@@ -836,7 +836,7 @@
      real(kind=8) :: ema0bg(:), dt2bye
      real(kind=8) :: rhos(:,:)
      real(kind=8) :: bec(:,:)
-     complex(kind=8) :: c0(:,:,:,:), cm(:,:,:,:)
+     complex(kind=8) :: c0(:,:), cm(:,:)
      logical, optional, intent(in) :: fromscra
      logical, optional, intent(in) :: restart
      !
@@ -900,24 +900,24 @@
         call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
       else
         do i=1,n,2
-           call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+           call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
            if( tefield ) then
-             CALL dforce_efield ( bec, i, c0(:,i,1,1), c2, c3, rhos)
+             CALL dforce_efield ( bec, i, c0(:,i), c2, c3, rhos)
            end if
            IF( iflag == 2 ) THEN
-             cm(:,i,1,1)   = c0(:,i,1,1)
-             cm(:,i+1,1,1) = c0(:,i+1,1,1)
+             cm(:,i)   = c0(:,i)
+             cm(:,i+1) = c0(:,i+1)
            END IF
            if( ttsde ) then
-              CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
-              CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
+              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )
+              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emadt2, c3 )
            else
-              CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), verl1, verl2, emaver, c2 )
-              CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), verl1, verl2, emaver, c3 )
+              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
+              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
            endif
            if ( gstart == 2 ) then
-              cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
-              cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
+              cm(1,  i)=cmplx(real(cm(1,  i)),0.0)
+              cm(1,i+1)=cmplx(real(cm(1,i+1)),0.0)
            end if
         end do
       end if

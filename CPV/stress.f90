@@ -20,14 +20,14 @@
   MODULE stress
 
        USE kinds
+       USE control_flags, ONLY: timing
 
        IMPLICIT NONE
        PRIVATE
        SAVE
 
-       PUBLIC :: pstress, stress_setup, print_stress_time
+       PUBLIC :: pstress, print_stress_time
 
-       LOGICAL :: timing = .false.
        INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
        INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
 
@@ -41,27 +41,19 @@
        REAL(dbl),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_dbl, 0.0_dbl, 0.0_dbl, 1.0_dbl, 0.0_dbl, 1.0_dbl /)
 
-       REAL(dbl) :: timeek, timeex, timeesr, timeeh, timeel, timeenl, timetot
-       INTEGER :: timcnt
+       REAL(dbl) :: timeek = 0.0d0
+       REAL(dbl) :: timeex = 0.0d0
+       REAL(dbl) :: timeesr = 0.0d0
+       REAL(dbl) :: timeeh = 0.0d0
+       REAL(dbl) :: timeel = 0.0d0
+       REAL(dbl) :: timeenl = 0.0d0
+       REAL(dbl) :: timetot = 0.0d0
+       INTEGER   :: timcnt = 0
 
        REAL(dbl) :: cclock
        EXTERNAL  :: cclock
 
      CONTAINS
-
-      SUBROUTINE stress_setup(timing_inp)
-        LOGICAL, INTENT(IN) :: timing_inp
-          timing = timing_inp
-          timeek = 0.0d0 
-          timeex = 0.0d0
-          timeesr = 0.0d0
-          timeeh = 0.0d0 
-          timeel = 0.0d0
-          timeenl = 0.0d0
-          timetot = 0.0d0
-          timcnt = 0
-        RETURN
-      END SUBROUTINE stress_setup
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -84,6 +76,7 @@
       USE pseudo_projector, ONLY: projector
       USE cell_base, ONLY: tpiba2
       USE io_global, ONLY: ionode
+      USE exchange_correlation, ONLY: stress_xc
 
       IMPLICIT NONE
 
@@ -862,137 +855,6 @@
       END SUBROUTINE
 
 
-!     --------------------------------------------
-!     --------------------------------------------
-
-        SUBROUTINE stressgc(grho, v2xc, nnr, gcpail, omega)
-!
-        IMPLICIT NONE
-!
-        INTEGER, INTENT(IN) :: nnr
-        REAL(dbl) ::  v2xc(:,:,:,:,:)
-        REAL(dbl) ::  grho(:,:,:,:,:)
-        REAL(dbl) ::  gcpail(6)
-        REAL(dbl) ::  omega
-!
-        REAL(dbl) :: stre, grhoi, grhoj
-        INTEGER :: i, j, k, ipol, jpol, ic, nxl, nyl, nzl, is, js, nspin
-        INTEGER :: kk(2,2), nn(2,2)
-
-! ...
-        nxl = SIZE(grho,1)
-        nyl = SIZE(grho,2)
-        nzl = SIZE(grho,3)
-        nspin = SIZE(grho,5)
-
-        kk(1,1)=1
-        kk(1,2)=3
-        kk(2,1)=3
-        kk(2,2)=2
-        nn(1,1)=1
-        nn(1,2)=2
-        nn(2,1)=1
-        nn(2,2)=2
-
-        DO ic = 1, 6
-          ipol = alpha(ic)
-          jpol = beta(ic)
-          stre = 0.0d0
-          DO is = 1, nspin
-            DO js = 1, nspin
-              DO k = 1, nzl
-                DO j = 1, nyl
-                  DO i = 1, nxl
-                    stre = stre + v2xc(i,j,k,is,js) * grho(i,j,k,ipol,js) * grho(i,j,k,jpol,is)
-                  END DO
-                END DO
-              END DO
-            END DO
-          END DO
-          gcpail(ic) = - REAL(nspin) / 2.0_dbl * stre * omega / REAL(nnr)
-        END DO
-
-        RETURN
-        END SUBROUTINE stressgc
-
-
-!=======================================================================
-!==        COMPUTES EXCHANGE & CORRELATION ENERGY CONTRIBUTION        ==
-!=======================================================================
-
-      SUBROUTINE stress_xc(dexc, strvxc, sfac, vxc, tgc, grho, v2xc, &
-        gagx_l, gv, tnlcc, rhocp, box)
-
-      use ions_base, only: nsp 
-      USE cell_module, only: boxdimensions
-      USE cell_base, ONLY: tpiba
-      USE cp_types, ONLY: recvecs
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-
-      IMPLICIT NONE
-
-!---------------------------------------------------ARGUMENT
-
-      type (recvecs), intent(in) :: gv
-      type (boxdimensions), intent(in) :: box
-      LOGICAL :: tgc, tnlcc(:)
-      COMPLEX(dbl) :: vxc(:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
-      REAL(dbl) :: dexc(:), strvxc
-      REAL(dbl) :: grho(:,:,:,:,:)
-      REAL(dbl) :: v2xc(:,:,:,:,:)
-      REAL(dbl) :: GAgx_L(:,:)
-      REAL(dbl) :: rhocp(:,:)
-
-!---------------------------------------------------LOCAL
-
-      COMPLEX(dbl) :: tex1, tex2, tex3
-      REAL(dbl) :: gcpail(6), omega
-      INTEGER :: ig, k, is, ispin, nspin, nnr_g
-
-!---------------------------------------------------SUBROUTINE BODY
-
-      omega = box%deth
-      nspin = SIZE(vxc, 2)
-      nnr_g = nr1 * nr2 * nr3
-
-      DEXC = 0.0d0
-
-! ... computes omega * \sum_{G}[ S(G)*rhopr(G)* G_{alpha} G_{beta}/|G|]
-! ... (252) Phd thesis Dal Corso. Opposite sign.
-
-      IF (ANY(tnlcc)) THEN
-
-        DO ig = gv%gstart, gv%ng_l
-          tex1 = (0.0_dbl , 0.0_dbl)
-          DO is=1,nsp
-            IF (tnlcc(is)) THEN
-              tex1 = tex1 + sfac( is, ig ) * CMPLX(rhocp(ig,is))
-            END IF
-          END DO
-          tex2 = 0.0_dbl
-          DO ispin = 1, nspin
-            tex2 = tex2 + CONJG( vxc(ig, ispin) )
-          END DO
-          tex3 = REAL(tex1 * tex2) / SQRT(gv%hg_l(ig)) / tpiba
-          dexc = dexc + tex3 * gagx_l(:,ig)
-        END DO
-        dexc = dexc * 2.0_dbl * omega
-
-      END IF
-
-! ... (E_{xc} - \int dr v_{xc}(n) n(r))/omega part of the stress
-! ... this part of the stress is diagonal.
-
-      dexc = dexc + strvxc * dalbe
-
-      IF (tgc) THEN
-        CALL stressgc(grho, v2xc, nnr_g, gcpail, omega)
-        dexc = dexc + gcpail
-      END IF
-
-      RETURN
-      END SUBROUTINE
 
       SUBROUTINE stress_debug(dekin, deht, dexc, desr, deps, denl, htm1)
         USE io_global, ONLY: stdout

@@ -147,7 +147,7 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE fft, ONLY: fft_initialize, pfwfft, pinvfft
+      USE fft, ONLY: pfwfft, pinvfft
       USE ions_base, ONLY: nsp
       USE cell_base, ONLY: tpiba2
       USE cp_types, ONLY: recvecs
@@ -177,8 +177,6 @@
 
 ! ... end of declarations
 !  ----------------------------------------------
-
-      CALL fft_initialize
 
       gstart = 1
       IF( gv%gzero ) gstart = 2

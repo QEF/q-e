@@ -25,8 +25,12 @@
      INTEGER :: nr1l = 0   ! local first dimension 
      INTEGER :: nr2l = 0   ! 
      INTEGER :: nr3l = 0   !
-     INTEGER :: nnrxl = 0  ! nr1x * nr2x * nr3l
-     INTEGER :: nnrx  = 0  ! nr1x * nr2x * nr3
+     INTEGER :: nnrx  = 0  ! size of the (local) array allocated for the FFT
+                           ! in general could be different than the size of
+                           ! the FFT grid
+
+     ! ATTENTION:  
+     ! "nnrx" is not to be confused with "nr1 * nr2 * nr3" 
 
 !=----------------------------------------------------------------------------=!
    END MODULE grid_dimensions
@@ -53,7 +57,6 @@
      INTEGER :: nr1sl = 0
      INTEGER :: nr2sl = 0
      INTEGER :: nr3sl = 0
-     INTEGER :: nnrsxl = 0
      INTEGER :: nnrsx  = 0
 
 !=----------------------------------------------------------------------------=!
@@ -82,7 +85,6 @@
      INTEGER :: nr1bl = 0
      INTEGER :: nr2bl = 0
      INTEGER :: nr3bl = 0
-     INTEGER :: nnrbxl = 0
      INTEGER :: nnrbx  = 0
 
 !=----------------------------------------------------------------------------=!
@@ -131,9 +133,9 @@
        nr2 = good_fft_order( nr2 )
        nr3 = good_fft_order( nr3 )
 
-       nr1x  = good_fft_dimension(nr1 )
+       nr1x  = good_fft_dimension( nr1 )
        nr2x  = nr2
-       nr3x  = good_fft_dimension(nr3 )
+       nr3x  = good_fft_dimension( nr3 )
 
        ! ... This subroutines calculates the size of the real and reciprocal smoth grids
        CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
@@ -199,7 +201,7 @@
 
       ! ... Subroutine body
 
-      !   set the actual FFT dimensions
+      !   set the actual (local) FFT dimensions
 
       nr1l = dfftp % nr1
       nr2l = dfftp % nr2
@@ -209,8 +211,11 @@
       nr2sl = dffts % nr2
       nr3sl = dffts % npl
 
-      nnrx  = dfftp%nnr
-      nnrsx = dffts%nnr
+      !   set the dimensions of the array allocated for the FFT
+      !   this could in principle be different than the FFT dimensions
+
+      nnrx  = dfftp % nnr
+      nnrsx = dffts % nnr
 
       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3)                    &
      &   CALL errore(' pmeshset ', ' smooth grid larger than dense grid? ', 1 )

@@ -83,7 +83,7 @@
                   rhoout, tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
-                  tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp
+                  tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr
       USE init_fpmd
       USE cp_types
       USE atoms_type_module, ONLY: atoms_type, deallocate_atoms_type
@@ -262,37 +262,7 @@
 
       CALL iosys()
 
-      ! ... Initialize (global) real and compute global reciprocal dimensions
-      !
-      CALL realspace_grids_init( alat, a1, a2, a3, gcutp, gcuts, ngm_ , ngs_ )
-
-      ! ... set the sticks mesh and distribute g vectors among processors
-      !
-      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcutp, gkcut, gcuts, &
-        nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
-        nr3sx, ngw_ , ngm_ , ngs_ )
-      !
-      ! ... Initialize reciprocal space local and global dimensions
-      !
-      CALL recvecs_init( ngm_ , ngw_ , ngs_ )
-      !
-      ! ... Initialize (local) real space dimensions
-      !
-      CALL realspace_grids_para( dfftp, dffts )
-
-      ! ... printout g vector distribution summary
-      !
-      CALL gmeshinfo()
-
-      ! ... set the bands mesh
-      !
-      CALL bmeshset()
-
-      ! ... Print out the memory required by this run
-
-      CALL cpsizes( nproc )
-      CALL cpflush()
-
+      CALL init_dimensions( )
 
       timepre = 0.0_dbl
       timernl = 0.0_dbl
@@ -477,7 +447,7 @@
 ! ...     on entry c0 should contain the wavefunctions to be optimized
           CALL runcg(tortho, ttprint, prn, rhoe, desc, atoms_0, gv, kp, &
                ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft )
+               fnl, vpot, doions, edft, ekin_maxiter, etot_conv_thr )
 ! ...     on exit c0 and cp both contain the updated wave function
 ! ...     cm are overwritten (used as working space)
         ELSE IF ( tsteepdesc ) THEN

@@ -55,10 +55,11 @@
         END SUBROUTINE
 
 
-    SUBROUTINE berry_setup( ngw, ngwt, nr1, nr2, nr3, mill )
+    SUBROUTINE berry_setup( ngw, mill )
 
+      USE io_global, only: ionode, stdout
       USE mp_global, ONLY: nproc, mpime, group
-      USE mp, ONLY: mp_max
+      USE mp, ONLY: mp_max, mp_sum
       USE stick_base, ONLY : sticks_owner
       USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
 
@@ -66,17 +67,25 @@
       integer LN_IND
       integer ig_local
 
-      integer :: mill(:,:), NR1,NR2,NR3, ngw, ngwt
+      integer :: mill(:,:), ngw
 
       integer in(8)
       integer, allocatable :: icnt_snd(:,:) ! icnt_snd(nproc,8)
       integer, allocatable :: icnt_rcv(:,:) ! icnt_rcv(nproc,8)
-      integer :: i, j, ig, itmp, in_l, igowner, igl
+      integer :: i, j, ig, itmp, in_l, igowner, igl, ngwt
+
+
+      IF( ionode ) THEN
+         WRITE( stdout, fmt="(3X,'Polarizability using berry phase')" )
+      END IF
 
       allocate( icnt_snd( nproc, 8 ) )
       allocate( icnt_rcv( nproc, 8 ) )
 
-      WRITE( stdout,*) '  *** DIPOLEINIT *** '
+      !  compute global number of G vectors
+      !
+      ngwt = ngw
+      CALL mp_sum( ngwt )
 
       CALL ln_setup( mill, ngwt )
 

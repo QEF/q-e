@@ -40,6 +40,7 @@
 !  END manual
 
 ! ... declare modules
+      use mp_global, only: nproc
       USE parameters, ONLY: nspinx
       USE phase_factors_module, ONLY: strucf
       USE nose_ions, ONLY: nosepinit
@@ -49,12 +50,8 @@
       USE time_step, ONLY: delt
       USE cell_module, ONLY: cell_init, get_lattice_vectors
       USE cell_base, ONLY: omega, alat
-      USE electrons_module, ONLY: electron_mass_init, band_init, n_emp
+      USE electrons_module, ONLY: electron_mass_init, band_init, n_emp, bmeshset
       USE electrons_base, ONLY: nupdwn
-      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
-      use small_box, only: alatb, b1b, b2b, b3b
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrbx
       USE reciprocal_space_mesh, ONLY:  newg
       USE reciprocal_vectors, ONLY:  ngwt, gstart, gzero, ngm, ngmt, ngw
       USE pseudopotential, ONLY: formf, nsanl, ngh, pseudopotential_init
@@ -70,12 +67,12 @@
       USE descriptors_module, ONLY: get_local_dims, get_global_dims
       USE control_flags, ONLY: nbeg, prn, tbeg, timing, t_diis
       USE input_parameters, ONLY: rd_ht
-      USE turbo, ONLY: tturbo, init_turbo
+      USE turbo, ONLY: tturbo, allocate_turbo
       USE ions_base, ONLY: tau_srt, tau_units, ind_srt, if_pos, atm
-      USE gvecp, ONLY: ecutp
-      USE gvecb, ONLY: gcutb
       USE stick, ONLY: dfftp
       USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE problem_size, ONLY: cpsizes
+      USE reciprocal_space_mesh, ONLY : gindexset
 
       IMPLICIT NONE
 
@@ -95,6 +92,7 @@
       REAL(dbl) :: s1, s2, s3, s4, s5
       REAL(dbl) :: annee
       REAL(dbl) :: a1(3), a2(3), a3(3)
+      real(dbl) :: b1(3), b2(3), b3(3)
       INTEGER :: i, ispin, isym
       LOGICAL :: tk
       COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
@@ -107,24 +105,23 @@
 
       s1 = cclock()
 
-! ... report information
       call get_lattice_vectors( a1, a2, a3 )
-
-      rat1 = DBLE( nr1b ) / DBLE( nr1 )
-      rat2 = DBLE( nr2b ) / DBLE( nr2 )
-      rat3 = DBLE( nr3b ) / DBLE( nr3 )
-      CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
-
-      gcutb = ecutp / tpibab / tpibab
-      CALL ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )  
-
+      call recips( a1, a2, a3, b1, b2, b3 )
 
 ! ... arrange for reciprocal lattice vectors
       tk = .NOT. ( kp%scheme == 'gamma' )
       CALL allocate_recvecs(gv, ngm, ngmt, ngw, ngwt, tk, kp%nkpt)
 
-! ... count reciprocal lattice vectors (generated from celldm)
-      CALL ggenew(gv, kp, prn)
+      CALL gindexset( gv, b1, b2, b3 )
+
+      ! ... set the bands mesh
+      !
+      CALL bmeshset( )
+
+      CALL cpsizes( nproc )
+      !
+      CALL cpflush( )
+
 
 ! ... Allocate + Initialize pseudopotentials
       CALL pseudopotential_init(ps, na, nsp, gv, kp)
@@ -196,7 +193,7 @@
 ! ... if tturbo=.TRUE. some data is stored in memory instead of being
 ! ... recalculated (see card 'TURBO')
       IF( tturbo ) THEN
-        CALL init_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
+        CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
       ENDIF
 
 
@@ -303,175 +300,308 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------=!
+   END MODULE init_fpmd
+!=----------------------------------------------------------------------=!
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Fri Oct  8 14:58:38 MDT; 1999
-!  ----------------------------------------------
-!  SUBROUTINE ggenew(ht_0,gv,nr1,nr2,nr3,prn)
-!  SUBROUTINE compute_hg(i,j,k,b1,b2,b3,nhg,ngw, &
-!                        nr1,nr2,nr3)
-!  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE ggenew(gv, kp, prn)
 
-!  this routine generates reciprocal lattice vectors with length squared
-!  less than gcut, and sorts them in order of increasing length
-!  their Fast Fourier Transform indices n1,n2,n3 are stored
-!  when using only the Gamma point, only the positive half space is
-!  spanned and indices for -G are provided
-!  N.B: THE G'S ARE IN UNITS OF 2PI/A.
-!  ----------------------------------------------
-!  END manual
 
-! ... declare modules
+!=----------------------------------------------------------------------=!
+!
+!   CP90 / FPMD common init subroutine 
+!
+!=----------------------------------------------------------------------=!
+
+
+!-----------------------------------------------------------------------
+  subroutine init1( tau )
+!-----------------------------------------------------------------------
+!
+!     initialize G-vectors and related quantities
+!
+      use control_flags, only: iprint
+      use constants, only: scmass
+      use io_global, only: stdout
+      use funct, only: dft
+      use parameters, only: natx, nsx
+      use ions_base, only: pmass, rcmax, nsp, na
+      use cell_base, only: ainv, a1, a2, a3
+      use cell_base, only: omega, alat, ibrav, celldm
+      use electrons_base, only: n => nbnd, f, nspin, nel, nupdwn, iupdwn
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      USE gvecw, ONLY: ecutw, gcutw
+      USE gvecp, ONLY: ecut => ecutp, gcut => gcutp
+      USE gvecs, ONLY: gcuts, dual
+      use gvecb, only: gcutb
+
+      implicit none
+! 
+      real(kind=8) tau(3,natx)
+!
+      integer idum, ik, k, iss, i, in, is, ia, isat
+      real(kind=8) fsum, ocp, ddum
+      real(kind=8) qk(3), rat1, rat2, rat3
+      real(kind=8) b1(3), b2(3), b3(3)
+      integer :: ng_ , ngs_ , ngm_ , ngw_
+
+!
+!     ==============================================================
+!
+      WRITE( stdout,34) ibrav,alat,omega,gcut,gcuts,gcutw,1
+      WRITE( stdout,81) nr1, nr2, nr3, nr1x, nr2x, nr3x,                      &
+     &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
+     &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
+!
+      WRITE( stdout,38) dft
+      WRITE( stdout,334) ecutw, dual * ecutw, ecut
+!
+      if(nspin.eq.1)then
+         WRITE( stdout,6) nel(1),n
+         WRITE( stdout,166) nspin
+         WRITE( stdout,74)
+         WRITE( stdout,77) (f(i),i=1,n)
+      else
+         WRITE( stdout,7) nel(1),nel(2), n
+         WRITE( stdout,167) nspin,nupdwn(1),nupdwn(2)
+         WRITE( stdout,75) 
+         WRITE( stdout,77) (f(i),i=iupdwn(1),nupdwn(1))
+         WRITE( stdout,76) 
+         WRITE( stdout,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
+      endif
+      WRITE( stdout,878) nsp
+      isat = 0
+      do is=1,nsp
+         WRITE( stdout,33) is, na(is), pmass(is)/scmass, rcmax(is)
+         WRITE( stdout,9)
+         do ia = ( 1 + isat ), ( na(is) + isat )
+            WRITE( stdout,555) ( tau(k,ia), k = 1, 3 )
+         end do
+         isat = isat + na(is)
+ 555     format((4x,3(1x,f6.2)))
+      end do
+!
+!
+   33 format(' is=',i3,/,'  na=',i4,                                    &
+     &       '  atomic mass=',f6.2,' gaussian rcmax=',f6.2)
+   34 format(' initialization ',//,                                     &
+     &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,                &
+     &       /,' gcut=',f8.2,3x,' gcuts=',                              &
+     &       f8.2,' gcutw=',f8.2,/,                                     &
+     &       ' k-points: nkpt=',i2,//)
+   81 format(' meshes:',/,                                              &
+     &       '  dense grid: nr1 ,nr2, nr3  = ',3i4,                     &
+     &                   '  nr1x, nr2x, nr3x = ',3i4,/,                 &
+     &       ' smooth grid: nr1s,nr2s,nr3s = ',3i4,                     &
+     &                   '  nr1sx,nr2sx,nr3sx= ',3i4,/,                 &
+     &       '    box grid: nr1b,nr2b,nr3b = ',3i4,                     &
+     &                   '  nr1bx,nr2bx,nr3bx= ',3i4,/)
+    6 format(/' # of electrons=',i5,' # of states=',i5,/)
+    7 format(/' # of up electrons=',i5,'  of down electrons=',i5,         &
+              ' # of states=',i5,/)
+   38 format(' exchange-correlation potential: ',a20/)
+  334 format(' ecutw=',f7.1,' ryd',3x,                                  &
+     &       ' ecuts=',f7.1,' ryd',3x,' ecut=',f7.1,' ryd')
+  166 format(/,' nspin=',i2)
+  167 format(/,' nspin=',i2,5x,' nup=',i5,5x,' ndown=',i5)
+   74 format(' occupation numbers:')
+   75 format(' occupation numbers up:')
+   76 format(' occupation numbers down:')
+   77 format(20f4.1)
+  878 format(/' # of atomic species',i5)
+    9 format(' atomic coordinates:')
+!
+      return
+      end subroutine
+
+
+!-----------------------------------------------------------------------
+
+  subroutine init_dimensions(  )
+
+      !
+      !     initialize G-vectors and related quantities
+      !
+
+      use io_global, only: stdout, ionode
+      use control_flags, only: program_name, gamma_only
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      use cell_base, only: ainv, a1, a2, a3
+      use cell_base, only: omega, alat
+      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
+      use small_box, only: alatb, b1b, b2b, b3b
+      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
+      USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
+      USE reciprocal_space_mesh, ONLY: gmeshinfo
+      USE reciprocal_vectors, ONLY : mill_g, g2_g, bi1, bi2, bi3
+      USE recvecs_subroutines, ONLY: recvecs_init
+      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix, gcutw, gkcut
+      use gvecp, only: ecut => ecutp, gcut => gcutp
+      use gvecs, only: gcuts
+      use gvecb, only: gcutb
+      use fft_scalar, only: good_fft_dimension, good_fft_order
+      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
       USE fft,       ONLY: fft_setup
-      USE reciprocal_space_mesh, ONLY : gindexset
-      USE reciprocal_vectors, ONLY : mill_g, g2_g
-      USE cp_types
-      USE cell_module, only: boxdimensions
-      USE cell_module, ONLY : get_lattice_vectors, alat
-      USE brillouin, ONLY: kpoints
-      USE gvecp, ONLY:  gcutp
-      USE gvecw, ONLY:  gkcut
-      USE gvecs, ONLY:  gcuts
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s
+      USE stick_base, ONLY: pstickset
       USE control_flags, ONLY: tdipole
       USE berry_phase, ONLY: berry_setup
+      USE electrons_base, ONLY: electrons_base_init
+      USE real_space_mesh, ONLY: realspace_procgrid_init
+      USE bands_mesh, ONLY: bands_procgrid_init
 
-      IMPLICIT NONE
+      implicit none
+! 
+      integer  :: i
+      real(kind=8) :: rat1, rat2, rat3
+      real(kind=8) :: b1(3), b2(3), b3(3)
+      integer :: ng_ , ngs_ , ngm_ , ngw_
 
-! ... declare subroutine arguments
-      LOGICAL, INTENT(IN) :: prn
+      !
+      ! ... Initialize dimensions for electronic states
+      !
 
-      TYPE (recvecs), INTENT(OUT) :: gv
-      TYPE (kpoints), INTENT(IN) :: kp
+      CALL electrons_base_init( )
 
-! ... declare other variables
-      REAL(dbl) :: b1(3), b2(3), b3(3)
-      REAL(dbl) :: a1(3), a2(3), a3(3)
+      !
+      ! ... Initialize processor grid for parallel linear algebra 
+      !     used electronic states lagrange multiplier matrixes
+      !
 
-      INTEGER   :: i
+      CALL bands_procgrid_init( )
 
-      REAL(dbl) :: s1, s2, s3, s4, s5, s6
+      !
+      ! ... Initialize (global) real and compute global reciprocal dimensions
+      !
 
+      CALL realspace_grids_init( alat, a1, a2, a3, gcut, gcuts, ng_ , ngs_ )
 
-! ... end of declarations
-!  ----------------------------------------------
+      !
+      ! ... Initialize real space processor grid
+      !
 
-! ... reciprocal lattice generators
-      call get_lattice_vectors( a1, a2, a3 )
-      call recips(a1, a2, a3, b1, b2, b3 )
+      CALL realspace_procgrid_init( )
 
-      !  Normally if a1, a2 and a3 are in cartesian coordinates
-      !  and in a.u. units the corresponding bs are in cartesian
-      !  coordinate too and in unit of 2 PI / a.u.
-      !  now bring b1, b2 and b3 in units of 2 PI / alat
+      !
+      ! ... cell dimensions and lattice vectors
+      !
 
-      b1 = b1 * alat 
+      call recips( a1, a2, a3, b1, b2, b3 )
+
+      !     Store the base vectors used to generate the reciprocal space
+
+      bi1 = b1
+      bi2 = b2
+      bi3 = b3
+
+      !     Change units:  b1, b2, b3  are the 3 basis vectors generating 
+      !     the reciprocal lattice in 2pi/alat units
+      !
+      !      Normally if a1, a2 and a3 are in cartesian coordinates
+      !      and in a.u. units the corresponding bs are in cartesian
+      !      coordinate too and in unit of 2 PI / a.u.
+      !      now bring b1, b2 and b3 in units of 2 PI / alat
+
+      b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
 
-! ... b1(i) = alat * ht_0%m1(i,1)
+      IF( ionode ) THEN
 
-      s1 = cclock()
+        WRITE( stdout,210) 
+210     format(/,3X,'unit vectors of full simulation cell',&
+              &/,3X,'in real space:',25x,'in reciprocal space (units 2pi/alat):')
+        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 1,a1,b1
+        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 2,a2,b2
+        WRITE( stdout,'(I1,1X,3f10.4,10x,3f10.4)') 3,a3,b3
 
-      CALL ggencp ( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s,               &
-     &      gcutp, gcuts, gkcut, kp%gamma_only )
-
-!
-! ... diagnostics
-      IF( ionode ) THEN 
-        WRITE( stdout,100)
-        WRITE( stdout,150)
-        WRITE( stdout,250) 1,(a1(i)/alat, i=1,3)
-        WRITE( stdout,250) 2,(a2(i)/alat, i=1,3)
-        WRITE( stdout,250) 3,(a3(i)/alat, i=1,3)
-        WRITE( stdout,110)
-        WRITE( stdout,200) 1,(b1(i), i=1,3)
-        WRITE( stdout,200) 2,(b2(i), i=1,3)
-        WRITE( stdout,200) 3,(b3(i), i=1,3)
       END IF
 
- 100  FORMAT(/' * Reciprocal space initialization ( from ggen ) :',/)
- 110  FORMAT(/'   Primitive vectors (units: 2*PI/ALAT):')
- 150  FORMAT(/'   Real Space vectors (cart. coord., units: ALAT):')
- 200  FORMAT(10X,'B',I1,' = ',3(2X,F6.2))
- 250  FORMAT(10X,'A',I1,' = ',3(2X,F6.2))
+      !
+      do i=1,3
+         ainv(1,i)=b1(i)/alat
+         ainv(2,i)=b2(i)/alat
+         ainv(3,i)=b3(i)/alat
+      end do
 
-      s3 = cclock()
+      !
+      ! ainv  is transformation matrix from cartesian to crystal coordinates
+      !       if r=x1*a1+x2*a2+x3*a3 => x(i)=sum_j ainv(i,j)r(j)
+      !       Note that ainv is really the inverse of a=(a1,a2,a3)
+      !       (but only if the axis triplet is right-handed, otherwise
+      !        for a left-handed triplet, ainv is minus the inverse of a)
+      !
 
-! ... setup reciprocal space mesh
-      b1 = b1 / alat
-      b2 = b2 / alat
-      b3 = b3 / alat
-      CALL gindexset(gv, mill_g, b1, b2, b3)
-      s4 = cclock()
+      ! ... set the sticks mesh and distribute g vectors among processors
+      !
 
+      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gkcut, gcuts, &
+        nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
+        nr3sx, ngw_ , ngm_ , ngs_ )
+      !
+      !
+      ! ... Initialize reciprocal space local and global dimensions
+      !     NOTE in a parallel run ngm_ , ngw_ , ngs_ here are the 
+      !     local number of reciprocal vectors
+      !
+      CALL recvecs_init( ngm_ , ngw_ , ngs_ )
+      !
+      !
+      ! ... Initialize (local) real space dimensions
+      !
+      CALL realspace_grids_para( dfftp, dffts )
+      !
+      !
+      ! ... Initialize FFT module
+      !
+      CALL fft_setup( gamma_only , ngm_ , ngs_ , ngw_ )
+      !
+      ! ... printout g vector distribution summary
+      !
+      CALL gmeshinfo()
+      !
+      !
+      ! ... generate g-space
+      !
+      call ggencp( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s, gcut, gcuts, gkcut, gamma_only )
+
+      ! 
+      !  Allocate index required to compute polarizability
+      !
       IF( tdipole ) THEN
-        IF( ionode ) WRITE( stdout,800)
-        CALL berry_setup( gv%ngw_l, gv%ngw_g, nr1, nr2, nr3, mill_g )
-  800 FORMAT(   3X,'Polarizability using berry phase')
+        CALL berry_setup( ngw_ , mill_g )
       END IF
 
-      IF( ALLOCATED( g2_g ) ) deallocate(g2_g)
-      IF( ALLOCATED( mill_g ) ) deallocate(mill_g)
+      !
+      !     global arrays are no more needed
+      !
+      if( allocated( g2_g ) )   deallocate( g2_g )
+      if( allocated( mill_g ) ) deallocate( mill_g )
+      
+      !
+      !     generation of little box g-vectors
+      !
+      !  sets the small box parameters
 
-      CALL fft_setup(gv, kp)
-      s5 = cclock()
+      rat1 = DBLE( nr1b ) / DBLE( nr1 )
+      rat2 = DBLE( nr2b ) / DBLE( nr2 )
+      rat3 = DBLE( nr3b ) / DBLE( nr3 )
+      CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
 
-      RETURN
-      END SUBROUTINE
+      !  now set gcutb
+      !
+      gcutb = ecut / tpibab / tpibab
+      !
+      CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+      
+      !
+      !   Flush stdout
+      !
+      CALL cpflush()
+      !
 
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE compute_hg(hg_g, mill, i,j,k,b1,b2,b3,gcut,gkcut,ig,igw)
-
-!  this routine computes squared lengths and indices for Fourier
-!  transforms of G points
-!  maximum values for nxh indices are also returned, for checking purpose
-!  ----------------------------------------------
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      REAL(dbl), INTENT(OUT) :: hg_g(:)
-      INTEGER, INTENT(OUT) :: mill(:,:)
-      INTEGER, INTENT(IN)  :: i, j, k
-      INTEGER, INTENT(INOUT) :: ig, igw
-      REAL(dbl)  :: b1(3), b2(3), b3(3)
-      REAL(dbl)  :: gcut, gkcut
-
-! ... declare functions
-      REAL(dbl)  miller2gsqr
-
-! ... declare other variables
-      REAL(dbl) :: gsq
-
-! ... end of declarations
-!  ----------------------------------------------
-
-      gsq = ( REAL(i) * b1(1) + REAL(j) * b2(1) + REAL(k) * b3(1) )**2 + &
-          & ( REAL(i) * b1(2) + REAL(j) * b2(2) + REAL(k) * b3(2) )**2 + &
-          & ( REAL(i) * b1(3) + REAL(j) * b2(3) + REAL(k) * b3(3) )**2 
-      IF(gsq .LE. gcut) THEN
-        IF(gsq .LE. gkcut) igw = igw + 1
-        ig = ig + 1
-        IF(ig .GT. SIZE(hg_g)) THEN
-          CALL errore(' compute_hg ',' too many G counts ',ig)
-        END IF
-        hg_g(ig) = gsq
-        mill(1,ig) = i;  mill(2,ig) = j;  mill(3,ig) = k
-      END IF
-
-      RETURN
-      END SUBROUTINE compute_hg
-
-
-     END MODULE init_fpmd
+      return
+      end subroutine

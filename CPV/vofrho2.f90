@@ -24,7 +24,6 @@
       use cell_base, only: omega
       use cell_base, only: a1, a2, a3
       use reciprocal_vectors, only: ng0 => gstart
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
@@ -36,11 +35,7 @@
 
       use pseu
       use core
-      ! use ncprm
       use gvecb
-      ! use dft_mod
-      use work, only: wrk1
-      use work_box
 !
       use dener
       use derho
@@ -61,8 +56,8 @@
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
-      complex(kind=8), pointer:: v(:),vs(:)
-      complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      complex(kind=8), allocatable :: v(:), vs(:)
+      complex(kind=8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
       
 !     complex(kind=8), allocatable:: vtemp1(:,:)
 !
@@ -71,8 +66,8 @@
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz = 2.0
-      v => wrk1
-      vs=> wrk1
+      allocate( v ( nnr   ) )
+      allocate( vs( nnrsx ) )
 
       allocate(vtemp(ng))
       allocate(rhotmp(ng))
@@ -355,6 +350,8 @@
 !
       deallocate(rhotmp)
       deallocate(vtemp)
+      deallocate( vs )
+      deallocate( v  )
 !
 !
       if((nfi.eq.0).or.tfirst.or.tlast) goto 999

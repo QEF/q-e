@@ -248,19 +248,26 @@ program pp_punch
   ! 
   ! input:  namelist "&inputpp", with variables
   !   prefix       prefix of input files saved by program pwscf
-  !   outdir      temporary directory where files resides
+  !   outdir       temporary directory where files resides
   !   pp_file      output file. This variable coulb de eliminated 
   !                adopting a suitable convention for the name
   !                involving prefix (prefix.XMLpun ??)
   !   uspp_spsi    using US PP if set .TRUE. writes S | psi > 
-  !                instead of | psi > in the output file 
+  !                and | psi > separately in the output file 
+  !   single_file  one-file output is produced
   !   ascii        ....
+  !
+  !   ntype        number of species
+  !   pseudo_dir   pseudopotential directory
+  !   psfile(:)    name of the pp file for each species 
   !   
   
 
   use pwcom
   use io_global, ONLY : stdout, ionode, ionode_id
-  use io_files
+  use io_files,  ONLY : psfile, pseudo_dir
+  use io_files,  ONLY : nd_nmbr, prefix, tmp_dir, outdir
+  use ions_base, ONLY : ntype => nsp
   use iotk_module
   use mp_global, ONLY : mpime, kunit
   use mp, ONLY: mp_bcast
@@ -274,7 +281,8 @@ program pp_punch
   logical :: found, uspp_spsi, ascii, single_file, raw
   INTEGER, EXTERNAL :: C_MKDIR
 
-  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw
+  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw, &
+                     psfile, pseudo_dir
 
   !
   call start_postproc (nd_nmbr)
@@ -288,29 +296,33 @@ program pp_punch
   ascii = .FALSE.
   single_file = .FALSE.
   raw = .FALSE.
+
   !
   !    Reading input file
   !
   IF ( ionode ) THEN
-  READ(5,inputpp,IOSTAT=ios)
-  IF (ios /= 0) CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
-  if( pp_file == ' ' ) then
-    pp_file = TRIM(prefix)//".export/index.xml"
-    if(ionode) ios = C_MKDIR( TRIM(prefix)//".export" , len(TRIM(prefix)//".export") )
-  endif
+      READ(5,inputpp,IOSTAT=ios)
+      IF (ios /= 0) CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
+      IF( pp_file == ' ' ) THEN
+          pp_file = TRIM(prefix)//".export/index.xml"
+          if(ionode) ios = C_MKDIR( TRIM(outdir)//"/"//TRIM(prefix)//".export" , LEN(TRIM(outdir)//"/"//TRIM(prefix)//".export") )
+      ENDIF
   ENDIF
   !
   ! ... Broadcasting variables
   !
+  tmp_dir = outdir
   CALL mp_bcast( outdir, ionode_id )
+  CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( pp_file, ionode_id )
   CALL mp_bcast( uspp_spsi, ionode_id )
   CALL mp_bcast( ascii, ionode_id )
   CALL mp_bcast( single_file, ionode_id )
   CALL mp_bcast( raw, ionode_id )
+  CALL mp_bcast( pseudo_dir, ionode_id )
+  CALL mp_bcast( psfile, ionode_id )
 
-  tmp_dir = outdir
 
   !
   !   Now allocate space for pwscf variables, read and check them.
@@ -344,9 +356,10 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use becmod,         only : becp
   use wavefunctions_module,  ONLY : evc
   use io_files,       only : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
+  use io_files,       only : pseudo_dir, psfile
   use io_base_export, only : write_restart_wfc
   use io_global,      only : ionode, stdout
-  USE ions_base,      ONLY : atm, nat, ityp, tau
+  USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
   use mp_global,      only : nproc, nproc_pool, mpime
   use mp_global,      only : my_pool_id, intra_pool_comm, inter_pool_comm
   use mp,             only : mp_sum, mp_max
@@ -498,24 +511,36 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
     write(0,*) "Writing atoms"
     call iotk_write_begin(50,"Atoms")
-    call iotk_write_attr (attr,"natoms",nat,first=.true.)
+    call iotk_write_attr (attr,"natoms",nat,FIRST=.TRUE.)
+    call iotk_write_attr (attr,"nspecies",nsp)
+    call iotk_write_empty(50,"Data",attr=attr)
+    call iotk_write_attr (attr,"units","alat",FIRST=.TRUE.)
     call iotk_write_begin(50,"Positions",attr=attr)
-    do i = 1, nat
-      xyz = tau(:,i)
-      call cryst_to_cart(1,xyz,bg,-1)
+    DO i = 1, nat
+      xyz = tau(:,i) 
+!
+! this line convert to crystal representation
+!      call cryst_to_cart(1,xyz,bg,-1)
+!
       call iotk_write_attr (attr,"type",atm(ityp(i)),first=.true.)
       call iotk_write_attr (attr,"xyz",xyz)
       call iotk_write_empty(50,"atom"//trim(iotk_index(i)),attr=attr)
-    end do
+    ENDDO
     call iotk_write_end(50,"Positions")
     call iotk_write_begin(50,"Types")
-    call iotk_write_empty(50,"Types_not_available")
+    call iotk_write_attr (attr,"pseudo_dir",TRIM(pseudo_dir),FIRST=.TRUE.)
+    call iotk_write_empty(50,"Data",attr=attr)
+    DO i=1, nsp 
+        call iotk_write_attr (attr,"pseudo_file",TRIM(psfile(i)),FIRST=.TRUE.)
+        call iotk_write_empty(50,"specie"//TRIM(iotk_index(i)), ATTR=attr )
+    ENDDO
     call iotk_write_end  (50,"Types")
     call iotk_write_end  (50,"Atoms")
 
     write(0,*) "Writing k-mesh"
     call iotk_write_attr (attr,"nk",nkstot,first=.true.)
     call iotk_write_begin(50,"Kmesh",attr=attr)
+    call iotk_write_dat  (50,"weights",wk(1:nkstot))
 ! Controlla in che unita' sono !
     call iotk_write_dat  (50,"k",xk(1:3,1:nkstot),fmt="(3f15.9)")
     call iotk_write_end  (50,"Kmesh")
@@ -523,6 +548,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     write(0,*) "Writing other parameters"
     call iotk_write_begin(50,"Other_parameters")
     call iotk_write_attr(attr,"wfc",ecutwfc,first=.true.)
+    call iotk_write_attr(attr,"rho",dual*ecutwfc)
+    call iotk_write_attr(attr,"units","Rydberg")
     call iotk_write_empty(50,"Cutoff",attr)
     call iotk_write_attr(attr,"nr1",nr1,first=.true.)
     call iotk_write_attr(attr,"nr2",nr2)
@@ -543,7 +570,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   ! for each k point build and write the global G+k indexes array
   allocate( igwk( npwx_g,nkstot ) )
   write(0,*) "Writing grids for wfc"
-  if(ionode) call iotk_write_begin(50,"Wfc_grids")
+  call iotk_write_attr (attr,"npwx",npwx_g,first=.true.)
+  if(ionode) call iotk_write_begin(50,"Wfc_grids",ATTR=attr)
 
 
   do ik = 1, nkstot
@@ -594,6 +622,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   if( ionode ) then
     call iotk_write_attr (attr,"nk",nkstot,first=.true.)
     call iotk_write_attr (attr,"nbnd",nbnd)
+    call iotk_write_attr (attr,"efermi",ef)
     call iotk_write_attr (attr,"units","Rydberg")
     call iotk_write_begin(50,"Eigenvalues",attr=attr)
     do ik=1,nkstot

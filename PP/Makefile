@@ -270,9 +270,17 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-EXOBJS=../Modules/iotk_base.o \
-../Modules/iotk_module.o \
-../Modules/iotk_external.o
+EXOBJS = \
+ ../Modules/iotk_base.o \
+ ../Modules/iotk_interface.o \
+ ../Modules/iotk_module.o \
+ ../Modules/iotk_external.o \
+ ../Modules/iotk_multitype.o \
+ ../Modules/iotk_multitype_character.o \
+ ../Modules/iotk_multitype_complex.o \
+ ../Modules/iotk_multitype_integer.o \
+ ../Modules/iotk_multitype_logical.o \
+ ../Modules/iotk_multitype_real.o 
 
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x initial_state.x

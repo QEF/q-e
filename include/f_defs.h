@@ -11,8 +11,12 @@
 #  define FLUSH
 #endif
 
-#if defined(CRAYY) || defined(__LINUX) || defined(__AIX) || defined(HITACHI) || defined(__SUN)
+#if defined(CRAYY) || defined(__LINUX) || defined(HITACHI) || defined(__SUN)
 #  define C_POINTER  integer(kind=4)
+#endif
+
+#if defined(__AIX)
+#  define C_POINTER  integer(kind=8)
 #endif
 
 #if defined __MAC

@@ -26,16 +26,17 @@
       use uspp, only: nhtol, nhsa => nkb
       use uspp_param, only: nh, nhm
       use cdvan
-      use work, only: wrk2
 !
       implicit none
       integer nspmn, nspmx
       complex(kind=8) c(ngw,n)
       real(kind=8) eigr(2,ngw,nas,nspmx)
+      complex(kind=8), allocatable :: wrk2(:,:)
 !
       integer ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii
       real(kind=8) signre, signim, arg
 !
+      allocate( wrk2( ngw, nas ) )
 !
       do j=1,3
          do i=1,3
@@ -93,88 +94,12 @@
             end do
          end do
       end do
+
+      deallocate( wrk2 )
 !
       return
       end
 !
-!---------------------------------------------------------------------
-      subroutine exch_corr_h(nspin,rhog,rhor,exc,dxc)
-!---------------------------------------------------------------------
-!
-! calculate exch-corr potential, energy, and derivatives dxc(i,j)
-! of e(xc) with respect to to cell parameter h(i,j)
-!
-      use funct, only: iexch, icorr, igcx, igcc
-      use gvecp, only: ng => ngm
-      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
-      use cell_base, only: ainv
-      use cell_base, only: omega
-      use control_flags, only: tpre
-      use derho
-      use mp, only: mp_sum
-!
-      implicit none
-! input
-      integer nspin
-! rhog contains the charge density in G space
-! rhor contains the charge density in R space
-      complex(kind=8) rhog(ng,nspin)
-! output
-! rhor contains the exchange-correlation potential
-      real(kind=8) rhor(nnr,nspin), dxc(3,3), exc
-! local
-      integer i,j,ir
-      real(kind=8) dexc(3,3)
-      real(kind=8), allocatable:: gradr(:,:,:)
-!
-!     filling of gradr with the gradient of rho using fft's
-!
-      if (igcx /= 0 .or. igcc /= 0) then
-         allocate(gradr(nnr,3,nspin))
-         call fillgrad(nspin,rhog,gradr)
-      end if
-!
-      CALL exch_corr_cp(nnr,nspin,gradr,rhor,exc)
-
-      call mp_sum( exc )
-
-      exc=exc*omega/dble(nr1*nr2*nr3)
-!
-! exchange-correlation contribution to pressure
-!
-      dxc = 0.0
-      if (tpre) then
-         if (nspin.ne.1) call errore('exc-cor','spin not implemented',1)
-!
-         do j=1,3
-            do i=1,3
-               do ir=1,nnr
-                  dxc(i,j) = dxc(i,j) + rhor(ir,1)*drhor(ir,1,i,j)
-               end do
-               dxc(i,j)=omega/(nr1*nr2*nr3)*dxc(i,j)
-            end do
-         end do
-         call mp_sum ( dxc )
-         do j=1,3
-            do i=1,3
-               dxc(i,j) = dxc(i,j) + exc*ainv(j,i)
-            end do
-         end do
-      end if
-!
-!     second part of the xc-potential
-!
-      if (igcx /= 0 .or. igcc /= 0) then
-         call gradh( nspin, gradr, rhog, rhor, dexc)
-         if (tpre) then
-            call mp_sum ( dexc )
-            dxc = dxc + dexc
-         end if
-         deallocate(gradr)
-      end if
-!
-      return
-      end
 !-----------------------------------------------------------------------
       subroutine formf(tfirst, eself)
 !-----------------------------------------------------------------------
@@ -413,118 +338,6 @@
 !
  1250 format(2x,'formf:     vps(g=0)=',f12.7,'     rhops(g=0)=',f12.7)
  1300 format(2x,'formf: sum_g vps(g)=',f12.7,' sum_g rhops(g)=',f12.7)
-!
-      return
-      end
-!______________________________________________________________________
-      subroutine gradh(nspin,gradr,rhog,rhor,dexc)
-!     _________________________________________________________________
-!
-!     calculate the second part of gradient corrected xc potential
-!     plus the gradient-correction contribution to pressure
-!
-      use control_flags, only: iprint, tpre
-      use gvec
-      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, &
-            nr1x, nr2x, nr3x
-      use cell_base, only: ainv
-      use work, only: wrk1
-      !use cell_module
-      use cell_base, only: omega
-      use derho
-!
-      implicit none
-! input
-      integer nspin
-      real(kind=8)  gradr(nnr,3,nspin), rhor(nnr,nspin), dexc(3,3)
-      complex(kind=8) rhog(ng,nspin)
-!
-      complex(kind=8), pointer:: v(:)
-      complex(kind=8), allocatable:: x(:), vtemp(:)
-      complex(kind=8)  ci, fp, fm
-      integer iss, ig, ir, i,j
-!
-      v => wrk1
-      allocate(x(ng))
-      allocate(vtemp(ng))
-      ci=(0.0,1.0)
-      if (tpre .and. nspin.ne.1) &
-           call errore('gradh','spin not implemented',1)
-      do iss=1, nspin
-!     _________________________________________________________________
-!     second part xc-potential: 3 forward ffts  
-!
-         do ir=1,nnr
-            v(ir)=cmplx(gradr(ir,1,iss),0.0)
-         end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ig=1,ng
-            x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
-         end do
-!
-         if(tpre) then
-            do i=1,3
-               do j=1,3
-                  do ig=1,ng
-                     vtemp(ig) = omega*ci*conjg(v(np(ig)))*             &
-     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,1)+      &
-     &                    gx(1,ig)*drhog(ig,iss,i,j))
-                  end do
-                  dexc(i,j) = real(SUM(vtemp))*2.0
-               end do
-            end do
-         endif
-!
-         do ir=1,nnr
-            v(ir)=cmplx(gradr(ir,2,iss),gradr(ir,3,iss))
-         end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!
-         do ig=1,ng
-            fp=v(np(ig))+v(nm(ig))
-            fm=v(np(ig))-v(nm(ig))
-            x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(2,ig)*0.5*cmplx( real(fp),aimag(fm))
-            x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(3,ig)*0.5*cmplx(aimag(fp),-real(fm))
-         end do
-!
-         if(tpre) then
-            do i=1,3
-               do j=1,3
-                  do ig=1,ng
-                     fp=v(np(ig))+v(nm(ig))
-                     fm=v(np(ig))-v(nm(ig))
-                     vtemp(ig) = omega*ci*                              &
-     &                    (0.5*cmplx(real(fp),-aimag(fm))*              &
-     &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,2)+      &
-     &                    gx(2,ig)*drhog(ig,iss,i,j))+                  &
-     &                    0.5*cmplx(aimag(fp),real(fm))*tpiba*          &
-     &                    (-rhog(ig,iss)*gx(i,ig)*ainv(j,3)+            &
-     &                    gx(3,ig)*drhog(ig,iss,i,j)))
-                  end do
-                  dexc(i,j) = dexc(i,j) + 2.0*real(SUM(vtemp))
-               end do
-            end do
-         endif
-!     _________________________________________________________________
-!     second part xc-potential: 1 inverse fft  
-!
-         do ig=1,nnr
-            v(ig)=(0.0,0.0)
-         end do
-         do ig=1,ng
-            v(np(ig))=x(ig)
-            v(nm(ig))=conjg(x(ig))
-         end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
-            rhor(ir,iss)=rhor(ir,iss)-real(v(ir))
-         end do
-      end do
-!
-      deallocate(vtemp)
-      deallocate(x)
 !
       return
       end

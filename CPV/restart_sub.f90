@@ -178,7 +178,7 @@ CONTAINS
 
       if( tzeroe ) then
 
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
 
       end if
 

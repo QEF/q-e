@@ -103,6 +103,7 @@
 !  end of declarations
 !  ----------------------------------------------
 
+
       atoms%for = 0.0d0
       CALL strucf(sfac, atoms, eigr, gv)
       edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
@@ -208,6 +209,11 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     LOGICAL :: tlast = .FALSE.
     REAL(kind=8) :: fcell(3,3), ccc, dt2hbe, enb, enbi, fccc
 
+    !
+    !
+
+    WRITE(6,*) 'DEBUG running from_scratch'
+
     dt2hbe = 0.5d0 * dt2bye
 
     ! Input positions read from input file and stored in tau0
@@ -302,7 +308,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 !
       fccc = 0.0d0
       !
-      CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, c0, fromscra = .TRUE. )
+      CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), c0(:,:,1,1), fromscra = .TRUE. )
 
 !
 !     nlfq needs deeq bec

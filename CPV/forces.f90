@@ -67,7 +67,7 @@
 !  END manual
 
 
-      USE fft, ONLY: pw_invfft, pw_fwfft,  fft_wf_initialize
+      USE fft, ONLY: pw_invfft, pw_fwfft
 
       IMPLICIT NONE
 
@@ -89,7 +89,6 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      CALL fft_wf_initialize
       IF( PRESENT( psi_stored ) ) THEN
         psi_stored = psi_stored * CMPLX(v, 0.0d0)
         CALL pw_fwfft(psi_stored, dco, dce)
@@ -273,7 +272,7 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE fft, ONLY: pw_invfft, pw_fwfft,  fft_wf_initialize
+      USE fft, ONLY: pw_invfft, pw_fwfft
 
       IMPLICIT NONE
 
@@ -298,8 +297,6 @@
 
 
       ngw = SIZE(co)
-
-      CALL fft_wf_initialize
 
       ALLOCATE( psi2(SIZE(v,1), SIZE(v,2), SIZE(v,3)) )
       ALLOCATE( ce(SIZE(co)), dce(SIZE(co)) )
@@ -492,7 +489,7 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE fft, ONLY: pw_invfft, pw_fwfft,  fft_wf_initialize
+      USE fft, ONLY: pw_invfft, pw_fwfft
 
       IMPLICIT NONE
 
@@ -512,7 +509,6 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      CALL fft_wf_initialize
       ALLOCATE( psi2(SIZE(v,1), SIZE(v,2), SIZE(v,3)) )
 
 ! ... Brings wave functions in the real space

@@ -42,7 +42,6 @@ emptystates.o \
 ensemble_dft.o \
 environment.o \
 exch_corr.o \
-fft_cp.o \
 fftdrv.o \
 fft.o \
 fields_type.o \

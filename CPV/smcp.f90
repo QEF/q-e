@@ -62,7 +62,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use control_flags, only: ortho_eps, ortho_max
   !
   use atom, only: nlcc
-  use core, only: deallocate_core
+  use core, only: nlcc_any, deallocate_core
   use uspp_param, only: nhm
   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
   use uspp, only: deallocate_uspp
@@ -76,7 +76,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use gvecb, only: ngb
   use gvecw, only: ngw
   use reciprocal_vectors, only: ng0 => gstart
-  use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
+  use ions_base, only: na, nat, pmass, nax, nsp, rcmax
   use ions_base, only: ind_srt, ions_vel, ions_cofmass, ions_kinene, ions_temp
   use ions_base, only: ions_thermal_stress, ions_vrescal, fricp, greasp, iforce
   use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
@@ -88,8 +88,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
   use pseu, only: vps, rhops
   use pseu, only: deallocate_pseu
-  use work
-  use work_box, only: qv, deallocate_work_box
   use io_global, ONLY: io_global_start, stdout, ionode
   use mp_global, ONLY: mp_global_start
   use mp, ONLY: mp_sum
@@ -100,10 +98,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use cdvan
   use stre
   use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-  !use restartsm
   use restart_file
   use parameters, only: nacx, natx, nsx, nbndxx
-  use constants, only: pi, factem
+  use constants, only: pi, factem, au_gpa, au_ps, gpa_au
   use io_files, only: psfile, pseudo_dir, smwout
   use input_cp, only: iosys
   use qgb_mod, only: deallocate_qgb_mod
@@ -121,13 +118,16 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use ions_positions, only: ions_hmove, ions_move
   use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
-  USE cell_nose, ONLY: cell_nosevel, cell_noseupd, qnh, temph, cell_nosezero
+  USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
+        cell_nosevel, cell_noseupd, cell_nose_nrg, cell_nosezero
   USE gvecw, ONLY: ecutw
   USE gvecp, ONLY: ecutp
 
   USE time_step, ONLY: delt
 
   use cp_electronic_mass, only: emass, emaec => emass_cutoff
+  use cp_electronic_mass, only: emass_precond
+
   use electrons_nose, only: qne, ekincw
 
   USE path_variables, only: smx, &
@@ -152,6 +152,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE smd_ene
 
   USE from_restart_module, ONLY: from_restart
+  USE runcp_module, ONLY: runcp_uspp
+
+  USE cp_main_variables, ONLY: ei1, ei2, ei3, eigr, sfac, irb, taub, eigrb, &
+        rhog, rhor, rhos, rhoc, becdr, bephi, becp, ema0bg, allocate_mainvar, &
+        deallocate_mainvar
   !
   !
   implicit none
@@ -172,79 +177,34 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   logical tconv
   real(kind=8) :: delta_etot
   !
-  ! structure factors e^{-ig*R}
-  !
-  complex(kind=8), allocatable:: ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
-  complex(kind=8), allocatable:: eigr(:,:,:)
-  !
-  ! structure factors (summed over atoms of the same kind)
-  !
-  complex(kind=8), allocatable:: sfac(:,:)
-  !
-  ! indexes, positions, and structure factors for the box grid
-  !
-  integer irb(3,natx,nsx)
-  real(kind=8) taub(3,natx)
-  complex(kind=8), allocatable:: eigrb(:,:,:)
-  ! 
-  ! charge densities and potentials
-  !     rhog  = charge density in g space
-  !     rhor  = charge density in r space (dense grid)
-  !     rhos  = charge density in r space (smooth grid)
-  !     rhoc  = core charge density in real space (dense grid)
-  !
-  complex(kind=8), allocatable:: rhog(:,:)
-  real(kind=8), allocatable:: rhor(:,:), rhos(:,:), rhoc(:)
-  !
-  ! nonlocal projectors:
-  !     bec   = scalar product of projectors and wave functions
-  !     betae = nonlocal projectors in g space = beta x e^(-ig.R) 
-  !     becdr = <betae|g|psi> used in force calculation
-  !     rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
-  !     deeq  = \int V_eff(r) q_lm(r) dr
-  !
-  real(kind=8), allocatable:: becdr(:,:,:)
-  real(kind=8), allocatable:: bephi(:,:), becp(:,:)
-  !
-  !  mass preconditioning
-  !
-  real(kind=8), allocatable:: ema0bg(:)
-  real(kind=8), allocatable:: emadt2(:)
-  real(kind=8), allocatable:: emaver(:)
-  real(kind=8), allocatable:: emainv(:)
-
   !
   ! work variables
   !
-  complex(kind=8), allocatable:: c2(:), c3(:)
   complex(kind=8)  speed
   real(kind=8)                                                      &
        &       tempp(smx), xnhe0(smx), vnhp(smx), xnhp0(smx), xnhpm(smx), &
        &       fccc(smx), xnhem(smx), vnhe(smx),  &
        &       epot(smx), xnhpp(smx), xnhep(smx), epre(smx), enow(smx),   &
-       &       econs(smx), econt(smx),                                    &
-       &       ccc(smx)
+       &       econs(smx), econt(smx), ccc(smx)
   real(kind=8) temps(nsx) 
-  real(kind=8) verl1, verl2, verl3, anor, saveh, tps,        &
-       &       bigr, dt2,              &
-       &       dt2by2, twodel, gausp, dt2bye, dt2hbe, &
-       &        savee, savep
+  real(kind=8) verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
+       &       dt2by2, twodel, gausp, dt2bye, dt2hbe, savee, savep
   real(kind=8) ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
        &       ekinc(smx), pre_ekinc(smx), enthal(smx)
+  !
   integer is, nacc, ia, j, iter, nfi, i, isa, ipos
   !
   !
   ! work variables, 2
   !
-  real(kind=8) fcell(3,3), hnew(3,3),velh(3,3),hgamma(3,3)
+  real(kind=8) fcell(3,3), hnew(3,3), velh(3,3), hgamma(3,3)
   real(kind=8) cdm(3)
   real(kind=8) qr(3)
-  real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
+  real(kind=8) temphh(3,3)
   real(kind=8) thstress(3,3) 
   !
   integer k, ii, l, m
-  real(kind=8) ekinh, alfar, temphc, alfap, &
-       &     factp, temp1, temp2, randy
+  real(kind=8) ekinh, alfar, temphc, alfap, temp1, temp2, randy
   real(kind=8) ftmp
 
   character(len=256) :: filename
@@ -256,7 +216,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   !     SMD 
   !
-  real(kind=8) :: t_arc_pre,t_arc_now,t_arc_tot
+  real(kind=8) :: t_arc_pre, t_arc_now, t_arc_tot
   integer :: sm_k,sm_file,sm_ndr,sm_ndw,unico,unifo,unist
   integer :: smpm,con_ite 
 
@@ -295,7 +255,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !     ====  1 pico              = 1.e-12                            ====
   !     ==================================================================
 
-  factp   = 3.3989 * 0.00001
   tps     = 0.0d0
 
   !
@@ -432,26 +391,20 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !     initialize g-vectors, fft grids
   !     ==================================================================
   !
-  !
-  !
   !      ... taus is calculated here.
   !
-
   call sminit( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst, delt, tps, iforce )
-
   !
   !
-
-  call r_to_s(rep(0)%tau0,rep(0)%taus, na, nsp, ainv)
-  call r_to_s(rep(sm_p)%tau0,rep(sm_p)%taus, na, nsp, ainv)
-
+  call r_to_s( rep(0)%tau0,    rep(0)%taus,    na, nsp, ainv)
+  call r_to_s( rep(sm_p)%tau0, rep(sm_p)%taus, na, nsp, ainv)
   !
   !
   WRITE( stdout,*) ' out from init'
   !
   !     more initialization requiring atomic positions
   !
-  nas = MAXVAL( na( 1 : nsp ) )
+  nax = MAXVAL( na( 1 : nsp ) )
 
   DO sm_k=1,smpm
      sm_file = smwout + sm_k
@@ -478,12 +431,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) ' Allocation begun, smpm = ', smpm
   !
-#if defined (__ORIGIN) || defined (__T3E)
-  call flush(stdout)
-#elif defined (__AIX) || defined (__ABSOFT)
-  call flush_(stdout)
-#endif
-  !
+  call cpflush()
   !
   DO sm_k=1,smpm
      allocate(rep_el(sm_k)%c0(ngw,nx))
@@ -498,30 +446,14 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) " Allocation for W.F. s : successful " 
 
+  CALL allocate_mainvar &
+      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, &
+        nlcc_any, smd = .TRUE. )
   !
   !
-  allocate(wrk2(ngw,max(nas,n)))
-  allocate(eigr(ngw,nas,nsp))
-  allocate(eigrb(ngb,nas,nsp))
-  allocate(sfac(ngs,nsp))
   allocate(rhops(ngs,nsp))
   allocate(vps(ngs,nsp))
-  allocate(rhor(nnr,nspin))
-  allocate(rhos(nnrsx,nspin))
-  allocate(rhog(ng,nspin))
-  if ( ANY( nlcc ) ) allocate(rhoc(nnr))
-  allocate(wrk1(nnr))
-  allocate(qv(nnrb))
-  allocate(c2(ngw))
-  allocate(c3(ngw))
-  allocate(ema0bg(ngw))
-  allocate(ei1(-nr1:nr1,nas,nsp))
-  allocate(ei2(-nr2:nr2,nas,nsp))
-  allocate(ei3(-nr3:nr3,nas,nsp))
   allocate(betae(ngw,nhsa))
-  allocate(becdr(nhsa,n,3))
-  allocate(bephi(nhsa,n))
-  allocate(becp (nhsa,n))
   allocate(deeq(nhm,nhm,nat,nspin))
   allocate(dbec (nhsa,n,3,3))
   allocate(dvps(ngs,nsp))
@@ -557,10 +489,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) ' Allocation for pointers : successful '
   !
-#ifdef __PARA
-  allocate(aux(nnr))
-#endif
-  !
   !
   con_ite = 0
   deeq(:,:,:,:) = 0.d0
@@ -577,12 +505,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) ' Allocation ended '
   !
-#if defined (__ORIGIN) || defined (__T3E)
-  call flush(stdout)
-#elif defined (__AIX) || defined (__ABSOFT)
-  call flush_(stdout)
-#endif
-
+  call cpflush()
   !
 
 666 continue
@@ -602,10 +525,10 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   temp1=tempw+tolp
   temp2=tempw-tolp
   gkbt = 3.*nat*tempw/factem
-  press = press*factp
+  press = press * GPA_AU
   !     ==========================================================
 
-  etot_ar(0) = ene_ini
+  etot_ar(0   ) = ene_ini
   etot_ar(sm_p) = ene_fin
 
   DO sm_k=0,sm_p
@@ -616,52 +539,35 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      rep(sm_k)%vels  = 0.0d0
      rep(sm_k)%velsm = 0.0d0
   ENDDO
+  !
   velsp = 0.
   !
-  hnew=h
+  hnew = h
   !
-
   DO sm_k=1,smpm
      rep_el(sm_k)%lambda = 0.d0
      rep_el(sm_k)%cm = (0.d0, 0.d0)
      rep_el(sm_k)%c0 = (0.d0, 0.d0)
   ENDDO
   !
-  !
   !     mass preconditioning: ema0bg(i) = ratio of emass(g=0) to emass(g)
   !     for g**2>emaec the electron mass ema0bg(g) rises quadratically
   !
-  do i=1,ngw
-     ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec)
-     if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
-  end do
-
-
-  !WRITE( stdout, * ) 'NBEG = ', nbeg
-  !fion_out(1:3,1:nat) = 0.0d0
-  !etot_out = 0.0d0
-  !RETURN
-
-
-  !
+  CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
   !
   ! ... calculating tangent for force transformation.
   !
-
   IF(smlm) call TANGENT(p_tau0,p_tan)
-
   !
   !
-
-  !
-  INI_REP_LOOP : DO sm_k=1,smpm  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !
+  INI_REP_LOOP : DO sm_k = 1, smpm 
      !
 
      sm_file = smwout + sm_k
-     sm_ndr = ndr + sm_k
+     sm_ndr  = ndr + sm_k
      !
      !
-     if ( nbeg < 0 ) then      ! >>>>>>>>>>>>>>>>>>>>>>>>>> !
+     if ( nbeg < 0 ) then 
 
         !======================================================================
         !    nbeg = -1 or nbeg = -2 or nbeg = -3
@@ -677,8 +583,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
                 &       tps, mat_z, f )
         endif
-
-
         !     
         call phfac( rep(sm_k)%tau0, ei1, ei2, ei3, eigr )
         !
@@ -717,17 +621,16 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
               rep_el(sm_k)%cm = rep_el(1)%cm 
            endif
         end if            ! <<<<<<<<<<<<<<<<<<<< !
-
-        !
         !
         !     prefor calculates betae (used by graham)
         !
         call prefor(eigr,betae)
+        !
         call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+        !
         if(iprsta.ge.3) call dotcsc(eigr,rep_el(sm_k)%cm)
         !     
         nfi=0
-
         !
         !     strucf calculates the structure factor sfac
         !
@@ -758,13 +661,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         if ( ANY( nlcc ) ) call set_cc(irb,eigrb,rhoc)
         !
         !
-
-
         call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
              &        ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
-
-        !WRITE( stdout, * ) 'debug 1, rcmax: ', rcmax(1:nsp) 
-        !WRITE( stdout, * ) 'debug 1, esr  : ', esr, eself
 
         !
         etot_ar(sm_k) = etot
@@ -783,49 +681,24 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     newd calculates deeq and a contribution to fion
         !
-
-
-        !call newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,deeq,rep(sm_k)%fion)
         call newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
 
-        if(ionode) WRITE( sm_file,*) ' out from newd'
         call prefor(eigr,betae)
         !
         !     if n is odd => c(*,n+1)=0
         !
-        ALLOCATE( emadt2( ngw ) )
-        ccc(sm_k) = dt2hbe
-        if(tsde) ccc(sm_k) = dt2bye
-        emadt2 = ccc(sm_k) * ema0bg
-
-
-        do i=1,n,2
-
-           call dforce(rep_el(sm_k)%bec,betae,i,rep_el(sm_k)%cm(1,i), &
-                & rep_el(sm_k)%cm(1,i+1),c2,c3,rhos)
-           call wave_steepest( rep_el(sm_k)%c0(:,i), rep_el(sm_k)%cm(:,i), emadt2, c2 )
-           call wave_steepest( rep_el(sm_k)%c0(:,i+1), rep_el(sm_k)%cm(:,i+1), emadt2, c3 )
-        end do
-
-        DEALLOCATE( emadt2 )
-        !
-        !
-        if(ionode) WRITE( sm_file,*) ' out from dforce'
+        CALL runcp_uspp( nfi, fccc(sm_k), ccc(sm_k), ema0bg, dt2bye, rhos, &
+             rep_el(sm_k)%bec, rep_el(sm_k)%cm, rep_el(sm_k)%c0, fromscra = .TRUE. )
         !
         !     buffer for wavefunctions is unit 21
         !
         if(tbuff) rewind 21
-
-        !call hangup
-        !stop 'qui'
         !
         !     nlfq needs deeq calculated in newd
         !
         if ( tfor .or. tprnfor ) call nlfq(rep_el(sm_k)%cm,eigr, &
              & rep_el(sm_k)%bec,becdr,rep(sm_k)%fion)
         !
-        if(ionode) WRITE( sm_file,*) ' out from nlfq'
-        ! 
         !     imposing the orthogonality
         !     ==========================================================
         !
@@ -891,8 +764,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         endif
         !
         !     
-     else         ! <<<<<<<<<<< |||||||||||| >>>>>>>>>>>>!
-
+     else   
         !
         !======================================================================
         !       nbeg = 0, nbeg = 1 or nbeg = 2
@@ -911,30 +783,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         call from_restart( tfirst, rep(sm_k)%taus, rep(sm_k)%tau0, h, eigr, &
                rep_el(sm_k)%bec, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ei1, ei2, ei3, sfac, eself )
         !
-!        CALL s_to_r(  rep(sm_k)%taus,  rep(sm_k)%tau0, na, nsp, h )
-!
-!        !
-!        if(trane.and.trhor) then
-!           call prefor(eigr,betae)
-!           call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
-!           rep_el(sm_k)%cm(:, 1:n)=rep_el(sm_k)%c0(:, 1:n)
-!        endif
-!        !
-!        if(iprsta.gt.2) then
-!           call print_atomic_var( rep(sm_k)%taus, na, nsp, ' read: taus ' )
-!           WRITE( stdout,*) ' read: cell parameters h '
-!           WRITE( stdout,*)  (h(1,j),j=1,3)
-!           WRITE( stdout,*)  (h(2,j),j=1,3)
-!           WRITE( stdout,*)  (h(3,j),j=1,3)
-!        endif
-!        !
-!        call phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
-!        call strucf(ei1,ei2,ei3,sfac)
-!        call formf(tfirst,eself)
-!        call calbec (1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
-!        if (tpre) call caldbec(1,nsp,eigr,rep_el(sm_k)%c0)
         !
-     end if               ! <<<<<<<<<<<<<<<<<<<<<<<< !
+     end if
 
 
      !==============================================end of if(nbeg.lt.0)====
@@ -955,7 +805,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      end if
      !
      if( .not. tpre ) then
-        stress (:,:) = 0.d0
+        stress = 0.d0
      endif
      !         
      fccc = 1.0d0
@@ -1067,31 +917,16 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              & (((rep(j)%tau0(i,ia),i=1,3),ia=1,SUM(na(1:nsp))),j=0,sm_p)
      ENDIF
      !
-#if defined (__ORIGIN) || defined (__T3E)
-     call flush(stdout)
-#elif defined (__AIX) || defined (__ABSOFT)
-     call flush_(stdout)
-#endif
+     call cpflush()
      !
   ENDIF
-
   !
-  !
-  !======================================================================
-  !
-  !           basic loop for molecular dynamics starts here
-  !
-  !======================================================================
-  !
-
-  !
-  !
+  !   basic loop for molecular dynamics starts here
   !
   WRITE(stdout,*) " _____________________________________________"
   WRITE(stdout,*) " "
   WRITE(stdout,*) " *****    Entering SMD LOOP   ***** "
   WRITE(stdout,*) " _____________________________________________"
-  !
   !
   !
   call stop_clock( 'initialize' )
@@ -1178,9 +1013,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
              &            ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
-        !WRITE( stdout, * ) 'debug 2, rcmax: ', rcmax(1:nsp) 
-        !WRITE( stdout, * ) 'debug 2, esr  : ', esr, eself
-
         !
         etot_ar(sm_k)  = etot
         eht_ar(sm_k)   = eht
@@ -1191,71 +1023,16 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         call compute_stress( stress, detot, h, omega )
-
         !
         enthal(sm_k)=etot+press*omega
         !
-        !=======================================================================
         !
-        !              verlet algorithm
-        !
-        !     loop which updates electronic degrees of freedom
-        !     cm=c(t+dt) is obtained from cm=c(t-dt) and c0=c(t)
-        !     the electron mass rises with g**2
-        !
-        !=======================================================================
-        !
-
-        !call newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,deeq,rep(sm_k)%fion)
         call newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
+        !
         call prefor(eigr,betae)
 
-
-        !
-        !==== set friction ====
-        !
-        if( tnosee ) then
-           verl1 = 2.0d0 * fccc(sm_k)
-           verl2 = 1.0d0 - verl1
-           verl3 = 1.0d0 * fccc(sm_k)
-        else
-           verl1=2./(1.+frice) 
-           verl2=1.-verl1
-           verl3=1./(1.+frice)
-        end if
-        !
-        !==== start loop over electronic degrees of freedom ====
-        !
-
-        ALLOCATE( emadt2( ngw ) )
-        ALLOCATE( emaver( ngw ) )
-        emadt2 = dt2bye * ema0bg
-        emaver = emadt2 * verl3
-        !
-        do i=1,n,2
-           call dforce(rep_el(sm_k)%bec,betae, &
-                & i,rep_el(sm_k)%c0(1,i),rep_el(sm_k)%c0(1,i+1),c2,c3,rhos)
-           !
-           if(tsde) then
-              CALL wave_steepest( rep_el(sm_k)%cm(:, i), rep_el(sm_k)%c0(:, i), emadt2, c2 )
-              CALL wave_steepest( rep_el(sm_k)%cm(:, i+1), rep_el(sm_k)%c0(:, i+1), emadt2, c3 )
-           else 
-              CALL wave_verlet( rep_el(sm_k)%cm(:, i), rep_el(sm_k)%c0(:, i), &
-                   verl1, verl2, emaver, c2 )
-              CALL wave_verlet( rep_el(sm_k)%cm(:, i+1), rep_el(sm_k)%c0(:, i+1), &
-                   verl1, verl2, emaver, c3 )
-           endif
-           if (ng0.eq.2) then
-              rep_el(sm_k)%cm(1,  i)=cmplx(real(rep_el(sm_k)%cm(1,  i)),0.0)
-              rep_el(sm_k)%cm(1,i+1)=cmplx(real(rep_el(sm_k)%cm(1,i+1)),0.0)
-           end if
-        end do
-
-        ccc(sm_k) = fccc(sm_k) * dt2bye
-        DEALLOCATE( emadt2 )
-        DEALLOCATE( emaver )
-        !
-        !==== end of loop which updates electronic degrees of freedom
+        CALL runcp_uspp( nfi, fccc(sm_k), ccc(sm_k), ema0bg, dt2bye, rhos, &
+             rep_el(sm_k)%bec, rep_el(sm_k)%c0, rep_el(sm_k)%cm )
         !
         !     buffer for wavefunctions is unit 21
         !
@@ -1369,7 +1146,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
           & 1x,i3,1x,f8.5, &
           & 1x,f8.5, &
           & 1x,E12.5,1x,E12.5)
-
      !
      !
      !________________________________________________________________________!
@@ -1393,25 +1169,22 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
          call cell_force( fcell, ainv, stress, omega, press, wmass )
 
          call cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
-
          !
-         velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
+         velh(:,:) = ( hnew(:,:) - hold(:,:) ) / twodel
          !
          call cell_gamma( hgamma, ainv, h, velh )
-
+         !
      endif
      !
      !======================================================================
      !
      TFOR_IF : if( tfor ) then
 
-        ION_REP_LOOP : DO sm_k=1,smpm  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !
+        ION_REP_LOOP : DO sm_k=1,smpm
 
-
-           CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, rep(sm_k)%fion, &
-             ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, tnosep, rep(sm_k)%fionm, vnhp(sm_k), velsp, &
-             rep(sm_k)%velsm )
-
+           CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, &
+             rep(sm_k)%fion, ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, &
+             tnosep, rep(sm_k)%fionm, vnhp(sm_k), velsp, rep(sm_k)%velsm )
            !
            !cc   call cofmass(velsp,rep(sm_k)%cdmvel)
            !         call cofmass(rep(sm_k)%tausp,cdm)
@@ -1424,13 +1197,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            !            enddo
            !         enddo
            !
-
-           !
            !  ... taup is obtained from tausp ...
            !
            CALL  s_to_r( rep(sm_k)%tausp, rep(sm_k)%taup, na, nsp, hnew )
 
-        ENDDO ION_REP_LOOP             ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
+        ENDDO ION_REP_LOOP 
 
      endif TFOR_IF
      !
@@ -1438,43 +1209,30 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      !              String method const  .. done in real coordiantes ...
      !---------------------------------------------------------------------------
      !
-     !
-
      call ARC(p_taup,arc_pre,t_arc_pre,1)
-
      !
-     !
-     IF(mod(nfi,lmfreq) == 0 ) THEN
+     IF( mod( nfi, lmfreq ) == 0 ) THEN
         IF(smlm) THEN
            !
-
-           call SMLAMBDA(p_taup,p_tau0,p_tan,con_ite,err_const)
-
+           call SMLAMBDA( p_taup, p_tau0, p_tan, con_ite, err_const )
            !
         ENDIF
      ENDIF
      !
-
-     call ARC(p_taup,arc_now,t_arc_now,1)
-
-     call ARC(p_taup,arc_tot,t_arc_tot,0)
-     !
+     call ARC( p_taup, arc_now, t_arc_now, 1 )
+     call ARC( p_taup, arc_tot, t_arc_tot, 0 )
      !
      !     ... move back to reduced coordiinates
      !     
-
      DO sm_k=1,smpm 
         call r_to_s(rep(sm_k)%taup,rep(sm_k)%tausp, na, nsp, ainv)
      ENDDO
-
-     !
      ! 
      !    
-     POST_REP_LOOP : DO sm_k = 1,smpm          ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>!
+     POST_REP_LOOP : DO sm_k = 1, smpm 
         !
         sm_file  =  smwout + sm_k
         sm_ndw = ndw + sm_k
-        !
         !
         !---------------------------------------------------------------------------
         !              initialization with guessed positions of ions
@@ -1492,22 +1250,19 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            else
               hold = h
            endif
-           !
            !        ... phfac calculates eigr
            !
            call phfac(rep(sm_k)%taup,ei1,ei2,ei3,eigr)
-
+           !
         else 
            !
            call phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
            !
         end if
         !
-        !
         !        ... prefor calculates betae
         !
         call prefor(eigr,betae)
-        !
         !
         !---------------------------------------------------------------------------
         !                    imposing the orthogonality
@@ -1542,7 +1297,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         ekinp(sm_k)  = 0.d0
         ekinpr(sm_k) = 0.d0
-
         !
         !     ionic kinetic energy 
         !
@@ -1560,14 +1314,12 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !     fake electronic kinetic energy
         !
         call elec_fakekine2( ekinc0(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, n, delt )
-
+        !
         !     ... previous ekinc
         !
         pre_ekinc(sm_k) = ekinc(sm_k)
 
         ekinc(sm_k) = 0.5 * ( ekinc0(sm_k) + ekincm(sm_k) )
-
-        !
         !
         !     fake cell-parameters kinetic energy
         !
@@ -1602,9 +1354,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            end if
         end if
         !
-        !
         ! ------------------------------
-        !
         !
         IF(mod(nfi-1,iprint).eq.0 .or. tlast) then
            write(stdout,*) " "
@@ -1636,17 +1386,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            econt(sm_k)=econt(sm_k)+0.5*qne*vnhe(sm_k)*vnhe(sm_k)+2.*ekincw*xnhe0(sm_k)
         endif
         if(tnoseh)then
-           do i=1,3
-              if(thdiag) then
-                 econt(sm_k)=econt(sm_k)+0.5*qnh*vnhh(i,i)*vnhh(i,i)+                 &
-                      &                temph/factem*xnhh0(i,i)
-              else
-                 do j=1,3
-                    econt(sm_k)=econt(sm_k)+0.5*qnh*vnhh(i,j)*vnhh(i,j)+              &
-                         &                 temph/factem*xnhh0(i,j)
-                 enddo
-              endif
-           enddo
+           econt(sm_k) = econt(sm_k) + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
         endif
         !
         !     ... Writing the smfiles ...
@@ -1656,14 +1396,12 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            if(ionode) WRITE( sm_file,1949)
         end if
         !
-        tps=nfi*delt*2.4189d-5
+        tps = nfi * delt * AU_PS
         !
         if(ionode) WRITE( sm_file,1950) nfi, ekinc(sm_k), int(tempp(sm_k)), &
              &              etot_ar(sm_k), econs(sm_k), econt(sm_k),              &
              &              arc_now(sm_k),t_arc_now,arc_pre(sm_k),arc_tot(sm_k),  &
              &              deviation(sm_k),maxforce(sm_k),paraforce(sm_k)
-        !
-        !
 
         ! Y.K.
         !      write(8,2948) tps,ekinc,temphc,tempp,enthal,econs,      &
@@ -1681,12 +1419,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 1950    format(i5,1x,f8.5,1x,i5,1x,f11.5,1x,f11.5,1x,f11.5, &
              & 1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5)
         !
-#if defined (__ORIGIN) || defined (__T3E)
-        call flush(sm_file)
-#elif defined (__AIX) || defined (__ABSOFT)
-        call flush_(sm_file)
+#if defined (FLUSH) 
+        call flush( sm_file )
 #endif
-        !
         !
         ! 
 2948    format(f8.5,1x,f8.5,1x,f6.1,1x,f6.1,3(1x,f11.5),4(1x,f7.4))
@@ -1708,12 +1443,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                  write(unist,3340) ((stress(i,j),i=1,3),j=1,3)
               ENDIF
               !
-#if defined (__ORIGIN) || defined (__T3E)
-              call flush(unico)
-              call flush(unifo)
-#elif defined (__AIX) || defined (__ABSOFT)
-              call flush_(unico)
-              call flush_(unifo)
+#if defined (FLUSH) 
+              call flush( unico )
 #endif
 3340          format(9(1x,f9.5))
            endif
@@ -1741,9 +1472,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         End if
         !
         if(thdyn)then
-           do i=1,ngw
-              ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec) 
-           enddo
+           CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
         endif
         !
         ekincm(sm_k)=ekinc0(sm_k)
@@ -1896,10 +1625,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 1952 format(4f14.5,f10.1)
      !
      !
-#if defined (__ORIGIN) || defined (__T3E)
+#if defined (FLUSH)
      call flush(sm_file)
-#elif defined (__AIX) || defined (__ABSOFT)
-     call flush_(sm_file)
 #endif
      !
      !
@@ -1999,25 +1726,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 1977 format(5x,//'====================== end cprvan ',                 &
        &            '======================',//)
 
-  IF( ALLOCATED( ei1 ) ) DEALLOCATE( ei1 )
-  IF( ALLOCATED( ei2 ) ) DEALLOCATE( ei2 )
-  IF( ALLOCATED( ei3 ) ) DEALLOCATE( ei3 )
-  IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
-  IF( ALLOCATED( sfac ) ) DEALLOCATE( sfac )
-  IF( ALLOCATED( eigrb ) ) DEALLOCATE( eigrb )
-  IF( ALLOCATED( rhor ) ) DEALLOCATE( rhor )
-  IF( ALLOCATED( rhos ) ) DEALLOCATE( rhos )
-  IF( ALLOCATED( rhog ) ) DEALLOCATE( rhog )
-  IF( ALLOCATED( rhoc ) ) DEALLOCATE( rhoc )
   IF( ALLOCATED( betae ) ) DEALLOCATE( betae )
-  IF( ALLOCATED( becdr ) ) DEALLOCATE( becdr )
-  IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )
-  IF( ALLOCATED( becp ) ) DEALLOCATE( becp )
   IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
-  IF( ALLOCATED( ema0bg ) ) DEALLOCATE( ema0bg )
-  IF( ALLOCATED( c2 ) ) DEALLOCATE( c2 )
-  IF( ALLOCATED( c3 ) ) DEALLOCATE( c3 )
-
   IF( ALLOCATED( deviation )) DEALLOCATE( deviation )
   IF( ALLOCATED( maxforce )) DEALLOCATE( maxforce )
   IF( ALLOCATED( arc_now )) DEALLOCATE( arc_now )
@@ -2039,6 +1749,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   IF( ALLOCATED( p_taup )) DEALLOCATE( p_taup )
   IF( ALLOCATED( p_tan )) DEALLOCATE( p_tan )
 
+  CALL deallocate_mainvar()
   CALL deallocate_elct()
   CALL deallocate_core()
   CALL deallocate_uspp()
@@ -2046,8 +1757,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   CALL deallocate_pseu()
   CALL deallocate_qgb_mod()
   CALL deallocate_qradb_mod()
-  CALL deallocate_work()
-  CALL deallocate_work_box()
   CALL deallocate_derho()
   CALL deallocate_dqgb_mod()
   CALL deallocate_dpseu()

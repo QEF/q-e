@@ -510,8 +510,8 @@ SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, ve
   real(kind=8) :: bec(:,:)
   real(kind=8) :: deeq(:,:,:,:)
   complex(kind=8) :: betae(:,:)
-  complex(kind=8) :: c0( :, :, :, : ), c2( : ), c3( : )
-  complex(kind=8) :: cm( :, :, :, : )
+  complex(kind=8) :: c0( :, : ), c2( : ), c3( : )
+  complex(kind=8) :: cm( :, : )
   real(kind=8) :: emadt2(:)
   real(kind=8) :: emaver(:)
   real(kind=8) :: verl1, verl2
@@ -596,22 +596,20 @@ SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, ve
           rhos2(ir,:)=rhos1(ir,:)
         end if
       end do
-      call dforce_field(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos1,rhos2)
+      call dforce_field(bec,deeq,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos1,rhos2)
     else
-      call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+      call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
     end if
     if(tsde) then
-      CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
-      CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
+      CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )
+      CALL wave_steepest( cm(:, i+1), c0(:, i+1), emadt2, c3 )
     else
-      CALL wave_verlet( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), &
-           verl1, verl2, emaver, c2 )
-      CALL wave_verlet( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), &
-           verl1, verl2, emaver, c3 )
+      CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
+      CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
     endif
     if (ng0.eq.2) then
-      cm(1,  i,1,1)=cmplx(real(cm(1,  i,1,1)),0.0)
-      cm(1,i+1,1,1)=cmplx(real(cm(1,i+1,1,1)),0.0)
+      cm(1,  i)=cmplx(real(cm(1,  i)),0.0)
+      cm(1,i+1)=cmplx(real(cm(1,i+1)),0.0)
     end if
   end do
 

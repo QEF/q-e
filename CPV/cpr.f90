@@ -100,7 +100,7 @@
       use reciprocal_vectors, only: gstart
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
-      use ions_base, only: ions_vrescal, fricp, greasp, iforce
+      use ions_base, only: ions_vrescal, fricp, greasp, iforce, ions_shiftvar
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3, frich, greash
       use cell_base, only: omega, alat, ibrav, celldm
@@ -111,8 +111,6 @@
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
       use pseu, only: deallocate_pseu
-      use work
-      use work_box, only: qv, deallocate_work_box
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_sum, mp_barrier
@@ -133,7 +131,6 @@
       use qradb_mod, only: deallocate_qradb_mod
       use dqrad_mod, only: deallocate_dqrad_mod
       use betax, only: deallocate_betax
-      use input_parameters, only: outdir, prefix
       use wave_base, only: wave_steepest, wave_verlet
       use wave_base, only: wave_speed2, frice, grease
       USE control_flags, ONLY : conv_elec, tconvthrs
@@ -146,8 +143,9 @@
       use ions_positions, only: tau0, taum, taup, taus, tausm, tausp, vels, velsm, velsp
       use ions_positions, only: ions_hmove, ions_move
       use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
-                           ions_noseupd, tempw
-      use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe
+            ions_noseupd, tempw, ions_nose_nrg, ions_nose_shiftvar
+      use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe, &
+            electrons_nose_nrg, electrons_nose_shiftvar
       use from_scratch_module, only: from_scratch
       use from_restart_module, only: from_restart
 
@@ -158,10 +156,10 @@
 
       use wannier_module, only: allocate_wannier, deallocate_wannier
       use wannier_subroutines
-      USE printout_base, ONLY: printout_base_setup, printout_base_open, printout_base_close, &
+      USE printout_base, ONLY: printout_base_open, printout_base_close, &
             printout_pos, printout_cell, printout_stress
       USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
-            cell_nosevel, cell_noseupd, cell_nose_nrg
+            cell_nosevel, cell_noseupd, cell_nose_nrg, cell_nose_shiftvar
       USE cell_base, ONLY: cell_kinene, cell_gamma, cell_move, cell_hmove
       USE gvecw, ONLY: ecutw
       USE gvecp, ONLY: ecutp
@@ -186,13 +184,13 @@
 !
 ! control variables
 !
-      logical tbump, tfirst, tlast, tstop, tconv
+      logical :: tfirst, tlast, tstop, tconv
       logical :: ttprint    !  logical variable used to control printout
 !
 !  ionic positions, center of mass position
 !
-      real(kind=8) cdm0(3)
-      real(kind=8) cdm(3)
+      real(kind=8) :: cdm0(3)
+      real(kind=8) :: cdm(3)
 !
 !  forces on ions
 !
@@ -200,10 +198,8 @@
 !
 ! work variables
 !
-      complex(kind=8)  speed
       real(kind=8)                                                      & 
-     &       tempp, verl1, verl2, verl3,     &
-     &       fccc, savee, saveh, savep,             &
+     &       tempp,  fccc, savee, saveh, savep,             &
      &       enthal, epot, epre, enow, tps, econs, econt, &
      &       ettt, ccc, bigr, dt2, dt2by2, twodel, dt2bye, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
@@ -216,7 +212,7 @@
 !
 ! work variables, 2
 !
-      real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3), temphh(3,3)
+      real(kind=8) hnew(3,3), velh(3,3), hgamma(3,3), temphh(3,3)
       real(kind=8) fcell(3,3)
 !
 
@@ -269,18 +265,19 @@
 !     ==================================================================
 !
       twodel = 2.d0 * delt
-      dt2 = delt * delt
+      dt2    = delt * delt
       dt2by2 = .5d0 * dt2
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
 
-      CALL printout_base_setup( outdir, prefix )
 !
 !     ==================================================================
 !     initialize g-vectors, fft grids
 !     ==================================================================
 
-      call init1 ( tau0, ibrav, celldm, ecutw, ecutp )
+      call init_dimensions( )
+
+      call init1 ( tau0 )
 
       call init( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst,  &
            tau0, taus, delt, tps, iforce )
@@ -318,11 +315,8 @@
       allocate(c0(ngw,nx,1,1))
       allocate(cm(ngw,nx,1,1))
       allocate(phi(ngw,nx,1,1))
-      allocate(wrk2(ngw,max(nax,n)))
       allocate(rhops(ngs,nsp))
       allocate(vps(ngs,nsp))
-      allocate(wrk1(nnr))
-      allocate(qv(nnrb))
       allocate(betae(ngw,nhsa))
       allocate(deeq(nhm,nhm,nat,nspin))
       allocate(rhovan(nhm*(nhm+1)/2,nat,nspin))
@@ -349,15 +343,12 @@
         CALL allocate_efield( ngw, nx, nhm, nax, nsp )
       END IF
 
-#ifdef __PARA
-      allocate(aux(nnr))
-#endif
       deeq(:,:,:,:) = 0.d0
-!
+      !
+      !
  666  continue
-
-!
-!
+      !
+      !
       temp1=tempw+tolp
       temp2=tempw-tolp
       gkbt = 3.*nat*tempw/factem
@@ -586,7 +577,7 @@
         call newd(rhor,irb,eigrb,rhovan,fion)
         call prefor(eigr,betae)
 
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm )
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0(:,:,1,1), cm(:,:,1,1) )
 
         !
         !----------------------------------------------------------------------
@@ -859,17 +850,12 @@
           econt=econs
         endif
       end if
-
-
-      if(tnosep)then
-         econt=econt+0.5*qnp*vnhp*vnhp+     gkbt*xnhp0
-      endif
-      if(tnosee)then
-         econt=econt+0.5*qne*vnhe*vnhe+2.*ekincw*xnhe0
-      endif
-      if(tnoseh)then
-         econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
-      endif
+      !
+      !   add energies of thermostats
+      !
+      if ( tnosep ) econt = econt + ions_nose_nrg( xnhp0, vnhp, qnp, gkbt )
+      if ( tnosee ) econt = econt + electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
+      if ( tnoseh ) econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
 !
       if( ( MOD( nfi-1, iprint ) == 0 ) .or. tfirst )  then
          WRITE( stdout,*)
@@ -947,28 +933,17 @@
 
 
       if( tfor ) then
-
-!
-!     new variables for next step
-!
-         tausm = taus
-         taus  = tausp
-         taum  = tau0
-         tau0  = taup
-         velsm = vels
-         vels  = velsp
-         if(tnosep) then
-            xnhpm = xnhp0
-            xnhp0 = xnhpp
-         endif
-         if(tnosee) then
-            xnhem = xnhe0
-            xnhe0 = xnhep
-         endif
-         if(tnoseh) then
-            xnhhm(:,:) = xnhh0(:,:)
-            xnhh0(:,:) = xnhhp(:,:)
-         endif
+         !
+         !     new variables for next step
+         !
+         call ions_shiftvar( tausp, taus, tausm )   !  scaled positions 
+         call ions_shiftvar( taup,  tau0,  taum )   !  real positions
+         call ions_shiftvar( velsp, vels, velsm )   !  scaled velocities
+         !
+         if( tnosep ) call ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
+         if( tnosee ) call electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
+         if( tnoseh ) call cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
+         !
       end if
 !
       if(thdyn)then
@@ -1169,8 +1144,6 @@
       CALL deallocate_pseu()
       CALL deallocate_qgb_mod()
       CALL deallocate_qradb_mod()
-      CALL deallocate_work()
-      CALL deallocate_work_box()
       CALL deallocate_derho()
       CALL deallocate_dqgb_mod()
       CALL deallocate_dpseu()

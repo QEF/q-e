@@ -21,10 +21,12 @@
         PRIVATE
 
         REAL(dbl)          :: start_seconds
+        REAL(dbl)          :: start_cclock_val
 
         PUBLIC :: environment_start
         PUBLIC :: environment_end
         PUBLIC :: opening_date_and_time, closing_date_and_time
+        PUBLIC :: start_cclock_val
       
 !==-----------------------------------------------------------------------==!
    CONTAINS
@@ -42,8 +44,8 @@
           USE version
 
           LOGICAL    :: texst
-          REAL(dbl)  :: elapsed_seconds
-          EXTERNAL      elapsed_seconds
+          REAL(dbl)  :: elapsed_seconds, cclock
+          EXTERNAL      elapsed_seconds, cclock
           INTEGER    :: nchar
           CHARACTER(LEN=80) :: uname
           CHARACTER(LEN=80) :: cp_version
@@ -52,7 +54,8 @@
           CALL init_clocks( .TRUE. )
           CALL start_clock( program_name )
 
-          start_seconds = elapsed_seconds()
+          start_seconds    = elapsed_seconds()
+          start_cclock_val = cclock( )
 
           cp_version = TRIM (version_number) // " - " // TRIM (version_date)
 

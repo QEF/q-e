@@ -252,7 +252,7 @@
 
 ! ... include modules
       USE cell_module, ONLY: boxdimensions
-      USE fft, ONLY : fft_initialize, pfwfft, pinvfft
+      USE fft, ONLY : pfwfft, pinvfft
       USE cell_base, ONLY: tpiba2
       USE energies, ONLY: total_energy, dft_energy_type
       USE stress, ONLY: pstress
@@ -260,7 +260,7 @@
       USE exchange_correlation, ONLY: tgc, exch_corr_energy
       USE charge_density, ONLY: gradrho
       USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
-      USE chi2, ONLY: tchi2, rhochi, allocate_chi2, deallocate_chi2
+      USE chi2, ONLY: rhochi, allocate_chi2, deallocate_chi2
       USE mp_global, ONLY: nproc, mpime, root, group
       USE vanderwaals, ONLY: tvdw, vdw
       USE charge_density, ONLY: checkrho
@@ -272,7 +272,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE stick, ONLY: dfftp
       USE charge_types, ONLY: charge_descriptor
-      USE control_flags, ONLY: tscreen
+      USE control_flags, ONLY: tscreen, tchi2
       USE io_global, ONLY: ionode
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE io_global, ONLY: stdout
@@ -352,8 +352,6 @@
 !  ----------------------------------------------
 
       IF(timing) s0 = cclock()
-
-      CALL fft_initialize()
 
       nspin = desc % nspin
       
@@ -1464,7 +1462,7 @@
       USE brillouin, ONLY: kpoints
       USE charge_types, ONLY: charge_descriptor
       USE atoms_type_module, ONLY: atoms_type
-      USE fft, ONLY : fft_initialize, pw_invfft, pfwfft, pinvfft, fft_wf_initialize
+      USE fft, ONLY : pw_invfft, pfwfft, pinvfft
       USE ions_base, ONLY: ind_localisation, nat_localisation, print_localisation
       USE ions_base, ONLY: ind_srt, pos_localisation
       USE ions_base, ONLY: rad_localisation
@@ -1523,12 +1521,10 @@
       ALLOCATE( cpsi( nr1x, nr2x, nr3x ) )
       ALLOCATE( k_density( gv%ng_l ) )
 
-      CALL fft_wf_initialize
       CALL pw_invfft( cpsi(:,:,:), wfc(:), wfc(:) )
       psi = REAL( cpsi, dbl )
       DEALLOCATE( cpsi )
 
-      CALL fft_initialize
       isa_sorted = 0
       isa_loc    = 0
 

@@ -16,17 +16,19 @@
 ! Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 !
 !------------------------------------------------------------------------------!
-! CONFIGURATION FILE FOR IOTK 0.3.1
+! CONFIGURATION FILE FOR IOTK 0.3.5
 !------------------------------------------------------------------------------!
 ! The following lines map some commonly defined system macro to the internal
 ! iotk macros.
 ! Iotk macros which are not defined take their default values.
 ! See the manual for a list of iotk macros.
 
-#define __IOTK_GENERIC_ARCHITECTURE
+#ifndef __IOTK_CONFIG_H
+#define __IOTK_CONFIG_H
+
+#  define __IOTK_MAXRANK 4
 
 #ifdef __AIX
-@PROCESS OPTIMIZE(0)
 #   define __IOTK_BINARY_FORMAT "IBM-SP/XLF"
 #   define __IOTK_LOGICAL1 1
 #   define __IOTK_LOGICAL2 2
@@ -39,29 +41,24 @@
 #   define __IOTK_REAL1    4
 #   define __IOTK_REAL2    8
 #   define __IOTK_REAL3    16
-#   define __IOTK_AVOID_EMPTY_FILES
-#   define __IOTK_MAXRANK 4
-#   undef __IOTK_GENERIC_ARCHITECTURE
 #endif
-
 
 #ifdef __LINUX
 #   ifdef __INTEL
 #         define __IOTK_BINARY_FORMAT "PC-LINUX/IFC"
-#         define __IOTK_LOGICAL1 1
-#         define __IOTK_LOGICAL2 2
+#         undef __IOTK_LOGICAL1 1
+#         undef __IOTK_LOGICAL2 2
 #         define __IOTK_LOGICAL3 4
-#         define __IOTK_LOGICAL4 8
-#         define __IOTK_INTEGER1 1
-#         define __IOTK_INTEGER2 2
+#         undef __IOTK_LOGICAL4 8
+#         undef __IOTK_INTEGER1 1
+#         undef __IOTK_INTEGER2 2
 #         define __IOTK_INTEGER3 4
-#         define __IOTK_INTEGER4 8
-#         define __IOTK_REAL1    4
+#         undef __IOTK_INTEGER4 8
+#         undef __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
-#         define __IOTK_REAL3    16
-#         define __IOTK_MAXRANK 4
-#         define __IOTK_AVOID_EMPTY_FILES
-#         undef __IOTK_GENERIC_ARCHITECTURE
+#         undef __IOTK_REAL3    16
+#         define __IOTK_WORKAROUND1
+#         define __IOTK_WORKAROUND3
 #   endif
 #   ifdef __G95
 #         define __IOTK_BINARY_FORMAT "PC-LINUX/G95"
@@ -75,66 +72,43 @@
 #         define __IOTK_INTEGER4 8
 #         define __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
-#         define __IOTK_MAXRANK 4
-#         define __IOTK_AVOID_EMPTY_FILES
-#         undef __IOTK_GENERIC_ARCHITECTURE
+#   endif
+#   ifdef __PGI
+#         define __IOTK_BINARY_FORMAT "PC-LINUX/PGI"
+#         undef __IOTK_LOGICAL1 1
+#         undef __IOTK_LOGICAL2 2
+#         define __IOTK_LOGICAL3 4
+#         undef __IOTK_LOGICAL4 8
+#         undef __IOTK_INTEGER1 1
+#         undef __IOTK_INTEGER2 2
+#         define __IOTK_INTEGER3 4
+#         undef __IOTK_INTEGER4 8
+#         undef __IOTK_REAL1    4
+#         define __IOTK_REAL2    8
+#         define __IOTK_WORKAROUND2
+#         define __IOTK_WORKAROUND3
 #   endif
 #endif
 
-
-#if defined (__LAHEY)
-#    define __IOTK_UNKNOWN_PROCESS
-#    define __IOTK_BINARY_FORMAT "UNKNOWN"
-#    define __IOTK_LOGICAL1 1
-#    define __IOTK_LOGICAL2 2
-#    define __IOTK_LOGICAL3 4
-#    define __IOTK_LOGICAL4 8
-#    define __IOTK_INTEGER1 4
-#    define __IOTK_REAL1    8
-#    define __IOTK_MAXRANK 5
-#    define __IOTK_AVOID_EMPTY_FILES
-#    undef __IOTK_GENERIC_ARCHITECTURE
-#endif
-
-
 #ifdef __SGI
-#    define __IOTK_BINARY_FORMAT "SGI-ORIGIN"
-#    define __IOTK_LOGICAL1 1
-#    define __IOTK_LOGICAL2 2
-#    define __IOTK_LOGICAL3 4
-#    define __IOTK_LOGICAL4 8
-#    define __IOTK_INTEGER1 1
-#    define __IOTK_INTEGER2 2
-#    define __IOTK_INTEGER3 4
-#    define __IOTK_INTEGER4 8
-#    define __IOTK_REAL1    4
-#    define __IOTK_REAL2    8
-#    define __IOTK_REAL3    16
-#    define __IOTK_MAXRANK 5
-#    define __IOTK_AVOID_EMPTY_FILES
-#    undef __IOTK_GENERIC_ARCHITECTURE
+#   define __IOTK_BINARY_FORMAT "SGI-ORIGIN"
+#   define __IOTK_LOGICAL1 1
+#   define __IOTK_LOGICAL2 2
+#   define __IOTK_LOGICAL3 4
+#   define __IOTK_LOGICAL4 8
+#   define __IOTK_INTEGER1 1
+#   define __IOTK_INTEGER2 2
+#   define __IOTK_INTEGER3 4
+#   define __IOTK_INTEGER4 8
+#   define __IOTK_REAL1    4
+#   define __IOTK_REAL2    8
+#   define __IOTK_REAL3    16
 #endif
 
-
-#ifdef __IOTK_GENERIC_ARCHITECTURE
-#    define __IOTK_UNKNOWN_PROCESS
-#    define __IOTK_BINARY_FORMAT "UNKNOWN"
-#    define __IOTK_LOGICAL1 1
-#    define __IOTK_LOGICAL2 2
-#    define __IOTK_LOGICAL3 4
-#    define __IOTK_LOGICAL4 8
-#    define __IOTK_INTEGER1 4
-#    define __IOTK_INTEGER2 2
-#    define __IOTK_INTEGER3 1
-#    define __IOTK_INTEGER4 8
-#    define __IOTK_REAL1    8
-#    define __IOTK_REAL2    4
-#    define __IOTK_MAXRANK 5
-#    define __IOTK_AVOID_EMPTY_FILES
-#endif
-
-
-#ifdef __MPI
+#ifdef __PARA
 #  define __IOTK_MPI_ABORT
 #endif
+
+#endif
+
 

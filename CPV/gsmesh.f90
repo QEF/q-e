@@ -125,7 +125,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-        SUBROUTINE gindexset(gv, mill, b1, b2, b3)
+        SUBROUTINE gindexset(gv, b1, b2, b3)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -152,7 +152,6 @@
        
 ! ...     declare subroutine arguments
           TYPE (recvecs) gv
-          INTEGER, INTENT(IN) :: mill(:,:)
           REAL(dbl), INTENT(IN) :: b1(3), b2(3), b3(3) 
 
 ! ...     declare other variables
@@ -184,30 +183,6 @@
           END IF
 
           ng = ng_l
-
-          DO ig = 1, ng
-
-            CALL miller2nxh( gv%mill(1,ig), gv%mill(2,ig), gv%mill(3,ig), &
-              i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
-            is = dfftp%isind( i + ( j - 1 ) * dfftp%nr1x )
-            gv%ig2st( 1, ig ) = k
-            gv%ig2st( 2, ig ) = is
-
-            IF( is == 0 ) &
-              CALL errore( ' gindexset ', ' wrong stick index ', 1 )
-
-            IF( gv%hspace ) THEN
-              CALL miller2indx( gv%mill(1,ig), gv%mill(2,ig), gv%mill(3,ig), &
-                i, j, k, dfftp%nr1, dfftp%nr2, dfftp%nr3 )
-              is = dfftp%isind( i + ( j - 1 ) * dfftp%nr1x )
-              gv%ig2st( 3, ig ) = k
-              gv%ig2st( 4, ig ) = is
-            END IF
-
-            IF( is == 0 ) &
-              CALL errore( ' gindexset ', ' wrong stick index ', 2 )
-            
-          END DO
 
           IF( gv%gzero .and. ( .not. ( gv%gstart == 2 ) ) ) THEN
             CALL errore(' gindexset ',' gzero and gstart are inconsistent ', 3)

@@ -75,6 +75,46 @@
       REAL(dbl) :: xnhem2  = 0.0d0   
       REAL(dbl) :: vnhe    = 0.0d0   
 !
+!------------------------------------------------------------------------------!
+  CONTAINS
+!------------------------------------------------------------------------------!
+
+  subroutine electrons_nose_init( ekincw_ , fnosee_ )
+     USE constants, ONLY: factem, pi, terahertz
+     REAL(dbl), INTENT(IN) :: ekincw_, fnosee_
+     ! set thermostat parameter for electrons
+     qne    = 0.0d0
+     ekincw  = ekincw_
+     fnosee = fnosee_
+     if( fnosee > 0.0d0 ) qne = 4.d0*ekincw/(fnosee*(2.d0*pi)*terahertz)**2
+    return
+  end subroutine
+
+
+  function electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
+    !  compute energy term for nose thermostat
+    implicit none
+    real(kind=8) :: electrons_nose_nrg
+    real(kind=8), intent(in) :: xnhe0, vnhe, qne, ekincw
+      !
+      electrons_nose_nrg = 0.5d0 * qne * vnhe * vnhe + 2.0d0 * ekincw * xnhe0
+      !
+    return
+  end function
+
+  subroutine electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
+    !  shift values of nose variables to start a new step
+    implicit none
+    real(kind=8), intent(out) :: xnhem, xnhe0
+    real(kind=8), intent(in) :: xnhep
+      !
+      xnhem = xnhe0
+      xnhe0 = xnhep
+      !
+    return
+  end subroutine
+
+
 
 !------------------------------------------------------------------------------!
   END MODULE electrons_nose

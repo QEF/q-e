@@ -18,15 +18,10 @@
         COMPLEX(dbl), allocatable :: RHOCHI(:)
         logical :: tchi2
 
-        PUBLIC :: allocate_chi2, deallocate_chi2, tchi2
-        PUBLIC :: rhochi, chi2_setup
+        PUBLIC :: allocate_chi2, deallocate_chi2
+        PUBLIC :: rhochi
 
       contains
-
-        subroutine chi2_setup(tchi2_inp)
-          logical, intent(in) :: tchi2_inp
-            tchi2 = tchi2_inp
-        end subroutine chi2_setup
 
         subroutine allocate_chi2(ng)
           integer, intent(in) :: ng

@@ -66,12 +66,21 @@ CONTAINS
 
 
    SUBROUTINE allocate_mainvar &
-      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, nlcc_any )
+      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, &
+        nlcc_any, smd )
       INTEGER, INTENT(IN) :: ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa
       LOGICAL, INTENT(IN) :: nlcc_any
+      LOGICAL, OPTIONAL, INTENT(IN) :: smd
       !
       !     allocation of all arrays not already allocated in init and nlinit
       !
+      LOGICAL :: nosmd
+      
+      nosmd = .TRUE.
+      IF( PRESENT( smd ) ) THEN
+        IF( smd ) nosmd = .FALSE.
+      END IF
+
       allocate(eigr(ngw,nax,nsp))
       allocate(eigrb(ngb,nax,nsp))
       allocate(sfac(ngs,nsp))
@@ -80,14 +89,18 @@ CONTAINS
       allocate(rhog(ng,nspin))
       if ( nlcc_any ) allocate(rhoc(nnr))
       allocate(ema0bg(ngw))
-      allocate(lambda(nx,nx))
-      allocate(lambdam(nx,nx))
-      allocate(lambdap(nx,nx))
+      IF( nosmd ) THEN
+        allocate(lambda(nx,nx))
+        allocate(lambdam(nx,nx))
+        allocate(lambdap(nx,nx))
+      END IF
       allocate(ei1(-nr1:nr1,nax,nsp))
       allocate(ei2(-nr2:nr2,nax,nsp))
       allocate(ei3(-nr3:nr3,nax,nsp))
       allocate(becdr(nhsa,n,3))
-      allocate(bec  (nhsa,n))
+      IF( nosmd ) THEN
+        allocate(bec  (nhsa,n))
+      END IF
       allocate(bephi(nhsa,n))
       allocate(becp (nhsa,n))
       RETURN

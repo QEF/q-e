@@ -32,7 +32,7 @@
         REAL(dbl) :: qnosep
 
         PUBLIC :: enosep, get_nose_ions, set_nose_ions
-        PUBLIC :: nose_ions_setup, nosep_velocity
+        PUBLIC :: nosep_velocity
         PUBLIC :: nosepinit, update_nose_ions, movenosep
 
 !=----------------------------------------------------------------------------=!
@@ -57,13 +57,6 @@
         return
       end subroutine set_nose_ions
 
-      subroutine nose_ions_setup( fnosep_inp, tempw_inp )
-        REAL(dbl),  intent(in) :: fnosep_inp
-        REAL(dbl),  intent(in) :: tempw_inp
-        fnosep = fnosep_inp
-        tempw  = tempw_inp
-        return
-      end subroutine nose_ions_setup
 
       subroutine update_nose_ions
         XNOS2M = XNOSM

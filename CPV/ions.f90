@@ -37,8 +37,6 @@
 !  SUBROUTINE deallocate_ions
 !  REAL(dbl) FUNCTION moveions(tsdp,thdyn,nfi,htm2,htm,ht0)
 !  SUBROUTINE update_ions
-!  SUBROUTINE tc_ions_setup(tempw_i,icapstep_i)
-!  LOGICAL FUNCTION tc_ions()
 !  SUBROUTINE velocity_scaling(nfi,delt,ht)
 !  ----------------------------------------------
 !  END manual
@@ -82,7 +80,6 @@
 
 ! ...   velocity rescaling
         INTEGER   :: icapstep
-        REAL(dbl) :: tempw
 
 ! ...   annealing
         LOGICAL   :: tanne
@@ -104,7 +101,7 @@
         PUBLIC :: set_reference_positions, ions_setup, atoms_init
         PUBLIC :: ions_print_info, deallocate_ions, constraints_setup
         PUBLIC :: apply_constraints, update_ions
-        PUBLIC :: tc_ions_setup, velocity_scaling
+        PUBLIC :: velocity_scaling
         PUBLIC :: cdmi, taui
         PUBLIC :: tneighbo, neighbo_radius
         PUBLIC :: max_ion_forces, moveions
@@ -588,6 +585,7 @@
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, &
              tfor, tsdp, tzerop, tv0rd, taurdr, nv0rd, nbeg, tcp, tcap
          USE ions_base, ONLY: tau_srt, tau_units, if_pos, ind_srt
+         USE ions_nose, ONLY: tempw
 
          integer, intent(in) :: iunit
          integer is, ia, k, ic, isa
@@ -1126,23 +1124,6 @@
       END SUBROUTINE update_ions
 
 
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE tc_ions_setup( tempw_i, icapstep_i )
-
-!  Randomize ionic positions
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-! ... Ionic Temperature control via velocity rescaling
-!
-        REAL(dbl), intent(in) :: tempw_i
-        integer, intent(in) :: icapstep_i
-          tempw = tempw_i
-          icapstep = icapstep_i
-        return
-      END SUBROUTINE tc_ions_setup
-
 
 !  BEGIN manual -------------------------------------------------------------   
 
@@ -1158,6 +1139,7 @@
       use constants, ONLY: factem
       use io_global, ONLY: ionode
       use control_flags, ONLY: tolp
+      use ions_nose, ONLY: tempw
 
       implicit none
 !

@@ -24,12 +24,12 @@
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       !use parm
-      use work, only: wrk1
 !
       implicit none
       real(kind=8), intent(in)   :: rhoc(nnr)
       real(kind=8), intent(inout):: rhor(nnr,nspin)
       complex(kind=8), intent(inout)::  rhog(ng,nspin)
+      complex(kind=8), allocatable :: wrk1( : )
 !
       integer ig, ir, iss, isup, isdw
 !
@@ -45,6 +45,7 @@
          call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
       end if
 ! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
+      allocate( wrk1( nnr ) )
       do ir=1,nnr
          wrk1(ir)=rhoc(ir)
       end do
@@ -60,6 +61,8 @@
             rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(np(ig))
          end do
       end if
+
+      deallocate( wrk1 )
 !
       return
       end
@@ -172,7 +175,7 @@
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
      &        call errore('box2grid','ibig3 wrong',ibig3)
          ibig3=ibig3-dfftp%ipp(me)
-         if (ibig3.gt.0.and.ibig3.le. ( dfftp%npp(me) ) ) then
+         if ( ibig3 .gt. 0 .and. ibig3 .le. ( dfftp%npp(me) ) ) then
             do ir2=1,nr2b
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
@@ -758,7 +761,6 @@
       use elct
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
-      use work, only: wrk1
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
 !
       implicit none
@@ -772,11 +774,12 @@
       complex(kind=8) fp,fm,ci
       real(kind=8) af(nhsa), aa(nhsa) ! automatic arrays
       complex(kind=8)  dtemp(ngw)    !
-      complex(kind=8), pointer:: psi(:)
+      complex(kind=8), allocatable :: psi(:)
 !
 !
       call start_clock( 'dforce' ) 
-      psi => wrk1
+      !
+      allocate( psi( nnrsx ) )
 !
 !     important: if n is odd => c(*,n+1)=0.
 ! 
@@ -889,6 +892,8 @@
             da(ig)=da(ig)+dtemp(ig)
          end do
       endif
+
+      deallocate( psi )
 !
       call stop_clock( 'dforce' ) 
 !
@@ -989,8 +994,6 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use cell_base, only: ainv
       use qgb_mod
-      use work, only: wrk1
-      use work_box
       use para_mod
       use cdvan
       use derho
@@ -1006,8 +1009,9 @@
      &     isa, ia, ir, irb3, imin3, imax3
       real(kind=8) sum, dsum
       complex(kind=8) fp, fm, ci
-      complex(kind=8), pointer:: v(:)
+      complex(kind=8), allocatable :: v(:)
       complex(kind=8), allocatable:: dqgbt(:,:)
+      complex(kind=8), allocatable :: qv(:)
 !
 !
       do j=1,3
@@ -1025,8 +1029,10 @@
 !
       if (nvb.eq.0) return
 !
-      v => wrk1
-      allocate(dqgbt(ngb,2))
+      allocate( v( nnr ) )
+      allocate( qv( nnrb ) )
+      allocate( dqgbt( ngb, 2 ) )
+
       ci=(0.,1.)
 !
       if(nspin.eq.1) then
@@ -1201,6 +1207,8 @@
          end do
       endif
       deallocate(dqgbt)
+      deallocate( v )
+      deallocate( qv )
 !
       return
       end
@@ -1323,7 +1331,6 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use atom, only: nlcc
-      use work_box
       use para_mod
       implicit none
 ! input
@@ -1336,6 +1343,7 @@
       integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3, isa
       real(kind=8) fcc(3,natx,nsx), fac, boxdotgrid
       complex(kind=8) ci, facg
+      complex(kind=8), allocatable :: qv(:)
       external  boxdotgrid
 !
 !
@@ -1343,6 +1351,7 @@
       ci = (0.d0,1.d0)
       fac = omega/dble(nr1*nr2*nr3*nspin)
       fcc = 0.d0
+      allocate( qv( nnrb ) )
       do is=1,nsp
          if(nlcc(is)) go to 10
 #ifdef __PARA
@@ -1401,6 +1410,8 @@
           fion1(:,isa) = fion1(:,isa) + fcc(:,ia,is)
         end do
       end do
+
+      deallocate( qv )
 !
       call stop_clock( 'forcecc' )
       return
@@ -1563,78 +1574,6 @@
       return
       end
 !
-!-----------------------------------------------------------------------
-      subroutine fwfft(f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!-----------------------------------------------------------------------
-! forward fourier transform of potentials and charge density 
-! on the dense grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dfftp
-      use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1x*nr2x*nr3x)
-      integer nr1,nr2,nr3,nr1x,nr2x,nr3x
-      call start_clock( 'fft' )
-#ifdef __PARA
-      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
-# else
-      call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
-# endif
-#endif
-      call stop_clock( 'fft' )
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine fwffts(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!-----------------------------------------------------------------------
-! forward fourier transform of potentials and charge density 
-! on the smooth grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dffts
-      use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
-      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call start_clock( 'ffts' ) 
-#ifdef __PARA
-      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
-# else
-      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
-# endif
-#endif
-      call stop_clock( 'ffts' ) 
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine fwfftw(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!-----------------------------------------------------------------------
-! forward fourier transform of potentials and charge density 
-! on the smooth grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dffts
-      use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
-      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call start_clock( 'fftw' ) 
-#ifdef __PARA
-      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
-# else
-      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
-# endif
-#endif
-      call stop_clock( 'fftw' ) 
-      return
-      end
 !-----------------------------------------------------------------------
       subroutine gausin(eigr,cm)
 !-----------------------------------------------------------------------
@@ -1943,217 +1882,6 @@
       end
 !
 !-----------------------------------------------------------------------
-      subroutine init1( tau, ibrav, celldm, ecutw, ecut)
-!-----------------------------------------------------------------------
-!
-!     initialize G-vectors and related quantities
-!
-      use gvec
-      use funct, only: dft
-      use parameters, only: natx, nsx
-      use ions_base, only: pmass, rcmax, nsp, na
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      use cell_base, only: ainv, a1, a2, a3
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
-      use constants, only: pi, fpi
-      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
-      use small_box, only: alatb, b1b, b2b, b3b
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use control_flags, only: iprint
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use gvecb, only: gvecb_set, gcutb
-      USE reciprocal_vectors, ONLY : mill_g, g2_g
-      use fft_scalar, only: good_fft_dimension, good_fft_order
-      use constants, only: scmass
-      use cell_base, only: omega, alat
-      use io_global, only: stdout
-      USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
-      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
-      USE stick_base, ONLY: pstickset
-
-      implicit none
-! 
-      integer ibrav
-      real(kind=8) tau(3,natx), celldm(6), ecut
-!
-      integer idum, ik, k, iss, i, in, is, ia, isat
-      real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
-      real(kind=8) qk(3), rat1, rat2, rat3
-      real(kind=8) b1(3), b2(3), b3(3)
-      integer :: ng_ , ngs_ , ngm_ , ngw_
-
-!
-!     ==============================================================
-!     ==== set parameters and cutoffs                           ==== 
-!     ==============================================================
-!
-      dual   = 4.d0
-      tpiba  = 2.d0 * pi/alat
-      tpiba2 = tpiba*tpiba
-      gcutw  = ecutw/tpiba/tpiba
-      gcuts  = dual*gcutw
-      gcut   = ecut/tpiba/tpiba
-!
-!     ===================================================
-!     ==== initialization for fft                    ====
-!     ===================================================
-!
-      CALL realspace_grids_init( alat, a1, a2, a3, gcut, gcuts, ng_ , ngs_ )
-
-!
-!     ===================================================
-!     ==== cell dimensions and lattice vectors      =====
-!     ===================================================
-!
-! a1,a2,a3  are the crystal axis (the vectors generating the lattice)
-! b1,b2,b3  are reciprocal crystal axis
-!
-      call recips( a1, a2, a3, b1, b2, b3 )
-      b1 = b1 * alat
-      b2 = b2 * alat
-      b3 = b3 * alat
-
-      WRITE( stdout,*)
-      WRITE( stdout,210) 
-210   format(' unit vectors of full simulation cell',/,                 &
-     &       ' in real space:',25x,'in reciprocal space:')
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a1,b1
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a2,b2
-      WRITE( stdout,'(3f10.4,10x,3f10.4)') a3,b3
-
-!     Store the base vectors used to generate the reciprocal space
-      bi1 = b1 / alat
-      bi2 = b2 / alat
-      bi3 = b3 / alat
-
-!
-! b1,b2,b3  are the 3 basis vectors generating the reciprocal lattice
-!           in 2pi/alat units
-!
-      do i=1,3
-         ainv(1,i)=b1(i)/alat
-         ainv(2,i)=b2(i)/alat
-         ainv(3,i)=b3(i)/alat
-      end do
-!
-! ainv  is transformation matrix from cartesian to crystal coordinates
-!       if r=x1*a1+x2*a2+x3*a3 => x(i)=sum_j ainv(i,j)r(j)
-!       Note that ainv is really the inverse of a=(a1,a2,a3)
-!       (but only if the axis triplet is right-handed, otherwise
-!        for a left-handed triplet, ainv is minus the inverse of a)
-!
-
-
-      CALL pstickset( dfftp, dffts, alat, a1, a2, a3, gcut, gcutw, gcuts, &
-        nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx,   &
-        nr3sx, ngw_ , ngm_ , ngs_ )
-
-!
-      CALL realspace_grids_para( dfftp, dffts )
-!
-!
-!     ==============================================================
-!     ==== generate g-space                                     ==== 
-!     ==============================================================
-      call ggencp                                                       &
-     &     ( b1, b2, b3, nr1, nr2, nr3, nr1s, nr2s, nr3s,               &
-     &       gcut, gcuts, gcutw, .TRUE. )
-
-      !  global arrays are no more needed
-
-      if( allocated( g2_g ) )   deallocate( g2_g )
-      if( allocated( mill_g ) ) deallocate( mill_g )
-!
-!     ==============================================================
-!     generation of little box g-vectors
-!     ==============================================================
-!
-      !  sets the small box parameters
-
-      rat1 = DBLE( nr1b ) / DBLE( nr1 )
-      rat2 = DBLE( nr2b ) / DBLE( nr2 )
-      rat3 = DBLE( nr3b ) / DBLE( nr3 )
-      CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
-
-      !  now set gcutb
-
-      gcutb = ecut / tpibab / tpibab
-!
-      CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
-!
-!     ==============================================================
-!
-      WRITE( stdout,34) ibrav,alat,omega,gcut,gcuts,gcutw,1
-      WRITE( stdout,81) nr1, nr2, nr3, nr1x, nr2x, nr3x,                      &
-     &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
-     &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
-!
-      WRITE( stdout,38) dft
-      WRITE( stdout,334) ecutw, dual * ecutw, ecut
-!
-      if(nspin.eq.1)then
-         WRITE( stdout,6) nel(1),n
-         WRITE( stdout,166) nspin
-         WRITE( stdout,74)
-         WRITE( stdout,77) (f(i),i=1,n)
-      else
-         WRITE( stdout,7) nel(1),nel(2), n
-         WRITE( stdout,167) nspin,nupdwn(1),nupdwn(2)
-         WRITE( stdout,75) 
-         WRITE( stdout,77) (f(i),i=iupdwn(1),nupdwn(1))
-         WRITE( stdout,76) 
-         WRITE( stdout,77) (f(i),i=iupdwn(2),iupdwn(2)-1+nupdwn(2))
-      endif
-      WRITE( stdout,878) nsp
-      isat = 0
-      do is=1,nsp
-         WRITE( stdout,33) is, na(is), pmass(is)/scmass, rcmax(is)
-         WRITE( stdout,9)
-         do ia = ( 1 + isat ), ( na(is) + isat )
-            WRITE( stdout,555) ( tau(k,ia), k = 1, 3 )
-         end do
-         isat = isat + na(is)
- 555     format((4x,3(1x,f6.2)))
-      end do
-!
-!
-   33 format(' is=',i3,/,'  na=',i4,                                    &
-     &       '  atomic mass=',f6.2,' gaussian rcmax=',f6.2)
-   34 format(' initialization ',//,                                     &
-     &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,                &
-     &       /,' gcut=',f8.2,3x,' gcuts=',                              &
-     &       f8.2,' gcutw=',f8.2,/,                                     &
-     &       ' k-points: nkpt=',i2,//)
-   81 format(' meshes:',/,                                              &
-     &       '  dense grid: nr1 ,nr2, nr3  = ',3i4,                     &
-     &                   '  nr1x, nr2x, nr3x = ',3i4,/,                 &
-     &       ' smooth grid: nr1s,nr2s,nr3s = ',3i4,                     &
-     &                   '  nr1sx,nr2sx,nr3sx= ',3i4,/,                 &
-     &       '    box grid: nr1b,nr2b,nr3b = ',3i4,                     &
-     &                   '  nr1bx,nr2bx,nr3bx= ',3i4,/)
-    6 format(/' # of electrons=',i5,' # of states=',i5,/)
-    7 format(/' # of up electrons=',i5,'  of down electrons=',i5,         &
-              ' # of states=',i5,/)
-   38 format(' exchange-correlation potential: ',a20/)
-  334 format(' ecutw=',f7.1,' ryd',3x,                                  &
-     &       ' ecuts=',f7.1,' ryd',3x,' ecut=',f7.1,' ryd')
-  166 format(/,' nspin=',i2)
-  167 format(/,' nspin=',i2,5x,' nup=',i5,5x,' ndown=',i5)
-   74 format(' occupation numbers:')
-   75 format(' occupation numbers up:')
-   76 format(' occupation numbers down:')
-   77 format(20f4.1)
-  878 format(/' # of atomic species',i5)
-    9 format(' atomic coordinates:')
-!
-      return
-      end
-!
-!-----------------------------------------------------------------------
       subroutine initbox ( tau0, taub, irb )
 !-----------------------------------------------------------------------
 !
@@ -2255,115 +1983,6 @@
       return
       end
 !
-!-----------------------------------------------------------------------
-      subroutine invfft(f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!-----------------------------------------------------------------------
-! inverse fourier transform of potentials and charge density 
-! on the dense grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dfftp
-      use fft_scalar, only: cfft3d
-
-      complex(kind=8) f(nr1x*nr2x*nr3x)
-      integer nr1,nr2,nr3,nr1x,nr2x,nr3x
-      call start_clock( 'fft' )
-#ifdef __PARA
-      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-# else
-      call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-# endif
-#endif
-      call stop_clock( 'fft' )
-!
-      return
-      end 
-!-----------------------------------------------------------------------
-      subroutine ivfftb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
-!-----------------------------------------------------------------------
-! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
-! on the  box grid . On output, f is overwritten
-!
-      use fft_scalar, only: cfft3d
-      integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
-
-!     in a parallel execution, not all processors calls this routine
-!     then we should avoid clocks, otherwise the program hangs in print_clock 
-#if ! defined __PARA
-      call start_clock( 'fftb' )
-#endif
-
-#ifdef __PARA
-      call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
-# else
-      call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
-# endif
-#endif
-
-#if ! defined __PARA
-      call stop_clock( 'fftb' )
-#endif
-!
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine ivffts(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!-----------------------------------------------------------------------
-! inverse fourier transform of  potentials and charge density
-! on the smooth grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dffts
-      use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
-      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call start_clock( 'ffts' )
-#ifdef __PARA
-      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
-# else
-      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
-# endif 
-#endif
-      call stop_clock( 'ffts' )
-!
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine ivfftw(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!-----------------------------------------------------------------------
-! inverse fourier transform of wavefunctions 
-! on the smooth grid . On output, f is overwritten
-!
-      use fft_cp, only: cfft_cp
-      use para_mod, only: dffts
-      use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
-      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call start_clock('fftw')
-#ifdef __PARA
-      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
-# else
-      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
-# endif
-#endif
-      call stop_clock('fftw')
-!
-      return
-      end
-!
 !-------------------------------------------------------------------------
       subroutine newd(vr,irb,eigrb,rhovan,fion)
 !-----------------------------------------------------------------------
@@ -2388,7 +2007,6 @@
       use qgb_mod
       use elct
       use control_flags, only: iprint, thdyn, tfor, tprnfor
-      use work_box
       use para_mod
       use mp, only: mp_sum
 !
@@ -2405,6 +2023,7 @@
       integer irb3, imin3, imax3
       real(kind=8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
       complex(kind=8) ci, facg1, facg2
+      complex(kind=8), allocatable :: qv(:)
       external boxdotgrid
 !
       call start_clock( 'newd' )
@@ -2412,6 +2031,8 @@
       fac=omegab/float(nr1b*nr2b*nr3b)
       deeq (:,:,:,:) = 0.d0
       fvan (:,:,:) = 0.d0
+
+      allocate( qv( nnrb ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
@@ -2612,6 +2233,8 @@
           fion(:,isa) = fion(:,isa) - fvan(:,ia,is)
         END DO
       END DO
+
+      deallocate( qv )
 !
   10  call stop_clock( 'newd' )
 !
@@ -2789,17 +2412,20 @@
       use uspp, only :nhsa=>nkb, nhtol, beta
       use cvan, only: ish
       use uspp_param, only: nh
-      use work, only: wrk2
 !
       implicit none
       integer n, nspmn, nspmx
       real(kind=8)  eigr(2,ngw,nas,nspmx), c(2,ngw,n)
       real(kind=8)  becp(nhsa,n)
+      complex(kind=8), allocatable :: wrk2(:,:)
 !
       integer ig, is, iv, ia, l, ixr, ixi, inl, i
       real(kind=8) signre, signim, arg
 !
       call start_clock( 'nlsm1' )
+
+      allocate( wrk2( ngw, nas ) )
+
       do is=nspmn,nspmx
          do iv=1,nh(is)
             l=nhtol(iv,is)
@@ -2853,6 +2479,7 @@
 #endif
 
       end do
+      deallocate( wrk2 )
       call stop_clock( 'nlsm1' )
       return
       end
@@ -2876,16 +2503,19 @@
       use uspp, only :nhsa=>nkb, nhtol, beta
       use cvan, only: ish
       use uspp_param, only: nh
-      use work, only: wrk2
 !
       implicit none
       real(kind=8)  eigr(2,ngw,nas,nsp),c(2,ngw,n), becdr(nhsa,n,3)
       integer ig, is, iv, ia, k, l, ixr, ixi, inl
       real(kind=8) signre, signim, arg
       real(kind=8), allocatable:: gk(:)
+      complex(kind=8), allocatable :: wrk2(:,:)
 !
       call start_clock( 'nlsm2' )
-      allocate(gk(ngw))
+
+      allocate( gk( ngw ) )
+      allocate( wrk2( ngw, nas ) )
+
       becdr = 0.d0
 !
       do k=1,3
@@ -2945,7 +2575,9 @@
 
       call reduce(3*nhsa*n,becdr)
 
-      deallocate(gk)
+      deallocate( gk )
+      deallocate( wrk2 )
+
       call stop_clock( 'nlsm2' )
 !
       return
@@ -3778,7 +3410,6 @@
       use elct
       use constants, only: pi, fpi
       use pseu
-      use work, only: wrk1
 !
       use cdvan
       use dener
@@ -3796,12 +3427,12 @@
       real(kind=8) rnegsum, rmin, rmax, rsum
       real(kind=8), external :: enkin, ennl
       complex(kind=8) ci,fp,fm
-      complex(kind=8), pointer:: psi(:), psis(:)
+      complex(kind=8), allocatable :: psi(:), psis(:)
 !
 !
       call start_clock( 'rhoofr' )
-      psi => wrk1
-      psis=> wrk1
+      allocate( psi( nnr ) ) 
+      allocate( psis( nnrsx ) ) 
       ci=(0.0,1.0)
       do iss=1,nspin
          rhor(:,iss) = 0.d0
@@ -3859,29 +3490,31 @@
          endif
 !
       else
-!     ==================================================================
-!     self-consistent charge
-!     ==================================================================
-!
-!     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
-! 
+
+         !     ==================================================================
+         !     self-consistent charge
+         !     ==================================================================
+         !
+         !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
+         ! 
          if (mod(n,2).ne.0) then
             do ig=1,ngw
                c(ig,n+1)=(0.,0.)
             end do
          endif
-!
+         !
          do i=1,n,2
             psis (:) = (0.d0, 0.d0)
             do ig=1,ngw
                psis(nms(ig))=conjg(c(ig,i))+ci*conjg(c(ig,i+1))
                psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
+               ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
             end do
-!
+
             call ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!
-!     wavefunctions in unit 21
-!
+
+            !     wavefunctions in unit 21
+            !
 #if defined(__CRAYY)
             if(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
 #else
@@ -3900,23 +3533,23 @@
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                rhos(ir,iss2)=rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do
-!
-!       buffer 21
-!     
+
+            !
+            !       buffer 21
+            !     
             if(tbuff) then
 #if defined(__CRAYY)
                ios=unit(21)
 #endif
-               if(ios.ne.0) call errore                                  &
-     &              (' rhoofr',' error in writing unit 21',ios)
+               if(ios.ne.0) call errore(' rhoofr',' error in writing unit 21',ios)
             endif
-!
+            !
          end do
-!
+         !
          if(tbuff) rewind 21
-!
-!     smooth charge in g-space is put into rhog(ig)
-!
+         !
+         !     smooth charge in g-space is put into rhog(ig)
+         !
          if(nspin.eq.1)then
             iss=1
             do ir=1,nnrsx
@@ -3942,9 +3575,9 @@
          endif
 !
          if(nspin.eq.1) then
-!     ==================================================================
-!     case nspin=1
-!     ------------------------------------------------------------------
+            ! 
+            !     case nspin=1
+            ! 
             iss=1
             psi (:) = (0.d0, 0.d0)
             do ig=1,ngs
@@ -3956,9 +3589,9 @@
                rhor(ir,iss)=real(psi(ir))
             end do
          else 
-!     ==================================================================
-!     case nspin=2
-!     ------------------------------------------------------------------
+            !
+            !     case nspin=2
+            !
             isup=1
             isdw=2
             psi (:) = (0.d0, 0.d0)
@@ -3980,7 +3613,9 @@
             end do
 #ifdef __PARA
             if (gstart.ne.2) then
-! in the parallel case, only one processor has G=0 ! 
+               !
+               !    in the parallel case, only one processor has G=0 ! 
+               !
                do iss=1,nspin
                   rsumg(iss)=0.0
                end do
@@ -3994,16 +3629,16 @@
                WRITE( stdout,2) (rsumg(iss),iss=1,nspin),(rsumr(iss),iss=1,nspin)
             endif
          endif
-!     ==================================================================
-!
-!     add vanderbilt contribution to the charge density
-!
-!     drhov called before rhov because input rho must be the smooth part
-!
+         !
+         !     add vanderbilt contribution to the charge density
+         !     drhov called before rhov because input rho must be the smooth part
+         !
          if (tpre) call drhov(irb,eigrb,rhovan,rhog,rhor)
-!
+         !
          call rhov(irb,eigrb,rhovan,rhog,rhor)
+
       endif
+
 !     ======================================endif for trhor=============
 !
 !     here to check the integral of the charge density
@@ -4040,6 +3675,9 @@
             WRITE( stdout,1) rsumg(1)+rsumg(2),rsumr(1)+rsumr(2)
          endif
       endif
+
+      deallocate( psi ) 
+      deallocate( psis ) 
 !
     2 format(//' subroutine rhoofr: total integrated electronic',       &
      &     ' density'/' in g-space =',f10.6,2x,f10.6,4x,                &
@@ -4049,6 +3687,7 @@
      &     ' in r-space =',f10.6)
 !
       call stop_clock( 'rhoofr' )
+
 !
       return
       end
@@ -4149,8 +3788,6 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint, iprsta
       use qgb_mod
-      use work, only: wrk1
-      use work_box
       use para_mod
 !
       implicit none
@@ -4166,37 +3803,47 @@
       real(kind=8) sumrho
       complex(kind=8) ci, fp, fm, ca
       complex(kind=8), allocatable::  qgbt(:,:)
-      complex(kind=8), pointer:: v(:)
+      complex(kind=8), allocatable:: v(:)
+      complex(kind=8), allocatable:: qv(:)
 !
       if (nvb.eq.0) return
       call start_clock( 'rhov' )
       ci=(0.,1.)
 !
-      v => wrk1
+!
+      allocate( v( nnr ) )
+      allocate( qv( nnrb ) )
       v (:) = (0.d0, 0.d0)
-      allocate(qgbt(ngb,2))
+      allocate( qgbt( ngb, 2 ) )
+
 !
       if(nspin.eq.1) then
-!     ------------------------------------------------------------------
-!     nspin=1 : two fft at a time, one per atom, if possible
-!     ------------------------------------------------------------------
+         ! 
+         !     nspin=1 : two fft at a time, one per atom, if possible
+         !
          iss=1
          isa=1
-         do is=1,nvb
+
+         do is = 1, nvb
+
 #ifdef __PARA
+
             do ia=1,na(is)
                nfft=1
                irb3=irb(3,ia,is)
                call parabox(nr3b,irb3,nr3,imin3,imax3)
                if (imax3-imin3+1.le.0) go to 15
 #else
-            do ia=1,na(is),2
-               nfft=2
-               if( ia.eq.na(is)) nfft=1
+
+            do ia = 1, na(is), 2
+               nfft = 2
+               if( ia .eq. na(is) ) nfft = 1
+
 #endif
-!
-!  nfft=2 if two ffts at the same time are performed
-!
+
+               !
+               !  nfft=2 if two ffts at the same time are performed
+               !
                do ifft=1,nfft
                   qgbt(:,ifft) = (0.d0, 0.d0)
                   ijv=0
@@ -4206,23 +3853,23 @@
                         sumrho=rhovan(ijv,isa+ifft-1,iss)
                         if(iv.ne.jv) sumrho=2.*sumrho
                         do ig=1,ngb
-                           qgbt(ig,ifft)=qgbt(ig,ifft) +                &
-      &                                  sumrho*qgb(ig,ijv,is)
+                           qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
                         end do
                      end do
                   end do
                end do
-!
-! add structure factor
-!
+               !
+               ! add structure factor
+               !
                qv(:) = (0.d0, 0.d0)
                if(nfft.eq.2)then
                   do ig=1,ngb
-                     qv(npb(ig))=  eigrb(ig,ia  ,is)*qgbt(ig,1)         &
-     &                  + ci*      eigrb(ig,ia+1,is)*qgbt(ig,2)
+                     qv(npb(ig))=  &
+                                   eigrb(ig,ia  ,is)*qgbt(ig,1)  &
+                        + ci*      eigrb(ig,ia+1,is)*qgbt(ig,2)
                      qv(nmb(ig))=                                       &
-     &                       conjg(eigrb(ig,ia  ,is)*qgbt(ig,1))        &
-     &                  + ci*conjg(eigrb(ig,ia+1,is)*qgbt(ig,2))
+                             conjg(eigrb(ig,ia  ,is)*qgbt(ig,1))        &
+                        + ci*conjg(eigrb(ig,ia+1,is)*qgbt(ig,2))
                   end do
                else
                   do ig=1,ngb
@@ -4230,12 +3877,13 @@
                      qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*qgbt(ig,1))
                   end do
                endif
-!
+
                call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
-!
-!  qv = US augmentation charge in real space on box grid
-!       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
-!
+
+               !
+               !  qv = US augmentation charge in real space on box grid
+               !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
+ 
                if(iprsta.gt.2) then
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
@@ -4247,18 +3895,18 @@
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
      &                 omegab*aimag(ca)/(nr1b*nr2b*nr3b)
                endif
-!
-!  add qv(r) to v(r), in real space on the dense grid
-!
+               !
+               !  add qv(r) to v(r), in real space on the dense grid
+               !
                call  box2grid(irb(1,ia,is),1,qv,v)
                if (nfft.eq.2) call  box2grid(irb(1,ia+1,is),2,qv,v)
   15           isa=isa+nfft
 !
             end do
          end do
-!
-!  rhor(r) = total (smooth + US) charge density in real space
-!
+         !
+         !  rhor(r) = total (smooth + US) charge density in real space
+         !
          do ir=1,nnr
             rhor(ir,iss)=rhor(ir,iss)+real(v(ir))        
          end do
@@ -4279,9 +3927,9 @@
             WRITE( stdout,*) ' rhov: vander ',omega*v(1)
             WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
          endif
-!
-!  rhog(g) = total (smooth + US) charge density in G-space
-!
+         !
+         !  rhog(g) = total (smooth + US) charge density in G-space
+         !
          do ig=1,ng
             rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
          end do
@@ -4290,9 +3938,9 @@
      &        ' rhov: n_v(g=0) = ',omega*real(rhog(1,iss))
 !
       else
-!     ------------------------------------------------------------------
-!     nspin=2: two fft at a time, one for spin up and one for spin down
-!     ------------------------------------------------------------------
+         !
+         !     nspin=2: two fft at a time, one for spin up and one for spin down
+         !
          isup=1
          isdw=2
          isa=1
@@ -4390,7 +4038,11 @@
      &        ' rhov: n_v(g=0) down = ',omega*real(rhog(1,isdw))
 !
       endif
+
       deallocate(qgbt)
+      deallocate( v )
+      deallocate( qv )
+
       call stop_clock( 'rhov' )
 !
       return
@@ -4414,8 +4066,6 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use control_flags, only: iprint
       use core
-      use work, only: wrk1
-      use work_box
       use para_mod
       implicit none
 ! input
@@ -4426,10 +4076,14 @@
 ! local
       integer nfft, ig, is, ia, irb3, imin3, imax3
       complex(kind=8) ci
+      complex(kind=8), allocatable :: wrk1(:)
+      complex(kind=8), allocatable :: qv(:)
 !
       call start_clock( 'set_cc' )
       ci=(0.,1.)
 !
+      allocate( qv ( nnrb ) )
+      allocate( wrk1 ( nnr ) )
       wrk1 (:) = (0.d0, 0.d0)
 !
       do is=1,nsp
@@ -4474,6 +4128,9 @@
       end do
 !
       call DCOPY(nnr,wrk1,2,rhoc,1)
+
+      deallocate( qv  )
+      deallocate( wrk1 )
 !
       call stop_clock( 'set_cc' )
 !
@@ -4870,7 +4527,6 @@
       use uspp_param, only: nh
       use gvecw, only: ngw
       use elct
-      use work, only: wrk2
       use control_flags, only: iprint, iprsta
 !
       implicit none
@@ -4881,10 +4537,14 @@
 ! local variables
       integer i, j, ig, is, iv, ia, inl
       real(kind=8) wtemp(n,nhsa) ! automatic array
+      complex(kind=8), allocatable :: wrk2(:,:)
 !
 !     lagrange multipliers
 !
       call start_clock( 'updatc' )
+      
+      allocate( wrk2( ngw, n ) )
+
       wrk2 = (0.d0, 0.d0)
       do j=1,n
          call DSCAL(n,ccc,x0(1,j),1)
@@ -4935,6 +4595,8 @@
       do j=1,n
          call DSCAL(n,1.0/ccc,x0(1,j),1)
       end do
+
+      deallocate( wrk2 )
 !
       call stop_clock( 'updatc' )
 !
@@ -4976,8 +4638,6 @@
       use pseu
       use core
       use gvecb
-      use work, only: wrk1
-      use work_box
 !
       use dener
       use derho
@@ -4997,8 +4657,8 @@
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
-      complex(kind=8), pointer:: v(:), vs(:)
-      complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      complex(kind=8), allocatable :: v(:), vs(:)
+      complex(kind=8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
       call start_clock( 'vofrho' )
       ci=(0.,1.)
@@ -5006,8 +4666,8 @@
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz = 2.0
-      v => wrk1
-      vs=> wrk1
+      allocate( v( nnr ) )
+      allocate( vs( nnrsx ) )
       allocate(vtemp(ng))
       allocate(rhotmp(ng))
       if (tpre) allocate(drhotmp(ng,3,3))
@@ -5260,6 +4920,8 @@
 !
       deallocate(rhotmp)
       deallocate(vtemp)
+      deallocate( v )
+      deallocate( vs )
 !
 !
       call stop_clock( 'vofrho' )
@@ -5309,150 +4971,6 @@
       end
 
 !
-!______________________________________________________________________
-      subroutine fillgrad(nspin,rhog,gradr)
-!     _________________________________________________________________
-!
-!     calculates gradient of charge density for gradient corrections
-!     in: charge density on G-space    out: gradient in R-space
-!
-      use gvec
-      !use parm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      use work, only: wrk1
-!
-      implicit none
-! input
-      integer nspin
-      complex(kind=8) rhog(ng,nspin)
-! output
-      real(kind=8)    gradr(nnr,3,nspin)
-! local
-      complex(kind=8), pointer:: v(:)
-      complex(kind=8) ci
-      integer iss, ig, ir
-!
-!
-      v => wrk1
-      ci=(0.0,1.0)
-      do iss=1,nspin
-         do ig=1,nnr
-            v(ig)=(0.0,0.0)
-         end do
-         do ig=1,ng
-            v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
-            v(nm(ig))=conjg(ci*tpiba*gx(1,ig)*rhog(ig,iss))
-         end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
-            gradr(ir,1,iss)=real(v(ir))
-         end do
-!
-         do ig=1,nnr
-            v(ig)=(0.0,0.0)
-         end do
-         do ig=1,ng
-            v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
-     &                                 gx(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(conjg(ci*gx(2,ig)*rhog(ig,iss)+           &
-     &                                 gx(3,ig)*rhog(ig,iss)))
-         end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
-            gradr(ir,2,iss)= real(v(ir))
-            gradr(ir,3,iss)=aimag(v(ir))
-         end do
-      end do
-!
-      return
-      end
-!______________________________________________________________________
-      subroutine grad2(nspin,gradr,rhor)
-!     _________________________________________________________________
-!
-!     calculate the second part of gradient corrected xc potential
-!     \sum_alpha (D / D r_alpha) ( D(rho*exc)/D(grad_alpha rho) )
-!
-      use gvec
-      !use parm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      use work, only: wrk1
-!
-      implicit none
-! input
-      integer nspin
-      real(kind=8) gradr(nnr,3,nspin)
-! input/output
-      real(kind=8) rhor(nnr,nspin)
-! local
-      complex(kind=8), pointer:: v(:)
-      complex(kind=8), allocatable:: x(:)
-      complex(kind=8) ci, fp, fm
-      integer iss, ig, ir
-!
-      v => wrk1
-      allocate(x(ng))
-      ci=(0.0,1.0)
-      do iss=1, nspin
-!
-! x polarization
-!
-!     copy input gradr(r) into a complex array, v(r)...
-!
-         do ir=1,nnr
-            v(ir)=cmplx(gradr(ir,1,iss),0.0)
-         end do
-!
-!     bring v(r) to G-space, v(G)...
-!
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!
-!     multiply by (iG) to get x=(\grad_x gradr)(G)
-!
-         do ig=1,ng
-            x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
-         end do
-!
-! y and z polarizations: as above, two fft's together
-!
-         do ir=1,nnr
-            v(ir)=cmplx(gradr(ir,2,iss),gradr(ir,3,iss))
-         end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ig=1,ng
-            fp=v(np(ig))+v(nm(ig))
-            fm=v(np(ig))-v(nm(ig))
-            x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(2,ig)*0.5*cmplx( real(fp),aimag(fm))
-            x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(3,ig)*0.5*cmplx(aimag(fp),-real(fm))
-         end do
-!
-!     x = \sum_alpha(\grad_alpha gradr)(G)
-!     now bring back to R-space
-!
-         do ig=1,nnr
-            v(ig)=(0.0,0.0)
-         end do
-         do ig=1,ng
-            v(np(ig))=x(ig)
-            v(nm(ig))=conjg(x(ig))
-         end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!
-!     v = \sum_alpha(\grad_x gradr)(r)
-!
-         do ir=1,nnr
-            rhor(ir,iss)=rhor(ir,iss)-real(v(ir))
-         end do
-      end do
-!
-      deallocate(x)
-!
-      return
-      end
 !----------------------------------------------------------------------
       subroutine checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
 !----------------------------------------------------------------------
@@ -5520,11 +5038,7 @@
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use pseu
       use core
-      !use ncprm
       use gvecb
-      !use dft_mod
-      use work, only: wrk1
-      use work_box
       use atom, only: nlcc
 !
       use dener
@@ -5544,7 +5058,7 @@
       integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
-      complex(kind=8), pointer:: v(:), vs(:)
+      complex(kind=8), allocatable :: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 
 ! Makov Payne Variables
@@ -5562,8 +5076,8 @@
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz = 2.0
-      v => wrk1
-      vs=> wrk1
+      allocate( v( nnr ) )
+      allocate( vs( nnrsx ) )
       allocate(vtemp(ng))
 !      write(6,*) 'Allocated vtemp'
       allocate(rhotmp(ng))
@@ -5890,6 +5404,8 @@
       deallocate(rhotmp)
       deallocate(vtemp)
       deallocate(rhortot)                ! Makov Payne Variable - M.S
+      deallocate( v )
+      deallocate( vs )
 
 !      write(6,*) 'Deallocations'
 !

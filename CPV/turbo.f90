@@ -18,12 +18,12 @@
         INTEGER :: NTURBO
         COMPLEX(dbl), ALLOCATABLE :: turbo_states(:,:,:,:) 
 
-        PUBLIC :: tturbo, nturbo, turbo_states, turbo_setup, init_turbo
+        PUBLIC :: tturbo, nturbo, turbo_states, turbo_init, allocate_turbo
         PUBLIC :: deallocate_turbo
 
       CONTAINS
 
-        SUBROUTINE turbo_setup(tturbo_inp, nturbo_inp)
+        SUBROUTINE turbo_init(tturbo_inp, nturbo_inp)
           USE io_global, ONLY: ionode
           USE io_global, ONLY: stdout
           LOGICAL, INTENT(IN) :: tturbo_inp
@@ -34,9 +34,9 @@
             WRITE( stdout,fmt='(/,3X,"TURBO setup, nturbo = ",I10)') nturbo
           END IF
           RETURN
-        END SUBROUTINE turbo_setup
+        END SUBROUTINE turbo_init
 
-        SUBROUTINE init_turbo( nr1, nr2, nr3 )
+        SUBROUTINE allocate_turbo( nr1, nr2, nr3 )
           USE io_global, ONLY: ionode
           USE io_global, ONLY: stdout
 
@@ -57,7 +57,7 @@
             nturbo = 0
           END IF
           RETURN
-        END SUBROUTINE init_turbo 
+        END SUBROUTINE allocate_turbo 
 
         SUBROUTINE deallocate_turbo
           INTEGER :: ierr

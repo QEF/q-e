@@ -187,24 +187,16 @@ end module qrl_mod
  15         continue
          end do
       end do
-!
+
       WRITE( stdout,*)
       WRITE( stdout,170) ngb
  170  format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
-!
-!   reorder the g's in order of increasing magnitude.
-!       cray:
-!       call orders (2,jwork,gb,index,ngb,1,8,1)
-!       generic:
+
       call kb07ad_cp90 (gb,ngb,index)
+
       do ig=1,ngb-1
          icurr=ig
  30      if(index(icurr).ne.ig) then
-!     comment if not using cray orders from here
-!         g2=gb(icurr)
-!         gb(icurr)=gb(index(icurr))
-!         gb(index(icurr))=g2
-!       to here.
             itv=mill_b(:,icurr)
             mill_b(:,icurr)=mill_b(:,index(icurr))
             mill_b(:,index(icurr))=itv
@@ -437,8 +429,6 @@ end module qrl_mod
       CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3,  &
      &      gcut, gcuts, gcutw, dfftp%isind, dfftp%nr1x, lgam )
 
-      ! WRITE(6,*) 'DEBUG gcount: ng, ngs, ngw = ', ng, ngs, ngw
-
 !
 !     Second step. Compute and sort all G vectors, and build non
 !     distributed reciprocal space vectors arrays (ng_g = global
@@ -454,8 +444,6 @@ end module qrl_mod
       allocate(mill_g(3,ng_g))
 
       CALL gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
-
-      ! WRITE(6,*) 'DEBUG gglobal: ng_g  = ', ng_g
 
 !
 !     third step: allocate space
@@ -478,10 +466,6 @@ end module qrl_mod
 !
       CALL glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
-      ! WRITE(6,*) 'DEBUG glocal: ng, ng_g  = ', ng, ng_g
-      ! call hangup
-      ! stop
-
       WRITE( stdout,*)
       WRITE( stdout,150) ng
  150  format(' ggen:  # of g vectors < gcut   ng= ',i6)
@@ -501,6 +485,15 @@ end module qrl_mod
 
       CALL gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
+! ... Uncomment to make tests and comparisons with other codes
+!      IF ( ionode ) THEN
+!        DO ig=1,ng
+!          WRITE( 201, fmt="( I6, 2I6 )" ) ig, np(ig), nm(ig)
+!        END DO
+!        CLOSE( 201 )
+!      END IF
+
+
 !
 ! check for the presence of refolded G-vectors (smooth  grid)
 !
@@ -514,6 +507,15 @@ end module qrl_mod
       allocate(nms(ngs))
 !
       CALL gfftindex( nps, nms, ngs, mill_l, nr1s, nr2s, nr3s, dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+
+
+! ... Uncomment to make tests and comparisons with other codes
+!      IF ( ionode ) THEN
+!        DO ig=1,ngs
+!          WRITE( 202, fmt="( I6, 2I6, 3I4 )" ) ig, nps(ig), nms(ig), mill_l(1,ig), mill_l(2,ig), mill_l(3,ig)
+!        END DO
+!        CLOSE( 202 )
+!      END IF
 
       !  ... here igl is used as temporary storage area
       !  ... sortedig_l2g is used to find out local G index given the global G index
@@ -634,11 +636,14 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
 !
 !     consider only columns that belong to this node
 !
+
+#if defined __PARA
                n1p = i + 1
                if (n1p.lt.1) n1p = n1p + nr1
                n2p = j + 1
                if (n2p.lt.1) n2p = n2p + nr2
                if ( isind( n1p + (n2p-1)*ldis ) .eq. 0 ) cycle loop_z
+#endif
 
                g2=0.d0
                do ir=1,3
@@ -662,6 +667,8 @@ END SUBROUTINE
 SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 !-------------------------------------------------------------------------
 
+  use io_global, only: ionode
+
   IMPLICIT NONE
 
   INTEGER :: ng_g
@@ -672,7 +679,7 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
   LOGICAL :: lgam
 
   INTEGER :: nr1m1, nr2m1, nr3m1
-  INTEGER :: i, j, k, ir, ng
+  INTEGER :: i, j, k, ir, ng, ig
 
   real(kind=8) :: g2, t(3)
 
@@ -717,8 +724,8 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ng_g
-!          WRITE( 201, fmt="( I6, 3I4, 2D25.16 )" ) &
-!            ig, mill_g(1,ig), mill_g(2,ig), mill_g(3,ig), g2_g( ig ), g2sort_g( ig )
+!          WRITE( 201, fmt="( I6, 3I4, 1D25.16 )" ) &
+!            ig, mill_g(1,ig), mill_g(2,ig), mill_g(3,ig), g2_g( ig )
 !        END DO
 !        CLOSE( 201 )
 !      END IF
@@ -731,6 +738,8 @@ END SUBROUTINE
 !-------------------------------------------------------------------------
 SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
 !-------------------------------------------------------------------------
+
+  use io_global, only: ionode
 
   IMPLICIT NONE
 
@@ -749,11 +758,15 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
         i = mill_g(1,ig)
         j = mill_g(2,ig)
         k = mill_g(3,ig)
+
+#if defined __PARA
         n1p = i + 1
         if (n1p.lt.1) n1p = n1p + nr1
         n2p = j + 1
         if (n2p.lt.1) n2p = n2p + nr2
         if (isind(n1p+(n2p-1)*ldis).eq.0) cycle loop_allg
+#endif
+
         ng_l=ng_l+1
         g(ng_l)=g2_g(ig)
         ig_l2g(ng_l) = ig
@@ -791,6 +804,16 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
          endif
  35      continue
       end do
+
+! ... Uncomment to make tests and comparisons with other codes
+!      IF ( ionode ) THEN
+!        DO ig=1,ng
+!          WRITE( 201, fmt="( I6, 3I4 )" ) &
+!            ig, mill_l(1,ig), mill_l(2,ig), mill_l(3,ig)
+!        END DO
+!        CLOSE( 201 )
+!      END IF
+
 
       deallocate( index )
 
@@ -844,9 +867,9 @@ END SUBROUTINE
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x )
-!-------------------------------------------------------------------------
 
+SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x )
+  !
   IMPLICIT NONE
 
   INTEGER :: ng
@@ -856,26 +879,29 @@ SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x
 
   INTEGER :: n1p, n2p, n3p
   INTEGER :: n1m, n2m, n3m
-  INTEGER :: i, j, k, ig
+  INTEGER :: i, j, k, ig, isp, ism
 
 
-      do ig=1,ng
-         i=mill_l(1,ig)
-         j=mill_l(2,ig)
-         k=mill_l(3,ig)
-!
-! n1p,n2p,n3p: indexes of G
-! negative indexes are refolded (note that by construction i.ge.0)
-!
+      do ig = 1, ng
+
+         i = mill_l(1,ig)
+         j = mill_l(2,ig)
+         k = mill_l(3,ig)
+
+         !
+         ! n1p,n2p,n3p: indexes of G
+         ! negative indexes are refolded (note that by construction i.ge.0)
+         !
          n1p=i+1
          n2p=j+1
          n3p=k+1
          if(i.lt.0) n1p=n1p+nr1
          if(j.lt.0) n2p=n2p+nr2
          if(k.lt.0) n3p=n3p+nr3
-!
-! n1m,n2m,n3m: indexes of -G
-!
+
+         !
+         ! n1m,n2m,n3m: indexes of -G
+         !
          if(i.eq.0) then
             n1m=1
          else
@@ -891,22 +917,39 @@ SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x
          else
             n3m=nr3-n3p+2
          end if
-!
-! conversion from (i,j,k) index to combined 1-d ijk index
-! for the parallel case: columns along z are stored contiguously
-!
-#ifdef __PARA
-         np(ig) = n3p + (isind(n1p+(n2p-1)*nr1x)-1)*nr3x
-         nm(ig) = n3m + (isind(n1m+(n2m-1)*nr1x)-1)*nr3x
+
+         !
+         ! conversion from (i,j,k) index to combined 1-d ijk index:
+         ! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
+         ! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
+         !
+         ! for the parallel case: columns along z are stored contiguously
+         !
+
+#if defined __PARA
+
+         isp = isind( n1p + ( n2p - 1 ) * nr1x )
+         IF( isp <= 0 ) &
+           CALL errore( ' gfftindex ', ' wrong index: isp', 1 )
+         IF( n3p > nr3x ) &
+           CALL errore( ' gfftindex ', ' wrong index: n3p ', 1 )
+
+         ism = isind( n1m + ( n2m - 1 ) * nr1x )
+         IF( ism <= 0 ) &
+           CALL errore( ' gfftindex ', ' wrong index: ism ', 1 )
+         IF( n3m > nr3x ) &
+           CALL errore( ' gfftindex ', ' wrong index: n3m ', 1 )
+
+         np(ig) = n3p + ( isp - 1 ) * nr3x
+         nm(ig) = n3m + ( ism - 1 ) * nr3x
+
 #else
+
          np(ig) = n1p + (n2p-1)*nr1x + (n3p-1)*nr1x*nr2x
          nm(ig) = n1m + (n2m-1)*nr1x + (n3m-1)*nr1x*nr2x
+
 #endif
-!
-! conversion from (i,j,k) index to combined 1-d ijk index:
-! ijk = 1 + (i-1)+(j-1)*ix+(k-1)*ix*jx
-! where the (i,j,k) array is assumed to be dimensioned (ix,jx,kx)
-!
+
       end do
 
   RETURN
@@ -1046,11 +1089,10 @@ END SUBROUTINE
           USE gvecw, ONLY: ecutw
           USE gvecw, ONLY: ecfix, ecutz, ecsig, tecfix
           USE gvecp, ONLY: ecutp
-          USE gvecs, ONLY: ecuts
+          USE gvecs, ONLY: ecuts, dual
 
           IMPLICIT NONE
           REAL(dbl), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
-          REAL(dbl) :: dual
 
           ecutw = ecutwfc
           ecutp = ecutrho
@@ -1092,14 +1134,14 @@ END SUBROUTINE
 
 ! ...     declare subroutine arguments
           REAL(dbl), INTENT(IN) :: alat
-          INTEGER, INTENT(IN) :: nk_inp
           LOGICAL, INTENT(IN) :: tk_inp
+          INTEGER, INTENT(IN) :: nk_inp
           REAL(dbl), INTENT(IN) :: kpoints_inp(3,*)
 
 ! ...     declare other variables
-          INTEGER i
-          REAL(dbl) kcut, ksq, dual
-          REAL(dbl) tpiba
+          INTEGER   :: i
+          REAL(dbl) :: kcut, ksq
+          REAL(dbl) :: tpiba
 
 !  end of declarations
 !  ----------------------------------------------
@@ -1133,6 +1175,7 @@ END SUBROUTINE
               IF ( ksq > kcut ) kcut = ksq
             END DO
           END IF
+
           gkcut = ( sqrt( kcut ) + sqrt( gcutw ) ) ** 2
 
           ekcut = gkcut * tpiba ** 2

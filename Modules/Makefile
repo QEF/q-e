@@ -58,7 +58,17 @@ uspp.o \
 wave_base.o \
 wavefunctions.o
 
-IOTK=iotk_module.o iotk_base.o iotk_external.o
+IOTK= \
+iotk_base.o \
+iotk_interface.o \
+iotk_module.o \
+iotk_external.o \
+iotk_multitype.o \
+iotk_multitype_character.o \
+iotk_multitype_complex.o \
+iotk_multitype_integer.o \
+iotk_multitype_logical.o \
+iotk_multitype_real.o 
 
 all : $(MODULES)
 

@@ -98,6 +98,8 @@
       RETURN
     END SUBROUTINE
 
+!------------------------------------------------------------------------------!
+
     SUBROUTINE unpacktau( tau, taup, na, nsp )
       IMPLICIT NONE
       REAL(dbl), INTENT(IN) :: taup( :, : )
@@ -114,6 +116,7 @@
       RETURN
     END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
     SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )
       IMPLICIT NONE
@@ -150,6 +153,7 @@
       RETURN
     END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
     SUBROUTINE unsort_tau( tau, tausrt, isrt, nat )
       IMPLICIT NONE
@@ -166,11 +170,12 @@
     END SUBROUTINE
 
 
+!------------------------------------------------------------------------------!
 
 
 
     SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , vel_, amass_ , &
-        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , id_loc_ , sic_ ,  &
+        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , rcmax_ , id_loc_ , sic_ ,  &
         sic_epsilon_, sic_rloc_ )
 
       USE constants, ONLY: scmass
@@ -185,11 +190,12 @@
       CHARACTER(LEN=*), INTENT(IN) :: tau_units_
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
       REAL(dbl), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
+      REAL(dbl), INTENT(IN) :: rcmax_ (:)
       INTEGER, OPTIONAL, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: sic_
       REAL(dbl), OPTIONAL, INTENT(IN) :: sic_epsilon_
       REAL(dbl), OPTIONAL, INTENT(IN) :: sic_rloc_
-      INTEGER :: i, ia
+      INTEGER :: i, ia, is
 
       nsp = nsp_
       nat = nat_
@@ -223,6 +229,14 @@
       vel( : , 1:nat )   = vel_ ( : , 1:nat )
       if_pos( :, 1:nat ) = if_pos_ ( : , 1:nat )
 
+      ! ...  radii, masses 
+
+      DO is = 1, nsp_
+         rcmax ( is ) = rcmax_ ( is )
+         IF( rcmax( is ) <= 0.d0 ) THEN
+            CALL errore(' ions_base_init ',' invalid rcmax ', is)
+         END IF
+      END DO
 
       SELECT CASE ( tau_units )
          !
@@ -371,6 +385,7 @@
       RETURN
     END SUBROUTINE
     
+!------------------------------------------------------------------------------!
 
     SUBROUTINE deallocate_ions_base()
       IMPLICIT NONE
@@ -409,6 +424,7 @@
       RETURN
     END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
     SUBROUTINE ions_vel2( vel, taup, taum, nat, dt )
       IMPLICIT NONE
@@ -454,6 +470,8 @@
 !
       RETURN
     END SUBROUTINE
+
+!------------------------------------------------------------------------------!
 
     SUBROUTINE cofmass2( tau, pmass, na, nsp, cdm )
       IMPLICIT NONE
@@ -538,6 +556,7 @@
        RETURN
        END SUBROUTINE randpos
 
+!------------------------------------------------------------------------------!
 
   SUBROUTINE ions_kinene( ekinp, vels, na, nsp, h, pmass )
     IMPLICIT NONE
@@ -691,6 +710,17 @@
         end do
       end do
     end if
+    return
+  end subroutine
+
+!------------------------------------------------------------------------------!
+
+  subroutine ions_shiftvar( varp, var0, varm )
+    implicit none
+    real(kind=8), intent(in) :: varp(:,:)
+    real(kind=8), intent(out) :: varm(:,:), var0(:,:)
+      varm = var0
+      var0 = varp
     return
   end subroutine
 
@@ -861,7 +891,7 @@
   CONTAINS 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_noseinit( tempw_ , fnosep_ , nat )
+  subroutine ions_nose_init( tempw_ , fnosep_ , nat )
     use constants, only: factem, pi, terahertz
     implicit none
     real(kind=8), intent(in)  :: tempw_ , fnosep_
@@ -898,13 +928,42 @@
   end subroutine
 
   subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp )
+    !  nose variables time advancment
     implicit none
     real(kind=8), intent(out) :: xnhpp, vnhp
     real(kind=8), intent(in) :: xnhp0, xnhpm, delt, qnp, ekinpr, gkbt
-    xnhpp=2.*xnhp0-xnhpm+2.*( delt**2 / qnp )*(ekinpr-gkbt/2.)
-    vnhp =(xnhpp-xnhpm)/( 2.0d0 * delt )
+      !
+      xnhpp=2.*xnhp0-xnhpm+2.*( delt**2 / qnp )*(ekinpr-gkbt/2.)
+      vnhp =(xnhpp-xnhpm)/( 2.0d0 * delt )
+      !
     return
   end subroutine
+  
+
+  function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt )
+    !  compute energy term for nose thermostat
+    implicit none
+    real(kind=8) :: ions_nose_nrg
+    real(kind=8), intent(in) :: xnhp0, vnhp, qnp, gkbt
+      !
+      ions_nose_nrg = 0.5d0 * qnp * vnhp * vnhp + gkbt * xnhp0
+      !
+    return
+  end function
+
+
+  subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
+    !  shift values of nose variables to start a new step
+    implicit none
+    real(kind=8), intent(out) :: xnhpm, xnhp0
+    real(kind=8), intent(in) :: xnhpp
+      !
+      xnhpm = xnhp0
+      xnhp0 = xnhpp
+      !
+    return
+  end subroutine
+  
 
 !------------------------------------------------------------------------------!
   END MODULE ions_nose

@@ -54,8 +54,6 @@
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
       use pseu, only: deallocate_pseu
-      use work
-      use work_box, only: qv, deallocate_work_box
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end

@@ -153,30 +153,6 @@ contains
   end subroutine
 end module qradb_mod
 
-module work
-  implicit none
-  save
-  complex(kind=8), allocatable, target:: wrk1(:)
-  complex(kind=8), allocatable, target:: wrk2(:,:)
-  complex(kind=8), allocatable:: aux(:)
-contains
-  subroutine deallocate_work
-      IF( ALLOCATED( wrk1 ) ) DEALLOCATE( wrk1 )
-      IF( ALLOCATED( wrk2 ) ) DEALLOCATE( wrk2 )
-      IF( ALLOCATED( aux ) ) DEALLOCATE( aux )
-  end subroutine
-end module work
-
-module work_box
-  implicit none
-  save
-  complex(kind=8), allocatable, target:: qv(:)
-contains
-  subroutine deallocate_work_box
-      IF( ALLOCATED( qv ) ) DEALLOCATE( qv )
-  end subroutine
-end module work_box
-
 ! Variable cell
 module derho
   implicit none

@@ -18,121 +18,48 @@
 !=---------------------------------------------------------------------=!
 
      USE kinds
-     USE cp_types
-     USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dfftp
-     USE fft_scalar
 
      IMPLICIT NONE
      SAVE
 
      PRIVATE
 
-     INTEGER, PARAMETER :: FFT_MODE_WAVE = 1
-     INTEGER, PARAMETER :: FFT_MODE_POTE = 2
+     INTEGER, PARAMETER :: FFT_MODE_WAVE = 2
+     INTEGER, PARAMETER :: FFT_MODE_POTE = 1
 
-     REAL(dbl) :: tims(4,2) = 0.0d0
-
-     COMPLEX(dbl), ALLOCATABLE :: zwrk(:,:)
-     INTEGER, ALLOCATABLE :: ig2st(:,:)
-     INTEGER :: ngw, ng
+     INTEGER :: ngw, ng, ngs
 
      INTERFACE pfwfft
        MODULE PROCEDURE pfwfft1, pfwfft2
      END INTERFACE
      INTERFACE pinvfft
-       MODULE PROCEDURE pinvfft1, pinvfft2
+       MODULE PROCEDURE pinvfft2
      END INTERFACE
 
      REAL(dbl)  :: total_fft_wf_time = 0.0d0
      INTEGER    :: number_of_fft_wf  = 0
-     REAL(dbl)  :: total_fft_time = 0.0_dbl
+     REAL(dbl)  :: total_fft_time = 0.0d0
      INTEGER    :: number_of_fft  = 0
      LOGICAL    :: first          = .true.
      LOGICAL    :: tk             = .false.
 
-     COMPLEX(dbl), PARAMETER :: czero = (0.0_dbl,0.0_dbl)
-     COMPLEX(dbl), PARAMETER :: uimag = (0.0_dbl,1.0_dbl)
-
      REAL(dbl) :: cclock
      EXTERNAL  :: cclock
 
-     PUBLIC :: pfwfft, pinvfft, fft_initialize, fft_closeup, fft_setup
-     PUBLIC :: pw_fwfft, pw_invfft, fft_wf_initialize, fft_time_stat
-     PUBLIC :: FFT_MODE_WAVE, FFT_MODE_POTE, tims
+     PUBLIC :: pfwfft, pinvfft, fft_closeup, fft_setup
+     PUBLIC :: pw_fwfft, pw_invfft, fft_time_stat
 
 !----------------------------------------------------------------------
    CONTAINS
-!----------------------------------------------------------------------
-
-   SUBROUTINE fft_allocate_workspace( nr3x, nsp, nsw )
-
-     IMPLICIT NONE
-     INTEGER :: nr3x, nsp(:), nsw(:)
-     INTEGER :: ierr, nsx
-
-     nsx = MAX( MAXVAL( nsp ), MAXVAL( nsw ) )
-
-     IF( ALLOCATED( zwrk ) ) THEN
-       IF( SIZE( zwrk, 1 ) /= nr3x .OR. SIZE( zwrk, 2 ) /= nsx ) THEN
-         DEALLOCATE(zwrk, STAT=ierr )
-         IF( ierr /= 0 ) &
-           CALL errore(' fft_allocate_workspace ', ' deallocation of zwrk failed ', ierr )
-       END IF
-     END IF
-
-     IF( .NOT. ALLOCATED( zwrk ) ) THEN
-       ALLOCATE( zwrk( nr3x, nsx ), STAT=ierr )
-       IF( ierr /= 0 ) &
-         CALL errore(' fft_allocate_workspace ', ' allocation of zwrk failed ', ierr )
-       zwrk = 0.0d0
-     END IF
-
-     RETURN
-   END SUBROUTINE
-
-!----------------------------------------------------------------------
-
-   SUBROUTINE fft_initialize
-
-     COMPLEX(dbl) :: dum(1,1,1)
-
-     CALL fft_allocate_workspace( dfftp%nr3x, dfftp%nsp, dfftp%nsw )
-     CALL pc3fft_drv( dum, zwrk, 0, dfftp, FFT_MODE_POTE )
-
-     RETURN
-   END SUBROUTINE fft_initialize
-
-!----------------------------------------------------------------------
-
-   SUBROUTINE fft_wf_initialize
-
-     COMPLEX(dbl) :: dum(1,1,1)
-
-     CALL fft_allocate_workspace( dfftp%nr3x, dfftp%nsp, dfftp%nsw )
-     CALL pc3fft_drv(dum, zwrk, 0, dfftp, FFT_MODE_WAVE)
-
-     RETURN
-   END SUBROUTINE fft_wf_initialize
-
 !----------------------------------------------------------------------
 
    SUBROUTINE fft_closeup
 
      IMPLICIT NONE
 
-     INTEGER :: ierr
-
-     IF( ALLOCATED( zwrk ) ) THEN
-       DEALLOCATE(zwrk, STAT=ierr)
-       IF( ierr /= 0 ) CALL errore(' fft_closeup ', ' deallocation of zwrk failed ', ierr )
-     END IF
-
-     IF( ALLOCATED( ig2st ) ) THEN
-       DEALLOCATE(ig2st, STAT=ierr)
-       IF( ierr /= 0 ) CALL errore(' fft_closeup ', ' deallocation of ig2st failed ', ierr )
-     END IF
-
+     ng  = 0
+     ngw = 0
+     ngs = 0 
      first = .TRUE.
 
      RETURN
@@ -140,37 +67,19 @@
 
 !----------------------------------------------------------------------
 !
-   SUBROUTINE fft_setup(gv, kp)
+   SUBROUTINE fft_setup( lgamma_ , ng_ , ngs_ , ngw_ )
 
-     USE mp_global, ONLY: nproc
-     USE brillouin, ONLY: kpoints
+     INTEGER, INTENT(IN) :: ng_ , ngs_ , ngw_
+     LOGICAL, INTENT(IN) :: lgamma_
 
-     TYPE (recvecs), INTENT(IN) :: gv
-     TYPE (kpoints), INTENT(IN) :: kp
+     tk = .NOT. lgamma_
 
-     INTEGER :: ierr
-     INTEGER :: i, ig
-
-     !
-     !  Body
-     !
-
-     tk = .NOT. ( kp%scheme == 'gamma' )
-
-     IF( gv%ng_l < gv%ngw_l ) &
+     IF( ng_ < ngw_ .OR. ngs_ < ngw_ ) &
        CALL errore( ' fft_setup ', ' inconsistend number of plane waves ', 1 )
 
-     IF( ALLOCATED( ig2st ) ) DEALLOCATE( ig2st )
-     ALLOCATE( ig2st( SIZE( gv%ig2st, 1 ), gv%ng_l ) )
-
-     DO ig = 1, gv%ng_l
-       ig2st(:,ig) = gv%ig2st(:,ig)
-     END DO
-
-     ng  = gv%ng_l
-     ngw = gv%ngw_l
-
-     tims = 0.0d0
+     ng  = ng_
+     ngw = ngw_
+     ngs = ngs_
 
      first = .false.
 
@@ -181,13 +90,9 @@
 !----------------------------------------------------------------------
 !
 
-!  BEGIN manual -------------------------------------------------------------
-
    SUBROUTINE fft_time_stat( nstep )
 
-!  Print some statistics about time wasted by fft routines
-!  --------------------------------------------------------------------------
-!  END manual ---------------------------------------------------------------
+     !  Print some statistics about time wasted by fft routines
 
      USE io_global, ONLY: stdout
 
@@ -215,10 +120,6 @@
      WRITE( stdout,501) '  total fft time    .....', ttot
      WRITE( stdout,*)
 
-     WRITE( stdout, fmt ="(/,3X,'PC3FFT TIMINGS')" )
-     WRITE( stdout,910)
-     WRITE( stdout,999) ( ( tims(i,j), i = 1, 4), j = 1, 2 )
-
 910  FORMAT('    FFTXW    FFTYW    FFTZW    TRASW    FFTXP    FFTYP    FFTZP    TRASP')
 999  FORMAT(8(F9.3))
 500  FORMAT(1X,A,I10)
@@ -226,6 +127,8 @@
 
      RETURN
    END SUBROUTINE fft_time_stat
+
+
 
 !
 !=---------------------------------------------------------------------==!
@@ -240,13 +143,19 @@
 !
      !   This subroutine COMPUTE on the charge density grid :
      !      C = FWFFT( PSI )
-!
+
+     USE fft_types, ONLY: fft_dlay_descriptor
+     USE stick, ONLY: dfftp
+     USE mp_global, ONLY: mpime
+
       IMPLICIT NONE
 
       COMPLEX(dbl), INTENT(INOUT) :: cpsi(:,:,:)
       COMPLEX(dbl), INTENT(OUT) :: C(:)
+      COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
       REAL(dbl) :: t1
-      INTEGER :: j, ierr, k, is
+      INTEGER :: ierr
 
       t1 = cclock()
 
@@ -259,14 +168,30 @@
         CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 2 )
       IF ( SIZE( cpsi, 3 ) /= dfftp%npl ) &
         CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 3 )
-      IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-        CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 4 )
 
-      CALL pc3fft_drv(cpsi(1,1,1), zwrk(1,1), -1, dfftp, FFT_MODE_POTE)
-      DO j = 1, ng
-        k  = ig2st( 1, j ); is = ig2st( 2, j )
-        C( j ) = zwrk( k, is )
-      END DO
+#if defined __PARA
+
+      ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
+
+      CALL pc3fft_drv(cpsi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
+
+      CALL psi2c( zwrk, SIZE( zwrk ), c, c, ng, 10 )
+
+      DEALLOCATE( zwrk )
+
+#else
+
+      ALLOCATE( psi( SIZE( cpsi, 1 ),  SIZE( cpsi, 2 ), SIZE( cpsi, 3 ) ) )
+
+      psi = cpsi
+
+      CALL fwfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+      CALL psi2c( psi, dfftp%nnr, c, c, ng, 10 )
+
+      DEALLOCATE( psi )
+
+#endif
 
       total_fft_time =  total_fft_time + ( cclock() - T1 )
       number_of_fft  =  number_of_fft  + 1
@@ -282,15 +207,20 @@
      !     C = FWFFT( A )
      !       C is a COMPLEX 1D array (reciprocal space)
      !       A is a REAL 3D array (real space)
-!
+
+     USE fft_types, ONLY: fft_dlay_descriptor
+     USE stick, ONLY: dfftp
+     USE mp_global, ONLY: mpime
+
       IMPLICIT NONE
 
       REAL(dbl),  INTENT(IN) :: A(:,:,:)
       COMPLEX(dbl) :: C(:)
 
       COMPLEX(dbl), allocatable :: psi(:,:,:)
+      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
       REAL(dbl) :: t1
-      INTEGER :: is, i, j, k, nxl, nyl, nzl, ierr
+      INTEGER :: ierr
 
       T1 = cclock()
 
@@ -303,25 +233,28 @@
         CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 2 )
       IF ( SIZE( A, 3 ) /= dfftp%npl ) &
         CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 3 )
-      IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-        CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 4 )
 
-      nxl = SIZE(A,1)
-      nyl = SIZE(A,2)
-      nzl = SIZE(A,3)
-
-      ALLOCATE( psi(nxl,nyl,nzl), STAT=ierr)
+      ALLOCATE( psi( SIZE(A,1), SIZE(A,2), SIZE(A,3) ), STAT=ierr)
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' allocation of psi failed ' ,0)
 
       psi = CMPLX( A )
 
-      !CALL pc3fft_stick(psi, zwrk, -1, dfftp, FFT_MODE_POTE)
-      CALL pc3fft_drv(psi(1,1,1), zwrk(1,1), -1, dfftp, FFT_MODE_POTE)
+#if defined __PARA
 
-      DO j = 1, ng
-        k  = ig2st( 1, j ); is = ig2st( 2, j )
-        C( j ) = zwrk( k, is )
-      END DO
+      ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
+
+      CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
+
+      CALL psi2c( zwrk, SIZE( zwrk ), c, c, ng, 10 )
+
+      DEALLOCATE( zwrk )
+
+#else
+
+      CALL fwfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL psi2c( psi, dfftp%nnr, c, c, ng, 10 )
+
+#endif
 
       DEALLOCATE( psi, STAT=ierr )
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' deallocation of psi failed ' ,0)
@@ -340,6 +273,9 @@
      !     C = ALPHA * C + INVFFT( A )   if alpha is present
      !     C =     INVFFT( A )           otherwise
 !
+     USE fft_types, ONLY: fft_dlay_descriptor
+     USE stick, ONLY: dfftp
+     USE mp_global, ONLY: mpime
 
       IMPLICIT NONE
 
@@ -347,8 +283,9 @@
       REAL(dbl), INTENT(IN), OPTIONAL :: ALPHA
       COMPLEX(dbl), INTENT(IN) :: A(:)
 
-      INTEGER :: i, j, k, nxl, nyl, nzl, is, is_i, k_i, ierr
+      INTEGER :: ierr
       COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
       REAL(dbl) t1
 !
       T1 = cclock()
@@ -362,39 +299,40 @@
         CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 2 )
       IF ( SIZE( c, 3 ) /= dfftp%npl ) &
         CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 3 )
-      IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-        CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 4 )
 
-      nxl = SIZE( c, 1 )
-      nyl = SIZE( c, 2 )
-      nzl = SIZE( c, 3 )
-
-      ALLOCATE( psi( nxl, nyl, nzl ), STAT=ierr)
+      ALLOCATE( psi( SIZE( c, 1 ), SIZE( c, 2 ), SIZE( c, 3 ) ), STAT=ierr)
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' allocation of psi failed ' ,0)
 
-      zwrk = 0.0d0
+#if defined __PARA
 
-      IF(.NOT. tk) THEN
-        DO j = 1, ng
-          k   = ig2st(1,j); is   = ig2st(2,j)
-          k_i = ig2st(3,j); is_i = ig2st(4,j)
-          zwrk(k,     is) = A(j)
-          zwrk(k_i, is_i) = CONJG( A(j) )
-        END DO
+      ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
+
+      IF( tk ) THEN
+        CALL c2psi( zwrk, SIZE( zwrk ), a, a, ng, 10 )
       ELSE
-        DO j = 1, ng
-          k = ig2st(1,j); is = ig2st(2,j)
-          zwrk(k,is) = A(j)
-        END DO
+        CALL c2psi( zwrk, SIZE( zwrk ), a, a, ng, 11 )
       END IF
 
-      !CALL pc3fft_stick(psi(:,:,:), zwrk(:,:), +1, dfftp, FFT_MODE_POTE)
-      CALL pc3fft_drv(psi(1,1,1), zwrk(1,1), +1, dfftp, FFT_MODE_POTE)
+      CALL pc3fft_drv(psi(1,1,1), zwrk, +1, dfftp, FFT_MODE_POTE)
+
+      DEALLOCATE( zwrk )
+
+#else
+
+      IF( tk ) THEN
+        CALL c2psi( psi, dfftp%nnr, a, a, ng, 10 )
+      ELSE
+        CALL c2psi( psi, dfftp%nnr, a, a, ng, 11 )
+      END IF
+
+      CALL invfft( psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+#endif
 
       IF( .NOT. PRESENT( alpha ) ) THEN
-        c = REAL(psi)
+        c = REAL( psi )
       ELSE
-        c = c + alpha * REAL(psi)
+        c = c + alpha * REAL( psi )
       END IF
 
       DEALLOCATE(psi, STAT=ierr)
@@ -405,70 +343,6 @@
 
       RETURN
    END SUBROUTINE pinvfft2
-
-!----------------------------------------------------------------------
-
-   SUBROUTINE pinvfft1(gamma, c, alpha, a)
-
-     !   This subroutine COMPUTE on the charge density grid :
-     !     C = gamma * C + alpha * INVFFT( A )
-
-      IMPLICIT NONE
-
-      REAL(dbl), INTENT(in) :: alpha, gamma
-      REAL(dbl)    :: C(:,:,:)
-      COMPLEX(dbl) :: A(:)
-
-      INTEGER :: i, j, k, k_i, is, is_i, ierr
-      COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
-      REAL(dbl) :: t1
-!
-      T1 = cclock()
-
-      IF ( first ) &
-        CALL errore(' pinvfft 1 ',' fft not initialized ', 1 )
-
-      IF ( SIZE( c, 1 ) /= dfftp%nr1x ) &
-        CALL errore( ' pinvfft 1 ', ' inconsistent array dimensions ', 1 )
-      IF ( SIZE( c, 2 ) /= dfftp%nr2x ) &
-        CALL errore( ' pinvfft 1 ', ' inconsistent array dimensions ', 2 )
-      IF ( SIZE( c, 3 ) /= dfftp%npl ) &
-        CALL errore( ' pinvfft 1 ', ' inconsistent array dimensions ', 3 )
-      IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-        CALL errore( ' pinvfft 1 ', ' inconsistent array dimensions ', 4 )
-
-      ALLOCATE( psi( SIZE(c,1), SIZE(c,2), SIZE(c,3) ), STAT=ierr)
-      IF( ierr /= 0 )  call errore(' PINVFFT ', ' allocation of psi failed ', 1 )
-
-      zwrk = 0.0d0
-
-      IF(.NOT. tk) THEN
-        DO j = 1, ng
-          k   = ig2st( 1, j ); is   = ig2st( 2, j )
-          k_i = ig2st( 3, j ); is_i = ig2st( 4, j )
-          zwrk(k,     is) = A(j)
-          zwrk(k_i, is_i) = CONJG( A(j) )
-        END DO
-      ELSE
-        DO j = 1, ng
-          k   = ig2st(1,j);   is   = ig2st(2,j)
-          zwrk(k,     is) = A(j)
-        END DO
-      END IF
-
-      !CALL pc3fft_stick(psi, zwrk, +1, dfftp, FFT_MODE_POTE)
-      CALL pc3fft_drv(psi(1,1,1), zwrk(1,1), +1, dfftp, FFT_MODE_POTE)
-
-      c = gamma * c + alpha * REAL( psi )
-
-      DEALLOCATE(psi, STAT=ierr)
-      IF( ierr /= 0 )  call errore(' PINVFFT ', ' deallocation of psi failed ' ,0)
-
-      total_fft_time =  total_fft_time + ( cclock() - t1 )
-      number_of_fft  =  number_of_fft  + 1
-
-      RETURN
-   END SUBROUTINE pinvfft1
 
 !=---------------------------------------------------------------------==!
 !
@@ -482,44 +356,62 @@
 
      !   This subroutine COMPUTE on the wave function sub-grid :
 
-     USE stick, ONLY: dfftp
+     USE fft_types, ONLY: fft_dlay_descriptor
+     USE stick, ONLY: dffts
+     USE mp_global, ONLY: mpime
 
      COMPLEX(dbl) :: C(:)
      COMPLEX(dbl), OPTIONAL :: CA(:)
      COMPLEX(dbl) :: psi(:,:,:)
      REAL(dbl)  :: T1
-     INTEGER :: is, is_i, k, k_i, j
+     INTEGER :: ierr
+     COMPLEX(dbl), ALLOCATABLE :: psitmp(:,:,:)
+     COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
 
      t1 = cclock()
 
      IF ( first ) &
        CALL errore(' pw_fwfft 1 ',' fft not initialized ', 1 )
 
-     IF ( SIZE( psi, 1 ) /= dfftp%nr1x ) &
+     IF ( SIZE( psi, 1 ) /= dffts%nr1x ) &
        CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 1 )
-     IF ( SIZE( psi, 2 ) /= dfftp%nr2x ) &
+     IF ( SIZE( psi, 2 ) /= dffts%nr2x ) &
        CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 2 )
-     IF ( SIZE( psi, 3 ) /= dfftp%npl ) &
+     IF ( SIZE( psi, 3 ) /= dffts%npl ) &
        CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 3 )
-     IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-       CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 4 )
 
-     !CALL pc3fft_stick(psi, zwrk, -1, dfftp, FFT_MODE_WAVE)
-     CALL pc3fft_drv(psi(1,1,1), zwrk(1,1), -1, dfftp, FFT_MODE_WAVE)
+#if defined __PARA
+
+
+     ALLOCATE( zwrk( dffts%nsp( mpime + 1 ) * dffts%nr3x ) )
+
+     CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dffts, FFT_MODE_WAVE)
 
      IF( PRESENT( ca ) ) THEN
-       DO j = 1, ngw
-         k   = ig2st(1,j); is   = ig2st(2,j)
-         k_i = ig2st(3,j); is_i = ig2st(4,j)
-         ca(j) = zwrk(k_i, is_i)
-         c (j) = zwrk(k  , is  )
-       END DO
+       CALL psi2c( zwrk, SIZE( zwrk ), c, ca, ngw, 2 )
      ELSE
-       DO j = 1, ngw
-         k = ig2st(1,j); is = ig2st(2,j)
-         c(j) = zwrk(k,is)
-       END DO
+       CALL psi2c( zwrk, SIZE( zwrk ), c, c, ngw, 0 )
      END IF
+
+     DEALLOCATE( zwrk )
+
+#else
+
+     ALLOCATE( psitmp( SIZE( psi, 1 ), SIZE( psi, 2 ), SIZE( psi, 3 ) ) )
+ 
+     psitmp = psi
+
+     CALL fwfftw( psitmp, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+
+     IF( PRESENT( ca ) ) THEN
+       CALL psi2c( psitmp, dffts%nnr, c, ca, ngw, 2 )
+     ELSE
+       CALL psi2c( psitmp, dffts%nnr, c, c, ngw, 0 )
+     END IF
+
+     DEALLOCATE( psitmp )
+
+#endif
 
      total_fft_wf_time =  total_fft_wf_time + ( cclock() - t1 )
      number_of_fft_wf  =  number_of_fft_wf  + 1
@@ -535,53 +427,62 @@
 
      !   This subroutine COMPUTE on the wave function sub-grid :
 
-     USE stick, ONLY: dfftp
+     USE fft_types, ONLY: fft_dlay_descriptor
+     USE stick, ONLY: dffts
+     USE mp_global, ONLY: mpime
 
      COMPLEX(dbl), INTENT(IN) :: C(:)
      COMPLEX(dbl), INTENT(IN), OPTIONAL :: CA(:)
      COMPLEX(dbl) :: psi(:,:,:)
-
-     COMPLEX(dbl) :: cca1, cca2
-     REAL(dbl) :: T1, T2
-     INTEGER :: is, is_i, k, k_i, j
+     COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
+     REAL(dbl) :: T1
 
      IF ( first ) &
        CALL errore(' pw_invfft 1 ',' fft not initialized ', 1 )
 
-     IF ( SIZE( psi, 1 ) /= dfftp%nr1x ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 1 )
-     IF ( SIZE( psi, 2 ) /= dfftp%nr2x ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 2 )
-     IF ( SIZE( psi, 3 ) /= dfftp%npl ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 3 )
-     IF ( SIZE( zwrk, 1 ) /= dfftp%nr3x ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 4 )
-
      T1 = cclock()
 
-     zwrk = czero
 
-     ! WRITE(6,*) 'DEBUG pw_invfft ', ngw
+     IF ( SIZE( psi, 1 ) /= dffts%nr1x ) &
+       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 1 )
+     IF ( SIZE( psi, 2 ) /= dffts%nr2x ) &
+       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 2 )
+     IF ( SIZE( psi, 3 ) /= dffts%npl ) &
+       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 3 )
+
+#if defined __PARA
+
+     ALLOCATE( zwrk( dffts%nsp( mpime + 1 ) * dffts%nr3x ) )
+
      IF( PRESENT( ca ) ) THEN
-       DO j = 1, ngw
-         cca1 =       C(j)  + uimag *       CA(j)
-         cca2 = CONJG(C(j)) + uimag * CONJG(CA(j))
-         k   = ig2st(1,j); is   = ig2st(2,j)
-         k_i = ig2st(3,j); is_i = ig2st(4,j)
-         zwrk(k  , is  ) = cca1
-         zwrk(k_i, is_i) = cca2
-         ! WRITE( *, * ) k, is, k_i, is_i
-         ! WRITE( *, fmt='(2D24.16)' ) zwrk(k  , is  )
-         ! WRITE( *, fmt='(2D24.16)' ) zwrk(k_i, is_i)
-       END DO
+       CALL c2psi( zwrk, SIZE( zwrk ), c, ca, ngw, 2 )
      ELSE
-       DO j = 1, ngw
-         k = ig2st(1,j); is = ig2st(2,j)
-         zwrk(k,is) = c(j)
-       END DO
+       IF( tk ) THEN
+         CALL c2psi( zwrk, SIZE( zwrk ), c, c, ngw, 0 )
+       ELSE
+         CALL c2psi( zwrk, SIZE( zwrk ), c, c, ngw, 1 )
+       END IF
      END IF
 
-     CALL pc3fft_drv(psi(1,1,1), zwrk(1,1), +1, dfftp, FFT_MODE_WAVE)
+     CALL pc3fft_drv(psi(1,1,1), zwrk, +1, dffts, FFT_MODE_WAVE)
+
+     DEALLOCATE( zwrk )
+
+#else
+ 
+     IF( PRESENT( ca ) ) THEN
+       CALL c2psi( psi, dffts%nnr, c, ca, ngw, 2 )
+     ELSE
+       IF( tk ) THEN
+         CALL c2psi( psi, dffts%nnr, c, c, ngw, 0 )
+       ELSE
+         CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
+       END IF
+     END IF
+
+     CALL ivfftw( psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+
+#endif
 
      total_fft_wf_time =  total_fft_wf_time + ( cclock() - T1 )
      number_of_fft_wf  =  number_of_fft_wf  + 1
@@ -594,3 +495,389 @@
 !==---------------------------------------------------------------------==!
    END MODULE fft
 !==---------------------------------------------------------------------==!
+
+
+!-----------------------------------------------------------------------
+      subroutine invfft(f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+!-----------------------------------------------------------------------
+! inverse fourier transform of potentials and charge density
+! on the dense grid . On output, f is overwritten
+!
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dfftp
+      use fft_scalar, only: cfft3d
+
+      complex(kind=8) f(nr1x*nr2x*nr3x)
+      integer nr1,nr2,nr3,nr1x,nr2x,nr3x
+      call start_clock( 'fft' )
+#ifdef __PARA
+      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
+#else
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+# else
+      call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+# endif
+#endif
+      call stop_clock( 'fft' )
+!
+      return
+      end
+
+!-----------------------------------------------------------------------
+      subroutine ivfftb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+!-----------------------------------------------------------------------
+! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
+! on the  box grid . On output, f is overwritten
+!
+      use fft_scalar, only: cfft3d
+      integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
+
+!     in a parallel execution, not all processors calls this routine
+!     then we should avoid clocks, otherwise the program hangs in print_clock
+#if ! defined __PARA
+      call start_clock( 'fftb' )
+#endif
+
+#ifdef __PARA
+      call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
+#else
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# else
+      call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# endif
+#endif
+
+#if ! defined __PARA
+      call stop_clock( 'fftb' )
+#endif
+!
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine ivffts(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+!-----------------------------------------------------------------------
+! inverse fourier transform of  potentials and charge density
+! on the smooth grid . On output, f is overwritten
+!
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
+      call start_clock( 'ffts' )
+#ifdef __PARA
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
+#else
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# else
+      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# endif
+#endif
+      call stop_clock( 'ffts' )
+!
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine ivfftw(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+!-----------------------------------------------------------------------
+! inverse fourier transform of wavefunctions
+! on the smooth grid . On output, f is overwritten
+!
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
+      use fft_scalar, only: cfft3d, cfft3ds
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
+      call start_clock('fftw')
+#ifdef __PARA
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
+#else
+# if defined __AIX || __FFTW
+      call cfft3ds(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts%isind, dffts%iplw)
+# elif defined __COMPLIB || __SCSL
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# else
+      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
+# endif
+#endif
+      call stop_clock('fftw')
+!
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine fwfft(f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+!-----------------------------------------------------------------------
+! forward fourier transform of potentials and charge density 
+! on the dense grid . On output, f is overwritten
+! 
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dfftp
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1x*nr2x*nr3x)
+      integer nr1,nr2,nr3,nr1x,nr2x,nr3x
+      call start_clock( 'fft' )
+#ifdef __PARA
+      call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
+#else 
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+# else
+      call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+# endif
+#endif
+      call stop_clock( 'fft' )
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine fwffts(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+!-----------------------------------------------------------------------
+! forward fourier transform of potentials and charge density
+! on the smooth grid . On output, f is overwritten
+!
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
+      use fft_scalar, only: cfft3d
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
+      call start_clock( 'ffts' )
+#ifdef __PARA
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
+#else
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# else
+      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# endif
+#endif
+      call stop_clock( 'ffts' )
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine fwfftw(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+!-----------------------------------------------------------------------
+! forward fourier transform of potentials and charge density
+! on the smooth grid . On output, f is overwritten
+!
+      use fft_cp, only: cfft_cp
+      use para_mod, only: dffts
+      use fft_scalar, only: cfft3d, cfft3ds
+      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
+      call start_clock( 'fftw' )
+#ifdef __PARA
+      call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
+#else
+# if defined __AIX || __FFTW 
+      call cfft3ds(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts%isind, dffts%iplw)
+# elif defined __COMPLIB || __SCSL
+      call cfft3d(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# else
+      call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
+# endif
+#endif
+      call stop_clock( 'fftw' )
+      return
+      end
+
+
+!-----------------------------------------------------------------------
+      subroutine ivfftbold(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+!-----------------------------------------------------------------------
+! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
+! on the  box grid . On output, f is overwritten
+!
+      use fft_scalar, only: cfft3d
+      integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
+      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
+      call start_clock(' ivfftbold ' )
+
+#ifdef __PARA
+      ! call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)  ! DEBUG
+      call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
+#else
+# if defined __AIX || __FFTW || __COMPLIB || __SCSL
+      call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# else
+      call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
+# endif
+#endif
+
+      call stop_clock(' ivfftbold ' )
+!
+      return
+      end
+
+!-----------------------------------------------------------------------
+
+     SUBROUTINE c2psi( psi, nnr, c, ca, ng, iflg )
+       !
+       use recvecs_indexes, only: nm, np
+       use gvecs, only: nms, nps
+       use kinds, only: dbl
+
+       implicit none
+
+       complex(dbl) :: psi(*), c(*), ca(*)
+       integer, intent(in) :: nnr, ng, iflg
+
+       complex(dbl), parameter :: ci=(0.0d0,1.0d0)
+       integer :: ig
+       
+         psi( 1 : nnr ) = 0.0d0
+
+         !
+         !  iflg "cases"
+         !
+         !  0, 10   Do not use gamma symmetry
+         !
+         !  1, 11   set psi using a wf with Gamma symmetry
+         !
+         !  2, 12   set psi combining two wf with Gamma symmetry
+         !
+
+         SELECT CASE ( iflg )
+           !
+           !  Case 0, 1 and 2  SMOOTH MESH
+           !
+           CASE ( 0 )
+             !
+             do ig = 1, ng
+               psi( nps( ig ) ) = c( ig )
+             end do
+             !
+           CASE ( 1 )
+             !
+             do ig = 1, ng
+               psi( nms( ig ) ) = conjg( c( ig ) )
+               psi( nps( ig ) ) = c( ig )
+             end do
+             !
+           CASE ( 2 )
+             !
+             do ig = 1, ng
+               psi( nms( ig ) ) = conjg( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( nps( ig ) ) = c( ig ) + ci * ca( ig )
+             end do
+
+           !
+           !  Case 10, 11 and 12  DENSE MESH
+           !
+           CASE ( 10 )
+             !
+             do ig = 1, ng
+               psi( np( ig ) ) = c( ig )
+             end do
+             !
+           CASE ( 11 )
+             !
+             do ig = 1, ng
+               psi( nm( ig ) ) = conjg( c( ig ) )
+               psi( np( ig ) ) = c( ig )
+             end do
+             !
+           CASE ( 12 )
+             !
+             do ig = 1, ng
+               psi( nm( ig ) ) = conjg( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( np( ig ) ) = c( ig ) + ci * ca( ig )
+             end do
+             !
+           CASE DEFAULT
+             !
+             CALL errore(" c2psi "," wrong value for iflg ", ABS( iflg ) )
+
+         END SELECT
+
+       return
+     END SUBROUTINE
+
+!-----------------------------------------------------------------------
+
+     SUBROUTINE psi2c( psi, nnr, c, ca, ng, iflg )
+
+       use recvecs_indexes, only: nm, np
+       use gvecs, only: nms, nps
+       use kinds, only: dbl
+
+       implicit none
+
+       complex(dbl) :: psi(*), c(*), ca(*)
+       integer, intent(in) :: nnr, ng, iflg
+
+       complex(dbl), parameter :: ci=(0.0d0,1.0d0)
+       integer :: ig
+
+         !
+         !  iflg "cases"
+         !
+         !  0, 10   Do not use gamma symmetry
+         !
+         !  1, 11   set psi using a wf with Gamma symmetry
+         !
+         !  2, 12   set psi combining two wf with Gamma symmetry
+         !
+       
+         SELECT CASE ( iflg )
+
+           !
+           !  Case 0, 1 and 2  SMOOTH MESH
+           !
+           CASE ( 0 )
+             !
+             do ig = 1, ng
+               c( ig ) = psi( nps( ig ) )
+             end do
+             !
+           CASE ( 1 )
+             !
+             CALL errore(" psi2c "," wrong value for iflg ", 11 )
+             !
+           CASE ( 2 )
+             !
+             DO ig = 1, ng
+               ca(ig) = psi( nms( ig ) )
+               c (ig) = psi( nps( ig ) )
+             END DO
+
+           !
+           !  Case 10, 11 and 12  DENSE MESH
+           !
+           CASE ( 10 )
+             !
+             do ig=1,ng
+               c(ig) = psi(np(ig))
+             end do
+             !
+           CASE ( 11 )
+             !
+             CALL errore(" psi2c "," wrong value for iflg ", 1 )
+             !
+           CASE ( 12 )
+             !
+             DO ig = 1, ng
+               ca(ig) = psi( nm( ig ) )
+               c (ig) = psi( np( ig ) )
+             END DO
+
+           CASE DEFAULT
+             !
+             CALL errore(" psi2c "," wrong value for iflg ", ABS( iflg ) )
+
+         END SELECT
+       
+       return
+     END SUBROUTINE

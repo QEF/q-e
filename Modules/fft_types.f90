@@ -16,7 +16,10 @@ MODULE fft_types
   TYPE fft_dlay_descriptor
     INTEGER :: nst      ! total number of sticks
     INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
+                                 ! using proc index starting from 1 !! 
+                                 ! on proc mpime -> nsp( mpime + 1 )
     INTEGER, POINTER :: nsw(:)   ! number of sticks per processor ( wave func )
+                                 ! using proc index as above
     INTEGER :: nr1      !
     INTEGER :: nr2      ! effective FFT dimensions
     INTEGER :: nr3      ! 
@@ -30,7 +33,7 @@ MODULE fft_types
     INTEGER, POINTER :: ngl(:)   ! per proc. no. of non zero charge density/potential components
     INTEGER, POINTER :: nwl(:)   ! per proc. no. of non zero wave function plane components
     INTEGER, POINTER :: npp(:)   ! number of "Z" planes per processor
-    INTEGER, POINTER :: ipp(:)   ! index of the first "Z" plane on each proc
+    INTEGER, POINTER :: ipp(:)   ! offset of the first "Z" plane on each proc ( 0 on the first proc!!!)
     INTEGER, POINTER :: iss(:)   ! index of the first stick on each proc
     INTEGER, POINTER :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, POINTER :: ismap(:) ! for each stick in the plane indicate the position
@@ -343,6 +346,10 @@ CONTAINS
     desc%nr2x  = nr2x
     desc%nr3x  = nr3x
 
+    ! here we are setting parameter as if we were
+    ! in a serial code, sticks are along X dimension
+    ! and not along Z
+
     DO i2 = lb( 2 ), ub( 2 )
       DO i3 = lb( 3 ), ub( 3 )
         m1 = i2 + 1; if ( m1 < 1 ) m1 = m1 + nr2
@@ -353,6 +360,12 @@ CONTAINS
         END IF
       END DO
     END DO
+
+    desc%nnr  = nr1x * nr2x * nr3x
+    desc%npl  = nr3
+    desc%nnp  = nr1x * nr2x
+    desc%npp  = nr3
+    desc%ipp  = 0
 
     return
   end subroutine fft_dlay_scalar

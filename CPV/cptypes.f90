@@ -110,8 +110,6 @@
                                             !   first index: x,y,z
                                             !   second index: G vector
 
-          INTEGER, POINTER :: ig2st(:,:)  ! G-vector to stick index
-
           INTEGER, POINTER :: ig(:)     ! Global indices of the G vectors
                                         !   index: G vector
 
@@ -172,12 +170,9 @@
 
             IF (tk) THEN
               gv%hspace = .FALSE.
-              ALLOCATE(gv%ig2st(2,ngl), STAT=ierr)
             ELSE 
               gv%hspace = .TRUE.
-              ALLOCATE(gv%ig2st(4,ngl), STAT=ierr)
             END IF
-            IF( ierr /= 0 ) CALL errore(' allocate_recvecs ', ' allocating %ig2st ', ierr )
 
             IF (tk) THEN
               ALLOCATE(gv%kg_mask_l(ngwl,nk), STAT=ierr)
@@ -221,10 +216,6 @@
           END IF
           IF(ASSOCIATED(gv%gx_l)) THEN
             NULLIFY( gv%gx_l )
-          END IF
-          IF(ASSOCIATED(gv%ig2st)) THEN
-            DEALLOCATE(gv%ig2st, STAT=ierr)
-            IF( ierr /= 0 ) CALL errore(' deallocate_rvecs ', ' deallocating %ig2st ', ierr )
           END IF
           IF(ASSOCIATED(gv%kg_mask_l)) THEN
             DEALLOCATE(gv%kg_mask_l, STAT=ierr)

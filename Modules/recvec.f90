@@ -100,6 +100,8 @@
      REAL(dbl) :: ecuts = 0.0d0
      REAL(dbl) :: gcuts = 0.0d0
 
+     REAL(dbl) :: dual = 0.0d0
+
    CONTAINS
 
      SUBROUTINE deallocate_gvecs()
@@ -256,6 +258,7 @@
      !     np      = fft index for G>
      !     nm      = fft index for G<
      !     in1p,in2p,in3p = G components in crystal axis
+
 
      INTEGER, ALLOCATABLE :: np(:), nm(:), in1p(:), in2p(:), in3p(:)
 

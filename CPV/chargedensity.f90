@@ -331,7 +331,7 @@
 
 ! ... declare modules
 
-    USE fft, ONLY: pw_invfft, fft_wf_initialize
+    USE fft, ONLY: pw_invfft
     USE stick, ONLY: dfftp
     USE mp_global, ONLY: mpime
     USE turbo, ONLY: tturbo, nturbo, turbo_states
@@ -394,7 +394,6 @@
     ALLOCATE( rho( nr1x, nr2x, nr3x ), STAT=ierr )
     IF( ierr /= 0 ) CALL errore(' rhoofr ', ' allocating rho ', ABS(ierr) )
 
-    CALL fft_wf_initialize()
 
     DO ispin = 1, nspin
 
@@ -529,6 +528,8 @@
 
       END IF
 
+      !  WRITE(stdout,*) 'DEBUG: rhoofr (rho) ', SUM( rho ) * omega / ( nxl * nyl * nzl )
+
       rhoe( 1:nxl, 1:nyl, 1:nzl, ispin ) = rho( 1:nxl, 1:nyl, 1:nzl )
 
       END DO
@@ -589,3 +590,70 @@
 !=----------------------------------------------------------------------=!
       END MODULE charge_density
 !=----------------------------------------------------------------------=!
+
+
+!=----------------------------------------------------------------------=!
+!   CP subroutine to compute gradient
+!=----------------------------------------------------------------------=!
+
+      subroutine fillgrad(nspin,rhog,gradr)
+!     _________________________________________________________________
+!
+!     calculates gradient of charge density for gradient corrections
+!     in: charge density on G-space    out: gradient in R-space
+!
+      use reciprocal_vectors, only: gx
+      use recvecs_indexes, only: np, nm
+      use gvecp, only: ng => ngm
+      use grid_dimensions, only: nr1, nr2, nr3, &
+            nr1x, nr2x, nr3x, nnr => nnrx
+      use cell_base, only: tpiba
+!
+      implicit none
+! input
+      integer nspin
+      complex(kind=8) rhog(ng,nspin)
+! output
+      real(kind=8)    gradr(nnr,3,nspin)
+! local
+      complex(kind=8), allocatable :: v(:)
+      complex(kind=8) ci
+      integer iss, ig, ir
+!
+!
+      allocate( v( nnr ) ) 
+      !
+      ci=(0.0,1.0)
+      do iss=1,nspin
+         do ig=1,nnr
+            v(ig)=(0.0,0.0)
+         end do
+         do ig=1,ng
+            v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
+            v(nm(ig))=conjg(ci*tpiba*gx(1,ig)*rhog(ig,iss))
+         end do
+         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         do ir=1,nnr
+            gradr(ir,1,iss)=real(v(ir))
+         end do
+         do ig=1,nnr
+            v(ig)=(0.0,0.0)
+         end do
+         do ig=1,ng
+            v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
+     &                                 gx(3,ig)*rhog(ig,iss) )
+            v(nm(ig))= tpiba*(conjg(ci*gx(2,ig)*rhog(ig,iss)+           &
+     &                                 gx(3,ig)*rhog(ig,iss)))
+         end do
+         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         do ir=1,nnr
+            gradr(ir,2,iss)= real(v(ir))
+            gradr(ir,3,iss)=aimag(v(ir))
+         end do
+      end do
+      !
+      deallocate( v )
+!
+      return
+      end subroutine
+

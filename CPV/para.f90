@@ -199,38 +199,6 @@ end module para_mod
 !
 !
 !----------------------------------------------------------------------
-      subroutine cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,sign)
-!----------------------------------------------------------------------
-!
-!   not-so-parallel 3d fft for box grid, implemented only for sign=1
-!   G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-!   The array f (overwritten on output) is NOT distributed:
-!   a copy is present on each processor.
-!   The fft along z  is done on the entire grid.
-!   The fft along xy is done only on planes that have components on the
-!   dense grid for each processor. Note that the final array will no
-!   longer be the same on all processors.
-!
-      use para_mod
-      use grid_dimensions, only: nr3
-      use fft_scalar, only: cft_b
-!
-      implicit none
-      integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,sign
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
-!
-      integer ir3, ibig3, imin3, imax3, np3
-!
-      call parabox(nr3b,irb3,nr3,imin3,imax3)
-      np3=imax3-imin3+1
-! np3 is the number of planes to be transformed
-      if (np3.le.0) return
-      call cft_b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,imin3,imax3,sign)
-!
-      return
-      end
-!
-!----------------------------------------------------------------------
       subroutine parabox(nr3b,irb3,nr3,imin3,imax3)
 !----------------------------------------------------------------------
 !

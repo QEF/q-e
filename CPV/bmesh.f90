@@ -20,13 +20,13 @@
 
         TYPE (processors_grid) :: bands_grid  
 
-        PUBLIC :: bands_grid, bands_mesh_setup
+        PUBLIC :: bands_grid, bands_procgrid_init
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE bands_mesh_setup( )
+   SUBROUTINE bands_procgrid_init( )
 
 !
 !  This subroutine initialize the processor grid, among which the electronic 
@@ -35,13 +35,11 @@
 !  do so.
 !  
 
-     USE mp, ONLY: mp_env
+     USE mp_global, ONLY: mpime, nproc, group
      USE processors_grid_module, ONLY: grid_init
 
-       INTEGER :: mpime, nproc, group
        INTEGER :: npx, npy, npz
 
-       CALL mp_env(nproc, mpime, group)
        npx = nproc
        npy = 1
        npz = 1
@@ -54,7 +52,7 @@
 
      RETURN
 
-   END SUBROUTINE bands_mesh_setup
+   END SUBROUTINE bands_procgrid_init
 
 !=----------------------------------------------------------------------------=!
    END MODULE bands_mesh

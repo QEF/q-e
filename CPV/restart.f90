@@ -360,7 +360,6 @@
       tv   = .FALSE.
       DO j = 1, nspin
         ALLOCATE( rhog(ng), vg(ng) )
-!        CALL fft_initialize
 !        CALL pfwfft( rhog(:,i), rho(i)%r(:,:,:) )
 !        CALL pfwfft( vg(:,i)  , vpot(:,:,:,i) )
         CALL write_restart_charge(ndw, rhog, trho, vg, tv, ng_g, &
@@ -706,7 +705,6 @@
           ALLOCATE( rhog(ng), vg(ng) )
           CALL read_restart_charge(ndr, rhog, trho, vg, tv, ng_g_, &
             ispin_, nspin_, ig_l2g, ng )
-!          CALL fft_initialize
 !          CALL pinvfft( vpot(:,:,:,i), rhog(:,i) )
 !          CALL pinvfft( rho(i)%r(:,:,:), vg(:,i) )
           DEALLOCATE( rhog, vg )
@@ -967,7 +965,7 @@
         USE io_global, ONLY: ionode, ionode_id
         USE gvecw, ONLY: ecutwfc => ecutw
         USE gvecp, ONLY: ecutrho => ecutp
-        USE fft, ONLY : fft_initialize, pfwfft, pinvfft
+        USE fft, ONLY : pfwfft, pinvfft
         USE charge_types, ONLY: charge_descriptor
         USE control_flags, ONLY: twfcollect, force_pairing
         USE io_global, ONLY: stdout
@@ -1296,7 +1294,6 @@
         DO j = 1, nspin
           ALLOCATE( rhog(ng_l) )
           ALLOCATE( vg(ng_l) )
-          CALL fft_initialize
           CALL pfwfft( rhog(:), rho(:,:,:,j) )
           CALL pfwfft( vg(:)  , vpot(:,:,:,j) )
           CALL write_restart_charge(ndw, rhog, trho, vg, tv, ng_g, &
@@ -1468,7 +1465,7 @@
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ecutwfc => ecutw
         USE gvecp, ONLY: ecutrho => ecutp
-        USE fft, ONLY : fft_initialize, pfwfft, pinvfft
+        USE fft, ONLY : pfwfft, pinvfft
         USE charge_types, ONLY: charge_descriptor
         USE ions_base, ONLY: nat, nsp, na
         USE electrons_module, ONLY: nspin
@@ -1867,7 +1864,6 @@
             ALLOCATE( rhog(ng_l), vg(ng_l) )
             CALL read_restart_charge(ndr, rhog, trho, vg, tv, ng_g, &
               ispin_, nspin_, gv%ig, ng_l )
-            CALL fft_initialize
             CALL pinvfft( vpot(:,:,:,j), rhog(:) )
             CALL pinvfft( rho(:,:,:,j), vg(:) )
             DEALLOCATE( rhog, vg )
@@ -1962,7 +1958,7 @@
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ecutwfc => ecutw
         USE gvecp, ONLY: ecutrho => ecutp
-        USE fft, ONLY : fft_initialize, pfwfft, pinvfft
+        USE fft, ONLY : pfwfft, pinvfft
         USE charge_types, ONLY: charge_descriptor
         USE ions_base, ONLY: nat, nsp, na
         USE electrons_module, ONLY: nspin

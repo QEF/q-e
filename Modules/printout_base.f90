@@ -26,7 +26,7 @@ MODULE printout_base
 CONTAINS
 
 
-  SUBROUTINE printout_base_setup( outdir, prefix )
+  SUBROUTINE printout_base_init( outdir, prefix )
 
      USE io_global, ONLY: ionode, ionode_id
      USE mp_global, ONLY: group
@@ -74,7 +74,7 @@ CONTAINS
         CALL errore(' printout_base_setup ',' error in opening unit ',iunit)
 
     RETURN
-  END SUBROUTINE printout_base_setup
+  END SUBROUTINE printout_base_init
 
 
   SUBROUTINE printout_base_open( )

@@ -19,83 +19,26 @@
 
         PRIVATE
         
-        REAL(dbl) :: old_clock_value = 0.0d0
+        REAL(dbl) :: old_clock_value = -1.0d0
 
-        REAL(dbl) :: timeform, timernl, timerho, timevof, timerd
-        REAL(dbl) :: timeorto, timeloop
-        INTEGER   :: timecnt
+        REAL(dbl) :: timeform = 0.0d0, &
+                     timernl = 0.0d0,  &
+                     timerho = 0.0d0,  &
+                     timevof = 0.0d0,  &
+                     timerd = 0.0d0
+        REAL(dbl) :: timeorto = 0.0d0, timeloop = 0.0d0
+        INTEGER   :: timecnt = 0
 
         REAL(dbl) :: cclock
         EXTERNAL  :: cclock
 
 
-        PUBLIC :: printout_setup, printout, printmain
+        PUBLIC :: printout, printmain
         PUBLIC :: print_time, print_sfac, printacc, print_legend
         PUBLIC :: cp_print_rho
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE printout_setup( outdir, prefix )
-
-     USE mp_global, ONLY: group
-     USE mp, ONLY: mp_bcast
-     USE printout_base, ONLY: pprefix, printout_base_setup
-
-     INTEGER :: iunit, ierr
-     CHARACTER(LEN=*), INTENT(IN) :: outdir
-     CHARACTER(LEN=*), INTENT(IN) :: prefix
-     CHARACTER(LEN=256) :: file_name
-
-     old_clock_value      = cclock()
-
-     CALL printout_base_setup( outdir, prefix )
-
-
-! ...     Print Headers to files
-
-         IF( ionode ) THEN
-
-           file_name = trim(pprefix)//'.tmv'
-           CALL open_and_append( opt_unit, file_name )
-           WRITE( opt_unit, 940 ) 
-           CLOSE( opt_unit )
- 940       FORMAT('        ESR     FWFFT        XC       HAR    INVFFT    STRESS       TOT')
-
-           file_name = trim(pprefix)//'.tmo'
-           CALL open_and_append( opt_unit, file_name )
-           WRITE( opt_unit, 930 ) 
-           CLOSE( opt_unit )
- 930       FORMAT('     RHOSET    SIGSET      DIAG     TRASF      ITER  BACKTRAS       TOT')
-
-           file_name = trim(pprefix)//'.tms'
-           CALL open_and_append( opt_unit, file_name )
-           WRITE( opt_unit, 920 ) 
-           CLOSE( opt_unit )
- 920       FORMAT('        EK        EXC       ESR        EH        EL       ENL       TOT')
-
-           file_name = trim(pprefix)//'.tml'
-           CALL open_and_append( opt_unit, file_name )
-           WRITE( opt_unit, 910 ) 
-           CLOSE( opt_unit )
- 910       FORMAT('     FORM     NLRH   RHOOFR   VOFRHO    FORCE    ORTHO     LOOP')
-
-         END IF
-
-         timeform = 0.0d0
-         timernl  = 0.0d0
-         timerho  = 0.0d0
-         timevof  = 0.0d0
-         timerd   = 0.0d0
-         timeorto = 0.0d0
-         timeloop = 0.0d0
-         timecnt = 0
-
-     RETURN
-   END  SUBROUTINE printout_setup
-
-
 !=----------------------------------------------------------------------------=!
 
 
@@ -122,6 +65,7 @@
       USE cell_base, ONLY: iforceh
       USE printout_base, ONLY: printout_base_open, printout_base_close, &
             printout_pos, printout_cell, printout_stress
+      USE environment, ONLY: start_cclock_val
 
       IMPLICIT NONE
 
@@ -151,6 +95,10 @@
 
       tfile = ( tprint .AND. ( nfi > 0 ) )
       ttsic = ( self_interaction /= 0 )
+      
+      IF( first ) THEN
+        old_clock_value = start_cclock_val
+      END IF
 
       s0 = cclock()
       sec_per_loop = (s0 - old_clock_value)
@@ -555,22 +503,28 @@
 
           file_name = trim(pprefix)//'.tmo'
           CALL open_and_append( opt_unit, file_name )
+          IF( index == 0 ) WRITE( opt_unit, 930 ) 
           CALL print_ortho_time( opt_unit )
           CLOSE( opt_unit )
+ 930      FORMAT('     RHOSET    SIGSET      DIAG     TRASF      ITER  BACKTRAS       TOT')
 
           file_name = trim(pprefix)//'.tmv'
           CALL open_and_append( opt_unit, file_name )
+          IF( index == 0 ) WRITE( opt_unit, 940 ) 
           CALL print_vofrho_time( opt_unit )
           CLOSE( opt_unit )
+ 940      FORMAT('        ESR     FWFFT        XC       HAR    INVFFT    STRESS       TOT')
 
           file_name = trim(pprefix)//'.tms'
           CALL open_and_append( opt_unit, file_name )
+          IF( index == 0 ) WRITE( opt_unit, 920 ) 
           CALL print_stress_time( opt_unit )
           CLOSE( opt_unit )
+ 920      FORMAT('        EK        EXC       ESR        EH        EL       ENL       TOT')
 
           file_name = trim(pprefix)//'.tml'
           CALL open_and_append( opt_unit, file_name )
-          CALL print_stress_time( opt_unit )
+          IF( index == 0 ) WRITE( opt_unit, 910 ) 
           IF( timecnt > 0 ) THEN
             timeform = timeform / timecnt
             timernl  = timernl  / timecnt
@@ -583,6 +537,7 @@
  999        FORMAT(7(F9.3))
           END IF
           CLOSE( opt_unit )
+ 910      FORMAT('     FORM     NLRH   RHOOFR   VOFRHO    FORCE    ORTHO     LOOP')
 
           index   = index + 1
           timesum = timesum + timeloop
@@ -622,7 +577,7 @@
       USE cp_types, ONLY: recvecs
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_max, mp_get, mp_put
-      USE fft, ONLY : fft_initialize, pfwfft, pinvfft
+      USE fft, ONLY : pfwfft, pinvfft
       USE charge_types, ONLY: charge_descriptor
 
       TYPE (recvecs), INTENT(IN) ::  gv
@@ -637,8 +592,6 @@
       REAL   (dbl), ALLOCATABLE :: gx_rcv(:,:)
       INTEGER     , ALLOCATABLE :: ig_rcv(:)
       COMPLEX(dbl), ALLOCATABLE :: sfac_rcv(:,:)
-
-        CALL fft_initialize
 
         nspin = SIZE(rhoe,4)
         nsp   = SIZE(sfac,1)

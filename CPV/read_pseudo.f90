@@ -1251,7 +1251,7 @@ END SUBROUTINE
          call errore('readpp','wrong potential read',15)
       endif
 
-      call dftname (nint(exfact), dft)
+      call dftname_cp (nint(exfact), dft)
       call which_dft (dft)
 !
       if(lloc(is).eq.2)then 
@@ -1749,7 +1749,7 @@ END SUBROUTINE
 ! convert from "our" conventions to Vanderbilt conventions
 !
 
-      call dftname (nint(exfact), dft)
+      call dftname_cp (nint(exfact), dft)
       call which_dft (dft)
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &

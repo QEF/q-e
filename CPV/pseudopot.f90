@@ -89,8 +89,7 @@
 !  ----------------------------------------------
 
 
-      SUBROUTINE pseudopotential_setup(nsp, pseudo_dir, psfile, &
-                 tpstab_inp, pstab_size_inp, raggio_inp)
+      SUBROUTINE pseudopotential_setup(nsp, tpstab_inp, pstab_size_inp, raggio_inp)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -103,8 +102,6 @@
 
         INTEGER, INTENT(IN) :: nsp, pstab_size_inp
         LOGICAL, INTENT(IN) :: tpstab_inp
-        CHARACTER(LEN=*), INTENT(IN) :: pseudo_dir
-        CHARACTER(LEN=*), INTENT(IN) :: psfile(:)
         REAL(dbl), INTENT(IN) :: raggio_inp(:)
 
         INTEGER :: i, is, il, l

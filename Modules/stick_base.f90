@@ -18,7 +18,7 @@
         SAVE
 
         PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
-        PUBLIC :: sticks_owner, sticks_deallocate, pstickset
+        PUBLIC :: sticks_owner, sticks_deallocate, pstickset, sticks_maps_scalar
  
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
@@ -186,6 +186,69 @@
 
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------=
+
+  SUBROUTINE  sticks_maps_scalar( lgamma, ub, lb, b1, b2, b3, gcutm, gkcut, gcutms, stw, ngm, ngms )
+
+    LOGICAL, INTENT(IN) :: lgamma !  if true use gamma point simmetry
+    INTEGER, INTENT(IN) :: ub(:)  !  upper bounds for i-th grid dimension
+    INTEGER, INTENT(IN) :: lb(:)  !  lower bounds for i-th grid dimension
+    REAL(dbl) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
+    REAL(dbl) , INTENT(IN) :: gcutm  ! cut-off for potentials
+    REAL(dbl) , INTENT(IN) :: gkcut  ! cut-off for plane waves
+    REAL(dbl) , INTENT(IN) :: gcutms  ! cut-off for smooth mesh
+    !
+    INTEGER, INTENT(OUT) :: ngm, ngms
+    !
+    !     stick map for wave functions, note that map is taken in YZ plane
+    !
+    INTEGER, INTENT(OUT) :: stw( lb(2) : ub(2), lb(3) : ub(3) ) 
+
+    INTEGER :: i1, i2, i3, n1, n2, n3
+    REAL(dbl) :: amod
+
+    ngm = 0
+    ngms = 0
+
+    n1 = MAX( ABS( lb(1) ), ABS( ub(1) ) )
+    n2 = MAX( ABS( lb(2) ), ABS( ub(2) ) )
+    n3 = MAX( ABS( lb(3) ), ABS( ub(3) ) )
+
+    loop1: do i1 = - n1, n1
+       !
+       ! Gamma-only: exclude space with x<0
+       !
+       if (lgamma .and. i1 < 0) cycle loop1
+       !
+       loop2: do i2 = - n2, n2
+          !
+          ! Gamma-only: exclude plane with x=0, y<0
+          !
+          if(lgamma .and. i1 == 0.and. i2 < 0) cycle loop2
+          !
+          loop3: do i3 = - n3, n3
+             !
+             ! Gamma-only: exclude line with x=0, y=0, z<0
+             !
+             if(lgamma .and. i1 == 0 .and. i2 == 0 .and. i3 < 0) cycle loop3
+             !
+             amod = (i1 * b1 (1) + i2 * b2 (1) + i3 * b3 (1) ) **2 + &
+                    (i1 * b1 (2) + i2 * b2 (2) + i3 * b3 (2) ) **2 + &
+                    (i1 * b1 (3) + i2 * b2 (3) + i3 * b3 (3) ) **2
+             if (amod <= gcutm)  ngm  = ngm  + 1
+             if (amod <= gcutms) ngms = ngms + 1
+             if (amod <= gkcut ) then
+                stw( i2, i3 ) = 1
+                if (lgamma) stw( -i2, -i3 ) = 1
+             end if
+          enddo loop3
+       enddo loop2
+    enddo loop1
+
+    RETURN
+  END SUBROUTINE
+
 
 !=----------------------------------------------------------------------=
 
@@ -502,7 +565,8 @@
           USE control_flags, ONLY: gamma_only
           USE io_global, ONLY: ionode
           USE io_global, ONLY: stdout
-          USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_set
+          USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, fft_dlay_set, &
+               fft_dlay_scalar
 
 
           TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
@@ -591,7 +655,7 @@
 
 
           INTEGER :: i, j, k
-          INTEGER :: ip, is, itmp, iss, i1, i2
+          INTEGER :: ip, is, itmp, iss, i1, i2, ngm_ , ngs_
           INTEGER, ALLOCATABLE :: ist_tmp(:), index(:)
 
           tk    = .NOT. gamma_only
@@ -677,7 +741,9 @@
           CALL sticks_pairup( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
 
-! ...     Allocate data layout descriptors
+          ! ...   Allocate and Set fft data layout descriptors
+
+#if defined __PARA
 
           CALL fft_dlay_allocate( dfftp, nproc, nr1x,  nr2x )
           CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
@@ -686,6 +752,24 @@
             nproc, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (mpime+1), &
             nproc, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+
+#else
+
+          DEALLOCATE( stw )
+          ALLOCATE( stw( lb(2) : ub(2), lb(3) : ub(3) ) )
+
+          CALL sticks_maps_scalar( (.not.tk), ub, lb, b1, b2, b3, gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
+
+          IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', ABS( ngm - ngm_ ) )
+          IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', ABS( ngs - ngs_ ) )
+
+          CALL fft_dlay_allocate( dfftp, nproc, MAX(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, nproc, MAX(nr1sx, nr3sx), nr2sx )
+
+          CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
+          CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
+
+#endif
 
 ! ...     Maximum number of sticks (potentials)
           nstpx  = MAXVAL( nstp )

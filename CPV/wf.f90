@@ -22,8 +22,6 @@
   use smooth_grid_dimensions , nnrs => nnrsx
   use control_flags
   use qgb_mod
-  use work
-  use work_box
   use wfparm
   use wfparm2
   use grid_dimensions, only : nr1, nr2, nr3
@@ -64,6 +62,8 @@
   complex(kind=8), allocatable, dimension(:, :, :) :: O, Ospin, Oa
   real(kind=8), parameter :: autoaf=0.529177d0
   real(kind=8) alen,blen,clen
+
+  complex(kind=8), allocatable, dimension(:) :: qv
 !
 !
   integer,allocatable :: f3(:), f4(:)
@@ -769,6 +769,8 @@
 !
 !   Augmentation Part first
 
+     allocate( qv( nnrb ) )
+
      X=(0.d0, 0.d0)
      !
      !
@@ -778,7 +780,7 @@
            do iv = 1, nh(is)
               inl = ish(is) + (iv-1)*na(is) + ia
               ijv = ijv + 1
-              qv( 1 : nnrb ) = 0.0d0 ! call zero(2*nnrb,qv)
+              qv( 1 : nnrb ) = 0.0d0 
               do ig=1,ngb
                  qv(npb(ig))=eigrb(ig,ia,is)*qgb(ig,ijv,is)
                  qv(nmb(ig))=conjg(eigrb(ig,ia,is)*qgb(ig,ijv,is))
@@ -880,6 +882,8 @@
    if(iprsta.gt.4) then
      write(6,*) "Augmentation Part Done"
    end if
+
+   deallocate( qv )
 
 !   Then Soft Part
    if(nspin.eq.1) then
@@ -2692,32 +2696,7 @@ end subroutine wf
    end do
    return
    end subroutine grid_map
-!-----------------------------------------------------------------------
-      subroutine ivfftbold(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
-!-----------------------------------------------------------------------
-! inverse fourier transform of Q functions (Vanderbilt pseudopotentials)
-! on the  box grid . On output, f is overwritten
-!
-      use fft_scalar, only: cfft3d
-      integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
-      call start_clock(' ivfftbold ' )
 
-#ifdef __PARA
-      ! call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)  ! DEBUG
-      call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
-#else
-# if defined __AIX || __FFTW || __COMPLIB || __SCSL
-      call cfft3d(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
-# else
-      call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
-# endif
-#endif
-
-      call stop_clock(' ivfftbold ' )
-!
-      return
-      end
 !--------------------------------------------------------------
 subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !--------------------------------------------------------------
@@ -3819,7 +3798,6 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use elct
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
-      use work, only: wrk1
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use uspp_param, only: nh, nhm
       use uspp, only : nhsa=> nkb, dvan
@@ -3835,11 +3813,11 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       complex(kind=8) fp,fm,ci
       real(kind=8) af(nhsa), aa(nhsa) ! automatic arrays
       complex(kind=8)  dtemp(ngw)    !
-      complex(kind=8), pointer:: psi(:)
+      complex(kind=8), allocatable :: psi(:)
 !
 !
       call start_clock( 'dforce_field' )
-      psi => wrk1
+      allocate( psi( nnrsx ) )
 !
 !     important: if n is odd => c(*,n+1)=0.
 ! 
@@ -3952,6 +3930,8 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
             da(ig)=da(ig)+dtemp(ig)
          end do
       endif
+
+      deallocate( psi )
 !
       call stop_clock( 'dforce_field' )
 !
@@ -3970,16 +3950,14 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use elct
       use para_mod
       use smooth_grid_dimensions , nnrs => nnrsx
-!      use parms
       use gvecw , only : ngw
-      use work, only : wrk1
       use parallel_include
 !
       implicit none
 
       integer unit, jw
       complex*16 c(ngw,nx)
-      complex*16, pointer:: psis(:)
+      complex*16, allocatable :: psis(:)
 !
       integer i, ii, ig, proc, ierr, ntot, ncol, mc,ngpwpp(nproc)
       integer nmin(3), nmax(3), n1,n2,nzx,nz,nz_
@@ -4028,7 +4006,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !
 ! allocate the needed work spaces
 !
-      psis=> wrk1
+      allocate( psis( nnrs ) ) 
       psis( 1:nnrs ) = 0.0d0 ! call zero(2*nnrs,psis)
       if (me.eq.1) then
          allocate(psitot(ntot))
@@ -4082,6 +4060,8 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
          deallocate(psiwr)
          deallocate(psitot)
       end if
+
+      deallocate( psis ) 
 !
       return
 !
@@ -4120,7 +4100,6 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use elct
       use constants, only: pi, fpi
       use pseu
-      use work, only: wrk1
       use wfparm, only : iwf
 !
       use cdvan
@@ -4143,13 +4122,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       real(kind=8) rnegsum, rmin, rmax, rsum
       real(kind=8) enkin, ennl
       complex(kind=8) ci,fp,fm
-      complex(kind=8), pointer:: psi(:), psis(:)
+      complex(kind=8), allocatable :: psi(:), psis(:)
       external ennl, enkin
 !
 !
       call start_clock(' rhoiofr ')
-      psi => wrk1
-      psis=> wrk1
+      allocate( psi( nnr ) )
+      allocate( psis( nnrsx ) ) 
       ci=(0.0,1.0)
       do iss=1,nspin
          rhor( 1:nnr, iss ) = 0.0d0 ! call zero(nnr,rhor(1,iss))
@@ -4443,6 +4422,9 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       write( stdout, * ) 
       write( stdout , * ) 'State Written : ' ,iwf, 'to unit',ndwwf
       write( stdout, * ) 
+
+      deallocate( psi  )
+      deallocate( psis ) 
 
       call stop_clock(' rhoiofr ')
 !

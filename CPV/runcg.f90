@@ -24,13 +24,11 @@
 
 
         INTEGER :: nsteep = 5
-        INTEGER :: maxnstep = 200
         REAL(dbl) :: cg_dt = 4.0d0
         REAL(dbl) :: cg_dt2 = 25.0d0
         REAL(dbl) :: cg_emass = 200.d0
-        REAL(dbl) :: cg_ethr = 1.d-7
         LOGICAL :: cg_prn = .FALSE.
-        REAL(dbl) :: old_clock_value = 0.0d0
+        REAL(dbl) :: old_clock_value = -1.0d0
 
         INTERFACE runcg
           MODULE PROCEDURE runcg_new
@@ -39,7 +37,7 @@
         REAL(dbl) :: cclock
         EXTERNAL  :: cclock
 
-        PUBLIC :: runcg, runcg_info, runcg_setup
+        PUBLIC :: runcg, runcg_info
 
 
 ! ---------------------------------------------------------------------- !
@@ -48,21 +46,10 @@
 
         SUBROUTINE runcg_info( unit )
           INTEGER, INTENT(IN) :: unit
-          WRITE(unit, 100) cg_ethr, maxnstep
- 100      FORMAT(/,3X,'Using Conjugate Gradient for electronic minimization', &
-                 /,3X,'energy threshold ........... = ',1D10.4, &
-                 /,3X,'maximum number of iterations = ', 1I6 )
+ 100      FORMAT(/,3X,'Using Conjugate Gradient for electronic minimization')
           RETURN
         END SUBROUTINE
 
-        SUBROUTINE runcg_setup( ethr_in, maxnstep_in )
-          REAL(dbl), INTENT(IN) :: ethr_in
-          INTEGER, INTENT(IN) :: maxnstep_in
-          cg_ethr = ethr_in
-          maxnstep = maxnstep_in
-          old_clock_value = cclock()
-          RETURN
-        END SUBROUTINE
 
 
 !  -----------------------------------------------------------------------
@@ -70,7 +57,7 @@
 
    SUBROUTINE runcg_new(tortho, tprint, prn, rhoe, desc, atoms_0, gv, kp, &
                 ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
-                fnl, vpot, doions, edft )
+                fnl, vpot, doions, edft, maxnstep, cgthr )
 
 !  this routine computes the electronic ground state via ...
 !  END manual
@@ -99,6 +86,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
       USE control_flags, ONLY: force_pairing
+      USE environment, ONLY: start_cclock_val
 
       IMPLICIT NONE
 
@@ -118,6 +106,8 @@
       REAL(dbl) :: occ(:,:,:)
       TYPE (projector) :: fnl(:,:)
       TYPE (dft_energy_type) :: edft
+      INTEGER :: maxnstep
+      REAL(dbl) :: cgthr
 
       REAL(dbl)    :: ei(:,:,:)
       REAL(dbl)    :: vpot(:,:,:,:)
@@ -176,6 +166,12 @@
 
       ALLOCATE( dt2bye( ngw ) )
       dt2bye = delt * delt / pmss
+
+      WRITE(stdout,100) cgthr, maxnstep
+ 100  FORMAT(/,3X,'Using Conjugate Gradient for electronic minimization', &
+             /,3X,'energy threshold ........... = ',1D10.4, &
+             /,3X,'maximum number of iterations = ', 1I6 )
+
 
       IF(ionode) THEN
         WRITE( stdout,'(/,3X,"Conjugate Gradient Optimizations, starting ...")' )
@@ -282,9 +278,12 @@
         ELSE
           dek   = 1.0d0
         END IF
+
+        IF( old_clock_value < 0.0d0 ) old_clock_value = start_cclock_val
         s0 = cclock()
         seconds_per_iter = (s0 - old_clock_value)
         old_clock_value = s0
+
         IF( ionode ) THEN
           WRITE( stdout,113) iter, emin, demin, ekinc, seconds_per_iter
 113       FORMAT(1X,I5,2X,F14.6,2X,3D12.4)
@@ -298,7 +297,7 @@
         IF (check_stop_now()) THEN
           EXIT CONJUGATE_GRADIENTS
         END IF
-        IF( ABS( demin ) / MAXVAL( nb ) < cg_ethr ) THEN
+        IF( ABS( demin ) / MAXVAL( nb ) < cgthr ) THEN
           IF(ionode) WRITE( stdout,*) "  convergence achieved successfully"
           doions = .TRUE.
           EXIT CONJUGATE_GRADIENTS

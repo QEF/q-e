@@ -52,7 +52,8 @@
                   tcp, tcap, tdamp, tdampions, tconvthrs, tolp, &
                   convergence_criteria, tionstep, nstepe, tsteepdesc, &
                   ionic_conjugate_gradient, tconjgrad_ion, &
-                  tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter, force_pairing
+                  tatomicwfc, tscreen, gamma_only, force_pairing, &
+                  tchi2
 
 
         PUBLIC ::  fix_dependencies, check_flags
@@ -108,9 +109,8 @@
         LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
         LOGICAL :: tuspp = .FALSE.      ! Ultra-soft pseudopotential are being used
         LOGICAL :: printwfc = .FALSE.   ! Print wave functions, temporarely used only by ensemble-dft
-
-! ...   Force pairing
-        LOGICAL :: force_pairing
+        LOGICAL :: force_pairing = .FALSE.   ! ...   Force pairing
+        LOGICAL :: tchi2 = .FALSE.      ! Compute Chi^2
 
 
         TYPE (convergence_criteria) :: tconvthrs
@@ -179,12 +179,15 @@
         LOGICAL :: tcp = .FALSE.
         REAL(dbl) :: tolp = 0.0d0   !  tolerance for temperature variation
 
-        REAL(dbl) :: ekin_conv_thr = 0.0d0
-        INTEGER   :: ekin_maxiter = 100
-        REAL(dbl) :: etot_conv_thr = 0.0d0
-        INTEGER   :: etot_maxiter = 100
-        REAL(dbl) :: forc_conv_thr = 0.0d0
-        INTEGER   :: forc_maxiter = 100
+        REAL(dbl), PUBLIC :: &
+          ekin_conv_thr = 0.0d0, &!  conv. threshold for fictitious e. kinetic energy
+          etot_conv_thr = 0.0d0, &!  conv. threshold for DFT energy
+          forc_conv_thr = 0.0d0   !  conv. threshold for atomic forces
+        INTEGER, PUBLIC   :: &
+          ekin_maxiter = 100,    &!  max number of iter. for ekin convergence
+          etot_maxiter = 100,    &!  max number of iter. for etot convergence
+          forc_maxiter = 100      !  max number of iter. for atomic forces conv.
+
 
   !
   ! ... Several variables controlling the run

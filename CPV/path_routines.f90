@@ -50,7 +50,7 @@ MODULE path_routines
       USE input_parameters, ONLY : max_seconds
       USE input_parameters, ONLY : ntyp, nat, na_inp, sp_pos, rd_pos, &
                                    atom_mass, atom_label, if_pos, rd_vel, &
-                                   atomic_positions
+                                   atomic_positions, ion_radius
       !
       USE io_global,     ONLY : ionode, ionode_id
       USE mp_global,     ONLY : mpime
@@ -125,7 +125,7 @@ MODULE path_routines
 
       CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, rd_vel, &
                            atom_mass, atom_label, if_pos, atomic_positions, &
-                           alat_ , a1, a2, a3  )
+                           alat_ , a1, a2, a3, ion_radius  )
       !
       CALL check_stop_init( max_seconds )
       !

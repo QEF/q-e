@@ -18,14 +18,13 @@
          pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
        USE orthogonalize_base, ONLY: sqr_matmul, sigset, rhoset, diagonalize_rho, &
          BACKRHOSET, SIGRHOSET, BACKRHOSET2, SIGRHOSET2
+       USE control_flags, ONLY: timing
 
        IMPLICIT NONE
 
        SAVE
 
        PRIVATE
-
-       LOGICAL :: timing = .false.
 
        INTEGER :: ortho_tune = 16
 
@@ -53,28 +52,13 @@
          MODULE PROCEDURE ortho_s, ortho_v, ortho_m
        END INTERFACE
 
-       PUBLIC :: ortho, orthogonalize_info, orthogonalize_setup
+       PUBLIC :: ortho, orthogonalize_info
        PUBLIC :: print_ortho_time
 
 !=----------------------------------------------------------------------------=!
      CONTAINS
 !=----------------------------------------------------------------------------=!
 
-       SUBROUTINE orthogonalize_setup(timing_inp  )
-         LOGICAL, INTENT(IN) :: timing_inp
-           timing = timing_inp
-           timrhos = 0.0d0
-           timsigs = 0.0d0
-           timdiag = 0.0d0
-           timtras1 = 0.0d0
-           timiter = 0.0d0
-           timbtra = 0.0d0
-           timtot = 0.0d0
-           timcnt = 0
-         RETURN
-       END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
 
        SUBROUTINE orthogonalize_info( unit )
          USE control_flags, ONLY: ortho_eps, ortho_max

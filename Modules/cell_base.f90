@@ -189,6 +189,8 @@
           RETURN
         END SUBROUTINE R_TO_S1
 
+!------------------------------------------------------------------------------!
+
         SUBROUTINE R_TO_S3 ( R, S, na, nsp, hinv )
           REAL(dbl), intent(out) ::  S(:,:)
           INTEGER, intent(in) ::  na(:), nsp
@@ -209,6 +211,8 @@
           END DO
           RETURN
         END SUBROUTINE R_TO_S3
+
+!------------------------------------------------------------------------------!
 
         SUBROUTINE R_TO_S1B ( R, S, hinv )
           REAL(dbl), intent(out) ::  S(:)
@@ -241,6 +245,8 @@
           RETURN
         END SUBROUTINE s_to_r1
 
+!------------------------------------------------------------------------------!
+
         SUBROUTINE s_to_r1b (S,R,h)
           REAL(dbl), intent(in) ::  S(3)
           REAL(dbl), intent(out) :: R(3)
@@ -254,6 +260,8 @@
           END DO
           RETURN
         END SUBROUTINE s_to_r1b
+
+!------------------------------------------------------------------------------!
 
         SUBROUTINE s_to_r3 ( S, R, na, nsp, h )
           REAL(dbl), intent(in) ::  S(:,:)
@@ -383,6 +391,7 @@
         RETURN
       END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
       SUBROUTINE pbcs_vectors(v, w, m)
 ! ... This subroutine compute the periodic boundary conditions in the scaled
@@ -497,6 +506,7 @@
     RETURN
   END SUBROUTINE
       
+!------------------------------------------------------------------------------!
 
   SUBROUTINE cell_steepest( hnew, h, delt, iforceh, fcell )
     REAL(kind=8), INTENT(OUT) :: hnew(3,3)
@@ -515,6 +525,7 @@
   END SUBROUTINE
 
 
+!------------------------------------------------------------------------------!
 
   SUBROUTINE cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
     REAL(kind=8), INTENT(OUT) :: hnew(3,3)
@@ -551,6 +562,7 @@
     RETURN
   END SUBROUTINE
 
+!------------------------------------------------------------------------------!
 
   subroutine cell_hmove( h, hold, delt, iforceh, fcell )
     real(kind=8), intent(out) :: h(3,3)
@@ -569,6 +581,7 @@
     return
   end subroutine
 
+!------------------------------------------------------------------------------!
 
   subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
     real(kind=8), intent(out) :: fcell(3,3)
@@ -589,6 +602,7 @@
     return
   end subroutine
 
+!------------------------------------------------------------------------------!
 
   subroutine cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
     real(kind=8), intent(out) :: hnew(3,3)
@@ -615,6 +629,7 @@
     return
   end subroutine
 
+!------------------------------------------------------------------------------!
 
   subroutine cell_gamma( hgamma, ainv, h, velh )
     implicit none
@@ -636,6 +651,7 @@
     return
   end subroutine
 
+!------------------------------------------------------------------------------!
 
   subroutine cell_kinene( ekinh, temphh, velh )
     use constants, only: factem
@@ -653,6 +669,13 @@
     return
   end subroutine
 
+!------------------------------------------------------------------------------!
+
+  function cell_alat( )
+    real(dbl) :: cell_alat
+    cell_alat = alat
+    return 
+  end function
 
 !
 !------------------------------------------------------------------------------!
@@ -739,6 +762,16 @@ CONTAINS
     enddo
     return
   end function
+
+  subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
+    !  shift values of nose variables to start a new step
+    implicit none
+    real(kind=8), intent(out) :: xnhhm(3,3), xnhh0(3,3)
+    real(kind=8), intent(in) :: xnhhp(3,3)
+      xnhhm = xnhh0
+      xnhh0 = xnhhp
+    return
+  end subroutine
 
 !
 !------------------------------------------------------------------------------!

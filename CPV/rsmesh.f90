@@ -39,7 +39,7 @@
 
         LOGICAL :: depend = .FALSE.
 
-        PUBLIC :: real_space_grid, real_space_mesh_setup
+        PUBLIC :: real_space_grid, realspace_procgrid_init
 
 !=----------------------------------------------------------------------------=!
       CONTAINS
@@ -49,7 +49,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE real_space_mesh_setup(t2dpegrid_inp)
+      SUBROUTINE realspace_procgrid_init( twod_grid )
 
 !  This subroutines defines the processors grid for the real space data
 !  distribution.
@@ -57,18 +57,15 @@
 !  ----------------------------------------------
 
 
-        USE mp, ONLY: mp_env
-        LOGICAL, INTENT(IN) :: t2dpegrid_inp
+        USE mp_global, ONLY: nproc, group, mpime
+        LOGICAL, INTENT(IN), OPTIONAL :: twod_grid
         INTEGER :: npx, npy, npz
-        INTEGER :: nproc, mpime, group
 ! ..
-        CALL mp_env(nproc, mpime, group)
         npx = 1
-        IF ( t2dpegrid_inp ) THEN
-          CALL calculate_grid_dims(nproc, npy, npz) 
-        ELSE
-          npy = 1
-          npz = nproc
+        npy = 1
+        npz = nproc
+        IF ( PRESENT( twod_grid ) ) THEN
+          IF( twod_grid ) CALL calculate_grid_dims(nproc, npy, npz) 
         END IF
         CALL grid_init( real_space_grid, group, nproc, mpime, npx, npy, npz )
         IF ( ( npy * npz * npx ) /= nproc ) THEN
@@ -77,7 +74,7 @@
         depend = .TRUE.
 
         RETURN
-      END SUBROUTINE real_space_mesh_setup
+      END SUBROUTINE realspace_procgrid_init
 
 !=----------------------------------------------------------------------------=!
       END MODULE real_space_mesh

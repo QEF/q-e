@@ -581,7 +581,7 @@
       SUBROUTINE print_ks_states( psi, file_name )
 
         USE kinds
-        USE fft, ONLY: pw_invfft, fft_wf_initialize
+        USE fft, ONLY: pw_invfft
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp, ONLY: mp_barrier, mp_sum
         USE io_global, ONLY: ionode, ionode_id
@@ -616,7 +616,6 @@
         ALLOCATE( zcomp( nr3_g ), rcomp2( nr3_g ) )
         ALLOCATE( psi2( nr1_l, nr2_l, nr3_l ) )
 
-        CALL fft_wf_initialize
         CALL pw_invfft( psi2, psi, psi )
         
         INQUIRE( UNIT=ksunit, OPENED=top )
