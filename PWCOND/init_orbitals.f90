@@ -5,6 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
+! Mar. 2005 : In each region, the orbitals are ordered according to the
+!             z coordinate of the atomic positions. (ADC)
+!
 subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !
 ! Calculates and allocates some variables describing the nonlocal
@@ -110,7 +114,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   endif
 
   ilocros = 0
-  ioins = ilocros + lnocros 
+  ioins =  lnocros 
   irocros = ioins + noins
   
   do na = 1, nat
@@ -188,6 +192,34 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
         endif
       enddo
     enddo
+  enddo
+
+!
+!  order orbital in order of increasing taunew
+!
+  do iorb=1,ilocros
+     do iorb1=iorb+1,ilocros
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  &
+           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
+                         natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+     enddo
+  enddo
+
+  do iorb=lnocros+1,lnocros+noins
+     do iorb1=iorb+1,lnocros+noins
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  &
+           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
+                         natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+     enddo
+  enddo
+
+  do iorb=lnocros+noins+1,lnocros+noins+rnocros
+     do iorb1=iorb+1,lnocros+noins+rnocros
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  then
+           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
+                         natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+        endif
+     enddo
   enddo
 
   do iorb = 1, norb
@@ -359,4 +391,31 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   return
 end subroutine init_orbitals
 
+subroutine exchange(natih1,tblm1,taunew1,natih2,tblm2,taunew2)
+
+use kinds, only : dp
+implicit none
+
+integer :: natih1(2),natih2(2),tblm1(4),tblm2(4)
+real(kind=dp) ::taunew1(4),taunew2(4), rdum
+
+integer :: i, idum
+
+do i=1,2
+   idum=natih1(i)
+   natih1(i)=natih2(i)
+   natih2(i)=idum
+enddo
+do i=1,4
+   idum=tblm1(i)
+   tblm1(i)=tblm2(i)
+   tblm2(i)=idum
+enddo
+do i=1,4
+   rdum=taunew1(i)
+   taunew1(i)=taunew2(i)
+   taunew2(i)=rdum
+enddo
+return
+end
 
