@@ -108,9 +108,10 @@ MODULE input_parameters
           ! 'cp-wf'    = Car-Parrinello with wannier functions
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(12)
+        CHARACTER(LEN=80) :: calculation_allowed(13)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd', 'cp-wf' /
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd', &
+          'cp-wf' /
           ! Allowed value for calculation parameters
 
 
