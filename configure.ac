@@ -1,6 +1,5 @@
 AC_INIT(PWscf, 2.1, , pwscf)
 AC_REVISION(0.01)
-AC_PREREQ(2.53)
 
 # store variables from the environment (may be set or not)
 topdir=$TOPDIR
@@ -42,7 +41,7 @@ case $build in
 ia64-*-linux-gnu )
 	is_linux64=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc efc f90 f77"
+	try_f90="ifort ifc efc f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
@@ -50,7 +49,7 @@ ia64-*-linux-gnu )
 x86_64-*-linux-gnu )
 	is_linux64=1
 	try_f90_parallel="mpif90"
-	try_f90="pgf90 f90 pgf77 f77"
+	try_f90="pgf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
@@ -58,7 +57,7 @@ x86_64-*-linux-gnu )
 *-pc-linux-gnu )
 	is_linux=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc pgf90 g95 f90 pgf77 f77"
+	try_f90="ifort ifc pgf90 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
@@ -68,27 +67,27 @@ x86_64-*-linux-gnu )
 *-ibm-aix* )
 	is_aix=1
 	try_f90_parallel="mpxlf90_r mpxlf90"
-	try_f90="xlf90_r xlf90 f90 xlf f77"
+	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX"
 	;;
 mips-sgi-* )
 	is_mips=1
-	try_f90="f90 f77"
+	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
 alphaev*-dec-osf* )
 	is_alpha=1
-	try_f90="f90 f77"
+	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
 sparc-sun-* )
 	is_sparc=1
 	try_f90_parallel="mpf90"
-	try_f90="f90 f77"
+	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
@@ -101,7 +100,7 @@ sparc-sun-* )
 	;;
 powerpc-apple-darwin* )
 	is_mac=1
-	try_f90="xlf90 f90 f77"
+	try_f90="xlf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__MAC"
