@@ -10,8 +10,8 @@ default:
 	@echo '  pp           postprocessing programs'
 	@echo '  gamma        Gamma-only version of pw and ph'
 	@echo '  nc           non collinear magnetic version of pw code'
+	@echo '  pwneb        version of pw with NEB'
 	@echo '  pwcond       ballistic conductance'
-	@echo '  pwneb        basic code for scf, structure optimization, MD and NEB)'
 	@echo '  d3           third-order derivatives'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -62,14 +62,13 @@ links:
 	test -d bin || mkdir bin
 	( cd bin/ ; \
 	  for exe in ../PW/pw.x ../PW/memory.x ../NEB/pwneb.x ../PH/ph.x \
-		 ../D3/d3.x \
-		 ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x \
-		 ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
-		 ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x \
-		 ../PP/plotband.x ../PWCOND/pwcond.x ../pwtools/band_plot.x \
-		 ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x \
-		 ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x \
-		 ../pwtools/kpoints.x ; do \
+	   	     ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x \
+		../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x \
+		../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
+		../PP/voronoy.x ../PP/plotband.x ../PWCOND/pwcond.x \
+		../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
+		../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
+		../pwtools/ev.x ../pwtools/kpoints.x ; do \
 	    if test -f $$exe ; then ln -fs $$exe . ; fi \
 	  done \
 	)
@@ -79,7 +78,7 @@ clean:
 	touch make.rules make.sys # make complains if they aren't there
 				  # same with .dependencies below
 	for dir in PW PWNC NEB PH PP D3 PWCOND Gamma pwtools upftools \
-		   Modules install clib flib FPMD CPV figa ; do \
+		   Modules install clib flib FPMD CPV ; do \
 	  if test -d $$dir ; then \
 	    ( cd $$dir ; touch .dependencies ; make clean_ ) \
 	  fi \
@@ -98,7 +97,8 @@ veryclean: clean
 tar:
 	rm -f pw.tar pw.tar.gz
 	find License README */README INSTALL configure \
-	     makedeps.sh moduledep.sh Makefile */Makefile Makefile.neb NEB/make.dep \
+	     makedeps.sh moduledep.sh Makefile */Makefile \
+	     Makefile.neb NEB/make.dep \
 	     configure.new configure.ac config.guess config.sub \
 	     install-sh make.rules.in make.sys.in \
 	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
