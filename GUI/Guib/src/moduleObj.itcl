@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.2 2004-04-05 13:20:15 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -180,6 +180,7 @@
 #        _openReadNamelistVar   -- reads the next name of a variable in the namelist
 #        _openReadNamelistValue -- reads the next value of a variable in the namelist
 #        _openReadKeyword       -- reads keyword from the input according to "-nocase" status
+#        _openSyntaxError       -- method for dealing with file-read errors
 #   
 #      3.7 methods connected with the "Save" menu    
 #        _manageSave   -- wrapper for "_save" method
@@ -448,6 +449,7 @@ class ::guib::moduleObj {
     private method _openReadNamelistVar   {obj fileChannel}
     private method _openReadNamelistValue {} 
     private method _openReadKeyword       {keyword}
+    private method _openSyntaxError       {text {addSkipMsg 1}}
     private method _isDisabledKey         {obj id ident}
 
     #
