@@ -75,7 +75,16 @@ subroutine punch_band (filband)
 #ifdef __PARA
   use para, only: me
 #endif
-  use pwcom
+  use atom
+  use basis
+  use brilz
+  use constants, only: rytoev
+  use gvect
+  use klist
+  use units
+  use wvfct
+  use wavefunctions
+  use us
   use becmod
 
   implicit none

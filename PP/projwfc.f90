@@ -16,6 +16,7 @@ program projwfc
   ! outdir      temporary directory where files resides
   !
   use pwcom
+  use parameters, only : DP
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para, only: me
@@ -84,7 +85,20 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
-  use pwcom
+  use atom
+  use basis
+  use brilz
+  use constants, only: rytoev
+  use gvect
+  use klist
+  use ldaU
+  use lsda_mod
+  use symme, only: nsym, irt
+  use varie, only: newpseudo
+  use wvfct
+  use units
+  use us
+  use wavefunctions
   use becmod
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA

@@ -10,7 +10,7 @@
 subroutine print_clock_pw
    !
    ! this routine prints out the clocks at the end of the run
-   ! it tries to construct the calling tree of the program..
+   ! it tries to construct the calling tree of the program.
 
    use pwcom
    implicit none

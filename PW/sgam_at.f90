@@ -152,7 +152,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                  ft1 = ft (1) * nr1
                  ft2 = ft (2) * nr2
                  ft3 = ft (3) * nr3
-                 ! check if the fractional transaltions are commensurate
+                 ! check if the fractional translations are commensurate
                  ! with the FFT grid, discard sym.op. if not
                  if (abs (ft1 - nint (ft1) ) / nr1.gt.1.0d-5 .or. &
                      abs (ft2 - nint (ft2) ) / nr2.gt.1.0d-5 .or. &

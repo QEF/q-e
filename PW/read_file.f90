@@ -47,8 +47,8 @@ subroutine read_file
   kunittmp = 0
 
   !  here we read the variables that dimension the system
-  !  in parallel execution, only root proc read the file
-  !  and then broadcast the values to all ather procs
+  !  in parallel execution, only root proc reads the file
+  !  and then broadcasts the values to all other procs
   !
   call readfile_new( 'dim', iunpun, rdum, rdum, kunittmp, 0, 0, ierr )
   IF( ierr /= 0 ) THEN

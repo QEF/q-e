@@ -20,12 +20,11 @@ subroutine gather (f_in, f_out)
   use parameters, only : DP
   implicit none
 
-  real (8) :: f_in (nxx), f_out ( * )
+  real (kind=DP) :: f_in (nxx), f_out ( * )
   include 'mpif.h'
-
-
-  integer :: root, proc, info, displs (nprocp), recvcount (nprocp)
-  root = 0
+  integer :: root = 0
+  integer :: proc, info, displs (nprocp), recvcount (nprocp)
+ 
   call start_clock ('gather')
   do proc = 1, nprocp
      recvcount (proc) = ncplane * npp (proc)
@@ -34,10 +33,9 @@ subroutine gather (f_in, f_out)
      else
         displs (proc) = displs (proc - 1) + recvcount (proc - 1)
      endif
-
   enddo
-  call mpi_barrier (MPI_COMM_POOL, info)
 
+  call mpi_barrier (MPI_COMM_POOL, info)
   call mpi_gatherv (f_in, recvcount (me), MPI_REAL8, f_out, &
        recvcount, displs, MPI_REAL8, root, MPI_COMM_POOL, info)
   call errore ('gather', 'info<>0', info)

@@ -177,12 +177,12 @@ subroutine setup
 
   call recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !
-  !     If  lxkcry = .true. , the input k-point components in crystallogra
-  !     units are transformed in cartesian coordinates
+  !     If  lxkcry = .true. , the input k-point components in crystal
+  !     axis are transformed in cartesian coordinates
   !
   if (lxkcry) call cryst_to_cart (nks, xk, bg, 1)
   !
-  !     Test that atomic coordinates are different
+  !     Test that atoms do not overlap
   !
   if (.not. (lchk_tauxk (nat, tau, bg) ) ) call errore ('setup', &
        'Wrong atomic coordinates ', 1)
@@ -290,7 +290,7 @@ subroutine setup
      .and. .not. ( calc.eq.'mm' .or. calc.eq.'nm' ) ) &
      call errore ('setup', 'Dynamics, you should have no symmetries', -1)
   !
-  !     Automatic generation of k-points
+  !     Calculate quantities used in tetrahedra method
   !
 
   if (ltetra) then

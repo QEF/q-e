@@ -35,7 +35,6 @@ program pwscf
      call ions
      if (conv_ions) goto 10
      call hinit1
-
   enddo
 
 10 call punch

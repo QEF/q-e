@@ -91,64 +91,64 @@ subroutine move_ions
 end subroutine move_ions
 !-------------------------------------------------------------------
 subroutine new_force (dg, dg2)
-!-------------------------------------------------------------------
-!
-!     find the lagrange multiplier lambda for the problem with one const
-!
-!                force*dg
-!     lambda = - --------,
-!                 |dg|^2
-!
-!     and redefine the forces:
-!
-!     force = force + lambda*dg
-!
-!     where dg is the gradient of the constraint function
-!
-use pwcom
-integer :: na, i, ipol
+  !-------------------------------------------------------------------
+  !
+  !     find the lagrange multiplier lambda for the problem with one const
+  !
+  !                force*dg
+  !     lambda = - --------,
+  !                 |dg|^2
+  !
+  !     and redefine the forces:
+  !
+  !     force = force + lambda*dg
+  !
+  !     where dg is the gradient of the constraint function
+  !
+  use pwcom
+  integer :: na, i, ipol
 
-real(kind=DP) :: dg (3, nat), lambda, dg2, DDOT, sum
+  real(kind=DP) :: dg (3, nat), lambda, dg2, DDOT, sum
 
-lambda = 0.d0
-if (dg2.ne.0.d0) then
-   lambda = - DDOT (3 * nat, force, 1, dg, 1) / dg2
-   call DAXPY (3 * nat, lambda, dg, 1, force, 1)
-   if (DDOT (3 * nat, force, 1, dg, 1) **2.gt.1.d-30) then
-call errore ('new_force', 'force is not orthogonal to constrain', - 1)
-      print *, DDOT (3 * nat, force, 1, dg, 1) **2
-   endif
-   do ipol = 1, 3
-   sum = 0.d0
-   do na = 1, nat
-   sum = sum + force (ipol, na)
-   enddo
-!
-!     impose total force = 0
-!
-   do na = 1, nat
-   force (ipol, na) = force (ipol, na) - sum / nat
-   enddo
-   enddo
-!
-! resymmetrize (should not be needed, but...)
-!
-   if (nsym.gt.1) then
-      do na = 1, nat
-      call trnvect (force (1, na), at, bg, - 1)
-      enddo
-      call symvect (nat, force, nsym, s, irt)
-      do na = 1, nat
-      call trnvect (force (1, na), at, bg, 1)
-      enddo
-   endif
-   write (6, '(/5x,"Constrained forces")')
-   do na = 1, nat
-   write (6, '(3f14.8)') (force (i, na) , i = 1, 3)
-   enddo
+  lambda = 0.d0
+  if (dg2.ne.0.d0) then
+     lambda = - DDOT (3 * nat, force, 1, dg, 1) / dg2
+     call DAXPY (3 * nat, lambda, dg, 1, force, 1)
+     if (DDOT (3 * nat, force, 1, dg, 1) **2.gt.1.d-30) then
+        call errore ('new_force', 'force is not orthogonal to constrain', - 1)
+        print *, DDOT (3 * nat, force, 1, dg, 1) **2
+     endif
+     do ipol = 1, 3
+        sum = 0.d0
+        do na = 1, nat
+           sum = sum + force (ipol, na)
+        enddo
+        !
+        !     impose total force = 0
+        !
+        do na = 1, nat
+           force (ipol, na) = force (ipol, na) - sum / nat
+        enddo
+     enddo
+     !
+     ! resymmetrize (should not be needed, but...)
+     !
+     if (nsym.gt.1) then
+        do na = 1, nat
+           call trnvect (force (1, na), at, bg, - 1)
+        enddo
+        call symvect (nat, force, nsym, s, irt)
+        do na = 1, nat
+           call trnvect (force (1, na), at, bg, 1)
+        enddo
+     endif
+     write (6, '(/5x,"Constrained forces")')
+     do na = 1, nat
+        write (6, '(3f14.8)') (force (i, na) , i = 1, 3)
+     enddo
 
-endif
-return
+  endif
+  return
 
 end subroutine new_force
 !---------------------------------------------------------------------

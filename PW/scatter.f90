@@ -17,9 +17,10 @@ subroutine scatter (f_in, f_out)
 #ifdef __PARA
 #include "machine.h"
   use para
+  use parameters, only : DP
   implicit none
 
-  real (8) :: f_in ( * ), f_out (nxx)
+  real (kind=DP) :: f_in ( * ), f_out (nxx)
   include 'mpif.h'
 
 
@@ -38,7 +39,7 @@ subroutine scatter (f_in, f_out)
   call mpi_barrier (MPI_COMM_POOL, info)
   call mpi_scatterv (f_in, sendcount, displs, MPI_REAL8, f_out, &
        sendcount (me), MPI_REAL8, root, MPI_COMM_POOL, info)
-  call errore ('gather_pot', 'info<>0', info)
+  call errore ('scatter', 'info<>0', info)
   if (sendcount(me).ne.nxx) f_out(sendcount(me)+1:nxx) = 0.d0
 
   call stop_clock ('scatter')
