@@ -181,7 +181,7 @@
                read(1,*) ((zstar(i,j,na), j=1,3),i=1,3)
             end do
  20         read(1,'(a)',end=10,err=10) line
-            if (line(1:17) == '     Raman tensor') go to 25
+            if (line(1:10) == '     Raman') go to 25
             go to 20
  25         read(1,*,end=10,err=10)
             do na = 1,nat
@@ -272,11 +272,11 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
  write (6,'(/5x,"Polarizability (A^3 units)")')
  !
  !  correction to molecular polarizabilities from Clausius-Mossotti formula
- !  (for anisoptropic systems the 
+ !  (for anisotropic systems epsilon is replaced by its trace)
  !
  cmfac = 3.d0 / ( 2.d0 + (eps0(1,1) + eps0(2,2) + eps0(3,3))/3.d0 )
  !
- write (6,'(/5x,"Multiply by",f9.6," for Clausius-Mossotti correction")') cmfac
+ write (6,'(5x,"multiply by",f9.6," for Clausius-Mossotti correction")') cmfac
  do jpol=1,3
     do ipol=1,3
        if (ipol == jpol) then
@@ -330,7 +330,7 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
     write (6,'(/"#  mode   [cm-1]     [THz]       IR")')
  else
     write (6,'(5x,"Raman cross sections are in A^4/amu units")')
-    write (6,'(/5x,"Multiply Raman by",f9.6," for Clausius-Mossotti", &
+    write (6,'(5x,"multiply Raman by",f9.6," for Clausius-Mossotti", &
          & " correction")') cmfac**2
     write (6,'(/"#  mode   [cm-1]     [THz]      IR       Raman     depol")')
  end if
