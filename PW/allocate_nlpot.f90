@@ -103,7 +103,7 @@ subroutine allocate_nlpot
   lqx = 2*lmaxkb+1
   !
   if (lqx > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
-  allocate (vkb( npwx,  nkb))    
+  if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (qgm( ngm))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !

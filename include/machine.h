@@ -232,8 +232,6 @@
 
 #  endif
 
-#  define ZHETRD      ZHETRD
-
 #endif
 
 #if defined(__ABSOFT)

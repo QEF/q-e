@@ -60,8 +60,8 @@ subroutine init_us_1
   allocate (ylmk0( lqx * lqx))    
   dvan (:,:,:) = 0.d0
   qq (:,:,:)   = 0.d0
-  qrad(:,:,:,:)= 0.d0
   ap (:,:,:)   = 0.d0
+  if (lqx > 0) qrad(:,:,:,:)= 0.d0
 
   prefr = fpi / omega
   !
