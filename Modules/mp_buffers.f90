@@ -31,7 +31,10 @@
       USE io_global,  ONLY :  stdout
       USE kinds, ONLY : dbl
       USE parallel_include
+
+#if defined __SHMEM
       USE shmem_include
+#endif
 
       PRIVATE
       PUBLIC :: mp_sendrecv_buffers, mp_allocate_buffers, mp_deallocate_buffers, &

@@ -9,7 +9,10 @@
 MODULE mp_global
   !----------------------------------------------------------------------------
   !
+#if defined __SHMEM
   USE shmem_include
+#endif
+
   USE parallel_include
   USE kinds
   !
