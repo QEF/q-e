@@ -78,9 +78,6 @@ SUBROUTINE reduce( dim, ps )
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include  
-#  if defined (__SHMEM)
-  USE para,      ONLY : nprocp
-#  endif
   !
   IMPLICIT NONE
   !
@@ -160,11 +157,11 @@ SUBROUTINE reduce( dim, ps )
 #  if defined (__SHMEM)
      !
 # if defined (__ALTIX) || defined (__ORIGIN)
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+(n-1)*maxb), &
-                                  maxb, start, 0, nprocp, pWrkData, pWrkSync )
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+(n-1)*maxb), maxb, &
+                                  start, 0, nproc_pool, pWrkData, pWrkSync )
 # else
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*maxb), &
-                                  maxb, start, 0, nprocp, pWrkData, pWrkSync )
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*maxb), maxb, &
+                                  start, 0, nproc_pool, pWrkData, pWrkSync )
 #endif
      !                             
 #  else
@@ -188,11 +185,11 @@ SUBROUTINE reduce( dim, ps )
      !
 # if defined (__ALTIX) || defined (__ORIGIN)
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+nbuf*maxb),          &
-     &                            (dim-nbuf*maxb), start, 0, nprocp,    &
+     &                            (dim-nbuf*maxb), start, 0, nproc_pool,&
      &                            pWrkData, pWrkSync )
 # else
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+nbuf*maxb), (dim-nbuf*maxb), &
-                                  start, 0, nprocp, pWrkData, pWrkSync )
+                                  start, 0, nproc_pool, pWrkData, pWrkSync )
 # endif
      !                             
 #  else
@@ -346,7 +343,7 @@ END SUBROUTINE poolreduce
 SUBROUTINE gather( f_in, f_out )
   !----------------------------------------------------------------------------
   !
-  ! ... gathers nprocp distributed data on the first processor of every pool
+  ! ... gathers nproc_pool distributed data on the first processor of every pool
   !
   ! ... REAL*8  f_in  = distributed variable (nxx)
   ! ... REAL*8  f_out = gathered variable (nrx1*nrx2*nrx3)

@@ -10,9 +10,6 @@
 ! ... The performance of the code may depend heavily upon the
 ! ... performance of these routines.
 !
-! ... For FFTW and AIX ESSL, there are no serial drivers: 
-! ... parallel drivers are used also in the serial case
-!
 ! ... If a machine-specific routine is not available, a fake
 ! ... routine issuing an error message is compiled.
 !
