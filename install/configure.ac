@@ -634,6 +634,7 @@ then
 		case "$f90_id" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib
+				     /opt/intel/mkl72/lib/64
 				     /opt/intel/mkl701/lib/64
 				     /opt/intel/mkl70/lib/64
 				     /opt/intel/mkl/mkl61/lib/64
@@ -652,6 +653,7 @@ then
 		case "$f90_id" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib
+				     /opt/intel/mkl72/lib/32
 				     /opt/intel/mkl701/lib/32
 				     /opt/intel/mkl70/lib/32
 				     /opt/intel/mkl/mkl61/lib/32
