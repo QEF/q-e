@@ -77,6 +77,7 @@ links :
 	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
 	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
 	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \
+	      ../atomic/ld1.x \
 	  ; do \
 	      if test -f $$exe ; then ln -fs $$exe . ; fi \
 	  done \
