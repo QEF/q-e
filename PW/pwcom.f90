@@ -11,8 +11,6 @@ MODULE basis
   !
   ! ... The variables needed to describe the atoms in the unit cell
   !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : ntypx
   USE ions_base,  ONLY : &
        zv,               &! the valence charge of the atom
        nat,              &! number of atoms in the unit cell
@@ -40,7 +38,6 @@ MODULE dynam
   ! ... Variables needed for the dynamics
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : ntypx
   USE ions_base,  ONLY : amass
   !
   SAVE
@@ -196,8 +193,6 @@ MODULE ktetra
   !
   ! ... The variables for the tetrahedron method
   !  
-  USE kinds, ONLY : DP
-  !
   SAVE
   !
   INTEGER :: &
@@ -217,8 +212,6 @@ MODULE symme
   !
   ! ... The variables needed to describe the symmetry properties
   !  
-  USE kinds, ONLY : DP
-  !
   SAVE
   !
   INTEGER :: &
@@ -238,7 +231,7 @@ MODULE atom
   ! ... The variables needed to describe the atoms and related quantities
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx, ndmx, lmaxx, nchix
+  USE parameters, ONLY : npsx, ndmx, nchix
   !
   SAVE
   !
@@ -269,7 +262,7 @@ MODULE pseud
   ! ... The variables describing pseudopotentials in analytical form
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx, ntypx
+  USE parameters, ONLY : npsx
   !
   SAVE
   !
@@ -455,7 +448,6 @@ MODULE char
   !
   ! ... The names of the atoms, of the solid and of the symmetries
   !  
-  USE kinds,      ONLY : DP
   USE parameters, ONLY : npsx
   !
   SAVE
@@ -475,7 +467,7 @@ MODULE us
   ! ... These parameters are needed with the US pseudopotentials
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lmaxx, lqmax, nbrx, npsx, nqfx, ndmx
+  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx, ndmx
   !
   SAVE
   !
@@ -611,8 +603,6 @@ END MODULE
 MODULE bp
   !
   ! ... The variables needed for the Berry phase polarization calculation
-  !
-  USE kinds, ONLY : DP
   !
   SAVE
   !

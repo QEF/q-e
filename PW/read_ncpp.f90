@@ -16,7 +16,7 @@ subroutine read_ncpp (np, iunps)
        nchi, lchi, rho_at, rho_atc, numeric, nlcc
   use char, only: psd
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
-       nlcc, a_nlcc, b_nlcc, alpha_nlcc
+       a_nlcc, b_nlcc, alpha_nlcc
   use us, only: vloc_at, betar, kkbeta, nbeta, lll, dion
   use funct, only: dft, which_dft
   implicit none
