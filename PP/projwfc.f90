@@ -273,9 +273,11 @@ subroutine projwave  ( )
   enddo 
   if (nwfc /= natomwfc) call errore ('projwave', 'wrong # of atomic wfcs?', 1) 
   ! 
+
+! 
   allocate(proj (natomwfc, nbnd, nkstot) ) 
   proj   = 0.d0 
-  allocate(swfcatom (npwx , natomwfc ) ) 
+  if (.not. lda_plus_u) allocate(swfcatom (npwx , natomwfc ) ) 
   allocate(wfcatom (npwx, natomwfc) ) 
   allocate(overlap (natomwfc, natomwfc) ) 
   overlap= (0.d0,0.d0) 
@@ -455,7 +457,7 @@ subroutine projwave  ( )
   end if 
   deallocate (overlap) 
   deallocate (wfcatom) 
-  deallocate (swfcatom) 
+  if (.not. lda_plus_u) deallocate (swfcatom) 
   ! 
 #ifdef __PARA 
   ! 
