@@ -202,7 +202,21 @@ subroutine gener_pseudo
 
   allocate ( b(nbeta, nbeta), binv(nbeta, nbeta) )
 
-  if (pseudotype == 2) then
+  if (pseudotype == 1) then
+     !
+     !    unscreen the local potential, add it to all channels
+     !
+     call descreening
+     do l=0,3
+        do n=1,mesh
+           vnl(n,l)=vnl(n,l)+vpsloc(n)
+        enddo
+     enddo
+     vpsloc=0.0_dp
+     !
+     goto 500
+     !
+  else if (pseudotype == 2) then
      !
      !     symmetrize the B matrix
      !
@@ -224,8 +238,6 @@ subroutine gener_pseudo
            b(ns,ns1)=bmat(ns,ns1)
         enddo
      enddo
-  elseif (pseudotype == 1) then
-     goto 500
   endif
   !
   !   compute the inverse of the matrix B_{ij}^-1
@@ -294,36 +306,25 @@ subroutine gener_pseudo
      enddo
   endif
 
-  if (pseudotype.ne.1) then
-     do ib=1,nbeta
-        do jb=1,nbeta
-           ddd(ib,jb,1)=bmat(ib,jb)
-        enddo
+  do ib=1,nbeta
+     do jb=1,nbeta
+        ddd(ib,jb,1)=bmat(ib,jb)
      enddo
-  endif
+  enddo
   !
   !    descreening the local potential and the D coefficients
   !
-500 call descreening
+  call descreening
   !
-  !    In pseudotype 1 the local potential is added to all channel
-  !
-  if (pseudotype == 1) then
-     do l=0,3
-        do n=1,mesh
-           vnl(n,l)=vnl(n,l)+vpsloc(n)
-        enddo
-     enddo
-     vpsloc=0.0_dp
-  endif
+500 continue
   !
   !     print the main functions on files
   !
-  if (file_wavefunctionsps .ne. ' ') then
-     open(unit=19,file=file_wavefunctionsps, status='unknown', iostat=ios,err=300)
+if (file_wavefunctionsps .ne. ' ') then
+     open(unit=19,file=file_wavefunctionsps, status='unknown', iostat=ios, &
+          err=300)
 300  call errore('gener_pseudo','opening file '//file_wavefunctionsps,&
           abs(ios))
-
      do n=1,mesh
         write(19,'(i5,7e13.5)') n,r(n), (phis(n,ns), ns=1,nwfs)
      enddo
@@ -365,8 +366,7 @@ subroutine gener_pseudo
      enddo
   endif
 
-  write(6, &
-       & '(/,5x,12(''-''),'' End of pseudopotential generation '',20(''-''),/)')
+  write(6,"(/,5x,12('-'),' End of pseudopotential generation ',20('-'),/)")
 
   return
 end subroutine gener_pseudo

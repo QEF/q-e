@@ -131,7 +131,7 @@ subroutine pseudovloc
         rcloc=rcut(nsloc+indi)
         if (rep == 0) then
            write(6,"(/,5x,' Generating local potential: lloc=',i1, &
-                  ', matching radius rcloc = ',f8.4)") lloc, rcloc
+                  & ', matching radius rcloc = ',f8.4)") lloc, rcloc
         else
            write(6,"(/,5x,' Generating local potential: lloc=',i1, &
                   &', spin=',i1,', matching radius rcloc = ',f8.4)") &
