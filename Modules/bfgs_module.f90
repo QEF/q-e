@@ -184,6 +184,8 @@ MODULE bfgs_module
           !
        END IF
        !
+       ! ... some output is written
+       !
        WRITE( UNIT = stdout, &
             & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
        WRITE( UNIT = stdout, &
@@ -194,12 +196,14 @@ MODULE bfgs_module
        WRITE( UNIT = stdout, &
             & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
        !
+       ! ... the bfgs algorithm starts here
+       !
        IF ( energy > energy_old ) THEN
           !
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !  
+          !	  
           lin_iter = lin_iter + 1
           !
           WRITE( UNIT = stdout, &
@@ -213,10 +217,26 @@ MODULE bfgs_module
                & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
               trust_radius
           !
+          ! ... values of the last succeseful bfgs step are restored
+          !
+          pos      = pos_old(:,1)
+          energy   = energy_old
+          gradient = gradient_old(:,1)          
+          !
           IF ( trust_radius < trust_radius_min ) THEN
              !
              ! ... the history is reset
-             !     
+             !                  
+             IF ( trust_radius_old == trust_radius_min ) THEN
+                !
+                ! ... the history has already been reset at the previous step :
+                ! ... something is going wrong
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"WARNING :  something is going wrong",/)' )
+                !
+             END IF
+             !
              WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
              !
              inverse_hessian = identity(dim)
@@ -226,12 +246,6 @@ MODULE bfgs_module
              trust_radius = trust_radius_min
              !
           ELSE 
-             !
-             ! ... values of the last succeseful bfgs step are restored
-             !
-             pos      = pos_old(:,1)
-             energy   = energy_old
-             gradient = gradient_old(:,1)
              !
              ! ... old bfgs direction ( normalized ) is recovered
              !
@@ -439,6 +453,8 @@ MODULE bfgs_module
           !
        END IF
        !
+       ! ... some output is written
+       !
        WRITE( UNIT = stdout, &
             & FMT = '(/,5X,"number of ionic steps",T30,"= ",I3)' ) scf_iter
        WRITE( UNIT = stdout, &
@@ -449,12 +465,14 @@ MODULE bfgs_module
        WRITE( UNIT = stdout, &
             & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
        !
+       ! ... the bfgs algorithm starts here
+       !
        IF ( energy > energy_old ) THEN
           !
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !  
+          !	  
           lin_iter = lin_iter + 1
           !
           WRITE( UNIT = stdout, &
@@ -764,7 +782,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
        WRITE( iunbfgs, * ) inverse_hessian
-       ! 
+       ! 	     
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_bfgs_file  
@@ -795,7 +813,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) gradient_old(:,2:lbfgs_ndim), gradient
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
-       !      
+       ! 	     
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_lbfgs_file          
@@ -1050,7 +1068,7 @@ MODULE bfgs_module
           !
           WRITE( iunbfgs, * ) SHAPE( inverse_hessian )
           WRITE( iunbfgs, * ) inverse_hessian
-          !      
+          ! 	     
           CLOSE( UNIT = iunbfgs )       
           !
           DEALLOCATE( pos_old )   
