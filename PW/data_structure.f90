@@ -18,8 +18,8 @@ subroutine data_structure( lgamma )
     ngms_l, ngms_g, nrxx, nrxxs, gcutm, gcutms, &
     nr1, nr2, nr3, nrx1, nrx2, nrx3, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
 #ifdef __PARA
-  use para, only: maxproc, ncplane, ncplanes, nkcp, ipc, ipcs, npp, npps, &
-    ncp0, ncp0s, icpl, icpls, nxx, nxxs, nct, ncts, ncp, ncps
+  use para, only: maxproc, ncplane, ncplanes, nkcp, npp, npps, &
+    ncp0, ncp0s, nxx, nxxs, nct, ncts, ncp, ncps
 #endif
   use mp, only: mp_sum
   use mp_global, only: intra_pool_comm, nproc_pool, me_pool
@@ -100,11 +100,6 @@ subroutine data_structure( lgamma )
   ncplane  = nrx1 * nrx2
   ncplanes = nrx1s * nrx2s
   !
-  !    global pointers passed with commons are allocate here
-  !
-  allocate (ipc( ncplane))    
-  allocate (ipcs( ncplanes))    
-
   !
   ! check the number of plane per process
   !
@@ -266,9 +261,6 @@ subroutine data_structure( lgamma )
   ncp0( 1:nproc_pool )  = dfftp%iss( 1:nproc_pool )
   ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
 
-  allocate (icpl( nct))    
-  allocate (icpls( ncts))    
-
   !
   !  array ipc and ipcl ( ipc contain the number of the
   !                       column for that processor or zero if the
@@ -276,11 +268,11 @@ subroutine data_structure( lgamma )
   !                       ipcl contains the point in the plane for
   !                       each column)
   !
-  ipc ( 1:ncplane )    = dfftp%isind( 1:ncplane )
-  icpl( 1:nct )        = dfftp%ismap( 1:nct )
+  !  ipc ( 1:ncplane )    = >  dfftp%isind( 1:ncplane )
+  !  icpl( 1:nct )        = >  dfftp%ismap( 1:nct )
 
-  ipcs ( 1:ncplanes )  = dffts%isind( 1:ncplanes )
-  icpls( 1:ncts )      = dffts%ismap( 1:ncts )
+  !  ipcs ( 1:ncplanes )  = >  dffts%isind( 1:ncplanes )
+  !  icpls( 1:ncts )      = >  dffts%ismap( 1:ncts )
 
   nrxx  = dfftp%nnr
   nrxxs = dffts%nnr

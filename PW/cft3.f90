@@ -40,7 +40,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   use fft_base, only: fft_scatter
 
   use parameters, only : DP
-  use para, only: nct, ncp, ncplane, icpl, nprocp, nxx, me, npp
+  use para, only: nct, ncp, ncplane, nprocp, nxx, me, npp
 
   implicit none
 
@@ -76,7 +76,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
      f(:) = (0.d0,0.d0)
      do i = 1, nct
-        mc = icpl (i)
+        mc = dfftp%ismap (i)
         do j = 1, npp (me)
            f (mc + (j - 1) * ncplane) = aux (j + (i - 1) * nppx)
         enddo
@@ -95,7 +95,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call cft_2 (f, npp (me), n1, n2, nx1, nx2, sign)
 #endif
      do i = 1, nct
-        mc = icpl (i)
+        mc = dfftp%ismap (i)
         do j = 1, npp (me)
            aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplane)
         enddo

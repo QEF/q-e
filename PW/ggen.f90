@@ -22,6 +22,8 @@ subroutine ggen
   use wvfct, only : gamma_only
   use cellmd, only: lmovecell
   use constants, only: eps8
+  use sticks, only: dfftp, dffts
+  
 #ifdef __PARA
   use para
 #endif
@@ -160,7 +162,7 @@ subroutine ggen
     m2 = mod (j, nr2) + 1
     if (m2.lt.1) m2 = m2 + nr2
     mc = m1 + (m2 - 1) * nrx1
-    if (ipc (mc) .eq.0) goto 1
+    if ( dfftp%isind ( mc ) .eq.0) goto 1
 #endif
 
     tt = 0.d0
@@ -265,8 +267,8 @@ subroutine ggen
         if (n3s.lt.1) n3s = n3s + nr3s
         if (n1.le.nr1.and.n2.le.nr2.and.n3.le.nr3) then
 #ifdef __PARA
-           nl (ng) = n3 + (ipc (n1 + (n2 - 1) * nrx1) - 1) * nrx3
-           if (ng.le.ngms) nls (ng) = n3s + (ipcs (n1s + (n2s - 1) &
+           nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+           if (ng.le.ngms) nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
 #else
            nl (ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
@@ -341,9 +343,7 @@ subroutine index_minusg
   use gvect
   use gsmooth
   use wvfct, only :  gamma_only
-#ifdef __PARA
-  use para, only: ipc, ipcs
-#endif
+  use sticks, only: dfftp, dffts
   implicit none
   !
   integer :: n1, n2, n3, n1s, n2s, n3s, ng
@@ -365,8 +365,8 @@ subroutine index_minusg
         if (n3s < 1) n3s = n3s + nr3s
         if (n1.le.nr1 .and. n2.le.nr2 .and. n3.le.nr3) then
 #ifdef __PARA
-           nlm(ng) = n3 + (ipc (n1 + (n2 - 1) * nrx1) - 1) * nrx3
-           if (ng.le.ngms) nlsm(ng) = n3s + (ipcs (n1s + (n2s - 1) &
+           nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+           if (ng.le.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
 #else
            nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2

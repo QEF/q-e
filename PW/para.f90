@@ -23,7 +23,7 @@ Module pfft
   ! ncplane: number of columns in a plane
   ! nct    : total number of non-zero columns
   ! nxx    : local fft data size
-  Integer, Pointer :: ipc(:), icpl(:)
+  ! Integer, Pointer :: ipc(:), icpl(:)  Warning this arrays moved to dfftp and dffts
   ! ipc (ncplane): index saying which proc owns columns in a plane
   ! icpl(nct)    : index relating columns and pos. in the plan
 End Module pfft
@@ -43,7 +43,7 @@ Module pffts
   ! ncplanes:number of columns in a plane
   ! ncts   : total number of non-zero columns
   ! nxxs   : local fft data size
-  Integer , Pointer :: ipcs(:), icpls(:)
+  ! Integer , Pointer :: ipcs(:), icpls(:)  Warning this arrays moved to dfftp and dffts
   ! ipcs(ncplanes) : index saying which proc owns columns in a plane
   ! icpls(ncts)    : index relating columns and positions in the plan
 End Module pffts

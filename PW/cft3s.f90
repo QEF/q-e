@@ -50,7 +50,8 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
   use fft_base, only: fft_scatter
 
   use parameters, only: DP
-  use para, only: icpls, ncts, ncplanes, ncp0s, nkcp, nprocp, nxxs, npps, ncps, me
+  use para, only: ncts, ncplanes, ncp0s, nkcp, nprocp, nxxs, npps, ncps, me
+  use sticks, only: dffts
 
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
@@ -98,7 +99,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         call fft_scatter (aux, nx3, nxxs, f, ncps, npps, sign)
         f(:) = (0.d0,0.d0)
         do i = 1, ncts
-           mc = icpls (i)
+           mc = dffts%ismap (i)
            do j = 1, npps (me)
               f (mc + (j - 1) * ncplanes) = aux (j + (i - 1) * nppx)
            enddo
@@ -120,7 +121,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         enddo
         do iproc = 1, nprocp
            do i = 1, nkcp (iproc)
-              mc = icpls (i + ncp0s (iproc) )
+              mc = dffts%ismap (i + ncp0s (iproc) )
               ii = ii + 1
               k = mod (mc - 1, nx1) + 1
               planes (k) = 1
@@ -146,7 +147,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         enddo
         do iproc = 1, nprocp
            do i = 1, nkcp (iproc)
-              mc = icpls (i + ncp0s (iproc) )
+              mc = dffts%ismap (i + ncp0s (iproc) )
               k = mod (mc - 1, nx1) + 1
               planes (k) = 1
            enddo
@@ -159,7 +160,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
 #endif
      if (sign.ne. - 2) then
         do i = 1, ncts
-           mc = icpls (i)
+           mc = dffts%ismap (i)
            do j = 1, npps (me)
               aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplanes)
            enddo
@@ -174,7 +175,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
         ii = 0
         do iproc = 1, nprocp
            do i = 1, nkcp (iproc)
-              mc = icpls (i + ncp0s (iproc) )
+              mc = dffts%ismap (i + ncp0s (iproc) )
               ii = ii + 1
               do j = 1, npps (me)
                  aux (j + (ii - 1) * nppx) = f (mc + (j - 1) * ncplanes)

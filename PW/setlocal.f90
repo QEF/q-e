@@ -44,7 +44,8 @@ subroutine setlocal
 !  If required add an electric field to the local potential 
 !
 
-  if (tefield.and.(.not.dipfield)) call add_efield(vltot)
+  if (tefield.and.(.not.dipfield)) then
+     call add_efield(vltot)
   endif
 
   deallocate(aux)

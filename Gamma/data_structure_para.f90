@@ -79,11 +79,6 @@ subroutine data_structure_para
   ncplane = nrx1*nrx2
   ncplanes= nrx1s*nrx2s
   !
-  !    global variables allocated here
-  !
-  allocate  ( ipc ( ncplane ) )    
-  allocate  ( ipcs( ncplanes) )    
-  !
   !    local variables to be deallocated at the end
   !
   allocate  (ngc ( ncplane))    
@@ -207,22 +202,13 @@ subroutine data_structure_para
   nxxs  = nrxxs
 
   !
-  ! ipc  is the processor for this column in the dense grid
-  ! ipcs is the same, for the smooth grid
-  !
-  allocate (icpl ( nct  ) )
-  allocate (icpls( ncts ) )    
-  !
-  ipc  = 0
-  ipcs = 0
-  !
   ncp0( 1:nproc_pool ) = dfftp%iss( 1:nproc_pool )
-  ipc ( 1:ncplane )    = dfftp%isind( 1:ncplane )
-  icpl( 1:nct )        = dfftp%ismap( 1:nct )
+  !   ipc ( 1:ncplane )    = dfftp%isind( 1:ncplane )
+  !   icpl( 1:nct )        = dfftp%ismap( 1:nct )
 
   ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
-  ipcs ( 1:ncplanes )   = dffts%isind( 1:ncplanes )
-  icpls( 1:ncts )       = dffts%ismap( 1:ncts )
+  !   ipcs ( 1:ncplanes )   = dffts%isind( 1:ncplanes )
+  !   icpls( 1:ncts )       = dffts%ismap( 1:ncts )
 
   !
   deallocate (aux)
