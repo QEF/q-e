@@ -136,7 +136,15 @@ SUBROUTINE setup()
   !
   ! ... Set the number of electrons equal to the total ionic charge
   !
+#if defined (__PGI)
+  IF ( nelec == 0.D0 ) THEN
+     DO na = 1, nat
+        nelec = nelec + zv( ityp(na) )
+     END DO
+  END IF  
+#else
   IF ( nelec == 0.D0 ) nelec = SUM( zv(ityp(1:nat)) )
+#endif
   !
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
