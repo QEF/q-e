@@ -21,13 +21,12 @@ csh!), except that capitalized names starting with "AC_" are Autoconf
 macros.  Normally you shouldn't have to touch them.  You may refer to
 the GNU Autoconf Manual for more info.
 
-"make.sys.in" and "make.rules.in" are the source files for "make.sys"
-and "make.rules", that "configure" generates: you might want to edit
-those files as well.  The generation procedure is as follows: if
-"configure.ac" contains the macro "AC_SUBST(name)", then every
-occurrence of "@name@" in the source files will be substituted with
-the value of the shell variable "name" at the point where AC_SUBST was
-called.
+"make.sys.in" is the source file for "make.sys", that "configure"
+generates: you might want to edit that file as well.  The generation
+procedure is as follows: if "configure.ac" contains the macro
+"AC_SUBST(name)", then every occurrence of "@name@" in the source
+files will be substituted with the value of the shell variable "name"
+at the point where AC_SUBST was called.
 
 "configure" writes a detailed log of its operation to "config.log".
 When any configuration step fails, you may look there for the relevant
@@ -228,7 +227,7 @@ Add an entry for your case and define:
 - if the Fortran 90 compiler is able to invoke the C preprocessor
   automatically before compiling, define "have_cpp=1"; otherwise,
   leave it undefined (I mean it -- *don't* define it as 0).
-  The appropriate "make.rules" will be generated accordingly.
+  The appropriate compilation rules will be generated accordingly.
   If the compiler requires that any flags be specified in order to
   invoke the preprocessor (for example, "-fpp " -- note the space),
   specify them in "pre_fdflags".

@@ -41,7 +41,6 @@ First step : choosing the architecture
 In this step, the following files are generated:
 
   make.sys         compilation settings and flags
-  make.rules       compilation rules
   */make.depend    dependencies, per source directory
 
 "make.sys" is copied from a set of architecture-dependent templates.

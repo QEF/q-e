@@ -16,7 +16,8 @@
   \vspace{1.5cm}
   \\
   % title
-  \huge User's Guide for Quantum-ESPRESSO v.\version
+  \huge User's Guide for Quantum-ESPRESSO \smallskip\\
+  \Large (version \version)
 }
 \maketitle
 
@@ -26,26 +27,32 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of Quantum ($\nu$) 
+This guide covers the installation and usage of Quantum ($\nu$)
 ESPRESSO (opEn-Source Package for Research in Electronic Structure, 
-Simulation, and Optimization), version \version. The $\nu-$ESPRESSO 
-package contains the
-following codes for the calculation of electronic-structure properties
-within Density-Functional Theory, using a Plane-Wave basis set and
+Simulation, and Optimization), version \version.
+
+The $\nu-$ESPRESSO package contains the following codes for the
+calculation of electronic-structure properties within
+Density-Functional Theory, using a Plane-Wave basis set and
 pseudopotentials:
 \begin{itemize}
   \item PWscf (Plane-Wave Self-Consistent Field).
   \item FPMD (First Principles Molecular Dynamics).
   \item CP (Car-Parrinello).
 \end{itemize}
-Moreover it contains auxiliary codes:
+and the following auxiliary codes:
 \begin{itemize}
   \item PWgui (Graphical User Interface for PWscf): a graphical
         interface for producing input data files for PWscf.
   \item atomic: a program for atomic calculations and generation of
         pseudopotentials.
 \end{itemize}
-Documentation, in addition to what provided in this guide, can be
+The $\nu-$ESPRESSO codes work on many different types of Unix machines,
+including parallel machines using Message Passing Interface (MPI).
+Running $\nu-$ESPRESSO on MS-Windows is possible, but not supported: 
+see section \ref{installation}, ``Installation''.
+
+Further documentation, beyond what is provided in this guide, can be
 found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the $\nu-$ESPRESSO distribution
@@ -53,27 +60,27 @@ found in:
         In particular the \texttt{INPUT\_*} files contain the detailed
         listing of available input variables and cards.
   \item the various \texttt{README} files found in the distribution
-  \item the PWscf web site
-        (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                           {http://www.pwscf.org/})
   \item the Pw\_forum mailing list
         (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
                            {mailto:pw_forum@pwscf.org})
 
-        See the PWscf web site for instructions on how to subscribe
-        and how to browse and search the archives of the mailing list.
-        Please search the archives before posting to the list: your
-        question might already have been answered.
+        You can subscribe to this list and browse and search its
+        archives from the PWscf web site
+        (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                           {http://www.pwscf.org/}).
+        Only subscribed users can post.
+        Please search the archives before posting: your question may
+        have already been answered.
   \item the ``Scientific Software'' page of the Democritos web site
         \hfill\break
         (\htmladdnormallink%
          {\texttt{http://www.democritos.it/scientific.php}}%
          {http://www.democritos.it/scientific.php})
 \end{itemize}
-The $\nu-$ESPRESSO codes work on many different types of Unix machines,
-including parallel machines using Message Passing Interface (MPI).
-Running $\nu-$ESPRESSO on MS-Windows is possible, but not supported: 
-see section \ref{installation}, ``Installation''.
+
+This guide is \emph{not} meant to provide comprehensive information
+about solid state physics and its computational methods.
+If you want to learn that, read a good textbook.
 
 \subsection{Codes}
 
@@ -127,20 +134,11 @@ with a restart file from CP, and vice versa.
 
 \hyphenation{gian-noz-zi}
 The maintenance and further development of the $\nu-$ESPRESSO code is
-promoted by the DEMOCRITOS National Simulation Center of the Italian
-INFM
-(\htmladdnormallink{\texttt{http://www.democritos.it/}}%
-                   {http://www.democritos.it/})
-under the coordination of Paolo Giannozzi
-(\htmladdnormallink{\texttt{giannozz@nest.sns.it}}%
-                   {mailto:giannozz@nest.sns.it})
-(Scuola Normale Superiore, Pisa), with the strong support of the
-CINECA National Supercomputing Center in Bologna
-(\htmladdnormallink{\texttt{http://www.cineca.it/}}%
-                   {http://www.cineca.it/}),
-under the responsibility of Carlo Cavazzoni\break
-(\htmladdnormallink{\texttt{c.cavazzoni@cineca.it}}%
-                   {mailto:c.cavazzoni@cineca.it}).
+promoted by the DEMOCRITOS National Simulation Center of INFM (Italian
+institute for condensed matter physics) under the coordination of
+Paolo Giannozzi (Scuola Normale Superiore, Pisa), with the strong
+support of the CINECA National Supercomputing Center in Bologna under
+the responsibility of Carlo Cavazzoni.
 Currently active developers include
 Gerardo Ballabio (CINECA),
 Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
@@ -149,9 +147,6 @@ Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
-The web site for PWscf and related codes is:
-\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                  {http://www.pwscf.org/}
 
 The FPMD and CP codes are both based on the original code written by
 Roberto Car and Michele Parrinello.
@@ -180,6 +175,7 @@ The pseudopotential generation package ``atomic'' was written by
 Andrea Dal Corso and it is the result of many additions to the
 original code by Paolo Giannozzi.
 
+\hyphenation{fran-ce-sco}
 A list of further contributors includes:
 Dario Alf\`e,
 Francesco Antoniella,
@@ -218,6 +214,49 @@ and let us apologize to everybody we have forgotten.
 This guide was written (mostly) by Paolo Giannozzi, Gerardo Ballabio,
 Carlo Cavazzoni.
 
+\subsubsection{Contact us}
+
+The web site for PWscf is:
+\medskip
+
+\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                  {http://www.pwscf.org/}
+
+\medskip
+\noindent
+Releases and patches of $\nu-$ESPRESSO can be downloaded from this
+site.
+
+The recommended place where to ask questions about installation and
+usage of $\nu-$ESPRESSO, and to report bugs, is the Pw$\_$forum
+mailing list
+(\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
+                   {mailto:pw\_forum@pwscf.org}).
+Here you can obtain help from the developers and many knowledgeable
+users.  You can subscribe to this list and browse and search its
+archives from the PWscf web site.  Only subscribed users can post.
+Please search the archives before posting: your question may have
+already been answered.
+
+If you specifically need to contact the developers of $\nu-$ESPRESSO
+(and only them), write to
+\htmladdnormallink{\texttt{pwscf@pwscf.org}}%
+                  {mailto:pwscf@pwscf.org}.
+
+Other pointers:\\
+DEMOCRITOS:
+\htmladdnormallink{\texttt{http://www.democritos.it/}}%
+                  {http://www.democritos.it/}\\
+INFM:
+\htmladdnormallink{\texttt{http://www.infm.it/}}%
+                  {http://www.infm.it/}\\
+CINECA:
+\htmladdnormallink{\texttt{http://www.cineca.it/}}%
+                  {http://www.cineca.it/}\\
+SISSA:
+\htmladdnormallink{\texttt{http://www.sissa.it/}}%
+                  {http://www.sissa.it/}
+
 \subsection{Terms of use}
 
 $\nu-$ESPRESSO is free software, released under the GNU General Public
@@ -235,13 +274,11 @@ $\nu-$ESPRESSO web page.
 Our preferred form for the acknowledgment is the following:
 
 \begin{quote}
-\emph{Acknowledgments:}
-\par\noindent
-Calculations in this work have been done using the $\nu-$ESPRESSO package
+\emph{Acknowledgments:}\\
+Calculations in this work have been done using the $\nu$-ESPRESSO package
 [\emph{ref}].
 \par\noindent
-\emph{Bibliography:}
-\par\noindent
+\emph{Bibliography:}\\{}
 [\emph{ref}]
 S.~Baroni, A.~Dal Corso, S.~de Gironcoli, P.~Giannozzi, % PWscf
 C.~Cavazzoni, G.~Ballabio, S.~Scandolo, G.~Chiarotti, P.~Focher, % FPMD
@@ -296,7 +333,7 @@ use this instead:
 
 \noindent
 The bravest may access the (unstable) development version via anonymous 
-CVS (Concurrent Version Sysstem): see the file \texttt{README.cvs}
+CVS (Concurrent Version System): see the file \texttt{README.cvs}
 contained in the distribution.
 
 To install $\nu-$ESPRESSO, you must:
@@ -332,8 +369,7 @@ tested; you have to specify the target machine with the
 
 Specifically, \texttt{configure} generates the following files:
 \begin{quote}
-  \texttt{make.sys}: compilation settings and flags\\
-  \texttt{make.rules}: compilation rules\\
+  \texttt{make.sys}: compilation rules and flags\\
   \texttt{*/make.depend}: dependencies, per source directory
 \end{quote}
 
@@ -376,20 +412,19 @@ Some environment variables that are relevant to \texttt{configure} are:
 \end{quote}
 For example, the following command line:
 \begin{verbatim}
-  ./configure F90=ifort FFLAGS="-Vaxlib -O2 -assume byterecl" \
-              CC=gcc CFLAGS=-O3 LDFLAGS="-Vaxlib -static"
+  ./configure F90=ifort FFLAGS="-O2 -assume byterecl" CC=gcc \
+              CFLAGS=-O3 LDFLAGS=-static
 \end{verbatim}
 instructs \texttt{configure} to use \texttt{ifort} as Fortran 95
-compiler with flags \texttt{"-Vaxlib -O2 -assume byterecl"},
-\texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to use flags
-\texttt{"-Vaxlib -static"} when linking.  Note that the values
-of \texttt{FFLAGS} and \texttt{LDFLAGS} must be quoted, because they
-contain spaces.
+compiler with flags \texttt{"-O2 -assume byterecl"},
+\texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to link with
+\texttt{"-static"} flag.  Note that the value of \texttt{FFLAGS} must
+be quoted, because it contains spaces.
 
 If your machine type is unknown to \texttt{configure}, you may use the
 \texttt{ARCH} variable to suggest an architecture among supported
-ones.  Try the one that looks more similar to your machine type
-(you'll probably have to do some additional tweaking).
+ones.  Try the one that looks more similar to your machine type;
+you'll probably have to do some additional tweaking.
 Currently supported architectures are:
 \begin{quote}
   \texttt{linux64}: Linux 64-bit machines (Itanium, Opteron)\\
@@ -405,11 +440,11 @@ Finally, \texttt{configure} recognizes the following command-line
 options:
 \begin{quote}
   \texttt{--disable-parallel}:
-    compile serial code, even if parallel environment is available\\
+    compile serial code, even if parallel environment is available.\\
   \texttt{--disable-shared}:
-    don't use shared libraries: generate static executables\\
+    don't use shared libraries: generate static executables.\\
   \texttt{--enable-shared}:
-    use shared libraries\\
+    use shared libraries.\\
   \texttt{--host=}\emph{target}:
     specify target machine for cross-compilation.\break
     \emph{Target} must be a string identifying the architecture that
@@ -423,8 +458,7 @@ only!), you'll need GNU Autoconf
 Edit the source file \texttt{configure.ac}, then run Autoconf to
 regenerate \texttt{configure}.  If you edit \texttt{configure}
 directly, all changes will be lost when you regenerate it.
-You may also want to edit \texttt{make.sys.in} and
-\texttt{make.rules.in}.
+You may also want to edit \texttt{make.sys.in}.
 For more information, see \texttt{README.configure}.
 
 \subsubsection{Libraries}
@@ -533,9 +567,8 @@ settings and how to force their recompilation.
 \subsubsection{Manual configuration}
   \label{manualconf}
 
-To configure $\nu-$ESPRESSO manually, you have to write working
-\texttt{make.sys} and \texttt{make.rules}, and generate
-\texttt{*/make.depend} files yourself.
+To configure $\nu-$ESPRESSO manually, you have to write a working
+\texttt{make.sys} and generate \texttt{*/make.depend} files yourself.
 
 For \texttt{make.sys}, several templates (each for a different machine
 type) to start with are provided in the \texttt{install/} directory:
@@ -546,27 +579,26 @@ Currently available systems are:
   \texttt{alpha}:     HP-Compaq alpha workstations\\
   \texttt{alphaMPI}:  HP-Compaq alpha parallel machines\\
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
+  \texttt{beo\_ifc}:  Linux clusters of PCs, Intel compiler\\
+  \texttt{beowulf}:   Linux clusters of PCs, Portland compiler\\
   \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
   \texttt{fujitsu}:   Fujitsu vector machines\\
   \texttt{hitachi}:   Hitachi SR8000\\
   \texttt{hp}:        HP PA-RISC workstations\\
   \texttt{hpMPI}:     HP PA-RISC parallel machines\\
   \texttt{ia64}:      HP Itanium workstations\\
+  \texttt{ibm}:       IBM RISC machines\\
+  \texttt{ibmsp}:     IBM SP machines\\
   \texttt{irix}:      SGI workstations\\
   \texttt{pc\_abs}:   Linux PCs, Absoft compiler\\
+  \texttt{pc\_ifc}:   Linux PCs, Intel compiler\\
   \texttt{pc\_lahey}: Linux PCs, Lahey compiler\\
   \texttt{pc\_pgi}:   Linux PCs, Portland compiler\\
   \texttt{sun}:       Sun workstations\\
-  \texttt{sunmpi}:    Sun parallel machines\\
+  \texttt{sunMPI}:    Sun parallel machines\\
   \texttt{sxcross}:   NEC SX-6\\
   \texttt{t3e}:       Cray T3E
 \end{quote}
-The \texttt{install/} directory also contains files \texttt{Rules.cpp}
-and \texttt{Rules.nocpp}, which are templates for \texttt{make.rules}.
-The former is to be used with Fortran compilers that support
-the preprocessing of source files; otherwise you must use the latter.
-They'll usually work without further editing.
-
 To select the appropriate templates, you can run:
 \medskip
 
@@ -579,16 +611,12 @@ where \emph{system} is the best match to your configuration;
 available systems.
 
 That will copy \texttt{Make.}\emph{system} to \texttt{make.sys}, and
-either \texttt{Rules.*} file to \texttt{make.rules}; it will usually
-pick the right one.
-In addition, it'll run the \texttt{makedeps.sh} script to generate
-\texttt{*/make.depend} files.
-(If you don't run the \texttt{configure.old} script, you'll have to do
-that yourself.)
+run the \texttt{makedeps.sh} script to generate \texttt{*/make.depend}
+files.  If you don't use \texttt{configure.old}, you'll have to do
+that yourself.
 
 Most probably (and even more so if there isn't an exact match to your
-machine type), you'll have to tweak \texttt{make.sys} by hand until
-you obtain successful compilation.
+machine type), you'll have to tweak \texttt{make.sys} by hand.
 In particular, you must specify the full list of libraries that
 you intend to link to.
 You'll also have to set the \texttt{MYLIB} variable to:
@@ -1413,7 +1441,7 @@ proceeding to serious calculations.
 \section{Using PWscf}
 
 Input files for the PWscf codes may be either written by hand (the
-good old way), or produced via the ``PWgui'' graphical user interface
+good old way), or produced via the ``PWgui'' graphical interface
 by Anton Kokalj, included in the $\nu-$ESPRESSO distribution.
 See \texttt{PWgui-}\emph{x.y.z}\texttt{/INSTALL} (where \emph{x.y.z}
 is the version number) for more info on PWgui, or \texttt{GUI/README}
@@ -1477,8 +1505,8 @@ type \texttt{smearing}. If you choose \texttt{occupations='tetrahedra'},
 you need to specify a suitable uniform k-point grid (card 
 \texttt{K\_POINTS} with option \texttt{automatic}). 
 Spin-polarized systems must be treated as metallic system,
-except the special cases of a single k-point for which
-occupancies can be fixed (\texttt{occupations='from\_input'}
+except the special case of a single k-point, for which
+occupation numbers can be fixed (\texttt{occupations='from\_input'}
 and card \texttt{OCCUPATIONS}).
 
 Explanations for the meaning of variables \texttt{ibrav} and

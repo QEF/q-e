@@ -120,12 +120,6 @@ There are two ways to do preprocessing of fortran files:
   \item directly with the fortran compiler, if supported;
   \item by first pre-compiling with the C preprocessor {\tt cpp}.
 \end{itemize}
-The file "make.rules" select what is done.
-In the first case,  the file install/Make.rules\_nocpp is copied
-to make.rules.
-In the second case, the file install/Make.rules\_cpp is 
-copied to make.rules. This is done by the script "configure".
-
 In the first case, one needs to specify in the "make.sys" file the
 fortran compiler option that tells the compiler 
 to pre-process first. In the second case, one needs to 
