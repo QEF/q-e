@@ -116,6 +116,7 @@ implicit none
      ! Convergence threshold for iterative diagonalization
      if (lscf.and.iter.ne.1.and.ik_.eq.0) then
         if (imix.ge.0) then
+           if (iter.eq.2) ethr = 1.d-2
            ethr=max(min(ethr,dr2/nelec/10.0),tr2/nelec/100.0)
         else
            ethr = max (min (ethr/2.0,sqrt(dr2)/1000.0), 1.d-12)

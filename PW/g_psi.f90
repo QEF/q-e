@@ -36,25 +36,41 @@ parameter (eps = 1.0d-4)
 !    The local variables
 !
 real(kind=DP) :: denm     ! the denominator
+real(kind=DP) :: x, scala
 
 integer :: k, i
                           ! counter on psi functions
                           ! counter on G vectors
 call start_clock ('g_psi')
-do k = 1, m
-do i = 1, n
-denm = h_diag (i) - e (k) * s_diag (i)
+
 !
-! denm = g2+v(g=0) - e(k)
-!
-if (abs (denm) .lt.eps) denm = sign (eps, denm)
-!
-! denm = sign( max( abs(denm),eps ), denm )
-!
-psi (i, k) = psi (i, k) / denm
-enddo
-enddo
+if (test_new_preconditioning) then
+   scala = 1.0
+   do k = 1, m
+      do i = 1, n
+         x = (h_diag(i) - e(k)*s_diag(i))*scala
+         denm = (1+x+sqrt(1+(x-1)*(x-1)))/scala
+!         denm = 1.d0 + 16*x*x*x*x/(27.d0+18*x+12*x*x+8*x*x*x)
+         psi (i, k) = psi (i, k) / denm
+      enddo
+   enddo
+else
+
+   do k = 1, m
+      do i = 1, n
+         denm = h_diag (i) - e (k) * s_diag (i)
+         !
+         ! denm = g2+v(g=0) - e(k)
+         !
+         if (abs (denm) .lt.eps) denm = sign (eps, denm)
+         !
+         ! denm = sign( max( abs(denm),eps ), denm )
+         !
+         psi (i, k) = psi (i, k) / denm
+      enddo
+   enddo
+
+end if
 call stop_clock ('g_psi')
 return
 end subroutine g_psi
-

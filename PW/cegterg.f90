@@ -20,6 +20,8 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
 #include "machine.h"
   use parameters, only : DP
+  use g_psi_mod
+
   implicit none
   ! on INPUT
   integer :: ndim, ndmx, nvec, nvecx
@@ -86,6 +88,8 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   ! allocate the work arrays
   !
 
+  test_new_preconditioning = .true.
+
   call start_clock ('cegterg')
   allocate( psi (ndmx,  nvecx))
   allocate(hpsi (ndmx,  nvecx))
@@ -103,6 +107,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
   notcnv = nvec
   nbase = nvec
+  psi(:,:) = (0.d0,0.d0)
   psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
@@ -137,46 +142,53 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !       iterate
   !
   do kter = 1, maxter
+
      iter = kter
      call start_clock ('update')
-     if (notcnv < nvec) then
-        np = nbase
-        do n = 1, nvec
-           if ( .not.conv (n) ) then
-              !
-              !     this root not yet converged ... set a new basis vector
-              !     (position np) to (h-es)psi ...
-              !
-              np = np + 1
-              ! for use in g_psi
-              ew (np) = e (n)
-              call ZGEMV ('n', ndim, nbase, (1.d0, 0.d0) , hpsi, ndmx, &
-                   vc (1, n) , 1, (0.d0, 0.d0) , psi (1, np) , 1)
-              eau = DCMPLX ( - e (n), 0.d0)
-              call ZGEMV ('n', ndim, nbase, eau, spsi, ndmx, vc (1, n) , 1, &
-                   (1.d0, 0.d0) , psi (1, np) , 1)
-           endif
-        enddo
-     else
-        !
-        !     expand the basis set with new basis vectors (h-es)psi ...
-        !
-        call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0), spsi, &
-             ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
-        do n = 1, nvec
+
+     np = 0
+     do n = 1, nvec
+        if ( .not.conv (n) ) then
+           ! this root not yet converged ... 
+           np = np + 1
+           ! move its approximate eigenvector in position np in order to 
+           ! set a new basis vector with the (h-es)psi operation below
+           vc(:,np) = vc(:,n)
            ! for use in g_psi
-           ew (nbase+n) = e (n)
-           psi (:,nbase+n) = - e(n) * psi(:,nbase+n)
-        end do
-        call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0d0), hpsi, &
-             ndmx, vc, nvecx, (1.d0, 0.d0), psi (1, nbase+1), ndmx)
-     end if
+           ew (nbase+np) = e (n)
+        end if
+     end do
+     !
+     !     expand the basis set with new basis vectors (h-es)psi ...
+     !
+     call ZGEMM ('n', 'n', ndim, notcnv, nbase, (1.d0, 0.d0), spsi, &
+          ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
+     do np = 1, notcnv
+        psi (:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+     end do
+     call ZGEMM ('n', 'n', ndim, notcnv, nbase, (1.d0, 0d0), hpsi, &
+          ndmx, vc, nvecx, (1.d0, 0.d0), psi (1, nbase+1), ndmx)
 
      call stop_clock ('update')
      !
      ! approximate inverse iteration
      !
      call g_psi (ndmx, ndim, notcnv, psi (1, nbase+1), ew (nbase+1) )
+
+#ifdef DEBUG_DAVIDSON
+     np = 0
+     ew (1:nvec) = -1.0d0
+     do n = 1, nvec
+        if (.not.conv(n)) then
+           np = np+1
+           ew (n) = ZDOTC (ndim, psi (1, nbase+np), 1, psi (1, nbase+np), 1)
+        endif
+     end do
+#ifdef __PARA
+     call reduce (nvec, ew)
+#endif
+     write (6,'(a,18f10.6)') 'NRM=',(ew(n),n=1,nvec)
+#endif
      !
      ! "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
      ! to improve numerical stability of subspace diagonalization rdiaghg
@@ -191,9 +203,6 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      do n = 1, notcnv
         call DSCAL (2 * ndim, 1.d0 / sqrt (ew (n) ), psi (1, nbase+n), 1)
      enddo
-#ifdef DEBUG_DAVIDSON
-     write (6,'(a,18f10.6)') 'NRM=',(ew(n),n=1,notcnv)
-#endif
      !
      !   here compute the hpsi and spsi of the new functions
      !
@@ -261,11 +270,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         if ( .not. conv(n) ) notcnv = notcnv + 1
         e (n) = ew (n)
      enddo
-!!! TEST : update all eigenvectors if more than 1/4 are converged
-     if (notcnv > nvec/4) then
-        notcnv = nvec
-        conv(:) = .false.
-     end if
+!!! TEST : update all eigenvectors if more than 1/4 are not converged
+!     if (notcnv > nvec/4) then
+!        notcnv = nvec
+!        conv(:) = .false.
+!     end if
 !!! END OF TEST
      !
      !     if overall convergence has been achieved, OR

@@ -10,5 +10,6 @@ module g_psi_mod
   implicit none
   ! These are the variables needed in g_psi
   real(kind=DP), allocatable :: h_diag (:),& ! diagonal part of the Hamiltonian
-       s_diag (:)                        ! diagonal part of the overlap matrix
+                                s_diag (:)   ! diagonal part of the overlap matrix
+  logical                    :: test_new_preconditioning=.false.
 end module g_psi_mod
