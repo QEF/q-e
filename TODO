@@ -36,13 +36,6 @@ COMMON
 
 PW
 
-- wavefunctions extrapolation fails when some new band comes in ( and 
-  some other goes out ) during the ionic evolution. This imply that
-  <psi(t-dt)|psi(t)> = 0 for this "new" band ( tipically one the highest 
-  unoccupied band ) and the alignment of the subspaces is no longer possible.
-  In this case the history of this new band should be erased and no 
-  extrapolation should be performed
-
 - extend wavefunctions extrapolation to ionic relaxation and to NEB 
   calculations. subroutine find_alpha_and_beta() should be moved from 
   dynamics.f90 to update_pot.f90 and relative informations should be written 
@@ -101,6 +94,7 @@ PW
     S|psi> is  inexpensive)
 
 - output should be more informative and less confused
+  the printout with UPF PP is incomplete or miisleading (lloc=0)
 
 - the various *bfgs, dynamics, vcsmd should be rewritten in a more
   uniform way with respect to what they print and how the parallel

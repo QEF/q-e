@@ -192,7 +192,7 @@ SUBROUTINE move_ions()
   ! ... the CP case this is done inside the routine "cp"
   !
   IF ( iswitch == 2 .OR. iswitch == 4 ) &
-     CALL check_constrain( alat, tau, atm, ityp, theta0, nat )
+     CALL check_constrain( theta0 )
   !
   ! ... before leaving check that the new positions still transform
   ! ... according to the symmetry of the system.
@@ -231,8 +231,7 @@ SUBROUTINE new_force( dg, dg2 )
   !
   INTEGER       :: na, i, ipol
   REAL(KIND=DP) :: dg(3, nat), lambda, dg2, sum
-  REAL(KIND=DP) :: DDOT
-  EXTERNAL         DDOT
+  REAL(KIND=DP), EXTERNAL :: DDOT
   !
   !
   lambda = 0.D0
@@ -293,7 +292,7 @@ END SUBROUTINE new_force
 !
 !
 !---------------------------------------------------------------------
-SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
+SUBROUTINE check_constrain( theta0 )
   !---------------------------------------------------------------------
   !
   !     update tau so that the constraint equation g=0 is satisfied,
@@ -309,14 +308,14 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
   USE constants,  ONLY : eps16
+  USE basis,      ONLY : nat, ityp, tau, atm
+  USE brilz,      ONLY : alat
   !
   IMPLICIT NONE
   !
-  INTEGER                    :: ityp(:), nat, na, i
-  CHARACTER(LEN=3)           :: atm(:)
-  REAL(KIND=DP)              :: tau(3,nat)
   REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
-  REAL(KIND=DP)              :: alat, dg2, g, theta0, dummy, eps
+  REAL(KIND=DP)              :: dg2, g, theta0, dummy
+  INTEGER                    :: na, i, j
   INTEGER, PARAMETER         :: maxiter = 250
   !
   !
@@ -354,7 +353,7 @@ SUBROUTINE check_constrain( alat, tau, atm, ityp, theta0, nat )
      !
      WRITE( stdout, '(/5X,"Corrected atomic positions:",/)')
      DO na = 1, nat
-        WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), ( tau(i,na), i = 1, 3 )
+        WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), ( tau(j,na), j = 1, 3 )
      END DO
      !
   END IF

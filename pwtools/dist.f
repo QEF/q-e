@@ -162,8 +162,8 @@
          end do
          print '(''indeces of species 1 and 2 > '',$)'
          read(5,*,end=20,err=20)  nsp1, nsp2
-         if (nsp1 .le. 0 .or. nsp2 .le. 0 .or.                          &
-     &       nsp1 .gt. nspx .or. nsp2 .gt. nspx) then
+         if (nsp1 .le. 0 .or. nsp2 .le. 0 .or.            
+     &      nsp1 .gt. nspx .or. nsp2 .gt. nspx) then
             print '(''  wrong indices (type control-D to exit)'')'
             go to 30
          end if
@@ -191,8 +191,8 @@
                if (atm(ityp(nb)) .eq. atm2) then
 
                   do i=1,3
-                     dr(i) = (tau(1,na)-tau(1,nb))*bg(1,i) +            &
-     &                       (tau(2,na)-tau(2,nb))*bg(2,i) +            &
+                     dr(i) = (tau(1,na)-tau(1,nb))*bg(1,i) +   
+     &                       (tau(2,na)-tau(2,nb))*bg(2,i) +  
      &                       (tau(3,na)-tau(3,nb))*bg(3,i)
                   enddo
                   do nn1=-2,2
@@ -201,9 +201,9 @@
                         dn2=dr(2)-nn2
                         do nn3=-2,2
                            dn3=dr(3)-nn3
-                           dd = scale* sqrt(                            &
-     &                       ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2+&
-     &                       ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2+&
+                           dd = scale* sqrt(                            
+     &                       ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2+
+     &                       ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2+
      &                       ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2)    
                            if(dd.ge.dmin.and.dd.le.dmax) then
                               ndist=ndist+1
@@ -211,7 +211,7 @@
                               atom1(ndist)=na
                               atom2(ndist)=nb
                               d(ndist)= dd
-                              if (nn1.eq.0.and.nn2.eq.0.and.nn3.eq.0)   &
+                              if (nn1.eq.0.and.nn2.eq.0.and.nn3.eq.0)   
      &                             then
                                  other_cell(ndist)=' '
                               else
@@ -229,10 +229,10 @@
       index(1)=0.0
       if (ndist.gt.0) call hpsort(ndist,d,index)
 !
-      if (iout.eq.1)                                                    &
+      if (iout.eq.1)                                                    
      &     write(iout,100) atm1, atm2, dmin,dmax
       do nd=1,ndist
-         write(iout,200) atom1(index(nd)), atom2(index(nd)),            &
+         write(iout,200) atom1(index(nd)), atom2(index(nd)),            
      &        other_cell(index(nd)), d(nd)
       end do
 !
@@ -261,8 +261,8 @@
             end do
             do nb=1,nat
                do i=1,3
-                  dr(i)=(tau(1,na)-tau(1,nb))*bg(1,i) +                 &
-     &                  (tau(2,na)-tau(2,nb))*bg(2,i) +                 &
+                  dr(i)=(tau(1,na)-tau(1,nb))*bg(1,i) +                 
+     &                  (tau(2,na)-tau(2,nb))*bg(2,i) +                
      &                  (tau(3,na)-tau(3,nb))*bg(3,i)
                end do
                do nn1=-1,1
@@ -271,12 +271,12 @@
                      dn2=dr(2)-nn2
                      do nn3=-1,1
                         dn3=dr(3)-nn3
-                        dd = scale* sqrt(                               &
-     &                      ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2 +&
-     &                      ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 +&
+                        dd = scale* sqrt(                               
+     &                      ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2 +
+     &                      ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 +
      &                      ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2 )
                         do i=1,3
-                           drv(i) = tau(i,na)-tau(i,nb) -               &
+                           drv(i) = tau(i,na)-tau(i,nb) -               
      &                          (nn1*at(i,1)+nn2*at(i,2)+nn3*at(i,3))
                         end do
 !
@@ -318,9 +318,9 @@
             do nn1=1,nn
                do nn2=nn1+1,nn
                   nd=nd+1
-                  angolo(nd) = 360/(2*pi) * acos (scale**2 *            &
-     &                 ( drn(1,nn1)*drn(1,nn2) +                        &
-     &                   drn(2,nn1)*drn(2,nn2) +                        &
+                  angolo(nd) = 360/(2*pi) * acos (scale**2 *            
+     &                 ( drn(1,nn1)*drn(1,nn2) +                        
+     &                   drn(2,nn1)*drn(2,nn2) +                        
      &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2) )
                end do
             end do
@@ -377,7 +377,7 @@
       implicit none  
       character*1 capital, character
 !
-      character*26 minuscole/'abcdefghijklmnopqrstuvwxyz'/,             &
+      character*26 minuscole/'abcdefghijklmnopqrstuvwxyz'/,             
      &             maiuscole/'ABCDEFGHIJKLMNOPQRSTUVWXYZ'/
       integer  i
 !
