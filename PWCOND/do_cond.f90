@@ -32,6 +32,11 @@ implicit none
                        bdl1, bdl2, bdr1, bdr2, nz1, dnslab, energy0,   &
                        denergy, ecut2d, ewind, epsproj, delgep,cutplot,&
                        llapack
+                                                                                
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+                                                                                
+
   nd_nmbr=nodenumber
 !
 !   set default values for variables in namelist
@@ -67,6 +72,28 @@ implicit none
 #ifdef __PARA
   if (me == 1)  then
 #endif
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
 
 !
 !     reading the namelist inputpp

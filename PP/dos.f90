@@ -49,6 +49,10 @@ program dos
   namelist /inputpp/ outdir, prefix, fildos, degauss1,ngauss1,&
        Emin, Emax, DeltaE
   logical :: minus_q
+                                                                                
+  CHARACTER (LEN=80)  :: input_file
+  INTEGER             :: nargs, iiarg, ierr
+                                                                                
   !
   call start_postproc (nd_nmbr)
 #ifdef __PARA
@@ -66,6 +70,28 @@ program dos
   ngauss1= 0
   degauss1=0.d0
   !
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc()
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+
   read (5, inputpp, err=200, iostat=ios )
 200 call errore('dos','reading inputpp namelist',abs(ios))
   !
