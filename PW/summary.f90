@@ -110,15 +110,16 @@ subroutine summary
   !
   !    and here more detailed information. Description of the unit cell
   !
-  WRITE( stdout, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') (i, celldm(i), i=1,6)
+  WRITE( stdout, '(2(3x,3(2x,"celldm(",i1,")=",f11.6),/))') &
+       (i, celldm(i), i=1,6)
   WRITE( stdout, '(5x, &
        &     "crystal axes: (cart. coord. in units of a_0)",/, &
-       &       3(15x,"a(",i1,") = (",3f8.4," )  ",/ ) )')  (apol,  &
+       &       3(15x,"a(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,  &
        (at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
 
   WRITE( stdout, '(5x, &
        &   "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
-       &            3(15x,"b(",i1,") = (",3f8.4," )  ",/ ) )')  (apol,&
+       &            3(15x,"b(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,&
        &  (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   do nt = 1, ntyp
      if (tvanp (nt) ) then

@@ -23,6 +23,9 @@
                    compiled and how they are called by the compiler
       __BENCHLIB   t3e machines with benchlib library
       __LAM        LAM-MPI version
+   Other definitions not used in the machine.h file:
+      __FFTW                use the FFTW library
+      __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
 
    Output Definitions:
 

@@ -146,7 +146,7 @@ SUBROUTINE move_ions()
         tau   =   RESHAPE( SOURCE = pos, SHAPE = (/ 3 , nat /) ) / alat
         force = - RESHAPE( SOURCE = gradient, SHAPE = (/ 3 , nat /) )
         !
-        CALL output_tau(.FALSE.)
+        CALL output_tau(conv_ions)
         !
         DEALLOCATE( pos )
         DEALLOCATE( gradient ) 

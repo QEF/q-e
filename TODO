@@ -1,8 +1,6 @@
-TODO LIST -  20 January 2004
+TODO LIST -  2 February 2004
 
 INSTALLATION/PORTING
-
-- configure => configure.old, configure.new => configure
 
 - Linux Alpha ?
 
@@ -59,7 +57,7 @@ PW
   in a more general and less obscure way (needed for better
   support of noncolinear stuff)
 
-- maximize merge of PW with Gamma and noncolinear code
+- maximize merge of colinear (PW) and with noncolinear (PWNC) code
 
 - replace "use pwcom" into more "use" statement
 
@@ -105,6 +103,10 @@ PW
     S|psi> is  inexpensive)
 
 - output should be more informative and less confused
+
+- the various *bfgs, dynamics, vcsmd should be rewritten in a more
+  uniform way with respect to what they print and how the parallel
+  case is treated. Always write at the end the lattice parameters.
 
 POSTPROCESSING
 

@@ -52,11 +52,11 @@ subroutine dynamics
              a (:,:),  mass (:)    ! accelerations and masses of atoms
   real(kind=DP)  ::  ekin          ! ionic kinetic energy
   real(kind=DP)  ::  total_mass, temp_new, tempo, norm_of_dtau
-  real(kind=DP)  ::  ml (3),  mlt  ! total linear momentum and its modulus
+  real(kind=DP)  ::  ml (3)        ! total linear momentum
   integer :: na, ipol, it ! counters
   logical :: exst
-  real(kind=DP)  ::  convert_E_to_temp, eps
-  parameter ( eps = 1.d-6, convert_E_to_temp = 315642.28d0 * 0.5d0)
+  real(kind=DP), parameter ::  convert_E_to_temp= 315642.28d0 * 0.5d0, &
+                               eps = 1.d-6
 
   allocate (mass(   nat))    
   allocate (a(  3, nat))    
@@ -124,8 +124,8 @@ subroutine dynamics
   !
   !     save the previous two steps ( a total of three steps is saved)
   !
-  call DCOPY (3 * nat, tauold (1, 1, 2), 1, tauold (1, 1, 3), 1)
-  call DCOPY (3 * nat, tauold (1, 1, 1), 1, tauold (1, 1, 2), 1)
+  tauold (:, :, 3) = tauold (:, :, 2)
+  tauold (:, :, 2) = tauold (:, :, 1)
   !
   ! move the atoms accordingly to the classical equation of motion
   !
@@ -171,21 +171,20 @@ subroutine dynamics
   call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   write (4, * ) temp_new, mass, total_mass, tauold, tempo, it
   close (unit = 4, status = 'keep')
-  do na = 1, nat
-     WRITE( stdout, '(a3,3f12.7)') atm(ityp(na)),&
-        (tau (ipol, na) , ipol = 1, 3)
-  enddo
+  !
+  call output_tau( .FALSE. )
   WRITE( stdout, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
        &       " Etot = ",f14.8)') ekin*alat**2, temp_new, ekin*alat**2+etot
   !
   !  total linear momentum must be zero if all atoms move
   !
-  mlt = abs (ml (1) ) + abs (ml (2) ) + abs (ml (3) )
-  if (fixatom.eq.0) then
-     if (mlt.gt.eps) call errore ('dynamics', 'Total linear momentum <> 0', - 1)
+  if (fixatom == 0) then
+     if ( abs(ml(1)) > eps .OR. abs(ml(2)) > eps .OR. abs(ml(3)) > eps ) then
+        call errore ('dynamics', 'Total linear momentum <> 0', - 1)
+        WRITE( stdout, '(5x,"Linear momentum: ",3f12.8)') ml
+     end if
   endif
 
-  WRITE( stdout, '(5x,"Linear momentum: ",3f18.14)') ml
 
   deallocate (tauold)
   deallocate (a)

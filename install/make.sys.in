@@ -2,6 +2,8 @@
 TOPDIR         = @topdir@
 CC             = @cc@
 CCFLAGS        = @cflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
+# See include/machine.h.README for a list of precompilation options
+# (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
 IFLAGS         = -I. -I$(TOPDIR)/include -I$(TOPDIR)/Modules -I$(TOPDIR)/PW -I$(TOPDIR)/PH @ifftw@
 CPP            = @cpp@
@@ -15,7 +17,19 @@ F77FLAGS_NOOPT = @fflags_noopt@
 LD             = @ld@
 LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
 LIBOBJS        = $(TOPDIR)/flib/ptools.a $(TOPDIR)/flib/flib.a $(TOPDIR)/clib/clib.a
+# LIBS must contain the location of all needed external libraries
 LIBS           = @libs@
+# MYLIB can be one of the following (depending on LIBS):
+# blas       : compile the local copy of blas routines
+# lapack     : compile the local copy of lapack routines
+# blas_and_lapack : all of the above - use this for a quick test
+#              or if you don't have an optimized blas/lapack library
+# lapack_ibm : compile only lapack routines not present in IBM ESSL
+#              use this together with IBM ESSL
+# lapack_t3e : compile only lapack routines not present in T3E scilib
+#              use this together with T3E scilib
+# lapack_mkl : compile only lapack routines not present in Intel MKL
+#              use this together with Intel MKL
 MYLIB          = @mylibs@
 AR             = @ar@
 ARFLAGS        = @arflags@
