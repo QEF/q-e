@@ -393,98 +393,102 @@ SUBROUTINE setup()
      !
   END DO
   !
-  DO nt = 1, ntyp
+  IF ( .NOT. lspinorb ) THEN
      !
-     IF ( so(nt) ) THEN
+     DO nt = 1, ntyp
         !
-        IF ( tvanp(nt) ) &
-           CALL errore( 'setup', 'US j-average not yet implemented', 1 )
-        !
-        nbe = 0
-        !
-        DO nb = 1, nbeta(nt)
+        IF ( so(nt) ) THEN
            !
-           nbe = nbe + 1
+           IF ( tvanp(nt) ) &
+                CALL errore( 'setup', 'US j-average not yet implemented', 1 )
            !
-           IF ( lll(nb,nt) /= 0 .AND. &
-                ABS( jjj(nb,nt) - lll(nb,nt) - 0.5D0 ) < 1.D-7 ) nbe = nbe - 1
-        END DO
-        !
-        nbeta(nt) = nbe
-        !
-        nbe = 0
-        !
-        DO nb = 1, nbeta(nt)
+           nbe = 0
            !
-           nbe = nbe + 1
-           !
-           l = lll(nbe,nt)
-           !
-           IF ( l /= 0 ) THEN
-              !
-              vionl = ( ( l + 1.D0 ) * dion(nbe+1,nbe+1,nt) + &
-                                   l * dion(nbe,nbe,nt) ) / ( 2.D0 * l + 1.D0 )
-              !
-              betar(1:mesh(nt),nb,nt) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
-                 ( ( l + 1.D0 ) * SQRT( dion(nbe+1,nbe+1,nt) / vionl ) * &
-                                            betar(1:mesh(nt),nbe+1,nt) + &
-                   l * SQRT( dion(nbe,nbe,nt) / vionl ) * &
-                                            betar(1:mesh(nt),nbe,nt) )
-                                                  
-              !
-              dion(nb,nb,nt) = vionl
+           DO nb = 1, nbeta(nt)
               !
               nbe = nbe + 1
               !
-           ELSE
+              IF ( lll(nb,nt) /= 0 .AND. &
+                   ABS( jjj(nb,nt) - lll(nb,nt) - 0.5D0 ) < 1.D-7 ) nbe = nbe - 1
+           END DO
+           !
+           nbeta(nt) = nbe
+           !
+           nbe = 0
+           !
+           DO nb = 1, nbeta(nt)
               !
-              betar(1:mesh(nt),nb,nt) = betar(1:mesh(nt),nbe,nt)
-              !
-              dion(nb,nb,nt) = dion(nbe,nbe,nt)
-              !
-           END IF
-           !
-        END DO
-        !
-        nbe = 0
-        !
-        DO nb = 1, nchi(nt)
-           !
-           nbe = nbe + 1
-           !
-           IF ( lchi(nb,nt) /= 0 .AND. &
-                ABS( jchi(nb,nt) - lchi(nb,nt) - 0.5D0 ) < 1.D-7 ) nbe = nbe - 1
-           !
-        END DO
-        !
-        nchi(nt) = nbe
-        ! 
-        nbe = 0
-        !
-        do nb = 1, nchi(nt)
-           !
-           nbe = nbe + 1
-           !
-           l = lchi(nbe,nt)
-           !
-           IF ( l /= 0 ) THEN
-              !
-              chi(1:mesh(nt),nb,nt)=( ( l + 1.D0 ) * chi(1:mesh(nt),nbe+1,nt)+ &
-                               l * chi(1:mesh(nt),nbe,nt)) / ( 2.D0 * l + 1.D0 )
-              
               nbe = nbe + 1
               !
-           ELSE
+              l = lll(nbe,nt)
               !
-              chi(1:mesh(nt),nb,nt) = chi(1:mesh(nt),nbe,nt)
+              IF ( l /= 0 ) THEN
+                 !
+                 vionl = ( ( l + 1.D0 ) * dion(nbe+1,nbe+1,nt) + &
+                      l * dion(nbe,nbe,nt) ) / ( 2.D0 * l + 1.D0 )
+                 !
+                 betar(1:mesh(nt),nb,nt) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
+                      ( ( l + 1.D0 ) * SQRT( dion(nbe+1,nbe+1,nt) / vionl ) * &
+                      betar(1:mesh(nt),nbe+1,nt) + &
+                      l * SQRT( dion(nbe,nbe,nt) / vionl ) * &
+                      betar(1:mesh(nt),nbe,nt) )
+
+                 !
+                 dion(nb,nb,nt) = vionl
+                 !
+                 nbe = nbe + 1
+                 !
+              ELSE
+                 !
+                 betar(1:mesh(nt),nb,nt) = betar(1:mesh(nt),nbe,nt)
+                 !
+                 dion(nb,nb,nt) = dion(nbe,nbe,nt)
+                 !
+              END IF
               !
-           END IF
+           END DO
            !
-        END DO
+           nbe = 0
+           !
+           DO nb = 1, nchi(nt)
+              !
+              nbe = nbe + 1
+              !
+              IF ( lchi(nb,nt) /= 0 .AND. &
+                   ABS( jchi(nb,nt) - lchi(nb,nt) - 0.5D0 ) < 1.D-7 ) nbe = nbe - 1
+              !
+           END DO
+           !
+           nchi(nt) = nbe
+           ! 
+           nbe = 0
+           !
+           do nb = 1, nchi(nt)
+              !
+              nbe = nbe + 1
+              !
+              l = lchi(nbe,nt)
+              !
+              IF ( l /= 0 ) THEN
+                 !
+                 chi(1:mesh(nt),nb,nt)=( ( l + 1.D0 ) * chi(1:mesh(nt),nbe+1,nt)+ &
+                      l * chi(1:mesh(nt),nbe,nt)) / ( 2.D0 * l + 1.D0 )
+
+                 nbe = nbe + 1
+                 !
+              ELSE
+                 !
+                 chi(1:mesh(nt),nb,nt) = chi(1:mesh(nt),nbe,nt)
+                 !
+              END IF
+              !
+           END DO
+           !
+        END IF
         !
-     END IF
+     END DO
      !
-  END DO
+  END IF
   !
   ! ... set number of atomic wavefunctions
   !
