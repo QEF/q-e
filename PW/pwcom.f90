@@ -7,12 +7,12 @@
 !
 !-------------------------------------------------------------------
 !
-module brilz
-  use parameters
+MODULE brilz
+  USE parameters
   !
-  !    The variables needed to describe the lattice
+  ! ... The variables needed to describe the lattice
   !
-  real(kind=DP) ::                                                  &
+  REAL(KIND=DP) :: &
        celldm(6),      &! dimensions of the unit cell
        at(3,3),        &! direct lattice vectors
        bg(3,3),        &! reciprocal lattice vectors
@@ -20,304 +20,322 @@ module brilz
        omega,          &! volume of the unit cell
        tpiba,          &! 2 times pi / alat
        tpiba2           ! the square of tpiba
-  integer       ::                                                  &
-       ibrav           ! index of the bravais lattice
-  character(len=9)::                                                &
-       symm_type       ! 'cubic' or 'hexagonal' when ibrav=0
-end module brilz
+  INTEGER :: &
+       ibrav            ! index of the bravais lattice
+  CHARACTER(LEN=9) :: &
+       symm_type        ! 'cubic' or 'hexagonal' when ibrav=0
+  !      
+END MODULE brilz
 !
-module basis
-  use parameters
-  !
-  !    The variables needed to describe the atoms in the unit cell
-  !
-  !
-  integer     ::       &
-       nat,            &! number of atoms in the unit cell
-       ntyp,           &! number of different types of atoms
-       natomwfc         ! number of starting wavefunctions
-  integer, allocatable :: &
-       ityp(:)          ! the type of each atom
-  real(kind=DP), allocatable ::  &
-       tau(:,:)         ! the positions of each atom
-  character(len=30) :: &! 'alat', 'crystal', 'angstrom', 'bohr'
-       atomic_positions ! specifies how input coordinates are given
-  character(len=3 ) :: &
-       atm(ntypx)       ! name of the type of the atoms
-  character(len=6)  :: &
-       startingwfc ,   &! 'random' or 'atomic' or 'file'
-       startingpot ,   &! 'atomic' or 'file'
-       startingconfig   ! 'input' or 'file'
-
-end module basis
-
 !
-module dynam
-  use parameters
+MODULE basis
+  USE parameters
   !
-  !    Variables needed for the dynamics
+  ! ... The variables needed to describe the atoms in the unit cell
   !
-  real(kind=DP) ::                                                   &
-       amass(ntypx),   &! mass of atoms
-       dt,             &! time step
-       temperature,    &! starting temperature
-       delta_T          ! rate of thermalization
+  INTEGER :: &
+       nat,               &! number of atoms in the unit cell
+       ntyp,              &! number of different types of atoms
+       natomwfc            ! number of starting wavefunctions
+  INTEGER, ALLOCATABLE :: &
+       ityp(:)             ! the type of each atom
+  REAL(KIND=DP), ALLOCATABLE :: &
+       tau(:,:)            ! the positions of each atom
+  CHARACTER(LEN=30) :: &   ! 'alat', 'crystal', 'angstrom', 'bohr'
+       atomic_positions    ! specifies how input coordinates are given
+  CHARACTER(LEN=3 ) :: &
+       atm(ntypx)          ! name of the type of the atoms
+  CHARACTER(LEN=6)  :: &
+       startingwfc ,      &! 'random' or 'atomic' or 'file'
+       startingpot ,      &! 'atomic' or 'file'
+       startingconfig      ! 'input' or 'file'
   !
-  integer      ::                                                    &
-       nraise           ! the frequency of temperature raising
-  !
-end module dynam
+END MODULE basis
 !
-module gvect
-  use parameters
-  use reciprocal_vectors, only: ig_l2g, sortedig_l2g
-  !
-  !    The variables describing the reciprocal lattice vectors
-  !
-  integer                ::                                          &
-       ngm,            &! number of g vectors
-       ngm_g,          &! global number of g vectors (sum over all processors)
-       ngm_l,          &! the local number of g vectors (only present processor)
-       gstart,         &! first nonzero g vector
-       nr1,            &! fft dimension along x
-       nr2,            &! fft dimension along y
-       nr3,            &! fft dimension along z
-       nrx1,           &! maximum fft dimension along x
-       nrx2,           &! maximum fft dimension along y
-       nrx3,           &! maximum fft dimension along z
-       nrxx,           &! maximum total fft
-       ngl              ! number of |g| shells
-
-  !integer , allocatable :: &
-  !     ig_l2g(:)        !"l2g" means local to global, this array convert a local
-  !                      ! G-vector index into the global index, in other words
-  !                      ! the index of the G-v. in the overall array of G-vectors
-
-  integer , allocatable, target :: &
-       nl(:),          &! correspondence fft <-> array of G vectors
-       nlm(:),         &! same for gamma point calculation
-       igtongl(:)       ! correspondence shells of G <-> G
-  real(kind=DP) , allocatable, target  ::                                    &
-       g(:,:),         &! coordinates of G vectors
-       gg(:)            ! modulus G^2 of G vectors
-                        ! G vectors are in order of increasing |G|
-  real(kind=DP) ::    ecutwfc ! energy cut-off
-
-  real(kind=DP), pointer  ::                                    &
-       gl(:)            ! the modulus of g in each shell
-  real (kind=DP) :: &
-       gcutm,          &! cut-off for G vectors
-       dual,           &! link between G of wavefunctions and charge
-       ecfixed,        &!
-       qcutz,          &! For the modified Ekin functional
-       q2sigma          !
-  complex(kind=DP), allocatable :: &
-       eigts1(:,:),    &!
-       eigts2(:,:),    &! the phases e^{-iG*tau_s}
-       eigts3(:,:)      !
-  integer, allocatable  ::         &
-       ig1(:),       &!
-       ig2(:),       &! the indices of G components
-       ig3(:)         !
-end module gvect
 !
-module gsmooth
-  use parameters
+MODULE dynam
+  USE parameters
   !
-  !     the variables for the smooth mesh of the wavefunction. It can
-  !     be different from the large mesh if dual > 4
+  ! ... Variables needed for the dynamics
   !
+  REAL(KIND=DP) :: &
+       amass(ntypx),  &! mass of atoms
+       dt,            &! time step
+       temperature,   &! starting temperature
+       delta_T         ! rate of thermalization
+  INTEGER :: &
+       nraise          ! the frequency of temperature raising
   !
-  integer :: &
-       ngms,       &! the number of smooth G vectors
-       ngms_g,     &! the global number of smooth G vectors (sum over all processors)
-       ngms_l,     &! the local number of smooth G vectors (only present processor)
-       nr1s,       &!
-       nr2s,       &! the dimension of the smooth grid
-       nr3s,       &!                                              &
-       nrx1s,      &! maximum dimension of the smooth grid
-       nrx2s,      &! maximum dimension of the smooth grid
-       nrx3s,      &! maximum dimension of the smooth grid
-       nrxxs        ! the total dimension of the smooth grid
-  integer, pointer :: &
-       &       nls(:),   &! the correspondence  G <-> smooth mesh
-       &       nlsm(:)    ! the same for gamma point calculation
-  !
-  logical                                                          &
-       doublegrid  ! true if we use a double grid
-  !
-  real(kind=DP)                                                           &
-       gcutms      ! the cut-off of the smooth mesh
-end module gsmooth
+END MODULE dynam
 !
-module klist
-  use parameters
+!
+MODULE gvect
+  USE parameters
+  USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
   !
-  !    The variables for the k-points
+  ! ...The variables describing the reciprocal lattice vectors
   !
-  real(kind=DP) ::                                                  &
+  INTEGER :: &
+       ngm,           &! number of g vectors
+       ngm_g,         &! global number of g vectors (sum over all processors)
+       ngm_l,         &! the local number of g vectors (only present processor)
+       gstart,        &! first nonzero g vector
+       nr1,           &! fft dimension along x
+       nr2,           &! fft dimension along y
+       nr3,           &! fft dimension along z
+       nrx1,          &! maximum fft dimension along x
+       nrx2,          &! maximum fft dimension along y
+       nrx3,          &! maximum fft dimension along z
+       nrxx,          &! maximum total fft
+       ngl             ! number of |g| shells
+  !INTEGER, ALLOCATABLE :: &
+  !     ig_l2g(:)      !"l2g" means local to global, this array convert a local
+  !                    ! G-vector index into the global index, in other words
+  !                    ! the index of the G-v. in the overall array of G-vectors
+  INTEGER, ALLOCATABLE, TARGET :: &
+       nl(:),         &! correspondence fft <-> array of G vectors
+       nlm(:),        &! same for gamma point calculation
+       igtongl(:)      ! correspondence shells of G <-> G
+  REAL(KIND=DP), ALLOCATABLE, TARGET :: &
+       g(:,:),        &! coordinates of G vectors
+       gg(:)           ! modulus G^2 of G vectors
+                       ! G vectors are in order of increasing |G|
+  REAL(KIND=DP) :: &
+       ecutwfc         ! energy cut-off
+  REAL(KIND=DP), POINTER :: &
+       gl(:)           ! the modulus of g in each shell
+  REAL (KIND=DP) :: &
+       gcutm,         &! cut-off for G vectors
+       dual,          &! link between G of wavefunctions and charge
+       ecfixed,       &!
+       qcutz,         &! For the modified Ekin functional
+       q2sigma         !
+  complex(KIND=DP), ALLOCATABLE :: &
+       eigts1(:,:),   &!
+       eigts2(:,:),   &! the phases e^{-iG*tau_s}
+       eigts3(:,:)     !
+  INTEGER, ALLOCATABLE  :: &
+       ig1(:),        &!
+       ig2(:),        &! the indices of G components
+       ig3(:)          !
+  !
+END MODULE gvect
+!
+!
+MODULE gsmooth
+  USE parameters
+  !
+  ! ... the variables for the smooth mesh of the wavefunction. It can
+  ! ... be different from the large mesh if dual > 4
+  !
+  INTEGER :: &
+       ngms,        &! the number of smooth G vectors
+       ngms_g,      &! the global number of smooth G vectors 
+                     !  (sum over all processors)
+       ngms_l,      &! the local number of smooth G vectors 
+                     !  (only present processor)
+       nr1s,        &!
+       nr2s,        &! the dimension of the smooth grid
+       nr3s,        &!                                              
+       nrx1s,       &! maximum dimension of the smooth grid
+       nrx2s,       &! maximum dimension of the smooth grid
+       nrx3s,       &! maximum dimension of the smooth grid
+       nrxxs         ! the total dimension of the smooth grid
+  INTEGER, POINTER :: &
+       nls(:),      &! the correspondence  G <-> smooth mesh
+       nlsm(:)       ! the same for gamma point calculation
+  LOGICAL :: &
+       doublegrid    ! .TRUE. if we use a double grid
+  REAL(KIND=DP) :: &
+       gcutms        ! the cut-off of the smooth mesh
+  !
+END MODULE gsmooth
+!
+!
+MODULE klist
+  USE parameters
+  !
+  ! ... The variables for the k-points
+  !
+  REAL(KIND=DP) :: &
        xk(3,npk),      &! coordinates of k points
        wk(npk),        &! weight of k points
        xqq(3),         &! coordinates of q point (used with iswitch=-2)
        degauss,        &! smearing parameter
        nelec            ! number of electrons
-  integer       ::                                                  &
+  INTEGER :: &
        ngk(npk),       &! number of plane waves for each k point
        nks,            &! number of k points in this pool
        nkstot,         &! total number of k points
-       ngauss          ! type of smearing technique
-  logical       ::                                                  &
-       lgauss,         &! if true: use gaussian broadening
-       lxkcry           ! if true:k-pnts in cryst. basis accepted in input
-end module klist
+       ngauss           ! type of smearing technique
+  LOGICAL :: &
+       lgauss,         &! if .TRUE.: use gaussian broadening
+       lxkcry           ! if .TRUE.:k-pnts in cryst. basis accepted in input
+  !
+END MODULE klist
 !
-module lsda_mod
-  use parameters
+!
+MODULE lsda_mod
+  USE parameters
   !
-  !    The variables needed for the lsda calculation
+  ! ... The variables needed for the lsda calculation
   !
-  logical :: lsda
-  real(kind=DP)  ::     &
+  LOGICAL :: &
+       lsda
+  REAL(KIND=DP) :: &
        starting_magnetization(ntypx) ! the magnetization used to start with
-  integer   ::                                           &
+  INTEGER :: &
        nspin,           &! number of spin polarization: 2 if lsda, 1 other
        current_spin,    &! spin of the current kpoint
        isk(npk)          ! for each k-point: 1=spin up, 2=spin down
-end module lsda_mod
+  !     
+END MODULE lsda_mod
 !
-module ktetra
-  use parameters
-  !
-  !    The variables for the tetrahedron method
-  !
-  integer                ::                                         &
-       nk1, nk2, nk3, &! the special-point grid
-       k1, k2, k3,    &! the offset from the origin
-       ntetra          ! number of tetrahedra
-  integer, allocatable :: &
-       tetra(:,:)      ! index of k-points in a given tetrahedron
-  !shape (4,ntetra)
-  logical              :: &
-       ltetra          ! if true: use tetrahedron method
-end module ktetra
 !
-module symme
-  use parameters
+MODULE ktetra
+  USE parameters
   !
-  !    The variables needed to describe the symmetry properties
+  ! ... The variables for the tetrahedron method
   !
-  integer   :: &
+  INTEGER :: &
+       nk1, nk2, nk3,   &! the special-point grid
+       k1, k2, k3,      &! the offset from the origin
+       ntetra            ! number of tetrahedra
+  INTEGER, ALLOCATABLE :: &
+       tetra(:,:)        ! index of k-points in a given tetrahedron
+                         ! shape (4,ntetra)
+  LOGICAL :: &
+       ltetra            ! if .TRUE.: use tetrahedron method
+  !
+END MODULE ktetra
+!
+!
+MODULE symme
+  USE parameters
+  !
+  ! ... The variables needed to describe the symmetry properties
+  !
+  INTEGER :: &
        s(3,3,48),              &! simmetry matrices
        ftau(3,48),             &! fractional translations
        nsym                     ! number of symmetries
-  integer, allocatable :: &
+  INTEGER, ALLOCATABLE :: &
        irt(:,:)                 ! symmetric atom for each atom and sym.op.
-
-  logical  ::    invsym         ! if true the system has inversion symmetry
-end module symme
+  LOGICAL :: &
+       invsym                   ! if .TRUE. the system has inversion symmetry
+  !
+END MODULE symme
 !
-module  atom
-  use parameters
-  !
-  !    The variables needed to describe the atoms and related quantities
-  !
-  real(kind=DP) ::                                                        &
-       zmesh(npsx),          &! the atomic charge for mesh generation
-       xmin(npsx),           &! initial linear mesh point
-       dx(npsx),             &! linear interval for logaritmic mesh
-       r(0:ndm,npsx),        &! radial logaritmic mesh
-       rab(0:ndm,npsx),      &! derivative of the radial mesh
-       vnl(0:ndm,0:lmaxx,npsx),    &! non local radial potential (KB type)
-       chi(0:ndm,nchix,npsx),      &! radial atomic orbitals
-       oc(nchix,npsx),             &! atomic level occupation
-       rho_at(0:ndm,npsx),         &! radial atomic charge density
-       rho_atc(0:ndm,npsx)          ! radial core charge density
-  integer     :: &
-       mesh(npsx),                 &! number of mesh points
-       msh(npsx),                  &! the point at rcut
-       nchi(npsx),                 &! number of atomic orbitals
-       lchi(nchix,npsx)             ! angular momentum of atomic orbitals
-  logical     :: &
-       numeric(npsx)         ! if true the potential is in numeric form
-  !
-end module atom
 !
-module pseud
-  use parameters
+MODULE atom
+  USE parameters
   !
-  !    The variables needed to compute the BHS pseudopotentials
+  ! ... The variables needed to describe the atoms and related quantities
   !
-  real(kind=DP) ::     &
-       cc(2,npsx),             &! the coefficients of the erf functions
-       alpc(2,npsx),           &! the alpha of the erf functions
-       zp(npsx),               &! the charge of the pseudopotential
-       aps(6,0:3,npsx),        &! the a_l coefficient
-       alps(3,0:3,npsx),       &! the b_l coefficient
-       zv(ntypx)                ! the valence charge of the atom
-  integer        ::    &
-       nlc(npsx),              &! number of erf functions
-       nnl(npsx),              &! number of the gaussian functions
-       lmax(npsx),             &! maximum angular momentum of the pseudopot
-       lloc(npsx)               ! angular momentum of the part taken as local
-  logical        ::     &
-       bhstype(npsx)            ! if true the parameter are from the BHS table
+  REAL(KIND=DP) :: &
+       zmesh(npsx),              &! the atomic charge for mesh generation
+       xmin(npsx),               &! initial linear mesh point
+       dx(npsx),                 &! linear interval for logaritmic mesh
+       r(0:ndm,npsx),            &! radial logaritmic mesh
+       rab(0:ndm,npsx),          &! derivative of the radial mesh
+       vnl(0:ndm,0:lmaxx,npsx),  &! non local radial potential (KB type)
+       chi(0:ndm,nchix,npsx),    &! radial atomic orbitals
+       oc(nchix,npsx),           &! atomic level occupation
+       rho_at(0:ndm,npsx),       &! radial atomic charge density
+       rho_atc(0:ndm,npsx)        ! radial core charge density
+  INTEGER :: &
+       mesh(npsx),               &! number of mesh points
+       msh(npsx),                &! the point at rcut
+       nchi(npsx),               &! number of atomic orbitals
+       lchi(nchix,npsx)           ! angular momentum of atomic orbitals
+  LOGICAL :: &
+       numeric(npsx)              ! if .TRUE. the potential is in numeric form
   !
-end module pseud
+END MODULE atom
 !
-module nl_c_c
-  use parameters
+!
+MODULE pseud
+  USE parameters
   !
-  !    The variable needed for the Non Linear Core Correction
+  ! ... The variables needed to compute the BHS pseudopotentials
   !
-  real(kind=DP)     :: &
+  REAL(KIND=DP) :: &
+       cc(2,npsx),            &! the coefficients of the erf functions
+       alpc(2,npsx),          &! the alpha of the erf functions
+       zp(npsx),              &! the charge of the pseudopotential
+       aps(6,0:3,npsx),       &! the a_l coefficient
+       alps(3,0:3,npsx),      &! the b_l coefficient
+       zv(ntypx)               ! the valence charge of the atom
+  INTEGER :: &
+       nlc(npsx),             &! number of erf functions
+       nnl(npsx),             &! number of the gaussian functions
+       lmax(npsx),            &! maximum angular momentum of the pseudopot
+       lloc(npsx)              ! angular momentum of the part taken as local
+  LOGICAL :: &
+       bhstype(npsx)           ! if .TRUE. the parameter are from the BHS table
+  !
+END MODULE pseud
+!
+!
+MODULE nl_c_c
+  USE parameters
+  !
+  ! ... The variable needed for the Non Linear Core Correction
+  !
+  REAL(KIND=DP) :: &
        a_nlcc(npsx),         &! the a_c coefficient of the gaussian
        b_nlcc(npsx),         &! the b_c coefficient of the gaussian
        alpha_nlcc(npsx)       ! the alpha coefficient of the gaussian
-  logical           :: &
-       nlcc(npsx)             ! if true the atom has nlcc
+  LOGICAL :: &
+       nlcc(npsx)             ! if .TRUE. the atom has nlcc
   !
-end module nl_c_c
-
-module vlocal
-  use parameters
+END MODULE nl_c_c
+!
+!
+MODULE vlocal
+  USE parameters
   !
-  !   The variables needed for the local potential in reciprocal space
+  ! ... The variables needed for the local potential in reciprocal space
   !
-  complex(kind=DP) , allocatable :: &
+  COMPLEX(KIND=DP), ALLOCATABLE :: &
        strf(:,:)              ! the structure factor
-  real(kind=DP), allocatable     :: &
+  REAL(KIND=DP), ALLOCATABLE :: &
        vloc(:,:),            &! the local potential for each atom type
        vnew(:,:)              ! V_out - V_in, needed in scf force correction
-end module vlocal
+  !
+END MODULE vlocal
 !
-module wvfct
-  use parameters
+!
+MODULE wvfct
+  USE parameters
   !
-  !    The variables needed to compute the band structure
+  ! ... The variables needed to compute the band structure
   !
-  integer                  ::  &
+  INTEGER ::  &
        npwx,             &! maximum number of PW for wavefunctions
        nbndx,            &! max number of bands use in iterative diag
        nbnd,             &! number of bands
        npw                ! the number of plane waves
-  integer, allocatable, target :: &
+  INTEGER, ALLOCATABLE, TARGET :: &
        igk(:),           &! correspondence k+G <-> G
        igk_l2g(:,:)       ! correspondence local index k+G <-> global G index
                           ! see also ig_l2g
-  real(kind=DP) , allocatable :: &
+  REAL(KIND=DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
-  logical :: &
-       gamma_only         ! if .true. only half G vectors are used
-end module wvfct
+  LOGICAL :: &
+       gamma_only         ! if .TRUE. only half G vectors are used
+  !
+END MODULE wvfct
 !
-module ener
-  use parameters
+!
+MODULE ener
+  USE parameters
   !
-  !    The variables needed to compute the energies
+  ! ... The variables needed to compute the energies
   !
-  real(kind=DP)           ::  &
+  REAL(KIND=DP) :: &
        etot,           &! the total energy of the solid
        eband,          &! the band energy
        deband,         &! correction for variational energy
@@ -328,48 +346,56 @@ module ener
        ewld,           &! the ewald energy
        demet,          &! correction for metals
        ef               ! the fermi energy
-end module ener
+  !
+END MODULE ener
 !
-module force_mod
-  use parameters
+!
+MODULE force_mod
+  USE parameters
   !
-  !    The variables for the first derivative of the energy
+  ! ... The variables for the first derivative of the energy
   !
-  real(kind=DP) , allocatable :: &
+  REAL(KIND=DP), ALLOCATABLE :: &
        force(:,:)       ! the force on each atom
-  real(kind=DP)           :: &
+  REAL(KIND=DP) :: &
        sigma(3,3)       ! the stress acting on the system
-  logical                 :: &
-       lforce,         &! if true compute the forces
-       lstres           ! if true compute the stress
-end module force_mod
+  LOGICAL :: &
+       lforce,         &! if .TRUE. compute the forces
+       lstres           ! if .TRUE. compute the stress
+  !
+END MODULE force_mod
 !
-module scf
-  use parameters
-  !
-  !    The variables needed to define the self-consistent cycle
-  !
-  real(kind=DP), allocatable :: &
-       rho(:,:),  &! the charge density in real space
-       rho_save(:,:), &! another charge density in real space
-       vr(:,:),   &! the Hartree + xc potential in real space
-       vltot(:),  &! the local potential in real space
-       vrs(:,:),  &! the total pot. in real space (smooth grig)
-       rho_core(:) ! the core charge in real space
-end module scf
-module workspace
-  use parameters
-  !
-  !   additional memory needed in h_psi
-  !
-end module workspace
 !
-module varie
-  use parameters
+MODULE scf
+  USE parameters
   !
-  !   Several variables controlling the run
+  ! ... The variables needed to define the self-consistent cycle
   !
-  real(kind=DP)  :: &
+  REAL(KIND=DP), ALLOCATABLE :: &
+       rho(:,:),       &! the charge density in real space
+       rho_save(:,:),  &! another charge density in real space
+       vr(:,:),        &! the Hartree + xc potential in real space
+       vltot(:),       &! the local potential in real space
+       vrs(:,:),       &! the total pot. in real space (smooth grig)
+       rho_core(:)      ! the core charge in real space
+  !
+END MODULE scf
+!
+!
+MODULE workspace
+  USE parameters
+  !
+  ! ... additional memory needed in h_psi
+  !
+END MODULE workspace
+!
+!
+MODULE varie
+  USE parameters
+  !
+  ! ... Several variables controlling the run
+  !
+  REAL(KIND=DP)  :: &
        mixing_beta,      &! the mixing parameter
        tr2,              &! the convergence threshold for potential
        upscale,          &! maximum reduction of convergence threshold
@@ -378,11 +404,11 @@ module varie
        alpha0,           &! the mixing parameters for the extrapolation
        beta0,            &! of the starting potential
        diis_ethr_cg       ! threshold in eigval for starting DIIS
-  integer                    :: &
+  INTEGER :: &
        ngm0,             &! used in mix_rho
        niter,            &! the maximum number of iteration
        nmix,             &! the number of iteration kept in the history
-       imix,             &! the type of mixing (0=plain,1=TF,2=localTF)
+       imix,             &! the type of mixing (0=plain,1=TF,2=local-TF)
        iprint,           &! the interval between full writing of results
        iverbosity,       &! type of printing ( 0 few, 1 all )
        david,            &! used on Davidson diagonalization
@@ -394,71 +420,74 @@ module varie
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
        diis_ndim,        &! dimension of reduced basis in DIIS
-       order             ! type of potential updating ( see update_pot )
+       order              ! type of potential updating ( see update_pot )
   !
-  logical                  :: &
-       lscf,             &! if true the calculation is selfconsistent
-       conv_elec,        &! if true electron convergence has been reached
-       conv_ions,        &! if true    ionic convergence has been reached
-       nosym,            &! if true no symmetry is used
-       newpseudo(npsx),  &! if true done with the new pseudopotentials
-       noinv,            &! if true eliminates inversion symmetry
-       diis_wfc_keep,    &! if true keeps old wfc for starting
-       restart,          &! if true restart from results of a preceding run
-       reduce_io         ! if true reduce the I/O to the strict minimum
+  LOGICAL :: &
+       lscf,             &! if .TRUE. the calculation is selfconsistent
+       conv_elec,        &! if .TRUE. electron convergence has been reached
+       conv_ions,        &! if .TRUE.    ionic convergence has been reached
+       nosym,            &! if .TRUE. no symmetry is used
+       newpseudo(npsx),  &! if .TRUE. done with the new pseudopotentials
+       noinv,            &! if .TRUE. eliminates inversion symmetry
+       diis_wfc_keep,    &! if .TRUE. keeps old wfc for starting
+       restart,          &! if .TRUE. restart from results of a preceding run
+       reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
   !
-end module varie
+END MODULE varie
 !
-module relax
-  use parameters
+!
+MODULE relax
+  USE parameters
   !
-  !   The variables used to control ionic relaxations
+  ! ... The variables used to control ionic relaxations
   !
-  integer     :: &
-       fixatom           ! last "fixatom" are kept fixed
-  logical     :: &       ! if true tart the structural optimization
-       restart_bfgs      ! from the results of a previous run
-  real(kind=DP)   :: &
-       epse,             &! threshold on total energy
-       epsf,             &! threshold on forces
-       dtau_ref,         &! estimation of dtau
+  INTEGER :: &
+       fixatom                   ! last "fixatom" are kept fixed
+  INTEGER, ALLOCATABLE :: &
+       if_pos(:,:)               ! if 0 that coordinate will be kept fixed
+  LOGICAL :: &                   ! if .TRUE. start the structural optimization
+       restart_bfgs              ! from the results of a previous run
+  REAL(KIND=DP) :: &
+       epse,                    &! threshold on total energy
+       epsf,                    &! threshold on forces
+       dtau_ref,                &! estimation of dtau
        starting_diag_threshold, &! self-explanatory
-       starting_scf_threshold   ! as above
+       starting_scf_threshold    ! as above
   !
-end module relax
+END MODULE relax
 !
-module cellmd
-  use parameters
+!
+MODULE cellmd
+  USE parameters
   !
-  !   The variables used to control cell relaxation
+  ! ... The variables used to control cell relaxation
   !
-  real(kind=DP)    :: &
+  REAL(KIND=DP) :: &
        press, cmass,     &! target pressure and cell mass,
        ttol,             &! tollerance for temperature rescaling
        at_old(3,3),      &! the lattice vectors at the previous ste
        omega_old,        &! the cell volume at the previous step
        cell_factor        ! maximum expected (linear) cell contraction
-  ! during relaxation/MD
-  integer              :: &
+                          ! during relaxation/MD
+  INTEGER :: &
        nzero,            &! iteration # of last thermalization
        ntimes,           &! number of thermalization steps to be performed
        ntcheck            ! # of steps between thermalizations
+  LOGICAL :: lmovecell    ! used in cell relaxation
   !
-  logical :: lmovecell    ! used in cell relaxation
-  !
-  character(len=2) ::  &
+  CHARACTER(LEN=2) :: &
        calc               ! main switch for variable cell shape MD
-  ! see readin, vcsmd and/or INPUT files
+                          ! see readin, vcsmd and/or INPUT files
   !
-end module cellmd
+END MODULE cellmd
 !
-module units
-  use parameters
+!
+MODULE units
+  USE parameters
   !
-  !    The units where various variables are saved
+  ! ... The units where various variables are saved
   !
-  !
-  integer               :: &
+  INTEGER :: &
        iunpun,           &! unit for saving the final results
        iunwfc,           &! unit with wavefunctions
        iunat,            &! unit for saving orthogonal atomic wfcs
@@ -468,54 +497,59 @@ module units
        iunigk,           &! unit for saving indices
        iunres,           &! unit for the restart of the run
        nwordwfc,         &! lenght of record in wavefunction file
-       nwordatwfc        ! lenght of record in atomic wfc file
+       nwordatwfc         ! lenght of record in atomic wfc file
   !
-end module units
+END MODULE units
 !
-module char
-  use parameters
-  !
-  !    The names of the atoms, of the solid and of the symmetries
-  !
-  character(len=75)   ::  title       ! title of the run
-  character(len=20)   ::  crystal     ! type of the solid
-  character(len=2 )   ::  psd(npsx)   ! name of the pseudopotential
-  character(len=45)   ::  sname(48)   ! name of the symmetries
-  !
-end module char
 !
-module filnam
-  use parameters
+MODULE char
+  USE parameters
   !
-  !    The name of the files
+  ! ... The names of the atoms, of the solid and of the symmetries
   !
-  character(len=80)   :: &
-       filpun,           &! name of the punch file
-       input_drho,       &! name of the file with the input drho
-       output_drho        ! name of the file with the output drho
+  CHARACTER(LEN=75) ::  title       ! title of the run
+  CHARACTER(LEN=20) ::  crystal     ! type of the solid
+  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
+  CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !
-end module filnam
+END MODULE char
 !
-module us
-  use parameters
+!
+MODULE filnam
+  USE parameters
   !
-  ! These parameters are needed with the US pseudopotentials
+  ! ... The name of the files
   !
-  integer, parameter  :: &
-       nlx  = (lmaxx+1)**2,&! maximum number of combined angular momentum
-       mx   = 2*lqmax-1     ! maximum magnetic angular momentum of Q
-
-  real(kind=DP), parameter:: &
-       dq = 0.01d0          ! space between points in the pseudopotential tab.
+  CHARACTER(LEN=80) :: &
+       filpun,         &! name of the punch file
+       input_drho,     &! name of the file with the input drho
+       output_drho      ! name of the file with the output drho
   !
-  real(kind=DP)                :: &
-       dion(nbrx,nbrx,npsx),       &! D_{mu,nu} parameters (in the atomic case)
-       betar(0:ndm,nbrx,npsx),     &! radial beta_{mu} functions
-       qqq(nbrx,nbrx,npsx),        &! q_{mu,nu} parameters (in the atomic case)
-       qfunc(0:ndm,nbrx,nbrx,npsx),&! Q_{mu,nu}(|r|) function for |r|> r_L
-       qfcoef(nqfm,lqmax,nbrx,nbrx,npsx),&! coefficients for Q in region |r|<r_L
-       rinner(lqmax,npsx)! values of r_L
-  integer                  :: &
+END MODULE filnam
+!
+!
+MODULE us
+  USE parameters
+  !
+  ! ... These parameters are needed with the US pseudopotentials
+  !
+  INTEGER, PARAMETER :: &
+       nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
+       mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
+  REAL(KIND=DP), PARAMETER:: &
+       dq = 0.01D0           ! space between points in the pseudopotential tab.
+  REAL(KIND=DP) :: &
+       dion(nbrx,nbrx,npsx),              &! D_{mu,nu} parameters (in the 
+                                           !  atomic case)
+       betar(0:ndm,nbrx,npsx),            &! radial beta_{mu} functions
+       qqq(nbrx,nbrx,npsx),               &! q_{mu,nu} parameters (in the 
+                                           !  atomic case)
+       qfunc(0:ndm,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
+                                           !  |r|> r_L
+       qfcoef(nqfm,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
+                                           !  |r|<r_L
+       rinner(lqmax,npsx)                  ! values of r_L
+  INTEGER :: &
        nh(npsx),             &! number of beta functions per atomic type
        nbeta(npsx),          &! number of beta functions
        kkbeta(npsx),         &! point where the beta are zero
@@ -524,8 +558,7 @@ module us
        ifqopt(npsx),         &! level of q optimization
        lll(nbrx,npsx),       &! angular momentum of the beta function
        iver(3,npsx)           ! version of the atomic code
-  !
-  integer     ::    &
+  INTEGER :: &
        nhm,              &! max number of different beta functions per atom
        nkb,              &! total number of beta functions, with struct.fact.
        nqxq,             &! size of interpolation table
@@ -534,132 +567,151 @@ module us
        lmaxkb,           &! max angular momentum
        lqx,              &! max angular momentum + 1 for Q functions
        nqx                ! number of interpolation points
-  integer, allocatable ::&
+  INTEGER, ALLOCATABLE ::&
        indv(:,:),        &! correspondence of betas atomic <-> soli
        nhtol(:,:),       &! correspondence n <-> angular momentum
        nhtom(:,:)         ! correspondence n <-> magnetic angular m
 
-  complex(kind=DP) , allocatable, target :: &
-       vkb(:,:),     &! all beta functions in reciprocal space
-       qgm(:)         ! complete fourier transform of Q
-  real(kind=DP) , allocatable          :: &
-       qq(:,:,:),    &! the q functions in the solid
-       dvan(:,:,:),  &! the D functions of the solid
-       deeq(:,:,:,:),&! the integral of V_eff and Q_{nm}
-       becsum(:,:,:),&! the sum of bec functions
-       qrad(:,:,:,:),&! radial FT of Q functions
-       tab(:,:,:)! interpolation table for PPs
-  real(kind=DP)   :: &
+  complex(KIND=DP), ALLOCATABLE, TARGET :: &
+       vkb(:,:),              &! all beta functions in reciprocal space
+       qgm(:)                  ! complete fourier transform of Q
+  REAL(KIND=DP), ALLOCATABLE :: &
+       qq(:,:,:),             &! the q functions in the solid
+       dvan(:,:,:),           &! the D functions of the solid
+       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm}
+       becsum(:,:,:),         &! the sum of bec functions
+       qrad(:,:,:,:),         &! radial FT of Q functions
+       tab(:,:,:)              ! interpolation table for PPs
+  REAL(KIND=DP) :: &
        ap(lqmax*lqmax,nlx,nlx) ! Clebsch-Gordan coefficients for spher.harm.
+  LOGICAL :: &
+       tvanp(npsx),           &! if .TRUE. the atom is of Vanderbilt type
+       okvan                   ! if .TRUE. at least one pseudo is Vanderbilt
   !
-  logical                :: &
-       tvanp(npsx),       &! if true the atom is of Vanderbilt type
-       okvan               ! if true at least one pseudo is Vanderbilt
-  !
-end module us
+END MODULE us
 !
-module ldaU
-  use parameters
+!
+MODULE ldaU
+  USE parameters
   !
-  !    The quantities needed in lda+U calculations
+  ! ... The quantities needed in lda+U calculations
   !
-  complex(kind=DP), allocatable  :: &
-       swfcatom(:,:)! orthogonalized atomic wfcs
-  real(kind=DP), allocatable     :: &
-       ns(:,:,:,:),   &! the occupation matrix used in h_psi
-       nsnew(:,:,:,:)  ! the occupation matrix computed by at
-  real(kind=DP) :: &       
-       d1(3,3,48),          &! matrices for rotating spherical     
-       d2(5,5,48),          &! harmonics                           
-       d3(7,7,48),          &! 
-       eth,                 &! the (corrected) Hubbard contribution
-       Hubbard_U(ntypx),    &! the Hubbard U
-       Hubbard_alpha(ntypx)  ! the Hubbard alpha (used to calculate U)
-  integer           :: &                                                
-       niter_with_fixed_ns, &! no. of iterations with fixed ns
-       Hubbard_l(ntypx),    &! the agular momentum of Hubbard states
-       Hubbard_lmax          ! maximum agular momentum of Hubbard states
-  logical           :: &                                                
-       lda_plus_u,          &! .true. if lda+u calculation is performed
-       conv_ns              ! .true. if ns are converged
-end module ldaU
+  COMPLEX(KIND=DP), ALLOCATABLE :: &
+       swfcatom(:,:)          ! orthogonalized atomic wfcs
+  REAL(KIND=DP), ALLOCATABLE :: &
+       ns(:,:,:,:),          &! the occupation matrix used in h_psi
+       nsnew(:,:,:,:)         ! the occupation matrix computed by at
+  REAL(KIND=DP) :: &       
+       d1(3,3,48),           &! matrices for rotating spherical     
+       d2(5,5,48),           &! harmonics                           
+       d3(7,7,48),           &! 
+       eth,                  &! the (corrected) Hubbard contribution
+       Hubbard_U(ntypx),     &! the Hubbard U
+       Hubbard_alpha(ntypx)   ! the Hubbard alpha (used to calculate U)
+  INTEGER :: &                                                
+       niter_with_fixed_ns,  &! no. of iterations with fixed ns
+       Hubbard_l(ntypx),     &! the agular momentum of Hubbard states
+       Hubbard_lmax           ! maximum agular momentum of Hubbard states
+  LOGICAL :: &                                                
+       lda_plus_u,           &! .TRUE. if lda+u calculation is performed
+       conv_ns                ! .TRUE. if ns are converged
+  !
+END MODULE ldaU
+!
+!
+MODULE extfield
+  USE parameters
+  !
+  ! ... 
+  !
+  LOGICAL :: &
+       tefield,      &! if .TRUE. a finite electric field is added to the
+                      ! local potential
+       dipfield       ! if .TRUE. the dipole field is subtracted
+  INTEGER :: &
+       edir           ! direction of the field
+  REAL(KIND=DP) :: &
+      emaxpos,       &! position of the maximum of the field (0<emaxpos<1)
+      eopreg,        &! amplitude of the inverse region (0<eopreg<1)
+      eamp,          &! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
+      etotefield      ! energy correction due to the field
 
-module extfield
-  use parameters
-  logical :: tefield, &     ! if true a finite electric field is added to the
-                            ! local potential
-             dipfield       ! if true the dipole field is subtracted
-  integer :: edir           ! direction of the field
-  real(kind=DP) ::   &
-      emaxpos,       &      ! position of the maximum of the field (0<emaxpos<1)
-      eopreg,        &      ! amplitude of the inverse region (0<eopreg<1)
-      eamp,          &      ! field amplitude (in a.u.) (1 a.u.=51.44 10^11 V/m)
-      etotefield            ! energy correction due to the field
-
-  real(kind=DP), allocatable:: forcefield(:,:)
-
-end module extfield
-
-module sticks
-  use fft_types, only: fft_dlay_descriptor
-  type ( fft_dlay_descriptor ) :: dfftp   ! dense grid
-  type ( fft_dlay_descriptor ) :: dffts   ! smooth grid
+  REAL(KIND=DP), ALLOCATABLE :: &
+      forcefield(:,:)
+  !
+END MODULE extfield
+!
+!
+MODULE sticks
+  USE fft_types, ONLY : fft_dlay_descriptor
+  !
+  TYPE ( fft_dlay_descriptor ) :: dfftp   ! dense grid
+  TYPE ( fft_dlay_descriptor ) :: dffts   ! smooth grid
+  !
   !   data structure containing all information
   !   about fft data distribution for a given 
   !   potential grid, and its wave functions sub-grid.
-end module
-  
-module bp
-  use parameters
   !
-  !    The variables needed for the Berry phase polarization calculation
+END MODULE
+!  
+!  
+MODULE bp
+  USE parameters
   !
-  logical      :: &
-       lberry                  ! if true, calculate polarization 
-  integer      :: &
-       gdir,      &            ! G-vector for polarization calculation
-       nppstr                  ! number of k-points (parallel vector)
-end module bp
+  ! ... The variables needed for the Berry phase polarization calculation
+  !
+  LOGICAL :: &
+       lberry        ! if .TRUE., calculate polarization 
+  INTEGER :: &
+       gdir,        &! G-vector for polarization calculation
+       nppstr        ! number of k-points (parallel vector)
+  !
+END MODULE bp
 !
-module fixed_occ
-  use parameters
-  real(kind=dp) :: f_inp(nbndxx,nspinx) ! the occupations for each spin
-
-  logical :: tfixed_occ  ! if true the occupations are fixed.
-end module fixed_occ
-
-
-module pwcom
-  use constants, only: e2, rytoev, amconv, uakbar, pi, tpi, fpi
-  use brilz
-  use basis
-  use dynam
-  use gvect
-  use gsmooth
-  use klist
-  use lsda_mod
-  use ktetra
-  use symme
-  use atom
-  use pseud
-  use nl_c_c
-  use vlocal
-  use wvfct
-  use ener
-  use force_mod
-  use scf
-  use workspace
-  use varie
-  use relax
-  use cellmd
-  use units
-  use char
-  use filnam
-  use us
-  use ldaU
-  use extfield
-  use sticks
-  use bp
-  use fixed_occ
-end module pwcom
 !
+MODULE fixed_occ
+  USE parameters
+  !
+  ! ...
+  !
+  REAL(KIND=DP) :: &
+       f_inp(nbndxx,nspinx)   ! the occupations for each spin
+  LOGICAL :: &
+       tfixed_occ             ! if .TRUE. the occupations are fixed.
+  !
+END MODULE fixed_occ
+!
+!
+MODULE pwcom
+  USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
+  USE brilz
+  USE basis
+  USE dynam
+  USE gvect
+  USE gsmooth
+  USE klist
+  USE lsda_mod
+  USE ktetra
+  USE symme
+  USE atom
+  USE pseud
+  USE nl_c_c
+  USE vlocal
+  USE wvfct
+  USE ener
+  USE force_mod
+  USE scf
+  USE workspace
+  USE varie
+  USE relax
+  USE cellmd
+  USE units
+  USE char
+  USE filnam
+  USE us
+  USE ldaU
+  USE extfield
+  USE sticks
+  USE bp
+  USE fixed_occ
+END MODULE pwcom

@@ -5,38 +5,41 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
-subroutine bfgs
+SUBROUTINE bfgs
   !-----------------------------------------------------------------------
   ! ionic relaxation through broyden-fletcher-goldfarb-shanno minimization
   ! this version saves data at each iteration
   !
-#include "machine.h"
-  use brilz
-  use basis
-  use relax
-  use force_mod
-  use varie
-  use ener, only: etot
-  use klist, only: nelec
-  use io_files, only : prefix
+  USE parameters,  ONLY : DP
+  USE brilz,       ONLY : alat
+  USE basis,       ONLY : nat, tau
+  USE force_mod,   ONLY : force
+  USE varie,       ONLY : conv_ions, upscale, imix, tr2, ethr, istep
+  USE relax,       ONLY : restart_bfgs, epse, epsf, starting_diag_threshold, &
+                          starting_scf_threshold, dtau_ref
+  USE ener,        ONLY : etot
+  USE klist,       ONLY : nelec
+  USE io_files,    ONLY : prefix
 #ifdef __PARA
-  use para, only : me, mypool
-  use mp
+  USE para,        ONLY : me, mypool
+  USE mp
 #endif
-  implicit none
-
-  integer :: iunit          ! unit for file containing bfgs info
-  integer :: nat1,        & ! number of moving atoms
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunit          ! unit for file containing bfgs info
+  INTEGER :: nat1,        & ! number of moving atoms
              nat3,        & ! 3 times the above
              nax3,        & ! 3 times the total number of atoms (nat)
              na, i          ! counters
-  real(kind=DP), allocatable :: &
+  REAL(KIND=DP), ALLOCATABLE :: &
              hessm1 (:,:),& ! current estimate of hessian^-1
              dtau (:,:),  & ! direction (versor) for line minimization
              oldforce (:,:) ! gradient along minimization direction
-  real(kind=DP) :: &
+  REAL(KIND=DP) :: &
              detot,       & ! forces at previous line minimum (LM)
              deold,       & ! as above at previous LM
              eold,        & ! energy at previous LM
@@ -44,200 +47,206 @@ subroutine bfgs
              x,           & ! present position along dtau
              xnew           ! next position along dtau
 
-  logical :: exst,       & ! test variable on existence of bfgs file
+  LOGICAL :: exst,       & ! test variable on existence of bfgs file
              minimum_ok    ! true if linmin found a good line minimum
-
-  real(kind=DP) :: DDOT
-
-
+  !
+  REAL(KIND=DP) :: DDOT
+  !
 #ifdef __PARA
-  integer :: root =0
+  INTEGER :: root = 0
   !
-  ! only one node does the calculation in the parallel case
   !
-
-  if (me.eq.1.and.mypool.eq.1) then
+  ! ... only one node does the calculation in the parallel case
+  !
+  IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif
-     allocate ( hessm1(3*nat,3*nat), dtau(3,nat), oldforce(3,nat) )
+     ALLOCATE( hessm1(3*nat,3*nat), dtau(3,nat), oldforce(3,nat) )
      !
      iunit = 4
-     nat1 = nat - fixatom
-     if (nat1.lt.1.or.nat.eq.1) then
-        call errore ('bfgs', 'not enough atoms to move', - 1)
-        conv_ions = .true.
-        goto 100
-     endif
+     !
+     ! ... the constrain on fixed coordinates is implemented setting to zero
+     ! ... the forces in forces.f90  ( C.S. 15/10/2003 )
+     !
+     ! nat1 = nat - fixatom
+     nat1 = nat
      nax3 = 3 * nat
      nat3 = 3 * nat1
-     conv_ions = .false.
+     conv_ions = .FALSE.
      !
-     call seqopn (iunit, trim(prefix)//'.bfgs', 'unformatted', exst)
+     CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
      !
-     ! exst flags whether restarting from preceding iterations
-     ! do not restart from existing data unless explicitely required
+     ! ... exst flags whether restarting from preceding iterations
+     ! ... do not restart from existing data unless explicitely required
      !
-     exst = exst .and. restart_bfgs
+     exst = ( exst .AND. restart_bfgs )
      !
-     if (.not.exst) then
+     IF ( .NOT. exst ) THEN
         !
-        ! file not found: starting iteration
+        ! ... file not found: starting iteration
         !
-        close (unit = iunit, status = 'delete')
-        minimum_ok = .false.
-        call estimate (hessm1, nax3, nat, nat3)
-        write (6, '(/5x,"EPSE = ",e9.2,"    EPSF = ",e9.2, &
-             &"    UPSCALE = ",f6.2)') epse, epsf, upscale
-     else
+        CLOSE( UNIT = iunit, STATUS = 'DELETE' )
+        minimum_ok = .FALSE.
+        CALL estimate( hessm1, nax3, nat, nat3 )
+        WRITE(6, '(/5X,"EPSE = ",E9.2,"    EPSF = ",E9.2, &
+                               "    UPSCALE = ",F6.2)') epse, epsf, upscale
+     ELSE
         !
-        ! file found: restart from preceding iterations
+        ! ... file found: restart from preceding iterations
         !
-        read (iunit) minimum_ok, xnew, starting_scf_threshold, &
+        READ( iunit ) minimum_ok, xnew, starting_scf_threshold, &
              starting_diag_threshold
-        read (iunit) dtau
-        read (iunit) hessm1
-        read (iunit) xold, eold, deold, oldforce
-        close (unit = iunit, status = 'keep')
-
-     endif
-20   continue
-     if (exst.and..not.minimum_ok) then
+        READ( iunit ) dtau
+        READ( iunit ) hessm1
+        READ( iunit ) xold, eold, deold, oldforce
+        CLOSE( UNIT = iunit, STATUS = 'KEEP' )
+     END IF
+     !
+20   CONTINUE
+     !
+     IF (exst.and..not.minimum_ok) then
         !
-        ! Search for a new line minimum
+        ! ... Search for a new line minimum
         !
         x = xnew
-        detot = - DDOT (nat3, force, 1, dtau, 1)
+        detot = - DDOT( nat3, force, 1, dtau, 1 )
         !
-        ! line minimization with 3rd order interpolation formula
+        ! ... line minimization with 3rd order interpolation formula
         !
-        call linmin (xold, eold, deold, x, etot, detot, xnew, minimum_ok)
+        CALL linmin( xold, eold, deold, x, etot, detot, xnew, minimum_ok )
         !
-        ! xnew close to x: line minimization already achieved
+        ! ... xnew close to x: line minimization already achieved
         !
-        if (abs ( (xnew - x) / x) .lt.0.05d0.and.minimum_ok) goto &
-             20
+        IF ( ABS( ( xnew - x ) / x ) < 0.05D0 .AND. minimum_ok ) GOTO 20
              !
-             ! new positions (hopefully close to the line minimum) :
+             ! new positions ( hopefully close to the line minimum ) :
              !
-        call DAXPY (nat3, (xnew - x) / alat, dtau, 1, tau, 1)
-        if (.not.minimum_ok) then
+        CALL DAXPY( nat3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
+        IF ( .NOT. minimum_ok ) THEN
            !
-           ! line minimum was not found take another step and reset
-           ! the starting point of the line minimization to the present position
+           ! ... line minimum was not found take another step and reset the 
+           ! ... starting point of the line minimization to the present position
            !
-           xold = x
-           eold = etot
+           xold  = x
+           eold  = etot
            deold = detot
-           call DCOPY (nat3, force, 1, oldforce, 1)
-
-        endif
-     else
-        if (exst) then
            !
-           ! We (hopefully) are at the line minimum: convergence check
+           CALL DCOPY( nat3, force, 1, oldforce, 1 )
            !
-           conv_ions = eold - etot .lt.epse
-           do i = 1, 3
-              do na = 1, nat1
-                 conv_ions = conv_ions.and.abs (force (i, na) ) .lt.epsf
-              enddo
-           enddo
+        END IF
+     ELSE
+        IF ( exst ) THEN
            !
-           ! update the inverse hessian
+           ! ... We (hopefully) are at the line minimum: convergence check
            !
-           ! set dtau to the true displacements from previous to present LM
+           conv_ions = ( ( eold - etot ) < epse )
+           DO i = 1, 3
+              DO na = 1, nat1
+                 conv_ions = ( conv_ions .AND. ( ABS( force(i,na) ) < epsf ) )
+              END DO
+           END DO
            !
-           call DSCAL (nat3, (xnew - xold), dtau, 1)
-           call updathes (nax3, nat3, oldforce, force, hessm1, dtau)
-        endif
+           ! ... update the inverse hessian
+           ! ... set dtau to the true displacements from previous to present LM
+           !
+           CALL DSCAL( nat3, ( xnew - xold ), dtau, 1 )
+           CALL updathes( nax3, nat3, oldforce, force, hessm1, dtau )
+        END IF
         !
-        ! find new minimization direction dtau
+        ! ... find new minimization direction dtau
         !
-        x = 0.d0
-        minimum_ok = .false.
-        dtau(:,:) = 0.d0
-        call DGEMV ('n', nat3, nat3, 1.d0, hessm1, nax3, force, 1, &
-             0.d0, dtau, 1)
-        xnew = sqrt (DDOT (nat3, dtau, 1, dtau, 1) )
-        call DSCAL (nat3, 1.d0 / xnew, dtau, 1)
+        x          = 0.D0
+        minimum_ok = .FALSE.
+        dtau(:,:)  = 0.D0
+        !
+        CALL DGEMV( 'N', nat3, nat3, 1.D0, hessm1, nax3, force, 1, &
+                     0.D0, dtau, 1 )
+        xnew = SQRT( DDOT( nat3, dtau, 1, dtau, 1 ) )
+        CALL DSCAL( nat3, 1.D0 / xnew, dtau, 1 )
         !
         ! ... and the gradient along the minimization direction dtau
         !
-        detot = - DDOT (nat3, force, 1, dtau, 1)
+        detot = - DDOT( nat3, force, 1, dtau, 1 )
         !
-        if (detot.gt.0.d0) then
-           write (6, '("uphill direction! de/dx =",e10.4)') detot
-           write (6, '("try steepest descent direction instead!")')
-           call DCOPY (nat3, force, 1, dtau, 1)
-           xnew = sqrt (DDOT (nat3, dtau, 1, dtau, 1) )
-           call DSCAL (nat3, 1.d0 / xnew, dtau, 1)
-           detot = - DDOT (nat3, force, 1, dtau, 1)
-        endif
+        IF ( detot > 0.D0 ) THEN
+           WRITE(6, '("uphill direction! de/dx =",E10.4)') detot
+           WRITE(6, '("try steepest descent direction instead!")')
+           !
+           CALL DCOPY( nat3, force, 1, dtau, 1 )
+           xnew = SQRT( DDOT( nat3, dtau, 1, dtau, 1 ) )
+           CALL DSCAL( nat3, 1.D0 / xnew, dtau, 1 )
+           detot = - DDOT( nat3, force, 1, dtau, 1 )
+        END IF
         !
-        ! update atomic positions. NB: tau in units of alat!
+        ! ... update atomic positions. NB: tau in units of alat!
         !
-        call DAXPY (nat3, (xnew - x) / alat, dtau, 1, tau, 1)
+        CALL DAXPY( nat3, ( xnew - x ) / alat, dtau, 1, tau, 1 )
         !
-        ! save values of variables at line minimum for later use
+        ! ... save values of variables at line minimum for later use
         !
-        xold = x
-        eold = etot
+        xold  = x
+        eold  = etot
         deold = detot
-        call DCOPY (nat3, force, 1, oldforce, 1)
         !
-     endif
+        CALL DCOPY( nat3, force, 1, oldforce, 1 )
+        !
+     END IF
      !
-     ! set appropriate (?) thresholds for self-consistency
+     ! ... set appropriate (?) thresholds for self-consistency
      !
-     if (imix.lt.0) then
-        tr2 = (starting_scf_threshold * max (1.d0 / upscale, min (1.d0, &
-             abs (xnew - x) / dtau_ref) ) ) **2
-        ethr = starting_diag_threshold * max (1.d0 / upscale, min ( &
-             1.d0, abs (xnew - x) / dtau_ref) ) **2
-     else
+     IF ( imix < 0 ) THEN
+        tr2 = ( starting_scf_threshold * MAX( 1.D0 / upscale, MIN( 1.D0, &
+                ABS( xnew - x ) / dtau_ref ) ) )**2
+        ethr = starting_diag_threshold * MAX( 1.D0 / upscale, MIN( 1.D0, &
+                ABS( xnew - x ) / dtau_ref ) )**2
+     ELSE
         ethr = tr2 / nelec
         tr2 = starting_scf_threshold * &
-                       max( 1.d0/upscale, abs(xnew-x)/dtau_ref )
-     end if
+                       MAX( 1.D0/upscale, ABS( xnew - x ) / dtau_ref )
+     END IF
      !
-     ! report
+     ! ... report
      !
-     if (conv_ions) then
-        write (6, '(/5x,"BFGS: convergence achieved, Efinal=",f15.8)') etot
-        write (6, '(/72("-")//5x,"Final estimate of positions")')
-     else
-        write (6, '(/72("-")//5x, &
-             &"Search of equilibrium positions: iteration # ",i4, &
-             &", scf threshold ",1pe8.2/)') istep, tr2
-     endif
+     IF ( conv_ions ) THEN
+        WRITE(6, '(/5X,"BFGS: convergence achieved, Efinal=",F15.8)') etot
+        WRITE(6, '(/72("-")//5X,"Final estimate of positions")')
+     ELSE
+        WRITE(6, '(/72("-")//5X, &
+             &"Search of equilibrium positions: iteration # ",I4, &
+             &", scf threshold ",1PE8.2/)') istep, tr2
+     END IF
      !
-     call output_tau
+     CALL output_tau
      !
-     ! save all quantities needed at the following iterations
+     ! ... save all quantities needed at the following iterations
      !
-     if (.not.conv_ions) then
-        call seqopn (iunit, trim(prefix)//'.bfgs', 'unformatted', exst)
-        write (iunit) minimum_ok, xnew, starting_scf_threshold, &
+     IF ( .NOT. conv_ions ) THEN
+        CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
+        WRITE( iunit ) minimum_ok, xnew, starting_scf_threshold, &
              starting_diag_threshold
-        write (iunit) dtau
-        write (iunit) hessm1
-        write (iunit) xold, eold, deold, oldforce
-        close (unit = iunit, status = 'keep')
-        ! at next iteration read from file
-        restart_bfgs = .true.
-     endif
-     deallocate (hessm1,dtau,oldforce)
-
-100  continue
+        WRITE( iunit ) dtau
+        WRITE( iunit ) hessm1
+        WRITE( iunit ) xold, eold, deold, oldforce
+        CLOSE( UNIT = iunit, STATUS = 'KEEP' )
+        !
+        ! ... at next iteration read from file
+        !
+        restart_bfgs = .TRUE.
+     END IF
+     !
+     DEALLOCATE( hessm1, dtau, oldforce )
+     !
 #ifdef __PARA
-  endif
+  END IF
   !
-  ! broadcast calculated quantities to all nodes
+  ! ... broadcast calculated quantities to all nodes
   !
-  call mp_bcast (conv_ions, root)
-  call mp_bcast (tau, root)
-  call mp_bcast (ethr, root)
-  call mp_bcast (tr2, root)
+  CALL mp_bcast( conv_ions, root )
+  CALL mp_bcast( tau, root )
+  CALL mp_bcast( ethr, root )
+  CALL mp_bcast( tr2, root )
 #endif
-  return
-end subroutine bfgs
+  !
+  RETURN
+  !
+END SUBROUTINE bfgs
 

@@ -4,9 +4,11 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!  
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
-subroutine electrons
+SUBROUTINE electrons
   !-----------------------------------------------------------------------
   !
   !    This routine is a driver of the self-consistent cycle.
@@ -19,374 +21,433 @@ subroutine electrons
   !    It prints on output the total energy and its decomposition in
   !    the separate contributions.
   !
-#include "machine.h"
-  use pwcom
-  USE wavefunctions,    ONLY : evc
-  use io_files, only: prefix
+  USE parameters,    ONLY : DP  
+  USE brilz,         ONLY : at, bg, alat, omega, tpiba2
+  USE basis,         ONLY : nat, ntyp, ityp, tau   
+  USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                            nrxx, nl, g, gg, ecutwfc, gcutm
+  USE gsmooth,       ONLY : doublegrid  
+  USE klist,         ONLY : xk, degauss, nelec, ngk, nks, nkstot, lgauss    
+  USE lsda_mod,      ONLY : lsda, nspin  
+  USE ktetra,        ONLY : ltetra  
+  USE pseud,         ONLY : zv    
+  USE vlocal,        ONLY : strf, vnew  
+  USE wvfct,         ONLY : nbnd, et, gamma_only  
+  USE ener,          ONLY : etot, eband, deband, ehart, vtxc, etxc, etxcc, &
+                            ewld, demet, ef  
+  USE scf,           ONLY : rho, rho_save, vr, vltot, vrs, rho_core
+  USE varie,         ONLY : mixing_beta, tr2, time_max, ethr, ngm0, niter, &
+                            nmix, imix, iprint, istep, iswitch, lscf, &
+                            conv_elec, restart, reduce_io  
+  USE units,         ONLY : iunwfc, iunocc, nwordwfc
+  USE filnam,        ONLY : output_drho   
+  USE ldaU,          ONLY : ns, nsnew, eth, Hubbard_U, niter_with_fixed_ns, &
+                            Hubbard_lmax, lda_plus_u  
+  USE extfield,      ONLY : tefield, etotefield  
+  USE bp,            ONLY : lberry  
+  USE wavefunctions, ONLY : evc
+  USE io_files,      ONLY : prefix
   !
-  !     a few local variables
+  ! ... a few local variables
   !
 #ifdef __PARA
-  use para
+  USE para
 #endif
-implicit none
+  !
+  IMPLICIT NONE
+  !
 #ifdef __PARA
   ! number of plane waves summed on all nodes
-  integer :: ngkp (npk)
+  INTEGER :: ngkp(npk)
 #define NRXX ncplane*npp(me)
   ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
 #else
 #define NRXX nrxx
 #endif
-  character :: flmix * 42
-
-  real(kind=DP) :: de, dr2, charge, mag, magtot, absmag, tcpu
+  !
+  CHARACTER :: flmix * 42
+  !
+  REAL(kind=DP) :: de, dr2, charge, mag, magtot, absmag, tcpu
   ! the correction energy
   ! the norm of the diffence between potential
   ! the total charge
   ! local magnetization
   ! total magnetization
   ! total absolute magnetization
-
-  integer :: i, ir, ig, ik, ibnd, idum, iter, ik_
+  ! ???
+  !
+  INTEGER :: i, ir, ig, ik, ibnd, idum, iter, ik_
   ! counter on polarization
   ! counter on the mesh points
+  ! ???
   ! counter on k points
   ! counter on bands
   ! dummy counter on iterations
   ! counter on iterations
-  ! used to read ik   from restart file
-  integer :: ldim2 
-
-  real (kind=DP) :: ehart_new,etxc_new,vtxc_new, charge_new
-  real (kind=DP), external :: ewald, get_clock
-
-  logical :: exst
-
-
-  call start_clock ('electrons')
+  ! used to read ik from restart file
+  !
+  INTEGER :: ldim2 
+  ! ???
+  !
+  REAL (kind=DP) :: ehart_new, etxc_new, vtxc_new, charge_new
+  ! ???
+  ! ???
+  ! ???
+  ! ???
+  !
+  REAL (kind=DP), EXTERNAL :: ewald, get_clock
+  !
+  LOGICAL :: exst
+  !
+  ! ... end of local variables declaration
+  !
+  CALL start_clock( 'electrons' )
   !
   iter = 0
-  ik_ = 0
+  ik_  = 0
   !
-  if (restart) then
-     call restart_in_electrons (iter, ik_, dr2)
-     if (ik_.eq. - 1000) then
-        conv_elec = .true.
-        ! jump to the end
-        goto 999
-     endif
-  endif
+  IF ( restart ) THEN
+     !
+     CALL restart_in_electrons( iter, ik_, dr2 )
+     !
+     IF ( ik_ == - 1000 ) THEN
+        conv_elec = .TRUE.
+        ! jump to the end 
+        IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+        CALL stop_clock( 'electrons' )
+        RETURN
+     END IF
+     !
+  END IF
   !
-  if (lscf) then
+  IF ( lscf ) THEN
      !   calculates the ewald contribution to total energy
-     ewld = ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
-          gg, ngm, gcutm, gstart, gamma_only, strf)
-     if (reduce_io) then
+     ewld = ewald ( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
+                    g, gg, ngm, gcutm, gstart, gamma_only, strf )
+     IF ( reduce_io ) THEN
         flmix = ' '
-     else
+     ELSE
         flmix = 'flmix'
-     endif
-  endif
+     END IF
+  END IF
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  if (imix.ge.0) then
-     do ig=1,ngm
-        if (gg(ig).lt. ecutwfc/tpiba2) ngm0=ig
-     end do
+  IF ( imix == 0 ) THEN
+     DO ig = 1, ngm
+        IF ( gg(ig) < ( ecutwfc / tpiba2 ) ) ngm0 = ig
+     END DO
      ngm0 = ngm
-  end if
-
-  do idum = 1, niter
-     tcpu = get_clock ('PWSCF')
-     write (6, 9000) tcpu
-     if (imix.ge.0) call DCOPY(nspin*nrxx,rho,1,rho_save,1)
+  END IF
+  !
+  DO idum = 1, niter
+     !
+     tcpu = get_clock( 'PWSCF' )
+     WRITE(6, 9000) tcpu
+     IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
      iter = iter + 1
-     if (lscf) then
-        write (6, 9010) iter, ecutwfc, mixing_beta
-     else
-        write (6, 9009)
-     endif
+     IF ( lscf ) THEN
+        WRITE(6, 9010) iter, ecutwfc, mixing_beta
+     ELSE
+        WRITE(6, 9009)
+     END IF
 #ifdef FLUSH
-     call flush (6)
+     CALL flush( 6 )
 #endif
-
-     ! Convergence threshold for iterative diagonalization
-     if (lscf.and.iter.ne.1.and.ik_.eq.0) then
-        if (imix.ge.0) then
-           if (iter.eq.2) ethr = 1.d-2
-!           ethr=max(min(ethr,mixing_beta*dr2/nelec/10.0),tr2/nelec/100.0)
-           ethr=max(min(ethr,dr2/nelec/10.0),tr2/nelec/100.0)
-        else
-           ethr = max (min (ethr/2.0,sqrt(dr2)/1000.0), 1.d-12)
-        end if
-     end if
-
      !
-     call c_bands (iter, ik_, dr2)
-
+     ! ... Convergence threshold for iterative diagonalization
      !
-     !! skip all the rest if not lscf
-     if (.not.lscf) then
-        conv_elec=.true.
+     IF ( lscf .AND. iter /= 1 .AND. ik_ == 0 ) THEN
+        !
+        IF ( imix >= 0 ) THEN
+           IF ( iter == 2 ) ethr = 1.D-2
+!           ethr = MAX( MIN( ethr , ( mixing_beta * dr2 / nelec / 10.0 ) ) , & 
+!                       ( tr2 / nelec / 100.0 ) )
+           ethr = MAX( MIN( ethr , ( dr2 / nelec / 10.0 ) ) , &
+                           ( tr2 / nelec / 100.0 ) )
+        ELSE
+           ethr = MAX( MIN( ( ethr / 2.0 ) , &
+                           ( SQRT( dr2 ) / 1000.0 ) ) , 1.D-12 )
+        END IF
+        !
+     END IF
+     !
+     CALL c_bands( iter, ik_, dr2 )
+     !
+     ! skip all the rest if not lscf
+     IF ( .NOT. lscf ) THEN
+        !
+        conv_elec = .TRUE.
 #ifdef __PARA
-        call poolrecover (et, nbnd, nkstot, nks)
+        CALL poolrecover( et, nbnd, nkstot, nks )
 #endif
-
-        do ik = 1, nkstot
-           if (lsda) then
-              if (ik.eq.1) write (6, 9015)
-              if (ik.eq.1 + nkstot / 2) write (6, 9016)
-
-           endif
-           write (6, 9020) (xk (i, ik), i = 1, 3)
-           write (6, 9030) (et (ibnd, ik) * 13.6058, ibnd = 1, nbnd)
-        enddo
-
-        ! Do a Berry phase polarization calculation if required
-        if ((lberry).and.(iswitch /= -1)) call errore('electrons', &
-                     'calculation=''nscf'' is mandatory if lberry=''.true.''',1)
-        if (lberry) call c_phase
-
+        DO ik = 1, nkstot
+           IF ( lsda ) THEN
+              IF ( ik == 1 ) WRITE(6, 9015)
+              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE(6, 9016)
+           END IF
+           WRITE(6, 9020) ( xk(i, ik), i = 1, 3 )
+           WRITE(6, 9030) ( et(ibnd, ik) * 13.6058, ibnd = 1, nbnd )
+        END DO
+        !
+        ! DO a Berry phase polarization calculation if required
+        IF ( lberry ) CALL c_phase
+        !
         ! jump to the end
-        goto 999
-
-     endif
-     tcpu = get_clock ('PWSCF')
-     if (tcpu.gt.time_max) then
-        write (6, '(5x,"Maximum CPU time exceeded",2f15.2)') tcpu, &
-             time_max
-        call stop_pw (.false.)
-     endif
+        IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+        CALL stop_clock( 'electrons' )
+        RETURN
+        !
+     END IF
      !
-     call sum_band
+     tcpu = get_clock( 'PWSCF' )
      !
-     if (lda_plus_u) call write_ns
+     IF ( tcpu > time_max ) THEN
+        WRITE(6, '(5x,"Maximum CPU time exceeded",2f15.2)') tcpu, time_max
+        CALL stop_pw ( .FALSE. )
+     END IF
      !
-     !if (iter.eq.1.and.lda_plus_u.and.input_pot.ne.' '  &
-     !   .and.istep.eq.1) call ns_adj
+     CALL sum_band
      !
-     ! calculate total and absolute magnetization
+     IF ( lda_plus_u ) CALL write_ns
      !
-     if (lsda) then
-        magtot = 0.0d0
-        absmag = 0.0d0
-        do ir = 1, nrxx
-           mag = rho (ir, 1) - rho (ir, 2)
+     !IF ( iter == 1 .AND. lda_plus_u .AND. input_pot /=  ' '  &
+     !    .AND. istep == 1 ) CALL ns_adj
+     !
+     ! ... calculate total and absolute magnetization
+     !
+     IF ( lsda ) THEN
+        !
+        magtot = 0.0D0
+        absmag = 0.0D0
+        DO ir = 1, nrxx
+           mag    = rho(ir, 1) - rho(ir, 2)
            magtot = magtot + mag
-           absmag = absmag + ABS (mag)
+           absmag = absmag + ABS( mag )
         enddo
         magtot = magtot * omega / (nr1 * nr2 * nr3)
         absmag = absmag * omega / (nr1 * nr2 * nr3)
 #ifdef __PARA
-        call reduce (1, magtot)
-        call reduce (1, absmag)
+        CALL reduce( 1, magtot )
+        CALL reduce( 1, absmag )
 #endif
-     endif
+        !
+     END IF
      !
-
-     call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-          ehart, etxc, vtxc, charge, vnew)
-
-     call delta_e (nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
-          deband, nspin)
-
-     if (imix.ge.0) then
-
-        if (lda_plus_u .and. iter.le.niter_with_fixed_ns ) then
+     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                    ehart, etxc, vtxc, charge, vnew )
+     !
+     CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
+                   deband, nspin )
+     !
+     IF ( imix >= 0 ) THEN
+        !
+        IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
             ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-            call DCOPY(ldim2*nspin*nat, ns,1, nsnew,1)
-        end if
-
-        call mix_rho (rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
-                      nmix, flmix, conv_elec)
-
-        call DAXPY(nspin*nrxx,-1.d0,vr,1,vnew,1)
-
-        call v_of_rho &
-             (rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-              nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-              ehart_new, etxc_new, vtxc_new, charge_new, vr )
-
-     else ! old style potential mixing
-
-        call vpack (NRXX, nrxx, nspin, vnew, vr, + 1)
-
-        call mix_potential (nspin * NRXX, vnew, vr, mixing_beta, dr2, tr2, &
-             iter, nmix, flmix, conv_elec)
-
-        call vpack (NRXX, nrxx, nspin, vnew, vr, - 1)
-     end if
+            CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )
+        END IF
+        !
+        CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
+                      nmix, flmix, conv_elec )
+        !
+        CALL DAXPY( ( nspin * nrxx ), -1.D0, vr, 1, vnew, 1 )
+        !
+        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart_new, etxc_new, vtxc_new, charge_new, vr )
+        !
+     ELSE 
+        !
+        ! ... old style potential mixing
+        !
+        CALL vpack( NRXX, nrxx, nspin, vnew, vr, + 1 )
+        !
+        CALL mix_potential( ( nspin * NRXX ), vnew, vr, mixing_beta, dr2, tr2, &
+                            iter, nmix, flmix, conv_elec )
+        !
+        CALL vpack( NRXX, nrxx, nspin, vnew, vr, - 1 )
+        !
+     END IF
      !
-     ! On output vnew contains V(out)-V(in). Used to correct the forces
+     ! ... On output vnew contains V(out)-V(in). Used to correct the forces
+     ! ... define the total local potential (external + scf)
      !
-     ! define the total local potential (external + scf)
+     CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
      !
-     call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
-
-     if (lda_plus_u) then  
+     IF ( lda_plus_u ) THEN  
         ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-        if (iter.gt.niter_with_fixed_ns .and. imix.lt.0) &
-            call DCOPY(ldim2*nspin*nat,nsnew,1,ns,1)
+        IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) &
+           CALL DCOPY( ( ldim2 * nspin * nat ), nsnew, 1, ns, 1 )    
 #ifdef __PARA
-        if (me.eq.1.and.mypool.eq.1) then
+        IF ( me == 1 .AND. mypool == 1 ) THEN
 #endif
-           call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
-           write (iunocc, * ) ns
-           close (unit = iunocc, status = 'keep')
+           CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'formatted', exst )
+           WRITE(iunocc, * ) ns
+           CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
 #ifdef __PARA
-        endif
+        END IF
 #endif
-     endif
-
+     END IF
      !
-     !   In the US case we need to recompute the self consistent term in
-     !   the nonlocal potential.
+     ! ... In the US case we need to recompute the self consistent term in
+     ! ... the nonlocal potential.
      !
-
-     call newd
+     CALL newd     
      !
-     !  write the potential (and rho) on file
+     ! ... write the potential (and rho) on file
+     !     
+     IF ( imix >= 0 ) CALL io_pot( +1, TRIM( prefix )//'.rho', rho_save, nspin )
+     CALL io_pot( +1, TRIM( prefix )//'.pot', vr, nspin )     
      !
-     if (imix.ge.0) call io_pot(+1,trim(prefix)//'.rho',rho_save,nspin)
-     call io_pot(+1,trim(prefix)//'.pot',vr,nspin)
+     ! ... save converged wfc if they have not been written previously
+     !     
+     IF ( nks == 1 .AND. reduce_io ) &
+        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
      !
-     !  save converged wfc if they have not been written previously
+     ! ... write recover file
      !
-     if (nks.eq.1.and.reduce_io) call davcio(evc,nwordwfc,iunwfc,nks,1)
-
-     !
-     !  write recover file
-     !
-
-     call save_in_electrons (iter, dr2)
-
-     if ( (conv_elec.or.mod(iter,iprint).eq.0).and.iswitch.le.2) then
-
-     !  if (lda_plus_u) call write_ns
+     CALL save_in_electrons( iter, dr2 )
+     IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
+          iswitch <= 2 ) THEN
+     !  IF ( lda_plus_u ) CALL write_ns
 #ifdef __PARA
-        do ik = 1, nks
-           ngkp (ik) = ngk (ik)
-        enddo
-        call ireduce (nks, ngkp)
-        call ipoolrecover (ngkp, 1, nkstot, nks)
-        call poolrecover (et, nbnd, nkstot, nks)
+        DO ik = 1, nks
+           ngkp(ik) = ngk(ik)
+        END DO
+        !
+        CALL ireduce( nks, ngkp )
+        CALL ipoolrecover( ngkp, 1, nkstot, nks )
+        CALL poolrecover( et, nbnd, nkstot, nks )
 #endif
-
-        do ik = 1, nkstot
-           if (lsda) then
-              if (ik.eq.1) write (6, 9015)
-              if (ik.eq.1 + nkstot / 2) write (6, 9016)
-
-           endif
-           if (conv_elec) then
+        !
+        DO ik = 1, nkstot
+           IF ( lsda ) THEN
+              IF ( ik == 1 ) WRITE(6, 9015)
+              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE(6, 9016)
+           END IF
+           IF ( conv_elec ) THEN
 #ifdef __PARA
-              write (6, 9021) (xk (i, ik), i = 1, 3), ngkp (ik)
+              WRITE(6, 9021) (xk(i, ik), i = 1, 3), ngkp(ik)
 #else
-              write (6, 9021) (xk (i, ik), i = 1, 3), ngk (ik)
+              WRITE(6, 9021) (xk(i, ik), i = 1, 3), ngk(ik)
 #endif
-           else
-              write (6, 9020) (xk (i, ik), i = 1, 3)
-           endif
-           write (6, 9030) (et (ibnd, ik) * 13.6058, ibnd = 1, nbnd)
-        enddo
-        if (lgauss.or.ltetra) write (6, 9040) ef * 13.6058
-     endif
-     if (abs (charge-nelec) / charge > 1.0e-7) write (6, 9050) charge
-     etot = eband+ (etxc - etxcc) + ewld+ehart + deband+demet + eth
-     if (tefield) etot=etot+etotefield
-
-     if ( (conv_elec.or.mod (iter, iprint) .eq.0) .and.iswitch.le.2) &
-          then
-        if (imix.ge.0) then
-           write (6, 9081) etot, dr2
-        else
-           write (6, 9086) etot, dr2
-        end if
-        write (6, 9060) eband, eband+deband, ehart, etxc-etxcc, ewld
-        if (tefield) write(6, 9061) etotefield
-        if (lda_plus_u) write (6, 9065) eth
-        if (degauss.ne.0.0) write (6, 9070) demet
-     elseif (conv_elec.and.iswitch.gt.2) then
-        if (imix.ge.0) then
-           write (6, 9081) etot, dr2
-        else
-           write (6, 9086) etot, dr2
-        end if
-     else
-        if (imix.ge.0) then
-           write (6, 9080) etot, dr2
-        else
-           write (6, 9085) etot, dr2
-        end if
-     endif
-     if (lsda) write (6, 9017) magtot, absmag
+           ELSE
+              WRITE(6, 9020) (xk(i, ik), i = 1, 3)
+           END IF
+           WRITE(6, 9030) (et(ibnd, ik) * 13.6058, ibnd = 1, nbnd)
+        END DO
+        !
+        IF ( lgauss .OR. ltetra ) WRITE(6, 9040) ef * 13.6058
+        !
+     END IF
+     !
+     IF ( ( ABS( charge - nelec ) / charge ) > 1.0E-7 ) WRITE(6, 9050) charge
+     !
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + eth
+     !
+     IF ( tefield ) etot = etot + etotefield
+     !
+     IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
+          iswitch <= 2 ) THEN
+        !  
+        IF ( imix >= 0 ) THEN
+           WRITE(6, 9081) etot, dr2
+        ELSE
+           WRITE(6, 9086) etot, dr2
+        END IF
+        !
+        WRITE(6, 9060) eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+        !
+        IF ( tefield ) WRITE(6, 9061) etotefield
+        IF ( lda_plus_u ) WRITE(6, 9065) eth
+        IF ( degauss /= 0.0 ) WRITE(6, 9070) demet
+        !
+     ELSE IF ( conv_elec .AND. iswitch > 2 ) THEN
+        !
+        IF ( imix >= 0 ) THEN
+           WRITE(6, 9081) etot, dr2
+        ELSE
+           WRITE(6, 9086) etot, dr2
+        END IF
+        !
+     ELSE
+        !
+        IF ( imix >=  0 ) THEN
+           WRITE(6, 9080) etot, dr2
+        ELSE
+           WRITE(6, 9085) etot, dr2
+        END IF
+        !
+     END IF
+     !
+     IF ( lsda ) WRITE(6, 9017) magtot, absmag
      !
 #ifdef FLUSH
-     call flush (6)
+     CALL flush( 6 )
 #endif
-     if (conv_elec) then
-        write (6, 9110)
+     IF ( conv_elec ) THEN
+        WRITE(6, 9110)
         ! jump to the end
-        goto 999
-     endif
-
-!
-! uncomment the following line if you wish to monitor the evolution of the
-! force calculation during self-consistency
-!
-!     call forces
-
-     if (imix.ge.0) call DCOPY(nspin*nrxx,rho_save,1,rho,1)
-
-  enddo
-
-  write (6, 9120)
+        IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+        CALL stop_clock( 'electrons' )
+        RETURN        
+     END IF
+     !
+     ! ... uncomment the following line IF you wish to monitor the evolution 
+     ! ... of the force calculation during self-consistency
+     !
+     ! CALL forces
+     !
+     IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho_save, 1, rho, 1 )
+     !
+  END DO
+  !
+  WRITE(6, 9120)
+  !
   ! <------- jump here if not scf
-
-999 continue
-
-  if (output_drho.ne.' ') call remove_atomic_rho
-
-  call stop_clock ('electrons')
-
-  return
-9000 format (/'     total cpu time spent up to now is ',f9.2,' secs')
-9009 format (/'     Band Structure Calculation')
-9010 format (/'     iteration #',i3,'     ecut=',f9.2,' ryd',5x, &
-       &         'beta=',f4.2)
-9015 format (/' ------ SPIN UP ------------'/)
-9016 format (/' ------ SPIN DOWN ----------'/)
-9017 format (/'     total magnetization       =',f9.2,' Bohr mag/cell', &
-       &        /'     absolute magnetization    =',f9.2,' Bohr mag/cell')
-9020 format (/'          k =',3f7.4,'     band energies (ev):'/)
-9021 format (/'          k =',3f7.4,' (',i5,' PWs)   bands (ev):'/)
-9030 format ( '  ',8f9.4)
-9040 format (/'     the Fermi energy is ',f10.4,' ev')
-9050 format (/'     integrated charge         =',f15.8)
-9060 format (/'     band energy sum           =',  f15.8,' ryd' &
-       &     /'     one-electron contribution =',  f15.8,' ryd' &
-       &     /'     hartree contribution      =',  f15.8,' ryd' &
-       &     /'     xc contribution           =',  f15.8,' ryd' &
-       &     /'     ewald contribution        =',  f15.8,' ryd' )
-9061 format ( '     electric field correction =',  f15.8,' ryd' )
-9065 format ( '     Hubbard energy            =',f15.8,' ryd')
-9070 format ( '     correction for metals     =',f15.8,' ryd')
-9080 format (/'     total energy              =',0pf15.8,' ryd' &
-             /'     estimated scf accuracy    <',0pf15.8,' ryd')
-9081 format (/'!    total energy              =',0pf15.8,' ryd' &
-             /'     estimated scf accuracy    <',0pf15.8,' ryd')
-9085 format (/'     total energy              =',0pf15.8,' ryd' &
-             /'     potential mean squ. error =',1pe15.1,' ryd^2')
-9086 format (/'!    total energy              =',0pf15.8,' ryd' &
-             /'     potential mean squ. error =',1pe15.1,' ryd^2')
-9090 format (/'     the final potential is written on file ',a14)
-9100 format (/'     this iteration took ',f9.2,' cpu secs')
-9110 format (/'     convergence has been achieved')
-9120 format (/'     convergence NOT achieved. stopping ...')
-end subroutine electrons
+  !
+  IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+  !
+  CALL stop_clock( 'electrons' )
+  !
+  RETURN
+  !
+9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
+9009 FORMAT(/'     Band Structure Calculation')
+9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X, &
+             'beta=',F4.2)
+9015 FORMAT(/' ------ SPIN UP ------------'/)
+9016 FORMAT(/' ------ SPIN DOWN ----------'/)
+9017 FORMAT(/'     total magnetization       =',F9.2,' Bohr mag/cell', &
+            /'     absolute magnetization    =',F9.2,' Bohr mag/cell')
+9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
+9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
+9030 FORMAT( '  ',8F9.4)
+9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
+9050 FORMAT(/'     integrated charge         =',F15.8)
+9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
+            /'     one-electron contribution =',  F15.8,' ryd' &
+            /'     hartree contribution      =',  F15.8,' ryd' &
+            /'     xc contribution           =',  F15.8,' ryd' &
+            /'     ewald contribution        =',  F15.8,' ryd' )
+9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
+9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd')
+9070 FORMAT( '     correction for metals     =',F15.8,' ryd')
+9080 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
+            /'     estimated scf accuracy    <',0PF15.8,' ryd')
+9081 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
+            /'     estimated scf accuracy    <',0PF15.8,' ryd')
+9085 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
+            /'     potential mean squ. error =',1PE15.1,' ryd^2')
+9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
+            /'     potential mean squ. error =',1PE15.1,' ryd^2')
+9090 FORMAT(/'     the final potential is written on file ',A14)
+9100 FORMAT(/'     this iteration took ',F9.2,' cpu secs')
+9110 FORMAT(/'     convergence has been achieved')
+9120 FORMAT(/'     convergence NOT achieved. stopping ...')
+!
+END SUBROUTINE ELECTRONS
 

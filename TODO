@@ -1,8 +1,11 @@
-TODO LIST -  20 August 2003
+TODO LIST -  15 October 2003
 
-INSTALLATION
+INSTALLATION/PORTING
+
+- configure
 
 - Linux Alpha ?
+
 - Make.irix ? SGI-SGI64-ORIGIN ?
 
 COMMON
@@ -27,7 +30,7 @@ COMMON
 
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
-- Nudged Elastic Band
+- Add code for NEB (Nudged Elastic Band)
 
 - calculation of <psi|exp(iGr)|psi'>
 
@@ -35,7 +38,7 @@ COMMON
 
 PW
 
-- add/merge noncolinear code
+- maximize merge of PW with Gamma and noncolinear code
 
 - replace "use pwcom" into more "use" statement
 
@@ -111,11 +114,12 @@ DOCUMENTATION
 
 - examples for many features are missing
   examples should be quicker and easier to verify  
+  present examples are not very practical for testing
 
 - expand and update the manual; add a list of FAQ, or of already
   answered questions
 
-- add a developer's guide
+- add a developer's (technical) guide
 
 FPMD:
 
