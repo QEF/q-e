@@ -89,10 +89,13 @@ namespace eval ::guib {
 #  load Tcl/Tk + [Incr Tcl]/[Incr Tk]/[Incr Widgets]
 # ------------------------------------------------------------------------
 
-package require Tk       8.3
-package require Itcl     3.1
-package require Itk      3.1
-package require Iwidgets 3.0
+package require Tk       
+package require Itcl
+# We need to import all of the itcl functions into the global
+# namespace.
+namespace import -force itcl::*     
+package require Itk      
+package require Iwidgets 
 
 
 # ------------------------------------------------------------------------

@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: build.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: build.itcl,v 1.2 2004-02-19 11:18:20 kokalj Exp $ 
 #
 
 
@@ -443,9 +443,11 @@ body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {
     if { ! [winfo viewable $thisPage] } {
 	return
     }
-    
     update
-    
+
+    set bindScript [bind $thisPage <Configure>]
+    bind $thisPage <Configure> {}
+
     set tabset [$tabnotebook component tabset]
 
     set W  [winfo reqwidth  $thisPage]
@@ -464,11 +466,14 @@ body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {
 	    set W $Tw
 	}
     }
-
+    
     set list  [pack info $tabnotebook]
     set ind   [expr [lsearch -exact $list -ipadx] + 1]
     set ipadx [expr 2 * [lindex $list $ind]]    
     $tabnotebook configure -width [expr $W - $ipadx] -height $H    
+    update
+
+    bind $thisPage <Configure> $bindScript
 }
 
 

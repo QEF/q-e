@@ -21,6 +21,9 @@
 #*Guib*Scrolledframe*Canvas.background: White
 
 
+*Tabset.padX:           0
+*Tabset.padY:           0
+
 *Guib*Tabnotebook.width:                                750
 *Guib*Tabnotebook.tabPos:                               n
 *Guib*Tabnotebook.auto:                                 1

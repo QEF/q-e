@@ -31,7 +31,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: gui.itcl,v 1.2 2004-02-19 11:18:20 kokalj Exp $ 
 #
 
 
@@ -474,7 +474,7 @@ body ::guib::GUI::constructor {args} {
     $tb configure -helpvariable [scope helpVar]
     set widget(toolbar) $tb
 
-    $tb component hull configure -borderwidth 1 
+    $tb component hull configure -borderwidth 1
     $tb component hull configure -relief raised
 
     $tb add button filenew    -borderwidth 1 -relief flat -image filenew \
