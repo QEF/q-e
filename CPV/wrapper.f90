@@ -5,7 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+
+#include "../include/machine.h"
+
       complex(kind=8) function csum(n,a,nstride)
 !
 !  wrapper routine for cray scilib function csum
@@ -98,7 +100,7 @@
 !
 ! call to BLAS3 routine GEMM
 !
-      call GEMM                                                         &
+      call DGEMM                                                         &
      &     (mode1,mode2,nar,nbc,nac,1.d0,a,lda,b,ldb,0.d0,c,icd)
 !
       return

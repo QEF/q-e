@@ -12,7 +12,7 @@
 
 # Add -D__LIBMASS to use IBM mass
 # Add -D__FFTW to use fftw
-  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
+  CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL
 
 
 # ** Uncomment to Use IBM mass **

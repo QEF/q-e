@@ -10,7 +10,7 @@
  CPUTYPE=ev67
 
 # ** Preprocessor Macro **
- CPMACRO=-D__QSW -D__MPI -D__PARA -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm -D__TRU64
+ CPMACRO=-D__QSW -D__MPI -D__PARA -D__FFTW -D__TRU64
 
 #
 # ** Scientific Libraries **

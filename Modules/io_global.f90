@@ -8,15 +8,18 @@
 
       MODULE io_global
 
-        USE kinds
         IMPLICIT NONE
+
         PRIVATE
         SAVE
 
-        PUBLIC :: io_global_start, ionode, ionode_id
+        PUBLIC :: io_global_start, io_global_getionode
+        PUBLIC :: ionode, ionode_id
 
         INTEGER :: ionode_id = 0
         LOGICAL :: ionode = .TRUE.
+
+        LOGICAL :: first = .TRUE.
       
       CONTAINS
 
@@ -28,7 +31,20 @@
             ionode = .FALSE.
           END IF
           ionode_id = ionode_set
+          first = .FALSE.
           RETURN
         END SUBROUTINE io_global_start
+
+
+        SUBROUTINE io_global_getionode( ionode_out, ionode_id_out )
+          LOGICAL, INTENT(OUT) :: ionode_out
+          INTEGER, INTENT(OUT) :: ionode_id_out
+          IF( first ) &
+            CALL error( ' get_ionode ', ' ionode not yet defined ', 1 )
+          ionode_out = ionode
+          ionode_id_out = ionode_id
+          RETURN
+        END SUBROUTINE io_global_getionode
+       
     
       END MODULE io_global

@@ -6,6 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
+#include "../include/machine.h"
+
 module para_mod
 
   integer maxproc, ncplanex
@@ -1000,7 +1002,7 @@ end module para_mod
             from = offset1(proc)
             dest = 1 + sdispls(proc)
             do k = 1, ncp_(me)
-               call COPY ( 2 * npp_(proc),                              &
+               call DCOPY ( 2 * npp_(proc),                              &
      &              f_in ( from + 2*(k-1)*nr3x) , 1,                    &
      &              f_aux( dest + 2*(k-1)*npp_(proc) ) , 1 )
             end do
@@ -1036,7 +1038,7 @@ end module para_mod
             from = 1 + sdispls(proc)
             dest = offset1(proc)
             do k = 1, ncp_(me)
-               call COPY ( 2 * npp_(proc),                              &
+               call DCOPY ( 2 * npp_(proc),                              &
      &              f_aux( from + 2*(k-1)*npp_(proc) ) , 1 ,            &
      &              f_in ( dest + 2*(k-1)*nr3x) , 1 )
             end do
@@ -1082,7 +1084,7 @@ end module para_mod
      &        MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0)                                                 &
      &        call error('reduce','error in allreduce1',ierr)
-         call COPY(MAXB,buff,1,ps(1+(n-1)*MAXB),1)
+         call DCOPY(MAXB,buff,1,ps(1+(n-1)*MAXB),1)
       end do
 !
 !    possible remaining elements < maxb
@@ -1092,7 +1094,7 @@ end module para_mod
      &          MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
           if (ierr.ne.0)                                                &
      &         call error('reduce','error in allreduce2',ierr)
-          call COPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
+          call DCOPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
       endif
       call tictac(29,1)
 !

@@ -12,7 +12,7 @@
 # Serial Code
 # undefine __PARA __MPI
 # Parallel MPI
-CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__FFTW
 #
 # ** Communication Libraries **
   MPICH = /usr/local/mpich/current/

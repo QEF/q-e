@@ -8,7 +8,7 @@
 # --- Change Variables according to your system --- #
 
 # ** Preprocessor Macro **
-  CPMACRO=-D__SGI -D__ORIGIN -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+  CPMACRO=-D__SGI -D__ORIGIN -D__FFTW
 #
 # ** Scientific Libraries **
 # Uncomment to Use system library

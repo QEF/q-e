@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+#include "../include/machine.h"
+
 !-----------------------------------------------------------------------
       subroutine aainit(lli,ap,lpx,lpl)
 !-----------------------------------------------------------------------
@@ -214,7 +217,7 @@
          end do
       end do
 !
-      call SCAL(lix*lx*lix*lx*lx,sqrt(1./fpi),cc,1)
+      call DSCAL(lix*lx*lix*lx*lx,sqrt(1./fpi),cc,1)
 !
 !     transform between real spherical harmonics and the original ones
 !                (  y^r_lm = sum_n u(l,m,n) y_ln )
@@ -411,12 +414,12 @@
 !
       if (nspin.eq.1) then
          iss=1
-         call AXPY(nnr,1.d0,rhoc,1,rhor(1,iss),1)
+         call DAXPY(nnr,1.d0,rhoc,1,rhor(1,iss),1)
       else
          isup=1
          isdw=2
-         call AXPY(nnr,0.5d0,rhoc,1,rhor(1,isup),1)
-         call AXPY(nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
+         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isup),1)
+         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
       end if
 ! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
       do ir=1,nnr
@@ -2085,7 +2088,7 @@
 10       continue
       end do
 !
-      call AXPY(3*nax*nsp,1.d0,fcc,1,fion1,1)
+      call DAXPY(3*nax*nsp,1.d0,fcc,1,fion1,1)
 !
       call tictac(21,1)
       return
@@ -3301,14 +3304,14 @@
 ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
          do k=1,i-1
-            call AXPY(2*ngw,-csc(k),cp(1,k),1,cp(1,i),1)
+            call DAXPY(2*ngw,-csc(k),cp(1,k),1,cp(1,i),1)
          end do
          anorm =cscnorm(bec,cp,i)
-         call SCAL(2*ngw,1.0/anorm,cp(1,i),1)
+         call DSCAL(2*ngw,1.0/anorm,cp(1,i),1)
 !
 !         these are the final bec's
 !
-         call SCAL(nhsavb,1.0/anorm,bec(1,i),1)
+         call DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
       end do
 !
       call tictac(10,1)
@@ -4251,7 +4254,7 @@
 #ifdef __PARA
       call reduce(3*nax*nvb,fvan)
 #endif
-      call AXPY(3*nax*nvb,-1.d0,fvan,1,fion,1)
+      call DAXPY(3*nax*nvb,-1.d0,fvan,1,fion,1)
 !
   10  call tictac(11,1)
 !
@@ -7165,7 +7168,7 @@
 10       continue
       end do
 !
-      call COPY(nnr,wrk1,2,rhoc,1)
+      call DCOPY(nnr,wrk1,2,rhoc,1)
 !
       call tictac(17,1)
 !
@@ -7700,7 +7703,7 @@
       call tictac(9,0)
       call zero(2*ngw*n,wrk2)
       do j=1,n
-         call SCAL(n,ccc,x0(1,j),1)
+         call DSCAL(n,ccc,x0(1,j),1)
       end do
 !
 !     wrk2 = sum_m lambda_nm s(r(t+dt))|m>
@@ -7746,7 +7749,7 @@
       endif
 !
       do j=1,n
-         call SCAL(n,1.0/ccc,x0(1,j),1)
+         call DSCAL(n,1.0/ccc,x0(1,j),1)
       end do
 !
       call tictac(9,1)

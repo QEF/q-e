@@ -8,8 +8,7 @@
 # --- Change Variables according to your system --- #
 
 #  ** Preprocessor Macro **
-  CPMACRO=-D__SX4 \
-          -DSWAP=sswap -DAXPY=saxpy -DSCAL=sscal -DCOPY=scopy -DGEMM=sgemm
+  CPMACRO=-D__SX4 
 #
 ######################################################################
 # ***  Usually you don't need to edit variables below this line **** #

@@ -85,7 +85,7 @@
 
 #endif
 
-#if defined __PORTLAND
+#if defined __PGI
 
 #  if defined __GNU_LINK
 

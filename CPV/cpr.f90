@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+#include "../include/machine.h"
+
 !
 !=======================================================================
 !
@@ -1343,7 +1346,7 @@
 !  
 !     cm=c(t+dt) c0=c(t)
 !
-      call SWAP(2*ngw*n,c0,1,cm,1)
+      call DSWAP(2*ngw*n,c0,1,cm,1)
 !
 !     now:  cm=c(t) c0=c(t+dt)
 !

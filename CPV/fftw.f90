@@ -5,6 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+#include "../include/machine.h"
+
 #if defined(__FFTW)
 module fftw_mod
 
@@ -34,9 +37,9 @@ end module fftw_mod
 ! must be used
 !
 #if defined(__SGI64) || defined(__COMPAQ)
-#define POINTER integer(kind=8)
+#define PLAN_C_POINTER integer(kind=8)
 #else
-#define POINTER integer
+#define PLAN_C_POINTER integer
 #endif
 !
 !-------------------------------------------------------------------------
@@ -55,7 +58,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -78,7 +81,7 @@ end module fftw_mod
 !
       if (isign.eq.-1) then
          fac=1.0/float(nr1*nr2*nr3)
-         call SCAL(2*nr1*nr2*nr3, fac, f, 1)
+         call DSCAL(2*nr1*nr2*nr3, fac, f, 1)
       end if
 !
       return
@@ -100,7 +103,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -123,7 +126,7 @@ end module fftw_mod
 !
       if (isign.eq.-1) then
          fac=1.0/dfloat(nr1*nr2*nr3)
-         call SCAL(2*nr1*nr2*nr3, fac, f, 1)
+         call DSCAL(2*nr1*nr2*nr3, fac, f, 1)
       end if
 !
       return
@@ -145,7 +148,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -168,7 +171,7 @@ end module fftw_mod
 !
       if (isign.eq.-1) then
          fac=1.0/dfloat(nr1*nr2*nr3)
-         call SCAL(2*nr1*nr2*nr3, fac, f, 1)
+         call DSCAL(2*nr1*nr2*nr3, fac, f, 1)
       end if
 !
       return
@@ -191,7 +194,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -212,7 +215,7 @@ end module fftw_mod
 !
       if (isign.eq.-1) then
          fac=1.0/float(n)
-         call SCAL(2*nx*m, fac, fout, 1)
+         call DSCAL(2*nx*m, fac, fout, 1)
       end if
 #endif
       return
@@ -236,7 +239,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -259,7 +262,7 @@ end module fftw_mod
 !
       if (isign.eq.-1) then
          fac=1.0/float(n1*n2)
-         call SCAL(2*nx1*nx2*mplane, fac, f, 1)
+         call DSCAL(2*nx1*nx2*mplane, fac, f, 1)
       end if
 #endif
       return
@@ -282,7 +285,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan(2)
+      PLAN_C_POINTER plan(2)
       save plan
       data plan/0,0/
 !
@@ -305,7 +308,7 @@ end module fftw_mod
 !
       if (isign.eq.-1.or.isign.eq.-2) then
          fac=1.0/float(n)
-         call SCAL(2*nx*m, fac, fout, 1)
+         call DSCAL(2*nx*m, fac, fout, 1)
       end if
 #endif
       return
@@ -331,7 +334,7 @@ end module fftw_mod
 !
 ! initialization variables
 !
-      POINTER plan1(2), plan2(2)
+      PLAN_C_POINTER plan1(2), plan2(2)
       save plan1, plan2
       data plan1/0,0/, plan2/0,0/
 !
@@ -401,7 +404,7 @@ end module fftw_mod
          end do
 !
          fac=1.0/float(n1*n2)
-         call SCAL(2*nx1*nx2*mplane, fac, f, 1)
+         call DSCAL(2*nx1*nx2*mplane, fac, f, 1)
 !
       end if
 #endif
