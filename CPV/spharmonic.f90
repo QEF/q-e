@@ -107,25 +107,27 @@
 !================================================================
 !== Spherical harmonics (l=2) in cartesian coordinates
 !================================================================
-      FUNCTION GKL(X,Y,Z,SQM,M)
+      REAL(dbl) FUNCTION GKL(X,Y,Z,SQM,M)
       IMPLICIT NONE
-      REAL(dbl)  X,Y,Z,SQM,GKL
-      INTEGER M
+      REAL(dbl) :: X,Y,Z,SQM
+      INTEGER :: M
 
-        SELECT CASE (M)
-          CASE (1)
-            GKL=(3.D0*Z*Z/SQM-1.D0)/2.D0
-          CASE (2)
-            GKL=(X*X-Y*Y)/SQM*SQRT(3.D0)/2.D0
-          CASE (3)
-            GKL= X*Y/SQM*SQRT(3.D0)
-          CASE (4)
-            GKL=-Y*Z/SQM*SQRT(3.D0)
-          CASE (5)
-            GKL=-Z*X/SQM*SQRT(3.D0)
-          CASE DEFAULT
-            CALL errore(' GKL ',' magnetic moment not implementent ',m)
-        END SELECT
+      GKL = 0.0d0
+
+      SELECT CASE (M)
+        CASE (1)
+          GKL=(3.D0*Z*Z/SQM-1.D0)/2.D0
+        CASE (2)
+          GKL=(X*X-Y*Y)/SQM*SQRT(3.D0)/2.D0
+        CASE (3)
+          GKL= X*Y/SQM*SQRT(3.D0)
+        CASE (4)
+          GKL=-Y*Z/SQM*SQRT(3.D0)
+        CASE (5)
+          GKL=-Z*X/SQM*SQRT(3.D0)
+        CASE DEFAULT
+          CALL errore(' GKL ',' magnetic moment not implementent ',m)
+      END SELECT
 
       RETURN
       END FUNCTION GKL

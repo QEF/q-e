@@ -53,6 +53,7 @@
 #         define __IOTK_REAL2    8
 #         define __IOTK_WORKAROUND1
 #         define __IOTK_WORKAROUND3
+#         define __IOTK_WORKAROUND5
 #   endif
 #   ifdef __G95
 #         define __IOTK_BINARY_FORMAT "PC-LINUX/G95"
@@ -75,7 +76,7 @@
 #         undef __IOTK_REAL1    4
 #         define __IOTK_REAL2    8
 #         define __IOTK_WORKAROUND2
-#         define __IOTK_WORKAROUND3
+#         define __IOTK_WORKAROUND4
 #   endif
 #endif
 
@@ -89,6 +90,7 @@
 #         define __IOTK_REAL2    8
 #         define __IOTK_WORKAROUND1
 #         define __IOTK_WORKAROUND3
+#         define __IOTK_WORKAROUND5
 #   endif
 #endif
 

@@ -1,5 +1,5 @@
 ! Input/Output Tool Kit (IOTK)
-! Copyright (C) 2004 Giovanni Bussi
+! Copyright (C) 2004,2005 Giovanni Bussi
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -168,16 +168,13 @@ save
 ! For this reason, it should not be used directly by the end user.
 
 ! This line set the version string
-character(10),      parameter :: iotk_version            = "1.0.0beta3"
+character(9),      parameter :: iotk_version            = "1.0.0test"
 integer,                            parameter :: iotk_version_major      = 1
 integer,                            parameter :: iotk_version_minor      = 0
 integer,                            parameter :: iotk_version_patch      = 0
 character(3), parameter :: iotk_file_version       = "1.0"
 integer,                            parameter :: iotk_file_version_major = 1
 integer,                            parameter :: iotk_file_version_minor = 0
-
-! This line set the binary_format string
-character(100), parameter :: iotk_binary_format = __IOTK_BINARY_FORMAT
 
 character, parameter :: iotk_newline = __IOTK_NEWLINE
 character, parameter :: iotk_eos     = __IOTK_EOS
@@ -193,6 +190,8 @@ integer, parameter :: iotk_vallenx =  32768
 integer, parameter :: iotk_linlenx =  4096
 integer, parameter :: iotk_fillenx =  256
 integer, parameter :: iotk_linlen  =  128
+integer, parameter :: iotk_indent  =    2
+integer, parameter :: iotk_maxindent = 12
 
 ! These options can be modified runtime
 ! Margins for unit search
@@ -254,9 +253,10 @@ type iotk_error
 end type iotk_error
 
 integer, parameter :: iotk_error_linelength  = 120
-integer, parameter :: iotk_error_pool_size   = 5
+integer, parameter :: iotk_error_pool_size   = 100
 
 type(iotk_error) :: iotk_error_pool       (iotk_error_pool_size)
 logical          :: iotk_error_pool_used  (iotk_error_pool_size) = .false.
+integer          :: iotk_error_pool_order (iotk_error_pool_size) = 0
 
 end module iotk_base

@@ -243,15 +243,18 @@ program pp_punch
   !
   ! writes PWSCF data for postprocessing purposes in XML format using IOTK lib
   ! Wave-functions are collected and written using IO_BASE module.
-  ! At the moment the preprocessor flag __PUNCH_IOTK should be defined
-  ! in order to allow for iotk writing of the wfcs.
   ! 
   ! input:  namelist "&inputpp", with variables
   !   prefix       prefix of input files saved by program pwscf
   !   outdir       temporary directory where files resides
-  !   pp_file      output file. This variable coulb de eliminated 
-  !                adopting a suitable convention for the name
-  !                involving prefix (prefix.XMLpun ??)
+  !   pp_file      output file. If it is omitted, a directory 
+  !                "prefix.export/" is created in outdir and
+  !                some output files are put there. Anyway all the data 
+  !                are accessible through the "prefix.export/index.xml" file which
+  !                contains implicit pointers to all the other files in the
+  !                export directory. If reading is done by the IOTK library
+  !                all data appear to be in index.xml even if physically it
+  !                is not. 
   !   uspp_spsi    using US PP if set .TRUE. writes S | psi > 
   !                and | psi > separately in the output file 
   !   single_file  one-file output is produced
@@ -353,7 +356,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   use kinds,          only : DP 
   use pwcom  
-  use becmod,         only : becp
+  use becmod,         only : becp, rbecp
   use wavefunctions_module,  ONLY : evc
   use io_files,       only : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
   use io_files,       only : pseudo_dir, psfile
@@ -470,6 +473,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     write(0,*) "Writing dimensions"
     call iotk_write_begin(50,"Dimensions")
     call iotk_write_attr (attr,"nktot",nkstot,first=.true.)
+    call iotk_write_attr (attr,"nspin",nspin)
     call iotk_write_attr (attr,"nk1",nk1)
     call iotk_write_attr (attr,"nk2",nk2)
     call iotk_write_attr (attr,"nk3",nk3)
@@ -691,57 +695,69 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL init_us_1
        CALL init_at_1
 
+       IF ( gamma_only ) THEN
+           ALLOCATE (rbecp (nkb,nbnd))
+       ELSE
+           ALLOCATE ( becp (nkb,nbnd))
+       ENDIF
+
        do ik = 1, nkstot
 
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN
                
                CALL gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+               CALL davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+
                CALL init_us_2(npw, igk, xk(1, ik), vkb)
-               call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
                local_pw = ngk(ik-iks+1)
                             
                IF ( gamma_only ) THEN
-                  !CALL pw_gemm ('Y', nkb, nbnd, ngk_g(ik), vkb, npwx, evc, npwx, becp, nkb)
-                  CALL errore('pw_export','Gamma_only NOT YET implemented',1) 
+                  CALL pw_gemm ('Y', nkb, nbnd, ngk_g(ik), vkb, npwx, evc, npwx, rbecp, nkb)
+                  WRITE(0,*) 'Gamma only PW_EXPORT not yet tested'
                ELSE
                   CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
                ENDIF
                CALL s_psi(npwx, npw, nbnd, evc, sevc)
            ENDIF
 
-           allocate(l2g_new(local_pw))
+           ALLOCATE(l2g_new(local_pw))
 
            l2g_new = 0
-           do ig = 1, local_pw
+           DO ig = 1, local_pw
              ngg = igk_l2g(ig,ik-iks+1)
-             do ig_ = 1, ngk_g(ik)
-               if(ngg == igwk(ig_,ik)) then
+             DO ig_ = 1, ngk_g(ik)
+               IF(ngg == igwk(ig_,ik)) THEN
                  l2g_new(ig) = ig_
-                 exit
-               end if
-             end do
-           end do
+                 EXIT
+               ENDIF
+             ENDDO
+           ENDDO
 
            ispin = isk( ik )
            CALL write_restart_wfc(50, ik, nkstot, kunit, ispin, nspin, &
                wfc_scal, sevc, twf0, sevc, twfm, npw_g, nbnd, &
                l2g_new(:),local_pw )
-           deallocate(l2g_new)
-       end do
+           DEALLOCATE(l2g_new)
+       ENDDO
        if( ionode ) call iotk_write_end  (50, "Eigenvectors_Spsi")
       
        DEALLOCATE( sevc, STAT=ierr )
        IF ( ierr/= 0 ) CALL errore('pw_export','Unable to deallocate SEVC',ABS(ierr))
+       IF ( gamma_only ) THEN
+          DEALLOCATE (rbecp)
+       ELSE
+          DEALLOCATE ( becp)
+       ENDIF
   ENDIF
 
 
-  deallocate( igwk )
-  deallocate ( ngk_g )
+  DEALLOCATE( igwk )
+  DEALLOCATE ( ngk_g )
 
-  if( ionode ) then
+  IF( ionode ) THEN
     call iotk_close_write(50)
-  end if
+  END IF
 
 end subroutine write_export
 

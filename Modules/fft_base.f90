@@ -40,11 +40,12 @@
 
         PRIVATE
 
-        PUBLIC :: fft_transpose, fft_scatter
+        PUBLIC :: fft_transpose, fft_scatter, fft_timing
         PUBLIC :: dfftp, dffts, fft_dlay_descriptor
 
 
         INTEGER, ALLOCATABLE :: stmask(:)
+        REAL(dbl), ALLOCATABLE :: fft_timing(:,:)
 
 
 !=----------------------------------------------------------------------=!

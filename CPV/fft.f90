@@ -94,6 +94,7 @@
      !  Print some statistics about time wasted by fft routines
 
      USE io_global, ONLY: stdout
+     USE fft_base, ONLY: fft_timing
 
      INTEGER, INTENT(IN) :: nstep
      REAL(dbl)           :: tloop, tav, ttot
@@ -118,6 +119,11 @@
      WRITE( stdout,501) '  average time per fft ..', tav
      WRITE( stdout,501) '  total fft time    .....', ttot
      WRITE( stdout,*)
+
+     WRITE( stdout, fmt ="(/,3X,'PC3FFT TIMINGS')" )
+     WRITE( stdout,910)
+     WRITE( stdout,999) ( ( fft_timing(i,j), i = 1, 4), j = 1, 2 )
+     DEALLOCATE( fft_timing )
 
 910  FORMAT('    FFTXW    FFTYW    FFTZW    TRASW    FFTXP    FFTYP    FFTZP    TRASP')
 999  FORMAT(8(F9.3))

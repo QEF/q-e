@@ -1,5 +1,5 @@
 ! Input/Output Tool Kit (IOTK)
-! Copyright (C) 2004 Giovanni Bussi
+! Copyright (C) 2004,2005 Giovanni Bussi
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,17 @@
 module iotk_module
 ! This module is a wrapper for the entities in iotk_base which need to be public
   use iotk_base
-  use iotk_interface
+  use iotk_misc_interf
+  use iotk_error_interf
+  use iotk_attr_interf
+  use iotk_dat_interf
+  use iotk_files_interf
+  use iotk_write_interf
+  use iotk_scan_interf
+  use iotk_unit_interf
+  use iotk_xtox_interf
+  use iotk_fmt_interf
+  implicit none
 ! All names are private ...
   private
 ! ... except the names listed below
@@ -46,7 +56,6 @@ module iotk_module
   public :: iotk_fillenx
   public :: iotk_index
   public :: iotk_version
-  public :: iotk_binary_format
   public :: iotk_header_kind
   public :: iotk_copy_tag
   public :: iotk_unit_print
@@ -70,5 +79,6 @@ module iotk_module
   public :: iotk_eos
   public :: iotk_error_clear
   public :: iotk_error_print
+  public :: iotk_error_pool_pending
 end module iotk_module
 

@@ -41,14 +41,14 @@
           USE parser, ONLY: int_to_char
           use para_mod, ONLY: me, node
           use mp, only: mp_env
-          USE version
+          USE cp_version
 
           LOGICAL    :: texst
           REAL(dbl)  :: elapsed_seconds, cclock
           EXTERNAL      elapsed_seconds, cclock
           INTEGER    :: nchar
           CHARACTER(LEN=80) :: uname
-          CHARACTER(LEN=80) :: cp_version
+          CHARACTER(LEN=80) :: version_str
 
 
           CALL init_clocks( .TRUE. )
@@ -57,7 +57,7 @@
           start_seconds    = elapsed_seconds()
           start_cclock_val = cclock( )
 
-          cp_version = TRIM (version_number) // " - " // TRIM (version_date)
+          version_str = TRIM (version_number) // " - " // TRIM (version_date)
 
           ! ...  Temporary for para_mod
 
@@ -123,7 +123,7 @@
 
           ELSE IF( program_name == 'FPMD' ) THEN
 
-            CALL opening_date_and_time( cp_version )
+            CALL opening_date_and_time( version_str )
 
           END IF
 
@@ -168,18 +168,18 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE opening_date_and_time( cp_version )
+        SUBROUTINE opening_date_and_time( version_str )
 
           USE io_global, ONLY: stdout, ionode
 
-          CHARACTER(LEN=*), INTENT(IN) :: cp_version
+          CHARACTER(LEN=*), INTENT(IN) :: version_str
           CHARACTER(LEN=9) :: cdate, ctime
 
           CALL date_and_tim(cdate, ctime)
 
 ! ...     write program heading
           IF(ionode) THEN
-            WRITE( stdout,3333) cp_version
+            WRITE( stdout,3333) version_str
             WRITE( stdout,3334) 'THIS RUN WAS STARTED ON:  ' // ctime // ' ' // cdate
           END IF
 

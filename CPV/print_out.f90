@@ -496,7 +496,8 @@
       timeloop = timeloop + timeloop_
       timecnt = timecnt + 1
 
-      IF( timing .AND. ( tprint .OR. texit ) ) THEN
+      ! IF( timing .AND. ( tprint .OR. texit ) ) THEN
+      IF( timing ) THEN
 
         IF( ionode ) THEN
 

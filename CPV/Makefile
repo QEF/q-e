@@ -109,7 +109,7 @@ turbo.o \
 update.o \
 util.o \
 vanderwaals.o \
-version.o \
+cp_version.o \
 vofrho2.o \
 wannier.o \
 waveinit.o \
@@ -140,11 +140,11 @@ cp.x : cprstart.o $(FOBJS) $(LIBOBJ)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 
-version.o : version.h
+cp_version.o : cpver
 
-version.h :
+cpver :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
-		> version.h
+		> cpver
 
 fpmd.x : start.o $(FOBJS) $(LIBOBJ)
 	$(LD) -o fpmd.x start.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \

@@ -28,7 +28,7 @@
 !==---------------------------------------------------------------------==!
 
 ! ...
-     USE fft_base, ONLY: fft_transpose
+     USE fft_base, ONLY: fft_transpose, fft_timing
      USE fft_scalar, ONLY: cft_1z, cft_2xy
      USE mp_global, ONLY: mpime, nproc
      USE stick, ONLY: dfftp
@@ -96,6 +96,11 @@
      ldz  = dfft%nr3x
      nz_l = dfft%npp( mpime + 1 )
 
+     IF( .NOT. ALLOCATED( fft_timing ) ) THEN
+       ALLOCATE( fft_timing( 4, 2 ) )
+       fft_timing = 0.0d0
+     END IF
+
      IF( FFT_MODE == FFT_MODE_POTE ) THEN
        ns_l = dfft%nsp( mpime + 1 )
      ELSE
@@ -107,11 +112,11 @@
        !
        ! ...       BACKWARD FFT
        !
-       !s1 = cclock()
+       s1 = cclock()
 
        CALL cft_1z( c, ns_l, nz, ldz, isign, c )
 
-       !s2 = cclock()
+       s2 = cclock()
 
        IF( FFT_MODE == FFT_MODE_POTE ) THEN
          CALL fft_transpose(c, ldz, r, ldx, ldy, dfft, (mpime+1), nproc, -1)
@@ -119,7 +124,7 @@
          CALL fft_transpose(c, ldz, r, ldx, ldy, dfft, (mpime+1), nproc, -2)
        END IF
 
-       !s3 = cclock()
+       s3 = cclock()
 
        IF( FFT_MODE == FFT_MODE_POTE ) THEN
          CALL cft_2xy( r, nz_l, nx, ny, ldx, ldy, isign, dfft%iplp ) 
@@ -127,13 +132,14 @@
          CALL cft_2xy( r, nz_l, nx, ny, ldx, ldy, isign, dfft%iplw ) 
        END IF
 
-       !s4 = cclock()
+       s4 = cclock()
+
 
      ELSE IF( isign < 0 ) THEN
        !
        ! ...       FORWARD FFT
        !
-       !s4 = cclock()
+       s4 = cclock()
 
        IF( FFT_MODE == FFT_MODE_POTE ) THEN
          CALL cft_2xy( r, nz_l, nx, ny, ldx, ldy, isign, dfft%iplp ) 
@@ -141,7 +147,7 @@
          CALL cft_2xy( r, nz_l, nx, ny, ldx, ldy, isign, dfft%iplw ) 
        END IF
 
-       !s3 = cclock()
+       s3 = cclock()
 
        IF( FFT_MODE == FFT_MODE_POTE ) THEN
          CALL fft_transpose(c, ldz, r, ldx, ldy, dfft, (mpime+1), nproc, 1)
@@ -149,13 +155,17 @@
          CALL fft_transpose(c, ldz, r, ldx, ldy, dfft, (mpime+1), nproc, 2)
        END IF
 
-       !s2 = cclock()
+       s2 = cclock()
 
        CALL cft_1z( c, ns_l, nz, ldz, isign, c )
 
-       !s1 = cclock()
+       s1 = cclock()
 
      END IF
+
+     fft_timing( 2, FFT_MODE ) = fft_timing( 2, FFT_MODE ) + ABS(s4-s3)
+     fft_timing( 3, FFT_MODE ) = fft_timing( 3, FFT_MODE ) + ABS(s2-s1)
+     fft_timing( 4, FFT_MODE ) = fft_timing( 4, FFT_MODE ) + ABS(s3-s2)
 !
      RETURN
 
