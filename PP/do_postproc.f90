@@ -65,7 +65,8 @@ subroutine do_postproc (nodenumber)
   use mp
 #endif
   implicit none
-  character :: nodenumber * 3, filband * 14, filplot * 14
+  character(len=3)  :: nodenumber
+  character(len=80) :: filband, filplot
 
   integer :: n_atom_wfc, plot_num, kpoint, kband, spin_component, ios
   logical :: stm_wfc_matching, lsign

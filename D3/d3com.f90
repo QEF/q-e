@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ end module units_d3
 !    the name of the files
 !
 module d0rho
-  character(len=30) :: fild0rho
+  character(len=80) :: fild0rho
 end module d0rho
 !
 !     the variable needed to describe the patterns when q=0

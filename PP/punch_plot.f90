@@ -41,7 +41,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   use para
 #endif
   implicit none
-  character :: filplot * 14
+  character(len=*) :: filplot
   integer :: kpoint, kband, spin_component, plot_num
   logical :: stm_wfc_matching, lsign
   real(kind=DP) :: sample_bias, z, dz

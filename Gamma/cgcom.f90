@@ -9,7 +9,7 @@
 ! These are PHONON-specific modules (Conjugate Gradient version)
 !
 module phunits
-  character(len=20) :: fildyn
+  character(len=80) :: fildyn
   character(len=75) :: title_ph
   integer iuwfc, iubar, iudwf, iuscf, iuvkb, lrwfc, lrbar, lrdwf, lrscf
 end module phunits

@@ -112,7 +112,6 @@ module efield
   complex (kind=DP), allocatable :: zstareu0 (:,:),& ! 3, 3 * nat),
        zstarue0 (:,:)                            ! 3 * nat, 3)
   ! the effective charges
-  ! the effective charges
 end module efield
 
 !
@@ -260,7 +259,7 @@ end module units_ph
 !    the name of the files
 !
 module output
-  character (len=14) :: fildyn, filelph, fildvscf, fildrho
+  character (len=80) :: fildyn, filelph, fildvscf, fildrho
   ! output file for the dynamical matrix
   ! output file for electron-phonon coefficie
   ! output file for deltavscf

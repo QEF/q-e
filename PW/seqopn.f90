@@ -29,7 +29,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   !
   !    here the local variables
   !
-  character :: tempfile * 72
+  character(len=256) :: tempfile
   ! complete file name
   integer :: ios
   ! integer variable to test I/O status

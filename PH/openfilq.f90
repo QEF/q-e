@@ -25,7 +25,7 @@ subroutine openfilq
   implicit none
   integer :: ios
   ! integer variable for I/O control
-  character (len=20) :: filint
+  character (len=256) :: filint
   ! the name of the file
   logical :: exst
   ! logical variable to check file existe

@@ -24,7 +24,7 @@ subroutine start_postproc (nodenumber)
   logical :: exst
 
 
-  character :: filin * 14, nodenumber * 3, version * 12
+  character :: filin * 80, nodenumber * 3, version * 12
   version = 'POSTPROC-120'
   filin = ' '
   nodenumber = '   '

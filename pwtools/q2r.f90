@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ program q2r
   !
   character(len=20) :: crystal
   character(len=80) :: title
-  character(len=30) :: filin,filj,filf,fild
+  character(len=80) :: filin,filj,filf,fild
   character(len=3)  :: atm(nax)
   !
   logical :: lq,lrigid,zasr, lrigid_save 

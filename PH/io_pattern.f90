@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,8 +22,8 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 !
   integer :: nirr, npert(3*nat), iflag
   complex(kind=DP) :: u(3*nat,3*nat)
-  character::  fildrho*(*)   ! name of the file
-  character::  filname*42    ! complete name of the file
+  character (len=*)  ::  fildrho   ! name of the file
+  character (len=256)::  filname   ! complete name of the file
 !
 !   here the local variables
 !

@@ -40,7 +40,7 @@ subroutine punch_plot_e
   ! counter on atoms
   ! counter on mesh points
 
-  character :: caux * 1, filin * 42
+  character :: caux * 1, filin * 80
   ! used to compose the name
   ! complete name of the file
 

@@ -21,7 +21,7 @@ subroutine cg_setup
   !
   integer :: i, l, nt, kpoint
   logical :: exst
-  character (len=20) :: filint
+  character (len=256) :: filint
   real(kind=DP) :: rhotot, dmxc
   external dmxc
   !
@@ -81,7 +81,7 @@ subroutine cg_setup
   !
   !  derivative of the xc potential
   !
-  call setv(nrxx,0.d0,dmuxc,1)
+  dmuxc(:) = 0.d0
   do i = 1,nrxx
      rhotot = rho(i,current_spin)+rho_core(i)
      if ( rhotot.gt. 1.d-30 ) dmuxc(i)= dmxc( rhotot)

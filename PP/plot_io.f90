@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !
   use parameters, only : DP
   implicit none
-  character (len=14) :: filplot
+  character (len=*) :: filplot
   character (len=75) :: title
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, &
        plot_num, ityp (ntyp), iflag, i

@@ -14,7 +14,7 @@ subroutine do_bands (nodenumber)
 
   implicit none
   character (len=3)  :: nodenumber
-  character (len=14) :: filband
+  character (len=80) :: filband
   character(len=256) :: outdir
   integer :: ios
   namelist / inputpp / outdir, prefix, filband
@@ -59,7 +59,7 @@ subroutine punch_band (filband)
   use becmod
 
   implicit none
-  character (len=14) :: filband
+  character (len=*) :: filband
   real(kind=DP) :: proold, modulo
   ! the best overlap product
   ! the x coordinate in k space

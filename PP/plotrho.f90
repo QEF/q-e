@@ -29,7 +29,7 @@ program plotrho
   real(kind=DP) :: xdim, ydim, xs, ys
   real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
   real(kind=DP) :: at (3, 3), a0
-  character (len=20) :: filename, fileout, ans * 1
+  character (len=80) :: filename, fileout, ans * 1
 
 
   logical :: logarithmic_scale
@@ -187,7 +187,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   real(kind=DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
   real(kind=DP) :: xmin, xmax, ymin, ymax, xdim, ydim, xs, ys
 
-  character (len=20) :: filename, str
+  character (len=*) :: filename, str
   integer :: ncmax
   parameter (ncmax = 19)
   integer :: i, j, k

@@ -31,7 +31,7 @@ subroutine do_voronoy
   integer, allocatable :: nlbig (:)
   real(kind=DP), allocatable :: partial_charge (:)
   complex(kind=DP), allocatable :: rhobig (:)
-  character(len=15) :: filename
+  character(len=80) :: filename
   integer :: good_fft_dimension
   !
   !

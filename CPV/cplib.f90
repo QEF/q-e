@@ -4703,7 +4703,7 @@
 !
 ! on some machines (IBM RS/6000 for instance) the following test allows
 ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
-! If a matrix of Not-Numbers is passed to rsg, the most likely outcome is
+! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
 ! that the program goes on forever doing nothing and writing nothing.
 !
                if (rhos(i,j).ne.rhos(i,j))                                &
@@ -4717,7 +4717,7 @@
          end do
          ifail=0
          call tictac(26,0)
-         call rsg(nx,nss,rhos,tmp1,diag,1,u,work1,work2,ifail) 
+         call rs(nx,nss,rhos,diag,1,u,work1,work2,ifail) 
          call tictac(26,1)
 !
 !                calculation of lagranges multipliers

@@ -488,7 +488,7 @@ module filnam
   !
   !    The name of the files
   !
-  character(len=14)   :: &
+  character(len=80)   :: &
        filpun,           &! name of the punch file
        input_drho,       &! name of the file with the input drho
        output_drho        ! name of the file with the output drho

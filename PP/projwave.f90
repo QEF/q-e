@@ -91,7 +91,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use para
 #endif
   implicit none
-  character (len=14) :: filproj
+  character (len=80) :: filproj
   character (len=8)  :: io_choice
   character (len=33) :: filextension
   character (len=1)  :: l_label(0:3)=(/'s','p','d','f'/)

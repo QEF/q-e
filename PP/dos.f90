@@ -41,7 +41,7 @@ subroutine dos (nodenumber)
   use io
 
   character(len=3) :: nodenumber
-  character(len=14) :: fildos
+  character(len=80) :: fildos
   character(len=256) :: outdir
   real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
        degauss1

@@ -41,7 +41,7 @@ subroutine punch_plot_ph
   ! compatibility variable
   ! counter on polarization
 
-  character :: filin * 42
+  character(len=80) :: filin
   ! complete name of the file
 
   real(kind=DP), allocatable :: raux (:)

@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2002 PWSCF group
+! Copyright (C) 2002-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,7 @@ program elph
        lambda(nsigx), alpha2F(nex,nsigx), logavg
   real(kind=8) qread(3), dosef1, ef1, degauss1, gammaq, lambda2, &
        degaussq, emax, deltae, e, omega, sum
-  character(len=50) :: filelph
+  character(len=80) :: filelph
   real(kind=8), external :: w0gauss
 
   ! INPUT from standard input:

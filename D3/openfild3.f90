@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ subroutine openfild3
   implicit none
   integer :: ios
   ! integer variable for I/O control
-  character (len=20) :: filint
+  character (len=256) :: filint
   ! the name of the file
   logical :: exst
   ! logical variable to check file existe

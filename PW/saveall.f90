@@ -24,7 +24,7 @@ subroutine saveall (iun, iflag)
   ! if 1 writes otherwise reads
   integer :: ios
   ! integer variable for I/O control
-  character (len=55) :: dummy_tmp_dir
+  character (len=80) :: dummy_tmp_dir
   !
   !
   if (iflag.eq.1) then

@@ -18,7 +18,7 @@ From the root directory (the one where this file is), give the command:
 "./configure" with no argument will yield a list of valid arguments.
 Temporarily there are different installation files for PWscf, CP, FPMD.
 
-For PWscf, select one of the following as "your-system" :
+Select one of the following as "your-system" :
 
 ibmsp   : IBM SP2/3/4, IBM compiler
 t3e     : Cray T3E, Cray compiler
@@ -32,25 +32,17 @@ ibm     : IBM RS6000 workstations, IBM compiler
 pc_abs  : Linux PCs, Absoft compiler
 pc_pgi  : Linux PCs, Portland compiler
 pc_ifc  : Linux PCs, Intel compiler
+pc_lahey: Linux PCs, Lahey compiler
 sun     : Sun workstations, Sun compiler
+sxcross : NEC SX-6, cross-compilation
 fujitsu : Fujitsu vector machines, Fujitsu compiler
 hitachi : Hitachi SR8000
 
-For CP and FPMD:
+For CP and FPMD only:
 
-cp.ibmsp   : IBM SP2/3/4, IBM compiler
-cp.t3e     : Cray T3E, Cray compiler
-cp.origin  : SGI Origin 2000/3000, SGI compiler
-cp.alphasc : Compaq alpha parallel machines, Compaq compiler
-cp.aix     : IBM RS6000 workstations, IBM compiler
-cp.alpha   : Compaq alpha workstations, Compaq compiler
-cp.irix    : SGI workstations running IRIX, SGI compiler
-cp.lnx.alpha  : Linux Alphas, Compaq compiler
-cp.qsw        : Linux Alpha QSW cluster, Compaq compiler
-cp.lnx.absoft : Linux PCs (also beowulf), Absoft compiler
-cp.lnx.pgi    : Linux PCs (also beowulf), Portland compiler
-cp.lnx.intel  : Linux PCs (also beowulf), Intel compiler
-cp.sx5        : NEC SX-5
+cp.qsw  : Linux Alpha QSW cluster, Compaq compiler
+irix    : SGI workstations (possibly obsolete)
+cp.sx5  : NEC SX-5 (possibly obsolete)
 
 This will generate dependencies and produce a file "make.sys"
 in the root directory. 

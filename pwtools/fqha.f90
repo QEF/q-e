@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!     Calcola la Energia libera F
-!     data la DOS calcola la F a varie temperature
+!     Calculate Free Energy F
+!     Given phonon DOS, calculate F at various temperatures
 !
 program fqha
   !
@@ -15,7 +15,7 @@ program fqha
   real(kind=8) :: dos(ndivx),nu(ndivx),T,a1,a2,a3,Ftot,norm,F0
   real(kind=8) :: de, emax
   integer :: i,ndiv
-  character(len=50) :: filename
+  character(len=80) :: filename
   !
   a1=0.5d0/13.6058d0/8065.5d0
   a2=8.617d-5/13.6058d0
