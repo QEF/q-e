@@ -16,7 +16,7 @@
       use cvan
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use electrons_base, only: n => nbnd
+      use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
@@ -131,7 +131,7 @@
 !
 !  constructs fmat=zmat^t.fdiag.zmat
 !
-      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx
 
       implicit none
       integer iss, nss, istart, i, j, k
@@ -163,7 +163,7 @@
 !-----------------------------------------------------------------------
 
       use cvan
-      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx, n => nbnd
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
@@ -265,7 +265,7 @@
 !
 !  constructs fmat=zmat.fdiag.zmat^t
 !
-      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbndx, n => nbnd
+      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
 
       implicit none
       integer iss, nss, istart, i, j, k
@@ -336,7 +336,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbnd
+      use electrons_base, only: n => nbsp
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
       use uspp, only :qq
@@ -410,7 +410,7 @@ subroutine pcdaga2(a,as ,b )
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbnd
+      use electrons_base, only: n => nbsp
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
 

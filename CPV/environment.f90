@@ -107,28 +107,19 @@
              call errore('startup','wow, >1000 nodes !!',nproc)
           end if
 
-          IF( program_name == 'CP90' ) THEN
+          CALL opening_date_and_time( version_str )
 
-            if ( ionode ) then
-              WRITE( stdout,'(72("*"))')
-              WRITE( stdout,'(4("*"),64x,4("*"))')
-              WRITE( stdout,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
-                   &  "molecular dynamics          ",4("*"))')
-              WRITE( stdout,'(4("*"),"  using ultrasoft Vanderbilt ", &
-                   &  "pseudopotentials - v.",a6,8x,4("*"))') version_number
-              WRITE( stdout,'(4("*"),64x,4("*"))')
-              WRITE( stdout,'(72("*"))')
-              WRITE( stdout,'(/5x,''Parallel version (MPI)'')')
-            end if
-
-          ELSE IF( program_name == 'FPMD' ) THEN
-
-            CALL opening_date_and_time( version_str )
-
-          END IF
+#if defined __MPI
 
           WRITE( stdout,100)  nproc, mpime
-100       FORMAT(3X,'Tasks =',I5,'  This task id =',I5)
+100       FORMAT(3X,'MPI Parallel Build',/,3X,'Tasks =',I5,'  This task id =',I5)
+
+#else
+
+          WRITE( stdout,100)  
+100       FORMAT(3X,'Serial Build')
+
+#endif
 
           RETURN
         END SUBROUTINE
@@ -171,28 +162,45 @@
         SUBROUTINE opening_date_and_time( version_str )
 
           USE io_global, ONLY: stdout, ionode
+          USE control_flags, ONLY: program_name
 
           CHARACTER(LEN=*), INTENT(IN) :: version_str
-          CHARACTER(LEN=9) :: cdate, ctime
+          CHARACTER(LEN=9)  :: cdate, ctime
+          CHARACTER(LEN=80) :: time_str
 
           CALL date_and_tim(cdate, ctime)
+          time_str = 'This run was started on:  ' // ctime // ' ' // cdate
 
 ! ...     write program heading
+
+
           IF(ionode) THEN
-            WRITE( stdout,3333) version_str
-            WRITE( stdout,3334) 'THIS RUN WAS STARTED ON:  ' // ctime // ' ' // cdate
+            WRITE( stdout,3331) 
+            IF( program_name == 'FPMD' ) THEN
+              WRITE( stdout,3333) version_str
+            ELSE
+              WRITE( stdout,3332) version_str
+            END IF
+            WRITE( stdout,3331) 
+            WRITE( stdout,3334) time_str
           END IF
 
- 3333     FORMAT('=',78('-'),'=',/,&
-      18X,'AB-INITIO COSTANT PRESSURE MOLECULAR DYNAMICS',/,&
-      25X,'A Car-Parrinello Parallel Code',/,&
-          '=',78('-'),'=',//, &
-          '  Version: ',A60,/,&
-          '  Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,',/,&
-          '    Paolo Focher, Gerardo Ballabio',//, &
-          '=',78('-'),'=',/)
+ 3331     FORMAT('=',78('-'),'=')
+ 3332     FORMAT( /, &
+      5X,'CPV: variable-cell Car-Parrinello molecular dynamics',/,&
+      5X,'using ultrasoft Vanderbilt pseudopotentials',//,&
+      5X,'Version: ',A60,/,&
+      5X,'Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,',/,&
+      5X,'  Paolo Giannozzi, Nicola Marzari, and others',/)
 
- 3334     FORMAT(3X,A60,/)
+ 3333     FORMAT( /,&
+      5X,'FPMD: variable-cell Car-Parrinello molecular dynamics',/,&
+      5X,'using norm-conserving pseudopotentials',//,&
+      5X,'Version: ',A60,/,&
+      5X,'Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,',/,&
+      5X,'Paolo Focher, Gerardo Ballabio',/)
+
+ 3334     FORMAT(/,3X,A60,/)
           RETURN
         END SUBROUTINE
 
@@ -202,13 +210,16 @@
 
           USE io_global, ONLY: stdout, ionode
 
-          CHARACTER(LEN=9) :: cdate, ctime
+          CHARACTER(LEN=9)  :: cdate, ctime
+          CHARACTER(LEN=80) :: time_str
 
           CALL date_and_tim(cdate, ctime)
 
+          time_str = 'This run was terminated on:  ' // ctime // ' ' // cdate
+
           IF( ionode ) THEN
             WRITE( stdout,*)
-            WRITE( stdout,3334) 'THIS RUN WAS TERMINATED ON:  ' // ctime // ' ' // cdate
+            WRITE( stdout,3334) time_str
             WRITE( stdout,3335)
           END IF
 

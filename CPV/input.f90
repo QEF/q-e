@@ -17,11 +17,12 @@
    IMPLICIT NONE
    SAVE
 
-   PRIVATE
-
-   PUBLIC :: read_input_file
-   PUBLIC :: iosys_pseudo
-   PUBLIC :: iosys
+   PRIVATE                      !  Input Subroutines
+                                !  should be called in the following order
+                                !
+   PUBLIC :: read_input_file    !  a) This sub. should be called first
+   PUBLIC :: iosys_pseudo       !  b) then read pseudo files
+   PUBLIC :: iosys              !  c) finally copy variables to modules
 
    LOGICAL :: has_been_read = .FALSE.
 
@@ -31,43 +32,50 @@
 
 
    SUBROUTINE read_input_file( lneb, lsmd, lwf )
-        USE read_namelists_module, ONLY: read_namelists
-        USE read_cards_module, ONLY: read_cards
-        USE input_parameters, ONLY: calculation
-        USE control_flags, ONLY: program_name
-        IMPLICIT NONE
+      !
+      USE read_namelists_module, ONLY: read_namelists
+      USE read_cards_module, ONLY: read_cards
+      USE input_parameters, ONLY: calculation
+      USE control_flags, ONLY: program_name
+      !
+      IMPLICIT NONE
 
-        LOGICAL, OPTIONAL, INTENT(OUT) :: lneb, lsmd, lwf
-        CHARACTER(LEN=2) :: prog
+      LOGICAL, OPTIONAL, INTENT(OUT) :: lneb, lsmd, lwf
+      CHARACTER(LEN=2) :: prog
 
-        IF( program_name == 'FPMD' ) prog = 'FP'
-        IF( program_name == 'CP90' ) prog = 'CP'
+      IF( program_name == 'FPMD' ) prog = 'FP'
+      IF( program_name == 'CP90' ) prog = 'CP'
 
-        ! . Read NAMELISTS ..................................................!
+      ! . Read NAMELISTS ..................................................!
 
-        CALL read_namelists( prog )
+      CALL read_namelists( prog )
 
-        ! . Read CARDS ......................................................!
+      ! . Read CARDS ......................................................!
 
-        CALL read_cards( prog )
+      CALL read_cards( prog )
 
-        IF( PRESENT(lneb) ) THEN
-          lneb = ( TRIM( calculation ) == 'neb' )
+      IF( PRESENT(lneb) ) THEN
+        lneb = ( TRIM( calculation ) == 'neb' )
+      END IF
+      IF( PRESENT(lsmd) ) THEN
+        lsmd = ( TRIM( calculation ) == 'smd' )
+        IF( lsmd .AND. ( program_name == 'FPMD' ) ) THEN
+          CALL errore(" read_input_file ", " SMD Dynamics not implemented in FPMD ", 1 )
         END IF
-        IF( PRESENT(lsmd) ) THEN
-          lsmd = ( TRIM( calculation ) == 'smd' )
-        END IF
-        IF( PRESENT(lwf) ) THEN
-          lwf  = ( TRIM( calculation ) == 'cp-wf' )
-        END IF
+      END IF
+      IF( PRESENT(lwf) ) THEN
+        lwf  = ( TRIM( calculation ) == 'cp-wf' )
+      END IF
 
-         has_been_read = .TRUE.
+       has_been_read = .TRUE.
 
-        RETURN
+      RETURN
    END SUBROUTINE
-
+   !
+   !
    !  ----------------------------------------------
-
+   !
+   !
    SUBROUTINE iosys_pseudo( )
 
         use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, prefix, scradir
@@ -99,47 +107,58 @@
         call readpp( )
         !
         return
-   end subroutine
-
+   END SUBROUTINE
+   !
+   !
    !  ----------------------------------------------
-
+   !
+   !
    SUBROUTINE iosys
 
-     USE control_flags, ONLY: fix_dependencies
-     USE control_flags, only:  program_name
+     USE control_flags, ONLY: fix_dependencies, program_name
 
      IMPLICIT NONE
+
+        IF( ionode ) THEN
+          WRITE( stdout, fmt = &
+            "(//,3X,'Main Simulation Parameters (from input)',/ &
+            &   ,3X,'---------------------------------------')" )
+        END IF
 
         ! . Set internal flags according to the input .......................!
 
         CALL set_control_flags( )
-        CALL modules_setup()
 
         ! . CALL the Module specific setup routine ..........................!
 
-        CALL modules_setup_cp()
+        CALL modules_setup()
+
+        ! . Initialize SMD variables and path
+        
+        CALL smd_initvar()
 
         ! . Fix values for dependencies .....................................!
 
         IF( program_name == 'FPMD' ) THEN
           CALL fix_dependencies()
         END IF
-
-
+        !
         ! . Write to stdout input module information ........................!
-
+        !
         IF( program_name == 'FPMD' ) THEN
           CALL input_info()
           CALL modules_info()
         ELSE
           CALL input_info_cp()
         END IF
-
+        !
      RETURN
    END SUBROUTINE iosys
-
+   !
+   !
    !  ----------------------------------------------
-
+   !
+   !
    SUBROUTINE set_control_flags( )
      !
      USE kinds, ONLY: dbl
@@ -226,7 +245,6 @@
           ekin_maxiter_ => ekin_maxiter, &
           etot_maxiter_ => etot_maxiter, &
           forc_maxiter_ => forc_maxiter
-
 
       USE control_flags, ONLY: &
         force_pairing_ => force_pairing
@@ -696,12 +714,14 @@
           CALL errore(' IOSYS ', ' FOURIER ACCELERATION WITHOUT ORTHO',0)
       END IF
 
-
+      IF( ( TRIM( calculation ) == 'smd' ) .AND. ( TRIM( cell_dynamics ) /= 'none' ) ) THEN
+        CALL errore(' smiosys ',' cell_dynamics not implemented : '//trim(cell_dynamics), 1 )
+      END IF
 
       RETURN
    END SUBROUTINE
-
-
+   !
+   !
    !  ----------------------------------------------
    !
    !
@@ -711,7 +731,8 @@
    !
    !
    !  ----------------------------------------------
-
+   !
+   !
    SUBROUTINE modules_setup( )
      !
      USE kinds,            ONLY: dbl
@@ -728,7 +749,10 @@
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
            tturbo_inp, nturbo_inp, outdir, prefix, xc_type, woptical,         &
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
-           xk, wk
+           xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
+           rotation_damping, occupation_damping, occupation_dynamics,         &
+           rotation_dynamics, degauss, smearing
+
 
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
@@ -795,6 +819,10 @@
      USE potentials,               ONLY: potential_init
      USE kohn_sham_states,         ONLY: ks_states_init
      USE electrons_module,         ONLY: electrons_setup
+     USE ions_positions,           ONLY: tau0
+     USE ions_base,                ONLY: tau_srt, tions_base_init
+     USE electrons_base,           ONLY: electrons_base_initval
+     USE ensemble_dft,             ONLY: ensemble_initval
 
 
      !
@@ -823,7 +851,7 @@
         massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
         CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht,  &
                a, b, c, cosab, cosac, cosbc , wmass , massa_totale , press , &
-               cell_damping, greash , cell_dofree, alat_ )
+               cell_damping, greash , cell_dofree )
      END IF
 
      alat_ = cell_alat()
@@ -923,14 +951,19 @@
 
      CALL ks_states_init( nspin, tprnks, tprnks_empty )
 
+
+     CALL electrons_base_initval( nelec, nelup, neldw, nbnd, nspin, occupations, f_inp )
+
+     CALL ensemble_initval &
+          ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
+            occupation_damping, occupation_dynamics, rotation_dynamics,  degauss, smearing )
+
     
      IF( program_name == 'FPMD' ) THEN
 
         CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
 
-        CALL electrons_setup( tf_inp, nbnd, nint(nelec), nint(nelup), &
-          nint(neldw), nspin, empty_states_nbnd, emass, emass_cutoff, &
-          f_inp, nkstot )
+        CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
         CALL ions_setup( anne_inp, anner_inp,   &
              nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
@@ -952,106 +985,33 @@
         CALL guess_setup( diis_chguess )
         CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
 
+     ELSE
+
+       tau0 = 0.0d0
+       tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
 
      END IF
 
+
      RETURN
-   END SUBROUTINE modules_setup
+  END SUBROUTINE modules_setup
+  !
+  !
+  !
+  !     -------------------------------------------------------------------
+  !
+  !
+  SUBROUTINE smd_initvar( )
 
-   !
-   !
+      !     this subroutine copies SMD variables from input module to path_variables
+      !     -------------------------------------------------------------------
 
-!
+      USE kinds, ONLY: dbl
 
-    subroutine modules_setup_cp( )
-
-!     this subroutine copies variables from input module to other modules
-!     -------------------------------------------------------------------
-
-      use input_parameters, only: &
-           nr1, nr2, nr3, nr2s, nr3s, nr1s, &
-           tempw, atomic_positions, nelec, &
-           if_pos, rd_ht, trd_ht, a, b, c, cosab, cosac, cosbc, cell_symmetry, nelup, &
-           neldw, occupations, f_inp, pos, pseudo_dir, &
-           sp_pos, atom_mass, atom_pfile, &
-           startingwfc, ion_dynamics, ion_damping, &
-           cell_velocities, electron_dynamics, ion_velocities, &
-           celldm, nbnd, nspin, calculation, ntyp, ibrav, restart_mode, ion_positions, &
-           ecutwfc, ecutrho, ortho_eps, ortho_max, qcutz, q2sigma, &
-           ecfixed, fnosep, nat, ion_temperature, &
-           cell_temperature, cell_dynamics, cell_damping, electron_temperature, &
-           dt, emass, emass_cutoff, ion_radius, &
-           ekin_conv_thr, etot_conv_thr, na_inp, rd_pos, atom_label, rd_vel, &
+      USE input_parameters, only: calculation, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin, &
-           n_inner, fermi_energy, rotmass, occmass, rotation_damping,                       &
-           occupation_damping, occupation_dynamics, rotation_dynamics,                      &
-           degauss, smearing, tk_inp, nkstot, xk
-
-
-      use constants, only: pi, scmass, factem, eps8, uma_au, terahertz 
-
-      use parameters, only: natx
-
-      use io_global, only: ionode, stdout
-
-      use control_flags, only:  &
-            tconvthrs, lneb, lsmd, tzerop, tzeroe, tzeroc, nbeg,  &
-            ndr_ => ndr, &
-            ndw_ => ndw, &
-            nomore_ => nomore, &
-            iprint_ => iprint, &
-            iprsta_ => iprsta, &
-            ortho_eps_ => ortho_eps, &
-            ortho_max_ => ortho_max, &
-            trane_ => trane, &
-            ampre_ => ampre, &
-            tfor_ => tfor, &
-            tsdp_ => tsdp, &
-            tcp_ => tcp, &
-            tcap_ => tcap, &
-            tnosep_ => tnosep, &
-            tnosee_ => tnosee, &
-            tnoseh_ => tnoseh, &
-            tpre_ => tpre, &
-            thdyn_ => thdyn, &
-            tsde_ => tsde
-
-      use mp, only: mp_bcast
-      !
-      USE ions_base, ONLY: tau_srt, ind_srt, &
-           rcmax_ => rcmax, &
-           fricp_ => fricp
-      !
-      USE ions_positions, ONLY: &
-           tau0_ => tau0
-      ! 
-      USE cell_base, ONLY: cell_alat, a1, a2, a3
-
-      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
-
-      USE time_step, ONLY: set_time_step, &
-           delt_ => delt
-
-      USE cp_electronic_mass, only: &
-           emass_ => emass, &
-           emaec_ => emass_cutoff
-
-      USE wave_base, ONLY: frice_ => frice
-
-      USE ions_nose, ONLY: &
-           qnp_ => qnp, &
-           tempw_ => tempw
-      USE electrons_base, ONLY: &
-           nupdwn_ => nupdwn, &
-           iupdwn_ => iupdwn, &
-           nel_ => nel, &
-           n_ => nbnd, &
-           nx_ => nbndx, &
-           f_ => f, &
-           ispin_ => fspin, &
-           nspin_ => nspin
+           num_of_images, smd_ene_ini, smd_ene_fin
 
       USE path_variables, ONLY: &
            sm_p_ => smd_p, &
@@ -1070,41 +1030,18 @@
            ene_ini_ => smd_ene_ini, &
            ene_fin_ => smd_ene_fin
 
-
-      USE ensemble_dft, ONLY: &
-           tens_ => tens, &
-           tgrand_ => tgrand, &
-           ninner_ => ninner, &
-           ismear_ => ismear, &
-           etemp_ => etemp, &
-           ef_  => ef, &
-           tdynz_ => tdynz, &
-           tdynf_ => tdynf, &
-           zmass_ => zmass, &
-           fmass_ => fmass, &
-           fricz_ => fricz, &
-           fricf_ => fricf
-
-
+      USE ions_base,      ONLY: nat, nsp, tions_base_init
+      USE control_flags,  ONLY: nbeg
+      USE cell_base,      ONLY: cell_alat
       !
       implicit none
       !
+      real(dbl) :: alat_
       !
-      ! local variables
+      IF( .NOT. tions_base_init ) &
+        CALL errore( " smd_initvar ", " ions_base_init should be called first ", 1 )
       !
-
-      real(kind=8) :: ocp, fsum
-      integer :: i, ia, is, iss, in, isa
-      real(kind=8) :: alat_
-
-      !
-      ! Subroutine body
-      !
-
       alat_ = cell_alat()
-
-      ! 
-      !     translate from input to internals of SMCP, 
       !
       ! ... SM_P  
       !
@@ -1143,254 +1080,40 @@
       ene_ini_ = smd_ene_ini
       ene_fin_ = smd_ene_fin
       !
-      IF( lsmd .AND. cell_dynamics /= 'none' ) THEN
-        CALL errore(' smiosys ',' cell_dynamics not implemented : '//trim(cell_dynamics), 1 )
-      END IF
       !
-      IF( lsmd ) THEN
-
+      IF( TRIM( calculation ) == 'smd' ) THEN
          !
          ! How to obtain the initial trial path.
          !
-
          IF(smd_smopt) THEN
    
-          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,1)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,1)
 
          ELSEIF(smd_linr) THEN
 
-          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,2)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,2)
 
          ELSEIF(smd_polm .AND. (smd_kwnp < num_of_images) ) THEN
 
-          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,3)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,3)
 
          ELSEIF(smd_kwnp == num_of_images ) THEN
 
-          CALL init_path(sm_p_,kwnp_,smd_stcd,ntyp,nat,alat_,nbeg,4)
+          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,4)
 
          ENDIF
 
-      ELSE
-
-         tau0_ = 0.0d0
-         tau0_ ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
-
       END IF
-
-
       !
-      !
-      !  set occupancies
-      !
-
-      ! ...   Set Values for bands and spin
-
-      n_     = nbnd * nspin
-      nspin_ = nspin
-      
-      IF( nelec < 1 ) THEN
-         CALL errore(' iosys ',' nelec less than 1 ', int(nelec) )
-      END IF
-      IF( nint(nelec) - nelec > eps8 ) THEN
-         CALL errore(' iosys ',' nelec must be integer', int(nelec) )
-      END IF
-
-      if( mod( n_ , 2 ) .ne. 0 ) then
-         nx_ = n_ + 1
-      else
-         nx_= n_
-      end if
-
-      ALLOCATE( f_ ( nx_ ) )
-      ALLOCATE( ispin_ ( nx_ ) )
-      f_     = 0.0d0
-      ispin_ = 0
-
-      iupdwn_ ( 1 ) = 1
-      nel_ = 0
-
-
-      SELECT CASE ( TRIM(occupations) ) 
-      CASE ('bogus')
-         !
-         ! empty-states calculation: occupancies have a (bogus) finite value
-         !
-         ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
-         !
-         f_ ( : ) = nelec / n_         
-         nel_ (1) = nint(nelec)
-         nupdwn_ (1) = n_
-         if ( nspin_ == 2 ) then
-            !
-            ! bogus to ensure Nelec = Nup + Ndw
-            !
-            nel_ (1) = ( nint(nelec) + 1 ) / 2
-            nel_ (2) =   nint(nelec)       / 2
-            nupdwn_ (1)=nbnd
-            nupdwn_ (2)=nbnd
-            iupdwn_ (2)=nbnd+1
-         end if
-      CASE ('from_input')
-         !
-         ! occupancies have been read from input
-         !
-         f_ ( 1:nbnd ) = f_inp( 1:nbnd, 1 )
-         if( nspin_ == 2 ) f_ ( nbnd+1 : 2*nbnd ) = f_inp( 1:nbnd, 2 ) 
-         if( nelec == 0.d0 ) nelec = SUM ( f_ ( 1:n_ ) )
-         if( nspin_ == 2 .and. nelup == 0) nelup = SUM ( f_ ( 1:nbnd ) )
-         if( nspin_ == 2 .and. neldw == 0) neldw = SUM ( f_ ( nbnd+1 : 2*nbnd ) )
-
-         if( nspin_ == 1 ) then 
-           nel_ (1) = nint(nelec)
-           nupdwn_ (1) = n_
-         else
-           IF ( ABS (nelup + neldw - nelec) > eps8 ) THEN
-              CALL errore(' iosys ',' wrong # of up and down spin', 1 )
-           END IF
-           nel_ (1) = nint(nelup)
-           nel_ (2) = nint(neldw)
-           nupdwn_ (1)=nbnd
-           nupdwn_ (2)=nbnd
-           iupdwn_ (2)=nbnd+1
-         end if
-
-      CASE ('fixed')
-
-         if( nspin_ == 1 ) then
-            nel_ (1) = nint(nelec)
-            nupdwn_ (1) = n_
-         else
-            IF ( nelup + neldw /= nelec  ) THEN
-               CALL errore(' iosys ',' wrong # of up and down spin', 1 )
-            END IF
-            nel_ (1) = nint(nelup)
-            nel_ (2) = nint(neldw)
-            nupdwn_ (1)=nbnd
-            nupdwn_ (2)=nbnd
-            iupdwn_ (2)=nbnd+1
-         end if
-
-         ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
-         ocp = 2.d0 / nspin_
-         ! default filling: attribute ocp electrons to each states
-         !                  until the good number of electrons is reached
-         do iss = 1, nspin_
-            fsum = 0.0d0
-            do in = iupdwn_ ( iss ), iupdwn_ ( iss ) - 1 + nupdwn_ ( iss )
-               if ( fsum + ocp < nel_ ( iss ) + 0.0001 ) then
-                  f_ (in) = ocp
-               else
-                  f_ (in) = max( nel_ ( iss ) - fsum, 0.d0 )
-               end if
-                fsum=fsum + f_(in)
-            end do
-         end do
-
-      CASE ('grand-canonical','g-c','gc')
-          tens_    =.true.
-          tgrand_  =.true.
-          CALL errore(' iosys ','grand-canonical not yet implemented ', 1 )
-
-      CASE ('ensemble','ensemble-dft','edft')
-          tens_    =.true.
-          ninner_  = n_inner
-          etemp_   = degauss
-          ef_      = fermi_energy
-          fricz_   = rotation_damping
-          fricf_   = occupation_damping
-          zmass_   = rotmass
-          fmass_   = occmass
-
-          SELECT CASE (rotation_dynamics)
-            CASE ( 'line-minimization','l-m','lm' )
-              tdynz_ = .FALSE.
-              fricz_ = 0.0d0
-              zmass_ = 0.0d0
-            CASE DEFAULT
-              CALL errore(' iosys ',' rotation_dynamics not implemented ', 1 )
-          END SELECT
-
-          SELECT CASE (occupation_dynamics)
-            CASE ( 'line-minimization','l-m','lm' )
-              tdynf_ = .FALSE.
-              fricf_ = 0.0d0
-              fmass_ = 0.0d0
-            CASE DEFAULT
-              CALL errore(' iosys ',' occupation_dynamics not implemented ', 1 )
-          END SELECT
-
-          if ( nspin_ == 1 ) then
-            n_       = nbnd
-            f_ ( : ) = nelec / n_
-            nel_ (1) = nint(nelec)
-            nupdwn_ (1) = n_
-          else
-            n_       = 2*nbnd
-            if (nelup.ne.0) then
-              if ((nelup+neldw).ne.nelec) then
-                 CALL errore(' iosys ',' nelup+neldw .ne. nelec', 1 )
-              end if
-              nel_ (1) = nelup
-              nel_ (2) = neldw
-            else
-              nel_ (1) = ( nint(nelec) + 1 ) / 2
-              nel_ (2) =   nint(nelec)       / 2
-            end if
-            nupdwn_ (1) = nbnd
-            nupdwn_ (2) = nbnd
-            iupdwn_ (2) = nbnd+1
-            do iss = 1, nspin_
-             do i = iupdwn_ ( iss ), iupdwn_ ( iss ) - 1 + nupdwn_ ( iss )
-                f_ (i) =  nel_ (iss) / real (nupdwn_ (iss))
-             end do
-            end do
-          end if
-
-          SELECT CASE (smearing)
-            CASE ( 'gaussian','g' )
-              ismear_ = 1
-            CASE ( 'fermi-dirac','f-d', 'fd' )
-              ismear_ = 2
-            CASE ( 'hermite-delta','h-d','hd' )
-              ismear_ = 3
-            CASE ( 'gaussian-splines','g-s','gs' )
-              ismear_ = 4
-            CASE ( 'cold-smearing','c-s','cs','cs1' )
-              ismear_ = 5
-            CASE ( 'marzari-vanderbilt','m-v','mv','cs2' )
-              ismear_ = 6
-            CASE ( '0')
-              ismear_ = 0
-            CASE ( '-1')
-              ismear_ = -1
-
-            CASE DEFAULT
-              CALL errore(' iosys ',' smearing not implemented', 1 )
-          END SELECT
-
-      CASE DEFAULT
-         CALL errore(' iosys ',' occupation method not implemented', 1 )
-      END SELECT
-
-      do iss = 1, nspin_
-         do in = iupdwn_(iss), iupdwn_(iss) - 1 + nupdwn_(iss)
-            ispin_(in) = iss
-         end do
-      end do
-
-      !
-
       RETURN
-
   END SUBROUTINE
-
-!
-!     --------------------------------------------------------
-!     print out heading
-!
-
-
+  !
+  !
+  !     --------------------------------------------------------
+  !
+  !     print out heading
+  !
+  !
   SUBROUTINE input_info_cp()
 
       use constants, only: pi, scmass, factem, eps8, uma_au, terahertz, gpa_au
@@ -1430,15 +1153,12 @@
 
       use mp, only: mp_bcast
       !
-      USE ions_base, ONLY: tau_srt, ind_srt, &
+      USE ions_base, ONLY: &
            rcmax_ => rcmax, &
            fricp_ => fricp, &
            greasp_ => greasp, &
            nsp
       !
-      USE ions_positions, ONLY: &
-           tau0_ => tau0
-      ! 
       USE cell_base, ONLY: cell_alat, a1, a2, a3, &
            press_ => press, &
            frich_ => frich, &
@@ -1462,15 +1182,6 @@
       USE ions_nose, ONLY: &
            qnp_ => qnp, &
            tempw_ => tempw
-      USE electrons_base, ONLY: &
-           nupdwn_ => nupdwn, &
-           iupdwn_ => iupdwn, &
-           nel_ => nel, &
-           n_ => nbnd, &
-           nx_ => nbndx, &
-           f_ => f, &
-           ispin_ => fspin, &
-           nspin_ => nspin
       USE electrons_nose, ONLY: &
            qne_ => qne, &
            ekincw_ => ekincw
@@ -1682,12 +1393,12 @@
 
       RETURN
 
-    END SUBROUTINE
-!
-
-
-! ----------------------------------------------------------------
-
+  END SUBROUTINE
+  !
+  !
+  ! ----------------------------------------------------------------
+  !
+  !
   SUBROUTINE input_info()
 
     ! this subroutine print to standard output some parameters read from input
@@ -1699,8 +1410,6 @@
     IMPLICIT NONE
 
     IF( ionode ) THEN
-      WRITE( stdout, * )
-      WRITE( stdout, 10)
       WRITE( stdout, 400) title
       WRITE( stdout, 500) restart_mode, nstep, iprint, ndr, ndw
       WRITE( stdout, 501) celldm(1), celldm
@@ -1709,12 +1418,8 @@
       WRITE( stdout, 509)
     END IF
 
-
-
     RETURN
 
- 10   FORMAT(//,3X,'MD PARAMETERS READ FROM STANDARD INPUT',/ &
-               ,3X,'-------------------------------------')
 400   FORMAT(/  3X, 'Job Title: ', A )
 500   FORMAT(   3X,'Restart Mode = ',A15,', Number of MD Steps = ',I7,/ &
                ,3X,'Print out every ',I4,' MD Steps',/  &
@@ -1726,13 +1431,12 @@
 509   FORMAT(   3X,'Verlet algorithm for electron dynamics')
 510   FORMAT(   3X,'Electronic fictitious MASS = ',F10.2)
 
-
-
   END SUBROUTINE input_info
-
-! ----------------------------------------------------------------
-! ----------------------------------------------------------------
-
+  !
+  !
+  ! ----------------------------------------------------------------
+  !
+  !
   SUBROUTINE modules_info()
 
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
@@ -1802,21 +1506,23 @@
                   ,' purely electronic steepest descent steps',/ &
                ,3X,'are performed for every ionic step in the program')
   590   FORMAT(   3X,'Electron temperature control via nose thermostat')
-END SUBROUTINE modules_info
+    !
+  END SUBROUTINE modules_info
 
 
 
-SUBROUTINE sic_info( stdout )
-  USE ions_base, ONLY: self_interaction
-  IMPLICIT NONE
-  INTEGER, INTENT(IN) :: stdout
-  !
-  ! prints the type of USIC we will do :
-  !
+  SUBROUTINE sic_info( stdout )
 
-  IF( self_interaction == 0 ) THEN
-    RETURN
-  END IF
+    USE ions_base, ONLY: self_interaction
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: stdout
+    !
+    ! prints the type of USIC we will do :
+    !
+
+    IF( self_interaction == 0 ) THEN
+      RETURN
+    END IF
 
         WRITE(stdout, 591)
         WRITE(stdout, 592) self_interaction
@@ -1857,8 +1563,8 @@ SUBROUTINE sic_info( stdout )
   592 FORMAT(   3X,'Introducing a Self_Interaction Correction case: ', I3)
   593 FORMAT(   3X,'----------------------------------------')
 
-  RETURN
-END SUBROUTINE
+    RETURN
+  END SUBROUTINE
 
 ! ----------------------------------------------------------------
   END MODULE input

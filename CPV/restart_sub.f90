@@ -278,7 +278,7 @@ CONTAINS
     USE control_flags, ONLY: trane, trhor, iprsta, tpre
     use uspp, only:  betae => vkb
     use ions_base, only: na, nsp
-    use electrons_base, only: n => nbnd
+    use electrons_base, only: n => nbsp
     use io_global, only: stdout
     use cell_base, only: s_to_r
     use cpr_subroutines, only: print_atomic_var

@@ -156,12 +156,12 @@
           REAL(dbl), ALLOCATABLE :: v(:,:,:)
           REAL(dbl) :: fac
 ! ...                                                                   
-          ldx   = dfftp%nr1
-          ldy   = dfftp%nr2
+          ldx   = dfftp%nr1x
+          ldy   = dfftp%nr2x
           ldz   = dfftp%npl
-          nxl   = MIN( ldx, SIZE( grho, 1 ) )
-          nyl   = MIN( ldy, SIZE( grho, 2 ) )
-          nzl   = MIN( ldz, SIZE( grho, 3 ) )
+          nxl   = MIN( dfftp%nr1, SIZE( grho, 1 ) )
+          nyl   = MIN( dfftp%nr2, SIZE( grho, 2 ) )
+          nzl   = MIN( dfftp%npl, SIZE( grho, 3 ) )
           nspin = SIZE(rhoer,4)
 
           fac = REAL(nspin)

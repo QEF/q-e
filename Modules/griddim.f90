@@ -116,6 +116,7 @@
        USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
            nnrbx, nr1bl, nr2bl, nr3bl
        USE fft_scalar, only: good_fft_dimension, good_fft_order
+       USE io_global, only: stdout
        !
        IMPLICIT NONE
        !
@@ -126,8 +127,12 @@
        !
        REAL(dbl) :: qk(3) = 0.0d0
 
-       ! ... This subroutines calculates the size of the real and reciprocal dense grids
-       CALL ngnr_set( alat, a1, a2, a3, gcutd, qk, ng, nr1, nr2, nr3 )
+       IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
+         ! ... This subroutines calculates the size of the real and reciprocal dense grids
+         CALL ngnr_set( alat, a1, a2, a3, gcutd, qk, ng, nr1, nr2, nr3 )
+       ELSE
+         WRITE( stdout, '( /, 3X,"Info: using nr1, nr2, nr3 values from input" )' )
+       END IF
 
        nr1 = good_fft_order( nr1 )
        nr2 = good_fft_order( nr2 )
@@ -137,8 +142,12 @@
        nr2x  = nr2
        nr3x  = good_fft_dimension( nr3 )
 
-       ! ... This subroutines calculates the size of the real and reciprocal smoth grids
-       CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
+       IF( nr1s == 0 .OR. nr2s == 0 .OR. nr3s == 0 ) THEN
+         ! ... This subroutines calculates the size of the real and reciprocal smoth grids
+         CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ngs, nr1s, nr2s, nr3s )
+       ELSE
+         WRITE( stdout, '( /, 3X,"Info: using nr1s, nr2s, nr3s values from input" )' )
+       END IF
 
        nr1s = good_fft_order( nr1s )
        nr2s = good_fft_order( nr2s )

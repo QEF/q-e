@@ -26,7 +26,7 @@
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-                                nx => nbndx, n => nbnd, ispin => fspin, &
+                                nx => nbspx, n => nbsp, ispin => fspin, &
                                 deallocate_elct
 
       use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,              &

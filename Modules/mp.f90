@@ -75,7 +75,7 @@
 
       INTEGER, PRIVATE, SAVE :: mp_high_watermark = 0
 
-      INTEGER, PRIVATE, PARAMETER :: mp_msgsiz_max = 100000000
+      INTEGER, PRIVATE, PARAMETER :: mp_msgsiz_max = 900000000
 
 !------------------------------------------------------------------------------!
 !

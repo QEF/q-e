@@ -58,7 +58,7 @@ MODULE path_routines
       USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
       USE control_flags, ONLY : lpath, lneb
       USE parser,        ONLY : int_to_char
-      USE cell_base,     ONLY : cell_base_init, a1, a2, a3
+      USE cell_base,     ONLY : cell_base_init, a1, a2, a3, cell_alat
       USE ions_base,     ONLY : ions_base_init
       USE check_stop,    ONLY : check_stop_init
       !
@@ -124,7 +124,9 @@ MODULE path_routines
       massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
       CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, a, b, &
              c, cosab, cosac, cosbc, wmass , massa_totale , press , cell_damping , &
-             greash , cell_dofree, alat_ )
+             greash , cell_dofree )
+
+      alat_ = cell_alat()
 
       CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, rd_vel, &
                            atom_mass, atom_label, if_pos, atomic_positions, &

@@ -151,7 +151,7 @@
       USE gvecp, ONLY: ngm, ngmt, ecutp
       USE gvecs, ONLY: ngs, ngst
       USE gvecw, ONLY: ngw, ngwt, ecutw
-      USE electrons_base, ONLY: nspin, nbnd, nelt, nel, nupdwn, iupdwn
+      USE electrons_base, ONLY: nspin, nbnd, nbsp, nelt, nel, nupdwn, iupdwn
       USE cell_base, ONLY: ibrav, alat, celldm
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
       USE reciprocal_vectors, ONLY: ig_l2g, mill_l

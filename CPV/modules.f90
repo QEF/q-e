@@ -31,7 +31,7 @@ end module core
 
 module elct
   use electrons_base, only: nspin, nel, nupdwn, iupdwn
-  use electrons_base, only: n => nbnd, nx => nbndx
+  use electrons_base, only: n => nbsp, nx => nbspx
   use electrons_base, only: f, qbac, ispin => fspin
   use electrons_base, only: deallocate_elct
   implicit none

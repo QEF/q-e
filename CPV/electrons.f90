@@ -6,37 +6,17 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sat Feb 12 11:56:12 MET 2000
-!  ----------------------------------------------
-!  BEGIN manual
-
-   MODULE electrons_module
-
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE electron_mass_init(alat, delt, hg, ngw)
-!  SUBROUTINE band_init(occ, emp, nk)
-!  SUBROUTINE electrons_info(nel_out, nx_out, n_out)
-!  SUBROUTINE electrons_print_info(unit)
-!  SUBROUTINE electrons_setup(nel_inp, emass_inp, ecutmass_inp,f_inp)
-!  SUBROUTINE deallocate_electrons
-!  ----------------------------------------------
-!  END manual
+!=----------------------------------------------------------------------------=!
+  MODULE electrons_module
+!=----------------------------------------------------------------------------=!
 
         USE kinds
-        USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
-        USE parallel_types, ONLY: processors_grid, descriptor, CYCLIC_SHAPE
+        USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
+        USE parallel_types,     ONLY: processors_grid, descriptor, CYCLIC_SHAPE
         USE descriptors_module, ONLY: desc_init, get_local_dims, &
-          get_global_dims, owner_of, local_index
-
-        USE electrons_base, ONLY: nbnd, nbndx, nspin, nel, nelt, nupdwn, iupdwn
+                                      get_global_dims, owner_of, local_index
+        USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
+                                      nupdwn, iupdwn, telectrons_base_initval, f
         USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff
         USE cp_electronic_mass, ONLY: emass
         USE cp_electronic_mass, ONLY: emass_precond
@@ -61,7 +41,6 @@
         TYPE (descriptor) :: occ_desc
         TYPE (descriptor) :: emp_desc
 
-        REAL(dbl), ALLOCATABLE :: f(:,:)
         REAL(dbl), ALLOCATABLE :: ei(:,:,:)
         REAL(dbl), ALLOCATABLE :: ei_emp(:,:,:)
         REAL(dbl), ALLOCATABLE :: pmss(:)
@@ -80,43 +59,42 @@
 
         PUBLIC :: electrons_setup, eigs, cp_eigs
         PUBLIC :: electron_mass_init, band_init, bmeshset
-        PUBLIC :: electrons_info, electrons_print_info
+        PUBLIC :: electrons_print_info
         PUBLIC :: deallocate_electrons, fermi_energy
         PUBLIC :: pmss, n_emp, emass, emp_desc, ei_emp
-        PUBLIC :: occ_desc, ei, nspin, nelt, nel, nupdwn
+        PUBLIC :: occ_desc, ei, nspin, nelt, nupdwn
         PUBLIC :: nbnd
 
+!
 !  end of module-scope declarations
-!  ----------------------------------------------
+!
+!=----------------------------------------------------------------------------=!
+   CONTAINS
+!=----------------------------------------------------------------------------=!
 
-      CONTAINS
 
-!  subroutines
-!  ----------------------------------------------
-!  ----------------------------------------------
-        SUBROUTINE electron_mass_init( alat, hg, ngw )
+   SUBROUTINE electron_mass_init( alat, hg, ngw )
 
-!  (describe briefly what this routine does...)
-!  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS 
-!  ----------------------------------------------
+     !  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS 
 
-! ...     declare subroutine arguments
-          REAL(dbl), INTENT(IN) :: alat
-          REAL(dbl), INTENT(IN) :: hg(:)
-          INTEGER,   INTENT(IN) :: ngw
-          REAL(dbl) :: tpiba2
-          INTEGER :: ierr
+     USE constants, ONLY: pi
 
-          ALLOCATE( pmss( ngw ), STAT=ierr)
-          IF( ierr/=0 ) CALL errore( ' electron_mass_init ',' allocating pmss ', ierr)
+     REAL(dbl), INTENT(IN) :: alat
+     REAL(dbl), INTENT(IN) :: hg(:)
+     INTEGER,   INTENT(IN) :: ngw
+     REAL(dbl) :: tpiba2
+     INTEGER :: ierr
 
-          tpiba2 = ( 8.d0 * datan( 1.d0 ) / alat ) ** 2
+     ALLOCATE( pmss( ngw ), STAT=ierr)
+     IF( ierr/=0 ) CALL errore( ' electron_mass_init ',' allocating pmss ', ierr)
 
-          CALL emass_precond( pmss, hg, ngw, tpiba2, ecutmass )
-          pmss = emass / pmss
+     tpiba2 = ( 2.d0 * pi / alat ) ** 2
+
+     CALL emass_precond( pmss, hg, ngw, tpiba2, ecutmass )
+     pmss = emass / pmss
           
-          RETURN 
-        END SUBROUTINE electron_mass_init
+     RETURN 
+   END SUBROUTINE electron_mass_init
 
 !  ----------------------------------------------
 !  ----------------------------------------------
@@ -141,14 +119,14 @@
           
      IF( nspin == 1 ) THEN
        DO ik = 1, nk
-         occ( 1:nbnd, ik, 1 ) = f( 1:nbnd, 1 )
+         occ( 1:nbnd, ik, 1 ) = f( 1:nbnd )
        END DO
      ELSE
        DO ik = 1, nk
-         occ( 1:nupdwn(1), ik, 1 ) = f( 1:nupdwn(1), 1 )
+         occ( 1:nupdwn(1), ik, 1 ) = f( 1:nupdwn(1) )
        END DO
        DO ik = 1, nk
-         occ( 1:nupdwn(2), ik, 2 ) = f( 1:nupdwn(2), 2 )
+         occ( 1:nupdwn(2), ik, 2 ) = f( iupdwn(2) : ( iupdwn(2) + nupdwn(2) - 1 ) )
        END DO
      END IF
 
@@ -255,17 +233,6 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-        SUBROUTINE electrons_info(nel_out, nx_out, nemp_out, nspin_out)
-          INTEGER, INTENT(OUT) :: nel_out, nx_out, nspin_out, nemp_out
-            nel_out = nelt
-            nx_out  = nbnd
-            nemp_out  = n_emp
-            nspin_out = nspin
-          RETURN
-        END SUBROUTINE 
-
-!  ----------------------------------------------
-!  ----------------------------------------------
         SUBROUTINE electrons_print_info( unit )
 
           INTEGER, INTENT(IN) :: unit
@@ -273,13 +240,13 @@
 
           IF( nspin == 1) THEN
             WRITE(unit,6) nelt, nbnd
-            WRITE(unit,7) ( f( i, 1 ), i = 1, nbnd )
+            WRITE(unit,7) ( f( i ), i = 1, nbnd )
           ELSE
             WRITE(unit,8) nelt
             WRITE(unit,9) nel(1)
-            WRITE(unit,7) ( f( i, 1 ), i = 1, nupdwn(1))
+            WRITE(unit,7) ( f( i ), i = 1, nupdwn(1))
             WRITE(unit,10) nel(2)
-            WRITE(unit,7) ( f( i, 2 ), i = 1, nupdwn(2))
+            WRITE(unit,7) ( f( i ), i = iupdwn(2), ( iupdwn(2) + nupdwn(2) - 1 ) )
           END IF
 6         FORMAT(/,3X,'Electronic states',/  &
                   ,3X,'-----------------',/  &
@@ -297,182 +264,44 @@
         END SUBROUTINE electrons_print_info
 
 !  ----------------------------------------------
+!
+!
+!
 !  ----------------------------------------------
-   SUBROUTINE electrons_setup(toccrd_inp, nbnd_ , nelec_ , nelu_ , &
-     neld_ , nspin_ , n_emp_ , emass_inp, ecutmass_inp, f_inp, nkp)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
+
+   SUBROUTINE electrons_setup( n_emp_ , emass_inp, ecutmass_inp, nkp )
 
      IMPLICIT NONE
-     LOGICAL, INTENT(IN) :: toccrd_inp
-     INTEGER, INTENT(IN) :: nbnd_ , nelec_
-     INTEGER, INTENT(IN) :: nelu_
-     INTEGER, INTENT(IN) :: neld_, nspin_
      INTEGER, INTENT(IN) :: n_emp_
-
      REAL(dbl),  INTENT(IN) :: emass_inp, ecutmass_inp
-     REAL(dbl),  INTENT(IN) :: f_inp(:,:)
      INTEGER, INTENT(IN) :: nkp
      INTEGER :: ierr, i
-     CHARACTER(LEN=80) :: msg
  
-! ...     end of declarations
-!  ----------------------------------------------
 
-     toccrd = toccrd_inp
+     IF( .NOT. telectrons_base_initval ) &
+       CALL errore( ' electrons_setup ', ' electrons_base not initialized ', 1 )
 
-     nbnd  = nbnd_
-     nspin = nspin_
      n_emp = n_emp_
 
-     IF ( nspin /= 1 .AND. nspin /= 2 ) THEN
-       WRITE( msg, fmt = '( " invalid nspin: ", I5 )' ) nspin
-       CALL errore( ' electrons_setup ', msg, 1 )
-     END IF
+     IF( n_emp > nbndx ) &
+       CALL errore( ' electrons_setup ', ' too many empty states ', 1 )
 
-     IF( toccrd ) THEN
-
-       ! ...   User values
-
-       IF( nspin == 1 ) THEN
-
-         !  here nbnd can be larger than the default
-
-         nel(1)    = nelec_ / 2 + MOD( nelec_ , 2 )
-         nel(2)    = nelec_ / 2
-         nelt      = nel(1) + nel(2)
-         nbnd      = nbnd_
-         nupdwn(1) = nbnd_
-         nupdwn(2) = nbnd_
-
-       ELSE IF( nspin == 2 ) THEN
-       
-         IF( nelu_ > 0 .OR. neld_ > 0 ) THEN
-           nel(1)  = nelu_
-           nel(2)  = neld_
-         ELSE
-           nel(1)  = nelec_ / 2 + MOD( nelec_ , 2 )
-           nel(2)  = nelec_ / 2
-         END IF
-         nelt  = nel(1) + nel(2)
-         nbnd      = nbnd_
-         nupdwn(1) = nbnd_
-         nupdwn(2) = nbnd_
-
-       END IF
-
-     ELSE
-
-       ! ...   default values
-
-       IF( nspin == 1 ) THEN
-
-         nel(1)  = nelec_ / 2 + MOD( nelec_ , 2 )
-         nel(2)  = nelec_ / 2
-         nelt    = nel(1) + nel(2)
-
-         IF( nbnd /= ( ( nelt + 1 ) / 2 ) ) THEN
-           nbnd = ( ( nelt + 1 ) / 2 )
-           CALL infomsg( ' electrons_setup ', ' nbnd modified according to nelt ', nbnd )
-         END IF
-
-         nupdwn(1) = nel(1)
-         nupdwn(2) = nel(2)
-
-         IF( nbnd /= MAX( nupdwn(1), nupdwn(2) ) ) &
-           CALL errore( ' electrons_setup ', ' inconsistent number of states ', 1 )
-
-       ELSE IF( nspin == 2 ) THEN
-
-         IF( nelu_ /= 0 .OR. neld_ /= 0 ) THEN
-           nel(1) = nelu_
-           nel(2) = neld_
-         ELSE
-           nel(1)  = nelec_ / 2 + MOD( nelec_ , 2 )
-           nel(2)  = nelec_ / 2
-         END IF
-
-         nelt    = nel(1) + nel(2)
-
-         nupdwn(1) = nel(1)
-         nupdwn(2) = nel(2)
-
-         IF( nbnd /= MAX( nupdwn(1), nupdwn(2) ) ) THEN
-           nbnd = MAX( nupdwn(1), nupdwn(2) )
-           CALL infomsg( ' electrons_setup ', ' nbnd modified according to nupdwn ', nbnd )
-         END IF
-
-       END IF
-
-
-     END IF
-
-
-! .. Do some sanity check
-
-     IF( nelt /= nelec_ ) THEN
-       CALL errore(' electrons ',' inconsistent nel up, nel down ', 1 )
-     END IF
-
-     IF( nelt < 1 ) THEN
-       CALL errore(' electrons ',' invalid nelu + neld ', 2 )
-     END IF
-
-     IF( nbnd < 1 ) &
-       CALL errore(' electrons ',' nbnd out of range ',nbnd)
-
-     IF( nbnd < nupdwn(1) .OR. nbnd < nupdwn(2)) &
-       CALL errore(' electrons ',' inconsistent nbnd and nupdwn(1) or nupdwn(2) ',nbnd)
-
-     IF( ( 2 * nbnd ) < nelt ) &
-       CALL errore(' electrons ',' TOO FEW STATES ', nbnd )
-
-     nbndx = MAX( nbnd, nupdwn(1), nupdwn(2), n_emp )
-
-     ! .. Set occupation numbers and eingenvalues matrixes
-
-     ALLOCATE( f( nbnd, nspin ), STAT=ierr )
-     IF( ierr/=0 ) CALL errore( ' electrons ',' allocating f ',ierr)
-     f  = 0.0_dbl
-
+     IF( ALLOCATED( ei ) ) DEALLOCATE( ei )
      ALLOCATE( ei( nbnd, nkp, nspin ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei ',ierr)
      ei = 0.0_dbl
 
+     IF( ALLOCATED( ei_emp ) ) DEALLOCATE( ei_emp )
      IF( n_emp > 0 ) THEN
        ALLOCATE( ei_emp( n_emp, nkp, nspin ), STAT=ierr)
        IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei_emp ',ierr)
        ei_emp = 0.0_dbl
      END IF
 
-     IF( toccrd ) THEN
-
-       IF( SIZE(f,1) > SIZE(f_inp,1) .OR. SIZE(f,2) > SIZE(f_inp,2) ) & 
-         CALL errore(' electrons ',' wrong sizes for f_inp ',1)
-
-       f = f_inp( 1:nbnd , 1:nspin )
-
-     ELSE
-
-       IF( nspin == 1 ) THEN
-
-         DO i = 1, nelt
-           f( ( i - 1 ) / 2 + 1, 1 ) = f( ( i - 1 ) / 2 + 1, 1 ) + 1.0d0
-         END DO
-
-       ELSE
-
-         f( 1 : nel(1) , 1 ) = 1.0d0
-         f( 1 : nel(2) , 2 ) = 1.0d0
-
-       END IF
-
-     END IF
-
      ecutmass = ecutmass_inp
      emass    = emass_inp
-     IF (ecutmass < 0.0_dbl) &
+     IF ( ecutmass < 0.0_dbl ) &
        CALL errore(' electrons ',' ecutmass out of range ' , 0)
 
      band_first = .FALSE.
@@ -645,10 +474,6 @@
             DEALLOCATE(pmss, STAT=ierr)
             IF( ierr/=0 ) CALL errore( ' deallocate_electrons ',' deallocating pmss ',ierr )
           END IF
-          IF(ALLOCATED(f))        THEN
-            DEALLOCATE(f, STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' deallocate_electrons ',' deallocating f ',ierr )
-          END IF
           IF(ALLOCATED(ei))       THEN
             DEALLOCATE(ei, STAT=ierr)
             IF( ierr/=0 ) CALL errore( ' deallocate_electrons ',' deallocating ei ',ierr )
@@ -670,6 +495,12 @@
         
 
 !  ----------------------------------------------
+!
+!  tools subroutines
+!
+!  ----------------------------------------------
+
+
         SUBROUTINE rsumgam(ib, prod, gam)
           USE mp_global, ONLY: mpime, group, nproc
           USE mp, ONLY: mp_sum
@@ -680,9 +511,9 @@
           IF ( ib_owner(ib) == mpime ) gam(ib_local(ib),:) = prod(:)
           RETURN
         END SUBROUTINE
-!  ----------------------------------------------
 
 !  ----------------------------------------------
+
         SUBROUTINE csumgam(ib, cprod, cgam)
           USE mp_global, ONLY: mpime, group, nproc
           USE mp, ONLY: mp_sum
@@ -693,6 +524,7 @@
           IF(ib_owner(ib) == mpime ) cgam(ib_local(ib),:) = cprod(:)
           RETURN
         END SUBROUTINE
+
 !  ----------------------------------------------
 
         SUBROUTINE cpackgam(cgam, f, caux)
@@ -735,6 +567,8 @@
           RETURN
         END SUBROUTINE
 
+!  ----------------------------------------------
+
         SUBROUTINE rpackgam(gam, f, aux)
           USE mp_global, ONLY: mpime, nproc, group
           USE mp, ONLY: mp_sum
@@ -774,6 +608,8 @@
           END IF
           RETURN
         END SUBROUTINE
+
+!  ----------------------------------------------
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -902,7 +738,7 @@
      LOGICAL, SAVE :: lprimo
      INTEGER :: i
 
-         if( tens .and. ( ismear == -1) ) then!in questo caso stampa elementi matrice dipolo
+         if( tens .and. ( ismear == -1) ) then  ! in questo caso stampa elementi matrice dipolo
 
             call rotate( z0, c0(:,:,1,1), bec, c0diag, becdiag )
 
@@ -964,7 +800,6 @@
       END SUBROUTINE
 
 
-!  ----------------------------------------------
-   END MODULE electrons_module
-!  ----------------------------------------------
-
+!=----------------------------------------------------------------------------=!
+  END MODULE electrons_module
+!=----------------------------------------------------------------------------=!

@@ -141,7 +141,7 @@
       USE ions_base, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation
       USE ions_base, ONLY: ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
-      USE electrons_base, ONLY: nupdwn
+      USE electrons_base, ONLY: nupdwn, deallocate_elct
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
@@ -800,6 +800,7 @@
       CALL deallocate_rvecs(gv)
       CALL deallocate_phfac(eigr)
       CALL deallocate_electrons
+      CALL deallocate_elct
       IF(tdipole) THEN
         CALL deallocate_polarization
       END IF

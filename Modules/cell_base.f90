@@ -412,7 +412,7 @@
 
   SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht,  &
                a, b, c, cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
-               frich_ , greash_ , cell_dofree, alat_ )
+               frich_ , greash_ , cell_dofree )
 
     USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au 
     USE io_global, ONLY: stdout
@@ -428,18 +428,22 @@
     REAL(dbl),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
     REAL(dbl),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
 
-    REAL(dbl), INTENT(OUT) :: alat_
 
     REAL(dbl) :: b1(3), b2(3), b3(3)
+
     !
     ! ... set up crystal lattice, and initialize cell_base module
     !
-
     celldm = celldm_
     ibrav  = ibrav_
     press  = press_ * gpa_au
     !  frich  = frich_   ! for the time being this is set elsewhere
     greash = greash_
+
+    WRITE( stdout, * )
+    WRITE( stdout, * )
+    WRITE( stdout, 110 ) press_
+110 format('   external pressure       = ',f15.2,' [GPa]')
 
     wmass  = wc_
     IF( wmass == 0.d0 ) THEN
@@ -449,8 +453,8 @@
     ELSE
       WRITE( stdout,998) wmass
     END IF
-998 format('   wmass (read from input) = ',f15.2,/)
-999 format('   wmass (calculated) = ',f15.2,/)
+998 format('   wmass (read from input) = ',f15.2,' [AU]',/)
+999 format('   wmass (calculated)      = ',f15.2,' [AU]',/)
 
 
     ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
@@ -524,7 +528,6 @@
     bg( :, 3 ) = b3( : )
 
     tcell_base_init = .TRUE.
-    alat_ = alat
 
     thdiag = .false.
 
@@ -739,6 +742,8 @@
 
   function cell_alat( )
     real(dbl) :: cell_alat
+    if( .NOT. tcell_base_init ) &
+      call errore( ' cell_alat ', ' alat has not been set ', 1 )
     cell_alat = alat
     return 
   end function

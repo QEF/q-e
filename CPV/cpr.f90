@@ -77,7 +77,7 @@
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin, &
                           atot, entropy, egrand
 
-      use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+      use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
       use electrons_base, only: deallocate_elct, nel, iupdwn, nupdwn, nudx, nelt
 
       use efield_module, only: efield, epol, tefield, allocate_efield, deallocate_efield, &

@@ -68,7 +68,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use uspp, only: deallocate_uspp
   use cvan, only: nvb
   use energies, only: eht, epseu, exc, etot, eself, enl, ekin, esr
-  use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+  use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
   use electrons_base, only: deallocate_elct, nel, iupdwn, nupdwn
   use gvec, only: tpiba2, ng
   use gvec, only: deallocate_gvec

@@ -345,7 +345,7 @@ initial_state.x : initial_state.o $(PPOBJS)
 	$(LD) -o $@ initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pw_export.x : pw_export.o $(EXOBJS) $(PPOBJS)
+pw_export.x : pw_export.o $(EXOBJS) $(PWOBJS) $(PPOBJS)
 	$(LD) -o $@ pw_export.o $(EXOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 

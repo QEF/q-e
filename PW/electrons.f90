@@ -43,14 +43,14 @@ SUBROUTINE electrons()
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
-  USE wvfct,                ONLY : nbnd, et, gamma_only  
+  USE wvfct,                ONLY : nbnd, et, gamma_only, wg  
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef  
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, &
                                    lscf, lpath, lmd, conv_elec, restart, &
-                                   reduce_io
+                                   reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -535,6 +535,11 @@ SUBROUTINE electrons()
            !
            WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
            !
+           IF( iverbosity > 0 ) THEN
+               WRITE( stdout, 9032 )
+               WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
+           END IF
+           !
         END DO
         !
         IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040 ) ef * rytoev
@@ -686,6 +691,7 @@ SUBROUTINE electrons()
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
 9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
 9030 FORMAT( '  ',8F9.4)
+9032 FORMAT(/'     occupation numbers ')
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
 9050 FORMAT(/'     integrated charge         =',F15.8)
 9051 FORMAT(/'     integrated charge_new     =',F15.8)

@@ -84,7 +84,7 @@ CONTAINS
 
   SUBROUTINE cg_update( tfirst, nfi, c0 )
     use gvecw, only: ngw
-    use electrons_base, only: n => nbnd
+    use electrons_base, only: n => nbsp
     IMPLICIT NONE
     COMPLEX(kind=8) :: c0( :, :, :, : )
     INTEGER :: nfi

@@ -1,5 +1,7 @@
 MODULE ensemble_dft
 
+  USE kinds, ONLY: dbl
+
   IMPLICIT NONE
   SAVE
 
@@ -15,61 +17,61 @@ MODULE ensemble_dft
                                            !  5 => cold smearing i
                                            !  6 => cold smearing ii
                                            ! (only 2 works).
-      real(kind=8) :: etemp      = 0       ! smearing temperature.
-      real(kind=8) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
+      real(dbl) :: etemp      = 0       ! smearing temperature.
+      real(dbl) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
       logical      :: tdynz      = .false. ! whether to do dynamics for the
                                            ! rotational degrees of freedom.
       logical      :: tdynf      = .false. ! whether to do dynamics for the
                                            ! unitary degrees of freedom.
-      real(kind=8) :: zmass      = 0       ! mass for the rotational degrees of freedom
+      real(dbl) :: zmass      = 0       ! mass for the rotational degrees of freedom
                                            ! in CP Lagrangian.
-      real(kind=8) :: fmass      = 0       ! mass for the occupational degrees of freedom
+      real(dbl) :: fmass      = 0       ! mass for the occupational degrees of freedom
                                            ! in CP Lagrangian.
-      real(kind=8) :: fricz      = 0       ! unitary degrees of freedom damping.
-      real(kind=8) :: fricf      = 0       ! occupational degrees of freedom damping.
+      real(dbl) :: fricz      = 0       ! unitary degrees of freedom damping.
+      real(dbl) :: fricf      = 0       ! occupational degrees of freedom damping.
 
 !***ensemble-DFT
-      real(kind=8), allocatable::                 bec0(:,:)
-      real(kind=8), allocatable::                 becm(:,:)
-      real(kind=8), allocatable::           becdrdiag(:,:,:)
-      real(kind=8), allocatable::                  z0(:,:,:)
-      real(kind=8), allocatable::                  id(:,:,:)
-      real(kind=8), allocatable::               fion2(:,:)
-      complex(kind=8), allocatable::             c0diag(:,:)
-      real(kind=8), allocatable::               becdiag(:,:)
-      real(kind=8), allocatable::               c0hc0(:,:,:)
-      real(kind=8), allocatable::              c0h0c0(:,:,:)
-      real(kind=8), allocatable::             c0hxcc0(:,:,:)
-      complex(kind=8), allocatable::               h0c0(:,:)
-      complex(kind=8), allocatable::              hxcc0(:,:)
-      real(kind=8), allocatable::                  z1(:,:,:)
-      real(kind=8), allocatable::                  zx(:,:,:)
-      real(kind=8), allocatable::                 zxt(:,:,:)
-      real(kind=8), allocatable::                zaux(:,:,:)
-      real(kind=8), allocatable::                    dval(:)
-      real(kind=8), allocatable::                      e0(:)
-      real(kind=8), allocatable::                      e1(:)
-      real(kind=8), allocatable::                      ex(:)
-      real(kind=8), allocatable::                      dx(:)
-      real(kind=8), allocatable::                      f0(:)
-      real(kind=8), allocatable::                      f1(:)
-      real(kind=8), allocatable::                      fx(:)
-      real(kind=8), allocatable::                    faux(:)
-      real(kind=8), allocatable::               fmat0(:,:,:)
-      real(kind=8), allocatable::               fmat1(:,:,:)
-      real(kind=8), allocatable::               fmatx(:,:,:)
-      real(kind=8), allocatable::               dfmat(:,:,:)
-      real(kind=8), allocatable::                     v0s(:)
-      real(kind=8), allocatable::                 vhxcs(:,:)
-      real(kind=8), allocatable::               epsi0(:,:,:)
-      real(kind=8) :: atot0,atot1,atotmin,etot0,etot1,etotmin
-      real(kind=8) :: ef1,enocc
-      real(kind=8) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc
-      real(kind=8) :: etot2,entropy2
-      real(kind=8) :: f2,x,xx,xmin
-      complex(kind=8) :: c0doti,c0dotk
+      real(dbl), allocatable::                 bec0(:,:)
+      real(dbl), allocatable::                 becm(:,:)
+      real(dbl), allocatable::           becdrdiag(:,:,:)
+      real(dbl), allocatable::                  z0(:,:,:)
+      real(dbl), allocatable::                  id(:,:,:)
+      real(dbl), allocatable::               fion2(:,:)
+      complex(dbl), allocatable::             c0diag(:,:)
+      real(dbl), allocatable::               becdiag(:,:)
+      real(dbl), allocatable::               c0hc0(:,:,:)
+      real(dbl), allocatable::              c0h0c0(:,:,:)
+      real(dbl), allocatable::             c0hxcc0(:,:,:)
+      complex(dbl), allocatable::               h0c0(:,:)
+      complex(dbl), allocatable::              hxcc0(:,:)
+      real(dbl), allocatable::                  z1(:,:,:)
+      real(dbl), allocatable::                  zx(:,:,:)
+      real(dbl), allocatable::                 zxt(:,:,:)
+      real(dbl), allocatable::                zaux(:,:,:)
+      real(dbl), allocatable::                    dval(:)
+      real(dbl), allocatable::                      e0(:)
+      real(dbl), allocatable::                      e1(:)
+      real(dbl), allocatable::                      ex(:)
+      real(dbl), allocatable::                      dx(:)
+      real(dbl), allocatable::                      f0(:)
+      real(dbl), allocatable::                      f1(:)
+      real(dbl), allocatable::                      fx(:)
+      real(dbl), allocatable::                    faux(:)
+      real(dbl), allocatable::               fmat0(:,:,:)
+      real(dbl), allocatable::               fmat1(:,:,:)
+      real(dbl), allocatable::               fmatx(:,:,:)
+      real(dbl), allocatable::               dfmat(:,:,:)
+      real(dbl), allocatable::                     v0s(:)
+      real(dbl), allocatable::                 vhxcs(:,:)
+      real(dbl), allocatable::               epsi0(:,:,:)
+      real(dbl) :: atot0,atot1,atotmin,etot0,etot1,etotmin
+      real(dbl) :: ef1,enocc
+      real(dbl) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc
+      real(dbl) :: etot2,entropy2
+      real(dbl) :: f2,x,xx,xmin
+      complex(dbl) :: c0doti,c0dotk
       integer ::  niter,nss,istart,il
-      real(kind=8) :: gibbsfe
+      real(dbl) :: gibbsfe
 
 
 CONTAINS
@@ -77,10 +79,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy( entropy, f, nspin )
     implicit none
-    real(kind=8), intent(out) :: entropy
-    real(kind=8), intent(in) :: f
+    real(dbl), intent(out) :: entropy
+    real(dbl), intent(in) :: f
     integer, intent(in) :: nspin
-    real(kind=8) :: f2
+    real(dbl) :: f2
     entropy=0.0
     if ((f.gt.1.0d-20).and.(f.lt.(2.0/float(nspin)-1.0d-20))) then
        f2=float(nspin)*f/2.0
@@ -92,10 +94,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy2( entropy, f, n, nspin )
     implicit none
-    real(kind=8), intent(out) :: entropy
-    real(kind=8), intent(in) :: f(:)
+    real(dbl), intent(out) :: entropy
+    real(dbl), intent(in) :: f(:)
     integer, intent(in) :: n, nspin
-    real(kind=8) :: f2
+    real(dbl) :: f2
     integer :: i
     entropy=0.0
     do i=1,n
@@ -111,10 +113,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy_der( ex, fx, n, nspin )
     implicit none
-    real(kind=8), intent(out) :: ex(:)
-    real(kind=8), intent(in) :: fx(:)
+    real(dbl), intent(out) :: ex(:)
+    real(dbl), intent(in) :: fx(:)
     integer, intent(in) :: n, nspin
-    real(kind=8) :: f2,xx
+    real(dbl) :: f2,xx
     integer :: i
     !     calculation of the entropy derivative at x
     do i=1,n
@@ -153,6 +155,92 @@ CONTAINS
     RETURN
   END SUBROUTINE
 
+
+  SUBROUTINE ensemble_initval &
+    ( occupations_ , n_inner_ , fermi_energy_ , rotmass_ , occmass_ , rotation_damping_ , &
+      occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_ )
+    CHARACTER(LEN=*), INTENT(IN) :: occupations_
+    CHARACTER(LEN=*), INTENT(IN) :: rotation_dynamics_
+    CHARACTER(LEN=*), INTENT(IN) :: occupation_dynamics_
+    CHARACTER(LEN=*), INTENT(IN) :: smearing_
+    INTEGER, INTENT(IN) :: n_inner_
+    REAL(dbl), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
+    REAL(dbl), INTENT(IN) :: occupation_damping_ , degauss_
+    IMPLICIT NONE
+
+      SELECT CASE ( TRIM( occupations_ ) )
+          !
+      CASE ('bogus')
+          !
+      CASE ('from_input')
+          !
+      CASE ('fixed')
+          !
+      CASE ('grand-canonical','g-c','gc')
+          !
+          tens    =.true.
+          tgrand  =.true.
+          CALL errore(' ensemble_initval ','grand-canonical not yet implemented ', 1 )
+          !
+      CASE ('ensemble','ensemble-dft','edft')
+          !
+          tens    =.true.
+          ninner  = n_inner_
+          etemp   = degauss_
+          ef      = fermi_energy_
+          fricz   = rotation_damping_
+          fricf   = occupation_damping_
+          zmass   = rotmass_
+          fmass   = occmass_
+
+          SELECT CASE ( TRIM( rotation_dynamics_ ) )
+            CASE ( 'line-minimization','l-m','lm' )
+              tdynz = .FALSE.
+              fricz = 0.0d0
+              zmass = 0.0d0
+            CASE DEFAULT
+              CALL errore(' ensemble_initval ',' rotation_dynamics not implemented ', 1 )
+          END SELECT
+
+          SELECT CASE ( TRIM( occupation_dynamics_ ) )
+            CASE ( 'line-minimization','l-m','lm' )
+              tdynf = .FALSE.
+              fricf = 0.0d0
+              fmass = 0.0d0
+            CASE DEFAULT
+              CALL errore(' ensemble_initval ',' occupation_dynamics not implemented ', 1 )
+          END SELECT
+
+          SELECT CASE ( TRIM( smearing_ ) )
+            CASE ( 'gaussian','g' )
+              ismear = 1
+            CASE ( 'fermi-dirac','f-d', 'fd' )
+              ismear = 2
+            CASE ( 'hermite-delta','h-d','hd' )
+              ismear = 3
+            CASE ( 'gaussian-splines','g-s','gs' )
+              ismear = 4
+            CASE ( 'cold-smearing','c-s','cs','cs1' )
+              ismear = 5
+            CASE ( 'marzari-vanderbilt','m-v','mv','cs2' )
+              ismear = 6
+            CASE ( '0')
+              ismear = 0
+            CASE ( '-1')
+              ismear = -1
+            CASE DEFAULT
+              CALL errore(' ensemble_initval ',' smearing not implemented', 1 )
+          END SELECT
+          !
+      CASE DEFAULT
+          !
+          CALL errore(' ensemble_initval ',' occupation method not implemented', 1 )
+          !
+      END SELECT
+
+
+    RETURN
+  END SUBROUTINE
 
 
   SUBROUTINE enemble_dft_info()

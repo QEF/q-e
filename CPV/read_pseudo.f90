@@ -603,6 +603,7 @@ END FUNCTION
         TYPE (pseudo_ncpp), INTENT(IN) :: ap
         INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
 
+        WRITE( stdout, * ) 
         IF (ap%lnl > 0) THEN
           WRITE( stdout,10) ap%pottyp
           IF (ap%tmix) THEN
@@ -645,7 +646,7 @@ END FUNCTION
   131     FORMAT(/, 3X,'Pseudopotentials Grid    : Channels = ',I2,&
                    ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
   132     FORMAT(   3X,'point      radius        pseudopotential')
-  120     FORMAT(I8,F15.10,5F10.6)
+  120     FORMAT(I8,E14.6,5E14.6)
 
         ELSE
 

@@ -327,7 +327,7 @@
       use ions_base, only: pmass, rcmax, nsp, na
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat, ibrav, celldm
-      use electrons_base, only: n => nbnd, f, nspin, nel, nupdwn, iupdwn
+      use electrons_base, only: n => nbsp, f, nspin, nel, nupdwn, iupdwn
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
@@ -448,7 +448,6 @@
       USE stick_base, ONLY: pstickset
       USE control_flags, ONLY: tdipole
       USE berry_phase, ONLY: berry_setup
-      USE electrons_base, ONLY: electrons_base_init
       USE real_space_mesh, ONLY: realspace_procgrid_init
       USE bands_mesh, ONLY: bands_procgrid_init
 
@@ -458,12 +457,6 @@
       real(kind=8) :: rat1, rat2, rat3
       real(kind=8) :: b1(3), b2(3), b3(3)
       integer :: ng_ , ngs_ , ngm_ , ngw_
-
-      !
-      ! ... Initialize dimensions for electronic states
-      !
-
-      CALL electrons_base_init( )
 
       !
       ! ... Initialize processor grid for parallel linear algebra 

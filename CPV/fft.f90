@@ -125,7 +125,7 @@
      WRITE( stdout,999) ( ( fft_timing(i,j), i = 1, 4), j = 1, 2 )
      DEALLOCATE( fft_timing )
 
-910  FORMAT('    FFTXW    FFTYW    FFTZW    TRASW    FFTXP    FFTYP    FFTZP    TRASP')
+910  FORMAT('    FFTXP    FFTYP    FFTZP    TRASP    FFTXW    FFTYW    FFTZW    TRASW')
 999  FORMAT(8(F9.3))
 500  FORMAT(1X,A,I10)
 501  FORMAT(1X,A,F10.5)
@@ -152,6 +152,7 @@
      USE fft_types, ONLY: fft_dlay_descriptor
      USE stick, ONLY: dfftp
      USE mp_global, ONLY: mpime
+     USE io_global, ONLY: stdout
 
       IMPLICIT NONE
 
@@ -167,8 +168,10 @@
       IF ( first ) &
         CALL errore( ' pfwfft 2 ', ' fft not initialized ', 1 )
 
-      IF ( SIZE( cpsi, 1 ) /= dfftp%nr1x ) &
+      IF ( SIZE( cpsi, 1 ) /= dfftp%nr1x ) THEN
+        WRITE( stdout, * ) 'Values = ', SIZE( cpsi, 1 ), dfftp%nr1x
         CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 1 )
+      END IF
       IF ( SIZE( cpsi, 2 ) /= dfftp%nr2x ) &
         CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 2 )
       IF ( SIZE( cpsi, 3 ) /= dfftp%npl ) &

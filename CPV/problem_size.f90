@@ -21,7 +21,7 @@
       USE parameters
       use fft 
       use ions_base, only: nsp, nax 
-      use electrons_module, only: electrons_info
+      use electrons_module, only: nel => nelt, nx => nbnd, n_emp, nspin
       use brillouin, only: get_kpoints_number
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
       use pseudopotential, only: lmax, ngh 
@@ -37,16 +37,14 @@
       integer NSAX,NAMX,NAFX 
       integer nbyte 
       integer nbyte_alloc 
-      integer n_emp, itmp 
-      integer nel,nx, nspin, nk
+      integer itmp 
+      integer nk
       integer :: csiz = 1
       integer :: lsiz = 4
       integer :: isiz = 4
       integer :: dsiz = 8
       integer :: zsiz = 16
                                                                         
-      CALL electrons_info(nel, nx, n_emp, nspin)
-
       nr1_l = dfftp%nr1x
       nr2_l = dfftp%nr2x
       nr3_l = dfftp%npl

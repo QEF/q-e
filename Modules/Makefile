@@ -58,10 +58,10 @@ uspp.o \
 wave_base.o \
 wavefunctions.o
 
-IOTK= \
+IOTKOBJS= \
 iotk_base.o \
-iotk_interface.o \
 iotk_module.o \
+iotk_interface.o \
 iotk_external.o \
 iotk_multitype.o \
 iotk_multitype_character.o \
@@ -72,9 +72,10 @@ iotk_multitype_real.o
 
 all : $(MODULES)
 
-$(IOTK): ../include/iotk_config.h
+$(IOTKOBJS) : ../include/iotk_config.h
 
-iotk : $(IOTK)
+iotk : $(IOTKOBJS)
+	$(AR) $(ARFLAGS) libiotk.a $(IOTKOBJS)
 
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc

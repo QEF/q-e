@@ -1035,18 +1035,6 @@ MODULE read_namelists_module
           CALL errore( sub_name ,' ecutrho out of range ',1)
        !
        IF( prog == 'FP' ) THEN
-          IF( nr1 /= 0 ) &
-             CALL infomsg( sub_name ,' nr1 is not used in FPMD ', nr1)
-          IF( nr2 /= 0 ) &
-             CALL infomsg( sub_name ,' nr2 is not used in FPMD ', nr2)
-          IF( nr3 /= 0 ) &
-             CALL infomsg( sub_name ,' nr3 is not used in FPMD ', nr3)
-          IF( nr1s /= 0 ) &
-             CALL infomsg( sub_name ,' nr1s is not used in FPMD ', nr1s)
-          IF( nr2s /= 0 ) &
-             CALL infomsg( sub_name ,' nr2s is not used in FPMD ', nr2s)
-          IF( nr3s /= 0 ) &
-             CALL infomsg( sub_name ,' nr3s is not used in FPMD ', nr3s)
           IF( degauss /= 0.D0 ) &
              CALL infomsg( sub_name ,' degauss is not used in FPMD ',-1)
        END IF

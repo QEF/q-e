@@ -828,7 +828,7 @@
      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
      use uspp, only : deeq, betae => vkb
      use reciprocal_vectors, only : gstart
-     use electrons_base, only : n=>nbnd
+     use electrons_base, only : n=>nbsp
      use wannier_subroutines, only: ef_potential
      use efield_module, only: dforce_efield, tefield
 

@@ -728,7 +728,7 @@
    
      use kinds, only: dbl
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag, dval, zaux, e0, zx
-     use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+     use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
      use energies, only: enl, ekin
      use ions_base, only: nsp
