@@ -53,6 +53,7 @@ checkallsym.o \
 checksym.o \
 cinitcgg.o \
 clean_pw.o \
+close_files.o \
 compute_dip.o \
 constrain.o \
 conv_to_num.o \
@@ -95,6 +96,7 @@ force_hub.o \
 force_lc.o \
 force_us.o \
 forces.o \
+formats.o \
 funct.o \
 functionals.o \
 g_psi.o \
@@ -113,6 +115,7 @@ h_psi.o \
 hexsym.o \
 hinit0.o \
 hinit1.o \
+io_routines.o \
 init_ns.o \
 init_pool.o \
 init_run.o \
@@ -131,12 +134,15 @@ lchk_tauxk.o \
 linmin.o \
 lsda_functionals.o \
 maximum.o \
+minimization_routines.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \
 move_ions.o \
 multable.o \
 n_plane_waves.o \
+neb_routines.o \
+neb_variables.o \
 new_ns.o \
 newd.o \
 noncol.o \
@@ -154,9 +160,12 @@ potinit.o \
 print_clock_pw.o \
 psymrho.o \
 punch.o \
+pw_gemm.o \
 pwcom.o \
 qvan2.o \
 random.o \
+rbecmod.o \
+rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \
 read_ncpp.o \
@@ -164,8 +173,10 @@ read_pseudo.o \
 readin.o \
 readnewvan.o \
 readvan.o \
+regterg.o \
 reduce.o \
 remove_atomic_rho.o \
+reset_k_points.o \
 restart.o \
 restart_from_file.o \
 restart_in_electrons.o \
@@ -173,6 +184,7 @@ restart_in_ions.o \
 rgen.o \
 rho2zeta.o \
 rotate_wfc.o \
+rotate_wfc_gamma.o \
 ruotaijk.o \
 s_1psi.o \
 s_axis_to_ca.o \
@@ -220,6 +232,7 @@ sum_band.o \
 sumkg.o \
 sumkt.o \
 summary.o \
+supercell.o \
 swap.o \
 symrho.o \
 symtns.o \
@@ -238,6 +251,7 @@ vcsmd.o \
 vcsubs.o \
 vhpsi.o \
 vloc_of_g.o \
+vloc_psi.o \
 vpack.o \
 w0gauss.o \
 w1gauss.o \
