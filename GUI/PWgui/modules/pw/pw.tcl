@@ -163,10 +163,33 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }
 		}
+
+		separator -label "--- Berry phase ---"
+
+		var lberry {
+		    -label     "Calculate Berry phase (lberry):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+		var gdir   {
+		    -label    "Direction of the k-point strings (gdir):"
+		    -widget   optionmenu
+		    -textvalue {
+			"along 1st reciprocal vector"
+			"along 2nd reciprocal vector"
+			"along 3rd reciprocal vector"
+		    }
+		    -value { 1 2 3 }		
+		}
+		var nppstr {
+		    -label "Num. of k-points along each symmetry-reduced string (nppstr):"
+		    -validate posint
+		}
 	    }
 	}
     }
-
+    
 
     ########################################################################
     ##                                                                    ##
@@ -805,7 +828,14 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    }
                     
                     var reset_vel {
-			-label "sort of clean-up of the quick-min history:"
+			-label "Sort of clean-up of the quick-min history (reset_vel):"
+			-textvalue { Yes No }
+			-value     { .TRUE. .FALSE. }
+			-widget    radiobox
+		    }
+
+		    var write_save {
+			-label "Write a prefix.save file for each image (write_save):"
 			-textvalue { Yes No }
 			-value     { .TRUE. .FALSE. }
 			-widget    radiobox
@@ -1094,9 +1124,9 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	    }
 	    group kshift -name Kshift {
 		packwidgets left
-		var sk1 -label "sk1:"  -widget spinint  -validate posint  -outfmt "  %d "  -default 1
-		var sk2 -label "sk2:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
-		var sk3 -label "sk3:"  -widget spinint  -validate posint  -outfmt "%d "  -default 1
+		var sk1 -label "sk1:"  -widget spinint  -validate binary  -outfmt "  %d "  -default 1
+		var sk2 -label "sk2:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
+		var sk3 -label "sk3:"  -widget spinint  -validate binary  -outfmt "%d "  -default 1
 	    }
 	}
 

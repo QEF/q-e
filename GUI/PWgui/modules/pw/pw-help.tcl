@@ -106,6 +106,23 @@ help tefield      -vartype logical -helpfmt txt2html -helptext {
 }	
 
 
+help lberry   -vartype logical -helpfmt txt2html -helptext {  
+               If .TRUE. perform a Berry phase calculation
+               See the header of PW/bp_c_phase.f90 for documentation
+<p> ( default = .FALSE. )
+}
+
+help gdir  -vartype integer -helpfmt txt2html -helptext {          
+               For Berry phase calculation: direction of the k-point
+               strings in reciprocal space. Allowed values: 1, 2, 3 
+               1=first, 2=second, 3=third reciprocal lattice vector
+}
+
+help nppstr  -vartype integerl -helpfmt txt2html -helptext {        
+               For Berry phase calculation: number of k-points to be 
+               calculated along each symmetry-reduced string
+}
+
 
 # =============================================================================
 # NAMELIST &SYSTEM
@@ -681,6 +698,13 @@ help reset_vel     -vartype logical -helpfmt txt2html -helptext {
                (sort of clean-up of the history)
 <p> ( default = .FALSE. )
 }
+
+help write_save    -vartype logical -helpfmt txt2html -helptext {
+               used to write the prefix.save file for each image needed for
+               post-processing
+<p> ( default = .FALSE. )
+}
+
 
 # =============================================================================
 # NAMELIST &CELL
