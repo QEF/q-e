@@ -176,7 +176,7 @@ subroutine vcsmd
          '(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, ", &
          &     "Efinal=", f15.8)') etot
         if (calc.eq.'nm') write (6, &
-         '(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, " &
+         '(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, ", &
          &     "Efinal=", f15.8)') etot
         write (6,'(/72("-")//5x,"Final estimate of lattice vectors ", &
          &       "(input alat units)")')

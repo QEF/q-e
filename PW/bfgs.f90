@@ -88,7 +88,7 @@ SUBROUTINE bfgs
         minimum_ok = .FALSE.
         CALL estimate( hessm1, nax3, nat, nat3 )
         WRITE(6, '(/5X,"EPSE = ",E9.2,"    EPSF = ",E9.2, &
-                               "    UPSCALE = ",F6.2)') epse, epsf, upscale
+       &               "    UPSCALE = ",F6.2)') epse, epsf, upscale
      ELSE
         !
         ! ... file found: restart from preceding iterations
