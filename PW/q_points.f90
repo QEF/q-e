@@ -50,7 +50,7 @@ subroutine q_points
   !
   ! Write the q points in the output
   !
-  write(stdout, '(//5x"Calculation of the dynamical matrices for the following points:")')
+  write(stdout, '(//5x,"Calculation of the dynamical matrices for the following points:")')
   write(stdout, '("Number of q points:",i4)') nqs
   write(stdout, '(" Nr:      xq(1)       xq(2)       xq(3) " )')
   do iq = 1, nqs

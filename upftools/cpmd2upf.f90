@@ -249,8 +249,8 @@ subroutine convert_cpmd
   !
   if (igcc.eq.3) then
      igcc=2
-  else if (igcc.eq.3) then
-     igcc=2
+  else if (igcc.eq.2) then
+     igcc=3
   end if
 
   allocate(rab(mesh))
