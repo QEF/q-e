@@ -31,7 +31,7 @@
       use parmb, only: nr1b,nr2b,nr3b 
       use parms, only: nr1s,nr2s,nr3s 
       use pres_mod, only: agg, sgg, e0gg
-      use psfiles, only: psfile
+      use psfiles, only: psfile, pseudo_dir
       use io_global, only: ionode
       use mp, only: mp_bcast
 
@@ -64,7 +64,6 @@
       real (kind=8) :: max_seconds, dt
       real (kind=8) :: ekin_conv_thr, etot_conv_thr, forc_conv_thr
       character(len=80) :: restart_mode, disk_io, calculation, verbosity, title
-      character (len=50) :: pseudo_dir
       integer :: isave, nstep
       NAMELIST / control / title, calculation, verbosity, &
            restart_mode, nstep, iprint, isave, tstress, tprnfor, &
@@ -178,6 +177,7 @@
       forc_conv_thr = 1.d-4
       electron_maxstep = 100
       disk_io = 'default'
+      pseudo_dir='./'
 
 ! ...   Variables initialization for SYSTEM
 

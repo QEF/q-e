@@ -5430,6 +5430,7 @@
 !
       implicit none
 !
+      character(len=256) :: filename
       integer :: is, ierr, iunit=14
 !
 !     -----------------------------------------------------------------
@@ -5461,9 +5462,14 @@
 !     ------------------------------------------------------
          if(ipp(is).le.1) nvb=nvb+1
 !
-         write(6,*) 'reading ppot for species is = ',is, &
-              ' from file ',trim(psfile(is))
-         open (unit=iunit,file=psfile(is),status='old',form='formatted')
+         if (trim(pseudo_dir) == ' ' ) then
+             filename=trim(psfile(is))
+         else
+             filename=trim(pseudo_dir)//trim(psfile(is))
+         end if
+         write(6,"('reading ppot for species # ',i2, &
+        &          ' from file ',a)") is, filename
+         open (unit=iunit,file=filename,status='old',form='formatted')
 !
          select case (ipp(is))
 !     =================================================================

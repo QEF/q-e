@@ -272,7 +272,7 @@ end module pseu
 module psfiles
   use ion_parameters
   !    psfile = name of files containing pseudopotential
-  character(len=80) :: psfile(nsx)
+  character(len=80) :: pseudo_dir, psfile(nsx)
 end module psfiles
 
 module qgb_mod
