@@ -158,7 +158,7 @@ SUBROUTINE forces
   END DO
   !
   WRITE(6, '(/5x,"Total force = ",F12.6,5X, &
-                 "Total SCF correction = ",F12.6)') SQRT(sum), SQRT(sumscf)
+              &  "Total SCF correction = ",F12.6)') SQRT(sum), SQRT(sumscf)
 #ifdef __PARA
   CALL check( ( 3 * nat ), force )
 #endif

@@ -19,7 +19,7 @@ SUBROUTINE init_run
   !
   IF ( gamma_only ) THEN
      WRITE(6, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials, ", &
-                    "Gamma point")')
+                 &  "Gamma point")')
   ELSE
      WRITE(6, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   END IF

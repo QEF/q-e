@@ -71,7 +71,7 @@ SUBROUTINE start_clock( label )
         !
         IF ( t0(n) /= notrunning ) THEN
            WRITE(6, '("start_clock: clock # ",I2," for ",A12, &
-                      " already started")') n, label
+                    & " already started")') n, label
         ELSE
            t0(n) = scnds()
         END IF
@@ -117,7 +117,7 @@ SUBROUTINE stop_clock( label )
         !
         IF ( t0(n) == notrunning ) THEN
            WRITE(6, '("stop_clock: clock # ",I2," for ",A12, &
-                      " not running")') n, label
+                    & " not running")') n, label
         ELSE
            myclock(n) = myclock(n) + scnds() - t0(n)
            t0(n)      = notrunning
@@ -235,11 +235,11 @@ SUBROUTINE print_this_clock( n )
   ELSE IF ( called(n) == 0 ) THEN
      ! For clocks that have never been called
      WRITE(6, '("print_this: clock # ",I2," for ",A12, &
-                " never called !")') n, clock_label(n)
+              & " never called !")') n, clock_label(n)
   ELSE
      ! For all other clocks
      WRITE(6, '(5X,A12," :",F9.2,"s CPU (", &
-                I8," calls,",F8.3," s avg)")') clock_label(n), &
+              & I8," calls,",F8.3," s avg)")') clock_label(n), &
           elapsed_cpu_time, called(n) , ( elapsed_cpu_time / called(n) )
   END IF
   !

@@ -21,7 +21,7 @@ SUBROUTINE electrons
   !    It prints on output the total energy and its decomposition in
   !    the separate contributions.
   !
-  USE parameters,    ONLY : DP  
+  USE parameters,    ONLY : DP, npk 
   USE brilz,         ONLY : at, bg, alat, omega, tpiba2
   USE basis,         ONLY : nat, ntyp, ityp, tau   
   USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
