@@ -19,10 +19,10 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: run.itcl,v 1.2 2005-01-17 11:47:01 kokalj Exp $ 
+# $Id: run.itcl,v 1.3 2005-03-23 11:22:31 kokalj Exp $ 
 #
 
-proc ::pwscf::run::run {guiObj {init 1}} {
+proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
     variable ::pwscf::settings
     variable run
 
@@ -34,40 +34,62 @@ proc ::pwscf::run::run {guiObj {init 1}} {
     set moduleObj   [$guiObj getSelected moduleObj]
     set moduleIdent [$guiObj getSelected moduleIdent]
 
+    if { $use_defaults == 1 } {
+	# use default values
+	set _run(RUN.prefix,$moduleObj)  $::pwscf::settings(RUN.prefix)
+	set _run(RUN.postfix,$moduleObj) $::pwscf::settings(RUN.postfix)
+	set _run(PW,$moduleObj)          $::pwscf::settings(PW)
+	set _run(PH,$moduleObj)          $::pwscf::settings(PH)
+	set _run(PP,$moduleObj)          $::pwscf::settings(PP)
+	set _run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
+	set _run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
+	set _run(D3,$moduleObj)          $::pwscf::settings(D3)
+    } else {
+	# use values as specified in the current configuration
+	set _run(RUN.prefix,$moduleObj)  $run(RUN.prefix,$moduleObj)  
+	set _run(RUN.postfix,$moduleObj) $run(RUN.postfix,$moduleObj) 
+	set _run(PW,$moduleObj)          $run(PW,$moduleObj)          
+	set _run(PH,$moduleObj)          $run(PH,$moduleObj)          
+	set _run(PP,$moduleObj)          $run(PP,$moduleObj)          
+	set _run(CHDENS,$moduleObj)      $run(CHDENS,$moduleObj)      
+	set _run(PROJWFC,$moduleObj)     $run(PROJWFC,$moduleObj)     
+	set _run(D3,$moduleObj)          $run(D3,$moduleObj)          
+    }
+
     #
     # determine what program to run
     #
 
     switch -glob -- $moduleIdent {
 	*pw {
-	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PW,$moduleObj) $run(RUN.postfix,$moduleObj)"
+	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(PW,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	}
 	*ph {
-	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PH,$moduleObj) $run(RUN.postfix,$moduleObj)"
+	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(PH,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	}
 	*pp {
-	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PP,$moduleObj) $run(RUN.postfix,$moduleObj)"
+	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(PP,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	}
 	*ch {
-	    set runCmd "$run(CHDENS,$moduleObj)"; # CHDENS is not parallel
+	    set runCmd "$_run(CHDENS,$moduleObj)"; # CHDENS is not parallel
 	} 
 	*pr {
-	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PROJWFC,$moduleObj) $run(RUN.postfix,$moduleObj)"
+	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(PROJWFC,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	} 
 	*d3 {
-	    set runCmd "$run(RUN.prefix,$moduleObj) $run(D3,$moduleObj) $run(RUN.postfix,$moduleObj)"
+	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(D3,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
@@ -327,7 +349,7 @@ proc ::pwscf::run::_configApply {t configObj guiObj} {
     $configObj saveToVar ::pwscf::run
     
     # run the calculation
-    set status [run $guiObj no_init]
+    set status [run $guiObj no_init no_defaults]
 
     # check the status of the run
     set moduleObj [$guiObj getSelected moduleObj]
