@@ -171,10 +171,27 @@ program chdens
   !
   ! Read the header and allocate objects
   !
+
+  !
+  ! ... workaround for not yet allocated arrays
+  !
+  
+  allocate(tau (3, nat))
+  allocate(ityp(nat))
+  allocate(rhor(nrx1*nrx2*nrx3))
+  
   call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                 nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
                 plot_num, atm, ityp, zv, tau, rhodum, 0)
+  
   !
+  ! ... see comment above
+  !
+  
+  deallocate( tau )
+  deallocate( ityp )
+  deallocate( rhor )
+  
   allocate(tau (3, nat))
   allocate(ityp(nat))
   allocate(rhor(nrx1*nrx2*nrx3))
