@@ -34,7 +34,7 @@ implicit none
              egcc(:)          ! the gga core energy
 
       integer :: &
-             n,i,ns,is,nst,lam,n1,n2,ikl,ierr
+             n,i,ns,is,nst,lam,n1,n2,ikl,ierr, ind
 
       logical :: &
              gga                ! if true it is a gga calculation
@@ -120,8 +120,15 @@ implicit none
       endif
 !
       epseu=0.0_DP
-      if (pseudotype.eq.1) then
+      if (pseudotype == 1) then
          do ns=1,nwfts
+            if ( rel < 2 .or. llts(ns) == 0 .or. &
+                 abs(jjts(ns)-llts(ns)+0.5_dp) < 0.001_dp) then
+               ind=1
+            else if ( rel == 2 .and. llts(ns) > 0 .and. &
+                 abs(jjts(ns)-llts(ns)-0.5_dp) < 0.001_dp) then
+               ind=2
+            endif
             f1=0.0_DP
             lam=llts(ns)
             if (octs(ns).gt.0.0_DP) then
@@ -130,17 +137,17 @@ implicit none
                enddo
             endif
             do n=1,mesh
-               f1(n,1) = f1(n,1) * vnl(n,lam)
+               f1(n,1) = f1(n,1) * vnl(n,lam,ind)
             end do
             if (ikk(ns) > 0) &
                 epseu = epseu + int_0_inf_dr(f1,r,r2,dx,ikk(ns),2*(lam+1))
          enddo
-      elseif ((pseudotype.eq.2).or.(pseudotype.eq.3)) then
+      else
          do ns=1,nwfts
             if (octs(ns).gt.0.0_DP) then
                do n1=1,nbeta
-                  if (llts(ns).eq.lls(n1).and.   &
-                                   abs(jjts(ns)-jjs(n1)).lt.1.e-7_DP) then
+                  if ( llts(ns).eq.lls(n1).and.   &
+                       abs(jjts(ns)-jjs(n1)).lt.1.e-7_DP) then
                      nst=(llts(ns)+1)*2
                      ikl=ikk(n1)
                      do n=1,ikl

@@ -399,9 +399,6 @@ subroutine ld1_readin
            !
            !    try old Norm-Conserving format
            !
-           call read_pseudo  &
-                (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
-                dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
            pseudotype = 1
            !
         else
@@ -414,14 +411,23 @@ subroutine ld1_readin
         !
         !    Old Norm-Conserving format
         !
+        pseudotype = 1
+        !
+     endif
+     !
+     if (pseudotype == 1) then
+        !
         call read_pseudo  &
              (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
-             dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
-        pseudotype = 1
+             dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
+        !
+        do ns=1,lmax+1
+           ikk(ns)=mesh
+        enddo
      endif
      !
   end if
-
+  !
   if (lpaw) then
      if (pseudotype /= 3) call errore('ld1_readin', &
           'please start from a US for generating a PAW dataset' ,pseudotype)

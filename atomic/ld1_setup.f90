@@ -17,11 +17,11 @@ subroutine ld1_setup
   !     transform dft in a series of codes for the exchange and
   !     correlation routine
   !
-  if (iswitch.ne.2.or.pseudotype.eq.1) call which_dft(dft)
+  if (iswitch /= 2 .or. pseudotype == 1) call which_dft(dft)
   !
   !  split the spin-orbit states
   !
-  if (rel.eq.2) then
+  if (rel == 2) then
      call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
      do n=1,nwf
         oc_old(n)=oc(n)
@@ -31,7 +31,7 @@ subroutine ld1_setup
   !  make the correspondence all-electron pseudopotential
   !  and split the spin-orbit states
   !
-  if (iswitch.ge.2) then
+  if (iswitch >= 2) then
      do nc=1, nconf
         if (rel.eq.2) &
              call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
@@ -63,7 +63,7 @@ subroutine ld1_setup
   !
   !  divide the core and valence states
   !
-  if (iswitch.eq.3) then 
+  if (iswitch == 3) then 
      isws=1
      nwf0=nwfs
      if (rel==2) &
@@ -95,7 +95,7 @@ subroutine ld1_setup
            new(n)=.false.
         endif
      enddo
-     if (lloc.gt.-1) then
+     if (lloc > -1) then
         nsloc=nwfs
         nbeta=nwfs-1
         if (rel==2.and.lloc.ne.0) then
@@ -120,13 +120,7 @@ subroutine ld1_setup
                 call errore('ld1_setup','strange occupations',1)
         endif
      enddo
-     if (pseudotype.eq.1) then
-        do n=1,nwfs
-           ikk(n)=mesh
-        enddo
-     endif
   endif
-
   !
   !     zero the external potential and total energies
   !

@@ -12,11 +12,12 @@ subroutine descreening
   implicit none
 
 
-  integer ::    &
-       ns,  &     ! counter on pseudo functions
-       ns1, &    ! counter on pseudo functions
+  integer ::  &
+       ns,    &  ! counter on pseudo functions
+       ns1,   &  ! counter on pseudo functions
        ib,jb, &  ! counter on beta functions
-       lam      ! the angular momentum
+       lam,   &  ! the angular momentum
+       ind
 
   real(kind=dp) :: &
        vaux(ndm,2),&   ! work space
@@ -70,9 +71,16 @@ subroutine descreening
   do ns=1,nwfts
      if (octs(ns).gt.0.0_dp) then
         is=iswts(ns)
-        if (pseudotype.eq.1) then
+        if (pseudotype ==1) then
+           if ( rel < 2 .or. llts(ns) == 0 .or. &
+                abs(jjts(ns)-llts(ns)+0.5_dp) < 0.001_dp) then
+              ind=1
+           else if ( rel == 2 .and. llts(ns) > 0 .and. &
+                abs(jjts(ns)-llts(ns)-0.5_dp) < 0.001_dp) then
+              ind=2
+           endif
            do n=1,mesh
-              vaux(n,1)=vpsloc(n)+vnl(n,llts(ns))
+              vaux(n,1)=vpsloc(n)+vnl(n,llts(ns),ind)
            enddo
         else
            do n=1,mesh

@@ -83,22 +83,19 @@ subroutine run_pseudo
      do ns=1,nwfts
         if (octs(ns).gt.0.0_dp) then
            is=iswts(ns)
-           if (pseudotype.eq.1) then
-              if (rel.eq.2) then
-                 if (abs(jjts(ns)-llts(ns)+0.5_dp).lt.1.e-2_dp  &
-                      &          .or. llts(ns)==0 ) then
-                    ind=1
-                 else
-                    ind=2
-                 endif
-                 do n=1,mesh
-                    vaux(n)=vpstot(n,is)+vnlo(n,llts(ns),ind)
-                 enddo
+           if (pseudotype == 1) then
+              if ( rel < 2 .or. llts(ns) == 0 .or. &
+                   abs(jjts(ns)-llts(ns)+0.5_dp) < 0.001_dp) then
+                 ind=1
+              else if ( rel==2 .and. llts(ns)>0 .and. &
+                   abs(jjts(ns)-llts(ns)-0.5_dp) < 0.001_dp) then
+                 ind=2
               else
-                 do n=1,mesh
-                    vaux(n)=vpstot(n,is)+vnl(n,llts(ns))
-                 enddo
+                 call errore('run-pseudo','spin-orbit?!?',3)
               endif
+              do n=1,mesh
+                 vaux(n)=vpstot(n,is)+vnl (n,llts(ns),ind)
+              enddo
            else
               do n=1,mesh
                  vaux(n)=vpstot(n,is)
@@ -168,22 +165,17 @@ subroutine run_pseudo
   do ns=1,nwfts
      is=iswts(ns) 
      if (octs(ns).gt.-1.0_dp) then
-        if (pseudotype.eq.1) then
-           if (rel.eq.2) then
-              if (abs(jjts(ns)-llts(ns)+0.5_dp).lt.1.e-2_dp  &
-                   &          .or. llts(ns)==0 ) then
-                 ind=1
-              else
-                 ind=2
-              endif
-              do n=1,mesh
-                 vaux(n)=vpstot(n,is)+vnlo(n,llts(ns),ind)
-              enddo
-           else
-              do n=1,mesh
-                 vaux(n)=vpstot(n,is)+vnl(n,llts(ns))
-              enddo
+        if (pseudotype == 1) then
+           if ( rel < 2 .or. llts(ns) == 0 .or. &
+                abs(jjts(ns)-llts(ns)+0.5_dp) < 0.001_dp) then
+              ind=1
+           else if ( rel == 2 .and. llts(ns) > 0 .and. &
+                abs(jjts(ns)-llts(ns)-0.5_dp) < 0.001_dp) then
+              ind=2
            endif
+           do n=1,mesh
+              vaux(n)=vpstot(n,is)+vnl (n,llts(ns),ind)
+           enddo
         else
            do n=1,mesh
               vaux(n)=vpstot(n,is)

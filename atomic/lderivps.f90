@@ -29,7 +29,7 @@ subroutine lderivps
 
   real(kind=dp),allocatable :: &
        dlchis(:,:), &  ! the logarithmic derivatives
-       vaux(:),     &  !
+       vaux(:),     &  ! auxiliary: the potential 
        aux(:),      &  ! the square of the wavefunction
        al(:)           ! the known part of the differential equation
 
@@ -80,27 +80,23 @@ subroutine lderivps
         nst=(lam+1)**2  
         nbf=nbeta
         if (pseudotype == 1) then
-           if (rel == 2) then
-              if (abs(jam-lam+0.5_dp) < 1.e-2_dp .or. lam == 0 ) then
-                 ind=1
-              else
-                 ind=2
-              endif
-              do n=1,mesh
-                 vpstot(n,is)=vpstot(n,is)+vnlo(n,lam,ind)
-                 vaux(n)=vnlo(n,lam,ind)
-              enddo
-           else
-              do n=1,mesh
-                 vpstot(n,is)=vpstot(n,is)+vnl(n,lam)
-                 vaux(n)=vnl(n,lam)
-              enddo
+           if (rel < 2 .or. lam == 0 .or. abs(jam-lam+0.5_dp) < 0.001_dp) then
+              ind=1
+           else if (rel==2 .and. lam>0 .and. abs(jam-lam-0.5_dp)<0.001_dp) then
+              ind=2
            endif
-           nbf=0.0_dp
+           do n=1,mesh
+              vaux(n) = vpstot(n,is) + vnl(n,lam,ind)
+           enddo
+           nbf=0.0
+        else
+           do n=1,mesh
+              vaux(n) = vpstot(n,is)
+           enddo
         endif
 
         do n=1,4
-           al(n)=vpstot(n,is)-ze2/r(n)
+           al(n)=vaux(n)-ze2/r(n)
         enddo
         call series(al,r,r2,b)
 
@@ -123,7 +119,7 @@ subroutine lderivps
            aux(2)=rr2/sqr(2)
 
            do n=1,mesh
-              al(n)=( (vpstot(n,is)-e)*r2(n) + lamsq )*ddx12
+              al(n)=( (vaux(n)-e)*r2(n) + lamsq )*ddx12
               al(n)=1.0_dp-al(n)
            enddo
 
@@ -139,11 +135,6 @@ subroutine lderivps
 
            dlchis(ie,nc)=compute_log(aux(ikrld-3),r(ikrld),dx)
         enddo
-        if (pseudotype == 1) then
-           do n=1,mesh
-              vpstot(n,is)=vpstot(n,is)-vaux(n)
-           enddo
-        endif
      enddo
 
      if (nspin == 2 .and. is == 1) then

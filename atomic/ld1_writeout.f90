@@ -71,16 +71,6 @@ subroutine ld1_writeout
      !
   else
      !
-     if (pseudotype == 1) then
-        !
-        !  prepare for writing UPF file 
-        !
-        if (rel == 2 ) then
-           call copy_ncpp_so ()
-        end if
-        !
-     endif
-     !
      call write_upf(iunps)
      !
   endif
@@ -170,86 +160,3 @@ subroutine write_rrkj (iunps)
   !
 end subroutine write_rrkj
 
-!---------------------------------------------------------------------
-subroutine copy_ncpp_so ()
-  !---------------------------------------------------------------------
-  !
-  use ld1inc
-  implicit none
-  !
-  integer :: n,     & ! counter on wavefunctions
-             nch,   & ! counter on chi functions
-             l,     & ! counter on angular momentum
-             ir       ! counter on mesh points
-  real(kind=dp), external :: int_0_inf_dr
-  real(kind=dp) :: aux(ndm)
-  !
-  if ( lloc == 0) then
-     do ir=1,mesh
-        vpsloc(ir)=vnlo(ir,lloc,1)
-     enddo
-  else if ( lloc > 0 ) then
-     do ir=1,mesh
-        vpsloc(ir) = ((lloc+1.0_dp)*vnlo(ir,lloc,2) + &
-             lloc*vnlo(ir,lloc,1)) / (2.0_dp*lloc + 1.0_dp)
-     enddo
-  endif
-  nbeta=0
-  do l=0,lmax
-     if (l /= lloc) then
-        nbeta=nbeta+1
-        nch=0
-        do n=1,nwfts
-           if (llts(n) == l .and. abs(jjts(n)-l+0.5_dp) < 1e-3_dp) nch=n
-        enddo
-        if (l==0) nch=1
-        if (nch == 0) call errore('copy_ncpp_so','jj not found',1)
-        do ir=1,mesh
-           betas(ir,nbeta) = (vnlo(ir,l,1)-vpsloc(ir)) * phis(ir,nch) 
-        enddo
-        lls(nbeta)=llts(nch)
-        jjs(nbeta)=jjts(nch)
-        ikk(nbeta)=mesh
-        do ir=mesh-1,1,-1
-           if (abs(betas(ir,nbeta)) < 1.e-11_dp)then
-              ikk(nbeta)=ir
-           else
-              goto 203
-           endif
-        enddo
-203     continue
-        do ir = 1, mesh
-           aux (ir) = phis(ir, nch) * betas (ir, nbeta)
-        enddo
-        bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
-        if (l /= 0) then
-           nbeta=nbeta+1
-           nch=0
-           do n=1,nwfts
-              if (llts(n) == l.and.abs(jjts(n)-l-0.5_dp) < 1e-3_dp) nch=n
-           enddo
-           if (nch == 0) call errore('convert','jj not found',1)
-           do ir=1,mesh
-              betas(ir,nbeta) = (vnlo(ir,l,2)-vpsloc(ir)) * phis(ir,nch) 
-           enddo
-           lls(nbeta)=llts(nch)
-           jjs(nbeta)=jjts(nch)
-           ikk(nbeta)=mesh
-           do ir=mesh-1,1,-1
-              if (abs(betas(ir,nbeta)) < 1.e-11_dp) then
-                 ikk(nbeta)=ir
-              else
-                 goto 204
-              endif
-           enddo
-204        continue
-           do ir = 1, mesh
-              aux(ir) = phis(ir,nch)*betas(ir,nbeta)
-           enddo
-           bmat(nbeta,nbeta)=1.0_dp/int_0_inf_dr(aux,r,r2,dx,mesh,2*(l+1))
-        endif
-     endif
-  end do
-
-  return
-end subroutine copy_ncpp_so

@@ -54,9 +54,9 @@ subroutine gener_pseudo
 
   integer :: &
        m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
-       is, nbf, nc, ios
+       is, nbf, nc, ios, ind
 
-  character(len=5) :: ind
+  character(len=5) :: indqvan
 
   logical :: &
        lbes4     ! use 4 Bessel functions expansion
@@ -209,8 +209,15 @@ subroutine gener_pseudo
      vnl=0.0_dp
      do ns=1,nbeta
         lam=lls(ns)
+        if ( rel < 2 .or. lls(ns) == 0 .or. &
+             abs(jjs(ns)-lls(ns)+0.5_dp) < 0.001_dp) then
+           ind=1
+        else if ( rel == 2 .and. lls(ns) > 0 .and. &
+             abs(jjs(ns)-lls(ns)-0.5_dp) < 0.001_dp) then
+           ind=2
+        endif
         do n=1,ikk(ns)
-           vnl(n,lam) = chis(n,ns)/phis(n,ns)
+           vnl(n,lam,ind) = chis(n,ns)/phis(n,ns)
         enddo
      enddo
      !
@@ -378,15 +385,15 @@ if (file_wavefunctionsps .ne. ' ') then
   endif
   if (file_qvan .ne. ' ') then
      do ns1=1,nbeta
-        ind=' '
-        if (ns1.lt.10) then
-           write(ind,'(".",i1)') ns1
-        elseif (ns1.lt.100) then
-           write(ind,'(".",i2)') ns1
+        indqvan=' '
+        if (ns1 < 10) then
+           write(indqvan,'(".",i1)') ns1
+        elseif (ns1 < 100) then
+           write(indqvan,'(".",i2)') ns1
         else
-           write(ind,'(".",i3)') ns1
+           write(indqvan,'(".",i3)') ns1
         endif
-        open(unit=19,file=TRIM(file_qvan)//TRIM(ind), status='unknown', &
+        open(unit=19,file=TRIM(file_qvan)//TRIM(indqvan), status='unknown', &
              iostat=ios, err=700)
 700     call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
         do n=1,mesh

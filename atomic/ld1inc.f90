@@ -87,8 +87,7 @@ module ld1inc
        psipsus(ndm,nwfx),& ! the all-electron wavefunctions for us pseudo
        rhos(ndm,2),      & ! the pseudo density
        zetas(ndm),       & ! the pseudo magnetization
-       vnl(ndm,0:3),     & ! the nonlocal pseudopotential
-       vnlo(ndm,0:3,2),  & ! the nonlocal pseudopotential (spin-orbit)
+       vnl(ndm,0:3,2),   & ! the pseudopotential in semilocal form
        betas(ndm,nwfsx), & ! the projector functions
        chis(ndm,nwfsx),  & ! auxiliary functions
        rho0,             & ! value of the charge at the origin

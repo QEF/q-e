@@ -30,7 +30,7 @@ use funct
       read( iunps, '(a75)', err=100, iostat=ios ) title
 
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
-      if (pseudotype < 1 .or. pseudotype > 3) &
+      if (pseudotype /= 2 .and. pseudotype /= 3) &
          call errore('read_newpseudo','pseudotype is wrong',1)
 
       read( iunps, '(2l5)',err=100, iostat=ios ) reldum, nlcc
