@@ -46,7 +46,7 @@ SUBROUTINE force_hub(forceh)
    INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat) : offset of d electrons of atom d in the natomwfc ordering
 
-   COMPLEX (kind=DP) :: ZDOTC, c_one, c_zero
+   COMPLEX (kind=DP) :: c_one, c_zero
 
    INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, l, n, ik
    INTEGER :: counter

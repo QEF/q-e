@@ -1035,8 +1035,6 @@ CONTAINS
     !  ==  Tetrahedra                                                  ==
     !  ==--------------------------------------------------------------==
 
-    CALL read_restart_tetra( ndr, ltetra, ntetra, tetra )
-
     IF ( ltetra ) THEN
        !
        CALL read_restart_tetra( ndr, ltetra, ntetra, tetra )
