@@ -429,7 +429,6 @@ MODULE varie
       mixing_beta,      &! the mixing parameter
       tr2,              &! the convergence threshold for potential
       upscale,          &! maximum reduction of convergence threshold
-      time_max,         &! maximum allowed cpu time in sec
       ethr,             &! the convergence threshold for eigenvalues
       alpha0,           &! the mixing parameters for the extrapolation
       beta0,            &! of the starting potential

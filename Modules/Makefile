@@ -7,6 +7,7 @@ MODULES = \
 berry_phase.o \
 bfgs_module.o \
 cell_base.o  \
+check_stop.o  \
 clocks.o \
 constants.o \
 control_flags.o \

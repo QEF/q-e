@@ -46,7 +46,6 @@ subroutine bcast_ph_input
   call mp_bcast (amass, root)
   call mp_bcast (alpha_mix, root)
   call mp_bcast (xq, root)
-  call mp_bcast (time_max, root)
   !
   ! characters
   !

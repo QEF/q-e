@@ -420,7 +420,6 @@ subroutine newscf
   qcutz=0.0
   istep=1
   iprint=10000
-  time_max=1000000
   order=1
   input_drho=' '
   output_drho=' '

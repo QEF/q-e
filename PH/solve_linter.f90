@@ -23,6 +23,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE io_global,      ONLY : stdout
   USE io_files, ONLY: iunigk
   use pwcom
+  USE check_stop, ONLY: time_max => max_seconds
   USE wavefunctions_module,  ONLY: evc
   USE constants,  ONLY: degspin
   use becmod

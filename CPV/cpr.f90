@@ -103,7 +103,8 @@
       use input_parameters, only: outdir
       use wave_base, only: wave_steepest, wave_verlet
       use wave_base, only: wave_speed2
-      USE control_flags, ONLY : conv_elec
+      USE control_flags, ONLY : conv_elec, tconvthrs
+      USE check_stop, ONLY : check_stop_now
 
 ! wavefunctions
 !
@@ -126,6 +127,9 @@
       logical twall, tbump
       logical thdiag
       logical tfirst, tlast
+      logical tstop
+      logical tconv
+      real(kind=8) :: delta_etot
 !
 ! structure factors e^{-ig*R}
 !
@@ -753,9 +757,9 @@
 !
 !======================================================================
 !
-      call tictac(2,1)
+    call tictac(2,1)
 
- 1000 continue
+    MAIN_LOOP: DO
 
       call tictac(1,0)
 !
@@ -1415,8 +1419,8 @@
 !     automatic adapt of friction using grease and twall
 !     =====================================================================
 
-      epre=enow
-      enow=etot
+      epre = enow
+      enow = etot
       tbump=.false.
       if (enow .gt. (epre+0.00002)) then
          if (tsde) then
@@ -1451,7 +1455,28 @@
 !     =====================================================
       call tictac(1,1)
 !
-      if( nfi < nomore ) go to 1000
+      delta_etot = ABS( epre - enow )
+      tstop = check_stop_now()
+      tconv = .FALSE.
+      IF( tconvthrs%active ) THEN
+        tconv = ( delta_etot < tconvthrs%derho ) .AND. ( ekinc < tconvthrs%ekin )
+      END IF
+      IF( tconv ) THEN
+        IF( ionode ) THEN
+          WRITE( stdout,fmt= &
+            "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )
+          WRITE( stdout,fmt="(3X,'MAIN: ',3(D14.6,1X,D8.1))" ) &
+            ekinc, tconvthrs%ekin, delta_etot, tconvthrs%derho, 0.0d0, tconvthrs%force
+          WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
+        END IF
+      END IF
+
+      tstop = tstop .OR. tconv
+
+      if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
+
+    END DO MAIN_LOOP
+
 !
 !=============================end of main loop of molecular dynamics====
 !

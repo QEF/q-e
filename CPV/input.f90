@@ -73,7 +73,8 @@ CONTAINS
            nstep, ecutwfc, ecutrho, ampre, ortho_eps, ortho_max, wmass, qcutz, q2sigma, &
            ecfixed, ekincw, fnosep, nat, tstress, disk_io, fnosee, ion_temperature, &
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
-           dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor
+           dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor, &
+           ekin_conv_thr, etot_conv_thr, max_seconds
 
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
@@ -84,6 +85,9 @@ CONTAINS
       use ions_base, only: isort_pos
       use control_flags, only: taurdr, tprnfor_ => tprnfor
       use mp, only: mp_bcast
+      USE control_flags, ONLY: tconvthrs, lneb
+      USE check_stop, ONLY: check_stop_init
+
 
       !
       implicit none
@@ -144,8 +148,6 @@ CONTAINS
       if ( ecutrho <= 0.d0 ) ecutrho = 4.d0 * ecutwfc
       ecut_ = ecutrho
 
-      ! ...   nbeg
-
       ampre_ = ampre
       SELECT CASE ( restart_mode ) 
          CASE ('from_scratch')
@@ -172,6 +174,9 @@ CONTAINS
       ndw_ = ndw
       iprint_ = iprint
 
+      IF( .NOT. lneb ) THEN
+        CALL check_stop_init( max_seconds )
+      END IF
 
       ! ...   TORTHO
 
@@ -358,6 +363,16 @@ CONTAINS
       !
       ! compatibility between FPMD and CP90
       !
+
+      tconvthrs%active = .FALSE.
+      IF( ion_dynamics == 'none' .AND. cell_dynamics == 'none' ) THEN
+        tconvthrs%ekin   = ekin_conv_thr
+        tconvthrs%derho  = etot_conv_thr
+        tconvthrs%force  = 10d+10
+        tconvthrs%active = .TRUE.
+        tconvthrs%nstep  = 1
+      END IF
+
       iprint_ = isave 
       tprnfor_ = tprnfor
       if ( trim( verbosity ) == 'high' ) then

@@ -23,6 +23,7 @@ MODULE neb_base
   PUBLIC :: initialize_neb, compute_action, compute_tangent
   PUBLIC :: elastic_constants, gradient, search_stationary_points
   PUBLIC :: compute_error, path_tangent_
+  PUBLIC :: born_oppenheimer_PES, search_mep
 
   !   
   CONTAINS
@@ -32,7 +33,6 @@ MODULE neb_base
     SUBROUTINE initialize_neb( prog )
       !-----------------------------------------------------------------------
       !
-      USE control_flags,    ONLY : istep
       USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
                                    minimization_scheme, climbing
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
@@ -45,7 +45,7 @@ MODULE neb_base
                                    error, mass, free_minimization, CI_scheme,  &
                                    optimization, k, k_min, k_max,  Emax_index, &
                                    VEC_scheme, ds, neb_thr, lquick_min ,       &
-                                   ldamped_dyn, lmol_dyn
+                                   ldamped_dyn, lmol_dyn, istep_neb
       USE neb_variables,    ONLY : neb_dyn_allocation   
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
@@ -76,7 +76,7 @@ MODULE neb_base
       !
       ! ... istep is initialized to zero
       !
-      istep = 0
+      istep_neb = 0
       !
       ! ... the dimension of all neb arrays is set 
       ! ... ( It corresponds to the dimension of the configurational space )
@@ -617,6 +617,324 @@ MODULE neb_base
     !!! END FUNCTION path_tangent
     !!! workaround for ifc8 compiler internal error
     END SUBROUTINE path_tangent_
+    !
+
+
+    !-----------------------------------------------------------------------
+    SUBROUTINE born_oppenheimer_PES( flag, stat )
+      !-----------------------------------------------------------------------
+      !
+      USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
+                                PES, PES_gradient, suspended_image
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      LOGICAL, INTENT(IN)   :: flag
+      LOGICAL, INTENT(OUT)  :: stat
+      !
+      ! ... local variables
+      !
+      INTEGER               :: i, image
+      INTEGER               :: N_in, N_fin
+      !
+      ! ... end of local variables
+      !
+      !
+      IF ( flag ) THEN
+         !
+         N_in = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in = 2
+         N_fin = ( num_of_images - 1 )
+         !
+      END IF
+      !
+      IF ( suspended_image /= 0 ) N_in = suspended_image
+      !
+      Emin = + 1.0D16
+      Emax = - 1.0D16
+      !
+      CALL compute_scf( N_in, N_fin, stat )
+      !
+      IF ( .NOT. stat ) RETURN
+      !
+      DO image = 1, num_of_images
+         !
+         IF ( PES(image) <= Emin ) Emin = PES(image)
+         !
+         IF ( PES(image) >= Emax ) THEN
+            !
+            Emax = PES(image)
+            !
+            Emax_index = image
+            !
+         END IF
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE born_oppenheimer_PES
+    !
+
+    !-----------------------------------------------------------------------
+    SUBROUTINE search_mep()
+      !-----------------------------------------------------------------------
+      !
+      USE io_files,      ONLY : iunneb, iunexit, exit_file
+      USE formats,       ONLY : run_output, run_output_T_const
+      USE neb_variables, ONLY : num_of_images, dim, pos, PES, error,       &
+                                climbing, optimization,  CI_scheme,        &
+                                Emax_index, temp, Emax, neb_thr, conv_neb, &
+                                suspended_image, lsteep_des, lquick_min ,  &
+                                ldamped_dyn, lmol_dyn, istep_neb, nstep_neb
+      USE io_routines,   ONLY : write_restart, write_dat_files, write_output
+      USE check_stop,    ONLY : check_stop_now
+#if defined (__LANGEVIN)
+      USE parser,        ONLY : int_to_char
+#endif
+      USE minimization_routines
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables
+      !
+      REAL (KIND=DP)      :: err
+      INTEGER             :: image
+      LOGICAL             :: stat
+      INTEGER             :: N_in, N_fin
+      LOGICAL             :: file_exists
+#if defined (__LANGEVIN)
+      REAL (KIND=DP)      :: langevin_action( num_of_images )
+      INTEGER, PARAMETER  :: iunlangevin = 666
+      CHARACTER(LEN=20)   :: langevin_fmt
+#endif
+      !
+      ! ... external functions
+      !
+      REAL (kind=DP), EXTERNAL :: get_clock
+      !
+      !
+#if defined (__LANGEVIN)
+      !
+      langevin_fmt = "(I3," // TRIM( int_to_char( num_of_images - 2 ) ) // &
+                   & "(F8.5))"
+      !
+      OPEN( UNIT = iunlangevin, FILE = "langevin", STATUS = "UNKNOWN" )
+#endif
+      !
+      conv_neb = .FALSE.
+      !
+      IF ( istep_neb == nstep_neb ) THEN
+         !
+         CALL compute_tangent()
+         !
+         CALL gradient()
+         !
+         CALL compute_error( err )
+         !
+         CALL write_dat_files()
+         !
+         suspended_image = 0
+         !
+         RETURN
+         !
+      END IF
+      !
+      IF ( optimization ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in  = 2
+         N_fin = num_of_images - 1
+         !
+      END IF
+      !
+      !
+      minimization: DO
+         !
+         ! ... the restart file is written
+         !
+         CALL write_restart()
+         !
+         ! ... minimization step is done only in case of no suspended images
+         ! ... when the simulation is started from scratch all gradients are
+         ! ... zero and the elastic band remains in the old position.
+         !
+         IF ( suspended_image == 0 ) THEN
+            !
+            first_minimization_loop: DO image = N_in, N_fin
+               !
+               IF ( lsteep_des ) THEN
+                  !
+                  CALL steepest_descent( image )
+                  !
+               ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+                  !
+                  CALL velocity_Verlet_first_step( image )
+                  !
+               END IF
+               !
+            END DO first_minimization_loop
+            !
+         END IF
+         !
+         ! ... the programs checks if the user has required a soft
+         ! ... exit or if if maximum CPU time has been exceeded
+         !
+         IF ( check_stop_now( ) ) THEN
+            !
+            CALL stop_pw( .FALSE. )
+            !
+         END IF
+         !
+         ! ... energies and gradients acting on each image of the elastic band
+         ! ... are computed calling a driver that perfoms the scf calculations
+         !
+         IF ( istep_neb == 0 ) THEN
+            !
+            CALL born_oppenheimer_PES( .TRUE., stat )
+            !
+         ELSE
+            !
+            CALL born_oppenheimer_PES( optimization, stat )
+            !
+         END IF
+         !
+         IF ( .NOT. stat ) THEN
+            !
+            EXIT minimization
+            !
+         END IF
+         !
+         IF ( CI_scheme == "highest-TS" ) THEN
+            !
+            climbing = .FALSE.
+            !
+            climbing(Emax_index) = .TRUE.
+            !
+         ELSE IF ( CI_scheme == "all-SP" ) THEN
+            !
+            CALL search_stationary_points()
+            !
+         END IF
+         !
+         CALL compute_tangent()
+         CALL gradient()
+         !
+         ! ... a second minimization step is needed for those algorithms
+         ! ... based on a velocity Verlet scheme
+         !
+         IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+            !
+            second_minimization_loop: DO image = N_in, N_fin
+               !
+               IF ( lquick_min ) THEN
+                  !
+                  CALL quick_min_second_step( image )
+                  !
+               ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
+                  !
+                  CALL velocity_Verlet_second_step( image )
+                  !
+               END IF
+               !
+            END DO second_minimization_loop
+            !
+            IF ( lmol_dyn ) CALL thermalization( N_in , N_fin   )
+            !
+         END IF
+         !
+         CALL compute_error( err )
+         !
+         CALL write_dat_files()
+         !
+#if defined (__LANGEVIN)
+         CALL compute_action( langevin_action )
+#endif
+         !
+         istep_neb = istep_neb + 1
+         !
+         ! ... informations are written on the standard output
+         !
+#if defined (__LANGEVIN)
+         WRITE( UNIT = iunlangevin, FMT = langevin_fmt ) &
+             istep_neb, &
+             langevin_action(2:num_of_images-1) * ( AU * BOHR_RADIUS_ANGS )
+         !
+         WRITE( UNIT = iunneb, FMT = '(/)' )
+         !
+         DO image = 2, ( num_of_images - 1 )
+            !
+            WRITE( UNIT = iunneb, &
+                   FMT = '(5X,"image = ", I2, "   action = ",F14.8)' ) &
+                image, langevin_action(image)  * ( AU * BOHR_RADIUS_ANGS )
+            !
+         END DO
+         !
+         WRITE( UNIT = iunneb, FMT = '(/,5X,"langevin action = ",F14.8)' ) &
+             SUM( langevin_action )  * ( AU * BOHR_RADIUS_ANGS )
+#endif
+         !
+         IF ( lmol_dyn ) THEN
+            !
+            WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
+                istep_neb,                    &
+                temp * AU * eV_to_kelvin, &
+                err * ( AU / BOHR_RADIUS_ANGS )
+            !
+         ELSE
+            !
+            WRITE( UNIT = iunneb, FMT = run_output ) &
+                istep_neb,                  &
+                ( Emax - PES(1) ) * AU, &
+                err * ( AU / BOHR_RADIUS_ANGS )
+            !
+         END IF
+         !
+         CALL write_output()
+         !
+         ! ... the program checks if the convergence has been achieved
+         !
+         IF ( ( err * AU / BOHR_RADIUS_ANGS ) <= neb_thr )  THEN
+            !
+            conv_neb = .TRUE.
+            !
+            EXIT minimization
+            !
+         END IF
+         !
+         ! ... the programs checks if the maximum number of iterations has
+         ! ... been reached or if the user has required a soft exit
+         !
+         IF ( istep_neb >= nstep_neb ) THEN
+            !
+            suspended_image = 0
+            !
+            EXIT minimization
+            !
+         END IF
+         !
+         suspended_image = 0
+         !
+      END DO minimization
+      !
+      !
+#if defined (__LANGEVIN)
+      CLOSE( UNIT = iunlangevin )
+#endif
+      !
+      RETURN
+      !
+    END SUBROUTINE search_mep
     !
     !
 END MODULE neb_base

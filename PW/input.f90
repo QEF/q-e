@@ -91,7 +91,7 @@ SUBROUTINE iosys()
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
-                            noinv, time_max, restart, loldbfgs, lconstrain,   &
+                            noinv, restart, loldbfgs, lconstrain,   &
                             ldamped
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
@@ -107,7 +107,8 @@ SUBROUTINE iosys()
                             ds_             => ds, &
                             k_max_          => k_max, & 
                             k_min_          => k_min, &
-                            neb_thr_        => neb_thr
+                            neb_thr_        => neb_thr, &
+                            nstep_neb
   USE noncollin_module, ONLY : baco_ibm_xlf, &
                                noncolin_  => noncolin, &
                                lambda_    => lambda, &
@@ -124,6 +125,7 @@ SUBROUTINE iosys()
                             trust_radius_end_ => trust_radius_end, &
                             w_1_              => w_1, & 
                             w_2_              => w_2 
+  USE check_stop,    ONLY : check_stop_init
   !
   ! CONTROL namelist
   !
@@ -230,7 +232,7 @@ SUBROUTINE iosys()
   !
   ! ... translate from input to internals of PWscf, various checks
   !
-  time_max = max_seconds
+  CALL check_stop_init( max_seconds )
   !
   IF ( tefield .AND. ( .NOT. nosym ) ) THEN
      nosym = .TRUE.
@@ -608,6 +610,8 @@ SUBROUTINE iosys()
   ELSE IF ( TRIM( calculation ) == 'neb' ) THEN
      !
      ! ... NEB specific
+     !
+     nstep_neb = nstep
      !
      IF ( num_of_images < 2 ) THEN
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &

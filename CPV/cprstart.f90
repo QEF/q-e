@@ -57,10 +57,9 @@
       use para_mod, ONLY: me, mygroup, nproc
       use io_files, only: psfile, pseudo_dir
       use ions_base, only: ipp, nsp
+      use control_flags, only: lneb
 !
       implicit none
-!
-      logical :: lneb
 !
 !     program starts here
 !
@@ -137,6 +136,7 @@
      USE neb_variables,    ONLY: neb_deallocation
      USE neb_routines,     ONLY: initialize_neb, search_mep, iosys_neb
      USE io_routines,      ONLY: write_output
+     USE ions_base,        ONLY: deallocate_ions_base
 
      IMPLICIT NONE
 
@@ -162,6 +162,8 @@
      ! ... output is written
      !
      CALL write_output()
+
+     CALL deallocate_ions_base()
      !
      ! ... stdout is reconnected to standard output
      !

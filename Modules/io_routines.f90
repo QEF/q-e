@@ -408,7 +408,7 @@ MODULE io_routines
              DO atom = 1, nat
                 !
                 WRITE( UNIT = iunxyz, FMT = xyz_fmt ) &
-                    TRIM( atom_label(ityp(atom)) ), &
+                    TRIM( atom_label( ityp( atom ) ) ), &
                     pos((3*atom-2),image) * BOHR_RADIUS_ANGS, &
                     pos((3*atom-1),image) * BOHR_RADIUS_ANGS, &
                     pos((3*atom),image) * BOHR_RADIUS_ANGS

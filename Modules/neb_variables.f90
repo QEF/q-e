@@ -65,6 +65,9 @@ MODULE neb_variables
        Emax,                     &!
        Emin                       !
   !
+  INTEGER        :: istep_neb
+  INTEGER        :: nstep_neb
+  !
   CONTAINS
      !
      !----------------------------------------------------------------------

@@ -44,10 +44,11 @@ SUBROUTINE electrons()
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef  
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
-  USE control_flags,        ONLY : mixing_beta, tr2, time_max, ethr, ngm0, &
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, iswitch, &
                                    lscf, lneb, lmd, conv_elec, restart, &
                                    reduce_io  
+  USE check_stop,           ONLY : check_stop_now, max_seconds
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunneb, &
                                    output_drho, iunexit, exit_file
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -610,14 +611,14 @@ SUBROUTINE electrons()
        !     
        tcpu = get_clock( 'PWSCF' )
        !
-       IF ( tcpu > time_max ) THEN
+       IF ( check_stop_now( ) ) THEN
           !
           IF ( lneb ) THEN  
-             WRITE( iunneb, '(5X,"Maximum CPU time exceeded",2F15.2)' ) &
-                 tcpu, time_max
+             WRITE( iunneb, '(5X,"Maximum CPU time exceeded",1F15.2)' ) &
+                 tcpu, max_seconds
           ELSE
-             WRITE( stdout, '(5X,"Maximum CPU time exceeded",2F15.2)' ) &
-                 tcpu, time_max
+             WRITE( stdout, '(5X,"Maximum CPU time exceeded",1F15.2)' ) &
+                 tcpu, max_seconds
           END IF       
           !
           CALL stop_pw( .FALSE. )
@@ -633,24 +634,7 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !
-       !
-       INQUIRE( FILE = TRIM( exit_file ), EXIST = file_exists )
-       !
-       IF ( file_exists ) THEN
-          !
-#if defined (__PARA)
-          !
-          ! ... all jobs are syncronized
-          !
-          CALL mp_barrier()
-          !
-          IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
-             OPEN( UNIT = iunexit, FILE = TRIM( exit_file ), STATUS = "OLD" )
-             CLOSE( UNIT = iunexit, STATUS = "DELETE" )
-#if defined (__PARA)
-          END IF
-#endif
+       IF ( check_stop_now( ) ) THEN
           !
           IF ( lneb ) THEN  
              WRITE( iunneb, '(/,5X,"WARNING :  soft exit required",/, &

@@ -13,6 +13,7 @@ cpr.o \
 cpr_mod.o \
 cprstart.o \
 cprsub.o \
+compute_scf.o \
 crayfft.o \
 errore.o \
 fft_cp.o \
@@ -24,6 +25,7 @@ read_pseudo.o \
 restart.o \
 which_dft.o \
 neb_routines.o \
+stop_pw.o \
 $(WRAPPERS)
 
 all : cp.x

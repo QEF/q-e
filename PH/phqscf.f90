@@ -18,6 +18,7 @@ subroutine phqscf
 #include "machine.h"
 
   USE io_global,  ONLY : stdout
+  USE check_stop, ONLY: time_max => max_seconds
   use pwcom
   USE kinds, only : DP
   use phcom
