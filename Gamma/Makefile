@@ -98,6 +98,7 @@ PWOBJS=../PW/pwcom.o \
 ../PW/punch.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/read_file.o \
 ../PW/read_ncpp.o \
 ../PW/rgen.o \
 ../PW/readin.o \
@@ -210,7 +211,6 @@ h_psi.o \
 interpolate.o \
 mix_rho.o \
 pw_gemm.o \
-read_file.o \
 rotate_wfc.o \
 s_psi.o \
 set_rhoc.o \
