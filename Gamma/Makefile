@@ -179,7 +179,6 @@ PWOBJS = \
 ../PW/sph_ind.o \
 ../PW/s_psi.o \
 ../PW/startup.o \
-../PW/stop_pw.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \
@@ -239,7 +238,6 @@ MODULES = \
 ../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
-../Modules/io_routines.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
 ../Modules/mp_buffers.o \

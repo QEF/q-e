@@ -134,14 +134,12 @@ MODULES = \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
-../Modules/io_routines.o \
 ../Modules/kind.o \
 ../Modules/minimization_routines.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
-../Modules/neb_base.o \
 ../Modules/neb_variables.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
@@ -202,7 +200,6 @@ PWOBJS = \
 ../PW/clean_pw.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
-../PW/compute_scf.o \
 ../PW/constraints_module.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
@@ -265,7 +262,6 @@ PWOBJS = \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
-../PW/input.o \
 ../PW/interpolate.o \
 ../PW/io_pot.o \
 ../PW/ions.o \
@@ -352,7 +348,6 @@ PWOBJS = \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
 ../PW/startup.o \
-../PW/stop_pw.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \
