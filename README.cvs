@@ -1,11 +1,12 @@
 The most current development version of ESPRESSO is publicly
-accessible via anonymous CVS.
+accessible via anonymous CVS (Concurrent Version System).
 
 *** PLEASE NOTE ***
 the development version may not work properly, and sometimes not even
 compile properly. Use at your own risk.
 
-To download the CVS tree from scratch, follow this procedure:
+To download the CVS tree from scratch, you will need "cvs" and "ssh"
+(secure shell) installed on your system. Follow this procedure:
 
 1) define the environment variables CVS_RSH and CVSROOT as follows:
       export CVS_RSH=ssh

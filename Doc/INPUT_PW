@@ -258,7 +258,7 @@ occupations    CHARACTER
                                (LSDA allowed). 
 
 degauss        REAL ( default = 0.D0 Ry )
-               value of the gaussian spreading for brillouin-zone
+               value of the gaussian spreading (Ry) for brillouin-zone
                integration in metals.
 
 smearing       CHARACTER

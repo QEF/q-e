@@ -8,7 +8,10 @@ distribution, or download it from http://www.pwscf.org/guide.htm
 
 ----------------------------------------------------------------------
 
-To install ESPRESSO, you must:
+To install ESPRESSO, you need working C and f95 compilers (f90 is not
+sufficient, but most "f90" compilers are actually f95-compliant).
+You will also need basic unix facilities: a shell, the "make" and
+"awk" utilities. To install ESPRESSO, you must:
 
 1. configure the source package for your system, compilers and
    libraries;
