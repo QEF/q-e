@@ -8,7 +8,7 @@
 # Preprocessor
 #
 CPP = fpp
-CPPFLAGS = -P -DSUN -DHAS_ZHEGVX -I$(OSHOME)/include
+CPPFLAGS = -P -D__SUN -DHAS_ZHEGVX -I$(OSHOME)/include
 #
 # Fortran compiler:
 #

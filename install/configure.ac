@@ -459,7 +459,7 @@ sparc:mpf90 | sparc:f90 )
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	try_dflags="-DSUN"
+	try_dflags="-D__SUN"
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"

@@ -11,7 +11,7 @@ subroutine bidon_sun
   stop 'cft_sun'
 end subroutine bidon_sun
 #else
-#ifdef SUN
+#ifdef __SUN
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)

@@ -551,7 +551,7 @@ SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 !
 ! ... SUN case
 !
-#ifdef SUN
+#ifdef __SUN
 #define PRESENT
 !----------------------------------------------------------------------
 SUBROUTINE cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
