@@ -122,7 +122,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
               corresponding value of rcut is used. 
       nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
              correction of Froyen, Cohen, and Louie
-      rcore= matching radius for the smoothing of the core charge (no default)
+      rcore= matching radius for the smoothing of the core charge
+             If not specified, the matching radius is determined 
+             by the condition  rho_core(rcore) = 2*rho_valence(rcore)
       rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
              method with 3 Bessel functions fails, specifying rho0 > 0
              may allow to override the problem (using 4 Bessel functions)
