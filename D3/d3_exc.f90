@@ -20,6 +20,8 @@ subroutine d3_exc
   use d3com
 #ifdef __PARA
   use para
+  USE io_global, ONLY : ionode_id
+  USE mp,        ONLY : mp_bcast  
 #endif
   implicit none
   integer :: errcode, ir, ipert, jpert, kpert, npert1, npert2
@@ -72,7 +74,7 @@ subroutine d3_exc
   enddo
 #ifdef __PARA
 100 continue
-  call poolbcast (2 * 27 * nat * nat * nat, d3dyn1)
+  CALL mp_bcast( d3dyn1, ionode_id, MPI_COMM_ROW )
 #endif
 
   d3dyn = d3dyn  + d3dyn1

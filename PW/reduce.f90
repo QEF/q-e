@@ -79,7 +79,6 @@ SUBROUTINE reduce( size, ps )
 #endif
      !
      ps((1+(n-1)*MAXB):(n*MAXB)) = buff(1:MAXB)
-     !CALL DCOPY( MAXB, buff, 1, ps(1+(n-1)*MAXB), 1 )
      !
   END DO
   !
@@ -99,7 +98,6 @@ SUBROUTINE reduce( size, ps )
 #endif
      !
      ps((1+nbuf*MAXB):(1+size)) = buff(1:(size-nbuf*MAXB))
-     !CALL DCOPY( (size-nbuf*MAXB), buff, 1, ps(1+nbuf*MAXB), 1 )
      !
   END IF
   !
@@ -151,9 +149,6 @@ SUBROUTINE ireduce( size, is )
      CALL errore( 'ireduce', 'error in allreduce 1', info )
      !
      is((1+(n-1)*MAXI):(n*MAXI)) = buff(1:MAXI)
-     !do m = 1, MAXI
-     !   is (m + (n - 1) * MAXI) = buff (m)
-     !enddo
      !
   END DO
   !
@@ -167,9 +162,6 @@ SUBROUTINE ireduce( size, is )
      CALL errore( 'reduce', 'error in allreduce 2', info )
      !
      is((1+nbuf*MAXB):(1+size)) = buff(1:(size-nbuf*MAXB))
-     !do m = 1, size-nbuf * MAXI
-     !   is (m + nbuf * MAXI) = buff (m)
-     !enddo
      !
   END IF
   !

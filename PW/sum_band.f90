@@ -36,7 +36,7 @@ SUBROUTINE sum_band()
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
 #if defined (__PARA)
-  USE para,                 ONLY : me, mypool, MPI_COMM_POOL
+  USE para,                 ONLY : me, mypool, MPI_COMM_POOL, MPI_COMM_ROW
   USE io_global,            ONLY : ionode_id
   USE mp,                   ONLY : mp_bcast
 #endif
@@ -85,7 +85,7 @@ SUBROUTINE sum_band()
      !
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !
-     IF ( me == 1 ) CALL poolbcast( 1, ef )
+     IF ( me == 1 ) CALL mp_bcast( ef, ionode_id, MPI_COMM_ROW )
      !
      CALL mp_bcast( ef, ionode_id, MPI_COMM_POOL )
      !

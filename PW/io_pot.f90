@@ -1,81 +1,123 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-subroutine io_pot (iop, filename, pot, nc)
-  !-----------------------------------------------------------------------
-  !
-  !     This routine reads (iop=-1) or write (iop=1) the potential
-  !     in real space onto a file
-  !
 #include "machine.h"
-  USE kinds, ONLY: DP
-  USE gvect, ONLY: nrxx, nrx1, nrx2, nrx3
-#ifdef __PARA
-  use para
+!
+!----------------------------------------------------------------------------
+SUBROUTINE io_pot( iop, filename, pot, nc )
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine reads (iop=-1) or write (iop=1) the potential
+  ! ... in real space onto a file
+  !
+  USE kinds,        ONLY : DP
+  USE gvect,        ONLY : nrxx, nrx1, nrx2, nrx3
+#if defined (__PARA)
+  USE para,         ONLY : me, mypool, MPI_COMM_ROW
+  USE io_global,    ONLY : ionode_id
+  USE mp,           ONLY : mp_bcast
 #endif
-  implicit none
-  integer :: iop, nc, ic
-  ! option: write if +1, read if -1
-  ! number of components and index for them
-  character (len=*) :: filename
-
-  real(kind=DP) :: pot (nrxx, nc)
-#ifdef __PARA
-  real(kind=DP), allocatable :: allv (:,:)
+  !
+  IMPLICIT NONE
+  !
+  INTEGER           :: iop, nc, ic
+    ! option: write if +1, read if -1
+    ! number of components and index for them
+  CHARACTER (LEN=*) :: filename
+  REAL(KIND=DP)     :: pot(nrxx,nc)
+  LOGICAL           :: exst
+#if defined (__PARA)
+  REAL(KIND=DP), ALLOCATABLE :: allv(:,:)
 #endif
-
-  logical :: exst
-#ifdef __PARA
-  if (me.eq.1) allocate( allv(nrx1*nrx2*nrx3, nc) )
   !
-  ! On writing: gather the potential on the first node of each pool
+  ! 
+#if defined (__PARA)
   !
-  if (iop.eq.1) then
-     do ic = 1, nc
-        call gather (pot (1, ic), allv (1, ic) )
-     enddo
-  endif
-  if (me.eq.1.and.mypool.eq.1) then
+  ! ... parallel case
+  !
+  IF ( me == 1 ) ALLOCATE( allv( nrx1*nrx2*nrx3, nc ) )
+  !
+  ! ... On writing: gather the potential on the first node of each pool
+  !
+  IF ( iop == 1 ) THEN
      !
-     ! Only the first node of the first pool reads or writes the file
+     DO ic = 1, nc
+        !   
+        CALL gather( pot(1,ic), allv(1,ic) )
+        !
+     END DO
      !
-     call seqopn (4, filename, 'unformatted', exst)
-     if (iop.eq.1) then
-        write (4, err = 10) allv
-     else
-        read (4, err = 20) allv
-     endif
-     close (unit = 4)
-  endif
+  END IF
   !
-  ! On reading: copy the potential on the first node  of all pools
-  !             scatter the potential on all nodes of each pool
+  IF ( me == 1 .AND. mypool == 1 ) THEN
+     !
+     ! ... Only the first node of the first pool reads or writes the file
+     !
+     CALL seqopn( 4, filename, 'UNFORMATTED', exst )
+     !
+     IF ( iop == 1 ) THEN
+        !
+        WRITE( 4, err = 10 ) allv
+        !   
+     ELSE
+        !
+        READ( 4, err = 20 ) allv
+        !
+     END IF
+     !
+     CLOSE( UNIT = 4 )
+     !
+  END IF
   !
-  if (iop.eq. - 1) then
-     if (me.eq.1) call poolbcast (nrx1 * nrx2 * nrx3 * nc, allv)
-     do ic = 1, nc
-        call scatter (allv (1, ic), pot (1, ic) )
-     enddo
-  endif
-  if (me.eq.1) deallocate(allv)
+  ! ... On reading: copy the potential on the first node  of all pools
+  ! ...             scatter the potential on all nodes of each pool
+  !
+  IF ( iop == -1 ) THEN
+     !
+     IF ( me == 1 ) CALL mp_bcast( allv, ionode_id, MPI_COMM_ROW )
+     !
+     DO ic = 1, nc
+        !
+        CALL scatter( allv(1,ic), pot(1,ic) )
+        !
+     END DO
+     !
+  END IF
+  !
+  IF ( me == 1 ) DEALLOCATE( allv )
+  !
 #else
-  call seqopn (4, filename, 'unformatted', exst)
-  if (iop.eq.1) then
-     write (4, err = 10) pot
-  else
-     read (4, err = 20) pot
-  endif
-  close (unit = 4)
+  !
+  ! ... serial case
+  !
+  CALL seqopn( 4, filename, 'UNFORMATTED', exst )
+  !  
+  IF ( iop == 1 ) THEN
+     !
+     WRITE( 4, err = 10 ) pot
+     !
+  ELSE
+     !
+     READ( 4, err = 20 ) pot
+     !
+  END IF
+  !
+  CLOSE( UNIT = 4 )
+  !
 #endif
-  return
-10 call errore ('io_pot', 'error writing '//filename, 1)
-  return
-20 call errore ('io_pot', 'error reading '//filename, 2)
-  return
-end subroutine io_pot
-
+  !
+  RETURN
+  !
+10 CALL errore( 'io_pot', 'error writing '//filename, 1 )
+  !
+  RETURN
+  !
+20 CALL errore( 'io_pot', 'error reading '//filename, 2 )
+  !
+  RETURN
+  !
+END SUBROUTINE io_pot

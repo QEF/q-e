@@ -19,7 +19,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
 #if defined (__PARA)
   !
   USE kinds,      ONLY : DP
-  USE para,       ONLY : me, mypool, npool, kunit, MPI_COMM_POOL
+  USE para,       ONLY : me, mypool, npool, kunit, MPI_COMM_POOL, MPI_COMM_ROW
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast  
   !
@@ -40,7 +40,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... copy from the first node of the first pool
   ! ... to the first node of all the other pools
   !
-  IF ( me == 1 ) CALL poolbcast( nsize * nkstot, f_in )
+  IF ( me == 1 ) CALL mp_bcast( f_in, ionode_id, MPI_COMM_ROW )
   !
   ! ... distribute the vector on the first node of each pool
   !
@@ -62,4 +62,3 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   RETURN
   !
 END SUBROUTINE poolscatter
-

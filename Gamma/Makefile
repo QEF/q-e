@@ -29,7 +29,6 @@ PWOBJS = \
 ../PW/bp_ylm_q.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
-../PW/broadcast.o \
 ../PW/c_bands.o \
 ../PW/ccalbec.o \
 ../PW/ccgdiagg.o \
@@ -140,7 +139,6 @@ PWOBJS = \
 ../PW/orthoatwfc.o \
 ../PW/output_tau.o \
 ../PW/para.o \
-../PW/poolbcast.o \
 ../PW/poolextreme.o \
 ../PW/poolrecover.o \
 ../PW/poolreduce.o \

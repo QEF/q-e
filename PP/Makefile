@@ -50,7 +50,6 @@ PWOBJS = \
 ../PW/bp_ylm_q.o \
 ../PW/bp_zgedi.o \
 ../PW/bp_zgefa.o \
-../PW/broadcast.o \
 ../PW/c_bands.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
@@ -167,7 +166,6 @@ PWOBJS = \
 ../PW/orthoatwfc.o \
 ../PW/para.o \
 ../PW/paw.o \
-../PW/poolbcast.o \
 ../PW/poolextreme.o \
 ../PW/poolrecover.o \
 ../PW/poolreduce.o \

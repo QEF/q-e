@@ -29,7 +29,6 @@ bp_strings.o \
 bp_ylm_q.o \
 bp_zgedi.o \
 bp_zgefa.o \
-broadcast.o \
 c_bands.o \
 c_gemm.o \
 ccalbec.o \
@@ -153,7 +152,6 @@ orthoatwfc.o \
 output_tau.o \
 para.o \
 paw.o \
-poolbcast.o \
 poolextreme.o \
 poolrecover.o \
 poolreduce.o \
