@@ -5,12 +5,12 @@
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 TOPDIR=`pwd`
 
-for DIR in Modules PW CPV flib pwtools upftools PP PWCOND \
+for DIR in Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 Raman atomic Nmr
 do
     # set inter-directory dependencies
     case $DIR in
-	Modules )         DEPENDS="../include"                        ;;
+	Modules | clib )  DEPENDS="../include"                        ;;
 	PW | CPV | flib | pwtools | upftools | atomic )
 	                  DEPENDS="../include ../Modules"             ;;
 	PP | PWCOND | Gamma | PH )
@@ -26,10 +26,17 @@ do
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
     fi
 
-    # handle special case
+    # handle special cases
     mv make.depend make.depend.tmp
     sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
         make.depend.tmp > make.depend
+
+    if test "$DIR" = "clib"
+    then
+        mv make.depend make.depend.tmp
+        sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
+    fi
+        
     rm -f make.depend.tmp
 
     # check for missing dependencies

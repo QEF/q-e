@@ -138,8 +138,9 @@ tar :
 	tar cvf espresso.tar \
 	    License README* */README* Makefile */Makefile \
 	    configure configure.ac config.guess config.sub install-sh \
-	    makedeps.sh moduledep.sh make.sys.in \
-	    configure.old */make.depend \
+	    make.sys.in \
+	    makedeps.sh moduledep.sh includedep.sh \
+	    configure.old \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs

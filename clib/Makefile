@@ -22,3 +22,5 @@ source :
 
 clean :
 	- rm -f clib.a *.o *.mod *.i core*
+
+include make.depend
