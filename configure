@@ -53,6 +53,15 @@ then
 		echo work.pc > $PWD/pwtools/intel.pcl
 		echo $PWD/Modules/work.pc >> $PWD/pwtools/intel.pcl
 		echo $PWD/PW/work.pc >> $PWD/pwtools/intel.pcl
+
+		echo work.pc > $PWD/FPMD/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/FPMD/intel.pcl
+
+                echo work.pc > $PWD/CPV/intel.pcl
+                echo $PWD/Modules/work.pc >> $PWD/CPV/intel.pcl
+
+                echo work.pc > $PWD/flib/intel.pcl
+                echo $PWD/Modules/work.pc >> $PWD/flib/intel.pcl
 	fi
 
 	if [ "$1" = "cp.lnx.intel" ]
