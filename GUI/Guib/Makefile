@@ -10,7 +10,7 @@ REPACK  = $(HERE)/sys_utils/repack.sh
 ROOT_FILES = \
 	README THANKS NEWS INSTALL TODO VERSION ChangeLog \
 	BUGS AUTHORS COPYING COPYRIGHT \
-	guib guib.tcl  guib.theme  init.tcl  pkgIndex.tcl 
+	guib  guib.bat  guib.tcl  guib.theme  init.tcl  pkgIndex.tcl 
 
 DOC_FILES = doc/html/*.html doc/usage.pdf
 
