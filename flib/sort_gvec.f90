@@ -23,13 +23,12 @@ subroutine sort_gvec( ng, g2, mill )
   REAL(dbl), ALLOCATABLE :: gsort( : )
   INTEGER, ALLOCATABLE :: index( : )
   INTEGER :: ig, icurr, it, im
-  REAL(dbl) :: gsq
 
   ALLOCATE( gsort( ng ) )
   ALLOCATE( index( ng ) )
 
   DO ig = 1, ng
-    IF ( gsq > eps8 ) THEN
+    IF ( g2(ig) > eps8 ) THEN
       gsort(ig) = g2(ig)
     ELSE
       gsort(ig) = 0.d0
@@ -37,7 +36,7 @@ subroutine sort_gvec( ng, g2, mill )
   END DO
 
   index(1) = 0
-  CALL hpsort_eps(ng, gsort, index, eps8)
+  CALL hpsort_eps( ng, gsort( 1 ), index( 1 ), eps8 )
 
   ! ... sort indices accordingly
   DO ig = 1, ng-1
