@@ -608,9 +608,9 @@ MODULE neb_base
          !
          ! ... tangent to the path ( normalized )
          !
-         tangent(:,image) = path_tangent( image )
+         !!!tangent(:,image) = path_tangent( image )
          !!! workaround for ifc8 compiler internal error
-         !!!CALL path_tangent_( image, tangent(:,image) )
+         CALL path_tangent_( image, tangent(:,image) )
          !
          tangent(:,image) = tangent(:,image) / norm( tangent(:,image) )
          !
@@ -622,9 +622,9 @@ MODULE neb_base
     !
     !    
     !-----------------------------------------------------------------------
-    FUNCTION path_tangent( index )
+    !!!FUNCTION path_tangent( index )
     !!! workaround for ifc8 compiler internal error
-    !!!SUBROUTINE path_tangent_( index, path_tangent )
+    SUBROUTINE path_tangent_( index, path_tangent )
       !-----------------------------------------------------------------------
       !
       USE supercell,     ONLY : pbc
@@ -687,9 +687,9 @@ MODULE neb_base
       !
       RETURN
       !
-    END FUNCTION path_tangent
+    !!!END FUNCTION path_tangent
     !!! workaround for ifc8 compiler internal error
-    !!!END SUBROUTINE path_tangent_
+    END SUBROUTINE path_tangent_
     !
     !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_PES( flag, stat )
