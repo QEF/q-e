@@ -44,8 +44,8 @@ subroutine rgd_blk (nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   ! DIAGONAL TERM FIRST (ONLY ONCE, INITIALIZE GMEGA)
   !
-  write (*,*) 'remember to fix Gmega'
-  write (*,*) 'remember to check diagonal-term symmetry'
+!  write (*,*) 'remember to fix Gmega'
+!  write (*,*) 'remember to check diagonal-term symmetry'
   alph = 3.0
   im = 0
   do m1 = -nrx1,nrx1
