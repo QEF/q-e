@@ -70,9 +70,9 @@ subroutine compute_dip(rho, dip, dipion, z0)
      enddo
 #endif
 
-     nrwsx=125
-     allocate(rws(0:3,nrwsx))
-     call wsinit(rws,nrwsx,nrws,at)
+!     nrwsx=125
+!     allocate(rws(0:3,nrwsx))
+!     call wsinit(rws,nrwsx,nrws,at)
 
      deltax=1.d0/real(nr1,dp)
      deltay=1.d0/real(nr2,dp)
@@ -93,7 +93,14 @@ subroutine compute_dip(rho, dip, dipion, z0)
                       real(j1,dp)*at(ipol,2)*deltay + &
                       real(k11,dp)*at(ipol,3)*deltaz
               enddo
-              weight=wsweight(rijk,rws,nrws)
+              weight = 1.d0
+              if(i1.eq.-real(nr1,dp)/2.d0.or.i1.eq.real(nr1,dp)/2.d0) &
+                 weight = weight*0.5d0
+              if(j1.eq.-real(nr2,dp)/2.d0.or.j1.eq.real(nr2,dp)/2.d0) &
+                 weight = weight*0.5d0
+              if(k11.eq.-real(nr3,dp)/2.d0.or.k11.eq.real(nr3,dp)/2.d0) &
+                 weight = weight*0.5d0
+!              weight=wsweight(rijk,rws,nrws)
               do ipol=1,3
                  dipol(ipol)=dipol(ipol)+weight*(rijk(ipol)+x0(ipol))*rrho(ir)
               enddo
@@ -122,7 +129,7 @@ subroutine compute_dip(rho, dip, dipion, z0)
      enddo
      proj=proj/bmod
      dipion= fpi*proj/omega
-     deallocate(rws)
+!     deallocate(rws)
 
 #ifdef __PARA
   endif

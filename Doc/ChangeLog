@@ -1,3 +1,6 @@
+ 2 Sep 2004 Bug fix: The dipole correction was not working with a 
+            non-tetragonal cell. (Contributed by N. Bonini).
+
  1 Sep 2004 The error message is no longer written on /dev/stderr 
             (on linux clusters), but only on unit *. (C.S.)
             missing ZSYRK and ZSYR2K subroutines added to the 
