@@ -31,12 +31,10 @@ c_gemm.o \
 ccalbec.o \
 ccalbec_nc.o \
 ccgdiagg.o \
-ccgdiagg_nc.o \
 cdiagh.o \
 cdiaghg.o \
 cdiisg_nc.o \
 cegterg.o \
-cegterg_nc.o \
 cft3.o \
 cft3s.o \
 cft_3.o \
@@ -160,6 +158,7 @@ punch.o \
 pw_gemm.o \
 pwcom.o \
 qvan2.o \
+rcgdiagg.o \
 rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \
@@ -178,6 +177,7 @@ restart_in_electrons.o \
 restart_in_ions.o \
 rgen.o \
 rho2zeta.o \
+rinitcgg.o \
 rotate_wfc.o \
 rotate_wfc_gamma.o \
 rotate_wfc_nc.o \
@@ -305,10 +305,27 @@ MODULES = \
 ../Modules/shmem_include.o \
 ../Modules/stick_base.o \
 ../Modules/supercell.o \
-../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/wavefunctions.o
+../Modules/wavefunctions.o \
+../Modules/timestep.o \
+../Modules/iotk_module.o \
+../Modules/iotk_base.o \
+../Modules/iotk_external.o \
+../Modules/iotk_interface.o \
+../Modules/iotk_multitype.o \
+../Modules/iotk_multitype_complex1.o \
+../Modules/iotk_multitype_complex2.o \
+../Modules/iotk_multitype_character1.o \
+../Modules/iotk_multitype_character2.o \
+../Modules/iotk_multitype_integer1.o \
+../Modules/iotk_multitype_integer2.o \
+../Modules/iotk_multitype_real1.o \
+../Modules/iotk_multitype_real2.o \
+../Modules/iotk_multitype_logical1.o \
+../Modules/iotk_multitype_logical2.o
+
+
 
 all : memory.x pw.x
 

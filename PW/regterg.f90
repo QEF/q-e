@@ -11,8 +11,8 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
-                    overlap, gstart, e, btype, notcnv, iter )
+SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
+                    gstart, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -30,27 +30,29 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... on INPUT
   !
-  INTEGER :: ndim, ndmx, nvec, nvecx, gstart
+  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx, gstart
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX (KIND=DP) :: evc(ndmx,nvec)
+  COMPLEX (KIND=DP), INTENT(INOUT) :: evc(ndmx,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
-  REAL (KIND=DP) :: ethr
+  REAL (KIND=DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
     ! when two consecutive estimates of the root differ by less than ethr.
-  LOGICAL :: overlap
+  LOGICAL, INTENT(IN) :: overlap
     ! if .FALSE. : S|psi> not needed
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
+  INTEGER, INTENT(IN) :: lrot
+    ! .TRUE. if the wfc have already be rotated
   !
   ! ... on OUTPUT
   !
   REAL (KIND=DP) :: e(nvec)
     ! contains the estimated roots.
-  INTEGER :: iter, notcnv
+  INTEGER :: dav_iter, notcnv
     ! integer  number of iterations performed
     ! number of unconverged roots
   !
@@ -69,7 +71,6 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! S matrix on the reduced basis
     ! eigenvectors of the Hamiltonian
     ! eigenvalues of the reduced hamiltonian
-  REAL (KIND=DP), EXTERNAL :: DDOT
   COMPLEX (KIND=DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
     ! work space, contains psi
     ! the product of H and psi
@@ -81,6 +82,8 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   INTEGER :: ndim2, ndmx2
   !
   ! ... Called routines:
+  !
+  REAL (KIND=DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(ndmx,ndim,nvec,psi,hpsi)
@@ -107,7 +110,6 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ALLOCATE( conv( nvec ) )    
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
-  !
   !
   ! ... threshold for empty bands
   !
@@ -136,6 +138,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ! ... vr contains the eigenvectors of hr
   !
   hr(:,:) = 0.D0
+  sr(:,:) = 0.D0
   vr(:,:) = 0.D0
   !
   CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0 , &
@@ -145,8 +148,6 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, hpsi, ndmx2, hr, nvecx )
   !
   CALL reduce( nbase * nvecx, hr )
-  !
-  sr(:,:) = 0.D0
   !
   IF ( overlap ) THEN
      !
@@ -168,19 +169,31 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   CALL reduce( nbase * nvecx, sr )
   !
-  FORALL( n = 1 : nbase )
+  IF ( lrot ) THEN
      !
-     e(n) = hr(n,n)
+     DO n = 1, nbase
+        !
+        e(n) = hr(n,n)
+        !
+        vr(n,n) = 1.D0
+        !
+     END DO
      !
-     vr(n,n) = 1.D0
+  ELSE
      !
-  END FORALL
+     ! ... diagonalize the reduced hamiltonian
+     !
+     CALL rdiaghg( nbase, nvec, hr, sr, nvecx, ew, vr )
+     !
+     e(1:nvec) = ew(1:nvec)
+     !
+  END IF
   !
   ! ... iterate
   !
   iterate: DO kter = 1, maxter
      !
-     iter = kter
+     dav_iter = kter
      !
      CALL start_clock( 'update' )
      !
@@ -222,10 +235,10 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-! workaround for g95 bug
-!     FORALL( np = 1: notcnv ) &
      DO np = 1, notcnv
+        !
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+        !
      END DO
      !
      CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, hpsi, &
@@ -238,8 +251,10 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
      !
      ! ... "normalize" correction vectors psi(:,nbase+1:nbase+notcnv) in order
-     ! ... to improve numerical stability of subspace diagonalization rdiaghg
-     ! ... ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
+     ! ... to improve numerical stability of subspace diagonalization cdiaghg
+     ! ... ew is used as work array :
+     !
+     ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
      DO n = 1, notcnv
         !
@@ -251,13 +266,10 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( notcnv, ew )
      !
-! workaround for g95 bug
-!     FORALL( n = 1 : notcnv )
      DO n = 1, notcnv
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         !
-!     END FORALL
      END DO
      !
      ! ... here compute the hpsi and spsi of the new functions
@@ -306,16 +318,16 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      nbase = nbase + notcnv
      !
-     FORALL( n = 1 : nbase )
+     DO n = 1, nbase
         !
-        FORALL( m = n + 1 : nbase )
+        DO  m = n + 1, nbase
            !
            hr(m,n) = hr(n,m)
            sr(m,n) = sr(n,m)
            !
-        END FORALL
+        END DO
         !
-     END FORALL
+     END DO
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -323,13 +335,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... test for convergence
      !
-     WHERE( btype(:) == 1 )
+     WHERE( btype(1:nvec) == 1 )
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < ethr ) )
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
         !
      ELSEWHERE
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < empty_ethr ) )
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
         !
      END WHERE
      !
@@ -344,7 +356,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      ! ... with the current estimate of the eigenvectors;
      ! ... set the basis dimension to nvec.
      !
-     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. iter == maxter ) THEN
+     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
         CALL start_clock( 'last' )
         !
@@ -359,12 +371,12 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
            !
            EXIT iterate
            !
-        ELSE IF ( iter == maxter ) THEN
+        ELSE IF ( dav_iter == maxter ) THEN
            !
            ! ... last iteration, some roots not converged: return
            !
            WRITE( UNIT = stdout, &
-                  FMT = '("   WARNING: ",i5," eigenvalues not converged")' ) &
+                  FMT = '(5X,"WARNING: ",I5," eigenvalues not converged")' ) &
                 notcnv
            !
            CALL stop_clock( 'last' )
@@ -382,14 +394,14 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
            CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, spsi, &
                        ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
            !
-           spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+           spsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
            !
         END IF
         !
         CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, hpsi, &
                     ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
         !
-        hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+        hpsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
         !
         ! ... refresh the reduced hamiltonian
         !
@@ -399,13 +411,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         sr(:,1:nbase) = 0.D0
         vr(:,1:nbase) = 0.D0
         !
-        FORALL( n = 1 : nbase )
+        DO n = 1, nbase
            !
            hr(n,n) = e(n)
            sr(n,n) = 1.D0
            vr(n,n) = 1.D0
            !
-        END FORALL
+        END DO
         !
         CALL stop_clock( 'last' )
         !

@@ -53,8 +53,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: avg_iter, v_of_0
+  REAL(KIND=DP) :: avg_iter, cg_iter, v_of_0
     ! average number of iterations
+    ! number of iterations in Conjugate-Gradient
     ! the average of the potential
   INTEGER :: ik, ig, ibnd, dav_iter, diis_iter, ntry, notconv
     ! counter on k points
@@ -64,6 +65,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
     ! number of iterations in DIIS
     ! number or repeated call to diagonalization in case of non convergence
     ! number of notconverged elements
+  LOGICAL :: lrot
+    ! .TRUE. if the wfc have already be rotated
   INTEGER, ALLOCATABLE :: btype(:)
     ! type of band: conduction (1) or valence (0)  
   !
@@ -160,13 +163,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
           !
+       ELSE IF ( isolve == 1 ) THEN
+          !
+          WRITE( stdout, '(5X,"CG style diagonalization")')
+          !
        ELSE IF ( isolve == 2 ) THEN
           !
           WRITE( stdout, '(5X,"DIIS style diagonalization")')
-          !       
-       ELSE
-          !
-          CALL errore( 'c_bands', 'CG diagonalization not implemented', 1 )
           !
        END IF
        !
@@ -238,7 +241,53 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           IF ( wg_set ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
-          IF ( isolve == 2 ) THEN
+          IF ( isolve == 1 ) THEN
+             !
+             ! ... Conjugate-Gradient diagonalization
+             !
+             ! ... h_diag is the precondition matrix
+             !
+             FORALL( ig = 1 : npw )
+                !
+                h_diag(ig) = 1.D0 + g2kin(ig) + &
+                             SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+                !
+             END FORALL
+             !
+             ntry = 0
+             !
+             CG_loop : DO
+                !
+                IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
+                   !
+                   CALL rinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                   !
+                   avg_iter = avg_iter + 1.D0
+                   !
+                END IF
+                !
+                CALL rcgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
+                               h_diag, ethr, max_cg_iter, .NOT. lscf, &
+                               notconv, cg_iter )
+                !
+                avg_iter = avg_iter + cg_iter
+                !
+                ! ... save wave-functions to be used as input for the
+                ! ... iterative diagonalization of the next scf iteration 
+                ! ... and for rho calculation
+                !
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+                !
+                ntry = ntry + 1                
+                !
+                ! ... exit condition
+                !
+                IF ( test_exit_cond() ) EXIT  CG_loop
+                !
+             END DO CG_loop
+             !
+          ELSE IF ( isolve == 2 ) THEN
              !
              ! ... RMM-DIIS method
              !
@@ -286,8 +335,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
+                lrot = .NOT. wg_set
+                !
                 CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                              gstart, et(1,ik), btype, notconv, dav_iter )
+                              gstart, et(1,ik), btype, notconv, lrot, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -360,9 +411,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... here the local variables
        !
-       REAL(KIND=DP) :: cg_iter
-         ! number of iteration in CG
-         ! number of iteration in DIIS
        INTEGER :: ipol
        !
        ! ... becp contains <beta|psi> - used in h_psi and s_psi
@@ -483,15 +531,25 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              IF ( noncolin ) THEN
                 !
-                DO ipol = 1, npol
+                h_diag_nc = 1.D0
+                !
+                FORALL( ig = 1 : npwx )
                    !
-                   h_diag_nc(1:npw,ipol) = MAX( 1.D0, g2kin(1:npw) )
+                   h_diag_nc(ig,:) = 1.D0 + g2kin(ig) + &
+                                     SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
                    !
-                END DO
+                END FORALL
                 !
              ELSE
                 !
-                h_diag(1:npw) = MAX( 1.D0, g2kin(1:npw) )
+                h_diag = 1.D0
+                !
+                FORALL( ig = 1 : npw )
+                   !
+                   h_diag(ig) = 1.D0 + g2kin(ig) + &
+                                SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+                   !
+                END FORALL
                 !
              END IF
              !
@@ -518,13 +576,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   CALL ccgdiagg_nc( npwx, npw, nbnd, evc_nc, et(1,ik), &
-                                     h_diag_nc, ethr, max_cg_iter,      &
-                                     .NOT. lscf, notconv, cg_iter, npol )
+                   CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), btype, &
+                                  h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
+                                  notconv, cg_iter )
                    !
                 ELSE
                    !
-                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), &
+                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
                                   h_diag, ethr, max_cg_iter, .NOT. lscf, &
                                   notconv, cg_iter )
                    !
@@ -649,15 +707,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
+                lrot = .NOT. wg_set
+                !
                 IF ( noncolin ) THEN
                    !
-                   CALL cegterg_nc( npw, npwx, nbnd, nbndx, evc_nc, ethr, &
-                                    okvan, et(1,ik), notconv, dav_iter, npol )
+                   CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, ethr, okvan, &
+                                 et(1,ik), btype, notconv, lrot, dav_iter )
                    !
                 ELSE
                    !
-                   CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                                 okvan, et(1,ik), btype, notconv, dav_iter )
+                   CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
+                                 et(1,ik), btype, notconv, lrot, dav_iter )
                    !
                 END IF
                 !

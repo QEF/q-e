@@ -11,8 +11,8 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
-                    ethr, overlap, e, btype, notcnv, iter )
+SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+                    overlap, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -22,36 +22,39 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   ! ... where H is an hermitean operator, e is a real scalar,
   ! ... S is an overlap matrix, evc is a complex vector
   !
-  USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : DP
+  USE io_global,        ONLY : stdout
+  USE kinds,            ONLY : DP
+  USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   !
   ! ... on INPUT
   ! 
-  INTEGER :: ndim, ndmx, nvec, nvecx
+  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
-    ! maximum dimension of the reduced basis set
+    ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX (KIND=DP) :: evc(ndmx,nvec)
-    !  evc   contains the  refined estimates of the eigenvectors  
-  REAL (KIND=DP) :: ethr
-    ! energy threshold for convergence
+  COMPLEX (KIND=DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
+    !  evc contains the  refined estimates of the eigenvectors  
+  REAL (KIND=DP), INTENT(IN) :: ethr
+    ! energy threshold for convergence :
     !   root improvement is stopped, when two consecutive estimates of the root
     !   differ by less than ethr.
-  LOGICAL :: overlap
+  LOGICAL, INTENT(IN) :: overlap
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
+  INTEGER, INTENT(IN) :: lrot
+    ! .TRUE. if the wfc have already be rotated
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP) :: e(nvec)
+  REAL(KIND=DP), INTENT(OUT) :: e(nvec)
     ! contains the estimated roots.
-  INTEGER :: iter, notcnv
-    ! integer  number of iterations performed
+  INTEGER, INTENT(OUT) :: dav_iter, notcnv
+    ! integer number of iterations performed
     ! number of unconverged roots
   !
   ! ... LOCAL variables
@@ -59,21 +62,20 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, n, m
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
+    ! adapted ndim and ndmx
     ! do-loop counters
   COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:),  sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
-  COMPLEX(KIND=DP), ALLOCATABLE :: psi(:,:), hpsi(:,:), spsi(:,:)
+  COMPLEX(KIND=DP), ALLOCATABLE :: psi(:,:,:), hpsi(:,:,:), spsi(:,:,:)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
-  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
-    ! scalar product routine
   COMPLEX(KIND=DP) :: eau
     ! auxiliary complex variable
   REAL(KIND=DP), ALLOCATABLE :: ew(:)
@@ -85,12 +87,15 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   ! ... Called routines:
   !
-  EXTERNAL  h_psi, s_psi, g_psi
+  REAL(KIND=DP), EXTERNAL :: DDOT
+  !
+  EXTERNAL  h_psi,    s_psi,    g_psi
+  EXTERNAL  h_psi_nc, s_psi_nc, g_psi_nc
     ! h_psi(ndmx,ndim,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(ndmx,ndim,nvec,spsi)
     !     calculates S|psi> (if needed)
-    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
+    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,npol,nvec)
     ! g_psi(ndmx,ndim,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
@@ -100,9 +105,9 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   ! ... allocate the work arrays
   !
-  ALLOCATE(  psi( ndmx, nvecx ) )
-  ALLOCATE( hpsi( ndmx, nvecx ) )
-  IF ( overlap ) ALLOCATE( spsi( ndmx, nvecx ) )
+  ALLOCATE(  psi( ndmx,  npol, nvecx ) )
+  ALLOCATE( hpsi( ndmx,  npol, nvecx ) )
+  IF ( overlap ) ALLOCATE( spsi( ndmx,  npol, nvecx ) )
   ALLOCATE( sc( nvecx, nvecx ) )
   ALLOCATE( hc( nvecx, nvecx ) )
   ALLOCATE( vc( nvecx, nvecx ) )
@@ -115,6 +120,18 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
+  IF ( npol == 1 ) THEN
+     !
+     kdim = ndim
+     kdmx = ndmx
+     !
+  ELSE
+     !
+     kdim = ndmx*npol
+     kdmx = ndmx*npol
+     !
+  END IF
+  !
   ! ... prepare the hamiltonian for the first iteration
   !
   notcnv = nvec
@@ -124,13 +141,23 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   IF ( overlap ) spsi = ZERO
   psi  = ZERO
   hpsi = ZERO
-  psi(:,1:nvec) = evc(:,1:nvec)
+  psi(:,:,1:nvec) = evc(:,:,1:nvec)
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
-  !
-  IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+  IF ( noncolin ) THEN
+     !
+     CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
+     !
+     IF ( overlap ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
+     !
+  ELSE
+     !
+     CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+     !
+     IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+     !
+  END IF
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced space
   ! ... vc contains the eigenvectors of hc
@@ -139,38 +166,50 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   sc(:,:) = ZERO
   vc(:,:) = ZERO
   !
-  CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
-              psi, ndmx, hpsi, ndmx, ZERO, hc, nvecx )
+  CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
+              psi, kdmx, hpsi, kdmx, ZERO, hc, nvecx )
   !
   CALL reduce( 2 * nbase * nvecx, hc )
   !
   IF ( overlap ) THEN
      !
-     CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
-                 psi, ndmx, spsi, ndmx, ZERO, sc, nvecx )
+     CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
+                 psi, kdmx, spsi, kdmx, ZERO, sc, nvecx )
      !     
   ELSE
      !
-     CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
-                 psi, ndmx,  psi, ndmx, ZERO, sc, nvecx )
+     CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
+                 psi, kdmx, psi, kdmx, ZERO, sc, nvecx )
      !
   END IF
   !
   CALL reduce( 2 * nbase * nvecx, sc )
   !
-  FORALL( n = 1 : nbase )
+  IF ( lrot ) THEN
      !
-     e(n) = hc(n,n)
+     DO n = 1, nbase
+        !
+        e(n) = hc(n,n)
+        !
+        vc(n,n) = ONE
+        !
+     END DO
      !
-     vc(n,n) = ONE
+  ELSE
      !
-  END FORALL
+     ! ... diagonalize the reduced hamiltonian
+     !
+     CALL cdiaghg( nbase, nvec, hc, sc, nvecx, ew, vc )
+     !
+     e(1:nvec) = ew(1:nvec)
+     !
+  END IF
   !
   ! ... iterate
   !
   iterate: DO kter = 1, maxter
      !
-     iter = kter
+     dav_iter = kter
      !
      CALL start_clock( 'update' )
      !
@@ -202,77 +241,105 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      IF ( overlap ) THEN
         !
-        CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, spsi, &
-                    ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
+        CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, spsi, &
+                    kdmx, vc, nvecx, ZERO, psi(1,1,nbase+1), kdmx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, psi, &
-                    ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
+        CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, psi, &
+                    kdmx, vc, nvecx, ZERO, psi(1,1,nbase+1), kdmx )
         !
      END IF
      !
-! workaround for g95 bug
-!     FORALL( np = 1: notcnv ) &
      DO np = 1, notcnv
-        psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+        !
+        psi(:,:,nbase+np) = - ew(nbase+np) * psi(:,:,nbase+np)
+        !
      END DO
      !
-     CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, hpsi, &
-                 ndmx, vc, nvecx, ONE, psi(1,nbase+1), ndmx )
+     CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, hpsi, &
+                 kdmx, vc, nvecx, ONE, psi(1,1,nbase+1), kdmx )
      !
      CALL stop_clock( 'update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
+     IF ( noncolin ) THEN
+        !
+        CALL g_psi_nc( ndmx, ndim, notcnv, npol, psi(1,1,nbase+1), ew(nbase+1) )
+        !
+     ELSE
+        !
+        CALL g_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), ew(nbase+1) )
+        !
+     END IF
      !
      ! ... "normalize" correction vectors psi(:,nbase+1:nbase+notcnv) in order
      ! ... to improve numerical stability of subspace diagonalization cdiaghg
-     ! ... ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
+     ! ... ew is used as work array :
+     !
+     ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
      !
      DO n = 1, notcnv
         !
-        ew(n) = ZDOTC( ndim, psi(1,nbase+n), 1, psi (1,nbase+n), 1 )
+        IF ( npol == 1 ) THEN
+           !
+           ew(n) = DDOT( 2*ndim, psi(1,1,nbase+n), 1, psi(1,1,nbase+n), 1 )
+           !
+        ELSE
+           !
+           ew(n) = DDOT( 2*ndim, psi(1,1,nbase+n), 1, psi(1,1,nbase+n), 1 ) + &
+                   DDOT( 2*ndim, psi(1,2,nbase+n), 1, psi(1,2,nbase+n), 1 )
+           !
+        END IF
         !
      END DO
      !
      CALL reduce( notcnv, ew )
      !
-! workaround for g95 bug
-!     FORALL( n = 1 : notcnv )
      DO n = 1, notcnv
         !
-        psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
+        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
         !
      END DO
-!     END FORALL
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( ndmx, ndim, notcnv, psi(1,nbase+1), hpsi(1,nbase+1) )
-     !
-     IF ( overlap ) &
-        CALL s_psi( ndmx, ndim, notcnv, psi(1,nbase+1), spsi(1,nbase+1) )
+     IF ( noncolin ) THEN
+        !
+        CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
+        !
+        IF ( overlap ) &
+           CALL s_psi_nc( ndmx, ndim, notcnv, &
+                          psi(1,1,nbase+1), spsi(1,1,nbase+1) )
+        !
+     ELSE
+        !
+        CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
+        !
+        IF ( overlap ) &
+           CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), spsi(1,1,nbase+1) )
+        !
+     END IF
      !
      ! ... update the reduced hamiltonian
      !
      CALL start_clock( 'overlap' )
      !
-     CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
-                 hpsi(1,nbase+1), ndmx, ZERO, hc(1,nbase+1), nvecx )
+     CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, kdmx, &
+                 hpsi(1,1,nbase+1), kdmx, ZERO, hc(1,nbase+1), nvecx )
      !
      CALL reduce( 2 * nvecx * notcnv, hc(1,nbase+1) )
      !
      IF ( overlap ) THEN
         !
-        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
-                    spsi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
+        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, kdmx, &
+                    spsi(1,1,nbase+1), kdmx, ZERO, sc(1,nbase+1), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
-                    psi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
+        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, kdmx, &
+                    psi(1,1,nbase+1), kdmx, ZERO, sc(1,nbase+1), nvecx )
         !
      END IF
      !
@@ -282,27 +349,21 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      nbase = nbase + notcnv
      !
-! workaround for Intel bug
-!     FORALL( n = 1 : nbase )
      DO n = 1, nbase
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
-        hc(n,n) = DCMPLX( DREAL( hc(n,n) ), 0.D0 )
-        sc(n,n) = DCMPLX( DREAL( sc(n,n) ), 0.D0 )
+        hc(n,n) = DCMPLX( REAL( hc(n,n) ), 0.D0 )
+        sc(n,n) = DCMPLX( REAL( sc(n,n) ), 0.D0 )
         !
-! workaround for Intel bug
-!        FORALL(  m = n + 1 : nbase )
-        DO m = n + 1, nbase
+        DO  m = n + 1, nbase
            !
            hc(m,n) = CONJG( hc(n,m) )
            sc(m,n) = CONJG( sc(n,m) )
            !
         END DO
-!        END FORALL
         !
      END DO
-!     END FORALL
      !
      ! ... diagonalize the reduced hamiltonian
      !
@@ -310,13 +371,13 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      !
      ! ... test for convergence
      !
-     WHERE( btype(:) == 1 )
+     WHERE( btype(1:nvec) == 1 )
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < ethr ) )
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
         !
      ELSEWHERE
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < empty_ethr ) )
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
         !
      END WHERE
      !
@@ -331,12 +392,12 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
      ! ... with the current estimate of the eigenvectors;
      ! ... set the basis dimension to nvec.
      !
-     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. iter == maxter ) THEN
+     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
         CALL start_clock( 'last' )
         !
-        CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, psi, &
-                    ndmx, vc, nvecx, ZERO, evc, ndmx )
+        CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, psi, &
+                    kdmx, vc, nvecx, ZERO, evc, kdmx )
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -346,12 +407,12 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
            !
            EXIT iterate
            !
-        ELSE IF ( iter == maxter ) THEN
+        ELSE IF ( dav_iter == maxter ) THEN
            !
            ! ... last iteration, some roots not converged: return
            !
            WRITE( UNIT = stdout, &
-                  FMT = '("   WARNING: ",i5," eigenvalues not converged")' ) &
+                  FMT = '(5X,"WARNING: ",I5," eigenvalues not converged")' ) &
                 notcnv
            !
            CALL stop_clock( 'last' )
@@ -362,21 +423,21 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         !
         ! ... refresh psi, H*psi and S*psi
         !
-        psi(:,1:nvec) = evc(:,1:nvec)
+        psi(:,:,1:nvec) = evc(:,:,1:nvec)
         !
         IF ( overlap ) THEN
            !
-           CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, spsi, &
-                       ndmx, vc, nvecx, ZERO, psi(1,nvec+1), ndmx )
+           CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, spsi, &
+                       kdmx, vc, nvecx, ZERO, psi(1,1,nvec+1), kdmx )
            !
-           spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+           spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
            !
         END IF
         !
-        CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, hpsi, &
-                    ndmx, vc, nvecx, ZERO, psi(1,nvec+1), ndmx )
+        CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, hpsi, &
+                    kdmx, vc, nvecx, ZERO, psi(1,1,nvec+1), kdmx )
         !
-        hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
+        hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
         !
         ! ... refresh the reduced hamiltonian 
         !
@@ -386,8 +447,6 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
         sc(:,1:nbase) = ZERO
         vc(:,1:nbase) = ZERO
         !
-! workaround for Intel bug
-!        FORALL( n = 1 : nbase )
         DO n = 1, nbase
            !
            hc(n,n) = e(n)
@@ -395,7 +454,6 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
            vc(n,n) = ONE
            !
         END DO
-!        END FORALL
         !
         CALL stop_clock( 'last' )
         !

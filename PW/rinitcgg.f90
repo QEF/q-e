@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
+SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Hamiltonian diagonalization in the subspace spanned
@@ -18,6 +18,7 @@ SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   ! ... Calls h_1psi to calculate H|psi>, S|psi
   !
   USE kinds, ONLY : DP
+  USE gvect, ONLY : gstart
   !
   IMPLICIT NONE
   !
@@ -26,29 +27,29 @@ SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-  COMPLEX(KIND=DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX (KIND=DP) :: psi(npwx,nstart), evc(npwx,nbnd)
     ! input and output eigenvectors (may overlap) 
   REAL(KIND=DP) :: e(nbnd)
     ! eigenvalues
   !
-  ! ... local variables
+  !... local variables
   !
   INTEGER                        :: m, ibnd, i, j, npw2
-  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:), spsi(:), hc(:,:,:), sc(:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:), spsi(:)
+  REAL (KIND=DP),    ALLOCATABLE :: hr(:,:,:), sr(:,:)
   REAL (KIND=DP),    ALLOCATABLE :: en(:)
   !
-  COMPLEX (KIND=DP), EXTERNAL :: ZDOTC, ZDOTU
-  REAL (KIND=DP),    EXTERNAL :: DDOT
+  REAL (KIND=DP), EXTERNAL :: DDOT
   !
   !
   CALL start_clock( 'wfcrot1' )
   !
   npw2 = 2 * npw
   !
-  ALLOCATE( spsi( npwx ) )
-  ALLOCATE( hpsi( npwx ) )
-  ALLOCATE( hc( nstart, nstart, 2 ) )
-  ALLOCATE( sc( nstart, nstart ) )
+  ALLOCATE( spsi( npwx ) )    
+  ALLOCATE( hpsi( npwx ) )    
+  ALLOCATE( hr( nstart, nstart, 2 ) )   
+  ALLOCATE( sr( nstart, nstart ) )
   ALLOCATE( en( nstart ) )
   !
   ! ... Set up the Hamiltonian and Overlap matrix
@@ -57,47 +58,63 @@ SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
      !
      CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      !
-     hc(m,m,1) = DDOT( npw2, psi(1,m), 1, hpsi, 1 )
-     sc(m,m)   = DDOT( npw2, psi(1,m), 1, spsi, 1 )
+     hr(m,m,1) = 2.D0 * DDOT( npw2, psi(1,m), 1, hpsi, 1 )
+     sr(m,m)   = 2.D0 * DDOT( npw2, psi(1,m), 1, spsi, 1 )
+     !
+     IF ( gstart == 2 ) THEN
+        !
+        hr(m,m,1) = hr(m,m,1) - psi(1,m) * hpsi(1)
+        sr(m,m)   = sr(m,m)   - psi(1,m) * spsi(1)
+        !
+     END IF
      !
      DO j = m + 1, nstart
         !
-        hc(j,m,1) = ZDOTC( npw, psi(1,j), 1, hpsi, 1 )
-        hc(m,j,1) = CONJG( hc(j,m,1) )
+        hr(j,m,1) = 2.D0 * DDOT( npw2, psi(1,j), 1, hpsi, 1 )
+        sr(j,m)   = 2.D0 * DDOT( npw2, psi(1,j), 1, spsi, 1 )
         !
-        sc(j,m) = ZDOTC( npw, psi(1,j), 1, spsi, 1 )
-        sc(m,j) = CONJG( sc(j,m) )
+        IF ( gstart == 2 ) THEN
+           !
+           hr(j,m,1) = hr(j,m,1) - psi(1,j) * hpsi(1)
+           sr(j,m)   = sr(j,m)   - psi(1,j) * spsi(1)
+           !
+        END IF
+        !
+        hr(m,j,1) = hr(j,m,1) 
+        sr(m,j)   = sr(j,m)
         !
      END DO
      !
   END DO
   !
-  CALL reduce( 2 * nstart * nstart, hc(1,1,1) )
-  CALL reduce( 2 * nstart * nstart, sc(1,1) )
+  CALL reduce( 2 * nstart * nstart, hr(1,1,1) )
+  CALL reduce( 2 * nstart * nstart, sr(1,1) )
   !
   ! ... diagonalize
   !
-  CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, hc(1,1,2) )
+  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, hr(1,1,2) )
   !
   e(1:nbnd) = en(1:nbnd)
   !
-  ! ... update the basis set
+  ! ... update the basis set (hpsi is used as workspace)
   !
-  DO i = 1, npw
+  DO m = 1, nbnd
+     !
+     hpsi = ( 0.D0, 0.D0 )
      !
      DO ibnd = 1, nbnd
         !
-        hc(ibnd,1,1) = ZDOTU( nstart, hc(1,ibnd,2), 1, psi(i,1), npwx )
+        hpsi = hpsi + hr(ibnd,m,2) * psi(:,ibnd)
         !
      END DO
      !
-     evc(i,1:nbnd) = hc(1:nbnd,1,1)
+     evc(:,m) = hpsi
      !
   END DO
   !
   DEALLOCATE( en )
-  DEALLOCATE( sc )
-  DEALLOCATE( hc )
+  DEALLOCATE( sr )
+  DEALLOCATE( hr )
   DEALLOCATE( hpsi )
   DEALLOCATE( spsi )
   !
@@ -105,4 +122,4 @@ SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !
   RETURN
   !
-END SUBROUTINE cinitcgg
+END SUBROUTINE rinitcgg

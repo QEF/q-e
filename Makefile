@@ -22,7 +22,7 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : bindir mods libs
+pw : bindir mods libs iotk
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
 	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
