@@ -63,4 +63,5 @@ LIBS = -llapack -lblas -lasl
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 
-LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)
+LDFLAGS = $(BASIC) $(DEBUG) $(DEBUGOPT) $(OSHOME)/flib/ptools.a \
+          $(OSHOME)/flib/flib.a $(LIBS) -Wl" -f zero -Z 20000000 " $(LIBS)

@@ -30,7 +30,7 @@ LIBS= -L/usr/lang/lib64 -llapackvp -lblasvp -lssl2vp  -L/usr/local/lib/lib64/ -l
 
 # 
 LD=$(F90)
-LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
+LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(LIBS)
 #
 # ar:
 #

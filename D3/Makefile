@@ -395,7 +395,18 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/which_dft.o  \
 ../PW/write_config_to_file.o  \
 ../PW/write_ns.o  \
-../PW/ylmr2.o
+../PW/ylmr2.o   \
+../PW/bp_bess.o \
+../PW/bp_calc_btq.o \
+../PW/bp_c_phase.o \
+../PW/bp_dbess.o \
+../PW/bp_qvan3.o \
+../PW/bp_radin.o \
+../PW/bp_strings.o \
+../PW/bp_ylm_q.o \
+../PW/bp_zgedi.o \
+../PW/bp_zgefa.o
+
 #
 # targets
 #

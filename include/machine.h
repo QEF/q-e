@@ -227,10 +227,16 @@
 
 #endif
 
-#if defined(ABSOFT)
+#if defined(__ABSOFT)
 #  define getenv getenv_
 #  define getarg getarg_
 #  define iargc  iargc_
+#endif
+
+#ifdef __T3E
+#  define iargc        ipxfargc
+#  define getarg(x,y)  pxfgetarg(x,y,  ilen,ierr)
+#  define getenv(x,y)  pxfgetenv(x,0,y,ilen,ierr)
 #endif
 
 #if defined(__BENCHLIB)

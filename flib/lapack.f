@@ -19064,3 +19064,5082 @@ CIBM           PREFER SCALAR
 *     End of ZUNM2R
 *
       END
+      SUBROUTINE DGETRF( M, N, A, LDA, IPIV, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     March 31, 1993
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGETRF computes an LU factorization of a general M-by-N matrix A
+*  using partial pivoting with row interchanges.
+*
+*  The factorization has the form
+*     A = P * L * U
+*  where P is a permutation matrix, L is lower triangular with unit
+*  diagonal elements (lower trapezoidal if m > n), and U is upper
+*  triangular (upper trapezoidal if m < n).
+*
+*  This is the right-looking Level 3 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the M-by-N matrix to be factored.
+*          On exit, the factors L and U from the factorization
+*          A = P*L*U; the unit diagonal elements of L are not stored.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  IPIV    (output) INTEGER array, dimension (min(M,N))
+*          The pivot indices; for 1 <= i <= min(M,N), row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+*                has been completed, but the factor U is exactly
+*                singular, and division by zero will occur if it is used
+*                to solve a system of equations.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, IINFO, J, JB, NB
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEMM, DGETF2, DLASWP, DTRSM, XERBLA
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGETRF', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 )
+     $   RETURN
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'DGETRF', ' ', M, N, -1, -1 )
+      IF( NB.LE.1 .OR. NB.GE.MIN( M, N ) ) THEN
+*
+*        Use unblocked code.
+*
+         CALL DGETF2( M, N, A, LDA, IPIV, INFO )
+      ELSE
+*
+*        Use blocked code.
+*
+         DO 20 J = 1, MIN( M, N ), NB
+            JB = MIN( MIN( M, N )-J+1, NB )
+*
+*           Factor diagonal and subdiagonal blocks and test for exact
+*           singularity.
+*
+            CALL DGETF2( M-J+1, JB, A( J, J ), LDA, IPIV( J ), IINFO )
+*
+*           Adjust INFO and the pivot indices.
+*
+            IF( INFO.EQ.0 .AND. IINFO.GT.0 )
+     $         INFO = IINFO + J - 1
+            DO 10 I = J, MIN( M, J+JB-1 )
+               IPIV( I ) = J - 1 + IPIV( I )
+   10       CONTINUE
+*
+*           Apply interchanges to columns 1:J-1.
+*
+            CALL DLASWP( J-1, A, LDA, J, J+JB-1, IPIV, 1 )
+*
+            IF( J+JB.LE.N ) THEN
+*
+*              Apply interchanges to columns J+JB:N.
+*
+               CALL DLASWP( N-J-JB+1, A( 1, J+JB ), LDA, J, J+JB-1,
+     $                      IPIV, 1 )
+*
+*              Compute block row of U.
+*
+               CALL DTRSM( 'Left', 'Lower', 'No transpose', 'Unit', JB,
+     $                     N-J-JB+1, ONE, A( J, J ), LDA, A( J, J+JB ),
+     $                     LDA )
+               IF( J+JB.LE.M ) THEN
+*
+*                 Update trailing submatrix.
+*
+                  CALL DGEMM( 'No transpose', 'No transpose', M-J-JB+1,
+     $                        N-J-JB+1, JB, -ONE, A( J+JB, J ), LDA,
+     $                        A( J, J+JB ), LDA, ONE, A( J+JB, J+JB ),
+     $                        LDA )
+               END IF
+            END IF
+   20    CONTINUE
+      END IF
+      RETURN
+*
+*     End of DGETRF
+*
+      END
+      SUBROUTINE DGETRI( N, A, LDA, IPIV, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      DOUBLE PRECISION   A( LDA, * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGETRI computes the inverse of a matrix using the LU factorization
+*  computed by DGETRF.
+*
+*  This method inverts U and then computes inv(A) by solving the system
+*  inv(A)*L = inv(U) for inv(A).
+*
+*  Arguments
+*  =========
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the factors L and U from the factorization
+*          A = P*L*U as computed by DGETRF.
+*          On exit, if INFO = 0, the inverse of the original matrix A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  IPIV    (input) INTEGER array, dimension (N)
+*          The pivot indices from DGETRF; for 1<=i<=N, row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO=0, then WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,N).
+*          For optimal performance LWORK >= N*NB, where NB is
+*          the optimal blocksize returned by ILAENV.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, U(i,i) is exactly zero; the matrix is
+*                singular and its inverse could not be computed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IWS, J, JB, JJ, JP, LDWORK, LWKOPT, NB,
+     $                   NBMIN, NN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEMM, DGEMV, DSWAP, DTRSM, DTRTRI, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      NB = ILAENV( 1, 'DGETRI', ' ', N, -1, -1, -1 )
+      LWKOPT = N*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( N.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -3
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -6
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGETRI', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Form inv(U).  If INFO > 0 from DTRTRI, then U is singular,
+*     and the inverse is not computed.
+*
+      CALL DTRTRI( 'Upper', 'Non-unit', N, A, LDA, INFO )
+      IF( INFO.GT.0 )
+     $   RETURN
+*
+      NBMIN = 2
+      LDWORK = N
+      IF( NB.GT.1 .AND. NB.LT.N ) THEN
+         IWS = MAX( LDWORK*NB, 1 )
+         IF( LWORK.LT.IWS ) THEN
+            NB = LWORK / LDWORK
+            NBMIN = MAX( 2, ILAENV( 2, 'DGETRI', ' ', N, -1, -1, -1 ) )
+         END IF
+      ELSE
+         IWS = N
+      END IF
+*
+*     Solve the equation inv(A)*L = inv(U) for inv(A).
+*
+      IF( NB.LT.NBMIN .OR. NB.GE.N ) THEN
+*
+*        Use unblocked code.
+*
+         DO 20 J = N, 1, -1
+*
+*           Copy current column of L to WORK and replace with zeros.
+*
+            DO 10 I = J + 1, N
+               WORK( I ) = A( I, J )
+               A( I, J ) = ZERO
+   10       CONTINUE
+*
+*           Compute current column of inv(A).
+*
+            IF( J.LT.N )
+     $         CALL DGEMV( 'No transpose', N, N-J, -ONE, A( 1, J+1 ),
+     $                     LDA, WORK( J+1 ), 1, ONE, A( 1, J ), 1 )
+   20    CONTINUE
+      ELSE
+*
+*        Use blocked code.
+*
+         NN = ( ( N-1 ) / NB )*NB + 1
+         DO 50 J = NN, 1, -NB
+            JB = MIN( NB, N-J+1 )
+*
+*           Copy current block column of L to WORK and replace with
+*           zeros.
+*
+            DO 40 JJ = J, J + JB - 1
+               DO 30 I = JJ + 1, N
+                  WORK( I+( JJ-J )*LDWORK ) = A( I, JJ )
+                  A( I, JJ ) = ZERO
+   30          CONTINUE
+   40       CONTINUE
+*
+*           Compute current block column of inv(A).
+*
+            IF( J+JB.LE.N )
+     $         CALL DGEMM( 'No transpose', 'No transpose', N, JB,
+     $                     N-J-JB+1, -ONE, A( 1, J+JB ), LDA,
+     $                     WORK( J+JB ), LDWORK, ONE, A( 1, J ), LDA )
+            CALL DTRSM( 'Right', 'Lower', 'No transpose', 'Unit', N, JB,
+     $                  ONE, WORK( J ), LDWORK, A( 1, J ), LDA )
+   50    CONTINUE
+      END IF
+*
+*     Apply column interchanges.
+*
+      DO 60 J = N - 1, 1, -1
+         JP = IPIV( J )
+         IF( JP.NE.J )
+     $      CALL DSWAP( N, A( 1, J ), 1, A( 1, JP ), 1 )
+   60 CONTINUE
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of DGETRI
+*
+      END
+      SUBROUTINE ZPOTRF( UPLO, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZPOTRF computes the Cholesky factorization of a complex Hermitian
+*  positive definite matrix A.
+*
+*  The factorization has the form
+*     A = U**H * U,  if UPLO = 'U', or
+*     A = L  * L**H,  if UPLO = 'L',
+*  where U is an upper triangular matrix and L is lower triangular.
+*
+*  This is the block version of the algorithm, calling Level 3 BLAS.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the Hermitian matrix A.  If UPLO = 'U', the leading
+*          N-by-N upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the factor U or L from the Cholesky
+*          factorization A = U**H*U or A = L*L**H.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, the leading minor of order i is not
+*                positive definite, and the factorization could not be
+*                completed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      COMPLEX*16         CONE
+      PARAMETER          ( ONE = 1.0D+0, CONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            J, JB, NB
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZGEMM, ZHERK, ZPOTF2, ZTRSM
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZPOTRF', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'ZPOTRF', UPLO, N, -1, -1, -1 )
+      IF( NB.LE.1 .OR. NB.GE.N ) THEN
+*
+*        Use unblocked code.
+*
+         CALL ZPOTF2( UPLO, N, A, LDA, INFO )
+      ELSE
+*
+*        Use blocked code.
+*
+         IF( UPPER ) THEN
+*
+*           Compute the Cholesky factorization A = U'*U.
+*
+            DO 10 J = 1, N, NB
+*
+*              Update and factorize the current diagonal block and test
+*              for non-positive-definiteness.
+*
+               JB = MIN( NB, N-J+1 )
+               CALL ZHERK( 'Upper', 'Conjugate transpose', JB, J-1,
+     $                     -ONE, A( 1, J ), LDA, ONE, A( J, J ), LDA )
+               CALL ZPOTF2( 'Upper', JB, A( J, J ), LDA, INFO )
+               IF( INFO.NE.0 )
+     $            GO TO 30
+               IF( J+JB.LE.N ) THEN
+*
+*                 Compute the current block row.
+*
+                  CALL ZGEMM( 'Conjugate transpose', 'No transpose', JB,
+     $                        N-J-JB+1, J-1, -CONE, A( 1, J ), LDA,
+     $                        A( 1, J+JB ), LDA, CONE, A( J, J+JB ),
+     $                        LDA )
+                  CALL ZTRSM( 'Left', 'Upper', 'Conjugate transpose',
+     $                        'Non-unit', JB, N-J-JB+1, CONE, A( J, J ),
+     $                        LDA, A( J, J+JB ), LDA )
+               END IF
+   10       CONTINUE
+*
+         ELSE
+*
+*           Compute the Cholesky factorization A = L*L'.
+*
+            DO 20 J = 1, N, NB
+*
+*              Update and factorize the current diagonal block and test
+*              for non-positive-definiteness.
+*
+               JB = MIN( NB, N-J+1 )
+               CALL ZHERK( 'Lower', 'No transpose', JB, J-1, -ONE,
+     $                     A( J, 1 ), LDA, ONE, A( J, J ), LDA )
+               CALL ZPOTF2( 'Lower', JB, A( J, J ), LDA, INFO )
+               IF( INFO.NE.0 )
+     $            GO TO 30
+               IF( J+JB.LE.N ) THEN
+*
+*                 Compute the current block column.
+*
+                  CALL ZGEMM( 'No transpose', 'Conjugate transpose',
+     $                        N-J-JB+1, JB, J-1, -CONE, A( J+JB, 1 ),
+     $                        LDA, A( J, 1 ), LDA, CONE, A( J+JB, J ),
+     $                        LDA )
+                  CALL ZTRSM( 'Right', 'Lower', 'Conjugate transpose',
+     $                        'Non-unit', N-J-JB+1, JB, CONE, A( J, J ),
+     $                        LDA, A( J+JB, J ), LDA )
+               END IF
+   20       CONTINUE
+         END IF
+      END IF
+      GO TO 40
+*
+   30 CONTINUE
+      INFO = INFO + J - 1
+*
+   40 CONTINUE
+      RETURN
+*
+*     End of ZPOTRF
+*
+      END
+      SUBROUTINE DGETF2( M, N, A, LDA, IPIV, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1992
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGETF2 computes an LU factorization of a general m-by-n matrix A
+*  using partial pivoting with row interchanges.
+*
+*  The factorization has the form
+*     A = P * L * U
+*  where P is a permutation matrix, L is lower triangular with unit
+*  diagonal elements (lower trapezoidal if m > n), and U is upper
+*  triangular (upper trapezoidal if m < n).
+*
+*  This is the right-looking Level 2 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the m by n matrix to be factored.
+*          On exit, the factors L and U from the factorization
+*          A = P*L*U; the unit diagonal elements of L are not stored.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  IPIV    (output) INTEGER array, dimension (min(M,N))
+*          The pivot indices; for 1 <= i <= min(M,N), row i of the
+*          matrix was interchanged with row IPIV(i).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -k, the k-th argument had an illegal value
+*          > 0: if INFO = k, U(k,k) is exactly zero. The factorization
+*               has been completed, but the factor U is exactly
+*               singular, and division by zero will occur if it is used
+*               to solve a system of equations.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            J, JP
+*     ..
+*     .. External Functions ..
+      INTEGER            IDAMAX
+      EXTERNAL           IDAMAX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGER, DSCAL, DSWAP, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGETF2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 )
+     $   RETURN
+*
+      DO 10 J = 1, MIN( M, N )
+*
+*        Find pivot and test for singularity.
+*
+         JP = J - 1 + IDAMAX( M-J+1, A( J, J ), 1 )
+         IPIV( J ) = JP
+         IF( A( JP, J ).NE.ZERO ) THEN
+*
+*           Apply the interchange to columns 1:N.
+*
+            IF( JP.NE.J )
+     $         CALL DSWAP( N, A( J, 1 ), LDA, A( JP, 1 ), LDA )
+*
+*           Compute elements J+1:M of J-th column.
+*
+            IF( J.LT.M )
+     $         CALL DSCAL( M-J, ONE / A( J, J ), A( J+1, J ), 1 )
+*
+         ELSE IF( INFO.EQ.0 ) THEN
+*
+            INFO = J
+         END IF
+*
+         IF( J.LT.MIN( M, N ) ) THEN
+*
+*           Update trailing submatrix.
+*
+            CALL DGER( M-J, N-J, -ONE, A( J+1, J ), 1, A( J, J+1 ), LDA,
+     $                 A( J+1, J+1 ), LDA )
+         END IF
+   10 CONTINUE
+      RETURN
+*
+*     End of DGETF2
+*
+      END
+      SUBROUTINE DLASWP( N, A, LDA, K1, K2, IPIV, INCX )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INCX, K1, K2, LDA, N
+*     ..
+*     .. Array Arguments ..
+      INTEGER            IPIV( * )
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLASWP performs a series of row interchanges on the matrix A.
+*  One row interchange is initiated for each of rows K1 through K2 of A.
+*
+*  Arguments
+*  =========
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the matrix of column dimension N to which the row
+*          interchanges will be applied.
+*          On exit, the permuted matrix.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.
+*
+*  K1      (input) INTEGER
+*          The first element of IPIV for which a row interchange will
+*          be done.
+*
+*  K2      (input) INTEGER
+*          The last element of IPIV for which a row interchange will
+*          be done.
+*
+*  IPIV    (input) INTEGER array, dimension (M*abs(INCX))
+*          The vector of pivot indices.  Only the elements in positions
+*          K1 through K2 of IPIV are accessed.
+*          IPIV(K) = L implies rows K and L are to be interchanged.
+*
+*  INCX    (input) INTEGER
+*          The increment between successive values of IPIV.  If IPIV
+*          is negative, the pivots are applied in reverse order.
+*
+*  Further Details
+*  ===============
+*
+*  Modified by
+*   R. C. Whaley, Computer Science Dept., Univ. of Tenn., Knoxville, USA
+*
+* =====================================================================
+*
+*     .. Local Scalars ..
+      INTEGER            I, I1, I2, INC, IP, IX, IX0, J, K, N32
+      DOUBLE PRECISION   TEMP
+*     ..
+*     .. Executable Statements ..
+*
+*     Interchange row I with row IPIV(I) for each of rows K1 through K2.
+*
+      IF( INCX.GT.0 ) THEN
+         IX0 = K1
+         I1 = K1
+         I2 = K2
+         INC = 1
+      ELSE IF( INCX.LT.0 ) THEN
+         IX0 = 1 + ( 1-K2 )*INCX
+         I1 = K2
+         I2 = K1
+         INC = -1
+      ELSE
+         RETURN
+      END IF
+*
+      N32 = ( N / 32 )*32
+      IF( N32.NE.0 ) THEN
+         DO 30 J = 1, N32, 32
+            IX = IX0
+            DO 20 I = I1, I2, INC
+               IP = IPIV( IX )
+               IF( IP.NE.I ) THEN
+                  DO 10 K = J, J + 31
+                     TEMP = A( I, K )
+                     A( I, K ) = A( IP, K )
+                     A( IP, K ) = TEMP
+   10             CONTINUE
+               END IF
+               IX = IX + INCX
+   20       CONTINUE
+   30    CONTINUE
+      END IF
+      IF( N32.NE.N ) THEN
+         N32 = N32 + 1
+         IX = IX0
+         DO 50 I = I1, I2, INC
+            IP = IPIV( IX )
+            IF( IP.NE.I ) THEN
+               DO 40 K = N32, N
+                  TEMP = A( I, K )
+                  A( I, K ) = A( IP, K )
+                  A( IP, K ) = TEMP
+   40          CONTINUE
+            END IF
+            IX = IX + INCX
+   50    CONTINUE
+      END IF
+*
+      RETURN
+*
+*     End of DLASWP
+*
+      END
+      SUBROUTINE DTRTRI( UPLO, DIAG, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     March 31, 1993
+*
+*     .. Scalar Arguments ..
+      CHARACTER          DIAG, UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DTRTRI computes the inverse of a real upper or lower triangular
+*  matrix A.
+*
+*  This is the Level 3 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  A is upper triangular;
+*          = 'L':  A is lower triangular.
+*
+*  DIAG    (input) CHARACTER*1
+*          = 'N':  A is non-unit triangular;
+*          = 'U':  A is unit triangular.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the triangular matrix A.  If UPLO = 'U', the
+*          leading N-by-N upper triangular part of the array A contains
+*          the upper triangular matrix, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of the array A contains
+*          the lower triangular matrix, and the strictly upper
+*          triangular part of A is not referenced.  If DIAG = 'U', the
+*          diagonal elements of A are also not referenced and are
+*          assumed to be 1.
+*          On exit, the (triangular) inverse of the original matrix, in
+*          the same storage format.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*          > 0: if INFO = i, A(i,i) is exactly zero.  The triangular
+*               matrix is singular and its inverse can not be computed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            NOUNIT, UPPER
+      INTEGER            J, JB, NB, NN
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DTRMM, DTRSM, DTRTI2, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      NOUNIT = LSAME( DIAG, 'N' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.NOUNIT .AND. .NOT.LSAME( DIAG, 'U' ) ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DTRTRI', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Check for singularity if non-unit.
+*
+      IF( NOUNIT ) THEN
+         DO 10 INFO = 1, N
+            IF( A( INFO, INFO ).EQ.ZERO )
+     $         RETURN
+   10    CONTINUE
+         INFO = 0
+      END IF
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'DTRTRI', UPLO // DIAG, N, -1, -1, -1 )
+      IF( NB.LE.1 .OR. NB.GE.N ) THEN
+*
+*        Use unblocked code
+*
+         CALL DTRTI2( UPLO, DIAG, N, A, LDA, INFO )
+      ELSE
+*
+*        Use blocked code
+*
+         IF( UPPER ) THEN
+*
+*           Compute inverse of upper triangular matrix
+*
+            DO 20 J = 1, N, NB
+               JB = MIN( NB, N-J+1 )
+*
+*              Compute rows 1:j-1 of current block column
+*
+               CALL DTRMM( 'Left', 'Upper', 'No transpose', DIAG, J-1,
+     $                     JB, ONE, A, LDA, A( 1, J ), LDA )
+               CALL DTRSM( 'Right', 'Upper', 'No transpose', DIAG, J-1,
+     $                     JB, -ONE, A( J, J ), LDA, A( 1, J ), LDA )
+*
+*              Compute inverse of current diagonal block
+*
+               CALL DTRTI2( 'Upper', DIAG, JB, A( J, J ), LDA, INFO )
+   20       CONTINUE
+         ELSE
+*
+*           Compute inverse of lower triangular matrix
+*
+            NN = ( ( N-1 ) / NB )*NB + 1
+            DO 30 J = NN, 1, -NB
+               JB = MIN( NB, N-J+1 )
+               IF( J+JB.LE.N ) THEN
+*
+*                 Compute rows j+jb:n of current block column
+*
+                  CALL DTRMM( 'Left', 'Lower', 'No transpose', DIAG,
+     $                        N-J-JB+1, JB, ONE, A( J+JB, J+JB ), LDA,
+     $                        A( J+JB, J ), LDA )
+                  CALL DTRSM( 'Right', 'Lower', 'No transpose', DIAG,
+     $                        N-J-JB+1, JB, -ONE, A( J, J ), LDA,
+     $                        A( J+JB, J ), LDA )
+               END IF
+*
+*              Compute inverse of current diagonal block
+*
+               CALL DTRTI2( 'Lower', DIAG, JB, A( J, J ), LDA, INFO )
+   30       CONTINUE
+         END IF
+      END IF
+*
+      RETURN
+*
+*     End of DTRTRI
+*
+      END
+      SUBROUTINE DTRTI2( UPLO, DIAG, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          DIAG, UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DTRTI2 computes the inverse of a real upper or lower triangular
+*  matrix.
+*
+*  This is the Level 2 BLAS version of the algorithm.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          Specifies whether the matrix A is upper or lower triangular.
+*          = 'U':  Upper triangular
+*          = 'L':  Lower triangular
+*
+*  DIAG    (input) CHARACTER*1
+*          Specifies whether or not the matrix A is unit triangular.
+*          = 'N':  Non-unit triangular
+*          = 'U':  Unit triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the triangular matrix A.  If UPLO = 'U', the
+*          leading n by n upper triangular part of the array A contains
+*          the upper triangular matrix, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n by n lower triangular part of the array A contains
+*          the lower triangular matrix, and the strictly upper
+*          triangular part of A is not referenced.  If DIAG = 'U', the
+*          diagonal elements of A are also not referenced and are
+*          assumed to be 1.
+*
+*          On exit, the (triangular) inverse of the original matrix, in
+*          the same storage format.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -k, the k-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            NOUNIT, UPPER
+      INTEGER            J
+      DOUBLE PRECISION   AJJ
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DSCAL, DTRMV, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      NOUNIT = LSAME( DIAG, 'N' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.NOUNIT .AND. .NOT.LSAME( DIAG, 'U' ) ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DTRTI2', -INFO )
+         RETURN
+      END IF
+*
+      IF( UPPER ) THEN
+*
+*        Compute inverse of upper triangular matrix.
+*
+         DO 10 J = 1, N
+            IF( NOUNIT ) THEN
+               A( J, J ) = ONE / A( J, J )
+               AJJ = -A( J, J )
+            ELSE
+               AJJ = -ONE
+            END IF
+*
+*           Compute elements 1:j-1 of j-th column.
+*
+            CALL DTRMV( 'Upper', 'No transpose', DIAG, J-1, A, LDA,
+     $                  A( 1, J ), 1 )
+            CALL DSCAL( J-1, AJJ, A( 1, J ), 1 )
+   10    CONTINUE
+      ELSE
+*
+*        Compute inverse of lower triangular matrix.
+*
+         DO 20 J = N, 1, -1
+            IF( NOUNIT ) THEN
+               A( J, J ) = ONE / A( J, J )
+               AJJ = -A( J, J )
+            ELSE
+               AJJ = -ONE
+            END IF
+            IF( J.LT.N ) THEN
+*
+*              Compute elements j+1:n of j-th column.
+*
+               CALL DTRMV( 'Lower', 'No transpose', DIAG, N-J,
+     $                     A( J+1, J+1 ), LDA, A( J+1, J ), 1 )
+               CALL DSCAL( N-J, AJJ, A( J+1, J ), 1 )
+            END IF
+   20    CONTINUE
+      END IF
+*
+      RETURN
+*
+*     End of DTRTI2
+*
+      END
+      SUBROUTINE ZPOTF2( UPLO, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      COMPLEX*16         A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  ZPOTF2 computes the Cholesky factorization of a complex Hermitian
+*  positive definite matrix A.
+*
+*  The factorization has the form
+*     A = U' * U ,  if UPLO = 'U', or
+*     A = L  * L',  if UPLO = 'L',
+*  where U is an upper triangular matrix and L is lower triangular.
+*
+*  This is the unblocked version of the algorithm, calling Level 2 BLAS.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          Specifies whether the upper or lower triangular part of the
+*          Hermitian matrix A is stored.
+*          = 'U':  Upper triangular
+*          = 'L':  Lower triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) COMPLEX*16 array, dimension (LDA,N)
+*          On entry, the Hermitian matrix A.  If UPLO = 'U', the leading
+*          n by n upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n by n lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the factor U or L from the Cholesky
+*          factorization A = U'*U  or A = L*L'.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -k, the k-th argument had an illegal value
+*          > 0: if INFO = k, the leading minor of order k is not
+*               positive definite, and the factorization could not be
+*               completed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+      COMPLEX*16         CONE
+      PARAMETER          ( CONE = ( 1.0D+0, 0.0D+0 ) )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            J
+      DOUBLE PRECISION   AJJ
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      COMPLEX*16         ZDOTC
+      EXTERNAL           LSAME, ZDOTC
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           XERBLA, ZDSCAL, ZGEMV, ZLACGV
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          DBLE, MAX, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'ZPOTF2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+      IF( UPPER ) THEN
+*
+*        Compute the Cholesky factorization A = U'*U.
+*
+         DO 10 J = 1, N
+*
+*           Compute U(J,J) and test for non-positive-definiteness.
+*
+            AJJ = DBLE( A( J, J ) ) - ZDOTC( J-1, A( 1, J ), 1,
+     $            A( 1, J ), 1 )
+            IF( AJJ.LE.ZERO ) THEN
+               A( J, J ) = AJJ
+               GO TO 30
+            END IF
+            AJJ = SQRT( AJJ )
+            A( J, J ) = AJJ
+*
+*           Compute elements J+1:N of row J.
+*
+            IF( J.LT.N ) THEN
+               CALL ZLACGV( J-1, A( 1, J ), 1 )
+               CALL ZGEMV( 'Transpose', J-1, N-J, -CONE, A( 1, J+1 ),
+     $                     LDA, A( 1, J ), 1, CONE, A( J, J+1 ), LDA )
+               CALL ZLACGV( J-1, A( 1, J ), 1 )
+               CALL ZDSCAL( N-J, ONE / AJJ, A( J, J+1 ), LDA )
+            END IF
+   10    CONTINUE
+      ELSE
+*
+*        Compute the Cholesky factorization A = L*L'.
+*
+         DO 20 J = 1, N
+*
+*           Compute L(J,J) and test for non-positive-definiteness.
+*
+            AJJ = DBLE( A( J, J ) ) - ZDOTC( J-1, A( J, 1 ), LDA,
+     $            A( J, 1 ), LDA )
+            IF( AJJ.LE.ZERO ) THEN
+               A( J, J ) = AJJ
+               GO TO 30
+            END IF
+            AJJ = SQRT( AJJ )
+            A( J, J ) = AJJ
+*
+*           Compute elements J+1:N of column J.
+*
+            IF( J.LT.N ) THEN
+               CALL ZLACGV( J-1, A( J, 1 ), LDA )
+               CALL ZGEMV( 'No transpose', N-J, J-1, -CONE, A( J+1, 1 ),
+     $                     LDA, A( J, 1 ), LDA, CONE, A( J+1, J ), 1 )
+               CALL ZLACGV( J-1, A( J, 1 ), LDA )
+               CALL ZDSCAL( N-J, ONE / AJJ, A( J+1, J ), 1 )
+            END IF
+   20    CONTINUE
+      END IF
+      GO TO 40
+*
+   30 CONTINUE
+      INFO = J
+*
+   40 CONTINUE
+      RETURN
+*
+*     End of ZPOTF2
+*
+      END
+      SUBROUTINE DSYGV( ITYPE, JOBZ, UPLO, N, A, LDA, B, LDB, W, WORK,
+     $                  LWORK, INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOBZ, UPLO
+      INTEGER            INFO, ITYPE, LDA, LDB, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * ), W( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYGV computes all the eigenvalues, and optionally, the eigenvectors
+*  of a real generalized symmetric-definite eigenproblem, of the form
+*  A*x=(lambda)*B*x,  A*Bx=(lambda)*x,  or B*A*x=(lambda)*x.
+*  Here A and B are assumed to be symmetric and B is also
+*  positive definite.
+*
+*  Arguments
+*  =========
+*
+*  ITYPE   (input) INTEGER
+*          Specifies the problem type to be solved:
+*          = 1:  A*x = (lambda)*B*x
+*          = 2:  A*B*x = (lambda)*x
+*          = 3:  B*A*x = (lambda)*x
+*
+*  JOBZ    (input) CHARACTER*1
+*          = 'N':  Compute eigenvalues only;
+*          = 'V':  Compute eigenvalues and eigenvectors.
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangles of A and B are stored;
+*          = 'L':  Lower triangles of A and B are stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA, N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the
+*          leading N-by-N upper triangular part of A contains the
+*          upper triangular part of the matrix A.  If UPLO = 'L',
+*          the leading N-by-N lower triangular part of A contains
+*          the lower triangular part of the matrix A.
+*
+*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
+*          matrix Z of eigenvectors.  The eigenvectors are normalized
+*          as follows:
+*          if ITYPE = 1 or 2, Z**T*B*Z = I;
+*          if ITYPE = 3, Z**T*inv(B)*Z = I.
+*          If JOBZ = 'N', then on exit the upper triangle (if UPLO='U')
+*          or the lower triangle (if UPLO='L') of A, including the
+*          diagonal, is destroyed.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  B       (input/output) DOUBLE PRECISION array, dimension (LDB, N)
+*          On entry, the symmetric positive definite matrix B.
+*          If UPLO = 'U', the leading N-by-N upper triangular part of B
+*          contains the upper triangular part of the matrix B.
+*          If UPLO = 'L', the leading N-by-N lower triangular part of B
+*          contains the lower triangular part of the matrix B.
+*
+*          On exit, if INFO <= N, the part of B containing the matrix is
+*          overwritten by the triangular factor U or L from the Cholesky
+*          factorization B = U**T*U or B = L*L**T.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  W       (output) DOUBLE PRECISION array, dimension (N)
+*          If INFO = 0, the eigenvalues in ascending order.
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The length of the array WORK.  LWORK >= max(1,3*N-1).
+*          For optimal efficiency, LWORK >= (NB+2)*N,
+*          where NB is the blocksize for DSYTRD returned by ILAENV.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  DPOTRF or DSYEV returned an error code:
+*             <= N:  if INFO = i, DSYEV failed to converge;
+*                    i off-diagonal elements of an intermediate
+*                    tridiagonal form did not converge to zero;
+*             > N:   if INFO = N + i, for 1 <= i <= N, then the leading
+*                    minor of order i of B is not positive definite.
+*                    The factorization of B could not be completed and
+*                    no eigenvalues or eigenvectors were computed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY, UPPER, WANTZ
+      CHARACTER          TRANS
+      INTEGER            LWKOPT, NB, NEIG
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DPOTRF, DSYEV, DSYGST, DTRMM, DTRSM, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      WANTZ = LSAME( JOBZ, 'V' )
+      UPPER = LSAME( UPLO, 'U' )
+      LQUERY = ( LWORK.EQ.-1 )
+*
+      INFO = 0
+      IF( ITYPE.LT.1 .OR. ITYPE.GT.3 ) THEN
+         INFO = -1
+      ELSE IF( .NOT.( WANTZ .OR. LSAME( JOBZ, 'N' ) ) ) THEN
+         INFO = -2
+      ELSE IF( .NOT.( UPPER .OR. LSAME( UPLO, 'L' ) ) ) THEN
+         INFO = -3
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -6
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -8
+      ELSE IF( LWORK.LT.MAX( 1, 3*N-1 ) .AND. .NOT.LQUERY ) THEN
+         INFO = -11
+      END IF
+*
+      IF( INFO.EQ.0 ) THEN
+         NB = ILAENV( 1, 'DSYTRD', UPLO, N, -1, -1, -1 )
+         LWKOPT = ( NB+2 )*N
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYGV ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Form a Cholesky factorization of B.
+*
+      CALL DPOTRF( UPLO, N, B, LDB, INFO )
+      IF( INFO.NE.0 ) THEN
+         INFO = N + INFO
+         RETURN
+      END IF
+*
+*     Transform problem to standard eigenvalue problem and solve.
+*
+      CALL DSYGST( ITYPE, UPLO, N, A, LDA, B, LDB, INFO )
+      CALL DSYEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, INFO )
+*
+      IF( WANTZ ) THEN
+*
+*        Backtransform eigenvectors to the original problem.
+*
+         NEIG = N
+         IF( INFO.GT.0 )
+     $      NEIG = INFO - 1
+         IF( ITYPE.EQ.1 .OR. ITYPE.EQ.2 ) THEN
+*
+*           For A*x=(lambda)*B*x and A*B*x=(lambda)*x;
+*           backtransform eigenvectors: x = inv(L)'*y or inv(U)*y
+*
+            IF( UPPER ) THEN
+               TRANS = 'N'
+            ELSE
+               TRANS = 'T'
+            END IF
+*
+            CALL DTRSM( 'Left', UPLO, TRANS, 'Non-unit', N, NEIG, ONE,
+     $                  B, LDB, A, LDA )
+*
+         ELSE IF( ITYPE.EQ.3 ) THEN
+*
+*           For B*A*x=(lambda)*x;
+*           backtransform eigenvectors: x = L*y or U'*y
+*
+            IF( UPPER ) THEN
+               TRANS = 'T'
+            ELSE
+               TRANS = 'N'
+            END IF
+*
+            CALL DTRMM( 'Left', UPLO, TRANS, 'Non-unit', N, NEIG, ONE,
+     $                  B, LDB, A, LDA )
+         END IF
+      END IF
+*
+      WORK( 1 ) = LWKOPT
+      RETURN
+*
+*     End of DSYGV
+*
+      END
+      SUBROUTINE DPOTRF( UPLO, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     March 31, 1993
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DPOTRF computes the Cholesky factorization of a real symmetric
+*  positive definite matrix A.
+*
+*  The factorization has the form
+*     A = U**T * U,  if UPLO = 'U', or
+*     A = L  * L**T,  if UPLO = 'L',
+*  where U is an upper triangular matrix and L is lower triangular.
+*
+*  This is the block version of the algorithm, calling Level 3 BLAS.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          N-by-N upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the factor U or L from the Cholesky
+*          factorization A = U**T*U or A = L*L**T.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, the leading minor of order i is not
+*                positive definite, and the factorization could not be
+*                completed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            J, JB, NB
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEMM, DPOTF2, DSYRK, DTRSM, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DPOTRF', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'DPOTRF', UPLO, N, -1, -1, -1 )
+      IF( NB.LE.1 .OR. NB.GE.N ) THEN
+*
+*        Use unblocked code.
+*
+         CALL DPOTF2( UPLO, N, A, LDA, INFO )
+      ELSE
+*
+*        Use blocked code.
+*
+         IF( UPPER ) THEN
+*
+*           Compute the Cholesky factorization A = U'*U.
+*
+            DO 10 J = 1, N, NB
+*
+*              Update and factorize the current diagonal block and test
+*              for non-positive-definiteness.
+*
+               JB = MIN( NB, N-J+1 )
+               CALL DSYRK( 'Upper', 'Transpose', JB, J-1, -ONE,
+     $                     A( 1, J ), LDA, ONE, A( J, J ), LDA )
+               CALL DPOTF2( 'Upper', JB, A( J, J ), LDA, INFO )
+               IF( INFO.NE.0 )
+     $            GO TO 30
+               IF( J+JB.LE.N ) THEN
+*
+*                 Compute the current block row.
+*
+                  CALL DGEMM( 'Transpose', 'No transpose', JB, N-J-JB+1,
+     $                        J-1, -ONE, A( 1, J ), LDA, A( 1, J+JB ),
+     $                        LDA, ONE, A( J, J+JB ), LDA )
+                  CALL DTRSM( 'Left', 'Upper', 'Transpose', 'Non-unit',
+     $                        JB, N-J-JB+1, ONE, A( J, J ), LDA,
+     $                        A( J, J+JB ), LDA )
+               END IF
+   10       CONTINUE
+*
+         ELSE
+*
+*           Compute the Cholesky factorization A = L*L'.
+*
+            DO 20 J = 1, N, NB
+*
+*              Update and factorize the current diagonal block and test
+*              for non-positive-definiteness.
+*
+               JB = MIN( NB, N-J+1 )
+               CALL DSYRK( 'Lower', 'No transpose', JB, J-1, -ONE,
+     $                     A( J, 1 ), LDA, ONE, A( J, J ), LDA )
+               CALL DPOTF2( 'Lower', JB, A( J, J ), LDA, INFO )
+               IF( INFO.NE.0 )
+     $            GO TO 30
+               IF( J+JB.LE.N ) THEN
+*
+*                 Compute the current block column.
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', N-J-JB+1, JB,
+     $                        J-1, -ONE, A( J+JB, 1 ), LDA, A( J, 1 ),
+     $                        LDA, ONE, A( J+JB, J ), LDA )
+                  CALL DTRSM( 'Right', 'Lower', 'Transpose', 'Non-unit',
+     $                        N-J-JB+1, JB, ONE, A( J, J ), LDA,
+     $                        A( J+JB, J ), LDA )
+               END IF
+   20       CONTINUE
+         END IF
+      END IF
+      GO TO 40
+*
+   30 CONTINUE
+      INFO = INFO + J - 1
+*
+   40 CONTINUE
+      RETURN
+*
+*     End of DPOTRF
+*
+      END
+      SUBROUTINE DSYEV( JOBZ, UPLO, N, A, LDA, W, WORK, LWORK, INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          JOBZ, UPLO
+      INTEGER            INFO, LDA, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), W( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYEV computes all eigenvalues and, optionally, eigenvectors of a
+*  real symmetric matrix A.
+*
+*  Arguments
+*  =========
+*
+*  JOBZ    (input) CHARACTER*1
+*          = 'N':  Compute eigenvalues only;
+*          = 'V':  Compute eigenvalues and eigenvectors.
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA, N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the
+*          leading N-by-N upper triangular part of A contains the
+*          upper triangular part of the matrix A.  If UPLO = 'L',
+*          the leading N-by-N lower triangular part of A contains
+*          the lower triangular part of the matrix A.
+*          On exit, if JOBZ = 'V', then if INFO = 0, A contains the
+*          orthonormal eigenvectors of the matrix A.
+*          If JOBZ = 'N', then on exit the lower triangle (if UPLO='L')
+*          or the upper triangle (if UPLO='U') of A, including the
+*          diagonal, is destroyed.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  W       (output) DOUBLE PRECISION array, dimension (N)
+*          If INFO = 0, the eigenvalues in ascending order.
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The length of the array WORK.  LWORK >= max(1,3*N-1).
+*          For optimal efficiency, LWORK >= (NB+2)*N,
+*          where NB is the blocksize for DSYTRD returned by ILAENV.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*          > 0:  if INFO = i, the algorithm failed to converge; i
+*                off-diagonal elements of an intermediate tridiagonal
+*                form did not converge to zero.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LOWER, LQUERY, WANTZ
+      INTEGER            IINFO, IMAX, INDE, INDTAU, INDWRK, ISCALE,
+     $                   LLWORK, LOPT, LWKOPT, NB
+      DOUBLE PRECISION   ANRM, BIGNUM, EPS, RMAX, RMIN, SAFMIN, SIGMA,
+     $                   SMLNUM
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      DOUBLE PRECISION   DLAMCH, DLANSY
+      EXTERNAL           LSAME, ILAENV, DLAMCH, DLANSY
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLASCL, DORGTR, DSCAL, DSTEQR, DSTERF, DSYTRD,
+     $                   XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      WANTZ = LSAME( JOBZ, 'V' )
+      LOWER = LSAME( UPLO, 'L' )
+      LQUERY = ( LWORK.EQ.-1 )
+*
+      INFO = 0
+      IF( .NOT.( WANTZ .OR. LSAME( JOBZ, 'N' ) ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.( LOWER .OR. LSAME( UPLO, 'U' ) ) ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LWORK.LT.MAX( 1, 3*N-1 ) .AND. .NOT.LQUERY ) THEN
+         INFO = -8
+      END IF
+*
+      IF( INFO.EQ.0 ) THEN
+         NB = ILAENV( 1, 'DSYTRD', UPLO, N, -1, -1, -1 )
+         LWKOPT = MAX( 1, ( NB+2 )*N )
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYEV ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      IF( N.EQ.1 ) THEN
+         W( 1 ) = A( 1, 1 )
+         WORK( 1 ) = 3
+         IF( WANTZ )
+     $      A( 1, 1 ) = ONE
+         RETURN
+      END IF
+*
+*     Get machine constants.
+*
+      SAFMIN = DLAMCH( 'Safe minimum' )
+      EPS = DLAMCH( 'Precision' )
+      SMLNUM = SAFMIN / EPS
+      BIGNUM = ONE / SMLNUM
+      RMIN = SQRT( SMLNUM )
+      RMAX = SQRT( BIGNUM )
+*
+*     Scale matrix to allowable range, if necessary.
+*
+      ANRM = DLANSY( 'M', UPLO, N, A, LDA, WORK )
+      ISCALE = 0
+      IF( ANRM.GT.ZERO .AND. ANRM.LT.RMIN ) THEN
+         ISCALE = 1
+         SIGMA = RMIN / ANRM
+      ELSE IF( ANRM.GT.RMAX ) THEN
+         ISCALE = 1
+         SIGMA = RMAX / ANRM
+      END IF
+      IF( ISCALE.EQ.1 )
+     $   CALL DLASCL( UPLO, 0, 0, ONE, SIGMA, N, N, A, LDA, INFO )
+*
+*     Call DSYTRD to reduce symmetric matrix to tridiagonal form.
+*
+      INDE = 1
+      INDTAU = INDE + N
+      INDWRK = INDTAU + N
+      LLWORK = LWORK - INDWRK + 1
+      CALL DSYTRD( UPLO, N, A, LDA, W, WORK( INDE ), WORK( INDTAU ),
+     $             WORK( INDWRK ), LLWORK, IINFO )
+      LOPT = 2*N + WORK( INDWRK )
+*
+*     For eigenvalues only, call DSTERF.  For eigenvectors, first call
+*     DORGTR to generate the orthogonal matrix, then call DSTEQR.
+*
+      IF( .NOT.WANTZ ) THEN
+         CALL DSTERF( N, W, WORK( INDE ), INFO )
+      ELSE
+         CALL DORGTR( UPLO, N, A, LDA, WORK( INDTAU ), WORK( INDWRK ),
+     $                LLWORK, IINFO )
+         CALL DSTEQR( JOBZ, N, W, WORK( INDE ), A, LDA, WORK( INDTAU ),
+     $                INFO )
+      END IF
+*
+*     If matrix was scaled, then rescale eigenvalues appropriately.
+*
+      IF( ISCALE.EQ.1 ) THEN
+         IF( INFO.EQ.0 ) THEN
+            IMAX = N
+         ELSE
+            IMAX = INFO - 1
+         END IF
+         CALL DSCAL( IMAX, ONE / SIGMA, W, 1 )
+      END IF
+*
+*     Set WORK(1) to optimal workspace size.
+*
+      WORK( 1 ) = LWKOPT
+*
+      RETURN
+*
+*     End of DSYEV
+*
+      END
+      SUBROUTINE DSYGST( ITYPE, UPLO, N, A, LDA, B, LDB, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     September 30, 1994
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, ITYPE, LDA, LDB, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYGST reduces a real symmetric-definite generalized eigenproblem
+*  to standard form.
+*
+*  If ITYPE = 1, the problem is A*x = lambda*B*x,
+*  and A is overwritten by inv(U**T)*A*inv(U) or inv(L)*A*inv(L**T)
+*
+*  If ITYPE = 2 or 3, the problem is A*B*x = lambda*x or
+*  B*A*x = lambda*x, and A is overwritten by U*A*U**T or L**T*A*L.
+*
+*  B must have been previously factorized as U**T*U or L*L**T by DPOTRF.
+*
+*  Arguments
+*  =========
+*
+*  ITYPE   (input) INTEGER
+*          = 1: compute inv(U**T)*A*inv(U) or inv(L)*A*inv(L**T);
+*          = 2 or 3: compute U*A*U**T or L**T*A*L.
+*
+*  UPLO    (input) CHARACTER
+*          = 'U':  Upper triangle of A is stored and B is factored as
+*                  U**T*U;
+*          = 'L':  Lower triangle of A is stored and B is factored as
+*                  L*L**T.
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          N-by-N upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the transformed matrix, stored in the
+*          same format as A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  B       (input) DOUBLE PRECISION array, dimension (LDB,N)
+*          The triangular factor from the Cholesky factorization of B,
+*          as returned by DPOTRF.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, HALF
+      PARAMETER          ( ONE = 1.0D0, HALF = 0.5D0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            K, KB, NB
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DSYGS2, DSYMM, DSYR2K, DTRMM, DTRSM, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( ITYPE.LT.1 .OR. ITYPE.GT.3 ) THEN
+         INFO = -1
+      ELSE IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYGST', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+*     Determine the block size for this environment.
+*
+      NB = ILAENV( 1, 'DSYGST', UPLO, N, -1, -1, -1 )
+*
+      IF( NB.LE.1 .OR. NB.GE.N ) THEN
+*
+*        Use unblocked code
+*
+         CALL DSYGS2( ITYPE, UPLO, N, A, LDA, B, LDB, INFO )
+      ELSE
+*
+*        Use blocked code
+*
+         IF( ITYPE.EQ.1 ) THEN
+            IF( UPPER ) THEN
+*
+*              Compute inv(U')*A*inv(U)
+*
+               DO 10 K = 1, N, NB
+                  KB = MIN( N-K+1, NB )
+*
+*                 Update the upper triangle of A(k:n,k:n)
+*
+                  CALL DSYGS2( ITYPE, UPLO, KB, A( K, K ), LDA,
+     $                         B( K, K ), LDB, INFO )
+                  IF( K+KB.LE.N ) THEN
+                     CALL DTRSM( 'Left', UPLO, 'Transpose', 'Non-unit',
+     $                           KB, N-K-KB+1, ONE, B( K, K ), LDB,
+     $                           A( K, K+KB ), LDA )
+                     CALL DSYMM( 'Left', UPLO, KB, N-K-KB+1, -HALF,
+     $                           A( K, K ), LDA, B( K, K+KB ), LDB, ONE,
+     $                           A( K, K+KB ), LDA )
+                     CALL DSYR2K( UPLO, 'Transpose', N-K-KB+1, KB, -ONE,
+     $                            A( K, K+KB ), LDA, B( K, K+KB ), LDB,
+     $                            ONE, A( K+KB, K+KB ), LDA )
+                     CALL DSYMM( 'Left', UPLO, KB, N-K-KB+1, -HALF,
+     $                           A( K, K ), LDA, B( K, K+KB ), LDB, ONE,
+     $                           A( K, K+KB ), LDA )
+                     CALL DTRSM( 'Right', UPLO, 'No transpose',
+     $                           'Non-unit', KB, N-K-KB+1, ONE,
+     $                           B( K+KB, K+KB ), LDB, A( K, K+KB ),
+     $                           LDA )
+                  END IF
+   10          CONTINUE
+            ELSE
+*
+*              Compute inv(L)*A*inv(L')
+*
+               DO 20 K = 1, N, NB
+                  KB = MIN( N-K+1, NB )
+*
+*                 Update the lower triangle of A(k:n,k:n)
+*
+                  CALL DSYGS2( ITYPE, UPLO, KB, A( K, K ), LDA,
+     $                         B( K, K ), LDB, INFO )
+                  IF( K+KB.LE.N ) THEN
+                     CALL DTRSM( 'Right', UPLO, 'Transpose', 'Non-unit',
+     $                           N-K-KB+1, KB, ONE, B( K, K ), LDB,
+     $                           A( K+KB, K ), LDA )
+                     CALL DSYMM( 'Right', UPLO, N-K-KB+1, KB, -HALF,
+     $                           A( K, K ), LDA, B( K+KB, K ), LDB, ONE,
+     $                           A( K+KB, K ), LDA )
+                     CALL DSYR2K( UPLO, 'No transpose', N-K-KB+1, KB,
+     $                            -ONE, A( K+KB, K ), LDA, B( K+KB, K ),
+     $                            LDB, ONE, A( K+KB, K+KB ), LDA )
+                     CALL DSYMM( 'Right', UPLO, N-K-KB+1, KB, -HALF,
+     $                           A( K, K ), LDA, B( K+KB, K ), LDB, ONE,
+     $                           A( K+KB, K ), LDA )
+                     CALL DTRSM( 'Left', UPLO, 'No transpose',
+     $                           'Non-unit', N-K-KB+1, KB, ONE,
+     $                           B( K+KB, K+KB ), LDB, A( K+KB, K ),
+     $                           LDA )
+                  END IF
+   20          CONTINUE
+            END IF
+         ELSE
+            IF( UPPER ) THEN
+*
+*              Compute U*A*U'
+*
+               DO 30 K = 1, N, NB
+                  KB = MIN( N-K+1, NB )
+*
+*                 Update the upper triangle of A(1:k+kb-1,1:k+kb-1)
+*
+                  CALL DTRMM( 'Left', UPLO, 'No transpose', 'Non-unit',
+     $                        K-1, KB, ONE, B, LDB, A( 1, K ), LDA )
+                  CALL DSYMM( 'Right', UPLO, K-1, KB, HALF, A( K, K ),
+     $                        LDA, B( 1, K ), LDB, ONE, A( 1, K ), LDA )
+                  CALL DSYR2K( UPLO, 'No transpose', K-1, KB, ONE,
+     $                         A( 1, K ), LDA, B( 1, K ), LDB, ONE, A,
+     $                         LDA )
+                  CALL DSYMM( 'Right', UPLO, K-1, KB, HALF, A( K, K ),
+     $                        LDA, B( 1, K ), LDB, ONE, A( 1, K ), LDA )
+                  CALL DTRMM( 'Right', UPLO, 'Transpose', 'Non-unit',
+     $                        K-1, KB, ONE, B( K, K ), LDB, A( 1, K ),
+     $                        LDA )
+                  CALL DSYGS2( ITYPE, UPLO, KB, A( K, K ), LDA,
+     $                         B( K, K ), LDB, INFO )
+   30          CONTINUE
+            ELSE
+*
+*              Compute L'*A*L
+*
+               DO 40 K = 1, N, NB
+                  KB = MIN( N-K+1, NB )
+*
+*                 Update the lower triangle of A(1:k+kb-1,1:k+kb-1)
+*
+                  CALL DTRMM( 'Right', UPLO, 'No transpose', 'Non-unit',
+     $                        KB, K-1, ONE, B, LDB, A( K, 1 ), LDA )
+                  CALL DSYMM( 'Left', UPLO, KB, K-1, HALF, A( K, K ),
+     $                        LDA, B( K, 1 ), LDB, ONE, A( K, 1 ), LDA )
+                  CALL DSYR2K( UPLO, 'Transpose', K-1, KB, ONE,
+     $                         A( K, 1 ), LDA, B( K, 1 ), LDB, ONE, A,
+     $                         LDA )
+                  CALL DSYMM( 'Left', UPLO, KB, K-1, HALF, A( K, K ),
+     $                        LDA, B( K, 1 ), LDB, ONE, A( K, 1 ), LDA )
+                  CALL DTRMM( 'Left', UPLO, 'Transpose', 'Non-unit', KB,
+     $                        K-1, ONE, B( K, K ), LDB, A( K, 1 ), LDA )
+                  CALL DSYGS2( ITYPE, UPLO, KB, A( K, K ), LDA,
+     $                         B( K, K ), LDB, INFO )
+   40          CONTINUE
+            END IF
+         END IF
+      END IF
+      RETURN
+*
+*     End of DSYGST
+*
+      END
+      DOUBLE PRECISION FUNCTION DLANSY( NORM, UPLO, N, A, LDA, WORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          NORM, UPLO
+      INTEGER            LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLANSY  returns the value of the one norm,  or the Frobenius norm, or
+*  the  infinity norm,  or the  element of  largest absolute value  of a
+*  real symmetric matrix A.
+*
+*  Description
+*  ===========
+*
+*  DLANSY returns the value
+*
+*     DLANSY = ( max(abs(A(i,j))), NORM = 'M' or 'm'
+*              (
+*              ( norm1(A),         NORM = '1', 'O' or 'o'
+*              (
+*              ( normI(A),         NORM = 'I' or 'i'
+*              (
+*              ( normF(A),         NORM = 'F', 'f', 'E' or 'e'
+*
+*  where  norm1  denotes the  one norm of a matrix (maximum column sum),
+*  normI  denotes the  infinity norm  of a matrix  (maximum row sum) and
+*  normF  denotes the  Frobenius norm of a matrix (square root of sum of
+*  squares).  Note that  max(abs(A(i,j)))  is not a  matrix norm.
+*
+*  Arguments
+*  =========
+*
+*  NORM    (input) CHARACTER*1
+*          Specifies the value to be returned in DLANSY as described
+*          above.
+*
+*  UPLO    (input) CHARACTER*1
+*          Specifies whether the upper or lower triangular part of the
+*          symmetric matrix A is to be referenced.
+*          = 'U':  Upper triangular part of A is referenced
+*          = 'L':  Lower triangular part of A is referenced
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.  When N = 0, DLANSY is
+*          set to zero.
+*
+*  A       (input) DOUBLE PRECISION array, dimension (LDA,N)
+*          The symmetric matrix A.  If UPLO = 'U', the leading n by n
+*          upper triangular part of A contains the upper triangular part
+*          of the matrix A, and the strictly lower triangular part of A
+*          is not referenced.  If UPLO = 'L', the leading n by n lower
+*          triangular part of A contains the lower triangular part of
+*          the matrix A, and the strictly upper triangular part of A is
+*          not referenced.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(N,1).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (LWORK),
+*          where LWORK >= N when NORM = 'I' or '1' or 'O'; otherwise,
+*          WORK is not referenced.
+*
+* =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      DOUBLE PRECISION   ABSA, SCALE, SUM, VALUE
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLASSQ
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+      IF( N.EQ.0 ) THEN
+         VALUE = ZERO
+      ELSE IF( LSAME( NORM, 'M' ) ) THEN
+*
+*        Find max(abs(A(i,j))).
+*
+         VALUE = ZERO
+         IF( LSAME( UPLO, 'U' ) ) THEN
+            DO 20 J = 1, N
+               DO 10 I = 1, J
+                  VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   10          CONTINUE
+   20       CONTINUE
+         ELSE
+            DO 40 J = 1, N
+               DO 30 I = J, N
+                  VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   30          CONTINUE
+   40       CONTINUE
+         END IF
+      ELSE IF( ( LSAME( NORM, 'I' ) ) .OR. ( LSAME( NORM, 'O' ) ) .OR.
+     $         ( NORM.EQ.'1' ) ) THEN
+*
+*        Find normI(A) ( = norm1(A), since A is symmetric).
+*
+         VALUE = ZERO
+         IF( LSAME( UPLO, 'U' ) ) THEN
+            DO 60 J = 1, N
+               SUM = ZERO
+               DO 50 I = 1, J - 1
+                  ABSA = ABS( A( I, J ) )
+                  SUM = SUM + ABSA
+                  WORK( I ) = WORK( I ) + ABSA
+   50          CONTINUE
+               WORK( J ) = SUM + ABS( A( J, J ) )
+   60       CONTINUE
+            DO 70 I = 1, N
+               VALUE = MAX( VALUE, WORK( I ) )
+   70       CONTINUE
+         ELSE
+            DO 80 I = 1, N
+               WORK( I ) = ZERO
+   80       CONTINUE
+            DO 100 J = 1, N
+               SUM = WORK( J ) + ABS( A( J, J ) )
+               DO 90 I = J + 1, N
+                  ABSA = ABS( A( I, J ) )
+                  SUM = SUM + ABSA
+                  WORK( I ) = WORK( I ) + ABSA
+   90          CONTINUE
+               VALUE = MAX( VALUE, SUM )
+  100       CONTINUE
+         END IF
+      ELSE IF( ( LSAME( NORM, 'F' ) ) .OR. ( LSAME( NORM, 'E' ) ) ) THEN
+*
+*        Find normF(A).
+*
+         SCALE = ZERO
+         SUM = ONE
+         IF( LSAME( UPLO, 'U' ) ) THEN
+            DO 110 J = 2, N
+               CALL DLASSQ( J-1, A( 1, J ), 1, SCALE, SUM )
+  110       CONTINUE
+         ELSE
+            DO 120 J = 1, N - 1
+               CALL DLASSQ( N-J, A( J+1, J ), 1, SCALE, SUM )
+  120       CONTINUE
+         END IF
+         SUM = 2*SUM
+         CALL DLASSQ( N, A, LDA+1, SCALE, SUM )
+         VALUE = SCALE*SQRT( SUM )
+      END IF
+*
+      DLANSY = VALUE
+      RETURN
+*
+*     End of DLANSY
+*
+      END
+      SUBROUTINE DORGTR( UPLO, N, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DORGTR generates a real orthogonal matrix Q which is defined as the
+*  product of n-1 elementary reflectors of order N, as returned by
+*  DSYTRD:
+*
+*  if UPLO = 'U', Q = H(n-1) . . . H(2) H(1),
+*
+*  if UPLO = 'L', Q = H(1) H(2) . . . H(n-1).
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U': Upper triangle of A contains elementary reflectors
+*                 from DSYTRD;
+*          = 'L': Lower triangle of A contains elementary reflectors
+*                 from DSYTRD.
+*
+*  N       (input) INTEGER
+*          The order of the matrix Q. N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the vectors which define the elementary reflectors,
+*          as returned by DSYTRD.
+*          On exit, the N-by-N orthogonal matrix Q.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A. LDA >= max(1,N).
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (N-1)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i), as returned by DSYTRD.
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK. LWORK >= max(1,N-1).
+*          For optimum performance LWORK >= (N-1)*NB, where NB is
+*          the optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY, UPPER
+      INTEGER            I, IINFO, J, LWKOPT, NB
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DORGQL, DORGQR, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      LQUERY = ( LWORK.EQ.-1 )
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      ELSE IF( LWORK.LT.MAX( 1, N-1 ) .AND. .NOT.LQUERY ) THEN
+         INFO = -7
+      END IF
+*
+      IF( INFO.EQ.0 ) THEN
+         IF( UPPER ) THEN
+            NB = ILAENV( 1, 'DORGQL', ' ', N-1, N-1, N-1, -1 )
+         ELSE
+            NB = ILAENV( 1, 'DORGQR', ' ', N-1, N-1, N-1, -1 )
+         END IF
+         LWKOPT = MAX( 1, N-1 )*NB
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DORGTR', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      IF( UPPER ) THEN
+*
+*        Q was determined by a call to DSYTRD with UPLO = 'U'
+*
+*        Shift the vectors which define the elementary reflectors one
+*        column to the left, and set the last row and column of Q to
+*        those of the unit matrix
+*
+         DO 20 J = 1, N - 1
+            DO 10 I = 1, J - 1
+               A( I, J ) = A( I, J+1 )
+   10       CONTINUE
+            A( N, J ) = ZERO
+   20    CONTINUE
+         DO 30 I = 1, N - 1
+            A( I, N ) = ZERO
+   30    CONTINUE
+         A( N, N ) = ONE
+*
+*        Generate Q(1:n-1,1:n-1)
+*
+         CALL DORGQL( N-1, N-1, N-1, A, LDA, TAU, WORK, LWORK, IINFO )
+*
+      ELSE
+*
+*        Q was determined by a call to DSYTRD with UPLO = 'L'.
+*
+*        Shift the vectors which define the elementary reflectors one
+*        column to the right, and set the first row and column of Q to
+*        those of the unit matrix
+*
+         DO 50 J = N, 2, -1
+            A( 1, J ) = ZERO
+            DO 40 I = J + 1, N
+               A( I, J ) = A( I, J-1 )
+   40       CONTINUE
+   50    CONTINUE
+         A( 1, 1 ) = ONE
+         DO 60 I = 2, N
+            A( I, 1 ) = ZERO
+   60    CONTINUE
+         IF( N.GT.1 ) THEN
+*
+*           Generate Q(2:n,2:n)
+*
+            CALL DORGQR( N-1, N-1, N-1, A( 2, 2 ), LDA, TAU, WORK,
+     $                   LWORK, IINFO )
+         END IF
+      END IF
+      WORK( 1 ) = LWKOPT
+      RETURN
+*
+*     End of DORGTR
+*
+      END
+      SUBROUTINE DPOTF2( UPLO, N, A, LDA, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DPOTF2 computes the Cholesky factorization of a real symmetric
+*  positive definite matrix A.
+*
+*  The factorization has the form
+*     A = U' * U ,  if UPLO = 'U', or
+*     A = L  * L',  if UPLO = 'L',
+*  where U is an upper triangular matrix and L is lower triangular.
+*
+*  This is the unblocked version of the algorithm, calling Level 2 BLAS.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          Specifies whether the upper or lower triangular part of the
+*          symmetric matrix A is stored.
+*          = 'U':  Upper triangular
+*          = 'L':  Lower triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          n by n upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n by n lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the factor U or L from the Cholesky
+*          factorization A = U'*U  or A = L*L'.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -k, the k-th argument had an illegal value
+*          > 0: if INFO = k, the leading minor of order k is not
+*               positive definite, and the factorization could not be
+*               completed.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            J
+      DOUBLE PRECISION   AJJ
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      DOUBLE PRECISION   DDOT
+      EXTERNAL           LSAME, DDOT
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEMV, DSCAL, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DPOTF2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+      IF( UPPER ) THEN
+*
+*        Compute the Cholesky factorization A = U'*U.
+*
+         DO 10 J = 1, N
+*
+*           Compute U(J,J) and test for non-positive-definiteness.
+*
+            AJJ = A( J, J ) - DDOT( J-1, A( 1, J ), 1, A( 1, J ), 1 )
+            IF( AJJ.LE.ZERO ) THEN
+               A( J, J ) = AJJ
+               GO TO 30
+            END IF
+            AJJ = SQRT( AJJ )
+            A( J, J ) = AJJ
+*
+*           Compute elements J+1:N of row J.
+*
+            IF( J.LT.N ) THEN
+               CALL DGEMV( 'Transpose', J-1, N-J, -ONE, A( 1, J+1 ),
+     $                     LDA, A( 1, J ), 1, ONE, A( J, J+1 ), LDA )
+               CALL DSCAL( N-J, ONE / AJJ, A( J, J+1 ), LDA )
+            END IF
+   10    CONTINUE
+      ELSE
+*
+*        Compute the Cholesky factorization A = L*L'.
+*
+         DO 20 J = 1, N
+*
+*           Compute L(J,J) and test for non-positive-definiteness.
+*
+            AJJ = A( J, J ) - DDOT( J-1, A( J, 1 ), LDA, A( J, 1 ),
+     $            LDA )
+            IF( AJJ.LE.ZERO ) THEN
+               A( J, J ) = AJJ
+               GO TO 30
+            END IF
+            AJJ = SQRT( AJJ )
+            A( J, J ) = AJJ
+*
+*           Compute elements J+1:N of column J.
+*
+            IF( J.LT.N ) THEN
+               CALL DGEMV( 'No transpose', N-J, J-1, -ONE, A( J+1, 1 ),
+     $                     LDA, A( J, 1 ), LDA, ONE, A( J+1, J ), 1 )
+               CALL DSCAL( N-J, ONE / AJJ, A( J+1, J ), 1 )
+            END IF
+   20    CONTINUE
+      END IF
+      GO TO 40
+*
+   30 CONTINUE
+      INFO = J
+*
+   40 CONTINUE
+      RETURN
+*
+*     End of DPOTF2
+*
+      END
+      SUBROUTINE DSYTRD( UPLO, N, A, LDA, D, E, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, LWORK, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), D( * ), E( * ), TAU( * ),
+     $                   WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYTRD reduces a real symmetric matrix A to real symmetric
+*  tridiagonal form T by an orthogonal similarity transformation:
+*  Q**T * A * Q = T.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          N-by-N upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading N-by-N lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*          On exit, if UPLO = 'U', the diagonal and first superdiagonal
+*          of A are overwritten by the corresponding elements of the
+*          tridiagonal matrix T, and the elements above the first
+*          superdiagonal, with the array TAU, represent the orthogonal
+*          matrix Q as a product of elementary reflectors; if UPLO
+*          = 'L', the diagonal and first subdiagonal of A are over-
+*          written by the corresponding elements of the tridiagonal
+*          matrix T, and the elements below the first subdiagonal, with
+*          the array TAU, represent the orthogonal matrix Q as a product
+*          of elementary reflectors. See Further Details.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  D       (output) DOUBLE PRECISION array, dimension (N)
+*          The diagonal elements of the tridiagonal matrix T:
+*          D(i) = A(i,i).
+*
+*  E       (output) DOUBLE PRECISION array, dimension (N-1)
+*          The off-diagonal elements of the tridiagonal matrix T:
+*          E(i) = A(i,i+1) if UPLO = 'U', E(i) = A(i+1,i) if UPLO = 'L'.
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (N-1)
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= 1.
+*          For optimum performance LWORK >= N*NB, where NB is the
+*          optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  If UPLO = 'U', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(n-1) . . . H(2) H(1).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(i+1:n) = 0 and v(i) = 1; v(1:i-1) is stored on exit in
+*  A(1:i-1,i+1), and tau in TAU(i).
+*
+*  If UPLO = 'L', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(1) H(2) . . . H(n-1).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i) = 0 and v(i+1) = 1; v(i+2:n) is stored on exit in A(i+2:n,i),
+*  and tau in TAU(i).
+*
+*  The contents of A on exit are illustrated by the following examples
+*  with n = 5:
+*
+*  if UPLO = 'U':                       if UPLO = 'L':
+*
+*    (  d   e   v2  v3  v4 )              (  d                  )
+*    (      d   e   v3  v4 )              (  e   d              )
+*    (          d   e   v4 )              (  v1  e   d          )
+*    (              d   e  )              (  v1  v2  e   d      )
+*    (                  d  )              (  v1  v2  v3  e   d  )
+*
+*  where d and e denote diagonal and off-diagonal elements of T, and vi
+*  denotes an element of the vector defining H(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY, UPPER
+      INTEGER            I, IINFO, IWS, J, KK, LDWORK, LWKOPT, NB,
+     $                   NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLATRD, DSYR2K, DSYTD2, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      ELSE IF( LWORK.LT.1 .AND. .NOT.LQUERY ) THEN
+         INFO = -9
+      END IF
+*
+      IF( INFO.EQ.0 ) THEN
+*
+*        Determine the block size.
+*
+         NB = ILAENV( 1, 'DSYTRD', UPLO, N, -1, -1, -1 )
+         LWKOPT = N*NB
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYTRD', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NX = N
+      IWS = 1
+      IF( NB.GT.1 .AND. NB.LT.N ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code
+*        (last block is always handled by unblocked code).
+*
+         NX = MAX( NB, ILAENV( 3, 'DSYTRD', UPLO, N, -1, -1, -1 ) )
+         IF( NX.LT.N ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = N
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  determine the
+*              minimum value of NB, and reduce NB or force use of
+*              unblocked code by setting NX = N.
+*
+               NB = MAX( LWORK / LDWORK, 1 )
+               NBMIN = ILAENV( 2, 'DSYTRD', UPLO, N, -1, -1, -1 )
+               IF( NB.LT.NBMIN )
+     $            NX = N
+            END IF
+         ELSE
+            NX = N
+         END IF
+      ELSE
+         NB = 1
+      END IF
+*
+      IF( UPPER ) THEN
+*
+*        Reduce the upper triangle of A.
+*        Columns 1:kk are handled by the unblocked method.
+*
+         KK = N - ( ( N-NX+NB-1 ) / NB )*NB
+         DO 20 I = N - NB + 1, KK + 1, -NB
+*
+*           Reduce columns i:i+nb-1 to tridiagonal form and form the
+*           matrix W which is needed to update the unreduced part of
+*           the matrix
+*
+            CALL DLATRD( UPLO, I+NB-1, NB, A, LDA, E, TAU, WORK,
+     $                   LDWORK )
+*
+*           Update the unreduced submatrix A(1:i-1,1:i-1), using an
+*           update of the form:  A := A - V*W' - W*V'
+*
+            CALL DSYR2K( UPLO, 'No transpose', I-1, NB, -ONE, A( 1, I ),
+     $                   LDA, WORK, LDWORK, ONE, A, LDA )
+*
+*           Copy superdiagonal elements back into A, and diagonal
+*           elements into D
+*
+            DO 10 J = I, I + NB - 1
+               A( J-1, J ) = E( J-1 )
+               D( J ) = A( J, J )
+   10       CONTINUE
+   20    CONTINUE
+*
+*        Use unblocked code to reduce the last or only block
+*
+         CALL DSYTD2( UPLO, KK, A, LDA, D, E, TAU, IINFO )
+      ELSE
+*
+*        Reduce the lower triangle of A
+*
+         DO 40 I = 1, N - NX, NB
+*
+*           Reduce columns i:i+nb-1 to tridiagonal form and form the
+*           matrix W which is needed to update the unreduced part of
+*           the matrix
+*
+            CALL DLATRD( UPLO, N-I+1, NB, A( I, I ), LDA, E( I ),
+     $                   TAU( I ), WORK, LDWORK )
+*
+*           Update the unreduced submatrix A(i+ib:n,i+ib:n), using
+*           an update of the form:  A := A - V*W' - W*V'
+*
+            CALL DSYR2K( UPLO, 'No transpose', N-I-NB+1, NB, -ONE,
+     $                   A( I+NB, I ), LDA, WORK( NB+1 ), LDWORK, ONE,
+     $                   A( I+NB, I+NB ), LDA )
+*
+*           Copy subdiagonal elements back into A, and diagonal
+*           elements into D
+*
+            DO 30 J = I, I + NB - 1
+               A( J+1, J ) = E( J )
+               D( J ) = A( J, J )
+   30       CONTINUE
+   40    CONTINUE
+*
+*        Use unblocked code to reduce the last or only block
+*
+         CALL DSYTD2( UPLO, N-I+1, A( I, I ), LDA, D( I ), E( I ),
+     $                TAU( I ), IINFO )
+      END IF
+*
+      WORK( 1 ) = LWKOPT
+      RETURN
+*
+*     End of DSYTRD
+*
+      END
+      SUBROUTINE DLATRD( UPLO, N, NB, A, LDA, E, TAU, W, LDW )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            LDA, LDW, N, NB
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), E( * ), TAU( * ), W( LDW, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLATRD reduces NB rows and columns of a real symmetric matrix A to
+*  symmetric tridiagonal form by an orthogonal similarity
+*  transformation Q' * A * Q, and returns the matrices V and W which are
+*  needed to apply the transformation to the unreduced part of A.
+*
+*  If UPLO = 'U', DLATRD reduces the last NB rows and columns of a
+*  matrix, of which the upper triangle is supplied;
+*  if UPLO = 'L', DLATRD reduces the first NB rows and columns of a
+*  matrix, of which the lower triangle is supplied.
+*
+*  This is an auxiliary routine called by DSYTRD.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER
+*          Specifies whether the upper or lower triangular part of the
+*          symmetric matrix A is stored:
+*          = 'U': Upper triangular
+*          = 'L': Lower triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.
+*
+*  NB      (input) INTEGER
+*          The number of rows and columns to be reduced.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          n-by-n upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n-by-n lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*          On exit:
+*          if UPLO = 'U', the last NB columns have been reduced to
+*            tridiagonal form, with the diagonal elements overwriting
+*            the diagonal elements of A; the elements above the diagonal
+*            with the array TAU, represent the orthogonal matrix Q as a
+*            product of elementary reflectors;
+*          if UPLO = 'L', the first NB columns have been reduced to
+*            tridiagonal form, with the diagonal elements overwriting
+*            the diagonal elements of A; the elements below the diagonal
+*            with the array TAU, represent the  orthogonal matrix Q as a
+*            product of elementary reflectors.
+*          See Further Details.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= (1,N).
+*
+*  E       (output) DOUBLE PRECISION array, dimension (N-1)
+*          If UPLO = 'U', E(n-nb:n-1) contains the superdiagonal
+*          elements of the last NB columns of the reduced matrix;
+*          if UPLO = 'L', E(1:nb) contains the subdiagonal elements of
+*          the first NB columns of the reduced matrix.
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (N-1)
+*          The scalar factors of the elementary reflectors, stored in
+*          TAU(n-nb:n-1) if UPLO = 'U', and in TAU(1:nb) if UPLO = 'L'.
+*          See Further Details.
+*
+*  W       (output) DOUBLE PRECISION array, dimension (LDW,NB)
+*          The n-by-nb matrix W required to update the unreduced part
+*          of A.
+*
+*  LDW     (input) INTEGER
+*          The leading dimension of the array W. LDW >= max(1,N).
+*
+*  Further Details
+*  ===============
+*
+*  If UPLO = 'U', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(n) H(n-1) . . . H(n-nb+1).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(i:n) = 0 and v(i-1) = 1; v(1:i-1) is stored on exit in A(1:i-1,i),
+*  and tau in TAU(i-1).
+*
+*  If UPLO = 'L', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(1) H(2) . . . H(nb).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i) = 0 and v(i+1) = 1; v(i+1:n) is stored on exit in A(i+1:n,i),
+*  and tau in TAU(i).
+*
+*  The elements of the vectors v together form the n-by-nb matrix V
+*  which is needed, with W, to apply the transformation to the unreduced
+*  part of the matrix, using a symmetric rank-2k update of the form:
+*  A := A - V*W' - W*V'.
+*
+*  The contents of A on exit are illustrated by the following examples
+*  with n = 5 and nb = 2:
+*
+*  if UPLO = 'U':                       if UPLO = 'L':
+*
+*    (  a   a   a   v4  v5 )              (  d                  )
+*    (      a   a   v4  v5 )              (  1   d              )
+*    (          a   1   v5 )              (  v1  1   a          )
+*    (              d   1  )              (  v1  v2  a   a      )
+*    (                  d  )              (  v1  v2  a   a   a  )
+*
+*  where d denotes a diagonal element of the reduced matrix, a denotes
+*  an element of the original matrix that is unchanged, and vi denotes
+*  an element of the vector defining H(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE, HALF
+      PARAMETER          ( ZERO = 0.0D+0, ONE = 1.0D+0, HALF = 0.5D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, IW
+      DOUBLE PRECISION   ALPHA
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DAXPY, DGEMV, DLARFG, DSCAL, DSYMV
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      DOUBLE PRECISION   DDOT
+      EXTERNAL           LSAME, DDOT
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Quick return if possible
+*
+      IF( N.LE.0 )
+     $   RETURN
+*
+      IF( LSAME( UPLO, 'U' ) ) THEN
+*
+*        Reduce last NB columns of upper triangle
+*
+         DO 10 I = N, N - NB + 1, -1
+            IW = I - N + NB
+            IF( I.LT.N ) THEN
+*
+*              Update A(1:i,i)
+*
+               CALL DGEMV( 'No transpose', I, N-I, -ONE, A( 1, I+1 ),
+     $                     LDA, W( I, IW+1 ), LDW, ONE, A( 1, I ), 1 )
+               CALL DGEMV( 'No transpose', I, N-I, -ONE, W( 1, IW+1 ),
+     $                     LDW, A( I, I+1 ), LDA, ONE, A( 1, I ), 1 )
+            END IF
+            IF( I.GT.1 ) THEN
+*
+*              Generate elementary reflector H(i) to annihilate
+*              A(1:i-2,i)
+*
+               CALL DLARFG( I-1, A( I-1, I ), A( 1, I ), 1, TAU( I-1 ) )
+               E( I-1 ) = A( I-1, I )
+               A( I-1, I ) = ONE
+*
+*              Compute W(1:i-1,i)
+*
+               CALL DSYMV( 'Upper', I-1, ONE, A, LDA, A( 1, I ), 1,
+     $                     ZERO, W( 1, IW ), 1 )
+               IF( I.LT.N ) THEN
+                  CALL DGEMV( 'Transpose', I-1, N-I, ONE, W( 1, IW+1 ),
+     $                        LDW, A( 1, I ), 1, ZERO, W( I+1, IW ), 1 )
+                  CALL DGEMV( 'No transpose', I-1, N-I, -ONE,
+     $                        A( 1, I+1 ), LDA, W( I+1, IW ), 1, ONE,
+     $                        W( 1, IW ), 1 )
+                  CALL DGEMV( 'Transpose', I-1, N-I, ONE, A( 1, I+1 ),
+     $                        LDA, A( 1, I ), 1, ZERO, W( I+1, IW ), 1 )
+                  CALL DGEMV( 'No transpose', I-1, N-I, -ONE,
+     $                        W( 1, IW+1 ), LDW, W( I+1, IW ), 1, ONE,
+     $                        W( 1, IW ), 1 )
+               END IF
+               CALL DSCAL( I-1, TAU( I-1 ), W( 1, IW ), 1 )
+               ALPHA = -HALF*TAU( I-1 )*DDOT( I-1, W( 1, IW ), 1,
+     $                 A( 1, I ), 1 )
+               CALL DAXPY( I-1, ALPHA, A( 1, I ), 1, W( 1, IW ), 1 )
+            END IF
+*
+   10    CONTINUE
+      ELSE
+*
+*        Reduce first NB columns of lower triangle
+*
+         DO 20 I = 1, NB
+*
+*           Update A(i:n,i)
+*
+            CALL DGEMV( 'No transpose', N-I+1, I-1, -ONE, A( I, 1 ),
+     $                  LDA, W( I, 1 ), LDW, ONE, A( I, I ), 1 )
+            CALL DGEMV( 'No transpose', N-I+1, I-1, -ONE, W( I, 1 ),
+     $                  LDW, A( I, 1 ), LDA, ONE, A( I, I ), 1 )
+            IF( I.LT.N ) THEN
+*
+*              Generate elementary reflector H(i) to annihilate
+*              A(i+2:n,i)
+*
+               CALL DLARFG( N-I, A( I+1, I ), A( MIN( I+2, N ), I ), 1,
+     $                      TAU( I ) )
+               E( I ) = A( I+1, I )
+               A( I+1, I ) = ONE
+*
+*              Compute W(i+1:n,i)
+*
+               CALL DSYMV( 'Lower', N-I, ONE, A( I+1, I+1 ), LDA,
+     $                     A( I+1, I ), 1, ZERO, W( I+1, I ), 1 )
+               CALL DGEMV( 'Transpose', N-I, I-1, ONE, W( I+1, 1 ), LDW,
+     $                     A( I+1, I ), 1, ZERO, W( 1, I ), 1 )
+               CALL DGEMV( 'No transpose', N-I, I-1, -ONE, A( I+1, 1 ),
+     $                     LDA, W( 1, I ), 1, ONE, W( I+1, I ), 1 )
+               CALL DGEMV( 'Transpose', N-I, I-1, ONE, A( I+1, 1 ), LDA,
+     $                     A( I+1, I ), 1, ZERO, W( 1, I ), 1 )
+               CALL DGEMV( 'No transpose', N-I, I-1, -ONE, W( I+1, 1 ),
+     $                     LDW, W( 1, I ), 1, ONE, W( I+1, I ), 1 )
+               CALL DSCAL( N-I, TAU( I ), W( I+1, I ), 1 )
+               ALPHA = -HALF*TAU( I )*DDOT( N-I, W( I+1, I ), 1,
+     $                 A( I+1, I ), 1 )
+               CALL DAXPY( N-I, ALPHA, A( I+1, I ), 1, W( I+1, I ), 1 )
+            END IF
+*
+   20    CONTINUE
+      END IF
+*
+      RETURN
+*
+*     End of DLATRD
+*
+      END
+      SUBROUTINE DORGQL( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, K, LDA, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DORGQL generates an M-by-N real matrix Q with orthonormal columns,
+*  which is defined as the last N columns of a product of K elementary
+*  reflectors of order M
+*
+*        Q  =  H(k) . . . H(2) H(1)
+*
+*  as returned by DGEQLF.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix Q. M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix Q. M >= N >= 0.
+*
+*  K       (input) INTEGER
+*          The number of elementary reflectors whose product defines the
+*          matrix Q. N >= K >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the (n-k+i)-th column must contain the vector which
+*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+*          returned by DGEQLF in the last k columns of its array
+*          argument A.
+*          On exit, the M-by-N matrix Q.
+*
+*  LDA     (input) INTEGER
+*          The first dimension of the array A. LDA >= max(1,M).
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (K)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i), as returned by DGEQLF.
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK. LWORK >= max(1,N).
+*          For optimum performance LWORK >= N*NB, where NB is the
+*          optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument has an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO
+      PARAMETER          ( ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IB, IINFO, IWS, J, KK, L, LDWORK, LWKOPT,
+     $                   NB, NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARFB, DLARFT, DORG2L, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      NB = ILAENV( 1, 'DORGQL', ' ', M, N, K, -1 )
+      LWKOPT = MAX( 1, N )*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 .OR. N.GT.M ) THEN
+         INFO = -2
+      ELSE IF( K.LT.0 .OR. K.GT.N ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -5
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -8
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DORGQL', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.LE.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      NX = 0
+      IWS = N
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code.
+*
+         NX = MAX( 0, ILAENV( 3, 'DORGQL', ' ', M, N, K, -1 ) )
+         IF( NX.LT.K ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = N
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  reduce NB and
+*              determine the minimum value of NB.
+*
+               NB = LWORK / LDWORK
+               NBMIN = MAX( 2, ILAENV( 2, 'DORGQL', ' ', M, N, K, -1 ) )
+            END IF
+         END IF
+      END IF
+*
+      IF( NB.GE.NBMIN .AND. NB.LT.K .AND. NX.LT.K ) THEN
+*
+*        Use blocked code after the first block.
+*        The last kk columns are handled by the block method.
+*
+         KK = MIN( K, ( ( K-NX+NB-1 ) / NB )*NB )
+*
+*        Set A(m-kk+1:m,1:n-kk) to zero.
+*
+         DO 20 J = 1, N - KK
+            DO 10 I = M - KK + 1, M
+               A( I, J ) = ZERO
+   10       CONTINUE
+   20    CONTINUE
+      ELSE
+         KK = 0
+      END IF
+*
+*     Use unblocked code for the first or only block.
+*
+      CALL DORG2L( M-KK, N-KK, K-KK, A, LDA, TAU, WORK, IINFO )
+*
+      IF( KK.GT.0 ) THEN
+*
+*        Use blocked code
+*
+         DO 50 I = K - KK + 1, K, NB
+            IB = MIN( NB, K-I+1 )
+            IF( N-K+I.GT.1 ) THEN
+*
+*              Form the triangular factor of the block reflector
+*              H = H(i+ib-1) . . . H(i+1) H(i)
+*
+               CALL DLARFT( 'Backward', 'Columnwise', M-K+I+IB-1, IB,
+     $                      A( 1, N-K+I ), LDA, TAU( I ), WORK, LDWORK )
+*
+*              Apply H to A(1:m-k+i+ib-1,1:n-k+i-1) from the left
+*
+               CALL DLARFB( 'Left', 'No transpose', 'Backward',
+     $                      'Columnwise', M-K+I+IB-1, N-K+I-1, IB,
+     $                      A( 1, N-K+I ), LDA, WORK, LDWORK, A, LDA,
+     $                      WORK( IB+1 ), LDWORK )
+            END IF
+*
+*           Apply H to rows 1:m-k+i+ib-1 of current block
+*
+            CALL DORG2L( M-K+I+IB-1, IB, IB, A( 1, N-K+I ), LDA,
+     $                   TAU( I ), WORK, IINFO )
+*
+*           Set rows m-k+i+ib:m of current block to zero
+*
+            DO 40 J = N - K + I, N - K + I + IB - 1
+               DO 30 L = M - K + I + IB, M
+                  A( L, J ) = ZERO
+   30          CONTINUE
+   40       CONTINUE
+   50    CONTINUE
+      END IF
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of DORGQL
+*
+      END
+      SUBROUTINE DORGQR( M, N, K, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, K, LDA, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DORGQR generates an M-by-N real matrix Q with orthonormal columns,
+*  which is defined as the first N columns of a product of K elementary
+*  reflectors of order M
+*
+*        Q  =  H(1) H(2) . . . H(k)
+*
+*  as returned by DGEQRF.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix Q. M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix Q. M >= N >= 0.
+*
+*  K       (input) INTEGER
+*          The number of elementary reflectors whose product defines the
+*          matrix Q. N >= K >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the i-th column must contain the vector which
+*          defines the elementary reflector H(i), for i = 1,2,...,k, as
+*          returned by DGEQRF in the first k columns of its array
+*          argument A.
+*          On exit, the M-by-N matrix Q.
+*
+*  LDA     (input) INTEGER
+*          The first dimension of the array A. LDA >= max(1,M).
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (K)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i), as returned by DGEQRF.
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK. LWORK >= max(1,N).
+*          For optimum performance LWORK >= N*NB, where NB is the
+*          optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument has an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO
+      PARAMETER          ( ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IB, IINFO, IWS, J, KI, KK, L, LDWORK,
+     $                   LWKOPT, NB, NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARFB, DLARFT, DORG2R, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      NB = ILAENV( 1, 'DORGQR', ' ', M, N, K, -1 )
+      LWKOPT = MAX( 1, N )*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 .OR. N.GT.M ) THEN
+         INFO = -2
+      ELSE IF( K.LT.0 .OR. K.GT.N ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -5
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -8
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DORGQR', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.LE.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      NX = 0
+      IWS = N
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code.
+*
+         NX = MAX( 0, ILAENV( 3, 'DORGQR', ' ', M, N, K, -1 ) )
+         IF( NX.LT.K ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = N
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  reduce NB and
+*              determine the minimum value of NB.
+*
+               NB = LWORK / LDWORK
+               NBMIN = MAX( 2, ILAENV( 2, 'DORGQR', ' ', M, N, K, -1 ) )
+            END IF
+         END IF
+      END IF
+*
+      IF( NB.GE.NBMIN .AND. NB.LT.K .AND. NX.LT.K ) THEN
+*
+*        Use blocked code after the last block.
+*        The first kk columns are handled by the block method.
+*
+         KI = ( ( K-NX-1 ) / NB )*NB
+         KK = MIN( K, KI+NB )
+*
+*        Set A(1:kk,kk+1:n) to zero.
+*
+         DO 20 J = KK + 1, N
+            DO 10 I = 1, KK
+               A( I, J ) = ZERO
+   10       CONTINUE
+   20    CONTINUE
+      ELSE
+         KK = 0
+      END IF
+*
+*     Use unblocked code for the last or only block.
+*
+      IF( KK.LT.N )
+     $   CALL DORG2R( M-KK, N-KK, K-KK, A( KK+1, KK+1 ), LDA,
+     $                TAU( KK+1 ), WORK, IINFO )
+*
+      IF( KK.GT.0 ) THEN
+*
+*        Use blocked code
+*
+         DO 50 I = KI + 1, 1, -NB
+            IB = MIN( NB, K-I+1 )
+            IF( I+IB.LE.N ) THEN
+*
+*              Form the triangular factor of the block reflector
+*              H = H(i) H(i+1) . . . H(i+ib-1)
+*
+               CALL DLARFT( 'Forward', 'Columnwise', M-I+1, IB,
+     $                      A( I, I ), LDA, TAU( I ), WORK, LDWORK )
+*
+*              Apply H to A(i:m,i+ib:n) from the left
+*
+               CALL DLARFB( 'Left', 'No transpose', 'Forward',
+     $                      'Columnwise', M-I+1, N-I-IB+1, IB,
+     $                      A( I, I ), LDA, WORK, LDWORK, A( I, I+IB ),
+     $                      LDA, WORK( IB+1 ), LDWORK )
+            END IF
+*
+*           Apply H to rows i:m of current block
+*
+            CALL DORG2R( M-I+1, IB, IB, A( I, I ), LDA, TAU( I ), WORK,
+     $                   IINFO )
+*
+*           Set rows 1:i-1 of current block to zero
+*
+            DO 40 J = I, I + IB - 1
+               DO 30 L = 1, I - 1
+                  A( L, J ) = ZERO
+   30          CONTINUE
+   40       CONTINUE
+   50    CONTINUE
+      END IF
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of DORGQR
+*
+      END
+      SUBROUTINE DSYGS2( ITYPE, UPLO, N, A, LDA, B, LDB, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, ITYPE, LDA, LDB, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYGS2 reduces a real symmetric-definite generalized eigenproblem
+*  to standard form.
+*
+*  If ITYPE = 1, the problem is A*x = lambda*B*x,
+*  and A is overwritten by inv(U')*A*inv(U) or inv(L)*A*inv(L')
+*
+*  If ITYPE = 2 or 3, the problem is A*B*x = lambda*x or
+*  B*A*x = lambda*x, and A is overwritten by U*A*U` or L'*A*L.
+*
+*  B must have been previously factorized as U'*U or L*L' by DPOTRF.
+*
+*  Arguments
+*  =========
+*
+*  ITYPE   (input) INTEGER
+*          = 1: compute inv(U')*A*inv(U) or inv(L)*A*inv(L');
+*          = 2 or 3: compute U*A*U' or L'*A*L.
+*
+*  UPLO    (input) CHARACTER
+*          Specifies whether the upper or lower triangular part of the
+*          symmetric matrix A is stored, and how B has been factorized.
+*          = 'U':  Upper triangular
+*          = 'L':  Lower triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrices A and B.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          n by n upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n by n lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*
+*          On exit, if INFO = 0, the transformed matrix, stored in the
+*          same format as A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  B       (input) DOUBLE PRECISION array, dimension (LDB,N)
+*          The triangular factor from the Cholesky factorization of B,
+*          as returned by DPOTRF.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit.
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, HALF
+      PARAMETER          ( ONE = 1.0D0, HALF = 0.5D0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            K
+      DOUBLE PRECISION   AKK, BKK, CT
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DAXPY, DSCAL, DSYR2, DTRMV, DTRSV, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( ITYPE.LT.1 .OR. ITYPE.GT.3 ) THEN
+         INFO = -1
+      ELSE IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYGS2', -INFO )
+         RETURN
+      END IF
+*
+      IF( ITYPE.EQ.1 ) THEN
+         IF( UPPER ) THEN
+*
+*           Compute inv(U')*A*inv(U)
+*
+            DO 10 K = 1, N
+*
+*              Update the upper triangle of A(k:n,k:n)
+*
+               AKK = A( K, K )
+               BKK = B( K, K )
+               AKK = AKK / BKK**2
+               A( K, K ) = AKK
+               IF( K.LT.N ) THEN
+                  CALL DSCAL( N-K, ONE / BKK, A( K, K+1 ), LDA )
+                  CT = -HALF*AKK
+                  CALL DAXPY( N-K, CT, B( K, K+1 ), LDB, A( K, K+1 ),
+     $                        LDA )
+                  CALL DSYR2( UPLO, N-K, -ONE, A( K, K+1 ), LDA,
+     $                        B( K, K+1 ), LDB, A( K+1, K+1 ), LDA )
+                  CALL DAXPY( N-K, CT, B( K, K+1 ), LDB, A( K, K+1 ),
+     $                        LDA )
+                  CALL DTRSV( UPLO, 'Transpose', 'Non-unit', N-K,
+     $                        B( K+1, K+1 ), LDB, A( K, K+1 ), LDA )
+               END IF
+   10       CONTINUE
+         ELSE
+*
+*           Compute inv(L)*A*inv(L')
+*
+            DO 20 K = 1, N
+*
+*              Update the lower triangle of A(k:n,k:n)
+*
+               AKK = A( K, K )
+               BKK = B( K, K )
+               AKK = AKK / BKK**2
+               A( K, K ) = AKK
+               IF( K.LT.N ) THEN
+                  CALL DSCAL( N-K, ONE / BKK, A( K+1, K ), 1 )
+                  CT = -HALF*AKK
+                  CALL DAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
+                  CALL DSYR2( UPLO, N-K, -ONE, A( K+1, K ), 1,
+     $                        B( K+1, K ), 1, A( K+1, K+1 ), LDA )
+                  CALL DAXPY( N-K, CT, B( K+1, K ), 1, A( K+1, K ), 1 )
+                  CALL DTRSV( UPLO, 'No transpose', 'Non-unit', N-K,
+     $                        B( K+1, K+1 ), LDB, A( K+1, K ), 1 )
+               END IF
+   20       CONTINUE
+         END IF
+      ELSE
+         IF( UPPER ) THEN
+*
+*           Compute U*A*U'
+*
+            DO 30 K = 1, N
+*
+*              Update the upper triangle of A(1:k,1:k)
+*
+               AKK = A( K, K )
+               BKK = B( K, K )
+               CALL DTRMV( UPLO, 'No transpose', 'Non-unit', K-1, B,
+     $                     LDB, A( 1, K ), 1 )
+               CT = HALF*AKK
+               CALL DAXPY( K-1, CT, B( 1, K ), 1, A( 1, K ), 1 )
+               CALL DSYR2( UPLO, K-1, ONE, A( 1, K ), 1, B( 1, K ), 1,
+     $                     A, LDA )
+               CALL DAXPY( K-1, CT, B( 1, K ), 1, A( 1, K ), 1 )
+               CALL DSCAL( K-1, BKK, A( 1, K ), 1 )
+               A( K, K ) = AKK*BKK**2
+   30       CONTINUE
+         ELSE
+*
+*           Compute L'*A*L
+*
+            DO 40 K = 1, N
+*
+*              Update the lower triangle of A(1:k,1:k)
+*
+               AKK = A( K, K )
+               BKK = B( K, K )
+               CALL DTRMV( UPLO, 'Transpose', 'Non-unit', K-1, B, LDB,
+     $                     A( K, 1 ), LDA )
+               CT = HALF*AKK
+               CALL DAXPY( K-1, CT, B( K, 1 ), LDB, A( K, 1 ), LDA )
+               CALL DSYR2( UPLO, K-1, ONE, A( K, 1 ), LDA, B( K, 1 ),
+     $                     LDB, A, LDA )
+               CALL DAXPY( K-1, CT, B( K, 1 ), LDB, A( K, 1 ), LDA )
+               CALL DSCAL( K-1, BKK, A( K, 1 ), LDA )
+               A( K, K ) = AKK*BKK**2
+   40       CONTINUE
+         END IF
+      END IF
+      RETURN
+*
+*     End of DSYGS2
+*
+      END
+      SUBROUTINE DSYTD2( UPLO, N, A, LDA, D, E, TAU, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), D( * ), E( * ), TAU( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DSYTD2 reduces a real symmetric matrix A to symmetric tridiagonal
+*  form T by an orthogonal similarity transformation: Q' * A * Q = T.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          Specifies whether the upper or lower triangular part of the
+*          symmetric matrix A is stored:
+*          = 'U':  Upper triangular
+*          = 'L':  Lower triangular
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
+*          n-by-n upper triangular part of A contains the upper
+*          triangular part of the matrix A, and the strictly lower
+*          triangular part of A is not referenced.  If UPLO = 'L', the
+*          leading n-by-n lower triangular part of A contains the lower
+*          triangular part of the matrix A, and the strictly upper
+*          triangular part of A is not referenced.
+*          On exit, if UPLO = 'U', the diagonal and first superdiagonal
+*          of A are overwritten by the corresponding elements of the
+*          tridiagonal matrix T, and the elements above the first
+*          superdiagonal, with the array TAU, represent the orthogonal
+*          matrix Q as a product of elementary reflectors; if UPLO
+*          = 'L', the diagonal and first subdiagonal of A are over-
+*          written by the corresponding elements of the tridiagonal
+*          matrix T, and the elements below the first subdiagonal, with
+*          the array TAU, represent the orthogonal matrix Q as a product
+*          of elementary reflectors. See Further Details.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  D       (output) DOUBLE PRECISION array, dimension (N)
+*          The diagonal elements of the tridiagonal matrix T:
+*          D(i) = A(i,i).
+*
+*  E       (output) DOUBLE PRECISION array, dimension (N-1)
+*          The off-diagonal elements of the tridiagonal matrix T:
+*          E(i) = A(i,i+1) if UPLO = 'U', E(i) = A(i+1,i) if UPLO = 'L'.
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (N-1)
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value.
+*
+*  Further Details
+*  ===============
+*
+*  If UPLO = 'U', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(n-1) . . . H(2) H(1).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(i+1:n) = 0 and v(i) = 1; v(1:i-1) is stored on exit in
+*  A(1:i-1,i+1), and tau in TAU(i).
+*
+*  If UPLO = 'L', the matrix Q is represented as a product of elementary
+*  reflectors
+*
+*     Q = H(1) H(2) . . . H(n-1).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i) = 0 and v(i+1) = 1; v(i+2:n) is stored on exit in A(i+2:n,i),
+*  and tau in TAU(i).
+*
+*  The contents of A on exit are illustrated by the following examples
+*  with n = 5:
+*
+*  if UPLO = 'U':                       if UPLO = 'L':
+*
+*    (  d   e   v2  v3  v4 )              (  d                  )
+*    (      d   e   v3  v4 )              (  e   d              )
+*    (          d   e   v4 )              (  v1  e   d          )
+*    (              d   e  )              (  v1  v2  e   d      )
+*    (                  d  )              (  v1  v2  v3  e   d  )
+*
+*  where d and e denote diagonal and off-diagonal elements of T, and vi
+*  denotes an element of the vector defining H(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO, HALF
+      PARAMETER          ( ONE = 1.0D0, ZERO = 0.0D0,
+     $                   HALF = 1.0D0 / 2.0D0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+      INTEGER            I
+      DOUBLE PRECISION   ALPHA, TAUI
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DAXPY, DLARFG, DSYMV, DSYR2, XERBLA
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      DOUBLE PRECISION   DDOT
+      EXTERNAL           LSAME, DDOT
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DSYTD2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.LE.0 )
+     $   RETURN
+*
+      IF( UPPER ) THEN
+*
+*        Reduce the upper triangle of A
+*
+         DO 10 I = N - 1, 1, -1
+*
+*           Generate elementary reflector H(i) = I - tau * v * v'
+*           to annihilate A(1:i-1,i+1)
+*
+            CALL DLARFG( I, A( I, I+1 ), A( 1, I+1 ), 1, TAUI )
+            E( I ) = A( I, I+1 )
+*
+            IF( TAUI.NE.ZERO ) THEN
+*
+*              Apply H(i) from both sides to A(1:i,1:i)
+*
+               A( I, I+1 ) = ONE
+*
+*              Compute  x := tau * A * v  storing x in TAU(1:i)
+*
+               CALL DSYMV( UPLO, I, TAUI, A, LDA, A( 1, I+1 ), 1, ZERO,
+     $                     TAU, 1 )
+*
+*              Compute  w := x - 1/2 * tau * (x'*v) * v
+*
+               ALPHA = -HALF*TAUI*DDOT( I, TAU, 1, A( 1, I+1 ), 1 )
+               CALL DAXPY( I, ALPHA, A( 1, I+1 ), 1, TAU, 1 )
+*
+*              Apply the transformation as a rank-2 update:
+*                 A := A - v * w' - w * v'
+*
+               CALL DSYR2( UPLO, I, -ONE, A( 1, I+1 ), 1, TAU, 1, A,
+     $                     LDA )
+*
+               A( I, I+1 ) = E( I )
+            END IF
+            D( I+1 ) = A( I+1, I+1 )
+            TAU( I ) = TAUI
+   10    CONTINUE
+         D( 1 ) = A( 1, 1 )
+      ELSE
+*
+*        Reduce the lower triangle of A
+*
+         DO 20 I = 1, N - 1
+*
+*           Generate elementary reflector H(i) = I - tau * v * v'
+*           to annihilate A(i+2:n,i)
+*
+            CALL DLARFG( N-I, A( I+1, I ), A( MIN( I+2, N ), I ), 1,
+     $                   TAUI )
+            E( I ) = A( I+1, I )
+*
+            IF( TAUI.NE.ZERO ) THEN
+*
+*              Apply H(i) from both sides to A(i+1:n,i+1:n)
+*
+               A( I+1, I ) = ONE
+*
+*              Compute  x := tau * A * v  storing y in TAU(i:n-1)
+*
+               CALL DSYMV( UPLO, N-I, TAUI, A( I+1, I+1 ), LDA,
+     $                     A( I+1, I ), 1, ZERO, TAU( I ), 1 )
+*
+*              Compute  w := x - 1/2 * tau * (x'*v) * v
+*
+               ALPHA = -HALF*TAUI*DDOT( N-I, TAU( I ), 1, A( I+1, I ),
+     $                 1 )
+               CALL DAXPY( N-I, ALPHA, A( I+1, I ), 1, TAU( I ), 1 )
+*
+*              Apply the transformation as a rank-2 update:
+*                 A := A - v * w' - w * v'
+*
+               CALL DSYR2( UPLO, N-I, -ONE, A( I+1, I ), 1, TAU( I ), 1,
+     $                     A( I+1, I+1 ), LDA )
+*
+               A( I+1, I ) = E( I )
+            END IF
+            D( I ) = A( I, I )
+            TAU( I ) = TAUI
+   20    CONTINUE
+         D( N ) = A( N, N )
+      END IF
+*
+      RETURN
+*
+*     End of DSYTD2
+*
+      END
+      SUBROUTINE DLARFB( SIDE, TRANS, DIRECT, STOREV, M, N, K, V, LDV,
+     $                   T, LDT, C, LDC, WORK, LDWORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          DIRECT, SIDE, STOREV, TRANS
+      INTEGER            K, LDC, LDT, LDV, LDWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   C( LDC, * ), T( LDT, * ), V( LDV, * ),
+     $                   WORK( LDWORK, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLARFB applies a real block reflector H or its transpose H' to a
+*  real m by n matrix C, from either the left or the right.
+*
+*  Arguments
+*  =========
+*
+*  SIDE    (input) CHARACTER*1
+*          = 'L': apply H or H' from the Left
+*          = 'R': apply H or H' from the Right
+*
+*  TRANS   (input) CHARACTER*1
+*          = 'N': apply H (No transpose)
+*          = 'T': apply H' (Transpose)
+*
+*  DIRECT  (input) CHARACTER*1
+*          Indicates how H is formed from a product of elementary
+*          reflectors
+*          = 'F': H = H(1) H(2) . . . H(k) (Forward)
+*          = 'B': H = H(k) . . . H(2) H(1) (Backward)
+*
+*  STOREV  (input) CHARACTER*1
+*          Indicates how the vectors which define the elementary
+*          reflectors are stored:
+*          = 'C': Columnwise
+*          = 'R': Rowwise
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix C.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix C.
+*
+*  K       (input) INTEGER
+*          The order of the matrix T (= the number of elementary
+*          reflectors whose product defines the block reflector).
+*
+*  V       (input) DOUBLE PRECISION array, dimension
+*                                (LDV,K) if STOREV = 'C'
+*                                (LDV,M) if STOREV = 'R' and SIDE = 'L'
+*                                (LDV,N) if STOREV = 'R' and SIDE = 'R'
+*          The matrix V. See further details.
+*
+*  LDV     (input) INTEGER
+*          The leading dimension of the array V.
+*          If STOREV = 'C' and SIDE = 'L', LDV >= max(1,M);
+*          if STOREV = 'C' and SIDE = 'R', LDV >= max(1,N);
+*          if STOREV = 'R', LDV >= K.
+*
+*  T       (input) DOUBLE PRECISION array, dimension (LDT,K)
+*          The triangular k by k matrix T in the representation of the
+*          block reflector.
+*
+*  LDT     (input) INTEGER
+*          The leading dimension of the array T. LDT >= K.
+*
+*  C       (input/output) DOUBLE PRECISION array, dimension (LDC,N)
+*          On entry, the m by n matrix C.
+*          On exit, C is overwritten by H*C or H'*C or C*H or C*H'.
+*
+*  LDC     (input) INTEGER
+*          The leading dimension of the array C. LDA >= max(1,M).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (LDWORK,K)
+*
+*  LDWORK  (input) INTEGER
+*          The leading dimension of the array WORK.
+*          If SIDE = 'L', LDWORK >= max(1,N);
+*          if SIDE = 'R', LDWORK >= max(1,M).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      CHARACTER          TRANST
+      INTEGER            I, J
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DCOPY, DGEMM, DTRMM
+*     ..
+*     .. Executable Statements ..
+*
+*     Quick return if possible
+*
+      IF( M.LE.0 .OR. N.LE.0 )
+     $   RETURN
+*
+      IF( LSAME( TRANS, 'N' ) ) THEN
+         TRANST = 'T'
+      ELSE
+         TRANST = 'N'
+      END IF
+*
+      IF( LSAME( STOREV, 'C' ) ) THEN
+*
+         IF( LSAME( DIRECT, 'F' ) ) THEN
+*
+*           Let  V =  ( V1 )    (first K rows)
+*                     ( V2 )
+*           where  V1  is unit lower triangular.
+*
+            IF( LSAME( SIDE, 'L' ) ) THEN
+*
+*              Form  H * C  or  H' * C  where  C = ( C1 )
+*                                                  ( C2 )
+*
+*              W := C' * V  =  (C1'*V1 + C2'*V2)  (stored in WORK)
+*
+*              W := C1'
+*
+               DO 10 J = 1, K
+                  CALL DCOPY( N, C( J, 1 ), LDC, WORK( 1, J ), 1 )
+   10          CONTINUE
+*
+*              W := W * V1
+*
+               CALL DTRMM( 'Right', 'Lower', 'No transpose', 'Unit', N,
+     $                     K, ONE, V, LDV, WORK, LDWORK )
+               IF( M.GT.K ) THEN
+*
+*                 W := W + C2'*V2
+*
+                  CALL DGEMM( 'Transpose', 'No transpose', N, K, M-K,
+     $                        ONE, C( K+1, 1 ), LDC, V( K+1, 1 ), LDV,
+     $                        ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T'  or  W * T
+*
+               CALL DTRMM( 'Right', 'Upper', TRANST, 'Non-unit', N, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - V * W'
+*
+               IF( M.GT.K ) THEN
+*
+*                 C2 := C2 - V2 * W'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M-K, N, K,
+     $                        -ONE, V( K+1, 1 ), LDV, WORK, LDWORK, ONE,
+     $                        C( K+1, 1 ), LDC )
+               END IF
+*
+*              W := W * V1'
+*
+               CALL DTRMM( 'Right', 'Lower', 'Transpose', 'Unit', N, K,
+     $                     ONE, V, LDV, WORK, LDWORK )
+*
+*              C1 := C1 - W'
+*
+               DO 30 J = 1, K
+                  DO 20 I = 1, N
+                     C( J, I ) = C( J, I ) - WORK( I, J )
+   20             CONTINUE
+   30          CONTINUE
+*
+            ELSE IF( LSAME( SIDE, 'R' ) ) THEN
+*
+*              Form  C * H  or  C * H'  where  C = ( C1  C2 )
+*
+*              W := C * V  =  (C1*V1 + C2*V2)  (stored in WORK)
+*
+*              W := C1
+*
+               DO 40 J = 1, K
+                  CALL DCOPY( M, C( 1, J ), 1, WORK( 1, J ), 1 )
+   40          CONTINUE
+*
+*              W := W * V1
+*
+               CALL DTRMM( 'Right', 'Lower', 'No transpose', 'Unit', M,
+     $                     K, ONE, V, LDV, WORK, LDWORK )
+               IF( N.GT.K ) THEN
+*
+*                 W := W + C2 * V2
+*
+                  CALL DGEMM( 'No transpose', 'No transpose', M, K, N-K,
+     $                        ONE, C( 1, K+1 ), LDC, V( K+1, 1 ), LDV,
+     $                        ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T  or  W * T'
+*
+               CALL DTRMM( 'Right', 'Upper', TRANS, 'Non-unit', M, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - W * V'
+*
+               IF( N.GT.K ) THEN
+*
+*                 C2 := C2 - W * V2'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M, N-K, K,
+     $                        -ONE, WORK, LDWORK, V( K+1, 1 ), LDV, ONE,
+     $                        C( 1, K+1 ), LDC )
+               END IF
+*
+*              W := W * V1'
+*
+               CALL DTRMM( 'Right', 'Lower', 'Transpose', 'Unit', M, K,
+     $                     ONE, V, LDV, WORK, LDWORK )
+*
+*              C1 := C1 - W
+*
+               DO 60 J = 1, K
+                  DO 50 I = 1, M
+                     C( I, J ) = C( I, J ) - WORK( I, J )
+   50             CONTINUE
+   60          CONTINUE
+            END IF
+*
+         ELSE
+*
+*           Let  V =  ( V1 )
+*                     ( V2 )    (last K rows)
+*           where  V2  is unit upper triangular.
+*
+            IF( LSAME( SIDE, 'L' ) ) THEN
+*
+*              Form  H * C  or  H' * C  where  C = ( C1 )
+*                                                  ( C2 )
+*
+*              W := C' * V  =  (C1'*V1 + C2'*V2)  (stored in WORK)
+*
+*              W := C2'
+*
+               DO 70 J = 1, K
+                  CALL DCOPY( N, C( M-K+J, 1 ), LDC, WORK( 1, J ), 1 )
+   70          CONTINUE
+*
+*              W := W * V2
+*
+               CALL DTRMM( 'Right', 'Upper', 'No transpose', 'Unit', N,
+     $                     K, ONE, V( M-K+1, 1 ), LDV, WORK, LDWORK )
+               IF( M.GT.K ) THEN
+*
+*                 W := W + C1'*V1
+*
+                  CALL DGEMM( 'Transpose', 'No transpose', N, K, M-K,
+     $                        ONE, C, LDC, V, LDV, ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T'  or  W * T
+*
+               CALL DTRMM( 'Right', 'Lower', TRANST, 'Non-unit', N, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - V * W'
+*
+               IF( M.GT.K ) THEN
+*
+*                 C1 := C1 - V1 * W'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M-K, N, K,
+     $                        -ONE, V, LDV, WORK, LDWORK, ONE, C, LDC )
+               END IF
+*
+*              W := W * V2'
+*
+               CALL DTRMM( 'Right', 'Upper', 'Transpose', 'Unit', N, K,
+     $                     ONE, V( M-K+1, 1 ), LDV, WORK, LDWORK )
+*
+*              C2 := C2 - W'
+*
+               DO 90 J = 1, K
+                  DO 80 I = 1, N
+                     C( M-K+J, I ) = C( M-K+J, I ) - WORK( I, J )
+   80             CONTINUE
+   90          CONTINUE
+*
+            ELSE IF( LSAME( SIDE, 'R' ) ) THEN
+*
+*              Form  C * H  or  C * H'  where  C = ( C1  C2 )
+*
+*              W := C * V  =  (C1*V1 + C2*V2)  (stored in WORK)
+*
+*              W := C2
+*
+               DO 100 J = 1, K
+                  CALL DCOPY( M, C( 1, N-K+J ), 1, WORK( 1, J ), 1 )
+  100          CONTINUE
+*
+*              W := W * V2
+*
+               CALL DTRMM( 'Right', 'Upper', 'No transpose', 'Unit', M,
+     $                     K, ONE, V( N-K+1, 1 ), LDV, WORK, LDWORK )
+               IF( N.GT.K ) THEN
+*
+*                 W := W + C1 * V1
+*
+                  CALL DGEMM( 'No transpose', 'No transpose', M, K, N-K,
+     $                        ONE, C, LDC, V, LDV, ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T  or  W * T'
+*
+               CALL DTRMM( 'Right', 'Lower', TRANS, 'Non-unit', M, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - W * V'
+*
+               IF( N.GT.K ) THEN
+*
+*                 C1 := C1 - W * V1'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M, N-K, K,
+     $                        -ONE, WORK, LDWORK, V, LDV, ONE, C, LDC )
+               END IF
+*
+*              W := W * V2'
+*
+               CALL DTRMM( 'Right', 'Upper', 'Transpose', 'Unit', M, K,
+     $                     ONE, V( N-K+1, 1 ), LDV, WORK, LDWORK )
+*
+*              C2 := C2 - W
+*
+               DO 120 J = 1, K
+                  DO 110 I = 1, M
+                     C( I, N-K+J ) = C( I, N-K+J ) - WORK( I, J )
+  110             CONTINUE
+  120          CONTINUE
+            END IF
+         END IF
+*
+      ELSE IF( LSAME( STOREV, 'R' ) ) THEN
+*
+         IF( LSAME( DIRECT, 'F' ) ) THEN
+*
+*           Let  V =  ( V1  V2 )    (V1: first K columns)
+*           where  V1  is unit upper triangular.
+*
+            IF( LSAME( SIDE, 'L' ) ) THEN
+*
+*              Form  H * C  or  H' * C  where  C = ( C1 )
+*                                                  ( C2 )
+*
+*              W := C' * V'  =  (C1'*V1' + C2'*V2') (stored in WORK)
+*
+*              W := C1'
+*
+               DO 130 J = 1, K
+                  CALL DCOPY( N, C( J, 1 ), LDC, WORK( 1, J ), 1 )
+  130          CONTINUE
+*
+*              W := W * V1'
+*
+               CALL DTRMM( 'Right', 'Upper', 'Transpose', 'Unit', N, K,
+     $                     ONE, V, LDV, WORK, LDWORK )
+               IF( M.GT.K ) THEN
+*
+*                 W := W + C2'*V2'
+*
+                  CALL DGEMM( 'Transpose', 'Transpose', N, K, M-K, ONE,
+     $                        C( K+1, 1 ), LDC, V( 1, K+1 ), LDV, ONE,
+     $                        WORK, LDWORK )
+               END IF
+*
+*              W := W * T'  or  W * T
+*
+               CALL DTRMM( 'Right', 'Upper', TRANST, 'Non-unit', N, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - V' * W'
+*
+               IF( M.GT.K ) THEN
+*
+*                 C2 := C2 - V2' * W'
+*
+                  CALL DGEMM( 'Transpose', 'Transpose', M-K, N, K, -ONE,
+     $                        V( 1, K+1 ), LDV, WORK, LDWORK, ONE,
+     $                        C( K+1, 1 ), LDC )
+               END IF
+*
+*              W := W * V1
+*
+               CALL DTRMM( 'Right', 'Upper', 'No transpose', 'Unit', N,
+     $                     K, ONE, V, LDV, WORK, LDWORK )
+*
+*              C1 := C1 - W'
+*
+               DO 150 J = 1, K
+                  DO 140 I = 1, N
+                     C( J, I ) = C( J, I ) - WORK( I, J )
+  140             CONTINUE
+  150          CONTINUE
+*
+            ELSE IF( LSAME( SIDE, 'R' ) ) THEN
+*
+*              Form  C * H  or  C * H'  where  C = ( C1  C2 )
+*
+*              W := C * V'  =  (C1*V1' + C2*V2')  (stored in WORK)
+*
+*              W := C1
+*
+               DO 160 J = 1, K
+                  CALL DCOPY( M, C( 1, J ), 1, WORK( 1, J ), 1 )
+  160          CONTINUE
+*
+*              W := W * V1'
+*
+               CALL DTRMM( 'Right', 'Upper', 'Transpose', 'Unit', M, K,
+     $                     ONE, V, LDV, WORK, LDWORK )
+               IF( N.GT.K ) THEN
+*
+*                 W := W + C2 * V2'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M, K, N-K,
+     $                        ONE, C( 1, K+1 ), LDC, V( 1, K+1 ), LDV,
+     $                        ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T  or  W * T'
+*
+               CALL DTRMM( 'Right', 'Upper', TRANS, 'Non-unit', M, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - W * V
+*
+               IF( N.GT.K ) THEN
+*
+*                 C2 := C2 - W * V2
+*
+                  CALL DGEMM( 'No transpose', 'No transpose', M, N-K, K,
+     $                        -ONE, WORK, LDWORK, V( 1, K+1 ), LDV, ONE,
+     $                        C( 1, K+1 ), LDC )
+               END IF
+*
+*              W := W * V1
+*
+               CALL DTRMM( 'Right', 'Upper', 'No transpose', 'Unit', M,
+     $                     K, ONE, V, LDV, WORK, LDWORK )
+*
+*              C1 := C1 - W
+*
+               DO 180 J = 1, K
+                  DO 170 I = 1, M
+                     C( I, J ) = C( I, J ) - WORK( I, J )
+  170             CONTINUE
+  180          CONTINUE
+*
+            END IF
+*
+         ELSE
+*
+*           Let  V =  ( V1  V2 )    (V2: last K columns)
+*           where  V2  is unit lower triangular.
+*
+            IF( LSAME( SIDE, 'L' ) ) THEN
+*
+*              Form  H * C  or  H' * C  where  C = ( C1 )
+*                                                  ( C2 )
+*
+*              W := C' * V'  =  (C1'*V1' + C2'*V2') (stored in WORK)
+*
+*              W := C2'
+*
+               DO 190 J = 1, K
+                  CALL DCOPY( N, C( M-K+J, 1 ), LDC, WORK( 1, J ), 1 )
+  190          CONTINUE
+*
+*              W := W * V2'
+*
+               CALL DTRMM( 'Right', 'Lower', 'Transpose', 'Unit', N, K,
+     $                     ONE, V( 1, M-K+1 ), LDV, WORK, LDWORK )
+               IF( M.GT.K ) THEN
+*
+*                 W := W + C1'*V1'
+*
+                  CALL DGEMM( 'Transpose', 'Transpose', N, K, M-K, ONE,
+     $                        C, LDC, V, LDV, ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T'  or  W * T
+*
+               CALL DTRMM( 'Right', 'Lower', TRANST, 'Non-unit', N, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - V' * W'
+*
+               IF( M.GT.K ) THEN
+*
+*                 C1 := C1 - V1' * W'
+*
+                  CALL DGEMM( 'Transpose', 'Transpose', M-K, N, K, -ONE,
+     $                        V, LDV, WORK, LDWORK, ONE, C, LDC )
+               END IF
+*
+*              W := W * V2
+*
+               CALL DTRMM( 'Right', 'Lower', 'No transpose', 'Unit', N,
+     $                     K, ONE, V( 1, M-K+1 ), LDV, WORK, LDWORK )
+*
+*              C2 := C2 - W'
+*
+               DO 210 J = 1, K
+                  DO 200 I = 1, N
+                     C( M-K+J, I ) = C( M-K+J, I ) - WORK( I, J )
+  200             CONTINUE
+  210          CONTINUE
+*
+            ELSE IF( LSAME( SIDE, 'R' ) ) THEN
+*
+*              Form  C * H  or  C * H'  where  C = ( C1  C2 )
+*
+*              W := C * V'  =  (C1*V1' + C2*V2')  (stored in WORK)
+*
+*              W := C2
+*
+               DO 220 J = 1, K
+                  CALL DCOPY( M, C( 1, N-K+J ), 1, WORK( 1, J ), 1 )
+  220          CONTINUE
+*
+*              W := W * V2'
+*
+               CALL DTRMM( 'Right', 'Lower', 'Transpose', 'Unit', M, K,
+     $                     ONE, V( 1, N-K+1 ), LDV, WORK, LDWORK )
+               IF( N.GT.K ) THEN
+*
+*                 W := W + C1 * V1'
+*
+                  CALL DGEMM( 'No transpose', 'Transpose', M, K, N-K,
+     $                        ONE, C, LDC, V, LDV, ONE, WORK, LDWORK )
+               END IF
+*
+*              W := W * T  or  W * T'
+*
+               CALL DTRMM( 'Right', 'Lower', TRANS, 'Non-unit', M, K,
+     $                     ONE, T, LDT, WORK, LDWORK )
+*
+*              C := C - W * V
+*
+               IF( N.GT.K ) THEN
+*
+*                 C1 := C1 - W * V1
+*
+                  CALL DGEMM( 'No transpose', 'No transpose', M, N-K, K,
+     $                        -ONE, WORK, LDWORK, V, LDV, ONE, C, LDC )
+               END IF
+*
+*              W := W * V2
+*
+               CALL DTRMM( 'Right', 'Lower', 'No transpose', 'Unit', M,
+     $                     K, ONE, V( 1, N-K+1 ), LDV, WORK, LDWORK )
+*
+*              C1 := C1 - W
+*
+               DO 240 J = 1, K
+                  DO 230 I = 1, M
+                     C( I, N-K+J ) = C( I, N-K+J ) - WORK( I, J )
+  230             CONTINUE
+  240          CONTINUE
+*
+            END IF
+*
+         END IF
+      END IF
+*
+      RETURN
+*
+*     End of DLARFB
+*
+      END
+      SUBROUTINE DLARFT( DIRECT, STOREV, N, K, V, LDV, TAU, T, LDT )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          DIRECT, STOREV
+      INTEGER            K, LDT, LDV, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   T( LDT, * ), TAU( * ), V( LDV, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLARFT forms the triangular factor T of a real block reflector H
+*  of order n, which is defined as a product of k elementary reflectors.
+*
+*  If DIRECT = 'F', H = H(1) H(2) . . . H(k) and T is upper triangular;
+*
+*  If DIRECT = 'B', H = H(k) . . . H(2) H(1) and T is lower triangular.
+*
+*  If STOREV = 'C', the vector which defines the elementary reflector
+*  H(i) is stored in the i-th column of the array V, and
+*
+*     H  =  I - V * T * V'
+*
+*  If STOREV = 'R', the vector which defines the elementary reflector
+*  H(i) is stored in the i-th row of the array V, and
+*
+*     H  =  I - V' * T * V
+*
+*  Arguments
+*  =========
+*
+*  DIRECT  (input) CHARACTER*1
+*          Specifies the order in which the elementary reflectors are
+*          multiplied to form the block reflector:
+*          = 'F': H = H(1) H(2) . . . H(k) (Forward)
+*          = 'B': H = H(k) . . . H(2) H(1) (Backward)
+*
+*  STOREV  (input) CHARACTER*1
+*          Specifies how the vectors which define the elementary
+*          reflectors are stored (see also Further Details):
+*          = 'C': columnwise
+*          = 'R': rowwise
+*
+*  N       (input) INTEGER
+*          The order of the block reflector H. N >= 0.
+*
+*  K       (input) INTEGER
+*          The order of the triangular factor T (= the number of
+*          elementary reflectors). K >= 1.
+*
+*  V       (input/output) DOUBLE PRECISION array, dimension
+*                               (LDV,K) if STOREV = 'C'
+*                               (LDV,N) if STOREV = 'R'
+*          The matrix V. See further details.
+*
+*  LDV     (input) INTEGER
+*          The leading dimension of the array V.
+*          If STOREV = 'C', LDV >= max(1,N); if STOREV = 'R', LDV >= K.
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (K)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i).
+*
+*  T       (output) DOUBLE PRECISION array, dimension (LDT,K)
+*          The k by k triangular factor T of the block reflector.
+*          If DIRECT = 'F', T is upper triangular; if DIRECT = 'B', T is
+*          lower triangular. The rest of the array is not used.
+*
+*  LDT     (input) INTEGER
+*          The leading dimension of the array T. LDT >= K.
+*
+*  Further Details
+*  ===============
+*
+*  The shape of the matrix V and the storage of the vectors which define
+*  the H(i) is best illustrated by the following example with n = 5 and
+*  k = 3. The elements equal to 1 are not stored; the corresponding
+*  array elements are modified but restored on exit. The rest of the
+*  array is not used.
+*
+*  DIRECT = 'F' and STOREV = 'C':         DIRECT = 'F' and STOREV = 'R':
+*
+*               V = (  1       )                 V = (  1 v1 v1 v1 v1 )
+*                   ( v1  1    )                     (     1 v2 v2 v2 )
+*                   ( v1 v2  1 )                     (        1 v3 v3 )
+*                   ( v1 v2 v3 )
+*                   ( v1 v2 v3 )
+*
+*  DIRECT = 'B' and STOREV = 'C':         DIRECT = 'B' and STOREV = 'R':
+*
+*               V = ( v1 v2 v3 )                 V = ( v1 v1  1       )
+*                   ( v1 v2 v3 )                     ( v2 v2 v2  1    )
+*                   (  1 v2 v3 )                     ( v3 v3 v3 v3  1 )
+*                   (     1 v3 )
+*                   (        1 )
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      DOUBLE PRECISION   VII
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEMV, DTRMV
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. Executable Statements ..
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 )
+     $   RETURN
+*
+      IF( LSAME( DIRECT, 'F' ) ) THEN
+         DO 20 I = 1, K
+            IF( TAU( I ).EQ.ZERO ) THEN
+*
+*              H(i)  =  I
+*
+               DO 10 J = 1, I
+                  T( J, I ) = ZERO
+   10          CONTINUE
+            ELSE
+*
+*              general case
+*
+               VII = V( I, I )
+               V( I, I ) = ONE
+               IF( LSAME( STOREV, 'C' ) ) THEN
+*
+*                 T(1:i-1,i) := - tau(i) * V(i:n,1:i-1)' * V(i:n,i)
+*
+                  CALL DGEMV( 'Transpose', N-I+1, I-1, -TAU( I ),
+     $                        V( I, 1 ), LDV, V( I, I ), 1, ZERO,
+     $                        T( 1, I ), 1 )
+               ELSE
+*
+*                 T(1:i-1,i) := - tau(i) * V(1:i-1,i:n) * V(i,i:n)'
+*
+                  CALL DGEMV( 'No transpose', I-1, N-I+1, -TAU( I ),
+     $                        V( 1, I ), LDV, V( I, I ), LDV, ZERO,
+     $                        T( 1, I ), 1 )
+               END IF
+               V( I, I ) = VII
+*
+*              T(1:i-1,i) := T(1:i-1,1:i-1) * T(1:i-1,i)
+*
+               CALL DTRMV( 'Upper', 'No transpose', 'Non-unit', I-1, T,
+     $                     LDT, T( 1, I ), 1 )
+               T( I, I ) = TAU( I )
+            END IF
+   20    CONTINUE
+      ELSE
+         DO 40 I = K, 1, -1
+            IF( TAU( I ).EQ.ZERO ) THEN
+*
+*              H(i)  =  I
+*
+               DO 30 J = I, K
+                  T( J, I ) = ZERO
+   30          CONTINUE
+            ELSE
+*
+*              general case
+*
+               IF( I.LT.K ) THEN
+                  IF( LSAME( STOREV, 'C' ) ) THEN
+                     VII = V( N-K+I, I )
+                     V( N-K+I, I ) = ONE
+*
+*                    T(i+1:k,i) :=
+*                            - tau(i) * V(1:n-k+i,i+1:k)' * V(1:n-k+i,i)
+*
+                     CALL DGEMV( 'Transpose', N-K+I, K-I, -TAU( I ),
+     $                           V( 1, I+1 ), LDV, V( 1, I ), 1, ZERO,
+     $                           T( I+1, I ), 1 )
+                     V( N-K+I, I ) = VII
+                  ELSE
+                     VII = V( I, N-K+I )
+                     V( I, N-K+I ) = ONE
+*
+*                    T(i+1:k,i) :=
+*                            - tau(i) * V(i+1:k,1:n-k+i) * V(i,1:n-k+i)'
+*
+                     CALL DGEMV( 'No transpose', K-I, N-K+I, -TAU( I ),
+     $                           V( I+1, 1 ), LDV, V( I, 1 ), LDV, ZERO,
+     $                           T( I+1, I ), 1 )
+                     V( I, N-K+I ) = VII
+                  END IF
+*
+*                 T(i+1:k,i) := T(i+1:k,i+1:k) * T(i+1:k,i)
+*
+                  CALL DTRMV( 'Lower', 'No transpose', 'Non-unit', K-I,
+     $                        T( I+1, I+1 ), LDT, T( I+1, I ), 1 )
+               END IF
+               T( I, I ) = TAU( I )
+            END IF
+   40    CONTINUE
+      END IF
+      RETURN
+*
+*     End of DLARFT
+*
+      END
+      SUBROUTINE DPOTRS( UPLO, N, NRHS, A, LDA, B, LDB, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     March 31, 1993
+*
+*     .. Scalar Arguments ..
+      CHARACTER          UPLO
+      INTEGER            INFO, LDA, LDB, N, NRHS
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DPOTRS solves a system of linear equations A*X = B with a symmetric
+*  positive definite matrix A using the Cholesky factorization
+*  A = U**T*U or A = L*L**T computed by DPOTRF.
+*
+*  Arguments
+*  =========
+*
+*  UPLO    (input) CHARACTER*1
+*          = 'U':  Upper triangle of A is stored;
+*          = 'L':  Lower triangle of A is stored.
+*
+*  N       (input) INTEGER
+*          The order of the matrix A.  N >= 0.
+*
+*  NRHS    (input) INTEGER
+*          The number of right hand sides, i.e., the number of columns
+*          of the matrix B.  NRHS >= 0.
+*
+*  A       (input) DOUBLE PRECISION array, dimension (LDA,N)
+*          The triangular factor U or L from the Cholesky factorization
+*          A = U**T*U or A = L*L**T, as computed by DPOTRF.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,N).
+*
+*  B       (input/output) DOUBLE PRECISION array, dimension (LDB,NRHS)
+*          On entry, the right hand side matrix B.
+*          On exit, the solution matrix X.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B.  LDB >= max(1,N).
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            UPPER
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DTRSM, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input parameters.
+*
+      INFO = 0
+      UPPER = LSAME( UPLO, 'U' )
+      IF( .NOT.UPPER .AND. .NOT.LSAME( UPLO, 'L' ) ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( NRHS.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( LDA.LT.MAX( 1, N ) ) THEN
+         INFO = -5
+      ELSE IF( LDB.LT.MAX( 1, N ) ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DPOTRS', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( N.EQ.0 .OR. NRHS.EQ.0 )
+     $   RETURN
+*
+      IF( UPPER ) THEN
+*
+*        Solve A*X = B where A = U'*U.
+*
+*        Solve U'*X = B, overwriting B with X.
+*
+         CALL DTRSM( 'Left', 'Upper', 'Transpose', 'Non-unit', N, NRHS,
+     $               ONE, A, LDA, B, LDB )
+*
+*        Solve U*X = B, overwriting B with X.
+*
+         CALL DTRSM( 'Left', 'Upper', 'No transpose', 'Non-unit', N,
+     $               NRHS, ONE, A, LDA, B, LDB )
+      ELSE
+*
+*        Solve A*X = B where A = L*L'.
+*
+*        Solve L*X = B, overwriting B with X.
+*
+         CALL DTRSM( 'Left', 'Lower', 'No transpose', 'Non-unit', N,
+     $               NRHS, ONE, A, LDA, B, LDB )
+*
+*        Solve L'*X = B, overwriting B with X.
+*
+         CALL DTRSM( 'Left', 'Lower', 'Transpose', 'Non-unit', N, NRHS,
+     $               ONE, A, LDA, B, LDB )
+      END IF
+*
+      RETURN
+*
+*     End of DPOTRS
+*
+      END

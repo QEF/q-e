@@ -186,7 +186,19 @@ PWOBJS=../PW/pwcom.o \
 ../PW/check.o   \
 ../PW/gather.o  \
 ../PW/scatter.o \
-../PW/init_pool.o
+../PW/init_pool.o \
+../PW/bp_bess.o \
+../PW/bp_calc_btq.o \
+../PW/bp_c_phase.o \
+../PW/bp_dbess.o \
+../PW/bp_qvan3.o \
+../PW/bp_radin.o \
+../PW/bp_strings.o \
+../PW/bp_ylm_q.o \
+../PW/bp_zgedi.o \
+../PW/bp_zgefa.o \
+../PW/ccalbec.o 
+
 
 MODULES = ../Modules/*.o ../PW/error_handler.o \
           ../PW/restart.o ../PW/upf_to_internal.o

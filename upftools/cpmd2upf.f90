@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "machine.h"
 !---------------------------------------------------------------------
 program cpmd2upf  
   !---------------------------------------------------------------------
@@ -17,11 +18,7 @@ program cpmd2upf
   implicit none
   character(len=75) filein, fileout
   logical exst
-  integer :: i,j
-#ifdef ABSOFT
-#define iargc  iargc_
-#define getarg getarg_
-#endif
+  integer :: i,ierr,ilen
   integer, external :: iargc
   !
   i = iargc ()  
@@ -33,11 +30,7 @@ program cpmd2upf
      inquire (file=filein,exist=exst)
      if(.not.exst) go to 5
   elseif (i.eq.1) then  
-#ifdef __T3E
-     call pxfgetarg (1, filein, i, j)  
-#else
      call getarg (1, filein)  
-#endif
   else  
      print '(''   usage: cpmd2upf  [input file] '')'  
      stop  

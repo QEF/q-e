@@ -21,7 +21,7 @@ program plotrho
   parameter (nwrk = 10000, nximax = 64, nyimax = 64, nxmax = 128, &
        nymax = 128, nlevelx = 19, nax = 130)
   integer :: ityp (nax), nxi, nyi, nx, ny, i, j, k, nlevels, na, &
-       nat, iargc
+       nat, ierr, ilen
   real(kind=DP) :: rhoi (0:nximax, 0:nyimax), xi (0:nximax), yi (0: &
        nyimax), rhoo (0:nxmax, 0:nymax), x (0:nxmax), y (0:nymax), &
        z (0:nlevelx), wrk (nwrk), xmin, xmax, ymin, ymax, rhoomin, &
@@ -30,19 +30,16 @@ program plotrho
   real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
   real(kind=DP) :: at (3, 3), a0
   character (len=80) :: filename, fileout, ans * 1
-
-
+  integer, external :: iargc
   logical :: logarithmic_scale
+
+
   i = iargc ()
   if (i.eq.0) then
      print '("  input file > ",$)'
      read (5, '(a)', end = 20, err = 20) filename
   elseif (i.eq.1) then
-#ifdef __T3E
-     call pxfgetarg (1, filename, i, j)
-#else
      call getarg (1, filename)
-#endif
   else
      print '("   usage: plotrho  [input file] ")'
   endif

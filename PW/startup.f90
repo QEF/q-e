@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "machine.h"
 !-----------------------------------------------------------------------
 subroutine startup (nd_nmbr, version)
   !-----------------------------------------------------------------------
@@ -48,10 +49,6 @@ subroutine startup (nd_nmbr, version)
 
 #if ! defined __PARA
   integer :: me, nproc
-#endif
-#ifdef __T3E
-#  define iargc        ipxfargc
-#  define getarg(x,y)  pxfgetarg(x,y, ilen, ierr)
 #endif
 
   character :: np * 2, cdate * 9, ctime * 9

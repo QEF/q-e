@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "machine.h"
 !---------------------------------------------------------------------
 program oldcp2upf  
   !---------------------------------------------------------------------
@@ -16,11 +17,7 @@ program oldcp2upf
   implicit none
   character(len=75) filein, fileout
   logical exst
-  integer :: i,j
-#ifdef ABSOFT
-#define iargc  iargc_
-#define getarg getarg_
-#endif
+  integer :: i,ilen,ierr
   integer, external :: iargc
   !
   i = iargc ()  
@@ -32,11 +29,7 @@ program oldcp2upf
      inquire (file=filein,exist=exst)
      if(.not.exst) go to 5
   elseif (i.eq.1) then  
-#ifdef __T3E
-     call pxfgetarg (1, filein, i, j)  
-#else
      call getarg (1, filein)  
-#endif
   else
      print '(''   usage: oldcp2upf [input file] '')'
      stop  

@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "machine.h"
 !-----------------------------------------------------------------------
 subroutine iosys
   !-----------------------------------------------------------------------
@@ -42,7 +43,7 @@ subroutine iosys
   ! local variables
   !
   character (len=30) :: atomic_positions
-  integer :: unit = 5, ionode_id = 0, i, ia, ios, is
+  integer :: unit = 5, ionode_id = 0, i, ia, ios, ierr, ilen, is
   !
   ! CONTROL namelist
 
@@ -165,11 +166,7 @@ subroutine iosys
   gdir=0
   nppstr=0
   !
-#ifdef __T3E
-  call pxfgetenv('HOME',0,pseudo_dir,i,ios)
-#else
   call getenv('HOME',pseudo_dir)
-#endif
   pseudo_dir=trim(pseudo_dir)//'/pw/pseudo/'
 
   ! ...   Variables initialization for SYSTEM
