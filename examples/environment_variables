@@ -4,7 +4,7 @@
 
 # BIN_DIR = path of compiled executables
 #     Usually this is $TOPDIR/bin, where $TOPDIR is the root of the
-#     ESPRESSO source tree.  (You must have run "make links".)
+#     ESPRESSO source tree.
 # PSEUDO_DIR = path of pseudopotentials required by the examples
 #     If you have downloaded the full ESPRESSO distribution, they
 #     should be already in $TOPDIR/pseudo; otherwise you may download
