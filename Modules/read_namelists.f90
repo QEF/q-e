@@ -133,6 +133,16 @@
         emaxpos = 0.5d0
         eopreg = 0.1d0
         eamp = 1.0d-3
+!!!!!
+    ! Non collinear program variables
+!!!!!
+        noncolin = .FALSE.
+        mcons = 0.0
+        lambda = 1.0
+        i_cons = 0
+        angle1 = 0.0
+        angle2 = 0.0
+        report = 1
         RETURN
       END SUBROUTINE
 
@@ -363,6 +373,16 @@
         CALL mp_bcast( emaxpos, ionode_id )
         CALL mp_bcast( eopreg, ionode_id )
         CALL mp_bcast( eamp, ionode_id )
+!!!!!!!!
+       ! noncolliner broadcast
+!!!!!!!!
+        CALL mp_bcast( noncolin, ionode_id )
+        CALL mp_bcast( angle1, ionode_id )
+        CALL mp_bcast( angle2, ionode_id )
+        CALL mp_bcast( report, ionode_id )
+        CALL mp_bcast( i_cons, ionode_id )
+        CALL mp_bcast( mcons, ionode_id )
+        CALL mp_bcast( lambda, ionode_id )
         RETURN
       END SUBROUTINE
 
@@ -638,7 +658,18 @@
           IF( nosym ) &
             CALL errore( sub_name ,' nosym not implemented in FPMD ', -1)
         END IF
-        RETURN
+!!!!!!!
+      ! Non collinear check
+!!!!!!!
+       IF( noncolin ) THEN
+         IF(diagonalization == 'cg') &
+           CALL errore( sub_name ,' cg not allowed with noncolin ',-1)
+         IF(diagonalization == 'diis') &
+           CALL errore( sub_name ,' diis not allowed with noncolin ',-1)
+         IF(i_cons < 0 .OR. i_cons > 2) &
+           CALL errore( sub_name ,' wrong i_cons ',-1)
+       END IF
+       RETURN
       END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!

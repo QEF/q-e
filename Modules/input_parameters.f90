@@ -329,6 +329,7 @@
           ! number of spinors
           ! "nspin = 1" for LDA simulations
           ! "nspin = 2" for LSD simulations
+          ! "nspin = 4" for NON COLLINEAR simulations
 
         REAL(dbl) :: nelup = 0.d0, neldw = 0.d0
           ! meaningful only if "nspin = 2", 
@@ -388,14 +389,29 @@
 
         REAL(dbl) :: eopreg = 0.0d0
 
-        REAL(dbl) :: eamp = 0.0d0 
+        REAL(dbl) :: eamp = 0.0d0
+
+        LOGICAL :: noncolin = .FALSE.
+
+        REAL(dbl) :: lambda = 1.0
+
+        INTEGER :: i_cons = 0
+
+        REAL(dbl) :: mcons(3,nsx) = 0.0 
+
+        REAL(dbl) :: angle1(nsx) = 0.0
+
+        REAL(dbl) :: angle2(nsx) = 0.0
+
+        INTEGER :: report = 1
 
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
              occupations, degauss, ngauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
-             edir, emaxpos, eopreg, eamp, smearing
+             edir, emaxpos, eopreg, eamp, smearing, &
+             noncolin, mcons, lambda, i_cons, angle1, angle2, report
 
 !=----------------------------------------------------------------------------=!  
 !  ELECTRONS Namelist Input Parameters
