@@ -435,7 +435,7 @@
 !        nbeg = -1, nbeg = 0, nbeg = 1 or nbeg = 2
 !======================================================================
 
-         call readfile_new                                           &
+         call readfile                                           &
      &     ( 1, ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
@@ -661,16 +661,23 @@
 !=======================================================================
 !
       hgamma(:,:) = 0.d0
+      !
       if(thdyn) then
-
+         !
          call cell_force( fcell, ainv, stress, omega, press, wmass )
-
+         !
+         ! WRITE(6,*) 'DEBUG fcell = ', fcell
+         ! WRITE(6,*) 'DEBUG stress = ', stress
+         ! WRITE(6,*) 'DEBUG omega = ', omega
+         ! WRITE(6,*) 'DEBUG press = ', press
+         ! WRITE(6,*) 'DEBUG wmass = ', wmass
+         !
          call cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
          !
          velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
          !
          call cell_gamma( hgamma, ainv, h, velh )
-
+         !
       endif
 !
 !======================================================================
@@ -964,7 +971,7 @@
          ! WRITE(6,*) 'DEBUG write taus  = ', taus(:,1)
          ! WRITE(6,*) 'DEBUG write tausm = ', tausm(:,1)
 
-         call writefile_new                                         &
+         call writefile                                         &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
@@ -1078,7 +1085,8 @@
     ! WRITE(6,*) 'DEBUG write taus  = ', taus(:,1)
     ! WRITE(6,*) 'DEBUG write tausm = ', tausm(:,1)
 
-    call writefile_new ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc, &
+    call writefile &
+     &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc, &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 

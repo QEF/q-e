@@ -565,7 +565,7 @@
       use cell_base, only: hold, h
       use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
-      use restart, only: readfile_new
+      use restart, only: readfile
       use parameters, only: nacx, nsx, natx
 
       implicit none
@@ -580,7 +580,7 @@
       real(kind=8) randy
       integer i, j, ia, is, nfi, isa, isat
 ! present in the call to read(p)file, not actually used
-      complex(kind=8) c0(1,1),cm(1,1)
+      complex(kind=8) c0(1,1,1,1),cm(1,1,1,1)
       real(kind=8) taum(1,1),vel(1,1),velm(1,1),acc(nacx)
       real(kind=8) lambda(1,1),lambdam(1,1)
       real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
@@ -599,8 +599,8 @@
 !
 ! read only h and hold from file ndr
 !
-         call readfile_new                                              &
-     &     (-1,ndr,h,hold,nfi,c0,cm,tau0,taum,vel,velm,acc,             &
+         call readfile                                              &
+     &     (-1,ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),tau0,taum,vel,velm,acc,             &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !

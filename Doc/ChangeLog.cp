@@ -1,5 +1,8 @@
 See file ChangeLog for changes after aug. 2004
 
+23-nov-04  ion_radius input parameter now specify the real space 
+           spread of the pseudocharge gaussian in both cp and fpmd code
+
 24-jul-04  few changes in module usage, sort of workaround for ifc 7.1 (CC)
 
 23-jul-04  inputs for string dynamics merged to CP input

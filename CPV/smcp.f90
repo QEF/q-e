@@ -662,7 +662,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !======================================================================
 
         if( nbeg == -1 ) then
-           call readfile_new                                            &
+           call readfile                                            &
                 &     ( 0, sm_ndr,h,hold,nfi,rep_el(sm_k)%cm,rep_el(sm_k)%cm,rep(sm_k)%taus,  &
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
@@ -892,7 +892,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !       nbeg = 0, nbeg = 1 or nbeg = 2
         !======================================================================
 
-        call readfile_new                                           &
+        call readfile                                           &
              &     ( 1, sm_ndr,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
              &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
@@ -1754,7 +1754,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         if( ( mod( nfi, isave ) == 0 ) .and. ( nfi < nomore ) ) then
 
-           call writefile_new                                                    &
+           call writefile                                                    &
                 &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
@@ -1920,7 +1920,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      !
      !
 
-     call writefile_new                                                    &
+     call writefile                                                    &
           &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
           &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &

@@ -109,7 +109,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
      !
      ! read only h and hold from file ndr
      !
-     call readfile_new                                              &
+     call readfile                                              &
           &     (-1,ndr+1,h,hold,nfi,c0,cm,rep(0)%tau0,taum,vel,velm,acc,   &
           &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
           &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps)

@@ -713,6 +713,183 @@ CONTAINS
       end subroutine
 
 
+!=----------------------------------------------------------------------------=!
+
+!-----------------------------------------------------------------------
+      subroutine writefile                                         &
+     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
+     &       fion, tps)
+!-----------------------------------------------------------------------
+!
+! read from file and distribute data calculated in preceding iterations
+!
+      use ions_base, only: nsp, na
+      use cell_base, only: s_to_r
+      use cp_restart, only: cp_writefile, cp_write_wfc
+      USE electrons_base, ONLY: nspin, nbnd
+!
+      implicit none
+      integer, INTENT(IN) :: ndw, nfi
+      real(kind=8), INTENT(IN) :: h(3,3), hold(3,3)
+      complex(kind=8), INTENT(IN) :: c0(:,:), cm(:,:)
+      real(kind=8), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
+      real(kind=8), INTENT(IN) :: vels(:,:), velsm(:,:)
+      real(kind=8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
+      real(kind=8), INTENT(IN) :: xnhe0, xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm
+      real(kind=8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      real(kind=8), INTENT(in) :: ecut, ecutw, delt
+      real(kind=8), INTENT(in) :: pmass(:)
+      real(kind=8), INTENT(in) :: celldm(:)
+      real(kind=8), INTENT(in) :: tps
+      integer, INTENT(in) :: ibrav
+
+      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
+      integer :: nk = 1, ispin
+      real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      real(kind=8) :: cdmi_ (3) = 0.0d0
+      real(kind=8), ALLOCATABLE :: taui_ (:,:) 
+      real(kind=8) :: xnhpp_ , xnhpm2_
+      real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
+      real(kind=8) :: xnhep_ , xnhem2_
+      real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+
+!
+! Do not write restart file if the unit number 
+! is negative, this is used mainly for benchmarks
+! and tests
+!
+
+      if ( ndw < 1 ) then
+        return
+      end if
+
+      ht     = TRANSPOSE( h ) 
+      htm    = TRANSPOSE( hold ) 
+      htvel  = TRANSPOSE( velh ) 
+      htm2_  = htm
+      xnhhp_ = 0.0d0
+
+      ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
+      CALL s_to_r( taus, taui_ , na, nsp, h )
+
+      cdmi_ = 0.0d0
+      xnhpp_  = xnhp0
+      xnhpm2_ = xnhpm
+
+      ALLOCATE( occ_ ( nbnd, 1, nspin ) )
+      occ_ = 2.0d0 / nspin
+
+      CALL invmat( 3, ht, htm1, omega )
+      b1 = htm1(:,1)
+      b2 = htm1(:,2)
+      b3 = htm1(:,3)
+
+      xnhep_ = 0.0d0
+      xnhem2_ = 0.0d0
+
+      CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
+        ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
+        occ_ , lambda, lambdam, b1, b2, b3, &
+        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm  )
+
+      DEALLOCATE( taui_ )
+      DEALLOCATE( occ_ )
+
+      IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
+
+      DO ispin = 1, nspin
+        CALL cp_write_wfc( ndw, ' ', 1, 1, ispin, nspin, c0, '0' )
+        CALL cp_write_wfc( ndw, ' ', 1, 1, ispin, nspin, cm, 'm' )
+      END DO
+
+      return
+      end subroutine
+
+!-----------------------------------------------------------------------
+      subroutine readfile                                        &
+     &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm, &
+     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
+     &       fion, tps)
+!-----------------------------------------------------------------------
+!
+! read from file and distribute data calculated in preceding iterations
+!
+
+      use electrons_base, only: nbnd, nspin, nel
+      use gvecw, only: ngw, ngwt
+      use ions_base, only: nsp, na
+      use cp_restart, only: cp_readfile, cp_read_cell, cp_read_wfc
+!
+      implicit none
+      integer :: ndr, nfi, flag
+      real(kind=8) :: h(3,3), hold(3,3)
+      complex(kind=8) :: c0(:,:), cm(:,:)
+      real(kind=8) :: tausm(:,:),taus(:,:), fion(:,:)
+      real(kind=8) :: vels(:,:), velsm(:,:)
+      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
+      real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
+      real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      real(kind=8), INTENT(in) :: ecut, ecutw, delt
+      real(kind=8), INTENT(in) :: pmass(:)
+      real(kind=8), INTENT(in) :: celldm(6)
+      integer, INTENT(in) :: ibrav
+      real(kind=8), INTENT(OUT) :: tps
+      !
+      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), htm2_(3,3) , xnhhp_(3,3)
+      integer :: nk = 1, ispin
+      real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      real(kind=8) :: cdmi_ (3) = 0.0d0
+      real(kind=8), ALLOCATABLE :: taui_ (:,:)
+      real(kind=8) :: xnhpp_ , xnhpm2_
+      real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
+      real(kind=8) :: xnhep_ , xnhem2_
+      real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+
+
+      IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
+
+      IF( flag == -1 ) THEN
+        CALL cp_read_cell( ndr, ' ', .TRUE., ht, htm, htvel, xnhh0, xnhhm, xnhhp_ , vnhh )
+        h     = TRANSPOSE( ht )
+        hold  = TRANSPOSE( htm )
+        velh  = TRANSPOSE( htvel )
+        RETURN
+      ELSE IF ( flag == 0 ) THEN
+        DO ispin = 1, nspin
+          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c0, '0' )
+        END DO
+        RETURN
+      END IF
+
+      ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
+      ALLOCATE( occ_ ( nbnd, 1, nspin ) )
+
+      CALL cp_readfile( ndr, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
+        ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
+        occ_ , lambda, lambdam, b1, b2, b3, &
+        xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm  )
+
+      DEALLOCATE( taui_ )
+      DEALLOCATE( occ_ )
+
+      h     = TRANSPOSE( ht )
+      hold  = TRANSPOSE( htm )
+      velh  = TRANSPOSE( htvel )
+
+      DO ispin = 1, nspin
+        CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c0, '0' )
+        CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, cm, 'm' )
+      END DO
+
+      return
+      end subroutine
+
+
 
 !=----------------------------------------------------------------------------=!
 
