@@ -93,7 +93,6 @@ PWOBJS = \
 ../PW/cft_t3e.o \
 ../PW/cfts_3.o \
 ../PW/cgramg1.o \
-../PW/check.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \

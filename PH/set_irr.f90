@@ -144,13 +144,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   Diagonalize
 !
   call cdiagh (3 * nat, phi, 3 * nat, eigen, u)
-#ifdef __PARA
-!
-!  Make sure all nodes have the same patterns
-!
-  call check (3 * nat, eigen)
-  call check (18 * nat * nat, u)
-#endif
+
 !
 !   We adjust the phase of each mode in such a way that the first
 !   non zero element is real

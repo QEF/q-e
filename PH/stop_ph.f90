@@ -19,13 +19,13 @@ subroutine stop_ph (flag)
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
-  use mp, only: mp_end
+  use mp, only: mp_end, mp_barrier
+  USE parallel_include
 #ifdef __PARA
   use para
 #endif
   implicit none
 #ifdef __PARA
-  include 'mpif.h'
   integer :: info
 #endif
   logical :: flag, exst
@@ -50,7 +50,7 @@ subroutine stop_ph (flag)
   call print_clock_ph
   call show_memory ()
 #ifdef __PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)
+  call mp_barrier()
 
   ! call mpi_finalize (info)
 #endif

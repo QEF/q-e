@@ -24,12 +24,12 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
   use para
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast  
+  USE parallel_include
 #endif
   implicit none
   integer :: iunit, lrec, nrec, isw
   complex(kind=DP) :: drho (nrxx, nspin)
 #ifdef __PARA
-  include 'mpif.h'
   !
   ! local variables
   !

@@ -11,11 +11,13 @@ subroutine stop_pp
   !
   ! Synchronize processes before stopping.
   !
-  use mp, only: mp_end
+  use mp, only: mp_end, mp_barrier
+  USE parallel_include
 #ifdef __PARA
-  include 'mpif.h'
+
   integer :: info
-  call mpi_barrier (MPI_COMM_WORLD, info)
+  
+  call mp_barrier()
 
   ! call mpi_finalize (info)
 #endif

@@ -46,7 +46,6 @@ cft_sun.o \
 cft_t3e.o \
 cfts_3.o \
 cgramg1.o \
-check.o \
 checkallsym.o \
 checksym.o \
 cinitcgg.o \

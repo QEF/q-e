@@ -44,7 +44,6 @@ PWOBJS = \
 ../PW/cft_sp.o \
 ../PW/cgramg1.o \
 ../PW/checkallsym.o \
-../PW/check.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
 ../PW/clean_pw.o \
