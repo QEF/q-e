@@ -14,37 +14,28 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   !
   !     on output: the number of points is doubled and xk and wk in the
   !                first (nks/2) positions correspond to up spin
-  !                those in the second (nks/2) one correspond to down spin
-  !                the weights wk are halved !
+  !                those in the second (nks/2) ones correspond to down spin
   !
   USE kinds, only : DP
   implicit none
   !
   ! I/O variables first
   !
-
   integer :: npk, isk (npk), nks
-  ! input-output: maximum allowed number of k
+  ! input: maximum allowed number of k-points
   ! output: spin associated to a given k-point
-  ! input-output: starting and ending number of
+  ! input-output: starting and ending number of k-points 
   real(kind=DP) :: xk (3, npk), wk (npk)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   !
-  !    And then the local variables
+  integer :: ik
   !
-
-  integer :: ik, j
-  ! counter on k
-  ! counter
-
-  if (2*nks.gt.npk) call errore ('set_kup&kdw','too many k points',nks)
+  !
+  if (2*nks > npk) call errore ('set_kup&kdw','too many k points',nks)
   do ik = 1, nks
-     do j = 1, 3
-        xk(j,ik+nks) = xk(j,ik)
-     enddo
-     wk (ik)     = 0.5 * wk(ik)
-     wk (ik+nks) =       wk(ik)
+     xk(:,ik+nks)= xk(:,ik)
+     wk (ik+nks) = wk(ik)
      isk(ik)     = 1
      isk(ik+nks) = 2
   enddo

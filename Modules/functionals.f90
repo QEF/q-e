@@ -69,7 +69,7 @@ module funct
   !              blyp     C.Lee, W.Yang, R.G.Parr, PRB 37, 785 (1988)
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
-  !              revPBE  Zhang and Yang, PRL 80, 809 (1998)
+  !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
 
   integer :: iexch, icorr, igcx, igcc
   !

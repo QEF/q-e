@@ -68,7 +68,8 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
   ! dummy (zero) value of iswitch passed to sgama
-  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3)
+  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
+       mdum(3,nat)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
   ! rotated q in crystal coordinates
@@ -132,7 +133,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   nosym = .false.
   call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       izero, modenum)
+       izero, modenum, .false., mdum)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo

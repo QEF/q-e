@@ -75,7 +75,7 @@ in mode 2
       the pseudo-potential parameters are:  
 
       type 1 Norm Conserving pseudo-potential with old format, or a
-             Pseudopotential generated with Troulier Martins code
+             Pseudopotential generated with Troullier Martins code
              and transformed with the convert routine (in tool)
            dft:    the string of the xc energy 
            zval:   the valence charge
@@ -267,7 +267,7 @@ NB: lsda is not compatible with pseudo-potential generation
     isic can be used only with all-electron calculation
 
 
-Here are some recipies to reproduce old all-electron atomic results
+Here are some recipes to reproduce old all-electron atomic results
 with the ld1 program.
 
 The Herman-Skillman tables can be reproduced with:

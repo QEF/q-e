@@ -17,6 +17,7 @@ PWOBJS = \
 ../PW/mode_group.o \
 ../PW/multable.o \
 ../PW/sgam_at.o \
+../PW/sgam_at_mag.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
 ../PW/smallg_q.o \

@@ -22,8 +22,7 @@ subroutine kpoint_grid &
   integer nks
   real(kind=DP)  xk(3,npk), wk(npk)
   ! LOCAL:
-  real(kind=DP), parameter :: degspin=2.d0, eps=1.0e-5
-  ! degspin: spin degeneracy used to normalize k-points
+  real(kind=DP), parameter :: eps=1.0e-5
   real(kind=DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
   real(kind=DP), allocatable:: xkg(:,:), wkk(:)
   integer nkr, i,j,k, ns, n, nk
@@ -126,9 +125,9 @@ subroutine kpoint_grid &
   end do
   !  go to cartesian axis (in units 2pi/a0)
   call cryst_to_cart(nks,xk,bg,1)
-  !  normalize weights to degspin (every band can accomodate 2 electrons)
+  !  normalize weights to one
   do nk=1,nks
-     wk(nk) = degspin * wk(nk)/fact
+     wk(nk) = wk(nk)/fact
   end do
 
   deallocate(equiv)

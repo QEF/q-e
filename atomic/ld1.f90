@@ -15,7 +15,7 @@ program ld1
   character :: &
        day*9, hour*9
 
-  character(len=9), parameter:: version='22-Feb-04'
+  character(len=9), parameter:: version='20-May-04'
   !
   !   write initialization information
   !

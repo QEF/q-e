@@ -170,7 +170,6 @@ PWOBJS = \
 ../PW/hinit1.o \
 ../PW/init_ns.o \
 ../PW/init_pool.o \
-../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
@@ -244,11 +243,7 @@ PWOBJS = \
 ../PW/set_vrs.o \
 ../PW/setlocal.o \
 ../PW/setqf.o \
-../PW/setup.o \
 ../PW/setupkpt.o \
-../PW/sgam_at.o \
-../PW/sgam_ph.o \
-../PW/sgama.o \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
 ../PW/spinor.o \

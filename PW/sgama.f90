@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
      nr1, nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xq, &
-     iswitch, modenum)
+     iswitch, modenum, noncolin, m_loc)
   !-----------------------------------------------------------------------
   !
   !     This routine performs the following tasks:
@@ -59,7 +59,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !        xq<>0 to restrict the small group of
 
   real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), xk (3, npk), &
-       wk (npk), xq (3)
+       wk (npk), xq (3), m_loc(3,nat)
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
   ! input: coordinates of atomic positions
@@ -67,7 +67,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! input-output: weights of k points
   ! input: coordinates of a q-point
 
-  logical :: invsym, minus_q
+  logical :: invsym, minus_q, noncolin
   ! output: if true the crystal has inversion
   ! output: if true a symmetry sends q->-q+G
   character :: sname (48) * 45
@@ -102,6 +102,8 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !
   call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
        irt, ftau)
+  IF (noncolin) CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
+                                   nr1, nr2, nr3, sym, irt, ftau, m_loc)
   !
   !    If xq.ne.(0,0,0) this is a preparatory run for a linear response
   !    calculation at xq. The relevant point group is therefore only the
@@ -111,7 +113,6 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
 
   call smallg_q (xq, iswitch, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
        sym, minus_q)
-
   if (iswitch.eq. - 4) then
      call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
      call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
@@ -134,8 +135,11 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !    here we set the k-points in the irreducible wedge of the point grou
   !    of the crystal
   !
-  call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
-       minus_q)
+  if (noncolin) then
+     call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, .false.)
+  else
+     call irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, minus_q)
+  end if
   !
   ! copy symm. operations in sequential order so that
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal

@@ -840,7 +840,7 @@ subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   ! local
   integer :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
   logical :: minus_q, invsym
-  real(kind=8) :: xqq(3), wk(nqx)
+  real(kind=8) :: xqq(3), wk(nqx), mdum(3,nat)
   character(len=45)   ::  sname(48)
   !
   xqq (:) =0.d0
@@ -865,7 +865,7 @@ subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, 6, &
        6, 6, irt, ftau, nqx, nq, q, wk, invsym, minus_q, xqq, &
-       0, 0)
+       0, 0, .false., mdum)
   
   if (ntetra /= 6 * nk1 * nk2 * nk3) &
        call errore ('gen_qpoints','inconsistent ntetra',1)

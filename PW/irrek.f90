@@ -19,50 +19,36 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   USE kinds, only : DP
   implicit none
   !
-  !     first the dummy variables
-  !
-  integer :: nks, npk, nrot, nsym, invs (3, 3, 48), irg (nrot)
-  ! in/out: number of input special points
-  ! input: maximum number of special points
-  ! input: order of the parent point group
-  ! input: order of the subgroup
-  ! input: inverse of the elments of G
-  ! input: partition of the elms of G in
-  ! left cosets, as given by SUBROUTINE COSET
-  real(kind=DP) :: xk (3, npk), wk (npk), at (3, 3), bg (3, 3)
-  ! in/out: special points
-  ! in/out: corresponding weights
-  ! input: basis of the Bravais lattice
-  ! input: basis of the reciprocal lattice
-  logical :: minus_q
-  ! input: .true. if q = -q+G
+  integer, intent(inout) :: nks
+  ! number of special points
+  integer, intent(in) :: npk, nrot, nsym, invs (3, 3, 48), irg (nrot)
+  ! maximum number of special points
+  ! order of the parent point group
+  ! order of the subgroup
+  ! inverse of the elements of the symmetry group
+  ! partition of the elements of the symmetry group into left cosets,
+  ! as given by SUBROUTINE COSET
+  real(kind=DP), intent(inout) :: xk (3, npk), wk (npk)
+  ! special points and weights
+  real(kind=DP), intent(in) :: at (3, 3), bg (3, 3)
+  ! basis vectors of the Bravais and reciprocal lattice
+  logical, intent(in) :: minus_q
+  ! .true. if symmetries q = -q+G are acceptable
   !
   !    here the local variables
   !
   integer :: nks0, jk, kpol, irot, jrot, ncos, jc, ic, isym
-  ! used to save the initial number of k-poin
-  ! counter on k-points
-  ! counter on polarizations
-  ! counter on rotations
-  ! counter on rotations
-  ! total number of cosets
-  ! counter on cosets
-  ! counter on cosets
-  ! counter on symmetries
+  ! nks0: used to save the initial number of k-points
+  ! ncos: total number of cosets
   real(kind=DP) :: xkg (3), xks (3, 48), w (48), sw, one
-  ! coordinates of the k point in crystal axi
+  ! coordinates of the k point in crystal axis
   ! coordinates of the rotated k point
   ! weight of each coset
-  ! buffer which contains the weight of k poi
+  ! buffer which contains the weight of k points
   ! total weight of k-points
-
   logical :: latm, satm
-  ! true if a k-point is equivalent to a prev
+  ! true if a k-point is equivalent to a previous one
   ! true if equivalent point found
-
-  real(kind=DP), parameter :: degspin = 2.0d0
-  ! spin degeneracy used in normalization of
-
 
   nks0 = nks
   do jk = 1, nks0
@@ -76,8 +62,8 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
                      at (3, kpol) * xk (3, jk)
      enddo
      !
-     !     Then it is rotated with each symmetry of the global group. Note th
-     !     the irg vector is used to divide all the rotated vector in cosets
+     !   Then it is rotated with each symmetry of the global group. Note that
+     !   the irg vector is used to divide all the rotated vector in cosets
      !
      do irot = 1, nrot
         jrot = irg (irot)
@@ -96,13 +82,13 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
         irot = (ic - 1) * nsym + 1
         latm = .false.
         !
-        !   latm = .true. if the present k-vector is equivalent to some previous
+        !  latm = .true. if the present k-vector is equivalent to some previous
         !
         do jc = 1, ic - 1
            do isym = 1, nsym
               !
-              !   satm = .true. if the present symmetry operation makes the ir and ik
-              !   k-vectors equivalent ...
+              !   satm = .true. if the present symmetry operation makes 
+              !   the ir and ik k-vectors equivalent ...
               !
               jrot = (jc - 1) * nsym + isym
               satm = abs (xks (1, irot) - xks (1, jrot) - &
@@ -157,10 +143,10 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
 
   enddo
   !
-  ! normalize weights to degspin (every band can accomodate 2 electrons)
+  ! normalize weights to one
   !
   one = SUM (wk(1:nks))
-  if ( one > 0.d0 ) wk(1:nks) = wk(1:nks) * degspin / one
+  if ( one > 0.d0 ) wk(1:nks) = wk(1:nks) / one
   !
   return
 end subroutine irrek

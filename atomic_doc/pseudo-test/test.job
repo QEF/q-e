@@ -2,8 +2,7 @@
 
 work=./results
 reference=./reference
-ld1dir=../../
-
+ld1dir=../../atomic
 
 mkdir $work
 rm -f $work/*

@@ -40,7 +40,7 @@ SUBROUTINE setup()
   USE kinds,         ONLY : DP
   USE parameters,    ONLY : npsx, nchix, npk
   USE io_global,     ONLY : stdout
-  USE constants,     ONLY : pi
+  USE constants,     ONLY : pi, degspin
   USE cell_base,     ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE basis,         ONLY : nat, tau, ntyp, ityp, startingwfc, startingpot, &
                             natomwfc, zv
@@ -68,7 +68,7 @@ SUBROUTINE setup()
   USE para,          ONLY : kunit
   USE mp_global,     ONLY : nimage
   USE spin_orb,      ONLY : lspinorb
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, m_loc
   !
   IMPLICIT NONE
   !
@@ -106,7 +106,7 @@ SUBROUTINE setup()
       n_atom_wfc,     &!
       set_Hubbard_l
   LOGICAL, EXTERNAL :: &
-      lchk_tauxk       ! lchk_tauxk tests that atomic coordinates do not overlap
+      lchk_tauxk       ! tests that atomic coordinates do not overlap
   !
   ! ... end of local variables
   !
@@ -164,15 +164,15 @@ SUBROUTINE setup()
   ! ... Set the number of occupied bands if not given in input
   !
   IF ( nbnd == 0 ) THEN
-     nbnd = NINT( nelec / 2.D0 )
+     nbnd = NINT( nelec / degspin )
      IF ( lgauss .OR. ltetra ) THEN
         !
         ! ... metallic case: add 20% more bands, with a minimum of 4
         !
-        nbnd = MAX( NINT( 1.2D0 * nelec / 2.D0 ), ( nbnd + 4 ) )
+        nbnd = MAX( NINT( 1.2D0 * nelec / degspin ), ( nbnd + 4 ) )
      END IF
   ELSE
-     IF ( nbnd < NINT( nelec / 2.D0 ) .AND. lscf ) &
+     IF ( nbnd < NINT( nelec / degspin ) .AND. lscf ) &
         CALL errore( 'setup', 'too few bands', 1 )
   END IF
   !
@@ -433,9 +433,11 @@ SUBROUTINE setup()
   !
   input_nks = nks
   !
+  allocate (m_loc(3,nat)) ! not actually used
   CALL sgama( nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
               nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xqq, &
-              iswitch, modenum )
+              iswitch, modenum, noncolin, m_loc )
+  deallocate (m_loc)
   !
   CALL checkallsym( nsym, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, &
                     irt, ftau )
@@ -477,6 +479,7 @@ SUBROUTINE setup()
      !
      ! ... LDA case: the two spin polarizations are identical
      !
+     wk(1:nks) = wk(1:nks)*degspin
      nspin = 1
      current_spin = 1
   END IF

@@ -193,6 +193,7 @@ setqf.o \
 setup.o \
 setupkpt.o \
 sgam_at.o \
+sgam_at_mag.o \
 sgam_ph.o \
 sgama.o \
 show_memory.o \

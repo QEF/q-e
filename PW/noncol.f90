@@ -34,8 +34,6 @@ MODULE noncollin_module
       mcons(3,ntypx),      &!  constrained values for local variables
       vtcon,               &!  contribution of the constraining fields to
                             !  the total energy
-      degspin,             &!  spin degeneration (2.0 in LDA case,
-                            !  1.0 in the other cases)
       r_m,                 &!  Radius for local integrations
       lambda                !  prefactor in the penalty functional 
                             !  for constraints

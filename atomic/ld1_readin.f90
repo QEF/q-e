@@ -50,7 +50,7 @@ subroutine ld1_readin
        isic,    &  ! if 1 self-interaction correction
        latt,    &  ! if <> 0 Latter correction is applied
        title,   &  ! the title of the run
-       file_wavefunctions,& ! file names with wavefunctions
+      file_wavefunctions,& ! file names with wavefunctions
        file_logderae ! file with logder  
 
   namelist /test/                 &
@@ -244,7 +244,7 @@ subroutine ld1_readin
   if (file_pseudopw == file_pseudo .and. file_pseudo /= ' ') &
        call errore('ld1_readin','rewrite file pseudo?',1)
   if (iswitch == 3 .and. nconf > 1) &
-       call errore('ld1_readin','two many test configurations',1)
+       call errore('ld1_readin','too many test configurations',1)
 
   do nc=1,nconf
      if (configts(nc) == ' ') then
