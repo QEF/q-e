@@ -1,6 +1,9 @@
+!
+!---------------------------------------------------------------
 subroutine run_test
   !
   !   This routine is a driver to the tests of the pseudopotential
+  !---------------------------------------------------------------
   !
 
   use ld1inc
@@ -75,7 +78,13 @@ subroutine run_test
      !   and run the pseudopotential test
      !
      call run_pseudo
+     !
      if (nc.eq.1) etots0=etots
+     !
+     !   print results
+     !
+     call write_resultsps 
+     !
   enddo
 
   return

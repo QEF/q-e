@@ -9,6 +9,8 @@ subroutine write_resultsps
   real(kind=dp) :: work(ndm), int_0_inf_dr, ravg, sij
   !
   !
+  write(6,110)
+110 format (/,5x,14('-'),' Testing the pseudopotential ',24('-'),/)
   write(6,1150) title
   if(rel.eq.1) write(6,'(5x,''scalar relativistic calculation'')')
   if(rel.eq.2) write(6,'(5x,''dirac relativistic calculation'')')
@@ -79,6 +81,9 @@ subroutine write_resultsps
 1292 format (5x,'Epseu=',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
   if(isic.ne.0) write(6,1300) dhrsic+dxcsic, dhrsic, dxcsic
 1300 format(5x,'desic:'/5x,0pf12.4,24x,2(0pf12.4))
+  write(6,120)
+120 format (/,5x,14('-'), ' End of pseudopotential test ',24('-'),/)
+  !
   write(13,*)
   if (file_wavefunctionsps.ne.' ') then
      open(unit=16,file=file_wavefunctionsps,status='unknown', &

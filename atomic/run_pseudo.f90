@@ -3,7 +3,7 @@
 subroutine run_pseudo
   !---------------------------------------------------------------
   !
-  !     this routine is a driver to an pseudopotential calculation
+  !     this routine is a driver to a pseudopotential calculation
   !     with the parameters given in input
   !
   !
@@ -14,12 +14,9 @@ subroutine run_pseudo
        ns, &    ! counter on pseudowavefunctions
        n,  &    ! counter on mesh
        is, &    ! counter on spin
-       nbf,&    ! number of beta functions
-       lam,nwf0,&  ! initial phi
-       nstop    ! check if the routine stop
+       nbf      ! number of beta functions
 
   real(kind=dp) :: &
-       xc(6),    & ! coefficients of bessel
        vaux(ndm),  &   ! auxiliary variable
        vnew(ndm,2)   ! the potential
 
@@ -32,8 +29,6 @@ subroutine run_pseudo
   real(kind=dp), parameter :: thresh=1.e-10_dp
   integer, parameter :: itmax=200
 
-  write(6,110)
-110 format (/,5x,14('-'),' Testing the pseudopotential ',24('-'),/)
   !
   !    compute an initial estimate of the potential
   !
@@ -176,16 +171,9 @@ subroutine run_pseudo
   else
      phits=phis
   endif
-  !
-  !   print results
-  !
-  call write_resultsps 
 
   if (file_recon.ne.' ')  call write_paw_recon
 
-  write(6,120)
-120 format (/,5x,14('-'), &
-       ' End of pseudopotential test ',24('-'),/)
   !
   !    compute logarithmic derivatives
   !
