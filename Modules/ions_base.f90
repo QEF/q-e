@@ -171,7 +171,7 @@
         atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , rcmax_ )
 
       USE constants, ONLY: scmass
-      USE io_base, ONLY: stdout
+      USE io_global, ONLY: stdout
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nsp_ , nat_ , na_ (:) , ityp_ (:)
