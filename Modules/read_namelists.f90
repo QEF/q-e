@@ -1438,6 +1438,7 @@ MODULE read_namelists_module
           END IF
           !
           IF ( calculation == 'nscf' .OR. &
+               calculation == 'raman'.OR. &
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
