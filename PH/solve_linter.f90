@@ -33,8 +33,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   use pwcom
   USE uspp_param,           ONLY : nhm
 !  use phcom
-  use disp,                 ONLY : tr2_ph
-  USE control_ph,           ONLY : iter0, niter_ph, nmix_ph, elph, &
+  USE control_ph,           ONLY : iter0, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &

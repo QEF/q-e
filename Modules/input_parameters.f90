@@ -107,10 +107,9 @@ MODULE input_parameters
           ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(13)
+        CHARACTER(LEN=80) :: calculation_allowed(12)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd',   &
-          'dispersion' /
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd'/
           ! Allowed value for calculation parameters
 
 

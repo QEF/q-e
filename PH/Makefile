@@ -84,6 +84,7 @@ psymdvscf.o \
 psyme.o \
 punch_plot_e.o \
 punch_plot_ph.o \
+q_points.o \
 q2qstar_ph.o \
 random_matrix.o \
 rotate_and_add_dyn.o \
@@ -299,7 +300,6 @@ PWOBJS = \
 ../PW/punch.o \
 ../PW/pw_gemm.o \
 ../PW/pwcom.o \
-../PW/q_points.o \
 ../PW/qvan2.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \

@@ -217,7 +217,6 @@
        lneb,             &! if .TRUE. the calculation is neb
        lsmd,             &! if .TRUE. the calculation is string dynamics
        lphonon,          &! if .TRUE. the calculation is phonon
-       ldisp,            &! if .TRUE. the calculation is dispersion
        lraman,           &! if .TRUE. the calculation is raman
        lconstrain,       &! if .TRUE. the calculation is constraint
        ldamped,          &! if .TRUE. the calculation is a damped dynamics

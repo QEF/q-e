@@ -146,7 +146,6 @@ psymrho.o \
 punch.o \
 pw_gemm.o \
 pwcom.o \
-q_points.o \
 qvan2.o \
 rdiaghg.o \
 read_conf_from_file.o \

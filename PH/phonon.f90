@@ -26,7 +26,7 @@ program phonon
   USE kinds, only : DP
   USE parser,           ONLY : int_to_char
   USE control_flags, ONLY : iswitch,  restart, lphonon, tr2, &
-       mixing_beta, lscf, ldisp, david, isolve
+       mixing_beta, lscf, david, isolve
   use phcom
   use global_version
   implicit none

@@ -24,7 +24,7 @@ subroutine phq_readin
   USE kinds,         ONLY : DP
   use phcom
   use io_files,      ONLY : tmp_dir, prefix
-  use control_flags, ONLY : iverbosity, reduce_io, iswitch, modenum, ldisp
+  use control_flags, ONLY : iverbosity, reduce_io, iswitch, modenum
   use para
 
   implicit none

@@ -4,7 +4,7 @@ subroutine q_points
 
   use kinds, only : dp
   USE io_global,  ONLY :  stdout
-  use disp, only : nqx, nq1, nq2, nq3, x_q, nqs
+  use disp, only : nqmax, nq1, nq2, nq3, x_q, nqs
   USE symme, only : nsym, s
   USE cell_base, ONLY : bg
 
@@ -23,9 +23,9 @@ subroutine q_points
   if( nq1 .le. 0 .or. nq2 .le. 0 .or. nq3 .le. 0 ) &
        call errore('q_points','nq1 or nq2 or nq3 .le. 0',1)
 
-  allocate (wq(nqx))
-  allocate (x_q(3,nqx))
-  call kpoint_grid( nsym, s, bg, nqx, 0, 0, 0, &
+  allocate (wq(nqmax))
+  allocate (x_q(3,nqmax))
+  call kpoint_grid( nsym, s, bg, nqmax, 0, 0, 0, &
                          nq1, nq2, nq3, nqs, x_q, wq )
   deallocate (wq)
   !

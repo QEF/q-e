@@ -245,6 +245,8 @@ MODULE control_ph
   ! starting representation
   ! starting iteration
   ! maximum number of representation
+  real(kind = dp) :: tr2_ph
+  ! threshold for phonon calculation
   REAL (KIND=DP) :: alpha_mix(maxter), time_now, alpha_pv
   ! the mixing parameter
   ! CPU time up to now
@@ -257,8 +259,9 @@ MODULE control_ph
   ! if .TRUE. computes electron-phonon interact
   ! if .TRUE. computes eff.cha. with ph
   ! if .TRUE. the run restart
-  logical :: lnscf
+  logical :: lnscf, ldisp
   ! if .TRUE. the run makes first a nscf calculation
+  ! if .TRUE. the run calculates the points for a dispersion
   !
 END MODULE control_ph
 !
@@ -323,6 +326,22 @@ MODULE output
   !
 END MODULE output
 !
+MODULE disp
+
+  USE kinds, ONLY: DP
+
+  save
+
+  integer, parameter :: nqmax = 1000
+
+  integer :: nq1, nq2, nq3
+  ! number of q-points in each direction
+  integer :: nqs
+  ! number of q points to be calculated 
+  real (kind = dp), allocatable, dimension(:,:) :: x_q
+  ! coordinates of the q points
+
+END MODULE disp
 !
 MODULE phcom
   USE modes
@@ -338,4 +357,5 @@ MODULE phcom
   USE char_ph
   USE units_ph
   USE output
+  USE disp 
 END MODULE phcom
