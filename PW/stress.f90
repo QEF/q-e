@@ -31,8 +31,12 @@ subroutine stress
   real(kind=DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3)
-
   integer :: l, m
+  !
+  if (nspin > 2) then
+     call errore ('stress','non-colinear case not implemented',-1)
+     return
+  end if
   call start_clock ('stress')
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 
