@@ -11,6 +11,8 @@
 !------------------------------------------------------------------------------!
       USE kinds, ONLY : dbl, i4b
       USE parallel_include
+      IMPLICIT NONE
+
 !      PRIVATE
       PUBLIC :: mp_start, mp_end, mp_env, mp_group, mp_cart_create, &
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
@@ -766,7 +768,7 @@
 !
       SUBROUTINE mp_get_i1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
         INTEGER :: msg_dest, msg_sour
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -812,7 +814,7 @@
 !
       SUBROUTINE mp_get_iv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
         INTEGER :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -860,7 +862,7 @@
 !
       SUBROUTINE mp_get_rv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
         REAL (dbl) :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -908,7 +910,7 @@
 !
       SUBROUTINE mp_get_rm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
         REAL (dbl) :: msg_dest(:,:), msg_sour(:,:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -957,7 +959,7 @@
 !
       SUBROUTINE mp_get_cv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
         COMPLEX (dbl) :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -1006,7 +1008,7 @@
 
       SUBROUTINE mp_put_i1(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
         INTEGER :: msg_dest, msg_sour
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -1053,7 +1055,7 @@
 !
       SUBROUTINE mp_put_iv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
         INTEGER :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -1098,7 +1100,7 @@
 !
       SUBROUTINE mp_put_rv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
         REAL (dbl) :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -1143,7 +1145,7 @@
 !
       SUBROUTINE mp_put_rm(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
         REAL (dbl) :: msg_dest(:,:), msg_sour(:,:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
@@ -1189,7 +1191,7 @@
 !
       SUBROUTINE mp_put_cv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
         COMPLEX (dbl) :: msg_dest(:), msg_sour(:)
-        INTEGER, INTENT(IN) :: dest, sour, ip
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
 #if defined(__MPI)
