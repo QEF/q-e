@@ -847,8 +847,8 @@ MODULE neb_base
       !
       IF ( .NOT. stat ) RETURN
       !
-      Emin       = MAXVAL( PES(:) )
-      Emax       = MINVAL( PES(:) )
+      Emin       = MINVAL( PES(:) )
+      Emax       = MAXVAL( PES(:) )
       Emax_index = MAXLOC( PES(:), 1 )
       !
       RETURN
