@@ -74,7 +74,7 @@ CONTAINS
            ecfixed, ekincw, fnosep, nat, tstress, disk_io, fnosee, ion_temperature, &
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
            dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor, &
-           ekin_conv_thr, etot_conv_thr, max_seconds
+           ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, atom_label, rd_vel
 
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards
@@ -86,6 +86,7 @@ CONTAINS
       use mp, only: mp_bcast
       USE control_flags, ONLY: tconvthrs, lneb
       USE check_stop, ONLY: check_stop_init
+      USE ions_base, ONLY: ions_base_init
 
 
       !
@@ -130,6 +131,13 @@ CONTAINS
       ! ...   Set the number of species
 
       nsp_ = ntyp
+
+      ! ...   Initialize the ions base module 
+      IF( .not. lneb ) THEN
+        CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
+             atom_label, if_pos, atomic_positions  )
+      END IF
+
 
       ! ...   IBRAV and CELLDM
 
