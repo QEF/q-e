@@ -292,6 +292,7 @@ implicit none
      endif
      if (abs (charge-nelec) / charge > 1.0e-7) write (6, 9050) charge
      etot = eband+ (etxc - etxcc) + ewld+ehart + deband+demet + eth
+     if (tefield) etot=etot+etotefield
 
      if ( (conv_elec.or.mod (iter, iprint) .eq.0) .and.iswitch.le.2) &
           then
@@ -301,6 +302,7 @@ implicit none
            write (6, 9086) etot, dr2
         end if
         write (6, 9060) eband, eband+deband, ehart, etxc-etxcc, ewld
+        if (tefield) write(6, 9061) etotefield
         if (lda_plus_u) write (6, 9065) eth
         if (degauss.ne.0.0) write (6, 9070) demet
      elseif (conv_elec.and.iswitch.gt.2) then
@@ -365,6 +367,7 @@ implicit none
        &     /'     hartree contribution      =',  f15.8,' ryd' &
        &     /'     xc contribution           =',  f15.8,' ryd' &
        &     /'     ewald contribution        =',  f15.8,' ryd' )
+9061 format ( '     electric field correction =',  f15.8,' ryd' )
 9065 format ( '     Hubbard energy            =',f15.8,' ryd')
 9070 format ( '     correction for metals     =',f15.8,' ryd')
 9080 format (/'     total energy              =',0pf15.8,' ryd' &

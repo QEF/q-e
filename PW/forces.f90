@@ -81,6 +81,7 @@ subroutine forces
                          forcecc (ipol, na) + &
                          forceh (ipol, na) + &
                          forcescc(ipol, na)
+        if (tefield) force(ipol,na)=force(ipol,na)+forcefield(ipol,na)
         sum = sum + force (ipol, na)
      enddo
      !         write(6,*) 'sum = ', sum

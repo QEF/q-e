@@ -4,47 +4,78 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Changes 30/06/2003 (ADC) : 
+!               Calculation of corrections to energy and forces due
+!               to the field.
+!               Added possibility to subtract the dipole field 
+!               for slab or molecule calculation.
+!               (See Bengtsson PRB 59, 12 301 (1999) and
+!                    Meyer and Vanderbilt, PRB 63, 205426 (2001).)
+!
 !
 !--------------------------------------------------------------------------
-  subroutine add_efield
+  subroutine add_efield(vpoten)
 !--------------------------------------------------------------------------
 !
-!   This routine adds an electric field to the ionic potential. The
+!   This routine adds an electric field to the local potential. The
 !   field is made artificially periodic by introducing a saw-tooth
 !   potential. The field is parallel to a reciprocal lattice vector bg, 
 !   according to the index edir.
+!
+!   if dipfield is false the electric field correction is added to the
+!   potential given as input (the bare local potential) only
+!   at the first call to this routine. In the following calls
+!   the routine exit.
+!
+!   if dipfield is true the dipole moment per unit surface is calculated
+!   and used to cancel the electric field due to periodic boundary
+!   conditions. This potential is added to the Hartree and xc potential
+!   in v_of_rho. NB: in this case the electric field contribution to the 
+!   band energy is subtracted by deband.
 !
 !
 #include "machine.h"
     use pwcom
 #ifdef __PARA
     use para
+    use mp
 #endif
 
   implicit none
 
   integer :: npoints, nmax, ndesc
-  integer :: ii, ij, ik, itmp, ir, izlb, izub
+  integer :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
   real(kind=dp) :: length, vamp, value
   real(kind=dp), parameter :: eps=1.d-8
+  real(kind=dp) :: vpoten(nrxx) ! the ef is added to this potential
+  real(kind=dp) :: dip, dipion, bmod, z0, dipold
+  real(kind=dp) :: deltal
+
+  logical :: first=.true.
+  save first, dipold
 
 #ifndef __PARA
   integer me, npp(1)
   me=1
   npp(1)=nr3
 #endif
+  
+
+  if (.not.tefield) return
+  if ((.not.dipfield).and. (.not.first)) return
+
+  bmod=sqrt(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
   if(edir.eq.1) then
      npoints=nr1
-     length=alat/sqrt(bg(1,1)**2+bg(2,1)**2+bg(3,1)**2)
   else if (edir.eq.2) then
      npoints=nr2
-     length=alat/sqrt(bg(1,2)**2+bg(2,2)**2+bg(3,2)**2)
   elseif (edir.eq.3) then
      npoints=nr3
-     length=alat/sqrt(bg(1,3)**2+bg(2,3)**2+bg(3,3)**2)
   else
      call errore('setlocal',' wrong edir',1)
   endif
+  length=alat/bmod
+  deltal=length/npoints
 
   nmax =int(real(npoints,dp)*(emaxpos-eps))+1
   if (nmax.lt.1.or.nmax.gt.npoints) &
@@ -53,22 +84,69 @@
   ndesc=int(real(npoints,dp)*(eopreg-eps))+1
   if (ndesc.lt.1.or.ndesc.gt.npoints) &
      call errore('setlocal','ndesc out of range',1)
+
+  dip=0.d0
+  dipion=0.d0
+  n3=nmax+ndesc+(nr3-ndesc)/2
+  if (n3.gt.nr3) n3=n3-nr3
+  z0=(n3-1)*deltal
+  if (mod(nr3-ndesc,2).ne.0) z0=z0+deltal*0.5d0
+  z0=z0/alat
+
+  if (first.and.dipfield) z0=0.d0
+  call compute_dip(dip,dipion,z0)
 !
-!    The electric field is assumed in a.u.( 1 a.u. of field change the
+!  This is used to reach self-consistency. Mixing the dipole field improves
+!  convergence. 
+!
+  if (first) then
+     dipold=dip
+  else
+     dip=dip*mixing_beta+dipold*(1.d0-mixing_beta)
+     dipold=dip
+  endif
+#ifdef __PARA
+  call mp_bcast(dip,0)
+#endif
+  if (.not.dipfield) then
+     etotefield=-2.d0*dipion*eamp*omega/fpi 
+     dip=0.d0
+  else
+     etotefield=-2.d0*(eamp-dip/2.d0)*dip*omega/fpi 
+  endif
+
+  if (lforce) then
+     do na=1,nat
+        do ipol=1,3
+           forcefield(ipol,na)=2.d0*(eamp-dip) &
+                                    *zv(ityp(na))*bg(ipol,edir)/bmod
+        enddo
+     enddo
+  endif
+     
+!
+!    The electric field is assumed in a.u.( 1 a.u. of field changes the
 !    potential energy of an electron of 1 Hartree in a distance of 1 Bohr. 
 !    The factor 2 converts potential energy to Ry. 
+!    NB: dip is the dipole moment per unit area divided by length and
+!        multiplied by four pi
 !    
-  vamp=2.0d0*eamp*length*real(npoints-ndesc,dp)/real(npoints,dp)
-
-  write(6,*)
-  write(6,*) 'Adding an external electric field'
-  write(6,*) 'Intensity [a.u.]: ', eamp
-  write(6,*) 'Amplitude vamp [Ry]', vamp
-  write(6,*) 'Total length [points] ', npoints
-  write(6,*) 'Total length [bohr rad] ', length
-  write(6,*) 'Field is reversed between points ', nmax, nmax+ndesc
+  vamp=2.0d0*(eamp-dip)*length*real(npoints-ndesc,dp)&
+                                               /real(npoints,dp)
+  if (first) then
+     write(6,*)
+     write(6,'(5x,"Adding an external electric field")')
+     write(6,'(5x,"Intensity [a.u.]: ",f15.8)') eamp
+  endif
+  if (dipfield) write(6,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
+  if (first) then
+     write(6,'(5x,"Potential amplitude [Ry]: ", f15.8)') vamp
+     write(6,'(5x,"Total length [points]: ", i5)') npoints
+     write(6,'(5x,"Total length [bohr rad]: ", f15.8)') length
+     write(6,'(5x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
+  endif
 !
-! in this case in x direction
+! in this case x direction
 !
   if(edir.eq.1) then
     do ij=1,nr2
@@ -78,19 +156,19 @@
            itmp=ii
            if (itmp.gt.nr1) itmp=itmp-nr1
            ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-           vltot(ir)=vltot(ir)+value
+           vpoten(ir)=vpoten(ir)+value
         end do
         do ii=nmax+ndesc,nmax+nr1-1
            value=vamp*(real(ii-nmax-ndesc,dp)/real(nr1-ndesc,dp)-0.5d0)
            itmp=ii
            if (itmp.gt.nr1) itmp=itmp-nr1
            ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-           vltot(ir)=vltot(ir)+value
+           vpoten(ir)=vpoten(ir)+value
         end do
       end do
     end do
 !
-! in this case in y direction
+! in this case y direction
 !
   else if (edir.eq.2) then
     do ii=1,nr1
@@ -100,14 +178,14 @@
            itmp=ij
            if (itmp.gt.nr2) itmp=itmp-nr2
            ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-           vltot(ir)=vltot(ir)+value
+           vpoten(ir)=vpoten(ir)+value
         end do
         do ij=nmax+ndesc,nmax+nr2-1
            value=vamp*(real(ij-nmax-ndesc,dp)/real(nr2-ndesc,dp)-0.5d0)
            itmp=ij
            if (itmp.gt.nr2) itmp=itmp-nr2
            ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-           vltot(ir)=vltot(ir)+value
+           vpoten(ir)=vpoten(ir)+value
         end do
       end do
     end do
@@ -140,7 +218,7 @@
 !
             itmp=itmp-izlb+1
             ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
-            vltot(ir)=vltot(ir)+value
+            vpoten(ir)=vpoten(ir)+value
           end if
         end do
         do ik=nmax+ndesc,nmax+nr3-1
@@ -150,7 +228,7 @@
            if((itmp.ge.izlb).and.(itmp.le.izub)) then
               itmp=itmp-izlb+1
               ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
-              vltot(ir)=vltot(ir)+value
+              vpoten(ir)=vpoten(ir)+value
            end if
         end do
       end do
@@ -158,6 +236,7 @@
   else
      call errore('setlocal', 'wrong edir', 1)
   endif
+  first=.false.
   return
 end subroutine add_efield
 

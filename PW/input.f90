@@ -28,7 +28,7 @@ subroutine iosys
        lmovecell, imix, at, omega, ityp, tau, nks, xk, wk, uakbar, amconv, &
        force, at_old, omega_old, starting_scf_threshold, title, crystal,  &
        atm, nk1, nk2, nk3, k1, k2, k3, &
-       tefield, edir, emaxpos, eopreg, eamp, &
+       tefield, dipfield, edir, emaxpos, eopreg, eamp, forcefield, &
        lberry, gdir, nppstr
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
   use constants, only: pi
@@ -57,7 +57,7 @@ subroutine iosys
        restart_mode, nstep, iprint, isave, tstress, tprnfor, &
        dt, ndr, ndw, outdir, prefix, max_seconds, ekin_conv_thr,&
        etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield, &
-       lberry, gdir, nppstr
+       dipfield, lberry, gdir, nppstr
 
   ! SYSTEM namelist
 
@@ -161,6 +161,7 @@ subroutine iosys
   forc_conv_thr = 1.d-3
   disk_io = 'default'
   tefield=.false.
+  dipfield=.false.
   noinv = .false.    ! not actually used
   lberry=.false.
   gdir=0
@@ -360,10 +361,12 @@ subroutine iosys
         nosym=.true.
         write(6,'(5x,"Presently no symmetry can be used with electric field",/)')
      endif
-     if (tefield.and.(tstress.or.tprnfor)) then
+     if (tefield.and.(tstress)) then
         tstress=.false.
-        tprnfor=.false.
-        write(6,'(5x,"Presently stress and forces not available with electric field",/)')
+        write(6,'(5x,"Presently stress not available with electric field",/)')
+     endif
+     if (tefield.and.(nspin.eq.2)) then
+        call errore('input','LSDA not available with electric field',1)
      endif
 #ifdef __PARA
   end if
@@ -392,6 +395,7 @@ subroutine iosys
   CALL mp_bcast( pseudo_dir, ionode_id )
   CALL mp_bcast( disk_io, ionode_id )
   CALL mp_bcast( tefield, ionode_id )
+  CALL mp_bcast( dipfield, ionode_id )
   CALL mp_bcast( lberry, ionode_id )
   CALL mp_bcast( gdir, ionode_id )
   CALL mp_bcast( nppstr, ionode_id )
@@ -901,6 +905,7 @@ subroutine iosys
   allocate (tau(3,nat))
   allocate (ityp(nat))
   allocate (force(3,nat)) ! compatibility with old readin
+  if (tefield) allocate(forcefield(3,nat))
   !
   CALL read_cards (pseudop, atomic_positions)
   !

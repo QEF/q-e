@@ -54,6 +54,7 @@ checkallsym.o  \
 check.o  \
 checksym.o  \
 cinitcgg.o  \
+compute_dip.o  \
 constrain.o  \
 conv_to_num.o  \
 coset.o  \
@@ -246,6 +247,7 @@ wgauss.o  \
 which_dft.o  \
 write_config_to_file.o  \
 write_ns.o  \
+wsweight.o  \
 ylmr2.o
 
 MODULES = ../Modules/*.o

@@ -145,6 +145,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/check.o  \
 ../PW/checksym.o  \
 ../PW/cinitcgg.o  \
+../PW/compute_dip.o  \
 ../PW/constrain.o  \
 ../PW/conv_to_num.o  \
 ../PW/coset.o  \
@@ -338,6 +339,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/which_dft.o  \
 ../PW/write_config_to_file.o  \
 ../PW/write_ns.o  \
+../PW/wsweight.o  \
 ../PW/ylmr2.o \
 ../PW/bp_bess.o \
 ../PW/bp_calc_btq.o \

@@ -48,6 +48,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   ! output: the integral of the charge
   ! output: the H+xc_up  potential
   !
+  integer :: is
   !
   call start_clock ('v_of_rho')
   !
@@ -61,6 +62,9 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   call v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, v)
   !
+  do is=1,nspin
+     call add_efield(v(1,is))
+  enddo
   call stop_clock ('v_of_rho')
   return
 end subroutine v_of_rho
@@ -281,6 +285,7 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         v(ir,is) = v(ir,is) + aux(1,ir)
      enddo
   enddo
+
 
   deallocate (aux,aux1)
   !

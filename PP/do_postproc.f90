@@ -86,7 +86,7 @@ subroutine do_postproc (nodenumber)
 #endif
   !     Check of namelist variables
   !
-  if (plot_num < 0 .or. plot_num > 11) call errore ('postproc', &
+  if (plot_num < 0 .or. plot_num > 12) call errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
   if ( (plot_num == 0 .or. plot_num == 1) .and.  &

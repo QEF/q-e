@@ -29,6 +29,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !              9                 planar averages of each wavefunction
   !             10                 integrated local dos from emin to emax
   !             11                 the V_bare + V_H potential
+  !             12                 The electric field potential
   !
   !     The output quantity is written (formatted) on file filplot.
   !
@@ -164,14 +165,21 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   elseif (plot_num == 11) then
 
-     raux(:) =  vltot(:) 
+     raux(:) = vltot(:) 
      if (nspin == 2) then
         rho(:,1) =  rho(:,1) +  rho(:,2)
         nspin = 1
      end if
      call v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, raux)
-
+     if (tefield.and.dipfield) call add_efield(raux)
+  elseif (plot_num == 12) then
+     raux=0.d0
+     if (tefield) then
+         call add_efield(raux)
+     else
+         call errore('punch_plot','e_field is not calculated',-1)
+     endif
   else
 
      call errore ('punch_plot', 'plot_num not implemented', - 1)

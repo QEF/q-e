@@ -585,13 +585,17 @@ end module ldaU
 
 module extfield
   use parameters
-  logical :: tefield        ! if true a finite electric field is added to the
+  logical :: tefield, &      ! if true a finite electric field is added to the
                             ! local potential
+             dipfield       ! if true the dipole field is subtracted
   integer :: edir           ! direction of the field
   real(kind=DP) ::   &
       emaxpos,       &      ! position of the maximum of the field (0<emaxpos<1)
       eopreg,        &      ! amplitude of the inverse region (0<eopreg<1)
-      eamp                  ! field amplitude (in a.u.) (1 a.u.=51.44 10^11 V/m)
+      eamp,          &      ! field amplitude (in a.u.) (1 a.u.=51.44 10^11 V/m)
+      etotefield            ! energy correction due to the field
+
+  real(kind=DP), allocatable:: forcefield(:,:)
 
 end module extfield
 
