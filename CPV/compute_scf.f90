@@ -15,7 +15,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE kinds,             ONLY : DP
   USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos, ion_positions
   USE input_parameters,  ONLY : outdir, prefix, nat, restart_mode
-  USE input_parameters,  ONLY : scradir => tscradir_inp, ndr
+  ! USE input_parameters,  ONLY : scradir => tscradir_inp, ndr
+  USE input_parameters,  ONLY : scradir, ndr
   USE constants,         ONLY : e2
   USE control_flags,     ONLY : conv_elec, ethr
   USE io_files,          ONLY : iunneb, iunexit
