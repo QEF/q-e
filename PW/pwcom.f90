@@ -473,9 +473,8 @@ MODULE us
        nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
   COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
        vkb(:,:),              &! all beta functions in reciprocal space
-       dvan(:,:,:,:),           &! the D functions of the solid
-       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm}
-       qgm(:)                  ! complete fourier transform of Q
+       dvan(:,:,:,:),         &! the D functions of the solid
+       deeq(:,:,:,:)           ! the integral of V_eff and Q_{nm}
   REAL(KIND=DP), PARAMETER:: &
        dq = 0.01D0           ! space between points in the pseudopotential tab.
   REAL(KIND=DP), ALLOCATABLE :: &

@@ -16,8 +16,13 @@ program postproc
   !
   !    DESCRIPTION of the INPUT: see file pwdocs/INPUT_PP
   !
-  use pwcom
-  use io_files, only: tmp_dir, nd_nmbr, prefix, iunwfc
+  USE kinds, ONLY: DP
+  USE cell_base, ONLY: bg
+  USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau
+  USE gvect
+  USE ener, ONLY: ef
+  USE vlocal, ONLY: strf
+  use io_files, only: tmp_dir, nd_nmbr, prefix
 #ifdef __PARA
   use para, only: me
   use mp

@@ -24,8 +24,17 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     It may not properly work if the slab has two symmetric surfaces.
   !
 #include "machine.h"
-  USE io_global,      ONLY : stdout
-  use pwcom
+  USE kinds, ONLY: DP
+  USE constants, ONLY: tpi, rytoev
+  USE io_global, ONLY : stdout
+  USE cell_base, ONLY: tpiba2, tpiba, omega, at, alat
+  USE gvect, ONLY: nrx1, nrx2, nrx3, nr1, nr2, nr3, ngm, g, ecutwfc, &
+       nl, nlm, nrxx
+  USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
+  USE ener, ONLY: ef
+  USE symme
+  USE scf, ONLY: rho
+  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk, gamma_only
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
@@ -43,8 +52,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   integer :: istates, igs, npws, ir, ir1, irx, iry, irz, ig, ibnd, &
        ik, nbnd_ocp, first_band, last_band
   ! the number of states to compute the image
-  ! counter on surface G vectors
-  ! number of surfac g-vectors
+  ! counter on surface g vectors
+  ! number of surface g vectors
   ! counters on 3D r points
   ! counter on g vectors
   ! counter on bands
@@ -54,7 +63,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   ! last  band close enough to the specified energy range [down1:up1]
 
   real(kind=DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
-       w1, w2, w0gauss, up, up1, down, down1, t0, scnds
+       w1, w2, up, up1, down, down1, t0, scnds
   complex(kind=DP), parameter :: i= (0.d0, 1.d0)
 
   real(kind=DP), allocatable :: gs (:,:)
@@ -62,7 +71,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   ! the coefficients of the matching wfc
   ! plane stm wfc
 
-  external w0gauss
+  real(kind=DP), external :: w0gauss
 
   t0 = scnds ()
   allocate (gs( 2, npwx))    

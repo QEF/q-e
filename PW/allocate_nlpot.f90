@@ -34,7 +34,7 @@ subroutine allocate_nlpot
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: nh, indv, nhtol, nhtolm, qq, dvan, deeq, qrad, vkb, tab, &
-       tab_at, dq, qgm, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
+       tab_at, dq, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
        tvanp, newpseudo, nhtoj
   USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
   implicit none
@@ -110,7 +110,6 @@ subroutine allocate_nlpot
   !
   if (lqx > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lqx, ntyp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
-  allocate (qgm( ngm))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
   ! ... Allocate space for Hubbard potential

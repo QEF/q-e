@@ -22,13 +22,13 @@ subroutine newd
        gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
   USE lsda_mod, ONLY: nspin
   USE scf,   ONLY: vr, vltot
-  USE us,    ONLY: qgm, lqx, deeq, dvan, okvan, nh, nhm, tvanp
+  USE us,    ONLY: lqx, deeq, dvan, okvan, nh, nhm, tvanp
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
   integer :: ig, nt, ih, jh, na, is
   ! counters on g vectors, atom type, beta functions x 2, atoms, spin
-  complex(kind=DP), allocatable :: aux (:,:), qgm_na (:)
+  complex(kind=DP), allocatable :: aux (:,:), qgm(:), qgm_na (:)
   ! work space
   real(kind=DP), allocatable  :: ylmk0 (:,:), qmod (:)
   ! spherical harmonics, modulus of G
@@ -57,7 +57,8 @@ subroutine newd
      fact = 1.d0
   end if
   call start_clock ('newd')
-  allocate ( aux(ngm,nspin), qgm_na(ngm), qmod(ngm), ylmk0(ngm, lqx*lqx) )
+  allocate ( aux(ngm,nspin), qgm_na(ngm), qgm(ngm), qmod(ngm), &
+       ylmk0(ngm, lqx*lqx) )
   !
   deeq(:,:,:,:) = 0.d0
   !
@@ -160,7 +161,7 @@ subroutine newd
      !        end do
 
   enddo
-  deallocate ( aux, qgm_na, qmod, ylmk0 )
+  deallocate ( aux, qgm_na, qgm, qmod, ylmk0 )
   call stop_clock ('newd')
 
   return

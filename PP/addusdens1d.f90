@@ -17,7 +17,11 @@ subroutine addusdens1d (plan, prho)
   !
 #include "machine.h"
   USE kinds, only: DP
-  use pwcom
+  USE cell_base, ONLY: alat, omega, celldm
+  USE ions_base, ONLY: nat, ntyp => nsp, ityp
+  USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
+  USE lsda_mod, ONLY: current_spin
+  USE us, ONLY: lqx, becsum, nh, tvanp
   !
   !     here the local variables
   !
@@ -46,18 +50,19 @@ subroutine addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  complex(kind=DP) :: skk, prho (nrxx), qg (nrx3), aux (10000)
-  ! auxiliary variables
+  complex(kind=DP) :: skk, prho (nrxx), qg (nrx3)
+  ! auxiliary variable
   ! auxiliary space for the charge
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G,nspin)
+  complex(kind=DP), allocatable :: qgm(:), aux (:)
 
 
   call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
+  allocate (qgm(ngm1d), aux(ngm1d))
   do ig = 1, ngm1d
      qmod (ig) = sqrt (gg1d (ig) )
   enddo
-
   aux(:) = (0.d0, 0.d0)
 
   if (ngm1d > 0) then
@@ -111,6 +116,7 @@ subroutine addusdens1d (plan, prho)
   do ig = 1, nr3
      plan (ig) = qgr (ig) * omega / dimz
   enddo
+  deallocate (aux, qgm)
 
   return
 end subroutine addusdens1d

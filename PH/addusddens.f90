@@ -61,18 +61,19 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
 
   complex(kind=DP) :: fact, zsum, bb, alpha, alpha_0, u1, u2, u3
   ! auxiliary variables
-  complex(kind=DP), allocatable ::  sk (:), drhous (:,:), aux (:,:,:)
+  complex(kind=DP), allocatable ::  sk (:), qgm(:), drhous (:,:), aux (:,:,:)
   ! the structure factor
-  ! auxiliary variable for FFT
+  ! q_lm(G)
   ! contain the charge of drho
   ! auxiliary variable for drho(G)
 
   if (.not.okvan) return
   call start_clock ('addusddens')
-  allocate (aux(   ngm , nspin , npertx))    
+  allocate (aux(  ngm , nspin , npertx))    
   allocate (sk (  ngm))    
-  allocate (ylmk0(  ngm , lqx * lqx))    
-  allocate (qmod (  ngm))    
+  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (qgm(  ngm))    
+  allocate (qmod( ngm))    
   if (.not.lgamma) allocate (qpg( 3  , ngm))    
   !      WRITE( stdout,*) aux, ylmk0, qmod
   !
@@ -164,8 +165,9 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)
-  deallocate (ylmk0)
   deallocate (qmod)
+  deallocate (qgm)
+  deallocate (ylmk0)
   deallocate (sk)
   deallocate (aux)
 

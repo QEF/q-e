@@ -13,7 +13,13 @@ subroutine local_dos1d (ik, kband, plan)
   !     calculates |psi|^2 for band kband at point ik
   !
 #include "machine.h"
-  use pwcom
+  USE cell_base, ONLY: omega
+  USE ions_base, ONLY: nat, ntyp=>nsp, ityp
+  USE gvect
+  USE gsmooth
+  USE lsda_mod, ONLY: current_spin
+  USE us, ONLY: becsum, nh, tvanp
+  USE wvfct, ONLY: npw, wg, igk
   USE wavefunctions_module,  ONLY: evc, psic
   use becmod
   implicit none

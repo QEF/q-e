@@ -21,9 +21,16 @@ program voronoy
   !  the original ones (the largest, the more accurate the integration)
   !
 #include "machine.h"
+  USE constants,  ONLY : pi
   USE io_global,  ONLY : stdout
   USE kinds
-  use pwcom
+  USE char,       only : title
+  USE cell_base,  only : ibrav, celldm, at, bg, alat, omega, tpiba, tpiba2
+  USE ions_base,  only : atm, zv, nat, tau, ityp, ntyp=>nsp
+  USE lsda_mod,   ONLY : nspin
+  USE gvect,      ONLY : ecutwfc, nr1, nr2, nr3, nrxx, gcutm, ngm, g, nl, &
+       dual, nrx1, nrx2, nrx3
+  USE scf,        ONLY : rho
   use fft_scalar, only : good_fft_dimension
   use io_files,   only : nd_nmbr
 #ifdef __PARA

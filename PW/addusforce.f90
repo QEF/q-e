@@ -22,7 +22,7 @@ subroutine addusforce (forcenl)
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: vr, vltot
-  USE us, ONLY : lqx, okvan, tvanp, qgm, nhm, nh, becsum
+  USE us, ONLY : lqx, okvan, tvanp, nhm, nh, becsum
   USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: forcenl (3, nat)
@@ -31,7 +31,7 @@ subroutine addusforce (forcenl)
   complex(kind=DP):: cfac
   real(kind=DP) :: fact, DDOT
   ! work space
-  complex(kind=DP), allocatable :: aux(:,:), aux1(:,:), vg(:)
+  complex(kind=DP), allocatable :: aux(:,:), aux1(:,:), vg(:), qgm(:)
   real(kind=DP) , allocatable :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
 
   !
@@ -47,7 +47,6 @@ subroutine addusforce (forcenl)
   ! fourier transform of the total effective potential
   !
   allocate (vg(nrxx))    
-
   do is = 1, nspin
      if (nspin.eq.4.and.is.ne.1) then
         vg (:) = vr(:,is)
@@ -61,6 +60,7 @@ subroutine addusforce (forcenl)
   !
   allocate (aux1(ngm,3))    
   allocate (ddeeq( 3, (nhm*(nhm+1))/2,nat,nspin))    
+  allocate (qgm( ngm))
   allocate (qmod( ngm))    
   allocate (ylmk0(ngm,lqx*lqx))    
   !
@@ -134,6 +134,7 @@ subroutine addusforce (forcenl)
      enddo
   enddo
   deallocate (ylmk0)
+  deallocate (qgm)
   deallocate (qmod)
   deallocate (ddeeq)
   deallocate (aux1)

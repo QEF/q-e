@@ -27,25 +27,19 @@ subroutine addusldos (ldos, becsum1)
   !
 
   integer :: ig, na, nt, ih, jh, ijh, is, ir
-  ! counter on G vectors
-  ! counter on atoms
-  ! counter on atomic types
-  ! counter on beta functions
-  ! counter on beta functions
-  ! composite index ih jh
-  ! counter on spin
-  ! counter on mesh points
+  ! counters
 
   real(kind=DP), allocatable :: ylmk0 (:,:), qmod (:)
   ! the spherical harmonics
   ! the modulus of G
 
-  complex(kind=DP), allocatable :: aux (:,:)
+  complex(kind=DP), allocatable :: aux (:,:), qgm (:)
   ! work space
 
   allocate (aux ( ngm , nspin))    
-  allocate (qmod( ngm))    
-  allocate (ylmk0 ( ngm , lqx * lqx))    
+  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (qgm ( ngm))
+  allocate (qmod( ngm))
 
   aux (:,:) = (0.d0,0.d0)
   call ylmr2 (lqx * lqx, ngm, g, gg, ylmk0)
@@ -92,8 +86,9 @@ subroutine addusldos (ldos, becsum1)
         call DAXPY (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
   endif
-  deallocate (ylmk0)
   deallocate (qmod)
+  deallocate (qgm)
+  deallocate (ylmk0)
   deallocate (aux)
   return
 end subroutine addusldos

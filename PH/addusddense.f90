@@ -38,24 +38,14 @@ subroutine addusddense (drhoscf, dbecsum)
 
   integer :: ig, na, nt, ih, jh, ir, mode, ipert, ijh, is
 
-  ! counter on G vectors
-  ! counter on atoms
-  ! counter on atomic type
-  ! counter on beta functions
-  ! counter on beta functions
-  ! counter on r vectors
-  ! pointer on modes
-  ! pointer on the mode
-  ! counter on perturbations
-  ! counter on spin
-  ! counter on combined beta functions
+  ! counters
 
   real(kind=DP), allocatable  :: qmod(:), ylmk0(:,:)
   ! the modulus of q+G
   ! the spherical harmonics
 
   complex(kind=DP) :: zsum
-  complex(kind=DP), allocatable ::  sk (:), qg (:), aux (:,:,:)
+  complex(kind=DP), allocatable ::  sk (:), qg (:), qgm (:), aux (:,:,:)
   ! the structure factor
   ! work space
 
@@ -64,8 +54,9 @@ subroutine addusddense (drhoscf, dbecsum)
   allocate (aux(  ngm, nspin, 3))    
   allocate (sk (  ngm))    
   allocate (qg (  nrxx))    
-  allocate (ylmk0(  ngm , lqx * lqx))    
-  allocate (qmod (  ngm))    
+  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (qgm  (ngm))    
+  allocate (qmod (ngm))    
   !
   !  And then we compute the additional charge in reciprocal space
   !
@@ -117,8 +108,9 @@ subroutine addusddense (drhoscf, dbecsum)
         drhoscf(:,is,ipert) = drhoscf(:,is,ipert) + 2.d0*qg(:)
      enddo
   enddo
-  deallocate (ylmk0)
   deallocate (qmod)
+  deallocate (qgm)
+  deallocate (ylmk0)
   deallocate (qg)
   deallocate (sk)
   deallocate (aux)

@@ -12,8 +12,11 @@ program wannier
   USE io_global,  ONLY : stdout, ionode
   USE mp_global,  ONLY : mpime
   USE mp,         ONLY : mp_bcast
-  use pwcom  
+  USE cell_base,  ONLY : at, bg
+  use lsda_mod,   ONLY : nspin, isk
   use para,       ONLY : kunit
+  use klist,      ONLY : nkstot, xk
+  use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
   use io_files
   !
   implicit none
@@ -104,7 +107,14 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
   !
 #include "machine.h"
   USE io_global,      ONLY : stdout
-  use pwcom  
+  USE cell_base, ONLY : at, bg, tpiba2, alat
+  USE ions_base, ONLY : atm, nat
+  USE gvect,     ONLY : ngm, ngm_g, ig_l2g, ig1, ig2, ig3, ecutwfc, &
+       nr1, nr2, nr3, g
+  USE lsda_mod,  ONLY : nspin, isk
+  USE ions_base, ONLY : ntyp => nsp, tau, ityp
+  USE wvfct,     ONLY : nbnd, npw, npwx, igk_l2g, et, g2kin
+  USE klist,     ONLY : nkstot, ngk, nks, xk
   USE wavefunctions_module,  ONLY : evc
   use io_files,       only : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc
   use io_base,        only : write_restart_wfc

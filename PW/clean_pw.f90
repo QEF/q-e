@@ -25,7 +25,7 @@ SUBROUTINE clean_pw()
   USE relax,                ONLY : if_pos
   USE wavefunctions_module, ONLY : evc, psic
   USE us,                   ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, qrad, &
-                                   vkb, qgm, becsum, tab, tab_at, nhtoj
+                                   vkb, becsum, tab, tab_at, nhtoj
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
   USE becmod,               ONLY : becp
@@ -105,7 +105,6 @@ SUBROUTINE clean_pw()
   IF ( ALLOCATED( deeq ) )       DEALLOCATE( deeq )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( vkb ) )        DEALLOCATE( vkb )
-  IF ( ALLOCATED( qgm ) )        DEALLOCATE( qgm )
   IF ( ALLOCATED( becsum ) )     DEALLOCATE( becsum )
   IF ( ALLOCATED( ns ) )         DEALLOCATE( ns )
   IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )

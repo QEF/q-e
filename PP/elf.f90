@@ -6,8 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-
-
 subroutine do_elf (elf)
   !-----------------------------------------------------------------------
   !  calculate electron localization function
@@ -29,9 +27,17 @@ subroutine do_elf (elf)
   !
   !
 #include "machine.h"
-  USE kinds
-  use pwcom
+  USE kinds, ONLY: DP
+  USE constants, ONLY: pi
+  USE cell_base, ONLY: omega, tpiba, tpiba2
+  USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
+       dual, g, ngm, nl
   USE io_files, ONLY: iunwfc, nwordwfc
+  USE klist, ONLY: nks, xk
+  USE lsda_mod, ONLY: nspin
+  USE scf, ONLY: rho
+  USE symme, ONLY: nsym, ftau, s
+  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
   USE wavefunctions_module,  ONLY: evc
   !
   ! I/O variables

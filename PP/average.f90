@@ -38,11 +38,20 @@ program average
   !      awin         ! the size of the window for macroscopic averages.
   !
 #include "machine.h"
+  USE kinds,     ONLY : DP
+  USE parameters, ONLY: ntypx
+  USE constants, ONLY: pi
+  USE char, ONLY: title
   USE io_global,      ONLY : stdout
-  USE kinds,     only : DP
-  use pwcom
+  USE cell_base, ONLY:  ibrav, alat, omega, celldm, tpiba, tpiba2, at, bg
+  USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
+       dual
+  USE gsmooth, ONLY: doublegrid, gcutms
+  USE ions_base, ONLY: zv, tau, nat, ntyp => nsp, ityp, atm
+  USE lsda_mod, ONLY: nspin
   USE wavefunctions_module,  ONLY : psic
-  use io_files,       only : nd_nmbr, iunpun
+  USE io_files, ONLY: nd_nmbr, iunpun
+  USE scf, ONLY: rho
 #ifdef __PARA
   use para,           only : me
 #endif

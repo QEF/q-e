@@ -38,7 +38,7 @@ subroutine init_us_1
   USE lsda_mod, ONLY : nspin
   USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
        kkbeta, nqf, nqlc, lll, jjj, tvanp, okvan, newpseudo, lmaxkb, &
-       nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, nhtoj, nhtolm, qrad, indv, nhm
+       nqxq, dq, nqx, tab, dvan, qq, nhtol, nhtoj, nhtolm, qrad, indv, nhm
   USE uspp, ONLY : ap, aainit
   USE spin_orb, ONLY : lspinorb, rot_ylm, qq_spinorb, fcoef
   implicit none
@@ -63,7 +63,7 @@ subroutine init_us_1
   ! interpolated value
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh, sph_ind
-  complex(kind=DP) :: coeff
+  complex(kind=DP) :: coeff, qgm(1)
   real(kind=dp) :: spinor, ji, jk
 
   call start_clock ('init_us_1')

@@ -43,18 +43,19 @@ subroutine newdq (dvscf, npe)
   complex(kind=DP), external :: ZDOTC
   ! the scalar product function
 
-  complex(kind=DP), allocatable :: aux1 (:), aux2 (:,:), veff (:)
+  complex(kind=DP), allocatable :: aux1 (:), aux2 (:,:), veff (:), qgm(:)
   ! work space
 
   if (.not.okvan) return
   call start_clock ('newdq')
 
   int3 (:,:,:,:,:) = (0.d0, 0.0d0)
-  allocate (aux1 (  ngm))    
-  allocate (aux2 (  ngm , nspin))    
-  allocate (veff (  nrxx))    
-  allocate (ylmk0 (  ngm , lqx * lqx))    
-  allocate (qmod (  ngm))    
+  allocate (aux1 (ngm))    
+  allocate (aux2 (ngm , nspin))    
+  allocate (veff (nrxx))    
+  allocate (ylmk0(ngm , lqx * lqx))    
+  allocate (qgm  (ngm))    
+  allocate (qmod (ngm))    
 
   if (.not.lgamma) allocate (qg (3,  ngm))    
   !
@@ -133,6 +134,7 @@ subroutine newdq (dvscf, npe)
 #endif
   if (.not.lgamma) deallocate (qg)
   deallocate (qmod)
+  deallocate (qgm)
   deallocate (ylmk0)
   deallocate (veff)
   deallocate (aux2)

@@ -40,6 +40,8 @@ subroutine dvanqq
   complex(kind=DP), allocatable :: sk (:), aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:,:,:), veff (:,:)
   ! work space
+  complex(kind=DP), allocatable, target :: qgm(:)
+  ! the augmentation function at G
   complex(kind=DP), pointer :: qgmq (:)
   ! the augmentation function at q+G
 
@@ -60,6 +62,7 @@ subroutine dvanqq
   allocate (qmodg( ngm))    
   allocate (veff ( nrxx , nspin))    
   allocate (ylmk0( ngm , lqx * lqx))    
+  allocate (qgm  ( ngm))    
   if (.not.lgamma) then
      allocate (ylmkq(ngm , lqx * lqx))    
      allocate (qpg (3, ngm))    
@@ -230,6 +233,7 @@ subroutine dvanqq
      deallocate (qpg)
      deallocate (ylmkq)
   endif
+  deallocate (qgm)
   deallocate (ylmk0)
   deallocate (veff)
   deallocate (qmodg)

@@ -34,10 +34,20 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !     The output quantity is written (formatted) on file filplot.
   !
 #include "machine.h"
-
-  use pwcom
+  !
+  USE kinds, ONLY: DP
+  USE constants, ONLY: rytoev
+  USE cell_base, ONLY: at, bg, omega, alat, celldm, ibrav
+  USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau, zv, atm
+  USE char, ONLY: title
+  USE extfield, ONLY: tefield, dipfield
+  USE gvect
+  USE klist, ONLY: nks, nkstot, xk
+  USE lsda_mod, ONLY: nspin, current_spin
+  USE ener, ONLY: ehart
   USE io_global,  ONLY : stdout
-  
+  USE scf, ONLY: rho, vltot, vr
+  USE wvfct, ONLY: npw, nbnd, wg, igk, gamma_only
 #ifdef __PARA
   use para
 #endif

@@ -11,8 +11,12 @@ subroutine work_function (wf)
   ! potential energy and the fermi energy.
   ! Written for supercells with the main axis along z.
   !
+  USE constants, ONLY: rytoev, e2
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE ener, ONLY: ef
+  USE lsda_mod, ONLY: nspin, current_spin
+  USE scf, ONLY: rho, vltot, vr, rho_core
+  USE gvect
 #ifdef __PARA
   use para
   use mp

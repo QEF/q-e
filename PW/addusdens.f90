@@ -20,7 +20,7 @@ subroutine addusdens
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE us, ONLY : lqx, okvan, tvanp, qgm, nh, becsum
+  USE us, ONLY : lqx, okvan, tvanp, nh, becsum
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
@@ -36,9 +36,9 @@ subroutine addusdens
   ! the spherical harmonics
 
   complex(kind=DP) :: skk
-  complex(kind=DP), allocatable ::  aux (:,:)
-  ! work space for FFT
+  complex(kind=DP), allocatable ::  aux (:,:), qgm(:)
   ! work space for rho(G,nspin)
+  ! Fourier transform of q
 
   if (.not.okvan) return
 
@@ -46,6 +46,7 @@ subroutine addusdens
 
   allocate (aux ( ngm, nspin))    
   allocate (qmod( ngm))    
+  allocate (qgm( ngm))    
   allocate (ylmk0( ngm, lqx * lqx))    
 
   aux (:,:) = (0.d0, 0.d0)
@@ -93,6 +94,7 @@ subroutine addusdens
   enddo
   !
   deallocate (ylmk0)
+  deallocate (qgm)
   deallocate (qmod)
   !
   !     convert aux to real space and add to the charge density

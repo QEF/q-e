@@ -20,7 +20,7 @@ subroutine addusstres (sigmanlc)
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: vr, vltot
-  USE us, ONLY : lqx, okvan, tvanp, qgm, nhm, nh, becsum
+  USE us, ONLY : lqx, okvan, tvanp, nhm, nh, becsum
   USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: sigmanlc (3, 3)
@@ -38,7 +38,7 @@ subroutine addusstres (sigmanlc)
   ! counter on polarizations
   ! counter on spin polarizations
   ! counter on atoms
-  complex(kind=DP), allocatable :: aux(:,:), aux1(:), vg(:)
+  complex(kind=DP), allocatable :: aux(:,:), aux1(:), vg(:), qgm(:)
   complex(kind=DP)              :: cfac
   ! used to contain the potential
   ! used to compute a product
@@ -54,7 +54,7 @@ subroutine addusstres (sigmanlc)
   !  of V_eff and dQ
   ! function which compute the scal.
 
-  allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qmod(ngm) )
+  allocate ( aux(ngm,nspin), aux1(ngm), vg(nrxx), qgm(ngm), qmod(ngm) )
   allocate ( ylmk0(ngm,lqx*lqx), dylmk0(ngm,lqx*lqx) )
 
   !
@@ -125,7 +125,7 @@ subroutine addusstres (sigmanlc)
      sigmanlc(:,:) = sigmanlc(:,:) + sus(:,:)
   end if
   deallocate (ylmk0, dylmk0)
-  deallocate (aux, aux1, vg, qmod)
+  deallocate (aux, aux1, vg, qgm, qmod)
 
   return
 

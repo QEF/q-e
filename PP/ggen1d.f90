@@ -12,11 +12,12 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   !    to compute and output planar averages of the charge density
   !    of single levels. It should work in parallel machines.
   !
-
-  use pwcom
+  USE kinds, ONLY: DP
+  USE cell_base, ONLY : at
+  USE gvect, ONLY: nr3, ngm, g, gg, igtongl
   implicit none
   integer :: ngm1d, ig1dto3d (nr3), igtongl1d (nr3), nl1d (nr3)
-  ! output: the number of 1D G vectors on this proce
+  ! output: the number of 1D G vectors on this processor
   ! output: correspondence 1D with 3D G vectors
   ! output: the correspondence with the shells
   ! output: correspondence 1D FFT mesh G with array
@@ -32,9 +33,7 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   ! counter on 3D vectors
   ! counter on 1D vectors
 
-  real(kind=DP) :: eps
-  ! a small number
-  parameter (eps = 1.d-12)
+  real(kind=DP), parameter :: eps = 1.d-12
 
 
   g1d(:,:) = 0.d0
