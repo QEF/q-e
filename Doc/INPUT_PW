@@ -341,7 +341,51 @@ eopreg         REAL( default = 0.1D0 )
 eamp           REAL ( default = 0.001 a.u. )
                Amplitude of the electric field (in a.u.) 
 	       ( 1 a.u. = 51.44 10^10 V/m )
-   
+
+noncolin       LOGICAL
+               if .true. the program will perform a noncollinear calculation.
+               DEFAULT: .false.
+
+angle1(i)      REAL
+               The angle expressed in degrees between the initial 
+               magnetization and the z-axis. I runs over the atom types.
+
+angle2(i)      REAL
+               The angle expressed in degrees between the projection
+               of the initial magnetization on x-y plane and the x-axis.
+
+i_cons         INTEGER
+               #if i_cons = 0; there isn't penalty fuctional
+
+               #if i_cons = 1; there is a penalty functional added to the
+               Hamiltonian of the form:
+                
+     - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
+
+               where i runs over the components (1-3) and itype over the
+               types (1-ntype). Lambda is a real number (see below). 
+
+               #if i_cons = 2; not all the components of the magnetic
+               moment are constrained but only the cosinus of angle1. So
+               only mcons(1,ityp) must be specified and it represents
+               the cosinus of angle1, and the penalty functional is:
+
+    - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - mcons(1,ityp) )**2
+
+lambda         REAL
+               see I_CONS
+
+mcons(i,j)     REAL
+               I runs over the components (1-3), J over the atom types.
+               see I_CONS.
+
+report         INTEGER
+               It's the number of iterations after which the program
+               write all the atomic magnetic moments.
+
+lspinorb       LOGICAL
+               if .true. the noncollinear code can use a pseudopotential with
+               spin-orbit.
 
 ===============================================================================
 NAMELIST &ELECTRONS
