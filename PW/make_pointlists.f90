@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
@@ -25,7 +26,7 @@
       USE kinds,      ONLY : dp
       USE io_global,  ONLY : stdout
       USE ions_base,  ONLY : nat, tau
-      USE cell_base,  ONLY : at
+      USE cell_base,  ONLY : at, bg
       USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
       USE noncollin_module
       USE para
@@ -35,9 +36,11 @@
       integer i,j,k,i0,j0,k0,ipol,ishift(3)
 
       real(kind=dp) :: posi(3),distance,shift(3),scalprod, distmin
+      real(kind=dp), allocatable :: tau0(:,:)
 
       if (.not.(noncolin)) return
       WRITE( stdout,*) "  Generating pointlists ..."
+      allocate(tau0(3,nat))
 
 ! First, the real-space position of every point ir is needed ...
 
@@ -51,6 +54,16 @@
       enddo
       
 #endif
+! Bring all the atomic positions on the first unit cell
+
+      tau0=tau
+      call cryst_to_cart(nat,tau0,bg,-1)
+      do iat=1,nat
+         do ipol=1,3
+            tau0(ipol,iat)=tau0(ipol,iat)-nint(tau0(ipol,iat))
+         enddo
+      enddo
+      call cryst_to_cart(nat,tau0,at,1)
 
 ! Check the minimum distance between two atoms in the system
 
@@ -66,9 +79,9 @@
 
                      distance = 0.d0
                      do ipol = 1,3
-                        posi(ipol) = tau(ipol,iat1) + real(i)*at(ipol,1) &
+                        posi(ipol) = tau0(ipol,iat1) + real(i)*at(ipol,1) &
      &                       +real(j)*at(ipol,2) + real(k)*at(ipol,3)
-                        distance = distance + (posi(ipol)-tau(ipol,iat)) &
+                        distance = distance + (posi(ipol)-tau0(ipol,iat)) &
      &                       **2.
                      enddo
 
@@ -114,15 +127,14 @@
                   do k = k0-nr3, k0+nr3, nr3
 
                      do ipol=1,3
-                        posi(ipol) = real(i)/real(nr1) * at(ipol &
-                             ,1) +real(j)/real(nr2) * at(ipol,2) &
-                             +real(k)/real(nr3) * at(ipol,3)
+                        posi(ipol) =  real(i)/real(nr1) * at(ipol,1) &
+                                    + real(j)/real(nr2) * at(ipol,2) &
+                                    + real(k)/real(nr3) * at(ipol,3)
                   
-                        posi(ipol) = posi(ipol) - tau(ipol,iat)
+                        posi(ipol) = posi(ipol) - tau0(ipol,iat)
                      enddo
 
-                     distance = sqrt(posi(1)**2.+posi(2)**2.+posi(3 &
-                          )**2.)
+                     distance = sqrt(posi(1)**2+posi(2)**2+posi(3)**2)
                      
                
                      if (distance.le.r_m) then
@@ -133,7 +145,7 @@
                      else if (distance.le.1.2*r_m) then
                         pointnum(iat) = pointnum(iat) + 1
                         factlist(pointnum(iat),iat) = 1.d0 - (distance &
-                             -r_m)/(0.2*r_m)
+                             -r_m)/(0.2d0*r_m)
                         pointlist(pointnum(iat),iat) = ir
 
                      endif
@@ -147,6 +159,7 @@
 
 
       enddo                     ! ipol
+      deallocate(tau0)
            
       end
 
