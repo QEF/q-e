@@ -80,6 +80,14 @@ subroutine init_us_1
   allocate (ylmk0( lmaxq * lmaxq))    
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
+  !
+  ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
+  ! but in some versions of the PP files lmax is not set to the maximum
+  ! l of the beta functions but includes the l of the local potential
+  !
+  do nt=1,ntyp
+     nqlc(nt) = MIN ( nqlc(nt), lmaxq )
+  end do
 
   prefr = fpi / omega
   if (lspinorb) then
@@ -206,8 +214,8 @@ subroutine init_us_1
         do l = 0, nqlc (nt) - 1
            !
            !     first we build for each nb,mb,l the total Q(|r|) function
-           !     note that l is the true angular momentum, and the arrays
-           !     have dimensions 1..l+1
+           !     note that l is the true (combined) angular momentum
+           !     and that the arrays have dimensions 1..l+1
            !
            do nb = 1, nbeta (nt)
               do mb = nb, nbeta (nt)

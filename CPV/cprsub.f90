@@ -883,7 +883,7 @@
 !     (betax, qradx) then calculated on the box grid by interpolation
 !     (this is done in routine newnlinit)
 !     
-      use parameters, only: lmaxx, lqmax
+      use parameters, only: lmaxx
       use control_flags, only: iprint, tpre
       use io_global, only: stdout
       use gvec
@@ -933,19 +933,26 @@
          ish(is)=nhsa
          nhsa=nhsa+na(is)*nh(is)
          if(ipp(is).le.1) nhsavb=nhsavb+na(is)*nh(is)
-         !!! if(tvanp(is)) nhsavb=nhsavb+na(is)*nh(is)
          nlcc_any = nlcc_any .OR. nlcc(is)
       end do
       if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
       lmaxq = 2*lmaxkb + 1
-      if (nhsa.le.0) call errore('nlinit ','not implemented ?',nhsa)
+      !
+      ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
+      ! but in some versions of the PP files lmax is not set to the maximum
+      ! l of the beta functions but includes the l of the local potential
+      !
+      do is=1,nsp
+         nqlc(is) = MIN ( nqlc(is), lmaxq )
+      end do
+      if (nhsa <= 0) call errore('nlinit ','not implemented ?',nhsa)
 !
 !     initialize array ap
 !
       call aainit(lmaxkb+1)
 !
       allocate(beta(ngw,nhm,nsp))
-      allocate(qradb(ngb,nbrx,nbrx,lqmax,nsp))
+      allocate(qradb(ngb,nbrx,nbrx,lmaxq,nsp))
       allocate(qgb(ngb,nhm*(nhm+1)/2,nsp))
       allocate(qq(nhm,nhm,nsp))
       allocate(dvan(nhm,nhm,nsp))
@@ -959,8 +966,8 @@
       allocate(dbeta(ngw,nhm,nsp,3,3))
       allocate(betagx(mmx,nhm,nsp))
       allocate(dbetagx(mmx,nhm,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lqmax,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lqmax,nsp))
+      allocate(qradx(mmx,nbrx,nbrx,lmaxq,nsp))
+      allocate(dqradx(mmx,nbrx,nbrx,lmaxq,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
@@ -1002,7 +1009,7 @@
 !     ---------------------------------------------------------------
 !     calculation of array qradx(igb,iv,jv,is)
 !     ---------------------------------------------------------------
-         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lmaxq = ',             &
+         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lmaxq = ', &
      &        nh(is),ngb,is,kkbeta(is),nqlc(is)
          do l=1,nqlc(is)
             do il=1,mmx
