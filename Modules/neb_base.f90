@@ -704,13 +704,13 @@ MODULE neb_base
       !
       ! ... I/O variables
       !
-      LOGICAL, INTENT(IN)   :: flag
-      LOGICAL, INTENT(OUT)  :: stat
+      LOGICAL, INTENT(IN)  :: flag
+      LOGICAL, INTENT(OUT) :: stat
       !
       ! ... local variables
       !
-      INTEGER               :: i, image
-      INTEGER               :: N_in, N_fin
+      INTEGER              :: i, image
+      INTEGER              :: N_in, N_fin
       !
       !
       IF ( flag ) THEN

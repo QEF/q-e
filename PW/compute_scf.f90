@@ -99,7 +99,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( ionode ) CALL new_image_init()
+  IF ( ( nimage > 1 ) .AND. ionode ) CALL new_image_init()
   !
   image = N_in + my_image_id
   ! 
@@ -156,7 +156,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         IF ( .NOT. ALLOCATED( ityp ) )     ALLOCATE( ityp( nat ) )
         IF ( .NOT. ALLOCATED( force ) )    ALLOCATE( force( 3, nat ) )  
         IF ( .NOT. ALLOCATED( if_pos_ ) )  ALLOCATE( if_pos_( 3, nat ) )
-        IF ( tefield  .AND. .NOT. ALLOCATED( forcefield ) ) &
+        IF ( tefield .AND. .NOT. ALLOCATED( forcefield ) ) &
                                            ALLOCATE( forcefield( 3, nat ) )
         !
         ! ... tau is in alat units ( pos is in bohr )
@@ -219,7 +219,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            WRITE( UNIT = iunneb, &
                   FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
            !
-           CALL stop_other_images()
+           ! ... in case of parallelization on images a stop signal
+           ! ... is sent via the "EXIT" file
+           !
+           IF ( nimage > 1 ) CALL stop_other_images()
            !
            EXIT scf_loop
            !
@@ -292,16 +295,16 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      WRITE( UNIT = iunneb, &
             FMT = '(/"image ",I2," waiting at the barrier")' ) my_image_id
      !
-  END IF   
-  !     
-  CALL mp_barrier( intra_image_comm )
-  CALL mp_barrier( inter_image_comm )
-  !
-  ! ... PES and PES_gradient are communicated among "image" pools
-  !
-  CALL mp_sum( PES(N_in:N_fin),            inter_image_comm )
-  CALL mp_sum( PES_gradient(:,N_in:N_fin), inter_image_comm )
-  CALL mp_sum( istat,                      inter_image_comm )
+     CALL mp_barrier( intra_image_comm )
+     CALL mp_barrier( inter_image_comm )
+     !
+     ! ... PES and PES_gradient are communicated among "image" pools
+     !
+     CALL mp_sum( PES(N_in:N_fin),            inter_image_comm )
+     CALL mp_sum( PES_gradient(:,N_in:N_fin), inter_image_comm )
+     CALL mp_sum( istat,                      inter_image_comm )
+     !
+  END IF
   !
   ! ... global status is computed here
   !
@@ -315,10 +318,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      stat = .FALSE.
      !
-     CALL mp_min( suspended_image, inter_image_comm )
-     !
-     OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
-     CLOSE( UNIT = iunexit, STATUS = 'DELETE' )     
+     IF ( nimage > 1 ) THEN
+        !
+        CALL mp_min( suspended_image, inter_image_comm )
+        !
+        OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
+        CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
+        !
+     END IF   
      !     
   END IF      
   !
@@ -369,45 +376,53 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        LOGICAL              :: opened, exists
        !
        !
-       open_loop: DO
-          !          
-          OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
-              & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
+       IF ( nimage > 1 ) THEN
           !
-          IF ( ioerr > 0 ) CYCLE open_loop
-          !
-          INQUIRE( UNIT = iunnewimage, OPENED = opened )
-          !
-          IF ( .NOT. opened ) THEN
+          open_loop: DO
+             !          
+             OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
+                 & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
              !
-             INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.newimage', EXIST = exists )
+             IF ( ioerr > 0 ) CYCLE open_loop
              !
-             IF ( exists ) THEN
+             INQUIRE( UNIT = iunnewimage, OPENED = opened )
+             !
+             IF ( .NOT. opened ) THEN
                 !
-                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
+                INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
+                       & TRIM( prefix ) // '.newimage', EXIST = exists )
                 !
-                READ( iunnewimage, * ) image
-                !
-                CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                !
-                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                !
-                WRITE( iunnewimage, * ) image + 1
-                ! 
-                CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                !
-                EXIT open_loop
+                IF ( exists ) THEN
+                   !
+                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
+                   !
+                   READ( iunnewimage, * ) image
+                   !
+                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
+                   !
+                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
+                   !
+                   WRITE( iunnewimage, * ) image + 1
+                   ! 
+                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
+                   !
+                   EXIT open_loop
+                   !
+                END IF
                 !
              END IF
              !
-          END IF
+          END DO open_loop
           !
-       END DO open_loop
-       !
-       CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+          CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+          !
+       ELSE
+          !
+          image = image + 1
+          !
+       END IF      
        !
        RETURN
        !
