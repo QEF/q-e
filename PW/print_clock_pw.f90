@@ -13,7 +13,8 @@ subroutine print_clock_pw
    ! it tries to construct the calling tree of the program.
 
    USE io_global,  ONLY : stdout
-   use pwcom
+   USE control_flags, ONLY: isolve, imix
+   USE force_mod, ONLY: lforce, lstres
    implicit none
 
    WRITE( stdout, * )

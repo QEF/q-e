@@ -9,7 +9,8 @@
 subroutine ions
   !-----------------------------------------------------------------------
   !
-  use pwcom
+  USE control_flags, ONLY: conv_ions, restart, iswitch
+  USE force_mod, ONLY: lforce, lstres
   !
   implicit none
   !

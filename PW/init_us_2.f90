@@ -14,7 +14,14 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   !   structure factor, for all atoms, in reciprocal space
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, tau, ntyp, ityp
+  USE brilz, ONLY: tpiba
+  USE constants, ONLY: tpi
+  USE gvect, ONLY: eigts1, eigts2, eigts3, ig1, ig2, ig3, g
+  USE wvfct, ONLY: npw, npwx, igk
+  USE us, ONLY: nhm, nkb, vkb, lmaxkb, dq, nh, nhtol, nhtom, tab, &
+       indv, nbeta
   implicit none
   !
   integer :: npw_, igk_ (npw_)

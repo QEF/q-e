@@ -25,22 +25,36 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !     programs.
   !
   !
-  use pwcom, only: DP, ngk, dual, ecutwfc, nat, istep, iswitch, nr1, nr2, nr3, &
-   nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, nspin, nbnd, nelec, ntyp, alat, &
-   k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, tetra, ntetra, ltetra, natomwfc, &
-   gcutm, gcutms, doublegrid, modenum, lstres, lforce, title, crystal, at, ibrav, &
-   celldm, atm, force, ityp, amass, npwx, nbndx, nrx1, nrx2, nrx3, nrx1s, nrx2s, &
-   nrx3s, nrxxs, nrxx, symm_type, sname, s, irt, ftau, nsym, invsym, noinv, ef, g, &
-   tpiba2, igk, g2kin, tau, zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
-   rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
-   nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
-   nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
-   nlcc, psd, lsda, bg, xk, wk, isk, igk_l2g, gamma_only, &
-   tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
+  USE brilz, ONLY: at, bg, ibrav, celldm, alat, symm_type
+  USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
+       ngk, nks, nkstot
+  USE ktetra,ONLY: tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
+  USE lsda_mod, ONLY: isk, nspin, lsda
+  USE force_mod, ONLY: lforce, lstres, force
+  USE gvect, ONLY: dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+       nrxx, ngm, ngm_g, gcutm
+  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+       gcutms, doublegrid
+  USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
+  USE char, ONLY: title, crystal, psd, sname
+  USE dynam, ONLY: amass
+  USE symme, ONLY: s, irt, ftau, nsym, invsym
+  USE ener, ONLY: ef
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+       rho_atc, mesh, msh, nchi, lchi, numeric
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc,&
+       bhstype
+  USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
+       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
+  USE nl_c_c, ONLY: a_nlcc, b_nlcc, alpha_nlcc, nlcc
+  USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
-  use control_flags, only: twfcollect
-  use io_files, only: prefix, tmp_dir, pseudo_dir, psfile
-  USE io_files,  ONLY : iunwfc, nwordwfc
+  USE fixed_occ, ONLY: tfixed_occ 
+  use control_flags, only: twfcollect, noinv, istep, iswitch, modenum
+  use io_files, only: prefix, tmp_dir, pseudo_dir, psfile, &
+       iunwfc, nwordwfc
   use funct, only: iexch, icorr, igcx, igcc
   use io_global, only: ionode
   use mp, only: mp_sum, mp_max, mp_end
@@ -479,27 +493,40 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !     programs.
   !
   !
-  USE parameters, only: npk, nchix, ndm
+  USE parameters, only: npk, nchix, ndm, nbrx, lqmax, nqfm
+  USE constants, ONLY: pi
   USE io_files,  ONLY : iunwfc, nwordwfc, prefix, tmp_dir
-  use funct, only: iexch, icorr, igcx, igcc
-  use pwcom, only: DP, ngk, dual, ecutwfc, nat, istep, iswitch, nr1, nr2, nr3, &
-   nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, nspin, nbnd, nelec, ntyp, alat, &
-   k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, tetra, ntetra, ltetra, natomwfc, &
-   gcutm, gcutms, doublegrid, modenum, lstres, lforce, title, crystal, at, ibrav, &
-   celldm, atm, force, ityp, amass, npwx, nbndx, nrx1, nrx2, nrx3, nrx1s, nrx2s, &
-   nrx3s, nrxxs, nrxx, symm_type, sname, s, irt, ftau, nsym, invsym, noinv, ef, g, &
-   tpiba2, igk, g2kin, tau, zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
-   rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
-   nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, kkbeta, &
-   nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, a_nlcc, b_nlcc, alpha_nlcc, &
-   nlcc, psd, lsda, bg, xk, wk, isk, tpiba, pi, omega, igk_l2g, &
-   ig_l2g, nbrx, lqmax, nqfm, gamma_only, &
-   tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp
-
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, ntyp, ityp, tau, natomwfc, atm
+  USE brilz, ONLY: at, bg, ibrav, celldm, alat, tpiba, tpiba2, omega, &
+       symm_type
+  USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
+       ngk, nks, nkstot
+  USE ktetra,ONLY: tetra, ntetra, ltetra, k1, k2, k3, nk1, nk2, nk3
+  USE lsda_mod, ONLY: isk, nspin, lsda
+  USE force_mod, ONLY: lforce, lstres, force
+  USE gvect, ONLY: dual, ecutwfc, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+       nrxx, ngm, ngm_g, gcutm, g, ig_l2g
+  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+       gcutms, doublegrid
+  USE wvfct, ONLY:  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
+  USE char, ONLY: title, crystal, psd, sname
+  USE dynam, ONLY: amass
+  USE symme, ONLY: s, irt, ftau, nsym, invsym
+  USE ener, ONLY: ef
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
+       rho_atc, mesh, msh, nchi, lchi, numeric
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc,&
+       bhstype
+  USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
+       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
+  USE nl_c_c, ONLY: a_nlcc, b_nlcc, alpha_nlcc, nlcc
+  USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
+  USE fixed_occ, ONLY: tfixed_occ 
+  use control_flags, only: twfcollect, noinv, istep, iswitch, modenum
+  use funct, only: iexch, icorr, igcx, igcc
   USE pseudo_types, ONLY: pseudo_upf
-  use control_flags, only: twfcollect
-
   use mp, only: mp_sum, mp_bcast, mp_max, mp_end
   use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
         nproc_pool, intra_pool_comm, root_pool

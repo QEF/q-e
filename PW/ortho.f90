@@ -14,9 +14,12 @@ subroutine ortho
   ! after any move of atoms and only if the US problem is solved with
   ! overlap=.false.
   !
-  use pwcom
+  USE kinds, ONLY: DP
   USE io_files, ONLY: iunwfc, nwordwfc, iunigk
+  USE klist, ONLY: nks, xk
+  USE wvfct, ONLY: npw, npwx, nbnd, nbndx, igk
   USE wavefunctions_module,    ONLY : evc
+  USE us, ONLY: nkb, vkb
   use becmod
   implicit none
   integer :: ik

@@ -27,7 +27,18 @@ subroutine init_us_1
   !   h) It fills the interpolation table for the beta functions
   !
 #include "machine.h"
-  use pwcom
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: lmaxx, ndm, nbrx, lqmax
+  USE constants, ONLY: fpi
+  USE atom, ONLY: r, rab, vnl, chi, msh
+  USE basis, ONLY: ntyp
+  USE brilz, ONLY: omega, tpiba
+  USE gvect, ONLY: g, gg
+  USE pseud, ONLY: lloc, lmax
+  USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
+       kkbeta, nqf, nqlc, lll, tvanp, okvan, newpseudo, lmaxkb, mx, &
+       nlx, ap, lpx, lpl, nqxq, dq, qgm, nqx, tab, dvan, qq, nhtol, &
+       nhtom, qrad, indv
   implicit none
   !
   !     here a few local variables

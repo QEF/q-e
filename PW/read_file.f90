@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-
 #if defined __NEW_PUNCH
 
 !-----------------------------------------------------------------------
@@ -18,13 +17,22 @@ subroutine read_file
   !
   !
 #include "machine.h"
-  use pwcom, only: tau, force, ityp, iunpun, nat, nbnd, nkstot, irt, &
-    tetra, ntetra, lsda, nspin, current_spin, cell_factor, lmovecell, nks, &
-    xk, ngms, gg, nls, ecutwfc, tpiba2, nrx1s, nr1s, nr2s, nr3s, nbndx, &
-    natomwfc, et, wg, rho, vr, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-    strf, eigts1, eigts2, eigts3, isk, wk, forcefield, tefield
-  USE kinds, only: dp
-  use io_files, only: tmp_dir, prefix
+  USE kinds, ONLY: dp
+  USE basis, ONLY: nat, ntyp, tau, ityp, natomwfc
+  USE brilz, ONLY: tpiba2, bg
+  USE force_mod, ONLY: force
+  USE klist, ONLY: nkstot, nks, xk, wk
+  USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
+  USE wvfct, ONLY: nbnd, nbndx, et, wg
+  USE symme, ONLY: irt 
+  USE ktetra, ONLY: tetra, ntetra 
+  USE extfield, ONLY:  forcefield, tefield
+  USE cellmd, ONLY: cell_factor, lmovecell
+  USE gvect, ONLY: gg, ecutwfc, ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
+  USE gsmooth, ONLY: ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE scf, ONLY: rho, vr
+  USE vlocal, ONLY: strf
+  use io_files, only: tmp_dir, prefix, iunpun
   use restart_module, only: readfile_new
 #ifdef __PARA
   use para
@@ -165,8 +173,22 @@ subroutine read_file
   !
   !
 #include "machine.h"
-  use pwcom
-  use io_files
+  USE kinds, ONLY: dp
+  USE basis, ONLY: nat, ntyp, tau, ityp, natomwfc
+  USE brilz, ONLY: tpiba2, bg
+  USE force_mod, ONLY: lforce, force
+  USE klist, ONLY: nkstot, nks, xk, wk
+  USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
+  USE wvfct, ONLY: nbnd, nbndx, et, wg
+  USE symme, ONLY: irt 
+  USE ktetra, ONLY: ltetra, tetra, ntetra
+  USE extfield, ONLY:  forcefield, tefield
+  USE cellmd, ONLY: cell_factor, lmovecell
+  USE gvect, ONLY: gg, ecutwfc, ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
+  USE gsmooth, ONLY: ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE scf, ONLY: rho, vr
+  USE vlocal, ONLY: strf
+  use io_files, only: tmp_dir, prefix, iunpun
 #ifdef __PARA
   use para
 #endif

@@ -15,8 +15,15 @@ subroutine newd
   !   to compute the non-local term in the US scheme.
   !
 #include "machine.h"
-
-  use pwcom
+  USE kinds, ONLY: DP
+  USE basis, ONLY: nat, ntyp, ityp
+  USE brilz, ONLY: omega
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, ngm, &
+       gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
+  USE lsda_mod, ONLY: nspin
+  USE scf,   ONLY: vr, vltot
+  USE us,    ONLY: qgm, lqx, deeq, dvan, okvan, nh, tvanp
+  USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
   integer :: ig, nt, ih, jh, na, is

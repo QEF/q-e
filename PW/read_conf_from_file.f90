@@ -9,10 +9,13 @@
 subroutine read_config_from_file
   !-----------------------------------------------------------------------
 
-  USE io_global,      ONLY : stdout
-  use pwcom
+  USE io_global,      ONLY: stdout
+  USE kinds,          ONLY: DP
+  USE basis,          ONLY: nat, ityp, tau, startingconfig
+  USE brilz,          ONLY: at, bg, ibrav, alat, omega
+  USE cellmd,         ONLY: at_old, omega_old, lmovecell
   use io_files,       only: prefix, iunres
-  use restart_module, only : readfile_config
+  use restart_module, only: readfile_config
 
   implicit none
 
@@ -71,7 +74,10 @@ subroutine read_config_from_file_old
   !-----------------------------------------------------------------------
 
   USE io_global,  ONLY : stdout
-  use pwcom
+  USE kinds,      ONLY: DP
+  USE basis,      ONLY: nat, ityp, tau, startingconfig
+  USE brilz,      ONLY: at, bg, ibrav, alat, omega
+  USE cellmd,     ONLY: at_old, omega_old, lmovecell
   use io_files,   only : prefix
 
   implicit none

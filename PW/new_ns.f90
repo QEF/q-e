@@ -16,9 +16,18 @@ subroutine new_ns
   ! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
   !
 #include "machine.h"
-  USE io_global,        ONLY : stdout
-  use pwcom
+  USE io_global, ONLY: stdout
+  USE kinds,     ONLY: DP
+  USE atom,      ONLY: lchi, nchi, oc
+  USE basis,     ONLY: nat, natomwfc, ityp
+  USE klist,     ONLY: nks
+  USE ldaU,      ONLY: ns, nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, &
+       Hubbard_alpha, swfcatom, eth, d1, d2, d3
+  USE lsda_mod,  ONLY: lsda, current_spin, nspin, isk
+  USE symme,     ONLY: nsym, irt
+  USE wvfct,     ONLY: nbnd, npw, npwx, igk, wg
   USE wavefunctions_module,    ONLY : evc
+  USE us,        ONLY: newpseudo
   use io_files
 #ifdef __PARA
   use para

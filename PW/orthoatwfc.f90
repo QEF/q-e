@@ -15,9 +15,15 @@ subroutine orthoatwfc
   ! in order to make lda+U calculations
   !
 #include "machine.h"
+  USE kinds, ONLY: DP
+  USE parameters, ONLY: nchix
   USE io_global,  ONLY : stdout
   USE io_files, ONLY: iunat, nwordatwfc, iunigk
-  use pwcom
+  USE basis, ONLY: nat, natomwfc
+  USE klist, ONLY: nks, xk
+  USE ldaU, ONLY: swfcatom
+  USE wvfct, ONLY: npwx, npw, igk
+  USE us, ONLY: nkb, vkb
   use becmod
 #ifdef __PARA
   use para

@@ -34,9 +34,8 @@ SUBROUTINE move_ions()
   !
   USE io_global,   ONLY : stdout
   USE io_files,    ONLY : tmp_dir
-  USE bfgs_module, ONLY : new_bfgs => bfgs, lin_bfgs
-  USE bfgs_module, ONLY : lbfgs_ndim
-  USE kinds,  ONLY : DP
+  USE bfgs_module, ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
+  USE kinds,       ONLY : DP
   USE brilz,       ONLY : alat, at, bg
   USE basis,       ONLY : nat, ityp, tau, atm
   USE gvect,       ONLY : nr1, nr2, nr3
@@ -215,7 +214,11 @@ SUBROUTINE new_force( dg, dg2 )
   !     where dg is the gradient of the constraint function
   !
   USE io_global,  ONLY : stdout
-  USE pwcom
+  USE kinds,      ONLY: DP
+  USE basis,      ONLY : nat
+  USE brilz,      ONLY : at, bg
+  USE force_mod,  ONLY : force
+  USE symme,      ONLY : s, nsym, irt
   !
   IMPLICIT NONE
   !
