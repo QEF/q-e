@@ -41,7 +41,7 @@ MODULE path_formats
     run_info = "(5X,'image',8X,'energy (eV)',8X,'error (eV/A)',8X,'frozen',/)"
   !
   CHARACTER (LEN=*), PARAMETER :: &
-    run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L)"
+    run_output = "(5X,I5,4X,F15.7,10X,F10.6,12X,L1)"
   !    
   CHARACTER (LEN=*), PARAMETER :: &
     summary_fmt = "(5X,A,T35,' = ',1X,A)"
