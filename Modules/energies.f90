@@ -137,16 +137,16 @@
 
           IF( PRESENT ( edft ) ) THEN
             IF( tsic ) THEN
-              WRITE( stdout,1) edft%ETOT, edft%EKIN, edft%EHT,&
-                 edft%ESELF, edft%ESR, edft%EH, &
+              WRITE( stdout,1) edft%etot, edft%ekin, edft%eht, &
+                 edft%eself, edft%esr, edft%eh, &
                  edft%ehte,  edft%self_ehte, edft%ehti, &
-                 edft%EPSEU, edft%ENL, edft%SXC,  edft%self_SXC,&
-                 edft%EVDW, edft%emkin, vxc, self_vxc
+                 edft%epseu, edft%enl, edft%exc,  edft%self_sxc, &
+                 edft%evdw, edft%emkin, vxc, self_vxc
             ELSE
-              WRITE( stdout,2) edft%ETOT, edft%EKIN, edft%EHT,&
-                 edft%ESELF, edft%ESR, edft%EH, &
-                 edft%ehte,  edft%ehti, edft%EPSEU, edft%ENL, edft%SXC, &
-                 edft%EVDW, edft%emkin
+              WRITE( stdout,2) edft%etot, edft%ekin, edft%eht,  &
+                 edft%eself, edft%esr, edft%eh, &
+                 edft%ehte,  edft%ehti, edft%epseu, edft%enl, edft%exc, &
+                 edft%evdw, edft%emkin
             END IF
           ELSE
             WRITE( stdout,1) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, EVDW
