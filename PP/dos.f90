@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 program dos_e
 
-  character :: nodenumber * 3
+  character(len=3) :: nodenumber
   call start_postproc (nodenumber)
   call dos (nodenumber)
 
@@ -23,7 +23,7 @@ subroutine dos (nodenumber)
   !
   !    prefix        prefix of input file produced by pw.x  'pwscf'
   !                    (wavefunctions are not needed)
-  !    tmp_dir       directory where filpun is searched   ./
+  !    outdir        directory where filpun is searched   ./
   !    ngauss1,      gaussian broadening parameters       0
   !     degauss1       if absent, read from file          0.d0
   !    Emin, Emax    min, max energy (eV) for DOS plot    band extrema
@@ -42,10 +42,11 @@ subroutine dos (nodenumber)
 
   character(len=3) :: nodenumber
   character(len=14) :: fildos
+  character(len=256) :: outdir
   real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
        degauss1
   integer :: nrot, ik, n, ndos, ngauss1
-  namelist /inputpp/ tmp_dir, prefix, fildos, degauss1,ngauss1,&
+  namelist /inputpp/ outdir, prefix, fildos, degauss1,ngauss1,&
        Emin, Emax, DeltaE
   logical :: minus_q
   !
@@ -53,7 +54,7 @@ subroutine dos (nodenumber)
   !
   !   set default values for variables in namelist
   !
-  tmp_dir='./'
+  outdir='./'
   prefix ='pwscf'
   fildos =' '
   Emin   =-1000000.
@@ -64,6 +65,8 @@ subroutine dos (nodenumber)
   !
   read (5, inputpp, err=200, iostat=ios )
 200 call errore('dos','reading inputpp namelist',abs(ios))
+  !
+  tmp_dir = trim(outdir)
   !
   call read_file
   !

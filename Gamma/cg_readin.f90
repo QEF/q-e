@@ -19,12 +19,14 @@ subroutine cg_readin
 #endif
   implicit none
   integer :: iunit =5, ionode_id = 0
+  character(len=256) :: outdir
   namelist /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &
-            tr2_ph, niter_ph, amass, tmp_dir, asr, deltatau, nderiv, &
+            tr2_ph, niter_ph, amass, outdir, asr, deltatau, nderiv, &
             first, last
   !
   call start_clock('cg_readin')
   !
+  outdir = './'
   prefix = 'pwscf'
   fildyn = 'matdyn'
   epsil  = .true.
@@ -43,6 +45,8 @@ subroutine cg_readin
 #endif
   read(iunit,'(a)') title_ph
   read(iunit,inputph)
+  !
+  tmp_dir = trim(outdir)
 #ifdef __PARA
   endif
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,7 @@ subroutine do_projwfc (nodenumber)
   ! calculates Lowdin charges, spilling parameter
   ! input: namelist "&inputpp", with variables
   ! prefix      prefix of input files saved by program pwscf
-  ! tmp_dir     temporary directory where files resides
+  ! outdir      temporary directory where files resides
   !
   use pwcom
   use io
@@ -24,9 +24,10 @@ subroutine do_projwfc (nodenumber)
   implicit none
   character (len=3)  :: nodenumber
   character (len=8)  :: io_choice
+  character(len=256) :: outdir
   real (kind=DP)     :: Emin, Emax, DeltaE, smoothing
   integer :: ios,ionode_id = 0 
-  namelist / inputpp / tmp_dir, prefix, io_choice, &
+  namelist / inputpp / outdir, prefix, io_choice, &
              Emin, Emax, DeltaE, smoothing
   !
   nd_nmbr = nodenumber
@@ -34,7 +35,7 @@ subroutine do_projwfc (nodenumber)
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  tmp_dir = './'
+  outdir = './'
   io_choice ='both'
   Emin   =-1000000.
   Emax   =+1000000.
@@ -45,6 +46,9 @@ subroutine do_projwfc (nodenumber)
   if (me == 1)  then
 #endif
   read (5, inputpp, err = 200, iostat = ios)
+  !
+  tmp_dir = trim(outdir)
+  !
 #ifdef __PARA
   end if
   !

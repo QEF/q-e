@@ -228,7 +228,8 @@ subroutine bfgs
         write (iunit) hessm1
         write (iunit) xold, eold, deold, oldforce
         close (unit = iunit, status = 'keep')
-
+        ! at next iteration read from file
+        restart_bfgs = .true.
      endif
      deallocate (hessm1,dtau,oldforce)
 

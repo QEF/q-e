@@ -21,8 +21,7 @@ CC = cc
 #
 # Fortran options:
 #
-FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
-	-align records
+FFLAGS = -O -fpe0 -real_size 64 -align dcommons -align records
 # Flags for FPMD
 # FFLAGS = -double_size 64 -fpconstant -real_size 64 -fast \
 #        -math_library fast -tune ev68

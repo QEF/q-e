@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ subroutine do_postproc (nodenumber)
   !    is controlled through the following variables in namelist inputpp:
   !
   ! prefix      prefix of files saved by program pwscf
-  ! tmp_dir     temporary directory where pwscf files resides
+  ! outdir      temporary directory where pwscf files resides
   !
   ! filplot     punch file, contains the quantity selected by plot_num
   ! plot_num    selects what is saved in filplot:
@@ -73,8 +73,9 @@ subroutine do_postproc (nodenumber)
 
   real(kind=DP) :: emin, emax, sample_bias, z, dz
   ! directory for temporary files
+  character(len=256) :: outdir
 
-  namelist / inputpp / tmp_dir, prefix, plot_num, stm_wfc_matching, &
+  namelist / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
        filplot, filband, lsign
   !
@@ -83,7 +84,7 @@ subroutine do_postproc (nodenumber)
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  tmp_dir = './'
+  outdir = './'
   filplot = ' '
   filband = ' '
   plot_num = 0
@@ -103,6 +104,7 @@ subroutine do_postproc (nodenumber)
 #endif
   read (5, inputpp, err = 200, iostat = ios)
 200 call errore ('postproc', 'reading inputpp namelist', abs (ios) )
+  tmp_dir = trim(outdir)
 #ifdef __PARA
   end if
   !

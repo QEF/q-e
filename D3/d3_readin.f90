@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,32 +24,25 @@ subroutine d3_readin
 #endif
   implicit none
   integer :: ios, ipol, iter, na, it, ii
-  ! integer variable for I/O control
-  ! counter on polarizations
-  ! counter on iterations
-  ! counter on atoms
-  ! counter on types
-  ! counter
-  ! eigenvalues convergence thresho
+  ! counters
+  character(len=256) :: outdir
 
-  namelist / inputph / ethr_ph, amass, iverbosity, tmp_dir, filpun, &
+  namelist / inputph / ethr_ph, amass, iverbosity, outdir, filpun, &
        fildyn, fildrho, fild0rho, q0mode_todo, wraux, recv, istop, &
        testflag, testint, testreal
+  ! convergence threshold
   ! atomic masses
   ! write control
   ! directory for temporary files
-  ! computed
-  ! the punch file produced by pwsc
-  ! the file with the dynamical mat
+  ! the punch file produced by pwscf
+  ! the file with the dynamical matrix
   ! the file with the deltarho
   ! the file with q=0 deltarho
-  ! list of the q=0 modes to be com
+  ! list of the q=0 modes to be computed
   ! .true.==> writes some auxiliary
   ! .true.==> this is a recover run
-  ! to stop the program at a given
-  ! variables used for testing purp
-  ! variables used for testing purp
-  ! variables used for testing purp
+  ! to stop the program at a given point
+  ! variables used for testing purposes
 #ifdef __PARA
 
   if (me.ne.1) goto 400
@@ -64,7 +57,7 @@ subroutine d3_readin
   !
   ethr_ph = 1.d-5
   iverbosity = 0
-  tmp_dir = './'
+  outdir = './'
   filpun = ' '
   fildyn = 'd3dyn'
   fildrho = ' '
@@ -77,8 +70,6 @@ subroutine d3_readin
   istop = 0
   do ii = 1, 50
      testflag (ii) = .false.
-
-
   enddo
   !
   !     reading the namelist inputph
@@ -116,13 +107,14 @@ subroutine d3_readin
 300 call errore ('d3_readin', 'reading xq', abs (ios) )
 
   lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
+  tmp_dir = trim(outdir)
+
 #ifdef __PARA
 400 continue
-
   call bcast_d3_input
   call init_pool
 #endif
-  call DCOPY (3, xq, 1, xqq, 1)
+  xqq (:) = xq(:)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
@@ -142,14 +134,6 @@ subroutine d3_readin
   !   partial computation of the dynamical matrix. Read them here
   !
   call allocate_part
-#ifdef __PARA
-
-  if (me.ne.1.or.mypool.ne.1) goto 800
-#endif
-#ifdef __PARA
-
-800 continue
-#endif
 
   if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
        4.and..not.lgamma) call errore ('d3_readin', ' Wrong iswitch ', 1 + &
@@ -157,7 +141,6 @@ subroutine d3_readin
   do it = 1, ntyp
      if (amass (it) .le.0.d0) call errore ('d3_readin', 'Wrong masses', &
           it)
-
   enddo
   if (mod (nks, 2) .ne.0.and..not.lgamma) call errore ('d3_readin', &
        'k-points are odd', nks)
@@ -166,12 +149,11 @@ subroutine d3_readin
   ! dimension is fixed to 300
   !
 
-  if (3 * nat.gt.300) call errore ('d3_readin', 'wrong dimension of q &
-       &0mode variable', 1)
+  if (3 * nat.gt.300) call errore ('d3_readin', 'wrong dimension of &
+       &q0mode variable', 1)
   do ii = 1, 3 * nat
      if (q0mode_todo (ii) .gt.3 * nat) call errore ('d3_readin', ' wrong &
           & q0mode_todo ', 1)
-
   enddo
   return
 end subroutine d3_readin

@@ -30,8 +30,9 @@ subroutine phq_readin
   ! counter on iterations
   ! counter on atoms
   ! counter on types
+  character(len=256) :: outdir
   namelist / inputph / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph, &
-       maxirr, nat_todo, iverbosity, tmp_dir, epsil, trans, elph, zue, nrapp, &
+       maxirr, nat_todo, iverbosity, outdir, epsil, trans, elph, zue, nrapp, &
        time_max, reduce_io, prefix, fildyn, filelph, fildvscf, fildrho
   ! tr2_ph   : convergence threshold
   ! amass    : atomic masses
@@ -41,7 +42,7 @@ subroutine phq_readin
   ! maxirr   : the number of irreducible representations
   ! nat_todo : number of atom to be displaced
   ! iverbosity   : verbosity control
-  ! tmp_dir  : directory where input and temp files reside
+  ! outdir   : directory where input, output, temporary files reside
   ! epsil    : if true calculate dielectric constant
   ! trans    : if true calculate phonon
   ! elph     : if true calculate electron-phonon coefficients
@@ -82,9 +83,8 @@ subroutine phq_readin
   zue = .false.
   elph = .false.
   time_max = 10000000.d0
-
   reduce_io = .false.
-  tmp_dir = './'
+  outdir = './'
   prefix = 'pwscf'
   filelph = ' '
   fildyn = 'matdyn'
@@ -132,6 +132,7 @@ subroutine phq_readin
        'gamma is needed for elec.field', 1)
   if (zue.and..not.trans) call errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
+  tmp_dir = trim(outdir)
 #ifdef __PARA
 400 continue
 

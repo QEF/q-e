@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,19 +15,22 @@ subroutine do_bands (nodenumber)
   implicit none
   character (len=3)  :: nodenumber
   character (len=14) :: filband
+  character(len=256) :: outdir
   integer :: ios
-  namelist / inputpp / tmp_dir, prefix, filband
+  namelist / inputpp / outdir, prefix, filband
   !
   nd_nmbr = nodenumber
   !
   !   set default values for variables in namelist
   !
   prefix = ' '
-  tmp_dir = './'
+  outdir = './'
   filband = ' '
   !
   read (5, inputpp, err = 200, iostat = ios)
 200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
+  !
+  tmp_dir = trim(outdir)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -60,31 +63,22 @@ subroutine punch_band (filband)
   real(kind=DP) :: proold, modulo
   ! the best overlap product
   ! the x coordinate in k space
-  complex(kind=DP) :: ZDOTC,  pro, cgracsc
-  ! scalar product function
+  complex(kind=DP) :: pro
   ! the product of wavefunctions
-  ! scalar product with the S matrix
 
   complex(kind=DP), allocatable :: psiold (:,:), old (:), actual (:), &
        becpold (:,:)
-  ! the space used to save the eigenf
+  ! the space used to save the eigenfunctions
   ! the old testing wavefunction
   ! the testing wavefunction
-  ! products of wavefunctions and bet
+  ! products of wavefunctions and beta
 
   integer :: ibnd, jbnd, ik, ikb, ig, npwold, ios
-  ! if 1 the band has been already us
-  ! counter on bands
-  ! counter on bands
-  ! counter on k points
-  ! counter of beta functions
-  ! counter on g vectors
-  ! save the igk
-  ! save the number of plane waves
-  ! index of changes
-  ! index of changes
-  ! used to control I/O status
+  ! counters
   integer, allocatable :: ok (:), igkold (:), il (:), ilm (:)
+  complex(kind=DP), external :: ZDOTC,  cgracsc
+  ! scalar product function
+  ! scalar product with the S matrix
 
 
   if (filband.eq.' ') return
@@ -151,14 +145,14 @@ subroutine punch_band (filband)
 
         call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
         do ibnd = 1, nbnd
-           call setv (2 * ngm, 0.d0, old, 1)
+           old(:) = (0.d0, 0.d0)
            do ig = 1, npwold
               old (igkold (ig) ) = psiold (ig, ibnd)
            enddo
            proold = 0.d0
            do jbnd = 1, nbnd
               if (ok (jbnd) .eq.0) then
-                 call setv (2 * ngm, 0.d0, actual, 1)
+                 actual (:) = (0.d0, 0.d0)
                  do ig = 1, npw
                     actual (igk (ig) ) = evc (ig, jbnd)
                  enddo
