@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: view.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+# $Id: view.itcl,v 1.2 2004-02-23 12:15:10 kokalj Exp $ 
 #
 
 proc ::pwscf::view::inputByPager {guiObj} {
@@ -28,9 +28,17 @@ proc ::pwscf::view::inputByPager {guiObj} {
     set moduleObj   [$guiObj getSelected moduleObj]
     set moduleIdent [$guiObj getSelected moduleIdent]
     
-    set tmpFile [::tclu::tempFile name pwscf.$moduleIdent]
+    set tmpFile [::tclu::tempFile name pwscf_$moduleIdent]
     namespace eval ::guib "$moduleObj save $tmpFile 1"
-    eval exec $::pwscf::settings(PAGER) $tmpFile &
+
+    if { [string match -nocase "PWgui" $::pwscf::settings(PAGER)] } {
+	defaultPager $tmpFile
+    } else {
+	if { [catch {eval exec $::pwscf::settings(PAGER) $tmpFile &}] } {
+	    # revert to default PAGER
+	    defaultPager $tmpFile
+	}
+    }
 }
  
 
@@ -91,3 +99,19 @@ proc ::pwscf::view::structByXcrysden {guiObj} {
 #    set id [winfo id $w]
 #    exec xcrysden --use $id &
 #}
+
+
+proc ::pwscf::view::defaultPager {file} {
+    
+    set t [::guib::widgets::dialogshell [::tku::widgetName] -title "Pager: $file" -separator 1 -transient 0]
+    $t add Close  -text Close  -command [list destroy $t]
+    $t default Close
+    
+    set w [$t childsite]
+    set text [::iwidgets::scrolledtext $w.text \
+		  -hscrollmode dynamic -vscrollmode dynamic \
+		  -wrap none -state normal]
+    $text import $file
+    $text configure -state disabled
+    pack $text -side top -fill both -expand 1
+}
