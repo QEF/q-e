@@ -5,10 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
-!-----------------------------------------------------------------------
-subroutine setup
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE setup
+  !----------------------------------------------------------------------------
   !
   !  This routine 
   !  1) determines various parameters of the calculation
@@ -37,383 +38,429 @@ subroutine setup
   !    invsym    if true the system has inversion symmetry
   !  + LDA+U-related quantities.
   !
-#include "machine.h"
-  use pwcom
+  !
+  USE parameters,  ONLY :  DP, npsx, nchix, npk
+  USE constants,   ONLY :  pi
+  USE brilz,       ONLY :  at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE basis,       ONLY :  nat, tau, ntyp, ityp, startingwfc, startingpot, &
+                           natomwfc
+  USE gvect,       ONLY :  gcutm, ecutwfc, dual, nr1, nr2, nr3
+  USE gsmooth,     ONLY :  doublegrid, gcutms
+  USE klist,       ONLY :  xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
+                           nkstot
+  USE lsda_mod,    ONLY :  lsda, nspin, current_spin, isk
+  USE ktetra,      ONLY :  nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
+  USE symme,       ONLY :  s, irt, ftau, nsym, invsym
+  USE atom,        ONLY :  r, oc, nchi, lchi, mesh, msh
+  USE pseud,       ONLY :  zv, zp, nlc, nnl, bhstype, alps, aps, lmax
+  USE wvfct,       ONLY :  nbnd, nbndx
+  USE varie,       ONLY :  tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
+                           david, isolve, imix, niter, noinv, newpseudo, &
+                           restart, nosym, modenum
+  USE relax,       ONLY :  dtau_ref, starting_diag_threshold
+  USE cellmd,      ONLY :  calc
+  USE us,          ONLY :  tvanp, okvan
+  USE ldaU,        ONLY :  d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
+                           Hubbard_alpha, Hubbard_lmax
+  USE bp,          ONLY :  gdir, lberry, nppstr
+  USE fixed_occ,   ONLY :  f_inp, tfixed_occ   
+  USE char,        ONLY :  sname, psd
 #ifdef __PARA
-  use para
+  USE para
 #endif
-  implicit none
   !
-  !    local variables
+  IMPLICIT NONE
   !
-  !    rcut: cut-off radius for radial integrations
+  ! ... local variables
   !
-  real(kind=DP), parameter :: rcut = 10.d0, eps = 1.0d-12
+  REAL(KIND=DP), PARAMETER :: &
+      rcut = 10.D0,   &!  cut-off radius for radial integrations
+      eps  = 1.0D-12   !
+  INTEGER :: & 
+      na,             &!
+      ir,             &!
+      nt,             &!
+      input_nks,      &!
+      nrot,           &!
+      iter,           &!
+      ierr,           &!
+      irot,           &!
+      isym,           &!
+      ipol,           &!
+      jpol,           &!
+      tipo,           &!
+      is,             &!
+      ibnd             !
+  LOGICAL :: &
+      minus_q          !
+  REAL(KIND=DP) :: &
+      iocc             ! 
+  INTEGER, EXTERNAL :: &
+      n_atom_wfc,     &!
+      set_Hubbard_l
+  LOGICAL, EXTERNAL :: &
+      lchk_tauxk       ! lchk_tauxk tests that atomic coordinates do not overlap
   !
-  integer :: na, ir, nt, input_nks, nrot, iter, ierr, irot, isym, &
-       ipol, jpol, tipo, is, ibnd
-  logical :: minus_q  
-  integer, external ::n_atom_wfc, set_Hubbard_l
-  real(kind=dp) :: iocc
+  ! ... end of local variables
   !
-  ! lchk_tauxk tests that atomic coordinates do not overlap
   !
-  logical, external :: lchk_tauxk
-
-  do nt = 1, ntyp
-     do ir = 1, mesh (nt)
-        if (r (ir, nt) > rcut) then
-           msh (nt) = ir
-           goto 5
-        endif
-     enddo
-
-     msh (nt) = mesh (nt)
+  DO nt = 1, ntyp
+     DO ir = 1, mesh(nt)
+        IF ( r(ir,nt) > rcut) THEN
+           msh(nt) = ir
+           GO TO 5
+        END IF
+     END DO
      !
-     ! force msh to be odd for simpson integration
+     msh(nt) = mesh(nt)
      !
-5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
-  enddo
+     ! ... force msh to be odd for simpson integration
+     !
+5    msh(nt) = 2 * ( (msh(nt) + 1) / 2) - 1
+  END DO
   !
-  !     Compute the ionic charge for each atom type
+  ! ... Compute the ionic charge for each atom type
   !
-  zv (1:ntyp) = zp (1:ntyp)
+  zv(1:ntyp) = zp(1:ntyp)
   !
-  !     Set the number of electrons equal to the total ionic charge
+  ! ... Set the number of electrons equal to the total ionic charge
   !
-  if (nelec == 0.d0) nelec = SUM(zv (ityp (1:nat) ))
-!
-!  If the occupations are from input, check the consistency with the
-!  number of electrons
-!
-  if (tfixed_occ) then
-     iocc=0
-     do is=1,nspin
-        do ibnd=1,nbnd
-           iocc=iocc+f_inp(ibnd,is)
-        enddo
-     enddo  
-     if (abs(iocc-nelec).gt.1d-5) &
-        call errore('setup','strange occupations',1)
-  endif
-
+  IF ( nelec == 0.D0 ) nelec = SUM( zv(ityp(1:nat)) )
   !
-  ! For metals: check whether Gaussian broadening or Tetrahedron method is
+  ! ... If the occupations are from input, check the consistency with the
+  ! ... number of electrons
   !
-  lgauss = (degauss .ne. 0.d0).and.(.not.tfixed_occ)
+  IF ( tfixed_occ ) THEN
+     iocc = 0
+     DO is = 1, nspin
+        DO ibnd = 1, nbnd
+           iocc = iocc + f_inp(ibnd,is)
+        END DO
+     END DO  
+     IF ( ABS( iocc - nelec ) > 1D-5 ) &
+        CALL errore( 'setup', 'strange occupations', 1 )
+  END IF
   !
-  ! Check: if there is an odd number of electrons, the crystal is a metal
+  ! ... For metals: check whether Gaussian broadening or Tetrahedron method is
   !
-  if (lscf .and. abs (nint (nelec / 2.d0) - nelec / 2.d0) > 1.0d-8 &
-           .and. .not.lgauss .and. .not.ltetra .and.(.not.tfixed_occ)) &
-              call errore ('setup', &
-       'the system is metallic, specify occupations', 1)
+  lgauss = ( ( degauss /= 0.D0 ) .AND. ( .NOT. tfixed_occ ) )
   !
-  !     Set the number of occupied bands if not given in input
+  ! ... Check: if there is an odd number of electrons, the crystal is a metal
   !
-  if (nbnd == 0) then
-     nbnd = nint (nelec) / 2.d0
-     if (lgauss .or. ltetra) then
+  IF ( lscf .AND. ABS( NINT( nelec / 2.D0 ) - nelec / 2.D0 ) > 1.0D-8 &
+            .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
+      CALL errore( 'setup', 'the system is metallic, specify occupations', 1 )
+  !
+  ! ... Set the number of occupied bands if not given in input
+  !
+  IF ( nbnd == 0 ) THEN
+     nbnd = NINT( nelec ) / 2.D0  ! ???? SICURI ????
+     IF ( lgauss .OR. ltetra ) THEN
         !
-        !     metallic case: add 20% more bands, with a minimum of 4
+        ! ... metallic case: add 20% more bands, with a minimum of 4
         !
-        nbnd = max (nint (1.20d0 * nelec / 2.d0), nbnd+4)
-     endif
-  else
-     if (nbnd < nint(nelec)/2.d0 .and. lscf) call errore ('setup', &
-          'too few bands', 1)
-  endif
+        nbnd = MAX( NINT( 1.20D0 * nelec / 2.D0 ), ( nbnd + 4 ) )
+     END IF
+  ELSE
+     IF ( nbnd < NINT( nelec ) / 2.D0 .AND. lscf ) &
+        CALL errore( 'setup', 'too few bands', 1 )
+  END IF
   !
-  ! Here we  set the precision of the diagonalization
+  ! ... Here we  set the precision of the diagonalization
   !
-  if (ethr == 0.d0) then
-     if (startingpot=='file') then
-        ! starting potential is expected to be a good one :
-        ! do not spoil it with a lousy first diagonalization
-        if (imix.ge.0) ethr = 0.1d0 * min (1.d-2, tr2/nelec)
-        if (imix.lt.0) ethr = 0.1d0 * min (1.0d-6, sqrt (tr2) )
-     else
-        ! starting atomic potential is probably far from scf..
-        ! do not waste iterations in the first diagonalizations
-        if (imix.ge.0) ethr = 1.0d-2
-        if (imix.lt.0) ethr = 1.0d-5
-     end if
-  end if
-
-  if (.not.lscf) niter = 1
-
+  IF ( ethr == 0.D0 ) THEN
+     IF ( startingpot == 'file' ) THEN
+        !
+        ! ... starting potential is expected to be a good one :
+        ! ... do not spoil it with a lousy first diagonalization
+        !
+        IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
+        IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.0D-6, SQRT( tr2 ) )
+     ELSE
+        !
+        ! ... starting atomic potential is probably far from scf
+        ! ... do not waste iterations in the first diagonalizations
+        !
+        IF ( imix >= 0 ) ethr = 1.0D-2
+        IF ( imix < 0 )  ethr = 1.0D-5
+     END IF
+  END IF
+  !
+  IF ( .NOT. lscf ) niter = 1
+  !
   starting_diag_threshold = ethr
   !
-  !    set number of atomic wavefunctions
+  ! ... set number of atomic wavefunctions
   !
-  natomwfc = n_atom_wfc (nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi)
+  natomwfc = n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
   !
-  !    set the max number of bands used in iterative diagonalization
+  ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
-  if (isolve == 0) then
+  IF ( isolve == 0 ) THEN
      nbndx = david * nbnd
-  endif
-
-  if (startingwfc == 'atomic' .and. .not.restart) nbndx = max (natomwfc, nbndx)
+  END IF
   !
-  !     Set the units in real and reciprocal space
+  IF ( startingwfc == 'atomic' .AND. .NOT. restart) &
+     nbndx = MAX( natomwfc, nbndx )
   !
-  tpiba = 2.d0 * pi / alat
+  ! ... Set the units in real and reciprocal space
+  !
+  tpiba = 2.D0 * pi / alat
   tpiba2 = tpiba**2
   !
-  !     Compute the cut-off of the G vectors
+  ! ... Compute the cut-off of the G vectors
   !
   gcutm = dual * ecutwfc / tpiba2
-  doublegrid = dual.gt.4.0d0
-  if (doublegrid) then
-     gcutms = 4.d0 * ecutwfc / tpiba2
-  else
+  doublegrid = ( dual > 4.0D0 )
+  IF ( doublegrid ) THEN
+     gcutms = 4.D0 * ecutwfc / tpiba2
+  ELSE
      gcutms = gcutm
-  endif
+  END IF
   !
-  !     Generate the reciprocal lattice vectors
+  ! ... Generate the reciprocal lattice vectors
   !
-
-  call recips ( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !
-  !     If  lxkcry = .true. , the input k-point components in crystal
-  !     axis are transformed in cartesian coordinates
+  ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
+  ! ... axis are transformed in cartesian coordinates
   !
-  if (lxkcry) call cryst_to_cart (nks, xk, bg, 1)
+  IF ( lxkcry ) CALL cryst_to_cart( nks, xk, bg, 1 )
   !
-  !     Test that atoms do not overlap
+  ! ... Test that atoms do not overlap
   !
-  if (.not. (lchk_tauxk (nat, tau, bg) ) ) call errore ('setup', &
-       'Wrong atomic coordinates ', 1)
+  IF ( .NOT. ( lchk_tauxk( nat, tau, bg ) ) ) &
+     CALL errore( 'setup', 'Wrong atomic coordinates ', 1 )
   !
-  ! set dtau_ref for relaxation and dynamics
-  ! this is done here because dtau_ref is updated in cg
+  ! ... set dtau_ref for relaxation and dynamics
+  ! ... this is done here because dtau_ref is updated in cg
   !
-  dtau_ref = 0.2d0
+  dtau_ref = 0.2D0
   !
-  !   calculate dimensions of the FFT grid
+  ! ... calculate dimensions of the FFT grid
   !
-  call set_fft_dim
+  CALL set_fft_dim()
   !
-  !  generate transformation matrices for the crystal point group
-  !  First we generate all the symmetry matrices of the Bravais lattice
+  !  ... generate transformation matrices for the crystal point group
+  !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
-  if (ibrav == 4 .or. ibrav == 5) then
+  IF ( ibrav == 4 .OR. ibrav == 5 ) THEN
      !
-     !  here the hexagonal or trigonal bravais lattice
+     ! ... here the hexagonal or trigonal bravais lattice
      !
-     call hexsym (at, s, sname, nrot)
+     CALL hexsym( at, s, sname, nrot )
      tipo = 2
-  elseif (ibrav >=1  .and. ibrav <= 14) then
+  ELSE IF ( ibrav >=1  .AND. ibrav <= 14 ) THEN
      !
-     !  here for the cubic bravais lattice
+     ! ... here for the cubic bravais lattice
      !
-     call cubicsym (at, s, sname, nrot)
+     CALL cubicsym( at, s, sname, nrot )
      tipo = 1
-  elseif (ibrav == 0) then
-     if (symm_type == 'cubic') then
+  ELSE IF ( ibrav == 0 ) THEN
+     IF ( symm_type == 'cubic' ) THEN
         tipo = 1
-        call cubicsym (at, s, sname, nrot)
-     endif
-     if (symm_type == 'hexagonal') then
+        CALL cubicsym( at, s, sname, nrot )
+     END IF
+     IF ( symm_type == 'hexagonal' ) THEN
         tipo = 2
-        call hexsym (at, s, sname, nrot)
-     endif
-  else
-     call errore ('setup', 'wrong ibrav', 1)
-  endif
+        CALL hexsym( at, s, sname, nrot )
+     END IF
+  ELSE
+     CALL errore( 'setup', 'wrong ibrav', 1 )
+  END IF
   !
-  !   if noinv is true eliminate all symmetries which exchange z with -z
+  ! ... if noinv is .TRUE. eliminate all symmetries which exchange z with -z
   !
-  if (noinv) then
+  IF ( noinv ) THEN
      irot = 0
-     do isym = 1, nrot
-        if (s (1, 3, isym) == 0 .and. s (3, 1, isym) == 0 .and. &
-            s (2, 3, isym) == 0 .and. s (3, 2, isym) == 0 .and. &
-            s (3, 3, isym) == 1) then
+     DO isym = 1, nrot
+        IF ( s(1,3,isym) == 0 .AND. s(3,1,isym) == 0 .AND. &
+             s(2,3,isym) == 0 .AND. s(3,2,isym) == 0 .AND. &
+             s(3,3,isym) == 1) THEN
            irot = irot + 1
-           s (:, :, irot) = s (:, :, isym)
-           sname (irot) = sname (isym)
-        endif
-     enddo
+           s(:,:,irot) = s(:,:,isym)
+           sname(irot) = sname(isym)
+        END IF
+     END DO
      nrot = irot
-  endif
-
+  END IF
   !
-  !   If nosym is true do not use any point-group symmetry
+  ! ... If nosym is true do not use any point-group symmetry
   !
-
-  if (nosym) nrot = 1
-
+  IF ( nosym ) nrot = 1
   !
-  !    Automatic generation of k-points (if required)
+  ! ... Automatic generation of k-points (if required)
   !
-
-  if (nks < 0) then
-     call setupkpoint (s, nrot, xk, wk, nks, npk, nk1, &
-          nk2, nk3, k1, k2, k3, at, bg, tipo)
-  else if (nks == 0) then
-     if (lberry) then
-       call kp_strings &
-       ( nppstr, gdir, nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
-     else
-       call kpoint_grid ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
-     end if
-  end if
+  IF ( nks < 0 ) THEN
+     CALL setupkpoint( s, nrot, xk, wk, nks, npk, nk1, &
+                       nk2, nk3, k1, k2, k3, at, bg, tipo )
+  ELSE IF ( nks == 0 ) THEN
+     IF ( lberry ) THEN
+        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
+                         k1, k2, k3, nk1, nk2, nk3, nks, xk, wk )
+     ELSE
+       CALL kpoint_grid( nrot, s, bg, npk, k1, k2, k3, &
+                         nk1, nk2, nk3, nks, xk, wk )
+     END IF
+  END IF
   !
-  !   allocate space for irt
+  ! ...  allocate space for irt
   !
-  allocate (irt( 48, nat))    
+  ALLOCATE( irt( 48, nat ) )    
   !
-  !   "sgama" eliminates rotations that are not symmetry operations
-  !   Input k-points are assumed to be  given in the IBZ of the Bravais
-  !   lattice, with the full point symmetry of the lattice.
-  !   If some symmetries are missing in the crystal, "sgama" computes
-  !   the missing k-points. If nosym is true (see above) we do not use
-  !   any point-group symmetry and leave k-points unchanged.
+  ! ... "sgama" eliminates rotations that are not symmetry operations
+  ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
+  ! ... lattice, with the full point symmetry of the lattice.
+  ! ... If some symmetries are missing in the crystal, "sgama" computes
+  ! ... the missing k-points. If nosym is true (see above) we do not use
+  ! ... any point-group symmetry and leave k-points unchanged.
   !
   input_nks = nks
   !
-  call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
-       nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xqq, &
-       iswitch, modenum)
-
-  call checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, &
-       irt, ftau)
+  CALL sgama( nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
+              nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xqq, &
+              iswitch, modenum )
   !
-  ! if dynamics is done the system should have no symmetries
-  ! (inversion symmetry alone is allowed)
+  CALL checkallsym( nsym, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, &
+                    irt, ftau )
   !
-
-  if (iswitch > 2 .and. (nsym == 2 .and. .not.invsym .or. nsym > 2) &
-     .and. .not. ( calc.eq.'mm' .or. calc.eq.'nm' ) ) &
-     call errore ('setup', 'Dynamics, you should have no symmetries', -1)
-  !
-  !     Calculate quantities used in tetrahedra method
+  ! ... if dynamics is done the system should have no symmetries
+  ! ... (inversion symmetry alone is allowed)
   !
 
-  if (ltetra) then
+  if ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
+           .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
+     CALL errore( 'setup', 'Dynamics, you should have no symmetries', -1 )
+  !
+  ! ... Calculate quantities used in tetrahedra method
+  !
+  IF ( ltetra ) THEN
      ntetra = 6 * nk1 * nk2 * nk3
-     allocate (tetra(4,ntetra))    
-     call tetrahedra (nsym,s,minus_q,at,bg,npk,k1,k2,k3, &
-          nk1,nk2,nk3, nks,xk,wk,ntetra,tetra)
-  else
+     ALLOCATE( tetra(4,ntetra) )    
+     CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
+                      nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
+  ELSE
      ntetra = 0
-  end if
+  END IF
   !
-  ! Berry phase calculation: do not change the number of k-points
+  ! ... Berry phase calculation: do not change the number of k-points
   !
-  if ( lberry ) nks = input_nks
+  IF ( lberry ) nks = input_nks
   !
-  ! phonon calculation: add k+q to the list of k
+  ! ... phonon calculation: add k+q to the list of k
   !
-  if (iswitch <= -2) call set_kplusq (xk, wk, xqq, nks, npk)
+  IF ( iswitch <= -2 ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
   !
-  if (lsda) then
+  IF ( lsda ) THEN
      !
-     ! LSDA case: two different spin polarizations, each with its own kpoints
+     ! ... LSDA case: two different spin polarizations, 
+     ! ...            each with its own kpoints
      !
      nspin = 2
-     call set_kup_and_kdw (xk, wk, isk, nks, npk)
-  else
+     CALL set_kup_and_kdw( xk, wk, isk, nks, npk )
+  ELSE
      !
-     ! LDA case: the two spin polarizations are identical
+     ! ... LDA case: the two spin polarizations are identical
      !
      nspin = 1
      current_spin = 1
-  endif
-  if (nks > npk) call errore ('setup', 'too many k points', nks)
+  END IF
+  IF ( nks > npk ) CALL errore( 'setup', 'too many k points', nks )
 #ifdef __PARA
-  call init_pool
+  CALL init_pool
   !
-  ! set the granularity for k-point distribution
+  ! ... set the granularity for k-point distribution
   !
-  if ( (abs (xqq (1) ) < eps .and. abs (xqq (2) ) < eps .and. &
-        abs (xqq (3) ) < eps) .or. (iswitch > - 2) ) then
+  IF ( ( ABS( xqq(1) ) < eps .AND. ABS( xqq(2) ) < eps .AND. &
+         ABS( xqq(3) ) < eps) .OR. ( iswitch > - 2 ) ) THEN
      kunit = 1
-  else
+  ELSE
      kunit = 2
-  endif
+  ENDIF
   !
-  ! distribute the k-points (and their weights and spin indices)
+  ! ... distribute the k-points (and their weights and spin indices)
   !
-
-  call divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
+  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
 #else
   !
-  !  set nkstot which is used to write results for all k-points
+  ! ... set nkstot which is used to write results for all k-points
   !
-
   nkstot = nks
 #endif
   !
-  !   For Bachelet-Hamann-Schluter pseudopotentials only
+  ! ... For Bachelet-Hamann-Schluter pseudopotentials only
   !
-  do nt = 1, ntyp
-     if (.not.tvanp (nt) ) then
-        if (nlc(nt) == 2 .and. nnl(nt) == 3 .and. bhstype (nt) ) &
-             call bachel (alps (1, 0, nt), aps (1, 0, nt), 1, lmax (nt) )
-     endif
+  DO nt = 1, ntyp
+     IF ( .NOT. tvanp(nt) ) THEN
+        IF ( nlc(nt) == 2 .AND. nnl(nt) == 3 .AND. bhstype(nt) ) &
+           CALL bachel( alps(1,0,nt), aps(1,0,nt), 1, lmax(nt) )
+     END IF
+  END DO
+  !
+  ! ... okvan = .TRUE. : at least one pseudopotential is US
+  !
+  okvan = .FALSE.
+  DO nt = 1, ntyp
+     okvan = ( okvan .OR. tvanp(nt) )
   enddo
   !
-  !   okvan = .true. : at least one pseudopotential is US
+  ! ... initialize parameters for charge density extrapolation during dynamics
   !
-  okvan = .false.
-  do nt = 1, ntyp
-     okvan = okvan.or.tvanp (nt)
-  enddo
+  alpha0 = 1.D0
+  beta0  = 0.D0
   !
-  ! initialize parameters for charge density extrapolation during dynamics
+  ! ... Needed for LDA+U
   !
-  alpha0 = 1.d0
-  beta0 = 0.d0
+  ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
-  ! Needed for LDA+U
-  !
-  ! initialize d1 and d2 to rotate the spherical harmonics
-  !
-
-  if (lda_plus_u) then
+  IF ( lda_plus_u ) THEN
      Hubbard_lmax = -1
-     do nt=1,ntyp
-        if (Hubbard_U(nt) /= 0.d0 .or. Hubbard_alpha(nt) /= 0.d0) then
+     DO nt = 1, ntyp
+        IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0) THEN
            Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
-           Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(nt))
-           write (6,*) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
-        end if
-     end do
-     write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
-     if (Hubbard_lmax == -1) &
-        call errore ('setup','lda_plus_u calculation but Hubbard_l not set',1)
-     call d_matrix (d1, d2, d3)  
-  end if
+           Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
+           WRITE( 6, * ) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
+        END IF
+     END DO
+     WRITE( 6, * ) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
+     IF ( Hubbard_lmax == -1 ) &
+        CALL errore( 'setup', &
+                   & 'lda_plus_u calculation but Hubbard_l not set', 1 )
+     CALL d_matrix( d1, d2, d3 )  
+  END IF
   !
-  return
-end subroutine setup
+  RETURN
+  !
+END SUBROUTINE setup
 !
-!-----------------------------------------------------------------------
-integer function n_atom_wfc &
-     (nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi)
-  !-----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+FUNCTION n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
+  !----------------------------------------------------------------------------
   !
-  ! Find max number of bands needed
+  ! ... Find max number of bands needed
   !
-  use parameters, only : DP
-  implicit none
-  integer :: nat, npsx, ityp (nat), nchix, nchi (npsx), lchi (nchix, npsx)
-  real(kind=DP) :: oc (nchix, npsx)
-  logical :: newpseudo (npsx)
-  integer :: na, nt, n
+  USE parameters, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER       :: n_atom_wfc
+  INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix, npsx)
+  REAL(KIND=DP) :: oc(nchix, npsx)
+  LOGICAL       :: newpseudo(npsx)
+  INTEGER       :: na, nt, n
+  !
   !
   n_atom_wfc = 0
-  do na = 1, nat
-     nt = ityp (na)
-     do n = 1, nchi (nt)
-        if (oc (n, nt) > 0.d0 .or. .not.newpseudo (nt) ) &
-             n_atom_wfc = n_atom_wfc + 2 * lchi (n, nt) + 1
-     enddo
-  enddo
-
-  return
-end function n_atom_wfc
+  DO na = 1, nat
+     nt = ityp(na)
+     DO n = 1, nchi(nt)
+        IF ( oc(n,nt) > 0.D0 .OR. .NOT. newpseudo(nt) ) &
+           n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt) + 1
+     END DO
+  END DO
+  !
+  RETURN
+  !
+END FUNCTION n_atom_wfc
