@@ -85,8 +85,8 @@ then
         case "$1" in
           pc_ifc | beo_ifc | ibm    | ibmsp | origin | nec | t3e | \
           alpha  | alphaMPI| hitachi | \
-          cp.aix | cp.alpha | cp.alphasc | cp.ibmsp | cp.irix | cp.lnx.intel | \
-          cp.origin | cp.qsw | cp.sx5 | cp.t3e )
+          cp.aix | cp.alpha | cp.alphasc | cp.ibmsp | cp.irix | \
+          cp.origin | cp.qsw | cp.sx5 )
             cp install/Make.rules_nocpp make.rules
           ;;
           pc_pgi | pc_abs | beowulf | fujitsu | sun   | sunmpi | sxcross | \

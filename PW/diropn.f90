@@ -32,7 +32,7 @@ subroutine diropn (unit, filename, recl, exst)
   !
   !    local variables
   !
-  character :: assstr * 80, tempfile * 52
+  character(len=80) :: assstr, tempfile
   ! complete file name
   integer :: ios, unf_recl, ierr
   ! used to check I/O operations
@@ -76,7 +76,7 @@ subroutine diropn (unit, filename, recl, exst)
   if (unf_recl.gt.5000000) then
      if (unit.lt.10) then
         write (assstr, '("assign -b 1 u:",i1)') unit
-     else (unit.lt.100) then
+     else if(unit.lt.100) then
         write (assstr, '("assign -b 1 u:",i2)') unit
      else
         call errore ('diropn', 'unit too large', 1)

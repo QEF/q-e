@@ -808,7 +808,7 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
-      INTEGER :: idum
+      INTEGER :: idum = 0
       IF( ionode ) THEN
         WRITE(iuni) twrite
         WRITE(iuni) idum
