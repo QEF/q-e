@@ -52,18 +52,13 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: the matrice sending q -> -q+G
 
   logical :: minus_q
-  ! output: if true one symmetry send q -
+  ! output: if true one symmetry send q -> -q+G
   integer :: imode
   ! counter on modes
   !
   !    set the information on the symmetry group
   !
-  nsymq = 1
-  minus_q = .false.
-  gi (1, 1) = 0.d0
-  gi (2, 1) = 0.d0
-  gi (3, 1) = 0.d0
-  irgq (1) = 1
+  call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
   !
   !     set the modes
   !
@@ -80,11 +75,16 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !   in the basis of the displacements
   !
   call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)
-
   call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)
+
   do imode = 1, 3 * nat
      t (1, 1, 1, imode) = (1.d0, 0.d0)
   enddo
+
+  tmq = (0.d0,0.d0)
+  if (minus_q) then
+     tmq (1, 1, :) = (1.d0, 0.d0)
+  end if
 
   return
 end subroutine set_irr_nosym
