@@ -16,9 +16,9 @@ subroutine transmit(ik, ien)
 !
 #include "f_defs.h"
   USE io_global,  ONLY :  stdout
-  USE uspp_param, ONLY :  tvanp
+  use lsda_mod, only: nspin
   USE noncollin_module, ONLY : noncolin, npol
-  use pwcom
+  use spin_orb, only : lspinorb
   use cond
 implicit none
 
@@ -37,7 +37,7 @@ implicit none
 
   if(nchanl*nchanr.eq.0) then
     tk = 0.d0
-    WRITE( stdout,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ',   &
+    WRITE( stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',   &
                            eev, tk
     return
   endif
@@ -232,9 +232,19 @@ implicit none
     enddo
     tk=tk+eigen(n)
   enddo
-  WRITE( stdout,'(a20, 2f12.7)') 'E-Ef(ev), TOTAL T = ', eev, tk 
+
 !
-! To add to the total transmission 
+! Output of T(k) on a general file
+!
+  if (nspin.eq.1) then
+   tk = 2.d0*tk
+   WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T(x2 spins) = ',eev,tk 
+  else
+   WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',eev,tk
+  endif
+
+!
+! To add T(k) to the total T 
 !
   tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
 
