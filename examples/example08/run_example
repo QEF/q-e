@@ -212,7 +212,7 @@ cat > ni.pdos.in << EOF
     outdir='$TMP_DIR/'
     prefix='ni'
     Emin=5.0, Emax=25.0, DeltaE=0.1
-    ngauss1=1, degauss1=0.02
+    ngauss=1, degauss=0.02
  /
 EOF
 $ECHO "  running PDOS calculation for Ni...\c"
