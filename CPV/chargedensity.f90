@@ -53,13 +53,13 @@
 
 !     This subroutine print out the charge density to file CHARGE_DENSITY    
 
-      USE environment, ONLY: tscra, scradir
       USE cell_module, ONLY: boxdimensions, s_to_r
       USE mp_global, ONLY: mpime, root, group, nproc
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE mp, ONLY: mp_gather, mp_sum
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
+      USE io_files, ONLY: scradir
 
 
       IMPLICIT NONE

@@ -103,8 +103,7 @@
       use cdvan
       use stre
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use restart
-      use restart_subroutines
+      use restart_file
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem, au_gpa, au_ps
       use io_files, only: psfile, pseudo_dir
@@ -129,6 +128,8 @@
       use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
                            ions_noseupd, tempw
       use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe
+      use from_scratch_module, only: from_scratch
+      use from_restart_module, only: from_restart
 
 ! wavefunctions
 !
@@ -423,7 +424,7 @@
 !
          nfi = 0
 
-         CALL fromscra_sub &
+         CALL from_scratch &
             ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
               taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
               detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
@@ -441,7 +442,7 @@
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !
 
-         call restart_sub     &
+         call from_restart     &
             ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
               taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
               detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &

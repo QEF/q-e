@@ -70,7 +70,6 @@
 ! ... declare modules
       USE kinds
       USE phase_factors_module, ONLY : strucf
-      USE restart_file, ONLY : writefile_new, readfile_new, restart
       USE restart_file, ONLY : writefile, readfile
       USE parameters, ONLY: nacx, nspinx
       USE runcp_module, ONLY: runcp, runcp_force_pairing
@@ -115,7 +114,8 @@
       USE time_step, ONLY: tps, delt
       USE brillouin, ONLY: kp, kpoint_closeup
       USE rundiis_module, ONLY: rundiis, runsdiis
-      USE from_scratch_module, ONLY: fromscratch
+      USE from_scratch_module, ONLY: from_scratch
+      USE from_restart_module, ONLY: from_restart
       USE wave_types
       USE charge_types
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
@@ -372,7 +372,7 @@
 ! ...   create a new configuration from scratch
 !
         ttprint = .true.
-        CALL fromscratch(gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, fi, &
+        CALL from_scratch(gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, fi, &
           ht_0, atoms_0, fnl, vpot, edft )
 
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
@@ -387,7 +387,7 @@
            atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m2, ht_m, ht_0, rhoe, &
            desc, vpot, gv, kp)
 
-        CALL restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, &
+        CALL from_restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, &
            fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
 
         velh = ht_m%hvel

@@ -95,7 +95,7 @@
         USE io_global, ONLY: stdout
         USE mp, ONLY: mp_bcast
         USE mp_wave, ONLY: splitwf
-        USE environment, ONLY: tscra, scradir
+        USE io_files, ONLY: scradir
         USE cp_types, ONLY: recvecs
 
         IMPLICIT none
@@ -125,7 +125,7 @@
 
         ALLOCATE( ctmp(ngwm_g) )
 
-        IF( tscra ) THEN
+        IF( LEN( TRIM( scradir ) ) > 1 ) THEN
           nl = INDEX(scradir,' ')
           fileempty = scradir(1:nl-1) // '/' // TRIM( empty_file )
         ELSE
@@ -193,7 +193,7 @@
         USE wave_types, ONLY: wave_descriptor
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
-        USE environment, ONLY: tscra, scradir
+        USE io_files, ONLY: scradir
         USE cp_types, ONLY: recvecs
 
         COMPLEX(dbl), INTENT(IN) :: c_emp(:,:,:,:)
@@ -217,7 +217,7 @@
 
         ALLOCATE( ctmp( ngwm_g ) )
 
-        IF( tscra ) THEN
+        IF( LEN( TRIM( scradir ) ) > 1  ) THEN
           nl = INDEX(scradir,' ')
           fileempty = scradir(1:nl-1) // '/' // TRIM( empty_file )
         ELSE

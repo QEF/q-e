@@ -565,7 +565,7 @@
       use cell_base, only: hold, h
       use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
-      use restart, only: readfile
+      use restart_file, only: readfile
       use parameters, only: nacx, nsx, natx
 
       implicit none

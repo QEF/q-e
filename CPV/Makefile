@@ -15,6 +15,9 @@ chargemix.o \
 charge_types.o \
 chi2.o \
 compute_scf.o \
+cp_emass.o \
+cp_fpmd.o \
+cp_restart.o \
 cplib.o \
 cpr_mod.o \
 cpr.o \
@@ -50,6 +53,7 @@ lda.o \
 lsd.o \
 macdep.o \
 main.o \
+main_loops.o \
 modules.o \
 nl_base.o \
 nlcc.o \
@@ -74,7 +78,6 @@ read_pseudo.o \
 readpseudo.o \
 redis.o \
 restart.o \
-restart_fpmd.o \
 restart_sub.o \
 rsmesh.o \
 runcg_ion.o \

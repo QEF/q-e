@@ -1065,14 +1065,13 @@ END MODULE input_cp
         USE io_files, ONLY: &
           psfile, &
           pseudo_dir_ => pseudo_dir, &
-          prefix_     => prefix
+          prefix_     => prefix, &
+          scradir_   => scradir
 
         USE control_flags, ONLY: program_name, lneb, tnoseh, &
-              ortho_max_ => ortho_max, &
               tolp_      => tolp, &
+              ortho_max_ => ortho_max, &
               ortho_eps_ => ortho_eps
-#ifdef __PPPP
-#endif
 
         USE nose_ions, ONLY: nose_ions_setup
         USE nose_electrons, ONLY: nose_electrons_setup
@@ -1085,7 +1084,6 @@ END MODULE input_cp
         USE empty_states, ONLY: empty_setup
         USE electrons_module, ONLY: electrons_setup
         USE pseudopotential, ONLY: pseudopotential_setup
-        USE environment, ONLY: environment_setup
         USE exchange_correlation, ONLY: exch_corr_setup
         USE turbo, ONLY: turbo_setup
         USE diis, ONLY: diis_setup
@@ -1213,7 +1211,9 @@ END MODULE input_cp
 
         CALL exch_corr_setup(xc_type, narray_inp, rmxxc_inp)
         CALL check_stop_init( max_seconds )
-        CALL environment_setup( scradir )
+        !
+        scradir_ = TRIM( scradir )
+        !
         CALL potential_setup(tvhmean_inp,vhnr_inp, vhiunit_inp, &
                vhrmin_inp, vhrmax_inp, vhasse_inp, timing, iesr_inp)
         CALL wave_base_init( electron_damping )

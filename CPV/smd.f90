@@ -42,7 +42,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
   use betax, only: mmx, refg
   !use restartsm
-  use restart
+  use restart_file
   use parameters, only: nacx, nsx, natx
   USE smd_rep, only: rep
   USE path_variables, only: &

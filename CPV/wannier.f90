@@ -698,7 +698,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   use cell_base, only: h, hold
   use ions_base, only: pmass
   use cvan, only: nvb
-  use restart
+  use restart_file
 
   IMPLICIT NONE
 

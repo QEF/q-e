@@ -12,7 +12,7 @@
 !==-----------------------------------------------------------------------==!
 
         USE kinds
-        USE io_files, ONLY: scradir, crash_file, crashunit, &
+        USE io_files, ONLY: crash_file, crashunit, &
                             stop_file, stopunit
 
         IMPLICIT NONE
@@ -20,35 +20,16 @@
 
         PRIVATE
 
-        LOGICAL            :: tscra
         REAL(dbl)          :: start_seconds
 
-        PUBLIC :: environment_setup, environment_start
+        PUBLIC :: environment_start
         PUBLIC :: environment_end
         PUBLIC :: opening_date_and_time, closing_date_and_time
-        PUBLIC :: tscra, scradir
       
 !==-----------------------------------------------------------------------==!
       CONTAINS
 !==-----------------------------------------------------------------------==!
     
-        SUBROUTINE environment_setup( scradir_i )
-
-          CHARACTER(LEN=*), INTENT(IN) :: scradir_i
-          INTEGER :: iclk, nclk
-
-            IF( scradir_i /= './' ) tscra = .TRUE.
-
-            IF( tscra ) THEN
-              scradir = scradir_i
-            ELSE
-              scradir = ' '
-            END IF
-
-          RETURN
-        END SUBROUTINE environment_setup
-
-!==-----------------------------------------------------------------------==!
 
         SUBROUTINE environment_start( ionode, mpime, nproc, cp_version )
 

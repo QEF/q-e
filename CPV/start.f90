@@ -62,7 +62,6 @@
 
 ! ... initialize MPI (parallel processing handling)
 
-
       root = 0
       CALL mp_start()
       CALL mp_env( nproc, mpime, gid )
@@ -90,7 +89,7 @@
       CALL read_input_file( lneb )
 
       IF( lneb ) THEN
-        CALL neb_loop_fpmd( 0 )
+        CALL neb_loop( 0 )
       ELSE
         CALL fpmd_loop( 0 )
       END IF
@@ -105,103 +104,3 @@
 
       STOP 'FPMD'
     END PROGRAM start
-
-
-
-    SUBROUTINE fpmd_loop( iloop )
-
-      USE kinds
-      USE main_module,      ONLY: cpmain
-      USE input_parameters, ONLY: restart_mode, outdir
-      USE input_parameters, ONLY: nat
-      USE io_global,        ONLY:  stdout
-
-      IMPLICIT NONE
-
-      INTEGER :: iloop
-      CHARACTER(LEN=256), SAVE :: outdir_orig
-
-      REAL(dbl), ALLOCATABLE :: tau( :, : )
-      REAL(dbl), ALLOCATABLE :: fion( :, : )
-      REAL(dbl) :: etot
-
-
-      IF( iloop == 1 ) outdir_orig = outdir
-
-      IF( iloop > 1 ) THEN
-        restart_mode = 'restart'
-      END IF
-
-      SELECT CASE (iloop)
-        CASE ( 1 )
-          outdir = TRIM( outdir_orig ) // '/' // 'image01'
-        CASE ( 2 )
-          outdir = TRIM( outdir_orig ) // '/' // 'image02'
-      END SELECT
-
-! ... Car-Parrinello main routine
-
-      IF( nat > 0 ) THEN
-        ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
-      ELSE
-        CALL errore( ' cploop ', ' nat less or equal 0 ', 1 )
-      END IF
-
-      CALL cpmain( tau, fion, etot )
-
-      ! WRITE(6,*) '  From cploop, etot = ', etot
-
-      RETURN
-    END SUBROUTINE fpmd_loop
-
-
-
-   SUBROUTINE neb_loop_fpmd( iloop )
-     !
-     USE kinds
-     USE main_module,      ONLY : cpmain
-     USE io_global,        ONLY : ionode, stdout
-     USE path_variables,   ONLY : conv_path
-     USE path_variables,   ONLY : path_deallocation
-     USE path_base,        ONLY : initialize_path, search_mep
-     USE path_routines,    ONLY : iosys_path
-     USE path_io_routines, ONLY : write_output
-     USE ions_base,        ONLY : deallocate_ions_base
-     !
-     IMPLICIT NONE
-     !
-     INTEGER :: iloop
-     !
-     !
-     ! ... stdout is connected to a file ( specific for each image )
-     ! ... via unit 17
-     !
-     IF( ionode ) THEN
-       !
-       stdout = 17
-       !
-     END IF
-     !
-     CALL iosys_path()
-     !
-     CALL initialize_path( 'FP' )
-     !
-     ! ... this routine does all the NEB job
-     !
-     CALL search_mep()
-     !
-     ! ... output is written
-     !
-     CALL write_output()
-     !
-     CALL deallocate_ions_base( )
-     !
-     CALL path_deallocation( 'neb' )
-     !
-     ! ... stdout is reconnected to standard output
-     !
-     stdout = 6
-     !
-     RETURN
-     !
-   END SUBROUTINE neb_loop_fpmd

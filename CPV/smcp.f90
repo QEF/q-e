@@ -101,7 +101,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use stre
   use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
   !use restartsm
-  use restart
+  use restart_file
   use parameters, only: nacx, natx, nsx, nbndxx
   use constants, only: pi, factem
   use io_files, only: psfile, pseudo_dir, smwout
