@@ -17,16 +17,17 @@ subroutine do_chdens
   !
   !      DESCRIPTION of the INPUT:
   !
-  !-&input           Namelist &input;
-  !                  BELOW IS THE DESCRIPTION OF THE VARIABLES OF THE &INPUT NAMELIST
+  !-&input           Namelist &input; contains
   !
-  !      nfile       the number of data files
+  !      nfile       the number of data files (OPTIONAL, default: 1)
   !
   !----FOR i = 1, nfile:
   !
   !      filepp(i)   file containing the 3D charge (produced by pp.x)
+  !                  (AT LEAST filepp(1) REQUIRED)
   !      weight(i)   weight - The quantity to be plotted will be
-  !                  weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3) + ...
+  !                  weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3)+...
+  !                  (OPTIONAL: default weight(1)=1.0)
   !
   !                  BEWARE: atomic coordinates are read from the first file;
   !                  if their number is different for different files,
@@ -34,33 +35,75 @@ subroutine do_chdens
   !
   !----END_FOR
   !	
-  !	
-  !      iflag     1 if a 1D plot is required
+  !      iflag     1 if a 1D plot is required (DEFAULT)
   !                2 if a 2D plot is required
   !                3 if a 3D plot is required
-  !               30 if a "fast" 3D plot is required: the 3D plot points
-  !                    are not recalculated from the Fourier components but
-  !                    directly extracted from the FFT grid of the system
-  !               31 if a "fast" 3D plot is required: the same as iflag=30,
-  !                    but the whole unit-cell is taken. Does not require the
-  !                    input of the e1,e2,e3,x0 and nx,ny,nz
-  !                    NOTE: works only for XCRYSDEN format (output_format=3)
   !                4 if a 2D polar plot on a sphere is required
   !
   !      plot_out  0   plot the spherical average of the charge density
-  !                1   plot the charge density
+  !                1   plot the charge density (DEFAULT)
   !                2   plot the induced polarization along x
   !                3   plot the induced polarization along y
   !                4   plot the induced polarization along z
   !
   !      output_format  (ignored on 1D plot)
-  !                0  format suitable for gnuplot
-  !                1  format suitable for contour.x
-  !                2  format suitable for plotrho
-  !                3  format suitable for XCRYSDEN
-  !                4  format suitable for gOpenMol
+  !                0  format suitable for gnuplot   (1D) (DEFAULT)
+  !                1  format suitable for contour.x (2D)
+  !                2  format suitable for plotrho   (2D)
+  !                3  format suitable for XCRYSDEN  (1D, 2D, 3D)
+  !                4  format suitable for gOpenMol  (3D)
+  !                   (formatted: convert to unformatted *.plt)
+  !
+  !-IF iflag = 1
+  !                   REQUIRED:
+  !               e1  3D vector which determines the plotting line
+  !               x0  3D vector, origin of the line
+  !               nx  number of points in the line:
+  !                   rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
+  !
+  !-ELSEIF iflag = 2
+  !                   REQUIRED:
+  !           e1, e2  3D vectors which determine the plotting plane
+  !                   (must be orthogonal)
+  !               x0  3D vector, origin of the plane
+  !           nx, ny  number of points in the plane:
+  !                   rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
+  !                                      + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
+  !
+  !-ELSEIF iflag = 3
+  !                   OPTIONAL:
+  !       e1, e2, e3  3D vectors which determine the plotting parallelepiped
+  !                   (if present, must be orthogonal)
+  !               x0  3D vector, origin of the parallelepiped
+  !         nx,ny,nz  number of points in the parallelepiped:
+  !                   rho(i,j,k) = rho( x0 + e1 * (i-1)/(nx-1)
+  !                                        + e2 * (j-1)/(ny-1)
+  !                                        + e3 * (k-1)/(nz-1) ),
+  !                                i = 1, nx ; j = 1, ny ; k = 1, nz
+  !
+  !                 - If output_format = 3 (XCRYSDENS), the above variables
+  !                   are ignored, the entire FFT grid is written in the
+  !                   XCRYSDENS format - works for any crystal axis
+  !                 - If e1, e2, e3, x0 are present, e1 e2 e3 are parallel
+  !                   to xyz and parallel to crystal axis, a subset of the
+  !                   FFT grid that approximately covers the parallelepiped
+  !                   defined by e1, e2, e3, x0, is written (presently only
+  !                   in gopenmol "formatted" file format) - works only
+  !                   if the crystal axis are parallel to xyz
+  !                 - Otherwise, the required 3D grid is generated from the
+  !                   Fourier components (may be VERY slow)
+  !
+  !-ELSEIF iflag = 4  
+  !                   REQUIRED:
+  !         radius    Radius of the sphere (alat units), centered at (0,0,0)
+  !         nx, ny    number of points in the polar plane:
+  !                   phi(i)  = 2 pi * (i - 1)/(nx-1), i=1, nx
+  !                   theta(j)=   pi * (j - 1)/(ny-1), j=1, ny
+  !
+  ! END IF
   !
   !      fileout   name of the file to which the plot is written
+  !                (DEFAULT: standard output)
   !
   !----IF plot_out=2,3,4:
   !
@@ -70,7 +113,7 @@ subroutine do_chdens
   !                is written (in postproc format) for further processing
   !                (macroscopic average)
   !
-  !----IF iflag=3,30 and plot_out=1
+  !----IF iflag=3 and plot_out=1 (OPTIONAL)
   ! 
   !      idpol     1 the ionic and electronic dipole moment of the charge
   !                  is computed. 
@@ -82,65 +125,21 @@ subroutine do_chdens
   !          the Bravais lattice. The 3d box must contain this cell 
   !          otherwise meaningless numbers are printed.
   !
-  !----END_IF
-  !
   !-/              END of namelist &input
-  !
-  !--------------- DESCRIPTION OF FURTHER STANDARD INPUT
-  !
-  !-IF iflag = 1      the following cards are
-  !
-  !         e1        3D vector which determines the plotting line
-  !         x0        3D vector, origin of the line
-  !         nx        number of points in the line:
-  !                   rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
-  !
-  !-ELSEIF iflag = 2  the following cards are
-  !
-  !         e1        3D vectors which determine the plotting plane
-  !         e2           NB: the two axes must be orthogonal
-  !         x0        3D vector, origin of the plane
-  !         nx, ny    number of points in the plane:
-  !                   rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
-  !                                      + e2 * (j-1)/(ny-1) ), i = 1, nx ; j = 1, ny
-  !
-  !-ELSEIF iflag = 3 or iflag = 30 the following cards are
-  !         e1
-  !         e2        3D vectors which determine the plotting parallelepiped
-  !         e3        REQUIREMENT: the three axes must be orthogonal !!!
-  !         x0        3D vector, origin of the parallelepiped
-  !         nx,ny,nz  number of points in the parallelepiped:
-  !                   rho(i,j,k) = rho( x0 + e1 * (i-1)/(nx-1)
-  !                                        + e2 * (j-1)/(ny-1)
-  !                                        + e3 * (k-1)/(nz-1) ),
-  !                                i = 1, nx ; j = 1, ny ; k = 1, nz
-  !
-  !         IMPORTANT: all 3D vectors in a0 (alat) units
-  !         BEWARE: iflag = 30 (fast plot)
-  !            - works only if crystal axes are orthogonal
-  !            - works only if e1 is along x, e2 along y, e3 along z
-  !            - the plotting grid is fixed and determined by the FFT grid
-  !            - nx, ny, nz  are ignored
-  !            - the parallelepiped defined by e1, e2, e3, x0 is displaced
-  !              and stretched so as to fit the FFT grid
-  !         BEWARE: iflag = 30 (fast plot, whole cell)
-  !            - works for all crystal axes
-  !            - works only for XCRYSDEN XSF output format (i.e. output_format = 3)
-  !
-  !-ELSEIF iflag = 4  the following cards are
-  !
-  !         radius    Radius of the sphere (alat units), centered at (0,0,0)
-  !         nx, ny    number of points in the polar plane:
-  !                   phi(i)  = 2 pi * (i - 1)/(nx-1), i=1, nx
-  !                   theta(j)=   pi * (j - 1)/(ny-1), j=1, ny
-  !
-  !-ENDIF
-  !
-  !EOF
 
 #include "machine.h"
-  use pwcom
-  use io
+!  use pwcom
+  use constants, only:  pi, fpi
+  use brilz
+  use basis
+  use char
+  use lsda_mod, only: nspin
+  use gvect
+  use gsmooth
+  use pseud, only: zv
+  use scf, only: rho
+  use workspace
+!  use io
 
   implicit none
   integer, parameter :: nfilemax = 7
@@ -149,13 +148,13 @@ subroutine do_chdens
   integer :: inunit, ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
        na, ir, i, j, ig, plot_out, output_format, plot_num
 
-  real(kind=DP) :: e (3, 3), x0 (3), radius, m1, m2, m3, &
+  real(kind=DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
 
   character (len=80) :: fileout, filepol, filename (nfilemax)
 
   real(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
-  real(kind=DP), allocatable :: taus (:,:)
+  real(kind=DP), allocatable :: taus (:,:), rhor(:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   integer :: idpol               ! dipol moment flag
@@ -163,12 +162,12 @@ subroutine do_chdens
   character (len=3) :: atms(ntypx)
   character (len=80) :: filepp(nfilemax)
   real(kind=DP) :: rhodum, dipol(0:3)
-  complex(kind=DP), allocatable:: vgc (:)
+  complex(kind=DP), allocatable:: rhog (:)
   ! rho or polarization in G space
   logical :: fast3d
 
   namelist /input/  &
-       nfile, filepp, weight, iflag, idpol, &
+       nfile, filepp, weight, iflag, idpol, e1, e2, e3, nx, ny, nz, x0, &
        plot_out, output_format, fileout, epsilon, filepol
 
   !
@@ -185,13 +184,17 @@ subroutine do_chdens
   epsilon       = 1.0d0
   idpol         = 0
   filepol       = ' '
-  fast3d = .false.
-
+  e1(:)         = 0.d0
+  e2(:)         = 0.d0
+  e3(:)         = 0.d0
+  x0(:)         = 0.d0
+  nx            = 0
+  ny            = 0
+  nz            = 0
   !
   !    read and check input data
   !
   inunit = 5
-
   !
   ! reading the namelist input
   !
@@ -202,17 +205,8 @@ subroutine do_chdens
   if (nfile.le.0.or.nfile.gt.nfilemax) &
        call errore ('chdens ', 'nfile is wrong ', 1)
 
-
-  ! check for iflag
-  if (iflag.eq.30) then
-     iflag = 3
-     fast3d = .true.
-  end if
-  if ((iflag.lt.1.or.iflag.gt.4) .and. iflag.ne.31) &
-       call errore ('chdens', 'iflag not implemented', 1)
-
   ! check for idpol
-  if (idpol.eq.1.or.idpol.eq.2) then
+  if (idpol == 1 .or. idpol == 2) then
      if (iflag.ne.3) then
         idpol=0
         call errore("chdens","dipole computed only if iflag=3 or 30",-1)
@@ -223,74 +217,56 @@ subroutine do_chdens
      endif
   endif
 
-  ! reading the rest of input (spanning vectors, origin, number-of points)
-  if (iflag.lt.4) then
-     read (inunit, *, err = 1100, iostat = ios) (e (ipol,1), ipol = 1, 3)
-     if (e(1,1)**2 + e(2,1)**2 + e(3,1)**2 .lt. 1d-3) &
-         call errore ('chdens', 'zero vector', 1)
-  endif
-  if (iflag.eq.1) then
-     !
-     !    reading for the 1D plot
-     !
-     read (inunit, *, err = 1100, iostat = ios) (x0 (ipol), ipol = 1, 3)
-     read (inunit, *, err = 1100, iostat = ios) nx
-  endif
-  !
-  if (iflag.ge.2.and.iflag.lt.4) then
-     !
-     !    reading for the 2D and 3D plots
-     !
-     read (inunit, *, err = 1100, iostat = ios) (e(ipol,2), ipol=1,3)
-     !
-     !    here we control that the vectors are not on the same line
-     !
-     if ( (abs(e(1,1)*e(2,2) - e(2,1)*e(1,2) ) .lt. 1e-7) .and. &
-          (abs(e(3,1)*e(1,2) - e(1,1)*e(3,2) ) .lt. 1e-7) .and. &
-          (abs(e(3,1)*e(2,2) - e(2,1)*e(3,2) ) .lt. 1e-7) ) &
-           call errore ('chdens', 'vectors on the same line', 1)
-     !
-     !    and here that they are orthogonal
-     !
-     if (abs(e(1,1)*e(1,2) + e(2,1)*e(2,2) + e(3,1)*e(3,2)) .gt. 1e-4) &
-         call errore ('chdens', 'vectors are not orthogonal', 1)
-     !
-     if (iflag.eq.3) then
-        !
-        !    reading for the 3D plot
-        !
-        read (inunit, *, err=1100, iostat=ios) (e(ipol,3), ipol=1,3)
+  ! check for iflag
 
-        !
-        !    here we control that the vectors are not on the same line
-        !
-        if ( (abs(e(1,1)*e(2,3) - e(2,1)*e(1,3)) .lt. 1e-7) .and. &
-             (abs(e(3,1)*e(1,3) - e(1,1)*e(3,3)) .lt. 1e-7) .and. &
-             (abs(e(3,1)*e(2,3) - e(2,1)*e(3,3)) .lt. 1e-7) ) &
-              call errore ('chdens', 'vectors on the same line', 2)
-        !
-        !    and here that they are orthogonal
-        !
-        if (abs(e(1,1)*e(1,3) + e(2,1)*e(2,3) + e(3,1)*e(3,3)) .gt. 1e-4 .or. &
-            abs(e(1,2)*e(1,3) + e(2,2)*e(2,3) + e(3,2)*e(3,3)) .gt. 1e-4) &
-            call errore ('chdens', 'vectors are not orthogonal', 2)
-     endif
-     read (inunit, *, err = 1100, iostat = ios) (x0 (ipol), ipol = &
-          1, 3)
-     if (iflag.eq.2) then
-        read (inunit, *, err = 1100, iostat = ios) nx, ny
-     elseif (iflag.eq.3) then
-        read (inunit, *, err = 1100, iostat = ios) nx, ny, nz
-     endif
-  endif
+  if (iflag == 1) then
 
-  if (iflag.eq.4) then
-     read (inunit, *, err = 1100, iostat = ios) radius
-     read (inunit, *, err = 1100, iostat = ios) nx, ny
+     ! 1D plot : check variables
+
+     if (e1(1)**2 + e1(2)**2 + e1(3)**2 < 1d-6) &
+         call errore ('chdens', 'missing e1 vector', 1)
+     if (nx <= 0 )   call errore ('chdens', 'wrong nx', 1)
+
+  else if (iflag == 2) then
+
+     ! 2D plot : check variables
+
+     if (e1(1)**2 + e1(2)**2 + e1(3)**2 <  1d-6 .or. &
+         e2(1)**2 + e2(2)**2 + e2(3)**2 <  1d-6)     &
+         call errore ('chdens', 'missing e1/e2 vectors', 1)
+     if (e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) > 1d-6) &
+         call errore ('chdens', 'e1 and e2 are not orthogonal', 1)
+     if (nx <= 0 .or. ny <= 0 )   call errore ('chdens', 'wrong nx/ny', 2)
+
+  else if (iflag == 3) then
+
+     ! 3D plot : check variables
+
+     if ( e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) > 1d-6 .or. &
+          e1(1)*e3(1) + e1(2)*e3(2) + e1(3)*e3(3) > 1d-6 .or. &
+          e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
+         call errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
+
+     if (output_format < 3 .and. output_format > 4) then
+        
+        call errore ('chdens', 'incompatibly iflag/output_format', 1)
+
+     endif
+
+  else if (iflag  == 4) then
+
+     if (nx <= 0 .or. ny <= 0 )   call errore ('chdens', 'wrong nx/ny', 4)
+
+  else
+
+     call errore ('chdens', 'iflag not implemented', 1)
+
   endif
 
   ! check for plot_out
-  if (plot_out.lt.0.or.plot_out.gt.4) call errore ('chdens','plot_out wrong',1)
+
+  if (plot_out < 0 .or. plot_out > 4) call errore ('chdens','plot_out wrong',1)
+
   !
   ! Read the header and allocate objects
   !
@@ -300,6 +276,7 @@ subroutine do_chdens
   !
   allocate(tau (3, nat))
   allocate(ityp(nat))
+  allocate(rhor(nrx1*nrx2*nrx3))
   !
   alat = celldm (1)
   tpiba = 2.d0 * pi / alat
@@ -319,18 +296,14 @@ subroutine do_chdens
   call set_fft_dim
 
   call allocate_fft
-
-  rho = 0.d0
   !
   ! Read first file
   !
   call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                 nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                plot_num, atm, ityp, zv, tau, rho, -1)
+                plot_num, atm, ityp, zv, tau, rho(1,1), -1)
   !
-  do ir = 1, nrxx
-     psic (ir) = weight (1) * cmplx (rho (ir, 1),0.d0)
-  enddo
+  rhor (:) = weight (1) * rho (:,1)
   !
   ! Read following files (if any), verify consistency
   ! Note that only rho is read; all other quantities are discarded
@@ -341,7 +314,7 @@ subroutine do_chdens
      !
      call plot_io (filepp (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
           nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
-          duals, ecuts, plot_num, atms, ityps, zvs, taus, rho, - 1)
+          duals, ecuts, plot_num, atms, ityps, zvs, taus, rho(1,1), - 1)
      !
      deallocate (ityps)
      deallocate (taus)
@@ -359,9 +332,7 @@ subroutine do_chdens
              ('chdens', 'incompatible celldm', 1)
      enddo
      !
-     do ir = 1, nrxx
-        psic(ir) = psic(ir) + weight(ifile) * cmplx(rho(ir,1),0.d0)
-     enddo
+     rhor (:) = rhor (:) + weight (ifile) * rho (:,1)
   enddo
 
   !
@@ -375,38 +346,32 @@ subroutine do_chdens
      ounit = 6
   endif
 
-
-  ! ----------------------------------------------------------------
-  ! iflag=31
-  ! ----------------------------------------------------------------
-  !   at this point we are ready to print the whole FFT mesh (density only)
-  !   TODO: check the consistency of iflag=31 with plot_out
-  if (iflag.eq.31 .and. plot_out.eq.1) then
-
-     if (output_format .ne. 3) then
-        ! so far iflag.eq.31 works only for XCRYSDEN's XSF format
-        call errore ('chdens', 'wrong output_format for iflag.eq.31; works only if output_format.eq.3', 1)
-     endif
-
-     call plot_whole_cell (alat, at, nat, tau, atm, ityp, &
-          nr1, nr2, nr3, nrx1, nrx2, nrx3, psic, output_format, ounit)
-     return
-  endif
-
   !
-  !    At this point we start the calculations, first we normalize the vec
+  !    At this point we start the calculations, first we normalize the 
+  !    vectors defining the plotting region. 
+  !    If these vectors have 0 length, replace them with crystal axis
   !
-  if (iflag.lt.4) then
-     m1 = sqrt (e (1, 1) **2 + e (2, 1) **2 + e (3, 1) **2)
-     if (iflag.ge.2) m2 = sqrt(e(1,2)**2 + e(2,2)**2 + e(3,2)**2)
-     if (iflag.eq.3) m3 = sqrt(e(1,3)**2 + e(2,3)**2 + e(3,3)**2)
 
-     do ipol = 1, 3
-        e (ipol, 1) = e (ipol, 1) / m1
-        if (iflag.ge.2) e (ipol, 2) = e (ipol, 2) / m2
-        if (iflag.eq.3) e (ipol, 3) = e (ipol, 3) / m3
-     enddo
-  endif
+  m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
+  if (m1 == 0) then
+     e1 (:) = at(:,1)
+     m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
+  end if
+  if (m1 > 0) e1 (:) = e1 (:) / m1
+  !
+  m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
+  if (m2 == 0) then
+     e2 (:) = at(:,2)
+     m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
+  end if
+  if (m2 > 0) e2 (:) = e2 (:) / m2
+  !
+  m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
+  if (m3 == 0) then
+     e3 (:) = at(:,3)
+     m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
+  end if
+  if (m3 > 0) e3 (:) = e3 (:) / m3
   !
   !    and rebuild G-vectors in reciprocal space
   !
@@ -414,61 +379,58 @@ subroutine do_chdens
   !
   !    here we compute the fourier component of the quantity to plot
   !
+  psic(:) = DCMPLX (rhor(:), 0.d0)
   call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
-  !    we store the fourier components in the array vgc
+  !    we store the fourier components in the array rhog
   !
 
-  allocate (vgc( ngm))    
-  if (plot_out.le.1) then
+  allocate (rhog( ngm))    
+  if (plot_out <= 1) then
      do ig = 1, ngm
-        vgc (ig) = psic (nl (ig) )
+        rhog (ig) = psic (nl (ig) )
      enddo
   else
      ipol = plot_out - 1
-     do ig = 2, ngm
-        vgc (ig) = psic (nl (ig) ) * g (ipol, ig) / gg (ig)
-     enddo
-
-     vgc (1) = (epsilon - 1.d0) / fpi
+     rhog (1) = (epsilon - 1.d0) / fpi
+     rhog (2:ngm) = psic (nl (2:ngm) ) * g (ipol, 2:ngm) / gg (2:ngm)
+     !
+     !    bring the quantity back to real space
+     !
+     psic (:) = (0.d0,0.d0)
+     psic (nl (:) ) = rhog (:)
+     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     !
+     rho (:, 1) = DREAL (psic (:) )
+     !
      if (filepol.ne.' ') then
-        !
-        !    bring the quantity in real space and write the output file
-        !
-        psic(:) = (0.d0,0.d0)
-        do ig = 1, ngm
-           psic (nl (ig) ) = vgc (ig)
-        enddo
-        call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        !
-        do ir = 1, nrxx
-           rho (ir, 1) = real (psic (ir) )
-        enddo
+        ! write to the output file
         call plot_io (filepol, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                       nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                      plot_num, atm, ityp, zv, tau, rho, + 1)
+                      plot_num, atm, ityp, zv, tau, rho(1,1), + 1)
      endif
   endif
   !
-  !     And now the plot
+  !     And now the plot (rhog in G-space, rhor in real space)
   !
-  if (iflag.eq.1) then
+  if (iflag == 1) then
 
-     call plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
+     call plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, plot_out, ounit)
 
-  elseif (iflag.eq.2) then
+  elseif (iflag == 2) then
 
-     call plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
+     call plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
           at, nat, tau, atm, ityp, output_format, ounit)
-     if (output_format.eq.2) then
+     if (output_format == 2) then
         write (ounit, '(i4)') nat
         write (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
         write (ounit, '(f10.6)') celldm (1)
         write (ounit, '(3(3f12.6/))') at
      endif
 
-  elseif (iflag.eq.3) then
-     if (output_format.eq.4) then
+  elseif (iflag == 3) then
+
+     if (output_format == 4) then
 
         ! gopenmol wants the coordinates in a separate file
 
@@ -484,34 +446,64 @@ subroutine do_chdens
         end if
      endif
 
-     if (fast3d) then
-        call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
-        call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-             nrx1, nrx2, nrx3, nr1, nr2, nr3, psic, &
-             bg, m1, m2, m3, x0, e, output_format, ounit, dipol(0))
+     ! are vectors defining the plotting region aligned along xyz ?
+
+     fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
+              ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
+              ( e3(1) == 0.d0  .and.  e3(2) == 0.d0) 
+
+     ! are crystal axis aligned along x, y, z ?
+
+     fast3d = fast3d .and. &
+          ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
+          ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
+          ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
+
+     if (output_format == 300) then
+        !
+        ! XCRYSDEN FORMAT
+        !
+        call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
+        call xsf_fast_datagrid_3d &
+             (rhor, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
      else
-        call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, vgc, &
-             nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit, dipol(0))
+        !
+        ! GOPENMOL FORMAT
+        !
+        if (.not.fast3d) then
+
+           call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
+                nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
+                bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol(0))
+        else
+           call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog, &
+                nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+                dipol(0))
+        end if
      end if
+
+     !   at this point we are ready to print the whole FFT mesh (density only)
 
      if (idpol.eq.1.or.idpol.eq.2) & 
         call write_dipol(dipol(0),tau,nat,alat,zv,ntyp,ityp,idpol)
 
-  elseif (iflag.eq.4) then
+  elseif (iflag == 4) then
      radius = radius / alat
-     call plot_2ds (nx, ny, radius, ngm, g, vgc, output_format, ounit)
+     call plot_2ds (nx, ny, radius, ngm, g, rhog, output_format, ounit)
   else
+
      call errore ('chdens', 'wrong iflag', 1)
 
   endif
 
-  deallocate(vgc)
+  deallocate(rhor)
+  deallocate(rhog)
   return
 1100 call errore ('chdens', 'reading input data', abs (ios) )
 end subroutine do_chdens
 !
 !-----------------------------------------------------------------------
-subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
+subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -529,7 +521,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
   ! lattice parameter
   ! G-vectors
 
-  complex(kind=DP) :: vgc (ngm)
+  complex(kind=DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, ig
   real(kind=DP) :: rhomin, rhomax, rhoint, rhoim, xi, yi, zi, deltax, arg, gr
@@ -560,7 +552,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
            !     NB: G are in 2pi/alat units, r are in alat units
            !
            arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
-           carica(i) = carica(i) + vgc (ig) * cmplx(cos(arg),sin(arg))
+           carica(i) = carica(i) + rhog (ig) * cmplx(cos(arg),sin(arg))
         enddo
      enddo
   else
@@ -570,13 +562,13 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
      !
      !     G =0 term
      do i = 1, nx
-        carica (i) = 4.d0 * pi * vgc (1)
+        carica (i) = 4.d0 * pi * rhog (1)
      enddo
      !     G!=0 terms
      do ig = 2, ngm
         arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
         !     This displaces the origin into x0
-        rho0g = vgc (ig) * cmplx(cos(arg),sin(arg))
+        rho0g = rhog (ig) * cmplx(cos(arg),sin(arg))
         !     r =0 term
         carica (1) = carica (1) + 4.d0 * pi * rho0g
         !     r!=0 terms
@@ -627,7 +619,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, vgc, alat, plot_out, ounit)
 end subroutine plot_1d
 !
 !-----------------------------------------------------------------------
-subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
+subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
      at, nat, tau, atm, ityp, output_format, ounit)
   !-----------------------------------------------------------------------
   !
@@ -642,14 +634,15 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   ! output unit
   ! output format
   character(len=3) :: atm(*) ! atomic symbols
-  real(kind=DP) :: e(3,2), x0(3), m1, m2, g(3,ngm), alat, tau(3,nat), at(3,3)
+  real(kind=DP) :: e1(3), e2(3), x0(3), m1, m2, g(3,ngm), alat, &
+       tau(3,nat), at(3,3)
   ! vectors e1, e2 defining the plane
   ! origin
   ! modulus of e1
   ! modulus of e2
   ! G-vectors
 
-  complex(kind=DP) :: vgc (ngm)
+  complex(kind=DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, ig
 
@@ -679,16 +672,16 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      !
      do i = 1, nx
         eigx (i) = exp ( (0.d0, 1.d0) * 2.d0 * pi * ( (i - 1) * deltax * &
-             (e(1,1) * g(1,ig) + e(2,1) * g(2,ig) + e(3,1) * g(3,ig) ) + &
+             (e1(1) * g(1,ig) + e1(2) * g(2,ig) + e1(3) * g(3,ig) ) + &
              (x0 (1) * g(1,ig) + x0 (2) * g(2,ig) + x0 (3) * g(3,ig) ) ) )
      enddo
      do j = 1, ny
         eigy (j) = exp ( (0.d0, 1.d0) * 2.d0 * pi * (j - 1) * deltay * &
-             (e(1,2) * g(1,ig) + e(2,2) * g(2,ig) + e(3,2) * g(3,ig) ) )
+             (e2(1) * g(1,ig) + e2(2) * g(2,ig) + e2(3) * g(3,ig) ) )
      enddo
      do j = 1, ny
         do i = 1, nx
-           carica (i, j) = carica (i, j) + vgc (ig) * eigx (i) * eigy (j)
+           carica (i, j) = carica (i, j) + rhog (ig) * eigx (i) * eigy (j)
         enddo
      enddo
   enddo
@@ -715,7 +708,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
   !
   !     and we print the charge on output
   !
-  if (output_format.eq.0) then
+  if (output_format == 0) then
      !
      !     gnuplot format
      !
@@ -724,13 +717,13 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
         write (ounit, '(e25.14)') ( DREAL(carica(i,j)), j = 1, ny )
         write (ounit, * )
      enddo
-  elseif (output_format.eq.1) then
+  elseif (output_format == 1) then
      !
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
      write (ounit, '(4e25.14)') ( ( DREAL(carica(i,j)), j = 1, ny ), i = 1, nx )
-  elseif (output_format.eq.2) then
+  elseif (output_format == 2) then
      !
      !     plotrho format
      !
@@ -739,15 +732,15 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
      write (ounit, '(6e12.4)') ( ( DREAL(carica(i,j)), i = 1, nx ), j = 1, ny )
      write (ounit, '(3f8.4)') x0
-     write (ounit, '(3f8.4)') (m1 * e (i, 1) , i = 1, 3)
-     write (ounit, '(3f8.4)') (m2 * e (i, 2) , i = 1, 3)
+     write (ounit, '(3f8.4)') (m1 * e1 (i) , i = 1, 3)
+     write (ounit, '(3f8.4)') (m2 * e2 (i) , i = 1, 3)
 
-  elseif (output_format.eq.3) then
+  elseif (output_format == 3) then
      !
      ! XCRYSDEN's XSF format
      !
      call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-     call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e, alat, ounit)
+     call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   else
      call errore('plot_2d', 'wrong output_format', 1)
   endif
@@ -759,7 +752,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
 end subroutine plot_2d
 !
 !-----------------------------------------------------------------------
-subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, ounit)
+subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   !-----------------------------------------------------------------------
   use parameters, only : DP
   !
@@ -774,7 +767,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, ounit)
   ! radius of the sphere
   ! G-vectors
 
-  complex(kind=DP) :: vgc (ngm)
+  complex(kind=DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, ig
 
@@ -819,7 +812,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, ounit)
         do i = 1, nx
            eig = exp ( (0.d0,1.d0) * 2.d0 * pi * &
                ( r(1,i,j)*g(1,ig) + r(2,i,j)*g(2,ig) + r(3,i,j)*g(3,ig) ) )
-           carica (i, j) = carica (i, j) + vgc (ig) * eig
+           carica (i, j) = carica (i, j) + rhog (ig) * eig
         enddo
      enddo
   enddo
@@ -869,8 +862,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, ounit)
 end subroutine plot_2ds
 !
 !-----------------------------------------------------------------------
-subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
-     nx, ny, nz, m1, m2, m3, x0, e, output_format, ounit, dipol)
+subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
+     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -884,8 +877,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   ! output unit
   character(len=3) :: atm(*)
 
-  real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), e(3,3), x0(3), &
-                   m1, m2, m3, dipol(0:3)
+  real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
+                   e1(3), e2(3), e3(3), m1, m2, m3, dipol(0:3)
   ! lattice parameter
   ! atomic positions
   ! lattice vectors
@@ -894,7 +887,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   ! origin
   ! moduli of e1,e2,e3
 
-  complex(kind=DP) :: vgc (ngm)
+  complex(kind=DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, k, ig
 
@@ -925,22 +918,22 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
      !
      do i = 1, nx
         eigx (i) = exp( (0.d0,1.d0) * 2.d0 * pi * ( (i-1) * deltax * &
-             (e(1,1)*g(1,ig)+e(2,1)*g(2,ig)+e(3,1)*g(3,ig)) + &
+             (e1(1)*g(1,ig)+e1(2)*g(2,ig)+e1(3)*g(3,ig)) + &
              ( x0(1)*g(1,ig)+ x0(2)*g(2,ig)+ x0(3)*g(3,ig)) ) )
      enddo
      do j = 1, ny
         eigy (j) = exp( (0.d0,1.d0) * 2.d0 * pi * (j-1) * deltay * &
-             (e(1,2)*g(1,ig)+e(2,2)*g(2,ig)+e(3,2)*g(3,ig)) )
+             (e2(1)*g(1,ig)+e2(2)*g(2,ig)+e2(3)*g(3,ig)) )
      enddo
      do k = 1, nz
         eigz (k) = exp( (0.d0,1.d0) * 2.d0 * pi * (k-1) * deltaz * &
-             (e(1,3)*g(1,ig)+e(2,3)*g(2,ig)+e(3,3)*g(3,ig)) )
+             (e3(1)*g(1,ig)+e3(2)*g(2,ig)+e3(3)*g(3,ig)) )
      enddo
      do k = 1, nz
         do j = 1, ny
            do i = 1, nx
               carica (i, j, k) = carica (i, j, k) + &
-                   DREAL (vgc (ig) * eigz (k) * eigy (j) * eigx (i) )
+                   DREAL (rhog (ig) * eigz (k) * eigy (j) * eigx (i) )
            enddo
         enddo
      enddo
@@ -960,9 +953,9 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
      do j = 1, ny
         do i = 1, nx
            do ipol=1,3
-              r(ipol)=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
-                               (j-1)*e(ipol,2)*deltay + &
-                               (k-1)*e(ipol,3)*deltaz
+              r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
+                               (j-1)*e2(ipol)*deltay + &
+                               (k-1)*e3(ipol)*deltaz
            enddo
            fact(i,j,k)=wsweight(r,rws,nrws)
            suma=suma+fact(i,j,k)
@@ -986,9 +979,9 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
            rhoabs = rhoabs + abs (carica (i, j, k) )
            dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k)
            do ipol=1,3
-              rijk=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
-                            (j-1)*e(ipol,2)*deltay + &
-                            (k-1)*e(ipol,3)*deltaz
+              rijk=x0(ipol)+(i-1)*e1(ipol)*deltax + &
+                            (j-1)*e2(ipol)*deltay + &
+                            (k-1)*e3(ipol)*deltaz
               dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
            enddo
         enddo
@@ -1003,7 +996,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, rhomax, &
                                                         rhotot, rhoabs
 
-  if (output_format.eq.4) then
+  if (output_format == 4) then
      !
      ! "gOpenMol" file
      !
@@ -1018,7 +1011,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, vgc, &
      ! XCRYSDEN's XSF format
      !
      call xsf_struct      (alat, at, nat, tau, atm, ityp, ounit)
-     call xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, e, alat, ounit)
+     call xsf_datagrid_3d &
+          (carica, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
   endif
 
   deallocate (carica)
@@ -1033,7 +1027,7 @@ end subroutine plot_3d
 !-----------------------------------------------------------------------
 subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      nrx1, nrx2, nrx3, nr1, nr2, nr3, rho, &
-     bg, m1, m2, m3, x0, e, output_format, ounit, dipol)
+     bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, dipol)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
@@ -1042,8 +1036,8 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
        output_format, ounit
   character(len=3) :: atm(*)
 
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(2, nrx1,nrx2,nrx3), &
-       bg (3, 3), e (3, 3), x0 (3), m1, m2, m3, dipol(0:3)
+  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
+       bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3, dipol(0:3)
 
   integer :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
   real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs
@@ -1059,9 +1053,9 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   ny0 = nint ( x0(1)*bg(1,2)*nr2 + x0(2)*bg(2,2)*nr2 + x0(3)*bg(3,2)*nr2 ) + 1
   nz0 = nint ( x0(1)*bg(1,3)*nr3 + x0(2)*bg(2,3)*nr3 + x0(3)*bg(3,3)*nr3 ) + 1
   !
-  if ( e(2,1) .ne. 0.d0  .or.  e(3,1) .ne. 0.d0 .or. &
-       e(1,2) .ne. 0.d0  .or.  e(3,2) .ne. 0.d0 .or. &
-       e(1,3) .ne. 0.d0  .or.  e(2,3) .ne. 0.d0 )   &
+  if ( e1(2) .ne. 0.d0  .or.  e1(3) .ne. 0.d0 .or. &
+       e2(1) .ne. 0.d0  .or.  e2(3) .ne. 0.d0 .or. &
+       e3(1) .ne. 0.d0  .or.  e3(2) .ne. 0.d0 )   &
        call errore ('plot_fast','need vectors along x,y,z',1)
 
   ! find FFT grid points closer to X0 + e1, X0 + e2, X0 + e3
@@ -1088,7 +1082,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
         do i = nx0, nx1
            i1 = mod(i-1,nr1)+1
            if (i1.le.0) i1 = i1 + nr1
-           carica (i-nx0+1, j-ny0+1, k-nz0+1) = rho(1, i1, j1, k1)
+           carica (i-nx0+1, j-ny0+1, k-nz0+1) = rho(i1, j1, k1)
         enddo
      enddo
   enddo
@@ -1128,9 +1122,9 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      do j = 1, ny
         do i = 1, nx
            do ipol=1,3
-              r(ipol)=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
-                               (j-1)*e(ipol,2)*deltay + &
-                               (k-1)*e(ipol,3)*deltaz
+              r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
+                               (j-1)*e2(ipol)*deltay + &
+                               (k-1)*e3(ipol)*deltaz
            enddo
            fact(i,j,k)=wsweight(r,rws,nrws)
            suma=suma+fact(i,j,k)
@@ -1154,9 +1148,9 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
            rhoabs = rhoabs + abs (carica (i, j, k) )
            dipol(0) = dipol(0) + fact(i,j,k)*carica (i, j, k) 
            do ipol=1,3
-              rijk=x0(ipol)+(i-1)*e(ipol,1)*deltax + &
-                            (j-1)*e(ipol,2)*deltay + &
-                            (k-1)*e(ipol,3)*deltaz
+              rijk=x0(ipol)+(i-1)*e1(ipol)*deltax + &
+                            (j-1)*e2(ipol)*deltay + &
+                            (k-1)*e3(ipol)*deltaz
               dipol(ipol)=dipol(ipol)+fact(i,j,k)*rijk*carica(i,j,k)
            enddo
         enddo
@@ -1167,7 +1161,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   rhoabs = rhoabs / (nx-1) / (ny-1) / (nz-1) * m1 * m2 * m3 * alat**3
   dipol(0) = dipol(0) / suma * omega 
 
-  if (omega.gt.m1*m2*m3*alat**3) &
+  if (omega > m1*m2*m3*alat**3) &
      write(6,*) 'Warning: the box is too small to calculate dipole'
 
   print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
@@ -1177,7 +1171,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      dipol(ipol)=dipol(ipol) / suma *omega*alat
   enddo
 
-  if (output_format.eq.4) then
+  if (output_format == 4) then
      !
      !     "gopenmol" file
      !
@@ -1188,7 +1182,8 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
      ! write XSF format
      !
      call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-     call xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, e, alat, ounit)
+     call xsf_datagrid_3d (carica, nx, ny, nz, m1, m2, m3, x0, &
+          e1, e2, e3, alat, ounit)
   endif
   !
   deallocate (carica)

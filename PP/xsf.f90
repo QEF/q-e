@@ -54,7 +54,7 @@ subroutine xsf_fast_datagrid_3d &
   use parameters, only : DP
   implicit none
   integer       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
-  real(kind=DP) :: alat, at (3, 3), rho(2,nrx1,nrx2,nrx3)
+  real(kind=DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
   ! --
   integer       :: i1, i2, i3, ix, iy, iz, count, i, ii, &
        ind_x(10), ind_y(10),ind_z(10)
@@ -94,7 +94,7 @@ subroutine xsf_fast_datagrid_3d &
               !ind(count) = ii
            else
               write(ounit,'(6e13.5)') &
-                   (rho(1,ind_x(i),ind_y(i),ind_z(i)),i=1,6)
+                   (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,6)
               count=1
               !ind(count) = ii
            endif
@@ -104,7 +104,7 @@ subroutine xsf_fast_datagrid_3d &
         enddo
      enddo
   enddo
-  write(ounit,'(6e13.5:)') (rho(1,ind_x(i),ind_y(i),ind_z(i)),i=1,count)
+  write(ounit,'(6e13.5:)') (rho(ind_x(i),ind_y(i),ind_z(i)),i=1,count)
   write(ounit,'(a)') 'END_DATAGRID_3D'
   write(ounit,'(a)') 'END_BLOCK_DATAGRID_3D'
   return
@@ -113,11 +113,11 @@ end subroutine xsf_fast_datagrid_3d
 
 
 
-subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e, alat, ounit)
+subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   use parameters, only : DP
   implicit none
   integer       :: nx, ny, ounit
-  real(kind=DP) :: m1, m2, alat, x0(3), e(3,2), rho(2, nx, ny)
+  real(kind=DP) :: m1, m2, alat, x0(3), e1(3), e2(3), rho(2, nx, ny)
   ! --
   integer       :: ix, iy, count, i, ind_x(10), ind_y(10)
 
@@ -131,14 +131,14 @@ subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e, alat, ounit)
   ! origin
   write(ounit,'(3f10.6)') (0.529177d0*alat*x0(i),i=1,3) ! in ANSTROMS
   ! 1st spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e(i,1)*m1,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (0.529177d0*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e(i,2)*m2,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (0.529177d0*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
 
   count=0
   do iy=1,ny
      do ix=1,nx
-        if (count.lt.6) then
+        if (count < 6) then
            count = count + 1
         else
            write(ounit,'(6e13.5)') (rho(1,ind_x(i),ind_y(i)),i=1,6)
@@ -157,11 +157,12 @@ end subroutine xsf_datagrid_2d
 
 
 
-subroutine xsf_datagrid_3d (rho, nx, ny, nz, m1, m2, m3, x0, e, alat, ounit)
+subroutine xsf_datagrid_3d &
+     (rho, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
   use parameters, only : DP
   implicit none
   integer       :: nx, ny, nz, ounit
-  real(kind=DP) :: m1, m2, m3, alat, x0(3), e(3,3), rho(nx, ny, nz)
+  real(kind=DP) :: m1, m2, m3, alat, x0(3), e1(3),e2(3),e3(3), rho(nx, ny, nz)
   ! --
   integer       :: ix, iy, iz, count, i, ind_x(10), ind_y(10), ind_z(10)
 
@@ -175,11 +176,11 @@ subroutine xsf_datagrid_3d (rho, nx, ny, nz, m1, m2, m3, x0, e, alat, ounit)
   ! origin
   write(ounit,'(3f10.6)') (0.529177d0*alat*x0(i),i=1,3) ! in ANSTROMS
   ! 1st spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e(i,1)*m1,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (0.529177d0*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e(i,2)*m2,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (0.529177d0*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
   ! 3rd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e(i,3)*m3,i=1,3)
+  write(ounit,'(3f10.6)') (0.529177d0*alat*e3(i)*m3,i=1,3)
 
   count=0
   do iz=1,nz

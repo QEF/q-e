@@ -1,8 +1,9 @@
-TODO LIST - 24 Apr 2003
+TODO LIST - 8 May 2003
 
 INSTALLATION
 
 - compile fftw by default for PW and CP as well
+  (a che serve FFTW_INC_DIR ?)
 
 COMMON
 
@@ -26,6 +27,8 @@ COMMON
 - update to fftw v.3 (if convenient)?
 
 PW
+
+- replace "use pwcom" into more "use" statement
 
 - add traceback in error (error_handler module)
 
@@ -84,16 +87,17 @@ PH
 
 DOCUMENTATION
 
-- expand, update, verify, etc
-
 - examples for many features are missing
   examples should be quicker and easier to verify  
 
-- add a list of FAQ, or AAQ (Already Answered Questions)
+- expand and update the manual; add a list of FAQ, or of already
+  answered questions
 
 - add a developer's guide
 
 CPV: 
+
+- Documentation close to non-existing. Document how to do empty states.
 
 - find reason for differences in empty states between CP and PW
   with ultrasoft pps and box grids. If it is a bug, it is serious.
