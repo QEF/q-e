@@ -380,7 +380,8 @@ module varie
        time_max,         &! maximum allowed cpu time in sec
        ethr,             &! the convergence threshold for eigenvalues
        alpha0,           &! the mixing parameters for the extrapolation
-       beta0              ! of the starting potential
+       beta0,            &! of the starting potential
+       diis_ethr_cg       ! threshold in eigval for starting DIIS
   integer                    :: &
        ngm0,             &! used in mix_rho
        niter,            &! the maximum number of iteration
@@ -396,7 +397,6 @@ module varie
        modenum,          &! used with iswitch=-4
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
-       diis_start_cg,    &! number of CG iterations before DIIS
        diis_ndim,        &! dimension of reduced basis in DIIS
        order             ! type of potential updating ( see update_pot )
   !

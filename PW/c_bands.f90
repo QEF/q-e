@@ -24,7 +24,7 @@ subroutine c_bands (iter, ik_, dr2)
   use pwcom, ONLY: g, g2kin, tpiba2, ecfixed, qcutz, lda_plus_u, &
  iunwfc, swfcatom, iunat, nwordatwfc, q2sigma, diis_ndim, wg, nbndx, nkstot, &
  okvan, et, istep, ethr, lscf, max_cg_iter, vltot, nrxx, nr1, nr3, nr2, nbnd, &
- nks, npwx, diis_start_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, evc, &
+ nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, evc, &
  current_spin, lsda, isk, igk, npw
   use g_psi_mod
   implicit none
@@ -78,8 +78,9 @@ subroutine c_bands (iter, ik_, dr2)
      write (6, '("     Conjugate-gradient style diagonalization")')
   elseif (isolve == 2) then
      write (6, '("     DIIS style diagonalization")')
-     if (iter < diis_start_cg) &
-          write (6, '(6x,i3," of ",i3," CG iterations")') iter,diis_start_cg
+     if (ethr > diis_ethr_cg) &
+          write (6,5) diis_ethr_cg
+5    format(6x,"use conjugate-gradient method until ethr <",1pe9.2)
   else
      call errore ('c_bands', 'isolve not implemented', 1)
 
@@ -136,10 +137,10 @@ subroutine c_bands (iter, ik_, dr2)
      endif
      !
      if (isolve == 1 .or. &
-             (isolve == 2 .and. iter <= diis_start_cg)) then
+             (isolve == 2 .and. ethr > diis_ethr_cg)) then
         !
         ! Conjugate-Gradient diagonalization
-        ! and first "diis_start_cg" steps of RMM-DIIS diagonalization
+        ! and first steps of RMM-DIIS diagonalization
         !
         ! h_diag is the precondition matrix
         !
@@ -165,7 +166,7 @@ subroutine c_bands (iter, ik_, dr2)
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 10
      elseif (isolve == 2) then
         !
-        !  after "diis_start_cg" steps of CG, start the RMM-DIIS method
+        !  when ethr <= diis_ethr_cg  start the RMM-DIIS method
         !
         do ig = 1, npw
            h_diag (ig) = g2kin (ig) + v_of_0

@@ -96,7 +96,7 @@ subroutine iosys
   use relax, only: &
      epsf, starting_scf_threshold, restart_bfgs, epse
   use varie, only: &
-     diis_start_cg, diis_ndim, diis_wfc_keep, isolve, max_cg_iter, &
+     diis_ethr_cg, diis_ndim, diis_wfc_keep, isolve, max_cg_iter, &
      diis_buff, david, imix, nmix, iverbosity, tr2, niter, order, iswitch, &
      ntypx, &
      upscale_ => upscale, &
@@ -140,8 +140,9 @@ subroutine iosys
        electron_maxstep, electron_dynamics, &
        mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns, &
        diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
-       diago_diis_start, diago_diis_ndim, diago_diis_keep, diagonalization, &
-       startingwfc, startingpot, conv_thr
+       diago_diis_ndim, diago_diis_keep, diago_diis_ethr, &
+       diagonalization, startingwfc, startingpot, &
+       conv_thr
 
   ! IONS namelist
 
@@ -368,7 +369,7 @@ subroutine iosys
      isolve = 2
      max_cg_iter= diago_cg_maxiter
      diis_buff = diago_diis_buff
-     diis_start_cg = diago_diis_start   ! SF
+     diis_ethr_cg = diago_diis_ethr   ! SF
      diis_ndim = diago_diis_ndim        ! SF
      diis_wfc_keep  = diago_diis_keep
   CASE ('david')

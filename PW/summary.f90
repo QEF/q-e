@@ -324,7 +324,7 @@ subroutine summary
 
   if (isolve.eq.2) then
      write (6, * )
-     write (6, '(5x,"initial CG steps:   ",1i5)') diis_start_cg
+     write (6, '(5x,"threshold for starting DIIS:   ",f10.4)') diis_ethr_cg
      write (6, '(5x,"reduced basis size: ",1i5)') diis_ndim
   endif
 

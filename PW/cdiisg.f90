@@ -88,6 +88,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
 
   call start_clock ('diis')
 
+  test_new_preconditioning = .true.
   verb = .false.
 
   !
@@ -147,6 +148,10 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      !
      hc (1, 1) = ZDOTC (ndim, psi (1, 1), 1, hpsi (1, 1), 1)
      sc (1, 1) = ZDOTC (ndim, psi (1, 1), 1, spsi (1, 1), 1)
+#ifdef __PARA
+     call reduce (2, hc(1, 1))
+     call reduce (2, sc(1, 1))
+#endif
      !
      !   calculate the residual vector |R>=H|psi> - e S|psi>
      !
@@ -157,6 +162,9 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      !
      !   calculate the first element of the <res_i|res_j> matrix
      rc (1, 1) = ZDOTC (ndim, res (1, 1), 1, res (1, 1), 1)
+#ifdef __PARA
+     call reduce (2 , rc(1, 1))
+#endif
      !
      !  iterate
      !
@@ -180,7 +188,10 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         nbase = nbase + 1
      !
      ! normalize new basis vector
-        ec = ZDOTC (ndim, psi (1, nbase), 1, psi (1, nbase), 1)
+        ec = DREAL(ZDOTC (ndim, psi (1, nbase), 1, psi (1, nbase), 1))
+#ifdef __PARA
+     call reduce (1 , ec)
+#endif
         call ZSCAL (ndim, DCMPLX (1/dsqrt(ec), 0.d0), psi (1, nbase), 1)
      ! new eigenvector, normalize eigenvectors
         vc(nbase) = (1.d0, 0.d0)
@@ -205,6 +216,10 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         call ZGEMM ('c', 'n', nbase, 1, ndim, (1.d0, 0.d0) , psi, &
              ndmx, spsi (1, nbase) , ndmx, (0.d0, 0.d0) , sc (1, nbase), &
              nvecx)
+#ifdef __PARA
+     call reduce (2 * nvecx, hc(1, nbase))
+     call reduce (2 * nvecx, sc(1, nbase))
+#endif
      !
      !   calculate the residual vector |R>=H|psi> - e S|psi>
      !
@@ -218,6 +233,9 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
              res , ndmx, res (1, nbase) , ndmx, (0.d0, 0.d0) , &
              rc (1, nbase) , nvecx)
         ew(nbase) = rc (nbase, nbase)
+#ifdef __PARA
+     call reduce (2 * nvecx, rc(1, nbase))
+#endif
      !
      !     rc, hc, and sc are hermitian
      !
@@ -242,6 +260,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         write(6,*) 'eigval'
      endif
      
+
      !
      !     diagonalize the reduced hamiltonian
      !
@@ -300,6 +319,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      if (nbase.ge.nvecx) then
         call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), psi, &
              ndmx, vc , nvecx, (0.d0, 0.d0), evc (1, ib), ndmx)
+
         if (verb) write(6,*) 'rotate band ',ib
         minter = kter + 1
         goto 10
