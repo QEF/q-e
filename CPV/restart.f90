@@ -32,7 +32,7 @@ CONTAINS
       use cell_base, only: boxdimensions, s_to_r, cell_init
       USE ncprm, ONLY: r, rab
       use control_flags, only: twfcollect
-      USE miscellany, ONLY: int_to_char
+      USE parser, ONLY: int_to_char
 !
       implicit none
       integer :: ndw, nfi
@@ -354,7 +354,7 @@ CONTAINS
       use io_global
       use cell_base, only: boxdimensions, s_to_r, cell_init, r_to_s
       use control_flags, only: twfcollect
-      USE miscellany, ONLY: int_to_char
+      USE parser, ONLY: int_to_char
 !
       implicit none
       integer :: ndr, nfi, flag

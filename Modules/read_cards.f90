@@ -1720,8 +1720,7 @@ MODULE read_cards_module
      !
      SUBROUTINE card_climbing_images( input_line )
        !
-       USE parser,        ONLY :  matches
-       USE miscellany,    ONLY :  int_to_char
+       USE parser,        ONLY :  matches, int_to_char
        !
        IMPLICIT NONE
        ! 
