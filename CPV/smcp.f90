@@ -121,7 +121,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use ions_positions, only: ions_hmove, ions_move
   use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
-  USE cell_nose, ONLY: cell_nosevel, cell_noseupd, qnh, temph
+  USE cell_nose, ONLY: cell_nosevel, cell_noseupd, qnh, temph, cell_nosezero
   USE gvecw, ONLY: ecutw
   USE gvecp, ONLY: ecutp
 
@@ -151,6 +151,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE smd_rep
   USE smd_ene
 
+  USE from_restart_module, ONLY: from_restart
   !
   !
   implicit none
@@ -583,6 +584,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 #endif
 
   !
+
 666 continue
   !
   !
@@ -650,6 +652,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
   !
   !
+
   !
   INI_REP_LOOP : DO sm_k=1,smpm  ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !
      !
@@ -905,29 +908,31 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              &       tps, mat_z, f )
 
 
+        call from_restart( tfirst, rep(sm_k)%taus, rep(sm_k)%tau0, h, eigr, &
+               rep_el(sm_k)%bec, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ei1, ei2, ei3, sfac, eself )
         !
-        CALL s_to_r(  rep(sm_k)%taus,  rep(sm_k)%tau0, na, nsp, h )
-
-        !
-        if(trane.and.trhor) then
-           call prefor(eigr,betae)
-           call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
-           rep_el(sm_k)%cm(:, 1:n)=rep_el(sm_k)%c0(:, 1:n)
-        endif
-        !
-        if(iprsta.gt.2) then
-           call print_atomic_var( rep(sm_k)%taus, na, nsp, ' read: taus ' )
-           WRITE( stdout,*) ' read: cell parameters h '
-           WRITE( stdout,*)  (h(1,j),j=1,3)
-           WRITE( stdout,*)  (h(2,j),j=1,3)
-           WRITE( stdout,*)  (h(3,j),j=1,3)
-        endif
-        !
-        call phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
-        call strucf(ei1,ei2,ei3,sfac)
-        call formf(tfirst,eself)
-        call calbec (1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
-        if (tpre) call caldbec(1,nsp,eigr,rep_el(sm_k)%c0)
+!        CALL s_to_r(  rep(sm_k)%taus,  rep(sm_k)%tau0, na, nsp, h )
+!
+!        !
+!        if(trane.and.trhor) then
+!           call prefor(eigr,betae)
+!           call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
+!           rep_el(sm_k)%cm(:, 1:n)=rep_el(sm_k)%c0(:, 1:n)
+!        endif
+!        !
+!        if(iprsta.gt.2) then
+!           call print_atomic_var( rep(sm_k)%taus, na, nsp, ' read: taus ' )
+!           WRITE( stdout,*) ' read: cell parameters h '
+!           WRITE( stdout,*)  (h(1,j),j=1,3)
+!           WRITE( stdout,*)  (h(2,j),j=1,3)
+!           WRITE( stdout,*)  (h(3,j),j=1,3)
+!        endif
+!        !
+!        call phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
+!        call strucf(ei1,ei2,ei3,sfac)
+!        call formf(tfirst,eself)
+!        call calbec (1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
+!        if (tpre) call caldbec(1,nsp,eigr,rep_el(sm_k)%c0)
         !
      end if               ! <<<<<<<<<<<<<<<<<<<<<<<< !
 
@@ -962,6 +967,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      !
      !
   ENDDO  INI_REP_LOOP      ! <<<<<<<<<<<<<<<<<<<<<<< ! 
+  !
   !
   !
   IF(smlm .and. nbeg < 0) THEN
@@ -1013,10 +1019,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      vnhp(sm_k) =0.
      rep(sm_k)%fionm=0.d0
      CALL ions_vel(  rep(sm_k)%vels,  rep(sm_k)%taus,  rep(sm_k)%tausm, na, nsp, delt )
-     xnhh0(:,:)=0.
-     xnhhm(:,:)=0.
-     vnhh (:,:) =0.
-     velh (:,:)=(h(:,:)-hold(:,:))/delt
+
+     CALL cell_nosezero( vnhh, xnhh0, xnhhm )
+     velh = ( h - hold ) / delt
      !
      !     ======================================================
      !     kinetic energy of the electrons
@@ -1298,6 +1303,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
      ENDDO EL_REP_LOOP   ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
 
+
      !_________________________________________________________________________!
      !
      !
@@ -1363,6 +1369,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
           & 1x,i3,1x,f8.5, &
           & 1x,f8.5, &
           & 1x,E12.5,1x,E12.5)
+
      !
      !
      !________________________________________________________________________!
@@ -1535,6 +1542,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         ekinp(sm_k)  = 0.d0
         ekinpr(sm_k) = 0.d0
+
         !
         !     ionic kinetic energy 
         !
@@ -1803,9 +1811,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            END IF
         END IF
 
+
         tstop = tstop .OR. tconv
 
      ENDDO POST_REP_LOOP ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
+
 
 
      if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
@@ -1815,6 +1825,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   !============================= END of main LOOP ======================
   !
+
 
   !
   !  Here copy relevant physical quantities into the output arrays/variables

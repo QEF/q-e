@@ -256,7 +256,6 @@ PWOBJS = \
 ../PW/estimate.o \
 ../PW/ewald.o \
 ../PW/fftw.o \
-../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \
 ../PW/gen_at_dj.o \
@@ -285,7 +284,6 @@ PWOBJS = \
 ../PW/kpoint_grid.o \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
-../PW/lsda_functionals.o \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \

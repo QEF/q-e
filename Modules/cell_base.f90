@@ -690,6 +690,14 @@ CONTAINS
     return
   end subroutine
 
+  subroutine cell_nosezero( vnhh, xnhh0, xnhhm )
+    real(dbl), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
+    xnhh0=0.0d0
+    xnhhm=0.0d0
+    vnhh =0.0d0
+    return
+  end subroutine
+
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
     implicit none
     real(kind=8), intent(inout) :: vnhh(3,3), velh(3,3)

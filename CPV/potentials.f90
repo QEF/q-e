@@ -257,8 +257,7 @@
       USE energies, ONLY: total_energy, dft_energy_type
       USE stress, ONLY: pstress
       USE gvecw, ONLY: tecfix
-      USE exchange_correlation, ONLY: tgc, vofxc_lda, vofxc_lsd, v2gc, &
-        exch_corr_energy
+      USE exchange_correlation, ONLY: tgc, exch_corr_energy
       USE charge_density, ONLY: gradrho
       USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
       USE chi2, ONLY: tchi2, rhochi, allocate_chi2, deallocate_chi2
@@ -315,15 +314,13 @@
       REAL(dbl), ALLOCATABLE :: rhoetr(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: fion_vdw(:,:)
       REAL(dbl), ALLOCATABLE :: grho(:,:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: v2xc(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: v2xc2(:,:,:)
+      REAL(dbl), ALLOCATABLE :: v2xc(:,:,:,:,:)
       REAL(dbl), ALLOCATABLE :: fion(:,:)
 
       REAL(dbl), ALLOCATABLE :: self_rho(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: self_vpot(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: self_grho(:,:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: self_v2xc(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: self_v2xc2(:,:,:)
+      REAL(dbl), ALLOCATABLE :: self_v2xc(:,:,:,:,:)
 
       REAL(dbl) ::  pail(3,3)
 
@@ -395,12 +392,10 @@
 
       IF(tgc) THEN
         ALLOCATE( grho( nr1x, nr2x, nr3x, 3, nspin ) )
-        ALLOCATE( v2xc( nr1x, nr2x, nr3x, 2*nspin-1) )
-        ALLOCATE( v2xc2(nr1x, nr2x, nr3x) )
+        ALLOCATE( v2xc( nr1x, nr2x, nr3x, nspin, nspin) )
       ELSE
         ALLOCATE( grho( 1, 1, 1, 1, 1 ) )
-        ALLOCATE( v2xc( 1, 1, 1, 1 ) )
-        ALLOCATE( v2xc2(1, 1, 1) )
+        ALLOCATE( v2xc( 1, 1, 1, 1, 1 ) )
       END IF
 
       ALLOCATE( rhoeg(gv%ng_l, nspin) )
@@ -418,13 +413,10 @@
           ALLOCATE(self_grho( nr1x, nr2x, nr3x, 3, nspin ), STAT = ierr)
           IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_grho ', ierr)
     
-          ALLOCATE(self_v2xc( nr1x, nr2x, nr3x, 2*nspin-1), STAT = ierr)
+          ALLOCATE(self_v2xc( nr1x, nr2x, nr3x, nspin, nspin ), STAT = ierr)
           IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_v2xc ', ierr)
   
-          ALLOCATE(self_v2xc2( nr1x, nr2x, nr3x), STAT = ierr)
-          IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_v2xc2 ', ierr)
           self_v2xc  = 0.D0
-          self_v2xc2 = 0.D0
 
         END IF !on tgc
 
@@ -509,8 +501,7 @@
 ! ... Self-interaction correction --- Excor Part
 !In any case calculate the Excor part with rhoetr
       
-      CALL exch_corr_energy(rhoetr, rhoetg, grho, vpot, &
-                 sxcp, vxc, v2xc, v2xc2, gv)
+      CALL exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxcp, vxc, v2xc, gv)
 
       IF( ttsic ) THEN
         IF( ionode ) THEN
@@ -542,12 +533,12 @@
                  self_grho(:,:,:,:,2) = 0.D0
           ENDIF
           CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
-                   self_sxcp, self_vxc, self_v2xc, self_v2xc2, gv)
+                   self_sxcp, self_vxc, self_v2xc, gv)
           vpot(:,:,:,1) =  vpot(:,:,:,1) - self_vpot(:,:,:,1)
           vpot(:,:,:,2) =  vpot(:,:,:,2) + self_vpot(:,:,:,1)
           IF (tgc) THEN
-            v2xc(:,:,:,1) =  v2xc(:,:,:,1) - self_v2xc(:,:,:,1)
-            v2xc(:,:,:,2) =  v2xc(:,:,:,2) + self_v2xc(:,:,:,1)
+            v2xc(:,:,:,1,1) =  v2xc(:,:,:,1,1) - self_v2xc(:,:,:,1,1)
+            v2xc(:,:,:,2,2) =  v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1)
           ENDIF
 
           ! write(stdout,*)  'da exc la parte da rhodwn rhodwn',self_sxcp
@@ -575,15 +566,15 @@
 !          write(stdout,*)'DA XC SELF_RHO2',self_rho(:,:,:,2)
 
           CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
-                 self_sxcp, self_vxc, self_v2xc, self_v2xc2, gv)
+                 self_sxcp, self_vxc, self_v2xc, gv)
 
           vpot (:,:,:,2) = self_vpot(:,:,:,2) + self_vpot(:,:,:,1)
           vpot (:,:,:,1) = 0.d0
           write(stdout,*)  'da XC with tgc: E_XC==',self_sxcp
 
           IF (tgc) THEN
-             v2xc(:,:,:,1) = 0.d0
-             v2xc(:,:,:,2) = self_v2xc(:,:,:,2) + self_v2xc(:,:,:,1)
+             v2xc(:,:,:,1,1) = 0.d0
+             v2xc(:,:,:,2,2) = self_v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1)
           ENDIF
           write(stdout,*)  'da exc la parte da rhodwn rhodwn',self_sxcp
           edft%self_sxc= sxcp - self_sxcp
@@ -607,19 +598,7 @@
       END IF
                  
       IF ( ttstress ) THEN
-        strvxc = 0.0d0
-        DO ispin = 1, nspin
-          DO k = 1, nr3_l
-            DO j = 1, nr2_l
-              strvxc = strvxc + &
-              DDOT ( nr1_l, vpot(1,j,k,ispin), 1, rhoetr(1,j,k,ispin), 1 )
-            END DO
-          END DO
-        END DO
-
-        vxc    = strvxc    ! ...  SUM ( u(r) * rho(r) )
-        strvxc = (edft%sxc - strvxc) * omega / REAL( nr1_g * nr2_g * nr3_g )
-!        strvxc = SUM(v2xc2) * omega / REAL(nr1_g*nr2_g*nr3_g)
+        strvxc = ( edft%sxc - vxc ) * omega / REAL( nr1_g * nr2_g * nr3_g )
       END IF
 
       IF( ANY( ps%tnlcc ) ) THEN
@@ -698,7 +677,6 @@
 
       IF( ALLOCATED( self_grho  ) ) DEALLOCATE( self_grho  )
       IF( ALLOCATED( self_v2xc  ) ) DEALLOCATE( self_v2xc  )
-      IF( ALLOCATED( self_v2xc2 ) ) DEALLOCATE( self_v2xc2 )
       IF( ALLOCATED( self_vpot  ) ) DEALLOCATE( self_vpot )
       IF( ALLOCATED( self_rho   ) ) DEALLOCATE( self_rho  )
 
@@ -781,7 +759,7 @@
         END IF
       END IF
 
-      DEALLOCATE( rhoeg, rhoetg, rhoetr, grho, v2xc, v2xc2, fion )
+      DEALLOCATE( rhoeg, rhoetg, rhoetr, grho, v2xc, fion )
 
       IF(tchi2) THEN
         CALL deallocate_chi2

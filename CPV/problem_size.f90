@@ -25,7 +25,6 @@
       use brillouin, only: get_kpoints_number
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
       use pseudopotential, only: lmax, ngh 
-      use exchange_correlation, only: narray 
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE fft_base, ONLY: dfftp, dffts

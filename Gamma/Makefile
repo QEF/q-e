@@ -79,7 +79,6 @@ PWOBJS = \
 ../PW/force_lc.o \
 ../PW/forces.o \
 ../PW/force_us.o \
-../PW/functionals.o \
 ../PW/gen_at_dj.o \
 ../PW/gen_at_dy.o \
 ../PW/gen_us_dj.o \
@@ -109,7 +108,6 @@ PWOBJS = \
 ../PW/kpoint_grid.o \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
-../PW/lsda_functionals.o \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \

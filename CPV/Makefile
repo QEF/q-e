@@ -49,7 +49,6 @@ fields_type.o \
 fnl.o \
 forces.o \
 fromscra.o \
-gga.o \
 greenf.o \
 grid.o \
 gsmesh.o \
@@ -61,10 +60,9 @@ interfaces_main.o \
 interfaces.o \
 ions.o \
 ksstates.o \
-lda.o \
-lsd.o \
 macdep.o \
 main.o \
+mainvar.o \
 main_loops.o \
 modules.o \
 nl_base.o \

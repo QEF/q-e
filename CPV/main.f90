@@ -94,7 +94,6 @@
       USE polarization, ONLY: deallocate_polarization, ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE recvecs_indexes, ONLY: deallocate_recvecs_indexes
-      USE exchange_correlation, ONLY: deallocate_lda
       USE turbo, ONLY: tturbo, deallocate_turbo
       USE nose_ions, ONLY: movenosep, nosep_velocity, update_nose_ions
       USE nose_electrons, ONLY: movenosee, nosee_velocity, update_nose_electrons
@@ -830,7 +829,6 @@
       CALL deallocate_recvecs()
       CALL deallocate_recvecs_indexes()
       CALL deallocate_rvecs(gv)
-      CALL deallocate_lda( )
       CALL deallocate_phfac(eigr)
       CALL deallocate_electrons
       IF(tdipole) THEN

@@ -1318,7 +1318,7 @@ MODULE input_fpmd
           tturbo_inp, nturbo_inp, diis_achmix, electron_damping, vhrmax_inp, &
           vhasse_inp, iesr_inp, diis_ethr, diis_wthr, diis_delt, &
           etot_conv_thr, diis_g0chmix, diis_nchmix, diis_g1chmix, xc_type, &
-          narray_inp, rmxxc_inp, empty_states_maxstep, empty_states_delt, &
+          empty_states_maxstep, empty_states_delt, &
           empty_states_emass, empty_states_ethr, vhnr_inp, vhiunit_inp, &
           vhrmin_inp, tvhmean_inp, tscra_inp, scradir, max_seconds, wk, &
           outdir, prefix, k3, nk3, k1, k2, woptical, noptical, boptical, &
@@ -1485,7 +1485,7 @@ MODULE input_fpmd
         IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
         CALL empty_setup( empty_states_maxstep, delt_emp_inp, ethr_emp_inp )
 
-        CALL exch_corr_setup(xc_type, narray_inp, rmxxc_inp)
+        CALL exch_corr_setup( xc_type )
         CALL check_stop_init( max_seconds )
         !
         scradir_ = TRIM( scradir )

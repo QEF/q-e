@@ -172,6 +172,8 @@
       USE electrons_module, ONLY: cp_eigs
       USE print_out_module, ONLY: cp_print_rho
 
+      USE cp_main_variables
+
 !
 !
       implicit none
@@ -181,64 +183,16 @@
       real(kind=8) :: tau(3,*)
       real(kind=8) :: fion_out(3,*)
       real(kind=8) :: etot_out
-
-!
 !
 ! control variables
 !
-      logical tbump
-      logical tfirst, tlast
-      logical tstop
-      logical tconv
-      real(kind=8) :: delta_etot
-!
-! structure factors e^{-ig*R}
-!
-      complex(kind=8), allocatable:: ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
-      complex(kind=8), allocatable:: eigr(:,:,:)
-!
-! structure factors (summed over atoms of the same kind)
-!
-      complex(kind=8), allocatable:: sfac(:,:)
-!
-! indexes, positions, and structure factors for the box grid
-!
-      integer irb(3,natx,nsx)
-      real(kind=8) taub(3,natx)
-      complex(kind=8), allocatable:: eigrb(:,:,:)
-! 
-! charge densities and potentials
-!     rhog  = charge density in g space
-!     rhor  = charge density in r space (dense grid)
-!     rhos  = charge density in r space (smooth grid)
-!     rhoc  = core charge density in real space (dense grid)
-!
-      complex(kind=8), allocatable:: rhog(:,:)
-      real(kind=8), allocatable:: rhor(:,:), rhos(:,:), rhoc(:)
-!
-! nonlocal projectors:
-!     bec   = scalar product of projectors and wave functions
-!     betae = nonlocal projectors in g space = beta x e^(-ig.R) 
-!     becdr = <betae|g|psi> used in force calculation
-!     rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
-!     deeq  = \int V_eff(r) q_lm(r) dr
-!
-      real(kind=8), allocatable:: bec(:,:), becdr(:,:,:)
-      real(kind=8), allocatable:: bephi(:,:), becp(:,:)
-!
-!  mass preconditioning
-!
-      real(kind=8), allocatable:: ema0bg(:)
-      real(kind=8), allocatable:: emadt2(:)
-      real(kind=8), allocatable:: emaver(:)
-!
-!  constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
-!
-      real(kind=8), allocatable:: lambda(:,:), lambdam(:,:), lambdap(:,:)
+      logical tbump, tfirst, tlast, tstop, tconv
+      logical :: ttprint    !  logical variable used to control printout
 !
 !  ionic positions, center of mass position
 !
       real(kind=8) cdm0(3)
+      real(kind=8) cdm(3)
 !
 !  forces on ions
 !
@@ -246,8 +200,6 @@
 !
 ! work variables
 !
-      real(kind=8) acc(nacx)
-      complex(kind=8), allocatable:: c2(:), c3(:)
       complex(kind=8)  speed
       real(kind=8)                                                      & 
      &       tempp, verl1, verl2, verl3,     &
@@ -256,27 +208,23 @@
      &       ettt, ccc, bigr, dt2, dt2by2, twodel, dt2bye, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
       real(kind=8) temps(nsx)
-      integer is, nacc, ia, j, iter, nfi, i, isa, ipos
+      real(kind=8) ekinh, temphc, temp1, temp2, randy
+      real(kind=8) :: delta_etot
+      real(kind=8) ftmp, enb, enbi
+      integer :: is, nacc, ia, j, iter, nfi, i, isa, ipos
+      integer :: k, ii, l, m, ibeg
 !
 ! work variables, 2
 !
       real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3), temphh(3,3)
       real(kind=8) fcell(3,3)
-      real(kind=8) cdm(3)
 !
-      integer :: k, ii, l, m, ibeg
-      real(kind=8) ekinh, temphc, temp1, temp2, randy
-      real(kind=8) ftmp, enb, enbi
 
-      character(len=256) :: filename
-      character(len=256) :: dirname
-      integer :: strlen, dirlen
       real(kind=8) :: b1(3), b2(3), b3(3)
       real(kind=8) :: stress_gpa(3,3), thstress(3,3)
 
-      logical :: ttprint    !  logical variable used to control printout
-      real(kind=8), allocatable :: tauw( :, : )  ! temporary array used 
-                            !  to printout positions
+      !   temporary array used to printout positions
+      real(kind=8), allocatable :: tauw( :, : )  
 
 !
 !     ==================================================================
@@ -364,35 +312,18 @@
 !     allocation of all arrays not already allocated in init and nlinit
 !     ==================================================================
 !
+      CALL allocate_mainvar &
+         ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, nlcc_any )
+
       allocate(c0(ngw,nx,1,1))
       allocate(cm(ngw,nx,1,1))
       allocate(phi(ngw,nx,1,1))
       allocate(wrk2(ngw,max(nax,n)))
-      allocate(eigr(ngw,nax,nsp))
-      allocate(eigrb(ngb,nax,nsp))
-      allocate(sfac(ngs,nsp))
       allocate(rhops(ngs,nsp))
       allocate(vps(ngs,nsp))
-      allocate(rhor(nnr,nspin))
-      allocate(rhos(nnrsx,nspin))
-      allocate(rhog(ng,nspin))
-      if ( nlcc_any ) allocate(rhoc(nnr))
       allocate(wrk1(nnr))
       allocate(qv(nnrb))
-      allocate(c2(ngw))
-      allocate(c3(ngw))
-      allocate(ema0bg(ngw))
-      allocate(lambda(nx,nx))
-      allocate(lambdam(nx,nx))
-      allocate(lambdap(nx,nx))
-      allocate(ei1(-nr1:nr1,nax,nsp))
-      allocate(ei2(-nr2:nr2,nax,nsp))
-      allocate(ei3(-nr3:nr3,nax,nsp))
       allocate(betae(ngw,nhsa))
-      allocate(becdr(nhsa,n,3))
-      allocate(bec  (nhsa,n))
-      allocate(bephi(nhsa,n))
-      allocate(becp (nhsa,n))
       allocate(deeq(nhm,nhm,nat,nspin))
       allocate(rhovan(nhm*(nhm+1)/2,nat,nspin))
       allocate(dbec (nhsa,n,3,3))
@@ -492,10 +423,10 @@
 !
 
          call from_restart     &
-            ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
-              taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-              detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
-              bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
+            ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, fion, &
+              taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, stress,  &
+              detot, enthal, lambda, lambdam, lambdap, ema0bg, dbec, &
+              bephi, becp, velh, dt2bye, fionm, ekincm )
 !
       end if
 !==============================================end of if(nbeg.lt.0)====
@@ -1226,27 +1157,7 @@
 !      
  1977 format(5x,//'====================== end cprvan ======================',//)
 
-      IF( ALLOCATED( ei1 ) ) DEALLOCATE( ei1 )
-      IF( ALLOCATED( ei2 ) ) DEALLOCATE( ei2 )
-      IF( ALLOCATED( ei3 ) ) DEALLOCATE( ei3 )
-      IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
-      IF( ALLOCATED( sfac ) ) DEALLOCATE( sfac )
-      IF( ALLOCATED( eigrb ) ) DEALLOCATE( eigrb )
-      IF( ALLOCATED( rhor ) ) DEALLOCATE( rhor )
-      IF( ALLOCATED( rhos ) ) DEALLOCATE( rhos )
-      IF( ALLOCATED( rhog ) ) DEALLOCATE( rhog )
-      IF( ALLOCATED( rhoc ) ) DEALLOCATE( rhoc )
-      IF( ALLOCATED( bec ) ) DEALLOCATE( bec )
-      IF( ALLOCATED( becdr ) ) DEALLOCATE( becdr )
-      IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )
-      IF( ALLOCATED( becp ) ) DEALLOCATE( becp )
-      IF( ALLOCATED( ema0bg ) ) DEALLOCATE( ema0bg )
-      IF( ALLOCATED( lambda ) ) DEALLOCATE( lambda )
-      IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )
-      IF( ALLOCATED( lambdap ) ) DEALLOCATE( lambdap )
-      IF( ALLOCATED( c2 ) ) DEALLOCATE( c2 )
-      IF( ALLOCATED( c3 ) ) DEALLOCATE( c3 )
-
+      CALL deallocate_mainvar()
       CALL deallocate_cvan()
       CALL deallocate_efield( )
       CALL deallocate_ensemble_dft()

@@ -128,7 +128,6 @@ PWOBJS = \
 ../PW/ewald.o \
 ../PW/ewald_dipole.o \
 ../PW/fftw.o \
-../PW/functionals.o \
 ../PW/g_psi.o \
 ../PW/g_psi_mod.o \
 ../PW/gen_at_dj.o \
@@ -159,7 +158,6 @@ PWOBJS = \
 ../PW/kpoint_grid.o \
 ../PW/lchk_tauxk.o \
 ../PW/linmin.o \
-../PW/lsda_functionals.o \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
@@ -289,6 +287,10 @@ pmw.x : poormanwannier.o $(PPOBJS)
 
 pp.x : postproc.o $(PPOBJS)
 	$(LD) -o $@ postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+xctest.x : xctest.o $(PPOBJS)
+	$(LD) -o $@ xctest.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 projwfc.x : projwfc.o $(PPOBJS)

@@ -87,7 +87,6 @@ force_hub.o \
 force_lc.o \
 force_us.o \
 forces.o \
-functionals.o \
 g_psi.o \
 g_psi_mod.o \
 gen_at_dj.o \
@@ -121,7 +120,6 @@ iweights.o \
 kpoint_grid.o \
 lchk_tauxk.o \
 linmin.o \
-lsda_functionals.o \
 make_pointlists.o \
 mix_pot.o \
 mix_rho.o \

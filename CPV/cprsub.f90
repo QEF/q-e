@@ -108,10 +108,10 @@
       use gvecp, only: ng => ngm
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base, only: ainv
-      !use cell_module
       use cell_base, only: omega
       use control_flags, only: tpre
       use derho
+      use mp, only: mp_sum
 !
       implicit none
 ! input
@@ -134,27 +134,15 @@
          call fillgrad(nspin,rhog,gradr)
       end if
 !
-      exc=0.0
-      if (iexch==1.and.icorr==1.and.igcx==0.and.igcc==0) then
-         ! LDA (Perdew-Zunger)
-         call expxc(nnr,nspin,rhor,exc)
-      else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
-         ! PW91
-         call ggapwold(nspin,rhog,gradr,rhor,exc)
-      else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
-         ! BLYP
-         call ggablyp4(nspin,rhog,gradr,rhor,exc)
-      else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
-         ! PBE
-         call ggapbe(nspin,rhog,gradr,rhor,exc)
-      else
-         call errore('exc-cor','no such exch-corr',1)
-      end if
+      CALL exch_corr_cp(nnr,nspin,gradr,rhor,exc)
+
+      call mp_sum( exc )
+
       exc=exc*omega/dble(nr1*nr2*nr3)
 !
 ! exchange-correlation contribution to pressure
 !
-      dxc(:,:) = 0.0
+      dxc = 0.0
       if (tpre) then
          if (nspin.ne.1) call errore('exc-cor','spin not implemented',1)
 !
@@ -166,9 +154,7 @@
                dxc(i,j)=omega/(nr1*nr2*nr3)*dxc(i,j)
             end do
          end do
-#ifdef __PARA
-         call reduce (9,dxc)
-#endif
+         call mp_sum ( dxc )
          do j=1,3
             do i=1,3
                dxc(i,j) = dxc(i,j) + exc*ainv(j,i)
@@ -179,16 +165,10 @@
 !     second part of the xc-potential
 !
       if (igcx /= 0 .or. igcc /= 0) then
-         call gradh(nspin,gradr,rhog,rhor,dexc)
+         call gradh( nspin, gradr, rhog, rhor, dexc)
          if (tpre) then
-#ifdef __PARA
-            call reduce (9,dexc)
-#endif
-            do j=1,3
-               do i=1,3
-                  dxc(i,j) = dxc(i,j) + dexc(i,j)
-               end do
-            end do
+            call mp_sum ( dexc )
+            dxc = dxc + dexc
          end if
          deallocate(gradr)
       end if

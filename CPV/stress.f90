@@ -90,7 +90,7 @@
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: prn, tgc
       REAL(dbl) :: pail(:,:), desr(:), strvxc
-      REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:)
+      REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
       COMPLEX(dbl) :: rhoeg(:,:), vxc(:,:)
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl), INTENT(IN) :: occ(:,:,:)
@@ -870,17 +870,14 @@
         IMPLICIT NONE
 !
         INTEGER, INTENT(IN) :: nnr
-        REAL(dbl) ::  v2xc(:,:,:,:)
+        REAL(dbl) ::  v2xc(:,:,:,:,:)
         REAL(dbl) ::  grho(:,:,:,:,:)
         REAL(dbl) ::  gcpail(6)
         REAL(dbl) ::  omega
 !
         REAL(dbl) :: stre, grhoi, grhoj
         INTEGER :: i, j, k, ipol, jpol, ic, nxl, nyl, nzl, is, js, nspin
-        INTEGER,  DIMENSION(2,2), PARAMETER :: kk = reshape &
-         ( (/ 1, 3, 3, 2 /), (/ 2, 2 /) )
-        INTEGER,  DIMENSION(2,2), PARAMETER :: nn = reshape &
-         ( (/ 1, 1, 2, 2 /), (/ 2, 2 /) )
+        INTEGER :: kk(2,2), nn(2,2)
 
 ! ...
         nxl = SIZE(grho,1)
@@ -888,17 +885,25 @@
         nzl = SIZE(grho,3)
         nspin = SIZE(grho,5)
 
+        kk(1,1)=1
+        kk(1,2)=3
+        kk(2,1)=3
+        kk(2,2)=2
+        nn(1,1)=1
+        nn(1,2)=2
+        nn(2,1)=1
+        nn(2,2)=2
+
         DO ic = 1, 6
           ipol = alpha(ic)
           jpol = beta(ic)
+          stre = 0.0d0
           DO is = 1, nspin
-            stre = 0.d0
             DO js = 1, nspin
               DO k = 1, nzl
                 DO j = 1, nyl
                   DO i = 1, nxl
-                    stre = stre + v2xc(i,j,k,kk(is,js)) * &
-                      grho(i,j,k,ipol,nn(is,js)) * grho(i,j,k,jpol,is)
+                    stre = stre + v2xc(i,j,k,is,js) * grho(i,j,k,ipol,js) * grho(i,j,k,jpol,is)
                   END DO
                 END DO
               END DO
@@ -935,7 +940,7 @@
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl) :: dexc(:), strvxc
       REAL(dbl) :: grho(:,:,:,:,:)
-      REAL(dbl) :: v2xc(:,:,:,:)
+      REAL(dbl) :: v2xc(:,:,:,:,:)
       REAL(dbl) :: GAgx_L(:,:)
       REAL(dbl) :: rhocp(:,:)
 

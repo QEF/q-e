@@ -9,6 +9,9 @@ atomic_number.o \
 capital.o \
 dost.o \
 erf.o \
+functionals.o \
+lsda_functionals.o \
+more_functionals.o \
 iceil.o \
 iglocal.o \
 invmat.o \

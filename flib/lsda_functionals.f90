@@ -58,6 +58,8 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      vcdw = 0.0d0
   elseif (icorr == 1) then
      call pz_spin (rs, zeta, ec, vcup, vcdw)
+  elseif (icorr == 3) then
+     call lsd_lyp (rho, zeta, ec, vcup, vcdw)  !  from CP/FPMD (more_functionals)
   elseif (icorr == 4) then
      call pw_spin (rs, zeta, ec, vcup, vcdw)
   else
