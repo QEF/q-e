@@ -55,7 +55,7 @@ subroutine readnewvan (is, iunps)
   character (len=75) :: titleps
   ! the title of the pseudo
 
-  if (is.lt.0.or.is.gt.npsx) call errore ('readvan', 'Wrong is number', 1)
+  if (is.lt.0.or.is.gt.npsx) call errore ('readnewvan', 'Wrong is number', 1)
   read (iunps, '(a75)', err = 100, iostat = ios) titleps
 
   psd (is) = titleps (7:8)
@@ -152,7 +152,7 @@ subroutine readnewvan (is, iunps)
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) ( (chi (ir, &
        nb, is) , ir = 1, mesh (is) ) , nb = 1, nwfs)
 
-100 call errore ('read_newvan', 'Reading pseudo file', abs (ios) )
+100 call errore ('readnewvan', 'Reading pseudo file', abs (ios) )
   do nb = 1, nwfs
      chi (0, nb, is) = 0.d0
   enddo
