@@ -3,6 +3,7 @@
 include ../make.sys
 
 PWOBJS = \
+../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/addusdens.o \
 ../PW/addusforce.o \
@@ -231,7 +232,6 @@ PWOBJS = \
 ../PW/vloc_of_g.o \
 ../PW/vloc_psi.o \
 ../PW/v_of_rho.o \
-../PW/v_of_rho_nc.o \
 ../PW/vpack.o \
 ../PW/w0gauss.o \
 ../PW/w1gauss.o \

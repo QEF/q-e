@@ -70,16 +70,9 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
-  IF (noncolin) THEN
-     call v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,              &
-          ehart, etxc, vtxc, charge, psic, lambda, vtcon, i_cons, mcons, &
-          pointlist, pointnum, factlist, nat, ntyp, ityp)
-  ELSE
-     call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,         &
-          ehart, etxc, vtxc, etotefield, charge, psic)
-  END IF
+  call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,         &
+        ehart, etxc, vtxc, etotefield, charge, psic)
   !
   !  restart procedure completed
   !

@@ -20,6 +20,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !
   USE io_global,  ONLY : stdout
   USE kinds, only: DP
+  USE noncollin_module, ONLY : noncolin
   implicit none
   !
   !    first the dummy variables
@@ -58,11 +59,17 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, g, nspin, alat, omega, etxc, vtxc, v)
   !
+  !  add a magnetic field 
+  !
+  if (noncolin) call add_bfield(v)
+  !
   !  calculate hartree potential
   !
   call v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin, alat, omega, ehart, charge, v)
   !
+  !  add an electric field
+  ! 
   do is=1,nspin
      call add_efield(rho,v(1,is),etotefield)
   enddo
@@ -71,13 +78,15 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
 end subroutine v_of_rho
 !
 !--------------------------------------------------------------------
-subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+SUBROUTINE v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      nrxx, nl, ngm, g, nspin, alat, omega, etxc, vtxc, v)
   !--------------------------------------------------------------------
   !
   !     Exchange-Correlation potential Vxc(r) from n(r)
   !
   USE io_global,  ONLY : stdout
+  USE noncollin_module,   ONLY : noncolin
+  USE spin_orb,   ONLY : domag
   USE kinds, only : DP
   implicit none
   !
@@ -112,17 +121,22 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   ! the square of the e charge
   real(kind=DP), parameter :: e2 = 2.d0
 
-  real(kind=DP) :: rhox, arhox, zeta, ex, ec, vx (2), vc (2), rhoneg(2)
-  ! rhox: total (valence+pseudocore if present) charge in each point
-  ! arhox: abs(rhox)
-  ! zeta: spin polarization ( -1 <= zeta <= 1)
-  ! ex, ec: local exchange and correlation energies
-  ! vx, vc: local exchange and correlation potentials
-  ! rhoneg: integral of the negative charge
-  integer :: ir, is, ig
+  real(kind=DP) :: rhox, arhox, zeta, amag, vs, ex, ec, vx (2), vc (2), &
+                   rhoneg(2)
+  ! the total charge in each point
+  ! the absolute value of the charge
+  ! the absolute value of the charge
+  ! local exchange energy
+  ! local correlation energy
+  ! local exchange potential
+  ! local correlation potential
+  integer :: ir, is, ig, ipol
   ! counter on mesh points
   ! counter on spin polarizations
   ! counter on G vectors
+  ! counter on nspin
+  ! number of points with wrong zeta/charge
+  !
   !
   !      call start_clock('vxc')
   !
@@ -131,24 +145,24 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   etxc = 0.d0
   vtxc = 0.d0
   v(:,:) = 0.d0
-  rhoneg(:)=0.d0
+  rhoneg=0.d0
 
-  if (nspin == 1) then
+  if (nspin == 1.or.(nspin==4 .and. .not.domag)) then
      !
      ! spin-unpolarized case
      !
      do ir = 1, nrxx
-        rhox = rho (ir, nspin) + rho_core (ir)
+        rhox = rho (ir, 1) + rho_core (ir)
         arhox = abs (rhox)
         if (arhox.gt.1.d-30) then
            CALL xc( arhox, ex, ec, vx(1), vc(1) )
-           v(ir,nspin) = e2 * (vx(1) + vc(1) )
+           v(ir,1) = e2 * (vx(1) + vc(1) )
            etxc = etxc + e2 * (ex + ec) * rhox
-           vtxc = vtxc + v(ir,nspin) * rho(ir,nspin)
+           vtxc = vtxc + v(ir,1) * rho(ir,1)
         endif
-        if (rho(ir,nspin) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,nspin)
+        if (rho(ir,1) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,1)
      enddo
-  else
+  else if (nspin == 2) then
      !
      ! spin-polarized case
      !
@@ -157,9 +171,9 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         arhox = abs(rhox)
         if (arhox.gt.1.d-30) then
            zeta = ( rho(ir,1) - rho(ir,2) ) / arhox
-           if (abs(zeta) .gt.1.d0) then
-              zeta = sign(1.d0,zeta)
-           endif
+           if (abs(zeta) .gt.1.d0) zeta = sign(1.d0,zeta)
+           if (rho(ir,1) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,1)
+           if (rho(ir,2) < 0.d0) rhoneg(2) = rhoneg(2) - rho(ir,2)
            call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            do is = 1, nspin
               v(ir,is) = e2 * (vx(is) + vc(is) )
@@ -167,8 +181,34 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            etxc = etxc + e2 * (ex + ec) * rhox
            vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
         endif
-        if (rho(ir,1) < 0.d0) rhoneg(1) = rhoneg(1) - rho(ir,1) 
-        if (rho(ir,2) < 0.d0) rhoneg(2) = rhoneg(2) - rho(ir,2) 
+     enddo
+  else if (nspin==4) then
+     !
+     !  noncolinear case
+     !
+     do ir = 1,nrxx
+        amag = sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
+        rhox = rho(ir,1) + rho_core(ir)
+        if (rho(ir,1) < 0.d0)  rhoneg(1)=rhoneg(1)-rho(ir,1)
+        arhox = abs(rhox)
+        if (arhox.gt.1.d-30) then
+           zeta = amag / arhox
+           if(abs(zeta).gt.1.d0) then
+               rhoneg(2)=rhoneg(2)+1.d0/omega
+               zeta=sign(1.d0,zeta)
+           endif
+           call xc_spin(arhox,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
+           vs=0.5d0*(vx(1)+vc(1)-vx(2)-vc(2))
+           v(ir,1) = e2*(0.5d0*(vx(1)+vc(1)+vx(2)+vc(2)))
+           !               WRITE( stdout,'(4f18.8)') arhox,zeta,vs,v(ir,1)
+           if (amag.gt.1.d-20) then
+              do ipol=2,4
+                 v(ir,ipol) = e2*vs*rho(ir,ipol)/amag
+              enddo
+           endif
+           etxc= etxc + e2*(ex+ec)*rhox
+           vtxc= vtxc + v(ir,1)*rho(ir,1)
+        endif
      enddo
   endif
 #ifdef __PARA
@@ -186,9 +226,14 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   ! add gradient corrections (if any)
   !
-
-  call gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+  if (noncolin) then
+     call gradcorr_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+          nrxx, nl, ngm, g, alat, omega, e2, etxc, vtxc, v, nspin)
+  else
+     call gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
+  endif
+
 #ifdef __PARA
   call reduce (1, vtxc)
   call reduce (1, etxc)
@@ -284,11 +329,17 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !      add hartree potential to the xc potential
   !
-  do is = 1, nspin
+  if (nspin==4) then
      do ir = 1, nrxx
-        v(ir,is) = v(ir,is) + aux(1,ir)
+        v(ir,1) = v(ir,1) + aux(1,ir)
      enddo
-  enddo
+  else
+     do is = 1, nspin
+        do ir = 1, nrxx
+           v(ir,is) = v(ir,is) + aux(1,ir)
+        enddo
+     enddo
+  endif
 
 
   deallocate (aux,aux1)

@@ -304,21 +304,9 @@ SUBROUTINE electrons()
      !
      IF ( lsda .OR. noncolin ) CALL compute_magnetization()
      !
-     IF ( noncolin ) THEN
-        !
-        CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,    &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,  &
-                          ehart, etxc, vtxc, charge, vnew, lambda, vtcon,    &
-                          i_cons, mcons, pointlist, pointnum, factlist, nat, &
-                          ntyp, ityp )
-        !
-     ELSE
-        !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vnew )
-        !
-     ENDIF
+     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                    ehart, etxc, vtxc, etotefield, charge, vnew )
      !
      CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                    deband, nspin )
@@ -386,21 +374,9 @@ SUBROUTINE electrons()
            !
            IF ( lsda .OR. noncolin ) CALL compute_magnetization()
            !
-           IF ( noncolin ) THEN
-              !
-              CALL v_of_rho_nc( rho,rho_core,nr1,nr2,nr3,nrx1,nrx2,nrx3,   &
-                                nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
-                                omega, ehart, etxc, vtxc, charge, vnew,    &
-                                lambda, vtcon, i_cons, mcons, pointlist,   &
-                                pointnum, factlist, nat, ntyp, ityp )
-              !
-           ELSE
-              !
-              CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                             ehart, etxc, vtxc, etotefield, charge, vnew )
-              !
-           END IF
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vnew )
            !
            CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
                          deband, nspin )              
@@ -430,22 +406,10 @@ SUBROUTINE electrons()
         !
         vnew =  vnew - vr
         !
-        IF ( noncolin ) THEN
-           !
-           CALL v_of_rho_nc( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2,    &
-                             nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat,  &
-                             omega, ehart_new, etxc_new, vtxc_new, charge_new, &
-                             vr, lambda, vtcon, i_cons, mcons, pointlist,      &
-                             pointnum, factlist, nat, ntyp, ityp )
-           !
-        ELSE
-           !
-           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                          ehart_new, etxc_new, vtxc_new, etotefield_new,       &
-                          charge_new, vr )
-           !
-        END IF
+        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
+                       ehart_new, etxc_new, vtxc_new, etotefield_new,       &
+                       charge_new, vr )
         !
      ELSE 
         !

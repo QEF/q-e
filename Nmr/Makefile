@@ -152,6 +152,7 @@ MODULES = \
 ../Modules/wavefunctions.o
 
 PWOBJS = \
+../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
 ../PW/add_vuspsi_nc.o \
@@ -350,7 +351,6 @@ PWOBJS = \
 ../PW/usnldiag.o \
 ../PW/usnldiag_nc.o \
 ../PW/v_of_rho.o \
-../PW/v_of_rho_nc.o \
 ../PW/vhpsi.o \
 ../PW/vhpsi_nc.o \
 ../PW/vloc_of_g.o \

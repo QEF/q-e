@@ -96,21 +96,9 @@ SUBROUTINE potinit()
         ! ... here we compute the potential which correspond to the 
         ! ... initial charge
         !
-        IF ( noncolin ) THEN
-           !
-           CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                             nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
-                             omega, ehart, etxc, vtxc, charge, vr, lambda,   &
-                             vtcon, i_cons, mcons, pointlist, pointnum,      &
-                             factlist, nat, ntyp, ityp )
-           !
-        ELSE
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
-           !
-        END IF
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
         !       
         !
         IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
@@ -123,21 +111,9 @@ SUBROUTINE potinit()
            !
            ! ... and compute v_of_rho again
            !
-           IF ( noncolin ) THEN
-              !
-              CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
-                                nrxx, nl, ngm, gstart, nspin, g, gg, alat,     &
-                                omega, ehart, etxc, vtxc, charge, vr, lambda,  &
-                                vtcon, i_cons, mcons, pointlist, pointnum,     &
-                                factlist, nat, ntyp, ityp )
-              !
-           ELSE
-              !
-              CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                             ehart, etxc, vtxc, etotefield, charge, vr )
-              !
-           END IF
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
            !
         END IF
         !
@@ -219,23 +195,13 @@ SUBROUTINE potinit()
      ! ... here we compute the potential which corresponds to the 
      ! ... initial charge
      !
-     IF ( noncolin ) THEN
-        !
-        lambda0=lambda
-        if (i_cons==3) lambda0=0.003
-        CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
-                          omega, ehart, etxc, vtxc, charge, vr, lambda0,  &
-                          vtcon, i_cons, mcons, pointlist, pointnum,      &
-                          factlist, nat, ntyp, ityp )
-        !
-     ELSE
-        !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
-        !
-     END IF
+     lambda0=lambda
+     if (i_cons==3) lambda=0.003
+     !
+     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                    ehart, etxc, vtxc, etotefield, charge, vr )
+     lambda=lambda0
      !   
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         !
@@ -247,23 +213,12 @@ SUBROUTINE potinit()
         !
         ! ... and compute v_of_rho again
         !
-        IF ( noncolin ) THEN
-           !
-           lambda0=lambda
-           if (i_cons==3) lambda0=0.003
-           CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                             nrxx, nl, ngm, gstart, nspin, g, gg, alat,      &
-                             omega, ehart, etxc, vtxc, charge, vr, lambda0,  &
-                             vtcon, i_cons, mcons, pointlist, pointnum,      &
-                             factlist, nat, ntyp, ityp )
-           !
-        ELSE
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
-           !
-        END IF
+        lambda0=lambda
+        if (i_cons==3) lambda=0.003
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
+        lambda=lambda0
         !
      END IF
      !

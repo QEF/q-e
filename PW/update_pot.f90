@@ -321,18 +321,12 @@ SUBROUTINE extrapolate_charge( rho_extr )
         !
      END DO
      !
-     CALL v_of_rho_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                       nl, ngm, gstart, nspin, g, gg, alat, omega, ehart,    &
-                       etxc, vtxc, charge, vr, lambda, vtcon, i_cons, mcons, &
-                       pointlist, pointnum, factlist, nat, nsp, ityp )
-     !    
-  ELSE
-     !
-     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, etotefield, charge, vr )
-     !
   END IF
+  !
+  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                 ehart, etxc, vtxc, etotefield, charge, vr )
+  !
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !

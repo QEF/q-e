@@ -3,6 +3,7 @@
 include ../make.sys
 
 PWOBJS = \
+add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
 add_vuspsi_nc.o \
@@ -248,7 +249,6 @@ upf_to_internal.o \
 usnldiag.o \
 usnldiag_nc.o \
 v_of_rho.o \
-v_of_rho_nc.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
