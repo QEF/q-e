@@ -9,7 +9,7 @@
 subroutine bcast_d3_input
   !-----------------------------------------------------------------------
   !
-  !     In this routine the first processor send the input to all
+  !     In this routine the first processor sends input data to all
   !     the other processors
   !
   !
