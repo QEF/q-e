@@ -109,6 +109,7 @@ subroutine new_ns
 #ifdef __PARA
   call poolreduce (nat * nspin * ldim * ldim, nr)  
 #endif
+  if (nspin.eq.1) nr = 0.5d0 * nr
   !
   ! impose hermiticity of n_{m1,m2}
   !
