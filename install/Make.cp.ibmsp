@@ -11,7 +11,7 @@
 # ** Preprocessor Macro **
 
 # Add -D__LIBMASS to use IBM mass
-# Add -D__FFTDRW  to use fftw
+# Add -D__FFTW -D__FFTWDRV  to use fftw
   CPMACRO=-D__AIX,-D__MPI,-D__PARA,-D__LIBMASS,-D__ESSL,-DSWAP=dswap,-DAXPY=daxpy,-DSCAL=dscal,-DCOPY=dcopy,-DGEMM=dgemm
 
 
@@ -27,7 +27,6 @@
 # Uncomment to compile Lapack subset from the source code and use IBM ESSL
 #  MYLIB=lapack
 
-  FFT=ibmfft.o
   ESSL= -lpessl -lessl
 
 # Uncomment to use blas and lapack subset from the source code

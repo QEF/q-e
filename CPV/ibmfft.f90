@@ -10,6 +10,7 @@
 !  Note that the three routines are equal, and that no initialization
 !  is needed (the initialization arrays are recalculated every time).
 !
+#if defined (__ESSL)
 !
 !----------------------------------------------------------------------
       subroutine cfft3 (f,nr1,nr2,nr3,nr1x,nr2x,nr3x,sign)
@@ -510,3 +511,9 @@
 #endif
       return
       end
+#else
+      subroutine bidon_ibm
+         stop 'ibmfft'
+      end subroutine bidon_ibm
+#endif
+

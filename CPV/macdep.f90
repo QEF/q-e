@@ -313,7 +313,7 @@
          good=pwr(4).eq.0 .and. pwr(5).eq.0
 #endif
 !
-#ifdef __FFTW
+#if defined(__FFTW)
          good=pwr(5).eq.0
 #endif         
       end if

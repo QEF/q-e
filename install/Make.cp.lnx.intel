@@ -37,7 +37,6 @@
 #  MODULEOPT= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/FPMD
 #
 # ** Scientific Libraries **
-  FFT=fftw.o
 # Use System Lapack and blas
   LAPACK= /opt/intel/mkl/lib/32/libmkl_lapack.a \
           /opt/intel/mkl/lib/32/libmkl_p4.a -lguide -lpthread  -lfftw

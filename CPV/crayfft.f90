@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#if defined(__CRAYY) || defined(__SX4)
 !
 !-------------------------------------------------------------------------
       subroutine cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,isign)
@@ -222,3 +223,8 @@
 !
       return
       end
+#else
+      subroutine bidon_cray
+         stop 'crayfft'
+      end subroutine bidon_cray
+#endif

@@ -8,7 +8,7 @@
 # --- Change Variables according to your system --- #
 
 # Macro
-  CPMACRO=-D__MPI -D__PARA -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+  CPMACRO=-D__MPI -D__PARA -D__FFTW -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
 #  CPMACRO=-D__QSW -D__FFTWDRV
 #
   CPUTYPE=ev67
@@ -16,7 +16,6 @@
   MPIINCLUDE= -I/usr/lib/mpi/include/
   COMMLIB=  -L/usr/lib/mpi/lib/ -lmpi -lmpif -lelan -lelan3 -lrmscall 
 #
-  FFT= fftw.o
   MYLIB=
   SCILIB= -lfftw -lcxml
 #

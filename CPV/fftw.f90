@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#if defined(__FFTW)
 module fftw_mod
 
   integer FFTW_FORWARD,FFTW_BACKWARD
@@ -467,3 +467,8 @@ end module fftw_mod
 #endif
       return
       end
+#else
+      subroutine bidon_fftw
+         stop 'fftw'
+      end subroutine bidon_sun
+#endif

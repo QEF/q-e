@@ -271,7 +271,7 @@
       real(kind=8) el, ql, par, sp, e1, e2, emax, vpsum, rhopsum, fint, &
      &             fpibg, gps, sfp, xg, dsfp, dgps, r2new, r2max, r21,  &
      &             r22, r2l
-      real(kind=8), external : erf
+      real(kind=8), external :: erf
       integer is, irmax, ir, ig, ib
       real(kind=8), allocatable:: df(:), dfigl(:)
 !
@@ -933,8 +933,8 @@
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj
       real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
       complex(kind=8), allocatable:: qgbs(:), dqgbs(:,:,:)
-      real(kind=8) ylmr, xg, c, betagl, dbetagl, dylmr, gg
-      external ylmr, dylmr
+      real(kind=8) xg, c, betagl, dbetagl, gg
+      real(kind=8), external :: ylmr, dylmr
 !
 !
       allocate(dqradb(ngb,nbrx,nbrx,lx,nsp))

@@ -21,7 +21,6 @@ CPMACRO=-D__PGI -D__PARA -D__MPI -D__LINUX -D__PORTLAND -D__FFTW -DSWAP=dswap -D
   LIBGM=-L/usr/gm/lib -lgm
 #
 # ** Scientific Libraries **
-  FFT=fftw.o
   MYLIB=
   ATLAS=/cineca/lib/ATLAS
   LAPACK= -L/cineca/lib/pgi -llapack -L$(ATLAS) -lf77blas -latlas

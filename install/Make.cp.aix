@@ -16,7 +16,6 @@
 #
 # ** Scientific Libraries **
   MYLIB=
-  FFT=ibmfft.o
   ESSL= -lessl
   LAPACK= -L /cineca/lib -llapack
 #

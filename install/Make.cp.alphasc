@@ -17,7 +17,6 @@
  COMMLIB=  -L/usr/lib -lmpi -lelan -lelan3 -lrmscall
 #
 # ** Scientific Libraries **
-  FFT=fftw.o
   FFTWDIR= /a/acv0/fftw-2.1.3/fftw/.libs
   SCILIB= -L$(FFTWDIR) -lfftw -lcxml
   MYLIB=
