@@ -32,24 +32,25 @@ Optimization), version \version. The ESPRESSO package contains the
 following codes for the calculation of electronic-structure properties
 within Density-Functional Theory, using a Plane-Wave basis set and
 pseudopotentials:
-\begin{description}
-  \item [PWscf] (Plane-Wave Self-Consistent Field).
-  \item [FPMD] (First Principles Molecular Dynamics).
-  \item [CP] (Car-Parrinello).
-\end{description}
+\begin{itemize}
+  \item PWscf (Plane-Wave Self-Consistent Field).
+  \item FPMD (First Principles Molecular Dynamics).
+  \item CP (Car-Parrinello).
+\end{itemize}
 Moreover it contains auxiliary codes:
-\begin{description}
-  \item [PWgui] (Graphical User Interface for PWscf):
-    a graphical interface for producing input data files for PWscf.
-
-  \item [atomic]
-    a program for atomic calculations and generation of
-    pseudopotentials.
-\end{description}
+\begin{itemize}
+  \item PWgui (Graphical User Interface for PWscf): a graphical
+        interface for producing input data files for PWscf.
+  \item atomic: a program for atomic calculations and generation of
+        pseudopotentials.
+\end{itemize}
 Documentation, in addition to what provided in this manual,
 can be found in:
 \begin{itemize}
   \item the \texttt{Doc/} directory of the ESPRESSO distribution
+
+        In particular the \texttt{INPUT\_*} files contain the detailed
+        listing of available input variables and cards.
   \item the various \texttt{README} files found in the distribution
   \item the PWscf web site
         (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
@@ -58,8 +59,8 @@ can be found in:
         (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
                            {mailto:pw_forum@pwscf.org})
 
-        See the PWscf web site for instructions on how to register and
-        how to search the archives of the mailing list.
+        See the PWscf web site for instructions on how to subscribe
+        and how to browse the archives of the mailing list.
   \item the ``Scientific Software'' page of the Democritos web site
         \hfill\break
         (\htmladdnormallink%
@@ -137,15 +138,17 @@ CINECA National Supercomputing Center in Bologna
 under the responsibility of Carlo Cavazzoni\break
 (\htmladdnormallink{\texttt{c.cavazzoni@cineca.it}}%
                    {mailto:c.cavazzoni@cineca.it}).
-Currently active developers include Gerardo Ballabio (CINECA), Gernot
-Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
-Trieste), Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
+Currently active developers include
+Gerardo Ballabio (CINECA),
+Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
+(SISSA, Trieste),
+Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 The web site for PWscf and related codes is:
-\htmladdnormallink{\texttt{http://www.pwscf.org}}%
-                  {http://www.pwscf.org}.
+\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                  {http://www.pwscf.org/}
 
 The FPMD and CP codes are both based on the original code written by
 Roberto Car and Michele Parrinello.
@@ -246,15 +249,6 @@ PWgui.
 Providing binaries for ESPRESSO would require too much effort and
 would work only for a small number of machines anyway.
 
-To install it, you must follow these steps:
-\begin{enumerate}
-  \item download and unpack the ESPRESSO source distribution;
-  \item configure ESPRESSO for your system, compilers and libraries;
-  \item compile some or all the executables in the package.
-\end{enumerate}
-
-\subsection{Download and unpack}
-
 The latest stable release of the ESPRESSO source package (currently
 version \version) can be downloaded from this URL:
 \medskip
@@ -264,13 +258,8 @@ version \version) can be downloaded from this URL:
 \medskip
 
 \noindent
-The bravest may access the (unstable) development version via
-anonymous CVS: see the file \texttt{README.cvs} contained in the
-distribution.
-
-To uncompress and unpack the source package, move it to an empty
-directory of your choice, \texttt{cd} to that directory, and run the
-command:
+To uncompress and unpack it, move it to an empty directory of your
+choice, \texttt{cd} to that directory, and run the command:
 \medskip
 
 \texttt{tar zxvf pw.\version.tgz}
@@ -282,56 +271,182 @@ use this instead:
 \medskip
 
 \texttt{gunzip -c pw.\version.tgz | tar xvf -}
+\medskip
+
+\noindent
+The bravest may access the (unstable) development version via
+anonymous CVS: see the file \texttt{README.cvs} contained in the
+distribution.
+
+Now, to install ESPRESSO, you must:
+\begin{enumerate}
+  \item configure the source package for your system, compilers and
+        libraries;
+  \item compile some or all the executables in the package.
+\end{enumerate}
+For the impatient:
+\begin{verbatim}
+  ./configure
+  make all
+\end{verbatim}
+A \texttt{bin/} directory will be generated, containing all the
+compiled executable programs (actually, symlinks to them).
+
+If you have problems or would like to tweak the default settings, read
+the detailed instructions below.
 
 \subsection{Configure}
 
-An automatic configuration script, generated with the GNU Autoconf
-package, is available since version 2.0.
-From the top directory of the ESPRESSO source tree, just type:
-\begin{verbatim}
-  ./configure
-\end{verbatim}
-The script will examine your hardware and software, generate
-dependencies needed by the Makefile's, produce suitable configuration
-files \texttt{make.sys} and \texttt{make.rules}.
-Presently it is expected to work for Linux PCs, IBM sp machines, SGI
-Origin, some HP-Compaq Alpha machines, Cray X1.
-See also the \texttt{README.install} file.
+To configure the ESPRESSO source package, run the \texttt{configure}
+script.  It will (try to) detect compilers and libraries available on
+your machine, and set up things accordingly.
+Presently it is expected to work on most Linux 32- and 64-bit (Itanium
+and Opteron) PCs, IBM SP machines, SGI Origin, some HP-Compaq Alpha
+machines, Cray X1, Mac OS X.
 
-\texttt{configure} accepts the following options:
+Cross-compilation isn't currently supported.  It might be in some
+future release, but don't hold your breath.  Volunteers to implement
+it are welcome.
+
+\texttt{configure} is automatically generated by the GNU Autoconf
+utility\break
+(\htmladdnormallink{\texttt{http://www.gnu.org/software/autoconf/}}%
+                   {http://www.gnu.org/software/autoconf/}).
+If you want to modify it, its source file is \texttt{configure.ac};
+you may also want to edit \texttt{make.sys.in} and
+\texttt{make.rules.in}.  See instructions in
+\texttt{README.configure}.
+
+Specifically, "configure" generates the following files:
 \begin{quote}
-\texttt{--disable-parallel}: compile a serial code, also on parallel
- machines with available parallel environment\\
-\texttt{--disable-shared}:   do not use shared libraries (makes the
-code more portable)  \\
-\texttt{--enable-shared}:    use shared libraries if available 
-(may be needed in some cases)
+  \texttt{make.sys}: compilation settings and flags\\
+  \texttt{make.rules}: compilation rules\\
+  \texttt{*/.dependencies}: dependencies, per source directory
 \end{quote}
 
-If \texttt{configure} doesn't recognize your configuration, you may 
-resort to the manual configuration, described below, or try to
-generate a better \texttt{configure} file following the instructions 
-in \texttt{README.configure} (please report success to the developers). 
-The latter option is only for experts.
-If \texttt{configure} stops with an error, you typically have a 
-misconfigured fortran compiler, or no compiler at all, or a machine 
-that does not allow direct interactive execution of fortran compiled 
-codes.
+\texttt{.dependencies} files are actually generated by the
+\texttt{makedeps.sh} shell script, that \texttt{configure} invokes.
+If you modify the program sources, you might have to rerun it.
 
-The file \texttt{make.sys} may still require some tweaking if produced
-by the automatic configuration; if produced by manual configuration,
-it MUST be edited.
-In most cases you will need to specify the name and location of
-libraries (see next section).
-In some cases you may need to change preprocessing options
-(\texttt{CPPFLAGS}) and/or compiler options (\texttt{F90FLAGS}).
+You should always be able to compile the ESPRESSO suite of programs
+without having to edit any of the generated files.  However you may
+have to tune \texttt{configure} by specifying appropriate environment
+variables and/or command-line options.
+
+Environment variables may be set in any of these ways:
+\begin{verbatim}
+  export VARIABLE=value         # sh, bash, ksh
+  ./configure
+
+  setenv VARIABLE value         # csh, tcsh
+  ./configure
+
+  ./configure VARIABLE=value    # any shell
+\end{verbatim}
+Some environment variables that are relevant to \texttt{configure} are:
+\begin{quote}
+  \texttt{F90}, \texttt{F77}, \texttt{CC}:
+    names of Fortran 90, Fortran 77, and C compilers\\
+  \texttt{CPP}:
+    source file preprocessor (defaults to \texttt{\$CC -E})\\
+  \texttt{LD}: linker (defaults to \texttt{\$F90})\\
+  \texttt{CFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS},
+    \texttt{CPPFLAGS}, \texttt{LDFLAGS}:
+    compilation flags\\
+  \texttt{LIBDIRS}:
+    extra directories to search for libraries (see below)
+\end{quote}
+For example, the following command line:
+\begin{verbatim}
+  ./configure F90=ifort FFLAGS="-Vaxlib -O2 -assume byterecl" \
+              CC=gcc CFLAGS=-O3 LDFLAGS="-Vaxlib -static"
+\end{verbatim}
+instructs \texttt{configure} to use \texttt{ifort} as Fortran 90
+compiler with flags \texttt{"-Vaxlib -O2 -assume byterecl"},
+\texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to use flags
+\texttt{"-Vaxlib -static"} when linking.  Note that the values
+of \texttt{FFLAGS} and \texttt{LDFLAGS} must be quoted, because they
+contain spaces.
+
+\texttt{configure} also recognizes the following command-line options:
+\begin{quote}
+  \texttt{-disable-parallel}:
+    compile serial code, even if parallel environment is available\\
+  \texttt{-disable-shared}:
+    compile statically (don't use shared libraries)\\
+  \texttt{-enable-shared}:
+    use shared libraries
+\end{quote}
+
+\paragraph{IMPORTANT:}
+
+ESPRESSO can take advantage of several optimized numerical libraries:
+\begin{itemize}
+  \item ESSL on AIX systems (shipped by IBM)
+  \item MKL together with Intel compilers (shipped by Intel, free for
+        non-commercial use)
+  \item ATLAS (free software,
+        \htmladdnormallink%
+        {\texttt{http://math-atlas.sourceforge.net/}}%
+        {http://math-atlas.sourceforge.net/})
+  \item FFTW (free software,
+        \htmladdnormallink{\texttt{http://www.fftw.org/}}%
+        {http://www.fftw.org/})
+\end{itemize}
+and a few others.  Note that FFTW must be version 2; version 3 is not
+yet supported.
+
+A reference implementation of all required external libraries is
+bundled with the ESPRESSO distribution, which means that you'll always
+be able to compile the programs at least; but using optimized
+libraries can often provide huge performance increases.
+
+\texttt{configure} attempts to find those libraries, but may fail if
+they have been installed at non-standard places.  You should examine
+the final value of \texttt{LIBS} (either in the output of
+\texttt{configure}, or in the generated \texttt{make.sys}) to check
+whether all available libraries were found.
+
+If any libraries weren't found, you can specify a list of directories
+to search in the environment variable \texttt{LIBDIRS}, and rerun
+\texttt{configure}; directories in the list must be separated by
+spaces.  For example:
+\begin{verbatim}
+  ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
+\end{verbatim}
+If this still fails, you may set the environment variable
+\texttt{LIBS} manually and retry.  For example:
+\begin{verbatim}
+  ./configure LIBS="-L/usr/lib/math -lfftw -llapack -lblas"
+\end{verbatim}
+Beware that in this case, you must specify \emph{all} the libraries
+that you want to link to.  \texttt{configure} will blindly accept the
+specified value, and won't search for any extra libraries.  (This is
+so that if \texttt{configure} finds any library that you don't want to
+use, you can override it.)
+
+If you want to use the FFTW library, the \texttt{fftw.h} include file
+is also required.  If the configuration script wasn't able to find it,
+you can specify its location in the \texttt{INCLUDEFFTW} environment
+variable.
+For example:
+\begin{verbatim}
+  ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
+\end{verbatim}
+If everything else fails, you'll have to write the \texttt{make.sys}
+file manually.  The \texttt{install/} directory contains several
+examples (named \texttt{Make.*}): you may choose the one that looks
+most appropriate for your machine, copy it to \texttt{make.sys}, and
+tweak it until you obtain successful compilation.  If this ever
+happens, please let us know, and we'll try to support your machine in
+the next version of \texttt{configure}.
 
 \paragraph{Please Note:}
 
-if you change \texttt{CPPFLAGS} or \texttt{F90FLAGS} after the first
-compilation, run \texttt{make clean} and recompile everything, unless
-you know exactly which routines are affected and how to force their
-recompilation.
+If you change any compilation flags after a previous (successful or
+failed) compilation, you must run \texttt{make clean} before
+recompiling, unless you know exactly which routines are affected by
+the changed options and how to force their recompilation.
 
 \subsubsection{Libraries}
 
@@ -465,8 +580,12 @@ The present values will work for most cases.  All other variables are
 dynamically allocated: you do not need to recompile your code for a
 different system.
 
-\texttt{make} with no arguments yields a list of valid
-targets:
+At your option, you may compile the complete ESPRESSO suite of
+programs (with \texttt{make all}), or only some specific programs.
+
+\texttt{make} with no arguments yields a list of valid compilation
+targets.
+Here is a list:
 
 \begin{itemize}
   \item
@@ -567,13 +686,14 @@ The codes for data postprocessing in \texttt{PP/} are:
         polyhedra (obsolete, use at your own risk)
   \item \texttt{dos.x} calculates electronic Density of States
         (DOS).
-  \item \texttt{pw2wan.x}: interface with code \texttt{WanT} for
-        calculation of transport properties via Wannier (also known
-        as Boyd) functions: see
-        \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
-                       {http://www.wannier-transport.org/}.
-  \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
-        for Quantum Monte Carlo calculation
+  \item \texttt{pw2wan.x}: interface with code WanT for calculation of
+        transport properties via Wannier (also known as Boyd)
+        functions: see\hfill\break
+        \htmladdnormallink%
+        {\texttt{http://www.wannier-transport.org/}}%
+        {http://www.wannier-transport.org/}
+  \item \texttt{pw2casino.x}: interface with CASINO code for Quantum
+        Monte Carlo calculation
         (\htmladdnormallink%
          {\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
          {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
@@ -1748,7 +1868,7 @@ one processor.
 
 \clearpage
 
-\section{Performance issues}
+\section{Performance issues (PWscf)}
 
 \subsection{CPU time requirements}
 
