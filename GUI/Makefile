@@ -3,6 +3,6 @@
 default:
 
 veryclean:
-	cd Guib; $(MAKE) veryclean
-	cd PWgui; $(MAKE) distclean
+	-cd Guib; $(MAKE) veryclean
+	-cd PWgui; $(MAKE) distclean
 
