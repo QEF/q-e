@@ -27,6 +27,7 @@ for arg in $*
 do
 	if   test "$arg" = "--disable-parallel" ; then no_parallel=1
 	elif test "$arg" = "--disable-shared"   ; then no_shared=1
+	elif test "$arg" = "--enable-shared"    ; then yes_shared=1
 	fi
 done
 
@@ -41,60 +42,55 @@ case $build in
 ia64-*-linux-gnu )
 	is_linux64=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc f90 f77 g77"
+	try_f90="ifort ifc f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
-        ranlib="echo"
 	;;
 x86_64-*-linux-gnu )
 	is_linux64=1
 	try_f90_parallel="mpif90"
-	try_f90="pgf90 f90 pgf77 f77 g77"
+	try_f90="pgf90 f90 pgf77 f77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
-        ranlib="echo"
 	;;
 *-pc-linux-gnu )
 	is_linux=1
 	try_f90_parallel="mpif90"
-	try_f90="ifort ifc pgf90 g95 f90 pgf77 f77 g77"
+	try_f90="ifort ifc pgf90 g95 f90 pgf77 f77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
-        ranlib="echo"
+	# use static libraries unless explicitly asked
+	if test ! $yes_shared ; then no_shared=1 ; fi
 	;;
 *-ibm-aix* )
 	is_aix=1
 	try_f90_parallel="mpxlf90_r mpxlf90"
-	try_f90="xlf90_r xlf90 f90 xlf f77 g77"
+	try_f90="xlf90_r xlf90 f90 xlf f77"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX"
-        ranlib="echo"
 	;;
 mips-sgi-* )
 	is_mips=1
-	try_f90="f90 f77 g77"
+	try_f90="f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
-        ranlib="echo"
 	;;
 alphaev*-dec-osf* )
 	is_alpha=1
 	try_f90="f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
-        ranlib="echo"
 	;;
 sparc-sun-* )
 	is_sparc=1
 	try_f90_parallel="mpf90"
-	try_f90="f90 f77 g77"
+	try_f90="f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
-        ranlib="echo"
 	;;
 *cray-unicosmp* )
 	is_x1=1
@@ -102,11 +98,10 @@ sparc-sun-* )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__X1"
-        ranlib="echo"
 	;;
 powerpc-apple-darwin* )
-	is_powerpc=1
-	try_f90="xlf90 f90"
+	is_mac=1
+	try_f90="xlf90 f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__MAC"
@@ -314,7 +309,7 @@ ia64-*-linux-gnu:ifort )
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
-	pre_f_dflags="-fpp "
+	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
 x86_64-*-linux-gnu:pgf* )
@@ -332,7 +327,7 @@ x86_64-*-linux-gnu:pgf* )
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
-	pre_f_dflags="-fpp "
+	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
 *-pc-linux-gnu:ifc )
@@ -342,7 +337,7 @@ x86_64-*-linux-gnu:pgf* )
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
-	pre_f_dflags="-fpp "
+	pre_fdflags="-fpp "
 	have_cpp=1
 
 	if test `echo $version | sed 's/\..*//'` -lt 7
@@ -396,8 +391,8 @@ x86_64-*-linux-gnu:pgf* )
 	try_fflags_noopt="-q64 -O0"
 	try_ldflags="-q64"
 	# try_ldflags_static="-bstatic"
-	pre_f_dflags="-WF,"
-	aix_flags=1
+	pre_fdflags="-WF,"
+	xlf_flags=1
 	have_cpp=1
 	;;
 mips-sgi-*:f90 )
@@ -406,13 +401,13 @@ mips-sgi-*:f90 )
 	try_fflags_noopt="-mips4 -64 -O0"
 	try_ldflags="-mips4 -64"
 	try_dflags="-D__SGI -D__SGI64 -D__ORIGIN"
-	pre_f_dflags="-cpp "
+	pre_fdflags="-cpp "
 	have_cpp=1
 	;;
 alphaev*-dec-osf*:f90 )
 	have_cpp=1
 	try_dflags="-D__ALPHA"
-	pre_f_dflags="-cpp "
+	pre_fdflags="-cpp "
 	try_fflags="-O -real_size 64 -align dcommons -align records"
 	try_f77flags="\$(FFLAGS)"
 	try_f90flags="\$(FFLAGS) -free"
@@ -431,7 +426,7 @@ sparc-sun-*:mpf90 | sparc-sun-*:f90 )
         try_fflags_noopt="FFLAGS = -s default64 -dp -rma -e0 -O0 -Z"
         try_ldflags="-s default64 -f nan64"
         try_dflags="$try_dflags -D__X1_COA"
-        pre_f_dflags="-e Z -F"
+        pre_fdflags="-e Z -F"
         have_cpp=1
 	;;
 powerpc-apple-darwin* )
@@ -439,8 +434,8 @@ powerpc-apple-darwin* )
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	pre_f_dflags="-WF,"
-	powerpc_flags=1
+	pre_fdflags="-WF,"
+	xlf_flags=1
 	have_cpp=1
 	;;	
 *:g77 )
@@ -493,8 +488,6 @@ x86_64-*-linux-gnu:pgcc )
 *-ibm-aix*:mpcc* | *-ibm-aix*:xlc* | *-ibm-aix*:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
-	pre_dflags="-Wp,"
-	aix_flags=1
 	;;
 mips-sgi-*:cc )
 	try_cflags="-mips4 -64 -O2 -r10000"
@@ -613,9 +606,9 @@ then
 	elif test $is_mips
 	then
 		try_libdirs="/usr/local/lib /cineca/lib"
-	elif test $is_powerpc
+	elif test $is_mac
 	then
-		try_libdirs="/sw/lib"
+		try_libdirs="/usr/local/lib /sw/lib"
 	else
 		try_libdirs="/usr/local/lib"
 	fi
@@ -925,15 +918,21 @@ fi
 AC_LANG_POP(C)
 AC_LANG_POP(Fortran 77)
 
-# AIX compilers want comma-separated -D directives
-if test "$dflags" = "" ; then dflags="$try_dflags"                      ; fi
-if test $aix_flags     ; then dflags="`echo $dflags | sed 's/  */,/g'`" ; fi
-if test "$fdflags" = ""; then fdflags="$try_dflags"                     ; fi
-if test $powerpc_flags ; then fdflags="`echo $fdflags | sed 's/  */,/g'`" ; fi
+if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
-echo setting MYLIB... $mylib
+
+# xlf compilers (AIX and powerpc) want comma-separated -D directives
+if test $xlf_flags
+then
+	fdflags="`echo $dflags | sed 's/  */,/g'`"
+else
+	fdflags="\$(DFLAGS)"
+fi
 echo setting FDFLAGS... $fdflags
+
+if test "$ranlib" = "" ; then ranlib=echo ; fi
 echo setting RANLIB... $ranlib
+echo setting MYLIB... $mylib
 
 # generate dependencies
 if test -x $topdir/makedeps.sh
@@ -948,7 +947,6 @@ AC_SUBST(cc)
 AC_SUBST(cflags)
 AC_SUBST(dflags)
 AC_SUBST(fdflags)
-AC_SUBST(pre_dflags)
 AC_SUBST(cpp)
 AC_SUBST(cppflags)
 AC_SUBST(f77)
@@ -956,7 +954,7 @@ AC_SUBST(f90)
 AC_SUBST(fflags)
 AC_SUBST(f90flags)
 AC_SUBST(fflags_noopt)
-AC_SUBST(pre_f_dflags)
+AC_SUBST(pre_fdflags)
 AC_SUBST(ifftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
