@@ -303,7 +303,7 @@ SUBROUTINE setup()
      ! ... In the case of noncollinear magnetism, bands are NOT
      ! ... twofold degenerate :
      !
-     IF ( noncolin ) nbnd = 2 * nbnd
+     IF ( noncolin ) nbnd = INT( degspin ) * nbnd
      !
   ELSE
      !
