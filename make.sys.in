@@ -30,6 +30,6 @@ LIBS           = @libs@
 #              use this together with T3E scilib
 # lapack_mkl : compile only lapack routines not present in Intel MKL
 #              use this together with Intel MKL
-MYLIB          = @mylibs@
+MYLIB          = @mylib@
 AR             = @ar@
 ARFLAGS        = @arflags@

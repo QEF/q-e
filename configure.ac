@@ -1,6 +1,6 @@
-AC_INIT(PWscf, 1.3.0, , pwscf)
+AC_INIT(PWscf, 2.0, , pwscf)
 AC_REVISION(0.01)
-AC_PREREQ(2.57)
+AC_PREREQ(2.53)
 
 # store variables from the environment (may be set or not)
 topdir=$TOPDIR
@@ -16,8 +16,10 @@ f90flags=$F90FLAGS
 ld=$LD
 ldflags=$LDFLAGS
 libs=$LIBS
+libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
+mylib=$MYLIB
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -70,12 +72,12 @@ AC_PROG_F77($f90)
 f90=$F77
 
 case "$build:$f90" in
-*-pc-linux-*:pgf* )
+*-pc-linux-gnu:pgf* )
 	is_pgi=1
 	try_cc="mpicc pgcc gcc cc icc"
 	try_f77="mpif77 pgf77 $f90"
 	;;
-*-pc-linux-*:ifort | *-pc-linux-*:ifc )
+*-pc-linux-gnu:ifort | *-pc-linux-*:ifc )
 	# extract compiler version
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	ifc_version=`$f90 -V 2>&1 | grep "Intel(R)"`
@@ -86,7 +88,7 @@ case "$build:$f90" in
 	try_cc="icc gcc cc mpicc pgcc"
 	try_f77="$f90"
 	;;
-*-pc-linux-*:mpif* )
+*-pc-linux-gnu:mpif* )
 	# which compiler is actually under the hood?
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
 	pgi_version=`$f90 -V 2>&1 | grep -e pgf`
@@ -107,14 +109,14 @@ case "$build:$f90" in
 
 		is_ifc=1
 		try_cc="mpicc icc gcc cc pgcc"
-		try_f77="$f90"
+		try_f77="mpif77 ifort ifc $f90"
 	else
 		echo "${ECHO_T}unknown"
 		try_cc="mpicc gcc cc pgcc icc"
 		try_f77="mpif77 $f90"
 	fi
 	;;
-*-ibm-aix* )
+*-ibm-aix*:* )
 	try_cc="mpcc_r mpcc xlc cc gcc"
 	try_f77="mpxlf_r mpxlf xlf f77 $f90"
 	;;
@@ -122,11 +124,12 @@ mips-sgi-*:* )
 	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
-sparc-sun-* )
+sparc-sun-*:* )
 	try_cc="mpcc cc gcc"
 	try_f77="mpf77 f77 $f90"
 	;;
 * )
+	# unknown
 	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
@@ -156,6 +159,7 @@ case "$build:$cc:$f90" in
 *-pc-linux-*:icc:ifort | *-pc-linux-*:gcc:ifort )       ;;
 mips-sgi-*:cc:f90 )                                     ;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )           ;;
+
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
 	problems="$problems\\
@@ -166,7 +170,7 @@ esac
 
 # check compilers flags
 case "$build:$f90" in
-*-pc-linux-* )
+*-pc-linux-gnu:* )
 	if test $is_pgi
 	then
 		try_fflags="-fast -r8"
@@ -357,25 +361,52 @@ fi
 test_ldflags="`echo $ldflags | sed 's/\$([[^)]]*)//g'`"
 
 AC_LANG_PUSH(Fortran 77)
-F77=$f90 # use Fortran 90 actually (autoconf doesn't know about that!)
+F77=$f90 # use Fortran 90 actually (autoconf knows Fortran 77 only!)
 
 # search for libraries (unless LIBS has been set from the environment)
 if test "$libs" = ""
 then
+	# build list of directories to search
+	if test $is_aix
+	then
+		try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass"
+	elif test $is_linux && test $is_ifc
+	then
+		try_libdirs="/usr/local/lib
+			     /opt/intel/mkl/mkl61/lib/32 /opt/intel/mkl/lib/32
+			     /cineca/lib /cineca/prod/intel/lib"
+	elif test $is_linux && test $is_pgi
+	then
+		try_libdirs="/usr/local/lib
+			     /usr/local/pgi/linux86/lib
+			     /cineca/lib /cineca/prod/pgi/lib"
+	fi
+
+	# prepend directories specified by the user
+	if test "$libdirs" != ""
+	then
+		$try_libdirs="$libdirs $try_libdirs"
+	fi
+
+	if test "$LD_LIBRARY_PATH" != ""
+	then
+		ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
+		try_libdirs="$try_libdirs $ld_library_path"
+	fi
+
 	# use vendor libraries if available
 	if test $is_aix
 	then
 		# check for mass (in several directories)
-		libpath="/usr/local/lib /cineca/lib/mass"
-		for try_libdir in none $libpath
+		for dir in none $try_libdirs
 		do
 			unset ac_cv_search_vexp # clear cached value
-			if test "$try_libdir" = "none"
+			if test "$dir" = "none"
 			then
 				try_loption=
 			else
-				echo $ECHO_N "in $try_libdir: " $ECHO_C
-				try_loption="-L$try_libdir"
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
@@ -395,17 +426,15 @@ then
 	elif test $is_linux
 	then
 		# check for mkl (in several directories)
-		libpath="/usr/local/lib /opt/intel/mkl/mkl61/lib/32
-			 /opt/intel/mkl/lib/32"
-		for try_libdir in none $libpath
+		for dir in none $try_libdirs
 		do
 			unset ac_cv_search_zhegv # clear cached value
-			if test "$try_libdir" = "none"
+			if test "$dir" = "none"
 			then
 				try_loption=
 			else
-				echo $ECHO_N "in $try_libdir: " $ECHO_C
-				try_loption="-L$try_libdir"
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
@@ -432,16 +461,15 @@ $ac_cv_search_zhegv -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 		AC_LANG_PUSH(C)
 
 		# check for fftw (in several directories)
-		libpath="/usr/local/lib /cineca/lib"
-		for try_libdir in none $libpath
+		for dir in none $try_libdirs
 		do
 			unset ac_cv_search_fftwnd # clear cached value
-			if test "$try_libdir" = "none"
+			if test "$dir" = "none"
 			then
 				try_loption=
 			else
-				echo $ECHO_N "in $try_libdir: " $ECHO_C
-				try_loption="-L$try_libdir"
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
 			fi
 			CFLAGS="$test_cflags"
 			CPPFLAGS="$test_cppflags"
@@ -468,17 +496,15 @@ $ac_cv_search_zhegv -lmkl_ia32 -lguide $libs", , -lmkl_ia32 -lguide)
 	if ! test $have_lapack
 	then
 		# check for lapack (in several directories)
-		libpath="/usr/local/lib /usr/local/pgi/linux86/lib \
-			 /cineca/lib"
-		for try_libdir in none $libpath
+		for dir in none $try_libdirs
 		do
 			unset ac_cv_search_zhegv # clear cached value
-			if test "$try_libdir" = "none"
+			if test "$dir" = "none"
 			then
 				try_loption=
 			else
-				echo $ECHO_N "in $try_libdir: " $ECHO_C
-				try_loption="-L$try_libdir"
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
@@ -508,8 +534,8 @@ LIBS="$libs"
 AC_SEARCH_LIBS(mpi_init, "", parallel=1
 	       try_dflags="$try_dflags -D__MPI -D__PARA")
 
-if test "`echo $libs | grep mkl`" != "" ; then mylibs="lapack_mkl" ; fi
-AC_SEARCH_LIBS(zhegv, "", , mylibs="blas_and_lapack")
+if test "`echo $libs | grep mkl`" != "" ; then mylib="lapack_mkl" ; fi
+AC_SEARCH_LIBS(zhegv, "", , mylib="blas_and_lapack")
 
 AC_SEARCH_LIBS(zhegvx, "", try_dflags="$try_dflags -DHAS_ZHEGVX")
 AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
@@ -534,15 +560,15 @@ fi
 if test $want_fftw_h
 then
 	includepath="/usr/local/include /cineca/lib/fftw-2.1.3/fftw"
-	for try_includedir in none $includepath
+	for dir in none $includepath
 	do
 		unset ac_cv_header_fftw_h # clear cached value
-		if test "$try_includedir" = "none"
+		if test "$dir" = "none"
 		then
 			try_ioption=
 		else
-			echo $ECHO_N "in $try_includedir: " $ECHO_C
-			try_ioption="-I$try_includedir"
+			echo $ECHO_N "in $dir: " $ECHO_C
+			try_ioption="-I$dir"
 		fi
 		CFLAGS="$test_cflags $try_ioption"
 		CPPFLAGS="$test_cppflags $try_ioption"
@@ -566,7 +592,7 @@ AC_LANG_POP(Fortran 77)
 if test "$dflags" = "" ; then dflags="$try_dflags"                      ; fi
 if test $aix_flags     ; then dflags="`echo $dflags | sed 's/  */,/g'`" ; fi
 echo setting DFLAGS... $dflags
-echo setting MYLIBS... $mylibs
+echo setting MYLIB... $mylib
 
 # generate dependencies
 if test -x $topdir/makedeps.sh
@@ -606,7 +632,7 @@ AC_SUBST(ifftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(libs)
-AC_SUBST(mylibs)
+AC_SUBST(mylib)
 AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(f90rule)
@@ -616,10 +642,26 @@ AC_CONFIG_FILES(make.sys make.rules)
 AC_OUTPUT
 
 # final warnings
+echo ------------------------------------------------------------------
+echo PWscf can take advantage of several optimized numerical libraries
+echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
+echo but may fail if they have been installed in non-standard locations.
+echo The following libraries have been found:
+echo "  LIBS=$libs"
+echo If any libraries are missing, try setting the environment variable
+echo "  LIBDIRS=\"list of directories, separated by spaces\""
+echo and rerunning configure.
+echo Bourne shell syntax:
+echo "  export LIBDIRS=\"...\" ; ./configure"
+echo C shell syntax:
+echo "  setenv LIBDIRS \"...\" ; ./configure"
+echo If this still fails, set the environment variable LIBS manually.
+echo ------------------------------------------------------------------
+
 if ! test $parallel
 then
 	echo ----------------------------------------------
-	echo WARNING: parallel environment not available
+	echo WARNING: parallel environment not detected
 	echo this program will run in single-processor mode
 	echo ----------------------------------------------
 fi
