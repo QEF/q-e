@@ -21,7 +21,8 @@
       USE parameters
       use fft 
       use ions_base, only: nsp, nax 
-      use electrons_module, only: nel => nelt, nx => nbnd, n_emp, nspin
+      use electrons_base, only: nx => nbnd, nspin
+      use electrons_module, only: n_emp
       use brillouin, only: get_kpoints_number
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
       use pseudopotential, only: lmax, ngh 

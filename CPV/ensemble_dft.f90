@@ -159,6 +159,7 @@ CONTAINS
   SUBROUTINE ensemble_initval &
     ( occupations_ , n_inner_ , fermi_energy_ , rotmass_ , occmass_ , rotation_damping_ , &
       occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_ )
+    IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: occupations_
     CHARACTER(LEN=*), INTENT(IN) :: rotation_dynamics_
     CHARACTER(LEN=*), INTENT(IN) :: occupation_dynamics_
@@ -166,7 +167,6 @@ CONTAINS
     INTEGER, INTENT(IN) :: n_inner_
     REAL(dbl), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
     REAL(dbl), INTENT(IN) :: occupation_damping_ , degauss_
-    IMPLICIT NONE
 
       SELECT CASE ( TRIM( occupations_ ) )
           !
