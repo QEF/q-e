@@ -1,60 +1,53 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine stop_ph (flag)
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE stop_ph( flag )
+  !----------------------------------------------------------------------------
   !
-  ! Close all files and synchronize processes before stopping.
-  ! Called at the end of the run with flag=.true. (removes 'recover')
-  ! or during execution with flag=.false. (does not remove 'recover')
+  ! ... Synchronize processes before stopping.
   !
-
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-!  use control_flags, ONLY : twfcollect
-  use mp, only: mp_end, mp_barrier
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_end, mp_barrier
+  !
   USE parallel_include
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-#ifdef __PARA
-  integer :: info
-#endif
-  logical :: flag, exst
-
-
-  call print_clock_ph
-  call show_memory ()
-#ifdef __PARA
-  call mp_barrier()
-
-  ! call mpi_finalize (info)
-#endif
-
-  call mp_end()
-
-#ifdef __T3E
   !
-  ! set streambuffers off
+  IMPLICIT NONE
   !
-
-  call set_d_stream (0)
+  INTEGER :: info
+  LOGICAL :: flag, exst
+  !
+  !
+  CALL print_clock_ph()
+  !
+  CALL show_memory()
+  !
+  CALL mp_barrier()
+  !
+  CALL mp_end()
+  !
+#if defined (__T3E)
+  !
+  ! ... set streambuffers off
+  !
+  CALL set_d_stream( 0 )
+  !
 #endif
-
-  call deallocate_part
-
-  if (flag) then
-     stop
-  else
-     stop 1
-  endif
-
-end subroutine stop_ph
+  !
+  CALL deallocate_part()
+  !
+  IF ( flag ) THEN
+     !
+     STOP
+     !
+  ELSE
+     !
+     STOP 1
+     !
+  ENDIF
+  !
+END SUBROUTINE stop_ph
