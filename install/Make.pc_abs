@@ -37,7 +37,7 @@ F90FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS
 #
 # This is needed to tell the compiler where modules are
 #
-MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
 
 #
 # Loader:
