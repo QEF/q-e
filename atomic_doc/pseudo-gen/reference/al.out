@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 08-Feb-05
-     today is  8Feb2005 at 14:29:54 
+     program ld1 starts. version 11-Feb-05
+     today is 11Feb2005 at 12:25: 8 
 
      -------------------- All-electron run ------------------------------
 
@@ -126,12 +126,12 @@
      dEtot_ae =       0.000000 Ry
      dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
-     Ekin =      -0.316470 Ry,      -0.158235 Ha,      -4.305834 eV
-     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =       1.274073 Ry,       0.637036 Ha,      17.334782 eV
+     Encl =      -7.865800 Ry,      -3.932900 Ha,    -107.020508 eV
      Ehrt =       2.885281 Ry,       1.442640 Ha,      39.256555 eV
      Ecxc =      -1.174642 Ry,      -0.587321 Ha,     -15.981942 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=      -5.279177 Ry,      -2.639589 Ha,     -71.827428 eV
+     Epseu=       0.996080 Ry,       0.498040 Ha,      13.552464 eV
 
      -------------- End of pseudopotential test ------------------------
 
