@@ -1,0 +1,73 @@
+Today is: mar feb  8 15:53:17 CET 2005
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                          Doing tests for Oxygen                          !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Generating pseudo LDA for O with nlcc=.false. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -40.138650 Ryd
+
+Testing pseudo LDA for O with nlcc=.false. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -40.138650 Ryd
+Pseudopotential tested in the (1s2) 2s0 2p6 configuration
+  Pseudo energy =  -37.997817 Ryd
+  Error         =   -0.000498 Ryd
+Pseudopotential tested in the (1s2) 2s0 2p4 configuration
+  Pseudo energy =  -34.278773 Ryd
+  Error         =   -0.001619 Ryd
+
+Testing pseudo LDA for O with nlcc=.false. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -40.138650 Ryd
+Pseudopotential tested in the (1s2) 2s0 2s0 2p3 2p3 configuration
+  Pseudo energy =  -37.997817 Ryd
+  Error         =   -0.000497 Ryd
+Pseudopotential tested in the (1s2) 2s1 2s1 2p1 2p3 configuration
+  Pseudo energy =  -40.242160 Ryd
+  Error         =   -0.000069 Ryd
+
+
+Generating pseudo PBE for O with nlcc=.true. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -41.130397 Ryd
+
+Testing pseudo PBE for O with nlcc=.true. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -41.130397 Ryd
+Pseudopotential tested in the (1s2) 2s0 2p6 configuration
+  Pseudo energy =  -38.937600 Ryd
+  Error         =   -0.000443 Ryd
+Pseudopotential tested in the (1s2) 2s0 2p4 configuration
+  Pseudo energy =  -35.232117 Ryd
+  Error         =   -0.001927 Ryd
+
+Testing pseudo PBE for O with nlcc=.true. ...
+Pseudopotential generated in the (1s2) 2s2 2p4 configuration
+  Pseudo energy =  -41.130397 Ryd
+Pseudopotential tested in the (1s2) 2s0 2s0 2p3 2p3 configuration
+  Pseudo energy =  -38.937600 Ryd
+  Error         =   -0.000443 Ryd
+Pseudopotential tested in the (1s2) 2s1 2s1 2p1 2p3 configuration
+  Pseudo energy =  -41.241839 Ryd
+  Error         =   -0.000100 Ryd
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                          Doing tests for Copper                          !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Generating pseudo LDA for Cu with nlcc=.true. ...
+Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration
+  Pseudo energy = -207.078160 Ryd
+
+Testing pseudo LDA for Cu with nlcc=.true. ...
+Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration
+  Pseudo energy = -207.078160 Ryd
+Pseudopotential tested in the (1s2 2s2 2p6 3s2 3p6) 3d9.7 4s1 configuration
+  Pseudo energy = -206.915990 Ryd
+  Error         =   -0.000558 Ryd
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
