@@ -95,7 +95,7 @@ clean :
 veryclean : clean
 	- /bin/rm -rf make.rules make.sys \
 		      config.log config.status autom4te.cache \
-		      pw.tar.gz CPV/version.h \
+		      espresso.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
 	- if test -d GUI ; then ( cd GUI; $(MAKE) $(MFLAGS) veryclean ) ; fi
