@@ -345,6 +345,29 @@ MODULE read_namelists_module
        !
        sic_rloc    = 0.0D0
        !
+       ! ... SMD defaults (Y.K. 15/04/2004 )
+       !
+       smd_polm              = .FALSE.
+       smd_kwnp              = 2
+       smd_linr              = .FALSE.
+       smd_stcd              = .FALSE.
+       smd_stcd1             = 0
+       smd_stcd2             = 0
+       smd_stcd3             = 0
+       smd_codf              = 50
+       smd_forf              = 50
+       smd_smwf              = 1
+       smd_lmfreq            = 1
+       smd_tol               = 1.d-4
+       smd_maxlm             = 10
+       smd_smcp              = .TRUE.
+       smd_smopt             = .FALSE.
+       smd_smlm              = .FALSE.
+       smd_splc              = .FALSE.
+       smd_spal              = 1.d0
+       smd_ene_ini           = 1.d0
+       smd_ene_fin           = 1.d0
+       !
        RETURN
        !
      END SUBROUTINE
@@ -699,6 +722,27 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( sic_rloc, ionode_id )
        ! 
+       ! ... SMD broadcast (Y.K. 15/04/2004)
+       !
+       CALL mp_bcast( smd_polm, ionode_id )
+       CALL mp_bcast( smd_kwnp, ionode_id )
+       CALL mp_bcast( smd_linr, ionode_id )
+       CALL mp_bcast( smd_stcd, ionode_id )
+       CALL mp_bcast( smd_stcd2, ionode_id )
+       CALL mp_bcast( smd_stcd2, ionode_id )
+       CALL mp_bcast( smd_stcd3, ionode_id )
+       CALL mp_bcast( smd_codf, ionode_id )
+       CALL mp_bcast( smd_forf, ionode_id )
+       CALL mp_bcast( smd_smwf, ionode_id )
+       CALL mp_bcast( smd_lmfreq, ionode_id )
+       CALL mp_bcast( smd_tol, ionode_id )
+       CALL mp_bcast( smd_maxlm, ionode_id)
+       CALL mp_bcast( smd_smcp, ionode_id )
+       CALL mp_bcast( smd_smopt, ionode_id )
+       CALL mp_bcast( smd_smlm, ionode_id)
+       CALL mp_bcast( smd_ene_ini, ionode_id )
+       CALL mp_bcast( smd_ene_fin, ionode_id )
+
        RETURN
        !
      END SUBROUTINE
@@ -847,6 +891,12 @@ MODULE read_namelists_module
           IF( lberry ) & 
              CALL infomsg( sub_name,' lberry not implemented yet ',-1)
        END IF
+       !  For SMD (Y.K 04/15/2004)
+       !
+       IF( calculation == 'smd' .AND. prog /= 'CP' ) THEN
+             CALL errore( sub_name,' SMD implemented only with CP ',-1)
+       END IF
+
        !
        RETURN
        !
@@ -1132,6 +1182,28 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' minimization_scheme '''// &
                        & TRIM( minimization_scheme )//''' not allowed ', 1 )       
 
+       ! ... SMD checking ( Y.K. 15/04/2004 )
+       !
+       IF ( smd_polm .AND. smd_linr ) &
+          CALL errore( sub_name,' smd_polm & smd_linr  both true ',-1)
+       !
+       IF ( smd_polm .AND. smd_kwnp < 3 ) &
+          CALL errore( sub_name,' smd_kwnp < 3 for smd_polm ',-1)
+       !
+       IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) & 
+          CALL errore( sub_name,' smd_stcd not specified ',-1)
+       !
+       IF( smd_smcp .AND. (smd_smopt .OR. smd_smlm) ) &
+          CALL errore( sub_name,' SMCP ? ',-1)
+       !
+       IF( smd_smopt .AND. (smd_smcp .OR. smd_smlm) ) &
+          CALL errore( sub_name,' SMOPT ? ',-1)
+       !
+       IF( smd_smlm .AND. (smd_smcp .OR. smd_smopt) ) &
+          CALL errore( sub_name,' SMLM ? ',-1)
+       !
+
+
        IF (sic /= 'none' .and. sic_rloc == 0.d0) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1)
        !
@@ -1281,6 +1353,14 @@ MODULE read_namelists_module
                   CALL errore( sub_name,' calculation '//calculation// &
                   & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
+          !
+          ! ... SMD calculation ( Y.K. 15/04/2004)
+          !
+          CASE ( 'smd' )
+             IF( prog == 'CP' ) THEN
+                electron_dynamics = 'damp'
+                ion_dynamics = 'damp'
+             END IF
           CASE ('relax')
              IF( prog == 'FP' ) THEN
                 electron_dynamics = 'sd'
@@ -1482,6 +1562,7 @@ MODULE read_namelists_module
               TRIM( calculation ) == 'vc-md'    .OR. &
               TRIM( calculation ) == 'cp'       .OR. &
               TRIM( calculation ) == 'vc-cp'    .OR. &
+              TRIM( calculation ) == 'smd'      .OR. &
               TRIM( calculation ) == 'neb' ) THEN
              READ( 5, ions, iostat = ios ) 
           END IF

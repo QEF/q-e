@@ -13,6 +13,8 @@
         IMPLICIT NONE
         SAVE
 
+        PRIVATE
+
         TYPE dft_energy_type
           REAL(dbl)  :: ETOT
           REAL(dbl)  :: SKIN
@@ -56,6 +58,8 @@
         REAL(dbl)  :: SELF_VXC = 0.0_dbl
         REAL(dbl)  :: EBAND = 0.0_dbl
 
+        PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
+          print_energies, debug_energies
 
       CONTAINS
 
@@ -136,51 +140,56 @@
           REAL ( dbl ) :: EHT
 
           IF( PRESENT ( edft ) ) THEN
-            IF( tsic ) THEN
-              WRITE( stdout,1) edft%etot, edft%ekin, edft%eht, &
-                 edft%eself, edft%esr, edft%eh, &
-                 edft%ehte,  edft%self_ehte, edft%ehti, &
-                 edft%epseu, edft%enl, edft%exc,  edft%self_sxc, &
-                 edft%evdw, edft%emkin, vxc, self_vxc
-            ELSE
-              WRITE( stdout,2) edft%etot, edft%ekin, edft%eht,  &
-                 edft%eself, edft%esr, edft%eh, &
-                 edft%ehte,  edft%ehti, edft%epseu, edft%enl, edft%exc, &
-                 edft%evdw, edft%emkin
-            END IF
+              WRITE( stdout,  * )
+              WRITE( stdout,  * )
+              WRITE( stdout,  1 ) edft%etot
+              WRITE( stdout,  2 ) edft%ekin
+              WRITE( stdout,  3 ) edft%eht
+              WRITE( stdout,  4 ) edft%eself
+              WRITE( stdout,  5 ) edft%esr
+              WRITE( stdout,  9 ) edft%epseu
+              WRITE( stdout, 10 ) edft%enl
+              WRITE( stdout, 11 ) edft%exc
+              WRITE( stdout,  * )
+              WRITE( stdout,  6 ) edft%eh
+              WRITE( stdout,  7 ) edft%ehte
+              WRITE( stdout,  8 ) edft%ehti
+              WRITE( stdout, 12 ) edft%evdw
+              WRITE( stdout, 13 ) edft%emkin
+              IF( tsic ) THEN
+                WRITE( stdout, 14 ) edft%self_ehte
+                WRITE( stdout, 15 ) edft%self_sxc
+                WRITE( stdout, 16 ) vxc
+                WRITE( stdout, 17 ) self_vxc
+              END IF
+            ! ETOT  = EKIN + EHT + EPSEU + ENL + EXC + EVDW - ENT
           ELSE
-            WRITE( stdout,1) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, EVDW
+              WRITE( stdout,  1 ) edft%etot
+              WRITE( stdout,  2 ) edft%ekin
+              WRITE( stdout,  3 ) edft%eht
+              WRITE( stdout,  4 ) edft%eself
+              WRITE( stdout,  5 ) edft%esr
+              WRITE( stdout,  9 ) edft%epseu
+              WRITE( stdout, 10 ) edft%enl
+              WRITE( stdout, 11 ) edft%exc
           END IF
-2         FORMAT(/,/,6X,'                TOTAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'              KINETIC ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        ELECTROSTATIC ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'                       ESELF = ',F18.10,' A.U.'/ &
-                    ,6X,'                         ESR = ',F18.10,' A.U.'/ &
-                    ,6X,'              HARTREE ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'                HARTREE EHTE = ',F18.10,' A.U.'/ &
-                    ,6X,'                HARTREE EHTI = ',F18.10,' A.U.'/ &
-                    ,6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        VAN DER WAALS ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.'/,/)
-1         FORMAT(/,/,6X,'                TOTAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'              KINETIC ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        ELECTROSTATIC ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'                       ESELF = ',F18.10,' A.U.'/ &
-                    ,6X,'                         ESR = ',F18.10,' A.U.'/ &
-                    ,6X,'              HARTREE ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'                HARTREE EHTE = ',F18.10,' A.U.'/ &
-                    ,6X,'            HARTREE SIC_EHTE = ',F18.10,' A.U.'/ &
-                    ,6X,'                HARTREE EHTI = ',F18.10,' A.U.'/ &
-                    ,6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        VAN DER WAALS ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.'/ &
-                    ,6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.'/ &
-                    ,6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.'/,/)
+1         FORMAT(    6X,'                TOTAL ENERGY = ',F18.10,' A.U.')
+2         FORMAT(    6X,'              KINETIC ENERGY = ',F18.10,' A.U.')
+3         FORMAT(    6X,'        ELECTROSTATIC ENERGY = ',F18.10,' A.U.')
+4         FORMAT(    6X,'                       ESELF = ',F18.10,' A.U.')
+5         FORMAT(    6X,'                         ESR = ',F18.10,' A.U.')
+6         FORMAT(    6X,'              HARTREE ENERGY = ',F18.10,' A.U.')
+7         FORMAT(    6X,'                HARTREE EHTE = ',F18.10,' A.U.')
+8         FORMAT(    6X,'                HARTREE EHTI = ',F18.10,' A.U.')
+9         FORMAT(    6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.')
+10        FORMAT(    6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.')
+11        FORMAT(    6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' A.U.')
+12        FORMAT(    6X,'        VAN DER WAALS ENERGY = ',F18.10,' A.U.')
+13        FORMAT(    6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.')
+14        FORMAT(    6X,'            HARTREE SIC_EHTE = ',F18.10,' A.U.')
+15        FORMAT(    6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' A.U.')
+16        FORMAT(    6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
+17        FORMAT(    6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
           RETURN
         END SUBROUTINE print_energies
 

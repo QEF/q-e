@@ -215,6 +215,7 @@
        loldbfgs,         &! if .TRUE. the calculation is a bfgs-type relaxation based on the old scheme
        lmd,              &! if .TRUE. the calculation is a dynamics
        lneb,             &! if .TRUE. the calculation is neb
+       lsmd,             &! if .TRUE. the calculation is string dynamics
        lphonon,          &! if .TRUE. the calculation is phonon
        ldisp,            &! if .TRUE. the calculation is dispersion
        lraman,           &! if .TRUE. the calculation is raman

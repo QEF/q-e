@@ -385,6 +385,7 @@ MODULE read_cards_module
      !------------------------------------------------------------------------
      !
      ! ... routine modified for NEB           ( C.S. 21/10/2003 )
+     ! ... routine modified for SMD           ( Y.K. 15/04/2004 )
      ! ... updated manual not yet available
      !
      SUBROUTINE card_atomic_positions( input_line, prog )
@@ -394,12 +395,12 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
        CHARACTER(LEN=4)   :: lb_pos
-       INTEGER            :: ia, ip, i, k, is, nfield, index
+       INTEGER            :: ia, ip, i, k, is, nfield, index, rep_i
        LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
-       IF ( calculation == 'neb' ) &
+       IF ( (calculation == 'neb') .OR. (calculation == 'smd') ) &
           ALLOCATE( pos( ( 3 * natx ) , num_of_images ) )
        !
        IF ( tread ) THEN
@@ -417,7 +418,7 @@ MODULE read_cards_module
        END IF
        !
        if_pos = 1
-       IF ( calculation == 'neb' ) pos = 0.D0
+       IF ( (calculation == 'neb') .OR. (calculation == 'smd') ) pos = 0.D0
        sp_pos = 0
        rd_pos = 0.D0
        na_inp = 0
@@ -491,6 +492,82 @@ MODULE read_cards_module
              !
           END IF
           !
+       ELSE IF(calculation == 'smd') THEN
+          !
+          rep_loop : DO rep_i = 1, smd_kwnp
+          !
+          CALL read_line( input_line )
+          !
+          IF ( matches( "first_image", input_line )  &
+             & .OR. matches( "image", input_line )      &
+             & .OR. matches( "last_image", input_line) ) THEN
+             !
+             DO ia = 1, nat
+                !
+                index = 3 * ( ia - 1 )
+                !
+                CALL read_line( input_line )
+                CALL field_count( nfield, input_line )
+                !
+                IF ( nfield == 4 ) THEN
+                   !
+                   READ(input_line,*) lb_pos, ( pos(k+index,rep_i), k = 1, 3 )
+                   !
+                ELSE IF ( nfield == 7 .AND. rep_i == 1 ) THEN
+                   !
+                   READ(input_line,*) lb_pos, pos((index+1),rep_i), &
+                                              pos((index+2),rep_i), &
+                                              pos((index+3),rep_i), &
+                                              if_pos(1,ia), &
+                                              if_pos(2,ia), &
+                                              if_pos(3,ia)
+                   !
+                ELSE
+                   !
+                   CALL errore( ' read_cards ', &
+                              & ' wrong number of columns  in' // &
+                              & ' ATOMIC_POSITIONS, image input ', sp_pos(ia) )
+                   !
+                END IF
+                !
+                !
+                !
+                IF(rep_i ==1) THEN
+                   !
+                   lb_pos = ADJUSTL( lb_pos )
+                   !
+                   match_label_smd: DO is = 1, ntyp
+                      !
+                      IF ( TRIM( lb_pos ) == TRIM( atom_label(is) ) ) THEN
+                         !
+                         sp_pos(ia) = is
+                         EXIT match_label_smd
+                         !
+                      END IF
+                      !
+                   END DO match_label_smd
+                   !
+                   IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
+                      !
+                      CALL errore( ' read_cards ', &
+                              & ' wrong index in ATOMIC_POSITIONS ', ia )
+                      !
+                   END IF
+                   !
+                   is  =  sp_pos(ia)
+                   na_inp( is ) = na_inp( is ) + 1
+                   !
+                ENDIF
+              !
+             END DO
+             !
+          ELSE
+             CALL errore( ' read_cards ', ' missing or wrong image' // &
+                        & ' identifier in ATOMIC_POSITION', 1 )
+          ENDIF
+           !
+          END DO rep_loop
+
        ELSE
           !
           DO ia = 1, nat
