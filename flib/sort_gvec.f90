@@ -23,6 +23,7 @@ subroutine sort_gvec( ng, g2, mill )
   REAL(dbl), ALLOCATABLE :: gsort( : )
   INTEGER, ALLOCATABLE :: index( : )
   INTEGER :: ig, icurr, it, im
+  REAL(dbl) :: gsq
 
   ALLOCATE( gsort( ng ) )
   ALLOCATE( index( ng ) )
