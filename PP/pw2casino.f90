@@ -4,13 +4,14 @@
 ! coefficients and other stuff needed by the QMC code CASINO. 
 program pw2casino
  
+  use kinds, ONLY: DP
   use pwcom
   use io_files, only: nd_nmbr,prefix,nwordwfc,iunwfc
   USE wavefunctions_module, ONLY : evc
   use becmod
   implicit none
   integer :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
-       nk, ngtot, ig7, ikk, nt
+       nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
   integer, allocatable :: index(:), igtog(:)
   logical :: exst, found
   real(kind=DP) :: ek, eloc, enl,charge
@@ -27,7 +28,7 @@ program pw2casino
   call openfil
   
  call init_us_1
-
+ call newd
   io = 77
 
   write (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
@@ -118,9 +119,30 @@ program pw2casino
               hpsi(j,ibnd) =  g2kin(j) * evc(j,ibnd)
               ek = ek +  conjg(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
            end do
-           do nt=1,ntyp
-              do j=1,nkb
-                 enl=enl+abs(becp(j,ibnd))**2*wg(ibnd,ikk)*dion(j,j,nt)
+           ijkb0 = 0
+           do nt = 1, ntyp
+              do na = 1, nat
+                 if (ityp (na) .eq.nt) then
+                    do ih = 1, nh (nt)
+                       ikb = ijkb0 + ih
+                       enl=enl+abs(becp(ikb,ibnd))**2*wg(ibnd,ikk)* &
+                            (deeq(ih,ih,na,ispin) - &
+                              et(ibnd,ikk) * qq(ih,ih,nt))
+!                            dvan(ih,ih,nt)
+                       print *,deeq(ih,ih,na,ispin),et(ibnd,ikk), qq(ih,ih,nt)
+                       DO jh = ( ih + 1 ), nh(nt)
+                            jkb = ijkb0 + jh
+                            enl=enl+ &
+                                 (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
+                                 conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
+                                 * wg(ibnd,ikk) * (deeq(ih,jh,na,ispin) - &
+                                 et(ibnd,ikk) * qq(ih,jh,nt))
+                            
+                         END DO
+
+                      enddo
+                    ijkb0 = ijkb0 + nh (nt)
+                 endif
               enddo
            enddo
         enddo
@@ -215,9 +237,12 @@ etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   write(io,*) ngtot
   write(io,'(a)') ' Gx Gy Gz (au)'
   do ig = 1, ngtot
-     write(io,*) tpi/alat*g(1,igtog(ig)), tpi/alat*g(2,igtog(ig)), &
+     write(io,100) tpi/alat*g(1,igtog(ig)), tpi/alat*g(2,igtog(ig)), &
           tpi/alat* g(3,igtog(ig))
   enddo
+
+100 FORMAT (3(1x,f20.15))
+
   write(io,'(a)') ' '
   write(io,'(a)') ' WAVE FUNCTION'
   write(io,'(a)') ' -------------'
