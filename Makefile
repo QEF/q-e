@@ -98,7 +98,7 @@ tar:
 	rm -f pw.tar pw.tar.gz
 	find License README */README INSTALL configure \
 	     makedeps.sh moduledep.sh Makefile */Makefile \
-	     Makefile.neb NEB/make.dep \
+	     NEB/make.dep \
 	     configure.new configure.ac config.guess config.sub \
 	     install-sh make.rules.in make.sys.in \
 	     */*.f90 */*.c */*.f clib/*.h include/*.h* \
