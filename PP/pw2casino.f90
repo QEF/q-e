@@ -135,7 +135,7 @@ subroutine compute_casino
      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      !
      do nt=1,ntyp
-        do ig = gstart, ngm
+        do ig = 1, ngm
            eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
                 * conjg(aux(nl(ig)))
         enddo
