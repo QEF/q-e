@@ -142,7 +142,7 @@ subroutine vcsmd
   endif
 
   !
-  ! check if convergence for structural minimization is acheived
+  ! check if convergence for structural minimization is achieved
   !
   if (calc.eq.'mm') then
      conv_ions = eold - etot .lt. epse
@@ -154,7 +154,7 @@ subroutine vcsmd
      if (conv_ions) then
         WRITE( stdout,'(/5x,"Damped Dynamics: convergence achieved, Efinal=",&
               &     f15.8)') etot
-        call output_tau
+        call output_tau(.TRUE.)
         return
      end if
   end if
@@ -185,7 +185,7 @@ subroutine vcsmd
         WRITE( stdout,'("  final unit-cell volume =",f12.4," (a.u.)^3")') omega
         WRITE( stdout,'("  input alat = ",f12.4," (a.u.)")') alat
         !
-        call output_tau
+        call output_tau (.TRUE.)
         !
         return
      end if

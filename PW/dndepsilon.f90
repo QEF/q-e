@@ -13,8 +13,16 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    ! contribution to the internal stres tensor.
    !
 #include "machine.h"
-   use pwcom
+   USE parameters, ONLY: DP
    USE wavefunctions_module, ONLY: evc
+   USE atom, ONLY: nchi, lchi, oc
+   USE basis, ONLY: nat, natomwfc, ityp
+   USE klist, ONLY: nks, xk
+   USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
+   USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
+   USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
+   USE varie, ONLY: newpseudo
+   USE us, ONLY: nkb, vkb
    use becmod
    use io_files
 #ifdef __PARA

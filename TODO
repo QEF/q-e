@@ -1,8 +1,8 @@
-TODO LIST -  28 October 2003
+TODO LIST -  20 January 2004
 
 INSTALLATION/PORTING
 
-- configure
+- configure => configure.old, configure.new => configure
 
 - Linux Alpha ?
 
@@ -90,7 +90,7 @@ PW
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
-- ultrasoft PP: import "small boxes" from CP ?
+- ultrasoft PP: import "small boxes" from CP 
 
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
@@ -110,8 +110,6 @@ POSTPROCESSING
   and with new_punch must be verified
 
 - stm_wfc_matching not working
-
-- add more scripts that process output files
 
 - dos, projected dos, etc: input data should be more uniform
 
@@ -153,5 +151,6 @@ CPV:
 
 - check on small box size
 
-- replace calls to zero, ssum, csum, blas copy, scal, with f90
+- replace calls to zero, ssum, csum, blas copy, scal, with f90 commands
+
 

@@ -14,10 +14,15 @@ subroutine data_structure( lgamma )
   !
 #include "machine.h"
   USE io_global,  ONLY : stdout
-  use sticks, only: dfftp, dffts
-  use pwcom, only: dp, bg, xk, nks, tpiba, ecutwfc, ngm, ngms, ngm_l, ngm_g, &
-    ngms_l, ngms_g, nrxx, nrxxs, gcutm, gcutms, &
-    nr1, nr2, nr3, nrx1, nrx2, nrx3, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE sticks, ONLY: dfftp, dffts
+  USE parameters, ONLY: DP
+  USE brilz, ONLY: bg,  tpiba
+  USE klist, ONLY: xk, nks
+  USE gvect, ONLY:  nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+       ngm, ngm_l, ngm_g, gcutm, ecutwfc
+  USE gsmooth, ONLY: nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+       ngms, ngms_l, ngms_g, gcutms
+       
 #ifdef __PARA
   use para, only: maxproc, ncplane, ncplanes, nkcp, npp, npps, &
     ncp0, ncp0s, nxx, nxxs, nct, ncts, ncp, ncps

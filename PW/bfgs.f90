@@ -230,7 +230,7 @@ SUBROUTINE bfgs()
              &", scf threshold ",1PE8.2/)') istep, tr2
      END IF
      !
-     CALL output_tau
+     CALL output_tau (.FALSE.)
      !
      ! ... save all quantities needed at the following iterations
      !
