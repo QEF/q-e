@@ -53,7 +53,7 @@ program wannier
   !   Now allocate space for pwscf variables, read and check them.
   !
   call read_file  
-  call openfil  
+  call openfil_pp
   !
   call mp_bcast( isk, 0 )
   !

@@ -16,6 +16,7 @@ subroutine stop_d3 (flag)
   use pwcom
   use phcom
   use d3com
+  use control_flags, only: twfcollect
   USE io_files,   ONLY : iunigk
   use mp,         ONLY : mp_end, mp_barrier
   use para
@@ -24,7 +25,11 @@ subroutine stop_d3 (flag)
 
   logical :: flag
 
-  close (unit = iuwfc, status = 'keep')
+  if (twfcollect ) then
+     close (unit = iuwfc, status = 'delete')
+  else
+     close (unit = iuwfc, status = 'keep')
+  end if
   close (unit = iubar, status = 'keep')
   close (unit = iudwf, status = 'keep')
 #ifdef __PARA

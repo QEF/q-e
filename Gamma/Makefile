@@ -140,6 +140,7 @@ PWOBJS = \
 ../PW/readvan.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
+../PW/restart.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \

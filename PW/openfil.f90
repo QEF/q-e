@@ -40,8 +40,6 @@ SUBROUTINE openfil()
   CALL diropn( iunwfc, TRIM( prefix )//'.wfc', nwordwfc, exst )
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
-     !
-#if defined __NEW_PUNCH
      ndr      = 4
      kunittmp = 1
 #  ifdef __PARA
@@ -51,15 +49,9 @@ SUBROUTINE openfil()
      CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, nwordwfc, &
                         iunwfc, ierr )
      IF ( ierr > 0 ) THEN
-        !
-#else
         WRITE( stdout, '(5X,"Cannot read wfc file: not found")' )
         startingwfc = 'atomic'
-#endif
-#if defined __NEW_PUNCH
      END IF
-#endif
-     !
   END IF
   !
   ! ... Needed for LDA+U

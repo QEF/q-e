@@ -15,7 +15,7 @@ SUBROUTINE stop_pw( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,         ONLY :  stdout, ionode
-  USE control_flags,     ONLY :  lneb
+  USE control_flags,     ONLY :  lneb, twfcollect
   USE io_files,          ONLY :  prefix, iunwfc, iunigk, iunres
   USE input_parameters,  ONLY :  deallocate_input_parameters
   USE io_routines,       ONLY :  write_restart
@@ -33,9 +33,18 @@ SUBROUTINE stop_pw( flag )
   IF ( lneb ) stdout = 6
   !
   ! ... iunwfc contains wavefunctions and is kept open during
-  ! ... the execution - close and save the file
+  ! ... the execution - close the file and save it (or delete it 
+  ! ... if the wavefunctions are already stored in the .save file)
   !
-  CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+  IF ( twfcollect .AND. flag ) THEN
+     !
+     CLOSE( UNIT = iunwfc, STATUS = 'DELETE' )
+     !
+  ELSE
+     !
+     CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+     !
+  END IF
   !      
   IF ( flag .AND. ionode ) THEN
      !

@@ -55,7 +55,7 @@ program efg
 
   call read_file
 
-  call openfil
+  call openfil_pp
 
   call read_recon(filerec)
 

@@ -9,7 +9,7 @@
 SUBROUTINE restart_from_file
   !----------------------------------------------------------------------------
   !
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, ionode
   USE io_files,      ONLY : iunres, tmp_dir
   USE control_flags, ONLY : restart
   USE parser,        ONLY : delete_if_present
@@ -24,7 +24,7 @@ SUBROUTINE restart_from_file
   !
   ! ... check if restart file is present
   !
-  IF ( mpime == 0 ) THEN
+  IF ( ionode ) THEN
      !
      iunres = 1
      !

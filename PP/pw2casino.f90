@@ -45,7 +45,7 @@ program pw2casino
 #endif 
   !
   call read_file
-  call openfil
+  call openfil_pp
   !
   call compute_casino
   !
@@ -317,6 +317,7 @@ subroutine compute_casino
         enddo
      enddo
   enddo
+  close(io)
 
   write (stdout,*) 'Kinetic energy   '  , ek/2
   write (stdout,*) 'Local energy     ', eloc/2

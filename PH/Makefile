@@ -135,6 +135,7 @@ MODULES = \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/pseudo_types.o \
+../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/stick_base.o \
 ../Modules/uspp.o \
@@ -248,7 +249,6 @@ PWOBJS = \
 ../PW/ns_adj.o \
 ../PW/newd.o \
 ../PW/noncol.o \
-../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
 ../PW/para.o \
@@ -261,6 +261,7 @@ PWOBJS = \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
+../PW/restart.o \
 ../PW/remove_atomic_rho.o \
 ../PW/regterg.o \
 ../PW/rgen.o \

@@ -51,7 +51,7 @@ program bands
   !   Now allocate space for pwscf variables, read and check them.
   !
   call read_file
-  call openfil
+  call openfil_pp
   call init_us_1
   !
   call punch_band (filband)

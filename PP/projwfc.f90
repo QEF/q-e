@@ -80,7 +80,7 @@ program projwfc
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
   call read_file 
-  call openfil 
+  call openfil_pp
   ! 
   call projwave (io_choice,Emin, Emax, DeltaE, smoothing) 
   ! 

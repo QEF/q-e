@@ -26,7 +26,8 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !
   !
   USE kinds, ONLY: DP
-  USE basis, ONLY: nat, ntyp, ityp, tau, zv, natomwfc, atm
+  USE basis, ONLY: ntyp, natomwfc
+  USE ions_base, ONLY: nat, ityp, tau, zv, atm
   USE cell_base, ONLY: at, bg, ibrav, celldm, alat, symm_type
   USE klist, ONLY: xk, wk, degauss, ngauss, lgauss, nelec, &
        ngk, nks, nkstot
@@ -486,7 +487,7 @@ end subroutine writefile_new
 subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !-----------------------------------------------------------------------
   !
-  !     This routine is called at the end of the run to save on a file
+  !     This routine is called at the start of the run to read from file
   !     the information needed to restart and to other postprocessing
   !     programs.
   !
@@ -1027,14 +1028,14 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    WRITE( stdout, '(5x,"read complete")')
    !
    return
-end subroutine
+end subroutine readfile_new
 
 
 !----------------------------------------------------------------------
 subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !-----------------------------------------------------------------------
   !
-  !     This routine is called at the end of the run to save on a file
+  !     This routine is called at the start of the run to read from a file
   !     the information needed to restart and to other postprocessing
   !     programs.
   !

@@ -17,7 +17,7 @@ program postproc
   !    DESCRIPTION of the INPUT: see file pwdocs/INPUT_PP
   !
   use pwcom
-  use io_files, only: tmp_dir, nd_nmbr, prefix
+  use io_files, only: tmp_dir, nd_nmbr, prefix, iunwfc
 #ifdef __PARA
   use para, only: me
   use mp
@@ -101,7 +101,7 @@ program postproc
   !   Now allocate space for pwscf variables, read and check them.
   !
   call read_file
-  call openfil
+  call openfil_pp
   call struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
        strf, eigts1, eigts2, eigts3)
   call init_us_1

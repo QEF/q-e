@@ -58,7 +58,7 @@ program poormanwannier
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
   call read_file 
-  call openfil 
+  call openfil_pp
   !
   call projection( first_band, last_band)
   ! 
@@ -89,7 +89,7 @@ subroutine projection (first_band, last_band)
   use becmod,   only: becp 
   use rbecmod,  only: rbecp => becp 
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
-                      iunat, nwordatwfc, iunigk
+                      iunat, nwordatwfc
   use wavefunctions_module, only: evc 
 #ifdef __PARA 
   use para 

@@ -11,12 +11,25 @@ subroutine stop_pp
   !
   ! Synchronize processes before stopping.
   !
+  use control_flags, only: twfcollect
+  use io_files, only: iunwfc
   use mp, only: mp_end, mp_barrier
   USE parallel_include
 #ifdef __PARA
 
   integer :: info
-  
+  logical :: op
+
+  inquire ( iunwfc, opened = op )
+
+  if ( op ) then
+     if (twfcollect) then
+        close (unit = iuwfc, status = 'delete')
+     else
+        close (unit = iuwfc, status = 'keep')
+     end if
+  end if 
+
   call mp_barrier()
 
   ! call mpi_finalize (info)

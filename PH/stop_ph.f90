@@ -19,6 +19,7 @@ subroutine stop_ph (flag)
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
+  use control_flags, ONLY : twfcollect
   use mp, only: mp_end, mp_barrier
   USE parallel_include
 #ifdef __PARA
@@ -30,7 +31,11 @@ subroutine stop_ph (flag)
 #endif
   logical :: flag, exst
 
-  close (unit = iuwfc, status = 'keep')
+  if ( twfcollect ) then
+     close (unit = iuwfc, status = 'delete')
+  else
+     close (unit = iuwfc, status = 'keep')
+  end if
   close (unit = iudwf, status = 'keep')
   close (unit = iubar, status = 'keep')
   if(epsil.or.zue) close (unit = iuebar, status = 'keep')

@@ -14,6 +14,8 @@ subroutine cg_setup
   USE kinds, only: DP
   use pwcom
   USE atom, ONLY: nlcc
+  USE restart_module, ONLY: readfile_new
+  USE para,           ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
   use io_files, only: prefix, iunpun, iunres
   use cgcom
@@ -26,6 +28,8 @@ subroutine cg_setup
   character (len=256) :: filint
   real(kind=DP) :: rhotot, dmxc
   external dmxc
+  INTEGER       :: ndr, kunittmp, ierr
+  REAL(KIND=DP) :: edum(1,1), wdum(1,1)
   !
   call start_clock('cg_setup')
   !
@@ -98,13 +102,27 @@ subroutine cg_setup
   lrwfc=2*nbnd*npwx
   filint = trim(prefix) //'.wfc'
   call diropn(iunpun,filint,lrwfc,exst)
-  if(.not.exst) call errore('main','file '//filint//' not found',1)
-  !
+  if(.not.exst) then 
+     ndr      = 34
+     kunittmp = 1
+#  ifdef __PARA
+     kunittmp = kunit
+#  endif
+     !
+     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
+                        iunpun, ierr )
+     if ( ierr > 0 ) &
+        call errore('main','file '//filint//' not found',1)
+  end if
   !  read wave functions and calculate indices
   !
   kpoint=1
   call davcio(evc,lrwfc,iunpun,kpoint,-1)
-  close(unit=iunpun,status='keep')
+  if ( exst ) then
+     close(unit=iunpun,status='keep')
+  else 
+     close(unit=iunpun,status='delete')
+  end if
   call gk_sort (xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)
   !
   !  Kleinman-Bylander PPs

@@ -18,6 +18,7 @@ subroutine openfilq
   use io_files, only: prefix, iunigk
   USE kinds, only : DP
   use phcom
+  use control_flags, ONLY : twfcollect
 #ifdef __PARA
   use para
 #endif
@@ -47,37 +48,16 @@ subroutine openfilq
   call diropn (iuwfc, filint, lrwfc, exst)
 
   if (.not.exst) then
-
-#if defined __NEW_PUNCH
-
     ndr      = 4
     kunittmp = 1
-
 #  ifdef __PARA
-
     kunittmp = kunit
-
 #  endif
-
     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
-
-    if( ierr > 0 ) then
-
-#else
-
+    if( ierr > 0 ) &
       call errore ('openfilq', 'file '//filint//' not found', 1)
-
-#endif
-
-#if defined __NEW_PUNCH
-
-    end if
-
-#endif
-
+    twfcollect=.not.exst
   end if
-
-
   !
   !    The file with deltaV_{bare} * psi
   !

@@ -13,6 +13,7 @@ elf.o \
 ggen1d.o \
 local_dos.o \
 local_dos1d.o \
+openfil_pp.o\
 plan_avg.o \
 plot_io.o \
 plot_whole_cell.o \
@@ -154,7 +155,6 @@ PWOBJS = \
 ../PW/init_paw_1.o \
 ../PW/init_paw_2.o \
 ../PW/init_pool.o \
-../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \
@@ -176,7 +176,6 @@ PWOBJS = \
 ../PW/ns_adj.o \
 ../PW/newd.o \
 ../PW/noncol.o \
-../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
 ../PW/para.o \
@@ -190,6 +189,7 @@ PWOBJS = \
 ../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
+../PW/restart.o\
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rotate_wfc.o \

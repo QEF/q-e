@@ -6,36 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine write_config_to_file_old
-  !-----------------------------------------------------------------------
-  USE cell_base, ONLY : ibrav, alat, at
-  USE basis, ONLY : nat, tau
-  USE control_flags, ONLY : lscf
-  USE io_files, ONLY : prefix, iunres
-  implicit none
-  logical :: exst
-  integer :: iunit
-  !
-  ! do not modify the file if in a non-scf run..
-  ! probably not needed precaution
-  if (.not.lscf) return
-  !
-  ! open configuration file
-  !
-  iunit= 1
-  call seqopn (iunit, trim(prefix)//'.config', 'unformatted', exst)
-  !
-  ! save restart information
-  !
-  write (iunres) ibrav, nat
-  write (iunres) alat, at, tau
-
-  close (unit = iunres, status = 'keep')
-  !
-  return
-end subroutine write_config_to_file_old
-
-!-----------------------------------------------------------------------
 subroutine write_config_to_file
   !-----------------------------------------------------------------------
   USE control_flags, ONLY : lscf

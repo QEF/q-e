@@ -111,8 +111,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
      !
      ! ... How many parallel images ?
      !
-     nimage = 1
-     nargs  = iargc() 
+     nargs = iargc() 
      !
      DO iiarg = 1, ( nargs - 1 )
         !
