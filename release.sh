@@ -38,29 +38,29 @@ find $GUI -name CVS -exec /bin/rm -r {} \;
 
 tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ cpdocs/ cp_examples/ Modules/ clib/ flib/ CPV/
+                      include/ Doc/ examples/ Modules/ clib/ flib/ CPV/
 
 tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ cpdocs/ cp_examples/ Modules/ clib/ flib/ FPMD/
+                      include/ Doc/ examples/ Modules/ clib/ flib/ FPMD/
 
 tar -czf ../$GUI.tar.gz $GUI
 
 tar -czf ../pw.tar.gz bin/ config*  flib/ README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ pwdocs/ Modules/ clib/ flib/ \
+                      include/ Doc/ Modules/ clib/ flib/ \
                       PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/
 
-tar -czf ../pw_examples.tar.gz pw_examples/
+tar -czf ../pw_examples.tar.gz examples/
 
 tar -czf ../ps_examples.tar.gz pseudo/
 
 tar -czf ../allpw.tar.gz bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
-                      include/ pwdocs/ Modules/ PW/ PP/     \
+                      include/ Docs/ Modules/ PW/ PP/     \
                       PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ clib/ flib/  \
-		      pw_examples/ pseudo/ $GUI
+		      examples/ pseudo/ $GUI
 
-scp pwdocs/README pwdocs/ChangeLog pwdocs/BUGS pwdocs/manual.tex \
-    pwdocs/*.png  pwdocs/manual.pdf ../*.tar.gz cibs:public_html/pw
+scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
+    Doc/*.png  Doc/manual.pdf ../*.tar.gz cibs:public_html/pw
 
