@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "machine.h"
-!
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines
   !----------------------------------------------------------------------------
@@ -44,7 +42,7 @@ MODULE basic_algebra_routines
      END FUNCTION internal_dot_product
      !
      !     
-     !-----------------------------------------------------------------------     
+     !----------------------------------------------------------------------- 
      PURE FUNCTION norm( vector )
        !-----------------------------------------------------------------------
        !
@@ -68,23 +66,14 @@ MODULE basic_algebra_routines
        REAL (KIND=DP), INTENT(IN) :: vector(:)
        REAL (KIND=DP), INTENT(IN) :: matrix(:,:)
        REAL (KIND=DP)             :: matrix_times_vector(SIZE( vector ))
-       REAL (KIND=DP)             :: accumulator
-       INTEGER                    :: i, j, dim
+       INTEGER                    :: i, dim
        !
        !
        dim = SIZE( vector )
        !
        DO i = 1, dim
           !
-          accumulator = 0.D0
-          !
-          DO j = 1, dim
-             !
-             accumulator = accumulator + matrix(j,i) * vector(j)
-             !
-          END DO
-          !
-          matrix_times_vector(i) = accumulator
+          matrix_times_vector(i) = matrix(i,:) .dot. vector(:) 
           !
        END DO
        !
@@ -100,23 +89,14 @@ MODULE basic_algebra_routines
        REAL (KIND=DP), INTENT(IN) :: vector(:)
        REAL (KIND=DP), INTENT(IN) :: matrix(:,:)
        REAL (KIND=DP)             :: vector_times_matrix(SIZE( vector ))
-       REAL (KIND=DP)             :: accumulator
-       INTEGER                    :: i, j, dim
+       INTEGER                    :: i, dim
        !
        !
        dim = SIZE( vector )
        !
        DO i = 1, dim
           !
-          accumulator = 0.D0
-          !
-          DO j = 1, dim
-             !
-             accumulator = accumulator + vector(j) * matrix(i,j)
-             !
-          END DO
-          !
-          vector_times_matrix(i) = accumulator
+          vector_times_matrix(i) = vector(:) .dot. matrix(:,i)
           !
        END DO
        !
@@ -157,6 +137,8 @@ MODULE basic_algebra_routines
        REAL(KIND=DP)       :: identity(dim,dim)
        INTEGER             :: i
        !
+       !
+       identity = 0.D0
        !
        DO i = 1, dim
           !
@@ -361,7 +343,6 @@ MODULE bfgs_module
        !
        CHARACTER (LEN=*), INTENT(IN) :: scratch
        INTEGER, INTENT(IN)           :: dim
-       INTEGER                       :: i
        CHARACTER (LEN=256)           :: bfgs_file
        LOGICAL                       :: file_exists
        !
@@ -393,13 +374,7 @@ MODULE bfgs_module
           gradient_old     = 0.D0
           bfgs_step_old    = 0.D0
           trust_radius_old = trust_radius_ini
-          inverse_hessian  = 0.D0
-          !       
-          DO i = 1, dim
-             !
-             inverse_hessian(i,i) = 1.D0
-             !
-          END DO   
+          inverse_hessian  = identity(dim)
           !
        END IF    
        !
@@ -443,13 +418,11 @@ MODULE bfgs_module
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)   :: gradient(:)   
-       INTEGER, INTENT(IN)         :: dim                       
-       REAL(KIND=DP), ALLOCATABLE  :: gamma(:)
-       REAL(KIND=DP)               :: sdotgamma
+       REAL(KIND=DP), INTENT(IN)  :: gradient(:)   
+       INTEGER, INTENT(IN)        :: dim                       
+       REAL(KIND=DP)              :: gamma(dim)
+       REAL(KIND=DP)              :: sdotgamma
        !
-       !
-       ALLOCATE( gamma(dim) )
        !
        gamma = gradient - gradient_old
        !
@@ -461,15 +434,13 @@ MODULE bfgs_module
           !
        ELSE
           !
-          inverse_hessian = inverse_hessian + &
-             ( identity(dim) + ( gamma .dot. ( inverse_hessian * gamma ) ) / sdotgamma ) * &
-             matrix( bfgs_step_old, bfgs_step_old ) / sdotgamma - &
-             ( matrix( bfgs_step_old, gamma * inverse_hessian ) + &
-               matrix( inverse_hessian * gamma, bfgs_step_old ) ) / sdotgamma
+          inverse_hessian = inverse_hessian + ( identity(dim) + &
+            ( gamma .dot. ( inverse_hessian * gamma ) ) / sdotgamma ) * &
+            matrix( bfgs_step_old, bfgs_step_old ) / sdotgamma - &
+            ( matrix( bfgs_step_old, ( gamma * inverse_hessian ) ) + &
+              matrix( ( inverse_hessian * gamma ), bfgs_step_old ) ) / sdotgamma
           !
        END IF  
-       !
-       DEALLOCATE( gamma )
        !
      END SUBROUTINE update_inverse_hessian
      !
@@ -508,7 +479,6 @@ MODULE bfgs_module
        INTEGER, INTENT(IN)        :: dim   
        INTEGER, INTENT(IN)        :: stdout
        LOGICAL, INTENT(OUT)       :: conv_bfgs
-       INTEGER                    :: i           
        REAL(KIND=DP)              :: a
        LOGICAL                    :: ltest
        !
@@ -549,13 +519,7 @@ MODULE bfgs_module
           !
           WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
           !
-          inverse_hessian = 0.D0
-          !       
-          DO i = 1, dim
-             !
-             inverse_hessian(i,i) = 1.D0
-             !
-          END DO 
+          inverse_hessian = identity(dim)
           !
        END IF          
        !
