@@ -180,24 +180,26 @@ MODULE bfgs_module
   PUBLIC :: bfgs
   !
   REAL(KIND=DP), ALLOCATABLE :: &
-      pos_old(:),               &!
-      inverse_hessian(:,:),     &!
-      bfgs_step(:),             &!
-      bfgs_step_old(:),         &!
-      gradient_old(:)            !
+      pos_old(:),               &! old positions
+      inverse_hessian(:,:),     &! inverse of the hessian matrix (updated via
+                                 ! BFGS formula)
+      bfgs_step(:),             &! bfgs direction
+      bfgs_step_old(:),         &! old bfgs direction
+      gradient_old(:)            ! old gradient
   REAL(KIND=DP) :: &   
-      trust_radius,             &!
-      trust_radius_old,         &!
-      energy_old                 !
+      trust_radius,             &! displacement along the bfgs direction
+      trust_radius_old,         &! old displacement along the bfgs direction
+      energy_old                 ! old energy
   INTEGER :: &
-      iteration                  !     
+      iteration                  ! bfgs iteration    
   REAL(KIND=DP), PARAMETER  :: &
-      trust_radius_max = 0.5D0, &!
-      trust_radius_min = 0.D-5, &!
-      trust_radius_ini = 0.5D0, &!
-      trust_radius_end = 0.D-7   !   
+      trust_radius_max = 0.5D0, &! maximum allowed displacement
+      trust_radius_min = 1.D-5, &! minimum allowed displacement
+      trust_radius_ini = 0.5D0, &! initial displacement
+      trust_radius_end = 1.D-7   ! bfgs stops when trust_radius is less than
+                                 ! this value
   INTEGER, PARAMETER  :: &
-      iunbfgs = 4                !      
+      iunbfgs = 4                ! iunit for bfgs IO     
   !  
   CONTAINS
      !
@@ -206,8 +208,6 @@ MODULE bfgs_module
                       gradient_thr, energy_error, gradient_error, &
                       step_accepted, conv_bfgs )
        !-----------------------------------------------------------------------
-       !
-       USE io_files, ONLY : prefix
        !
        IMPLICIT NONE
        !
@@ -248,13 +248,7 @@ MODULE bfgs_module
        !
        IF ( conv_bfgs ) THEN
           !
-          WRITE( stdout, '(/,5X,"bfgs converged in ",I3," iterations")' ) &
-              iteration
-          WRITE( stdout, '(/,5X,"Final energy: ",F14.10," ryd"/)' ) energy
-          !
-          OPEN( UNIT = iunbfgs, &
-                FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs' )
-          CLOSE( UNIT = iunbfgs, STATUS = 'DELETE' )
+          CALL terminate_bfgs( energy, stdout, scratch )
           !
           RETURN
           !
@@ -262,26 +256,55 @@ MODULE bfgs_module
        !
        iteration = iteration + 1
        !
-       WRITE( stdout, '(/,5X,"iteration  = ",I3)' ) iteration
+       WRITE( stdout, '(/,5X,"iteration  = ",I3)' )   iteration
        WRITE( stdout, '(5X,"energy new = ",F14.10)' ) energy
        WRITE( stdout, '(5X,"energy old = ",F14.10)' ) energy_old
        !
        IF ( energy > energy_old ) THEN
           !
+          ! ... the previous step is rejected 
+          !
           step_accepted = .FALSE.
           !
           WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
+          WRITE( stdout, '(/,5X,"gradient .dot. bfgs_step > 0.D0 : ",L1,/)' ) &
+              ( ( gradient .dot. bfgs_step_old ) > 0.D0 )
           !
-          trust_radius = 0.5D0 * trust_radius
+          ! ... the old trust radius is reduced by a factor 2
+          !
+          trust_radius = 0.5D0 * trust_radius_old
           !
           WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
           !
-          pos       = pos_old
-          energy    = energy_old
-          gradient  = gradient_old
-          bfgs_step = bfgs_step_old
+          IF ( trust_radius < trust_radius_min ) THEN
+             !
+             ! ... the history is resetted
+             !     
+             WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
+             !
+             inverse_hessian = identity(dim)
+             !
+             bfgs_step = - inverse_hessian * gradient
+             !
+             trust_radius = trust_radius_ini
+             !
+          ELSE 
+             !
+             ! ... values saved of the previous step are restored
+             !
+             pos       = pos_old
+             energy    = energy_old
+             gradient  = gradient_old
+             !
+             ! ... old bfgs direction (normalized) is recovered
+             !
+             bfgs_step = bfgs_step_old / trust_radius_old
+             !
+          END IF   
           !
        ELSE    
+          !
+          ! ... a new bfgs step is done
           !
           step_accepted = .TRUE.
           !
@@ -293,36 +316,52 @@ MODULE bfgs_module
           !
           CALL update_inverse_hessian( gradient, dim )
           !
+          ! ... bfgs direction (not normalized) 
+          !
           bfgs_step = - inverse_hessian * gradient
           !
           IF ( ( gradient .dot. bfgs_step ) > 0.D0 ) THEN
              !  
+             ! ... bfgs direction is reversed if not downhill
+             !
              bfgs_step = - bfgs_step
              !
              WRITE( stdout, '(/,5X,"search direction reversed")' )
              !
           END IF   
-          !     
-          CALL compute_trust_radius( lwolfe, energy, dim, stdout, conv_bfgs )
+          !  
+          ! ... the new trust radius is computed
+          !
+          CALL compute_trust_radius( lwolfe, energy, gradient, dim, &
+                                     stdout, conv_bfgs )
+          !
+          ! ... if trust_radius < trust_radius_end convergence is achieved
+          !
+          IF ( conv_bfgs ) THEN
+             !
+             CALL terminate_bfgs( energy, stdout, scratch )
+             !
+             RETURN
+             !
+          END IF
           !
           WRITE( stdout, '(5X,"trust_radius = ",F14.10)' ) trust_radius
           !
        END IF  
        !
-       IF ( conv_bfgs ) THEN
-          !
-          pos    = pos_old
-          energy = energy_old
-          !
-       ELSE
-          !
-          pos_old = pos
-          !
-          pos = pos + trust_radius * bfgs_step / norm( bfgs_step )
-          !
-          CALL write_bfgs_file( energy, gradient, scratch )         
-          !
-       END IF    
+       ! ... actual positions are stored
+       !
+       pos_old = pos
+       !
+       ! ... bfgs step
+       !
+       bfgs_step = trust_radius * bfgs_step / norm( bfgs_step )
+       !
+       ! ... positions are updated
+       !
+       pos = pos + bfgs_step
+       !
+       CALL write_bfgs_file( energy, gradient, scratch )         
        !
        DEALLOCATE( pos_old )   
        DEALLOCATE( inverse_hessian )
@@ -353,6 +392,8 @@ MODULE bfgs_module
        !
        IF ( file_exists ) THEN
           !
+          ! ... bfgs is restarted from file
+          !
           OPEN( UNIT = iunbfgs, FILE = TRIM( bfgs_file ), &
                 STATUS = 'UNKNOWN', ACTION = 'READ' )  
           !
@@ -367,6 +408,8 @@ MODULE bfgs_module
           CLOSE( UNIT = iunbfgs )
           !
        ELSE
+          !
+          ! ... bfgs initialization
           !
           iteration        = 0
           pos_old          = 0.D0
@@ -469,18 +512,20 @@ MODULE bfgs_module
      !
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE compute_trust_radius( lwolfe, energy, dim, stdout, conv_bfgs )
+     SUBROUTINE compute_trust_radius( lwolfe, energy, gradient, dim, &
+                                      stdout, conv_bfgs )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN)  :: energy               
-       LOGICAL, INTENT(IN)        :: lwolfe
-       INTEGER, INTENT(IN)        :: dim   
-       INTEGER, INTENT(IN)        :: stdout
-       LOGICAL, INTENT(OUT)       :: conv_bfgs
-       REAL(KIND=DP)              :: a
-       LOGICAL                    :: ltest
+       LOGICAL, INTENT(IN)           :: lwolfe
+       REAL(KIND=DP), INTENT(IN)     :: energy    
+       REAL(KIND=DP), INTENT(IN)     :: gradient(:)                         
+       INTEGER, INTENT(IN)           :: dim   
+       INTEGER, INTENT(IN)           :: stdout
+       LOGICAL, INTENT(OUT)          :: conv_bfgs
+       REAL(KIND=DP)                 :: a
+       LOGICAL                       :: ltest
        !
        !
        ltest = ( energy - energy_old ) < &
@@ -511,18 +556,52 @@ MODULE bfgs_module
        !
        IF ( trust_radius < trust_radius_end  ) THEN
           !
-          WRITE( stdout, '(/,5X,"bfgs converged",/)' )
-          !
           conv_bfgs = .TRUE.
           !
        ELSE IF ( trust_radius < trust_radius_min ) THEN
+          !
+          ! ... the history is resetted
           !
           WRITE( stdout, '(/,5X,"resetting bfgs history",/)' )
           !
           inverse_hessian = identity(dim)
           !
+          bfgs_step = - inverse_hessian * gradient
+          !
+          trust_radius = trust_radius_ini
+          !
        END IF          
        !
      END SUBROUTINE compute_trust_radius 
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE terminate_bfgs( energy, stdout, scratch )
+       !-----------------------------------------------------------------------
+       !
+       USE io_files, ONLY : prefix             
+       !
+       IMPLICIT NONE
+       !
+       REAL(KIND=DP), INTENT(IN)     :: energy  
+       INTEGER, INTENT(IN)           :: stdout         
+       CHARACTER (LEN=*), INTENT(IN) :: scratch       
+       !       
+       !
+       WRITE( stdout, '(/,5X,"bfgs converged in ",I3," iterations")' ) &
+           iteration
+       WRITE( stdout, '(/,5X,"Final energy: ",F14.10," ryd"/)' ) energy
+       !
+       OPEN( UNIT = iunbfgs, &
+             FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs' )
+       CLOSE( UNIT = iunbfgs, STATUS = 'DELETE' )
+       !
+       DEALLOCATE( pos_old )   
+       DEALLOCATE( inverse_hessian )
+       DEALLOCATE( bfgs_step )       
+       DEALLOCATE( bfgs_step_old )
+       DEALLOCATE( gradient_old )     
+       !
+     END SUBROUTINE terminate_bfgs
      !
 END MODULE bfgs_module
