@@ -1,4 +1,4 @@
-AC_INIT(PWscf, 2.1, , pwscf)
+AC_INIT(ESPRESSO, 2.1, , espresso)
 
 # store variables from the environment (may be set or not)
 topdir=$TOPDIR
@@ -82,20 +82,20 @@ mips )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
+	try_dflags="-D__SGI -D__SGI64 -D__ORIGIN"
 	;;
 alpha )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
+	try_dflags="-D__ALPHA"
 	;;
 alinux )
-	try_f90_parallel="mpif77 mpif90"
-	try_f77_parallel="mpif77"
+	try_f90_parallel="mpif90"
 	try_f90="fort g95 f90"
-	try_f77="fort g77 f77"
 	try_ar="ar"
 	try_arflags="ruv"
-	try_dflags="-D__LINUX64"
+	try_dflags="-D__ALPHA -D__LINUX64"
 	# use static libraries unless explicitly asked
 	if test ! $yes_shared ; then no_shared=1 ; fi
 	;;
@@ -104,6 +104,7 @@ sparc )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
+	try_dflags="-DSUN"
 	;;
 crayx1 )
 	try_f90="ftn"
@@ -432,13 +433,11 @@ mips:f90 )
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-mips4 -64 -O0"
 	try_ldflags="-mips4 -64"
-	try_dflags="-D__SGI -D__SGI64 -D__ORIGIN"
 	pre_fdflags="-cpp "
 	have_cpp=1
 	;;
 alinux:fort )
 	have_cpp=1
-	try_dflags="-D__ALPHA -D__LINUX64"
 	pre_fdflags="-cpp "
 	try_fflags="-O -r8 -align dcommons -align records"
 	try_f77flags="\$(FFLAGS)"
@@ -447,7 +446,6 @@ alinux:fort )
 	;;
 alpha:f90 )
 	have_cpp=1
-	try_dflags="-D__ALPHA"
 	pre_fdflags="-cpp "
 	try_fflags="-O -real_size 64 -align dcommons -align records"
 	try_f77flags="\$(FFLAGS)"
@@ -459,10 +457,10 @@ sparc:mpf90 | sparc:f90 )
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	try_dflags="-D__SUN"
 	;;
 crayx1:ftn )
-        try_fflags="-s default64 -dp -rma -e0 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"
+        try_fflags="-s default64 -dp -rma -e0 \
+-O scalar3,stream3,vector3,nointerchange -Z -O inline5"
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="FFLAGS = -s default64 -dp -rma -e0 -O0 -Z"
         try_ldflags="-s default64 -f nan64"
@@ -471,7 +469,8 @@ crayx1:ftn )
         have_cpp=1
 	;;
 mac:* )
-	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -qalias=nointptr"
+	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+-qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
@@ -640,11 +639,10 @@ then
 			;;
 		esac
 		;;
-	alinux )  try_libdirs="/usr/lib /usr/local/lib " ;;
-	aix )  try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass" ;;
-	mips ) try_libdirs="/usr/local/lib /cineca/lib"                  ;;
-	mac )  try_libdirs="/usr/local/lib /sw/lib"                      ;;
-	*)     try_libdirs="/usr/local/lib"                              ;;
+	aix )    try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass" ;;
+	mips )   try_libdirs="/usr/local/lib /cineca/lib"                  ;;
+	mac )    try_libdirs="/usr/local/lib /sw/lib"                      ;;
+	*)       try_libdirs="/usr/local/lib"                              ;;
 	esac
 
 	# prepend directories specified by the user
@@ -936,7 +934,7 @@ then
 	if test "$includefftw" = ""
 	then
 		# if libfftw is in /some/path/lib, then fftw.h is
-		# likely to be in /some/path/include
+		# probably in /some/path/include
 		includefftw=`echo $libs |
 			sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
 			     s/lib/include/'`
@@ -1021,8 +1019,8 @@ AC_SUBST(libs)
 AC_SUBST(mylib)
 AC_SUBST(ar)
 AC_SUBST(arflags)
-AC_SUBST(f90rule)
 AC_SUBST(ranlib)
+AC_SUBST(f90rule)
 
 AC_CONFIG_FILES(make.sys make.rules)
 
@@ -1030,7 +1028,7 @@ AC_OUTPUT
 
 # final warnings
 echo -----------------------------------------------------------------
-echo PWscf can take advantage of several optimized numerical libraries
+echo ESPRESSO can take advantage of several optimized numerical libraries
 echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
 echo but may fail if they have been installed in non-standard locations.
 echo
@@ -1047,7 +1045,7 @@ echo If any libraries are missing, you may specify a list of directories
 echo to search and retry, as follows:
 echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
 echo
-echo For more information, read the README.INSTALL file or the PWscf manuals.
+echo For more information, read README.install or the ESPRESSO User\'s Guide.
 echo -----------------------------------------------------------------
 
 if ! test $no_parallel && ! test $parallel
