@@ -1,4 +1,11 @@
 !
+! Copyright (C) 2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 !-----------------------------------------------------------------------
 subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      at,bg,g,gg,ngm,nmodes,u,has_equivalent,dyn)

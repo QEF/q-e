@@ -44,9 +44,7 @@
       flmat='dynmat'
       flout='dynout'
       flmol='moldout'
-      do nt=1, ntyp
-         amass(nt)=0.0
-      end do
+      amass(:)=0.0
       q(1)=0.0
       q(2)=0.0
       q(3)=0.0
@@ -225,7 +223,6 @@ subroutine writeIR (nax, nat, w2, z, zstar)
   !   write IR cross sections
   !   on input: z = eigendisplacements
   !
- use allocate
  implicit none
  ! input
  integer nax, nat
@@ -233,15 +230,13 @@ subroutine writeIR (nax, nat, w2, z, zstar)
  complex(kind=8) z(3*nax,3*nat)
  ! local
  integer na, nu, ipol, jpol
- real(kind=8), pointer :: infrared(:)
- real(kind=8):: polar(3), rydcm1, cm1thz, freq, irmax
+ real(kind=8) :: infrared(3*nat)
+ real(kind=8) :: polar(3), rydcm1, cm1thz, freq, irmax
  !
  !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
  !
  rydcm1 = 13.6058*8065.5
  cm1thz = 241.796/8065.5
- !
- call mallocate(infrared,3*nat)
  !
  irmax=0.d0
  do nu = 1,3*nat

@@ -197,7 +197,6 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
   !   diagonalise the dynamical matrix
   !   On output: w2 = energies, z = displacements
   !
- use allocate
  implicit none
  ! input
  integer nax, nat, ityp(*)
@@ -208,12 +207,12 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  complex(kind=8) z(3*nax,3*nat)
  ! local
  integer nat3, na, nta, ntb, nb, ipol, jpol, i, j
- complex(kind=8), pointer :: dyn2(:,:)
+ complex(kind=8), allocatable :: dyn2(:,:)
  !
  !  fill the two-indices dynamical matrix
  !
  nat3 = 3*nat
- call mallocate(dyn2, 3*nax, nat3)
+ allocate(dyn2 (3*nax, nat3))
  !
  do na = 1,nat
     do nb = 1,nat
@@ -257,7 +256,7 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  !
  call cdiagh2(nat3,dyn2,3*nax,w2,z)
  !
- call mfree(dyn2)
+ deallocate(dyn2)
  !
  !  displacements are eigenvectors divided by sqrt(amass)
  !
@@ -281,19 +280,17 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !
   !   write modes on output file in a readable way
   !
- use allocate
  implicit none
  ! input
  integer nax, nat, iout
  real(kind=8) q(3), w2(3*nat)
  complex(kind=8) z(3*nax,3*nat)
  ! local
- integer nat3, na, nta, ipol, i, j, iout
- real(kind=8), pointer:: freq(:)
+ integer nat3, na, nta, ipol, i, j
+ real(kind=8):: freq(3*nat)
  real(kind=8):: rydthz,rydcm1,cm1thz,znorm
  !
  nat3=3*nat
- call mallocate(freq, nat3)
  !
  !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
  !
@@ -330,8 +327,6 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
  !         close(iout)
  !      end if
  !
- call mfree(freq)
- !
  return
  !
 9010 format(5x,'omega(',i2,') =',f15.6,' [THz] =',f15.6,' [cm-1]')
@@ -345,7 +340,6 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
   !
   !   write modes on output file in a molden-friendly way
   !
- use allocate
  implicit none
  ! input
  integer nax, nat, ityp(nat)
@@ -355,7 +349,7 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
  character(len=3) atm(*)
  ! local
  integer nat3, na, nta, ipol, i, j, iout
- real(kind=8), pointer:: freq(:)
+ real(kind=8) :: freq(3*nat)
  real(kind=8) :: rydcm1, znorm
  !
  if (flmol.eq.' ') then
@@ -365,7 +359,6 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
     open (unit=iout,file=flmol,status='unknown',form='formatted')
  end if
  nat3=3*nat
- call mallocate(freq, nat3)
  !
  rydcm1 = 13.6058*8065.5
  !
@@ -401,7 +394,6 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
  !
  close(unit=iout)
  !
- call mfree(freq)
  return
  !
 end subroutine writemolden
@@ -413,7 +405,6 @@ subroutine cdiagh2 (n,h,ldh,e,v)
   !   calculates all the eigenvalues and eigenvectors of a complex
   !   hermitean matrix H . On output, the matrix is unchanged
   !
- use allocate
  implicit none
  !
  ! on INPUT
@@ -433,8 +424,8 @@ subroutine cdiagh2 (n,h,ldh,e,v)
       &           nb,      &! block size
       &           info      ! flag saying if the exec. of libr. routines was ok
  !
- real(kind=8), pointer::   rwork(:)
- complex(kind=8), pointer:: work(:)
+ real(kind=8), allocatable::   rwork(:)
+ complex(kind=8), allocatable:: work(:)
  !
  !     check for the block size
  !
@@ -449,13 +440,13 @@ subroutine cdiagh2 (n,h,ldh,e,v)
  ! allocate workspace
  !
  call ZCOPY(n*ldh,h,1,v,1)
- call mallocate(work,lwork)
- call mallocate(rwork, 3*n-2)
+ allocate(work (lwork))
+ allocate(rwork (3*n-2))
  call ZHEEV('V','U',n,v,ldh,e,work,lwork,rwork,info)
  call error('cdiagh2','info =/= 0',abs(info))
  ! deallocate workspace
- call mfree(rwork)
- call mfree(work)
+ deallocate(rwork)
+ deallocate(work)
  !
  return
 end subroutine cdiagh2
