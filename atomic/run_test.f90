@@ -74,8 +74,8 @@ subroutine run_test
         dum=0.0_dp
         im=2
         do ir=1,mesh-1
-           dum=abs(psi(ir+1,nstoae(n)))
-           if(dum.gt.abs(psi(ir,nstoae(n)))) im=ir+1
+           dum=abs(psi(ir+1,1,nstoae(n)))
+           if(dum.gt.abs(psi(ir,1,nstoae(n)))) im=ir+1
         enddo
         if (pseudotype.lt.3) then
            rcutts(n)=r(im)*1.1_dp

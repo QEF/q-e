@@ -61,7 +61,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
         enddo
         call dir_outward(ndm,mesh,lam,jjs(ns),enls(ns),dx, &
              chi_dir,r,rab,vpot)
-        chir(:,ns)=chi_dir(:,2)
+        chir(:,ns)=chi_dir(:,1)
      else
         call intref(lam,enls(ns),mesh,dx,r,r2,sqr, &
              vpot,ze2,chir(1,ns))
@@ -76,7 +76,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
      enddo
   else 
      do n=1,mesh
-        chir(n,ns)=psi(n,nwf0)
+        chir(n,ns)=psi(n,1,nwf0)
      enddo
   endif
 

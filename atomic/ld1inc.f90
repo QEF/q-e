@@ -24,9 +24,11 @@ module ld1inc
 
   real(kind=dp)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
-       psi(ndm,nwfx),      & ! the all-electron wavefunctions
-       psi_dir(ndm,2,nwfx),& ! all-electron dirac wavefunctions
+       psi(ndm,2,nwfx),    & ! the all-electron (dirac) wavefunctions
+                             ! psi(:,1,n) = major component for state n 
+                             ! psi(:,2,n) = minor component for state n
        rho(ndm,2),         & ! the all-electron density
+                             ! rho(:,1) = spin-up, rho(:,2) = spin-down
        zeta(ndm)             ! the all-electron magnetization 
 
   logical :: &

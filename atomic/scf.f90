@@ -20,7 +20,7 @@ subroutine scf
   ze2 = - zed * e2
   rhoc1=0.0_dp
   id=3
-  psi_dir=0.0_dp
+  psi=0.0_dp
   rab=dx*r
   !
   if (isic /= 0) then
@@ -37,15 +37,14 @@ subroutine scf
            if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
            if (rel == 0) then
               call ascheq (nn(n),ll(n),enl(n),mesh,dx,r,r2, &
-                   sqr,vnew(1,is),ze2,thresh,psi(1,n),nstop)
+                   sqr,vnew(1,is),ze2,thresh,psi(1,1,n),nstop)
            elseif (rel == 1) then
               call lschps (1,zed,exp(dx),dx,mesh,nin,mch, &
-                   nn(n),ll(n),enl(n),psi(1,n),r,vnew(1,is))
+                   nn(n),ll(n),enl(n),psi(1,1,n),r,vnew(1,is))
               nstop=0
            elseif (rel == 2) then
               call dirsol (ndm,mesh,nn(n),ll(n),jj(n),iter,enl(n), &
-                   thresh,dx,psi_dir(1,1,n),r,rab,vnew(1,is))
-              psi(:,n)=psi_dir(:,2,n)
+                   thresh,dx,psi(1,1,n),r,rab,vnew(1,is))
               nstop=0
            else
               call errore('scf','relativistic not programmed',1)
@@ -55,19 +54,26 @@ subroutine scf
            nerr=nerr+nstop
         else
            enl(n)=0.0_dp
-           psi(:,n)=0.0_dp
+           psi(:,:,n)=0.0_dp
         endif
      enddo
-
-     if (rel==2) then
-        call charge(ndm,mesh,nwf,2,oc,psi_dir,rho,isw)
-     else
-        call charge(ndm,mesh,nwf,1,oc,psi,rho,isw)
-     endif
-
+     !
+     ! calculate charge density (spherical approximation)
+     !
+     rho=0.0_dp
+     do n=1,nwf
+        do i=1,mesh
+           rho(i,isw(n))=rho(i,isw(n))+oc(n)*(psi(i,1,n)**2+psi(i,2,n)**2)
+        enddo
+     enddo
+     !
+     ! calculate new potential
+     !
      call new_potential(ndm,mesh,r,r2,sqr,dx,zed,vxt,    &
           lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
-
+     !
+     ! calculate SIC correction potential (if present)
+     !
      if (isic /= 0) then
         do n=1,nwf
            if (oc(n) >= 0.0_dp) then
@@ -80,6 +86,8 @@ subroutine scf
            end if
         enddo
      endif
+     !
+     ! mix old and new potential
      !
      call vpack(mesh,ndm,nspin,vnew,vpot,1)
      call dmixp(mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)

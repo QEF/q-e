@@ -19,15 +19,17 @@ subroutine esic
   dxcsic = 0.0_DP
   do n=1,nwf
      call sic_correction(n,v,vsic,work1)
-     do i=1,mesh
-        if (rel.eq.2) then
-           v(i)=v(i)*(psi_dir(i,1,n)**2+psi_dir(i,2,n)**2)
-           vsic(i)=vsic(i)*(psi_dir(i,1,n)**2+psi_dir(i,2,n)**2)
-        else
-           v(i)=v(i)*psi(i,n)**2
-           vsic(i)=vsic(i)*psi(i,n)**2
-        endif
-     enddo
+     if (rel.eq.2) then
+        do i=1,mesh
+           v(i)=v(i)*(psi(i,1,n)**2+psi(i,2,n)**2)
+           vsic(i)=vsic(i)*(psi(i,1,n)**2+psi(i,2,n)**2)
+        end do
+     else
+        do i=1,mesh
+           v(i)=v(i)*psi(i,1,n)**2
+           vsic(i)=vsic(i)*psi(i,1,n)**2
+        enddo
+     endif
      deksic = deksic +  &
           &      oc(n)*int_0_inf_dr(vsic,r,r2,dx,mesh,2*(ll(n)+1))
      dhrsic = dhrsic - 0.5_DP*oc(n)*int_0_inf_dr(v    ,r,r2,dx,mesh,2)

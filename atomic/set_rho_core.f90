@@ -31,15 +31,15 @@ subroutine set_rho_core
      do ns=1,nwf
         if (rel==2) then
            if (core_state(ns)) then
-              rhoc(n)=rhoc(n)+oc(ns)*(psi_dir(n,1,ns)**2+psi_dir(n,2,ns)**2)
+              rhoc(n)=rhoc(n)+oc(ns)*(psi(n,1,ns)**2+psi(n,2,ns)**2)
            else
-              rhov(n)=rhov(n)+oc(ns)*(psi_dir(n,1,ns)**2+psi_dir(n,2,ns)**2)
+              rhov(n)=rhov(n)+oc(ns)*(psi(n,1,ns)**2+psi(n,2,ns)**2)
            endif
         else
            if (core_state(ns)) then
-              rhoc(n) = rhoc(n) + oc(ns)*psi(n,ns)**2
+              rhoc(n) = rhoc(n) + oc(ns)*psi(n,1,ns)**2
            else
-              rhov(n) = rhov(n) + oc(ns)*psi(n,ns)**2
+              rhov(n) = rhov(n) + oc(ns)*psi(n,1,ns)**2
            endif
         endif
      enddo

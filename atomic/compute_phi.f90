@@ -77,7 +77,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
            rab(i)=r(i)*dx
         enddo
         call dir_outward(ndm,mesh,lam,jjs(ns),enls(ns),dx,chi_dir,r,rab,vpot)
-        chir(:,ns)=chi_dir(:,2)
+        chir(:,ns)=chi_dir(:,1)
      else
         ze2=-zed*2.0_dp
         call intref(lam,enls(ns),mesh,dx,r,r2,sqr,vpot,ze2,chir(1,ns))
@@ -91,7 +91,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
     enddo
   else 
      do n=1,mesh
-        chir(n,ns)=psi(n,nwf0)
+        chir(n,ns)=psi(n,1,nwf0)
      enddo
   endif
   !

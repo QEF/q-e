@@ -11,7 +11,6 @@ ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
 cfdsol.o \
-charge.o \
 chargeps.o \
 compute_chi.o \
 compute_det.o \

@@ -25,7 +25,7 @@ subroutine all_electron(ild)
   !  compute total energy
   !
   call elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,  &
-       nwf,enl,ll,lsd,nspin,oc,ndm,psi,vnl,    &
+       nwf,enl,ll,lsd,nspin,oc,ndm,vnl,    &
        etot,ekin,encl,epseu,ehrt,ecxc,evxt)
   !
   !   add sic correction if needed

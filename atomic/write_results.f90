@@ -102,8 +102,8 @@ subroutine write_results
   do i=1,nwf
      dum=0.0_dp
      do m=1,mesh
-        dum=max(dum,abs(psi(m,i)))
-        if(dum.eq.abs(psi(m,i)))im(i)=m
+        dum=max(dum,abs(psi(m,1,i)))
+        if(dum.eq.abs(psi(m,1,i)))im(i)=m
      enddo
   enddo
 
@@ -111,7 +111,7 @@ subroutine write_results
      do j=i,nwf
         if (ll(i).eq.ll(j)) then
            do m=1,mesh
-              work(m)=psi(m,i)*psi(m,j)
+              work(m)=psi(m,1,i)*psi(m,1,j)
            enddo
            sij = int_0_inf_dr(work,r,r2,dx,mesh,2*ll(i)+2)
            if (i.eq.j) then
@@ -140,7 +140,7 @@ subroutine write_results
 1110 call errore('write_result','opening file_wavefunctions',abs(ios))
      write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
      do n=1,mesh 
-        write(15,'(8f10.6)') r(n),(psi(n,i),i=nwf,max(1,nwf-6),-1)
+        write(15,'(8f10.6)') r(n),(psi(n,1,i),i=nwf,max(1,nwf-6),-1)
      enddo
      close(15)
   endif

@@ -30,6 +30,8 @@ subroutine dir_outward(idim1,mesh,lcur,jcur,e0,dx,snl,r,rab,ruae)
 !            k is quantum number 
 !               k = - (l+1)    if  j = l+0.5
 !               k = + l        if  j = l-0.5
+!     IMPORTANT: on output, snl(:,1) contains the MAJOR component
+!                           snl(:,2) contains the MINOR component
 !
 !----------------------------------------------------------------------------
 !
@@ -149,8 +151,8 @@ call cfdsol(zz,yy,6,mesh,idim1)
 !
 snl=0.0_DP
 do ir=1,mesh
-   snl(ir,1)=yy(ir,1)
-   snl(ir,2)=yy(ir,2)
+   snl(ir,2)=yy(ir,1)
+   snl(ir,1)=yy(ir,2)
 enddo
 do ir=1,mesh
    ruae(ir)=ruae(ir)/r(ir)

@@ -28,11 +28,11 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   rhotot=0.0_dp
   if (rel.eq.2) then
      do i=1,mesh
-        rhotot(i,1)=psi_dir(i,1,n)**2+psi_dir(i,2,n)**2
+        rhotot(i,1)=psi(i,1,n)**2+psi(i,2,n)**2
      enddo
   else
      do i=1,mesh
-        rhotot(i,1)=psi(i,n)**2
+        rhotot(i,1)=psi(i,1,n)**2
      enddo
   endif
   !call hartree(0,2*(ll(n)+1),mesh,r,r2,sqr,dx,rhotot,vhn1)

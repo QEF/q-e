@@ -1,7 +1,7 @@
 !
 !---------------------------------------------------------------
   subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
-                       nwf,enl,ll,lsd,nspin,oc,ndm,chi,vnl, &
+                       nwf,enl,ll,lsd,nspin,oc,ndm, vnl, &
                        etot,ekin,encl,epseu,ehrt,ecxc,evxt)    
 !---------------------------------------------------------------
 !
@@ -17,7 +17,7 @@ logical:: nlcc, gga
 real(kind=dp):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
           etot,encl,epseu,ekin,ehrt,ecxc,evxt
 real(kind=dp):: enl(nwf),oc(nwf), rhotot, exc_t, &
-          r(ndm),r2(ndm),dx,chi(ndm,nwf),rho(ndm,2),zeta(ndm), &
+          r(ndm),r2(ndm),dx, rho(ndm,2),zeta(ndm), &
           vxt(ndm),vnl(ndm,0:3),vh(ndm)
 real(kind=dp),allocatable :: f1(:), f2(:), f3(:), f4(:)
 real(kind=dp),allocatable :: vgc(:,:), egc(:), rhoc(:)

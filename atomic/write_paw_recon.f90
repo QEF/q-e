@@ -31,9 +31,9 @@ implicit none
 
          wmax=0.0_dp
          do n=1,mesh
-            if(abs(psi(n,iae)).gt.wmax.and.r(n).lt.4.0_dp)then
-               wmax=abs(psi(n,iae))
-               if(psi(n,iae).lt.0.0_dp)then
+            if(abs(psi(n,1,iae)).gt.wmax.and.r(n).lt.4.0_dp)then
+               wmax=abs(psi(n,1,iae))
+               if(psi(n,1,iae).lt.0.0_dp)then
                   isign=-1
                else
                   isign=+1
@@ -41,7 +41,7 @@ implicit none
             endif
          enddo
 
-         write (51,'(1p4e19.11)') (isign*psi(n,iae) , n=1,mesh )
+         write (51,'(1p4e19.11)') (isign*psi(n,1,iae) , n=1,mesh )
          write (51,*) '</PP_REC_AE>'
          write (51,*) '<PP_REC_PS>'
 
