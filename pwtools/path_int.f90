@@ -345,7 +345,7 @@ PROGRAM images_interpolator
        !
        DO j = 1, dim, 3
           !
-          WRITE( UNIT = iunrestart, FMT = velocities ) 0.D0, 0.D0, 0.D0
+          WRITE( UNIT = iunrestart, FMT = '("VELOCITIES")' ) 0.D0, 0.D0, 0.D0
           !
        END DO
        !
