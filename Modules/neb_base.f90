@@ -34,8 +34,9 @@ MODULE neb_base
     SUBROUTINE initialize_neb( prog )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : pos, nat, restart_mode, calculation, &
+      USE input_parameters, ONLY : pos, restart_mode, calculation, &
                                    minimization_scheme, climbing, nstep, ds
+      USE ions_base,        ONLY : nat                                   
       USE io_files,         ONLY : prefix, iunneb, neb_file, &
                                    dat_file, int_file, xyz_file, axsf_file
       USE cell_base,        ONLY : alat
@@ -237,7 +238,6 @@ MODULE neb_base
          !
          SUBROUTINE compute_deg_of_freedom()
            !
-           USE ions_base,        ONLY :  nat
            USE input_parameters, ONLY :  if_pos
            USE neb_variables,    ONLY :  deg_of_freedom
            !
