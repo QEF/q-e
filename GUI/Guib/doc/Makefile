@@ -1,6 +1,7 @@
-# $Id: Makefile,v 1.1 2004-02-18 11:29:17 kokalj Exp $
+# $Id: Makefile,v 1.2 2004-02-24 16:32:59 kokalj Exp $
 
-ROBODOC = robodoc
+ROBODOC      = robodoc
+ROBODOC_HTML = html
 
 %.pdf : %.tex
 	if test ! -f $@ ; then pdflatex $<; fi
@@ -9,8 +10,9 @@ ROBODOC = robodoc
 default: usage.pdf usage robodoc 
 
 robodoc:
+	if test -d $(ROBODOC_HTML) ; then rm -rf $(ROBODOC_HTML) ; fi
 	$(ROBODOC)
-	( mkdir html; cd html; \
+	( cd $(ROBODOC_HTML); \
 		cat robodoc.css | sed "s/11pt/16pt/g" - > temp.css; \
 		cat temp.css    | sed "s/10pt/12pt/g" - > robodoc.css; \
 		rm -f temp.css )
@@ -22,6 +24,6 @@ usage: usage.pdf usage.tex
 	latex2html -split 0 usage.tex
 
 clean:
-	if test -d html/  ; then rm -rf html/; fi
+	if test -d $(ROBODOC_HTML) ; then rm -rf $(ROBODOC_HTML); fi
 	if test -d usage/ ; then rm -rf usage/; fi
 	-rm -f usage.aux usage.log usage.pdf usage.toc *~
