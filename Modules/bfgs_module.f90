@@ -193,7 +193,7 @@ MODULE bfgs_module
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !  
+          !	  
           lin_iter = lin_iter + 1
           !
           WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
@@ -273,8 +273,16 @@ MODULE bfgs_module
           !  
           ! ... the new trust radius is computed
           !
-          CALL compute_trust_radius( lwolfe, energy, gradient, dim, &
-                                     stdout, conv_bfgs )
+          IF ( bfgs_iter == 1 ) THEN
+             !
+             trust_radius =  trust_radius_ini
+             !
+          ELSE
+             !
+             CALL compute_trust_radius( lwolfe, energy, gradient, dim, &
+                                        stdout, conv_bfgs )
+             !
+          END IF
           !
           ! ... if trust_radius < trust_radius_end convergence is achieved
           !
@@ -420,7 +428,7 @@ MODULE bfgs_module
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !  
+          !	  
           lin_iter = lin_iter + 1
           !
           WRITE( stdout, '(/,5X,"CASE: energy_new > energy_old",/)' )
@@ -505,8 +513,16 @@ MODULE bfgs_module
           !  
           ! ... the new trust radius is computed
           !
-          CALL compute_trust_radius( lwolfe, energy, gradient, dim, &
-                                     stdout, conv_bfgs )
+          IF ( bfgs_iter == 1 ) THEN
+             !
+             trust_radius =  trust_radius_ini
+             !
+          ELSE
+             !
+             CALL compute_trust_radius( lwolfe, energy, gradient, dim, &
+                                        stdout, conv_bfgs )
+             !
+          END IF
           !
           ! ... if trust_radius < trust_radius_end convergence is achieved
           ! ... this should be a "rare event"
@@ -699,7 +715,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
        WRITE( iunbfgs, * ) inverse_hessian
-       !      
+       ! 	     
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_bfgs_file  
@@ -730,7 +746,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) gradient_old(:,2:lbfgs_ndim), gradient
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
-       !      
+       ! 	     
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_lbfgs_file          
@@ -974,7 +990,7 @@ MODULE bfgs_module
           !
           WRITE( iunbfgs, * ) SHAPE( inverse_hessian )
           WRITE( iunbfgs, * ) inverse_hessian
-          !      
+          ! 	     
           CLOSE( UNIT = iunbfgs )       
           !
           DEALLOCATE( pos_old )   

@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#define __NOBLAS
+!
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines
   !----------------------------------------------------------------------------
