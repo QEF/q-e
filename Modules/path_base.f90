@@ -123,7 +123,7 @@ MODULE path_base
       IF ( lneb ) THEN
          !
          ! ... elastic constants are rescaled here on
-         ! ... the base of the input time step ds ( m = 4 ) :
+         ! ... the base of the input time step ds ( m = 5 ) :
          !
          k_ratio = k_min / k_max
          !
@@ -179,9 +179,11 @@ MODULE path_base
          grad         = 0.D0
          norm_grad    = 0.D0
          error        = 0.D0
-         k            = k_min
          pos_old      = 0.D0
          grad_old     = 0.D0
+         !
+         k            = k_min
+         !
          frozen       = .FALSE.
          vel_zeroed   = .FALSE.
          !
@@ -234,13 +236,6 @@ MODULE path_base
          ALLOCATE( image_spacing( num_of_images - 1 ) )
          !
          CALL read_restart()
-         !
-         IF ( free_energy ) THEN
-            !
-            pos_in_av  = pos_(:,1)
-            pos_fin_av = pos_(:,num_of_images)
-            !
-         END IF
          !
          ! ... consistency between the input value of nstep and the value
          ! ... of nstep_path read from the restart_file is checked
@@ -318,9 +313,8 @@ MODULE path_base
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
          !
-         IF ( .NOT. lbroyden ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
+         WRITE( UNIT = iunpath, &
+                FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
          !
          IF ( lquick_min ) &
             WRITE( UNIT = iunpath, &
@@ -1099,7 +1093,8 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      INTEGER :: i
+      INTEGER       :: i
+      LOGICAL, SAVE :: first = .TRUE.
       !
       !
       IF ( .NOT. fixed_tan ) THEN
@@ -1114,7 +1109,7 @@ MODULE path_base
       !
       DO i = 1, num_of_images
          !
-         CALL smd_tangent( i )
+         IF ( first ) CALL smd_tangent( i )
          !
          IF ( llangevin ) THEN
             !
@@ -1148,6 +1143,8 @@ MODULE path_base
          norm_grad(i) = norm( grad(:,i) )
          !
       END DO
+      !
+      IF ( fixed_tan ) first = .FALSE.
       !
       RETURN
       !
@@ -1556,9 +1553,7 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : istep_path, suspended_image, reset_vel, &
-                                 fixed_tan, ft_pos_av, ft_pos, path_length, &
-                                 path_length_av
+      USE path_variables, ONLY : istep_path, suspended_image, frozen, grad
       !
       IMPLICIT NONE
       !
@@ -1570,12 +1565,6 @@ MODULE path_base
             ! ... neb forces
             !
             CALL neb_gradient()
-            !
-            ! ... the error is computed only when the run is not starting 
-            ! ... from scratch or when reset_vel == .FALSE. 
-            !
-            IF ( ( istep_path > 0 ) .AND. &
-                 ( .NOT. reset_vel ) ) CALL compute_error()
             !
          ELSE IF ( lsmd ) THEN
             !
@@ -1595,10 +1584,20 @@ MODULE path_base
             !
             CALL smd_gradient()
             !
-            ! ... the error is computed only when the run is not starting 
-            ! ... from scratch
+         END IF
+         !
+         ! ... the error is computed only when the run is not starting 
+         ! ... from scratch
+         !
+         IF ( istep_path > 0 ) THEN
             !
-            IF ( istep_path > 0 ) CALL compute_error()
+            CALL compute_error()
+            !
+         ELSE
+            !
+            frozen = .FALSE.
+            !
+            grad = 0.D0
             !
          END IF
          !

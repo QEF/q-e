@@ -57,8 +57,8 @@ MODULE path_variables
        temp_req,                 &! required temperature
        activation_energy,        &! forward activatation energy
        err_max,                  &! the largest error
-       path_length,              &! lentgth of the path
-       path_length_av             ! lentgth of the average path
+       path_length,              &! length of the path
+       path_length_av             ! length of the average path
   LOGICAL :: &
        lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"

@@ -215,29 +215,35 @@ MODULE path_opt_routines
      SUBROUTINE broyden()
        !-----------------------------------------------------------------------
        !
+       USE constants,      ONLY : eps8, au, bohr_radius_angs
        USE io_files,       ONLY : broy_file, iunbroy
-       USE path_variables, ONLY : dim, num_of_images, reset_broyden, frozen
+       USE path_variables, ONLY : dim, reset_broyden, frozen, &
+                                  n_im => num_of_images
        USE io_global,      ONLY : meta_ionode, meta_ionode_id
        USE mp,             ONLY : mp_bcast
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:)
-       INTEGER                     :: i, j, I_in, I_fin
-       INTEGER                     :: k
-       REAL (KIND=DP)              :: s_norm
-       LOGICAL                     :: exists
-       REAL (KIND=DP), PARAMETER   :: J0           = 4.0D0
-       REAL (KIND=DP), PARAMETER   :: step_max     = 0.8D0
-       INTEGER,        PARAMETER   :: broyden_ndim = 32
+       REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:), pos_old(:,:)
+       INTEGER                     :: k, i, j, I_in, I_fin
+       REAL (KIND=DP)              :: s_norm, coeff, &
+                                      norm_g, norm_g_old, g_dot_s
+       LOGICAL                     :: exists, accepted
+       REAL (KIND=DP)              :: J0
+       !
+       REAL (KIND=DP), PARAMETER   :: step_max = 0.6D0
+       !
+       INTEGER,        PARAMETER   :: broyden_ndim = 5
        !
        !
-       ALLOCATE( g( dim * num_of_images ) )
-       ALLOCATE( s( dim * num_of_images, broyden_ndim ) )
+       ALLOCATE( g( dim * n_im ) )
+       ALLOCATE( s( dim * n_im, broyden_ndim ) )
+       !
+       ALLOCATE( pos_old( dim, n_im ) )
        !
        g = 0.D0
        !
-       DO i = 1, num_of_images
+       DO i = 1, n_im
           !
           IF ( frozen(i) ) CYCLE
           !
@@ -248,28 +254,93 @@ MODULE path_opt_routines
           !
        END DO
        !
-       IF ( norm( g ) == 0.D0 ) RETURN
+       norm_g = MAXVAL( ABS( g ) )
+       !
+       IF ( norm_g == 0.D0 ) RETURN
        !
        IF ( meta_ionode ) THEN
           !
-          ! ... open the file containing the old configurations of the path
+          ! ... open the file containing the broyden's history
           !
           INQUIRE( FILE = broy_file, EXIST = exists )
           !
-          IF ( reset_broyden ) exists = .FALSE.
-          !
-          IF ( exists ) THEN
+          IF ( exists .AND. .NOT. reset_broyden ) THEN
              !
-             OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "UNKNOWN" )
+             OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
              !
+             READ( UNIT = iunbroy , FMT = * ) J0
+             READ( UNIT = iunbroy , FMT = * ) accepted
+             READ( UNIT = iunbroy , FMT = * ) norm_g_old
+             READ( UNIT = iunbroy , FMT = * ) pos_old
              READ( UNIT = iunbroy , FMT = * ) k
              READ( UNIT = iunbroy , FMT = * ) s
              !
              CLOSE( UNIT = iunbroy )
              !
-             k = MIN( k + 1, broyden_ndim )
+             IF ( accepted ) THEN
+                !
+                g_dot_s = ( g(:) .dot. s(:,k) ) / norm( s(:,k) )
+                !
+                ! ... here we check wether the previous step has to be 
+                ! ... accepted or not
+                !
+                IF ( g_dot_s < 0.D0 ) THEN
+                   !
+                   PRINT '(5X,"case 1")'
+                   !
+                   accepted = .TRUE.
+                   !
+                ELSE
+                   !
+                   IF ( norm_g < norm_g_old ) THEN
+                      !
+                      PRINT '(5X,"case 2")'
+                      !
+                      accepted = .TRUE.
+                      !
+                      J0 = J0 * 1.1D0
+                      !
+                   ELSE
+                      !
+                      PRINT '(5X,"case 3")'
+                      !
+                      J0 = J0 * 0.8D0
+                      !
+                      accepted = .FALSE.
+                      !
+                      pos(:,1:n_im) = pos_old
+                      !
+                      norm_g = norm_g_old
+                      !
+                   END IF
+                   !
+                END IF
+                !
+             ELSE
+                !
+                accepted = .TRUE.
+                !
+             END IF
              !
-          ELSE
+             IF ( accepted ) k = k + 1
+             !
+          ELSE 
+             !
+             IF ( reset_broyden ) THEN
+                !
+                OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
+                !
+                READ( UNIT = iunbroy , FMT = * ) J0
+                !
+                CLOSE( UNIT = iunbroy )
+                !
+             ELSE
+                !
+                J0 = ds
+                !
+             END IF
+             !             
+             accepted = .TRUE.
              !
              s = 0.D0
              !
@@ -279,50 +350,69 @@ MODULE path_opt_routines
              !
           END IF
           !
-          ! ... Broyden update
+          PRINT '(5X,"J0        = ",F10.6)', J0
+          PRINT '(5X,"norm( g ) = ",F10.6)', norm_g / bohr_radius_angs * au
+          PRINT '(5X,"accepted  = ",L1,/)', accepted
           !
-          s(:,k) = - J0 * g(:)
-          !
-          DO j = 1, k - 2
+          IF ( accepted ) THEN
              !
-             s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
-                               ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
+             ! ... Broyden's update
              !
-          END DO
-          !
-          IF ( k > 1 ) THEN
-             !
-             s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / &
-                      ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) ) * s(:,k)
-             !
-          END IF
-          !
-          IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
-             !
-             ! ... uphill step :  reset history
-             !
-             k = 1
-             !
-             s = 0.D0
+             IF ( k > broyden_ndim ) THEN
+                !
+                ! ... the Broyden's subspace is swapped
+                !
+                k = broyden_ndim
+                !
+                DO j = 1, k - 1
+                   !
+                   s(:,j) = s(:,j+1)
+                   !
+                END DO
+                !
+             END IF
              !
              s(:,k) = - J0 * g(:)
              !
-          END IF
-          !
-          s_norm = norm( s(:,k) )
-          !
-          s(:,k) = s(:,k) / s_norm * MIN( s_norm, step_max )
-          !
-          pos = pos + RESHAPE( SOURCE = s(:,k), &
-                               SHAPE = (/ dim, num_of_images /) )
-          !
-          IF ( k == broyden_ndim ) THEN
-             !
-             DO j = k, 2, -1
+             DO j = 1, k - 2
                 !
-                s(:,j-1) = s(:,j)
+                s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
+                                  ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
                 !
              END DO
+             !
+             IF ( k > 1 ) THEN
+                !
+                coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
+                !
+                IF ( coeff > eps8 ) & 
+                   s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
+                !
+             END IF
+             !
+             IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
+                !
+                ! ... uphill step :  history reset
+                !
+                PRINT '(5X,"BROYDEN uphill step :  history reset",/)'
+                !
+                k = 1
+                !
+                s = 0.D0
+                !
+                s(:,k) = - J0 * g(:)
+                !
+             END IF
+             !
+             s_norm = norm( s(:,k) )
+             !
+             s(:,k) = s(:,k) / s_norm * MIN( s_norm, step_max )
+             !
+          ELSE
+             !
+             ! ... here we try a shorter step
+             !
+             s(:,k) = 0.5D0 * s(:,k)
              !
           END IF
           !
@@ -330,10 +420,19 @@ MODULE path_opt_routines
           !
           OPEN( UNIT = iunbroy, FILE = broy_file )
           !
+          WRITE( UNIT = iunbroy, FMT = * ) J0
+          WRITE( UNIT = iunbroy, FMT = * ) accepted
+          WRITE( UNIT = iunbroy, FMT = * ) norm_g
+          WRITE( UNIT = iunbroy, FMT = * ) pos(:,1:n_im)
           WRITE( UNIT = iunbroy, FMT = * ) k
           WRITE( UNIT = iunbroy, FMT = * ) s
           !
           CLOSE( UNIT = iunbroy )
+          !
+          ! ... broyden's step
+          !
+          pos(:,1:n_im) = pos(:,1:n_im) + &
+                          RESHAPE( SOURCE = s(:,k), SHAPE = (/ dim, n_im /) )
           !
        END IF
        !
@@ -341,6 +440,7 @@ MODULE path_opt_routines
        !
        DEALLOCATE( g )
        DEALLOCATE( s )
+       DEALLOCATE( pos_old )
        !
        RETURN
        !
