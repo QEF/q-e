@@ -5,9 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#include "f_defs.h"
+!
 !-----------------------------------------------------------------------
-subroutine phqscf
+SUBROUTINE phqscf
   !-----------------------------------------------------------------------
   !
   !     This subroutine is the main driver of the self consistent cycle
@@ -15,124 +16,121 @@ subroutine phqscf
   !     change of the self-consistent potential due to a phonon of
   !     a fixed q or to an electric field.
   !
-#include "f_defs.h"
 
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode
   USE check_stop, ONLY: time_max => max_seconds
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-#ifdef DEBUG
-  USE para, ONLY : me, mypool
-#endif
-  implicit none
+  USE pwcom
+  USE kinds, ONLY : DP
+  USE phcom
 
-  integer :: irr, irr1, irrc, imode0
+  IMPLICIT NONE
+
+  INTEGER :: irr, irr1, irrc, imode0
   ! counter on the representations
   ! counter on the representations
   ! number of representation computed
   ! counter on the modes
 
-  real(kind=DP) :: tcpu, get_clock
+  REAL(kind=DP) :: tcpu, get_clock
   ! timing variables
 
-  logical :: exst
+  LOGICAL :: exst
   ! used to test the recover file
 
-  external get_clock
+  EXTERNAL get_clock
   ! the change of density due to perturbations
 
-  complex(kind=DP), allocatable :: drhoscf (:,:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: drhoscf (:,:,:)
 
-  call start_clock ('phqscf')
+  CALL start_clock ('phqscf')
   !
   !    For each irreducible representation we compute the change
   !    of the wavefunctions
   !
   irrc = 0
-  if (irr0 < 0) then
+  IF (irr0 < 0) THEN
      irr0 = 0
      iter0= 0
-  endif
+  ENDIF
 
- allocate (drhoscf( nrxx , nspin, npertx))    
-  do irr = 1, nirr
-     if ( (comp_irr (irr) == 1) .and. (done_irr (irr) == 0) ) then
+ ALLOCATE (drhoscf( nrxx , nspin, npertx))    
+  DO irr = 1, nirr
+     IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
         irrc = irrc + 1
         imode0 = 0
-        do irr1 = 1, irr - 1
+        DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
-        enddo
-        if (npert (irr) == 1) then
+        ENDDO
+        IF (npert (irr) == 1) THEN
            WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
                               irr, imode0 + 1
-        else
+        ELSE
            WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",4i3)') &
                               irr, (imode0+irr1, irr1=1,npert(irr))
-        endif
+        ENDIF
         !
         !    then for this irreducible representation we solve the linear system
         !
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
-        call solve_linter (irr, imode0, npert (irr), drhoscf)
+        CALL solve_linter (irr, imode0, npert (irr), drhoscf)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
         !
-        if (convt) then
-           call drhodv (imode0, npert (irr), drhoscf)
+        IF (convt) THEN
+           CALL drhodv (imode0, npert (irr), drhoscf)
            !
            !   add the contribution of the modes imode0+1 -> imode+npe
            !   to the effective charges Z(Us,E) (Us=scf,E=bare)
            !
-           if (zue) call add_zstar_ue (imode0, npert (irr) )
-           if (zue.and. okvan) call add_zstar_ue_us(imode0, npert (irr) )
+           IF (zue) CALL add_zstar_ue (imode0, npert (irr) )
+           IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npert (irr) )
 
-        endif
-        if (convt) then
+        ENDIF
+        IF (convt) THEN
            WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
            done_irr (irr) = 1
            iter0 = 0
-        else
+        ELSE
            WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
-           call stop_ph (.false.)
-        endif
+           CALL stop_ph (.FALSE.)
+        ENDIF
         !
         !   We test here if we have done the appropriate number of
         !   representation
         !
-        call seqopn (iunrec, 'recover', 'unformatted', exst)
-        if (okvan) write (iunrec) int1, int2
+        CALL seqopn (iunrec, 'recover', 'unformatted', exst)
+        IF (okvan) WRITE (iunrec) int1, int2
 
-        write(iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+        WRITE(iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
 
-        write(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
+        WRITE(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
 
-        close (unit = iunrec, status = 'keep')
+        CLOSE (unit = iunrec, status = 'keep')
         tcpu = get_clock ('PHONON')
-        if (tcpu > 1000000000) then
+        IF (tcpu > 1000000000) THEN
            !
            !            if (tcpu.gt.time_max) then
            ! temporary fix: recover does not work if program stop here
            !
            WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
                 tcpu, time_max
-           call stop_ph (.false.)
+           CALL stop_ph (.FALSE.)
 
-        endif
+        ENDIF
 
-        if (irrc >= maxirr) then
+        IF (irrc >= maxirr) THEN
            WRITE( stdout, '(/,5x,"Stopping at Representation #",i6)') irr
 #ifdef DEBUG
-           if (me /= 1 .or. mypool /= 1) close (6)
+           IF ( ionode ) CLOSE (6)
 #endif
-           call stop_ph (.false.)
-        endif
-     endif
+           CALL stop_ph (.FALSE.)
+        ENDIF
+     ENDIF
 
-  enddo
-  deallocate (drhoscf)
+  ENDDO
+  DEALLOCATE (drhoscf)
 
-  call stop_clock ('phqscf')
-  return
-end subroutine phqscf
+  CALL stop_clock ('phqscf')
+  RETURN
+END SUBROUTINE phqscf
