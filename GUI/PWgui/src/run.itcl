@@ -1,0 +1,399 @@
+#
+# $RCSfile: run.itcl,v $ --
+#
+#      This file contains ...
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: run.itcl,v 1.1 2004-09-20 07:08:34 kokalj Exp $ 
+#
+
+proc ::pwscf::run::run {guiObj {init 1}} {
+    variable ::pwscf::settings
+    variable run
+
+    # initializing ...
+    if { $init == 1 } {
+	_init $guiObj
+    }
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]
+
+    #
+    # determine what program to run
+    #
+
+    switch -glob -- $moduleIdent {
+	*pw {
+	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PW,$moduleObj) $run(RUN.postfix,$moduleObj)"
+
+	    # find out the outdir and create it !!!
+	    _mkdirOutdir $moduleObj
+	}
+	*ph {
+	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PH,$moduleObj) $run(RUN.postfix,$moduleObj)"
+
+	    # find out the outdir and create it !!!
+	    _mkdirOutdir $moduleObj
+	}
+	*pp {
+	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PP,$moduleObj) $run(RUN.postfix,$moduleObj)"
+
+	    # find out the outdir and create it !!!
+	    _mkdirOutdir $moduleObj
+	}
+	*ch {
+	    set runCmd "$run(CHDENS,$moduleObj)"; # CHDENS is not parallel
+	} 
+	*pr {
+	    set runCmd "$run(RUN.prefix,$moduleObj) $run(PROJWFC,$moduleObj) $run(RUN.postfix,$moduleObj)"
+
+	    # find out the outdir and create it !!!
+	    _mkdirOutdir $moduleObj
+	} 
+	*d3 {
+	    set runCmd "$run(RUN.prefix,$moduleObj) $run(D3,$moduleObj) $run(RUN.postfix,$moduleObj)"
+
+	    # find out the outdir and create it !!!
+	    _mkdirOutdir $moduleObj
+	}
+	default {
+	    # module not yet supported ...
+	    return 0
+	}
+    }
+
+    #
+    # run the calculation
+    #
+    if { $run(mode,$moduleObj) == "nonblocking" } {
+
+	# run in non-blocking mode (i.e. on the fly)
+
+	set execID [::tclu::nonblocking open]
+
+	# display stdout into pager while calculating
+	::tclu::nonblocking stdout $execID "::pwscf::run::defaultStdOutPager $moduleObj"
+
+	# run the calculation
+	set status [eval ::tclu::nonblocking exec $execID $runCmd < $run(inpFile,$moduleObj) 2> $run(errFile,$moduleObj)]
+
+	# CALCULATION is finished, hence ...
+
+	# save the stdout to outFile
+	::tclu::nonblocking save $execID $run(outFile,$moduleObj)
+	
+	# we are done
+	::tclu::nonblocking unset $execID 
+
+	return $status
+    } else {
+
+	# run in background and forget about it ...
+
+	eval exec $runCmd < $run(inpFile,$moduleObj) > $run(outFile,$moduleObj) 2> $run(errFile,$moduleObj) &
+	set run(run.done,$moduleObj) 1
+	return 1
+    }
+}
+
+
+proc ::pwscf::run::runAs {guiObj} {
+    variable run
+
+    # first configure and then run ...
+
+    set t [::tku::toplevelExists .pwgui_settings]
+
+    # initializing ...
+    _init $guiObj
+    
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]
+    set prog        [getProg $moduleIdent]
+
+    # create a configure module
+    set obj [_configureModule $moduleObj $prog]
+
+    ::guib::widgets::dialogshell $t -title "Configure calculation" -separator 1 -transient 0
+    $t add Cancel -text "Cancel"        -command [list ::pwscf::run::_cancel $t $guiObj]    
+    $t add Apply  -text "Apply & Run"   -command [list ::pwscf::run::_configApply $t $obj $guiObj]
+    $t default Apply
+
+    #
+    # build the config-GUI recursively
+    #
+    set cs [$t childsite]    
+    $obj makeEmbedGUI $cs
+    
+    ::tku::centerWindow $t
+}
+
+
+proc ::pwscf::run::runAndXC {guiObj} {
+    variable run
+
+    # first run the calculation
+
+    set status [run $guiObj]
+
+    # now display with xcrysden if status is OK, and program is pw.x or chdens.x
+
+    _displayXC $guiObj $status
+}
+
+proc ::pwscf::run::runAsAndXC {guiObj} {
+    variable run
+
+    # first run the calculation
+    runAs $guiObj
+
+    # wait for calculation to finish 
+    set moduleObj [$guiObj getSelected moduleObj]
+    tkwait variable ::pwscf::run::run(run.done,$moduleObj)
+
+    # now display with xcrysden if status is OK, and program is pw.x or chdens.x
+    _displayXC $guiObj $run(status,$moduleObj)
+}
+
+
+proc ::pwscf::run::defaultStdOutPager {moduleObj id newLine} {
+    variable run
+
+    set create 0
+    if { ! [info exists run(textWidget,$moduleObj)] } {
+	set create 1
+    } elseif { ! [winfo exists $run(textWidget,$moduleObj)] } {
+	set create 1
+    }
+    
+    if { $create } {
+	# calling the pager for the first time: create the toplevel
+	# and text widgets ...
+	set t [::guib::widgets::dialogshell [::tku::widgetName] -title "Output file: $run(outFile,$moduleObj)" -separator 1 -transient 0]
+	$t add Close  -text Close  -command [list destroy $t]
+	$t default Close
+	
+	set w [$t childsite]
+	set run(textWidget,$moduleObj) [::iwidgets::scrolledtext $w.text \
+					    -labeltext "Output file:\n$run(outFile,$moduleObj)" \
+					    -hscrollmode dynamic -vscrollmode dynamic \
+					    -wrap none -state normal]
+	pack $run(textWidget,$moduleObj) -side top -fill both -expand 1
+    }
+
+    $run(textWidget,$moduleObj) configure -state normal
+    $run(textWidget,$moduleObj) insert end $newLine
+    $run(textWidget,$moduleObj) yview moveto 1
+    $run(textWidget,$moduleObj) configure -state disabled
+}
+
+
+proc ::pwscf::run::_init {guiObj} {
+    variable ::pwscf::settings
+    variable run
+
+    # initializing ...
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]
+
+    ::tclu::newset run(mode,$moduleObj)        $run(mode)
+    ::tclu::newset run(RUN.prefix,$moduleObj)  $::pwscf::settings(RUN.prefix)
+    ::tclu::newset run(RUN.postfix,$moduleObj) $::pwscf::settings(RUN.postfix)
+    ::tclu::newset run(PW,$moduleObj)          $::pwscf::settings(PW)
+    ::tclu::newset run(PH,$moduleObj)          $::pwscf::settings(PH)
+    ::tclu::newset run(PP,$moduleObj)          $::pwscf::settings(PP)
+    ::tclu::newset run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
+    ::tclu::newset run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
+    ::tclu::newset run(D3,$moduleObj)          $::pwscf::settings(D3)
+
+    #
+    # determine what are the IO-files
+    #
+
+    set inpFile [$guiObj getSelected saveFile]
+    if { $inpFile == "" } {	
+	# save the file
+	set inpFile [$guiObj saveAs]
+	if { $inpFile == "" } {
+	    # Cancel button was pressed
+	    return -code return 0
+	}
+    } else {
+	$guiObj save 1 ; # "1" here is for nocomplain. I am not sure if nocomplain is good idea ???
+    }
+    
+    # get the output-file from the input-file; also the error file
+    
+    set head [regsub {\.(inp|in)$} $inpFile {}]
+    set run(inpFile,$moduleObj) $inpFile
+    set run(outFile,$moduleObj)  $head.out
+    set run(errFile,$moduleObj)  $head.err
+
+    set run(status,$moduleObj) 1
+    set run(run.done,$moduleObj) 0
+}
+
+
+proc ::pwscf::run::getProg {moduleIdent} {
+    switch -glob -- $moduleIdent {
+	*pw { return pw.x }
+	*ph { return ph.x }
+	*pp { return pp.x }
+	*ch { return chdens.x }
+	*pr { return projwfc.x }
+	*d3 { return d3.x }
+	default {
+	    # module not yet supported ...
+	    return ""
+	}
+    }    
+}
+
+
+proc ::pwscf::run::_configureModule {moduleObj prog} {
+
+    set var    [string toupper [string trimright $prog .x]]
+
+    set script [subst -nocommands {
+
+	optionSetDefault line     decor normal
+	optionSetDefault namelist decor normal
+	
+	separator -label "--- PWscf settings ---\n\n The calculation will be executed as:  prefix $prog postfix < input > output"
+	line pwscf_fix -name "Prefix & postfix (i.e. Prefix = mpirun -np 2  .AND.  Postfix = -npool 2)" {
+	    var RUN.prefix  -variable ::pwscf::run::run(RUN.prefix,$moduleObj)  -label "Prefix:"
+	    var RUN.postfix -variable ::pwscf::run::run(RUN.postfix,$moduleObj) -label "Postfix:"
+	}
+	line pwscf_exe -name "Specify $prog executable (i.e. /usr/local/bin/$prog)" {
+	    var $var -variable ::pwscf::run::run($var,$moduleObj) -label "Executable \\\"pw.x\\\":" -widget entryfileselect
+	}
+	line io_files -name "Input & Output files" {
+	    var inFile  -variable ::pwscf::run::run(inpFile,$moduleObj) -label "Input file:" -widget entryfileselect
+	    var outFile -variable ::pwscf::run::run(outFile,$moduleObj) -label "Output file:" -widget entryfileselect
+	    var errFile -variable ::pwscf::run::run(errFile,$moduleObj) -label "Error file:" -widget entryfileselect
+	}
+	line run_mode -name "Mode of calculation: \\\"on the fly\\\" for short jobs  .OR. \\\"in background\\\" for long jobs" {
+	    var mode {
+		-variable ::pwscf::run::run(mode,$moduleObj) 
+		-label "Mode of calaculation" 
+		-textvalue {
+		    "on the fly" 
+		    "in background" 
+		} 
+		-value { 
+		    nonblocking  
+		    background 
+		}
+		-widget radiobox
+	    }
+	}
+
+	postprocess {
+	    loadFromVar
+	    widgetconfigure inFile -width 60
+	}
+    }]
+
+    set obj [::guib::moduleObj settings\#auto -title "PWgui: settings" -script $script]
+}
+      
+
+proc ::pwscf::run::_configApply {t configObj guiObj} {
+    variable run
+
+    if { [winfo exists $t] } {
+	destroy $t
+    }
+
+    # save "config" variables
+    $configObj saveToVar ::pwscf::run
+    
+    # run the calculation
+    set status [run $guiObj no_init]
+
+    # check the status of the run
+    set moduleObj [$guiObj getSelected moduleObj]
+    if { $status == 1 } {
+	set run(status,$moduleObj) 1
+    } else {
+	set run(status,$moduleObj) 0
+    }
+    set run(run.done,$moduleObj) 1
+}
+
+
+proc ::pwscf::run::_cancel {t guiObj} {
+    variable run
+
+    # destroy "config" toplevel
+    if { [winfo exists $t] } {
+	destroy $t
+    }
+    
+    # set the status to zero
+    set moduleObj [$guiObj getSelected moduleObj]
+    set run(status,$moduleObj) 0    
+    set run(run.done,$moduleObj) 1
+}
+
+
+proc ::pwscf::run::_mkdirOutdir {moduleObj} {
+    set outdir [string trim [namespace eval ::guib "$moduleObj varvalue outdir"] '\"]
+    if { $outdir != "" } {
+	if { ! [file isdirectory $outdir] } {
+	    if { [catch {file mkdir $outdir} errMsg] } {
+		::tclu::warningDialog "cannot create temporary directory \"$outdir\". Aborting the calculation !!!\n\nERROR message: $errMsg"
+		return -code return 0
+	    }
+	} 
+	if { ! [file writable $outdir] } {
+	    ::tclu::warningDialog "temporary directory \"$outdir\" is not writable"
+	    return -code return 0
+	}
+    }
+}
+
+
+proc ::pwscf::run::_displayXC {guiObj status} {
+    variable run
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]
+    set prog        [getProg $moduleIdent]
+    if { $status == 1 } {
+	if { $prog == "pw.x" } {
+	    # launch XCRYSDEN in background mode and display the
+	    # structure from output file 
+	    exec xcrysden --pwo $run(outFile,$moduleObj) &
+	    
+	} elseif { $prog == "chdens.x" } {
+	    # check if the output_format == 3 || output_format == 5, and display
+	    # the structure/property from fileout
+	    
+	    set output_format [namespace eval ::guib "$moduleObj vartextvalue output_format"]
+	    set fileout       [string trim [namespace eval ::guib "$moduleObj varvalue fileout"] '\"]
+	    if { [string match *XSF* $output_format] } {
+		# it is an XSF format
+		exec xcrysden --xsf $fileout &
+	    }
+	}
+    }
+}
+
