@@ -131,7 +131,7 @@ subroutine punch_band (filband)
         npwold = npw
         modulo = wk (ik) * nks / 2.d0
         write(iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
-        write (iunpun, '(10f8.3)')  (et (il (ibnd) , ik) &
+        write (iunpun, '(8f9.4)')  (et (il (ibnd) , ik) &
              * rytoev, ibnd = 1, nbnd)
         !
         !   The bec function for this k point are computed

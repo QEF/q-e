@@ -36,10 +36,10 @@ MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 #
 F90 = sxf90
-F77 = sxf77
+F77 = sxf90
 
-#FFLAGS = $(BASIC) $(MISC) $(OPT) $(FTRACE)
-FFLAGS = $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
+FFLAGS = $(BASIC) $(MISC) $(OPT) $(FTRACE)
+#FFLAGS = $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
 #FCAUTIOUS=$(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
 F90FLAGS=$(FFLAGS)
 F77FLAGS=$(FFLAGS)
@@ -60,8 +60,6 @@ LIBS = -llapack -lblas -lasl
 #../liblapack.a ../libblas.a ../libfft.a 
 #
 # Loader flags:
-#
-# Use -s for stripped executable (smaller file)
 #
 LD = $(F90)
 #LDFLAGS =  $(BASIC) $(PROF) $(FTRACE) 

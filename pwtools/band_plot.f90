@@ -34,7 +34,7 @@ program prog
      read(10,9030) (e(i,n),n=1,nbands)
      write(13,9030) (e(i,n),n=1,nbands)
 9020 format (14x,3f7.4)
-9030 format ('   ',8f9.4)  
+9030 format (8f9.4)  
   enddo
   do j=1,nbands2
      dk=0

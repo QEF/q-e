@@ -3,13 +3,12 @@
 # Based on info from N. Marzari and B.R. Sahu
 # Edit according to your needs
 #
-# add -D__MKL if using the Intel Mathematical Kernel Library
 # Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
 # two underscores at the end
 # Define FFTW library names with one underscore less than they have in
 # the library (one underscore is added by the compiler)
 #
-CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__INTEL -D__MKL -D__FFTW \
+CPPFLAGS = -I$(OSHOME)/include/ -D__LINUX -D__INTEL -D__FFTW \
            -D__PARA -D__MPI  \
            -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
            -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
@@ -58,14 +57,13 @@ MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW I $(OSHOME)/PH
 # Loader:
 #
 # The following is for Intel MKL libraries v. 5.1 on Pentium-3
-# (remember -D__MKL in CPPFLAGS !)
 # For MKL v. 5.2, add "-lguide"
 # Use libmkl_p3.a for Pentium-3, libmkl_p4.a for Pentium-4 machines 
 # (MKL will likely not work for other CPUs like Athlon)
 
 LIBS= -lfftw /opt/intel/mkl/lib/32/libmkl_lapack.a \
       /opt/intel/mkl/lib/32/libmkl_p3.a -lguide -lpthread
-
+MYLIB=lapack_mkl
 # The following is for Atlas optimized blas/lapack libraries
 # You may not actually need -lcblas . See the manual for details
 # on how to fix I/O incompatibility problems with ifc

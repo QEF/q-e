@@ -29,6 +29,9 @@ lapack_ibm : lapack_ibm.o dlamch.o
 lapack_t3e : lapack_t3e.o 
 	$(AR) $(ARFLAGS) flib.a $?
 
+lapack_mkl : lapack_mkl.o 
+	$(AR) $(ARFLAGS) flib.a $?
+
 eispack : eispack.o
 	echo eispack
 

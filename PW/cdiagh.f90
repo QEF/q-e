@@ -151,9 +151,3 @@ subroutine cdiagh (n, h, ldh, e, v)
   return
 end subroutine cdiagh
 
-#ifdef __MKL
-! ILAENV is missing in the Intel Mathematical Kernel Library (mkl)
-integer function ILAENV ()
-  ILAENV=64
-end function ILAENV
-#endif
