@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the

@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the

@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2004 Vanderbilt's group at Rutgers University, NJ
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 SUBROUTINE kp_strings &
            ( nppstr,gdir,nrot,s,bg,npk,k1,k2,k3,nk1,nk2,nk3,nks,xk,wk)
 

@@ -1,3 +1,11 @@
+!
+! Copyright (C) 2003 A. Smogunov
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 subroutine gep_gep(n, amt, bmt, eigen, veigen)
 !
 ! It solves GEP: A X = lambda B X using routines in GEP.f

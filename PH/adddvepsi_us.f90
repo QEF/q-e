@@ -1,4 +1,10 @@
 !
+! Copyright (C) 2001-2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 subroutine adddvepsi_us(becp2,ipol,kpoint)
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assume that the variable dpqq, has been set.

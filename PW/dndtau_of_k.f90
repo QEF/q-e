@@ -1,3 +1,4 @@
+!
 ! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
