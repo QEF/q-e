@@ -124,7 +124,7 @@
       INTEGER :: modenum
       REAL(kind=8) :: alat
       REAL(kind=8) :: ef, rnel, wfc_scal_cp90
-      character(len=4) :: atom_label(nsp)
+      character(len=3) :: atom_label(nsp)
 
       LOGICAL :: tscal
       LOGICAL :: teig
@@ -477,7 +477,7 @@
       LOGICAL :: lstres_, lforce_
       character(len=80) :: title_, crystal_
       character(len=256) :: tmp_dir_
-      character(len=4) :: atom_label(nsp)
+      character(len=3) :: atom_label(nsp)
       real(kind=8) :: bi1_(3), bi2_(3), bi3_(3)
 !
       integer :: i, ia, is, j
@@ -1033,7 +1033,7 @@
         CHARACTER(LEN=80) :: title
         CHARACTER(LEN=80) :: crystal
         CHARACTER(LEN=256) :: tmp_dir
-        CHARACTER(LEN=4) :: atom_label(nsx)
+        CHARACTER(LEN=3) :: atom_label(nsx)
         INTEGER, ALLOCATABLE :: ityp(:)
         INTEGER :: isk
         LOGICAL :: tmill, tupf, lgamma, lda_plus_u
@@ -1543,7 +1543,7 @@
         REAL(dbl) :: ef_
         REAL(dbl) :: xenosm2_, xenosm_, xenos0_, xenosp_ 
         INTEGER, ALLOCATABLE :: ityp_(:)
-        CHARACTER(LEN=4) :: atom_label_( nsx )
+        CHARACTER(LEN=3) :: atom_label_( nsx )
         LOGICAL :: tscal_
 
         !  variables  that are not read from files

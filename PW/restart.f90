@@ -105,7 +105,7 @@ CONTAINS
     REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:)
     REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:)
     REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
-    CHARACTER(len=4) :: atom_label(nsx)
+    CHARACTER(len=3) :: atom_label(nsx)
     REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal, tocc, tlam, teig, tmill
     REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
@@ -625,7 +625,7 @@ CONTAINS
     REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
     REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
     REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
-    CHARACTER(len=4) :: atom_label(nsx)
+    CHARACTER(len=3) :: atom_label(nsx)
     REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal
     REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
@@ -1206,7 +1206,7 @@ CONTAINS
     REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
     REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
     REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
-    CHARACTER(len=4) :: atom_label( nsx )
+    CHARACTER(len=3) :: atom_label( nsx )
     REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal
     REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
