@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,10 +24,9 @@ subroutine wfcinit
   !    "     "  polarization
   ! number of starting wavefunctions
 
-  real(kind=DP) :: rndm, rr, arg
+  real(kind=DP) ::rr, arg
+  real(kind=DP), external :: rndm
   ! random function generation
-
-  external rndm
   !
   ! state what is going to happen
   !
@@ -128,7 +127,7 @@ subroutine wfcinit
   enddo
   if (iprint.eq.1) then
 #ifdef __PARA
-     call poolrecover (et, nbndx, nkstot, nks)
+     call poolrecover (et, nbnd, nkstot, nks)
 #endif
      do ik = 1, nkstot
         write (6, 9010) (xk (ipol, ik), ipol = 1, 3)

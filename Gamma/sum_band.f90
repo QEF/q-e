@@ -50,10 +50,10 @@ subroutine sum_band
      !
   elseif (ltetra) then
 #ifdef __PARA
-     call poolrecover (et, nbndx, nkstot, nks)
+     call poolrecover (et, nbnd, nkstot, nks)
      if (me.eq.1.and.mypool.eq.1) then
 #endif
-        call tweights (nkstot, nspin, nbndx, nbnd, nelec, ntetra, &
+        call tweights (nkstot, nspin, nbnd, nelec, ntetra, &
              tetra, et, ef, wg)
 #ifdef __PARA
      endif
@@ -62,7 +62,7 @@ subroutine sum_band
      call broadcast (1, ef)
 #endif
   elseif (lgauss) then
-     call gweights (nks, wk, nbndx, nbnd, nelec, degauss, ngauss, &
+     call gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
           et, ef, demet, wg)
   endif
   !

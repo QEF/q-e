@@ -129,7 +129,7 @@ subroutine wfcinit
   enddo
   if (iprint.eq.1) then
 #ifdef __PARA
-     call poolrecover (et, nbndx, nkstot, nks)
+     call poolrecover (et, nbnd, nkstot, nks)
 #endif
      do ik = 1, nkstot
         write (6, 9010) (xk (ipol, ik), ipol = 1, 3)

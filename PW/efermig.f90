@@ -1,23 +1,22 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine efermig (et, nbndx, nbnd, nks, nelec, wk, Degauss, &
-     Ngauss, Ef)
+subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
   !--------------------------------------------------------------------
   !
   !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
   !
   use parameters
   implicit none
-  integer :: nks, nbndx, nbnd, i, kpoint, Ngauss
-  real(kind=DP) :: wk (nks), et (nbndx, nks), Degauss, Ef, Eup, Elw, &
-       sumkg, sumkup, sumklw, sumkmid, nelec
-  external sumkg
+  integer :: nks, nbnd, i, kpoint, Ngauss
+  real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, Ef, Eup, Elw, &
+       sumkup, sumklw, sumkmid, nelec
+  real(kind=DP), external::  sumkg
   !
   !      find bounds for the Fermi energy. Very safe choice!
   !
@@ -39,13 +38,13 @@ subroutine efermig (et, nbndx, nbnd, nks, nelec, wk, Degauss, &
   !
   !      Bisection method
   !
-  sumkup = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Eup)
-  sumklw = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Elw)
+  sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup)
+  sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw)
   if ( (sumkup - nelec) .lt. - 1.0e-10.or. (sumklw - nelec) &
        .gt.1.0e-10) call errore ('Efermi', 'unexpected error', 1)
   do i = 1, 50
      Ef = (Eup + Elw) / 2.0
-     sumkmid = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Ef)
+     sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef)
      if (abs (sumkmid-nelec) .lt.1.0e-10) then
         return
      elseif ( (sumkmid-nelec) .lt. - 1.0e-10) then

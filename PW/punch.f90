@@ -18,7 +18,7 @@ subroutine punch
   !
   !
   use pwcom, only: nks, filpun, reduce_io, evc, nwordwfc, iunwfc, lscf, &
-    rho, nspin, iunpun, et, wg, nbnd, nkstot, nbndx
+    rho, nspin, iunpun, et, wg, nbnd, nkstot
   use io, only: prefix
 #ifdef __PARA
   use para
@@ -57,8 +57,8 @@ subroutine punch
   ! while eigenvalues et and weights wg must be
   ! explicitely collected to the first node
   !
-  call poolrecover (et, nbndx, nkstot, nks)
-  call poolrecover (wg, nbnd , nkstot, nks)
+  call poolrecover (et, nbnd, nkstot, nks)
+  call poolrecover (wg, nbnd, nkstot, nks)
   !
   ! In parallel execution, only the first node writes this file
   !
@@ -127,7 +127,7 @@ subroutine punch
   ! while eigenvalues et and weights wg must be
   ! explicitely collected to the first node
   !
-  call poolrecover (et, nbndx, nkstot, nks)
+  call poolrecover (et, nbnd, nkstot, nks)
   call poolrecover (wg, nbnd , nkstot, nks)
   !
   ! In parallel execution, only the first node writes this file

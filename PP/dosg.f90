@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,15 +7,14 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine dos_g (et, nspin, nbndx, nbnd, nks, wk, Degauss, &
-     ngauss, E, dosg)
+subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
   !--------------------------------------------------------------------
   !
   use parameters, only : DP
   implicit none
-  integer :: nspin, nks, nbndx, nbnd, ngauss
+  integer :: nspin, nks, nbnd, ngauss
 
-  real(kind=DP) :: wk (nks), et (nbndx, nks), Degauss, E, dosg (2)
+  real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, E, dosg (2)
   real(kind=DP) :: w0gauss
   integer :: n, ns, nk0, nk, ik
   external w0gauss

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
+subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
      tetra, ef)
   !--------------------------------------------------------------------
   !
@@ -15,14 +15,13 @@ subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
   !
   use parameters
   implicit none
-  integer :: nks, nbndx, nbnd, nspin, ntetra, tetra (4, ntetra)
+  integer :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
   ! input: the number of k points
-  ! input: the maximum number of bands
   ! input: the number of bands
   ! input: the number of spin components
   ! input: the number of tetrahedra
   ! input: the vertices of a tetrahedron
-  real(kind=DP) :: et (nbndx, nks), nelec, ef
+  real(kind=DP) :: et (nbnd, nks), nelec, ef
   ! input: the eigenvalues
   ! input: the number of electrons
   ! output: the fermi energy
@@ -67,14 +66,14 @@ subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
   !
   !      Bisection method
   !
-  sumkup = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, eup)
-  sumklw = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, elw)
+  sumkup = sumkt (et, nbnd, nks, nspin, ntetra, tetra, eup)
+  sumklw = sumkt (et, nbnd, nks, nspin, ntetra, tetra, elw)
   if ( (sumkup - nelec) .lt. - eps.or. (sumklw - nelec) .gt.eps) &
        call errore ('efermit', 'unexpected error', 1)
   better = 1.0e+10
   do iter = 1, maxiter
      ef = (eup + elw) / 2.0
-     sumkmid = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, ef)
+     sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef)
      if (abs (sumkmid-nelec) .lt.better) then
         better = abs (sumkmid-nelec)
         efbetter = ef
@@ -93,8 +92,7 @@ subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
   !     unconverged exit:
   !     the best available ef is used . Needed in some difficult cases
   ef = efbetter
-  sumkmid = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, ef)
-
+  sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef)
 
   write (6, 9010) ef * rydtoev, sumkmid
   !     converged exit:

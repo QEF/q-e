@@ -126,7 +126,7 @@ implicit none
      if (.not.lscf) then
         conv_elec=.true.
 #ifdef __PARA
-        call poolrecover (et, nbndx, nkstot, nks)
+        call poolrecover (et, nbnd, nkstot, nks)
 #endif
 
         do ik = 1, nkstot
@@ -248,7 +248,7 @@ implicit none
         enddo
         call ireduce (nks, ngkp)
         call ipoolrecover (ngkp, 1, nkstot, nks)
-        call poolrecover (et, nbndx, nkstot, nks)
+        call poolrecover (et, nbnd, nkstot, nks)
 #endif
 
         do ik = 1, nkstot

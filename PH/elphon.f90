@@ -331,9 +331,8 @@ subroutine elphsum
      ! Note that the weights of k+q points must be set to zero for the
      ! following call to yield correct results
      !
-     call efermig (et, nbndx, nbnd, nks, nelec, wk, degauss1, ngauss1, &
-          ef1)
-     dosef = dos_ef (ngauss1, degauss1, ef1, et, nbndx, wk, nks, nbnd)
+     call efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, ef1)
+     dosef = dos_ef (ngauss1, degauss1, ef1, et, wk, nks, nbnd)
      ! N(Ef) is the DOS per spin, not summed over spin
      dosef = dosef / 2.d0
      !
@@ -442,15 +441,14 @@ subroutine elphsum
 end subroutine elphsum
 !
 !-----------------------------------------------------------------------
-function dos_ef (ngauss, degauss, ef, et, nbndx, wk, nks, &
-     nbnd)
+function dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   use parameters, only : DP
   implicit none
   real(kind=DP) :: dos_ef
-  integer :: ngauss, nbndx, nbnd, nks
-  real(kind=DP) :: et (nbndx, nks), wk (nks), ef, degauss
+  integer :: ngauss, nbnd, nks
+  real(kind=DP) :: et (nbnd, nks), wk (nks), ef, degauss
   !
   integer :: ik, ibnd
   real(kind=DP) :: w0gauss

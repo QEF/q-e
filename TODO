@@ -1,8 +1,8 @@
-TODO LIST - 2 Apr 2003
+TODO LIST - 7 Apr 2003
 
 INSTALLATION
 
-- compile fftw by default on request for PW and CP as well
+- compile fftw by default for PW and CP as well
 
 COMMON
 
@@ -25,15 +25,16 @@ COMMON
 
 PW
 
+- wavefunctions should be dimensioned nbnd, not nbndx
+
 - bfgs, md : atomic positions should be written in the same
   format as they are read (but this should not spoil scripts
   that extract coordinates from output file)
 
-- remove analytical pps and related variables
+- remove analytical PPs and related variables
 
-- remove residual direct calls to MPI routines
-  use routines in mp.f90 instead
-  merge with existing wrapper if needed
+- remove residual direct calls to MPI routines,
+  use (or merge with) existing routines in mp.f90 instead
 
 - remove potential mixing, save and start from rho instead of V
 
@@ -55,6 +56,8 @@ PW
 
 - memory estimator tool, or memory report 
 
+- ultrasoft PP: newd and addusdens are too slow
+
 POSTPROCESSING
 
 - bands.x must either be finished or removed
@@ -64,7 +67,7 @@ POSTPROCESSING
 
 - stm in non-scf calculations to be verified
 
-- add more scripts that process output file
+- add more scripts that process output files
 
 - dos, projected dos, etc: input data should be more uniform
 
@@ -72,11 +75,14 @@ PH
 
 - Tone: ntyp in input needed for phonon GUI ?
 
-- better algorithm for electron-phonon (Malgorzata?)
+- better algorithm for electron-phonon (Malgorzata)
 
 DOCUMENTATION
 
 - expand, update, verify, etc
+
+- examples for many features are missing
+  examples should be quicker and easier to verify  
 
 - add a list of FAQ, or AAQ (Already Answered Questions)
 
@@ -86,6 +92,7 @@ CPV:
   with ultrasoft pps and box grids. If it is a bug, it is serious.
 
 - check on input ipp and pp type. Even better: remove ipp
+  (leave either UPF or old-format Vanderbilt)
 
 - remove eispack routines, replace with lapack or parallel diag
 

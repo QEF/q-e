@@ -13,10 +13,10 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   !
   !     iterative solution of the eigenvalue problem:
   !
-  !     ( H - e S ) * psi = 0
+  !     ( H - e S ) * evc = 0
   !
   !     where H is an hermitean operator, e is a real scalar,
-  !     S is an overlap matrix, psi is a complex vector
+  !     S is an overlap matrix, evc is a complex vector
   !     (real wavefunctions with only half plane waves stored)
   !
 #include "machine.h"
@@ -25,7 +25,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   ! on INPUT
   integer :: ndim, ndmx, nvec, nvecx, gstart
   ! dimension of the matrix to be diagonalized
-  ! leading dimension of matrix psi, as declared in the calling pgm unit
+  ! leading dimension of matrix evc, as declared in the calling pgm unit
   ! integer number of searched low-lying roots
   ! maximum dimension of the reduced basis set
   !    (the basis set is refreshed when its dimension would exceed nvecx)
@@ -58,16 +58,16 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   ! S matrix on the reduced basis
   ! eigenvectors of the Hamiltonian
   ! eigenvalues of the reduced hamiltonian
-  real(kind=DP) :: DDOT
+  real(kind=DP), external :: DDOT
   complex(kind=DP), allocatable :: psi(:,:), hpsi (:,:),spsi (:,:)
   ! work space, contains psi
   ! the product of H and psi
   ! the product of S and psi
-  integer, allocatable  :: conv (:)
-  ! if 1 the root is converged if 0 no
+  logical, allocatable  :: conv (:)
+  ! if .true. the root is converged
   !
   ! Called routines:
-  external h_psi, g_psi, DDOT
+  external h_psi, g_psi
   ! h_psi(ndmx,ndim,nvec,psi,hpsi,spsi)
   !     calculates nvec H|psi> and S|psi> (if needed) products.
   !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
@@ -88,13 +88,13 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   allocate (ew( nvecx))    
   allocate (conv( nvec))    
 
-  if (nvec.gt.nvecx / 2) call errore ('regter', 'nvecx is too small',1)
+  if (nvec > nvecx / 2) call errore ('regter', 'nvecx is too small',1)
   !
   !     prepare the hamiltonian for the first iteration
   !
   notcnv = nvec
   nbase = nvec
-  call DCOPY (2*ndmx*nvec, evc, 1, psi, 1)
+  psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
   !
@@ -103,8 +103,8 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   !     hr contains the projection of the hamiltonian onto the reduced space
   !     vr contains the eigenvectors of hr
   !
-  call setv (nvecx * nvecx, 0.d0, hr, 1)
-  call setv (nvecx * nvecx, 0.d0, vr, 1)
+  hr (:,:) = 0.d0
+  vr (:,:) = 0.d0
   call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0 , psi, &
        2*ndmx, hpsi, 2*ndmx, 0.d0, hr, nvecx)
   if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
@@ -112,7 +112,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
 #ifdef __PARA
   call reduce (nbase * nvecx, hr)
 #endif
-  call setv (nvecx * nvecx, 0.d0, sr, 1)
+  sr(:,:) = 0.d0
   call DGEMM ('t', 'n', nbase, nbase, 2*ndim, 2.d0, psi, &
        2*ndmx, spsi, 2*ndmx, 0.d0, sr, nvecx)
   if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
@@ -123,31 +123,47 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
 
   do n = 1, nbase
      e (n) = hr (n, n)
-     conv (n) = 0
+     conv (n) = .false.
      vr (n, n) = 1.d0
   enddo
   !
   !       iterate
   !
   do kter = 1, maxter
-     iter = kter+1
-     np = nbase
+     iter = kter
      call start_clock ('update')
-     do n = 1, nvec
-        if (conv (n) .eq.0) then
-           !
-           !     this root not yet converged ... set a new basis vector
-           !     (position np) to (h-es)psi ...
-           !
-           np = np + 1
-           ew(np) = e (n)
-           call setv (2 * ndim, 0.d0, psi (1, np), 1)
-           call DGEMV ('n', 2*ndim, nbase, 1.d0, hpsi, 2*ndmx, &
-                vr (1, n) , 1, 0.d0, psi (1, np) , 1)
-           call DGEMV ('n', 2*ndim, nbase, -e(n),spsi, 2*ndmx, &
-                vr (1, n) , 1, 1.d0, psi (1, np) , 1)
-        endif
-     enddo
+     if (notcnv < nvec) then
+        np = nbase
+        do n = 1, nvec
+           if ( .not.conv (n) ) then
+              !
+              !     this root not yet converged ... set a new basis vector
+              !     (position np) to (h-es)psi ...
+              !
+              np = np + 1
+              ! for use in g_psi
+              ew(np) = e (n)
+              call DGEMV ('n', 2*ndim, nbase, 1.d0, hpsi, 2*ndmx, &
+                   vr (1, n) , 1, 0.d0, psi (1, np) , 1)
+              call DGEMV ('n', 2*ndim, nbase, -e(n),spsi, 2*ndmx, &
+                   vr (1, n) , 1, 1.d0, psi (1, np) , 1)
+           endif
+        enddo
+     else
+        !
+        !     expand the basis set with new basis vectors (h-es)psi ...
+        !
+        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
+             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
+        do n = 1, nvec
+              ! for use in g_psi
+           ew (nbase+n) = e (n)
+           psi (:,nbase+n) = - e(n) * psi(:,nbase+n)
+        end do
+        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, hpsi, &
+             2*ndmx, vr, nvecx, 1.d0, psi (1, nbase+1), 2*ndmx)
+     end if
+
      call stop_clock ('update')
      !
      ! approximate inverse iteration
@@ -212,62 +228,80 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
      !
      notcnv = 0
      do n = 1, nvec
-        if (conv (n) .eq.0) then
-           if (.not.abs (ew (n) - e (n) ) .le.ethr) then
-              notcnv = notcnv + 1
-           else
-              ! root converged
-              conv (n) = 1
-           endif
-        endif
+!!!        conv (n) = conv(n) .or. ( abs (ew (n) - e (n) ) <= ethr )
+        conv (n) = ( abs (ew (n) - e (n) ) <= ethr )
+        if ( .not. conv(n) ) notcnv = notcnv + 1
         e (n) = ew (n)
-     end do
+     enddo
+!!! TEST : update all eigenvectors if more than 1/4 are converged
+     if (notcnv > nvec/4) then
+        notcnv = nvec
+        conv(:) = .false.
+     end if
+!!! END OF TEST
      !
-     !     if overall convergence has been achieved or the dimension of the
-     !     reduced basis set is becoming too large, refresh the basis set
-     !     i.e. replace the first nvec elements with the current estimate
-     !     of the eigenvectors and set the basis dimension to nvec.
+     !     if overall convergence has been achieved, OR
+     !     the dimension of the reduced basis set is becoming too large, OR
+     !     in any case if we are at the last iteration
+     !     refresh the basis set. i.e. replace the first nvec elements
+     !     with the current estimate of the eigenvectors;
+     !     set the basis dimension to nvec.
      !
-     if (notcnv.eq.0 .or. iter.gt.maxter .or. nbase+notcnv.gt.nvecx) then
+     if (notcnv == 0 .or. nbase+notcnv > nvecx .or. iter == maxter) then
         call start_clock ('last')
         call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, psi, &
              2*ndmx, vr, nvecx, 0.d0, evc, 2*ndmx)
-        if (notcnv.eq.0.or. iter.gt.maxter) then
+        if (notcnv == 0) then
         !
         !     all roots converged: return
         !
            call stop_clock ('last')
            goto 10
+        else if (iter == maxter) then
+        !
+        !     last iteration, some roots not converged: return
+        !
+#ifdef DEBUG_DAVIDSON
+           do n = 1, nvec
+              if ( .not.conv (n) ) write (6, '("   WARNING: e(",i3,") =",&
+                   f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
+           enddo
+#else
+           write (6, '("   WARNING: ",i5," eigenvalues not converged")') &
+                notcnv
+#endif
+           call stop_clock ('last')
+           goto 10
         end if
-        call DCOPY (2*ndmx*nvec, evc, 1, psi, 1)
+        !
+        !     refresh psi, H*psi and S*psi
+        !
+        psi(:, 1:nvec) = evc(:, 1:nvec)
+
         call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi(1,nvec+1), 2*ndmx)
-        call DCOPY (2 * ndmx * nvec, psi(1,nvec+1), 1, spsi, 1)
+             2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
+        spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
 
         call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, hpsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi(1,nvec+1), 2*ndmx)
-        call DCOPY (2 * ndmx * nvec, psi(1,nvec+1), 1, hpsi, 1)
+             2*ndmx, vr, nvecx, 0.d0, psi(1, nvec + 1), 2*ndmx)
+        hpsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
         !
-        !     modify the reduced hamiltonian accordingly
+        !     refresh the reduced hamiltonian
         !
-        call setv (nvecx * nvecx, 0.d0, hr, 1)
-        call DCOPY (nbase, e, 1, hr, nvecx + 1 )
-        call setv (nvecx * nvecx, 0.d0, sr, 1)
-        call setv (nvecx, 1.d0, sr, nvecx + 1 )
-        call stop_clock ('last')
         nbase = nvec
-        call setv (nvecx * nbase, 0.d0, vr, 1)
+        hr (:, 1:nbase) = 0.d0
+        sr (:, 1:nbase) = 0.d0
+        vr (:, 1:nbase) = 0.d0
         do n = 1, nbase
+           hr (n, n) = e(n)
+           sr (n, n) = 1.d0
            vr (n, n) = 1.d0
-        enddo
+        end do
+        call stop_clock ('last')
      endif
   enddo
 
 10 continue
-  do n = 1, nvec
-     if (conv (n) .eq.0) write (6, '("   WARNING: e(",i3,") =",&
-          & f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
-  enddo
 
   deallocate (conv)
   deallocate (ew)

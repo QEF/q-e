@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,34 +7,28 @@
 !
 !
 !--------------------------------------------------------------------
-
-
-subroutine gweights (nks, wk, nbndx, nbnd, nelec, degauss, ngauss, &
+subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
      et, ef, demet, wg)
   !--------------------------------------------------------------------
   !     calculates weights with the gaussian spreading technique
   use parameters
   implicit none
   !
-  integer :: nks, nbndx, nbnd, ngauss
-  real(kind=DP) :: wk (nks), et (nbndx, nks), nelec, degauss
-
+  integer :: nks, nbnd, ngauss
+  real(kind=DP) :: wk (nks), et (nbnd, nks), nelec, degauss
   real(kind=DP) :: wg (nbnd, nks), ef, demet
-  real(kind=DP) :: wgauss, w1gauss
+  !
   integer :: kpoint, ibnd
+  real(kind=DP) , external :: wgauss, w1gauss
 
-
-
-  external efermig, wgauss, w1gauss
   ! Calculate the Fermi energy ef
 
-  call efermig (et, nbndx, nbnd, nks, nelec, wk, degauss, ngauss, &
-       ef)
+  call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef)
   demet = 0.d0
   do kpoint = 1, nks
      do ibnd = 1, nbnd
-        ! Calculate the gaussian weights
 
+        ! Calculate the gaussian weights
 
         wg (ibnd, kpoint) = wk (kpoint) * wgauss ( (ef - et (ibnd, kpoint) &
              ) / degauss, ngauss)

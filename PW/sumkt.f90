@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,19 +7,17 @@
 !
 !
 !--------------------------------------------------------------------
-real(8) function sumkt (et, nbndx, nbnd, nks, nspin, ntetra, &
-     tetra, e)
+function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e)
   !--------------------------------------------------------------------
   !
   use parameters
   implicit none
-  integer :: nbndx, nbnd, nks, nspin, ntetra, tetra (4, ntetra)
-
-  real(kind=DP) :: et (nbndx, nks), e
-  integer :: nt, nk, ns, ibnd, i
-
-
+  real(kind=DP) :: sumkt
+  integer :: nbnd, nks, nspin, ntetra, tetra (4, ntetra)
+  real(kind=DP) :: et (nbnd, nks), e
+  !
   real(kind=DP) :: etetra (4), e1, e2, e3, e4
+  integer :: nt, nk, ns, ibnd, i
 
   sumkt = 0.0
   do ns = 1, nspin

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,15 +19,16 @@ subroutine allocate_wfc
   !
   ! Allocate memory
   !
-  allocate (et( nbndx, nkstot))    
-  allocate (wg( nbnd,  nkstot))    
-  allocate (evc(  npwx, nbndx))    
+  allocate (et( nbnd, nkstot))    
+  allocate (wg( nbnd, nkstot))    
+  allocate (evc(npwx, nbndx))    
   allocate(becp(nkb, nbndx))
-  ! Needed with LDA+U
-
+  !
+  ! Needed for LDA+U
+  !
   if (lda_plus_u) allocate (swfcatom( npwx, natomwfc))    
 
-  call setv (nbndx * nkstot, 0.d0, et, 1)
+  et(:,:) = 0.d0
   write (6, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
 
 100 format (/5x,'nbndx  = ',i5,'  nbnd   = ',i5,'  natomwfc = ',i5, &

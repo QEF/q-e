@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -180,7 +180,7 @@
       end if
       if (asr) then
 !
-! ASR sulle cariche efficaci
+! ASR on effective charges
 !
             do i=1,3
                do j=1,3
@@ -194,7 +194,7 @@
                end do
             end do
 !
-! ASR sulla matrice dinamica
+! ASR on dynamical matrix
 !
             do i=1,3
                do j=1,3

@@ -274,7 +274,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !
   !   recover the vector proj over the pools
   !
-  call poolrecover (et, nbndx, nkstot, nks)
+  call poolrecover (et, nbnd, nkstot, nks)
   call poolrecover (proj, nbnd * natomwfc, nkstot, nks)
   !
   if (me.eq.1.and.mypool.eq.1) then

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -51,11 +51,10 @@ subroutine sum_band
      !
   elseif (ltetra) then
 #ifdef __PARA
-     call poolrecover (et, nbndx, nkstot, nks)
+     call poolrecover (et, nbnd, nkstot, nks)
      if (me.eq.1.and.mypool.eq.1) then
 #endif
-        call tweights (nkstot, nspin, nbndx, nbnd, nelec, ntetra, &
-             tetra, et, ef, wg)
+        call tweights (nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg)
 #ifdef __PARA
      endif
      call poolscatter (nbnd, nkstot, wg, nks, wg)
@@ -63,8 +62,7 @@ subroutine sum_band
      call broadcast (1, ef)
 #endif
   elseif (lgauss) then
-     call gweights (nks, wk, nbndx, nbnd, nelec, degauss, ngauss, &
-          et, ef, demet, wg)
+     call gweights (nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg)
   endif
   !
   ! Needed for LDA+U

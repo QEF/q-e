@@ -116,9 +116,9 @@ subroutine dos (nodenumber)
   do n= 1, ndos
      E = Emin + (n - 1) * DeltaE
      if (ltetra) then
-        call dos_t(et,nspin,nbndx,nbnd, nks,ntetra,tetra, E, DOSofE)
+        call dos_t(et,nspin,nbnd, nks,ntetra,tetra, E, DOSofE)
      else
-        call dos_g(et,nspin,nbndx,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
+        call dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
      endif
      if (nspin.eq.1) then
         DOSint = DOSint + DOSofE (1) * DeltaE

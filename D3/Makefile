@@ -165,6 +165,7 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/addusdens.o  \
 ../PW/addusforce.o  \
 ../PW/addusstress.o  \
+../PW/add_efield.o  \
 ../PW/add_vuspsi.o  \
 ../PW/allocate_fft.o  \
 ../PW/allocate_locpot.o  \

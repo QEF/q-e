@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,34 +7,29 @@
 !
 !
 !--------------------------------------------------------------------
-
-
-subroutine tweights (nks, nspin, nbndx, nbnd, nelec, ntetra, &
+subroutine tweights (nks, nspin, nbnd, nelec, ntetra, &
      tetra, et, ef, wg)
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
   use parameters
   implicit none
   !
-  integer :: nks, nspin, nbndx, nbnd, ntetra, tetra (4, ntetra)
-  real(kind=DP) :: et (nbndx, nks), nelec
+  integer :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)
+  real(kind=DP) :: et (nbnd, nks), nelec
 
   real(kind=DP) :: wg (nbnd, nks), ef
   real(kind=DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
-
-
-
   integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
+
   ! Calculate the Fermi energy ef
 
-  call efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, tetra, &
-       ef)
+  call efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef)
   do ik = 1, nks
      do ibnd = 1, nbnd
         wg (ibnd, ik) = 0.d0
      enddo
-
   enddo
+
   do ns = 1, nspin
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin

@@ -17,11 +17,9 @@ subroutine iweights (nks, wk, nbnd, nelec, wg)
   integer :: nks, nbnd
   real(kind=DP) :: wk (nks), nelec
   real(kind=DP) :: wg (nbnd, nks)
-  real(kind=DP) :: degspin
+  real(kind=DP), parameter :: degspin = 2.d0
   integer :: kpoint, ibnd
 
-
-  parameter (degspin = 2.d0)
   do kpoint = 1, nks
      do ibnd = 1, nbnd
         if (ibnd.le.nint (nelec) / degspin) then

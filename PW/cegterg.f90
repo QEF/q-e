@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,16 +7,16 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
+subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      e, notcnv, iter)
   !----------------------------------------------------------------------
   !
   !     iterative solution of the eigenvalue problem:
   !
-  !     ( H - e S ) * psi = 0
+  !     ( H - e S ) * evc = 0
   !
   !     where H is an hermitean operator, e is a real scalar,
-  !     S is an overlap matrix, psi is a complex vector
+  !     S is an overlap matrix, evc is a complex vector
   !
 #include "machine.h"
   use parameters, only : DP
@@ -24,11 +24,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   ! on INPUT
   integer :: ndim, ndmx, nvec, nvecx
   ! dimension of the matrix to be diagonalized
-  ! leading dimension of matrix psi, as declared in the calling pgm unit
+  ! leading dimension of matrix evc, as declared in the calling pgm unit
   ! integer number of searched low-lying roots
   ! maximum dimension of the reduced basis set
   !    (the basis set is refreshed when its dimension would exceed nvecx)
-  complex(kind=DP) :: psi (ndmx, nvecx)
+  complex(kind=DP) :: evc (ndmx, nvec)
   real(kind=DP) :: ethr
   ! energy threshold for convergence
   !   root improvement is stopped, when two consecutive estimates of the root
@@ -37,9 +37,8 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   ! if .true.  : use overlap matrix
   ! if .false. : use orthogonalization
   ! on OUTPUT
-  !     complex*16 psi   the first nvec columns contain the
-  !                      refined estimates of the eigenvectors
-  real(kind=DP) :: e (nvecx)
+  !  evc   contains the  refined estimates of the eigenvectors
+  real(kind=DP) :: e (nvec)
   ! contains the estimated roots.
 
   integer :: iter, notcnv
@@ -58,21 +57,22 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   ! dimension of the reduced basis
   ! counter on the reduced basis vectors
   ! do-loop counters
-  complex(kind=DP), allocatable :: hc (:,:),  smat (:,:), vc (:,:), aux (:)
+  complex(kind=DP), allocatable :: hc (:,:),  sc (:,:), vc (:,:)
   ! Hamiltonian on the reduced basis
   ! S matrix on the reduced basis
   ! the eigenvectors of the Hamiltonian
-  ! work space
-  complex(kind=DP), allocatable :: hpsi (:,:), spsi (:,:)
+  complex(kind=DP), allocatable :: psi(:,:), hpsi (:,:), spsi (:,:)
+  ! work space, contains psi
   ! the product of H and psi
   ! the product of S and psi
-  complex(kind=DP) ::  ZDOTC, eau
+  complex(kind=DP), external ::  ZDOTC
   ! scalar product routine
+  complex(kind=DP) ::  eau
   ! auxiliary complex variable
   real(kind=DP), allocatable :: ew (:)
   ! eigenvalues of the reduced hamiltonian
-  integer, allocatable  :: conv (:)
-  ! if 1 the root is converged if 0 no
+  logical, allocatable  :: conv (:)
+  ! true if the root is converged
   !
   ! Called routines:
   external h_psi, g_psi
@@ -82,28 +82,28 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   ! g_psi(ndmx,ndim,notcnv,psi,e)
   !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
   !    the first nvec columns contain the trial eigenvectors
-  external ZDOTC
   !
   ! allocate the work arrays
   !
 
   call start_clock ('cegterg')
-  if (overlap) allocate(smat(nvecx, nvecx))
-  allocate(hc (nvecx,  nvecx))
-  allocate(vc (nvecx,  nvecx))
+  allocate( psi (ndmx,  nvecx))
   allocate(hpsi (ndmx,  nvecx))
   allocate(spsi (ndmx,  nvecx))
-  allocate(aux (ndmx * nvec))
+  if (overlap) allocate(sc(nvecx, nvecx))
+  allocate(hc (nvecx,  nvecx))
+  allocate(vc (nvecx,  nvecx))
   allocate(ew (nvecx))
   allocate(conv (nvec))
 
   !      write(6,*) 'eneter cegter',hc,vc,hpsi
-  if (nvec.gt.nvecx / 2) call errore ('cegter', 'nvecx is too small',1)
+  if (nvec > nvecx / 2) call errore ('cegter', 'nvecx is too small',1)
   !
   !     prepare the hamiltonian for the first iteration
   !
   notcnv = nvec
   nbase = nvec
+  psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
   !
@@ -120,17 +120,17 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   call reduce (2 * nbase * nvecx, hc)
 #endif
   if (overlap) then
-     smat(:,:) = (0.d0, 0.d0)
+     sc(:,:) = (0.d0, 0.d0)
      call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
-          ndmx, spsi, ndmx, (0.d0, 0.d0) , smat, nvecx)
+          ndmx, spsi, ndmx, (0.d0, 0.d0) , sc, nvecx)
 #ifdef __PARA
-     call reduce (2 * nbase * nvecx, smat)
+     call reduce (2 * nbase * nvecx, sc)
 #endif
   endif
 
   do n = 1, nbase
      e (n) = hc (n, n)
-     conv (n) = 0
+     conv (n) = .false.
      vc (n, n) = (1.d0, 0.d0)
   enddo
   !
@@ -138,34 +138,49 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   !
   do kter = 1, maxter
      iter = kter
-     np = nbase
      call start_clock ('update')
-
-     do n = 1, nvec
-        if (conv (n) .eq.0) then
-           !
-           !     this root not yet converged ... set a new basis vector
-           !     (position np) to (h-es)psi ...
-           !
-           np = np + 1
-           e (np) = e (n)
-           psi(:,np) = (0.d0,0.d0)
-           call ZGEMV ('n', ndim, nbase, (1.d0, 0.d0) , hpsi, ndmx, vc (1, &
-                n) , 1, (0.d0, 0.d0) , psi (1, np) , 1)
-           eau = DCMPLX ( - e (n), 0.d0)
-           call ZGEMV ('n', ndim, nbase, eau, spsi, ndmx, vc (1, n) , 1, &
-                (1.d0, 0.d0) , psi (1, np) , 1)
-        endif
-     enddo
+     if (notcnv < nvec) then
+        np = nbase
+        do n = 1, nvec
+           if ( .not.conv (n) ) then
+              !
+              !     this root not yet converged ... set a new basis vector
+              !     (position np) to (h-es)psi ...
+              !
+              np = np + 1
+              ! for use in g_psi
+              ew (np) = e (n)
+              call ZGEMV ('n', ndim, nbase, (1.d0, 0.d0) , hpsi, ndmx, &
+                   vc (1, n) , 1, (0.d0, 0.d0) , psi (1, np) , 1)
+              eau = DCMPLX ( - e (n), 0.d0)
+              call ZGEMV ('n', ndim, nbase, eau, spsi, ndmx, vc (1, n) , 1, &
+                   (1.d0, 0.d0) , psi (1, np) , 1)
+           endif
+        enddo
+     else
+        !
+        !     expand the basis set with new basis vectors (h-es)psi ...
+        !
+        call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0), spsi, &
+             ndmx, vc, nvecx, (0.d0, 0.d0), psi (1, nbase+1), ndmx)
+        do n = 1, nvec
+           ! for use in g_psi
+           ew (nbase+n) = e (n)
+           psi (:,nbase+n) = - e(n) * psi(:,nbase+n)
+        end do
+        call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0d0), hpsi, &
+             ndmx, vc, nvecx, (1.d0, 0.d0), psi (1, nbase+1), ndmx)
+     end if
 
      call stop_clock ('update')
      !
      ! approximate inverse iteration
      !
-     call g_psi (ndmx, ndim, notcnv, psi (1, nbase+1), e (nbase+1) )
+     call g_psi (ndmx, ndim, notcnv, psi (1, nbase+1), ew (nbase+1) )
      !
-     ! "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order to
-     ! the numerical stability of cdiaghg (use ew as work array for norm of p
+     ! "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
+     ! to improve numerical stability of subspace diagonalization rdiaghg
+     ! ew is used as work array : ew = <psi_i|psi_i>, i=nbase+1,nbase+notcnv
      !
      do n = 1, notcnv
         ew (n) = ZDOTC (ndim, psi (1, nbase+n), 1, psi (1, nbase+n), 1)
@@ -200,17 +215,18 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      call reduce (2 * nvecx * notcnv, hc (1, nbase+1) )
 #endif
      if (overlap) then
-        call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0) &
-             , psi, ndmx, spsi (1, nbase+1) , ndmx, (0.d0, 0.d0) , smat (1, &
-             nbase+1) , nvecx)
+        call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0), &
+             psi, ndmx, spsi (1, nbase+1) , ndmx, (0.d0, 0.d0) , &
+             sc (1, nbase+1) , nvecx)
 #ifdef __PARA
-        call reduce (2 * nvecx * notcnv, smat (1, nbase+1) )
+        call reduce (2 * nvecx * notcnv, sc (1, nbase+1) )
 #endif
      endif
 
      call stop_clock ('overlap')
      nbase = nbase+notcnv
      do n = 1, nbase
+        !  the diagonal of hc must be strictly real 
         hc (n, n) = DCMPLX (DREAL (hc (n, n) ), 0.d0)
         do m = n + 1, nbase
            hc (m, n) = conjg (hc (n, m) )
@@ -221,12 +237,12 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      !
      if (overlap) then
         do n = 1, nbase
-           smat (n, n) = DCMPLX (DREAL (smat (n, n) ), 0.d0)
+           sc (n, n) = DCMPLX (DREAL (sc (n, n) ), 0.d0)
            do m = n + 1, nbase
-              smat (m, n) = conjg (smat (n, m) )
+              sc (m, n) = conjg (sc (n, m) )
            enddo
         enddo
-        call cdiaghg (nbase, nvec, hc, smat, nvecx, ew, vc)
+        call cdiaghg (nbase, nvec, hc, sc, nvecx, ew, vc)
 #ifdef DEBUG_DAVIDSON
         write (6,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
         write (6,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
@@ -240,87 +256,93 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      !
      notcnv = 0
      do n = 1, nvec
-!        if (conv (n) .eq.0) then
-           if (.not.abs (ew (n) - e (n) ) .le.ethr) then
-              e (n) = ew (n)
-              conv (n) = 0
-              notcnv = notcnv + 1
-           else
-              e (n) = ew (n)
-              ! root converged
-              conv (n) = 1
-           endif
-!        endif
+!!!        conv (n) = conv(n) .or. ( abs (ew (n) - e (n) ) <= ethr )
+        conv (n) = ( abs (ew (n) - e (n) ) <= ethr )
+        if ( .not. conv(n) ) notcnv = notcnv + 1
+        e (n) = ew (n)
      enddo
-     !     if overall convergence has been achieved or the dimension of the
-     !     reduced basis set is becoming too large, then refresh the basis
-     !     set. i.e. replace the first nvec elements with the current estimat
-     !     of the eigenvectors and set the basis dimension to nvec.
-
-     if (notcnv.eq.0.or.nbase+notcnv.gt.nvecx) then
+!!! TEST : update all eigenvectors if more than 1/4 are converged
+     if (notcnv > nvec/4) then
+        notcnv = nvec
+        conv(:) = .false.
+     end if
+!!! END OF TEST
+     !
+     !     if overall convergence has been achieved, OR
+     !     the dimension of the reduced basis set is becoming too large, OR
+     !     in any case if we are at the last iteration
+     !     refresh the basis set. i.e. replace the first nvec elements
+     !     with the current estimate of the eigenvectors;
+     !     set the basis dimension to nvec.
+     !
+     if ( notcnv == 0 .or. nbase+notcnv > nvecx .or. iter == maxter) then
         call start_clock ('last')
-        aux(:) = (0.d0,0.d0)
         call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , psi, &
-             ndmx, vc, nvecx, (0.d0, 0.d0) , aux, ndmx)
-        call ZCOPY (ndmx * nvec, aux, 1, psi, 1)
-        if (notcnv.eq.0) then
+             ndmx, vc, nvecx, (0.d0, 0.d0) , evc, ndmx)
+        if (notcnv == 0) then
         !
         !     all roots converged: return
         !
            call stop_clock ('last')
            goto 10
+        else if (iter == maxter) then
+        !
+        !     last iteration, some roots not converged: return
+        !
+#ifdef DEBUG_DAVIDSON
+           do n = 1, nvec
+              if ( .not.conv (n) ) write (6, '("   WARNING: e(",i3,") =",&
+                   f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
+           enddo
+#else
+           write (6, '("   WARNING: ",i5," eigenvalues not converged")') &
+                notcnv
+#endif
+           call stop_clock ('last')
+           goto 10
         end if
+        !
+        !     refresh psi, H*psi and S*psi
+        !
+        psi(:, 1:nvec) = evc(:, 1:nvec)
 
         call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , spsi, &
-             ndmx, vc, nvecx, (0.d0, 0.d0) , aux, ndmx)
-        call ZCOPY (ndmx * nvec, aux, 1, spsi, 1)
+             ndmx, vc, nvecx, (0.d0, 0.d0) , psi(1, nvec + 1), ndmx)
+        spsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
 
         call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , hpsi, &
              ndmx, vc, nvecx, (0.d0, 0.d0) , psi (1, nvec + 1) , ndmx)
-        call ZCOPY (ndmx * nvec, psi (1, nvec + 1), 1, hpsi, 1)
+        hpsi(:, 1:nvec) = psi(:, nvec+1:2*nvec)
         !
-        !     modify the reduced hamiltonian accordingly
+        !     refresh the reduced hamiltonian 
         !
-        hc(:,:) = (0.d0, 0.d0)
-        call DCOPY (nbase, e, 1, hc, 2 * (nvecx + 1) )
+        nbase = nvec
+        hc (:, 1:nbase) = (0.d0, 0.d0)
+        vc (:, 1:nbase) = (0.d0, 0.d0)
+        do n = 1, nbase
+           hc (n, n) = e(n)
+           vc (n, n) = (1.d0, 0.d0)
+        enddo
         if (overlap) then
-           smat = (0.d0, 0.d0)
-           do n = 1, nvecx
-              smat (n, n) = (1.d0, 0.d0)
+           sc (:, 1:nbase) = (0.d0, 0.d0)
+           do n = 1, nbase
+              sc (n, n) = (1.d0, 0.d0)
            enddo
         endif
         call stop_clock ('last')
-        nbase = nvec
-        vc(:,1:nbase) = (0.d0, 0.d0)
-        do n = 1, nbase
-           vc (n, n) = (1.d0, 0.d0)
-        enddo
-     endif
-  enddo
-  !
-  !  replace the first nvec elements with the current estimate of 
-  !  the eigenvectors before quiting also when overall convergence 
-  !  has not been achieved
-  !
-  aux(:) = (0.d0,0.d0)
-  call ZGEMM ('n', 'n', ndim, nvec, nbase, (1.d0, 0.d0) , psi, &
-             ndmx, vc, nvecx, (0.d0, 0.d0) , aux, ndmx)
-  call ZCOPY (ndmx * nvec, aux, 1, psi, 1)
 
-  do n = 1, nvec
-     if (conv (n) .eq.0) write (6, '("   WARNING: e(",i3,") =",&
-          & f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
+     endif
   enddo
 
 10 continue
-  deallocate (conv)
-  deallocate (ew)
-  deallocate (aux)
   deallocate (spsi)
   deallocate (hpsi)
-  deallocate (vc)
+  deallocate ( psi)
+  if (overlap) deallocate (sc)
   deallocate (hc)
-  if (overlap) deallocate (smat)
+  deallocate (vc)
+  deallocate (ew)
+  deallocate (conv)
 
   call stop_clock ('cegterg')
   return

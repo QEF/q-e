@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,15 +12,15 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
   !     This routine calculates an stm image defined as the local density
   !     of states at the fermi energy.
-  !     To this end uses a matched exponential behaved wavefunction, in th
+  !     To this end uses a matched exponential behaved wavefunction, in the
   !     spirit of the Tersoff and Hamann approximation (PRB 31, 805 (1985)
   !     The matching with the true wavefunction is decided by the variable
-  !     in celldm(1) units, then stm images are calculateted every dz.
+  !     z in celldm(1) units, then stm images are calculateted every dz.
   !     The bias of the sample is decided by sample_bias, states between
   !     ef and ef + sample_bias are taken into account.
   !     It needs the workfunction wf. On output wf contains the number of
   !     states used to compute the image.
-  !     The slab must be orientated with the main axis along celldm(3).
+  !     The slab must be oriented with the main axis along celldm(3).
   !     It may not properly work if the slab has two symmetric surfaces.
   !
 #include "machine.h"
@@ -38,7 +38,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
   integer :: istates, igs, npws, ir, ir1, irx, iry, irz, ig, ibnd, &
        ik, nbnd_ocp
-  ! the number of states to compute the im
+  ! the number of states to compute the image
   ! counter on surface G vectors
   ! number of surfac g-vectors
   ! counters on 3D r points
@@ -67,11 +67,10 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
   !
   !     if matching is .true. then matches the wfc's and uses their
-  !     exponential behaviour, otherwise uses the true wfc's on the fft gr
+  !     exponential behaviour, otherwise uses the true wfc's on fft grid
   !
-  call setv (nrx1 * nrx2 * nrx3, 0.d0, stmdos, 1)
-
-  if (.not.stm_wfc_matching) call setv (nrxx, 0.d0, rho, 1)
+  stmdos(:) = 0.d0
+  if (.not.stm_wfc_matching) rho(:,:) = 0.d0
   if (stm_wfc_matching) then
      z = z * alat
 
@@ -122,7 +121,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   endif
   !
   !     take only the states in the energy window above or below the fermi
-  !     as determined by the bias of the sample
+  !     energy as determined by the bias of the sample
   !
   if (sample_bias.gt.0) then
      up = ef + sample_bias
@@ -170,14 +169,15 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            uguale = .false.
            do igs = 1, npws
               !
-              !     if the surface part of G is equal to at least one of the surface v
-              !     already found then uguale = .true.
+              !     if the surface part of G is equal to at least one of the
+              !     surface vectors already found then uguale = .true.
               !
               uguale = uguale.or. (g (1, igk (ig) ) .eq.gs (1, igs) .and.g ( &
                    2, igk (ig) ) .eq.gs (2, igs) )
            enddo
            !
-           !     if G is not equal to any surface vector then G is a new surface ve
+           !     if G is not equal to any surface vector then G is a new
+           !     surface vector
            !
            if (.not.uguale) then
               npws = npws + 1
@@ -196,12 +196,11 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
         !
         istates = istates + 1
         !
-        !     for this state the work function is modified accordingly to its en
-        !
-        !
         !     find the coefficients of the matching wfcs
         !
         if (stm_wfc_matching) then
+           !     for this state the work function is modified accordingly
+           !     to its energy
            wf1 = wf - (et (ibnd, ik) - ef - sample_bias)
            do igs = 1, npws
               a (igs) = (0.d0, 0.d0)
@@ -219,18 +218,19 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               enddo
            enddo
            !
-           !     reconstruct the wfc for the z in interest for this k-point and thi
-           !     uses nr3/2 planes only, the other nr3/2 are empty -> only the uppe
-           !     surface is used. N.B. it may not properly work if the upper surfac
-           !     is connected to the lower surface by a symmetry operation (one
-           !     should take the average of the two surfaces...).
+           !     reconstruct the wfc for the z of interest for this k-point
+           !     and this band. Uses nr3/2 planes only, the other nr3/2 are 
+           !     empty -> only the upper surface is used.
+           !     N.B. it may not properly work if the upper surfacw
+           !     is connected to the lower surface by a symmetry operation
+           !     (one should take the average of the two surfaces...).
            !
            do irz = 2, nr3 / 2
               !
               !     zz is the new z
               !
               zz = z + dz * (irz - 2)
-              call setv (2 * nrx1 * nrx2, 0.d0, psi, 1)
+              psi(:,:) = (0.d0, 0.d0)
               do igs = 1, npws
                  fac = exp ( - sqrt (wf1 + ( (xk (1, ik) + gs (1, igs) ) **2 + &
                       (xk (2, ik) + gs (2, igs) ) **2) * tpiba2) * zz)
@@ -256,8 +256,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               call reduce (2 * nrx1 * nrx2, psi)
 #endif
               !
-              !     now sum for each k-point and for each band the square modulus of t
-              !     wfc times the weighting factor
+              !     now sum for each k-point and for each band the square
+              !     modulus of the wfc times the weighting factor
               !
               do iry = 1, nr2
                  do irx = 1, nr1
@@ -271,7 +271,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            !
            !     do not match
            !
-           call setv (2 * nrxx, 0.d0, psic, 1)
+           psic(:) = (0.d0, 0.d0)
            do ig = 1, npw
               psic (nl (igk (ig) ) ) = evc (ig, ibnd)
 

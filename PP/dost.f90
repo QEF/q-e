@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,14 +7,14 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine dos_t (et, nspin, nbndx, nbnd, nks, ntetra, tetra, e, dost)
+subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
   !------------------------------------------------------------------
   !
   use parameters, only : DP
   implicit none
-  integer :: nspin, nbndx, nbnd, nks, ntetra, tetra (4, ntetra)
+  integer :: nspin, nbnd, nks, ntetra, tetra (4, ntetra)
 
-  real(kind=DP) :: et (nbndx, nks), e, dost (2)
+  real(kind=DP) :: et (nbnd, nks), e, dost (2)
   integer :: itetra (4), nk, ns, nt, ibnd, i
 
   real(kind=DP) :: etetra (4), e1, e2, e3, e4
