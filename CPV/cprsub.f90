@@ -1300,7 +1300,7 @@
       allocate(qradb(ngb,nbrx,nbrx,lmaxq,nsp))
       allocate(qgb(ngb,nhm*(nhm+1)/2,nsp))
       allocate(qq(nhm,nhm,nsp))
-      allocate(dvan(nhm,nhm,1,nsp))
+      allocate(dvan(nhm,nhm,nsp))
       if (nlcc_any) allocate(rhocb(ngb,nsp))
       allocate(nhtol(nhm,nsp))
       allocate(indv (nhm,nsp))
@@ -1316,7 +1316,7 @@
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
-      dvan(:,:,:,:) =0.d0
+      dvan(:,:,:) =0.d0
       if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
 !
 !     ------------------------------------------------------------------
@@ -1535,7 +1535,7 @@
          do iv=1,nh(is)
             do jv=1,nh(is)
                if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
-                  dvan(iv,jv,1,is)=fac*dion(indv(iv,is),indv(jv,is),is)
+                  dvan(iv,jv,is)=fac*dion(indv(iv,is),indv(jv,is),is)
                endif 
             end do
          end do

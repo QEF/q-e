@@ -186,8 +186,7 @@ subroutine init_us_1
               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
-              dvan (ih, jh, 1, nt) = dion (ir, is, nt)
-              if (nspin.eq.4) dvan(ih, jh, 4, nt) = dion(ir, is, nt)
+              dvan (ih, jh, nt) = dion (ir, is, nt)
             endif
           enddo
         enddo

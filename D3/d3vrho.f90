@@ -131,8 +131,8 @@ subroutine d3vrho
                              call reduce (16, alpha)
 #endif
                              d3dynwrk (na_k, na_i, na_j) = d3dynwrk (na_k, na_i, na_j) - &
-                                  2.0d0 * dvan(ikb,ikb,1,nt) * wgg * &
-                                  DIMAG(alpha(1)*alpha(2) + alpha(3)*alpha(4) + &
+                                  2.0d0 * dvan(ikb,ikb,nt) * wgg * &
+                                  DIMAG(alpha(1)*alpha(2) + alpha(3)*alpha(4) +&
                                         alpha(5)*alpha(6) + alpha(7)*alpha(8))
                           enddo
                        endif

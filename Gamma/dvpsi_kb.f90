@@ -116,8 +116,8 @@ subroutine dvpsi_kb(kpoint,nu)
               !
               do ibnd = 1,nbnd
                  do ih = 1,nh(nt)
-                    bec1(ih,ibnd) = dvan(ih,ih,1,nt) * bec1(ih,ibnd)
-                    bec2(ih,ibnd) = dvan(ih,ih,1,nt) * bec2(ih,ibnd)
+                    bec1(ih,ibnd) = dvan(ih,ih,nt) * bec1(ih,ibnd)
+                    bec2(ih,ibnd) = dvan(ih,ih,nt) * bec2(ih,ibnd)
                  end do
               end do
               !

@@ -173,13 +173,13 @@ subroutine compute_casino
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
                        enl=enl+conjg(becp(ikb,ibnd))*becp(ikb,ibnd) &
-                            *wg(ibnd,ikk)* dvan(ih,ih,1,nt)
+                            *wg(ibnd,ikk)* dvan(ih,ih,nt)
                        DO jh = ( ih + 1 ), nh(nt)
                           jkb = ijkb0 + jh
                           enl=enl + &
                                (conjg(becp(ikb,ibnd))*becp(jkb,ibnd)+&
                                conjg(becp(jkb,ibnd))*becp(ikb,ibnd))&
-                               * wg(ibnd,ikk) * dvan(ih,jh,1,nt)
+                               * wg(ibnd,ikk) * dvan(ih,jh,nt)
 
                        END DO
 

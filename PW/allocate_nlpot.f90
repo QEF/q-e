@@ -100,7 +100,7 @@ subroutine allocate_nlpot
     allocate (fcoef(nhm,nhm,2,2,ntyp))
   else
     allocate (qq(   nhm, nhm, ntyp))    
-    allocate (dvan( nhm, nhm, nspin, ntyp))    
+    allocate (dvan( nhm, nhm, ntyp))    
   endif
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &

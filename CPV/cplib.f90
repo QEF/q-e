@@ -711,7 +711,7 @@
                      enddo
                   end do
                   if(iv.ne.jv) dsum=2.d0*dsum
-                  denl = denl + dsum*dvan(jv,iv,1,is)
+                  denl = denl + dsum*dvan(jv,iv,is)
                end do
             end do
          end do
@@ -904,9 +904,9 @@
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      isa=isa+1
-                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,1,is)
+                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
                      af(inl)=af(inl)-  f(i)*dd*bec(jnl,  i)
-                     dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,1,is)
+                     dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
                      if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
                   end do
                end do
@@ -1407,7 +1407,7 @@
                      sum=sum+sums(iss)
                   end do
                   if(iv.ne.jv) sum=2.d0*sum
-                  ennl=ennl+sum*dvan(jv,iv,1,is)
+                  ennl=ennl+sum*dvan(jv,iv,is)
                end do
             end do
          end do
@@ -3715,7 +3715,7 @@
                      inl=ish(is)+(jv-1)*na(is)+ia
                      do i=1,n
                         iss=ispin(i)
-                        temp=dvan(iv,jv,1,is)+deeq(jv,iv,isa,iss)
+                        temp=dvan(iv,jv,is)+deeq(jv,iv,isa,iss)
                         tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i)
                      end do
                   end do
