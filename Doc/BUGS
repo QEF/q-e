@@ -1,4 +1,8 @@
 
+  * memory leak in Raman code
+
+  * disproportionate memory requirement in phonon code with USPP
+
   *  dangerous calls to read_restart_tetra and write_restart_tetra
      when restarting with no allocated tetrahedra
 

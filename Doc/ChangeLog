@@ -1,5 +1,6 @@
 18 Nov 2004 Reduction in memory requirements for phonon calculation
             with uspp (routine dvanqq) - courtesy of N. Mounet
+            Memory leak in Raman code fixed (PG).
 
 17 Nov 2004 Cleanup and merge of spherical bessel function routines (C.S.)
             added script to compute dependencies of a subroutine [Gerardo]

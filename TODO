@@ -1,22 +1,42 @@
-TODO LIST - 25 Oct 2004
-(does not include new developments!)
+TODO LIST - 18 Nov 2004
+
+BUGS
+
+- Efermi and restart (Alessandra)
+- fourfold degenerate phonons (Nicolas Mounet)
+
+NEW DEVELOPMENTS TO MERGE
+
+- ensemble-DFT dynamics (Nicola)
+- Axel's patches for configure (maybe not yet, or not now)
+- patches by Pascal Thibadeau: misc stuff in atomic/ (ok)
+  and support for FFTW3 (partly working)
+- porting/opimization for Altix by Martin Hilgeman (coming)
+- porting/opimization for SX6 from CASPUR (hopefully coming)
+- finite electric field (when finished)
+- META-GGA (when finished/tested)
 
 INSTALLATION/PORTING
 
+- make the installation system itself as portable as possible
+  so that it can be easily used for other codes
+
 - expand configure to cover as many configurations as possible
 
-- __FUJITSU vs FUJ64, HITACHI, NEC-SX5
+- exotic architectures: __FUJITSU, FUJ64, HITACHI, NEC-SX5, ...
 
 COMMON
+
+- data files: move to new format (XML + directories)
+
+- pseudopotentials: support new format (XML)
 
 - adding/removing/modifying input variables is too complex
 
 - time steps in fs (both in input and in output)
 
-- data files: modifying their format (e.g. adding a variable) 
-  is not documented and way too complex right now
-  Add version information for future compatibility
-  What is the status of file compatibility between PW and CP/FPMD?
+- data files: What is exactly the status of file compatibility
+  between PW and CP/FPMD?
 
 - fix shift in eigenvalues between CP/FPMD and PW
   The eigenvalues should be the same
@@ -27,20 +47,19 @@ COMMON
 
 - merge spherical harmonics between CP-PW and FPMD
   merge integration routines, random number generators
-  spherical bessel: add routine directly calculating dj_l(x)/dx,
-  verify limits x=>0, fix special cases x=>0 into the codes
 
-- variable declarations : real(kind=DP), or real(dbl), everywhere
+- variable declarations : real(kind=DP) or real(dbl), everywhere
 
 - clean up intrinsic functions mess:
      real, dreal, float, dfloat, dble
      cmplx, dcmplx
      conjg, dconjg
      imag, aimag, dimag
-  with and without preprocessing!
+  plus preprocessing!
 
 - error is in flib/ but requires modules: not a good solution,
-  things in flib/ should not use modules except maybe kinds   
+  things in flib/ should not use modules except maybe kinds 
+  and other very low level modules 
 
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax
 
@@ -49,15 +68,10 @@ COMMON
 
 PW
 
-- cleanup of parallel stuff: finish removal of old-style variables
-  Put SHMEM stuff into a single module (low priority) ?
-
-- remove iswitch, replace with existing (minus_q, lscf)
-  or new logical variables
+- cleanup: complete removal of iswitch, replace with existing 
+  (minus_q, lscf) or new logical variables
 
 - maximize merge of colinear (PW) and noncolinear (PWNC) code
-
-- add traceback in error (error_handler module)
 
 - remove potential mixing, save and start from rho instead of V,
   at least for scf calculations. Requires fixing the noncolinear
@@ -67,9 +81,6 @@ PW
 
 - save rho and/or V in G-space instead of R-space
   check that what is read makes sense
-
-- extend to CP/FPMD possibility to save wavefunctions either 
-  'distributed' or 'collected' in parallel execution
 
 - add possibility to read atomic positions from file
 
@@ -93,11 +104,15 @@ PW
 - write explicitly and unambiguosly the units of output quantities
   and also what are exactly the output quantites!
 
+Low priority:
+
+- add traceback in error (error_handler module)
+
+- Put SHMEM stuff into a single module
+
 POSTPROCESSING
 
-- complete postprocessing in Gamma case
-
-- postprocessing with CP/FPMD?
+- complete postprocessing in Gamma case, and with CP/FPMD data
 
 - stm_wfc_matching not working
 
@@ -105,26 +120,28 @@ POSTPROCESSING
   the information on lattice basis vectors if ibrav=0.
   As a consequence most postprocessing codes will not work 
 
-- reconstruction of all-electron wavefunctions
-
 PH, D3, Gamma, Raman
 
 - Bug with 4-dimensional irreps is still there!
 
+- the factors in Raman coefficients are not what they should be 
+  (I think) in order to have the stated units A^4/amu
+
 - finish simplification of phonon dispersion calculation:
-  move all phonon-specific stuff (symmetry etc) from
-  pw into phonon?
+  move all phonon-specific stuff (symmetry etc) from pw into phonon?
 
 - same input for Gamma and PH; Gamma output compatible with Raman
 
-- better algorithm for electron-phonon (Malgorzata?)
+- once Raman works for sure, remove all Raman-related stuff in Gamma
+
+- better algorithms for electron-phonon
 
 - replace "use pwcom" into more "use" statements
 
 
 DOCUMENTATION
 
-- examples for some features are still missing
+- examples for some features (notably variab;le cell) still missing
   automated testing procedure: how to deal with numerical differences?
 
 - expand and update the manual; add a list of FAQ, or of already
@@ -134,6 +151,8 @@ DOCUMENTATION
 
 CP/FPMD:
 
+- extend to CP/FPMD possibility to save wavefunctions either 
+  'distributed' or 'collected' in parallel execution
 
 - CP: check on small box size
 
