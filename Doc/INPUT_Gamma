@@ -1,0 +1,73 @@
+First, an explanation and a warning: the code phcg.x contained in 
+the Gamma/ subdirectory is a specialized phonon code, calculating
+phonon modes only at Gamma (q=0), and using only Gamma (k=0) for 
+the sum over the Brillouin Zone. It performs direct minimization 
+of the energy functional expanded at second order in the atomic 
+displacements. The code was written having molecular applications 
+in mind : Raman and IR spectra calculations in C60 (see JCP 100, 
+p.8537, 1994) and later in models of the GFP chromophore (Chem.Phys.
+287/1-2, p.33, 2003). The (non resonant) Raman cross sections are 
+calculated by finite differences of the dielectric tensor with 
+respect to small atomic displacements. This method is simple but 
+slow and is made obsolete by the use of the (2n+1) theorem. Unless
+you know what you are doing, you shouldn't use this code for the
+calculation of Raman coefficients.
+
+Note that:
+- the code reads a file produced by pw.x with Gamma point only and
+  Gamma-point special tricks (half of the plane waves and so on)
+- the symmetry is used in a different way wrt all other PWscf codes:
+  only inequivalent atoms are displaced. This has an historical reason: 
+  C60 has just 3 inequivalent atoms when put into in a cubic cell with 
+  standard orientation (the isolated molecule has 1 inequivalent atom)
+- the code saves partial and final results in files "restart_e" and 
+  "restartph". Remove those files if you want to start from scratch, 
+  otherwise the code will restart from previous data.
+
+Input:
+  title (a string of characters)
+  &inputph [variable1=value1, variable2=value2,...] /
+  displacement patterns (optional, see below)
+
+Input variables as in the phonon code:
+
+  outdir
+  prefix
+  fildyn
+  epsil 
+  trans
+  tr2_ph   Note that Conjugate-Gradient algorithm stops when 
+           || A\delta\psi - B || < tr2_ph, where A and B define
+           the DFT functional expanded at second order:
+           E^{(2)} = (1/2) (\delta\psi A \delta\psi) - B\delta\psi
+
+Variables specific to this code:
+
+  asr      use Acoustic Sum Rule to reduce by 3 the number of phonon
+           calculations to be performed (used only if trans=.true.)
+  nmodes   use the specified displacement patterns, provided after the
+           namelist as nmodes vectors, each with 3*nat components
+           (nat=number of atoms); nmodes < 3*nat is allowed (I think). 
+           If not set, uses all 3*nat displacement patterns (one atom
+           at the time, along x, or y, or z)
+
+Raman-specific variables for this code:
+
+  raman    perform a calculation of Raman cross sections by finite
+           differences
+  deltatau finite difference (a.u.): typically a small but not too
+           small amount, something like 0.01 a.u, or so
+  nderiv   type of finite derivative formula: nderiv=2 is a simple
+           two-point formula (two calculations per displacement)
+            [ f (-deltatau) + f(+deltatau) - 2 f(0) ] / 2/ deltatau^2
+           nderiv=4 is a four-point formula (4 calculations/displacement)
+  first, last
+           calculate raman intensities only for phonon modes from the
+           "first" to the "last" (in increasing order of energy, as
+           produced by the code after diagonalization of the dynamical
+           matrix), using these phonon modes as displacement patterns.
+           Requires nderiv*(last-first+1) calculations of the dielectric
+           tensor. If not set, first calculate all derivatives of the 
+           dielectric tensor wrt atomic displacements (nderiv*3*nat 
+           calculations); then, Raman intensities for all phonon modes.
+

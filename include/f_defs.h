@@ -15,6 +15,14 @@
 #  define C_POINTER  integer(kind=4)
 #endif
 
+#if defined __MAC
+#  if defined __MAC64
+#    defined C__POINTER  integer(kind=8)
+#  else
+#    define C_POINTER  integer(kind=4)
+#  endif
+#endif
+
 #if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined(__T3E)
 #  define C_POINTER  integer(kind=8)
 #endif

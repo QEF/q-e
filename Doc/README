@@ -1,0 +1,47 @@
+This is the available documentation for the ESPRESSO package:
+
+MANUAL.FPMD-CP  User's Manual (sort of) for CP and FPMD
+manual.tex      User's Manual (sort of) for PWscf (applies in part to CP/FPMD
+                as well) - tex file, requires LaTeX and html.sty
+pwscf.png       Picture included in the manual
+democritos.png  as above
+refman.tex      Reference (technical) manual for PWscf: little more than
+                a template at present
+
+INPUT_FPMD      Input parameters for FPMD
+INPUT_CP        As above for CP (possibly obsolete)
+INPUT.HOWTO     Hints on how to choose simulation parameters for CP/FPMD with
+                Car-Parrinello dynamics
+INPUT_PW        Input parameters for PWscf (pw.x)
+INPUT_PP        Input parameters for postprocessing (pp.x)
+INPUT_PROJWFC   Input parameters for postprocessing (projwave.x)
+INPUT_CHDENS    Input parameters for plotting (chdens.x)
+INPUT_PH        Input parameters for phonon calculations (ph.x)
+INPUT_Gamma     Input parameters for normal-mode calculations (phcg.x)
+INPUT_D3        Input parameters for 3rd-order derivatives (d3.x)
+INPUT_EFG       Input parameters for electric-field gradient calc (efg.x)
+INPUT_NC        Input parameters for noncolinear magnetism (pwnc.x)
+INPUT_PWCOND    Input parameters for ballistic conductance (pwcond.x)
+INPUT_RAM       Input parameters for Raman calculation (raman.x)
+
+ChangeLog       ChangeLog for the ESPRESSO suite - after aug. 2004
+ChangeLog.pw    ChangeLog before aug 2004 for PWscf
+ChangeLog.cp    ChangeLog before aug 2004 for CP and FPMD
+
+BUGS            List of bugs fixed - only bugs that have been present
+                in some "official" release are listed
+CREDITS         Who did what
+
+All the material included in this distribution is free software;
+you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later version.
+
+These programs are distributed in the hope that they will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.

@@ -4,14 +4,15 @@ CCFLAGS        = @cflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
+FDFLAGS        = @fdflags@
 IFLAGS         = -I. -I../include -I../Modules -I../PW -I../PH @ifftw@
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ @pre_dflags@$(DFLAGS) $(IFLAGS)
 F77            = @f77@
 F90            = @f90@
-FFLAGS         = @fflags@
-F77FLAGS       = $(FFLAGS) $(IFLAGS)
-F90FLAGS       = @f90flags@ @pre_f_dflags@$(DFLAGS) $(IFLAGS)
+FFLAGS         = @fflags@ $(IFLAGS)
+F77FLAGS       = $(FFLAGS)
+F90FLAGS       = @f90flags@ @pre_f_dflags@$(FDFLAGS)
 F77FLAGS_NOOPT = @fflags_noopt@
 LD             = @ld@
 LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
@@ -32,3 +33,4 @@ LIBS           = @libs@
 MYLIB          = @mylib@
 AR             = @ar@
 ARFLAGS        = @arflags@
+RANLIB         = @ranlib@

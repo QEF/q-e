@@ -1,0 +1,92 @@
+THE INPUT OF THE NON COLLINEAR PROGRAM IS THE SAME THAT THE PW ONE, BUT
+THE FOLLOWING FLAGS:
+
+Input data format: { } = optional, [ ] = it depends
+=====================================================================
+&CONTROL
+  ...
+/
+&SYSTEM
+ ...
+/
+&ELECTRONS
+...
+/
+[ &IONS
+  ...
+ / ]
+[ &CELL
+  ...
+ / ]
+[ &PHONON
+  ...
+ / ]
+ATOMIC_SPECIES
+ X  Mass_X  PseudoPot_X
+ Y  Mass_Y  PseudoPot_Y
+ Z  Mass_Z  PseudoPot_Z
+ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+  X 0.0  0.0  0.0  {iforce(1) iforce(2) iforce(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+K_POINTS { tpiba | automatic | crystal | gamma }
+if (gamma)
+   nothing to read
+if (automatic)
+   nk1, nk2, nk3, k1, k2, k3
+if (not automatic)
+   nks
+   xk_x, xk_y, xk_z,  wk
+[ CELL_PARAMETERS { cubic | hexagonal }
+   a(1,1) a(2,1) a(3,1)
+   a(1,2) a(2,2) a(3,2)
+   a(1,3) a(2,3) a(3,3) ]
+=====================================================================
+NAMELIST &SYSTEM
+
+NONCOLIN        logical
+                if .true. the program will perform a noncollinear calculation.
+                DEFAULT: .false.
+
+ANGLE1(I)       real
+                The angle expressed in degrees between the initial 
+                magnetization and the z-axis. I runs over the atom types.
+
+ANGLE2(I)       real
+                The angle expressed in degrees between the projection
+                of the initial magnetization on x-y plane and the x-axis.
+
+I_CONS          integer
+                #if i_cons = 0; there isn't penalty fuctional
+
+                #if i_cons = 1; there is a penalty functional added to the
+                Hamiltonian of the form:
+                
+     - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
+
+                where i runs over the components (1-3) and itype over the
+                types (1-ntype). Lambda is a real number (see below). 
+
+                #if i_cons = 2; not all the components of the magnetic
+                moment are constrained but only the cosinus of angle1. So
+                only mcons(1,ityp) must be specified and it represents
+                the cosinus of angle1, and the penalty functional is:
+
+    - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - mcons(1,ityp) )**2
+
+LAMBDA          real
+                see I_CONS
+
+MCONS(I,J)      real
+                I runs over the components (1-3), J over the atom types.
+                see I_CONS.
+
+REPORT          integer
+                It's the number of iterations after which the program
+                write all the atomic magnetic moments.
+
+LSPINORB        logical
+                if .true. the noncollinear code can use a pseudopotential with
+                spin-orbit.
+
+FOR THE OTHER FLAGS LOOK AT INPUT_PW.

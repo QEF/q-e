@@ -1,0 +1,560 @@
+!
+!  ------ DESCRIPTION OF THE INPUT FILE ---------
+!        (to be given as standard input)
+!
+!  The format of the file is as follows:
+!
+!  &CONTROL   ... /
+!  &SYSTEM    ... /
+!  &ELECTRONS ... /
+!  &IONS      ... /
+!  &CELL      ... / (optional)
+!  'card_identifier 1'
+!  cards as specified by above identifier
+!  'card identifier 2'
+!  cards as specified by above identifier
+!  ...
+!
+!  ---------------- NAMELISTS PARAMETERS -------------------
+!  ( when appropriate default values are marked with a "*" )
+
+! ... CONTROL Namelist
+ 
+CHARACTER(LEN=80) :: calculation  
+! calculation = 'cp'* | 'scf' | 'relax' | 'vc-relax' | 'vc-cp' |  'nscf'
+! 'cp'       = Car-Parrinello MD (includes cases 'scf' and 'relax')
+! 'scf'      = electron minimization
+! 'relax'    = ionic minimization
+! 'vc-relax' = ionic + cell minimization
+! 'vc-cp'    = variable-cell Car-Parrinello (-Rahman) dynamics
+! 'nscf'     = non-selfconsistent calculation of KS states (CP only:
+!              reads the charge density previously saved to disk,
+               sets occupancies to a bogus nonzero value)
+ 
+CHARACTER(LEN=80) :: title  
+! title = 'title for this simulation'
+
+CHARACTER(LEN=80) :: restart_mode 
+! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters' | 'upto'
+! Specify how to start/restart the CPMD simulation
+!   'from_scratch'    start a new simulation from scratch,
+!                     with random wave functions
+!   'restart'         continue a previous simulation,
+!                     and performs  "nstep" new steps,
+!   'reset_counters'  continue a previous simulation,
+!                     performs  "nstep" new steps, resetting
+!                     the counter and averages
+!   'upto'            continue a previous simulation,
+!                     and stops when the counter value is equal "nstep"
+
+CHARACTER(LEN=80) :: verbosity  
+! verbosity = 'high' | 'default'* | 'low' | 'minimal'
+! Define the verbosity of the code output
+ 
+INTEGER :: nstep
+! Number of simulation steps, see "restart_mode"
+
+INTEGER :: iprint
+! Number of steps between successive writings of relevant physical 
+! quantities to standard output and to files "fort.3?" or "prefix.???"
+! depending on "prefix" parameter
+! (FPMD-N only)
+
+INTEGER :: isave
+! Number of steps between successive savings of
+! information needed to restart the run (see NDR, NDW)
+
+LOGICAL :: tstress
+! This flag controls the printing of the stress, always true when
+! the cell is moving 
+!  .TRUE.  write the stress tensor to standard output every "iprint" steps
+!  .FALSE. do not write the stress tensor stdout
+
+LOGICAL :: tprnfor
+! This flag controls the printing of the interatomic forces, always true when
+! the ions are moving 
+!  .TRUE.  write the atomic forces to standard output every "iprint" steps
+!  .FALSE. do not write atomic forces to stdout
+
+REAL(dbl) :: dt
+! Time step of the CP molecular dynamics simulation, 
+! in atomic units ( 1 a.u. of time = 2.4189 * 10^-17 s )
+! For non CP calculations, this represents the time advancing parameter
+
+CHARACTER(LEN=256) :: outdir, prefix
+! The path specified in "outdir" and the filename prefix "prefix"
+! are used to store output files ( i.e. outdir/prefix.??? )
+!
+INTEGER :: ndr, ndw
+! Units for input and output restart file
+!
+REAL(dbl) :: max_seconds 
+! terminate program after the specified number of seconds
+!
+LOGICAL   :: check_memory
+! The code performs a memory check, write on standard
+! output the allocated memory at each step.
+! Architecture Dependent - FPMD-N only
+
+REAL(dbl) :: ekin_conv_thr 
+! convergence criterion for electron minimization:
+! convergence is achieved when "ekin < ekin_conv_thr"
+
+REAL(dbl) :: etot_conv_thr, forc_conv_thr
+! convergence criteria for ion minimization:
+! 1) "etot(n+1)-etot(n) < etot_conv_thr", where "n" is the step index,
+!    and "etot" the DFT energy
+! 2) "MAXVAL(fion) < forc_conv_thr", where fion are the atomic forces
+! convergence is achieved when both criteria are met
+
+CHARACTER(LEN=80) :: disk_io  
+! disk_io = 'high', 'default'*, 'low', 'minimal'
+
+disk_io = 'high' saves the charge density to disk for empty KS calculation
+          (CP only)
+
+! ... SYSTEM Namelist
+!
+INTEGER :: ibrav
+! index the Bravais lattice:
+!    ibrav     structure                     point groups
+!     ---    --------------               -------------------
+!      1      cubic P (sc)              m3m, 432, m3, <4>3m, 23
+!      2      cubic F (fcc)             m3m, 432, m3, <4>3m, 23
+!      3      cubic I (bcc)             m3m, 432, m3, <4>3m, 23
+!      4       Hexagonal P        6, 6mm, 6/m, <6>, 622, 6/mmm, <6>2m
+!      4       Trigonal P                3, 3m, <3>, 32, <3>m
+!      5       Trigonal R                3, 3m, <3>, 32, <3>m
+!      6    Tetragonal P (st)     4, 4mm, 4/m, <4>, 422, 4/mmm, <4>2m
+!      7    Tetragonal I (bct)    4, 4mm, 4/m, <4>, 422, 4/mmm, <4>2m
+!      8     Orthorhombic P                  2mm, 222, mmm
+!      9     Orthorhombic base-centered
+!     10     Orthorhombic F ?
+!     11     Orthorhombic I ?
+!     12      Monoclinic P                     2, 2/m, m
+!     13      Monoclinic base-centered  
+!     14      Triclinic P                        1, <1>
+!
+! if ibrav=0 basis vector given on input, see card 'CELL_PARAMETERS'
+
+REAL(dbl) :: celldm(6)
+! dimensions of the cell 
+!   celldm(1) = a
+!   celldm(2) = b/a
+!   celldm(3) = c/a
+!   celldm(4) = cos(bc)
+!   celldm(5) = cos(ac)
+!   celldm(6) = cos(ab)
+! only the celldm's that are meaningful for the Bravais lattice
+! considered need be specified (others are ignored):
+!   ibrav = 1,2,3 : celldm(1)
+!   ibrav = 4,6,7 : celldm(1,3)
+!   ibrav =  5    : celldm(1,4)
+!   ibrav =  8-11 : celldm(1,2,3)
+!   ibrav = 12,13 : celldm(1,2,3,4)
+!   ibrav = 14    : celldm(1,2,3,4,5,6)
+
+INTEGER :: nat
+! total number of atoms
+
+INTEGER :: ntyp
+! number of atomic species
+
+INTEGER :: nbnd
+! number of electronic states (per spin if nspin=2)
+
+INTEGER :: nelec
+! number of electrons
+
+REAL(dbl) :: ecutwfc
+! energy cutoff for wave functions in k-space ( in Rydberg )
+
+REAL(dbl) :: ecutrho
+! energy cutoff for charge density in k-space ( in Rydberg )
+
+INTEGER :: nr1, nr2, nr3
+! dimensions of the real space grid for charge and potentials
+! if not specified, default values are calculated
+
+INTEGER :: nr1s, nr2s, nr3s
+! dimensions of the real space grid for wavefunctions
+! if not specified, default values are calculated
+
+INTEGER :: nr1b, nr2b, nr3b
+! dimensions of the "box" grid for Ultrasoft pseudopotentials
+! must be specified if Ultrasoft PP are present
+
+CHARACTER(LEN=80) :: occupations
+! occupations = 'smearing' | 'tetrahedra' | 'fixed'* | 'from_input'
+! select the electronic states filling mode
+! 'smearing'    smearing function is used around Fermi Level
+!               (see "ngauss" and "degauss")
+!               not used in FPMD-N and CP90
+! 'tetrahedra'  tetrahedron method
+!               not used in FPMD-N and CP90
+! 'fixed'       fixed occupations automatically calculated
+! 'from_input'  fixed occupations given in the stdin
+!               ( see card 'OCCUPATIONS' )
+
+REAL(dbl) :: degauss
+! parameter for the smearing functions
+! not used in FPMD-N and CP90
+
+INTEGER :: ngauss
+! parameter for the smearing functions
+! not used in FPMD-N and CP90
+
+INTEGER :: nspin
+! number of spinors
+! "nspin = 1" for spin-unpolarized simulations
+! "nspin = 2" for spin-polarized   simulations
+
+INTEGER :: nelup, neldw
+! meaningful only if "nspin = 2", 
+! "nelup" is the number of electrons with spin up
+! "neldw" is the number of electrons with spin down
+! "nelec = nelup + neldw"
+
+LOGICAL :: nosym
+! do not use symmetry
+! not used in FPMD-N and CP90
+
+REAL(dbl) :: ecfixed, qcutz, q2sigma
+! parameters for constant cut-off simulations
+! "ecfixed" is the value (in Rydberg) of the constant-cutoff 
+! "qcutz" and "q2sigma" are the height and the width (in Rydberg) 
+!  of the energy step for reciprocal vector whose square modulus 
+!  is grather than "ecfixed"
+
+CHARACTER(LEN=80) :: xc_type
+! xc_type = 'BLYP' | 'BP' | 'PBE' | 'PZ' | 'PW' | 'LDA'
+! select the exchange and correlation functionals
+! 'BLYP'  use Becke-Lee-Yang-Parr GCC-XC Functional
+! 'BP'    use Becke-Perdew GCC-XC Functionals
+! 'PBE'   use Perdew-Burke-Ernzerhof GCC-XC Functionals
+! 'PZ'    use Slater X, and Perdew-Zunger C Functionals
+! 'PW'    use Slater X, and Perdew-Wang C Functionals
+! 'LDA'   use LDA xc functional: the xc potential is
+!         calculated through an interpolation table
+! presently used only by FPMD-N
+
+!
+! ... ELECTRONS Namelist
+!
+
+REAL(dbl) :: emass
+! effective electron mass in the CP Lagrangian, 
+! in atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
+
+REAL(dbl) :: emass_cutoff
+! mass cut-off (in Rydberg) for the Fourier acceleration
+! effective mass is rescaled for "G" vector components with kinetic 
+! energy above "emass_cutoff" 
+
+CHARACTER(LEN=80) :: orthogonalization   
+! orthogonalization = 'Gram-Schmidt' | 'ortho'*
+! selects the orthonormalization method for electronic wave functions
+!  'Gram-Schmidt'  use Gram-Schmidt algorithm
+!  'ortho'         use iterative algorithm 
+
+INTEGER :: electron_maxstep
+! max number of electronic steps per
+
+REAL(dbl) :: ortho_eps
+! meaningful only if orthogonalization = 'ortho'
+! tolerance for iterative orthonormalization
+
+INTEGER   :: ortho_max
+! meaningful only if orthogonalization = 'ortho'
+! maximum number of iterations for orthonormalization
+
+CHARACTER(LEN=80) :: electron_dynamics   
+! electron_dynamics = 'sd'* | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' 
+! set how electrons shold be moved
+! 'none'   electronic degrees of freedom (d.o.f.) are kept fixed 
+! 'sd'     steepest descent algorithm is used to minimize electronic d.o.f. 
+! 'cg'     conjugate gradient algorithm is used to minimize electronic d.o.f. 
+! 'diis'   DIIS algorithm is used to minimize electronic d.o.f. 
+! 'damp'   damped dynamics is used to propagate electronic d.o.f. 
+! 'verlet' standard Verlet algorithm is used to propagate electronic d.o.f. 
+
+REAL(dbl) :: electron_damping
+! meaningful only if " electron_dynamics = 'damp' "
+! damping frequency times delta t, optimal values could be
+! calculated with the formula
+!        sqrt(0.5*log((E1-E2)/(E2-E3))) 
+! where E1 E2 E3 are successive values of the DFT total energy 
+! in a steepest descent simulations
+
+CHARACTER(LEN=80) :: electron_velocities  
+! electron_velocities = 'zero' | 'default'*
+! 'zero'    restart setting electronic velocities to zero
+! 'default' restart using electronic velocities of the previous run
+
+CHARACTER(LEN=80) :: electron_temperature  
+! electron_temperature = 'nose' | 'not_controlled'* | 'rescaling'
+! 'nose'           control electronic temperature using Nose thermostat
+!                  see parameter "fnosee" and "ekincw"
+! 'rescaling'      control electronic temperature via velocities rescaling 
+! 'not_controlled' electronic temperature is not controlled
+
+REAL(dbl) :: ekincw
+! meaningful only with "electron_temperature /= 'not_controlled' "
+! value of the average kinetic energy (in atomic units) forced
+! by the temperature control
+
+REAL(dbl) :: fnosee
+! meaningful only with "electron_temperature = 'nose' "
+! oscillation frequency of the nose thermostat (in terahertz) 
+
+CHARACTER(LEN=80) :: startingwfc
+! 'random' : randomize electronic wave functions ( see "ampre" )
+! 'atomic' : from superposition of atomic state
+
+REAL(dbl) :: ampre
+! meaningful only if  startingwfc='random': amplitude of the
+! randomization ( allowed values: 0.0 - 1.0 )
+
+REAL(dbl) :: grease
+! a number <= 1, very close to 1: the damping in electronic
+! damped dynamics is multiplied at each time step by "grease"
+! (avoids overdamping close to convergence: Obsolete ?)
+! grease = 1 : normal damped dynamics
+
+REAL(dbl) :: twall
+! for electronic damped dynamics: Obsolete ?
+
+real(kind=8) :: empty_states_delt, empty_states_emass, empty_states_ethr
+! For empty states calculation (FPMD)
+
+integer :: diis_size, diis_nreset, diis_maxstep
+logical :: diis_rot, diis_chguess
+real(kind=8) :: diis_hcut, diis_wthr, diis_delt
+real(kind=8) :: diis_fthr, diis_temp, diis_achmix, diis_g0chmix
+integer :: diis_nchmix, diis_nrot(3)
+real(kind=8) :: diis_g1chmix, diis_rothr(3), diis_ethr
+! For DIIS minimization (FPMD)
+!
+! ... IONS Namelist
+!
+
+CHARACTER(LEN=80) :: ion_dynamics  
+! ion_dynamics = 'sd'* | 'cg' | 'damp' | 'verlet' | 'none'  
+! set how ions shold be moved
+! 'none'   ions are kept fixed 
+! 'sd'     steepest descent algorithm is used to minimize ionic configuration
+! 'cg'     conjugate gradient algorithm is used to minimize ionic configuration
+! 'damp'   damped dynamics is used to propagate ions
+! 'verlet' standard Verlet algorithm is used to propagate ions
+
+REAL(dbl) :: ion_radius(nspx)
+! pseudo-atomic radius of the i-th atomic species
+! (for Ewald summation), values between 0.5 and 2.0 are usually used.
+
+REAL(dbl) :: ion_damping
+! meaningful only if " ion_dynamics = 'damp' "
+! damping frequency times delta t, optimal values could be
+! calculated with the formula
+!        sqrt(0.5*log((E1-E2)/(E2-E3))) 
+! where E1 E2 E3 are successive values of the DFT total energy 
+! in a ionic steepest descent simulation
+
+CHARACTER(LEN=80) :: ion_positions  
+! ion_positions = 'default'* | 'from_input' 
+! 'default'    restart the simulation with atomic positions read
+!              from the restart file
+! 'from_input' restart the simulation with atomic positions read
+!              from standard input ( see the card 'ATOMIC_POSITIONS' )
+
+CHARACTER(LEN=80) :: ion_velocities  
+! ion_velocities = 'zero' | 'default'* | random | 'from_input' 
+! 'default'    restart the simulation with atomic velocities read
+!              from the restart file
+! 'random'     start the simulation with random atomic velocities
+! 'from_input' restart the simulation with atomic velocities read
+!              from standard input (see the card 'ATOMIC_VELOCITIES' )
+! 'zero'       restart the simulation with atomic velocities set to zero
+
+CHARACTER(LEN=80) :: ion_temperature  
+! ion_temperature = 'nose' | 'not_controlled'* | 'rescaling'
+! 'nose'           control ionic temperature using Nose thermostat
+!                  see parameters "fnosep" and "tempw"
+! 'rescaling'      control ionic temperature via velocities rescaling 
+!                  see parameter "tolp"
+! 'not_controlled' ionic temperature is not controlled
+
+integer :: ion_maxstep
+! FPMD
+
+REAL(dbl) :: tempw
+! meaningful only with "ion_temperature /= 'not_controlled' "
+! value of the ionic temperature (in Kelvin) forced
+! by the temperature control
+
+REAL(dbl) :: fnosep
+! meaningful only with "ion_temperature = 'nose' "
+! oscillation frequency of the nose thermostat (in terahertz) 
+
+REAL(dbl) :: tolp
+! meaningful only with "ion_temperature = 'rescaling' "
+! tolerance (in Kelvin) of the rescaling. When ionic temperature
+! differs from "tempw" more than "tolp" apply rescaling.
+
+LOGICAL   :: tranp(nspx)
+! .TRUE.   randomize ionic positions ( see "amprp" )
+! .FALSE.  do nothing
+
+REAL(dbl) :: amprp(nspx)
+! meaningful only if "tranp = .TRUE.", amplitude of the
+! randomization ( allowed values: 0.0 - 1.0 )
+
+REAL(dbl) :: greasp
+! same as "grease", for ionic damped dynamics
+
+INTEGER   :: ion_nstepe
+! number of electronic steps between for each ionic step
+
+!
+! ... CELL Namelist 
+! (optional unless calculation = 'vc-cp' or 'vc-relax' )
+!
+
+CHARACTER(LEN=80) :: cell_parameters  
+! cell_parameters = 'default'* | 'from_input' 
+! 'default'    restart the simulation with cell parameters read
+!              from the restart file or "celldm" if "restart = 'from_scratch'"
+! 'from_input' restart the simulation with cell parameters
+!              from standard input ( see the card 'CELL_PARAMETERS' )
+
+CHARACTER(LEN=80) :: cell_dynamics 
+! ion_dynamics = 'sd' | 'pr' | 'damp' | 'none'  
+! set how cell shold be moved
+! 'none'   cell is kept fixed 
+! 'sd'      steepest descent algorithm is used to minimize the cell
+! 'damp-pr' damped dynamics is used to minimize the cell
+! 'pr'      standard Verlet algorithm is used to propagate the cell
+
+CHARACTER(LEN=80) :: cell_velocities
+! cell_velocities = 'zero' | 'default'*
+! 'zero'    restart setting cell velocitiy to zero
+! 'default' restart using cell velocity of the previous run
+
+REAL(dbl) :: press
+! external pressure (in kilobars: 1 kbar = 10^8 Pa)
+
+REAL(dbl) :: wmass
+! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units)
+! of the order of magnitude of the total atomic mass
+! (sum of the mass of the atoms) within the simulation cell.
+
+CHARACTER(LEN=80) :: cell_temperature  
+! cell_temperature = 'nose' | 'not_controlled'* | 'rescaling'
+! 'nose'           control cell temperature using Nose thermostat
+!                  see parameters "fnoseh" and "temph"
+! 'rescaling'      control cell temperature via velocities rescaling 
+! 'not_controlled' cell temperature is not controlled
+
+REAL(dbl) :: temph
+! meaningful only with "cell_temperature /= 'not_controlled' "
+! value of the cell temperature (in ???) forced
+! by the temperature control
+
+REAL(dbl) :: fnoseh
+! meaningful only with "cell_temperature = 'nose' "
+! oscillation frequency of the nose thermostat (in terahertz) 
+
+REAL(dbl) :: greash
+! same as "grease", for cell damped dynamics
+
+CHARACTER(LEN=80) :: cell_dofree 
+! cell_dofree = 'all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz'
+! select which of the cell parameters should be moved
+! 'all'    all axis and angles are propagated (default)
+! 'volume' the cell is simply rescaled, without changing the shape
+! 'x'      only the "x" axis is moved
+! 'y'      only the "y" axis is moved
+! 'z'      only the "z" axis is moved
+! 'xy'     only the "x" and "y" axis are moved, angles are unchanged
+! 'xz'     only the "x" and "z" axis are moved, angles are unchanged
+! 'yz'     only the "y" and "z" axis are moved, angles are unchanged
+! 'xyz'    "x", "y" and "z" axis are moved, angles are unchanged
+
+
+!  ------ CARDS PARAMETERS --------- 
+!         { } = optional
+!
+! CARD: ATOMIC_SPECIES
+!      set the atomic species been read and their pseudopotential file
+! Syntax:
+!    'ATOMIC_SPECIES'
+!      LABEL(1)    MASS(1)    PSFILE(1)
+!       ...        ....       ...
+!      LABEL(ntyp) MASS(ntyp) PSFILE(ntyp)
+! Where:
+!      LABEL(i)  ( CHARACTER(LEN=2) )  label of the atomic specie
+!      MASS (i)  mass of the i-th atomic species, in atomic units:
+!                1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
+!      PSFILE(i) ( CHARACTER(LEN=80) ) file name of the pseudopotential 
+!
+!     -----------------------------------------------------------------
+!     The pseudopotential file is assumed to be in the new UPF format. 
+!     If it doesn't work, the pseudopotential format is determined by 
+!     the file name:
+!        *.vdb or *.van     Vanderbilt US pseudopotential code
+!        *.RRKJ3            Andrea Dal Corso's code (old format)
+!        none of the above  old BHS format
+!     !!! List vanderbilt species first, norm-conserving one then !!!
+!     -----------------------------------------------------------------
+!
+! CARD: ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+!      set the atomic positions in the cell
+!      crystal    atomic position are given in scaled units
+!                 (see also cards CELL_PARAMETERS)
+!      bohr       atomic position are given in Bohr
+!      angstrom   atomic position are given in Angstrom
+!      alat       atomic position are given in units of alat
+! Syntax:
+!    'ATOMIC_POSITIONS'
+!      LABEL(1)  TAU(1,1,1) TAU(2,1,1) TAU(3,1,1)   [ IMBL(1) IMBL(2) IMBL(3) ]
+!      LABEL(2)  TAU(1,2,1) TAU(2,2,1) TAU(3,2,1)
+!       ...                 ...                 ...               ... ...
+!      LABEL(NSX) TAU(1,NAT(NSX),NSX) TAU(2,NAT(NSX),NSX) TAU(3,NAT(NSX),NSX)
+! Where:
+!      TAU(i,j,k) (REAL(DBL))  coordinates
+!      LABEL  ( CHARACTER(LEN=2) )  label of the atomic specie
+!      ITYP (INTEGER)  atomic type
+!      IMBL (INTEGER)  optional flags: if IMBL(i) = 1, the atom is allowed
+!                      to move in direction i, if it is 0 it is not
+!                      (specify only 0 or 1 !)
+!
+! CARD: KPOINTS
+!      use the specified set of k points
+! Syntax:
+!    'KPOINTS'
+!      NK
+!      KPOINTS(1,1)  ... KPOINTS(3,1)  KWEIGHT(1)
+!         ...        ...    ...          ...
+!      KPOINTS(1,NK) ... KPOINTS(3,NK) KWEIGHT(NK)
+! Where:
+!      NK (INTEGER)  number of k points
+!      KPOINTS(i,j) (REAL(DBL))  coordinates of k points
+!      KWEIGHT(i) (REAL(DBL))  weights of k points
+!
+! CARD: OCCUPATIONS
+!      use the specified occupation numbers of electronic states
+! Syntax:
+!    'OCCUPATIONS'
+!      F(1) .... F(nbnd)        only this input array if nspin = 1
+!      F(nbnd+1) .... F(2*nbnd) also this input array if nspin = 2
+! Where:
+!      F(:) (real)  occupation numbers
+!
+! CARD: CELL_PARAMETERS
+!      use the specified cell dimensions
+! Syntax:
+!    'CELL_PARAMETERS'
+!      HT(1,1) HT(1,2) HT(1,3)
+!      HT(2,1) HT(2,2) HT(2,3)
+!      HT(3,1) HT(3,2) HT(3,3)
+! Where:
+!      HT(i,j) (REAL(dbl))  cell dimensions

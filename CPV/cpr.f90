@@ -33,8 +33,8 @@
 !***                           C. Lee, and D. Vanderbilt, PRB 47, 10142 (1993).
 !***  implementation gga       A. Dal Corso, A. Pasquarello, A. Baldereschi,
 !***                           and R. Car, PRB 53, 1180 (1996).
-!***  implementation Wannier   M. Sharma, Y. Wu and R. Car, Int. J. Quantum. Chem.
-!***  function dymanics        95, 821, (2003).
+!***  implementation Wannier   M. Sharma, Y. Wu and R. Car, Int.J.Quantum.Chem.
+!***  function dynamics        95, 821, (2003).
 !***
 !***  implementation           M. Sharma and R.Car, ???
 !***  Electric Field

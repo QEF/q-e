@@ -51,20 +51,24 @@ all: flib.a ptools.a eispack $(MYLIB)
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 
 blas_and_lapack : blas lapack
 	touch $@
 
 blas : blas.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
 	touch $@
 
 lapack : lapack.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
 	touch $@
 
 lapack_ibm : lapack_ibm.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
+	$(RANLIB) flib.a
 	touch $@
 
 lapack_t3e : lapack_t3e.o 

@@ -9,11 +9,12 @@ Define environmental variables:
 (sh/bash). Then:
    cvs login
 (password: cvsanon). For the first code download:
-   cvs co O-sesame
-for the entire repository (the code appears in directory O-sesame/).
+   cvs co espresso
+for the entire repository (the code appears in directory espresso/).
 Alternatively, "cvs co pwscf", or "cp", or "fpmd" will download only
-PWscf, CP, FPMD, respectively, in directories with the same name.
-For updating the code to the current version:
+PWscf, CP, FPMD, respectively, in directories with the same name;
+"cvs co examples" will download tests and examples.
+In order to update the code to the current version:
    cvs update -d
 in the directory containing the distribution.
 

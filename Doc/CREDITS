@@ -1,0 +1,63 @@
+The ESPRESSO package (opEn-Source Package for Research in Electronic 
+Structure, Simulation, and Optimization) is the result of the merge
+of several pre-existing packages for electronic-structure calculations:
+- the PWscf package
+- the FPMD code
+- the CP code
+and of several utilities, in particular:
+- a GUI (Graphical User Interface) for generating input data files
+- a pseudopotential generation code.
+
+The maintenance and further development of the ESPRESSO code is promoted 
+by the DEMOCRITOS National Simulation Center (http://www.democritos.it) 
+of the Italian INFM, under the coordination of Paolo Giannozzi, with the 
+strong support of the CINECA National Supercomputing Center in Bologna, 
+under the responsability of Carlo Cavazzoni. Currently active developers 
+include Gerardo Ballabio (CINECA), Gernot Deinzer, Stefano Fabris, 
+Adriano Mosca Conte, Mickael Profeta, Carlo Sbraccia (SISSA), 
+Anton Kokalj (IJS).
+
+The PWscf package was originally developed by Stefano Baroni, Stefano
+de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi
+(Scuola Normale Superiore, Pisa), and others.
+The web site for PWSCF and related codes is http://www.pwscf.org
+
+The CP code, based on the original code written by R. Car and M. Parrinello,
+was developed by A. Pasquarello (IRRMA, Lausanne), K. Laasonen (Oulu),
+A. Trave (UCBerkeley), R. Car (Princeton), P. Giannozzi, N. Marzari (MIT),
+and others.
+
+The FPMD code, also based on the original code written by R. Car and 
+M. Parrinello. was developed by C. Cavazzoni (CINECA, Bologna), S. Scandolo 
+(ICTP, Trieste), G. Chiarotti (SISSA, Trieste), P. Focher, G. Ballabio, and 
+others.
+
+The GUI for PWscf was written by Anton Kokalj (IJS) and it is based on 
+his GUIB concept: http://www-k3.ijs.si/kokalj/guib/.
+
+The pseudopotential generation package "atomic" was written by 
+Andrea Dal Corso and it is the result of many additions to 
+the original code by Paolo Giannozzi.
+
+A list of contributors to the ESPRESSO code includes:
+Dario Alfe', Francesco Antoniella, Mauro Boero, Claudia Bungaro, 
+Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto Debernardi,
+Oswaldo Dieguez, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, 
+Kurt Maeder, Nicola Marzari, Francesco Mauri, Pasquale Pavone, 
+Guido Roma, Kurt Stokbro, Renata Wentzcovitch, Yudong Wu,
+Xiaofei Wang, Yosuke Kanai, Antonio Tilocca, Konstantin Kudin,
+and let us apologize to everybody we have forgotten.
+
+All the material included in this distribution is free software;
+you can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later version.
+
+These programs are distributed in the hope that they will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.

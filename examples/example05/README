@@ -27,5 +27,5 @@ variables see the appropriate INPUT_* file)
    bands), writes bands to a file (sibands.dat). 
    (input=si.bands.in, output=si.bands.out) 
 
-7) run program band_plot.x that reads the file produced by bands.x
+7) run program plotband.x that reads the file produced by bands.x
    and produces a postscript plot file (sibands.ps)

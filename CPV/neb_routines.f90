@@ -20,7 +20,7 @@ MODULE neb_routines
   USE neb_base,   ONLY : initialize_neb, compute_action, compute_tangent, &
                          elastic_constants, gradient, search_stationary_points, &
                          compute_error, path_tangent_, born_oppenheimer_PES, &
-                         search_mep
+                        search_mep
 
   !
   PRIVATE

@@ -158,7 +158,7 @@
 
 #endif
 
-#if defined __AIX || defined __HP
+#if defined __AIX || defined __HP || defined __MAC
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d

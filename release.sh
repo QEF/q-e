@@ -7,7 +7,7 @@
 #   2. convert (from Image-Magick)
 #   3. latex2html
 
-dir=pw-2-0
+dir=pw-2-1
 cd $HOME
 if test -d $dir.save; then /bin/rm -r $dir.save; fi
 if test -d $dir; then mv $dir $dir.save; fi
@@ -36,17 +36,17 @@ tar -xzf ../O-sesame/pw.tar.gz
 tar -xzf ../O-sesame/$GUI.tgz
 find $GUI -name CVS -exec /bin/rm -r {} \;
 
-tar -czf ../cp.tar.gz bin/ config* INSTALL README* Make* make*           \
+tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ cpdocs/ cp_examples/ Modules/ clib/ flib/ CPV/
 
-tar -czf ../fpmd.tar.gz bin/ config*  INSTALL README* Make* make*        \
+tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ cpdocs/ cp_examples/ Modules/ clib/ flib/ FPMD/
 
 tar -czf ../$GUI.tar.gz $GUI
 
-tar -czf ../pw.tar.gz bin/ config*  flib/ INSTALL README* Make* make* \
+tar -czf ../pw.tar.gz bin/ config*  flib/ README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ pwdocs/ Modules/ clib/ flib/ \
                       PW/ PP/ PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/
@@ -55,7 +55,7 @@ tar -czf ../pw_examples.tar.gz pw_examples/
 
 tar -czf ../ps_examples.tar.gz pseudo/
 
-tar -czf ../allpw.tar.gz bin/ config* INSTALL README* Make* make* \
+tar -czf ../allpw.tar.gz bin/ config* README* Make* make* \
                       install-sh install/ moduledep.sh License upftools/ \
                       include/ pwdocs/ Modules/ PW/ PP/     \
                       PH/ Gamma/ PWNC/ PWCOND/ D3/ pwtools/ clib/ flib/  \

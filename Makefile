@@ -24,41 +24,41 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : modules libs
+pw : mods libs
 	if test -d PW   ; then ( cd PW   ; make all ) ; fi
-fpmd : modules libs
+fpmd : mods libs
 	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
-cp : modules libs
+cp : mods libs
 	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
 
-ph : modules libs pw
+ph : mods libs pw
 	if test -d PH ; then ( cd PH ; make all ) ; fi
-pp : modules libs pw
+pp : mods libs pw
 	if test -d PP ; then ( cd PP ; make all ) ; fi
-gamma : modules libs pw
+gamma : mods libs pw
 	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
-nc : modules libs pw
+nc : mods libs pw
 	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
-pwcond : modules libs pw pp
+pwcond : mods libs pw pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
-d3 : modules libs pw ph
+d3 : mods libs pw ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
-raman : modules libs pw ph
+raman : mods libs pw ph
 	if test -d Raman ; then ( cd Raman ; make all ) ; fi
 
-tools : modules libs pw
+tools : mods libs pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
-upf : modules libs
+upf : mods libs
 	if test -d upftools ; then ( cd upftools ; make all ) ; fi
-ld1 : modules libs pw
+ld1 : mods libs pw
 	if test -d atomic ; then ( cd atomic ; make all ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
-modules :
+mods :
 	( cd Modules; make all )
-libs : modules
+libs : mods
 	( cd clib ; make all )
 	( cd flib ; make all )
 
@@ -106,8 +106,7 @@ veryclean : clean
 
 tar :
 	tar cvf pw.tar \
-	    License README */README README.cvs README.configure \
-            INSTALL Makefile */Makefile \
+	    License README* */README* Makefile */Makefile \
 	    configure configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure.old \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \

@@ -1,4 +1,4 @@
-AC_INIT(PWscf, 2.0, , pwscf)
+AC_INIT(PWscf, 2.1, , pwscf)
 AC_REVISION(0.01)
 AC_PREREQ(2.53)
 
@@ -45,6 +45,7 @@ ia64-*-linux-gnu )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
+        ranlib="echo"
 	;;
 x86_64-*-linux-gnu )
 	is_linux64=1
@@ -53,6 +54,7 @@ x86_64-*-linux-gnu )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
+        ranlib="echo"
 	;;
 *-pc-linux-gnu )
 	is_linux=1
@@ -61,6 +63,7 @@ x86_64-*-linux-gnu )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
+        ranlib="echo"
 	;;
 *-ibm-aix* )
 	is_aix=1
@@ -69,18 +72,21 @@ x86_64-*-linux-gnu )
 	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX"
+        ranlib="echo"
 	;;
 mips-sgi-* )
 	is_mips=1
 	try_f90="f90 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
+        ranlib="echo"
 	;;
 alphaev*-dec-osf* )
 	is_alpha=1
 	try_f90="f90 f77"
 	try_ar="ar"
 	try_arflags="ruv"
+        ranlib="echo"
 	;;
 sparc-sun-* )
 	is_sparc=1
@@ -88,6 +94,7 @@ sparc-sun-* )
 	try_f90="f90 f77 g77"
 	try_ar="ar"
 	try_arflags="ruv"
+        ranlib="echo"
 	;;
 *cray-unicosmp* )
 	is_x1=1
@@ -95,6 +102,15 @@ sparc-sun-* )
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__X1"
+        ranlib="echo"
+	;;
+powerpc-apple-darwin* )
+	is_powerpc=1
+	try_f90="xlf90 f90"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__MAC"
+	ranlib="ranlib"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture)
@@ -185,6 +201,10 @@ sparc-sun-*:* )
 	try_cc="cc"
 	try_f77="$f90"
 	;;
+powerpc-apple-darwin* )
+	try_cc="gcc"
+	try_f77="f77 $f90"
+	;;
 * )
 	# unknown, try these
 	try_cc="cc gcc"
@@ -273,6 +293,7 @@ x86_64-*-linux-gnu:pgcc:pgf90 )                   ;;
 *-ibm-aix*:xlc*:*xlf* | *-ibm-aix*:cc:*xlf* )     ;;
 mips-sgi-*:cc:f90 )                               ;;
 alphaev*-dec-osf*:cc:f90 )                        ;;
+powerpc-apple-darwin*:gcc:xlf90 )                 ;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )     ;;
 # *cray-unicosmp*:cc:ftn )                          ;;
 
@@ -413,6 +434,15 @@ sparc-sun-*:mpf90 | sparc-sun-*:f90 )
         pre_f_dflags="-e Z -F"
         have_cpp=1
 	;;
+powerpc-apple-darwin* )
+	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -qalias=nointptr"
+	try_f90flags="\$(FFLAGS) -qfree=f90"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	pre_f_dflags="-WF,"
+	powerpc_flags=1
+	have_cpp=1
+	;;	
 *:g77 )
 	# g77 is known not to work, but one might want to try anyway
 	try_fflags=""
@@ -481,6 +511,9 @@ sparc-sun-*:mpcc | sparc-sun-*:cc )
         try_cflags=""
         c_ldflags=""
         ;;
+powerpc-apple-darwin* )
+	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
+	;;
 *:gcc )
 	try_cflags="-O3 -fomit-frame-pointer"
 	try_cpp="cpp"
@@ -580,6 +613,9 @@ then
 	elif test $is_mips
 	then
 		try_libdirs="/usr/local/lib /cineca/lib"
+	elif test $is_powerpc
+	then
+		try_libdirs="/sw/lib"
 	else
 		try_libdirs="/usr/local/lib"
 	fi
@@ -892,8 +928,12 @@ AC_LANG_POP(Fortran 77)
 # AIX compilers want comma-separated -D directives
 if test "$dflags" = "" ; then dflags="$try_dflags"                      ; fi
 if test $aix_flags     ; then dflags="`echo $dflags | sed 's/  */,/g'`" ; fi
+if test "$fdflags" = ""; then fdflags="$try_dflags"                     ; fi
+if test $powerpc_flags ; then fdflags="`echo $fdflags | sed 's/  */,/g'`" ; fi
 echo setting DFLAGS... $dflags
 echo setting MYLIB... $mylib
+echo setting FDFLAGS... $fdflags
+echo setting RANLIB... $ranlib
 
 # generate dependencies
 if test -x $topdir/makedeps.sh
@@ -907,6 +947,7 @@ fi
 AC_SUBST(cc)
 AC_SUBST(cflags)
 AC_SUBST(dflags)
+AC_SUBST(fdflags)
 AC_SUBST(pre_dflags)
 AC_SUBST(cpp)
 AC_SUBST(cppflags)
@@ -924,6 +965,7 @@ AC_SUBST(mylib)
 AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(f90rule)
+AC_SUBST(ranlib)
 
 AC_CONFIG_FILES(make.sys make.rules)
 
@@ -948,7 +990,7 @@ echo If any libraries are missing, you may specify a list of directories
 echo to search and retry, as follows:
 echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
 echo
-echo For more information, read the INSTALL file or the PWscf manuals.
+echo For more information, read the README.INSTALL file or the PWscf manuals.
 echo -----------------------------------------------------------------
 
 if ! test $no_parallel && ! test $parallel

@@ -1,0 +1,1733 @@
+See file ChangeLog for changes after aug. 2004
+
+28 Jul 2004  Workaround for a bug of the PGI compiler (5.1-5) (C.S.)
+
+27 Jul 2004  PP/projwfc.f90: on input, degauss1, ngauss1 => degauss, ngauss
+             Documentation for atomic code updated (PG)
+             Various minor format changes in output (GB)
+
+23 Jul 2004  Fixed a small bug in the way preprocessor flags were used
+             (CS). Workaround for a strange bug in spin-orbit case 
+             with norm-conserving PP in PWNC/newd.f90 (AdC).
+
+22 Jul 2004  Two bugs fixed. Now PWCOND is working as before.
+             Bugs introduced when 0:ndm => ndmx (23 Apr)
+             and to correct another problem (31 May). (ADC)
+             NEB examples updated. Strange initialization fixed (CS)
+
+21 Jul 2004  Removed input variable VEC_scheme (no longer used).
+             INPUT_PW updated (CS). some examples regenerated (GB).
+
+20 Jul 2004  Fixed some bugs in NEB. Added a new field in the neb restart file.
+             To use old restart files the following gawk-script can be used:
+
+BEGIN{ level = 0 }
+{
+if ( $1 == "Image:" ) {
+   print ;
+   if ( $2 > level ) {
+      level = $2 ;
+      getline ;
+      printf "%2s,  F \n", $1 ;
+      }
+   }
+else { print }
+}
+
+C.S.
+
+16 Jul 2004  Fixed a bug (spotted by Guido) in the diagonalization with
+             occupation-dependent thresholds:
+             now occupations are also computed at the end of the the wfcs 
+             initialization so that wg is always initialized. (CS)
+
+15 Jul 2004  Several minor bugs fixed in the lbfgs algorithm. Added an,
+             hopefully safe, interpolation for the "step accepted" case 
+             of the standard bfgs which can give some speedup in the 
+             minimization (it can be disabled commenting a line inside 
+             the file). (CS)
+
+14 Jul 2004  added (partial) support for Cray X1 (contributed by Roberto 
+             Ansaloni). Small changes in phonon output and in the scripts
+             processing it. [Gerardo]
+
+ 9 Jul 2004  make_pointlists was not working with very strange atomic 
+             positions. Small changes in get_locals and report_mag (AdC)
+
+
+ 2 Jul 2004  Misc. cleanup; a few redundant routines moved to flib;
+             added example for phonon DOS; version number increased (PG)
+
+ 1 Jul 2004  Added the possibility to make a spin-orbit calculation with
+             zero magnetization. (Still to be cleaned) (ADC)
+             Removed the routine to calculate k - -k needed just in
+             this case. (ADC)
+             
+30 Jun 2004  Calculation of DOS and of Projected DOS have the same kind
+             of input and yield comparable results, at least with gaussian
+             broadening (PDOS with tetrahedra still not implemented)
+             Beware changes in input and possible problems. (PG)
+             Cleanup: 'dispersion' removed from PW, is now entirely in PH
+             module disp moved from pwcom to phcom
+             variable nqx changed to nqmax (Gernot)
+
+28 Jun 2004  Calculation of the dynamical matrices for the dispersion 
+             is now within ph.x possible. 
+             New input variables:
+             lnscf: if .true. the nscf and phonon run are done in one 
+                    single run
+             ldisp: if .true. calculation of dyn. matrices for dispersion
+             nq1, nq2, nq3: q-point mesh. (GD)
+
+28 Jun 2004   Bug fix: spin orbit + US-PP were not working in low symmetry
+              cases. (ADC)
+              Added a routine to calculate k and -k in the spin-orbit case,
+              because they are no more equivalent. (ADC)
+              
+26 Jun 2004   diis_module.f90 recoded.
+              The following variant of the DIIS Residual Minimization Method, 
+              based on three steps, has been implemented :
+              1) At the first "scf" step of the first "ionic" step, the 
+                 diagonalization starts with an initialization procedure. 
+                 Two (or more) sweeps on all the bands are performed. 
+                 A sweep consists in two (or more if required) unconstrained 
+                 trial steps (steepest descent steps) followed by a
+                 subspace rotation. If convergence is not achieved in this 
+                 phase a final trial step is done.
+                 In all the other cases the initialization procedure consists 
+                 in a subspace rotation followed by a trial step.
+              2) Diagonalization based on the DIIS algorithm is performed on 
+                 the lowest ( nbnd - 2 ) bands. Orthogonalization of the 
+                 eigenvectors is done at each step. The possibility of 
+                 orthogonalizing a given band only to those inside an energy 
+                 window is also implemented.
+              3) The topmost two bands are converged using a standard 
+                 conjugate-gradient procedure. This ensures that eventual 
+                 holes left by the DIIS algorithm can be identified and filled.
+                 If two holes have been found this procedure is repeated on the 
+                 topmost two bands (previously optimized with the DIIS 
+                 algorithm). (CS)
+
+25 Jun 2004   Machine-dependent definitions are now contained in two 
+              different files (both in /include):
+              1) f_defs.h  for definitions to be included in FORTRAN files ONLY
+              2) c_defs.h  for definitions to be included in C       files ONLY
+              (CS)
+              Many small changes to fix compilation on T3E (PG)
+              
+
+24 Jun 2004   Calculation of Makov-Payne correction added to chdens
+              (contributed by Giovanni Cantele) (PG)
+
+22 Jun 2004   Cleanup and some minor modification of the output format in 
+              molecular dynamics runs. (CS)
+              No need to have a spin index in dvan (PG)
+
+21 Jun 2004   Added support for Opteron (contributed by Davide Ceresoli) [GB]
+              First clean-up of parallelism. Fixed a bug in the way temporary
+              files were labelled when nproc > 10 and npool > 1 (CS).
+              More T3E glitches: getarg must be preprocessed
+              || instead of | in clib/cp.h (PG)
+
+17 Jun 2004   Direct references to mpif.h replaced (in fft_base.f90 and
+              ptoolkit.f90) by USE parallel_include.
+              Small change in the output: also the forces on fixed atoms are
+              printed (previously they were set to zero before the print-out).
+              (CS)
+
+16 Jun 2004   stm image should work also for magnetic systems (SdG)
+
+16 Jun 2004   NLCC for Fritz-Haber to UPF format converter (thanks to
+              from Frederic Bouyer and Katalin Gaal-Nagy)
+              Some calls to blas routines were incorrect for T3E (PG)
+
+16 Jun 2004   Fixed a bug (highlighted by Tone) in the way the path-length 
+              was computed. (CS)
+
+15 Jun 2004   Example22 added. It makes a calculation of fcc-Pt including
+              spin-orbit effects (ADC).
+
+14 Jun 2004   io_base : added read and write of jchi and jjj (ADC)
+              PP : added the possibility to plot the magnetization in the
+                   noncolinear case (ADC)
+              PWNC : clean up. openfil, restart, punch, read_conf_from_file,
+                     write_conf_to_file, restart_in_electrons, merged 
+                     with those in PW. (ADC)
+              io_base : noncolin, lspinorb saved in restart file.(ADC)
+              cpmd2upf wrote an incorrect DFT if converting BLYP PPs. (PG)
+
+13 Jun 2004   Some changes to newd.f90 (PG)
+
+12 Jun 2004   Modules becmod, rbecmod (one variable each) merged into
+              a single module (with two variables...)
+              More USPP merge (PG)
+
+11 Jun 2004   Cleanup of the molecular dynamics routines. Some debug messages
+              removed. Some duplicated variables (fixatom and if_pos) removed 
+              from pwcom (already present in ions_base). A logical variable 
+              lfixatom added in control_flags. 
+              The output of a molecular dynamics run has been slightlychanged
+              to be (hopefully) clearer.
+              Fixed a couple of ambiguities:
+              flib/rranf.f90: variable irand was not initialized.
+              PW/v_of_rho.f90: at line 146 the following call has been changed 
+              CALL xc( arhox, ex, ec, vx, vc )  =>  
+                                        CALL xc( arhox, ex, ec, vx(1), vc(1) )
+              (CS)
+
+10 Jun 2004   pw_examples, cp_examples => examples (Gerardo)
+              Several small bugs in restart, found by AdC and David
+              Prendergast (PG)
+              Fixes for cry-t3e compilation. Fix for Gamma compilation (PG)
+
+ 8 Jun 2004   More uspp variables rearrangement:
+              qq_spinorb moved into Modules/uspp.f90 as qq_so
+              dvan => dvan + dvan_so (for spin-orbit only)
+              PW/clean_pw.f90 replaces PWNC/clean_pw.f90 (PG)
+
+ 8 Jun 2004   First step to calculate all dyn. matrices needed for the 
+              entire dispersion in one step with pw.
+              A new calculation is possible called 'dispersion'
+              in the phonon card new input parameters are:
+              nq1, nq2, nq3 : number of q points in the direction
+              tr2_ph : threshold for the phonon calculation (see also INPUT_PH)
+              UP TO NOW ONLY THE Q POINTS FOR THE DYN. MATRICES ARE 
+              CALCULATED AND PRINTED. (Gernot)
+
+ 7 Jun 2004   Some bugs fixed in NEB:
+              1) Modules/neb_base.f90: the neb error is computed as done in 
+                 structural optimizations (convergence when the largest 
+                 component of the force vector is less than a threshold).  
+                 The rescaling of the elstic constants has been modified so 
+                 that they can not be smaller than a minimum value 
+                 (set to 0.05).
+              2) PW/compute_scf.f90: a bug in the way startingpot and 
+                 startingwfc were used inside neb has been fixed (now scf 
+                 should be faster).
+              3) PW/pwscf.f90: cleanup of module-dependencies. 
+              4) pwdocs/INPUT_PW: documentation updated (a detailed 
+                 explanation of how to specify initial configurations has been 
+                 added).
+              5) PW/neb_routines.f90: file no longer needed
+              (CS)
+
+ 2 Jun 2004   More USPP-related variable rearrangement (PG)
+              Quantities of a LDA+U calculation are again written on file 
+              ".save", similarly to what was previously done by the "saveall" 
+              routine but according to the new format. Two subroutines have 
+              been added to "io_base" (write_restart_ldaU, read_restart_ldaU) 
+              which are called by "restart". (SF)
+
+31 May 2004   PWCOND: Bug fix, now should work also for nrx1 or nrx3
+              different from nr1 or nr3 (contributed by A. Smogunov)
+              PH: cleanup of cgsolve_all in order to reduce memory use,
+                  zstar, epsilon and dynamical matrices written with 
+                  8 digits only (it should not make any significant difference
+                  and it should be easier to spot differences in dynmat files 
+                  if 0.123456789E-10 is treated as zero) 
+                  Symmetrization is applied already to drho (not anymore 
+                  to dvscf)                   (SdG)
+              PWNC cleanup (AdC)
+              More USPP_related variables moved to Modules/uspp.f90
+              Note that lqx => lmaxq for consistency with other names
+              (those ending in x are static dimensioning) (PG)
+
+28 May 2004   NEB: added the possibility of specifying one or several
+              intermediate images in the input file (see INPUT_PW). 
+	      Back-compatible with the old input files. (CS)
+
+27 May 2004   Raman calculation with 2n+1 theorem added (Gernot)
+              Small changes in noncolinear symmetrization (AMC)
+              Added support for "ph.x -in input" [Gerardo]
+               
+26 May 2004   Part of the variables for ultrasoft pseudopotentials
+	      have been moved into a new module uspp_param, shared
+              between PW and CP (in file Modules/uspp.f90)
+              The flag newpseudo is no longer used to decide whether
+              states with oc=0 are bound or not: for those states, and
+              only for the old RRKJ format, oc is set to a negative
+              value, and this signals that they are not bound. Not elegant
+              but simpler than it used to be. The converter to UPF format
+              did not include those states anyway.
+              Beware unexpected side effects! (PG)
+
+25 May 2004   Changes in pw to calculate the Raman tensor via the 2n+1 theorem.
+              A new calculation called 'raman' is now available.
+              For each k point additional points at k+b will be generated
+              and a nscf calculation will be performed.
+              The b vectors are small vectors either in cartesian coordinates
+              or along the direction along to the nearest neighbours.
+              A new input card named raman is introduced. New variables: 
+                  b_length:  the length of the b vectors
+                  lcart:     if .true. cartesian direction (default)
+                             if .false. in direction to the nearest neighbours
+
+24 May 2004   density/potential mixing procedure in presence of an electric 
+              field has been changed. 
+              - Density mixing is now available.
+              - Explicit mixing of the dipole moment in potential mixing has
+                been removed (in my opinion it was spurious). 
+              If anybody experiences bad convergence with the present scheme 
+              please let me know. (SdG)
+
+21 May 2004   Merged noncolinear and colinear symmetries (routines
+              sgama, irrek). Variable degspin removed, constant
+              degspin=2 left. Please check for unintended effects!
+
+21 May 2004   A new check has been added in move_ions in the case of 
+              BFGS+LSDA: if when the convergence is achieved the absolute 
+              magnetization (computed in electrons and now saved in the module 
+              lsda_mod) is less than 1.D-8 a new scf cycle is performed 
+              starting from atomic potential and wcfs and the BFGS convergence 
+              is checked again.
+              Removed some unused variables from pwscf.
+              Again a couple of errors highlighted by Tone in the format of the 
+              NEB restart file (file prefix.neb) at lines 369 and 377.
+              (CS)
+
+20 May 2004   Fixed an error highlighted by Tone in the format of the NEB 
+              restart file (file prefix.neb): ELSATIC vs ELASTIC (CS)
+
+19 May 2004   Functions "capital" and "matches" taken out of module
+              "parser" and added to flib; duplicated routines removed.
+              Manual update (PG)
+
+18 May 2004   Set value of gamma_only=lgamma after read_restart_header
+              in restart.f90 (SdG)
+              Removed obsoleted compiler flag -DHAS_ZHEGVX (GB)
+
+17 May 2004   Several minor bugs in the NEB machinery (mainly related to the 
+              restart procedure) have been fixed: this required a partial 
+              reorganization of the restart-file (prefix.neb) that is no longer 
+              compatible with the previous one. Now the restart mechanism is 
+              much more robust.
+              In coset.f90 division by zero without any check: added 
+              an error message.
+              Cleanup of openfil.f90 routine.
+              In read_cards.f90 module kinds was USEd two times.
+              (CS)
+
+14 May 2004   Fixed a couple of bugs in error.f90 and move_ions.f90 (CS).
+              Updated functionals and installation mechanisms,
+              ready for addition of atomic code. Doc update (PG)
+
+13 May 2004   keyword "revPBE" recognized by which_dft
+              Beware: potential for trouble with PBE and the like...
+              More noncolinear merge (PG)
+
+13 May 2004   Some cleanup in the NEB machinery (CS).
+              Fixed a serious bug in the mixing of spin polarized systems 
+              with the local-TF screening (SdG, CS). 
+
+12 May 2004   pw2casino: incorrect calculation of eloc (G=0 term missing)
+              (found by Dario Alfe')
+
+11 May 2004   becp = <beta|psi> allocated only when needed (except in
+              phonon where it is still allocated at the beginning)
+
+11 May 2004   Yet another version of the DIIS algorithm (replacing the 
+              previous one). This version is slower (but not dramatically)
+              than davidson for small systems, faster for large systems
+              (the cross-over is around 300 bands), but there is space 
+              for further improvements. A gamma-point version is also 
+              implemented (previously missing). An "holes-sniffer" is 
+              implemented to prevent holes in the eigenvalues spectrum. (C.S.)
+
+10 May 2004   Added a cut-off: -1.0 + 1.D-6 < zeta < 1.0 - 1.D-6 to prevent
+              the divergences of the correlation part of the PBE potential.
+              (C.S.)
+
+10 May 2004   Fixed some bugs in the cg and diis routines of the 
+              noncollinear code. Now these routines work also with
+              NC-PPs. (ADC)
+
+09 May 2004   Cleanup of duplicated or unimplemented routines in PWNC/ (PG)
+
+08 May 2004   Cleanup: pwcom no longer used in PP/,
+              qgm is now a local variable as it should be (PG)
+
+07 May 2004   New punch routine. If the wf_collect flag is true, it collects
+              all wavefunctions in a single file. (PC)
+              Fixed a in local-TF screening (division by zero) that
+              was present since version 1.2.0 (CS)
+
+06 May 2004   Fixed several bugs in the part that supports spin-orbit,
+              and a bug in the symmetrization of the magnetization in
+              the parallel case. (ADC)
+              Support for g95 added (GB)
+
+04 May 2004   Bug in cpmd2upf.f90 fixed (thanks to Dariusz Chrobak)
+
+03 May 2004   Added support for spin-orbit pseudo-potentials. 
+              Support for both NC and US PP. 
+              (Still experimental) (ADC)
+              NEB: cleanup of bfgs stuff
+              1) a backup copy of the restart file is written 
+                 at each iteration on the scratch directory.
+              2) velocities can be reset (reset_vel keyword)
+              when restarting from file. (C.S.)
+
+30 Apr 2004   Started the work to provide support for pseudopotentials with
+              spin-orbit. Now PW can read a spin-orbit pseudopotential,
+              but not use it (ADC)
+              DIRECT_IO_FACTOR for intel compiler reverted to 8, 
+              compiler option used instead.
+              Lowdin charges are printed for each spin component (PG) 
+
+28 Apr 2004   Pseudopotential cleanup and merge: 
+              module "atom" (common with CP) moved to Modules/
+              index nhtom (m) replaced by nhtolm (combined lm index)
+              (as in CP) (PG)
+
+27 Apr 2004   More pseudopotential cleanup (PG)
+              Fixed some bugs in the NEB machinery. In particular the error
+              was not properly computed and overestimated the real error. 
+              Some improvements in output format of a NEB calculation (C.S.)
+
+26 Apr 2004   The correct value of DIRECT_IO_FACTOR for intel compiler
+              version 8 is 2, not 8: wavefunction files were 4 times
+              larger than needed! (CC)
+
+25 Apr 2004   pseudopotential cleanup: vnl => vloc_at (PG)
+
+23 Apr 2004   ndm, mmaxx => ndmx ; 0:ndm => ndmx (no longer needed) (PG)
+
+22 Apr 2004   funct.f90 and which_dft moved to Modules/functionals.f90 (PG)
+
+21 Apr 2004   cleanup: zv moved to module "basis", documentation updated (PG)
+
+20 Apr 2004   dylmr2.f90 moved to flib/ (PG)
+
+19 Apr 2004   Bug fix: non-collinear code was not working with insulators
+              and nbnd > nelec/2 (AdC)
+
+15 Apr 2004   Fixed multiple writes to file in parallel execution
+              when calculating electron-phonon coefficients (thanks
+              to Xianghju) (PG)
+
+14 Apr 2004   Fixed a couple of bugs in the lbfgs algorithm. (CS)
+              On parallel LINUX machines the error message is written opening 
+              unit "0" on /dev/stderr (as is automatically done on AIX). (CS)
+              The exit_file is no longer a parameter (set in io_files.f90 to 
+              "EXIT"), but an internal variable set in input.f90 to 
+              "prefix.EXIT". This is necessary to allow the user to stop 
+              the "correct" job when several jobs are running on the same
+              working directory. (CS)
+              read_recon subroutine moved inside paw module for future use
+              in nmr calculation (MP)
+
+13 Apr 2004   First steps in USPP harmonization: nqfm => nqfx, some
+              us variables and aainit moved to Modules/uspp.f90 (new)
+              invmat moved to flib/ and merged with invmat3 of CP/FPMD,
+              rndm and ylmr2 moved to flib/ in rranf.f90
+
+ 7 Apr 2004   relativistic exchange introduced in case of pseudo generated 
+              with relativistic exchange
+              Added support for HP workstation with Itanium CPU
+
+ 3 Apr 2004   Cleanup: integer conversion to real performed with "dble"
+              everywhere, minor things here and there
+
+ 2 Apr 2004   A new (experimental) feature is added to LDA+U method.
+              The +U part of the functional can be built using
+              for the projection on localized orbitals some simple
+              Wannier functions generated by the post-processing
+              code poormanwannier.f90 (pmw.x) from the LDA band
+              structure. (SdG)
+
+ 2 Apr 2004   Cleanup: dsum deleted (PG)
+              Default value for the neb-time-step (ds) updated.
+              Corrected some other small errors in the INPUT_PW file (CS)
+
+ 2 Apr 2004   References to brilz replaced everywhere by cell_base (CS)
+              Again an improvement of the optimization procedure in neb
+              calculations: the new version of quick-min estimates the 
+              optimal time step on the basis of the approximate force
+              constant along the displacement vector (this is only done 
+              after some optimization steps). 
+              In all test cases the algorithm is at least two times faster.
+              Nevertheless the algorithm is not yet optimal (CS)
+              Cleanup: all references to varie replaced by references to
+              control_flags  (also when varie is indirectly called by pwcom).
+              Fake module varie has been removed from pwcom (CS).
+
+ 1 Apr 2004   Incorrect preconditioning in LBFGS (CS)
+
+31 Mar 2004   Compilation problems with __NEW_PUNCH fixed
+              Fixed a bug in neb when lda_plus_u is true (CS)
+
+29 Mar 2004   Various cleanup: error, date_and_tim, clib, harmonization
+              with CP and FPMD. Now in case of severe error, errore writes
+              its message also to the file 'CRASH' that is closed before 
+              aborting, this to avoid information loss in those systems
+              that do not flush open streams, when the code is stopped 
+              through a call to MPI_ABORT (CC)
+              General cleanup: NEB
+              1) units for activation energy and errors are printed
+                 in the output file
+              2) elastic constants are automatically rescaled so that
+                 "spring" forces have the same magnitude as "external-potential"
+                  forces: this permits a larger time step in NEB optimization
+                 (the default will be changed later)
+              3) fixed a bug in the way istep and istep_neb were set  
+              (CS) 
+              General cleanup: parser
+              1) the subroutine delete_if_present has a logical optional 
+                 input argument to require a warning message when a file 
+                 is removed
+              2) check_stop: the function check_stop_now has an optional
+                 input argument to assign an output unit different from stdout
+              (CS)
+
+24 Mar 2004   Implemented experimental parallelization of NEB images.
+              This required deep modifications of the parallelism in PWscf. 
+              - There are two new communicators: intra_image_comm and
+                inter_image_comm.
+              - #ifdef __PARA is no longer needed because all "parallel" 
+                variables are always initialized for a serial run and all
+                parallel routines are, in the case of a serial run, dummy 
+                routines. 
+              - The wrappers to MPI routines used only by PWscf are in file
+                PW/para.f90. 
+              - The others (mp_***) are in the Modules/mp.f90.
+              - All explicit referencies to mpif.h should be replaced by a
+                "USE parallel_include" (in a serial run parallel_include 
+                is simply a dummy module).
+
+              The extrapolation of both potential and wavefunctions has been
+              rewritten in order to be smarter than before: on the basis of 
+              the required extrapolation order, on the basis of the history 
+              and on the basis of which files are really present on the disk, 
+              the algorithm chooses the extrapolation order.
+              All algorithms in which ions are moved can use the extrapolation.
+
+              Both features are unstable: I need the help of everybody in
+              order to test them. (C.S.)
+
+24 Mar 2004   Crashes in raman and planar average calculation fixed
+
+19 Mar 2004   Yet another bug in phonon + k-points parallelization
+              in routine phq_readin (found by Nicolas Mounet)
+
+17 Mar 2004   Obsolete parallelization routines removed (CS)
+              Missing routines added to local lapack copy (MP)
+
+16 Mar 2004   All references to mpif.h and to subroutine check.f90 
+              removed by the PWscf and related codes (CS)
+
+15 Mar 2004   Makefile cleanup. In upftools executable are *.x (PG)
+              Problems in parallel version of PWNC and PWCOND fixed,
+              other refernces to mpif.h removed. (CS)
+              wfcs extrapolation extended to NEB. (CS)
+              In rdiaghg and cdiaghg #ifdef HAS_ZHEGVX removed (that 
+              routine is present in all lapack distributions).
+
+15 mar 2004   Two instances of the same variable in efg.f90 (AT)
+              Cleanup, doc, workaround for yet another ifc8 bug (PG)
+              Almost all neb routines moved to Modules (CC)
+              New module check_stop used by all codes
+              to check for exit conditions ( maximum time
+              or EXIT file ) (CC)
+              General cleanup of parallelization routines:
+              they have all been moved in the para.f90 file,
+              all includes of mpif.h replaced by USE include_parallel.
+              (C.S.)
+
+12 mar 2004   more postprocessing is working at Gamma point (AT, PG)
+              Several compilation and Makefile glitches (PG)
+              Manual updated (PG)
+              Options startingwfc and startingpot are no longer ignored
+              in a restart calculation (found by K.Kudin) (CS)
+
+09 mar 2004   ewald_dipole did not reduce g-tensor 
+              check efg in parallel (minor changes)
+              call to poolbcast() should include a test to npool /=1 (MP)
+
+08 mar 2004   Calls to broadcast() and poolbcast() replaced everywhere by 
+              calls to mp_bcast(*,MPI_COMM_POOL) and mp_bcast(*,MPI_COMM_ROW)
+	      respectively. Files PW/broadcast.f90 PW/poolbcast.f90 removed (CS)
+
+08 mar 2004   cleaning and documentation of paw related routines (MP)
+
+08 mar 2004   neb basic routines moved to Modules, to be shared among codes
+              basic cell and ionic variables moved from pwcom to
+              cell_base and ions_base .
+              cell_base modules and ions_base modules should be initialized
+              through the use of cell_base_init and ions_base_init, this
+              after having read the namelists and the cards .
+              IN THE FUTURE NONE OF THE VARIABLES IN THE BASIC MODULES SHOULD
+              BE SET IN THE MAIN CODES, BUT THROUGH A CALL TO SOME INIT 
+              FUNCTIONS CONTAINED IN THE BASIC MODULE ITSELF.
+              THE IDEA IS THAT THE BASIC VARIABLES SHOULD BE USED AS 
+              READ-ONLY. UNFORTUNATELY IN F90 THERE IS NO POSSIBILITY
+              TO SET A READ ONLY ATTRIBUTE. (CC)  
+
+07 mar 2004   Cleanup in PH/ and D3/, setv removed (PG)
+              Calls to broadcast replaced by calls to mp_bcast everywhere.
+              All kinds of ionic dynamics are done by a single cpu 
+              (see move_ions.f90). After the ions are moved the new positions
+              (and other information) are broadcast to all other cpus. C.S.
+
+04 mar 2004   Excessive check in PP/punch_plot.f90 if gamma_only
+              (Antonio Tilocca)
+
+01 mar 2004   calculation of NMR parameter Cq and eta in efg
+              some output formatting (MP)
+
+27 feb 2004   Fixed a serious bug in the path interpolator
+              (spotted by Nicola Bonini) C.S.
+              More cleanup in examples (GB)
+
+26 feb 2004   Porting to SGI Altix by Martin Hilgeman, SGI 
+              (see cpdocs/ChangeLog for detailed log)
+
+26 feb 2004   wfc-extrapolation extended to all "relax" algorithms.
+              Molecular Dynamics based algorithm partially rewritten: 
+              both standard and damped MD are performed with the velocity Verlet
+              scheme (with or without constrains). 
+              Renata's subroutines are used only in the framework of variable
+              cell.
+              constrain.f90 file is no longer needed: cnstrains are set in the 
+              input file (see CONSTRAINTS CARD) with the same input format used
+              in FPMD. An arbitrary number of constrains can be set.
+              In the case of constrained relaxation the damped MD
+              algorithm is used instead of BFGS.
+              When restart_mode = "from_scratch" many restart files are removed 
+              from the scratch directory.
+              Several other modifications here and there. (C.S.)
+
+26 feb 2004   Remove use of setv in symz (MP)
+              Several minor errors in the manual (PC)
+
+25 feb 2004   PWgui documentation updated (Tone)
+              Serious bug in phonon + pools (again) fixed:
+              double call to init_pool in PH/phq_readin.f90
+              (spotted by Gernot)
+              Useless clib/c_getenv.c removed (PG)
+              Minor updates to examples (CS, AdC)
+              Added --disable-parallel and --disable-shared flags
+              to "configure" (GB)
+              Electric field gradient calculation with PAW reconstruction
+              (MP)
+
+-------------------------------------------------------------------
+Date: 24 Feb 2004    Version: pw-2-0
+-------------------------------------------------------------------
+19 feb 2004   more fixes to pw2casino (MP), examples and doc (PG)
+
+18 feb 2004   more installation fixes (GB) and doc updates (PG)
+              Fixed another bug in the path interpolator script (CS)
+              GUI added to the repository - see the GUI/README file (Tone) 
+              Berry-Phase calculation in parallel fixed for npool = 1,
+              program stops if npool /= 1 (PG)
+              pw2casino works in parallel if npool=1 (MP) 
+
+17 feb 2004   check_constrain weirdness fixed - maybe
+	      Misc documentation updates (PG)
+              F77 syntax for dist.f (GR)
+
+16 feb 2004   Various updates to documentation (Tone, GB)
+              and to installation (GB)
+              Fixed a bug in the path interpolator script (CS)
+              Use only potential mixing with dipolar field (AdC)
+14 feb 2004   LDA+U: variable starting_ns_eigenvalue has been added in 
+              order to allow to specify how to fill starting ns occupation
+              matrices. Useful when the default choice takes the wrong
+              (or not desired) path. (SdG)
+              As gamma_only is not working yet with LDA+U in forces and 
+              stress a call to errore is added to prevent mis-use (SdG).
+
+13 feb 2004   Noncolinear example updated (AMC)
+              README.configure added (PG)
+              Installation instructions rewritten (GB)
+              Updated XCRYSDEN utilities in pwtools/ (Tone)
+
+12 feb 2004   Misc updates and fixes to examples (PG, SF, GB)
+              PP/bands.f90 stops if pools are present (PG)
+              Small bug fix in pseudo_types.f90 (AdC)
+              INPUT_CHDENS: fix description for XCRYSDEN format (Tone)
+              Implementation of LDA+U gamma_only calculations (SF)
+
+11 feb 2004   Missing lapack routines added (PG)
+              Case nks=1 in new_ns fxed (SF)
+              pw2casino: formatted output for G vect, correct nonlocal
+              energy, now correct in NC case (MP)
+              The minimization procedure has been refined in order to be
+              more robust when the starting configuration is close to the 
+              minimum: if (and only in this case) the trust_radius is too
+              long and the step fails to reduce the energy (Enew>Eold),
+              then the new trust_radius is obtained with a quadratic
+              interpolation (line search) that is guaranteed to have a
+              good minimum (previously the trust_radius was simply halved).
+              For test purpose a precompiler flag (OLDRECIPE) can be defined.
+              summary.f90: format was causing trouble with 'f' projectors (SF)
+
+10 feb 2004   Cleanup in check_example (GB), PW/rotate_wfc*.f90 (CS)
+              Singular Value Decomposition used in extrapolate_wfc:
+              avoids numerical instabilities (Paolo Cazzato)
+
+9 feb 2004    The new bfgs minimization scheme is now the default. 
+              In order to use the old scheme, the keyword ion_dynamics
+              must be set to "old-bfgs" (C.S.)
+              pw2casino: correct kinetic energy (tpiba2 was inside the k-loop)
+              write out only G vectors uses to describe wavefunctions
+              still not working in parallel (MP)
+
+6 feb 2004    Example documentation updated (SF)
+              Stress units explicitly written on output (SdG)
+              Examples updated, misc. (PG)
+              Example checker rewritten using awk (GB)
+              Added a tool to generate a new path (what is actually generated
+              is the restart file) starting from an old one. The new path is
+              obtained through interpolation (cubic splines). The new path
+              can be discretized with a different number of images (this is
+              its main purpose), images are equispaced and the interpolation
+              can be also performed on a subsection of the old path. A self 
+              explanatory shell script is also included: it permits an easier 
+              manipulation of the input file. Fixed a couple of bugs affecting
+              the "reset bfgs" procedure (C.S.).
+
+5 feb 2004    Fixes for 64-bit HP compilations (thanks to Sergei Lisenkov)
+              Better example checker (GB). Minor cleanup of tabulators (PG)
+
+4 feb 2004    D3 code updated to work with max_irr_dim != 3, some cleanup.
+              D3example added. (Gernot Deinzer) 
+              Fixed a bug in the parallel version of neb: a bcast was
+              missing (CS). 
+
+3 feb 2004    Documentation updated, some changes to output in dynamics
+              and in summary as requested by Tone - examples updated
+              configure => configure.old, configure.new => configure (PG)
+              Added some experimental stuff (not compiled if __LANGEVIN 
+              is not defined) to neb_routines (CS)
+              Added preliminary version of interface with QMC code
+              CASINO: PP/pw2casino.f90 (Mickael Profeta)
+
+2 feb 2004    projwfc works also with the gamma_only version (Guido Fratesi)
+              Restored the check on diagonalization also at the first scf 
+              iteration. Module miscellany removed. Cleanup (CS).
+
+29 Jan 2004   Fixed a bug and a potential name conflict in module
+              basic_algebra_routines (CS). Fixed bug in noncolinear case
+              with k-point parallelization (AMC+CS)
+              Sloppy code in variable-cell code leading to overflow (PG)
+              Small changes to "memory" to prevent integer overflow (PG)
+
+28 Jan 2004   flib.a is only redone when necessary (GB)
+              PWCOND: missing ionode_id added (AdC)
+              Fixed a bug in the restart mode of neb (CS)
+              Manual updated (CS, PG)
+              example6/run_example modified to prevent SP4 weirdness (PG)
+              Workaround in PW/h_psi.f90 for ifc v.8 (PG)
+              Misc cleanup, empty workspace module removed (PG)
+
+27 Jan 2004   Miscellaneous cleanup
+              Missing IMPLICIT NONE in PH/solve_ph.f90 was causing problems: 
+              iunres was not declared and unit -1073746312 was opened (CS) 
+              Recently introduced bugs in PP/projwfc.f90 and in
+              PW/dynamics.f90 fixed (PG)
+
+24 Jan 2004   Speedup in LDA+U and stress calculation (SdG)
+              IBM xlf workaround (CC)
+              Module pwcom removed from PW/ (PG)
+
+23 Jan 2004   Extensive module cleanup: DP moved from wrong place
+              (parameters) to the correct place (kinds); module "varie" 
+              replaced by "control_flags" (not yet in pwcom, though) -
+              many files changed. (PG)
+              64-bit cpus (Opteron, maybe Itanium) should now work
+              if __LINUX64 is defined (PG)
+              The diagonalization threshold can now be read by the input file
+              (diago_thr_init). In the case of a phonon calculation it is
+              ignored and a warning message issued. (CS)
+
+22 Jan 2004   More fixes for the case of local potentials only (CS)
+              Bug fixed in phonon calculation with nosym=.true. :
+              minus_q and related variables where not properly set
+              minus_q was always .false. while instead it may be .true.
+              for some value of q (gamma for instance) (SdG).
+              Contribution to the stress from derivative of the bessel 
+              function is obtained from the already available interpolation
+              table: non-local stress calculation is much faster (SdG).
+              STM images can be obtained from a calculation at "gamma";
+              gamma_only variable is written/read by saveall (Guido Fratesi)
+              Cell parameters written on output for variable-cell dynamics
+              as requested by Tone (PG)
+              Misc cleanup 
+
+21 Jan 2004   An old bug of PWscf was still there in the noncolinear code:
+              if lscf=.false. the calculation now starts from potential (AdC).
+              More tweaking on ethr threshold (CS).
+              Renamed reference outputs in pw_examples/example1 from "file"
+              to "file.out", edited run_example accordingly (GB)
+              machine.h: #define ZHETRD ZHETRD confuses pgi compiler (PG)
+              Case of local potentials only fixed (?) once again (PG)
+ 
+20 Jan 2004   The threshold for diagonalization (ethr) is now fixed to 1.D-5 
+              at the first scf iteration (iter=1). A check is performed to
+              verify that the resulting density is adeguate (dr2/nelec > ethr).
+              If it is not the diagonalization goes on with a smaller ethr.
+              For iter > 1 ethr is updated with the old recipe.
+              Added a warning in update_pot that indicates "problems" in 
+              wfc extrapolation. This problem has not yet been fixed.
+              More pwcom modules splitting (CS)
+              Fixed occupation in noncolinear code...fixed! (AdC)
+
+14 Jan 2004   out-of-bound error in Berry Phase calculation (PG)
+              Automatic checker  for examples added (GB)
+
+09 Jan 2004   phonon did not work on 4-dim irreps (PG)
+              configure.new updated to work with intel v.8 (GB)
+              (which gives internal compiler error anyway)
+
+08 Jan 2004   examples (output) updated
+
+06 Jan 2004   Check on undefined variables, out-of-bound arrays
+              Several implicit none re-added, pwcom modules split (PG)
+
+05 Jan 2004   Tabs removed (again)
+              NEB/ removed from makedeps.sh
+              plotrho: added possibility to have contour lines of
+              various type
+              A few undefined variables defined (again) (PG)
+
+05 Jan 2004   Cleanup of Gamma/ directory: obsolete files removed (CS)
+              Gamma/ now contains only Gamma-only version of the phonon code
+
+29 Dec 2003   kpoint_grid: 
+              - Bug fixed. Array wk(:) was temporarily used beyond its
+                range and in some cases, with very large number of k-points,
+                the code dumped or gave totally wrong numbers.
+              - Symmetry k-point reduction algorithm exploits now the
+                knowledge of the ordering of points in the list. It is
+                much faster, in particular for large grids (as those
+                needed for el-ph interaction for instance).
+
+16 Dec 2003   Berry-phase bugs fixed (Oswaldo)
+              Added trick by FA to allow reading from file
+
+15 Dec 2003   Fixed non-colinear version with GGA+NLCC spin-unpolarized
+
+11 Dec 2003   Merge of Gamma and NEB versions into PW
+
+-------------------------------------------------------------------
+Intermediate version: pw-1-3-1
+-------------------------------------------------------------------
+
+ 4 Dec 2003   NEB at gamma (NEB/pwgneb.x) is now available. 
+              Problem with starting_magnetization in NEB code fixed
+              Misc documentation updates
+              chdens : fixed XCRYSDEN output (Tone)
+
+ 2 Dec 2003   spin-polarized calculations: at least one value for
+              starting_magnetization must be explicitly set in input.
+              Workaround for xlf compilation problem in new BFGS
+
+<1 Dec 2003   Added two new implementations of BFGS (experimental:
+              can be tested using NEB code). Noncolinear speedup
+
+21 Nov 2003   Fixed bug in Gamma+doublegrid
+              Doc update, misc. cleanup in NEB and installation
+
+20 Nov 2003   NEB added
+
+19 Nov 2003   misc improvements in Makefile and configure.new
+
+14 Nov 2003   PW/memory.f90 cleanup, icc problems in c_mkdir.c
+
+11 Nov 2003   some pointers converted to allocatable (Michele)
+              new script to find dependencies  
+
+ 9 Nov 2003   bug (alpha compiler) reported by Sergey has been fixed
+              new lapack subroutine, called from PWCOND, added to
+                 lib/lapack.f and lib/lapack_ibm.f
+              Wavefunctions arrays moved to module wavefunctions_module,
+              common to all codes - required to reduce duplicated subroutine
+              Module filnam in pwcom moved to io_files module
+              Module units in pwcom moved to io_file
+              From now on, all file names and their units and attributes
+              (i.e. reclen) should be defined in Modules/io_files.f90
+
+ 7 Nov 2003   Doc updated, example 5 and some Make.* files corrected
+
+3-6Nov 2003   "stdout" and "stderr" units introduced and used everywhere
+              in the code (needed in NEB for simple output redirection). 
+              Merge of colinear and noncolinear versions of input.f90
+              and addusforce.f90.
+              Version number updated to 1.3.1
+
+1? Nov 2003   Tag "pwsafe" added.
+
+29 Oct 2003   Merge of several Gamma-specific routines into PW/
+              -D__LAM was not working in some cases (Michele)
+
+29 Oct 2003   Gamma code cleanup: becp is allocated when used and
+              then deallocated, obsolete module gamma removed
+
+28 Oct 2003   PGI compiler doesn't like "external ::" 
+              Minor changes to examples for noncolinear
+
+24 Oct 2003   Speed-up of Z* calculation
+
+21 Oct 2003   Input documentation (sort of) for PP/projwfc.f90
+              Added template for developers' guide (pwdocs/refman.tex)
+
+16 Oct 2003   bfgs modified to work with arbitrary components of the
+              atomic positions kept fixed (Carlo Sbraccia)
+              "Total force" now prints a more sensible quantity:
+              \sqrt(\sum_{i,n} f_i(n)^2) instead of \sum_{i,n} |f_i(n)|
+              Cleanup in several routines and in modules.
+
+16 Oct 2003   US effective charges now available in the phonon code. 
+              Contributed by Gernot Deinzer
+
+15 Oct 2003   phonon: added comments to remind why dbecsum is summed 
+              over processors; various calls to setv removed
+              Second occurrence of wsinit and wsweight removed
+              Unit number cleanup (solves problem with conflicting units)
+
+ 8 Oct 2003   Two bugs due to atomic-unit mess:
+              PW/input.f90: lattice parameter a converted to wrong units 
+              if input is given as a,b,c,cos(ab),cos(ac),cos(bc) instead
+              of celldm(:); upftools/cpmd2upf.f90: wrong conversion due
+              to Rydberg-Hartree mess. Minor cleanup here and there.
+              Band plotting may output data in xmgr-readable format
+
+ 3 Oct 2003   Non-colinear version of PW added (PWNC/)
+              Cleanup of PP and other routines
+              Band plotting simplified
+              Support for HP PA-Risc (re-)added
+
+17 Sep 2003   Wrong coordinates written if atomic_positions='crystal'
+              (thanks to Francois Willaime)
+              Errors in makefiles for cygwin and hp
+              Various compilation problems for t3e, alpha
+
+-------------------------------------------------------------------
+Date: 9 Sep 2003    Version: pw-1-3-0
+-------------------------------------------------------------------
+
+09 Sep 2003   Fix for a nasty bug: if one performs two band structure
+              calculations one after the other, the first spoils the
+              charge density and the second yields wrong results. 
+              Temporary fix (AdC): start nonscf calculations from
+              potential instead of rho.
+              Added consistency check for DFT read from PP files.
+
+02 Sep 2003   Parallel version of DIIS diagonalization
+              Bug fix in the dielectric constant with US-PP.
+              A factor i was not needed. Small differences 
+              with previous results. (Found by G. Deinzer).
+              io_base logic simplified. 
+              Variable wf_collect added to the control namelist.
+              This logical variable will be used in pw to
+              collect wave functions at the end of a parallel run.
+              Integer overflow in memory.x fixed (Adriano MC)
+
+01 Sep 2003   Example outputs updated. Manual updated.
+              Added scripts from Tone, Makefile for cygwin.
+
+29 Aug 2003   Version number centralized in Modules/version.f90,
+              updated to 1.3.0
+              Auxiliary programs in pwtools/: equation of state (ev.x),
+              distances/angles (dist.x), k-point generation (kpoints.x).
+              D3 fixes (maybe). Misc cleanup.
+
+21 Aug 2003   occupations can be read from file. 
+              sp3 fix (allocation with zero length). Manual updates.
+              Gamma: fixed occupations, electric fields, cleanup.
+
+20 Aug 2003   punch_band.f90 works in parallel. Misc cleanup.
+              nelec, nelup, neldw may have noninteger values
+
+11 Aug 2003   PP/start_postproc.f90 cleanup. Manual updated. Some error 
+              messages clarified. Example for Berry phase updated (BEWARE: 
+              space needed between card and option after last changes to 
+              input!!! K_POINT{automatic} => K_POINT {automatic} )
+
+31 Jul 2003   More input merging (Carlo):
+              All namelists and cards moved to Modules/input_parameters.f90 .
+              From now on, all new input variables should be added
+              to this module, and then copied to the code internal
+              variables in the input.f90 subroutine
+              The namelists and cards parsers are in :
+              Modules/read_namelists.f90 and Modules/read_cards.f90
+              files input_parameters.f90 read_namelists.f90 read_cards.f90
+              are shared by all codes, while each code has its own version of
+              input.f90 ( used to copy input values into internals variables ).
+
+              EXAMPLE:
+              suppose you need to add a new input variable called "pippo"
+              to the namelist control, then:
+
+              1) add pippo to the input_parameters.f90 file containing the
+                 namelist control
+
+              INTEGER :: pippo = 0
+              NAMELIST / control / ....., pippo
+              remember: always set an initialization value!
+
+              2) add pippo to the control_default subroutine 
+                (contained in module read_namelists.f90 )
+
+              subroutine control_default( prog )
+              ...
+              IF( prog == 'PW' ) pippo = 10
+              ...
+              end subroutine
+
+              this routine set the default value for pippo,
+              that could vary with the code
+
+              3) add pippo to the control_bcast subroutine
+                (contained in module  read_namelists.f90 )
+
+                subroutine control_bcast( )
+                ...
+                call mp_bcast( pippo )
+                ...
+                end subroutine
+
+30 Jul 2003  indexing of the occupation matrices (ns,nsnew, etc) used in
+             LDA+U has been redefined in a more natural order:
+             ns(na,is,ldim,ldim) -> ns(ldim,ldim,is,na)
+
+28 Jul 2003  cell parameters in the case ibrav=0 back to previous
+             convention (as documented in INPUT_PP)
+             Misc. cleanup, manual updated
+
+25 Jul 2003  el-ph calculation in the US case should work properly.
+             An US term in the calculation of deltaV * psi_v needed in
+             elphon.f90 was missing. This was giving wrong number in version
+             1.2.0, while US case was not implemented in previous versions.
+
+23 Jul 2003  clean_pw cleaned
+             symmetries are always applied in non-scf calculations
+             (excepted for Berry-phase calculation):
+             use nosym=.true. to prevent generation of additional points
+             Example for STM added
+
+21 Jul 2003  Fixed recently introduced memory leak, some cleanup,
+             removed useless "include mpif.h"
+
+11 Jul 2003  Atomic positions are written in a relaxation run
+             in the same units used in input
+             The unit cell can be given using crystallographic 
+             parameters a, b, c, (all in A), cosab cosac, cosbc 
+             Misc. cleanup
+
+08 Jul 2003  Cleanup: latgen, punch_band (algorithm improved)
+             Minor changes to bp_c_phase to avoid compiler warnings
+             Options for LAM MPI added (as suggested by Cangiani)
+
+01 Jul 2003  Example for conjugate-gradient diagonalization added
+
+30 Jun 2003  Energy and forces with a finite electric field.
+             Added the possibility to subtract the dipole field 
+             for slab or molecule calculation.
+             (See Bengtsson PRB 59, 12 301 (1999) and
+              Meyer and Vanderbilt, PRB 63, 205426 (2001).)
+
+30 Jun 2003  Bug fix in add_zstar_ue. The routine was not working with 
+             one k point.
+             average.f90 extended.
+
+25 Jun 2003  More files names dimensioned to 80
+             recips.f90 moved to flib and used by all codes,
+             all Makefiles modified accordingly
+             Examples updated, new example for band structure
+             calculation added
+
+20 Jun 2003  PW/startup.f90: longer character variable np needed
+             Band extraction moved out of PP/pp.x, into PP/bands.x
+             Band plotting program (PP/plotband.f90) added
+             Misc corrections
+
+18 Jun 2003  minor glitches in PW/readpp.f90, PP/plotrho.f90 fixed
+
+12 Jun 2003  Installation cleanup; fftw are compiled by default
+             All Makefiles updated for addition of Berry phase code
+             iargc, getenv, getarg preprocessed
+             Missing Blas/Lapack sources for pw added
+
+11 Jun 2003  New and modified routines added for the calculation of the 
+             electric polarization in crystalline solids using Berry phase 
+             theory (dieguez@physics.rutgers.edu).
+
+29 May 2003  memory estimator should work for parallel machines as well
+             Manual updated
+
+29 May 2003  Bug in diropn: tmp file name too short
+             startup: more general mechanism too catch npool
+             (both contributed by Serguei Patchkovskii)
+
+28 May 2003  Minor cleanup
+
+22 May 2003  Davidson modified to use less memory in non-US calculations
+             (involves changes in several routines)
+             Option "nooverlap" for Davidson removed
+
+19 May 2003  New DIIS added (Stefano Fabris)
+             Removed obsolete "scf in/out correction"
+
+12 may 2003  MKL problem fixed (maybe)
+             Manual updated
+
+ 8 may 2003  PP/chdens.f90 rewritten, different input
+
+ 5 may 2003  Some cleanup in ggen, __OLD_GGEN stuff removed,
+             same code (almost) for PW and Gamma versions
+             version number updated,  manual updated
+             Lahey installation
+
+24 apr 2003  More FFT restructuring (CC) 
+             Updates to manual
+
+22 apr 2003  CERNFFT, option NOPENCILS removed, misc changes
+             Make.ibmsp modified to work (hopefully) without
+             modifications for all codes
+
+22 apr 2003  All setv statements in PW replaced by f90 constructs.
+             Minor changes in PW & PH (code readability).
+
+21 apr 2003  More FFT restructuring (CC)
+             Makefile fixes (PP, PH, D3, Gamma)
+             Calls to allocate_fft, ggen moved out of setup.f90
+             Minor change in mix_rho to reduce memory use
+
+15 apr 2003  Doc and install files updated (MKL problem)
+
+12 apr 2003  All filenames  => 80 char
+             All directories=> 80 char
+             Filenames + directories + other => 256
+
+10 apr 2003  Minor changes
+
+09 apr 2003  beginning of parallel FFT restructuring (CC)
+
+08 apr 2003  evc is dimensioned (npwx, nbnd) - various routines changed
+             (extensive changes to wfcinit, rotate_wfc, ccginitg).
+             Residual wrong dimension et(nbndx,nkstot) removed.
+             Common efield_0 in PW renamed extfield to avoid name 
+             clash with common efield in PH (PGI compiler)
+
+08 apr 2003  g_psi, g_psi_mod: new preconditioning (better behaved when 
+             hdiag-e*sdiag is close to zero) used in cegterg. This
+             removes most of the warning messages when using Davidson
+             diagonalization. Although the overall performance (number of
+             h_psi performed) does not seem to change very much in small
+             tests, except pathological cases like ni.band.in in example1,
+             it should be wise to have a more stable preconditioning.
+             cegterg: use always GEMM instead of GEMV in the update.
+             electrons: in a relaxation run perform accurately the first
+             iteration after ionic move but reset the diagonalization
+             threshold according to the actual self-consistence for the
+             following ones.
+
+07 apr 2003  D3/Makefile : missing add_efield added
+             cegterg, regterg: use GEMM instead of GEMV, do not require
+             any longer evc, et to be dimensioned nbndx (et is now 
+             dimensioned (nbnd,nkstot)) - misc. cleanup
+
+03 apr 2003  chdens now can compute the dipole moment of a localized 
+             charge. (ADC)
+             A new routine (add_efield) has been added
+             to add a finite electric field with a
+             sawlike potential: see PRB 34, 7146 (1986). (by J. Tobik) 
+
+27 mar 2003  Do not restart bfgs from previous results if
+             restart_mode='from_scratch' (this time correct)
+             tmp_dir => outdir in reading, everywhere
+             misc. cleaning
+
+24 mar 2003  calls to mpi_bcast replaced by calls to interface mp_bcast
+             Electron-phonon with Vanderbilt according to MW (untested)
+
+21 mar 2003  - call to dvqpsi_us in PH/elphon.f90 updated with recent
+               changes (could cause core dump)
+             - local_dos.f90 compilation error in parallel case
+             - more mpi_bcast => mp_bcast, misc. cleaning
+
+20 mar 2003  - relaxation using damped dynamics can be used keeping fixed
+             last fixatom atoms (with the same input procedure as the bfgs
+             minimization).
+             - LDA+U part has been modified in order run also in the not
+             spin-polarized case (some testing still neeeded).
+             - Davidson diagonalization returns best estimate for
+             eigenvalues and eigenvectors also in the case that not all
+             roots have converged. This is more consistent and should
+             somehow alleviate the problem of WARNING messages in scf and 
+             band structure run.
+             - Number of beta function in pseudopotentials increased to 8.
+
+19 mar 2003  fix for problem when reading local potential fixed again
+             Make.pc_abs fixed, minor documentation update
+             Wrong call to sgama in PH/star_q.f90 fixed
+
+14 mar 2003  data for preprocessing on parallel machines can be read
+             from standard input
+             problem when reading local potential on ibm-sp3 fixed
+
+13 mar 2003  obsolete core-charge only term (etxcc) removed
+             from bfgs.f90 and set_rhoc.f90 
+             direct calls to mpi_bcast replaced by calls to mp_bcast
+             Misc. minor changes
+
+11 mar 2003  Startup subroutines of all codes now calls
+             mp_start and mp_env mp module subroutines instead of
+             mpi_... directly. This is a first step in the direction
+             of hiding the communications within a few basic modules.
+
+10 mar 2003  "configure" bug for pc cluster and intel 6
+             Make.rules_cpp => Rules.cpp, Make.rules_nocpp => Rules.nocpp
+             lapack_mkl.f added, __MKL removed
+             Make.{fujutsu,sxcross}, compile error in restart.f90 (Guido)
+             electrons, punch_band, plot_bands: use the same format
+             for reading and writing eigenvalues
+
+ 3 mar 2003  PP/dos.f90: density of state is written in #state/eV vs eV
+                         (it was written in #state/ryd vs eV) .
+             PP/projwave.f90: pwojwfc.x writes on standard output projections
+               on atomic states in a "human-readable" format, it writes
+               atomic-projected dos on files with self-explanatory names 
+               ( such as 'prefix'.pdos_atm#1(Ni)_wfc#2(d) in example8 ).
+               A variable io_choice= {'standard' | 'files' | 'both'} in 
+               the namelist specifies where output is written.
+             example8: generation of pdos added to the example.
+             example1-9:  modified so that 'cd results' statement is
+               executed before 'rm -f $TMP_DIR' one ... Otherwise defining
+               the current directory as TMP_DIR would result in removal of 
+               all files in the example directory.
+
+28 feb 2003  filemd => 'prefix'.md, filebfgs => 'prefix'.bfgs
+             Misc. T3E fixes
+
+27 feb 2003  Misc. installation changes
+
+27 feb 2003  Bug in PW/new_ns.f90 (Lixin He) fixed
+             Symmetrization of occupation matrix ns needed for LDA+U
+             calculations used incorrectly d2 matrices instead of their 
+             transponse. Similar error corrected also in PP/projwave.f90
+
+24 feb 2003  Bug in Gamma/raman.f90 (Xhongjun) fixed 
+             Bug in PP/work_function.f90 (Pingo) fixed (sort of)
+             LIB, LIBS => LIBS in all Makefiles
+
+21 feb 2003  Support for lahey compiler added (Verissimo-Alves):
+             "error" renamed to "errore", "rnd" to "rndx"
+             bug in io_base fixed
+             PARA => __PARA
+             cinterpolate moved into interpolate
+ 
+11 feb 2003  Support for nec sx6 added (Guido Roma)
+
+10 feb 2003  Support for sun completed
+             Better checks for q2r.f90
+
+10 feb 2003  lda+u stuff modified in order to work also for non-d
+             localized orbitals. Hubbard_l=0,1,2,3 are now possible.
+             It has been tested that calculations done for Hubbard_l=2
+             are reproduced. More testing on non-d material needed.
+
+ 7 feb 2003  module allocate, calls to mallocate, mfree removed
+             pointers replaced by allocatable whenever possible
+
+-------------------------------------------------------------------
+Date: 29 Jan 2003    Version: pw-1-2-0
+
+-------------------------------------------------------------------
+
+29 Jan 2003  Variable-cell dynamics: if the simulation starts from scratch,
+             remove existing files (e, eal, ave, avec, p, tv) from previous
+             simulations, give a warning.
+
+28 Jan 2003  More manual and examples updating, license added where missing
+             bug in Z* and in dynmat.f90 fixed.
+             New chdens from Tone.
+
+27 Jan 2003  More manual updating, minor Makefile changes.
+             merge of constants.f90 with CPV/FPMD.
+             phcom.f90: variable max_irr_dim introduced
+             (max dimension allowed for irreps: replaces "iswitch=-3")
+
+26 Jan 2003  Manual added and (partially) updated
+
+25 Jan 2003  Makefiles modified to work if some directory is missing
+             INSTALL file added, pwdocs/INSTALL.obsolete obsoleted,
+             README worth reading, misc. cleaning
+
+24 Jan 2003  More changes to installation files
+             small change in input.f90 to allow use of debugger
+             Do not (yet) use UPF format to write PPs in restart file:
+             other types of PP will not work
+             Documentation of examples, PP in UPF format updated
+
+23 Jan 2003  Misc changes to installation files and module finder,
+             missing file added to PH - PG + CC
+
+20 Jan 2003  Added dielectric tensor calculation with USPP
+             (experimental) - AdC
+
+19 Jan 2003  NEW DIRECTORY STRUCTURE, O-SESAME, NEW CVS SERVER
+
+15 Jan 2003  Two small bugs in the recover fixed (SdG and ADC)
+             if disk_io=low or restart_mode=from_scratch remove 
+             existing restart file if present.
+             Recovering with disk_io=high from a disk_io=low run
+             is possible. Also the opposite is possible.
+             More information on the restarting procedure is echoed 
+             to the output file.
+             Relaxation and dynamics echo the atomic coordinates in the
+             output file in the same format used in input.
+             When doing damped dynamics relaxation, do not issue a warning
+             about dynamics and symmetry. In this case the use of symmetry 
+             is legitimate.
+
+13 Jan 2003  More output format fixes (CC):
+             - bug fix for the old style punch (when compiling
+               without __NEW_PUNCH ): now it seems to work
+             - variables pseudo_dir and pseudop moved to module "io"
+             - new module upf_to_internal added
+             - in the restart file now the pseudopotentials are stored
+               in the upf format. Therefore the code phonon restarts from
+               the upf and re-computes the internal variables. It seems
+               to work but more check are needed.
+               With this new feature we are close to compute phonons using
+               the CP codes restart file, this is not yet possible 
+               because the charge density is still missing in restart file,
+             UPF converters: error in format (variable "rel")
+             (found by David Vanderbilt)
+
+10 Jan 2003  Gamma adapted to recent changes in I/O, misc cleaning
+             A bug and alpha compilation problems fixed in chdens (PG)
+
+07 Jan 2003  bug fix in io_base.F90, parameters.f90 (CC) :
+             - maximum number of k point in read_restart_header
+             - check on pseudo dimension modified when reading
+               and writing restart
+
+04 Jan 2003  new restart and output files (CC)
+             - bug fixes, problems with pools fixed
+             - io_base changed, a lot of check and a new wave functions writing 
+               procedure added. The goal is to have a layout independent from i
+               the number of processors and pools and compatible with the CP90
+               and FPMD-N code
+             - parameters.f90 and dimensions.F90 merged
+               now parameters.f90 is common to the three codes.
+             - restart.F90: the possibility of specifing the amount of data to
+               be written has been added. in writefile_new one could specify
+               'dim' or 'all' (more will be implemented soon ), in 
+               readfile_new one could specify 'dim', 'nowave', 'all'
+             - new vector igk_l2g ( read igk local to global ) with the mapping
+               of g+k vector added ( required to collect all wave functions
+               from different processors and pools )
+             - __NEW_PUNCH macro temporarily added: without defining this macro
+               the saveall procedure is still used to communicate with phonon
+             * NOTE * with __NEW_PUNCH active, every time the punch is called,
+             the subroutine collect all wavefunctions from different pools and
+             dumps everythings in the ".save" file that is independent from 
+             the procs geometry.
+             * NOTE * with __NEW_PUNCH active the PHONON code try to read wave
+             function from the "*.wfc" files, if they are not present PHONON
+             tries then to read wave functions from the ".save" file.
+             For the time being this is the way to proceed if we want to
+             calculate phonon with a different processor geometry with
+             respect the SCF calculation.
+
+03 Jan 2003  bug fixing (SdG):
+             - configuration read from file when needed or required.
+             - stress calculation in the LDA+U case is now working properly .
+             - pool management in parallel case works with the new mp_global 
+               module. Writing of the pwscf.save file still gives some problem.
+             More small changes to the LDA+U stuff, more pointers transformed
+             into allocatable allays, some formatting changes. 
+             UPF specifications updated (PG)
+
+28 Dec 2002  More Gamma merging (PG)
+
+27 Dec 2002  Beginning of Gamma merging (PG)
+
+20 Dec 2002  matdyn can do phonon DOS
+             Added tools/lambda.f90 for electron-phonon calculation
+             removed tools/dos.f90 (obsolete)
+             Minor changes in Gamma forces and stresses 
+             NC to UPF converter: wrong core corr for analytical PP
+
+18 Dec 2002  PG:
+             Minor change in input suggested by Tone:
+             ngauss => smearing ('gaussian', 'methfessel-paxton' etc)
+             call to "system" (alpha only) removed to prevent conflict
+             with namelist "system" (Guido Roma)
+             matdyn modified to handle phonons at q=0
+             CC:
+             array ig_l2g, that will be used to map local and global g 
+             vector index, added to pwcom. This array is required to 
+             collect wave functions across processors following a well 
+             defined g vector orders, the same order as in CP90 and FPMD-N
+             variable ngm_g, ngms_g, ngm_l and ngms_l added to store local
+             and global number of g vectors.
+             pool-related globally accessible variables added to the module 
+             mp_global
+             global and local number of g vectors computed in data_structure
+             ggen modified to build local to global g vectors index map!
+             To be tested in parallel execution with processor pools active!!
+
+17 Dec 2002  LDA+U forces and stress implemented. Atomic wavefunctions used 
+             in the definition of LDA+U projector are NOT orthogonalized in
+             order to simplify the computation of the above quantities.
+             "nosym" option should now work also for automatically generated
+             k-point grids. Misc cleanup.
+             Initialization of starting_magnetization fixed
+
+12 Dec 2002  Behavior of "nosym" option changed: if nosym = .true.  do not
+             force k-points to cover the entire BZ. Misc cleanup.
+
+ 9 Dec 2002  Converters updated to recent UPF changes
+
+ 6 Dec 2002  Fixed Gamma-only forces for US case (addusforce was wrong)
+             Fixed confusing error message if tmp_dir does not exist
+             Max l for Q functions dynamically calculated
+
+ 5 Dec 2002  mixing modified so as to mix also LDA+U stuff.
+
+ 4 Dec 2002  Minor changes to UPF format
+             Minor bug in UPF reading fixed (upf%typ was not defined properly 
+             if not US).
+             Small changes in LDA+U.
+
+ 3 Dec 2002  clean-up: iprint -> iverbosity, kwrite -> iprint
+             Restart from files (configuration,potential,wfc) should
+             work. In order to do so the code writes pot/rho files at each
+             iteration and wfc at convergence even if disk_io='default'.
+             If disk_io='high' the code attempts to restart from detailed 
+             history of the interrupted run.
+             Files old1pot, old2pot in update_pot renamed 'prefix'.oldrho 
+             and 'prefix'.oldrho2 in similarity to 'prefix'.oldwfc and 
+             'prefix'.oldwfc2
+
+ 2 Dec 2002  Added Gamma-only scf and phonon code (experimental)
+
+29 Nov 2002  Added support for Hitachi. Indentation and cleanup.
+             ecut(:) removed in data_structure as well.
+
+28 Nov 2002  clean-up: iswitch.gt.4 removed everywhere;
+             input_pot and output_pot removed, use prefixed filenames;
+             rename beta(:)->mixing_beta, and ecut(:)->ecutwfc everywhere.
+             File prefix.config and variable startingconfig='file'|'input'
+             introduced in order to allow to restart from an interrupted 
+             relaxation or dynamics even when disk_io.ne.'high'... 
+             Restart still to be changed accordingly.
+
+26 Nov 2002  Variable "becp" put in a separate module
+             (needed for inclusion of Gamma-point version).
+             Convergence thresholds for minimization also apply
+             to damped (Beeman) dynamics that now stops if they are
+             fulfilled before completing all nstep ionic steps.
+
+25 Nov 2002  input_pot variable suppressed. Feature replaced by 
+             startingpot='atomic' or 'file'
+             Starting diagonalization threshold (ethr) modified accordingly:
+             when startingpot=='atomic' ethr is initially loose;
+             when startingpot=='file' (always for nscf and phonon) starting
+             potential is expected to be good and ethr is tight from the 
+             beginning.
+
+22 Nov 2002  atomic labels are set to (len=3) everywhere
+             Version number updated
+
+21 Nov 2002  use of input variable calculation, ion_dynamics and
+             cell_dynamics modified. calculation define more specifically
+             the kind of computation to be performed (scf,nscf,phonon,
+             relax,md,vc-relax,vc-md) and the other variables provide 
+             possibilities for additional tuning. see INPUT_PW for details.
+             length of character variables atm and atom_label incresed to 3.
+             freq_pw renamed to gauss_freq (a less pw-centered name).
+             Variables psi(:,np) and aux(:,:) explicitely zeroed before
+             use in order to avoid ZGEMV and ZGEMM to return garbage if 
+             they are undefined.
+
+14 Nov 2002  CELL_PARAMETER card should be correct
+             Added support for sun machines
+             POINTER => C_POINTER
+
+13 Nov 2002  INPUT_PW updated
+             sp4 problems:
+                freq renamed to freq_pw
+                (name used by hardware performance monitor)
+                Makefiles changed to allow loader different from compiler
+                *.f90 allowed also by ibm with appropriate flag
+                cegterg: change pointers to allocatable
+
+12 Nov 2002  More (extensive) input changes
+
+07 Nov 2002  Serious numerical problem with spherical harmonics 
+             Converter from CP format to UPF fixed
+
+04 Nov 2002  UPF reading recast in a more portable (to other codes) way.
+             addusforce: don't do anything if there aren't any US PP
+
+21 Oct 2002  Variables for lda+U added to new input
+             Serious bug in conjugate-gradient diagonalization
+             (cinitcgg.F90) fixed
+             bcast_input did not compile on parallel machines
+             some cleaning here and there
+
+21 Oct 2002  Variable Hubbard_alpha added. It is used in the calculation 
+             of Hubbard_U. Minor typographical changes in some routines
+
+16 Oct 2002  input: dynamics + constraints, isolve suppressed
+
+15 Oct 2002  unexpected energy window plotted by pplib/dos.x .
+             sph_bes and qvan2 modified for L=3 pseudopotentials
+        
+10 Oct 2002  Missing input variables added to input.F90
+             Fixed a mismatch between where the potential is
+             and where it is read from.
+             Bug in pplib/chdens.F90, pplib/average.F90 fixed
+             Makefile, other minor changes in pslib/
+
+ 1 Oct 2002  L=3 pseudopotentials should work for both NC and US PP:
+             ylmr2 and d_matrix rewritten, init_us_1 modified.
+             read_pseudo_pswfc now reads properly atomic wavefunctions
+             in the UPF format.
+
+20 Set 2002  Minor changes preliminary to l=3 implementation in US PP
+
+19 Set 2002  New input - works also in parallel
+
+-------------------------------------------------------------------
+Tag: pw-newmix
+
+23 Aug 2002  Memory leak in mix_rho (rhoutsave not deallocated) fixed
+             Compilation problems in electrons with old xlf compiler fixed
+             Documentation update
+
+22 Aug 2002  ibrav=0 case added to postprocessing 
+             "call remove" has been removed
+
+21 Aug 2002  new charge density mixing schemes added. 
+             Four (4) mixing schemes are available according to the value
+             of the variable mixing_style in the namelist.
+             mixing_style='potential' (default): the same as before
+             mixing_style='plain': charge density mixing where a step
+                           (of lenght beta) in the delta_rho=rho_out-rho_in
+                           direction is taken.
+             mixing_style='TF': charge density mixing where delta_rho is
+                           screened with a homogeneous TF model.
+             mixing_style='local-TF': charge density mixing where delta_rho 
+                           is screened with a local-density dependent TF model.
+             The scf accuracy control variable dr2 should now provide a
+             fairly good estimate of the error in the energy due to lack of
+             selfconsistency. The scf threshold tr2 has therefore to be set
+             accordingly. Setting of threshold ethr also revisited.
+             Force scf correction should be ok, as well as relaxation settings
+             (possibly being more strict than really needed).
+             No effort was made yet to recover form interrupted runs or treat
+             properly restart from potential/charge of previous similar runs.
+
+Date: 20 Aug 2002    Version: pw-1-1-2
+Changes with respect to version pw-1-1-1 :
+-------------------------------------------------------------------
+             more UPF converter and miscellaneous cleanup
+             added support (maybe) for beowulf clusters with intel compiler 
+
+19 Aug 2002  Added possibility to calculate DOS from Emin to Emax (Tone)
+             Some cleanup of converters to UPF 
+
+17 Aug 2002  new PP_FORMAT implemented in PWSCF.
+             Tested on:
+             Al.vbc, As.gon, Pb.bhs3, (Analytical NC: minor differences due 
+                                       to conversion of the local potential 
+                                       to numerical form)
+             Fecc.mt,                 (Numerical NC: no differences)
+             CuUS.RRKJ3,FeUS.RRKJ3,NiUS.RRKJ3 (New US: no differences)
+             Au.vdb,                  (original US: no differences)
+             Test on more pseudopotentials welcome.
+             PP converters in pslib now produce pseudo in the new format. 
+             Some fixing was needed but now things seems to work. 
+             More testing welcome.  
+             More sensible layout of PP_INFO field and of PP information 
+             printed by PWSCF needed.
+
+29 Jul 2002  bugs in new version of projwave (both scalar and
+             parallel case) fixed
+        
+23 Jul 2002  projection on atomic states moved from postproc to
+             a separate program "projwfc.x". More readable output.
+             More Makefile fixes (origin)
+
+19 Jul 2002  obsolete system/Makedeps* removed.
+             BUGS file updated.
+             Misc. fixes (thanks to Palaiseau people):
+             kfac was not deallocated in stres_knl,
+             tmp_dir too short in bcast_input,
+             various Makefile fixes (to be verified).
+
+12 Jul 2002  Fast 3d plot in pplib/chdens available
+             Check presence of argument "-npool N" in para/startup
+             (some PC compilers give an error otherwise)
+
+10 Jul 2002  Only one "filpun" file is written in the parallel case
+             (but the wavefunction file is still distributed):
+             pwlib/openfil, saveall, punch, read_file modified,
+             documentation updated.
+             Error in phlib/stop_ph due to use of uninitialized
+             variable (iunres instead of iunrec) fixed
+
+09 Jul 2002  pwlib/gen_us_dj: the definition of the first point for
+             which the spherical bessel functions are computed is
+             now consistent with the check performed in sph_bes.F90.
+             (Problem pointed out by Shobhana Narasimhan)
+
+09 Jul 2002  pplib/plot_io : read/write also atom name, type, charge,
+             use nr3 and not nrx3 to write/read
+             pplib/chdens, average, modified accordingly, various cleanup
+             sph_dhar removed and replaced by dylmr2,
+             gen_us_dy modified accordingly
+
+08 Jul 2002  sph_har removed and replaced by ylmr2
+             init_us_2, gen_us_dj, atomic_wfc updated accordingly
+             restart=.false. by default (documentation updated)
+             Misc. cleaning and indenting
+             New version of aainit: should be easier to generalize
+             to higher l (SdG)
+
+02 Jul 2002  machine.h, Make.* modified : all preprocessing options 
+             can be given directly in the Make.* file, no need to
+             make changes in the code - documentation updated
+             More cleaning and indenting
+
+28 Jun 2002  Support for Fujitsu added (Guido Roma)
+             Various Alpha fixes (Francesco Antoniella and others):
+             Make.alpha updated (correct preprocessing options),
+             pwlib/cft_3.F90 for dxml/cxml libraries, pwlib/scnds.F90,
+             uninitialized variable in pwlib/read_pseudo.F90 (scan_begin)
+             pplib/elf.F90, pplib/voronoy.F90 compilation problems
+             pplib/punch_band.F90 modified to write an output that
+             can be read by new file tools/band_plot.f90
+             (Francesco Antoniella)
+             KIND => kind everywhere
+             readin: tests for lsda are needed only by scf calculations
+             nh statically dimensioned
+             some obsolete variables removed
+             Make.t3e updated (CINECA-specific stuff removed)
+
+ 3 Jun 2002  Fixed a problem with restart file introduced by the last
+             changes. klen, dircls, remove removed.
+
+31 May 2002  Doc update, more readin.F90 cleaning
+             Non-lscf calculation closes correctly files (small changes
+             to electrons, pwscf, ions)
+             No more node number added to sequential files for the first
+             processor in parallel execution (seqopn); diropn cleaned
+
+30 May 2002  ltetra is now distributed in bcast_input
+
+30 May 2002  INPUT_PW, Make.pc_abs updated, cleanup of readin.f90
+
+15 May 2002  Documentation update, problems in Makedeps
+
+10 May 2002  added directory Doc/ containing web pages
+             some variables moved from module para.f90 to data_structure.F90
+
+Date:  7 May 2002    Version: pw-1-1-1
+Changes with respect to version pw-1-1-0 :
+-------------------------------------------------------------------
+
+              add input check on presence of gaussian broadening for LSDA
+              restart_in_ions : do not destroy vnew, it is needed in
+              force calculation (scf correction term)
+
+18 Apr. 2002  gradcorr, dgradcorr: two FFTs spared
+              cgracsc moved to pplib/ (not used in any other place)
+              file BUGS added
+              fixed bug in stres_us for non-us PP and one k-point
+              (same problem of force_us, see 5 Apr.)
+              newd does not waste cpu time if no US PP's are present
+              projection on atomic wavefunctions (projwave.F90)
+              now works also for atoms with semicore states.
+              dynmat.x: added calculation of IR cross sections,
+              write correct displacement patterns in "molden" format.
+              Misc. indentation and cleaning
+              indexes, indeces => "indices"
+        
+ 8 Apr. 2002  same changes as in the f77 version in order to fix a few 
+              problems in the parallel version of d3tot: klen function
+              is declared external whenever is used; reading/writing
+              of fildrho is performed by the first node of each pool;
+              npwq is defined in d0rhod2v.F also when lgamma is .true.;
+              routine symd0rho is called by psymd0rho even if nsymq=1.
+              A couple of more partial contributions to d3mat are written
+              on disk if wraux=.true.
+
+ 5 Apr. 2002  force_us did not work for non-us PP and one k-point
+              (as a consequence of a change introduced in sum_band)
+
+27 Mar. 2002  Make.rules.ibm corrected (again)
+              pplib/stm.F: stm_wfc_matching was incorrect
+              (thanks to Maria Peressi)
+              pwlib/cegterg.F90: removed spurious \ introduced yesterday
+
+26 Mar. 2002  Indentation and cleaning of several routines.
+              phlib/dynmatcc.F90 heavily modified.
+              Only pseudopotential arrays including structure factors
+              are now used: the meaning of variables nkb and vkb has
+              changed (they replace variables nkbtot and allvkb),
+              many routines (mostly in d3lib/) changed accordingly,
+              pwlib/apply_phase.F90 deleted.
+              system/Make.alpha, pwlib/readin.F90 modified, added
+              system/Make.alphaMPI (Guido Roma, Giovanni Cantele).
+              pwlib/cegterg.F90: useless operations not performed
+              at the end, aux is as big as needed (and not any more)
+        
+21 Mar. 2002  h_1psi, s_1psi replaced by wrapper routines that call
+              h_psi, s_psi ; add_1vuspsi deleted, misc. cleaning
+        
+20 Mar. 2002  fixed compilation error in tools/dynmat (thanks to B.R.Sahu)
+              Make.rules.ibm corrected
+              Warnings in include/error_handler and tools/q2r fixed
+
+19 Mar. 2002  various Makefiles fixes
+              dgradcorr not called if gradient corrections absent
+              (Portland compiler did not like it)
+        
+Date: 15 March 2002    Version: pw-1-1-0
+
+-------------------------------------------------------------------
+12 Mar. 2002  More complex(16) fixed, misc. cleaning
+
+ 8 Mar. 2002  Fixed bug in dvpsi_e.F that could yield bad dielectric tensors
+              and effective charges (there was an inconsistency in 
+              indexing of pseudopotential arrays)
+
+ 6 Mar. 2002  Potential problem in 2N+1 fixed: Patterns are now written
+              by phonon and read (and not generated again) by d3tot.
+              This should guarantee consistency between the two sets.
+        
+ 6 Mar. 2002  More compilation errors for parallel machines
+              Function "capital" replaced with one that PG compiler likes
+
+ 5 Mar. 2002  Small changes to compile on SP3 the phonon program
+              Support for PGI compiler added
+              Bug in mallocate fixed 
+              
+ 4 Mar. 2002  ported changes to dos.f from 1.0.2
+
+ 1 Mar. 2002  Updated README.INSTALL
+
+14 Feb. 2002  changes parallel to those made in 1.0.2 are introduced
+              pwlib/readin.F90: / / => //
+
+12 Feb. 2002  changes parallel to those made in 1.0.2 are introduced
+
+25 Jan. 2002  tools converted
+              Synchronization with latest f77 version
+              Support for Intel compiler
+              Misc. cleaning
+
+20 Dec. 2001  d3lib completely converted, misc. cleaning
+
+19 Dec. 2001  Added pplib (untested), d3lib (does not work)
+              Misc. cleaning, removed spurious files
+
+18 Dec. 2001  Initial f90 release 

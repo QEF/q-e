@@ -1,0 +1,18 @@
+ 9 Aug 2004  Support for mac-osx added (contributed by Pascal Thibaudeau)
+             Extensive documentation update and reshuffling : pwdocs
+             and cpdocs merged into Doc (PG)
+
+ 9-Aug-2004  NEB restart file modified again: with the current implementation 
+             of quick-min pos_old and grad_old need not to be saved in the
+             restart file. Logical variables for reset_vel and frozen images
+             have been moved from "ENERGIES, POSITIONS AND GRADIENTS" to 
+             "QUICK-MIN FIELDS". Old restart files can be easily converted
+             removing in the "ENERGIES, POSITIONS AND GRADIENTS" field all 
+             logical variables and removing all the "QUICK-MIN FIELDS".
+             (C.S.)
+
+ 1 Aug 2004  same variable accessed from 2 different modules, some
+             compilers complain, fixed (CC)
+
+ChangeLog for the espresso code - starting Aug. 2004
+See ChangeLog.pw and ChangeLog.cp for changes before that date

@@ -16,6 +16,7 @@ all : clib.a
 
 clib.a : $(OBJS) 
 	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 
 source :
 	co -l $(OBJS:.o=.c)

@@ -1,0 +1,832 @@
+Input data format: { } = optional, [ ] = it depends
+
+All quantities MUST be set (when not otherwise specified) in 
+RYDBERG ATOMIC UNITS
+
+===============================================================================
+&CONTROL
+  ...
+/
+&SYSTEM
+ ...
+/
+&ELECTRONS
+...
+/
+[ &IONS
+  ...
+ / ]
+[ &CELL
+  ...
+ / ]
+[ &PHONON
+  ...
+ / ]
+ATOMIC_SPECIES
+ X  Mass_X  PseudoPot_X
+ Y  Mass_Y  PseudoPot_Y
+ Z  Mass_Z  PseudoPot_Z
+ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+if ( calculation = 'neb' )
+  first_image
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+ { intermediate_image 1
+   X 0.0  0.0  0.0
+   Y 0.9  0.0  0.0
+   Z O.0  0.2  0.2
+   intermediate_image ...
+   X 0.0  0.0  0.0
+   Y 0.9  0.0  0.0
+   Z O.0  0.2  0.2 }
+  last_image
+  X 0.0  0.0  0.0
+  Y 0.7  0.0  0.0
+  Z O.0  0.5  0.2 
+else
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+K_POINTS { tpiba | automatic | crystal | gamma }
+if (gamma)
+   nothing to read
+if (automatic) 
+   nk1, nk2, nk3, k1, k2, k3
+if (not automatic) 
+   nks
+   xk_x, xk_y, xk_z,  wk
+[ CELL_PARAMETERS { cubic | hexagonal }
+   a(1,1) a(2,1) a(3,1)
+   a(1,2) a(2,2) a(3,2)
+   a(1,3) a(2,3) a(3,3) ]
+[ OCCUPATIONS
+   f_inp(1,1)  f_inp(2,1)  f_inp(3,1) ... f_inp(10,1)
+   f_inp(11,1) f_inp(12,1) ... f_inp(nbnd,1)
+ [ f_inp(1,2)  f_inp(2,2)  f_inp(3,2) ... f_inp(10,2)
+   f_inp(11,2) f_inp(12,2) ... f_inp(nbnd,2) ] ]
+[ CLIMBING_IMAGES
+   list of images, separated by a comma ]   
+[ CONSTRAINTS
+   nconstr   constr_tol
+   constr_type(.)   constr(1,.)   constr(2,.) ]   
+===============================================================================
+NAMELIST &CONTROL
+
+calculation    CHARACTER
+               a string describing the task to be performed:
+               'scf', 'nscf', 'phonon', 'relax', 'md', 'vc-relax', 
+	       'vc-md', 'neb'
+               (vc = variable-cell). Default: 'scf'
+
+title          CHARACTER
+               reprinted on output. Default: ' '
+
+verbosity      CHARACTER
+               'high' | 'default' | 'low' | 'minimal'
+
+restart_mode   CHARACTER
+               'from_scratch'  : from scratch ( default )
+	                         NEB only: the starting path is a linear 
+				 interpolation between the first and the last 
+				 image. Note that in the linear interpolation
+                                 periodic boundary conditions ARE NON USED.
+               'restart'       : from previous interrupted run
+
+nstep          INTEGER                         
+               number of ionic + electronic steps
+               default: 1 if calculation = 'scf', 'nscf'
+	                0 if calculation = 'neb'
+                       50 for the other cases
+
+iprint         INTEGER
+               band energies are written every iprint iterations
+               default: write only at convergence
+
+tstress        LOGICAL
+               calculate stress. Set to .TRUE. if calculation='vc-md'
+
+tprnfor        LOGICAL
+               print forces. Set to .TRUE. if calculation='relax','md','vc-md'
+            
+dt             REAL
+               time step for molecular dynamics, in Rydberg atomic units 
+               (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
+                Hartree atomic units, half that much!!!)
+
+outdir         CHARACTER ( default = current directory ('./') )
+               input, temporary, output files are found
+            
+prefix         CHARACTER ( default = 'pwscf' )
+               prepended to input/output filenames: 
+               prefix.wfc, prefix.rho, etc. 
+
+max_seconds    INTEGER
+               jobs stops after max_seconds CPU time
+
+etot_conv_thr  REAL ( default = 1.0D-4 )
+               convergence threshold on total energy (a.u)
+               for ionic minimization. 
+               See also forc_conv_thr - both criteria must be satisfied
+
+forc_conv_thr  REAL ( default = 1.0D-3 )
+               convergence threshold on forces (a.u)
+               for ionic minimization.
+               See also etot_conv_thr - both criteria must be satisfied
+
+disk_io        CHARACTER
+               'high', 'default', 'low', 'minimal'
+
+pseudo_dir     CHARACTER ( default = '$HOME/pw/pseudo/' )
+               directory containing pseudopotential files
+
+tefield        LOGICAL ( default = .FALSE. )
+               If .TRUE. a sawlike potential is added to the 
+               bare ionic potential. 
+            
+
+===============================================================================
+NAMELIST &SYSTEM
+
+ibrav          INTEGER
+               bravais-lattice index (must be specified)
+               see at the end of this file
+
+celldm(i)      REAL, DIMENSION(6)                        
+               crystallographic constants - see at the end of this file
+               alat = celldm(1) is the lattice parameter "a" (in BOHR)
+               only needed celldm (depending on ibrav) must be specified
+
+a, b, c, cosab, cosac, cosbc: 
+               REAL
+	       traditional crystallographic constants (a,b,c in ANGSTROM)
+               specify either these or celldm  but not both
+ 
+nat            INTEGER
+                number of atoms in the unit cell - must be specified
+
+ntyp           INTEGER
+               number of types of atoms in the unit cell - must be specified
+
+nbnd           INTEGER
+               number of electronic states (bands) to be calculated.
+               Default: for an insulator, nbnd = (number of valence bands)
+                        (nbnd=nelec/2, see below for nelec)
+                        for a metal, 20% more (minimum 4 more)
+               Note that in spin-polarized calculations the number of
+               k-point, not the number of bands per k-point, is doubled
+
+nelec          REAL
+               number of electron in the unit cell
+               (may be noninteger if you wish)
+               Default: the same as ionic charge (neutral cell)
+               A compensating jellium background is inserted
+               to remove divergencies if the cell is not neutral
+
+ecutwfc        REAL
+               kinetic energy cutoff (Ry) for wavefunctions
+               (must be specified)
+	       
+ecutrho        REAL ( default = 4 * ecutwfc )
+               kinetic energy cutoff (Ry) for charge density and potential
+               May be larger ( for ultrasoft PP ) or somewhat smaller 
+               ( but not much smaller ) than the default value
+
+nr1,nr2,nr3    INTEGER
+               three-dimensional FFT mesh (hard grid) for charge
+               density (and scf potential). If not specified
+               the grid is calculated based on the cutoff for
+               charge density (see also "ecutrho")
+
+nr1s,nr2s,nr3s INTEGER
+               three-dimensional mesh for wavefunction FFT and for the smooth 
+               part of charge density ( smooth grid ). 
+               Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+
+nosym          LOGICAL ( default = .FALSE. )
+               if (.TRUE.) symmetry is not used. Note that a k-point grid
+               provided in input is used "as is"; an automatically generated
+               k-point grid will contain only points in the irreducible BZ 
+               of the lattice.  Use with care in low-symmetry large cells 
+               if you cannot afford a k-point grid with the correct symmetry.
+
+starting_magnetization(i)   
+               REAL
+               starting spin polarization (values between -1 and 1)
+               on atomic type 'i' in a lsda calculation. Breaks the
+               symmetry and provides a starting point for self-consistency.
+               The default value is zero, BUT a value MUST be specified for
+               AT LEAST one atomic type in spin polarized calculations.
+               If zero starting magnetization is specified, zero final
+               magnetization will be obtained.
+
+occupations    CHARACTER
+               'smearing':     gaussian smearing for metals
+                               requires a value for degauss
+               'tetrahedra' :  for metals and DOS calculation
+                               (see PRB49, 16223 (1994))
+                               Requires uniform grid of k-points,
+                               automatically generated (see below)
+               'fixed' :       for insulators with a gap
+               'from_input' :  The occupation are read from input file.
+                               Presently works only with one k-point 
+                               (LSDA allowed). 
+
+degauss        REAL ( default = 0.D0 Ry )
+               value of the gaussian spreading for brillouin-zone
+               integration in metals.
+
+smearing       CHARACTER
+               'gaussian', 'gauss':  
+                    ordinary Gaussian spreading (Default)
+               'methfessel-paxton', 'm-p', 'mp':
+                    Methfessel-Paxton first-order spreading
+                    (see PRB 40, 3616 (1989)).
+               'marzari-vanderbilt', 'cold', 'm-v', 'mv':
+                    Marzari-Vanderbilt cold smearing
+                    (see PRL 82, 3296 (1999))
+               'fermi-dirac', 'f-d', 'fd':
+                    smearing with Fermi-Dirac function
+
+nelup, neldw   REAL
+               number of spin-up and spin-down electrons, respectively
+               The sum must yield nelec !!! NOT YET USED !!!
+
+nspin          INTEGER
+               nspin = 1 :   non-polarized calculation (default)
+               nspin = 2 :  spin-polarized calculation
+
+ecfixed        REAL                                      40.0
+qcutz          REAL                                       0.0
+q2sigma        REAL                                       0.1
+               parameters for modified functional to be used in
+               variable-cell molecular dynamics (or in stress calculation)
+
+xc_type        CHARACTER
+               Exchange-correlation functional
+               Presently unused: XC functional is read from PP files
+
+lda_plus_u        LOGICAL   ( default = .FALSE.)
+Hubbard_U(I)      REAL      ( default = 0.D0 for all species)
+Hubbard_alpha(I)  REAL      ( default = 0.D0 for all species)
+               parameters for LDA+U calculations
+               If lda_plus_u = .TRUE. you must specify, for species I,
+               the parameters U and (optionally) alpha of the Hubbard 
+               model (both in eV). See:
+               Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
+               Anisimov et al., PRB 48, 16929 (1993);
+               Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994); 
+               Cococcioni and de Gironcoli (to be published)
+
+starting_ns_eigenvalue(m,ispin,I) REAL (default = -1.d0 that means NOT SET)
+               In the first iteration of an LDA+U run it overwrites
+               the m-th eigenvalue of the ns occupation matrix for the
+               ispin component of atomic species I. Leave unchanged
+               eigenvalues that are not set. This is useful to suggest
+               the desired orbital occupations when the default choice
+               takes another path.
+
+U_projector_type   CHARACTER   (default='atomic')
+               Only active when lda_plus_U is .true., specifies the type
+               of projector on localized orbital to be used in the LDA+U
+               scheme.
+               Currently available choices:
+               'atomic': use atomic wfc's (as they are) to build the projector 
+               'ortho-atomic': use Lowdin orthogonalized atomic wfc's
+               'file': use the information from file "prefix".atwfc that must
+                       have been generated previously, for instance by pmw.x
+                       (see PP/poormanwannier.f90 for details)
+               NB: forces and stress currently implemented only for the
+                   'atomic' choice.
+
+edir           INTEGER
+               1, 2 or 3. Used only if tefield is .TRUE.. The direction of the
+               electric field is parallel to the bg(:,edir) reciprocal 
+               lattice vector ( So the potential is constant in planes 
+               defined by the mesh points )
+
+emaxpos        REAL ( default = 0.5D0 )
+               Position of the maximum of the sawlike potential within the 
+               unit cell ( 0 < emaxpos < 1 )
+
+eopreg         REAL( default = 0.1D0 )
+               Part of the unit cell where the sawlike potential decreases.
+               ( 0 < eopreg < 1 )
+
+eamp           REAL ( default = 0.001 a.u. )
+               Amplitude of the electric field (in a.u.) 
+	       ( 1 a.u. = 51.44 10^10 V/m )
+   
+
+===============================================================================
+NAMELIST &ELECTRONS
+
+electron_maxstep  
+               INTEGER ( default = 50 )
+               maximum number of iterations in a scf step
+
+conv_thr       REAL  ( default = 1.D-6 )
+               Convergence threshold for selfconsistency: 
+               estimated energy error < conv_thr
+
+mixing_mode    CHARACTER
+               'plain' :    charge density Broyden mixing ( default )
+               'TF' :       as above, with simple Thomas-Fermi screening
+                            (for highly homogeneous systems)
+               'local-TF':  as above, with local-density-dependent TF screening
+                            (for highly inhomogeneous systems)
+               'potential': (obsolete) potential mixing
+
+mixing_beta    REAL ( default = 0.7D0 )
+               mixing factor for self-consistency 
+
+mixing_ndim    INTEGER ( default = 8)
+               number of iterations used in mixing scheme
+
+mixing_fixed_ns   
+               INTEGER ( default = 0 )
+               For LDA+U : number of iterations with fixed ns ( ns is the
+               atomic density appearing in the Hubbard term ) 
+
+diagonalization   
+               CHARACTER
+               'david':  Davidson iterative diagonalization with overlap matrix
+                         (default)
+               'diis' :  DIIS-like diagonalization
+               'cg' :    conjugate-gradient-like band-by-band diagonalization
+
+diago_thr_init     
+               REAL  ( default = 1.D-2 )
+               Convergence threshold for the firts iterative diagonalization.
+               The threshold (ethr) is automatically updated along the
+               self consistency loop.
+
+diago_cg_maxiter  
+               INTEGER
+               For conjugate gradient diagonalization:
+               max number of iterations
+
+diago_david_ndim  
+               INTEGER ( default = 4 )
+               For Davidson diagonalization: dimension of workspace 
+               (number of wavefunction packets, at least 2 needed). 
+               A larger value may yield a faster algorithm but uses 
+               more memory
+
+diago_diis_ndim   
+               INTEGER ( default = 3 )
+               For DIIS: dimension of the reduced space.
+
+diago_diis_ethr  
+               INTEGER
+               For DIIS: Conjugate Gradient diagonalization is repeated
+               until the convergence threshold for eigenvalues ( ethr ) is
+               smaller than diago_diis_ethr
+
+startingpot    CHARACTER
+               'atomic': starting potential from atomic charge superposition
+                         ( default for scf, *relax, *md, neb )
+               'file'  : start from existing "prefix".pot file
+                         ( default and only possibility for nscf and phonon )
+
+startingwfc    CHARACTER
+               'atomic': start from superposition of atomic orbitals ( default )
+                         If not enough atomic orbitals are available,
+                         fill with random numbers the remaining wfcs
+               'random': start from random wfcs
+               'file':   start from a wavefunction file
+               
+
+===============================================================================
+NAMELIST &IONS  ( only if calculation = 'relax', 'md', 
+                                        'vc-relax', 'vc-md', 'neb' )
+
+ion_dynamics   CHARACTER
+               specify the type of ionic dynamics. 
+               For different type of calculation different possibilities are 
+               allowed and different default values apply:
+               
+	       CASE ( calculation = 'relax' )
+                 'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
+                                        on the trust radius procedure, is used 
+                                        for structural relaxation (experimental)
+                 'old-bfgs' :           use the old BFGS quasi-newton method for
+                                        structural relaxation
+		 'damp' :               use damped (quick-min velocity Verlet) 
+                                        dynamics for structural relaxation
+                 'constrained-damp' :   use damped (quick-min velocity Verlet) 
+                                        dynamics for structural relaxation with 
+                                        the constraint specified in the 
+                                        CONSTRAINTS CARD
+               CASE ( calculation = 'md' )
+                 'verlet' : (default)   use velocity Verlet algorithm to 
+                                        integrate Newton's equation
+                 'constrained-verlet' : use velocity Verlet algorithm to do 
+                                        molecular dynamics with the constraint
+                                        specified in the CONSTRAINTS CARD 
+               CASE ( calculation = 'vc-relax' )
+                 'damp' :   (default)   use damped (Beeman) dynamics for 
+		                        structural relaxation
+               CASE ( calculation = 'vc-md' )
+                 'beeman' : (default)   use Beeman algorithm to integrate 
+                                        Newton's equation
+             
+ion_temperature   
+               CHARACTER
+               'nose'          : Nose' thermostat, not implemented
+               'rescaling'     : velocity rescaling (sort of implemented)
+               'not_controlled': default
+
+tempw          REAL
+               starting temperature (Kelvin) in MD runs 
+
+ttol           REAL ( default = 1.D-3 )
+               tolerance for velocity rescaling. Velocities are
+               not rescaled if the ratio of the run-averaged and 
+               target temperature differs from unit less than ttol
+
+upscale        REAL ( default = 10.D0 )
+               max reduction factor for conv_thr during structural optimization
+               conv_thr is automatically reduced when the relaxation 
+               approaches convergence so that forces are still accurate,
+               but conv_thr will not be reduced to less that 
+               conv_thr / upscale
+
+potential_extrapolation     
+               CHARACTER
+               used to extrapolate the potential and the wave-functions 
+               from preceding ionic step(s)
+               'none' | 'atomic' | 'wfc' | 'wfc2'
+               'none': no extrapolation
+               'atomic': extrapolate the potential as if it was a sum of
+                         atomic-like orbitals (default for calculation='relax')
+               'wfc':    extrapolate the potential as above
+                         extrapolate wave-functions with first-order formula
+                         (default for calcualtion='md' and calcualtion='neb')
+               'wfc2':   as above, with second order formula
+	       
+lbfgs_ndim     INTEGER ( default = 1 )
+               number of old forces and displacements vectors used in the
+	       linear scaling BFGS algorithm. When lbfgs_ndim = 1 the complete
+	       inverse Hessian is stored (suggested for small/medium-size 
+	       systems).
+	       On large systems (some hundreds of atoms) a good performance can 
+	       be achieved with only 4 or 6 old vectors 
+               (new-bfgs only)
+
+trust_radius_max
+               REAL ( default = 0.5D0 BOHR ) 
+               maximum ionic displacement in the structural relaxation 
+	       (new-bfgs only)
+
+trust_radius_min
+               REAL ( default = 1.D-5 BOHR )
+	       minimum ionic displacement in the structural relaxation
+               BFGS is reset when trust_radius < trust_radius_min
+	       (new-bfgs only)
+
+trust_radius_ini
+               REAL ( default = 0.5D0 BOHR )
+               initial ionic displacement in the structural relaxation
+               (new-bfgs only)
+
+trust_radius_end
+               REAL ( default = 1.D-7 BOHR )
+               BFGS is stopped when trust_radius < trust_radius_end
+	       trust_radius_end is not intended to be used as a criterium
+	       for convergence (new-bfgs only)
+
+w_1, w_2
+               REAL ( w_1 = 1.D-5, w_2 = 0.2D0 )
+	       parameters used in line search based on the Wolfe conditions
+	       (new-bfgs only)
+	       
+num_of_images  INTEGER ( default = 0 )
+               number of points used to discrtize the path
+
+CI_scheme      CHARACTER. ( default = "no-CI" )
+               specify the type of Climbing Image scheme
+               "no-CI"      : climbing image is not used
+               "highest-TS" : original CI scheme. The image highest in energy 
+	                      does not feel the effect of springs and is 
+			      allowed to climb along the path
+               "all-SP"     : CI is used on all the saddle points identified 
+	                      along the path. Moreover all local minima 
+			      identified along the path are optimized without 
+			      being affected by springs (see also optimization)
+               "manual"     : images that have to climb are manually selected. 
+	                      See also CLIMBING_IMAGES card 
+               use CI only when the shape of the MEP is clear
+
+optimization   LOGICAL ( default = .FALSE. )
+               also the first and the last configurations are optimized
+               "on the fly" 
+	       these images do not feel the effect of the springs
+
+minimization_scheme     
+               CHARACTER ( default = "quick-min" )
+               specify the type of minimization scheme      
+               "sd"         : steepest descent
+	       "quick-min"  : a minimization algorithm based on
+	                      molecular dynamics (suggested)
+               "damped-dyn" : damped molecular dynamics. See also the 
+	                      keyword damp
+               "mol-dyn"    : constant temperature molecular dynamics. See 
+	                      also the keyword temp_req.
+	                      Note that, in order to perform such molecular 
+			      dynamics, spring forces are NOT projected 
+			      along the path. 
+
+damp           REAL ( default = 1.D0 )
+               Damping coefficent. Ignored when "minimization_scheme"
+               is different from "damped-dyn"
+
+temp_req       REAL ( default = 0.D0 Kelvin )
+               temperature associated to the elastic band. Each image has its 
+	       own thermostat. The temperature in the output is the average 
+	       temperature of the elastic band computed before the 
+	       thermalization
+               ignored when "minimization_scheme" is different from "mol-dyn"
+
+ds             REAL ( default = 1.5D0 )
+               minimization step ( Hartree atomic units )
+	              
+k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
+               set them to use a Variable Elastic Constants scheme 
+	       elastic constants are in the range [ k_min, k_max ] 
+	       this is useful to rise the resolution around the saddle point
+
+neb_thr        REAL ( default = 0.05D0 eV / Angstrom )
+               the simulation stops when the error ( the norm of the force 
+	       orthogonal to the path in eV/A ) is less than neb_thr.
+               
+reset_vel      LOGICAL ( default = .FALSE. )
+               used to reset quick-min velocities at restart time
+               (sort of clean-up of the history)
+
+===============================================================================
+NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-md' )
+
+cell_dynamics     
+               CHARACTER
+               specify the type of dynamics for the cell. 
+               For different type of calculation different possibilities 
+               are allowed and different default values apply:
+
+               CASE ( calculation = 'vc-relax' )
+                 'none':    default 
+                 'sd':      steepest descent ( not implemented )
+                 'damp-pr': damped (Beeman) dynamics of the Parrinello-Raman 
+                            extended lagrangian
+                 'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
+                            extended lagrangian
+               CASE ( calculation = 'vc-md' )
+                 'none': default 
+                 'pr':      (Beeman) molecular dynamics of the Parrinello-Raman 
+                            extended lagrangian
+                 'w':       (Beeman) molecular dynamics of the new Wentzcovitch
+                            extended lagrangian
+
+press          REAL ( default = 0.D0 )
+               target pressure [KBar] in a variable-cell md simulation
+
+wmass          REAL
+               ficticious cell mass for variable-cell md simulations
+
+cell_factor    REAL ( default = 1.2 )
+               used in the construction of the pseudopotential tables. 
+               It should exceed the maximum linear contraction of the
+               cell during a simulation.
+
+
+===============================================================================
+&PHONON ( only in calculation = 'phonon' )
+
+modenum        INTEGER ( default = 0 )
+               for single-mode phonon calculation
+
+xqq(3)         REAL
+               q-point (units 2pi/a) for phonon calculation
+
+	       
+===============================================================================
+CARDS: { } = optional
+-------------------------------------------------------------------------------
+ATOMIC_SPECIES
+"ntyp" cards like the following
+ X  Mass_X  PseudoPot_X
+ X           Character: label of the atom
+ Mass_X      Real     : mass of the atomic species
+                       not used if calculation='scf', 'nscf', 'phonon'
+ PseudoPot_X Character: file containing PP for this species
+
+ The pseudopotential file is assumed to be in the new UPF format.
+ If it doesn't work, the pseudopotential format is determined by
+ the file name:
+     *.vdb or *.van     Vanderbilt US pseudopotential code
+     *.RRKJ3            Andrea Dal Corso's code (old format)
+     none of the above  old PWscf norm-conserving format
+ 
+-------------------------------------------------------------------------------
+ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+   alat    : atomic positions are in units of alat (default)
+   bohr    : atomic positions are in a.u.
+   crystal : atomic positions are in crystal coordinates (see below)
+   angstrom: atomic positions are in A
+
+if calculation = 'neb'
+
+  There are many cards like the following
+  
+  identifier
+  X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
+  
+  One for the first image ( identifier="first_image" must be followed by "nat" 
+  position cards ) and one for the last image ( identifier="last_image" must 
+  be followed by "nat" position cards )
+  There is also the possibility of specifying intermediate images; in this case
+  their coordinates must be set between the first_image and the last_image.
+  ( identifier="intermediate_image" must be followed by "nat" position cards ). 
+  Image configurations must be specified in the following order:
+  
+  first_image                                           <= mandatory
+   X 0.0  0.0  0.0  { if_pos(1) if_pos(2) if_pos(3) }
+   Y 0.5  0.0  0.0  { if_pos(1) if_pos(2) if_pos(3) }
+   Z O.0  0.2  0.2  { if_pos(1) if_pos(2) if_pos(3) }
+  intermediate_image 1                                  <= optional
+   X 0.0  0.0  0.0
+   Y 0.9  0.0  0.0
+   Z O.0  0.2  0.2
+  intermediate_image ...                                <= optional
+   X 0.0  0.0  0.0
+   Y 0.9  0.0  0.0
+   Z O.0  0.2  0.2 }
+  last_image                                            <= mandatory
+   X 0.0  0.0  0.0
+   Y 0.7  0.0  0.0
+   Z O.0  0.5  0.2  
+   
+  IMPORTANT: the total number of configurations specified in the input file 
+             must be less than num_of_images (as specified in &IONS).
+             The initial path is obtained interpolatig between the specified
+             configurations so that all images are equispaced (only the
+             coordinates of the first and last images are not changed). 
+
+otherwise
+
+  There are "nat" cards like the following
+  
+  X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
+
+where :
+
+  identifier  String: a string that identifies image coordinates.
+  X           Character: label of the atom as specified in ATOMIC_SPECIES
+  x, y, z     Real: atomic positions 
+  if_pos:     Integer: component i of the force for this atom is multiplied
+              by if_pos(i), which must be 0 or 1. Used to keep selected atoms
+              and/or selected components fixed in a NEB, MD or optimization run
+              
+-------------------------------------------------------------------------------
+K_POINTS { tpiba | automatic | crystal | gamma }
+
+   gamma    : use k = 0 ( do not read anything after this card )
+              Note that a set of subroutines optimized for clculations at 
+              the gamma point are used so that both memory and cpu requirements
+              are reduced
+   automatic: automatically generated uniform grid of k-points
+              next card:
+   nk1, nk2, nk3, k1, k2, k3
+              generates ( nk1, nk2, nk3 ) mesh with ( k1, k2, k3 ) offset
+              nk1, nk2, nk3 as in Monkhorst-Pack grids
+              k1, k2, k3 must be 0 ( no offset ) or 1 ( grid displaced 
+              by half a grid step in the corresponding direction )
+              The mesh with offset may not work with tetrahedra.
+   crystal  : read k-points in crystal coordinates
+   tpiba    : read k-points in 2pi/a units ( default )
+              next card:
+   nks
+              number of supplied special points
+   xk_x, xk_y, xk_z,  wk
+              special points in the irreducible Brillouin Zone
+              of the lattice (with all symmetries) and weights
+              If the symmetry is lower than the full symmetry 
+              of the lattice, additional points with appropriate
+              weights are generated
+	      
+-------------------------------------------------------------------------------
+CELL_PARAMETERS { cubic | hexagonal }
+  optional card, needed only if ibrav = 0 is specified
+  cubic    : assume cubic symmetry or a subset (default)  
+  hexagonal: assume hexagonal symmetry or a subset
+  Next cards:
+    a(1,1) a(2,1) a(3,1)
+    a(1,2) a(2,2) a(3,2)
+    a(1,3) a(2,3) a(3,3)
+
+  a(:,1) = crystal axis 1    alat units if celldm(1) was specified
+      2                 2    a.u. if celldm(1)=0
+      3                 3
+
+-------------------------------------------------------------------------------
+
+CLIMBING_IMAGES
+  optional card, needed only if calculation = 'neb' and CI_scheme = 'manual'
+  Next card: 
+  
+   index1, index2, ..., indexN
+  
+  where index1, index2, ..., indexN are the indeces of the images to which 
+  apply the Climbing Image procedure. If more than an image is specified they
+  must be separated by a comma
+       
+-------------------------------------------------------------------------------
+
+CONSTRAINTS
+
+   Ionic Constraints
+
+ Syntax:
+
+    CONSTRAINTS
+      nconstr   constr_tol
+      constr_type(.)   constr(1,.)   constr(2,.)
+
+ Where:
+
+      nconstr (INTEGER)         INTEGER, number of constraints
+      constr_tol                REAL,    tolerance for keeping the constraints 
+                                         satisfied
+      constr_type(.)            INTEGER, type of constrain
+      constr(1,.) constr(2,.)   INTEGER, atoms indeces object of the constraint.
+                                        
+                          I.E.: 1 ia1 ia2 "1" is the constrain type 
+                                (fixed distance) "ia1 ia2" are the 
+                                indeces of the atoms (as they appear 
+                                in the 'ATOMIC_POSITION' CARD) whose 
+                                distancehas to be kept constant
+
+-------------------------------------------------------------------------------
+
+  ibrav is the structure index:
+
+    ibrav        structure                   celldm(2)-celldm(6)
+
+      0          "free", see above                 not used
+      1          cubic P (sc)                      not used
+      2          cubic F (fcc)                     not used   
+      3          cubic I (bcc)                     not used
+      4          Hexagonal and Trigonal P        celldm(3)=c/a
+      5          Trigonal R                      celldm(4)=cos(aalpha)
+      6          Tetragonal P (st)               celldm(3)=c/a
+      7          Tetragonal I (bct)              celldm(3)=c/a
+      8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
+      9          Orthorhombic base-centered(bco) celldm(2)=b/a,celldm(3)=c/a
+     10          Orthorhombic face-centered      celldm(2)=b/a,celldm(3)=c/a
+     11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
+     12          Monoclinic P                    celldm(2)=b/a,celldm(3)=c/a,
+                                                 celldm(4)=cos(ab)
+     13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
+                                                 celldm(4)=cos(ab)
+     14          Triclinic P                     celldm(2)= b/a,
+                                                 celldm(3)= c/a,
+                                                 celldm(4)= cos(bc),
+                                                 celldm(5)= cos(ac),
+                                                 celldm(6)= cos(ab)
+
+  The special axis is the z-axis, one basal-plane vector is along x, 
+  and the other basal-plane vector is at angle beta for monoclinic 
+  (beta is not actually used), at 120 degrees for trigonal and hexagonal(p)
+  groups, and at 90 degrees for remaining groups, excepted fcc, bcc, 
+  tetragonal(i), for which the crystallographic vectors are as follows:
+
+  fcc bravais lattice.
+  ====================
+
+  a1=(a/2)(-1,0,1), a2=(a/2)(0,1,1), a3=(a/2)(-1,1,0).
+
+  bcc bravais lattice.
+  ====================
+
+  a1=(a/2)(1,1,1), a2=(a/2)(-1,1,1), a3=(a/2)(-1,-1,1).
+
+  tetragonal (i) bravais lattices.
+  ================================
+  a1=(a/2,a/2,c/2), a2=(a/2,-a/2,c/2), a3=(-a/2,-a/2,c/2).
+
+  trigonal(r) groups.
+  ===================
+
+  for these groups, the z-axis is chosen as the 3-fold axis, but the
+  crystallographic vectors form a three-fold star around the z-axis,
+  and the primitive cell is a simple rhombohedron. if c is the cosine
+  of the angle between any pair of crystallographic vectors, and if
+  tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3), the crystal-
+  lographic vectors are:
+
+        a1=a(0,2ty,tz),  a2=a(tx,-ty,tz),  a3=a(-tx,-ty,tz).
+
+  bco base centered orthorhombic
+  =============================
+  a1=(a/2,b/2,0), a2=(-a/2,b/2,0), a3=(0,0,c)
+----------------------------------------------------------------------

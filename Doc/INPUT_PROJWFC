@@ -1,0 +1,13 @@
+  ! Program: projwfc.x
+  ! Purpose: projects wavefunctions onto orthogonalized atomic wavefunctions, 
+  !          calculates Lowdin charges, spilling parameter, projected DOS 
+  !          (separated into up and down components for lSDA)
+  !
+  ! See the header of file PP/projwfc.f90 for input and output description
+  !
+  ! Program: dos.x
+  ! Purpose: calculates the Density of States (DOS) 
+  !          (separated into up and down components for lSDA)
+  !
+  ! See the header of file PP/dos.90 for input and output description
+

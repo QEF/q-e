@@ -1,0 +1,73 @@
+c   phonon input cards are as follows:
+c
+c card 1   title_ph
+c
+c                    namelist "inputph"
+c
+cc  variable             meaning                              default value
+c
+c*********     Variables that MUST BE SPECIFIED      ********** 
+c
+c amass(ntyp) atomic mass of each atomic type 
+c
+c*********           Optional Variables              **********
+c
+c outdir      scratch directory                                     './'
+c
+c prefix      prepended to input/output filenames                'pwscf'
+c             must be the same used in the calculation
+c             of unperturbed system
+c
+c niter_ph    maximum number of iterations in a scf step             50
+c
+c tr2_ph      threshold for selfconsistency                        1e-10
+c
+c alpha_mix(niter) mixing factor (for each iteration) for   alpha_mix(1)=0.7
+c             updating the scf potential:
+c             vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+c nmix_ph     number of iterations used in potential mixing          4
+c
+c iverbosity  iverbosity=0 short output, iverbosity=1 verbose output 0
+c
+c time_max    maximum allowed run time before the job stops smoothly
+c
+c fildyn      file where the dynamical matrix is written           'matdyn'
+c
+c fildrho     file where the charge density variations is written     ' '
+c
+c filelph     file where electron-phonon matrix elements are written  ' '
+c
+c fildvscf    file where the the potential variation is written       ' '
+c             (for later use in electron-phonon calculation)
+c
+c maxirr      maximum number of irreducible representation to be      0 i.e. all
+c             computed in a single run 
+c
+c epsil       if .true. in a q=0 calculation for a non metal the      .false.
+c             macroscopic dielectric constant of the system is 
+c             computed. 
+c
+c trans       if .true. the phonons are computed                      .true.
+c             If trans.and.epsil effective charges are calculated            
+c
+c elph        if .true. electron-phonon lambda coeffs are computed    .false.
+c             For metals only, requires gaussian smearing.
+c             If elph.and.trans, the lambdas are calculated in the same
+c             run, using the same k-point grid for phonons and lambdas
+c             If elph.and..not.trans, the lambdas are calculated using
+c             previously saved DeltaVscf in fildvscf, previously saved
+c             dynamical matrix, and the present punch file. This allows
+c             the use of a different (larger) k-point grid.
+c
+c zue         if .true. in a q=0 calculation for a non metal the 
+c             effective charges are computed from the phonon
+c             density responses. Note that if trans.and.epsil
+c             effective charges are calculated using a different
+c             algorithm. The results should be the same within
+c             numerical noise.
+
+c                    End of namelist "inputph"
+c
+c card 2   xq(3)   the phonon wavevector; must be equal to the one used
+c                  in the non-selfconsistent calculation.
+c

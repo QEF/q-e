@@ -13,8 +13,7 @@ COMMON
   The eigenvalues must be the same!!!
 
 - fix shift in total energy between CP, FPMD and PW
-  for charged systems. Total energies for charged systems
-  must be the same!!!
+  for charged systems. 
 
 - merge (standard) diagonalization routines
   use parallel diagonalization in CP and PW
@@ -111,7 +110,7 @@ DOCUMENTATION
 
 FPMD:
 
-- Documentation is nonexistent
+- Documentation needs serious improvements
 
 CPV: 
 

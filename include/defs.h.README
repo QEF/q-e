@@ -18,6 +18,8 @@
       __SGI64   64-bit mode for sgi machines
       __ALTIX   sgi altix 350/3000 machines running Linux
       __ORIGIN  sgi origin 2k or 3k machines
+      __COMPLIB FFT routines from SGI CHALLENGEComplib scientific library
+      __SCSL    FFT routines from SGI SCSL scientific library
       __ALPHA   hp-compaq (formerly dec) alphas
       __SX4     nec sx-4/5 vector machines (obsolete)
       __SX6     nec sx-6 vector machines
