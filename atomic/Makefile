@@ -75,9 +75,7 @@ write_upf.o
 
 LD1MODS = \
 ld1inc.o \
-parameters.o \
-pseudo_types.o \
-read_pseudo_module.o
+parameters.o 
 
 MODULES = \
 ../Modules/constants.o \
@@ -85,6 +83,8 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/kind.o \
 ../Modules/io_files.o \
+../Modules/pseudo_types.o \
+../Modules/readpseudo.o \
 ../PW/bachel.o 
 
 all: ld1.x

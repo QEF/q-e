@@ -1,3 +1,4 @@
+
 !
 !---------------------------------------------------------------------
 subroutine read_pseudoupf 
@@ -12,8 +13,8 @@ subroutine read_pseudoupf
   use ld1inc
   use funct
   !
-  use pseudo_types_ld1
-  use read_pseudo_module_ld1
+  use pseudo_types
+  use read_pseudo_module
   !
   implicit none
   !
@@ -30,13 +31,11 @@ subroutine read_pseudoupf
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
        err=100, iostat=ios)
 100   call errore('read_pseudoupf','open error on file '//file_pseudo,ios)
-  if (rel.lt.2) then
-     call read_pseudo_upf(iunps, upf, ierr)
-  else
-     call read_pseudo_upf_rel(iunps, upf, ierr)
-  endif
+
+  call read_pseudo_upf(iunps, upf, ierr)
   !
-  if (ierr .ne. 0) return
+  if (ierr .ne. 0) &
+     call errore('read_pseudoupf','reading pseudo upf',abs(ierr))
   !
   zval  = upf%zp
   nlcc = upf%nlcc
@@ -54,7 +53,7 @@ subroutine read_pseudoupf
   r(1:mesh) = upf%r  (1:upf%mesh)
   r2(1:mesh)= r(1:mesh)**2
   sqr(1:mesh)=sqrt(r(1:mesh))
-  if (rel.lt.2) then
+  if (.not.upf%has_so) then
      dx=log(r(2)/r(1))
      rmax=r(mesh)
      xmin=log(zed*r(1))
@@ -73,10 +72,10 @@ subroutine read_pseudoupf
   nbeta= upf%nbeta
   lls(1:nbeta)=upf%lll(1:nbeta)
 
-  if (rel.lt.2) then
-     jjs=0.0_dp
-  else
+  if (upf%has_so) then
      jjs(1:nbeta)=upf%jjj(1:nbeta)
+  else
+     jjs=0.0_dp
   endif
   !
   !
@@ -96,7 +95,7 @@ subroutine read_pseudoupf
   endif
   !
   !
-  if ( upf%nlcc) then
+  if (upf%nlcc) then
      fpi=16.0_dp*atan(1.0_dp)
      rhoc(1:mesh) = upf%rho_atc(1:upf%mesh)*fpi*r2(1:upf%mesh)
   else
