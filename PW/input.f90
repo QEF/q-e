@@ -28,8 +28,8 @@ SUBROUTINE iosys()
   USE brilz,         ONLY : at, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
+  USE ions_base,     ONLY : ntyp_ => nsp                            
   USE basis,         ONLY : nat_  => nat, &
-                            ntyp_ => ntyp, &
                             ityp, tau, atomic_positions, atm, &
                             startingwfc_ => startingwfc, &
                             startingpot_ => startingpot, &
@@ -222,7 +222,6 @@ SUBROUTINE iosys()
      END IF
      !
   END DO
-  !
   !
   CALL read_namelists( 'PW' )
   !
@@ -719,15 +718,16 @@ SUBROUTINE iosys()
   tmp_dir = TRIM( outdir )
   lstres = ( tstress .AND. lscf )
   !
+#if defined (__PARA)
+  IF ( lberry_ .AND. npool > 1 ) &
+     CALL errore( ' iosys ', ' Berry Phase not implemented with pools ', 1 )
+#endif  
+  !
   ! ... Copy values from input module to PW internals
   !
   nppstr_     = nppstr
   gdir_       = gdir
   lberry_     = lberry
-#ifdef __PARA
-  if ( lberry_ .AND. npool > 1 ) &
-     CALL errore (' iosys ', ' Berry Phase not implemented with pools ', 1)
-#endif
   title_      = title
   dt_         = dt
   tefield_    = tefield
