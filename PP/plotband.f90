@@ -5,7 +5,7 @@ program read_bands
   integer, parameter:: maxk=100, maxbands=50, maxtotbands=500
   real :: k(3,maxk), e(maxbands,maxk), kx(maxk)
   real :: ewrk(maxtotbands)
-  real :: e_in(maxk), wrk1(maxk), wrk2(maxk)
+  real :: e_in(maxk)
   real :: k1(3), k2(3), xk1, xk2, ps
   integer :: npoints(maxk)
   integer :: npk, nbands, first, last, nlines, n,i,ni,nf,nl, iargc
@@ -161,7 +161,8 @@ program read_bands
      !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(npk), &
      !             (e(i,n)-emin)*ydim/(emax-emin),n=npk,1,-1)
      !         write (1,'(i4," banda")' ) npk-1
-     ! Spline interpolation:
+     ! Spline interpolation with twice as many points:
+     !
      ni=1
      nf=1
      do nl=1,nlines
@@ -174,8 +175,8 @@ program read_bands
         do n=ni,nf
            e_in(n-ni+1)=e(i,n)
         end do
-        call interpol ( kx(ni),e_in,wrk1,wrk2,nf-ni+1, &
-                        k_interp,e_interp,n_interp )
+        call spline_interpol ( kx(ni), e_in, nf-ni+1, &
+                        k_interp, e_interp, n_interp )
         write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(npk), &
              (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
         write (1,'(i4," banda")' ) n_interp-1
@@ -194,39 +195,36 @@ program read_bands
 
 end program read_bands
 
-subroutine interpol (xin,yin,ywork,uwork,nin,xout,yout,nout)
+subroutine spline_interpol (xin, yin, nin, xout, yout, nout)
+
+  ! xin and xout should be in increasing order, with
+  ! xout(1) <= xin(1), xout(nout) <= xin(nin)
 
   implicit none
-  !  input
-  integer :: nin, nout
-  real ::xin(nin), yin(nin), xout(nout)
-  ! input, work space
-  real ::ywork(nin), uwork(nin)
-  ! output
-  real ::yout(nout)
-  ! local
+  integer, intent(in) :: nin, nout
+  real, intent(in)  :: xin(nin), yin(nin), xout(nout)
+  real, intent(out) :: yout(nout)
+  ! work space (automatically allocated)
+  real :: d2y(nin)
   real :: dy1, dyn
 
   dy1 = (yin(2)-yin(1))/(xin(2)-xin(1))
   dyn = 0.0
 
-  call spline(xin,yin,nin,dy1,dyn,ywork,uwork)
-  call splint(nin,xin,yin,ywork,nout,xout,yout)
+  call spline( xin, yin, nin, dy1, dyn, d2y)
+  call splint( nin, xin, yin, d2y, nout, xout, yout)
 
   return                                              
-end subroutine interpol
+end subroutine spline_interpol
 
-subroutine spline(x,y,n,yp1,ypn,d2y,work)
+subroutine spline(x, y, n, yp1, ypn, d2y)
 
   implicit none
-  ! input
-  integer :: n
-  real :: x(n), y(n), yp1, ypn
-  ! input, work space
+  integer, intent(in) :: n
+  real, intent(in) :: x(n), y(n), yp1, ypn
+  real, intent(out):: d2y(n)
+  ! work space (automatically allocated)
   real :: work(n)
-  ! output
-  real :: d2y(n)
-  ! local
   integer :: i, k
   real :: sig, p, qn, un
 
@@ -252,30 +250,32 @@ subroutine spline(x,y,n,yp1,ypn,d2y,work)
 end subroutine spline
 
 
-subroutine splint (nspline,xspline,yspline,d2y,nfit,xfit,yfit)
+subroutine splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
 
   implicit none
   ! input
-  integer :: nspline, nfit
-  real :: xspline(nspline), yspline(nspline), xfit(nfit)
-  real :: d2y(nspline)
-  ! output
-  real :: yfit(nfit)
-  ! local
+  integer, intent(in) :: nspline, nfit
+  real, intent(in) :: xspline(nspline), yspline(nspline), xfit(nfit), &
+       d2y(nspline)
+  real, intent(out) :: yfit(nfit)
   integer :: klo, khi, i
   real :: a, b, h 
 
   klo=1
   do i=1,nfit
      do khi=klo+1, nspline
-        if(xspline(khi).ge.xfit(i)) then
-           if(xspline(khi-1).le.xfit(i)) then
+        if(xspline(khi) >= xfit(i)) then
+           if(xspline(khi-1) <= xfit(i)) then
               klo = khi-1
            else
-              if (khi-1.eq.1 .and. i.eq.1) then
-                 stop '  SPLINT: xfit(1) < xspline(1)'
+              if (klo == 1 .and. khi-1 == 1) then
+                 ! the case xfit(i) < xspline(1) should not happen
+                 ! but since it may be due to a numerical artifact
+                 ! we just continue
+                 print *, '  SPLINT WARNING: xfit(i) < xspline(1)', &
+                      xfit(i), xspline(1)  
               else
-                 stop '  SPLINT: xfit not properly ordered'
+                 stop '  SPLINT ERROR: xfit not properly ordered'
               end if
            end if
            h= xspline(khi) - xspline(klo) 
@@ -287,10 +287,23 @@ subroutine splint (nspline,xspline,yspline,d2y,nfit,xfit,yfit)
            go to 10
         end if
      end do
+
+     ! the case xfit(i) > xspline(nspline) should also not happen
+     ! but again it may be due to a numerical artifact
+     ! A properly chosen extrapolation formula should be used here
+     ! (and in the case  xfit(i) < xspline(1) above as well) but
+     ! I am too lazy to write one - PG
+
+     print *, '  SPLINT WARNING: xfit(i) > xspline(nspline)', &
+                      xfit(i), xspline(nspline)  
+     khi = klo+1
+     h= xspline(khi) - xspline(klo) 
+     a= (xspline(khi)-xfit(i))/h
+     b= (xfit(i)-xspline(klo))/h
+           
+     yfit(i) = a*yspline(klo) + b*yspline(khi) &
+          + ( (a**3-a)*d2y(klo) + (b**3-b)*d2y(khi)  )*h*h/6.0
      !
-     ! This is for the unlikely event that rmax exceed r(mesh)
-     !
-     stop '  SPLINT: out of bounds'
 10   continue
   end do
   
