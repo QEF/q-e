@@ -1268,9 +1268,11 @@ end subroutine wf
   use control_flags, only: iprsta
 #ifdef __PARA
   use para_mod
-  include 'mpif.h'
 #endif
   implicit none
+#ifdef __PARA
+  include 'mpif.h'
+#endif
 
   integer :: f3(nw), f4(nw), i,j,inw
   integer ,intent(in) :: m
@@ -1603,9 +1605,11 @@ end subroutine wf
         use cvan
 #ifdef __PARA
    use para_mod
-   include 'mpif.h'
 #endif
    implicit none   
+#ifdef __PARA
+   include 'mpif.h'
+#endif
         real(kind=8), intent(in) :: b1(3),b2(3),b3(3)
 #ifdef __PARA
    integer :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
@@ -2658,9 +2662,12 @@ end subroutine wf
         use smooth_grid_dimensions, nnrs=>nnrsx
 #ifdef __PARA
    use para_mod
-   include 'mpif.h'
 #endif
    implicit none
+#ifdef __PARA
+   include 'mpif.h'
+#endif
+
    integer ir1, ir2, ir3, ibig3
    allocate(xdist(nnrs))
    allocate(ydist(nnrs))
@@ -2820,9 +2827,12 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
         use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
 #ifdef __PARA
         use para_mod
+#endif
+        implicit none
+#ifdef __PARA
         include 'mpif.h'
 #endif
-       implicit none
+
         integer ir1, ir2, ir3, ibig3 , inw
         real(kind=8) x
         integer , intent(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
@@ -3059,9 +3069,11 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use constants
 #ifdef __PARA
       use para_mod
-      include 'mpif.h'
 #endif
       implicit none
+#ifdef __PARA
+      include 'mpif.h'
+#endif
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
       complex(kind=8) ,intent(in) :: rhog(ng,nspin)
       complex(kind=8),allocatable :: bigrho(:)
@@ -3392,16 +3404,18 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
     use cell_base
 #ifdef __PARA
       use para_mod
+#endif
+  implicit none
+#ifdef __PARA
       include 'mpif.h'
 #endif
+
 !    (m,m) is the size of the matrix Ospin.
 !    Ospin is input overlap matrix.
 !    Uspin is the output unitary transformation.
 !             Rough guess for Uspin can be carried in.
 !
 !     conjugated gradient to search maximization
-!
-  implicit none
 !
   real(kind=8), parameter :: autoaf=0.529177d0
   integer, intent(in) :: m
