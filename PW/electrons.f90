@@ -52,7 +52,7 @@ SUBROUTINE electrons()
   USE bp,                   ONLY : lberry  
   USE wavefunctions_module, ONLY : evc
   USE mp_global,            ONLY : me_image, root_image
-  USE para,                 ONLY : npp, ncplane
+  USE pfft,                 ONLY : npp, ncplane
   !
   IMPLICIT NONE
   !
