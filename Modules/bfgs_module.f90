@@ -174,10 +174,10 @@ MODULE bfgs_module
        !       
        CALL read_bfgs_file( pos, energy, gradient, scratch, dim, stdout )
        !
-       scf_iter = scf_iter + 1       
-       IF (scf_iter == 1) THEN
+       scf_iter = scf_iter + 1
+       !
+       IF ( scf_iter == 1 ) &
           WRITE( UNIT = stdout, FMT = '(/,5x,"BFGS Geometry Calculation")' )
-       END IF
        !       
        conv_bfgs = ( ( energy_old - energy ) < energy_thr )
        !
@@ -521,6 +521,9 @@ MODULE bfgs_module
           ALLOCATE( gradient_old( dim, lbfgs_ndim ) )
        !       
        CALL read_lbfgs_file( pos, energy, gradient, scratch, dim )
+       !
+       IF ( scf_iter == 1 ) &
+          WRITE( UNIT = stdout, FMT = '(/,5x,"L-BFGS Geometry Calculation")' )
        !
        scf_iter = scf_iter + 1       
        !       
