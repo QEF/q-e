@@ -10,6 +10,7 @@ subroutine ions
   !-----------------------------------------------------------------------
   !
   use pwcom
+  !
   implicit none
   !
   call start_clock ('ions')
@@ -17,18 +18,14 @@ subroutine ions
   !
   ! recover from a previous run, if appropriate
   !
-
   if (restart.and.iswitch.ge.0) call restart_in_ions
-
+  !
   if (lforce) call forces
-
+  !
   if (lstres) call stress
-
+  !
   if (iswitch.gt.0) then
      call move_ions
-#ifdef __PARA
-      call check (3 * nat, tau)
-#endif
       !
       ! save restart information
       !
