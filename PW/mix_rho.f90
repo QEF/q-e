@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2002-2004 PWSCF group
 ! This file is distributed under the terms of the
@@ -78,8 +79,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   COMPLEX(KIND=DP), ALLOCATABLE :: &
     rhocin(:,:),        &! rhocin(ngm0,nspin)
     rhocout(:,:),       &! rhocout(ngm0,nspin)
-    rhoinsave(:),       &! rhoinsave(ngm0*nspin): work space
-    rhoutsave(:),       &! rhoutsave(ngm0*nspin): work space
+    rhoinsave(:,:),     &! rhoinsave(ngm0,nspin): work space
+    rhoutsave(:,:),     &! rhoutsave(ngm0,nspin): work space
     nsinsave(:,:,:,:),  &!
     nsoutsave(:,:,:,:)   !
   REAL(KIND=DP) :: &
@@ -97,8 +98,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
   COMPLEX(KIND=DP), ALLOCATABLE, SAVE :: &
-    df(:,:),          &! information from preceding iterations
-    dv(:,:)            !     "  "       "     "        "  "
+    df(:,:,:),        &! information from preceding iterations
+    dv(:,:,:)          !     "  "       "     "        "  "
   REAL(KIND=DP), ALLOCATABLE, SAVE :: &
     df_ns(:,:,:,:,:), &! idem 
     dv_ns(:,:,:,:,:)   ! idem
@@ -208,8 +209,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0 * nspin, n_iter ) )
-     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0 * nspin, n_iter ) )
+     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0, nspin, n_iter ) )
+     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0, nspin, n_iter ) )
      !
      IF ( lda_plus_u ) THEN
         !
@@ -224,8 +225,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      IF ( mixrho_iter == 1 ) THEN
         !
-        IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0 * nspin, n_iter ) )
-        IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0 * nspin, n_iter ) )
+        IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0, nspin, n_iter ) )
+        IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0, nspin, n_iter ) )
         !
         IF ( lda_plus_u ) THEN
            !
@@ -252,7 +253,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     ALLOCATE( rhoinsave(ngm0*nspin), rhoutsave(ngm0*nspin) )
+     ALLOCATE( rhoinsave(ngm0,nspin), rhoutsave(ngm0,nspin) )
      !
      IF ( lda_plus_u ) &
         ALLOCATE( nsinsave (ldim,ldim,nspin,nat), &
@@ -293,8 +294,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      IF ( saveonfile ) THEN
         !
-        CALL davcio( df(1,ipos), 2*ngm0*nspin, iunmix, 1, -1 )
-        CALL davcio( dv(1,ipos), 2*ngm0*nspin, iunmix, 2, -1 )
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 1, -1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2, -1 )
         !
         IF ( lda_plus_u ) THEN
            !
@@ -305,10 +306,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     df(:,ipos) = df(:,ipos) - &
-                  RESHAPE( SOURCE = rhocout, SHAPE = (/ ngm0 * nspin /) )
-     dv(:,ipos) = dv(:,ipos) - &
-                  RESHAPE( SOURCE = rhocin,  SHAPE = (/ ngm0 * nspin /) )
+     df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (:,:)
      !
      IF ( lda_plus_u ) THEN
         !
@@ -325,8 +324,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
         IF ( i /= ipos ) THEN
            !
-           CALL davcio( df(1,i), 2*ngm0*nspin, iunmix, 2*i+1, -1 )
-           CALL davcio( dv(1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
+           CALL davcio( df(1,1,i), 2*ngm0*nspin, iunmix, 2*i+1, -1 )
+           CALL davcio( dv(1,1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
            !
            IF ( lda_plus_u ) THEN
               !
@@ -344,8 +343,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      IF ( mixrho_iter > 1 ) THEN
         !
-        CALL davcio( df(1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+1, 1 )
-        CALL davcio( dv(1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+2, 1 )
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+1, 1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+2, 1 )
         !
      END IF
      !
@@ -366,8 +365,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
   ELSE
      !
-     rhoinsave = RESHAPE( SOURCE = rhocin,  SHAPE = (/ ngm0 * nspin /) )
-     rhoutsave = RESHAPE( SOURCE = rhocout, SHAPE = (/ ngm0 * nspin /) )
+     rhoinsave = rhocin
+     rhoutsave = rhocout
      !
      IF ( lda_plus_u ) THEN
         !
@@ -382,7 +381,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      DO j = i, iter_used
         !
-        betamix(i,j) = rho_dot_product( df(1,j), df(1,i) ) 
+        betamix(i,j) = rho_dot_product( df(1,1,j), df(1,1,i) ) 
         !
         IF ( lda_plus_u ) &
            betamix(i,j) = betamix(i,j) + &
@@ -403,7 +402,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   !
   DO i = 1, iter_used
      !
-     work(i) = rho_dot_product( df(1,i), rhocout )
+     work(i) = rho_dot_product( df(1,1,i), rhocout )
      !
      IF ( lda_plus_u ) &
         work(i) = work(i) + ns_dot_product( df_ns(1,1,1,1,i), nsout )
@@ -414,10 +413,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      gamma0 = SUM( betamix(1:iter_used,i) * work(1:iter_used) )
      !
-     rhocin  = rhocin  - &
-               gamma0 * RESHAPE( SOURCE = dv(:,i), SHAPE = (/ ngm0, nspin /) )
-     rhocout = rhocout - &
-               gamma0 * RESHAPE( SOURCE = df(:,i), SHAPE = (/ ngm0, nspin /) )
+     rhocin (:,:) = rhocin (:,:) - gamma0 * dv(:,:,i)
+     rhocout(:,:) = rhocout(:,:) - gamma0 * df(:,:,i)
      !
      IF ( lda_plus_u ) THEN
         !
@@ -457,8 +454,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     df(:,inext) = rhoutsave
-     dv(:,inext) = rhoinsave
+     df(:,:,inext) = rhoutsave(:,:)
+     dv(:,:,inext) = rhoinsave(:,:)
      !
      DEALLOCATE( rhoinsave, rhoutsave )
      !
