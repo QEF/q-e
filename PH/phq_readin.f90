@@ -58,7 +58,7 @@ subroutine phq_readin
   ! fildrho  : output file containing deltarho
 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: iargc, nargs, iiarg, ierr
 
 #ifdef __PARA
   if (me /= 1 .or. mypool /= 1) goto 400
