@@ -31,7 +31,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.3 2004-02-20 15:15:24 kokalj Exp $ 
+# $Id: gui.itcl,v 1.4 2004-04-06 13:21:48 kokalj Exp $ 
 #
 
 
@@ -104,7 +104,7 @@ proc ::guib::embedGUI {moduleFile containerWidget} {
 # method to open input files. The proc first queries for the input
 # filename and then opens it.
 #  RETURN VALUE
-#    Returns the name of moduleObj object.
+#    Returns the name of moduleObj object or an empty string if WRONG_FORMAT.
 #  EXAMPLE
 #    menuOpen examples/my_gui.tcl
 #****
@@ -127,7 +127,13 @@ proc ::guib::menuOpen {moduleFile} {
     set fileChannel [open $file r]
     
     set moduleObj [::guib::simpleTplwGUI $moduleFile]
-    $moduleObj readFile $fileChannel $file    
+
+    if { [$moduleObj readFile $fileChannel $file] == "WRONG_FORMAT" } {
+	# input file is in wrong format, close the corresponding GUI-tab
+	close $fileChannel
+	_closeCurrentTab
+	return ""
+    }
 
     close $fileChannel
 
@@ -1100,10 +1106,20 @@ body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
     }
  
     set fileChannel [open $file r]     
+
     # construct the module
     set obj [_newInput $moduleIdent $moduleName $moduleFile]
+
     # load the file
-    namespace eval ::guib [list $obj readFile $fileChannel]
+    set result [namespace eval ::guib [list $obj readFile $fileChannel]]
+
+    if { $result == "WRONG_FORMAT" } {
+	# input file is in wrong format, close the corresponding GUI-tab
+	close $fileChannel
+	_closeCurrentTab
+	return ""
+    }
+
     close $fileChannel
 
     set index            [$widget(notebook) index end]
