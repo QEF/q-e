@@ -46,7 +46,7 @@
           ios = C_MKDIR( TRIM( dirname ), LEN_TRIM( dirname ) )
       END IF
       CALL mp_bcast( ios, ionode_id )
-      IF( ios /= 0 ) THEN
+      IF( ios > 0 ) THEN
         CALL errore(' cp_writefile ', ' unable to create directory '//dirname , ios )
       END IF  
 

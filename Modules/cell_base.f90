@@ -411,7 +411,7 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht,  &
-               a, b, c, cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
+               a_ , b_ , c_ , cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
                frich_ , greash_ , cell_dofree )
 
     USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au 
@@ -423,18 +423,23 @@
     LOGICAL, INTENT(IN) :: trd_ht
     CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
     REAL(dbl), INTENT(IN) :: rd_ht (3,3)
-    REAL(dbl), INTENT(IN) :: a, b, c, cosab, cosac, cosbc
+    REAL(dbl), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
     REAL(dbl),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
     REAL(dbl),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
 
 
     REAL(dbl) :: b1(3), b2(3), b3(3)
+    REAL(dbl) :: a, b, c
+    INTEGER   :: j
 
     !
     ! ... set up crystal lattice, and initialize cell_base module
     !
     celldm = celldm_
+    a = a_
+    b = b_
+    c = c_
     ibrav  = ibrav_
     press  = press_ * gpa_au
     !  frich  = frich_   ! for the time being this is set elsewhere
@@ -462,6 +467,24 @@
     IF ( trd_ht ) THEN
       symm_type = cell_symmetry
       at        = TRANSPOSE( rd_ht )
+      WRITE( stdout, 210 )
+      WRITE( stdout, 220 ) ( rd_ht( 1, j ), j = 1, 3 )
+      WRITE( stdout, 220 ) ( rd_ht( 2, j ), j = 1, 3 )
+      WRITE( stdout, 220 ) ( rd_ht( 3, j ), j = 1, 3 )
+      IF ( ANY( celldm(1:6) /= 0 ) ) THEN
+        WRITE( stdout, 230 )
+        celldm(1:6) = 0.0d0
+      END IF
+      IF ( a /= 0 ) THEN
+        WRITE( stdout, 240 )
+        a = 0.0d0
+        b = 0.0d0
+        c = 0.0d0
+      END IF
+210   format('   initial cell from CELL_PARAMETERS card')
+220   format(3X,3F14.8)
+230   format('   celldm(1:6) are ignored')
+240   format('   a, b, c are ignored')
     END IF
 
     IF ( ibrav == 0 .AND. .NOT. trd_ht ) &

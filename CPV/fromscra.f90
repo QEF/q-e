@@ -212,7 +212,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     !
     !
 
-    WRITE(6,*) 'DEBUG running from_scratch'
+    ! WRITE(6,*) 'DEBUG running from_scratch'
 
     dt2hbe = 0.5d0 * dt2bye
 
