@@ -66,9 +66,11 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PHCG_COMMAND="$PARA_PREFIX $BIN_DIR/phcg.x $PARA_POSTFIX"
+DYNMAT_COMMAND="$BIN_DIR/dynmat.x"
 $ECHO
-$ECHO "  running pw.x as:   $PW_COMMAND"
-$ECHO "  running phcg.x as: $PHCG_COMMAND"
+$ECHO "  running pw.x     as: $PW_COMMAND"
+$ECHO "  running phcg.x   as: $PHCG_COMMAND"
+$ECHO "  running dynmat.x as: $DYNMAT_COMMAND"
 $ECHO
  
 # clean TMP_DIR
@@ -122,6 +124,7 @@ normal modes for sih4
   epsil=.true.,
   trans=.true., asr=.true.
   raman=.false.
+  fildyn='sih4.dyn'
  /
  0.0 0.0 0.0
 EOF
@@ -129,6 +132,15 @@ $ECHO "  running normal mode calculation for SiH4...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4.nm.out
 $ECHO " done"
 /bin/rm restart*
+
+# IR cross sections  for SiH4
+cat > sih4.dyn.in << EOF
+ &input flmat='sih4.dyn', asr=.true. /
+EOF
+
+$ECHO "  running IR cross section calculation for SiH4...\c"
+$DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
+$ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
