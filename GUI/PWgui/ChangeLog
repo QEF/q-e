@@ -1,3 +1,11 @@
+Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* modutils.tcl: adding some ::pwscf::readFilter::* utility procs
+		for better support of the syntax-error handling mechanism
+		for reading the input files (added procs: findNamelists,
+		findCards, findNamelistsAndCards)
+	* adding readfilter for chdens.x, prowfc.x modules, and improving
+		readfilter procs for pw.x, ph.x, pp.x, d3.x modules
+	
 Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* Makefile, sys_utils/starkit.sh, pwgui_vfs/: adding support for
 		building starpack binaries
