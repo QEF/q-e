@@ -169,11 +169,11 @@
 
 #  define CP_GETENV cp_getenv
 #  define CP_DATE cp_date
-#  define CREATE_PLAN create_plan
+#  define CREATE_PLAN my_create_plan
 #  define CREATE_PLANX create_planx
 #  define CREATE_PLANY create_plany
 #  define CREATE_PLANZ create_planz
-#  define DESTROY_PLAN destroy_plan
+#  define DESTROY_PLAN my_destroy_plan
 #  define DESTROY_PLANX destroy_planx
 #  define DESTROY_PLANY destroy_plany
 #  define DESTROY_PLANZ destroy_planz

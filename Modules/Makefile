@@ -14,6 +14,7 @@ mp_wave.o  \
 parser.o \
 readpseudo.o  \
 pseudodata.o  \
+cell_base.o  \
 pseudo_types.o
 #
 include ../make.rules
