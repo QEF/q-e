@@ -7,8 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-
-subroutine do_chdens
+program chdens
   !-----------------------------------------------------------------------
   !      Charge density/polarization plotting program
   !-----------------------------------------------------------------------
@@ -16,7 +15,6 @@ subroutine do_chdens
   !      DESCRIPTION of the INPUT: see file INPUT_CHDENS in pwdocs/
   !
 #include "machine.h"
-!  use pwcom
   use constants, only:  pi, fpi
   use brilz
   use basis
@@ -27,7 +25,10 @@ subroutine do_chdens
   use pseud, only: zv
   use scf, only: rho
   use workspace
-!  use io
+  use io_files, only: nd_nmbr
+#ifdef __PARA
+  use para, only: me
+#endif
 
   implicit none
   integer, parameter :: nfilemax = 7
@@ -57,7 +58,14 @@ subroutine do_chdens
   namelist /input/  &
        nfile, filepp, weight, iflag, idpol, e1, e2, e3, nx, ny, nz, x0, &
        plot_out, output_format, fileout, epsilon, filepol
-
+  !
+  call start_postproc (nd_nmbr)
+#ifdef __PARA
+  !
+  ! Works for parallel machines but only for one processor !!!
+  !
+  if (me == 1) then
+#endif
   !
   !   set the DEFAULT values
   !
@@ -396,9 +404,12 @@ subroutine do_chdens
 
   deallocate(rhor)
   deallocate(rhog)
-  return
+#ifdef __PARA
+  end if
+#endif
+  call stop_pp
 1100 call errore ('chdens', 'reading input data', abs (ios) )
-end subroutine do_chdens
+end program chdens
 !
 !-----------------------------------------------------------------------
 subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
@@ -1172,18 +1183,18 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
 end subroutine write_openmol_file
 
 subroutine write_dipol(dipol,tau,nat,alat,zv,ntyp,ityp,idpol)
-use parameters, only : dp
-implicit none
+  use parameters, only : dp
+  implicit none
 
-integer :: nat, ntyp, ityp(nat), idpol
-real(kind=dp) :: dipol(0:3), tau(3,nat), zv(ntyp), alat
+  integer :: nat, ntyp, ityp(nat), idpol
+  real(kind=dp) :: dipol(0:3), tau(3,nat), zv(ntyp), alat
 
-real(kind=dp) :: debye, dipol_ion(3)
+  real(kind=dp) :: debye, dipol_ion(3)
 
-integer :: na, ipol
-!
-!   compute ion dipole moments
-!
+  integer :: na, ipol
+  !
+  !   compute ion dipole moments
+  !
   if (idpol.eq.1) then
      dipol_ion=0.d0
      do na=1,nat
@@ -1192,39 +1203,39 @@ integer :: na, ipol
         enddo
      enddo
   endif
-!
-!  Charge inside the Wigner-Seitz cell
-!
+  !
+  !  Charge inside the Wigner-Seitz cell
+  !
   write(6, '(/4x," Charge density inside the Wigner-Seitz cell:",3f14.8," el.")')  &
-        dipol(0)
+       dipol(0)
 
-!
-!  print the electron dipole moment calculated by the plotting 3d routines
-!  A positive dipole goes from the - charge to the + charge.
-!
+  !
+  !  print the electron dipole moment calculated by the plotting 3d routines
+  !  A positive dipole goes from the - charge to the + charge.
+  !
   write(6, '(/4x,"Electrons dipole moments",3f14.8," a.u.")')  &
-                                         (-dipol(ipol),ipol=1,3)
-!
-! print the ionic and total dipole moment
-!
+       (-dipol(ipol),ipol=1,3)
+  !
+  ! print the ionic and total dipole moment
+  !
   if (idpol.eq.1) then
      write(6, '(4x,"     Ions dipole moments",3f14.8," a.u.")') &
-                                         (dipol_ion(ipol),ipol=1,3)
+          (dipol_ion(ipol),ipol=1,3)
      write(6,'(4x,"    Total dipole moments",3f14.8," a.u.")') &
-                                     ((-dipol(ipol)+dipol_ion(ipol)),ipol=1,3)
+          ((-dipol(ipol)+dipol_ion(ipol)),ipol=1,3)
   endif
-!
-!   Print the same information in Debye
-!
+  !
+  !   Print the same information in Debye
+  !
   debye=2.54176d0
 
   write(6,'(/4x,"Electrons dipole moments",3f14.8," Debye")') &
-                                         (-dipol(ipol)*debye,ipol=1,3)
+       (-dipol(ipol)*debye,ipol=1,3)
   if (idpol.eq.1) then
      write(6,'(4x,"     Ions dipole moments",3f14.8," Debye")') &
-                                         (dipol_ion(ipol)*debye,ipol=1,3)
+          (dipol_ion(ipol)*debye,ipol=1,3)
      write(6,'(4x,"    Total dipole moments",3f14.8," Debye")') &
-                               ((-dipol(ipol)+dipol_ion(ipol))*debye,ipol=1,3)
+          ((-dipol(ipol)+dipol_ion(ipol))*debye,ipol=1,3)
   endif
 
 end subroutine write_dipol

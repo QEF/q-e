@@ -2,21 +2,21 @@
 program read_bands
 
   implicit none
-  integer, parameter:: maxk=100, maxbands=50, maxtotbands=500
-  real :: k(3,maxk), e(maxbands,maxk), kx(maxk)
-  real :: ewrk(maxtotbands)
-  real :: e_in(maxk)
+  integer, parameter:: maxk=100
+  real :: k(3,maxk), e_in(maxk), kx(maxk)
+  real, allocatable :: e(:,:)
   real :: k1(3), k2(3), xk1, xk2, ps
   integer :: npoints(maxk)
-  integer :: npk, nbands, first, last, nlines, n,i,ni,nf,nl, iargc
+  integer :: npk, nbands, nlines, n,i,ni,nf,nl, iargc
   logical :: high_symmetry(maxk)
+  logical, allocatable :: is_in_range(:)
   character(len=80) :: filename, prgname
 
   integer, parameter ::  max_interp=4*maxk
   integer :: n_interp, init
   real :: k_interp(max_interp), e_interp(max_interp), coef_interp(maxk,4)
 
-  real :: emin, emax,  etic, eref, deltaE, Ef
+  real :: emin = 1.e10, emax =-1.e10,  etic, eref, deltaE, Ef
   real, parameter :: cm=28.453, xdim=15.0*cm, ydim=10.0*cm, &
                      x0=2.0*cm, y0=2.0*cm
 
@@ -35,22 +35,10 @@ program read_bands
 
   print '("number of bands > ",$)'
   read(5,*) nbands
-  print '("first and last band to plot > ",$)'
-  read(5,*) first,last
-  print '("Emin, Emax > ",$)'
-  read(5,*) emin, emax
-  print '("Efermi > ",$)'
-  read(5,*) Ef
-  print '("deltaE, reference E (for tics) ",$)'
-  read(5,*) deltaE, eref
-  if (last-first+1 >  maxbands) stop ' maxbands!'
-  if (nbands > maxtotbands) stop ' maxtotbands!'
+  allocate (e(nbands,maxk))
   do n=1,maxk
      read(1,*,end=20,err=30) ( k(i,n), i=1,3 )
-     read(1,*,end=30,err=30) (ewrk(i),i=1,nbands)
-     do i=1,last-first+1
-        e(i,n) = ewrk(i+first-1)
-     end do
+     read(1,*,end=30,err=30) (e(i,n),i=1,nbands)
      if (n==1) then
         kx(n) = 0.0
      else
@@ -63,6 +51,26 @@ program read_bands
   print '("Warning: max # of k-point (",i3,") read")', maxk
 20 npk=n-1
   print '(i3," k-point read")', npk
+
+  do n=1,npk
+     do i=1,nbands
+        emin = min(emin, e(i,n))
+        emax = max(emax, e(i,n))
+     end do
+  end do
+  print '("Range:",2f8.4,"eV  Emin, Emax > ",$)', emin, emax
+  read(5,*) emin, emax
+  print '("Efermi > ",$)'
+  read(5,*) Ef
+  print '("deltaE, reference E (for tics) ",$)'
+  read(5,*) deltaE, eref
+
+  allocate (is_in_range(nbands))
+  is_in_range(:) = .false.
+  do i=1,nbands
+     is_in_range(i) = any (e(i,1:npk) >= emin .and. e(i,1:npk) <= emax)
+  end do
+
   do n=1,npk
      if (n==1 .or. n==npk) then
         high_symmetry(n) = .true.
@@ -150,37 +158,39 @@ program read_bands
         write (1,'(4(f8.3,x)," riga")') &
              kx(n)*xdim/kx(npk), 0.0, kx(n)*xdim/kx(npk), ydim
      end if
-     do i=1,last-first+1
-        write (1,'(2(f8.3,x)," dot")' ) &
+     do i=1,nbands
+        if (is_in_range(i)) write (1,'(2(f8.3,x)," dot")' ) &
              kx(n)*xdim/kx(npk), (e(i,n)-emin)*ydim/(emax-emin)
      end do
   end do
   ! draw bands
-  do i=1,last-first+1
-     ! No interpolation:
-     !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(npk), &
-     !             (e(i,n)-emin)*ydim/(emax-emin),n=npk,1,-1)
-     !         write (1,'(i4," banda")' ) npk-1
-     ! Spline interpolation with twice as many points:
-     !
-     ni=1
-     nf=1
-     do nl=1,nlines
-        ni=nf
-        nf=nf + npoints(nl)-1
-        n_interp= 2*(nf-ni)+1
-        do n=1,n_interp
-           k_interp(n)=kx(ni)+(n-1)*(kx(nf)-kx(ni))/(n_interp-1)
+  do i=1,nbands
+     if (is_in_range(i)) then
+        ! No interpolation:
+        !         write (1,'(9(f8.3,x))') ( kx(n)*xdim/kx(npk), &
+        !             (e(i,n)-emin)*ydim/(emax-emin),n=npk,1,-1)
+        !         write (1,'(i4," banda")' ) npk-1
+        ! Spline interpolation with twice as many points:
+        !
+        ni=1
+        nf=1
+        do nl=1,nlines
+           ni=nf
+           nf=nf + npoints(nl)-1
+           n_interp= 2*(nf-ni)+1
+           do n=1,n_interp
+              k_interp(n)=kx(ni)+(n-1)*(kx(nf)-kx(ni))/(n_interp-1)
+           end do
+           do n=ni,nf
+              e_in(n-ni+1)=e(i,n)
+           end do
+           call spline_interpol ( kx(ni), e_in, nf-ni+1, &
+                k_interp, e_interp, n_interp )
+           write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(npk), &
+                (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
+           write (1,'(i4," banda")' ) n_interp-1
         end do
-        do n=ni,nf
-           e_in(n-ni+1)=e(i,n)
-        end do
-        call spline_interpol ( kx(ni), e_in, nf-ni+1, &
-                        k_interp, e_interp, n_interp )
-        write (1,'(9(f8.3,x))') ( k_interp(n)*xdim/kx(npk), &
-             (e_interp(n)-emin)*ydim/(emax-emin),n=n_interp,1,-1)
-        write (1,'(i4," banda")' ) n_interp-1
-     end do
+     end if
   end do
 
   write (1,*) 'grestore'

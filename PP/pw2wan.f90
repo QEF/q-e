@@ -1,42 +1,26 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 program wannier
-  !-----------------------------------------------------------------------
-  !
-  character (len=3) :: nodenumber
-  !
-  call start_postproc (nodenumber)  
-  call do_wannier (nodenumber)  
-  !
-  call stop_pp
-  stop
-end program wannier
-
-!
-!-----------------------------------------------------------------------
-subroutine do_wannier(nodenumber)
   !-----------------------------------------------------------------------
   !
   use pwcom  
   use para, only: kunit
   use io_files
-
+  !
   implicit none
-  character(len=3) :: nodenumber
   integer , dimension(3):: nk
   real(kind=8), dimension(3):: s0
   integer :: ik, i, kunittmp
 
   namelist / inputpp / tmp_dir, nk, s0, prefix
   !
-  nd_nmbr = nodenumber  
+  call start_postproc (nd_nmbr)
   !
   !   set default values for variables in namelist
   !
@@ -85,8 +69,9 @@ subroutine do_wannier(nodenumber)
     write(6,fmt="(' ik = ',I3,3F10.6)" ) ik, xk(1,ik), xk(2,ik), xk(3,ik)
   end do
   !
-  return  
-end subroutine do_wannier
+  call stop_pp
+  stop
+end program wannier
 !
 !-----------------------------------------------------------------------
 subroutine write_wannier (nk, s0, kunit)

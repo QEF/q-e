@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine average
+program average
   !-----------------------------------------------------------------------
   !
   !      This program calculates planar and macroscopic averages
@@ -40,7 +40,10 @@ subroutine average
 #include "machine.h"
   use parameters, only: DP
   use pwcom
-
+  use io_files, only: nd_nmbr
+#ifdef __PARA
+  use para, only: me
+#endif
   implicit none
   integer :: npixmax, nfilemax
   ! maximum number of pixel
@@ -86,6 +89,13 @@ subroutine average
   character (len=80) :: filename (nfilemax)
   ! names of the files with the charge
   !
+  call start_postproc (nd_nmbr)
+#ifdef __PARA
+  !
+  ! Works for parallel machines but only for one processor !!!
+  !
+  if (me == 1) then
+#endif
   inunit = 5
   read (inunit, *, err = 1100, iostat = ios) nfile
   if (nfile.le.0.or.nfile.gt.nfilemax) call errore ('average ', &
@@ -303,5 +313,8 @@ subroutine average
        i = 1, npt)
   deallocate(funci)
   deallocate(funcr)
-  return
-end subroutine average
+#ifdef __PARA
+  end if
+#endif
+  call stop_pp
+end program average

@@ -5,10 +5,8 @@ include ../make.rules
 include ../make.sys
 #
 PPOBJS = addusdens1d.o  \
-average.o  \
 cft.o \
 cgracsc.o  \
-chdens.o  \
 xsf.o \
 plot_whole_cell.o \
 dosg.o  \
@@ -19,14 +17,10 @@ local_dos1d.o  \
 local_dos.o  \
 plan_avg.o  \
 plot_io.o  \
-projwave.o  \
-punch_band.o  \
 punch_plot.o  \
 start_postproc.o  \
-do_postproc.o  \
 stm.o  \
 stop_pp.o  \
-voronoy.o  \
 work_function.o 
 
 MODULES = ../Modules/*.o
@@ -283,14 +277,14 @@ pp.x: $(PPOBJS) postproc.o
 projwfc.x:  $(PPOBJS) projwfc.o
 	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-chdens.x: $(PPOBJS) chmain.o
-	$(LD) -o chdens.x chmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+chdens.x: $(PPOBJS) chdens.o
+	$(LD) -o chdens.x chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-average.x: $(PPOBJS) avmain.o
-	$(LD) -o average.x avmain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+average.x: $(PPOBJS) average.o
+	$(LD) -o average.x average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-voronoy.x:  $(PPOBJS) voromain.o
-	$(LD) -o voronoy.x voromain.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+voronoy.x:  $(PPOBJS) voronoy.o
+	$(LD) -o voronoy.x voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 dos.x:  $(PPOBJS) dos.o
 	$(LD) -o dos.x dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)

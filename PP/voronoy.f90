@@ -7,12 +7,12 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine do_voronoy
+program voronoy
   !--------------------------------------------------------------------
   !
-  !  Calculates charges on atoms by dividing the space into Voronoy polyhe
-  !  A Voronoy polyhedron around a given atom is defined as the region
-  !  of space that is closer to that atom than to the others
+  !  Calculates charges on atoms by dividing the space into Voronoy
+  !  polyhedra. A Voronoy polyhedron around a given atom is defined
+  !  as the region of space that is closer to that atom than to the others
   !
   !  Note that this is a very rough way to associate charges to atoms
   !  and that it is well defined only if all atoms are of the same type!
@@ -24,6 +24,10 @@ subroutine do_voronoy
   use parameters
   use pwcom
   use fft_scalar, only: good_fft_dimension
+  use io_files, only: nd_nmbr
+#ifdef __PARA
+  use para, only: me
+#endif
   implicit none
   integer :: nr1big, nr2big, nr3big, nrx1big
   integer :: n, i, j, ng, na, plot_num
@@ -33,6 +37,13 @@ subroutine do_voronoy
   complex(kind=DP), allocatable :: rhobig (:)
   character(len=80) :: filename
   !
+  call start_postproc (nd_nmbr)
+#ifdef __PARA
+  !
+  ! Works for parallel machines but only for one processor !!!
+  !
+  if (me == 1) then
+#endif
   !
   print '(" Input file > ",$)'
   read (5, '(a)') filename
@@ -104,9 +115,11 @@ subroutine do_voronoy
   enddo
 
   write (6, '(" Check: total charge = ",f8.4)') total_charge
-  stop
-
-end subroutine do_voronoy
+#ifdef __PARA
+  end if
+#endif
+  call stop_pp
+end program voronoy
 !-----------------------------------------------------------------------
 
 subroutine get_fftindex (g, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &

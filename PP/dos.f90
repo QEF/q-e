@@ -5,18 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-program dos_e
-
-  character(len=3) :: nodenumber
-  call start_postproc (nodenumber)
-  call dos (nodenumber)
-
-  call stop_pp
-  stop
-end program dos_e
-!
 !--------------------------------------------------------------------
-subroutine dos (nodenumber)
+program dos
   !--------------------------------------------------------------------
   !
   ! Input (namelist &inputpp ... &end):                Default value
@@ -39,18 +29,26 @@ subroutine dos (nodenumber)
   !
   use pwcom
   use io_files, only: nd_nmbr, prefix, tmp_dir
-
-  character(len=3) :: nodenumber
+#ifdef __PARA
+  use para, only: me
+#endif
+  implicit none
   character(len=80) :: fildos
   character(len=256) :: outdir
   real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
        degauss1
-  integer :: nrot, ik, n, ndos, ngauss1
+  integer :: nrot, ik, n, ndos, ngauss1, ios
   namelist /inputpp/ outdir, prefix, fildos, degauss1,ngauss1,&
        Emin, Emax, DeltaE
   logical :: minus_q
   !
-  nd_nmbr = nodenumber
+  call start_postproc (nd_nmbr)
+#ifdef __PARA
+  !
+  ! Works for parallel machines but only for one processor !!!
+  !
+  if (me == 1) then
+#endif
   !
   !   set default values for variables in namelist
   !
@@ -130,5 +128,9 @@ subroutine dos (nodenumber)
   enddo
 
   close (unit = 4)
-  return
-end subroutine dos
+#ifdef __PARA
+  end if
+#endif
+  call stop_pp
+end program dos
+
