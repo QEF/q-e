@@ -74,7 +74,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   IF ( meta_ionode ) WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep
   !
-  CALL flush( stdout )
+  CALL flush( iunpath )
   !
   ! ... only the first cpu on each image needs the tauold vector
   !
