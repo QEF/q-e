@@ -8,6 +8,9 @@
      ntypx =10   npk =40000  lmax = 3
      nchix = 6  ndmx = 2000  nbrx =14 nqfx = 8
 
+     Only input k-points are used (inequivalent points not generated)
+
+
 
      bravais-lattice index     =            2
      lattice parameter (a_0)   =       7.5000  a.u.
@@ -83,7 +86,7 @@
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
 
-     nbndx  =     9  nbnd   =     8  natomwfc =     9  npwx   =     113
+     nbndx  =     8  nbnd   =     8  natomwfc =     9  npwx   =     113
      nelec  =    3.00 nkb   =     4  ngl    =      31
 
      The initial potential is read from file         al.pot

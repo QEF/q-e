@@ -66,7 +66,7 @@
 
      G cutoff =  189.7462  (   2733 G-vectors)     FFT grid: ( 20, 20, 20)
 
-     nbndx  =     8  nbnd   =     4  natomwfc =     8  npwx   =     350
+     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350
      nelec  =    8.00 nkb   =     8  ngl    =      65
 
      Initial potential from superposition of free atoms
