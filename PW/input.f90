@@ -47,7 +47,7 @@ SUBROUTINE iosys()
   USE char,          ONLY : title_ => title, &
                             crystal
   !
-  USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
+  USE cellmd,        ONLY : cmass, ttol, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
                             press_       => press, &
                             calc, lmovecell
@@ -201,8 +201,8 @@ SUBROUTINE iosys()
   !
   ! IONS namelist
   !
-  USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature, &
-                               tempw, delta_t, nraise, upscale,                &
+  USE input_parameters, ONLY : ion_dynamics, ion_positions, ion_temperature,   &
+                               tolp, tempw, delta_t, nraise, upscale,          &
                                potential_extrapolation,                        &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
@@ -253,14 +253,17 @@ SUBROUTINE iosys()
   !
   DO iiarg = 1, ( nargs - 1 )
      !
-     CALL getarg( iiarg, input_file )  
+     CALL getarg( iiarg, input_file )
+     !
      IF ( TRIM( input_file ) == '-input' .OR. &
           TRIM( input_file ) == '-inp'   .OR. &
           TRIM( input_file ) == '-in' ) THEN
         !
-        CALL getarg( ( iiarg + 1 ) , input_file )  
+        CALL getarg( ( iiarg + 1 ) , input_file )
+        !
         OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
                STATUS = 'OLD', IOSTAT = ierr )
+        !
         CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
                    & ' not found' , ierr )
         !
@@ -716,6 +719,7 @@ SUBROUTINE iosys()
      CONTINUE
   CASE ( 'rescaling' )
      temperature = tempw
+     ttol        = tolp
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown ion_temperature ' // &
                 & TRIM( ion_temperature ), 1 )

@@ -450,6 +450,13 @@ ion_temperature
 tempw          REAL ( default = 300.D0 )
                starting temperature (Kelvin) in MD runs 
 
+ttol           REAL ( default = 1.D-3 )
+               tolerance for velocity rescaling. Velocities are
+               not rescaled if the ratio of the run-averaged and
+               target temperature differs from unit less than ttol.
+               This keyword is used only in the case of variable cell
+               calculations.
+
 delta_t        REAL ( default = 1.D0 )
                delta_T = 1                 : nothing is done.
                delta_T /= 1 && delta_T > 0 : at each step the temperature is 
@@ -457,16 +464,13 @@ delta_t        REAL ( default = 1.D0 )
                                              done rescaling all the velocities.
                delta_T < 0                 : every 'nraise' steps the temperature
                                              is reduced by -delta_T
+               This keyword is NOT used in the case of variable cell
+               calculations.
 
 nraise         INTEGER (default = 100 )
                the temperature is reduced of -delta_T every 'nraise' steps.
-
-upscale        REAL ( default = 10.D0 )
-               max reduction factor for conv_thr during structural optimization
-               conv_thr is automatically reduced when the relaxation 
-               approaches convergence so that forces are still accurate,
-               but conv_thr will not be reduced to less that 
-               conv_thr / upscale
+               This keyword is NOT used in the case of variable cell
+               calculations.
 
 potential_extrapolation     
                CHARACTER
@@ -480,7 +484,19 @@ potential_extrapolation
                          extrapolate wave-functions with first-order formula
                          (default for calcualtion='md' and calcualtion='neb')
                'wfc2':   as above, with second order formula
-	       
+
+
+!
+! ... keywords used only in BFGS calculations
+!
+
+upscale        REAL ( default = 10.D0 )
+               max reduction factor for conv_thr during structural optimization
+               conv_thr is automatically reduced when the relaxation 
+               approaches convergence so that forces are still accurate,
+               but conv_thr will not be reduced to less that 
+               conv_thr / upscale
+
 lbfgs_ndim     INTEGER ( default = 1 )
                number of old forces and displacements vectors used in the
 	       linear scaling BFGS algorithm. When lbfgs_ndim = 1 the complete
@@ -516,7 +532,11 @@ w_1, w_2
                REAL ( w_1 = 1.D-5, w_2 = 0.2D0 )
 	       parameters used in line search based on the Wolfe conditions
 	       (bfgs only)
-	       
+
+!
+! ... keywords used only in NEB and SMD calculations
+!
+
 num_of_images  INTEGER ( default = 0 )
                number of points used to discrtize the path
 
