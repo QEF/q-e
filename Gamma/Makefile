@@ -9,24 +9,45 @@ PWOBJS = \
 ../PW/addusdens.o \
 ../PW/addusforce.o \
 ../PW/addusstress.o \
+../PW/add_vuspsi.o \
 ../PW/allocate_fft.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
+../PW/allocate_wfc.o \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/bachel.o \
 ../PW/bfgs.o \
+../PW/bp_bess.o \
+../PW/bp_calc_btq.o \
+../PW/bp_c_phase.o \
+../PW/bp_dbess.o \
+../PW/bp_qvan3.o \
+../PW/bp_radin.o \
+../PW/bp_strings.o \
+../PW/bp_ylm_q.o \
+../PW/bp_zgedi.o \
+../PW/bp_zgefa.o \
 ../PW/broadcast.o \
+../PW/c_bands.o \
+../PW/ccalbec.o \
+../PW/ccgdiagg.o \
+../PW/cdiaghg.o \
+../PW/cdiaghg.o \
 ../PW/cdiagh.o \
+../PW/cdiisg.o \
+../PW/cegterg.o \
+../PW/cft_3.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
-../PW/cft_3.o \
+../PW/cfts_3.o \
 ../PW/cft_sgi.o \
 ../PW/cft_sp.o \
-../PW/cfts_3.o \
-../PW/check.o \
+../PW/cgramg1.o \
 ../PW/checkallsym.o \
+../PW/check.o \
 ../PW/checksym.o \
+../PW/cinitcgg.o \
 ../PW/clean_pw.o \
 ../PW/compute_dip.o \
 ../PW/constrain.o \
@@ -34,15 +55,19 @@ PWOBJS = \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
-../PW/d_matrix.o \
 ../PW/data_structure.o \
 ../PW/date_and_tim.o \
 ../PW/davcio.o \
 ../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
 ../PW/diropn.o \
-../PW/divide.o \
 ../PW/divide_et_impera.o \
+../PW/divide.o \
+../PW/d_matrix.o \
+../PW/dndepsilon.o \
+../PW/dndtau.o \
+../PW/dprojdepsilon.o \
+../PW/dprojdtau.o \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dsum.o \
@@ -60,22 +85,28 @@ PWOBJS = \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
 ../PW/force_ew.o \
+../PW/force_hub.o \
 ../PW/force_lc.o \
 ../PW/forces.o \
-../PW/funct.o \
+../PW/force_us.o \
 ../PW/functionals.o \
-../PW/g_psi.o \
-../PW/g_psi_mod.o \
+../PW/funct.o \
 ../PW/gather.o \
+../PW/gen_at_dj.o \
+../PW/gen_at_dy.o \
 ../PW/gen_us_dj.o \
 ../PW/gen_us_dy.o \
 ../PW/ggen.o \
 ../PW/gk_sort.o \
+../PW/g_psi_mod.o \
+../PW/g_psi.o \
 ../PW/gradcorr.o \
 ../PW/gweights.o \
+../PW/h_1psi.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
+../PW/h_psi.o \
 ../PW/init_ns.o \
 ../PW/init_pool.o \
 ../PW/init_run.o \
@@ -85,9 +116,9 @@ PWOBJS = \
 ../PW/input.o \
 ../PW/interpolate.o \
 ../PW/invmat.o \
+../PW/ions.o \
 ../PW/io_pot.o \
 ../PW/io_routines.o \
-../PW/ions.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \
@@ -100,11 +131,12 @@ PWOBJS = \
 ../PW/mode_group.o \
 ../PW/move_ions.o \
 ../PW/multable.o \
-../PW/n_plane_waves.o \
 ../PW/neb_variables.o \
-../PW/new_ns.o \
 ../PW/newd.o \
+../PW/new_ns.o \
+../PW/n_plane_waves.o \
 ../PW/openfil.o \
+../PW/orthoatwfc.o \
 ../PW/output_tau.o \
 ../PW/para.o \
 ../PW/poolbcast.o \
@@ -117,56 +149,68 @@ PWOBJS = \
 ../PW/psymrho.o \
 ../PW/punch.o \
 ../PW/pwcom.o \
+../PW/pw_gemm.o \
 ../PW/qvan2.o \
 ../PW/random.o \
+../PW/rbecmod.o \
+../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
-../PW/read_ncpp.o \
-../PW/read_pseudo.o \
 ../PW/readin.o \
+../PW/read_ncpp.o \
 ../PW/readnewvan.o \
+../PW/read_pseudo.o \
 ../PW/readvan.o \
 ../PW/reduce.o \
+../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
+../PW/rotate_wfc_gamma.o \
+../PW/rotate_wfc.o \
 ../PW/ruotaijk.o \
-../PW/s_axis_to_ca.o \
+../PW/s_1psi.o \
+../PW/saveall.o \
 ../PW/save_in_cbands.o \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \
-../PW/saveall.o \
+../PW/s_axis_to_ca.o \
 ../PW/scale_h.o \
 ../PW/scatter.o \
 ../PW/scopy_t3e.o \
 ../PW/seqopn.o \
 ../PW/set_fft_dim.o \
+../PW/set_hubbard_l.o \
 ../PW/set_kplusq.o \
 ../PW/set_kup_and_kdw.o \
-../PW/set_rhoc.o \
-../PW/set_vrs.o \
 ../PW/setlocal.o \
 ../PW/setqf.o \
-../PW/setup.o \
+../PW/set_rhoc.o \
 ../PW/setupkpt.o \
+../PW/setup.o \
+../PW/set_vrs.o \
+../PW/sgama.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
-../PW/sgama.o \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
+../PW/s_psi.o \
 ../PW/startup.o \
 ../PW/stop_pw.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \
 ../PW/stres_har.o \
+../PW/stres_hub.o \
 ../PW/stres_knl.o \
 ../PW/stres_loc.o \
 ../PW/stress.o \
+../PW/stres_us.o \
 ../PW/struct_fact.o \
+../PW/sum_band.o \
 ../PW/sumkg.o \
 ../PW/sumkt.o \
 ../PW/summary.o \
@@ -183,14 +227,16 @@ PWOBJS = \
 ../PW/update_pot.o \
 ../PW/updathes.o \
 ../PW/usnldiag.o \
-../PW/v_of_rho.o \
 ../PW/vcsmd.o \
 ../PW/vcsubs.o \
 ../PW/vhpsi.o \
 ../PW/vloc_of_g.o \
+../PW/vloc_psi.o \
+../PW/v_of_rho.o \
 ../PW/vpack.o \
 ../PW/w0gauss.o \
 ../PW/w1gauss.o \
+../PW/wfcinit.o \
 ../PW/wgauss.o \
 ../PW/which_dft.o \
 ../PW/write_config_to_file.o \
@@ -203,24 +249,6 @@ MODULES = \
 ../PW/error_handler.o \
 ../PW/restart.o \
 ../PW/upf_to_internal.o
-
-GAMMA = \
-add_vuspsi.o \
-allocate_wfc.o \
-c_bands.o \
-fake.o \
-force_us.o \
-h_psi.o \
-pw_gemm.o \
-rbecmod.o \
-rdiaghg.o \
-regterg.o \
-rotate_wfc.o \
-s_psi.o \
-stres_us.o \
-sum_band.o \
-vloc_psi.o \
-wfcinit.o
 
 CGOBJS = \
 a_h.o \
@@ -256,13 +284,10 @@ solve_ph.o \
 writedyn.o \
 zvscal.o
 
-all : pwg.x phcg.x
+all : phcg.x
 
-pwg.x :  $(GAMMA) $(PWOBJS) pwscf.o
-	$(LD) -o pwg.x pwscf.o $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
-phcg.x : $(GAMMA) $(PWOBJS) $(CGOBJS)
-	$(LD) -o phcg.x $(CGOBJS) $(GAMMA) $(PWOBJS) $(MODULES) $(LDFLAGS)
+phcg.x : $(PWOBJS) $(CGOBJS)
+	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
 	- /bin/rm -f *.x *.o *.d *~ *.F90 *.mod work.pc
