@@ -47,11 +47,10 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   ! counters on directions
   ! pencils on the plane
   ! the planes to transform
-
 #ifndef __SX4 
 #ifndef __AIX
   complex(kind=DP) :: f (nrx1, nr2, nr3)
-  call errore('cfts_3','routine called by unsupported system', 1)
+  call errore('cfts_3','routine called by wrong architecture', 1)
 #endif
 #endif
 

@@ -199,6 +199,7 @@ end subroutine cft3s
 
 #else
 
+# define NOPENCILS
 # ifdef DEC
 #  ifdef DXML
 #   define NOPENCILS
