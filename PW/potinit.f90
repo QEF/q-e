@@ -63,7 +63,7 @@ subroutine potinit
   !     potential and rho files have been read from the restart file
   !
   if (startingpot=='file') then
-     if (imix.ge.0) then
+     if (imix.ge.0.and.lscf) then
         call io_pot ( -1, trim(prefix)//'.rho', rho, nspin)
         write (6, '(/5x,"The initial density is read from file ", &
                    &    a14)') trim(prefix)//'.rho'
