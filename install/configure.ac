@@ -46,6 +46,14 @@ ia64-*-linux-gnu )
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
 	;;
+x86_64-*-linux-gnu )
+	is_linux64=1
+	try_f90_parallel="mpif90"
+	try_f90="pgf90 f90 pgf77 f77 g77"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__LINUX64"
+	;;
 *-pc-linux-gnu )
 	is_linux=1
 	try_f90_parallel="mpif90"
@@ -101,7 +109,7 @@ f90=$F77
 f90_id=$f90 # this should be the compiler's brand name
 
 case "$build:$f90" in
-ia64-*-linux-gnu:* | *-pc-linux-gnu:* )
+ia64-*-linux-gnu:* | x86_64-*-linux-gnu:* | *-pc-linux-gnu:* )
 	# double-check compiler
 	# because on GNU/Linux systems they often have nonstandard names
 	echo $ECHO_N "checking version of $f90... $ECHO_C"
@@ -174,7 +182,7 @@ sparc-sun-*:* )
 esac
 
 case "$build:$f90" in
-*-pc-linux-gnu:mpif90 )
+*:mpif90 )
 	try_cc_parallel="mpicc"
 	try_f77_parallel="mpif77"
 	;;
@@ -212,7 +220,7 @@ cc=$CC
 cc_id=$cc # this should be the compiler's brand name
 
 case "$build:$cc" in
-ia64-*-linux-gnu:* | *-pc-linux-gnu:* )
+ia64-*-linux-gnu:* | x86_64-*-linux-gnu | *-pc-linux-gnu:* )
 	# double-check compiler
 	# because on GNU/Linux systems they often have nonstandard names
 	echo $ECHO_N "checking version of $cc... $ECHO_C"
@@ -245,6 +253,7 @@ case "$build:$cc_id:$f90_id" in
 	# list supported combinations here
 ia64-*-linux-gnu:icc:ifort )                      ;;
 ia64-*-linux-gnu:gcc:ifort )                      ;;
+x86_64-*-linux-gnu:pgcc:pgf90 )                   ;;
 *-pc-linux-gnu:icc:ifort | *-pc-linux-*:icc:ifc ) ;;
 *-pc-linux-gnu:gcc:ifort | *-pc-linux-*:gcc:ifc ) ;;
 *-pc-linux-gnu:pgcc:pgf90 )                       ;;
@@ -274,6 +283,14 @@ ia64-*-linux-gnu:ifort )
 	try_dflags="$try_dflags -D__INTEL"
 	pre_f_dflags="-fpp "
 	have_cpp=1
+	;;
+x86_64-*-linux-gnu:pgf* )
+	try_fflags="-fast -r8"
+	try_f90flags="\$(FFLAGS)"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	try_ldflags_static="-Bstatic"
+	try_dflags="$try_dflags -D__PGI"
 	;;
 *-pc-linux-gnu:ifort )
         try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
@@ -403,6 +420,11 @@ ia64-*-linux-gnu:icc )
 	try_cflags="-O3"
 	c_ldflags="-Vaxlib"
 	;;
+x86_64-*-linux-gnu:pgcc )
+	try_cflags="-fast"
+	c_ldflags=""
+	try_cpp="cpp"
+	;;
 *-pc-linux-gnu:icc )
 	try_cflags="-O3"
 	c_ldflags="-Vaxlib"
@@ -507,6 +529,12 @@ then
 			     /opt/intel/mkl70/lib/64
 			     /opt/intel/mkl/mkl61/lib/64 /opt/intel/mkl/lib/64
 			     /opt/intel/mkl61/lib/64"
+	elif test $is_linux64 && test $is_pgf
+	then
+		try_libdirs="/usr/local/lib
+			     /usr/local/pgi/linux86/lib
+			     /opt/pgi/linux86/5.1/lib
+			     /cineca/lib /cineca/prod/pgi/lib"
 	elif test $is_linux && test $is_ifort
 	then
 		try_libdirs="/usr/local/lib
