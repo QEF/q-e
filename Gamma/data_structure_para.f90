@@ -167,7 +167,7 @@ subroutine data_structure_para
        tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, ( me_pool + 1 ), &
        nproc_pool, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngpw, st, stw)
   CALL fft_dlay_set( dffts, &
-       tk, nct, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, ( me_pool + 1 ), &
+       tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, ( me_pool + 1 ), &
        nproc_pool, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngpw, sts, stw)
 
   IF( .NOT. tk ) THEN
