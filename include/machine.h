@@ -77,6 +77,20 @@
 #  define DGEMTX   sgemtx
 #  define DGEMX    sgemx
 
+#  define DLAMCH   slamch
+#  define DLAPY3   slapy3
+#  define DZNRM2   scnrm2
+#  define ZLADIV   cladiv
+#  define DLAE2    slae2
+#  define DLAEV2   slaev2
+#  define DLANST   slanst
+#  define DLAPY2   slapy2
+#  define DLARTG   slartg
+#  define DLASCL   slascl
+#  define DLASRT   slasrt
+#  define ZLASET   claset
+#  define ZLASR    clasr
+
 
 #else
 
