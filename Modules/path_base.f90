@@ -345,13 +345,11 @@ MODULE path_base
           !
           inter_image_dist = path_length / DBLE( num_of_images - 1  )
           !
-!         FORALL( i = 1: ( input_images - 1 ) )
-          do i = 1, input_images - 1
+          DO i = 1, input_images - 1
              !
              d_R(:,i) = d_R(:,i) / image_spacing(i)
              !
-          end do
-!          END FORALL   
+          END DO
           !
           pos_(:,1) = pos(1:dim,1)
           !
@@ -470,7 +468,7 @@ MODULE path_base
          !
          ! ... tangent to the path ( normalised )
          !
-         tangent(:,i) = path_tangent( i )
+         tangent(:,i) = neb_tangent( i )
          !
          tangent(:,i) = tangent(:,i) / norm( tangent(:,i) )
          !
@@ -517,6 +515,78 @@ MODULE path_base
       !
     END SUBROUTINE neb_gradient
     !
+    !-----------------------------------------------------------------------
+    FUNCTION neb_tangent( index )
+      !-----------------------------------------------------------------------
+      !
+      USE supercell,      ONLY : pbc
+      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images,    &
+                                 pes, path_length, path_length_av, ft_pos, &
+                                 ft_pos_av, pos_av_in, pos_av_fin, Nft,    &
+                                 fixed_tan
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: index
+      REAL (KIND=DP)      :: neb_tangent(dim)
+      !
+      ! ... local variables
+      !
+      INTEGER        :: n
+      REAL (KIND=DP) :: x, pi_n
+      REAL (KIND=DP) :: V_previous, V_actual, V_next
+      REAL (KIND=DP) :: abs_next, abs_previous
+      REAL (KIND=DP) :: delta_V_max, delta_V_min
+      !
+      !
+      ! ... NEB definition of the tangent
+      !
+      V_previous = pes( index - 1 )
+      V_actual   = pes( index )
+      V_next     = pes( index + 1 )
+      !
+      IF ( ( V_next > V_actual ) .AND. ( V_actual > V_previous ) ) THEN
+         !
+         neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,index) )
+         !
+      ELSE IF ( ( V_next < V_actual ) .AND. ( V_actual < V_previous ) ) THEN
+         !
+         neb_tangent = pbc( pos(:,index) - pos(:,( index - 1 )) )
+         !
+      ELSE
+         !
+         abs_next     = ABS( V_next - V_actual ) 
+         abs_previous = ABS( V_previous - V_actual ) 
+         !
+         delta_V_max = MAX( abs_next , abs_previous ) 
+         delta_V_min = MIN( abs_next , abs_previous )
+         !
+         IF ( V_next > V_previous ) THEN
+            !
+            neb_tangent = &
+                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_max + & 
+                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_min
+            !
+         ELSE IF ( V_next < V_previous ) THEN
+            !
+            neb_tangent = &
+                   pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_min + &
+                   pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_max
+            !
+         ELSE
+            !
+            neb_tangent = pbc( pos(:,( index + 1 )) - pos(:,( index - 1 )) ) 
+            !
+         END IF
+         !
+      END IF
+      !
+      RETURN
+      !
+    END FUNCTION neb_tangent
+    !
     ! ... smd specific routines
     !
     !-----------------------------------------------------------------------
@@ -528,7 +598,7 @@ MODULE path_base
                                    path_thr, Nft, ft_coeff, pos, pes, &
                                    use_multistep, grad_pes, err_max,  &
                                    frozen, vel, vel_zeroed
-                                   
+      USE io_global,        ONLY : meta_ionode
       !
       IMPLICIT NONE
       !
@@ -551,9 +621,10 @@ MODULE path_base
          !
          ! ... initialisation
          !
-         WRITE( UNIT = iunpath, &
-                FMT = '(5X,"initial number of images = ",I3,/)' ) &
-             init_num_of_images
+         IF ( meta_ionode ) &
+            WRITE( UNIT = iunpath, &
+                 & FMT = '(5X,"initial number of images = ",I3,/)' ) &
+                init_num_of_images
          !
          CALL redispose_last_image( init_num_of_images )
          !
@@ -567,9 +638,10 @@ MODULE path_base
          !
          IF ( new_num_of_images > num_of_images ) THEN
             !
-            WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"new number of images = ",I3,/)' ) &
-                new_num_of_images
+            IF ( meta_ionode ) &
+               WRITE( UNIT = iunpath, &
+                    & FMT = '(5X,"new number of images = ",I3,/)' ) &
+                   new_num_of_images
             !
             CALL redispose_last_image( new_num_of_images )
             !
@@ -940,6 +1012,7 @@ MODULE path_base
       !
       USE path_variables, ONLY : num_of_images, grad, llangevin, &
                                  first_last_opt, path_thr, error, frozen
+      USE mp_global,      ONLY : nimage
       !
       IMPLICIT NONE
       !
@@ -950,8 +1023,8 @@ MODULE path_base
       ! ... local variables
       !
       INTEGER        :: i, n
-      INTEGER        :: N_in, N_fin
-      REAL (KIND=DP) :: err_max
+      INTEGER        :: N_in, N_fin, free_me, num_of_scf_images
+      REAL (KIND=DP) :: err_max, val      
       !
       !
       IF ( first_last_opt ) THEN
@@ -989,6 +1062,29 @@ MODULE path_base
          !
       END IF
       !
+      IF ( nimage > 1 ) THEN
+         !
+         ! ... in the case of image-parallelisation the number of images to
+         ! ... be optimised must be larger than nimage
+         !
+         IF ( nimage > ( N_fin - N_in ) ) &
+            CALL errore( 'search_MEP', &
+                       & 'nimage is larger than the number of images ', 1 )
+         !
+         find_scf_images: DO
+            !
+            num_of_scf_images = COUNT( .NOT. frozen )
+            !
+            IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
+            !
+            free_me = MAXLOC( error, 1, frozen(N_in:N_fin) )
+            !
+            frozen(free_me) = .FALSE.
+            !
+         END DO find_scf_images
+         !
+      END IF
+      !
 #endif
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
@@ -996,122 +1092,6 @@ MODULE path_base
       RETURN
       !
     END SUBROUTINE compute_error
-    !
-    !-----------------------------------------------------------------------
-    FUNCTION path_tangent( index )
-      !-----------------------------------------------------------------------
-      !
-      USE supercell,      ONLY : pbc
-      USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images,    &
-                                 pes, path_length, path_length_av, ft_pos, &
-                                 ft_pos_av, pos_av_in, pos_av_fin, Nft,    &
-                                 fixed_tan
-      !
-      IMPLICIT NONE
-      !
-      ! ... I/O variables
-      !
-      INTEGER, INTENT(IN) :: index
-      REAL (KIND=DP)      :: path_tangent(dim)
-      !
-      ! ... local variables
-      !
-      INTEGER        :: n
-      REAL (KIND=DP) :: x, pi_n
-      REAL (KIND=DP) :: V_previous, V_actual, V_next
-      REAL (KIND=DP) :: abs_next, abs_previous
-      REAL (KIND=DP) :: delta_V_max, delta_V_min
-      !
-      !
-      IF ( lneb ) THEN
-         !
-         ! ... NEB definition of the tangent
-         !
-         V_previous = pes( index - 1 )
-         V_actual   = pes( index )
-         V_next     = pes( index + 1 )
-         !
-         IF ( ( V_next > V_actual ) .AND. ( V_actual > V_previous ) ) THEN
-            !
-            path_tangent = pbc( pos(:,( index + 1 )) - pos(:,index) )
-            !
-         ELSE IF ( ( V_next < V_actual ) .AND. ( V_actual < V_previous ) ) THEN
-            !
-            path_tangent = pbc( pos(:,index) - pos(:,( index - 1 )) )
-            !
-         ELSE
-            !
-            abs_next     = ABS( V_next - V_actual ) 
-            abs_previous = ABS( V_previous - V_actual ) 
-            !
-            delta_V_max = MAX( abs_next , abs_previous ) 
-            delta_V_min = MIN( abs_next , abs_previous )
-            !
-            IF ( V_next > V_previous ) THEN
-               !
-               path_tangent = &
-                    pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_max + & 
-                    pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_min
-               !
-            ELSE IF ( V_next < V_previous ) THEN
-               !
-               path_tangent = &
-                    pbc( pos(:,( index + 1 )) - pos(:,index) ) * delta_V_min + &
-                    pbc( pos(:,index) - pos(:,( index - 1 )) ) * delta_V_max
-               !
-            ELSE
-               !
-               path_tangent = &
-                    pbc( pos(:,( index + 1 )) - pos(:,( index - 1 )) ) 
-               !
-            END IF
-            !
-         END IF 
-         !
-      ELSE IF ( lsmd ) THEN
-         !
-         ! ... tangent from fourier interpolation
-         !
-         x = DBLE( index - 1 ) / DBLE( Nft )
-         !
-         IF ( fixed_tan ) THEN
-            !
-            path_tangent(:) = ( pos_av_fin(:) - pos_av_in(:) )
-            !
-            DO n = 1, num_of_modes
-               !
-               pi_n = pi * DBLE( n )
-               !
-               path_tangent(:) = path_tangent(:) + &
-                                 ft_pos_av(:,n) * pi_n * COS( pi_n * x )
-               !
-            END DO
-            !
-            path_tangent(:) = path_tangent(:) / path_length_av
-            !
-         ELSE
-            !
-            path_tangent(:) = ( pos(:,num_of_images) - pos(:,1) )
-            !
-            DO n = 1, num_of_modes
-               !
-               pi_n = pi * DBLE( n )
-               !
-               path_tangent(:) = path_tangent(:) + &
-                                 ft_pos(:,n) * pi_n * COS( pi_n * x )
-               !
-            END DO
-            !
-            path_tangent(:) = path_tangent(:) / path_length
-            !
-         END IF
-         !
-      END IF
-      !
-      RETURN
-      !
-    END FUNCTION path_tangent
     !
     !-----------------------------------------------------------------------
     FUNCTION gaussian_vect()
@@ -1165,7 +1145,6 @@ MODULE path_base
                                  istep_path, pes, first_last_opt, &
                                  Emin , Emax, Emax_index, frozen, &
                                  error
-      USE mp_global,      ONLY : nimage
       !
       IMPLICIT NONE
       !
@@ -1175,23 +1154,13 @@ MODULE path_base
       !
       ! ... local variables
       !
-      INTEGER        :: N_in, N_fin, i, free_me, num_of_scf_images
-      REAL (KIND=DP) :: val
+      INTEGER        :: N_in, N_fin, i
       !
       !
-      IF ( istep_path == 0 ) THEN
+      IF ( istep_path == 0 .OR. first_last_opt ) THEN
          !
          N_in  = 1
          N_fin = num_of_images
-         !
-      ELSE IF ( first_last_opt ) THEN
-         !
-         N_in  = 1
-         N_fin = num_of_images
-         !
-         IF ( frozen(1) ) N_in = 2
-         !
-         IF ( frozen(num_of_images) ) N_fin = ( num_of_images - 1 )
          !
       ELSE
          !
@@ -1201,25 +1170,6 @@ MODULE path_base
       END IF
       !
       IF ( suspended_image /= 0 ) N_in = suspended_image
-      !
-      IF ( nimage > 1 ) THEN
-         !
-         ! ... in the case of image-parallelisation the number of images to
-         ! ... be optimised must be larger than nimage
-         !
-         find_scf_images: DO
-            !
-            num_of_scf_images = COUNT( .NOT. frozen )
-            !
-            IF ( num_of_scf_images > nimage ) EXIT find_scf_images
-            !
-            free_me = MAXLOC( error, 1, frozen )
-            !
-            frozen(free_me) = .FALSE.
-            !
-         END DO find_scf_images
-         !
-      END IF
       !
       CALL compute_scf( N_in, N_fin, stat )
       !
@@ -1513,7 +1463,7 @@ MODULE path_base
       !
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE control_flags,    ONLY : lneb, lsmd
-      USE io_global,        ONLY : ionode
+      USE io_global,        ONLY : meta_ionode
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, suspended_image, &
                                    num_of_images, llangevin, lmol_dyn
@@ -1537,16 +1487,20 @@ MODULE path_base
       !
       IF ( exit_condition )  THEN
          !
-         WRITE( UNIT = iunpath, FMT = final_fmt )
-         !
-         IF ( ionode .AND. lneb ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(/,5X,"neb: convergence achieved in ",I3, &
-                          &     " iterations" )' ) istep_path
-         IF ( ionode .AND. lsmd ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(/,5X,"smd: convergence achieved in ",I3, &
-                          &     " iterations" )' ) istep_path
+         IF ( meta_ionode ) THEN
+            !
+            WRITE( UNIT = iunpath, FMT = final_fmt )
+            !
+            IF ( lneb ) &
+               WRITE( UNIT = iunpath, &
+                      FMT = '(/,5X,"neb: convergence achieved in ",I3, &
+                             &     " iterations" )' ) istep_path
+            IF ( lsmd ) &
+               WRITE( UNIT = iunpath, &
+                      FMT = '(/,5X,"smd: convergence achieved in ",I3, &
+                             &     " iterations" )' ) istep_path
+            !
+         END IF
          !
          suspended_image = 0
          !
@@ -1563,16 +1517,20 @@ MODULE path_base
       !
       IF ( istep_path >= nstep_path ) THEN
          !
-         WRITE( UNIT = iunpath, FMT = final_fmt )
-         !         
-         IF ( ionode .AND. lneb ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(/,5X,"neb: reached the maximum number of ", &
-                          &     "steps")' )
-         IF ( ionode .AND. lsmd ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(/,5X,"smd: reached the maximum number of ", &
-                          &     "steps")' )
+         IF ( meta_ionode ) THEN
+            !
+            WRITE( UNIT = iunpath, FMT = final_fmt )
+            !         
+            IF ( lneb ) &
+               WRITE( UNIT = iunpath, &
+                      FMT = '(/,5X,"neb: reached the maximum number of ", &
+                             &     "steps")' )
+            IF ( lsmd ) &
+               WRITE( UNIT = iunpath, &
+                      FMT = '(/,5X,"smd: reached the maximum number of ", &
+                             &     "steps")' )
+            !
+         END IF
          !
          suspended_image = 0
          !

@@ -58,6 +58,9 @@ MODULE path_variables
        lmol_dyn    = .FALSE.,    &! .TRUE. if opt_scheme = "mol-dyn"
        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
+  LOGICAL :: &
+       tune_load_balance          ! if .TRUE. the load balance for image
+                                  ! parallelisation is tuned at runtime
   INTEGER :: &                   
        istep_path,               &! iteration in the optimization procedure
        nstep_path,               &! maximum number of iterations

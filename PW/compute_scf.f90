@@ -40,6 +40,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                dim, suspended_image, istep_path,  &
                                first_last_opt, frozen, write_save
   USE parser,           ONLY : int_to_char
+  USE path_variables,   ONLY : tune_load_balance
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root
@@ -61,14 +62,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
-  ! ... end of local variables definition
-  !
-  ! ... external functions definition
-  !
   REAL (KIND=DP), EXTERNAL :: get_clock
   !
-  ! ... end of external functions definition
   !
+  tune_load_balance = .FALSE.
   !
   istep = istep_path + 1
   istat = 0
@@ -101,7 +98,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( ( nimage > 1 ) .AND. meta_ionode ) CALL new_image_init()
+  IF ( meta_ionode ) CALL new_image_init()
   !
   image = N_in + my_image_id
   !
@@ -130,7 +127,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !    
      END IF
      !
-     ! ... self-consistency ( for non-frozen images only, in neb case )
+     ! ... self-consistency ( for non-frozen images only )
      !
      IF ( .NOT. frozen(image) ) THEN
         !
@@ -384,11 +381,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        ! ... this subroutine initializes the file needed for the 
        ! ... parallelization among images
        !
-       USE io_files,  ONLY : iunnewimage
-       USE mp_global, ONLY : nimage
+       USE io_files,       ONLY : iunnewimage
+       USE path_variables, ONLY : tune_load_balance
        !
        IMPLICIT NONE       
        !
+       IF ( nimage == 1 .OR. .NOT. tune_load_balance ) RETURN
        !
        OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
            & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
@@ -409,13 +407,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
        ! ... other jobs try to read/write on file "prefix.newimage" 
        !
-       USE io_files,  ONLY : iunnewimage, iunblock
-       USE io_global, ONLY : ionode
+       USE io_files,       ONLY : iunnewimage, iunblock
+       USE io_global,      ONLY : ionode
+       USE path_variables, ONLY : tune_load_balance
        !
        IMPLICIT NONE
        !
        INTEGER, INTENT(INOUT) :: image
        INTEGER                :: ioerr
+       CHARACTER (LEN=256)    :: filename
        LOGICAL                :: opened, exists
        !
        !
@@ -423,38 +423,48 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
        !
        IF ( nimage > 1 ) THEN
           !
-          open_loop: DO
-             !          
-             OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
-                 & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
+          IF ( tune_load_balance ) THEN
              !
-             IF ( ioerr > 0 ) CYCLE open_loop
+             filename = TRIM( tmp_dir_saved ) // TRIM( prefix ) // '.BLOCK'
              !
-             INQUIRE( UNIT = iunnewimage, OPENED = opened )
+             open_loop: DO
+                !          
+                OPEN( UNIT = iunblock, FILE = TRIM( filename ), &
+                    & IOSTAT = ioerr, STATUS = 'NEW' )
+                !
+                IF ( ioerr > 0 ) CYCLE open_loop
+                !
+                INQUIRE( UNIT = iunnewimage, OPENED = opened )
+                !
+                IF ( .NOT. opened ) THEN
+                   !
+                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
+                   !
+                   READ( iunnewimage, * ) image
+                   !
+                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
+                   !
+                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
+                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
+                   !
+                   WRITE( iunnewimage, * ) image + 1
+                   ! 
+                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
+                   !
+                   EXIT open_loop
+                   !
+                END IF
+                !
+             END DO open_loop
              !
-             IF ( .NOT. opened ) THEN
-                !
-                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
-                !
-                READ( iunnewimage, * ) image
-                !
-                CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                !
-                OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                    & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                !
-                WRITE( iunnewimage, * ) image + 1
-                ! 
-                CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                !
-                EXIT open_loop
-                !
-             END IF
+             CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
              !
-          END DO open_loop
-          !
-          CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+          ELSE
+             !
+             image = image + nimage
+             !
+          END IF
           !
        ELSE
           !
