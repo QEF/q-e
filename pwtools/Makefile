@@ -4,15 +4,16 @@
 include ../make.sys
 include ../make.rules
 #
-PWOBJS = ../PW/error.o ../PW/wsweight.o\
+PWOBJS = ../PW/random.o ../PW/error.o ../PW/wsweight.o\
          ../PW/cryst_to_car.o ../PW/cubicsym.o ../PW/hexsym.o \
          ../PW/kpoint_grid.o ../PW/sgama.o ../PW/sgam_at.o  \
          ../PW/sgam_ph.o ../PW/coset.o ../PW/multable.o \
          ../PW/smallg_q.o ../PW/dsum.o ../PW/trnvecc.o ../PW/invmat.o \
-         ../PW/checksym.o ../PW/eqvect.o  \
+         ../PW/checksym.o ../PW/eqvect.o  ../PW/cryst_to_car.o \
          ../PW/irrek.o ../PW/mode_group.o \
          ../PW/cft_3.o ../PW/error_handler.o
-MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o
+MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o \
+          ../Modules/constants.o
 
 #
 # Targets
@@ -39,18 +40,17 @@ fqha.x:  fqha.o
 	$(LD) -o fqha.x fqha.o  $(LDFLAGS)
 
 ev.x:	ev.o
-	$(LD) -o ev.x ev.o ../PW/random.o ../PW/error.o 
+	$(LD) -o ev.x ev.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 kpoints.x: kpoints.o
 	$(LD) -o kpoints.x kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 pwi2xsf: pwi2xsf.o pwi2xsflib.o
-	$(LD) -o pwi2xsf pwi2xsf.o pwi2xsflib.o \
-../PW/cryst_to_car.o ../PW/error.o $(LDFLAGS)
+	$(LD) -o pwi2xsf pwi2xsf.o pwi2xsflib.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 pwi2xsf_new: pwi2xsf_new.o pwi2xsflib.o
 	$(LD) -o pwi2xsf_new pwi2xsf_new.o pwi2xsflib.o \
-../PW/cryst_to_car.o  ../PW/error.o $(LDFLAGS)
+        $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean_:
 	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc
