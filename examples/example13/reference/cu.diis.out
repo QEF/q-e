@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.2.0    starts ...
-     Today is  3Feb2004 at 12:11:12 
+     Program PWSCF     v.2.1    starts ...
+     Today is  2Sep2004 at 12: 6:41 
 
      non-colinear magnetization allowed
 
@@ -43,7 +43,7 @@
                 l(2) =   2
                 l(3) =   1
      Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
-                                                             0.000   0.000
+                                                       0.000   0.000
 
      atomic species   valence    mass     pseudopotential
         Cu            11.00    63.55000     Cu( 1.00)
@@ -162,7 +162,6 @@
      G cutoff =  344.1848  (   6735 G-vectors)     FFT grid: ( 27, 27, 27)
      G cutoff =  114.7283  (   1243 G-vectors)  smooth grid: ( 15, 15, 15)
  
-     threshold for starting DIIS:       0.0010
      reduced basis size:     3
 
      nbndx  =    18  nbnd   =    18  natomwfc =    12  npwx   =     169
@@ -180,969 +179,3350 @@
  ==============================================================================
      Starting wfc are atomic +   6 random wfc
 
-     total cpu time spent up to now is      8.27 secs
+     total cpu time spent up to now is      5.79 secs
 
      iteration #  1     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-      use conjugate-gradient method until ethr < 1.00E-03
-     ethr =  1.00E-02,  avg # of iterations =  5.0
+ diis_iter=   2.27777777777778     
+ diis_iter=   1.84876543209877     
+ diis_iter=   1.49159807956104     
+ diis_iter=   1.91619989330895     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.99534443851716     
+ diis_iter=   2.88863024658429     
+ diis_iter=   2.16047945814357     
+ diis_iter=   1.73113774767464     
+ diis_iter=   1.81839654153748     
+ diis_iter=   3.87879980786319     
+ diis_iter=   3.04882221154796     
+ diis_iter=   2.05826790064155     
+ diis_iter=   2.00323710559120     
+ diis_iter=   1.77795761697729     
+ diis_iter=   1.48766431205429     
+ diis_iter=   2.41598135066968     
+ diis_iter=   1.96755451948165     
+ diis_iter=   1.55375302886009     
+ diis_iter=   1.97520850160334     
+ diis_iter=   2.33195602786685     
+ diis_iter=   2.62955311265927     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.14608628403663     
+ diis_iter=   2.95256034911315     
+ diis_iter=   1.83069779717295     
+ diis_iter=   1.87948321095405     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.99330462283078     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.33296136793504     
+ diis_iter=   2.24072007599639     
+ diis_iter=   2.23559555977758     
+ diis_iter=   2.67975530887653     
+ diis_iter=   2.25998640604870     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.12555480033604     
+ diis_iter=   2.95141971112978     
+ diis_iter=   2.77507887284054     
+ diis_iter=   2.65417104849114     
+ diis_iter=   1.92523172491617     
+ diis_iter=   2.16251287360645     
+ diis_iter=   2.00902849297814     
+ diis_iter=   2.33383491627656     
+ diis_iter=   2.07410193979314     
+ diis_iter=   2.11522788554406     
+ diis_iter=   1.89529043808578     
+ diis_iter=   1.88307169100477     
+ diis_iter=   2.10461509394471     
+ diis_iter=   2.00581194966359     
+ diis_iter=   2.77810066387020     
+ diis_iter=   2.93211670354834     
+ diis_iter=   3.27400648353046     
+ diis_iter=   3.12633369352947     
+ diis_iter=   3.22924076075164     
+ diis_iter=   3.40162448670842     
+ diis_iter=   1.52231247148380     
+ diis_iter=   1.75123958174910     
+ diis_iter=   1.87506886565273     
+ diis_iter=   1.93750382586960     
+ diis_iter=   1.66319465699276     
+ diis_iter=   2.64795525872182     
+ diis_iter=   1.98044195881788     
+ diis_iter=   2.16558010882322     
+ diis_iter=   1.95364333937907     
+ diis_iter=   2.10853574107661     
+ diis_iter=   2.28380754117092     
+ diis_iter=   2.18243375228727     
+ diis_iter=   2.51013520846040     
+ diis_iter=   2.19500751158113     
+ diis_iter=   2.89972263953228     
+ diis_iter=   2.66109570219624     
+ diis_iter=   2.03672753901090     
+ diis_iter=   2.05759597438949     
+ diis_iter=   2.28097755413275     
+ diis_iter=   1.57116541967404     
+ diis_iter=   2.64284252331522     
+ diis_iter=   2.64682458462862     
+ diis_iter=   2.86926803247937     
+ diis_iter=   2.15940377958219     
+ diis_iter=   3.00885576553234     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.16715865364069     
+ diis_iter=   2.28706436964670     
+ diis_iter=   1.90483690942482     
+ diis_iter=   1.55026871719027     
+ diis_iter=   1.64168159539946     
+ diis_iter=   1.70231564418886     
+ diis_iter=   1.98346198023271     
+ diis_iter=   1.88797011001293     
+ diis_iter=   2.60488722833405     
+ diis_iter=   2.47804929046300     
+ diis_iter=   2.35989162724794     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.0199939792916     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.33444410996064     
+ diis_iter=   2.24080245055337     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.0133779139196     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.33407655077331     
+ diis_iter=   2.29633758615407     
+ diis_iter=   2.12757431034189     
+ diis_iter=   1.95153190613011     
+ diis_iter=   2.38619621700723     
+ diis_iter=   1.96589978983373     
+ diis_iter=   2.38699443276854     
+ diis_iter=   2.29927746848714     
+ diis_iter=   2.46107097047151     
+ diis_iter=   2.13672616502619     
+ diis_iter=   2.22981812027923     
+ diis_iter=   2.17943434001551     
+ diis_iter=   2.06552413000086     
+ diis_iter=   2.22586245166671     
+ diis_iter=   2.06810346953704     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.94822797052984     
+ diis_iter=   2.66379044280721     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.14798835793373     
+ diis_iter=   3.34155490877410     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.01897527270967     
+ diis_iter=   2.94549862626165     
+ diis_iter=   2.44141659034787     
+     ethr =  1.00E-02,  avg # of iterations =  3.5
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.341769
-     magnetization :          1.242512    0.000000    0.000000
-     magnetization/charge:    0.133006    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     1.242512   90.000000    0.000000
+     charge :     9.353400
+     magnetization :          1.429531    0.000000    0.000000
+     magnetization/charge:    0.152835    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     1.429531   90.000000    0.000000
 
  ==============================================================================
 
-     total energy              =   -87.32283801 ryd
-     estimated scf accuracy    <     5.35051161 ryd
+     total energy              =   -87.76975769 ryd
+     estimated scf accuracy    <     4.93597399 ryd
 
-     total magnetization     =  1.18083312  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     1.34 Bohr mag/cell
+     total magnetization     =  1.38830597  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     3.24 Bohr mag/cell
 
-     total cpu time spent up to now is     33.02 secs
+     total cpu time spent up to now is     27.49 secs
 
      iteration #  2     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-      use conjugate-gradient method until ethr < 1.00E-03
-     ethr =  1.00E-02,  avg # of iterations =  3.3
+ diis_iter=   3.33333333333333     
+ diis_iter=   3.29629629629630     
+ diis_iter=   2.84979423868313     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.54721079103795     
+ diis_iter=   3.08595615505766     
+ diis_iter=   2.61588645305876     
+ diis_iter=   3.47866035850326     
+ diis_iter=   2.30437001991685     
+ diis_iter=   2.23913166777316     
+ diis_iter=   1.51328509265406     
+ diis_iter=   2.75073806070300     
+ diis_iter=   2.43059655892794     
+ diis_iter=   3.02392203105155     
+ diis_iter=   2.66799566839175     
+ diis_iter=   2.20377753713288     
+ diis_iter=   2.45576541872960     
+ diis_iter=   2.74754252326276     
+ diis_iter=   2.54153014018126     
+ diis_iter=   2.86341834112118     
+ diis_iter=   1.93685657450673     
+ diis_iter=   2.38538092080593     
+ diis_iter=   3.02141005115588     
+ diis_iter=   2.55674500284199     
+ diis_iter=   2.25315250015789     
+ diis_iter=   1.62517513889766     
+ diis_iter=   2.86806528549431     
+ diis_iter=   2.65933696030524     
+ diis_iter=   2.92551872001696     
+ diis_iter=   3.10697326222316     
+ diis_iter=   2.56149851456795     
+ diis_iter=   3.14230547303155     
+ diis_iter=   3.06346141516842     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.55908118973158     
+ diis_iter=   3.47550451054064     
+ diis_iter=   3.19308358391892     
+ diis_iter=   3.17739353243994     
+ diis_iter=   2.17652186291333     
+ diis_iter=   2.56536232571741     
+ diis_iter=   2.86474235142874     
+ diis_iter=   2.49248568619049     
+ diis_iter=   3.30513809367725     
+ diis_iter=   3.23917433853762     
+ diis_iter=   1.56884301880765     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.64271350104487     
+ diis_iter=   2.59126186116916     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.64395899228718     
+ diis_iter=   3.09133105512707     
+ diis_iter=   1.72729616972928     
+ diis_iter=   3.37373867609607     
+ diis_iter=   2.96520770422756     
+ diis_iter=   2.72028931690153     
+ diis_iter=   2.81779385093897     
+ diis_iter=   2.54543299171883     
+ diis_iter=   3.30807961065105     
+ diis_iter=   3.12822664503617     
+ diis_iter=   2.84045703583534     
+ diis_iter=   2.88002539087974     
+ diis_iter=   2.21555696615999     
+ diis_iter=   2.28975316478667     
+ diis_iter=   2.34943073137704     
+ diis_iter=   1.79719059618761     
+ diis_iter=   2.71095503312153     
+ diis_iter=   2.42838639072897     
+ diis_iter=   1.91268813281828     
+ diis_iter=   3.16181600737879     
+ diis_iter=   3.39787866707660     
+ diis_iter=   3.41099325928203     
+ diis_iter=   2.52283295884900     
+ diis_iter=   2.58460183104717     
+ diis_iter=   3.14358899061373     
+ diis_iter=   2.56353272170076     
+ diis_iter=   3.14241848453893     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.61902324914105     
+ diis_iter=   2.58994573606339     
+ diis_iter=   3.31055254089241     
+ diis_iter=   3.46169736338291     
+ diis_iter=   2.58120540907683     
+ diis_iter=   2.58784474494871     
+ diis_iter=   2.64376915249715     
+ diis_iter=   2.48020939736095     
+ diis_iter=   2.69334496652005     
+ diis_iter=   1.98296360925111     
+ diis_iter=   2.44349797829173     
+ diis_iter=   1.69130544323843     
+ diis_iter=   1.98285030240214     
+ diis_iter=   2.61015835013345     
+ diis_iter=   1.75611990834075     
+ diis_iter=   1.70867332824115     
+ diis_iter=   2.31714851823562     
+ diis_iter=   2.73984158434642     
+ diis_iter=   2.87443564357480     
+ diis_iter=   2.32635753575416     
+ diis_iter=   2.74035319643079     
+ diis_iter=   2.98557517757949     
+ diis_iter=   2.88808750986553     
+ diis_iter=   3.16044930610364     
+ diis_iter=   2.23113607256131     
+ diis_iter=   2.79061867069785     
+ diis_iter=   2.15503437059433     
+ diis_iter=   2.61972413169968     
+ diis_iter=   2.36776245176109     
+ diis_iter=   3.24265346954228     
+ diis_iter=   3.84681408164124     
+ diis_iter=   3.49148967120229     
+ diis_iter=   2.74952720395568     
+     ethr =  1.00E-02,  avg # of iterations =  3.2
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :    10.128672
-     magnetization :          0.160236    0.000000    0.000000
-     magnetization/charge:    0.015820    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.160236   90.000000    0.000000
+     charge :    10.132560
+     magnetization :          0.142171    0.000000    0.000000
+     magnetization/charge:    0.014031    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.142171   90.000000    0.000000
 
  ==============================================================================
 
-     total energy              =   -87.56378162 ryd
-     estimated scf accuracy    <     0.44451152 ryd
+     total energy              =   -87.65599766 ryd
+     estimated scf accuracy    <     0.50253697 ryd
 
-     total magnetization     =  0.14919145  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.21 Bohr mag/cell
+     total magnetization     =  0.09821529  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     0.85 Bohr mag/cell
 
-     total cpu time spent up to now is     51.07 secs
+     total cpu time spent up to now is     49.99 secs
 
      iteration #  3     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-      use conjugate-gradient method until ethr < 1.00E-03
-     ethr =  4.04E-03,  avg # of iterations =  3.9
+ diis_iter=   2.94444444444444     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.10802469135802     
+ diis_iter=   4.39489026063100     
+ diis_iter=   2.96638279225728     
+ diis_iter=   2.77591015512540     
+ diis_iter=   4.04310611972919     
+ diis_iter=   3.16906145109607     
+ diis_iter=   2.67605896950534     
+ diis_iter=   3.14866994275030     
+ diis_iter=   3.39714833015279     
+ diis_iter=   2.91095268500849     
+ diis_iter=   3.38394181583380     
+ diis_iter=   3.46577454532410     
+ diis_iter=   2.52587636362912     
+ diis_iter=   2.97365979797940     
+ diis_iter=   3.16520332210997     
+ diis_iter=   3.84251129567278     
+ diis_iter=   3.60236173864849     
+ diis_iter=   3.47790898548047     
+ diis_iter=   4.35988383252669     
+ diis_iter=   3.01999354625148     
+ diis_iter=   3.38999964145842     
+ diis_iter=   2.79944442452547     
+ diis_iter=   3.04441357914030     
+ diis_iter=   3.05802297661891     
+ diis_iter=   3.39211238758994     
+ diis_iter=   3.57733957708833     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.69874108761602     
+ diis_iter=   4.42770783820089     
+ diis_iter=   3.96820599101116     
+ diis_iter=   2.88712255505618     
+ diis_iter=   3.43817347528090     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.07989852640450     
+ diis_iter=   3.55999436257803     
+ diis_iter=   3.75333302014322     
+ diis_iter=   2.76407405667462     
+ diis_iter=   3.43133744759303     
+ diis_iter=   3.57951874708850     
+ diis_iter=   3.30997326372714     
+ diis_iter=   3.73944295909595     
+ diis_iter=   3.76330238661644     
+ diis_iter=   2.98685013258980     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.66593611847721     
+ diis_iter=   3.64810756213762     
+ diis_iter=   2.42489486456320     
+ diis_iter=   3.96804971469796     
+ diis_iter=   3.22044720637211     
+ diis_iter=   3.34558040035401     
+ diis_iter=   3.79697668890856     
+ diis_iter=   3.48872092716159     
+ diis_iter=   3.58270671817564     
+ diis_iter=   3.64348370656531     
+ diis_iter=   3.20241576147585     
+ diis_iter=   3.01124532008199     
+ diis_iter=   2.61173585111567     
+ diis_iter=   3.08954088061754     
+ diis_iter=   3.17164116003431     
+ diis_iter=   2.62064673111302     
+ diis_iter=   4.20114704061739     
+ diis_iter=   3.45561928003430     
+ diis_iter=   2.80308996000191     
+ diis_iter=   4.37794944222233     
+ diis_iter=   3.18766385790124     
+ diis_iter=   3.12153688099451     
+ diis_iter=   3.22897427116636     
+ diis_iter=   3.12383190395369     
+ diis_iter=   3.84021288355298     
+ diis_iter=   2.99112293797517     
+ diis_iter=   3.44395127433195     
+ diis_iter=   3.24688618190733     
+ diis_iter=   5.01371589899485     
+ diis_iter=   4.11187310549972     
+ diis_iter=   2.89510406141665     
+ diis_iter=   3.27195022563426     
+ diis_iter=   3.40399723475746     
+ diis_iter=   3.80022206859764     
+ diis_iter=   2.87779011492209     
+ diis_iter=   2.77098833971789     
+ diis_iter=   2.82061046331766     
+ diis_iter=   2.93447835907320     
+ diis_iter=   2.60747101994851     
+ diis_iter=   2.92263727888603     
+ diis_iter=   2.66236873771589     
+ diis_iter=   2.81457604098422     
+ diis_iter=   3.21192089116579     
+ diis_iter=   3.01177338284254     
+ diis_iter=   3.22287629904681     
+ diis_iter=   2.73460423883593     
+ diis_iter=   3.15192245771311     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.06399569209517     
+ diis_iter=   3.39244420511640     
+ diis_iter=   2.79958023361758     
+ diis_iter=   3.76664334631209     
+ diis_iter=   3.54259129701734     
+ diis_iter=   3.36347729427874     
+ diis_iter=   3.57574873857104     
+ diis_iter=   2.92087492992061     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.9400486072178     
+ diis_iter=   3.55222492262321     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.75290138459018     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.87516118803279     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.43750895489071     
+ diis_iter=   3.19097271971615     
+ diis_iter=   3.06616515109534     
+     ethr =  4.57E-03,  avg # of iterations =  3.8
+
+     npt with |zeta| > 1:        1, npt tot    19683,      0.01 %
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.423037
-     magnetization :          0.281003    0.000000    0.000000
-     magnetization/charge:    0.029821    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.281003   90.000000    0.000000
+     charge :     9.409975
+     magnetization :          0.333147    0.000000    0.000000
+     magnetization/charge:    0.035404    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.333147   90.000000    0.000000
 
  ==============================================================================
 
-     total energy              =   -87.51997808 ryd
-     estimated scf accuracy    <     0.93512162 ryd
+     total energy              =   -87.47660642 ryd
+     estimated scf accuracy    <     1.03217574 ryd
 
-     total magnetization     =  0.25686272  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.33 Bohr mag/cell
+     total magnetization     =  0.28590413  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     0.77 Bohr mag/cell
 
-     total cpu time spent up to now is     71.63 secs
+     total cpu time spent up to now is     75.46 secs
 
      iteration #  4     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-      use conjugate-gradient method until ethr < 1.00E-03
-     ethr =  4.04E-03,  avg # of iterations =  3.1
+ diis_iter=   2.66666666666667     
+ diis_iter=   3.03703703703704     
+ diis_iter=   2.66872427983539     
+ diis_iter=   2.59270690443530     
+ diis_iter=   2.25515038357974     
+ diis_iter=   2.62528613242110     
+ diis_iter=   2.64584922957895     
+ diis_iter=   2.86921384608772     
+ diis_iter=   3.27051188033821     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.95947288224101     
+ diis_iter=   3.10885960456894     
+ diis_iter=   3.00604775580939     
+ diis_iter=   2.83366931976719     
+ diis_iter=   2.76853718443151     
+ diis_iter=   2.59825206580175     
+ diis_iter=   2.64434733698899     
+ diis_iter=   2.92468596316605     
+ diis_iter=   3.21803810906478     
+ diis_iter=   2.67877989494804     
+ diis_iter=   3.75993221638600     
+ diis_iter=   2.09777401202144     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.72765411177897     
+ diis_iter=   2.31820300620994     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.96212238923389     
+ diis_iter=   2.99789568829077     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.16654976046060     
+ diis_iter=   2.45369720891448     
+ diis_iter=   3.30298317827303     
+ diis_iter=   2.29461017657072     
+ diis_iter=   2.90525612092060     
+ diis_iter=   2.21695867338448     
+ diis_iter=   3.06760881518803     
+ diis_iter=   2.11486715639933     
+ diis_iter=   3.39527039757774     
+ diis_iter=   2.68862613319876     
+ diis_iter=   2.70492367406660     
+ diis_iter=   3.26138464855926     
+ diis_iter=   3.18118803603107     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.23228822422395     
+ diis_iter=   2.62401601245689     
+ diis_iter=   2.75688977846983     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.87538276547055     
+ diis_iter=   3.32641015363725     
+ diis_iter=   2.79591167520207     
+ diis_iter=   3.43310620417789     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.96850590023210     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.94269477223512     
+ diis_iter=   3.33014970956862     
+ diis_iter=   3.35167498386492     
+ diis_iter=   3.07509305465916     
+ diis_iter=   3.11528294748106     
+ diis_iter=   3.61751571930450     
+ diis_iter=   3.08986198440581     
+ diis_iter=   2.94943677691143     
+ diis_iter=   1.99719093205064     
+ diis_iter=   2.55539949622504     
+ diis_iter=   2.14196663867917     
+ diis_iter=   2.78566481325995     
+ diis_iter=   2.76587026740333     
+ diis_iter=   2.48699279263352     
+ diis_iter=   2.47149959959075     
+ diis_iter=   2.47063886664393     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.69281327036911     
+ diis_iter=   2.59404518168717     
+ diis_iter=   2.42189139898262     
+ diis_iter=   2.19010507772126     
+ diis_iter=   3.45500583765118     
+ diis_iter=   2.69194476875840     
+ diis_iter=   2.92733026493102     
+ diis_iter=   2.32929612582950     
+ diis_iter=   2.96273867365719     
+ diis_iter=   2.77570770409207     
+ diis_iter=   2.76531709467178     
+ diis_iter=   1.98696206081510     
+ diis_iter=   2.16594233671195     
+ diis_iter=   2.84255235203955     
+ diis_iter=   3.43569735289109     
+ diis_iter=   3.41309429738284     
+ diis_iter=   3.41183857207682     
+ diis_iter=   2.96732436511538     
+ diis_iter=   2.33151802028419     
+ diis_iter=   2.90730655668245     
+ diis_iter=   2.16151703092680     
+ diis_iter=   2.12008427949593     
+ diis_iter=   1.72889357108311     
+ diis_iter=   2.09604964283795     
+ diis_iter=   3.06089164682433     
+ diis_iter=   2.61449398037913     
+ diis_iter=   3.31191633224328     
+ diis_iter=   3.12843979623574     
+ diis_iter=   2.17380221090199     
+ diis_iter=   2.50965567838344     
+ diis_iter=   2.19498087102130     
+ diis_iter=   2.45527671505674     
+ diis_iter=   3.02529315083649     
+ diis_iter=   2.27918295282425     
+ diis_iter=   2.90439905293468     
+ diis_iter=   2.88357772516304     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.43797654028684     
+ diis_iter=   3.30210980779371     
+ diis_iter=   3.73900610043298     
+ diis_iter=   2.76327811669072     
+ diis_iter=   2.82018211759393     
+     ethr =  4.57E-03,  avg # of iterations =  3.1
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.813105
-     magnetization :         -0.067957    0.000000    0.000000
-     magnetization/charge:   -0.006925    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.067957   90.000000  180.000000
+     charge :     9.795831
+     magnetization :         -0.122054    0.000000    0.000000
+     magnetization/charge:   -0.012460    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.122054   90.000000 -180.000000
 
  ==============================================================================
 
-     total energy              =   -87.83933196 ryd
-     estimated scf accuracy    <     0.00697629 ryd
+     total energy              =   -87.83508664 ryd
+     estimated scf accuracy    <     0.00507669 ryd
 
-     total magnetization     = -0.08072831  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.08 Bohr mag/cell
+     total magnetization     = -0.14958616  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     0.16 Bohr mag/cell
 
-     total cpu time spent up to now is     88.69 secs
+     total cpu time spent up to now is     98.76 secs
 
      iteration #  5     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-     ethr =  6.34E-05,  avg # of iterations =  1.2
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.55555555555556     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.03086419753086     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.05727023319616     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.05873723517756     
+ diis_iter=   5.11437429084320     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.11746523838018     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.61763695768779     
+ diis_iter=   3.53431316431599     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.86301739801756     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.27016763322320     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.07056486851240     
+ diis_iter=   3.61503138158402     
+ diis_iter=   4.53416841008800     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.86300935611600     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.88127829756200     
+ diis_iter=   3.32673768319789     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.96259653795544     
+ diis_iter=   3.10903314099752     
+ diis_iter=   3.72827961894431     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.09601553438580     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.22755641857699     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.29041980103206     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.51613443339067     
+ diis_iter=   4.86200746852170     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.32566708158454     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.24031483786581     
+ diis_iter=   3.12446193543699     
+ diis_iter=   3.61802566307983     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.20100142572666     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.56672230142926     
+ diis_iter=   3.58704012785718     
+ diis_iter=   3.69928000710318     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.87218222261684     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.49289901236760     
+ diis_iter=   6.30516105624264     
+ diis_iter=   5.12806450312459     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.95155913906248     
+ diis_iter=   4.83064217439236     
+ diis_iter=   4.76836900968846     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.37602050053825     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.85422336114101     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.88079018673006     
+ diis_iter=   4.04893278815167     
+ diis_iter=   4.11382959934176     
+ diis_iter=   4.11743497774121     
+ diis_iter=   2.72874638765229     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.70715257709179     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.87261958761621     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.88181219931201     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.38232289996178     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.63235127222010     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.03513062623445     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.11306281256858     
+ diis_iter=   4.28405904514270     
+ diis_iter=   5.12689216917459     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.11816067606526     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.67323114867029     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.42629061937057     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.07923836774281     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.33773546487460     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.24098530360415     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.12449918353356     
+ diis_iter=   3.72913884352964     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.48495215797387     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.19360845322077     
+ diis_iter=   3.34408935851226     
+ diis_iter=   3.51911607547290     
+ diis_iter=   3.86217311530405     
+ diis_iter=   3.60345406196134     
+ diis_iter=   3.42241411455341     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.02346745080852     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.55685930282270     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.36426996126793     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.40912610895933     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.41161811716441     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.0784232287314     
+ diis_iter=   4.55991240159619     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.75332846675534     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.37518491481974     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.90973249526776     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.05054069418154     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.83614114967675     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.21311895275982     
+ diis_iter=   3.34517327515332     
+ diis_iter=   3.07473184861963     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.72637399158998     
+ diis_iter=   3.70702077731055     
+ diis_iter=   3.42816782096170     
+ diis_iter=   3.30156487894232     
+ diis_iter=   3.12786471549680     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.45154803974982     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.41397489109721     
+ diis_iter=   4.02299860506096     
+ diis_iter=   3.27905547805894     
+ diis_iter=   3.45994752655883     
+ diis_iter=   4.19221930703105     
+ diis_iter=   3.06623440594617     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.50367968921923     
+ diis_iter=   3.80575998273440     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.54476444348524     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.64137580241585     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.09118754457866     
+ diis_iter=   2.78284375247659     
+ diis_iter=   3.37682465291537     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.52093470293974     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.52894081682999     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.6960522676017     
+ diis_iter=   2.98311401486676     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.33239522304815     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.90735529016934     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.05040862723163     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.83613381262398     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.60200743403467     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.20011152411304     
+     ethr =  4.62E-05,  avg # of iterations =  6.1
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.823349
-     magnetization :          0.003657    0.000000    0.000000
-     magnetization/charge:    0.000372    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.003657   90.000000    0.000000
+     charge :     9.808758
+     magnetization :         -0.010111    0.000000    0.000000
+     magnetization/charge:   -0.001031    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.010111   90.000000  180.000000
 
  ==============================================================================
 
-     total energy              =   -87.84004221 ryd
-     estimated scf accuracy    <     0.00014433 ryd
+     total energy              =   -87.83899536 ryd
+     estimated scf accuracy    <     0.00016042 ryd
 
-     total magnetization     =  0.00101887  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.01 Bohr mag/cell
+     total magnetization     = -0.01824086  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     0.02 Bohr mag/cell
 
-     total cpu time spent up to now is    106.30 secs
+     total cpu time spent up to now is    130.04 secs
 
      iteration #  6     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
-     ethr =  1.31E-06,  avg # of iterations =  1.8
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.16666666666667     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.06481481481481     
+ diis_iter=   4.89248971193416     
+ diis_iter=   5.71624942844079     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.65090274602449     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.25838348589025     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.12546574921613     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.67363698606756     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.37075761033709     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.63170875612984     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.03509493089610     
+ diis_iter=   4.89083860727201     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.77171325595956     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.76509518088664     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.98694973227148     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.44371942957064     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.58020663497615     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.36556703527645     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.57586483529314     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.42088137973851     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.8567156322077     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.2142619795671     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.78968122108706     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.76609340117150     
+ diis_iter=   5.26478296673175     
+ diis_iter=   4.07026572037399     
+ diis_iter=   3.28168142890967     
+ diis_iter=   4.12676007938387     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.5625977821880     
+ diis_iter=   3.92014432123267     
+ diis_iter=   3.49556357340182     
+ diis_iter=   3.58308686518899     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.64350482584383     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.75797249032466     
+ diis_iter=   6.20877624946248     
+ diis_iter=   5.12270979163680     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.61792832175760     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.97877379565320     
+ diis_iter=   5.60993187753629     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.14499621541868     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.50805534530104     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.91711418585006     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.32872856588056     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.40715158699337     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.52261953261074     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.19570108514504     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.45531672695250     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.85862870705292     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.71436826150294     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.31746490341683     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.40652582796760     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.57814032377598     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.86545224020978     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.54808068001165     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.64156003777843     
+ diis_iter=   5.70230889098769     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.98346160505487     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.77685897805860     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.65426994322548     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.75857055240142     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.81992058624452     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.04555114368025     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.39141950798224     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.91063441711012     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.71725746761723     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.81762541486762     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.54542363415931     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.91919020189774     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.27328834454987     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.68184935247499     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.87121385291528     
+ diis_iter=   3.60395632516196     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.31133090695344     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.79507393927519     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.15528188551529     
+ diis_iter=   4.78640454919529     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.15480025273307     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.61971112515184     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.8122061736195     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.65623367631220     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.25867964868401     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.62548220270467     
+ diis_iter=   4.42363790015026     
+ diis_iter=   5.35686877223057     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.79760382067948     
+ diis_iter=   4.93320021225997     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.60740001179222     
+ diis_iter=   4.47818888954401     
+ diis_iter=   3.74878827164133     
+ diis_iter=   4.04159934842452     
+ diis_iter=   3.33564440824581     
+ diis_iter=   3.68531357823588     
+ diis_iter=   3.81585075434644     
+ diis_iter=   3.60088059746369     
+ diis_iter=   3.58893781097020     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.75494098949835     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.98638561052769     
+ diis_iter=   4.49924364502932     
+ diis_iter=   4.13884686916830     
+ diis_iter=   3.45215815939824     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.4695643421888     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.35942024123271     
+ diis_iter=   3.13107890229071     
+ diis_iter=   3.17394882790504     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.78744160155028     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.21041342230835     
+ diis_iter=   3.01168963457269     
+   WARNING: eigenvalue    11 not converged
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   10.5006494241429     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.41670274578572     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.07870570809921     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.72659476156107     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.70703304230895     
+ diis_iter=   2.98372405790605     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.72131800321700     
+ diis_iter=   3.70673988906761     
+ diis_iter=   3.37259666050376     
+ diis_iter=   4.52069981447243     
+   WARNING: eigenvalue    12 not converged
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   9.80670554524847     
+ diis_iter=   3.93370586362491     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.44076143686805     
+     ethr =  1.46E-06,  avg # of iterations =  7.4
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.808394
-     magnetization :          0.004419    0.000000    0.000000
-     magnetization/charge:    0.000451    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.004419   90.000000    0.000000
+     charge :     9.818418
+     magnetization :          0.006146    0.000000    0.000000
+     magnetization/charge:    0.000626    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.006146   90.000000    0.000000
 
  ==============================================================================
 
-     total energy              =   -87.84028790 ryd
-     estimated scf accuracy    <     0.00029338 ryd
+     total energy              =   -87.84015156 ryd
+     estimated scf accuracy    <     0.00003664 ryd
 
-     total magnetization     =  0.00362577  0.00000000  0.00000000 Bohr mag/cell
+     total magnetization     =  0.00540845  0.00000000  0.00000000 Bohr mag/cell
      absolute magnetization    =     0.01 Bohr mag/cell
 
-     total cpu time spent up to now is    127.08 secs
+     total cpu time spent up to now is    162.67 secs
 
      iteration #  7     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   8.27777777777778     
+ diis_iter=   6.01543209876543     
+ diis_iter=   5.11196844993141     
+ diis_iter=   5.61733158055175     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.70096286558621     
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.15005349253257     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  1.31E-06,  avg # of iterations =  1.7
+ diis_iter=   6.39722519402959     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.52206806633498     
+ diis_iter=   2.91789267035194     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.43988292613066     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.91332682922948     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.88407371273497     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.27133742848528     
+ diis_iter=   5.84840763491585     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.04713375749533     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.66928520874974     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.64829362270832     
+ diis_iter=   6.64712742348380     
+ diis_iter=   4.81372930130466     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.32298496118359     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.51794360895464     
+ diis_iter=   4.63988575605304     
+ diis_iter=   3.75777143089183     
+ diis_iter=   2.98654285727177     
+ diis_iter=   3.88814126984843     
+ diis_iter=   3.04934118165825     
+ diis_iter=   3.66940784342546     
+ diis_iter=   3.37052265796808     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.35391792544267     
+ diis_iter=   5.90855099585793     
+ diis_iter=   5.10603061088100     
+ diis_iter=   5.67255725616006     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.09291984756445     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.11627332486469     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.89534851804804     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.88307491766934     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.43794860653718     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.80210825591873     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.87789490310660     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.32654971683926     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.12925276204663     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.34051404233592     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.74113966901866     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.76339664827882     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.26463314712660     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.73692406372926     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.76316244798496     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.48684235822139     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.02704679767897     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.66816926653772     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.09267607036321     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.67181533724240     
+ diis_iter=   5.53732307429125     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.97429572634951     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.77634976257497     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.65424165347639     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.20301342519313     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.34461185695518     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.07470065871973     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.89303892548443     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.27183549586025     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.07065752754779     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.11503652930821     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.28416869607268     
+ diis_iter=   4.90467603867070     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   3.99470422437059     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.55526134579837     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.64195896365546     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.14677549798086     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.73037641655449     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.15168757869747     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.95287153214986     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.16404841845277     
+ diis_iter=   4.84244713435849     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.65791372968658     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.20321742942703     
+ diis_iter=   3.84462319052372     
+ diis_iter=   4.76914573280687     
+ diis_iter=   5.48717476293372     
+ diis_iter=   4.80484304238521     
+ diis_iter=   4.93360239124362     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.27408902173576     
+ diis_iter=   4.51522716787421     
+ diis_iter=   3.13973484265968     
+ diis_iter=   3.06331860236998     
+ diis_iter=   3.17018436679833     
+ diis_iter=   3.23167690926657     
+ diis_iter=   3.23509316162592     
+ diis_iter=   2.84639406453477     
+ diis_iter=   2.76924411469638     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.43162467303869     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.80175692627993     
+ diis_iter=   4.43343094034888     
+ diis_iter=   3.57963505224160     
+ diis_iter=   2.92109083623564     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.88450504645754     
+ diis_iter=   2.82691694702542     
+ diis_iter=   2.93482871927919     
+ diis_iter=   2.60749048440440     
+ diis_iter=   2.86708280468913     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.43706015581606     
+ diis_iter=   2.91317000865645     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.49517611159202     
+ diis_iter=   3.19417645064400     
+ diis_iter=   3.12189869170244     
+ diis_iter=   4.06232770509458     
+ diis_iter=   3.67012931694970     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.64834051760832     
+     ethr =  3.33E-07,  avg # of iterations =  5.9
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.815872
-     magnetization :         -0.001060    0.000000    0.000000
-     magnetization/charge:   -0.000108    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.001060   90.000000  180.000000
+     charge :     9.811465
+     magnetization :         -0.000418    0.000000    0.000000
+     magnetization/charge:   -0.000043    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.000418   90.000000 -180.000000
 
  ==============================================================================
 
-     total energy              =   -87.84037190 ryd
-     estimated scf accuracy    <     0.00002032 ryd
+     total energy              =   -87.84033801 ryd
+     estimated scf accuracy    <     0.00004281 ryd
 
-     total magnetization     = -0.00116128  0.00000000  0.00000000 Bohr mag/cell
+     total magnetization     = -0.00139546  0.00000000  0.00000000 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
-     total cpu time spent up to now is    147.24 secs
+     total cpu time spent up to now is    192.43 secs
 
      iteration #  8     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   7.88888888888889     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.99382716049383     
+ diis_iter=   5.44410150891632     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  1.85E-07,  avg # of iterations =  1.8
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.814190
-     magnetization :         -0.000620    0.000000    0.000000
-     magnetization/charge:   -0.000063    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000620   90.000000  180.000000
-
- ==============================================================================
-
-     total energy              =   -87.84038804 ryd
-     estimated scf accuracy    <     0.00000153 ryd
-
-     total magnetization     = -0.00091470  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.00 Bohr mag/cell
-
-     total cpu time spent up to now is    167.55 secs
-
-     iteration #  9     ecut=    25.00 ryd     beta=0.70
-     DIIS style diagonalization
+ diis_iter=   6.13578341716202     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.34087685650900     
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.13004871425050     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.39611381745836     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  1.39E-08,  avg # of iterations =  1.7
+ diis_iter=   5.63311743430324     
+ diis_iter=   3.25739541301685     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.62541085627871     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.86807838090437     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.77044879893913     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.37613604438551     
+ diis_iter=   5.63200755802142     
+ diis_iter=   4.25733375322341     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.12540743073463     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.56252263504081     
+ diis_iter=   6.36458459083560     
+ diis_iter=   4.79803247726865     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.82211291540381     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.37900627307799     
+ diis_iter=   4.74327812628211     
+ diis_iter=   3.54129322923789     
+ diis_iter=   2.91896073495766     
+ diis_iter=   3.77327559638654     
+ diis_iter=   2.70962642202147     
+ diis_iter=   3.15053480122342     
+ diis_iter=   3.23058526673463     
+ diis_iter=   2.12392140370748     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.17355118909486     
+ diis_iter=   5.28741951050527     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.23818997280585     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.45767722071144     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.91431540115064     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.88412863339726     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.99356270185540     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.61075348343641     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.42281963796869     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.13460109099826     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.17414450505546     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.12078580583642     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.56226587810202     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.42012588211678     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.85667366011760     
+ diis_iter=   3.93648187000653     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.49647121500036     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.08313728972224     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.39350762720679     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.57741709040038     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.86541206057780     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.04807844780988     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.28044880265610     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.90446937792534     
+ diis_iter=   5.27247052099585     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.29291502894421     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.62738416827468     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.14596578712637     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.28588698817369     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.68254927712076     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.31569718206226     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.18420539900346     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.06578918883353     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.33698828826853     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.96316601601492     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.49795366755638     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.97210853708647     
+ diis_iter=   4.83178380761592     
+ diis_iter=   5.43509910042311     
+ diis_iter=   4.63528328335684     
+ diis_iter=   3.86862684907538     
+ diis_iter=   3.38159038050419     
+ diis_iter=   4.96564391002801     
+ diis_iter=   4.72031355055711     
+ diis_iter=   4.98446186391984     
+ diis_iter=   5.11024788132888     
+ diis_iter=   4.50612488229605     
+ diis_iter=   3.13922916012756     
+ diis_iter=   3.06329050889598     
+ diis_iter=   2.61462725049422     
+ diis_iter=   3.08970151391635     
+ diis_iter=   3.00498341743980     
+ diis_iter=   2.88916574541332     
+ diis_iter=   2.54939809696741     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.64163322760930     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.03564629042274     
+ diis_iter=   4.72420257169015     
+ diis_iter=   3.81801125398279     
+ diis_iter=   2.37877840299904     
+ diis_iter=   2.63215435572217     
+ diis_iter=   2.81289746420679     
+ diis_iter=   2.48960541467815     
+ diis_iter=   2.69386696748212     
+ diis_iter=   3.03854816486012     
+ diis_iter=   2.66880823138112     
+ diis_iter=   2.75937823507673     
+ diis_iter=   2.76440990194871     
+ diis_iter=   3.43135610566382     
+ diis_iter=   3.35729756142577     
+ diis_iter=   2.85318319785699     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.32517684432539     
+     ethr =  3.33E-07,  avg # of iterations =  5.0
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
      charge :     9.814362
-     magnetization :          0.000013    0.000000    0.000000
-     magnetization/charge:    0.000001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000013   90.000000    0.000000
+     magnetization :         -0.000877    0.000000    0.000000
+     magnetization/charge:   -0.000089    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.000877   90.000000 -180.000000
 
  ==============================================================================
 
-     total energy              =   -87.84038819 ryd
-     estimated scf accuracy    <     0.00000087 ryd
+     total energy              =   -87.84038150 ryd
+     estimated scf accuracy    <     0.00000392 ryd
 
-     total magnetization     = -0.00004987  0.00000000  0.00000000 Bohr mag/cell
+     total magnetization     = -0.00089040  0.00000000  0.00000000 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
-     total cpu time spent up to now is    187.86 secs
+     total cpu time spent up to now is    219.65 secs
+
+     iteration #  9     ecut=    25.00 ryd     beta=0.70
+     DIIS style diagonalization
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.00000000000000     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.72222222222222     
+ diis_iter=   5.54012345679012     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.30778463648834     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.46154359091602     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.63675242171756     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.53537513453987     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.36307639636333     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.29794868868685     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.79433048270483     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.21079613792805     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.95615534099600     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.33089751894422     
+ diis_iter=   6.24060541771912     
+ diis_iter=   5.23558918987328     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.40197717721518     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.02233206540084     
+ diis_iter=   5.89012955918894     
+ diis_iter=   4.77167386439939     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.93175965913330     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.71843109217407     
+ diis_iter=   5.20657950512078     
+ diis_iter=   3.40036552806227     
+ diis_iter=   2.91113141822568     
+ diis_iter=   4.27284063434587     
+ diis_iter=   2.84849114635255     
+ diis_iter=   3.04713839701959     
+ diis_iter=   3.33595213316775     
+ diis_iter=   2.35199734073154     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.68622207448509     
+ diis_iter=   5.76034567080473     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.37557475948915     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.35419859774940     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.29745547765274     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.79430308209182     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.09968350456066     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.44998241692004     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.30277680094000     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.62793204449667     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.59044066913870     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.36613559272993     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.46478531070722     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.58137696170596     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.86563205342811     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.54809066963489     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.47489392609083     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.13749410700505     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.61874967261139     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.97881942625619     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.72104552368090     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.87339141798227     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.32629952322124     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.12923886240118     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.34051327013340     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.57447295945186     
+ diis_iter=   6.36524849774733     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.63140269431930     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.53507792746218     
+ diis_iter=   5.36305988485901     
+ diis_iter=   5.79794777138106     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.82210820952117     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.60122823386229     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.92229045743679     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.27346058096871     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.84852558783159     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.04714031043509     
+ diis_iter=   6.28039668391306     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.96002203799517     
+ diis_iter=   4.66444566877751     
+ diis_iter=   5.14802475937653     
+ diis_iter=   5.17489026440981     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.28749390357832     
+ diis_iter=   4.23819410575435     
+ diis_iter=   5.40212189476413     
+ diis_iter=   5.18900677193134     
+ diis_iter=   5.06605593177396     
+ diis_iter=   5.05922532954300     
+ diis_iter=   4.50329029608572     
+ diis_iter=   3.25018279422698     
+ diis_iter=   3.40278793301261     
+ diis_iter=   3.07793266294514     
+ diis_iter=   3.05988514794140     
+ diis_iter=   3.28110473044119     
+ diis_iter=   2.79339470724673     
+ diis_iter=   3.32185526151371     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.79565862563965     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.04420325697998     
+ diis_iter=   4.78023351427667     
+ diis_iter=   3.82112408412648     
+ diis_iter=   2.32339578245147     
+ diis_iter=   2.35129976569175     
+ diis_iter=   2.51951665364954     
+ diis_iter=   2.75108425853609     
+ diis_iter=   3.09728245880756     
+ diis_iter=   3.50540458104486     
+ diis_iter=   2.58363358783583     
+ diis_iter=   2.81020186599088     
+ diis_iter=   3.04501121477727     
+ diis_iter=   3.72472284526540     
+ diis_iter=   3.26248460251474     
+ diis_iter=   3.29236025569526     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.40513112531640     
+     ethr =  3.56E-08,  avg # of iterations =  5.4
+
+ ==============================================================================
+     atom number    1 relative position :    0.0000   0.0000   0.0000
+     charge :     9.813659
+     magnetization :         -0.000069    0.000000    0.000000
+     magnetization/charge:   -0.000007    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.000069   90.000000  180.000000
+
+ ==============================================================================
+
+     total energy              =   -87.84038757 ryd
+     estimated scf accuracy    <     0.00000035 ryd
+
+     total magnetization     = -0.00020369  0.00000000  0.00000000 Bohr mag/cell
+     absolute magnetization    =     0.00 Bohr mag/cell
+
+     total cpu time spent up to now is    247.66 secs
 
      iteration # 10     ecut=    25.00 ryd     beta=0.70
      DIIS style diagonalization
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   8.16666666666667     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   7.89814814814815     
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
+ diis_iter=   6.43878600823045     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
    WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  7.91E-09,  avg # of iterations =  1.6
+ diis_iter=   6.57993255601280     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.64332958644516     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.59129608813584     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.58840533822977     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.36602251879054     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.29811236215503     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.62767290900861     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.97931516161159     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.94329528675620     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.27462751593090     
+ diis_iter=   6.23747930644061     
+ diis_iter=   5.12430440591337     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.50690580032852     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.25038365557381     
+ diis_iter=   6.56946575864299     
+ diis_iter=   4.80941476436906     
+ diis_iter=   4.87830082024273     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.65990560112460     
+ diis_iter=   5.25888364450692     
+ diis_iter=   3.62549353580594     
+ diis_iter=   2.86808297421144     
+ diis_iter=   4.38156016523397     
+ diis_iter=   3.29897556473522     
+ diis_iter=   3.40549864248529     
+ diis_iter=   3.46697214680474     
+ diis_iter=   2.47038734148915     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.69279929674940     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.20515551648608     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.40028641758256     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.57779368986570     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.03209964943698     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.05733886941317     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.11429660385629     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.45079425576980     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.35837745865388     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.90879874770299     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.05048881931683     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.66947160107316     
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.53719286672629     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.30762182592924     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.90597899032940     
+ diis_iter=   4.71699883279608     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.53983326848867     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.08554629269382     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.61586368292743     
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.47865909349597     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.97103661630533     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   6.22061314535030     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.01225628585279     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.11179201588071     
+   WARNING: eigenvalue    13 not converged
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.11732177866004     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.33985120992556     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.57443617832920     
+ diis_iter=   6.47635756546273     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.63757542030349     
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.59097641223908     
+ diis_iter=   5.31060980067995     
+ diis_iter=   5.79503387781555     
+ diis_iter=   5.32194632654531     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   4.74010812925252     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.31889489606958     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.29549416089276     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.79419412004960     
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   5.04412189555831     
+ diis_iter=   6.61356232753102     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.14519790708506     
+ diis_iter=   5.11917766150473     
+ diis_iter=   5.39550987008360     
+ diis_iter=   5.29975054833798     
+ diis_iter=   4.18331947490767     
+ diis_iter=   4.56573997082820     
+ diis_iter=   5.58698555393490     
+ diis_iter=   5.08816586410750     
+ diis_iter=   5.06045365911708     
+ diis_iter=   5.17002520328428     
+ diis_iter=   4.62055695573802     
+ diis_iter=   3.36780871976322     
+ diis_iter=   3.18710048443129     
+ diis_iter=   3.01039447135729     
+ diis_iter=   3.50057747063096     
+ diis_iter=   3.41669874836839     
+ diis_iter=   2.63426104157602     
+ diis_iter=   2.59079228008756     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.75504401556042     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   8.04194688975336     
+ diis_iter=   4.72455260498630     
+ diis_iter=   3.81803070027702     
+ diis_iter=   2.43433503890428     
+ diis_iter=   2.91301861327246     
+ diis_iter=   2.66183436740403     
+ diis_iter=   2.75899079818911     
+ diis_iter=   2.70883282212162     
+ diis_iter=   3.53937960122898     
+ diis_iter=   2.75218775562383     
+ diis_iter=   2.70845487531244     
+ diis_iter=   3.20602527085069     
+ diis_iter=   3.73366807060282     
+ diis_iter=   3.59631489281127     
+ diis_iter=   3.97757304960063     
+   WARNING: eigenvalue    14 not converged
+   WARNING: eigenvalue    15 not converged
+   WARNING: eigenvalue    16 not converged
+   WARNING: eigenvalue    17 not converged
+   WARNING: eigenvalue    18 not converged
+ diis_iter=   7.38764294720003     
+     ethr =  3.22E-09,  avg # of iterations =  5.6
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.814066
-     magnetization :          0.000006    0.000000    0.000000
-     magnetization/charge:    0.000001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000006   90.000000    0.000000
-
- ==============================================================================
-
-     total energy              =   -87.84038889 ryd
-     estimated scf accuracy    <     0.00000013 ryd
-
-     total magnetization     = -0.00002270  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.00 Bohr mag/cell
-
-     total cpu time spent up to now is    207.64 secs
-
-     iteration # 11     ecut=    25.00 ryd     beta=0.70
-     DIIS style diagonalization
-   WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  1.20E-09,  avg # of iterations =  1.6
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.814009
-     magnetization :          0.000010    0.000000    0.000000
-     magnetization/charge:    0.000001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000010   90.000000    0.000000
-
- ==============================================================================
-
-     total energy              =   -87.84038893 ryd
-     estimated scf accuracy    <     0.00000008 ryd
-
-     total magnetization     =  0.00000117  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.00 Bohr mag/cell
-
-     total cpu time spent up to now is    227.78 secs
-
-     iteration # 12     ecut=    25.00 ryd     beta=0.70
-     DIIS style diagonalization
-   WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  6.87E-10,  avg # of iterations =  1.1
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.813938
-     magnetization :          0.000010    0.000000    0.000000
-     magnetization/charge:    0.000001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000010   90.000000    0.000000
-
- ==============================================================================
-
-     total energy              =   -87.84038897 ryd
-     estimated scf accuracy    <     0.00000002 ryd
-
-     total magnetization     =  0.00000401  0.00000000  0.00000000 Bohr mag/cell
-     absolute magnetization    =     0.00 Bohr mag/cell
-
-     total cpu time spent up to now is    245.41 secs
-
-     iteration # 13     ecut=    25.00 ryd     beta=0.70
-     DIIS style diagonalization
-   WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-   WARNING: eigenvalue    18 not converged
- warning :   1 eigenvectors not converged after   1 attemps
-     ethr =  1.42E-10,  avg # of iterations =  1.2
-
- ==============================================================================
-     atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     9.813920
-     magnetization :          0.000011    0.000000    0.000000
-     magnetization/charge:    0.000001    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.000011   90.000000    0.000000
+     charge :     9.813908
+     magnetization :         -0.000014    0.000000    0.000000
+     magnetization/charge:   -0.000001    0.000000    0.000000
+     polar coord.: r, theta, phi [deg] :     0.000014   90.000000 -180.000000
 
  ==============================================================================
 
           k = 0.0000 0.0000 0.0000 (  169 PWs)   bands (ev):
 
-     4.9905   4.9905  11.2116  11.2116  11.2116  11.2117  11.2117  11.2117
-    12.1012  12.1012  12.1013  12.1013  38.8667  38.8700  41.0170  41.0212
-    41.0257  41.0426
+     4.9904   4.9905  11.2120  11.2120  11.2120  11.2120  11.2121  11.2121
+    12.1016  12.1017  12.1017  12.1017  38.8604  38.8770  38.8770  38.8770
+    38.8770  38.8770
 
           k =-0.1250 0.1250-0.1250 (  165 PWs)   bands (ev):
 
-     5.5712   5.5712  11.0967  11.0968  11.3134  11.3134  11.3134  11.3134
-    12.0708  12.0708  12.0708  12.0708  34.2729  34.2754  39.2786  39.5226
-    39.7111  39.7178
+     5.5712   5.5713  11.0971  11.0972  11.3137  11.3138  11.3138  11.3139
+    12.0712  12.0712  12.0712  12.0712  34.2731  34.2734  39.2845  39.2845
+    39.2845  39.2845
 
           k =-0.2500 0.2500-0.2500 (  156 PWs)   bands (ev):
 
-     7.1560   7.1561  10.9619  10.9619  11.3817  11.3817  11.3818  11.3818
-    12.1934  12.1934  12.1935  12.1935  27.5301  27.5302  38.3760  38.3777
-    38.3916  38.4716
+     7.1560   7.1561  10.9622  10.9623  11.3821  11.3821  11.3821  11.3822
+    12.1938  12.1938  12.1939  12.1939  27.5302  27.5303  38.3754  38.3755
+    38.4190  38.4190
 
           k =-0.3750 0.3750-0.3750 (  159 PWs)   bands (ev):
 
-     8.7624   8.7625  11.2518  11.2518  11.2519  11.2519  11.7764  11.7764
-    12.5420  12.5420  12.5421  12.5421  21.8077  21.8078  37.4621  37.4739
-    37.7427  37.7449
+     8.7626   8.7626  11.2522  11.2522  11.2523  11.2523  11.7765  11.7766
+    12.5425  12.5425  12.5425  12.5425  21.8079  21.8079  37.4546  37.4546
+    37.4546  37.4546
 
           k = 0.5000-0.5000 0.5000 (  156 PWs)   bands (ev):
 
-     9.1194   9.1194  11.1770  11.1770  11.1770  11.1770  12.7169  12.7169
-    12.7169  12.7169  13.4642  13.4642  18.6471  18.6471  37.0290  37.0327
-    37.6170  37.6243
+     9.1196   9.1197  11.1774  11.1774  11.1774  11.1774  12.7173  12.7173
+    12.7174  12.7174  13.4641  13.4642  18.6473  18.6474  37.0390  37.0390
+    37.0390  37.0390
 
           k = 0.0000 0.2500 0.0000 (  165 PWs)   bands (ev):
 
-     5.7623   5.7623  10.9827  10.9827  11.4048  11.4048  11.4049  11.4049
-    11.9003  11.9003  12.1871  12.1872  36.7473  36.7476  36.7534  36.7601
-    36.7792  36.7942
+     5.7622   5.7623  10.9831  10.9831  11.4052  11.4052  11.4053  11.4053
+    11.9007  11.9007  12.1876  12.1876  36.7473  36.7473  36.7499  36.7499
+    36.7499  36.7499
 
           k =-0.1250 0.3750-0.1250 (  160 PWs)   bands (ev):
 
-     7.0148   7.0149  10.7590  10.7590  11.4420  11.4421  11.5630  11.5631
-    11.9837  11.9838  12.3192  12.3193  30.0801  30.0802  34.8378  34.8522
-    36.4566  36.4676
+     7.0148   7.0149  10.7594  10.7594  11.4425  11.4425  11.5634  11.5635
+    11.9841  11.9842  12.3197  12.3197  30.0802  30.0804  34.8376  34.8638
+    34.8638  34.8638
 
           k =-0.2500 0.5000-0.2500 (  158 PWs)   bands (ev):
 
-     8.7316   8.7316  10.8357  10.8357  11.1909  11.1910  11.4994  11.4994
-    12.6046  12.6047  12.8153  12.8154  23.9456  23.9456  34.0892  34.0991
-    34.9481  34.9672
+     8.7317   8.7317  10.8360  10.8361  11.1913  11.1913  11.4998  11.4998
+    12.6051  12.6052  12.8157  12.8158  23.9457  23.9457  34.0892  34.0892
+    34.0892  34.0892
 
           k = 0.6250-0.3750 0.6250 (  163 PWs)   bands (ev):
 
-     9.3902   9.3902  10.9730  10.9730  11.3802  11.3803  11.6282  11.6282
-    12.7289  12.7290  14.6437  14.6437  19.3257  19.3257  32.8167  32.8315
-    34.6314  34.6389
+     9.3904   9.3905  10.9734  10.9734  11.3806  11.3807  11.6285  11.6285
+    12.7294  12.7295  14.6438  14.6439  19.3258  19.3259  32.8181  32.8620
+    32.8620  32.8620
 
           k = 0.5000-0.2500 0.5000 (  161 PWs)   bands (ev):
 
-     9.3179   9.3179  11.0465  11.0466  11.3794  11.3795  11.4897  11.4898
-    12.4956  12.4957  14.0605  14.0605  20.5873  20.5873  31.5906  31.5929
-    36.5347  37.3003
+     9.3181   9.3181  11.0469  11.0469  11.3799  11.3799  11.4900  11.4901
+    12.4961  12.4962  14.0607  14.0608  20.5874  20.5922  31.5906  36.2664
+    36.2664  36.2664
 
           k = 0.3750-0.1250 0.3750 (  159 PWs)   bands (ev):
 
-     8.2150   8.2150  10.8162  10.8163  11.2659  11.2659  11.5176  11.5177
-    12.0422  12.0423  12.8327  12.8328  25.8890  25.8890  31.4966  31.4968
-    39.3336  39.7081
+     8.2150   8.2151  10.8166  10.8166  11.2663  11.2663  11.5181  11.5181
+    12.0426  12.0427  12.8332  12.8332  25.8890  25.8891  31.4967  31.4968
+    39.3529  39.3529
 
           k = 0.2500 0.0000 0.2500 (  160 PWs)   bands (ev):
 
-     6.4958   6.4959  10.9083  10.9083  11.4019  11.4020  11.4841  11.4842
-    11.8802  11.8803  12.2896  12.2897  32.0433  32.0433  32.7839  32.7839
-    41.5627  42.5222
+     6.4958   6.4959  10.9086  10.9087  11.4024  11.4024  11.4845  11.4846
+    11.8807  11.8807  12.2901  12.2901  32.0433  32.0434  32.7839  32.7840
+    41.5771  41.5771
 
           k = 0.0000 0.5000 0.0000 (  165 PWs)   bands (ev):
 
-     7.7953   7.7953  10.4444  10.4445  11.6421  11.6421  11.9301  11.9301
-    11.9302  11.9302  12.3963  12.3963  32.3410  32.3414  32.3483  32.3585
-    33.7758  34.4640
+     7.7953   7.7954  10.4448  10.4448  11.6425  11.6425  11.9305  11.9305
+    11.9306  11.9306  12.3967  12.3968  32.3411  32.3421  32.3421  32.3421
+    32.3421  32.3421
 
           k =-0.1250 0.6250-0.1250 (  162 PWs)   bands (ev):
 
-     9.0261   9.0261  10.2435  10.2436  11.4593  11.4594  12.0301  12.0301
-    12.6332  12.6332  12.9941  12.9941  26.9805  26.9833  30.3559  30.3612
-    31.1004  31.1291
+     9.0262   9.0263  10.2439  10.2439  11.4597  11.4597  12.0305  12.0305
+    12.6336  12.6337  12.9944  12.9945  26.9804  26.9807  30.3556  30.3557
+    31.1003  31.1003
 
           k = 0.7500-0.2500 0.7500 (  158 PWs)   bands (ev):
 
-     9.7741   9.7741  10.3371  10.3372  11.2736  11.2736  11.9052  11.9053
-    12.7606  12.7607  15.5347  15.5347  21.6033  21.6033  27.6769  27.6784
-    31.3036  31.3048
+     9.7743   9.7744  10.3374  10.3375  11.2739  11.2740  11.9057  11.9057
+    12.7611  12.7612  15.5349  15.5349  21.6034  21.6034  27.6770  27.6774
+    31.3038  31.3044
 
           k = 0.6250-0.1250 0.6250 (  162 PWs)   bands (ev):
 
-    10.0261  10.0261  10.5346  10.5346  11.0773  11.0774  11.8004  11.8005
-    12.5177  12.5178  16.7783  16.7783  20.0961  20.0961  26.0442  26.0444
-    32.9757  32.9834
+    10.0264  10.0264  10.5349  10.5349  11.0776  11.0777  11.8008  11.8009
+    12.5182  12.5183  16.7785  16.7785  20.0962  20.0963  26.0442  26.0447
+    32.9739  32.9739
 
           k = 0.5000 0.0000 0.5000 (  164 PWs)   bands (ev):
 
-     9.6306   9.6306  10.6866  10.6866  10.9039  10.9040  11.7533  11.7533
-    12.1031  12.1032  14.2121  14.2121  24.5991  24.5991  26.0270  26.0270
-    35.9043  37.3678
+     9.6307   9.6307  10.6869  10.6870  10.9043  10.9043  11.7537  11.7537
+    12.1035  12.1036  14.2124  14.2125  24.5991  24.5992  26.0271  26.0278
+    35.9016  35.9016
 
           k = 0.0000 0.7500 0.0000 (  162 PWs)   bands (ev):
 
-     9.2116   9.2116   9.9258   9.9258  12.5647  12.5647  12.5648  12.5648
-    12.6085  12.6086  13.2901  13.2901  26.4730  26.4805  29.3008  29.3016
-    29.3053  29.3061
+     9.2118   9.2119   9.9261   9.9261  12.5651  12.5651  12.5652  12.5652
+    12.6090  12.6090  13.2902  13.2903  26.4732  26.4736  29.3008  29.3013
+    29.3018  29.3065
 
           k = 0.8750-0.1250 0.8750 (  164 PWs)   bands (ev):
 
-     9.4573   9.4574   9.8803   9.8803  12.2118  12.2119  12.4809  12.4810
-    12.8059  12.8060  15.9158  15.9158  23.7248  23.7250  25.2537  25.2557
-    29.0148  29.0204
+     9.4576   9.4576   9.8806   9.8807  12.2122  12.2122  12.4814  12.4814
+    12.8063  12.8064  15.9159  15.9160  23.7251  23.7262  25.2540  25.2554
+    29.0141  29.0147
 
           k = 0.7500 0.0000 0.7500 (  168 PWs)   bands (ev):
 
-     9.8689   9.8689  10.1174  10.1174  11.5169  11.5169  12.2486  12.2487
-    12.6603  12.6604  19.0084  19.0085  20.5171  20.5171  22.9161  22.9161
-    30.3259  30.3606
+     9.8692   9.8693  10.1177  10.1177  11.5172  11.5173  12.2491  12.2491
+    12.6608  12.6609  19.0085  19.0086  20.5172  20.5173  22.9162  22.9163
+    30.3260  30.3578
 
           k = 0.0000-1.0000 0.0000 (  150 PWs)   bands (ev):
 
-     9.2658   9.2659   9.7168   9.7168  12.6971  12.6972  12.8717  12.8717
-    12.8718  12.8718  16.0648  16.0649  22.1123  22.1123  28.1805  28.1806
-    28.1824  28.1838
+     9.2661   9.2662   9.7171   9.7172  12.6976  12.6976  12.8721  12.8721
+    12.8722  12.8722  16.0648  16.0649  22.1124  22.1125  28.1805  28.1805
+    28.1808  34.7845
 
           k =-0.2500 0.5000 0.0000 (  156 PWs)   bands (ev):
 
-     8.3853   8.3853  10.5341  10.5342  11.2123  11.2123  11.9393  11.9394
-    11.9921  11.9922  12.8705  12.8706  28.3807  28.3808  29.1690  29.1690
-    34.7052  34.7106
+     8.3853   8.3854  10.5345  10.5345  11.2127  11.2127  11.9397  11.9398
+    11.9925  11.9926  12.8709  12.8709  28.3808  28.3808  29.1691  29.1691
+    34.7042  34.7044
 
           k = 0.6250-0.3750 0.8750 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6523  31.6530
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9180  22.9181  28.5932  28.5937
+    31.6525  31.6529
 
           k = 0.5000-0.2500 0.7500 (  164 PWs)   bands (ev):
 
-     9.8974   9.8975  10.5964  10.5964  11.1683  11.1683  11.6975  11.6975
-    12.6581  12.6582  16.6936  16.6936  19.1459  19.1459  29.3164  29.3164
-    29.7928  29.7929
+     9.8977   9.8978  10.5967  10.5967  11.1686  11.1686  11.6979  11.6979
+    12.6586  12.6586  16.6937  16.6938  19.1460  19.1461  29.3165  29.3166
+    29.7930  29.7931
 
           k = 0.7500-0.2500 1.0000 (  166 PWs)   bands (ev):
 
-     9.6204   9.6204  10.1238  10.1238  11.4253  11.4254  12.4028  12.4029
-    12.5608  12.5609  14.7943  14.7943  25.8725  25.8727  26.6524  26.6526
-    27.2682  27.2686
+     9.6207   9.6207  10.1241  10.1242  11.4257  11.4257  12.4033  12.4033
+    12.5613  12.5613  14.7945  14.7945  25.8726  25.8727  26.6525  26.6527
+    27.2683  27.2684
 
           k = 0.6250-0.1250 0.8750 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
-    27.1037  27.1037
+    10.0011  10.0011  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7964  24.7966
+    27.1038  27.1039
 
           k = 0.5000 0.0000 0.7500 (  158 PWs)   bands (ev):
 
-    10.2798  10.2798  10.4645  10.4646  10.7102  10.7103  12.0133  12.0134
-    12.5649  12.5650  17.1296  17.1296  21.9675  21.9675  24.2092  24.2092
-    28.8762  28.8762
+    10.2800  10.2801  10.4649  10.4649  10.7105  10.7106  12.0138  12.0138
+    12.5654  12.5655  17.1297  17.1298  21.9676  21.9676  24.2092  24.2094
+    28.8763  28.8765
 
           k =-0.2500-1.0000 0.0000 (  164 PWs)   bands (ev):
 
-     9.6008   9.6008   9.9539   9.9540  11.8936  11.8936  12.4333  12.4334
-    12.8719  12.8720  17.7253  17.7253  22.3942  22.3942  24.9313  24.9314
-    26.0255  26.0255
+     9.6011   9.6011   9.9543   9.9543  11.8940  11.8940  12.4338  12.4338
+    12.8724  12.8724  17.7253  17.7254  22.3943  22.3944  24.9313  24.9314
+    26.0256  26.0255
 
           k =-0.5000-1.0000 0.0000 (  156 PWs)   bands (ev):
 
-    10.0366  10.0366  10.6868  10.6868  10.6868  10.6868  12.0678  12.0679
-    12.8723  12.8724  20.9537  20.9537  20.9537  20.9537  23.1357  23.1357
-    24.0564  24.0565
+    10.0369  10.0369  10.6872  10.6872  10.6872  10.6872  12.0683  12.0683
+    12.8728  12.8728  20.9538  20.9538  20.9538  20.9538  23.1358  23.1364
+    24.0566  24.0566
 
           k = 0.1250-0.1250-0.1250 (  165 PWs)   bands (ev):
 
-     5.5712   5.5712  11.0967  11.0968  11.3134  11.3134  11.3134  11.3134
-    12.0708  12.0708  12.0708  12.0708  34.2729  34.2734  39.2825  39.6115
-    39.7112  39.7167
+     5.5712   5.5713  11.0971  11.0972  11.3137  11.3138  11.3138  11.3139
+    12.0712  12.0712  12.0712  12.0712  34.2730  34.2736  39.2906  39.2906
+    39.2906  39.2906
 
           k = 0.2500-0.2500-0.2500 (  156 PWs)   bands (ev):
 
-     7.1560   7.1561  10.9619  10.9619  11.3817  11.3817  11.3818  11.3818
-    12.1934  12.1934  12.1935  12.1935  27.5301  27.5302  38.3766  38.3818
-    38.4374  38.4698
+     7.1560   7.1561  10.9622  10.9623  11.3821  11.3821  11.3821  11.3822
+    12.1938  12.1938  12.1939  12.1939  27.5302  27.5303  38.3753  38.3754
+    38.3971  38.3971
 
           k = 0.3750-0.3750-0.3750 (  159 PWs)   bands (ev):
 
-     8.7624   8.7625  11.2518  11.2518  11.2519  11.2519  11.7764  11.7764
-    12.5420  12.5420  12.5421  12.5421  21.8077  21.8078  37.4599  37.4697
-    37.7457  37.7464
+     8.7626   8.7626  11.2522  11.2522  11.2523  11.2523  11.7765  11.7766
+    12.5425  12.5425  12.5425  12.5425  21.8079  21.8079  37.4545  37.5603
+    37.5603  37.5603
 
           k = 0.2500 0.0000 0.0000 (  165 PWs)   bands (ev):
 
-     5.7623   5.7623  10.9827  10.9827  11.4048  11.4048  11.4049  11.4049
-    11.9003  11.9003  12.1871  12.1872  36.7479  36.7486  36.7699  36.7766
-    36.7748  38.6193
+     5.7622   5.7623  10.9831  10.9831  11.4053  11.4053  11.4053  11.4053
+    11.9007  11.9008  12.1876  12.1876  36.7473  36.7474  36.7487  36.7487
+    36.7487  36.7487
 
           k =-0.2500 0.0000 0.0000 (  165 PWs)   bands (ev):
 
-     5.7623   5.7623  10.9827  10.9827  11.4048  11.4048  11.4049  11.4049
-    11.9003  11.9003  12.1871  12.1872  36.7473  36.7478  36.7618  36.7756
-    36.7835  38.5890
+     5.7622   5.7623  10.9831  10.9831  11.4053  11.4053  11.4053  11.4053
+    11.9007  11.9007  12.1876  12.1876  36.7473  36.7474  36.7574  36.7675
+    36.7860  36.7860
 
           k = 0.1250-0.3750-0.1250 (  160 PWs)   bands (ev):
 
-     7.0148   7.0149  10.7590  10.7590  11.4420  11.4421  11.5630  11.5631
-    11.9837  11.9838  12.3192  12.3193  30.0802  30.0803  34.8382  34.8435
-    36.4551  36.4760
+     7.0148   7.0149  10.7594  10.7594  11.4424  11.4425  11.5634  11.5635
+    11.9841  11.9842  12.3197  12.3197  30.0804  30.0804  34.8433  34.8433
+    34.8433  34.8433
 
           k = 0.3750-0.1250 0.1250 (  160 PWs)   bands (ev):
 
-     7.0148   7.0149  10.7590  10.7590  11.4420  11.4421  11.5630  11.5631
-    11.9837  11.9838  12.3192  12.3193  30.0802  30.0804  34.8396  34.8474
-    36.4492  36.4716
+     7.0148   7.0149  10.7593  10.7594  11.4424  11.4425  11.5635  11.5635
+    11.9842  11.9842  12.3197  12.3197  30.0803  30.0806  34.8374  34.8428
+    34.8428  34.8428
 
           k =-0.3750 0.1250 0.1250 (  160 PWs)   bands (ev):
 
-     7.0148   7.0149  10.7590  10.7590  11.4420  11.4421  11.5630  11.5631
-    11.9837  11.9838  12.3192  12.3193  30.0802  30.0802  34.8440  34.8444
-    36.4536  36.4562
+     7.0148   7.0149  10.7593  10.7594  11.4424  11.4425  11.5635  11.5635
+    11.9842  11.9842  12.3197  12.3197  30.0803  30.0804  34.8377  34.8555
+    34.8555  34.8555
 
           k = 0.2500-0.5000-0.2500 (  158 PWs)   bands (ev):
 
-     8.7316   8.7316  10.8357  10.8357  11.1909  11.1910  11.4994  11.4994
-    12.6046  12.6047  12.8153  12.8154  23.9456  23.9456  34.0887  34.1467
-    34.9457  34.9522
+     8.7317   8.7317  10.8360  10.8361  11.1913  11.1913  11.4998  11.4998
+    12.6051  12.6051  12.8157  12.8158  23.9457  23.9457  34.0914  34.0914
+    34.0914  34.0914
 
           k = 0.5000-0.2500 0.2500 (  158 PWs)   bands (ev):
 
-     8.7316   8.7316  10.8357  10.8357  11.1909  11.1910  11.4994  11.4994
-    12.6046  12.6047  12.8153  12.8154  23.9456  23.9456  34.0878  34.1272
-    34.9398  34.9529
+     8.7317   8.7317  10.8360  10.8360  11.1913  11.1914  11.4998  11.4998
+    12.6051  12.6051  12.8157  12.8158  23.9457  23.9457  34.1001  34.1001
+    34.1001  34.1001
 
           k =-0.5000 0.2500 0.2500 (  158 PWs)   bands (ev):
 
-     8.7316   8.7316  10.8357  10.8357  11.1909  11.1910  11.4994  11.4994
-    12.6046  12.6047  12.8153  12.8154  23.9456  23.9456  34.0894  34.0913
-    34.9429  34.9626
+     8.7317   8.7317  10.8360  10.8360  11.1913  11.1914  11.4998  11.4998
+    12.6051  12.6051  12.8157  12.8158  23.9457  23.9458  34.0893  34.0893
+    34.0893  34.0893
 
           k =-0.6250 0.3750 0.6250 (  163 PWs)   bands (ev):
 
-     9.3902   9.3902  10.9730  10.9730  11.3802  11.3803  11.6282  11.6282
-    12.7289  12.7290  14.6437  14.6437  19.3257  19.3257  32.8153  32.8606
-    34.6377  34.6696
+     9.3904   9.3905  10.9734  10.9734  11.3806  11.3807  11.6285  11.6285
+    12.7294  12.7294  14.6438  14.6439  19.3258  19.3259  32.8162  32.8561
+    32.8561  32.8561
 
           k =-0.3750 0.6250-0.6250 (  163 PWs)   bands (ev):
 
-     9.3902   9.3902  10.9730  10.9730  11.3802  11.3803  11.6282  11.6282
-    12.7289  12.7290  14.6437  14.6437  19.3257  19.3257  32.8152  32.8428
-    34.6385  36.3311
+     9.3904   9.3905  10.9734  10.9734  11.3806  11.3807  11.6285  11.6285
+    12.7294  12.7294  14.6438  14.6439  19.3258  19.3259  32.9118  32.9118
+    32.9118  32.9118
 
           k = 0.3750-0.6250-0.6250 (  163 PWs)   bands (ev):
 
-     9.3902   9.3902  10.9730  10.9730  11.3802  11.3803  11.6282  11.6282
-    12.7289  12.7290  14.6437  14.6437  19.3257  19.3257  32.8162  32.8573
-    34.6308  36.3353
+     9.3904   9.3905  10.9734  10.9734  11.3806  11.3807  11.6285  11.6285
+    12.7294  12.7294  14.6438  14.6439  19.3258  19.3259  32.8232  32.8708
+    32.8708  32.8708
 
           k =-0.5000 0.2500 0.5000 (  161 PWs)   bands (ev):
 
-     9.3179   9.3179  11.0465  11.0466  11.3794  11.3795  11.4897  11.4898
-    12.4956  12.4957  14.0605  14.0605  20.5873  20.5873  31.5909  31.5982
-    36.5374  37.3112
+     9.3181   9.3181  11.0469  11.0469  11.3798  11.3799  11.4900  11.4900
+    12.4961  12.4961  14.0607  14.0608  20.5874  31.6013  31.6013  31.6013
+    31.6013  31.6013
 
           k =-0.2500 0.5000-0.5000 (  161 PWs)   bands (ev):
 
-     9.3179   9.3179  11.0465  11.0466  11.3794  11.3795  11.4897  11.4898
-    12.4956  12.4957  14.0605  14.0605  20.5873  20.5873  31.5908  31.5962
-    36.5368  37.2734
+     9.3181   9.3181  11.0469  11.0469  11.3799  11.3799  11.4900  11.4900
+    12.4961  12.4961  14.0607  14.0608  20.5874  20.5874  31.5915  31.5940
+    36.7693  37.1594
 
           k = 0.2500-0.5000-0.5000 (  161 PWs)   bands (ev):
 
-     9.3179   9.3179  11.0465  11.0466  11.3794  11.3795  11.4897  11.4898
-    12.4956  12.4957  14.0605  14.0605  20.5873  20.5873  31.5914  31.5916
-    36.5386  37.3177
+     9.3181   9.3181  11.0469  11.0469  11.3799  11.3799  11.4900  11.4900
+    12.4961  12.4961  14.0607  14.0608  20.5874  31.6036  31.6036  31.6036
+    31.6036  31.6036
 
           k =-0.3750 0.1250 0.3750 (  159 PWs)   bands (ev):
 
-     8.2150   8.2150  10.8162  10.8163  11.2659  11.2659  11.5176  11.5177
-    12.0422  12.0423  12.8327  12.8328  25.8890  25.8890  31.4968  31.4968
-    39.3212  39.7018
+     8.2150   8.2151  10.8166  10.8166  11.2663  11.2663  11.5181  11.5181
+    12.0426  12.0427  12.8332  12.8332  25.8890  25.8891  31.4967  31.4968
+    39.4500  39.4500
 
           k =-0.1250 0.3750-0.3750 (  159 PWs)   bands (ev):
 
-     8.2150   8.2150  10.8162  10.8163  11.2659  11.2659  11.5176  11.5177
-    12.0422  12.0423  12.8327  12.8328  25.8890  25.8890  31.4966  31.4967
-    39.3306  39.7090
+     8.2150   8.2151  10.8166  10.8166  11.2663  11.2663  11.5181  11.5181
+    12.0426  12.0427  12.8332  12.8332  25.8890  25.8891  31.4967  31.4968
+    39.3658  39.3658
 
           k = 0.1250-0.3750-0.3750 (  159 PWs)   bands (ev):
 
-     8.2150   8.2150  10.8162  10.8163  11.2659  11.2659  11.5176  11.5177
-    12.0422  12.0423  12.8327  12.8328  25.8890  25.8890  31.4966  31.4968
-    39.3275  39.7116
+     8.2150   8.2151  10.8166  10.8166  11.2663  11.2663  11.5181  11.5181
+    12.0426  12.0427  12.8332  12.8332  25.8890  25.8891  31.4968  31.4968
+    39.3209  39.5694
 
           k =-0.2500 0.0000 0.2500 (  160 PWs)   bands (ev):
 
-     6.4958   6.4959  10.9083  10.9083  11.4019  11.4020  11.4841  11.4842
-    11.8802  11.8803  12.2896  12.2897  32.0433  32.0433  32.7839  32.7840
-    41.5858  41.5963
+     6.4958   6.4959  10.9086  10.9087  11.4024  11.4024  11.4845  11.4846
+    11.8807  11.8807  12.2901  12.2901  32.0434  32.0435  32.7839  32.7839
+    41.5467  41.5467
 
           k = 0.0000 0.2500-0.2500 (  160 PWs)   bands (ev):
 
-     6.4958   6.4959  10.9083  10.9083  11.4019  11.4020  11.4841  11.4842
-    11.8802  11.8803  12.2896  12.2897  32.0433  32.0434  32.7839  32.7839
-    41.5433  41.7984
+     6.4958   6.4959  10.9087  10.9087  11.4024  11.4024  11.4845  11.4845
+    11.8807  11.8807  12.2901  12.2901  32.0434  32.0435  32.7839  32.7840
+    41.6384  41.6384
 
           k = 0.5000 0.0000 0.0000 (  165 PWs)   bands (ev):
 
-     7.7953   7.7953  10.4444  10.4445  11.6421  11.6421  11.9301  11.9301
-    11.9302  11.9302  12.3963  12.3963  32.3412  32.3426  32.3564  32.3726
-    33.7653  34.5411
+     7.7953   7.7954  10.4448  10.4448  11.6425  11.6425  11.9306  11.9306
+    11.9306  11.9306  12.3967  12.3967  32.3411  32.3428  32.3428  32.3428
+    32.3428  32.3428
 
           k =-0.5000 0.0000 0.0000 (  165 PWs)   bands (ev):
 
-     7.7953   7.7953  10.4444  10.4445  11.6421  11.6421  11.9301  11.9301
-    11.9302  11.9302  12.3963  12.3963  32.3410  32.3417  32.3474  32.3775
-    33.7799  34.5436
+     7.7953   7.7954  10.4448  10.4448  11.6425  11.6425  11.9306  11.9306
+    11.9306  11.9306  12.3967  12.3967  32.3411  32.3472  32.3472  32.3472
+    32.3472  32.3472
 
           k = 0.1250-0.6250-0.1250 (  162 PWs)   bands (ev):
 
-     9.0261   9.0261  10.2435  10.2436  11.4593  11.4594  12.0301  12.0301
-    12.6332  12.6332  12.9941  12.9941  26.9802  26.9821  30.3554  30.3745
-    31.1034  31.1127
+     9.0262   9.0263  10.2439  10.2439  11.4596  11.4597  12.0305  12.0306
+    12.6336  12.6337  12.9944  12.9944  26.9803  26.9804  30.3556  30.3563
+    31.0997  31.1019
 
           k = 0.6250-0.1250 0.1250 (  162 PWs)   bands (ev):
 
-     9.0261   9.0261  10.2435  10.2436  11.4593  11.4594  12.0301  12.0301
-    12.6332  12.6332  12.9941  12.9941  26.9803  26.9828  30.3563  30.3749
-    31.1018  31.1042
+     9.0262   9.0263  10.2439  10.2439  11.4597  11.4597  12.0305  12.0305
+    12.6336  12.6337  12.9944  12.9944  26.9803  26.9811  30.3559  30.4417
+    30.4417  30.4417
 
           k =-0.6250 0.1250 0.1250 (  162 PWs)   bands (ev):
 
-     9.0261   9.0261  10.2435  10.2436  11.4593  11.4594  12.0301  12.0301
-    12.6332  12.6332  12.9941  12.9941  26.9804  26.9810  30.3586  30.3611
-    31.1011  31.1062
+     9.0262   9.0263  10.2439  10.2439  11.4597  11.4597  12.0305  12.0305
+    12.6336  12.6337  12.9944  12.9944  26.9804  26.9808  30.3563  30.4091
+    30.4091  30.4091
 
           k =-0.7500 0.2500 0.7500 (  158 PWs)   bands (ev):
 
-     9.7741   9.7741  10.3371  10.3372  11.2736  11.2736  11.9052  11.9053
-    12.7606  12.7607  15.5347  15.5347  21.6033  21.6033  27.6769  27.6819
-    31.3036  31.3100
+     9.7743   9.7744  10.3374  10.3375  11.2739  11.2740  11.9056  11.9057
+    12.7611  12.7612  15.5349  15.5349  21.6034  21.6034  27.6770  27.6775
+    31.3033  31.3069
 
           k =-0.2500 0.7500-0.7500 (  158 PWs)   bands (ev):
 
-     9.7741   9.7741  10.3371  10.3372  11.2736  11.2736  11.9052  11.9053
-    12.7606  12.7607  15.5347  15.5347  21.6033  21.6033  27.6769  27.6781
-    31.3034  31.3089
+     9.7743   9.7744  10.3374  10.3375  11.2739  11.2740  11.9057  11.9057
+    12.7611  12.7611  15.5349  15.5349  21.6034  21.6034  27.6770  27.6778
+    31.3034  31.3035
 
           k = 0.2500-0.7500-0.7500 (  158 PWs)   bands (ev):
 
-     9.7741   9.7741  10.3371  10.3372  11.2736  11.2736  11.9052  11.9053
-    12.7606  12.7607  15.5347  15.5347  21.6033  21.6033  27.6769  27.6781
-    31.3037  31.3096
+     9.7743   9.7744  10.3374  10.3375  11.2739  11.2740  11.9057  11.9057
+    12.7611  12.7611  15.5349  15.5349  21.6034  21.6034  27.6773  27.6810
+    31.3040  31.3387
 
           k =-0.6250 0.1250 0.6250 (  162 PWs)   bands (ev):
 
-    10.0261  10.0261  10.5346  10.5346  11.0773  11.0774  11.8004  11.8005
-    12.5177  12.5178  16.7783  16.7783  20.0961  20.0961  26.0442  26.0444
-    32.9776  32.9842
+    10.0264  10.0264  10.5349  10.5349  11.0776  11.0777  11.8008  11.8009
+    12.5182  12.5182  16.7785  16.7785  20.0962  20.0963  26.0443  26.0455
+    32.9769  32.9769
 
           k =-0.1250 0.6250-0.6250 (  162 PWs)   bands (ev):
 
-    10.0261  10.0261  10.5346  10.5346  11.0773  11.0774  11.8004  11.8005
-    12.5177  12.5178  16.7783  16.7783  20.0961  20.0961  26.0442  26.0446
-    32.9791  33.0005
+    10.0264  10.0264  10.5349  10.5350  11.0776  11.0777  11.8008  11.8009
+    12.5182  12.5182  16.7785  16.7785  20.0962  20.0963  26.0444  26.0459
+    32.9740  32.9740
 
           k = 0.1250-0.6250-0.6250 (  162 PWs)   bands (ev):
 
-    10.0261  10.0261  10.5346  10.5346  11.0773  11.0774  11.8004  11.8005
-    12.5177  12.5178  16.7783  16.7783  20.0961  20.0961  26.0442  26.0446
-    32.9730  32.9810
+    10.0264  10.0264  10.5349  10.5350  11.0776  11.0777  11.8008  11.8009
+    12.5182  12.5182  16.7785  16.7785  20.0962  20.0963  26.0444  26.0447
+    32.9744  32.9744
 
           k =-0.5000 0.0000 0.5000 (  164 PWs)   bands (ev):
 
-     9.6306   9.6306  10.6866  10.6866  10.9039  10.9040  11.7533  11.7533
-    12.1031  12.1032  14.2121  14.2121  24.5991  24.5991  26.0270  26.0270
-    35.9005  37.3198
+     9.6307   9.6307  10.6869  10.6870  10.9043  10.9043  11.7537  11.7537
+    12.1035  12.1036  14.2124  14.2125  24.5992  24.5992  26.0271  26.0273
+    35.9050  35.9050
 
           k = 0.0000 0.5000-0.5000 (  164 PWs)   bands (ev):
 
-     9.6306   9.6306  10.6866  10.6866  10.9039  10.9040  11.7533  11.7533
-    12.1031  12.1032  14.2121  14.2121  24.5991  24.5991  26.0270  26.0270
-    35.9376  36.0719
+     9.6307   9.6307  10.6869  10.6870  10.9043  10.9043  11.7537  11.7537
+    12.1035  12.1036  14.2124  14.2125  24.5991  24.5992  26.0270  26.0271
+    35.9034  35.9034
 
           k = 0.7500 0.0000 0.0000 (  162 PWs)   bands (ev):
 
-     9.2116   9.2116   9.9258   9.9258  12.5647  12.5647  12.5648  12.5648
-    12.6085  12.6086  13.2901  13.2901  26.4730  26.4815  29.3008  29.3009
-    29.3055  29.3080
+     9.2118   9.2119   9.9261   9.9261  12.5652  12.5652  12.5652  12.5652
+    12.6090  12.6090  13.2902  13.2903  26.4732  26.4738  29.3008  29.3015
+    29.3022  29.3162
 
           k =-0.7500 0.0000 0.0000 (  162 PWs)   bands (ev):
 
-     9.2116   9.2116   9.9258   9.9258  12.5647  12.5647  12.5648  12.5648
-    12.6085  12.6086  13.2901  13.2901  26.4731  26.4799  29.3008  29.3015
-    29.3034  29.3086
+     9.2118   9.2119   9.9261   9.9261  12.5652  12.5652  12.5652  12.5652
+    12.6090  12.6090  13.2902  13.2903  26.4732  26.4745  26.4745  26.4745
+    26.4745  26.4745
 
           k =-0.8750 0.1250 0.8750 (  164 PWs)   bands (ev):
 
-     9.4573   9.4574   9.8803   9.8803  12.2118  12.2119  12.4809  12.4810
-    12.8059  12.8060  15.9158  15.9158  23.7248  23.7249  25.2538  25.2546
-    29.0148  29.0193
+     9.4576   9.4576   9.8806   9.8807  12.2122  12.2122  12.4814  12.4814
+    12.8064  12.8064  15.9159  15.9160  23.7251  23.7255  25.2539  25.2547
+    29.0141  29.0171
 
           k =-0.1250 0.8750-0.8750 (  164 PWs)   bands (ev):
 
-     9.4573   9.4574   9.8803   9.8803  12.2118  12.2119  12.4809  12.4810
-    12.8059  12.8060  15.9158  15.9158  23.7248  23.7251  25.2538  25.2546
-    29.0142  29.0200
+     9.4576   9.4577   9.8806   9.8806  12.2122  12.2122  12.4814  12.4814
+    12.8064  12.8064  15.9159  15.9160  23.7250  23.7257  25.2538  25.2541
+    29.0156  29.0175
 
           k = 0.1250-0.8750-0.8750 (  164 PWs)   bands (ev):
 
-     9.4573   9.4574   9.8803   9.8803  12.2118  12.2119  12.4809  12.4810
-    12.8059  12.8060  15.9158  15.9158  23.7248  23.7268  25.2538  25.2548
-    29.0141  29.0195
+     9.4576   9.4577   9.8806   9.8806  12.2122  12.2122  12.4814  12.4814
+    12.8064  12.8064  15.9159  15.9160  23.7250  23.7251  25.2540  25.2545
+    29.0174  29.0310
 
           k =-0.7500 0.0000 0.7500 (  168 PWs)   bands (ev):
 
-     9.8689   9.8689  10.1174  10.1174  11.5169  11.5169  12.2486  12.2487
-    12.6603  12.6604  19.0084  19.0085  20.5171  20.5171  22.9161  22.9161
-    30.3285  30.3328
+     9.8692   9.8693  10.1177  10.1177  11.5172  11.5173  12.2491  12.2491
+    12.6608  12.6609  19.0085  19.0086  20.5172  20.5172  22.9162  22.9163
+    30.3268  30.3316
 
           k = 0.0000 0.7500-0.7500 (  168 PWs)   bands (ev):
 
-     9.8689   9.8689  10.1174  10.1174  11.5169  11.5169  12.2486  12.2487
-    12.6603  12.6604  19.0084  19.0085  20.5171  20.5171  22.9161  22.9161
-    30.3261  30.3373
+     9.8692   9.8693  10.1177  10.1177  11.5172  11.5173  12.2491  12.2491
+    12.6608  12.6608  19.0085  19.0086  20.5172  20.5172  22.9162  22.9162
+    30.3260  30.3270
 
           k =-1.0000 0.0000 0.0000 (  150 PWs)   bands (ev):
 
-     9.2658   9.2659   9.7168   9.7168  12.6971  12.6972  12.8717  12.8717
-    12.8718  12.8718  16.0648  16.0649  22.1123  22.1126  28.1805  28.1807
-    28.1824  28.1839
+     9.2661   9.2662   9.7171   9.7172  12.6976  12.6976  12.8722  12.8722
+    12.8722  12.8722  16.0648  16.0649  22.1124  22.1125  28.1805  28.1806
+    28.1810  28.1823
 
           k = 0.2500-0.5000 0.0000 (  156 PWs)   bands (ev):
 
-     8.3853   8.3853  10.5341  10.5342  11.2123  11.2123  11.9393  11.9394
-    11.9921  11.9922  12.8705  12.8706  28.3807  28.3819  29.1690  29.1690
-    34.7054  34.7172
+     8.3853   8.3854  10.5345  10.5345  11.2127  11.2127  11.9397  11.9398
+    11.9925  11.9926  12.8709  12.8709  28.3808  28.3811  29.1690  29.1691
+    34.7043  34.7048
 
           k = 0.5000-0.2500 0.0000 (  156 PWs)   bands (ev):
 
-     8.3853   8.3853  10.5341  10.5342  11.2123  11.2123  11.9393  11.9394
-    11.9921  11.9922  12.8705  12.8706  28.3807  28.3808  29.1690  29.1690
-    34.7047  34.7197
+     8.3853   8.3854  10.5345  10.5345  11.2127  11.2127  11.9397  11.9398
+    11.9925  11.9926  12.8709  12.8709  28.3808  28.3809  29.1691  29.1691
+    34.7043  34.7044
 
           k =-0.5000 0.2500 0.0000 (  156 PWs)   bands (ev):
 
-     8.3853   8.3853  10.5341  10.5342  11.2123  11.2123  11.9393  11.9394
-    11.9921  11.9922  12.8705  12.8706  28.3807  28.3807  29.1690  29.1691
-    34.7046  34.7120
+     8.3853   8.3854  10.5345  10.5345  11.2127  11.2127  11.9397  11.9398
+    11.9925  11.9926  12.8709  12.8709  28.3808  28.3810  29.1690  29.1691
+    34.7042  34.7062
 
           k = 0.0000-0.5000-0.2500 (  156 PWs)   bands (ev):
 
-     8.3853   8.3853  10.5341  10.5342  11.2123  11.2123  11.9393  11.9394
-    11.9921  11.9922  12.8705  12.8706  28.3807  28.3807  29.1690  29.1690
-    34.7047  34.7097
+     8.3853   8.3854  10.5345  10.5345  11.2127  11.2127  11.9398  11.9398
+    11.9925  11.9926  12.8709  12.8709  28.3808  28.3809  29.1690  29.1691
+    34.7042  34.7044
 
           k =-0.6250 0.3750 0.8750 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6523  31.6535
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9180  22.9181  28.5932  28.5933
+    31.6525  31.6526
 
           k =-0.3750 0.6250-0.8750 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6523  31.6537
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9181  22.9181  28.5932  28.5935
+    31.6524  31.6539
 
           k = 0.3750-0.6250-0.8750 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6523  31.6526
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9181  22.9183  28.5933  28.5933
+    31.6524  31.6525
 
           k = 0.8750 0.3750 0.6250 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6523  31.6530
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9180  22.9181  28.5933  28.5936
+    31.6524  31.6530
 
           k =-0.8750 0.3750-0.6250 (  161 PWs)   bands (ev):
 
-     9.6575   9.6575  10.6134  10.6134  10.9347  10.9348  11.8096  11.8097
-    12.4699  12.4700  14.3853  14.3854  22.9180  22.9180  28.5932  28.5932
-    31.6524  31.6531
+     9.6577   9.6577  10.6137  10.6138  10.9351  10.9352  11.8101  11.8101
+    12.4703  12.4704  14.3856  14.3857  22.9180  22.9181  28.5933  28.5933
+    31.6524  31.6527
 
           k =-0.2500 0.5000-0.7500 (  164 PWs)   bands (ev):
 
-     9.8974   9.8975  10.5964  10.5964  11.1683  11.1683  11.6975  11.6975
-    12.6581  12.6582  16.6936  16.6936  19.1459  19.1459  29.3164  29.3164
-    29.7928  29.7929
+     9.8977   9.8978  10.5967  10.5968  11.1686  11.1687  11.6979  11.6979
+    12.6586  12.6586  16.6937  16.6938  19.1460  19.1461  29.3164  29.3165
+    29.7929  29.7929
 
           k = 0.2500-0.5000-0.7500 (  164 PWs)   bands (ev):
 
-     9.8974   9.8975  10.5964  10.5964  11.1683  11.1683  11.6975  11.6975
-    12.6581  12.6582  16.6936  16.6936  19.1459  19.1459  29.3164  29.3164
-    29.7928  29.7929
+     9.8977   9.8978  10.5967  10.5968  11.1686  11.1687  11.6979  11.6979
+    12.6586  12.6586  16.6937  16.6938  19.1460  19.1461  29.3164  29.3166
+    29.7930  29.7931
 
           k =-0.7500 0.2500 1.0000 (  166 PWs)   bands (ev):
 
-     9.6204   9.6204  10.1238  10.1238  11.4253  11.4254  12.4028  12.4029
-    12.5608  12.5609  14.7943  14.7943  25.8725  25.8727  26.6524  26.6527
-    27.2682  27.2683
+     9.6207   9.6207  10.1241  10.1242  11.4257  11.4257  12.4033  12.4033
+    12.5613  12.5613  14.7945  14.7945  25.8726  26.0056  26.0056  26.0056
+    26.0056  26.0056
 
           k =-0.2500 0.7500-1.0000 (  166 PWs)   bands (ev):
 
-     9.6204   9.6204  10.1238  10.1238  11.4253  11.4254  12.4028  12.4029
-    12.5608  12.5609  14.7943  14.7943  25.8725  25.8728  26.6524  26.6524
-    27.2682  27.2683
+     9.6207   9.6207  10.1241  10.1241  11.4257  11.4257  12.4033  12.4033
+    12.5613  12.5613  14.7945  14.7945  25.8727  25.9873  25.9873  25.9873
+    25.9873  25.9873
 
           k = 0.2500-0.7500-1.0000 (  166 PWs)   bands (ev):
 
-     9.6204   9.6204  10.1238  10.1238  11.4253  11.4254  12.4028  12.4029
-    12.5608  12.5609  14.7943  14.7943  25.8725  25.8728  26.6524  26.6524
-    27.2682  27.2683
+     9.6207   9.6207  10.1241  10.1241  11.4257  11.4257  12.4033  12.4033
+    12.5613  12.5613  14.7945  14.7945  25.8726  25.8727  26.6525  26.6527
+    27.2683  27.2683
 
           k = 1.0000 0.2500 0.7500 (  166 PWs)   bands (ev):
 
-     9.6204   9.6204  10.1238  10.1238  11.4253  11.4254  12.4028  12.4029
-    12.5608  12.5609  14.7943  14.7943  25.8725  25.8727  26.6524  26.6525
-    27.2682  27.2687
+     9.6207   9.6207  10.1241  10.1242  11.4257  11.4257  12.4033  12.4033
+    12.5613  12.5613  14.7945  14.7945  25.8727  25.8729  26.6525  26.6527
+    27.2683  27.2684
 
           k =-0.6250 0.1250 0.8750 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
+    10.0011  10.0011  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7964  24.7966
     27.1037  27.1038
 
           k =-0.1250 0.6250-0.8750 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
-    27.1037  27.1037
+    10.0011  10.0011  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7965  24.7965
+    27.1038  27.1046
 
           k = 0.1250-0.6250-0.8750 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
-    27.1037  27.1037
+    10.0011  10.0012  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7964  24.7965
+    27.1038  27.1038
 
           k = 0.8750 0.1250 0.6250 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
-    27.1037  27.1037
+    10.0011  10.0011  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7964  24.7965
+    27.1037  27.1048
 
           k =-0.8750 0.1250-0.6250 (  161 PWs)   bands (ev):
 
-    10.0008  10.0008  10.2737  10.2737  11.1331  11.1332  12.1346  12.1346
-    12.7441  12.7441  18.0204  18.0204  21.2279  21.2279  24.7963  24.7964
-    27.1037  27.1037
+    10.0011  10.0011  10.2740  10.2740  11.1335  11.1335  12.1350  12.1350
+    12.7445  12.7446  18.0205  18.0205  21.2280  21.2281  24.7964  24.7966
+    27.1039  27.1083
 
           k =-0.5000 0.0000 0.7500 (  158 PWs)   bands (ev):
 
-    10.2798  10.2798  10.4645  10.4646  10.7102  10.7103  12.0133  12.0134
-    12.5649  12.5650  17.1296  17.1296  21.9675  21.9675  24.2092  24.2092
-    28.8762  28.8762
+    10.2800  10.2801  10.4649  10.4649  10.7105  10.7106  12.0138  12.0138
+    12.5654  12.5655  17.1297  17.1298  21.9676  21.9676  24.2092  24.2093
+    28.8764  28.8858
 
           k = 0.0000 0.5000-0.7500 (  158 PWs)   bands (ev):
 
-    10.2798  10.2798  10.4645  10.4646  10.7102  10.7103  12.0133  12.0134
-    12.5649  12.5650  17.1296  17.1296  21.9675  21.9675  24.2092  24.2092
-    28.8762  28.8762
+    10.2800  10.2801  10.4649  10.4649  10.7106  10.7106  12.0138  12.0138
+    12.5654  12.5654  17.1297  17.1298  21.9676  21.9676  24.2092  24.2093
+    28.8763  28.8765
 
           k = 0.7500 0.0000 0.5000 (  158 PWs)   bands (ev):
 
-    10.2798  10.2798  10.4645  10.4646  10.7102  10.7103  12.0133  12.0134
-    12.5649  12.5650  17.1296  17.1296  21.9675  21.9675  24.2092  24.2092
-    28.8762  28.8762
+    10.2800  10.2801  10.4649  10.4649  10.7105  10.7106  12.0138  12.0138
+    12.5654  12.5655  17.1297  17.1298  21.9676  21.9676  24.2094  24.2094
+    28.8763  28.8770
 
           k =-0.7500 0.0000-0.5000 (  158 PWs)   bands (ev):
 
-    10.2798  10.2798  10.4645  10.4646  10.7102  10.7103  12.0133  12.0134
-    12.5649  12.5650  17.1296  17.1296  21.9675  21.9675  24.2092  24.2092
-    28.8762  28.8762
+    10.2800  10.2801  10.4649  10.4649  10.7105  10.7106  12.0138  12.0138
+    12.5654  12.5655  17.1297  17.1298  21.9676  21.9676  24.2092  24.2093
+    28.8763  28.8763
 
           k = 0.2500 1.0000 0.0000 (  164 PWs)   bands (ev):
 
-     9.6008   9.6008   9.9539   9.9540  11.8936  11.8936  12.4333  12.4334
-    12.8719  12.8720  17.7253  17.7253  22.3942  22.3942  24.9313  24.9313
-    26.0255  26.0256
+     9.6011   9.6011   9.9543   9.9543  11.8940  11.8940  12.4338  12.4338
+    12.8724  12.8724  17.7253  17.7254  22.3943  22.3944  24.9313  24.9314
+    26.0258  26.0260
 
           k =-1.0000-0.2500 0.0000 (  164 PWs)   bands (ev):
 
-     9.6008   9.6008   9.9539   9.9540  11.8936  11.8936  12.4333  12.4334
-    12.8719  12.8720  17.7253  17.7253  22.3942  22.3942  24.9313  24.9314
-    26.0255  26.0255
+     9.6011   9.6011   9.9543   9.9543  11.8940  11.8940  12.4338  12.4338
+    12.8724  12.8724  17.7253  17.7254  22.3943  22.3944  24.9313  24.9423
+    26.0265  26.0269
 
           k = 0.0000 1.0000-0.2500 (  164 PWs)   bands (ev):
 
-     9.6008   9.6008   9.9539   9.9540  11.8936  11.8936  12.4333  12.4334
-    12.8719  12.8720  17.7253  17.7253  22.3942  22.3942  24.9313  24.9315
-    26.0255  26.0255
+     9.6011   9.6011   9.9543   9.9543  11.8940  11.8940  12.4338  12.4338
+    12.8724  12.8724  17.7253  17.7254  22.3943  22.3944  24.9313  24.9320
+    26.0256  26.0260
 
           k =-1.0000-0.5000 0.0000 (  156 PWs)   bands (ev):
 
-    10.0366  10.0366  10.6868  10.6868  10.6868  10.6868  12.0678  12.0679
-    12.8723  12.8724  20.9537  20.9537  20.9537  20.9537  23.1357  23.1357
-    24.0564  24.0565
+    10.0369  10.0369  10.6871  10.6871  10.6872  10.6872  12.0683  12.0683
+    12.8728  12.8728  20.9538  20.9538  20.9538  20.9799  20.9799  20.9799
+    20.9799  20.9799
 
-     the Fermi energy is    14.4911 ev
+     the Fermi energy is    14.4913 ev
 
-!    total energy              =   -87.84038898 ryd
-     estimated scf accuracy    <     0.00000001 ryd
+!    total energy              =   -87.84038874 ryd
+     estimated scf accuracy    <     0.00000000 ryd
 
-     band energy sum           =     9.09865120 ryd
-     one-electron contribution =   -10.24973323 ryd
-     hartree contribution      =    18.89958088 ryd
-     xc contribution           =   -14.05795708 ryd
+     band energy sum           =     9.09893704 ryd
+     one-electron contribution =   -10.24972269 ryd
+     hartree contribution      =    18.89956913 ryd
+     xc contribution           =   -14.05795535 ryd
      ewald contribution        =   -82.43214130 ryd
-     scf in/out correction     =     0.00076630 ryd
-     correction for metals     =    -0.00013824 ryd
+     scf in/out correction     =     0.00046977 ryd
+     correction for metals     =    -0.00013853 ryd
 
-     total magnetization     =  0.00000624  0.00000000  0.00000000 Bohr mag/cell
+     total magnetization     = -0.00001199  0.00000000  0.00000000 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
 
      convergence has been achieved
 
-     Writing file cu.pun        for program phonon
+     Writing file        cu.save for program phonon
  
-     PWSCF        :  4m23.24s CPU time
+     PWSCF        :  4m35.93s CPU time
 
-     init_run     :     8.22s CPU
-     electrons    :   254.87s CPU
+     init_run     :     5.76s CPU
+     electrons    :   270.12s CPU
  
-     electrons    :   254.87s CPU
-     c_bands      :   208.65s CPU (      13 calls,  16.050 s avg)
-     sum_band     :    40.68s CPU (      13 calls,   3.130 s avg)
-     v_of_rho     :     1.39s CPU (      27 calls,   0.051 s avg)
-     newd         :     2.32s CPU (      14 calls,   0.166 s avg)
-     mix_rho      :     1.53s CPU (      13 calls,   0.118 s avg)
+     electrons    :   270.12s CPU
+     c_bands      :   241.32s CPU (      10 calls,  24.132 s avg)
+     sum_band     :    26.37s CPU (      10 calls,   2.637 s avg)
+     v_of_rho     :     0.60s CPU (      21 calls,   0.029 s avg)
+     newd         :     1.15s CPU (      11 calls,   0.105 s avg)
+     mix_rho      :     0.62s CPU (      10 calls,   0.062 s avg)
  
-     c_bands      :   208.65s CPU (      13 calls,  16.050 s avg)
-     init_us_2    :     1.03s CPU (    2700 calls,   0.000 s avg)
-     ccgdiagg     :    50.47s CPU (     400 calls,   0.126 s avg)
-     diis         :   139.40s CPU (     900 calls,   0.155 s avg)
+     c_bands      :   241.32s CPU (      10 calls,  24.132 s avg)
+     init_us_2    :     0.60s CPU (    2100 calls,   0.000 s avg)
+     diis         :   239.79s CPU (    1072 calls,   0.224 s avg)
  
-     sum_band     :    40.68s CPU (      13 calls,   3.130 s avg)
-     sumbec       :     0.16s CPU (    1300 calls,   0.000 s avg)
-     addusdens    :     2.75s CPU (      13 calls,   0.212 s avg)
+     sum_band     :    26.37s CPU (      10 calls,   2.637 s avg)
+     becsum       :     0.17s CPU (    1000 calls,   0.000 s avg)
+     addusdens    :     1.27s CPU (      10 calls,   0.127 s avg)
  
-     wfcrot       :    47.11s CPU (    1000 calls,   0.047 s avg)
-     wfcrot1      :    14.48s CPU (     300 calls,   0.048 s avg)
-     cdiaghg      :    12.47s CPU (   26005 calls,   0.000 s avg)
+     wfcrot       :    40.52s CPU (    1172 calls,   0.035 s avg)
+     h_psi        :   213.36s CPU (   99702 calls,   0.002 s avg)
+     s_psi        :     5.71s CPU (   99702 calls,   0.000 s avg)
+     g_psi        :     1.64s CPU (   62160 calls,   0.000 s avg)
+     cdiaghg      :     6.88s CPU (   63332 calls,   0.000 s avg)
+     cgramg1      :     5.45s CPU (   63232 calls,   0.000 s avg)
  
-     init         :     5.48s CPU (   70230 calls,   0.000 s avg)
-     firstfft     :   102.11s CPU (   87230 calls,   0.001 s avg)
-     secondfft    :    36.75s CPU (   87230 calls,   0.000 s avg)
-     add_vuspsi   :     7.51s CPU (   70230 calls,   0.000 s avg)
+     h_psi        :   213.36s CPU (   99702 calls,   0.002 s avg)
+     init         :     4.01s CPU (   99702 calls,   0.000 s avg)
+     firstfft     :   120.07s CPU (  119626 calls,   0.001 s avg)
+     secondfft    :    56.43s CPU (  119626 calls,   0.000 s avg)
+     add_vuspsi   :    11.03s CPU (   99702 calls,   0.000 s avg)
  
-      General routines
-     ccalbec      :     6.43s CPU (   93556 calls,   0.000 s avg)
-     cft3         :     2.40s CPU (     475 calls,   0.005 s avg)
-     cft3s        :    78.47s CPU (  395828 calls,   0.000 s avg)
-     interpolate  :     0.74s CPU (     108 calls,   0.007 s avg)
-     davcio       :     5.30s CPU (    4000 calls,   0.001 s avg)
+     General routines
+     ccalbec      :     3.38s CPU (  100702 calls,   0.000 s avg)
+     cft3         :     0.69s CPU (     367 calls,   0.002 s avg)
+     cft3s        :   116.45s CPU (  514588 calls,   0.000 s avg)
+     interpolate  :     0.24s CPU (      84 calls,   0.003 s avg)
+     davcio       :     0.60s CPU (    3172 calls,   0.000 s avg)
  

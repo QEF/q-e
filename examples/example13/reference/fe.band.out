@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.2.0    starts ...
-     Today is  3Feb2004 at 11:59:49 
+     Program PWSCF     v.2.1    starts ...
+     Today is  2Sep2004 at 11:57:17 
 
      non-colinear magnetization allowed
 
@@ -47,7 +47,7 @@
                 l(5) =   2
                 l(6) =   2
      Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
-                                                             0.000   0.000
+                                                       0.000   0.000
 
      atomic species   valence    mass     pseudopotential
         Fe             8.00    55.84700     Fe( 1.00)
@@ -101,39 +101,30 @@
      The initial potential is read from file         fe.pot
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      2.95 secs
+     total cpu time spent up to now is      1.97 secs
 
      Band Structure Calculation
      Davidson diagonalization (with overlap)
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
    WARNING:     1 eigenvalues not converged
- warning :   1 eigenvectors not converged after   0 attemps
    WARNING:     1 eigenvalues not converged
- warning :   1 eigenvectors not converged after   0 attemps
    WARNING:     1 eigenvalues not converged
- warning :   1 eigenvectors not converged after   0 attemps
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
    WARNING:     2 eigenvalues not converged
- warning :   2 eigenvectors not converged after   0 attemps
-     ethr =  1.00E-07,  avg # of iterations = 17.1
+     ethr =  1.00E-07,  avg # of iterations = 20.2
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
      5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
-    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7540  40.2271
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7532  40.2271
 
           k = 0.0000 0.0000 0.1000     band energies (ev):
 
      5.7004   6.3887  11.8155  11.8155  11.8806  13.4293  13.5824  14.5102
-    14.5102  14.5915  16.2262  16.4164  38.6427  39.2276  39.6414  39.6415
+    14.5102  14.5915  16.2262  16.4164  38.6427  39.2276  39.6414  39.6414
 
           k = 0.0000 0.0000 0.2000     band energies (ev):
 
@@ -183,12 +174,12 @@
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
      5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
-    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7533  40.2271
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7532  40.2271
 
           k = 0.0000 0.1000 0.1000     band energies (ev):
 
      5.9178   6.6081  11.6908  11.8035  12.0661  13.4172  13.5503  14.3673
-    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2204  39.6294
+    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2204  39.6276
 
           k = 0.0000 0.2000 0.2000     band energies (ev):
 
@@ -228,17 +219,17 @@
           k = 0.0000 0.9000 0.9000     band energies (ev):
 
      5.9178   6.6081  11.6908  11.8035  12.0661  13.4172  13.5503  14.3673
-    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2207  39.6281
+    14.4814  14.7939  16.2135  16.3766  37.6510  38.4047  39.2204  39.6276
 
           k = 0.0000 1.0000 1.0000     band energies (ev):
 
      5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
-    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7540  40.2271
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7532  40.2271
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
      5.4784   6.1656  11.8169  11.8169  11.8169  13.5394  13.5394  14.5209
-    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7533  40.2271
+    14.5209  14.5209  16.3634  16.3634  39.7532  39.7532  39.7532  40.2271
 
           k = 0.1000 0.1000 0.1000     band energies (ev):
 
@@ -265,46 +256,46 @@
     10.8105  10.8105  10.8105  12.9094  12.9094  12.9094  13.8096  13.8096
     16.7237  16.7237  23.6322  23.6322  23.6322  25.2234  25.2234  25.2234
 
-     Writing file fe.pun        for program phonon
+     Writing file        fe.save for program phonon
  
-     PWSCF        :    14.22s CPU time
+     PWSCF        :    12.00s CPU time
 
-     init_run     :     2.85s CPU
-     electrons    :    10.41s CPU
+     init_run     :     1.89s CPU
+     electrons    :     9.40s CPU
  
-     electrons    :    10.41s CPU
-     c_bands      :    10.41s CPU
-     sum_band     :     0.76s CPU
-     newd         :     0.11s CPU
+     electrons    :     9.40s CPU
+     c_bands      :     9.40s CPU
+     sum_band     :     0.62s CPU
+     newd         :     0.06s CPU
  
-     c_bands      :    10.41s CPU
+     c_bands      :     9.40s CPU
      init_us_2    :     0.04s CPU (      84 calls,   0.000 s avg)
-     cegterg      :    10.32s CPU (      28 calls,   0.369 s avg)
+     cegterg      :     9.33s CPU (      37 calls,   0.252 s avg)
  
-     sum_band     :     0.76s CPU
-     sumbec       :     0.00s CPU (      28 calls,   0.000 s avg)
-     addusdens    :     0.15s CPU
+     sum_band     :     0.62s CPU
+     becsum       :     0.01s CPU (      28 calls,   0.000 s avg)
+     addusdens    :     0.10s CPU
  
-     wfcrot       :     1.00s CPU (      28 calls,   0.036 s avg)
-     cegterg      :    10.32s CPU (      28 calls,   0.369 s avg)
-     h_psi        :     6.97s CPU (     536 calls,   0.013 s avg)
-     g_psi        :     0.08s CPU (     480 calls,   0.000 s avg)
-     overlap      :     0.59s CPU (     480 calls,   0.001 s avg)
-     cdiaghg      :     2.11s CPU (     508 calls,   0.004 s avg)
-     update       :     0.61s CPU (     480 calls,   0.001 s avg)
-     last         :     0.37s CPU (      84 calls,   0.004 s avg)
+     wfcrot       :     0.64s CPU (      28 calls,   0.023 s avg)
+     cegterg      :     9.33s CPU (      37 calls,   0.252 s avg)
+     h_psi        :     6.31s CPU (     630 calls,   0.010 s avg)
+     g_psi        :     0.05s CPU (     565 calls,   0.000 s avg)
+     overlap      :     0.62s CPU (     565 calls,   0.001 s avg)
+     cdiaghg      :     1.65s CPU (     593 calls,   0.003 s avg)
+     update       :     0.51s CPU (     565 calls,   0.001 s avg)
+     last         :     0.38s CPU (      93 calls,   0.004 s avg)
  
-     h_psi        :     6.97s CPU (     536 calls,   0.013 s avg)
-     init         :     0.15s CPU (     536 calls,   0.000 s avg)
-     firstfft     :     3.76s CPU (    4363 calls,   0.001 s avg)
-     secondfft    :     1.88s CPU (    4363 calls,   0.000 s avg)
-     add_vuspsi   :     0.29s CPU (     536 calls,   0.001 s avg)
-     s_psi        :     0.30s CPU (     536 calls,   0.001 s avg)
+     h_psi        :     6.31s CPU (     630 calls,   0.010 s avg)
+     init         :     0.12s CPU (     630 calls,   0.000 s avg)
+     firstfft     :     3.00s CPU (    4752 calls,   0.001 s avg)
+     secondfft    :     2.29s CPU (    4752 calls,   0.000 s avg)
+     add_vuspsi   :     0.24s CPU (     630 calls,   0.000 s avg)
+     s_psi        :     0.31s CPU (     630 calls,   0.000 s avg)
  
-      General routines
-     ccalbec      :     0.14s CPU (     564 calls,   0.000 s avg)
-     cft3         :     0.05s CPU (      18 calls,   0.003 s avg)
-     cft3s        :     3.60s CPU (   18356 calls,   0.000 s avg)
-     interpolate  :     0.03s CPU (       8 calls,   0.004 s avg)
-     davcio       :     0.13s CPU (     112 calls,   0.001 s avg)
+     General routines
+     ccalbec      :     0.13s CPU (     658 calls,   0.000 s avg)
+     cft3         :     0.02s CPU (      18 calls,   0.001 s avg)
+     cft3s        :     4.37s CPU (   19912 calls,   0.000 s avg)
+     interpolate  :     0.01s CPU (       8 calls,   0.001 s avg)
+     davcio       :     0.04s CPU (     121 calls,   0.000 s avg)
  
