@@ -64,13 +64,16 @@ iotk_module.o \
 iotk_interface.o \
 iotk_external.o \
 iotk_multitype.o \
-iotk_multitype_character.o \
+iotk_multitype_character1.o \
+iotk_multitype_character2.o \
 iotk_multitype_complex1.o \
 iotk_multitype_complex2.o \
 iotk_multitype_integer1.o \
 iotk_multitype_integer2.o \
-iotk_multitype_logical.o \
-iotk_multitype_real.o 
+iotk_multitype_logical1.o \
+iotk_multitype_logical2.o \
+iotk_multitype_real1.o \
+iotk_multitype_real2.o 
 
 all : $(MODULES)
 

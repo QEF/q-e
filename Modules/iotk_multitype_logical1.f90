@@ -11,24 +11,24 @@
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 0 <= __IOTK_MAXRANK
 
 # 64 "iotk_attr.spp"
 ! This is needed as a workaround for bugged pack 
-subroutine iotk_private_pack_INTEGER1(out,in,n,l)
+subroutine iotk_private_pack_LOGICAL1(out,in,n,l)
     use iotk_base
     implicit none
     integer,                                    intent(in)  :: n,l
 # 73 "iotk_attr.spp"
-    INTEGER (kind=__IOTK_INTEGER1), intent(out) :: out(n)
-    INTEGER (kind=__IOTK_INTEGER1), intent(in)  :: in(n)
+    LOGICAL (kind=__IOTK_LOGICAL1), intent(out) :: out(n)
+    LOGICAL (kind=__IOTK_LOGICAL1), intent(in)  :: in(n)
 # 76 "iotk_attr.spp"
     out = in
-end subroutine iotk_private_pack_INTEGER1
+end subroutine iotk_private_pack_LOGICAL1
 
 # 81 "iotk_attr.spp"
-subroutine iotk_write_INTEGER1(val,string,ierr)
+subroutine iotk_write_LOGICAL1(val,string,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
@@ -36,7 +36,7 @@ subroutine iotk_write_INTEGER1(val,string,ierr)
   use iotk_str_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER1), intent(in) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in) :: val(:)
 #ifdef __IOTK_WORKAROUND6
   character(len=*)              :: string
 #else
@@ -56,11 +56,11 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
     return
   end if
   do index=1,size(val)
-# 114 "iotk_attr.spp"
-    call iotk_strcat(string,trim(iotk_itoa(val(index)))//" ",ierr)
+# 108 "iotk_attr.spp"
+    call iotk_strcat(string,iotk_ltoa(val(index))//" ",ierr)
     if(ierr/=0) then
       call iotk_error_issue(ierr,"iotk_write",__FILE__,__LINE__)
-# 116 "iotk_attr.spp"
+# 110 "iotk_attr.spp"
 call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
       return
     end if
@@ -68,17 +68,17 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
   end do
 ! taglio l'ultimo spazio
   string(iotk_strlen(string):iotk_strlen(string)) = iotk_eos
-end subroutine iotk_write_INTEGER1
+end subroutine iotk_write_LOGICAL1
 # 137 "iotk_attr.spp"
 
 # 141 "iotk_attr.spp"
-subroutine iotk_read_INTEGER1(val,string,index,ierr)
+subroutine iotk_read_LOGICAL1(val,string,index,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER1), intent(inout) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(inout) :: val(:)
   character(len=*), intent(in) :: string
   integer, intent(inout) :: index
   integer, intent(out) :: ierr
@@ -109,8 +109,8 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
 # 177 "iotk_attr.spp"
 call iotk_error_msg(ierr,'Too many data')
     end if
-# 180 "iotk_attr.spp"
-    call iotk_atoi(val(index),string(pos+1:pos1-1),check=check)
+# 182 "iotk_attr.spp"
+    val(index) = iotk_atol(string(pos+1:pos1-1),check=check)
 # 195 "iotk_attr.spp"
     if(.not.check) then
       call iotk_error_issue(ierr,"iotk_read",__FILE__,__LINE__)
@@ -125,11 +125,11 @@ call iotk_error_write(ierr,"string",string(pos+1:pos1-1))
 # 205 "iotk_attr.spp"
     if(pos1>=len(string)) exit
   end do
-end subroutine iotk_read_INTEGER1
+end subroutine iotk_read_LOGICAL1
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_0(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -138,7 +138,7 @@ subroutine iotk_write_attr_INTEGER1_0(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val 
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val 
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -196,10 +196,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_0
+end subroutine iotk_write_attr_LOGICAL1_0
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_0(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -209,13 +209,13 @@ subroutine iotk_scan_attr_INTEGER1_0(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val 
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val 
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val 
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val 
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default 
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -225,7 +225,7 @@ subroutine iotk_scan_attr_INTEGER1_0(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -336,15 +336,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_0
+end subroutine iotk_scan_attr_LOGICAL1_0
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_0
+subroutine iotk_attr_dummy_LOGICAL1_0
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_0
+end subroutine iotk_attr_dummy_LOGICAL1_0
 
 # 45 "iotk_attr.spp"
 
@@ -361,7 +361,7 @@ end subroutine iotk_attr_dummy_INTEGER1_0
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 1 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -369,7 +369,7 @@ end subroutine iotk_attr_dummy_INTEGER1_0
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_1(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -378,7 +378,7 @@ subroutine iotk_write_attr_INTEGER1_1(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -436,10 +436,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_1
+end subroutine iotk_write_attr_LOGICAL1_1
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_1(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -449,13 +449,13 @@ subroutine iotk_scan_attr_INTEGER1_1(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -465,7 +465,7 @@ subroutine iotk_scan_attr_INTEGER1_1(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -576,15 +576,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_1
+end subroutine iotk_scan_attr_LOGICAL1_1
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_1
+subroutine iotk_attr_dummy_LOGICAL1_1
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_1
+end subroutine iotk_attr_dummy_LOGICAL1_1
 
 # 45 "iotk_attr.spp"
 
@@ -601,7 +601,7 @@ end subroutine iotk_attr_dummy_INTEGER1_1
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 2 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -609,7 +609,7 @@ end subroutine iotk_attr_dummy_INTEGER1_1
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_2(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -618,7 +618,7 @@ subroutine iotk_write_attr_INTEGER1_2(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -676,10 +676,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_2
+end subroutine iotk_write_attr_LOGICAL1_2
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_2(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -689,13 +689,13 @@ subroutine iotk_scan_attr_INTEGER1_2(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -705,7 +705,7 @@ subroutine iotk_scan_attr_INTEGER1_2(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -816,15 +816,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_2
+end subroutine iotk_scan_attr_LOGICAL1_2
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_2
+subroutine iotk_attr_dummy_LOGICAL1_2
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_2
+end subroutine iotk_attr_dummy_LOGICAL1_2
 
 # 45 "iotk_attr.spp"
 
@@ -841,7 +841,7 @@ end subroutine iotk_attr_dummy_INTEGER1_2
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 3 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -849,7 +849,7 @@ end subroutine iotk_attr_dummy_INTEGER1_2
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_3(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -858,7 +858,7 @@ subroutine iotk_write_attr_INTEGER1_3(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -916,10 +916,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_3
+end subroutine iotk_write_attr_LOGICAL1_3
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_3(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -929,13 +929,13 @@ subroutine iotk_scan_attr_INTEGER1_3(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -945,7 +945,7 @@ subroutine iotk_scan_attr_INTEGER1_3(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -1056,15 +1056,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_3
+end subroutine iotk_scan_attr_LOGICAL1_3
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_3
+subroutine iotk_attr_dummy_LOGICAL1_3
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_3
+end subroutine iotk_attr_dummy_LOGICAL1_3
 
 # 45 "iotk_attr.spp"
 
@@ -1081,7 +1081,7 @@ end subroutine iotk_attr_dummy_INTEGER1_3
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 4 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -1089,7 +1089,7 @@ end subroutine iotk_attr_dummy_INTEGER1_3
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_4(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -1098,7 +1098,7 @@ subroutine iotk_write_attr_INTEGER1_4(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -1156,10 +1156,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_4
+end subroutine iotk_write_attr_LOGICAL1_4
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_4(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -1169,13 +1169,13 @@ subroutine iotk_scan_attr_INTEGER1_4(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -1185,7 +1185,7 @@ subroutine iotk_scan_attr_INTEGER1_4(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -1296,15 +1296,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_4
+end subroutine iotk_scan_attr_LOGICAL1_4
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_4
+subroutine iotk_attr_dummy_LOGICAL1_4
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_4
+end subroutine iotk_attr_dummy_LOGICAL1_4
 
 # 45 "iotk_attr.spp"
 
@@ -1321,7 +1321,7 @@ end subroutine iotk_attr_dummy_INTEGER1_4
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 5 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -1329,7 +1329,7 @@ end subroutine iotk_attr_dummy_INTEGER1_4
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_5(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -1338,7 +1338,7 @@ subroutine iotk_write_attr_INTEGER1_5(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -1396,10 +1396,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_5
+end subroutine iotk_write_attr_LOGICAL1_5
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_5(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -1409,13 +1409,13 @@ subroutine iotk_scan_attr_INTEGER1_5(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -1425,7 +1425,7 @@ subroutine iotk_scan_attr_INTEGER1_5(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -1536,15 +1536,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_5
+end subroutine iotk_scan_attr_LOGICAL1_5
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_5
+subroutine iotk_attr_dummy_LOGICAL1_5
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_5
+end subroutine iotk_attr_dummy_LOGICAL1_5
 
 # 45 "iotk_attr.spp"
 
@@ -1561,7 +1561,7 @@ end subroutine iotk_attr_dummy_INTEGER1_5
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 6 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -1569,7 +1569,7 @@ end subroutine iotk_attr_dummy_INTEGER1_5
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_6(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -1578,7 +1578,7 @@ subroutine iotk_write_attr_INTEGER1_6(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -1636,10 +1636,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_6
+end subroutine iotk_write_attr_LOGICAL1_6
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_6(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -1649,13 +1649,13 @@ subroutine iotk_scan_attr_INTEGER1_6(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -1665,7 +1665,7 @@ subroutine iotk_scan_attr_INTEGER1_6(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -1776,15 +1776,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_6
+end subroutine iotk_scan_attr_LOGICAL1_6
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_6
+subroutine iotk_attr_dummy_LOGICAL1_6
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_6
+end subroutine iotk_attr_dummy_LOGICAL1_6
 
 # 45 "iotk_attr.spp"
 
@@ -1801,7 +1801,7 @@ end subroutine iotk_attr_dummy_INTEGER1_6
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER1
+#ifdef __IOTK_LOGICAL1
 #if 7 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -1809,7 +1809,7 @@ end subroutine iotk_attr_dummy_INTEGER1_6
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER1_7(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -1818,7 +1818,7 @@ subroutine iotk_write_attr_INTEGER1_7(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -1876,10 +1876,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER1_7
+end subroutine iotk_write_attr_LOGICAL1_7
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER1_7(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -1889,13 +1889,13 @@ subroutine iotk_scan_attr_INTEGER1_7(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -1905,7 +1905,7 @@ subroutine iotk_scan_attr_INTEGER1_7(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER1), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL1), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -2016,15 +2016,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER1_7
+end subroutine iotk_scan_attr_LOGICAL1_7
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER1_7
+subroutine iotk_attr_dummy_LOGICAL1_7
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER1_7
+end subroutine iotk_attr_dummy_LOGICAL1_7
 
 # 45 "iotk_attr.spp"
 
@@ -2041,24 +2041,24 @@ end subroutine iotk_attr_dummy_INTEGER1_7
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 0 <= __IOTK_MAXRANK
 
 # 64 "iotk_attr.spp"
 ! This is needed as a workaround for bugged pack 
-subroutine iotk_private_pack_INTEGER2(out,in,n,l)
+subroutine iotk_private_pack_LOGICAL2(out,in,n,l)
     use iotk_base
     implicit none
     integer,                                    intent(in)  :: n,l
 # 73 "iotk_attr.spp"
-    INTEGER (kind=__IOTK_INTEGER2), intent(out) :: out(n)
-    INTEGER (kind=__IOTK_INTEGER2), intent(in)  :: in(n)
+    LOGICAL (kind=__IOTK_LOGICAL2), intent(out) :: out(n)
+    LOGICAL (kind=__IOTK_LOGICAL2), intent(in)  :: in(n)
 # 76 "iotk_attr.spp"
     out = in
-end subroutine iotk_private_pack_INTEGER2
+end subroutine iotk_private_pack_LOGICAL2
 
 # 81 "iotk_attr.spp"
-subroutine iotk_write_INTEGER2(val,string,ierr)
+subroutine iotk_write_LOGICAL2(val,string,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
@@ -2066,7 +2066,7 @@ subroutine iotk_write_INTEGER2(val,string,ierr)
   use iotk_str_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER2), intent(in) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in) :: val(:)
 #ifdef __IOTK_WORKAROUND6
   character(len=*)              :: string
 #else
@@ -2086,11 +2086,11 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
     return
   end if
   do index=1,size(val)
-# 114 "iotk_attr.spp"
-    call iotk_strcat(string,trim(iotk_itoa(val(index)))//" ",ierr)
+# 108 "iotk_attr.spp"
+    call iotk_strcat(string,iotk_ltoa(val(index))//" ",ierr)
     if(ierr/=0) then
       call iotk_error_issue(ierr,"iotk_write",__FILE__,__LINE__)
-# 116 "iotk_attr.spp"
+# 110 "iotk_attr.spp"
 call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
       return
     end if
@@ -2098,17 +2098,17 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
   end do
 ! taglio l'ultimo spazio
   string(iotk_strlen(string):iotk_strlen(string)) = iotk_eos
-end subroutine iotk_write_INTEGER2
+end subroutine iotk_write_LOGICAL2
 # 137 "iotk_attr.spp"
 
 # 141 "iotk_attr.spp"
-subroutine iotk_read_INTEGER2(val,string,index,ierr)
+subroutine iotk_read_LOGICAL2(val,string,index,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER2), intent(inout) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(inout) :: val(:)
   character(len=*), intent(in) :: string
   integer, intent(inout) :: index
   integer, intent(out) :: ierr
@@ -2139,8 +2139,8 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
 # 177 "iotk_attr.spp"
 call iotk_error_msg(ierr,'Too many data')
     end if
-# 180 "iotk_attr.spp"
-    call iotk_atoi(val(index),string(pos+1:pos1-1),check=check)
+# 182 "iotk_attr.spp"
+    val(index) = iotk_atol(string(pos+1:pos1-1),check=check)
 # 195 "iotk_attr.spp"
     if(.not.check) then
       call iotk_error_issue(ierr,"iotk_read",__FILE__,__LINE__)
@@ -2155,11 +2155,11 @@ call iotk_error_write(ierr,"string",string(pos+1:pos1-1))
 # 205 "iotk_attr.spp"
     if(pos1>=len(string)) exit
   end do
-end subroutine iotk_read_INTEGER2
+end subroutine iotk_read_LOGICAL2
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_0(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -2168,7 +2168,7 @@ subroutine iotk_write_attr_INTEGER2_0(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val 
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val 
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -2226,10 +2226,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_0
+end subroutine iotk_write_attr_LOGICAL2_0
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_0(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -2239,13 +2239,13 @@ subroutine iotk_scan_attr_INTEGER2_0(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val 
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val 
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val 
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val 
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default 
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -2255,7 +2255,7 @@ subroutine iotk_scan_attr_INTEGER2_0(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -2366,15 +2366,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_0
+end subroutine iotk_scan_attr_LOGICAL2_0
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_0
+subroutine iotk_attr_dummy_LOGICAL2_0
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_0
+end subroutine iotk_attr_dummy_LOGICAL2_0
 
 # 45 "iotk_attr.spp"
 
@@ -2391,7 +2391,7 @@ end subroutine iotk_attr_dummy_INTEGER2_0
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 1 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -2399,7 +2399,7 @@ end subroutine iotk_attr_dummy_INTEGER2_0
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_1(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -2408,7 +2408,7 @@ subroutine iotk_write_attr_INTEGER2_1(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -2466,10 +2466,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_1
+end subroutine iotk_write_attr_LOGICAL2_1
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_1(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -2479,13 +2479,13 @@ subroutine iotk_scan_attr_INTEGER2_1(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -2495,7 +2495,7 @@ subroutine iotk_scan_attr_INTEGER2_1(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -2606,15 +2606,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_1
+end subroutine iotk_scan_attr_LOGICAL2_1
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_1
+subroutine iotk_attr_dummy_LOGICAL2_1
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_1
+end subroutine iotk_attr_dummy_LOGICAL2_1
 
 # 45 "iotk_attr.spp"
 
@@ -2631,7 +2631,7 @@ end subroutine iotk_attr_dummy_INTEGER2_1
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 2 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -2639,7 +2639,7 @@ end subroutine iotk_attr_dummy_INTEGER2_1
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_2(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -2648,7 +2648,7 @@ subroutine iotk_write_attr_INTEGER2_2(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -2706,10 +2706,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_2
+end subroutine iotk_write_attr_LOGICAL2_2
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_2(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -2719,13 +2719,13 @@ subroutine iotk_scan_attr_INTEGER2_2(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -2735,7 +2735,7 @@ subroutine iotk_scan_attr_INTEGER2_2(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -2846,15 +2846,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_2
+end subroutine iotk_scan_attr_LOGICAL2_2
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_2
+subroutine iotk_attr_dummy_LOGICAL2_2
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_2
+end subroutine iotk_attr_dummy_LOGICAL2_2
 
 # 45 "iotk_attr.spp"
 
@@ -2871,7 +2871,7 @@ end subroutine iotk_attr_dummy_INTEGER2_2
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 3 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -2879,7 +2879,7 @@ end subroutine iotk_attr_dummy_INTEGER2_2
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_3(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -2888,7 +2888,7 @@ subroutine iotk_write_attr_INTEGER2_3(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -2946,10 +2946,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_3
+end subroutine iotk_write_attr_LOGICAL2_3
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_3(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -2959,13 +2959,13 @@ subroutine iotk_scan_attr_INTEGER2_3(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -2975,7 +2975,7 @@ subroutine iotk_scan_attr_INTEGER2_3(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -3086,15 +3086,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_3
+end subroutine iotk_scan_attr_LOGICAL2_3
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_3
+subroutine iotk_attr_dummy_LOGICAL2_3
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_3
+end subroutine iotk_attr_dummy_LOGICAL2_3
 
 # 45 "iotk_attr.spp"
 
@@ -3111,7 +3111,7 @@ end subroutine iotk_attr_dummy_INTEGER2_3
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 4 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -3119,7 +3119,7 @@ end subroutine iotk_attr_dummy_INTEGER2_3
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_4(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -3128,7 +3128,7 @@ subroutine iotk_write_attr_INTEGER2_4(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -3186,10 +3186,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_4
+end subroutine iotk_write_attr_LOGICAL2_4
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_4(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -3199,13 +3199,13 @@ subroutine iotk_scan_attr_INTEGER2_4(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -3215,7 +3215,7 @@ subroutine iotk_scan_attr_INTEGER2_4(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -3326,15 +3326,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_4
+end subroutine iotk_scan_attr_LOGICAL2_4
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_4
+subroutine iotk_attr_dummy_LOGICAL2_4
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_4
+end subroutine iotk_attr_dummy_LOGICAL2_4
 
 # 45 "iotk_attr.spp"
 
@@ -3351,7 +3351,7 @@ end subroutine iotk_attr_dummy_INTEGER2_4
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 5 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -3359,7 +3359,7 @@ end subroutine iotk_attr_dummy_INTEGER2_4
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_5(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -3368,7 +3368,7 @@ subroutine iotk_write_attr_INTEGER2_5(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -3426,10 +3426,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_5
+end subroutine iotk_write_attr_LOGICAL2_5
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_5(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -3439,13 +3439,13 @@ subroutine iotk_scan_attr_INTEGER2_5(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -3455,7 +3455,7 @@ subroutine iotk_scan_attr_INTEGER2_5(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -3566,15 +3566,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_5
+end subroutine iotk_scan_attr_LOGICAL2_5
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_5
+subroutine iotk_attr_dummy_LOGICAL2_5
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_5
+end subroutine iotk_attr_dummy_LOGICAL2_5
 
 # 45 "iotk_attr.spp"
 
@@ -3591,7 +3591,7 @@ end subroutine iotk_attr_dummy_INTEGER2_5
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 6 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -3599,7 +3599,7 @@ end subroutine iotk_attr_dummy_INTEGER2_5
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_6(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -3608,7 +3608,7 @@ subroutine iotk_write_attr_INTEGER2_6(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -3666,10 +3666,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_6
+end subroutine iotk_write_attr_LOGICAL2_6
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_6(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -3679,13 +3679,13 @@ subroutine iotk_scan_attr_INTEGER2_6(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -3695,7 +3695,7 @@ subroutine iotk_scan_attr_INTEGER2_6(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -3806,15 +3806,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_6
+end subroutine iotk_scan_attr_LOGICAL2_6
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_6
+subroutine iotk_attr_dummy_LOGICAL2_6
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_6
+end subroutine iotk_attr_dummy_LOGICAL2_6
 
 # 45 "iotk_attr.spp"
 
@@ -3831,7 +3831,7 @@ end subroutine iotk_attr_dummy_INTEGER2_6
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER2
+#ifdef __IOTK_LOGICAL2
 #if 7 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -3839,7 +3839,7 @@ end subroutine iotk_attr_dummy_INTEGER2_6
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER2_7(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -3848,7 +3848,7 @@ subroutine iotk_write_attr_INTEGER2_7(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -3906,10 +3906,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER2_7
+end subroutine iotk_write_attr_LOGICAL2_7
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER2_7(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -3919,13 +3919,13 @@ subroutine iotk_scan_attr_INTEGER2_7(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -3935,7 +3935,7 @@ subroutine iotk_scan_attr_INTEGER2_7(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER2), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL2), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -4046,15 +4046,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER2_7
+end subroutine iotk_scan_attr_LOGICAL2_7
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER2_7
+subroutine iotk_attr_dummy_LOGICAL2_7
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER2_7
+end subroutine iotk_attr_dummy_LOGICAL2_7
 
 # 45 "iotk_attr.spp"
 
@@ -4071,24 +4071,24 @@ end subroutine iotk_attr_dummy_INTEGER2_7
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 0 <= __IOTK_MAXRANK
 
 # 64 "iotk_attr.spp"
 ! This is needed as a workaround for bugged pack 
-subroutine iotk_private_pack_INTEGER3(out,in,n,l)
+subroutine iotk_private_pack_LOGICAL3(out,in,n,l)
     use iotk_base
     implicit none
     integer,                                    intent(in)  :: n,l
 # 73 "iotk_attr.spp"
-    INTEGER (kind=__IOTK_INTEGER3), intent(out) :: out(n)
-    INTEGER (kind=__IOTK_INTEGER3), intent(in)  :: in(n)
+    LOGICAL (kind=__IOTK_LOGICAL3), intent(out) :: out(n)
+    LOGICAL (kind=__IOTK_LOGICAL3), intent(in)  :: in(n)
 # 76 "iotk_attr.spp"
     out = in
-end subroutine iotk_private_pack_INTEGER3
+end subroutine iotk_private_pack_LOGICAL3
 
 # 81 "iotk_attr.spp"
-subroutine iotk_write_INTEGER3(val,string,ierr)
+subroutine iotk_write_LOGICAL3(val,string,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
@@ -4096,7 +4096,7 @@ subroutine iotk_write_INTEGER3(val,string,ierr)
   use iotk_str_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER3), intent(in) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in) :: val(:)
 #ifdef __IOTK_WORKAROUND6
   character(len=*)              :: string
 #else
@@ -4116,11 +4116,11 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
     return
   end if
   do index=1,size(val)
-# 114 "iotk_attr.spp"
-    call iotk_strcat(string,trim(iotk_itoa(val(index)))//" ",ierr)
+# 108 "iotk_attr.spp"
+    call iotk_strcat(string,iotk_ltoa(val(index))//" ",ierr)
     if(ierr/=0) then
       call iotk_error_issue(ierr,"iotk_write",__FILE__,__LINE__)
-# 116 "iotk_attr.spp"
+# 110 "iotk_attr.spp"
 call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
       return
     end if
@@ -4128,17 +4128,17 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
   end do
 ! taglio l'ultimo spazio
   string(iotk_strlen(string):iotk_strlen(string)) = iotk_eos
-end subroutine iotk_write_INTEGER3
+end subroutine iotk_write_LOGICAL3
 # 137 "iotk_attr.spp"
 
 # 141 "iotk_attr.spp"
-subroutine iotk_read_INTEGER3(val,string,index,ierr)
+subroutine iotk_read_LOGICAL3(val,string,index,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER3), intent(inout) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(inout) :: val(:)
   character(len=*), intent(in) :: string
   integer, intent(inout) :: index
   integer, intent(out) :: ierr
@@ -4169,8 +4169,8 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
 # 177 "iotk_attr.spp"
 call iotk_error_msg(ierr,'Too many data')
     end if
-# 180 "iotk_attr.spp"
-    call iotk_atoi(val(index),string(pos+1:pos1-1),check=check)
+# 182 "iotk_attr.spp"
+    val(index) = iotk_atol(string(pos+1:pos1-1),check=check)
 # 195 "iotk_attr.spp"
     if(.not.check) then
       call iotk_error_issue(ierr,"iotk_read",__FILE__,__LINE__)
@@ -4185,11 +4185,11 @@ call iotk_error_write(ierr,"string",string(pos+1:pos1-1))
 # 205 "iotk_attr.spp"
     if(pos1>=len(string)) exit
   end do
-end subroutine iotk_read_INTEGER3
+end subroutine iotk_read_LOGICAL3
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_0(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -4198,7 +4198,7 @@ subroutine iotk_write_attr_INTEGER3_0(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val 
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val 
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -4256,10 +4256,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_0
+end subroutine iotk_write_attr_LOGICAL3_0
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_0(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -4269,13 +4269,13 @@ subroutine iotk_scan_attr_INTEGER3_0(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val 
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val 
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val 
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val 
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default 
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -4285,7 +4285,7 @@ subroutine iotk_scan_attr_INTEGER3_0(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -4396,15 +4396,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_0
+end subroutine iotk_scan_attr_LOGICAL3_0
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_0
+subroutine iotk_attr_dummy_LOGICAL3_0
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_0
+end subroutine iotk_attr_dummy_LOGICAL3_0
 
 # 45 "iotk_attr.spp"
 
@@ -4421,7 +4421,7 @@ end subroutine iotk_attr_dummy_INTEGER3_0
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 1 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -4429,7 +4429,7 @@ end subroutine iotk_attr_dummy_INTEGER3_0
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_1(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -4438,7 +4438,7 @@ subroutine iotk_write_attr_INTEGER3_1(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -4496,10 +4496,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_1
+end subroutine iotk_write_attr_LOGICAL3_1
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_1(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -4509,13 +4509,13 @@ subroutine iotk_scan_attr_INTEGER3_1(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -4525,7 +4525,7 @@ subroutine iotk_scan_attr_INTEGER3_1(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -4636,15 +4636,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_1
+end subroutine iotk_scan_attr_LOGICAL3_1
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_1
+subroutine iotk_attr_dummy_LOGICAL3_1
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_1
+end subroutine iotk_attr_dummy_LOGICAL3_1
 
 # 45 "iotk_attr.spp"
 
@@ -4661,7 +4661,7 @@ end subroutine iotk_attr_dummy_INTEGER3_1
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 2 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -4669,7 +4669,7 @@ end subroutine iotk_attr_dummy_INTEGER3_1
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_2(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -4678,7 +4678,7 @@ subroutine iotk_write_attr_INTEGER3_2(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -4736,10 +4736,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_2
+end subroutine iotk_write_attr_LOGICAL3_2
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_2(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -4749,13 +4749,13 @@ subroutine iotk_scan_attr_INTEGER3_2(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -4765,7 +4765,7 @@ subroutine iotk_scan_attr_INTEGER3_2(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -4876,15 +4876,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_2
+end subroutine iotk_scan_attr_LOGICAL3_2
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_2
+subroutine iotk_attr_dummy_LOGICAL3_2
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_2
+end subroutine iotk_attr_dummy_LOGICAL3_2
 
 # 45 "iotk_attr.spp"
 
@@ -4901,7 +4901,7 @@ end subroutine iotk_attr_dummy_INTEGER3_2
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 3 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -4909,7 +4909,7 @@ end subroutine iotk_attr_dummy_INTEGER3_2
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_3(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -4918,7 +4918,7 @@ subroutine iotk_write_attr_INTEGER3_3(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -4976,10 +4976,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_3
+end subroutine iotk_write_attr_LOGICAL3_3
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_3(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -4989,13 +4989,13 @@ subroutine iotk_scan_attr_INTEGER3_3(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -5005,7 +5005,7 @@ subroutine iotk_scan_attr_INTEGER3_3(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -5116,15 +5116,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_3
+end subroutine iotk_scan_attr_LOGICAL3_3
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_3
+subroutine iotk_attr_dummy_LOGICAL3_3
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_3
+end subroutine iotk_attr_dummy_LOGICAL3_3
 
 # 45 "iotk_attr.spp"
 
@@ -5141,7 +5141,7 @@ end subroutine iotk_attr_dummy_INTEGER3_3
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 4 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -5149,7 +5149,7 @@ end subroutine iotk_attr_dummy_INTEGER3_3
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_4(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -5158,7 +5158,7 @@ subroutine iotk_write_attr_INTEGER3_4(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -5216,10 +5216,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_4
+end subroutine iotk_write_attr_LOGICAL3_4
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_4(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -5229,13 +5229,13 @@ subroutine iotk_scan_attr_INTEGER3_4(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -5245,7 +5245,7 @@ subroutine iotk_scan_attr_INTEGER3_4(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -5356,15 +5356,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_4
+end subroutine iotk_scan_attr_LOGICAL3_4
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_4
+subroutine iotk_attr_dummy_LOGICAL3_4
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_4
+end subroutine iotk_attr_dummy_LOGICAL3_4
 
 # 45 "iotk_attr.spp"
 
@@ -5381,7 +5381,7 @@ end subroutine iotk_attr_dummy_INTEGER3_4
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 5 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -5389,7 +5389,7 @@ end subroutine iotk_attr_dummy_INTEGER3_4
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_5(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -5398,7 +5398,7 @@ subroutine iotk_write_attr_INTEGER3_5(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -5456,10 +5456,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_5
+end subroutine iotk_write_attr_LOGICAL3_5
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_5(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -5469,13 +5469,13 @@ subroutine iotk_scan_attr_INTEGER3_5(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -5485,7 +5485,7 @@ subroutine iotk_scan_attr_INTEGER3_5(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -5596,15 +5596,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_5
+end subroutine iotk_scan_attr_LOGICAL3_5
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_5
+subroutine iotk_attr_dummy_LOGICAL3_5
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_5
+end subroutine iotk_attr_dummy_LOGICAL3_5
 
 # 45 "iotk_attr.spp"
 
@@ -5621,7 +5621,7 @@ end subroutine iotk_attr_dummy_INTEGER3_5
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 6 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -5629,7 +5629,7 @@ end subroutine iotk_attr_dummy_INTEGER3_5
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_6(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -5638,7 +5638,7 @@ subroutine iotk_write_attr_INTEGER3_6(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -5696,10 +5696,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_6
+end subroutine iotk_write_attr_LOGICAL3_6
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_6(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -5709,13 +5709,13 @@ subroutine iotk_scan_attr_INTEGER3_6(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -5725,7 +5725,7 @@ subroutine iotk_scan_attr_INTEGER3_6(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -5836,15 +5836,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_6
+end subroutine iotk_scan_attr_LOGICAL3_6
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_6
+subroutine iotk_attr_dummy_LOGICAL3_6
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_6
+end subroutine iotk_attr_dummy_LOGICAL3_6
 
 # 45 "iotk_attr.spp"
 
@@ -5861,7 +5861,7 @@ end subroutine iotk_attr_dummy_INTEGER3_6
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER3
+#ifdef __IOTK_LOGICAL3
 #if 7 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -5869,7 +5869,7 @@ end subroutine iotk_attr_dummy_INTEGER3_6
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER3_7(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -5878,7 +5878,7 @@ subroutine iotk_write_attr_INTEGER3_7(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -5936,10 +5936,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER3_7
+end subroutine iotk_write_attr_LOGICAL3_7
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER3_7(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -5949,13 +5949,13 @@ subroutine iotk_scan_attr_INTEGER3_7(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -5965,7 +5965,7 @@ subroutine iotk_scan_attr_INTEGER3_7(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER3), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL3), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -6076,15 +6076,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER3_7
+end subroutine iotk_scan_attr_LOGICAL3_7
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER3_7
+subroutine iotk_attr_dummy_LOGICAL3_7
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER3_7
+end subroutine iotk_attr_dummy_LOGICAL3_7
 
 # 45 "iotk_attr.spp"
 
@@ -6101,24 +6101,24 @@ end subroutine iotk_attr_dummy_INTEGER3_7
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 0 <= __IOTK_MAXRANK
 
 # 64 "iotk_attr.spp"
 ! This is needed as a workaround for bugged pack 
-subroutine iotk_private_pack_INTEGER4(out,in,n,l)
+subroutine iotk_private_pack_LOGICAL4(out,in,n,l)
     use iotk_base
     implicit none
     integer,                                    intent(in)  :: n,l
 # 73 "iotk_attr.spp"
-    INTEGER (kind=__IOTK_INTEGER4), intent(out) :: out(n)
-    INTEGER (kind=__IOTK_INTEGER4), intent(in)  :: in(n)
+    LOGICAL (kind=__IOTK_LOGICAL4), intent(out) :: out(n)
+    LOGICAL (kind=__IOTK_LOGICAL4), intent(in)  :: in(n)
 # 76 "iotk_attr.spp"
     out = in
-end subroutine iotk_private_pack_INTEGER4
+end subroutine iotk_private_pack_LOGICAL4
 
 # 81 "iotk_attr.spp"
-subroutine iotk_write_INTEGER4(val,string,ierr)
+subroutine iotk_write_LOGICAL4(val,string,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
@@ -6126,7 +6126,7 @@ subroutine iotk_write_INTEGER4(val,string,ierr)
   use iotk_str_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER4), intent(in) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in) :: val(:)
 #ifdef __IOTK_WORKAROUND6
   character(len=*)              :: string
 #else
@@ -6146,11 +6146,11 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
     return
   end if
   do index=1,size(val)
-# 114 "iotk_attr.spp"
-    call iotk_strcat(string,trim(iotk_itoa(val(index)))//" ",ierr)
+# 108 "iotk_attr.spp"
+    call iotk_strcat(string,iotk_ltoa(val(index))//" ",ierr)
     if(ierr/=0) then
       call iotk_error_issue(ierr,"iotk_write",__FILE__,__LINE__)
-# 116 "iotk_attr.spp"
+# 110 "iotk_attr.spp"
 call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
       return
     end if
@@ -6158,17 +6158,17 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
   end do
 ! taglio l'ultimo spazio
   string(iotk_strlen(string):iotk_strlen(string)) = iotk_eos
-end subroutine iotk_write_INTEGER4
+end subroutine iotk_write_LOGICAL4
 # 137 "iotk_attr.spp"
 
 # 141 "iotk_attr.spp"
-subroutine iotk_read_INTEGER4(val,string,index,ierr)
+subroutine iotk_read_LOGICAL4(val,string,index,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_xtox_interf
   use iotk_misc_interf
   implicit none
-  INTEGER(kind=__IOTK_INTEGER4), intent(inout) :: val(:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(inout) :: val(:)
   character(len=*), intent(in) :: string
   integer, intent(inout) :: index
   integer, intent(out) :: ierr
@@ -6199,8 +6199,8 @@ call iotk_error_msg(ierr,"CVS Revision: 1.7 ")
 # 177 "iotk_attr.spp"
 call iotk_error_msg(ierr,'Too many data')
     end if
-# 180 "iotk_attr.spp"
-    call iotk_atoi(val(index),string(pos+1:pos1-1),check=check)
+# 182 "iotk_attr.spp"
+    val(index) = iotk_atol(string(pos+1:pos1-1),check=check)
 # 195 "iotk_attr.spp"
     if(.not.check) then
       call iotk_error_issue(ierr,"iotk_read",__FILE__,__LINE__)
@@ -6215,11 +6215,11 @@ call iotk_error_write(ierr,"string",string(pos+1:pos1-1))
 # 205 "iotk_attr.spp"
     if(pos1>=len(string)) exit
   end do
-end subroutine iotk_read_INTEGER4
+end subroutine iotk_read_LOGICAL4
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_0(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -6228,7 +6228,7 @@ subroutine iotk_write_attr_INTEGER4_0(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val 
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val 
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -6286,10 +6286,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_0
+end subroutine iotk_write_attr_LOGICAL4_0
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_0(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -6299,13 +6299,13 @@ subroutine iotk_scan_attr_INTEGER4_0(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val 
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val 
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val 
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val 
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default 
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -6315,7 +6315,7 @@ subroutine iotk_scan_attr_INTEGER4_0(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -6426,15 +6426,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_0
+end subroutine iotk_scan_attr_LOGICAL4_0
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_0
+subroutine iotk_attr_dummy_LOGICAL4_0
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_0
+end subroutine iotk_attr_dummy_LOGICAL4_0
 
 # 45 "iotk_attr.spp"
 
@@ -6451,7 +6451,7 @@ end subroutine iotk_attr_dummy_INTEGER4_0
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 1 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -6459,7 +6459,7 @@ end subroutine iotk_attr_dummy_INTEGER4_0
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_1(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -6468,7 +6468,7 @@ subroutine iotk_write_attr_INTEGER4_1(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -6526,10 +6526,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_1
+end subroutine iotk_write_attr_LOGICAL4_1
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_1(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -6539,13 +6539,13 @@ subroutine iotk_scan_attr_INTEGER4_1(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -6555,7 +6555,7 @@ subroutine iotk_scan_attr_INTEGER4_1(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -6666,15 +6666,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_1
+end subroutine iotk_scan_attr_LOGICAL4_1
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_1
+subroutine iotk_attr_dummy_LOGICAL4_1
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_1
+end subroutine iotk_attr_dummy_LOGICAL4_1
 
 # 45 "iotk_attr.spp"
 
@@ -6691,7 +6691,7 @@ end subroutine iotk_attr_dummy_INTEGER4_1
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 2 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -6699,7 +6699,7 @@ end subroutine iotk_attr_dummy_INTEGER4_1
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_2(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -6708,7 +6708,7 @@ subroutine iotk_write_attr_INTEGER4_2(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -6766,10 +6766,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_2
+end subroutine iotk_write_attr_LOGICAL4_2
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_2(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -6779,13 +6779,13 @@ subroutine iotk_scan_attr_INTEGER4_2(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -6795,7 +6795,7 @@ subroutine iotk_scan_attr_INTEGER4_2(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -6906,15 +6906,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_2
+end subroutine iotk_scan_attr_LOGICAL4_2
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_2
+subroutine iotk_attr_dummy_LOGICAL4_2
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_2
+end subroutine iotk_attr_dummy_LOGICAL4_2
 
 # 45 "iotk_attr.spp"
 
@@ -6931,7 +6931,7 @@ end subroutine iotk_attr_dummy_INTEGER4_2
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 3 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -6939,7 +6939,7 @@ end subroutine iotk_attr_dummy_INTEGER4_2
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_3(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -6948,7 +6948,7 @@ subroutine iotk_write_attr_INTEGER4_3(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -7006,10 +7006,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_3
+end subroutine iotk_write_attr_LOGICAL4_3
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_3(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -7019,13 +7019,13 @@ subroutine iotk_scan_attr_INTEGER4_3(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -7035,7 +7035,7 @@ subroutine iotk_scan_attr_INTEGER4_3(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -7146,15 +7146,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_3
+end subroutine iotk_scan_attr_LOGICAL4_3
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_3
+subroutine iotk_attr_dummy_LOGICAL4_3
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_3
+end subroutine iotk_attr_dummy_LOGICAL4_3
 
 # 45 "iotk_attr.spp"
 
@@ -7171,7 +7171,7 @@ end subroutine iotk_attr_dummy_INTEGER4_3
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 4 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -7179,7 +7179,7 @@ end subroutine iotk_attr_dummy_INTEGER4_3
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_4(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -7188,7 +7188,7 @@ subroutine iotk_write_attr_INTEGER4_4(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -7246,10 +7246,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_4
+end subroutine iotk_write_attr_LOGICAL4_4
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_4(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -7259,13 +7259,13 @@ subroutine iotk_scan_attr_INTEGER4_4(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -7275,7 +7275,7 @@ subroutine iotk_scan_attr_INTEGER4_4(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -7386,15 +7386,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_4
+end subroutine iotk_scan_attr_LOGICAL4_4
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_4
+subroutine iotk_attr_dummy_LOGICAL4_4
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_4
+end subroutine iotk_attr_dummy_LOGICAL4_4
 
 # 45 "iotk_attr.spp"
 
@@ -7411,7 +7411,7 @@ end subroutine iotk_attr_dummy_INTEGER4_4
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 5 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -7419,7 +7419,7 @@ end subroutine iotk_attr_dummy_INTEGER4_4
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_5(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -7428,7 +7428,7 @@ subroutine iotk_write_attr_INTEGER4_5(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -7486,10 +7486,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_5
+end subroutine iotk_write_attr_LOGICAL4_5
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_5(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -7499,13 +7499,13 @@ subroutine iotk_scan_attr_INTEGER4_5(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -7515,7 +7515,7 @@ subroutine iotk_scan_attr_INTEGER4_5(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -7626,15 +7626,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_5
+end subroutine iotk_scan_attr_LOGICAL4_5
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_5
+subroutine iotk_attr_dummy_LOGICAL4_5
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_5
+end subroutine iotk_attr_dummy_LOGICAL4_5
 
 # 45 "iotk_attr.spp"
 
@@ -7651,7 +7651,7 @@ end subroutine iotk_attr_dummy_INTEGER4_5
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 6 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -7659,7 +7659,7 @@ end subroutine iotk_attr_dummy_INTEGER4_5
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_6(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -7668,7 +7668,7 @@ subroutine iotk_write_attr_INTEGER4_6(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -7726,10 +7726,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_6
+end subroutine iotk_write_attr_LOGICAL4_6
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_6(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -7739,13 +7739,13 @@ subroutine iotk_scan_attr_INTEGER4_6(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -7755,7 +7755,7 @@ subroutine iotk_scan_attr_INTEGER4_6(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -7866,15 +7866,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_6
+end subroutine iotk_scan_attr_LOGICAL4_6
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_6
+subroutine iotk_attr_dummy_LOGICAL4_6
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_6
+end subroutine iotk_attr_dummy_LOGICAL4_6
 
 # 45 "iotk_attr.spp"
 
@@ -7891,7 +7891,7 @@ end subroutine iotk_attr_dummy_INTEGER4_6
 
 # 59 "iotk_attr.spp"
 
-#ifdef __IOTK_INTEGER4
+#ifdef __IOTK_LOGICAL4
 #if 7 <= __IOTK_MAXRANK
 
 # 137 "iotk_attr.spp"
@@ -7899,7 +7899,7 @@ end subroutine iotk_attr_dummy_INTEGER4_6
 # 210 "iotk_attr.spp"
 
 # 213 "iotk_attr.spp"
-subroutine iotk_write_attr_INTEGER4_7(attr,name,val,dummy,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf
@@ -7908,7 +7908,7 @@ subroutine iotk_write_attr_INTEGER4_7(attr,name,val,dummy,first,ierr)
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-  INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:,:,:)
   type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
@@ -7966,10 +7966,10 @@ call iotk_error_msg(ierrl,'Attribute dummy argument is too short')
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_write_attr_INTEGER4_7
+end subroutine iotk_write_attr_LOGICAL4_7
 
 # 288 "iotk_attr.spp"
-subroutine iotk_scan_attr_INTEGER4_7(attr,name,val,dummy,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   use iotk_error_interf
   use iotk_attr_interf, only : iotk_read
@@ -7979,13 +7979,13 @@ subroutine iotk_scan_attr_INTEGER4_7(attr,name,val,dummy,found,default,eos,ierr)
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
 #ifdef __IOTK_WORKAROUND6
-  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:,:,:)
 #else
-  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:,:,:)
 #endif
   type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
-  INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
+  LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
   integer :: ierrl
@@ -7995,7 +7995,7 @@ subroutine iotk_scan_attr_INTEGER4_7(attr,name,val,dummy,found,default,eos,ierr)
   character(iotk_vallenx) :: valc
 # 317 "iotk_attr.spp"
   integer :: index
-  INTEGER(kind=__IOTK_INTEGER4), allocatable :: tmpval (:)
+  LOGICAL(kind=__IOTK_LOGICAL4), allocatable :: tmpval (:)
 # 320 "iotk_attr.spp"
   ierrl = 0
   attlen=iotk_strlen(attr)
@@ -8106,15 +8106,15 @@ call iotk_error_write(ierrl,"name",name)
   else
     if(ierrl/=0) call iotk_error_handler(ierrl)
   end if
-end subroutine iotk_scan_attr_INTEGER4_7
+end subroutine iotk_scan_attr_LOGICAL4_7
 # 429 "iotk_attr.spp"
 
 #endif
 #endif
 
-subroutine iotk_attr_dummy_INTEGER4_7
+subroutine iotk_attr_dummy_LOGICAL4_7
   write(0,*)
-end subroutine iotk_attr_dummy_INTEGER4_7
+end subroutine iotk_attr_dummy_LOGICAL4_7
 
 # 45 "iotk_attr.spp"
 
