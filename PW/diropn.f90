@@ -47,9 +47,8 @@ subroutine diropn (unit, filename, recl, exst)
   !    we first check that the file is not already openend
   !
   ios = 0  
-  inquire (unit = unit, opened = opnd)  
-  if (opnd) call error ('diropn', 'can"t open a connected unit', &
-       abs (unit) )
+  inquire (unit = unit, opened = opnd)
+  if (opnd) call error ('diropn', 'can"t open a connected unit', abs(unit))
   !
   !      then we check the filename
   !

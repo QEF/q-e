@@ -205,7 +205,7 @@ subroutine vcsmd
 
      enew = etot - e_start  
 
-#ifdef DEBUG
+#ifdef DEBUG_VCSMD
      write (45,*) 'istep=',istep
      write (45,*) 'ntyp=', ntyp
      write (45,*) 'nat=', nat
@@ -260,7 +260,7 @@ subroutine vcsmd
           avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
           enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn)
 
-#ifdef DEBUG
+#ifdef DEBUG_VCSMD
      write (46,*) 'istep=',istep
      write (46,*) 'ntyp=', ntyp
      write (46,*) 'nat=', nat
@@ -313,7 +313,7 @@ subroutine vcsmd
 
      enew = etot - e_start  
 
-#ifdef DEBUG
+#ifdef DEBUG_VCSMD
      write (45,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
      write (45,*) 'istep=', istep
      write (45,*) 'ntyp=',ntyp
@@ -379,7 +379,7 @@ subroutine vcsmd
           edyn, temperature, ttol, ntcheck, ntimes, istep, tnew, nzero, &
           nat, acu, ack, acp, acpv, avu, avk, avp, avpv)
 
-#ifdef DEBUG
+#ifdef DEBUG_VCSMD
      write (46,*) 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
      write (46,*) 'istep=', istep
      write (46,*) 'ntyp=',ntyp
@@ -455,6 +455,12 @@ subroutine vcsmd
      !      for subsequent iterations they should.
      !
      if (istep.eq.1) then  
+        call delete_if_present ( 'e')
+        call delete_if_present ( 'eal')
+        call delete_if_present ( 'ave')
+        call delete_if_present ( 'p')
+        call delete_if_present ( 'avec')
+        call delete_if_present ( 'tv')
         iost = 'new'  
         ipos = 'asis'  
      else  
@@ -468,20 +474,20 @@ subroutine vcsmd
      open (unit=iun_avec,file='avec',status=iost,form='formatted',position=ipos)
      open (unit=iun_tv,  file='tv',  status=iost,form='formatted',position=ipos)
      nst = istep - 1  
-     write (iun_e, 101) ut, ekint, edyn, pv, nst  
+     write (iun_e,   101) ut, ekint, edyn, pv, nst  
      write (iun_eal, 103) uta, eka, eta, utl, ekla, etl, nst  
      write (iun_ave, 104) avu, avk, nst  
-     write (iun_p, 105) press, p, avp, nst  
-     if (calc (1:1) .ne.'m') write (iun_avec, 103) (avmod (k) , k = &
-          1, 3) , theta (1, 2) , theta (2, 3) , theta (3, 1) , nst
+     write (iun_p,   105) press, p, avp, nst  
+     if (calc (1:1) .ne.'m') write (iun_avec, 103) (avmod(k), k=1,3),  &
+                                    theta(1,2), theta(2,3), theta(3,1), nst
 
      write (iun_tv, 104) vcell, tnew, nst  
-     close (unit = iun_e, status = 'keep')  
-     close (unit = iun_eal, status = 'keep')  
-     close (unit = iun_ave, status = 'keep')  
-     close (unit = iun_p, status = 'keep')  
+     close (unit = iun_e,    status = 'keep')  
+     close (unit = iun_eal,  status = 'keep')  
+     close (unit = iun_ave,  status = 'keep')  
+     close (unit = iun_p,    status = 'keep')  
      close (unit = iun_avec, status = 'keep')  
-     close (unit = iun_tv, status = 'keep')  
+     close (unit = iun_tv,   status = 'keep')  
 #ifdef PARA
   endif
 #endif
@@ -534,3 +540,24 @@ subroutine vcsmd
 105 format(1x,3d12.5,i6)  
 end subroutine vcsmd
 
+subroutine delete_if_present(filename)
+
+   character (len=*) :: filename
+   logical           :: exst, opnd
+   integer           :: iunit 
+
+   inquire (file = filename, exist = exst)
+
+   if (exst) then
+      do iunit = 99, 1, - 1
+         inquire (unit = iunit, opened = opnd)
+         if (.not.opnd) goto 10
+      enddo
+      call error ('delete_if_present', 'free unit not found?!?', 1)
+10    continue
+      open  (unit=iunit, file= filename , status='old')
+      close (unit=iunit, status = 'delete')  
+      write (6,*) 'WARNING: ',filename,' file was present; old file deleted '
+   end if
+
+end subroutine

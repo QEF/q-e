@@ -447,7 +447,7 @@ subroutine find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
      enddo
   enddo
 
-  write ( *, * ) chi, alpha0, beta0  
+!  write ( *, * ) chi, alpha0, beta0  
   return  
 
 end subroutine find_alpha_and_beta
