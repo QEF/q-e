@@ -22,7 +22,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/bachel.o \
 ../PW/bfgs.o \
 ../PW/cdiagh.o \
-../PW/cft.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \

@@ -23,10 +23,6 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !
   !       IBM      : essl library
   !       NEC sx4/5: GPFA library
-  !       DEC/Compaq/HP alphas: fortran routine
-  !
-  !     This routine does not always improve performances
-  !     It can be disabled by defining NOPENCILS
   !
   !----------------------------------------------------------------------
   !
@@ -187,78 +183,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
 
   endif
 #endif
-#ifdef DEC
-#ifndef DXML
 
-
-  real(kind=DP) :: norm, f (2, nr1, nr2, nr3)
-  ! normalization factor
-  ! the function is divided into real and im
-  if (nr1.ne.nrx1.or.nr2.ne.nrx2) call errore ('cft_3', 'no longer im &
-       &plemented', 1)
-  !     +    call mcpack(f,nrx1,nrx2,nrx3,f,nr1,nr2,nr3,1)
-  !
-  !    Start putting the correct normalization on f and testing the sign
-  !
-  norm = dfloat (nr1 * nr2 * nr3)
-  if (sign.eq. - 1) then
-     call dscal (2 * nrx1 * nrx2 * nrx3, 1.d0 / norm, f, 1)
-  elseif (sign.ne.1) then
-     call errore ('cfts_3', 'wrong sign', 1)
-  endif
-  !
-  !   This part goes from reciprocal to real space
-  !   i direction first
-  !
-  if (sign.eq.1) then
-     do k = 1, nr3
-        do j = 1, nr2
-           if (do_fft_x (j, k) .eq.1) call cft (f (1, 1, j, k), f (2, 1, &
-                j, k), nr1, nr1, nr1, 2 * sign)
-        enddo
-     enddo
-     !
-     !  j direction
-     !
-     do k = 1, nr3
-        if (do_fft_y (k) .eq.1) call cft (f (1, 1, 1, k), f (2, 1, 1, &
-             k), nr1 * nr2, nr2, nr1 * nr2, 2 * sign)
-     enddo
-     !
-     !   k direction
-     !
-     call cft (f (1, 1, 1, 1), f (2, 1, 1, 1), nr1 * nr2 * nr3, nr3, &
-          nr1 * nr2 * nr3, 2 * sign)
-  else
-     !
-     !   here we compute the transformation from real to reciprocal space
-     !
-     !   first the k direction
-     !
-     call cft (f (1, 1, 1, 1), f (2, 1, 1, 1), nr1 * nr2 * nr3, nr3, &
-          nr1 * nr2 * nr3, 2 * sign)
-     !
-     !   then the j direction
-     !
-     do k = 1, nr3
-        if (do_fft_y (k) .eq.1) call cft (f (1, 1, 1, k), f (2, 1, 1, &
-             k), nr1 * nr2, nr2, nr1 * nr2, 2 * sign)
-     enddo
-     !
-     !  and the i direction.
-     !
-     do k = 1, nr3
-        do j = 1, nr2
-           if (do_fft_x (j, k) .eq.1) call cft (f (1, 1, j, k), f (2, 1, &
-                j, k), nr1, nr1, nr1, 2 * sign)
-        enddo
-     enddo
-
-  endif
-  !      if( nr1.ne.nrx1 .or. nr2.ne.nrx2 )
-  !     +    call mcpack(f,nrx1,nrx2,nrx3,f,nr1,nr2,nr3,-1)
-#endif
-#endif
 #ifdef __SX4
 
   real(kind=DP) :: f (2, nrx1, nrx2, nrx3)

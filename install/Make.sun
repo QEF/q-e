@@ -5,7 +5,7 @@
 # Preprocessor
 #
 CPP = fpp
-CPPFLAGS = -P -DSUN -DNOPENCILS -DHAS_ZHEGVX -I$(OSHOME)/include
+CPPFLAGS = -P -DSUN -DHAS_ZHEGVX -I$(OSHOME)/include
 #
 # Fortran compiler:
 #

@@ -8,7 +8,7 @@ MAKE=sxmake
 CPP = /SX/usr/lib/sxcpp
 INC_DIR = ../include
 #
-CPPFLAGS = -P -E -DLANGUAGE_FORTRAN -DNOPENCILS -D__SX6 -I$(INC_DIR)
+CPPFLAGS = -P -E -DLANGUAGE_FORTRAN -D__SX6 -I$(INC_DIR)
 
 HOST=-sx6
 BASIC=-float0 -P stack $(HOST)

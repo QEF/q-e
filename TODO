@@ -1,4 +1,4 @@
-TODO LIST - 14 Apr 2003
+TODO LIST - 22 Apr 2003
 
 INSTALLATION
 
@@ -23,9 +23,11 @@ COMMON
 
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
+- update to fftw v.3 (if convenient)?
+
 PW
 
-- add traceback (error_handler module)
+- add traceback in error (error_handler module)
 
 - bfgs, md : atomic positions should be written in the same
   format as they are read (but this should not spoil scripts
@@ -55,11 +57,13 @@ PW
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
-- memory estimator tool, or memory report 
+- complete and verify memory estimator
 
 - ultrasoft PP: newd and addusdens are too slow
 
 - output should be more informative and less confused
+
+- remove scalar pencils ?
 
 POSTPROCESSING
 
@@ -88,6 +92,8 @@ DOCUMENTATION
   examples should be quicker and easier to verify  
 
 - add a list of FAQ, or AAQ (Already Answered Questions)
+
+- add a developer's guide
 
 CPV: 
 

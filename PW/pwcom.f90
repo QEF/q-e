@@ -546,7 +546,7 @@ module us
        dvan(:,:,:),  &! the D functions of the solid
        deeq(:,:,:,:),&! the integral of V_eff and Q_{nm}
        becsum(:,:,:),&! the sum of bec functions
-       qrad(:,:,:,:),&! radial FT of Q functi
+       qrad(:,:,:,:),&! radial FT of Q functions
        tab(:,:,:)! interpolation table for PPs
   real(kind=DP)   :: &
        ap(lqmax*lqmax,nlx,nlx) ! Clebsch-Gordan coefficients for spher.harm.

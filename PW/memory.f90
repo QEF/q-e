@@ -166,8 +166,11 @@ subroutine memory_estimate
   !
   print '("nonscalable memory =",f8.2,"Mb")', float(nonscalable_mem)/1024/1024
   print '("   scalable memory =",f8.2,"Mb")', float(scalable_mem)/1024/1024
-  print '("nonscalable wspace =",f8.2,"Mb")', float(scalable_wspace)/1024/1024
-  print '("   scalable wspace =",f8.2,"Mb")', float(nonscalable_wspace)/1024/1024
+  print '("nonscalable wspace =",f8.2,"Mb")', float(nonscalable_wspace)/1024/1024
+  print '("   scalable wspace =",f8.2,"Mb  (diag:",f8.2,"Mb, mix:",f8.2,"Mb)")',&
+          float(scalable_wspace)/1024/1024, &
+          float(wspace_diago)/1024/1024,    &
+	  float(wspace_mix)/1024/1024
   !
   return
 end subroutine memory_estimate

@@ -33,7 +33,6 @@ cegterg.o  \
 cft_3.o  \
 cft3.o  \
 cft3s.o  \
-cft.o  \
 cft_fftw.o  \
 cfts_3.o  \
 cft_sgi.o  \

@@ -49,22 +49,16 @@ function allowed (nr)
      ! fft dimension contains factors > 11 : no good in any case
      allowed = .false.
   else
-#ifdef __CERNFFT
-     ! this is for the generic (cernlib) case
-     allowed = .true.
-     ! specific (machine- and library-dependent cases
-#else
 #ifdef __AIX
      ! IBM machines with essl libraries
 
-     allowed = pwr (1) .ge.1.and.pwr (2) .le.2.and.pwr (3) &
-          .le.1.and.pwr (4) .le.1.and.pwr (5) .le.1.and. ( (pwr (2) &
-          .eq.0.and.pwr (3) + pwr (4) + pwr (5) .le.2) .or. (pwr (2) &
-          .ne.0.and.pwr (3) + pwr (4) + pwr (5) .le.1) )
+     allowed =  pwr(1) >= 1 .and. pwr(2) <= 2 .and. pwr(3) <= 1 .and. &
+                pwr(4) <= 1 .and. pwr(5) <= 1 .and. &
+                ( (pwr(2) == 0 .and. pwr(3) + pwr(4) + pwr(5) <= 2) .or. &
+                  (pwr(2) /= 0 .and. pwr(3) + pwr(4) + pwr(5) <= 1) )
 #else
-     ! fftw and all other cases
-     allowed = pwr (4) .eq.0.and.pwr (5) .eq.0
-#endif
+     ! fftw and all other cases: no factors 7 and 11
+     allowed = ( pwr(4) == 0 .and. pwr(5) == 0 )
 #endif
   endif
 

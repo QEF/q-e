@@ -11,9 +11,8 @@
 !     performance of these routines. Therefore it is convenient always
 !     to use machine-specific routines
 !
-!     If __FFTW is defined, the fftw library is used. Otherwise, if
-!     __CERNFFT is defined, a fortran (slow) version is used. Otherwise
-!     machine-specific routines are used (if available).
+!     If __FFTW is defined, the fftw library is used.
+!     Otherwise machine-specific routines are used (if available).
 !     If a machine-specific routine is not available either a fake
 !     routine issuing an error message is compiled.
 !
@@ -61,39 +60,6 @@ subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, isign)
      fac = 1.0 / float (nr1 * nr2 * nr3)
      call DSCAL (2 * nr1 * nr2 * nr3, fac, f, 1)
   endif
-  return
-
-end subroutine cft_3
-#else
-#if defined(__CERNFFT)
-!
-!----------------------------------------------------------------------
-subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
-  !----------------------------------------------------------------------
-  !
-  use parameters, only : DP
-  implicit none
-  integer :: n1, n2, n3, nm1, nm2, nm3, igrid, iopt
-  real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
-  external DSCAL
-  !
-  if (n1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
-  !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,1)
-  !
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n1, n1, 2 * iopt)
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n2, n1 * n2, 2 * &
-       iopt)
-  call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n3, n1 * n2 * n3, 2 &
-       * iopt)
-  !
-  if (iopt.lt.0) then
-     fac = 1.0 / (n1 * n2 * n3)
-     call DSCAL (2 * n1 * n2 * n3, fac, ac, 1)
-  endif
-  !
-  !      if( n1.ne.nm1 .or. n2.ne.nm2 )
-  !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,-1)
-  !
   return
 
 end subroutine cft_3
@@ -798,7 +764,6 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   return
 
 end subroutine cft_3
-#endif
 #endif
 #endif
 

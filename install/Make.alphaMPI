@@ -4,8 +4,6 @@
 #
 # Use -DDXML if you use fft routines from the dxml or cxml library
 # Use -D__FFTW instead of -DDXML if you use fft routines from fftw library
-# Add -DNOPENCILS if you do not want to use the FFT with pencils
-# (in some cases it is slower than the full 3d FFT)
 # if you use -D__FFTW you should specify also the directories for the
 # libfftw.a library and for the fftw.h include file
 #

@@ -3,13 +3,11 @@
 # Edit according to your needs
 #
 # Use -DDXML if you use fft routines from the dxml or cxml library
-# (add -DNOPENCILS if you do not want to use the FFT with pencils:
-#  in some cases it is slower than the full 3d FFT)
 # Use -D__FFTW instead of -DDXML if you use fft routines from fftw library
 # if you use -D__FFTW you should specify also the directories for the
 # libfftw.a library and for the fftw.h include file
 #
-CPPFLAGS = -DDEC -DDXML -DNOPENCILS -I$(OSHOME)/include
+CPPFLAGS = -DDEC -DDXML -I$(OSHOME)/include
 #
 # Preset values for FFTW
 # FFTW_INC_DIR=/usr/local/src/fftw-2.1.3/fftw
