@@ -36,8 +36,8 @@ subroutine startup (nd_nmbr, version)
   use para
 #endif
 
-  ! The following two modules hold global informations about processors
-  ! nuber, IDs and communicators
+  ! The following two modules hold global information about processors
+  ! number, IDs and communicators
   use io_global, only: io_global_start
   use mp_global, only: mp_global_start
   use mp, only: mp_start, mp_env, mp_barrier, mp_bcast

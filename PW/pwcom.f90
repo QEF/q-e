@@ -599,7 +599,7 @@ module sticks
   use fft_types, only: fft_dlay_descriptor
   type ( fft_dlay_descriptor ) :: dfftp   ! dense grid
   type ( fft_dlay_descriptor ) :: dffts   ! smooth grid
-  !   data structure containing all informations
+  !   data structure containing all information
   !   about fft data distribution for a given 
   !   potential grid, and its wave functions sub-grid.
 end module

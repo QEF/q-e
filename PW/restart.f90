@@ -19,7 +19,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
-  !     the informations needed to restart and to other postprocessing
+  !     the information needed to restart and to other postprocessing
   !     programs.
   !
   !
@@ -158,7 +158,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
 
 !  ==--------------------------------------------------------------==
-!  ==  WRITE HEADER INFORMATIONS                                   ==
+!  ==  WRITE HEADER INFORMATION                                    ==
 !  ==--------------------------------------------------------------==
    trutime = 0.0d0
    nelu = 0
@@ -464,7 +464,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
-  !     the informations needed to restart and to other postprocessing
+  !     the information needed to restart and to other postprocessing
   !     programs.
   !
   !
@@ -615,7 +615,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
 
 !  ==--------------------------------------------------------------==
-!  ==  HEADER INFORMATIONS                                         ==
+!  ==  HEADER INFORMATION                                          ==
 !  ==--------------------------------------------------------------==
 
    IF( trdhead ) THEN
@@ -1008,7 +1008,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
-  !     the informations needed to restart and to other postprocessing
+  !     the information needed to restart and to other postprocessing
   !     programs.
   !
   !
@@ -1084,7 +1084,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   end if
 
 !  ==--------------------------------------------------------------==
-!  ==  HEADER INFORMATIONS                                         ==
+!  ==  HEADER INFORMATION                                          ==
 !  ==--------------------------------------------------------------==
 
    tread = .TRUE.

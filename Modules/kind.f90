@@ -17,7 +17,7 @@
 !
 !------------------------------------------------------------------------------!
 !
-!!   Print informations about the used data types.
+!!   Print information about the used data types.
       SUBROUTINE print_kind_info
 !
 !------------------------------------------------------------------------------!

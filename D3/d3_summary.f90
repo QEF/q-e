@@ -60,7 +60,7 @@ subroutine d3_summary
        &     'kinetic-energy cut-off    = ',f12.4,'  Ry',/,5x, &
        &     'charge densisty cut-off   = ',f12.4,'  Ry',/,5x,/)
   !
-  !    and here more detailed informations. Description of the unit cell
+  !    and here more detailed information. Description of the unit cell
   !
   write (6, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') (i, &
        celldm (i) , i = 1, 6)

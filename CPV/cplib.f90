@@ -6357,7 +6357,7 @@
          call fill_qrl(is)
       end if
 !
-!    Here we write on output informations on the read pseudopotential
+!    Here we write on output information on the pseudopotential 
 !
       call dftname(xctype)
 !

@@ -65,7 +65,7 @@ subroutine phq_summary
        &     'beta                      = ',0pf12.4,/,5x, &
        &     'number of iterations used = ',i12,/)
   !
-  !    and here more detailed informations. Description of the unit cell
+  !    and here more detailed information. Description of the unit cell
   !
   write (6, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') (i, &
        celldm (i) , i = 1, 6)

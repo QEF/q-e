@@ -285,7 +285,7 @@ subroutine readvan (is, iunps)
   enddo
 100 call errore ('readvan', 'error reading pseudo file', abs (ios) )
   !
-  !    Here we write on output informations on the read pseudopotential
+  !    Here we write on output information on the pseudopotential
   !
   if (exfact.eq.0.) xctit = '      ceperley-alder'
   if (exfact.eq. - 1.) xctit = '              wigner'

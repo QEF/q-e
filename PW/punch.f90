@@ -14,7 +14,7 @@ subroutine punch
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
-  !     the informations needed to the phonon program.
+  !     the information needed to the phonon program.
   !
   !
   use pwcom, only: nks, filpun, reduce_io, evc, nwordwfc, iunwfc, lscf, &
@@ -85,7 +85,7 @@ subroutine punch
   !-----------------------------------------------------------------------
   !
   !     This routine is called at the end of the run to save on a file
-  !     the informations needed to the phonon program.
+  !     the information needed to the phonon program.
   !
   !
   use pwcom

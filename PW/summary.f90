@@ -10,8 +10,8 @@
 subroutine summary
   !-----------------------------------------------------------------------
   !
-  !    This routine writes on output all the informations obtained from th
-  !    input file and from the setup routine, before starting the
+  !    This routine writes on output all the information obtained from
+  !    the input file and from the setup routine, before starting the
   !    self-consistent calculation.
   !
   !    if iverbosity = 0 only a partial summary is done.
@@ -90,7 +90,7 @@ subroutine summary
 
   endif
   !
-  !    and here more detailed informations. Description of the unit cell
+  !    and here more detailed information. Description of the unit cell
   !
   write (6, '(2(3x,3(2x,"celldm(",i1,")=",f11.5),/))') (i, celldm(i), i=1,6)
   write (6, '(5x, &

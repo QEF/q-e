@@ -46,7 +46,7 @@
 ! - tovrw  - logical - true, overvrite all input variables with the read data
 !
 ! All Data Sections have a well defined number of records, and the first
-! record always contains the following _NON_ _DUMMY_ informations:
+! record always contains the following _NON_ _DUMMY_ information:
 ! "twrite" "file_version" 
 !
 !

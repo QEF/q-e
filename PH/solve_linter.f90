@@ -460,7 +460,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      write (6, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
           &      " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
      !
-     !    Here we save the informations for recovering the run from this poin
+     !    Here we save the information for recovering the run from this poin
      !
 #ifdef FLUSH
      call flush (6)
