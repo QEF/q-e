@@ -32,6 +32,7 @@ CONTAINS
       use cell_base, only: boxdimensions, s_to_r, cell_init
       USE ncprm, ONLY: r, rab
       use control_flags, only: twfcollect
+      USE miscellany, ONLY: int_to_char
 !
       implicit none
       integer :: ndw, nfi
@@ -107,8 +108,7 @@ CONTAINS
 !
       if (ionode) then
        !  open (unit=ndw,status='unknown',form='unformatted')
-         CALL cpitoa(ndw, filename)
-         filename = 'fort.'//filename
+         filename = 'fort.'//int_to_char( ndw )
          strlen  = index(filename,' ') - 1 
          OPEN(unit=ndw, file=filename(1:strlen), form='unformatted', status='unknown')
          REWIND ndw
@@ -354,6 +354,7 @@ CONTAINS
       use io_global
       use cell_base, only: boxdimensions, s_to_r, cell_init, r_to_s
       use control_flags, only: twfcollect
+      USE miscellany, ONLY: int_to_char
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -435,8 +436,7 @@ CONTAINS
 !
       if (ionode) then
          ! open (unit=ndr, status='old', form='unformatted')
-         CALL cpitoa(ndr, filename)
-         filename = 'fort.'//filename 
+         filename = 'fort.'//int_to_char( ndr ) 
          strlen  = index(filename,' ') - 1 
          OPEN(unit=ndr, file=filename(1:strlen), form='unformatted', status='old')
          REWIND (ndr)

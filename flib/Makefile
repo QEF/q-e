@@ -9,7 +9,6 @@ erf.o \
 iceil.o \
 iglocal.o \
 inv3.o \
-itoa.o \
 latgen.o \
 ngnr_set.o \
 recips.o \

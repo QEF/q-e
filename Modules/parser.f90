@@ -148,9 +148,6 @@ contains
           RETURN
         END SUBROUTINE
 
-!SUBROUTINE cpitoa: turn an integer into a string
-!SUBROUTINE unitname: ***
-!SUBROUTINE myunitname: given the processor num. return the output unit num.
 !SUBROUTINE con_cam:       count the number of fields in a string separated by
 !                          the optional character
 !SUBROUTINE field_count:   accept two string (one of them is optional) and one integer
@@ -169,85 +166,6 @@ contains
 !                          flib/error.f90) depending on which kind of parameter
 !                          has to be printed
 
-
-  SUBROUTINE cpitoa(n,str)
-!   trasforma un numero intero in una stringa
-    integer, intent(in) :: n
-    character(LEN=*) str
-    integer i, npow, j, nq, ntmp
-    logical :: lzero
-
-    j     = 1
-    IF( n .eq. 0) THEN
-      str(j:j) = '0'
-      j = j + 1
-    ELSE
-      IF( n .lt. 0 ) THEN
-        str(j:j) = '-'
-        j = j + 1
-        ntmp  = -n
-      ELSE
-        ntmp  =  n
-      END IF
-      lzero = .FALSE.
-      do i = 9, 0, -1
-        npow = 10**i
-        nq   = ntmp / npow
-        ntmp = MOD(ntmp,npow)
-        if( lzero .or. (nq.ne.0)) then
-          lzero = .TRUE.
-          select case(nq)
-            case (9)
-              str(j:j) = '9'
-            case (8)
-              str(j:j) = '8'
-            case (7)
-              str(j:j) = '7'
-            case (6)
-              str(j:j) = '6'
-            case (5)
-              str(j:j) = '5'
-            case (4)
-              str(j:j) = '4'
-            case (3)
-              str(j:j) = '3'
-            case (2)
-              str(j:j) = '2'
-            case (1)
-              str(j:j) = '1'
-            case (0)
-              str(j:j) = '0'
-            case default
-              str(j:j) = '0'
-          end select
-          j = j + 1
-        end if
-      end do
-    END IF
-    str(j:j) = ' '
-    return
-  END SUBROUTINE
-
-
-  SUBROUTINE unitname(n,name)
-    character(len=*) :: name
-    character(len=5) :: num
-    integer :: l
-    call cpitoa(n,num)
-    l    = index(num,' ') - 1
-    name = 'fort.'//num(1:l)
-    return
-  END SUBROUTINE
-
-  SUBROUTINE myunitname(me,name)
-    character(len=*) :: name
-    character(len=5) :: num
-    integer :: l
-    call cpitoa(me,num)
-    l    = index(num,' ') - 1
-    name = 'fort_6.'//num(1:l)
-    return
-  END SUBROUTINE
 
   SUBROUTINE field_compare(str, nf, var)
     IMPLICIT NONE
