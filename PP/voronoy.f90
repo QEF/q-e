@@ -51,9 +51,8 @@ program voronoy
   !
   ! read file header and allocate objects
   !
-  call plot_io (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-       nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
-       atm, ityp, zv, tau, rhodum, 0)
+  call read_io_header (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
+                       ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
   !
   allocate(tau(3, nat))
   allocate(ityp(nat))

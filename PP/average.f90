@@ -114,10 +114,8 @@ program average
 
 1100 call errore ('average', 'readin input', abs (ios) )
 
-  call plot_io (filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
-       nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-       plot_num, atm, ityp, zv, tau, rhodum, 0)
-
+  call read_io_header(filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
   nspin = 1
   if (ibrav.gt.0) call latgen (ibrav, celldm, at (1, 1), &
                                        at (1, 2), at (1, 3), omega )
