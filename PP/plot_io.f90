@@ -121,6 +121,7 @@ subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      enddo
   endif
   read (iunplot, * ) gcutm, dual, ecut, plot_num
+  close (unit = iunplot)
 
   return
 end subroutine read_io_header
