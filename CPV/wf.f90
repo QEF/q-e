@@ -4282,7 +4282,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !              iss2=ispin(i+1)
 !              sa2=f(i+1)/omega
 !            else
-!               iss2=iss1
+               iss2=iss1  ! carlo
                sa2=0.0
 !            end if
             do ir=1,nnrsx

@@ -563,7 +563,7 @@
       use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
       use constants, only: pi, fpi
       use cell_base, only: hold, h
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
       use restart, only: readfile_new
       use parameters, only: nacx, nsx, natx
@@ -587,12 +587,6 @@
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8) fion(1,1), tps
 !
-!
-!     ==============================================================
-!     ==== generate reference g-space                           ==== 
-!     ==============================================================
-!
-      call init1 ( tau0, ibrav, celldm, ecutw, ecut )
 !
 ! taus = scaled, tau0 = alat units
 !
@@ -630,8 +624,6 @@
 
       end if
 !
-      allocate( ggp(ngw) )
-!
 !     ==============================================================
 !     ==== generate true g-space                                ==== 
 !     ==============================================================
@@ -662,7 +654,7 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
       use cell_base, only: h, deth
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
 !
       implicit none
       integer ibrav

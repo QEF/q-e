@@ -399,7 +399,7 @@ end module qrl_mod
       use reciprocal_vectors, only: gstart, sortedig_l2g
       use recvecs_indexes, only: nm, np
       use gvecs, only: ngs, nms, ngsl, nps
-      use gvecw, only: ngw, ngwl, ngwt
+      use gvecw, only: ngw, ngwl, ngwt, ggp
       use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
       use io_global, only: stdout
       USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
@@ -449,6 +449,7 @@ end module qrl_mod
 !
       allocate(gx(3,ng))
       allocate(g(ng))
+      allocate(ggp(ngw))
       allocate(np(ng))
       allocate(nm(ng))
       allocate(igl(ng))

@@ -326,16 +326,6 @@ end module para_mod
 !
       call start_clock( 'setfftpara' )
 !
-! set the dimensions of fft arrays
-!
-      nr1x  = good_fft_dimension(nr1 )
-      nr2x  = nr2
-      nr3x  = good_fft_dimension(nr3 )
-!
-      nr1sx = good_fft_dimension(nr1s)
-      nr2sx = nr2s
-      nr3sx = good_fft_dimension(nr3s)
-!
 !     compute number of columns for each processor
 !
       ncplane  = nr1x  * nr2x

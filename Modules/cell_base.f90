@@ -503,6 +503,7 @@
     REAL(kind=8), INTENT(IN) :: delt
     INTEGER      :: i, j
     REAL(kind=8) :: dt2
+    dt2 = delt * delt
     DO j=1,3
       DO i=1,3
         hnew(i,j) = h(i,j) + dt2 * fcell(i,j) * iforceh(i,j)

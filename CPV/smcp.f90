@@ -36,6 +36,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !***                           C. Lee, and D. Vanderbilt, PRB 47, 10142 (1993).
   !***  implementation gga       A. Dal Corso, A. Pasquarello, A. Baldereschi,
   !***                           and R. Car, PRB 53, 1180 (1996).
+  !***  string methods           Yosuke Kanai et al.  J. Chem. Phys., 2004, 121, 3359-3367
   !***********************************************************************
   !***  
   !***  f90 version, with dynamical allocation of memory

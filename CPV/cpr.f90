@@ -260,13 +260,6 @@
       real(kind=8), allocatable :: tauw( :, : )  ! temporary array used 
                             !  to printout positions
 !
-!     CP loop starts here
-!
-
-      call start_clock( 'initialize' )
-
-      etot_out = 0.0d0
-!
 !     ==================================================================
 !     ====  units and constants                                     ====
 !     ====  1 hartree           = 1 a.u.                            ====
@@ -280,9 +273,22 @@
 !     ====  1 pico              = 1.e-12                            ====
 !     ====  1 Volt / meter      = 1/(5.1412*1.e+11) a.u.            ====
 !     ==================================================================
+!
+!     CP starts here
+!
+
+      call start_clock( 'initialize' )
+
+      etot_out = 0.0d0
 
       factp   = 3.3989 * 0.00001
       tps     = 0.0d0
+
+!     general variables
+!
+      tfirst = .true.
+      tlast  = .false.
+      nacc = 5
 !
 !     ==================================================================
 !     read input from standard input (unit 5)
@@ -314,25 +320,19 @@
 
 !     ==================================================================
 !
-!     general variables
-!
-      tfirst = .true.
-      tlast  = .false.
-      nacc = 5
-!
       twodel = 2.d0 * delt
       dt2 = delt * delt
       dt2by2 = .5d0 * dt2
       dt2bye = dt2/emass
       dt2hbe = dt2by2/emass
 
-
       CALL printout_base_setup( outdir, prefix )
-
 !
 !     ==================================================================
 !     initialize g-vectors, fft grids
 !     ==================================================================
+
+      call init1 ( tau0, ibrav, celldm, ecutw, ecut )
 
       call init( ibrav, celldm, ecut, ecutw, ndr, nbeg, tfirst,  &
            tau0, taus, delt, tps, iforce )

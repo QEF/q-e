@@ -2165,6 +2165,7 @@
       use constants, only: scmass
       use cell_base, only: omega, alat
       use io_global, only: stdout
+      USE grid_subroutines, ONLY: realspace_grids_init
 
       implicit none
 ! 
@@ -2175,7 +2176,26 @@
       real(kind=8) gcut, gcutw, gcuts, ecutw, dual, fsum, ocp, ddum
       real(kind=8) qk(3), rat1, rat2, rat3
       real(kind=8) b1(3), b2(3), b3(3)
-      integer ndum
+      integer :: ng_ , ngs_ 
+
+!
+!     ==============================================================
+!     ==== set parameters and cutoffs                           ==== 
+!     ==============================================================
+!
+      dual   = 4.d0
+      tpiba  = 2.d0 * pi/alat
+      tpiba2 = tpiba*tpiba
+      gcutw  = ecutw/tpiba/tpiba
+      gcuts  = dual*gcutw
+      gcut   = ecut/tpiba/tpiba
+!
+!     ===================================================
+!     ==== initialization for fft                    ====
+!     ===================================================
+!
+      CALL realspace_grids_init( alat, a1, a2, a3, gcut, gcuts, ng_ , ngs_ )
+
 !
 !     ===================================================
 !     ==== cell dimensions and lattice vectors      =====
@@ -2219,57 +2239,11 @@
 !        for a left-handed triplet, ainv is minus the inverse of a)
 !
 
-!
-!     ==============================================================
-!     ==== set parameters and cutoffs                           ==== 
-!     ==============================================================
-!
-      dual   = 4.d0
-      tpiba  = 2.d0 * pi/alat
-      tpiba2 = tpiba*tpiba
-      gcutw  = ecutw/tpiba/tpiba
-      gcuts  = dual*gcutw
-      gcut   = ecut/tpiba/tpiba
-!
-!     ===================================================
-!     ==== initialization for fft                    ====
-!     ===================================================
-!
-!     dense grid
-!
-      qk = 0.0d0
-      CALL ngnr_set( alat, a1, a2, a3, gcut, qk, ndum, nr1, nr2, nr3 )
-      nr1=good_fft_order(nr1)
-      nr2=good_fft_order(nr2)
-      nr3=good_fft_order(nr3)
-!
-!     smooth grid
-!
-      CALL ngnr_set( alat, a1, a2, a3, gcuts, qk, ndum, nr1s, nr2s, nr3s )
-      nr1s=good_fft_order(nr1s)
-      nr2s=good_fft_order(nr2s)
-      nr3s=good_fft_order(nr3s)
-
-      if ( nr1s.gt.nr1 .or. nr2s.gt.nr2 .or. nr3s.gt.nr3 )                    &
-     &     call errore('init1','smooth grid larger than dense grid?',1)
 
       call set_fft_para ( b1, b2, b3, gcut, gcuts, gcutw,               &
      &                   nr1, nr2, nr3, nr1s, nr2s, nr3s,  nnr,         &
      &                   nr1x,nr2x,nr3x,nr1sx,nr2sx,nr3sx, nnrsx )
 !
-!     box grid
-!
-      nr1b  = good_fft_order(nr1b)
-      nr2b  = good_fft_order(nr2b)
-      nr3b  = good_fft_order(nr3b)
-      nr1bx = good_fft_dimension(nr1b)
-      nr2bx = nr2b
-      nr3bx = nr3b
-!
-      if ( nr1b.gt.nr1 .or. nr2b.gt.nr2 .or. nr3b.gt.nr3 )                    &
-     &     call errore('init1','box grid larger than dense grid ?',1)
-!
-      nnrb = nr1bx * nr2bx * nr3bx
 !
 !     ==============================================================
 !     ==== generate g-space                                     ==== 

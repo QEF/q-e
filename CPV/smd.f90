@@ -39,7 +39,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   use elct
   use constants, only: pi, fpi
   use cell_base, only: hold, h
-  use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+  use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
   use betax, only: mmx, refg
   !use restartsm
   use restart
@@ -133,8 +133,6 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
      hold = h
 
   end if
-  !
-  allocate( ggp(ngw) )
   !
   !     ==============================================================
   !     ==== generate true g-space                                ==== 
