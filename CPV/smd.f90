@@ -30,7 +30,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !     initialize G-vectors and related quantities
   !     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
   !
-  use control_flags, only: iprint, thdyn, tranp, amprp
+  use control_flags, only: iprint, thdyn
   use io_global, only: stdout
   !use gvec
   use gvecw, only: ngw
@@ -141,17 +141,6 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !     ==============================================================
   !
   call newinit( ibrav )
-  !
-  !
-  DO sm_k = 0,sm_p
-     !
-     IF( ANY( tranp( 1:nsp ) ) ) THEN
-        call randpos(rep(sm_k)%taus, na, nsp, tranp, amprp, ainv, iforce )
-        call s_to_r( rep(sm_k)%taus, rep(sm_k)%tau0, na, nsp, h )
-     END IF
-
-  ENDDO
-  !
   !
 344 format(' ibrav = ',i4,'       cell parameters ',/)
 345 format(3(4x,f10.5))
