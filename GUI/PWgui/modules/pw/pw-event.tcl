@@ -7,76 +7,100 @@ tracevar calculation w {
 
     set calc   [varvalue calculation]
     set widget [getWidgetFromVarident ion_dynamics]
+    
+     groupwidget ions   disable
+     groupwidget cell   disable
+     groupwidget phonon disable
+     groupwidget vc_md  disable
+     groupwidget path   disable
+     groupwidget neb    disable
+     
      switch -exact -- $calc {
 	 'scf' - 
 	 'nscf' {
 	     groupwidget ions   disable
-	     groupwidget cell   disable
-	     groupwidget phonon disable
-	     groupwidget vc_md  disable
+             groupwidget cell   disable
+             groupwidget phonon disable
+             groupwidget vc_md  disable
+             groupwidget path   disable
+             groupwidget neb    disable
 	 }
 	 'phonon' {
 	     groupwidget ions   disable
-	     groupwidget cell   disable
-	     groupwidget phonon enable
-	     groupwidget vc_md  disable
+             groupwidget cell   disable
+             groupwidget phonon enable
+             groupwidget vc_md  disable
+             groupwidget path   disable
+             groupwidget neb    disable
 	 }
 	 'relax' {
+	     groupwidget ions   enable
+             groupwidget cell   disable
+             groupwidget phonon disable
+             groupwidget vc_md  disable
+             groupwidget path   disable
+             groupwidget neb    disable         
 	     groupwidget ions enable
 	     widget ion_dynamics enable
 	     widgetconfigure ion_dynamics -textvalues {
-		 "new BFGS algorithm, based on the trust radius procedure <bfgs>"
-		 "old BFGS quasi-newton method for structural relaxation  <old-bfgs>"
-		 "BFGS with the CONSTRAINT coded into \"constraint.f90\"  <constrained-bfgs>"
-		 "damped (Beeman) dynamics for structural relaxation  <damp>"
+		 "BFGS quasi-newton method for structural optimization (based on the trust radius procedure) <bfgs>"
+		 "old BFGS quasi-newton method for structural optimization (based on line minimization) <old-bfgs>"
+		 "damped dynamics (quick-min velocity Verlet) for structural optimization <damp>"
+                 "damped dynamics (quick-min velocity Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
 	     }
-	     groupwidget neb    disable
-	     groupwidget cell   disable
-	     groupwidget phonon disable
-	     groupwidget vc_md  disable
 	 }
 	 'vc-relax' {
-	     groupwidget ions enable
+	     groupwidget ions   enable
+             groupwidget cell   enable
+             groupwidget phonon disable
+             groupwidget vc_md  enable
+             groupwidget path   disable
+             groupwidget neb    disable
 	     widget ion_dynamics enable
 	     widgetconfigure ion_dynamics -textvalues {
-		 "damped (Beeman) dynamics for structural relaxation  <damp>"
+                 "Beeman algorithm for variable cell damped dynamics <damp>"
 	     }
-	     groupwidget neb    disable
-	     groupwidget cell   enable
-	     groupwidget phonon disable	  
-	     groupwidget vc_md  enable
 	 }
 	 'md' {
-	     groupwidget ions enable
+	     groupwidget ions   enable
+             groupwidget cell   disable
+             groupwidget phonon disable
+             groupwidget vc_md  disable
+             groupwidget path   disable
+             groupwidget neb    disable
 	     widget ion_dynamics enable
 	     widgetconfigure ion_dynamics -textvalues {
-		 "Verlet algorithm for Molecular dynamics  <verlet>"
-		 "Verlet-MD with the CONSTRAINT coded into \"constraint.f90\"  <constrained-verlet>"
-		 "Beeman algorithm for MD  <beeman>"
+		 "Velocity-Verlet algorithm for Molecular dynamics <verlet>"
+		 "Velocity-Verlet-MD with the CONSTRAINT <constrained-verlet>"
 	     }
-	     groupwidget neb    disable
-	     groupwidget cell   disable
-	     groupwidget phonon disable
-	     groupwidget vc_md  disable
 	 }
 	 'vc-md' {
-	     groupwidget ions enable
+	     groupwidget ions   enable
+             groupwidget cell   enable
+             groupwidget phonon disable
+             groupwidget vc_md  enable
+             groupwidget path   disable
+             groupwidget neb    disable
 	     widget ion_dynamics enable
 	     widgetconfigure ion_dynamics -textvalues {
-		 "Beeman algorithm for MD  <beeman>"
+		 "Beeman algorithm for variable cell MD <beeman>"
 	     }
-	     groupwidget neb    disable
-	     groupwidget cell   enable
-	     groupwidget phonon disable	     
-	     groupwidget vc_md  enable
 	 }
 	 'neb' {
-	     groupwidget ions     enable
-	     widget ion_dynamics  disable
-	     groupwidget neb      enable
-	     groupwidget cell     disable
-	     groupwidget phonon   disable
-	     groupwidget vc_md    disable
+	     groupwidget ions   enable
+             groupwidget cell   disable
+             groupwidget phonon disable
+             groupwidget vc_md  disable
+             groupwidget path   enable
+             groupwidget neb    enable
+	 }
+         'smd' {
+	     groupwidget ions   enable
+             groupwidget cell   disable
+             groupwidget phonon disable
+             groupwidget vc_md  disable
+             groupwidget path   enable
+             groupwidget neb    disable
 	 }
      }
 
@@ -86,8 +110,8 @@ tracevar calculation w {
     # force the update of the state of the CLIMBING_IMAGES card
     varset CI_scheme -value [varvalue CI_scheme]
 
-    # take care of NEB coordinates
-    if { $calc == "'neb'" } {
+    # take care of NEB || SMD coordinates
+    if { $calc == "'neb'" || $calc == "'smd'" } {
 	keywordconfigure first_image enable
 	keywordconfigure last_image  enable
 	widget atomic_coordinates2   create
@@ -248,7 +272,7 @@ tracevar ion_dynamics w {
 
     # MD
     switch -exact -- $calc {
-    	'scf' - 'nscf' - 'phonon' - 'neb' {
+    	'scf' - 'nscf' - 'phonon' - 'neb' - 'smd' {
     	    groupwidget md disable
     	}
     	'relax' - 'vc-relax' - 'md' - 'vc-md' {	    

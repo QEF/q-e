@@ -14,7 +14,9 @@
 help calculation -vartype character -helpfmt html -helptext {
     A string describing the task to be performed.
     <p>
-    <b>Allowed values:</b> 'scf', 'nscf', 'phonon', 'relax', 'md', 'vc-relax', 'vc-md', 'neb' (vc = variable-cell). 
+    <b>Allowed values:</b> 'scf', 'nscf', 'phonon', 'relax', 
+                           'md', 'vc-relax', 'vc-md', 'neb', 
+                           'smd' (vc = variable-cell). 
     <p>
     <b>Default:</b> 'scf'
 }
@@ -28,13 +30,19 @@ help verbosity    -vartype character -helpfmt txt2html -helptext {
 }
 
 help restart_mode -vartype character -helpfmt txt2html -helptext { 
-             'from_scratch': from scratch (default)
-             'restart' : from previous interrupted run
+             'from_scratch'  : from scratch ( default )
+	                       NEB and SMD only: the starting path is obtained
+                               with a linear interpolation between the images
+                               specified in the ATOMIC_POSITIONS card.
+			       Note that in the linear interpolation
+                               periodic boundary conditions ARE NON USED.
+             'restart'       : from previous interrupted run
 }
 
 help nstep        -vartype integer -helpfmt txt2html -helptext {                          
              number of ionic+electronic steps
-             default:  1 if calculation ='scf', 'nscf'
+             default:  1 if calculation = 'scf', 'nscf'
+                       0 if calculation = 'neb', 'smd'
                       50 for the other cases
 }
 
@@ -44,20 +52,21 @@ help iprint       -vartype integer -helpfmt txt2html -helptext {
 }
 
 help tstress      -vartype logical -helpfmt txt2html -helptext { 
-             calculate stress. Set to .t. true if calculation='vc-md'
+             calculate stress. Set to .TRUE. if calculation = 'vc-md'
 }
 
 help tprnfor      -vartype logical -helpfmt txt2html -helptext { 
-             print forces. Set to .t. if calculation='relax','md','vc-md'
+             print forces. Set to .TRUE. if calculation = 'relax', 'md', 'vc-md'
 }
             
 help dt           -vartype real -helpfmt txt2html -helptext { 
-             time step (a.u.)
+             time step for molecular dynamics, in Rydberg atomic units
+             (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
+              Hartree atomic units, half that much!!!)
 }
 
 help outdir       -vartype character -helpfmt txt2html -helptext { 
-             input, temporary, output files are found
-             in this directory - there must be a '/' at the end!
+             input, temporary, output files are found in this directory
              Default: current directory ('./')
 }
             
@@ -72,13 +81,13 @@ help max_seconds  -vartype integer -helpfmt txt2html -helptext {
 
 help etot_conv_thr     -vartype real -helpfmt txt2html -helptext { 
              convergence threshold on total energy (a.u)
-             for ionic minimization. Default: 1.0e-5
+             for ionic minimization. Default: 1.D-4
              See also forc_conv_thr - both criteria must be satisfied
 }
 
 help forc_conv_thr     -vartype real -helpfmt txt2html -helptext { 
              convergence threshold on forces (a.u)
-             for ionic minimization. Default: 1.0e-4
+             for ionic minimization. Default: 1.D-3
              Ssee also etot_conv_thr - both criteria must be satisfied
 }
 
@@ -92,8 +101,8 @@ help pseudo_dir   -vartype character -helpfmt txt2html -helptext {
 }
 	
 help tefield      -vartype logical -helpfmt txt2html -helptext {  
-             If .true. a sawlike potential is added to the 
-             bare ionic potential. Default: .false.
+             If .TRUE. a sawlike potential is added to the 
+               bare ionic potential.  Default: .FALSE.
 }	
 
 
@@ -236,7 +245,7 @@ foreach var {nr1 nr2 nr3} {
              three-dimensional FFT mesh (hard grid) for charge
              density (and scf potential). If not specified
              the grid is calculated based on the cutoff for
-             charge density (see also "dual")
+             charge density (see also "ecutrho")
     }
 }
 
@@ -250,38 +259,40 @@ foreach var {nr1s nr2s nr3s} {
 }
 
 help nosym        -vartype logical -helpfmt txt2html -helptext { 
-             if (.true.) symmetry is not used. Note that a k-point grid
+             if (.TRUE.) symmetry is not used. Note that a k-point grid
              provided in input is used "as is"; an automatically generated
              k-point grid will contain only points in the irreducible BZ 
              of the lattice.  Use with care in low-symmetry large cells 
              if you cannot afford a k-point grid with the correct symmetry.
-             Default: .false.
+             Default: .FALSE.
 }
 
 help starting_magnetization -vartype real -helpfmt txt2html -helptext { 
              starting spin polarization (values between -1 and 1)
-             on atomic type I in a lsda calculation. Breaks the
+             on atomic type 'i' in a lsda calculation. Breaks the
              symmetry and provides a starting point for self-consistency.
-             MUST be specified for lsda calculations, or else 
-             there will be no final magnetization, in any case
+             The default value is zero, BUT a value MUST be specified for
+             AT LEAST one atomic type in spin polarized calculations.
+             If zero starting magnetization is specified, zero final
+             magnetization will be obtained.
 }
 
 help occupations  -vartype character -helpfmt txt2html -helptext { 
-             'smearing': gaussian smearing for metals
-                         requires a value for degauss
+             'smearing':    gaussian smearing for metals
+                            requires a value for degauss
              'tetrahedra' : for metals and DOS calculation
-                           (see PRB49, 16223 (1994))
+                            (see PRB49, 16223 (1994))
                             Requires uniform grid of k-points,
                             automatically generated (see below)
-             'fixed' : for insulators with a gap
-             'from_input': The occupation are read from input file.
-                           Presently works only with one k-point 
-                           (LSDA allowed). 
+             'fixed' :      for insulators with a gap
+             'from_input':  The occupation are read from input file.
+                            Presently works only with one k-point 
+                            (LSDA allowed). 
 }
 
 help degauss      -vartype real -helpfmt txt2html -helptext { 
              value of the gaussian spreading (Ry) for brillouin-zone
-             integration in metals. Default: 0.0
+             integration in metals. Default: 0.D0
 }
 
 
@@ -333,7 +344,7 @@ help xc_type      -vartype character -helpfmt txt2html -helptext {
 
 set _hubbard {
              parameters for LDA+U calculations
-             If lda_plus_u = .true. you must specify, for species I,
+             If lda_plus_u = .TRUE. you must specify, for species I,
              the parameters U and (optionally) alpha of the Hubbard 
              model (both in eV). See:
              Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
@@ -346,7 +357,7 @@ help Hubbard_U      -vartype real -helpfmt txt2html -helptext "$_hubbard\n      
 help Hubbard_alpha  -vartype real -helpfmt txt2html -helptext "$_hubbard\n             (default: 0.0 for all species)"
 
 help edir         -vartype integer -helpfmt txt2html -helptext { 
-             1, 2 or 3. Used only if tefield is true. The direction of the
+             1, 2 or 3. Used only if tefield is .TRUE. The direction of the
              electric field is parallel to the bg(.,edir) reciprocal 
              lattice vector (So the potential is constant in planes 
              defined by the mesh points).
@@ -354,16 +365,16 @@ help edir         -vartype integer -helpfmt txt2html -helptext {
 
 help emaxpos      -vartype real -helpfmt txt2html -helptext { 
              Position of the maximum of the sawlike potential within the 
-             unit cell (0<emaxpos<1). Default: 0.5d0
+             unit cell (0<emaxpos<1). Default: 0.5D0
 }
 
 help eopreg       -vartype real -helpfmt txt2html -helptext { 
              Part of the unit cell where the sawlike potential decreases.
-             (0<eopreg<1). Default: 0.1d0
+             ( 0 < eopreg < 1 ). Default: 0.1D0
 }
 
 help eamp         -vartype real -helpfmt txt2html -helptext { 
-             Amplitude of the electric field (in a.u.) (1 a.u.=51.44 10^11 V/m)
+             Amplitude of the electric field (in a.u.) ( 1 a.u. = 51.44 10^11 V/m )
              Default: 0.001 a.u.
 }
 
@@ -380,20 +391,20 @@ help electron_maxstep  -vartype integer -helpfmt txt2html -helptext {
 
 help conv_thr     -vartype real -helpfmt txt2html -helptext { 
              Convergence threshold for selfconsistency: 
-             estimated energy error < conv_thr (Default 1e-6)
+             estimated energy error < conv_thr ( Default 1.D-6 )
 }
 
 help mixing_mode  -vartype character -helpfmt txt2html -helptext { 
-             'plain' : charge density Broyden mixing (default)
-             'TF'    : as above, with simple Thomas-Fermi screening
-                       (for highly homogeneous systems)
-             'local-TF': as above, with local-density-dependent TF screening
-                       (for highly inhomogeneous systems)
+             'plain'    : charge density Broyden mixing (default)
+             'TF'       : as above, with simple Thomas-Fermi screening
+                          (for highly homogeneous systems)
+             'local-TF' : as above, with local-density-dependent TF screening
+                          (for highly inhomogeneous systems)
              'potential': (obsolete) potential mixing
 }
 
 help mixing_beta  -vartype real -helpfmt txt2html -helptext { 
-             mixing factor for self-consistency (default: 0.7)
+             mixing factor for self-consistency (default: 0.7D0)
 }
 
 help mixing_ndim  -vartype integer -helpfmt txt2html -helptext { 
@@ -408,8 +419,8 @@ help mixing_fixed_ns   -vartype integer -helpfmt txt2html -helptext {
 help diagonalization   -vartype character -helpfmt txt2html -helptext { 
             'david': Davidson iterative diagonalization with overlap matrix
                      (default)
-            'diis': DIIS-like diagonalization
-            'cg'  : conjugate-gradient-like band-by-band diagonalization
+            'diis' : DIIS-like diagonalization
+            'cg'   : conjugate-gradient-like band-by-band diagonalization
 }
 
 help diago_thr_init -vartype real -helpfmt txt2html -helptext {
@@ -435,11 +446,6 @@ help diago_diis_ndim   -vartype integer -helpfmt txt2html -helptext {
              For DIIS: dimension of the reduced space.<p>Default: 3
 }
 
-help diago_diis_ethr  -vartype integer -helpfmt txt2html -helptext { 
-             For DIIS: Conjugate Gradient diagonalization is repeated
-             until the convergence threshold for eigenvalues (ethr) is
-             smaller than diago_diis_ethr
-}
 
 help startingpot  -vartype character -helpfmt txt2html -helptext { 
              'atomic': starting potential from atomic charge superposition
@@ -453,7 +459,7 @@ help startingwfc  -vartype character -helpfmt txt2html -helptext {
                        If not enough atomic orbitals are available,
                        fill with random numbers the remaining wfcs
              'random': start from random wfcs
-             'file':   start from a wavefunction file
+             'file'  : start from a wavefunction file
 }
 
 
@@ -463,39 +469,39 @@ help startingwfc  -vartype character -helpfmt txt2html -helptext {
 # =============================================================================
 
 help ion_dynamics      -vartype character -helpfmt txt2html -helptext { 
-             specify the type of ionic dynamics. 
-             For different type of calculation different possibilities are 
-             allowed and different default values apply:
-
-               CASE ( calculation = 'relax' )
-                 'bfgs' : (default)     a new BFGS quasi-newton algorithm, based
+               specify the type of ionic dynamics. 
+               For different type of calculation different possibilities are 
+               allowed and different default values apply:
+               
+	       CASE ( calculation = 'relax' )
+                 'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
                                         on the trust radius procedure, is used 
                                         for structural relaxation (experimental)
                  'old-bfgs' :           use the old BFGS quasi-newton method for
                                         structural relaxation
-                 'constrained-bfgs' :   use BFGS algorithm with the constraint
-                                        coded into routine "constraint.f90"
-                 'damp' :               use damped (Beeman) dynamics for 
-                                        structural relaxation
+		 'damp' :               use damped (quick-min velocity Verlet) 
+                                        dynamics for structural relaxation
+                 'constrained-damp' :   use damped (quick-min velocity Verlet) 
+                                        dynamics for structural relaxation with 
+                                        the constraint specified in the 
+                                        CONSTRAINTS CARD
                CASE ( calculation = 'md' )
-                 'verlet' : (default)   use Verlet algorithm to integrate 
-                                        Newton's equation
-                 'constrained-verlet' : use Verlet algorithm to do molecular 
-                                        dynamics with the constraint coded into 
-                                        routine "constraint.f90"
-                 'beeman' :             use Beeman algorithm to integrate 
-                                        Newton's equation
+                 'verlet' : (default)   use velocity Verlet algorithm to 
+                                        integrate Newton's equation
+                 'constrained-verlet' : use velocity Verlet algorithm to do 
+                                        molecular dynamics with the constraint
+                                        specified in the CONSTRAINTS CARD 
                CASE ( calculation = 'vc-relax' )
-                 'damp' : (default)     use damped (Beeman) dynamics for 
-                                        structural relaxation
+                 'damp' :   (default)   use damped (Beeman) dynamics for 
+		                        structural relaxation
                CASE ( calculation = 'vc-md' )
                  'beeman' : (default)   use Beeman algorithm to integrate 
                                         Newton's equation
 }
              
 help ion_temperature   -vartype character -helpfmt txt2html -helptext { 
-             'nose': Nose' thermostat, not implemented
-             'rescaling': velocity rescaling (sort of implemented)
+             'nose'          : Nose' thermostat, not implemented
+             'rescaling'     : velocity rescaling (sort of implemented)
              'not_controlled': default
 }
 
@@ -507,28 +513,28 @@ help ttol         -vartype real -helpfmt txt2html -helptext {
              tolerance for velocity rescaling. Velocities are
              not rescaled if the ratio of the run-averaged and 
              target temperature differs from unit less than ttol
-             (default: 1.0d-3)
+             (default: 1.D-3)
 }
 
 help upscale      -vartype real -helpfmt txt2html -helptext { 
-             max reduction factor for conv_thr during structural optimization
-             conv_thr is automatically reduced when the relaxation 
-             approaches convergence so that forces are still accurate,
-             but conv_thr will not be reduced to less that conv_thr/upscale**2
-             (default: 20.0)
+               max reduction factor for conv_thr during structural optimization
+               conv_thr is automatically reduced when the relaxation 
+               approaches convergence so that forces are still accurate,
+               but conv_thr will not be reduced to less that 
+               conv_thr / upscale. (default: 10.D0)
 }
 
 help potential_extrapolation     -vartype character -helpfmt txt2html -helptext { 
-             used to extrapolate the potential and the wave-functions 
-             from preceding ionic step(s)
-             'none' | 'atomic' | 'wfc' | 'wfc2'
-             'none': no extrapolation
-             'atomic': extrapolate the potential as if it was a sum of
-                       atomic-like orbitals (default for calculation='relax')
-             'wfc':  extrapolate the potential as above
-                     extrapolate wave-functions with first-order formula
-                     (default for calcualtion='md')
-             'wfc2': as above, with second order formula
+               used to extrapolate the potential and the wave-functions 
+               from preceding ionic step(s)
+               
+               'none':   no extrapolation
+               'atomic': extrapolate the potential as if it was a sum of
+                         atomic-like orbitals (default for calculation='relax')
+               'wfc':    extrapolate the potential as above
+                         extrapolate wave-functions with first-order formula
+                         (default for calcualtion = 'md', 'neb', 'smd')
+               'wfc2':   as above, with second order formula
 }
 
 
@@ -539,41 +545,41 @@ help lbfgs_ndim    -vartype integer -helpfmt txt2html -helptext {
 	       systems).<p>
 	       On large systems (some hundreds of atoms) a good performance can 
 	       be achieved with only 4 or 6 old vectors 
-               (new-bfgs only)
+               (bfgs only)
 <p> ( default = 1 )
 }
 
 help trust_radius_max -vartype  real -helpfmt txt2html -helptext {
                maximum ionic displacement in the structural relaxation 
-	       (new-bfgs only)
+	       (bfgs only)
 <p> ( default = 0.5D0 BOHR ) 
 }
 
 help trust_radius_min -vartype  real -helpfmt txt2html -helptext {
 	       minimum ionic displacement in the structural relaxation
                BFGS is reset when trust_radius < trust_radius_min
-	       (new-bfgs only)
+	       (bfgs only)
 <p> ( default = 1.D-5 BOHR )
 }
 
 help trust_radius_ini -vartype real -helpfmt txt2html -helptext {
                initial ionic displacement in the structural relaxation
-               (new-bfgs only)
+               (bfgs only)
 <p> ( default = 0.5D0 BOHR )
 }
 
 help trust_radius_end -vartype real -helpfmt txt2html -helptext {
                BFGS is stopped when trust_radius < trust_radius_end
 	       trust_radius_end is not intended to be used as a criterium
-	       for convergence (new-bfgs only)
+	       for convergence (bfgs only)
 <p> ( default = 1.D-7 BOHR )
 }
 
 
 set _w12 {
 	       parameters used in line search based on the Wolfe conditions
-	       (new-bfgs only)
-<p> ( default : w_1 = 0.5D-1, w_2 = 0.5D0 )
+	       (bfgs only)
+<p> ( default : w_1 = 1.D-5, w_2 = 0.2D0 )
 
 }     
 foreach var {w_1 w_2} {
@@ -591,38 +597,20 @@ help CI_scheme    -vartype   character -helpfmt txt2html -helptext {
                "highest-TS" : original CI scheme. The image highest in energy 
 	                      does not feel the effect of springs and is 
 			      allowed to climb along the path
-               "all-SP"     : CI is used on all the saddle points identified 
-	                      along the path. Moreover all local minima 
-			      identified along the path are optimized without 
-			      being affected by springs (see also optimization)
                "manual"     : images that have to climb are manually selected. 
 	                      See also CLIMBING_IMAGES card 
-               use CI only when the shape of the MEP is clear
 <p> ( default = "no-CI" )
 }
 
-help VEC_scheme   -vartype   character -helpfmt txt2html -helptext {
-               specify the type of Variable Elastic Constants scheme
-               "energy-weighted"   :  elsetic constants surrounding an image
-	                              depend on its energy: the accuracy is
-                                      higher around the saddle point.
-	       "gradient-weighted" :  elsetic constants surrounding an image
-	                              depend on on the norm of the total force
-				      acting on it: the accuracy is higher
-                                      around points of higher gradient.
-<p>
- ( default = "energy-weighted" )
-}
-
-help optimization  -vartype  logical -helpfmt txt2html -helptext {
+help first_last_opt  -vartype  logical -helpfmt txt2html -helptext {
                also the first and the last configurations are optimized
                "on the fly" 
-	       these images do not feel the effect of the springs
+	       (these images do not feel the effect of the springs)
 <p> ( default = .FALSE. )
 }
 
 help minimization_scheme  -vartype    character -helpfmt txt2html -helptext {
-               specify the type of minimization scheme      
+               specify the type of optimization scheme      
                "sd"         : steepest descent
 	       "quick-min"  : a minimization algorithm based on
 	                      molecular dynamics (suggested)
@@ -648,13 +636,13 @@ help temp_req      -vartype  real -helpfmt txt2html -helptext {
 	       temperature of the elastic band computed before the 
 	       thermalization
                ignored when "minimization_scheme" is different from
-               "sim-annealing"
+               "mol-dyn"
 <p> ( default = 0.D0 Kelvin )
 }
 
 help ds          -vartype    real -helpfmt txt2html -helptext {
-               minimization step ( Hartree atomic units )
-<p> ( default = 0.5D0 )
+               optimization step length ( Hartree atomic units )
+<p> ( default = 1.5D0 )
 }
 	
 set _k {              
@@ -667,40 +655,45 @@ foreach var {k_max k_min} {
     help $var -vartype real -helpfmt txt2html -helptext $_k
 }
 
-help neb_thr      -vartype   real -helpfmt txt2html -helptext {
+help path_thr      -vartype   real -helpfmt txt2html -helptext {
                the simulation stops when the error ( the norm of the force 
-	       orthogonal to the path in eV/A ) is less than neb_thr.
+	       orthogonal to the path in eV/A ) is less than path_thr.
 <p> ( default = 0.05D0 eV / Angstrom )
 }
 
+help reset_vel     -vartype logical -helpfmt txt2html -helptext {
+                used to reset quick-min velocities at restart time
+               (sort of clean-up of the history)
+<p> ( default = .FALSE. )
+}
 
 # =============================================================================
 # NAMELIST &CELL
 # =============================================================================
 
 help cell_dynamics     -vartype character -helpfmt txt2html -helptext { 
-             specify the type of dynamics for the cell. 
-             For different type of calculation different possibilities 
-             are allowed and different default values apply:
+               specify the type of dynamics for the cell. 
+               For different type of calculation different possibilities 
+               are allowed and different default values apply:
 
-             CASE(calculation='vc-relax')
-                'none': default 
-                'sd': steepest descent (not implemented)
-                'damp-pr': damped (Beeman) dynamics of the Parrinello-Raman 
-                           extended lagrangian
-                'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
-                           extended lagrangian
-             CASE(calculation='vc-md')
-                'none': default 
-                'pr': (Beeman) molecular dynamics of the Parrinello-Raman 
-                           extended lagrangian
-                'w':  (Beeman) molecular dynamics of the new Wentzcovitch
-                           extended lagrangian
+               CASE ( calculation = 'vc-relax' )
+                 'none':    default 
+                 'sd':      steepest descent ( not implemented )
+                 'damp-pr': damped (Beeman) dynamics of the Parrinello-Raman 
+                            extended lagrangian
+                 'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
+                            extended lagrangian
+               CASE ( calculation = 'vc-md' )
+                 'none': default 
+                 'pr':      (Beeman) molecular dynamics of the Parrinello-Raman 
+                            extended lagrangian
+                 'w':       (Beeman) molecular dynamics of the new Wentzcovitch
+                            extended lagrangian
 }
 
 help press        -vartype real -helpfmt txt2html -helptext { 
              target pressure [KBar] in a variable-cell md simulation
-             (default: 0.d0)
+             (default: 0.D0)
 }
 
 help wmass        -vartype real -helpfmt txt2html -helptext { 
@@ -710,7 +703,7 @@ help wmass        -vartype real -helpfmt txt2html -helptext {
 help cell_factor  -vartype real -helpfmt txt2html -helptext { 
              used in the construction of the pseudopotential tables. 
              It should exceed the maximum linear contraction of the
-             cell during a simulation. Default: 1.2
+             cell during a simulation. Default: 1.2D0
 }
 
 
@@ -784,7 +777,7 @@ set _pos {
     Syntax:
     
     ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
-    if ( calculation = 'neb' )
+    if ( calculation = 'neb' .OR. 'smd' )
       first_image
       X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
       Y 0.5  0.0  0.0
@@ -894,3 +887,36 @@ Description:
   must be separated by a comma
 }
 
+# ==============================================================================
+# CARD: CONSTRAINTS
+# ==============================================================================
+
+set constraints_help {
+
+   Ionic Constraints
+
+ Syntax:
+
+    CONSTRAINTS
+      nconstr   constr_tol
+      constr_type(.)   constr(1,.)   constr(2,.)
+
+ Where:
+
+      nconstr (INTEGER)         INTEGER, number of constraints
+      constr_tol                REAL,    tolerance for keeping the constraints 
+                                         satisfied
+      constr_type(.)            INTEGER, type of constrain
+      constr(1,.) constr(2,.)   INTEGER, atoms indices object of the constraint.
+                                        
+                          I.E.: 1 ia1 ia2 "1" is the constrain type 
+                                (fixed distance) "ia1 ia2" are the 
+                                indices of the atoms (as they appear 
+                                in the 'ATOMIC_POSITION' CARD) whose 
+                                distance has to be kept constant
+
+}
+
+foreach var { nconstr constr_tol constraints_table } { 
+help $var -helpfmt txt2html -helptext $constraints_help 
+}

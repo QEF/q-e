@@ -33,6 +33,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 			"Molecular dynamics  <md>"
 			"Molecular dynamics with Variable-Cell  <vc-md>"
 			"Nudged Elastic Band  <neb>"
+                        "String Method Dynamics <smd>"
 		    }
 		    -value {
 			'scf'
@@ -43,6 +44,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 			'md'
 			'vc-md'
 			'neb'
+                        'smd'
 		    }
 		    -default "Self-Consistent-Field  <scf>"
 		}
@@ -596,14 +598,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		separator -label "--- DIIS diagonalization ---"
 		
 		group diis -name "DISS diagonalization" {
-		    var diago_diis_buff {
-			-widget   spinint
-			-validate posint
-			-fmt     %d
-			-text    "For DIIS only"
-			-label   "Number of wavefunctions kept in buffer (diago_diis_buff):"
-		    }
-		    
+
 		    var diago_diis_ndim {
 			-text     "For DIIS only only"
 			-label    "Dimension of the reduced space (diago_diis_ndim):"
@@ -611,20 +606,6 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 			-validate posint
 			-fmt      %d
 		    }
-		    
-		    var diago_diis_keep {
-			-text      "For DISS only"
-			-label     "Keep old wavefunctions (diago_diis_keep):"
-			-textvalue {Yes No}
-			-value     {.true. .false.}
-			-widget    radiobox
-		    }
-		    
-		    var diago_diis_ethr {
-			-text    "For DIIS only: start with the CG diagonalization up to a given threshold"
-			-label   "Convergence treshold for switching on DIIS (diago_diis_ethr):"
-			-validate fortranposreal
-		    }	
 		}
 	    }    
 	}
@@ -644,21 +625,23 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -label "Type of ionic dynamics (ion_dynamics):"
 		    -widget   optionmenu
 		    -textvalue {
-			"new BFGS algorithm, based on the trust radius procedure <bfgs>"
-			"old BFGS quasi-newton method for structural relaxation  <old-bfgs>"
-			"BFGS with the CONSTRAINT coded into \"constraint.f90\"  <constrained-bfgs>"
-			"damped (Beeman) dynamics for structural relaxation  <damp>"
-			"Verlet algorithm for Molecular dynamics  <verlet>"
-			"Verlet-MD with the CONSTRAINT coded into \"constraint.f90\"  <constrained-verlet>"
-			"Beeman algorithm for MD  <beeman>"
-		    }		
+			"BFGS quasi-newton method for structural optimization (based on the trust radius procedure) <bfgs>"
+			"old BFGS quasi-newton method for structural optimization (based on line minimization) <old-bfgs>"
+			"damped dynamics (quick-min velocity Verlet) for structural optimization <damp>"
+                        "damped dynamics (quick-min velocity Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
+			"Velocity-Verlet algorithm for Molecular dynamics <verlet>"
+			"Velocity-Verlet-MD with the CONSTRAINT <constrained-verlet>"
+                        "Beeman algorithm for variable cell damped dynamics <damp>"
+			"Beeman algorithm for variable cell MD <beeman>"
+		    }
 		    -value {
 			'bfgs' 
 			'old-bfgs'
-			'constrained-bfgs' 
-			'damp'
+			'damp' 
+			'constrained-damp'
 			'verlet' 
-			'constrained-verlet' 
+			'constrained-verlet'
+                        'damp'
 			'beeman'
 		    }
 		}
@@ -708,11 +691,11 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 
-		separator -label "--- NEW-BFGS Structural Optimization ---"
+		separator -label "--- BFGS Structural Optimization ---"
 
 		group new_bfgs {
 		    var lbfgs_ndim {
-			-label "Number of old forces and displacements vectors used in the NEW_BFGS (lbfgs_ndim):"
+			-label "Number of old forces and displacements vectors used in the L-BFGS (lbfgs_ndim):"
 			-widget   spinint
 			-validate posint
 		    }
@@ -751,49 +734,24 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 
-		separator -label "--- Nudget Elastic Band (NEB) ---"
+		separator -label "--- Nudget Elastic Band (NEB) and String Method Dynamics (SMD) ---"
 		
-		group neb {
+		group path {
 		    var num_of_images {
 			-label   "Number of images used to discretize the path (num_of_images):"
 			-widget   spinint
 			-validate posint
 		    }
 		    
-		    var CI_scheme {
-			-label "Type of Climbing Image (CI) scheme (CI_scheme):"
-			-textvalue {
-			    "do not use climbing image  <no-CI>"
-			    "image highest in energy is allowed to climb  <highest-TS>"
-			    "CI is used on all the saddle points  <all-SP>"
-			    "climbing images are manually selected  <manual>"
-			}
-			-value {
-			    'no-CI'
-			    'highest-TS'
-			    'all-SP'
-			    'manual'
-			}
-			-widget optionmenu
-		    }
-
-
-		    var VEC_scheme {
-			-label     "Type of Variable Elastic Constants scheme (VEC_scheme):"
-			-textvalue { "energy-weighted"  "gradient-weighted" }
-			-value     { 'energy-weighted'  'gradient-weighted' }
-			-widget    radiobox
-		    }
-
-		    var optimization {
-			-label "Optimize also the first and the last configurations (optimization):"
+		    var first_last_opt {
+			-label "Optimize also the first and the last configurations (first_last_opt):"
 			-textvalue { Yes No }
-			-value     { .true. .false. }
+			-value     { .TRUE. .FALSE. }
 			-widget    radiobox
 		    }
 		    		    
 		    var minimization_scheme {
-			-label "Type of minimization scheme (minimization_scheme):"
+			-label "Type of optimization scheme (minimization_scheme):"
 			-value {
 			    'quick-min' 
 			    'sd'
@@ -801,7 +759,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 			    'mol-dyn'  
 			}
 			-textvalue {
-			    "SUGGESTED: minimization algorithm based on molecular dynamics  <quick-min>"
+			    "optimization algorithm based on molecular dynamics  <quick-min>"
 			    "steepest descent  <sd>"
 			    "damped molecular dynamics  <damped-dyn>"
 			    "constant temperature molecular dynamics  <mol-dyn>"
@@ -820,10 +778,42 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 		    }
 
 		    var ds {
-			-label    "Minimization time step (ds):"
+			-label    "Optimization step length (ds):"
 			-validate fortranposreal
 		    }
 		    
+		    var path_thr {
+			-label "Convergence threshold for path optimization (path_thr):"
+			-validate fortranposreal
+		    }
+                    
+                    var reset_vel {
+			-label "sort of clean-up of the quick-min history:"
+			-textvalue { Yes No }
+			-value     { .TRUE. .FALSE. }
+			-widget    radiobox
+		    }
+		}
+                
+              group neb {
+              
+		    var CI_scheme {
+			-label "Type of Climbing Image (CI) scheme (CI_scheme):"
+			-textvalue {
+			    "do not use climbing image  <no-CI>"
+			    "image highest in energy is allowed to climb  <highest-TS>"
+			    "CI is used on all the saddle points  <all-SP>"
+			    "climbing images are manually selected  <manual>"
+			}
+			-value {
+			    'no-CI'
+			    'highest-TS'
+			    'all-SP'
+			    'manual'
+			}
+			-widget optionmenu
+		    }
+              
 		    group elastic_constants -name "Elastic Constants for NEB spring:" -decor normal {
 			packwidgets left
 			var k_max {
@@ -835,12 +825,8 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 			    -validate fortranposreal
 			}
 		    }
-
-		    var neb_thr {
-			-label "Convergence threshold for NEB (neb_thr):"
-			-validate fortranposreal
-		    }
-		}
+              
+                }  
 	    }
 	}
     }
@@ -983,7 +969,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
 		
-	keyword first_image first_image\n; # only for calculation == 'neb'
+	keyword first_image first_image\n; # only for calculation == 'neb' || 'smd'
 	table atomic_coordinates {
 	    -caption   "Enter atomic coordinates:"
 	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate X-iforce Y-iforce Z-iforce}
@@ -998,7 +984,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	loaddata atomic_coordinates ::pwscf::pwLoadAtomCoor \
 	    "Load atomic coordinates from file ..."
 	
- 	# only for calculation == 'neb'
+ 	# only for calculation == 'neb' || 'smd'
 	packwidgets left
 	keyword last_image last_image\n
 	table atomic_coordinates2 {
@@ -1079,7 +1065,7 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##                         PAGE: CLIMBING_IMAGES & OCCUPATIONS        ##
+    ##         PAGE: CLIMBING_IMAGES & CONSTRAINTS & OCCUPATIONS          ##
     ##                                                                    ##
     ########################################################################
     page otherPage -name "Other Cards" {
@@ -1096,32 +1082,31 @@ module PWSCF\#auto -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
 
-	# incoming in next PWscf version
-	# # CARD: CONSTRAINTS
-	# 
-	# group constraints_card -name "Card: CONSTRAINTS" -decor normal {
-	#     keyword constraints_key CONSTRAINTS\n
-	#     line constraints_line1 -decor none {
-	# 	var nconstr {
-	# 	    -label    "Number of constraints:"
-	# 	    -validate posint
-	# 	    -widget   spinint
-	# 	    -default  1
-	# 	}
-	# 	var constr_tol {
-	# 	    -label    "Tolerance for keeping the constraints satisfied:"
-	# 	    -validate fortranposreal
-	# 	}
-	# 	table constraints_table {
-	# 	    -caption  "Enter constraints data:"
-	# 	    -head     {constraint-type 1st-atom-index 2nd-atom-index}
-	# 	    -validate {posint posint posint}
-	# 	    -cols     3
-	# 	    -rows     1
-	# 	    -outfmt   {"  %d    " "%d " "%d "}
-	# 	}
-	#     }		    
-	# }
+	# CARD: CONSTRAINTS
+	
+	group constraints_card -name "Card: CONSTRAINTS" -decor normal {
+	    keyword constraints_key CONSTRAINTS\n
+	    line constraints_line1 -decor none {
+		var nconstr {
+		    -label    "Number of constraints:"
+		    -validate posint
+		    -widget   spinint
+		    -default  1
+		}
+		var constr_tol {
+		    -label    "Tolerance for keeping the constraints satisfied:"
+		    -validate fortranposreal
+		}
+		table constraints_table {
+		    -caption  "Enter constraints data:"
+		    -head     {constraint-type 1st-atom-index 2nd-atom-index}
+		    -validate {posint posint posint}
+		    -cols     3
+		    -rows     1
+		    -outfmt   {"  %d    " "%d " "%d "}
+		}
+	    }		    
+	}
 
 	# CARD: OCCUPATIONS
 	
