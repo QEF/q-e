@@ -1,3 +1,4 @@
+# 1 "iotk_module.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -67,6 +68,8 @@ module iotk_module
   public :: iotk_defkind_integer
   public :: iotk_defkind_real
   public :: iotk_defkind_complex
+  public :: iotk_maxrank
+  public :: iotk_maxrank_hard
   public :: iotk_print_kinds
   public :: iotk_set_options
   public :: iotk_get_options
@@ -80,5 +83,6 @@ module iotk_module
   public :: iotk_error_clear
   public :: iotk_error_print
   public :: iotk_error_pool_pending
+  public :: iotk_dummytype ! CHECK IF EVERY COMPILER ALLOW TO OMIT THIS TYPE
 end module iotk_module
 

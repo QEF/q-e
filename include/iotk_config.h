@@ -24,6 +24,7 @@
 ! See the manual for a list of iotk macros.
 
 #ifndef __IOTK_CONFIG_H
+
 #define __IOTK_CONFIG_H
 
 #  define __IOTK_MAXRANK 4
@@ -40,7 +41,6 @@
 #   define __IOTK_INTEGER4 8
 #   define __IOTK_REAL1    4
 #   define __IOTK_REAL2    8
-#   define __IOTK_REAL3    16
 #endif
 
 #ifdef __LINUX
@@ -78,6 +78,19 @@
 #         define __IOTK_WORKAROUND2
 #         define __IOTK_WORKAROUND4
 #   endif
+#   ifdef __NAG
+#         define __IOTK_INTEGER1 1
+#         define __IOTK_INTEGER2 2
+#         define __IOTK_INTEGER3 3
+#         define __IOTK_INTEGER4 4
+#         define __IOTK_LOGICAL1 1
+#         define __IOTK_LOGICAL2 2
+#         define __IOTK_LOGICAL3 3
+#         define __IOTK_LOGICAL4 4
+#         define __IOTK_REAL1 1
+#         define __IOTK_REAL2 2
+#         define __IOTK_WORKAROUND4
+#   endif
 #endif
 
 #ifdef __LINUX64
@@ -106,7 +119,6 @@
 #   define __IOTK_INTEGER4 8
 #   define __IOTK_REAL1    4
 #   define __IOTK_REAL2    8
-#   define __IOTK_REAL3    16
 #endif
 
 #ifdef __PARA
@@ -114,5 +126,3 @@
 #endif
 
 #endif
-
-

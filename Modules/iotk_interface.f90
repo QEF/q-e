@@ -1,3 +1,4 @@
+# 1 "iotk_attr_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -38,6 +39,10 @@
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -61,102 +66,172 @@
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_attr_interf.spp"
 
@@ -357,7 +432,11 @@ subroutine iotk_write_LOGICAL1(val,string,ierr)
   use iotk_base
   implicit none
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_LOGICAL1
 #endif
@@ -367,7 +446,11 @@ subroutine iotk_write_LOGICAL2(val,string,ierr)
   use iotk_base
   implicit none
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_LOGICAL2
 #endif
@@ -377,7 +460,11 @@ subroutine iotk_write_LOGICAL3(val,string,ierr)
   use iotk_base
   implicit none
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_LOGICAL3
 #endif
@@ -387,7 +474,11 @@ subroutine iotk_write_LOGICAL4(val,string,ierr)
   use iotk_base
   implicit none
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_LOGICAL4
 #endif
@@ -397,7 +488,11 @@ subroutine iotk_write_INTEGER1(val,string,ierr)
   use iotk_base
   implicit none
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_INTEGER1
 #endif
@@ -407,7 +502,11 @@ subroutine iotk_write_INTEGER2(val,string,ierr)
   use iotk_base
   implicit none
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_INTEGER2
 #endif
@@ -417,7 +516,11 @@ subroutine iotk_write_INTEGER3(val,string,ierr)
   use iotk_base
   implicit none
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_INTEGER3
 #endif
@@ -427,7 +530,11 @@ subroutine iotk_write_INTEGER4(val,string,ierr)
   use iotk_base
   implicit none
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_INTEGER4
 #endif
@@ -437,7 +544,11 @@ subroutine iotk_write_REAL1(val,string,ierr)
   use iotk_base
   implicit none
   REAL(kind=__IOTK_REAL1), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_REAL1
 #endif
@@ -447,7 +558,11 @@ subroutine iotk_write_REAL2(val,string,ierr)
   use iotk_base
   implicit none
   REAL(kind=__IOTK_REAL2), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_REAL2
 #endif
@@ -457,7 +572,11 @@ subroutine iotk_write_REAL3(val,string,ierr)
   use iotk_base
   implicit none
   REAL(kind=__IOTK_REAL3), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_REAL3
 #endif
@@ -467,7 +586,11 @@ subroutine iotk_write_REAL4(val,string,ierr)
   use iotk_base
   implicit none
   REAL(kind=__IOTK_REAL4), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_REAL4
 #endif
@@ -477,7 +600,11 @@ subroutine iotk_write_COMPLEX1(val,string,ierr)
   use iotk_base
   implicit none
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_COMPLEX1
 #endif
@@ -487,7 +614,11 @@ subroutine iotk_write_COMPLEX2(val,string,ierr)
   use iotk_base
   implicit none
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_COMPLEX2
 #endif
@@ -497,7 +628,11 @@ subroutine iotk_write_COMPLEX3(val,string,ierr)
   use iotk_base
   implicit none
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_COMPLEX3
 #endif
@@ -507,3770 +642,4549 @@ subroutine iotk_write_COMPLEX4(val,string,ierr)
   use iotk_base
   implicit none
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val(:)
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)                                 :: string
+#else
   character(len=*),                    intent(out) :: string
+#endif
   integer,                             intent(out) :: ierr
 end subroutine iotk_write_COMPLEX4
 #endif
-# 76 "iotk_attr_interf.spp"
+# 80 "iotk_attr_interf.spp"
 end interface
 
 interface iotk_write_attr
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL1
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL1_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL1_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL1), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL1_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL2
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL2_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL2_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL2), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL2_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL3
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL3_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL3_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL3), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL3_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL4
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_LOGICAL4_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_LOGICAL4_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   LOGICAL(kind=__IOTK_LOGICAL4), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_LOGICAL4_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER1
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER1_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER1_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER1), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER1_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER2
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER2_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER2_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER2), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER2_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER3
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER3_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER3_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER3), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER3_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER4
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_INTEGER4_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_INTEGER4_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   INTEGER(kind=__IOTK_INTEGER4), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_INTEGER4_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL1
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL1_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL1_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL1), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL1_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL2
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL2_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL2_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL2), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL2_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL3
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL3_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL3_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL3), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL3_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL4
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_REAL4_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_REAL4_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   REAL(kind=__IOTK_REAL4), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_REAL4_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX1
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX1_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX1_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX1), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX1_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX2
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX2_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX2_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX2), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX2_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX3
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX3_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX3_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX3), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX3_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX4
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_0
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_1(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_1(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_1
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_2(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_2(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_2
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_3(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_3(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_3
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_4(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_4(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_4
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_5(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_5(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_5
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_6(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_6(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_6
 #endif
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_COMPLEX4_7(attr,name,val,first,ierr)
+subroutine iotk_write_attr_COMPLEX4_7(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   COMPLEX(kind=__IOTK_COMPLEX4), intent(in)  :: val (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_COMPLEX4_7
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 82 "iotk_attr_interf.spp"
+# 86 "iotk_attr_interf.spp"
 #ifdef __IOTK_CHARACTER1
-# 85 "iotk_attr_interf.spp"
+# 89 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_attr_CHARACTER1_0(attr,name,val,first,ierr)
+subroutine iotk_write_attr_CHARACTER1_0(attr,name,val,dummy,first,ierr)
   use iotk_base
   implicit none
   character(*), intent(inout) :: attr
   character(*), intent(in)    :: name
-# 92 "iotk_attr_interf.spp"
+# 96 "iotk_attr_interf.spp"
   CHARACTER(kind=__IOTK_CHARACTER1,len=*), intent(in)  :: val 
+  type(iotk_dummytype), optional :: dummy
   logical, optional, intent(in)  :: first
   integer, optional, intent(out) :: ierr
 end subroutine iotk_write_attr_CHARACTER1_0
 #endif
-# 99 "iotk_attr_interf.spp"
+# 104 "iotk_attr_interf.spp"
 #endif
-# 103 "iotk_attr_interf.spp"
+# 108 "iotk_attr_interf.spp"
 end interface
 
 interface iotk_scan_attr
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL1
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val 
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL1_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL1_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL1),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL1)                        :: val (:,:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL1), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL1_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL2
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val 
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL2_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL2_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL2),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL2)                        :: val (:,:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL2), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL2_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL3
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val 
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL3_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL3_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL3),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL3)                        :: val (:,:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL3), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL3_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_LOGICAL4
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val 
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_LOGICAL4_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_LOGICAL4_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  LOGICAL(kind=__IOTK_LOGICAL4),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL(kind=__IOTK_LOGICAL4)                        :: val (:,:,:,:,:,:,:)
+#else
+  LOGICAL(kind=__IOTK_LOGICAL4), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   LOGICAL(kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_LOGICAL4_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER1
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val 
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER1_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER1_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER1),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER1)                        :: val (:,:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER1), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER1_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER2
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val 
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER2_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER2_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER2),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER2)                        :: val (:,:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER2), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER2_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER3
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val 
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER3_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER3_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER3),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER3)                        :: val (:,:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER3), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER3_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_INTEGER4
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val 
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_INTEGER4_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_INTEGER4_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  INTEGER(kind=__IOTK_INTEGER4),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER(kind=__IOTK_INTEGER4)                        :: val (:,:,:,:,:,:,:)
+#else
+  INTEGER(kind=__IOTK_INTEGER4), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   INTEGER(kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_INTEGER4_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL1
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val 
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL1_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL1_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL1),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL1)                        :: val (:,:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL1), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL1_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL2
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val 
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL2_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL2_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL2),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL2)                        :: val (:,:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL2), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL2_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL3
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val 
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL3_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL3_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL3),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL3)                        :: val (:,:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL3), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL3_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_REAL4
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val 
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_REAL4_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_REAL4_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  REAL(kind=__IOTK_REAL4),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL(kind=__IOTK_REAL4)                        :: val (:,:,:,:,:,:,:)
+#else
+  REAL(kind=__IOTK_REAL4), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   REAL(kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_REAL4_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX1
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val 
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX1_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX1_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX1),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX1)                        :: val (:,:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX1), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX1_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX2
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val 
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX2_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX2_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX2),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX2)                        :: val (:,:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX2), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX2_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX3
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val 
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX3_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX3_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX3),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX3)                        :: val (:,:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX3), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX3_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_COMPLEX4
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val 
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_0
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_1(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_1(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_1
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_2(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_2(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_2
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_3(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_3(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_3
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_4(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_4(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_4
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_5(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_5(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_5
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_6(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_6(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_6
 #endif
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_COMPLEX4_7(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_COMPLEX4_7(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  COMPLEX(kind=__IOTK_COMPLEX4),           intent(out) :: val (:,:,:,:,:,:,:)
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX(kind=__IOTK_COMPLEX4)                        :: val (:,:,:,:,:,:,:)
+#else
+  COMPLEX(kind=__IOTK_COMPLEX4), intent(out)           :: val (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   COMPLEX(kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_COMPLEX4_7
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 109 "iotk_attr_interf.spp"
+# 114 "iotk_attr_interf.spp"
 #ifdef __IOTK_CHARACTER1
-# 112 "iotk_attr_interf.spp"
+# 117 "iotk_attr_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_attr_CHARACTER1_0(attr,name,val,found,default,eos,ierr)
+subroutine iotk_scan_attr_CHARACTER1_0(attr,name,val,dummy,found,default,eos,ierr)
   use iotk_base
   implicit none
   character(*),             intent(in)  :: attr
   character(*),             intent(in)  :: name
-# 119 "iotk_attr_interf.spp"
-  CHARACTER(kind=__IOTK_CHARACTER1,len=*),           intent(out) :: val 
+# 124 "iotk_attr_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER(kind=__IOTK_CHARACTER1,len=*)                        :: val 
+#else
+  CHARACTER(kind=__IOTK_CHARACTER1,len=*), intent(out)           :: val 
+#endif
+  type(iotk_dummytype), optional :: dummy
   logical,        optional, intent(out) :: found
   CHARACTER(kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default 
   logical,        optional, intent(in)  :: eos
   integer,        optional, intent(out) :: ierr
 end subroutine iotk_scan_attr_CHARACTER1_0
 #endif
-# 128 "iotk_attr_interf.spp"
+# 138 "iotk_attr_interf.spp"
 #endif
-# 132 "iotk_attr_interf.spp"
+# 142 "iotk_attr_interf.spp"
 end interface
 
 end module iotk_attr_interf
+# 1 "iotk_dat_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -4311,6 +5225,10 @@ end module iotk_attr_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -4334,102 +5252,172 @@ end module iotk_attr_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_dat_interf.spp"
 
@@ -4447,4060 +5435,4945 @@ interface iotk_write_dat
 #ifdef __IOTK_LOGICAL1
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL1_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL1_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL1),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL1_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL2
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL2_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL2_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL2),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL2_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL3
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL3_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL3_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL3),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL3_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL4
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_LOGICAL4_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_LOGICAL4_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   LOGICAL (kind=__IOTK_LOGICAL4),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_LOGICAL4_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER1
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER1_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER1_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER1),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER1_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER2
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER2_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER2_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER2),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER2_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER3
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER3_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER3_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER3),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER3_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER4
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_INTEGER4_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_INTEGER4_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   INTEGER (kind=__IOTK_INTEGER4),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_INTEGER4_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL1
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL1_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL1_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL1),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL1_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL2
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL2_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL2_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL2),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL2_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL3
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL3_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL3_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL3),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL3_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL4
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_REAL4_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_REAL4_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   REAL (kind=__IOTK_REAL4),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_REAL4_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX1
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX1_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX1_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX1),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX1_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX2
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX2_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX2_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX2),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX2_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX3
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX3_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX3_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX3),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX3_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX4
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_COMPLEX4_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_COMPLEX4_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   COMPLEX (kind=__IOTK_COMPLEX4),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_COMPLEX4_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
 # 44 "iotk_dat_interf.spp"
 #ifdef __IOTK_CHARACTER1
 # 46 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_0(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_0(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat 
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_0
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_1(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_1(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_1
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_2(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_2(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_2
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_3(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_3(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_3
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_4(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_4(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_4
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_5(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_5(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_5
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_6(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_6(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_6
 #endif
 # 46 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_write_dat_CHARACTER1_7(unit,name,dat,fmt,ierr)
+subroutine iotk_write_dat_CHARACTER1_7(unit,name,dat,dummy,fmt,ierr)
   use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
 # 53 "iotk_dat_interf.spp"
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),        intent(in)  :: dat (:,:,:,:,:,:,:)
+  type(iotk_dummytype), optional      :: dummy
   character(*), optional, intent(in)  :: fmt
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_dat_CHARACTER1_7
 #endif
-# 59 "iotk_dat_interf.spp"
+# 60 "iotk_dat_interf.spp"
 #endif
-# 63 "iotk_dat_interf.spp"
+# 64 "iotk_dat_interf.spp"
 end interface
 
 interface iotk_scan_dat
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL1
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat 
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL1_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL1_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:,:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL1_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL2
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat 
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL2_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL2_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:,:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL2_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL3
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat 
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL3_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL3_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:,:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL3_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL4
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat 
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_LOGICAL4_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_LOGICAL4_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:,:,:,:,:,:,:)
+#else
   LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   LOGICAL (kind=__IOTK_LOGICAL4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_LOGICAL4_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER1
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat 
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER1_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER1_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:,:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER1_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER2
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat 
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER2_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER2_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:,:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER2_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER3
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat 
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER3_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER3_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:,:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER3_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER4
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat 
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_INTEGER4_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_INTEGER4_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:,:,:,:,:,:,:)
+#else
   INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   INTEGER (kind=__IOTK_INTEGER4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_INTEGER4_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL1
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat 
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL1_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL1_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:,:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL1_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL2
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat 
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL2_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL2_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:,:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL2_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL3
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat 
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL3_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL3_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:,:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL3_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL4
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat 
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_REAL4_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_REAL4_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:,:,:,:,:,:,:)
+#else
   REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   REAL (kind=__IOTK_REAL4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_REAL4_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX1
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat 
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX1_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX1_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:,:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX1), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX1_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX2
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat 
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX2_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX2_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:,:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX2), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX2_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX3
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat 
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX3_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX3_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:,:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX3), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX3_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX4
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat 
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_COMPLEX4_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_COMPLEX4_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:,:,:,:,:,:,:)
+#else
   COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   COMPLEX (kind=__IOTK_COMPLEX4), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_COMPLEX4_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 69 "iotk_dat_interf.spp"
+# 70 "iotk_dat_interf.spp"
 #ifdef __IOTK_CHARACTER1
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 0 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_0(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_0(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat 
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat 
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default 
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_0
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 1 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_1(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_1(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_1
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 2 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_2(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_2(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_2
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 3 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_3(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_3(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_3
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 4 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_4(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_4(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:,:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_4
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 5 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_5(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_5(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:,:,:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_5
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 6 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_6(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_6(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:,:,:,:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_6
 #endif
-# 71 "iotk_dat_interf.spp"
+# 72 "iotk_dat_interf.spp"
 #if 7 <= __IOTK_MAXRANK
-subroutine iotk_scan_dat_CHARACTER1_7(unit,name,dat,found,default,ierr)
+subroutine iotk_scan_dat_CHARACTER1_7(unit,name,dat,dummy,found,default,ierr)
   use iotk_base
   implicit none
   integer,                   intent(in)  :: unit
   character(*),              intent(in)  :: name
-# 78 "iotk_dat_interf.spp"
+# 79 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:,:,:,:,:,:,:)
+#else
   CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:,:,:,:,:,:,:)
+#endif
+  type(iotk_dummytype), optional      :: dummy
   logical,         optional, intent(out) :: found
   CHARACTER (kind=__IOTK_CHARACTER1,len=*), optional, intent(in)  :: default (:,:,:,:,:,:,:)
   integer,         optional, intent(out) :: ierr
 end subroutine iotk_scan_dat_CHARACTER1_7
 #endif
-# 85 "iotk_dat_interf.spp"
+# 91 "iotk_dat_interf.spp"
 #endif
-# 89 "iotk_dat_interf.spp"
+# 95 "iotk_dat_interf.spp"
 end interface
 
 interface iotk_scan_dat_aux
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL1
 subroutine iotk_scan_dat_aux_LOGICAL1(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  LOGICAL (kind=__IOTK_LOGICAL1), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL1)                        :: dat (:)
+#else
+  LOGICAL (kind=__IOTK_LOGICAL1),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_LOGICAL1
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL2
 subroutine iotk_scan_dat_aux_LOGICAL2(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  LOGICAL (kind=__IOTK_LOGICAL2), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL2)                        :: dat (:)
+#else
+  LOGICAL (kind=__IOTK_LOGICAL2),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_LOGICAL2
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL3
 subroutine iotk_scan_dat_aux_LOGICAL3(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  LOGICAL (kind=__IOTK_LOGICAL3), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL3)                        :: dat (:)
+#else
+  LOGICAL (kind=__IOTK_LOGICAL3),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_LOGICAL3
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_LOGICAL4
 subroutine iotk_scan_dat_aux_LOGICAL4(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  LOGICAL (kind=__IOTK_LOGICAL4), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  LOGICAL (kind=__IOTK_LOGICAL4)                        :: dat (:)
+#else
+  LOGICAL (kind=__IOTK_LOGICAL4),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_LOGICAL4
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER1
 subroutine iotk_scan_dat_aux_INTEGER1(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  INTEGER (kind=__IOTK_INTEGER1), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER1)                        :: dat (:)
+#else
+  INTEGER (kind=__IOTK_INTEGER1),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_INTEGER1
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER2
 subroutine iotk_scan_dat_aux_INTEGER2(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  INTEGER (kind=__IOTK_INTEGER2), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER2)                        :: dat (:)
+#else
+  INTEGER (kind=__IOTK_INTEGER2),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_INTEGER2
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER3
 subroutine iotk_scan_dat_aux_INTEGER3(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  INTEGER (kind=__IOTK_INTEGER3), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER3)                        :: dat (:)
+#else
+  INTEGER (kind=__IOTK_INTEGER3),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_INTEGER3
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_INTEGER4
 subroutine iotk_scan_dat_aux_INTEGER4(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  INTEGER (kind=__IOTK_INTEGER4), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  INTEGER (kind=__IOTK_INTEGER4)                        :: dat (:)
+#else
+  INTEGER (kind=__IOTK_INTEGER4),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_INTEGER4
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL1
 subroutine iotk_scan_dat_aux_REAL1(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  REAL (kind=__IOTK_REAL1), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL1)                        :: dat (:)
+#else
+  REAL (kind=__IOTK_REAL1),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_REAL1
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL2
 subroutine iotk_scan_dat_aux_REAL2(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  REAL (kind=__IOTK_REAL2), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL2)                        :: dat (:)
+#else
+  REAL (kind=__IOTK_REAL2),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_REAL2
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL3
 subroutine iotk_scan_dat_aux_REAL3(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  REAL (kind=__IOTK_REAL3), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL3)                        :: dat (:)
+#else
+  REAL (kind=__IOTK_REAL3),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_REAL3
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_REAL4
 subroutine iotk_scan_dat_aux_REAL4(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  REAL (kind=__IOTK_REAL4), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  REAL (kind=__IOTK_REAL4)                        :: dat (:)
+#else
+  REAL (kind=__IOTK_REAL4),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_REAL4
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX1
 subroutine iotk_scan_dat_aux_COMPLEX1(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  COMPLEX (kind=__IOTK_COMPLEX1), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX1)                        :: dat (:)
+#else
+  COMPLEX (kind=__IOTK_COMPLEX1),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_COMPLEX1
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX2
 subroutine iotk_scan_dat_aux_COMPLEX2(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  COMPLEX (kind=__IOTK_COMPLEX2), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX2)                        :: dat (:)
+#else
+  COMPLEX (kind=__IOTK_COMPLEX2),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_COMPLEX2
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX3
 subroutine iotk_scan_dat_aux_COMPLEX3(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  COMPLEX (kind=__IOTK_COMPLEX3), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX3)                        :: dat (:)
+#else
+  COMPLEX (kind=__IOTK_COMPLEX3),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_COMPLEX3
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_COMPLEX4
 subroutine iotk_scan_dat_aux_COMPLEX4(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  COMPLEX (kind=__IOTK_COMPLEX4), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  COMPLEX (kind=__IOTK_COMPLEX4)                        :: dat (:)
+#else
+  COMPLEX (kind=__IOTK_COMPLEX4),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_COMPLEX4
 #endif
-# 95 "iotk_dat_interf.spp"
+# 101 "iotk_dat_interf.spp"
 #ifdef __IOTK_CHARACTER1
 subroutine iotk_scan_dat_aux_CHARACTER1(unit,dat,rkind,rlen,fmt,ierr)
   use iotk_base
   implicit none
   integer,         intent(in)  :: unit
-# 101 "iotk_dat_interf.spp"
-  CHARACTER (kind=__IOTK_CHARACTER1,len=*), intent(out) :: dat(:)
+# 107 "iotk_dat_interf.spp"
+#ifdef __IOTK_WORKAROUND6
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*)                        :: dat (:)
+#else
+  CHARACTER (kind=__IOTK_CHARACTER1,len=*),           intent(out) :: dat (:)
+#endif
   integer,         intent(in)  :: rkind
   integer,         intent(in)  :: rlen
   character(*),    intent(in)  :: fmt
   integer,         intent(out) :: ierr
 end subroutine iotk_scan_dat_aux_CHARACTER1
 #endif
-# 111 "iotk_dat_interf.spp"
+# 121 "iotk_dat_interf.spp"
 end interface
 
 end module iotk_dat_interf
+# 1 "iotk_error_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -8541,6 +10414,10 @@ end module iotk_dat_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -8564,102 +10441,172 @@ end module iotk_dat_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_error_interf.spp"
 
@@ -8844,14 +10791,22 @@ subroutine iotk_error_scan_character_e(error,name,val)
   implicit none
   type(iotk_error), intent(in) :: error
   character(len=*), intent(in) :: name
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)             :: val
+#else
   character(len=*), intent(out):: val
+#endif
 end subroutine iotk_error_scan_character_e
 subroutine iotk_error_scan_character_i(ierr,name,val)
   use iotk_base
   implicit none
   integer, intent(in) :: ierr
   character(len=*), intent(in) :: name
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)             :: val
+#else
   character(len=*), intent(out):: val
+#endif
 end subroutine iotk_error_scan_character_i
 subroutine iotk_error_scan_logical_e(error,name,val)
   use iotk_base
@@ -8900,6 +10855,7 @@ end subroutine iotk_error_handler_x
 end interface
 
 end module iotk_error_interf
+# 1 "iotk_files_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -8940,6 +10896,10 @@ end module iotk_error_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -8963,102 +10923,172 @@ end module iotk_error_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_files_interf.spp"
 
@@ -9076,8 +11106,10 @@ public :: iotk_close_read
 public :: iotk_magic
 
 interface iotk_copyfile
-subroutine iotk_copyfile_x(source,dest,source_unit,dest_unit,ierr)
+subroutine iotk_copyfile_x(dummy,source,dest,source_unit,dest_unit,ierr)
+  use iotk_base
   implicit none
+  type(iotk_dummytype), optional         :: dummy
   character(len=*), optional, intent(in) :: source
   character(len=*), optional, intent(in) :: dest
   integer,          optional, intent(in) :: source_unit
@@ -9087,11 +11119,13 @@ end subroutine iotk_copyfile_x
 end interface
 
 interface iotk_link
-subroutine iotk_link_x(unit,name,file,binary,raw,create,ierr)
+subroutine iotk_link_x(unit,name,file,dummy,binary,raw,create,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
   character(len=*),           intent(in)  :: name
   character(len=*),           intent(in)  :: file
+  type(iotk_dummytype), optional          :: dummy
   logical,          optional, intent(in)  :: binary
   logical,          optional, intent(in)  :: raw
   logical,          optional, intent(in)  :: create
@@ -9100,9 +11134,11 @@ end subroutine iotk_link_x
 end interface
 
 interface iotk_open_write
-subroutine iotk_open_write_x(unit,file,attr,binary,new,raw,root,skip_root,skip_head,ierr)
+subroutine iotk_open_write_x(unit,file,dummy,attr,binary,new,raw,root,skip_root,skip_head,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
+  type(iotk_dummytype), optional          :: dummy
   character(len=*), optional, intent(in)  :: file
   character(len=*), optional, intent(in)  :: attr
   logical,          optional, intent(in)  :: binary
@@ -9116,30 +11152,41 @@ end subroutine iotk_open_write_x
 end interface
 
 interface iotk_close_write
-subroutine iotk_close_write_x(unit,ierr)
+subroutine iotk_close_write_x(unit,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                intent(in)  :: unit
+  type(iotk_dummytype), optional      :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_close_write_x
 end interface
 
 interface iotk_open_read
-subroutine iotk_open_read_x(unit,file,attr,binary,raw,root,ierr)
+subroutine iotk_open_read_x(unit,file,dummy,attr,binary,raw,root,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
   character(len=*), optional, intent(in)  :: file
+  type(iotk_dummytype), optional          :: dummy
   logical,          optional, intent(in)  :: binary 
   logical,          optional, intent(in)  :: raw
+#ifdef __IOTK_WORKARUND6
+  character(len=*), optional              :: attr
+  character(len=*), optional              :: root
+#else
   character(len=*), optional, intent(out) :: attr
   character(len=*), optional, intent(out) :: root
+#endif
   integer,          optional, intent(out) :: ierr
 end subroutine iotk_open_read_x
 end interface
 
 interface iotk_close_read
-subroutine iotk_close_read_x(unit,ierr)
+subroutine iotk_close_read_x(unit,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                intent(in)  :: unit
+  type(iotk_dummytype), optional      :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_close_read_x
 end interface
@@ -9153,6 +11200,7 @@ end subroutine iotk_magic_x
 end interface
 
 end module iotk_files_interf
+# 1 "iotk_fmt_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -9193,6 +11241,10 @@ end module iotk_files_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -9216,102 +11268,172 @@ end module iotk_files_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_fmt_interf.spp"
 
@@ -9344,6 +11466,7 @@ end function iotk_wfmt_x
 end interface
 
 end module iotk_fmt_interf
+# 1 "iotk_misc_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -9384,6 +11507,10 @@ end module iotk_fmt_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -9407,107 +11534,176 @@ end module iotk_fmt_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_misc_interf.spp"
 
 module iotk_misc_interf
-use iotk_base
 implicit none
 private
 
@@ -9529,10 +11725,12 @@ public :: iotk_complete_filepath
 ! This module contains the interfaces to all iotk routines
 
 interface iotk_copy_tag
-subroutine iotk_copy_tag_x(source,dest,maxsize,ierr)
+subroutine iotk_copy_tag_x(source,dest,dummy,maxsize,ierr)
+  use iotk_base
   implicit none
   integer,           intent(in)  :: source
   integer,           intent(in)  :: dest
+  type(iotk_dummytype), optional :: dummy
   integer, optional, intent(in)  :: maxsize
   integer, optional, intent(out) :: ierr
 end subroutine iotk_copy_tag_x
@@ -9541,19 +11739,29 @@ end interface
 interface iotk_parse_dat
 subroutine iotk_parse_dat_x(attr,type,kind,isize,len,fmt,ierr)
   implicit none
-  character(*), intent(in)  :: attr
-  character(*), intent(out) :: type
-  integer,      intent(out) :: kind
-  integer,      intent(out) :: isize
-  integer,      intent(out) :: len
-  character(*), intent(out) :: fmt
-  integer,      intent(out) :: ierr
+  character(len=*), intent(in)  :: attr
+#ifdef __WORKAROUND6
+  character(len=*)              :: type
+#else
+  character(len=*), intent(out) :: type
+#endif
+  integer,          intent(out) :: kind
+  integer,          intent(out) :: isize
+  integer,          intent(out) :: len
+#ifdef __WORKAROUND6
+  character(len=*)              :: fmt
+#else
+  character(len=*), intent(out) :: fmt
+#endif
+  integer,          intent(out) :: ierr
 end subroutine iotk_parse_dat_x
 end interface
 
 interface iotk_set_options
-subroutine iotk_set_options_x(unitmin,unitmax,getline_buffer,error_warn_overflow,ierr)
+subroutine iotk_set_options_x(dummy,unitmin,unitmax,getline_buffer,error_warn_overflow,ierr)
+  use iotk_base
   implicit none
+  type(iotk_dummytype), optional:: dummy
   integer, optional, intent(in) :: unitmin
   integer, optional, intent(in) :: unitmax
   integer, optional, intent(in) :: getline_buffer
@@ -9563,8 +11771,10 @@ end subroutine iotk_set_options_x
 end interface
 
 interface iotk_get_options
-subroutine iotk_get_options_x(unitmin,unitmax,getline_buffer,error_warn_overflow)
+subroutine iotk_get_options_x(dummy,unitmin,unitmax,getline_buffer,error_warn_overflow)
+  use iotk_base
   implicit none
+  type(iotk_dummytype), optional:: dummy
   integer, optional, intent(out):: unitmin
   integer, optional, intent(out):: unitmax
   logical, optional, intent(out):: error_warn_overflow
@@ -9615,17 +11825,18 @@ subroutine iotk_check_iotk_attr_x(unit,attr,ierr)
   integer,                 intent(in)  :: unit
   character(iotk_attlenx), intent(in)  :: attr
   integer,                 intent(out) :: ierr
-  character(iotk_vallenx) :: version
 end subroutine iotk_check_iotk_attr_x
 end interface
 
 
 interface iotk_index
 function iotk_index_scal(index)
+  implicit none
   integer,           intent(in) :: index
   character(len=range(index)+3) :: iotk_index_scal
 end function iotk_index_scal
 function iotk_index_vec(index)
+  implicit none
   integer,                         intent(in) :: index(:)
   character(len=(range(index)+3)*size(index)) :: iotk_index_vec
 end function iotk_index_vec
@@ -9644,21 +11855,23 @@ end interface
 
 interface iotk_complete_filepath
 function iotk_complete_filepath_x(newfile,oldfile)
+  implicit none
   character(len=*), intent(in) :: newfile
   character(len=*), intent(in) :: oldfile
   character(len=len(newfile)+len(oldfile)) :: iotk_complete_filepath_x
-  character(len=len(oldfile)) :: prefix
 end function iotk_complete_filepath_x
 end interface
 
 interface iotk_check_name
 function iotk_check_name_x(name)
+  implicit none
   character(len=*), intent(in) :: name
   logical                      :: iotk_check_name_x
 end function iotk_check_name_x
 end interface
 
 end module iotk_misc_interf
+# 1 "iotk_str_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -9699,6 +11912,10 @@ end module iotk_misc_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -9722,102 +11939,172 @@ end module iotk_misc_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_str_interf.spp"
 
@@ -9858,8 +12145,12 @@ end interface
 interface iotk_escape
 subroutine iotk_escape_x(to,from)
   implicit none
-  character(len=*), intent(in) :: from
-  character(len=*), intent(out):: to
+  character(len=*), intent(in)  :: from
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)              :: to
+#else
+  character(len=*), intent(out) :: to
+#endif
 end subroutine
 end interface
 
@@ -9867,7 +12158,11 @@ interface iotk_deescape
 subroutine iotk_deescape_x(to,from,quot,apos)
   implicit none
   character(len=*), intent(in)  :: from
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)              :: to
+#else
   character(len=*), intent(out) :: to
+#endif
   logical, optional, intent(in) :: quot,apos
 end subroutine iotk_deescape_x
 end interface
@@ -9918,9 +12213,13 @@ end interface
 interface iotk_strcpy
 subroutine iotk_strcpy_x(to,from,ierr)
   implicit none
-  character(len=*), intent(out):: to
-  character(len=*), intent(in) :: from
-  integer,          intent(out):: ierr
+#ifdef __IOTK_WORKAROUND6
+  character(len=*)              :: to
+#else
+  character(len=*), intent(out) :: to
+#endif
+  character(len=*), intent(in)  :: from
+  integer,          intent(out) :: ierr
 end subroutine iotk_strcpy_x
 end interface
 
@@ -9942,6 +12241,7 @@ end function iotk_strcomp_x
 end interface
 
 end module iotk_str_interf
+# 1 "iotk_unit_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -9982,6 +12282,10 @@ end module iotk_str_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -10005,102 +12309,172 @@ end module iotk_str_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_unit_interf.spp"
 
@@ -10188,6 +12562,7 @@ end subroutine iotk_unit_get_x
 end interface
 
 end module iotk_unit_interf
+# 1 "iotk_scan_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -10228,6 +12603,10 @@ end module iotk_unit_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -10251,107 +12630,176 @@ end module iotk_unit_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_scan_interf.spp"
 
 module iotk_scan_interf
-use iotk_base
 implicit none
 private
 
@@ -10364,44 +12812,64 @@ public :: iotk_scan
 public :: iotk_getline
 
 interface iotk_scan_begin
-subroutine iotk_scan_begin_x(unit,name,attr,found,ierr)
+subroutine iotk_scan_begin_x(unit,name,attr,dummy,found,ierr)
+  use iotk_base
   implicit none
-  integer,                intent(in)  :: unit
-  character(*),           intent(in)  :: name
-  character(*), optional, intent(out) :: attr
-  logical,      optional, intent(out) :: found
-  integer,      optional, intent(out) :: ierr
+  integer,                        intent(in)  :: unit
+  character(len=*),               intent(in)  :: name
+#ifdef __WORKAROUND6
+  character(len=*),     optional              :: attr
+#else
+  character(len=*),     optional, intent(out) :: attr
+#endif
+  type(iotk_dummytype), optional              :: dummy
+  logical,              optional, intent(out) :: found
+  integer,              optional, intent(out) :: ierr
 end subroutine iotk_scan_begin_x
 end interface
 
 interface iotk_scan_end
-subroutine iotk_scan_end_x(unit,name,ierr)
+subroutine iotk_scan_end_x(unit,name,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
+  type(iotk_dummytype), optional      :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_scan_end_x
 end interface
 
 interface iotk_scan_pi
-subroutine iotk_scan_pi_x(unit,name,attr,found,ierr)
+subroutine iotk_scan_pi_x(unit,name,attr,dummy,found,ierr)
+  use iotk_base
   implicit none
-  integer,                intent(in)  :: unit
-  character(*),           intent(in)  :: name
-  character(*), optional, intent(out) :: attr
-  logical,      optional, intent(out) :: found
-  integer,      optional, intent(out) :: ierr
+  integer,                        intent(in)  :: unit
+  character(*),                   intent(in)  :: name
+#ifdef __WORKAROUND6
+  character(len=*),     optional              :: attr
+#else
+  character(len=*),     optional, intent(out) :: attr
+#endif
+  type(iotk_dummytype), optional              :: dummy
+  logical,              optional, intent(out) :: found
+  integer,              optional, intent(out) :: ierr
 end subroutine iotk_scan_pi_x
 end interface
 
 interface iotk_scan_empty
-subroutine iotk_scan_empty_x(unit,name,attr,found,ierr)
+subroutine iotk_scan_empty_x(unit,name,attr,dummy,found,ierr)
+  use iotk_base
   implicit none
-  integer,                intent(in)  :: unit
-  character(*),           intent(in)  :: name
-  character(*), optional, intent(out) :: attr
-  logical,      optional, intent(out) :: found
-  integer,      optional, intent(out) :: ierr
+  integer,                        intent(in)  :: unit
+  character(len=*),               intent(in)  :: name
+#ifdef __WORKAROUND6
+  character(len=*),     optional              :: attr
+#else
+  character(len=*),     optional, intent(out) :: attr
+#endif
+  type(iotk_dummytype), optional              :: dummy
+  logical,              optional, intent(out) :: found
+  integer,              optional, intent(out) :: ierr
 end subroutine iotk_scan_empty_x
 end interface
 
@@ -10436,14 +12904,19 @@ end interface
 interface iotk_getline
 subroutine iotk_getline_x(unit,line,length,ierr)
   implicit none
-  integer,            intent(in)  :: unit
-  character(len=*),   intent(out) :: line
-  integer, optional,  intent(out) :: length
-  integer, optional,  intent(out) :: ierr
+  integer,           intent(in)  :: unit
+#ifdef __WORKAROUND6
+  character(len=*)               :: line
+#else
+  character(len=*),  intent(out) :: line
+#endif
+  integer, optional, intent(out) :: length
+  integer, optional, intent(out) :: ierr
 end subroutine iotk_getline_x
 end interface
 
 end module iotk_scan_interf
+# 1 "iotk_write_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -10484,6 +12957,10 @@ end module iotk_scan_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -10507,107 +12984,176 @@ end module iotk_scan_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_write_interf.spp"
 
 module iotk_write_interf
-use iotk_base
 implicit none
 private
 
@@ -10619,49 +13165,59 @@ public :: iotk_write_empty
 public :: iotk_write_tag
 
 interface iotk_write_begin
-subroutine iotk_write_begin_x(unit,name,attr,ierr)
+subroutine iotk_write_begin_x(unit,name,attr,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
   character(len=*),           intent(in)  :: name
   character(len=*), optional, intent(in)  :: attr
+  type(iotk_dummytype), optional          :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_begin_x
 end interface
 
 interface iotk_write_end
-subroutine iotk_write_end_x(unit,name,ierr)
+subroutine iotk_write_end_x(unit,name,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
   character(len=*),           intent(in)  :: name
+  type(iotk_dummytype), optional          :: dummy
   integer,          optional, intent(out) :: ierr
 end subroutine iotk_write_end_x
 end interface
 
 interface iotk_write_pi
-subroutine iotk_write_pi_x(unit,name,attr,ierr)
+subroutine iotk_write_pi_x(unit,name,attr,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                    intent(in)  :: unit
   character(len=*),           intent(in)  :: name
   character(len=*), optional, intent(in)  :: attr
+  type(iotk_dummytype), optional          :: dummy
   integer,          optional, intent(out) :: ierr
 end subroutine iotk_write_pi_x
 end interface
 
 interface iotk_write_comment
-subroutine iotk_write_comment_x(unit,text,ierr)
+subroutine iotk_write_comment_x(unit,text,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: text
+  type(iotk_dummytype), optional      :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_comment_x
 end interface
 
 interface iotk_write_empty
-subroutine iotk_write_empty_x(unit,name,attr,ierr)
+subroutine iotk_write_empty_x(unit,name,attr,dummy,ierr)
+  use iotk_base
   implicit none
   integer,                intent(in)  :: unit
   character(*),           intent(in)  :: name
   character(*), optional, intent(in)  :: attr
+  type(iotk_dummytype), optional      :: dummy
   integer,      optional, intent(out) :: ierr
 end subroutine iotk_write_empty_x
 end interface
@@ -10680,6 +13236,7 @@ end subroutine iotk_write_tag_x
 end interface
 
 end module iotk_write_interf
+# 1 "iotk_xtox_interf.spp"
 ! Input/Output Tool Kit (IOTK)
 ! Copyright (C) 2004,2005 Giovanni Bussi
 !
@@ -10720,6 +13277,10 @@ end module iotk_write_interf
 #ifndef __IOTK_UNITMAX
 #  define __IOTK_UNITMAX 99999
 #endif
+! Unit for errors
+#ifndef __IOTK_ERROR_UNIT
+#  define __IOTK_ERROR_UNIT 0
+#endif
 ! Kind for header in binary files
 #ifndef __IOTK_HEADER_KIND
 #  define __IOTK_HEADER_KIND selected_int_kind(8)
@@ -10743,102 +13304,172 @@ end module iotk_write_interf
 ! For logical, integer and real types, the c precompiler
 ! looks for defined kinds. If no kind is found, the default
 ! is used as __IOTK_type1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_LOGICAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_LOGICAL1 iotk_defkind_LOGICAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_INTEGER4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_INTEGER1 iotk_defkind_INTEGER
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL1
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL2
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL3
-# 46 "../include/iotk_auxmacros.spp"
+# 50 "../include/iotk_auxmacros.spp"
 #ifndef __IOTK_REAL4
-# 48 "../include/iotk_auxmacros.spp"
+# 52 "../include/iotk_auxmacros.spp"
 #define __IOTK_REAL1 iotk_defkind_REAL
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 51 "../include/iotk_auxmacros.spp"
+# 55 "../include/iotk_auxmacros.spp"
 #endif
-# 54 "../include/iotk_auxmacros.spp"
-! Complex are treated indentically to reals
-! These lines map the definitions.
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL1
-#define __IOTK_COMPLEX1 __IOTK_REAL1
-#else
-#undef __IOTK_COMPLEX1
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL2
-#define __IOTK_COMPLEX2 __IOTK_REAL2
-#else
-#undef __IOTK_COMPLEX2
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL3
-#define __IOTK_COMPLEX3 __IOTK_REAL3
-#else
-#undef __IOTK_COMPLEX3
-#endif
-# 57 "../include/iotk_auxmacros.spp"
-#ifdef __IOTK_REAL4
-#define __IOTK_COMPLEX4 __IOTK_REAL4
-#else
-#undef __IOTK_COMPLEX4
-#endif
-# 63 "../include/iotk_auxmacros.spp"
-! If the binary format is not defined, use *
-#ifndef __IOTK_BINARY_FORMAT
-#define __IOTK_BINARY_FORMAT "*"
-#endif
+# 58 "../include/iotk_auxmacros.spp"
 
-! Some check 
+! Some useful check follow
 #if __IOTK_MAXRANK > 7
 #  error
 #endif
 #if __IOTK_MAXRANK < 1
 #  error
 #endif
-
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL5
+#  error
 #endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_LOGICAL10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_INTEGER10
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL5
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL6
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL7
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL8
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL9
+#  error
+#endif
+# 68 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL10
+#  error
+#endif
+# 73 "../include/iotk_auxmacros.spp"
+#endif
+
+! Complex are treated indentically to reals
+! These lines map the definitions.
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL1
+#  define __IOTK_COMPLEX1 __IOTK_REAL1
+#else
+#  undef __IOTK_COMPLEX1
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL2
+#  define __IOTK_COMPLEX2 __IOTK_REAL2
+#else
+#  undef __IOTK_COMPLEX2
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL3
+#  define __IOTK_COMPLEX3 __IOTK_REAL3
+#else
+#  undef __IOTK_COMPLEX3
+#endif
+# 78 "../include/iotk_auxmacros.spp"
+#ifdef __IOTK_REAL4
+#  define __IOTK_COMPLEX4 __IOTK_REAL4
+#else
+#  undef __IOTK_COMPLEX4
+#endif
+# 84 "../include/iotk_auxmacros.spp"
+
 
 # 30 "iotk_xtox_interf.spp"
 
