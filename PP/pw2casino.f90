@@ -280,11 +280,11 @@ subroutine compute_casino
   write(io,'(a)') ' WAVE FUNCTION'
   write(io,'(a)') ' -------------'
   write(io,'(a)') ' Number of k-points'
-  write(io,*) nks
+  write(io,*) nk
   !  if(nks > 1) rewind(iunigk)
   do ispin = 1, nspin 
-     do ik = 1, nks
-        ikk = ik + nks*(ispin-1)
+     do ik = 1, nk
+        ikk = ik + nk*(ispin-1)
         if( nks > 1 ) then
            !           read(iunigk) npw, igk
            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
