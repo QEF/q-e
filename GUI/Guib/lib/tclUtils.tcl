@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.3 2004-02-23 12:05:42 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.4 2004-03-17 10:09:33 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -335,6 +335,7 @@ proc ::tclu::putsFlush {args} {
 	set channel stdout
     } else {
 	set channel [lindex $args $ind]
+	incr ind
     }
     eval puts $flags $channel [lrange $args $ind end]
     flush $channel
