@@ -59,10 +59,10 @@ subroutine work_function (wf)
 
 #ifdef __PARA
      allocate (aux  ( nrxx))    
-     aux(:) = rho(:,current_spin) + rho_core(:)
+     aux(:) = rho(:,current_spin) + rho_core(:)/nspin
      call gather (aux, raux1)
 #else
-     raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)
+     raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin
 #endif
      !
      !
