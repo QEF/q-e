@@ -45,7 +45,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
   allocate( zps( norbnow, norbnow ) )
 
 !
-! To find indeces of initial and final slab
+! To find indices of initial and final slab
 !
   do ik=1, nrz
     if (z(ik).le.zin+eps)  kin=ik

@@ -163,7 +163,7 @@
          do n = 1, nsp
             print '(''species # '',i1,'' : '', a3)', n, atm(n)
          end do
-         print '(''indeces of species 1 and 2 > '',$)'
+         print '(''indices of species 1 and 2 > '',$)'
          read(5,*,end=20,err=20)  nsp1, nsp2
          if (nsp1 .le. 0 .or. nsp2 .le. 0 .or.            
      &      nsp1 .gt. nspx .or. nsp2 .gt. nspx) then

@@ -1526,10 +1526,10 @@ MODULE read_cards_module
      !      CONSTR_TOL          tolerance for keeping the constraints 
      !                          satisfied
      !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.)  
-     !                          type of constrain and atoms indeces
+     !                          type of constrain and atoms indices
      !                          object of the constraint. I.E.: 1 ia1 ia2
      !                          "1" is the constrain type (fixed distance)
-     !                          "ia1 ia2" are the indeces of the atoms (as 
+     !                          "ia1 ia2" are the indices of the atoms (as 
      !                          they appear in the 'POSITION' CARD) whose
      !                          distance has to be kept constant
      !
@@ -1810,7 +1810,7 @@ MODULE read_cards_module
      !
      ! Where:
      !
-     !   index1, ..., indexN are indeces of the images that have to climb
+     !   index1, ..., indexN are indices of the images that have to climb
      !
      !----------------------------------------------------------------------
      !    END manual

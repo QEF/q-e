@@ -28,7 +28,7 @@ subroutine sym_and_write_zue
   ! counter on modes
 
   real(kind=DP) :: work (3, 3, nat)
-  ! auxiliary space (note the order of indeces)
+  ! auxiliary space (note the order of indices)
   !
 #ifdef __PARA
   call reduce (18 * nat, zstarue0)
