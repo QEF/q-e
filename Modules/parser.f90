@@ -7,6 +7,7 @@
 !
 module parser
 
+  USE io_global,  ONLY : stdout
   USE kinds
 
   INTERFACE parser_error
@@ -271,14 +272,14 @@ contains
 
     num = 0
     IF (len(line) .GT. 256 ) THEN
-       WRITE(*,*) 'riga ', line
-       WRITE(*,*) 'lunga ', len(line)
+       WRITE( stdout,*) 'riga ', line
+       WRITE( stdout,*) 'lunga ', len(line)
        num = -1
        RETURN
     END IF
 
-    WRITE(*,*) '1riga ', line
-    WRITE(*,*) '1lunga ', len(line)
+    WRITE( stdout,*) '1riga ', line
+    WRITE( stdout,*) '1lunga ', len(line)
     IF ( .NOT. present(car) ) THEN
        sep=char(32)             !char(32) is the blank character
     ELSE
@@ -311,7 +312,7 @@ contains
 ! ... declare function
 
 ! ... print the error message
-      WRITE (6,100) mpime, a, b, n
+      WRITE( stdout,100) mpime, a, b, n
 
 ! ... terminate the program
       OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
@@ -340,7 +341,7 @@ contains
 ! ... declare function
 
 ! ... print the error message
-      WRITE (6,100) mpime, a, b, r
+      WRITE( stdout,100) mpime, a, b, r
 
 ! ... terminate the program
       OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
@@ -367,7 +368,7 @@ contains
       CHARACTER(LEN=*) a, b, c
 
 ! ... print the error message
-      WRITE (6,100) mpime, a, b, c
+      WRITE( stdout,100) mpime, a, b, c
 
 ! ... terminate the program
       OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
@@ -397,7 +398,7 @@ contains
 ! ... declare function
 
 ! ... print the error message
-      WRITE (6,100) mpime, a, b, t
+      WRITE( stdout,100) mpime, a, b, t
 
 ! ... terminate the program
       OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')

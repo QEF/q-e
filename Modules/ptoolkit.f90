@@ -32,6 +32,7 @@
 !        PZUPGTR( N, NRL, AP, LDA, TAU, Q, LDQ, NPROC, ME)
 !  END manual  
 
+    USE io_global,  ONLY : stdout
 
     IMPLICIT NONE
     SAVE
@@ -648,8 +649,8 @@
       IF( N == 0 ) THEN
         RETURN
       ELSE IF( (N > PTRED_WORK_SIZE) .OR. (N < 0) ) THEN
-        WRITE(6,*) ' *** ERROR IN PTREDV'
-        WRITE(6,*) ' N OUT OF RANGE : ',N
+        WRITE( stdout,*) ' *** ERROR IN PTREDV'
+        WRITE( stdout,*) ' N OUT OF RANGE : ',N
         STOP
       END IF
       
@@ -659,7 +660,7 @@
         IF(ME .le. RI(I) ) then
           IS(I) = IS(I) + 1
         END IF
-!        write (6,100) 'ME,I,RI,IS',ME,I,RI(I),IS(I)
+!        WRITE( stdout,100) 'ME,I,RI,IS',ME,I,RI(I),IS(I)
 100   FORMAT(A,2X,5I4)
       END DO
 

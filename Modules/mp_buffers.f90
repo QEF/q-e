@@ -28,6 +28,7 @@
 !
 !------------------------------------------------------------------------------!
 
+      USE io_global,  ONLY :  stdout
       USE kinds, ONLY : dbl
       USE parallel_include
       USE shmem_include
@@ -234,17 +235,17 @@
          CALL errore(' mp_alltoall_buffers ', ' bufsize too large ', msg_size)
       END IF
 
-      !WRITE(6,*) ' MP_BUFFERS DEBUG ', msg_size
-      !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1)
-      !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1+msg_size)
+      !WRITE( stdout,*) ' MP_BUFFERS DEBUG ', msg_size
+      !WRITE( stdout,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1)
+      !WRITE( stdout,*) ' MP_BUFFERS DEBUG ', mp_snd_buffer(1+msg_size)
 
       call MPI_ALLTOALL(mp_snd_buffer(1),msg_size,MPI_DOUBLE_COMPLEX, &
                         mp_rcv_buffer(1),msg_size,MPI_DOUBLE_COMPLEX, &
                         MPI_COMM_WORLD,IERR)
 
-      !WRITE(6, fmt='(10D8.2)' ) mp_rcv_buffer(1:mp_bufsize)
-      !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_rcv_buffer(1)
-      !WRITE(6,*) ' MP_BUFFERS DEBUG ', mp_rcv_buffer(1+msg_size)
+      !WRITE( stdout, fmt='(10D8.2)' ) mp_rcv_buffer(1:mp_bufsize)
+      !WRITE( stdout,*) ' MP_BUFFERS DEBUG ', mp_rcv_buffer(1)
+      !WRITE( stdout,*) ' MP_BUFFERS DEBUG ', mp_rcv_buffer(1+msg_size)
 
       IF(IERR /= 0) call errore(' mp_alltoall_buffers ', ' mpi_alltoall ',ierr)
 
@@ -308,8 +309,8 @@
       END SUBROUTINE mp_sendrecv_buffers
 
       SUBROUTINE mp_report_buffers
-        WRITE(6, *) 
-        WRITE(6, *) '  mp_buffers: high_watermark (bytes): ', mp_high_watermark
+        WRITE( stdout, *) 
+        WRITE( stdout, *) '  mp_buffers: high_watermark (bytes): ', mp_high_watermark
         RETURN
       END SUBROUTINE mp_report_buffers
 

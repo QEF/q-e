@@ -8,6 +8,7 @@
 
       MODULE descriptors_module
         USE parallel_types
+        USE io_global,  ONLY : stdout
         IMPLICIT NONE
         SAVE
 
@@ -167,19 +168,19 @@
                 column_src_pe, grid%mey, grid%npy)
 
               IF( debug ) THEN
-                WRITE(6,fmt="(' desc%nx      = ', I6 )") desc%nx
-                WRITE(6,fmt="(' desc%xshape  = ', I6 )") desc%xshape
-                WRITE(6,fmt="(' desc%nxl     = ', I6 )") desc%nxl
-                WRITE(6,fmt="(' desc%nxblk   = ', I6 )") desc%nxblk
-                WRITE(6,fmt="(' desc%ixl     = ', I6 )") desc%ixl
-                WRITE(6,fmt="(' desc%ipexs   = ', I6 )") desc%ipexs
+                WRITE( stdout,fmt="(' desc%nx      = ', I6 )") desc%nx
+                WRITE( stdout,fmt="(' desc%xshape  = ', I6 )") desc%xshape
+                WRITE( stdout,fmt="(' desc%nxl     = ', I6 )") desc%nxl
+                WRITE( stdout,fmt="(' desc%nxblk   = ', I6 )") desc%nxblk
+                WRITE( stdout,fmt="(' desc%ixl     = ', I6 )") desc%ixl
+                WRITE( stdout,fmt="(' desc%ipexs   = ', I6 )") desc%ipexs
 
-                WRITE(6,fmt="(' desc%ny      = ', I6 )") desc%ny
-                WRITE(6,fmt="(' desc%yshape  = ', I6 )") desc%yshape
-                WRITE(6,fmt="(' desc%nyl     = ', I6 )") desc%nyl
-                WRITE(6,fmt="(' desc%nyblk   = ', I6 )") desc%nyblk
-                WRITE(6,fmt="(' desc%iyl     = ', I6 )") desc%iyl
-                WRITE(6,fmt="(' desc%ipeys   = ', I6 )") desc%ipeys
+                WRITE( stdout,fmt="(' desc%ny      = ', I6 )") desc%ny
+                WRITE( stdout,fmt="(' desc%yshape  = ', I6 )") desc%yshape
+                WRITE( stdout,fmt="(' desc%nyl     = ', I6 )") desc%nyl
+                WRITE( stdout,fmt="(' desc%nyblk   = ', I6 )") desc%nyblk
+                WRITE( stdout,fmt="(' desc%iyl     = ', I6 )") desc%iyl
+                WRITE( stdout,fmt="(' desc%ipeys   = ', I6 )") desc%ipeys
               END IF
 
               desc%nz = 1

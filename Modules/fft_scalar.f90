@@ -171,7 +171,7 @@
        !   no table exist for these parameters
        !   initialize a new one
 
-       ! WRITE(6, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
+       ! WRITE( stdout, fmt="('DEBUG cft_1z, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -311,7 +311,7 @@
        END DO
      END IF
 
-     ! WRITE(6,*) 'DEBUG: ', COUNT( dofft )
+     ! WRITE( stdout,*) 'DEBUG: ', COUNT( dofft )
 
      !
      !   Here initialize table only if necessary
@@ -336,7 +336,7 @@
        !   no table exist for these parameters
        !   initialize a new one 
 
-       ! WRITE(6, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
+       ! WRITE( stdout, fmt="('DEBUG cft_2xy, reinitializing tables ', I3)" ) icurrent
 
 #if defined __FFTW
 
@@ -702,9 +702,9 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
   ! ESSL sign convention for fft's is the opposite of the "usual" one
   !
 
-  ! write(6, fmt="('DEBUG cfft3ds :',6I6)") nr1, nr2, nr3, nrx1, nrx2, nrx3
-  ! write(6, fmt="('DEBUG cfft3ds :',24I2)") do_fft_x
-  ! write(6, fmt="('DEBUG cfft3ds :',24I2)") do_fft_y
+  ! WRITE( stdout, fmt="('DEBUG cfft3ds :',6I6)") nr1, nr2, nr3, nrx1, nrx2, nrx3
+  ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_x
+  ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_y
 
   IF( nr2 /= nrx2 ) &
     CALL errore(' cfft3ds ', ' wrong dimensions: nr2 /= nrx2 ', 1 )

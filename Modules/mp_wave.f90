@@ -112,7 +112,7 @@
 #elif ! defined __PARA
 
       DO I = 1, ngwl
-        ! write(6,*) 'MW ', ig_l2g(i), i
+        ! WRITE( stdout,*) 'MW ', ig_l2g(i), i
         PWT( ig_l2g(i) ) = pw(i)
       END DO
 
@@ -625,7 +625,7 @@
       ALLOCATE( ibuf( nproc ) )
       ctmp = CMPLX( 0.0d0 )
 
-      ! write(6,*) 'D: ', nproc, mpime, group
+      ! WRITE( stdout,*) 'D: ', nproc, mpime, group
 
       ibuf = 0
       DO IG = 1, n_indi_snd

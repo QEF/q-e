@@ -168,13 +168,13 @@
           CALL mp_sum(sts ,intra_pool_comm)
 
 ! Test sticks
-!          write(6,*) 'testtesttesttesttesttesttesttesttesttest'
+!          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'
 !          DO i = lb(1), ub(1)
 !            DO j = lb(2), ub(2)
-!              write(6,'(2I4,I6)') i,j,stw(i,j)
+!              WRITE( stdout,'(2I4,I6)') i,j,stw(i,j)
 !            END DO
 !          END DO
-!          write(6,*) 'testtesttesttesttesttesttesttesttesttest'
+!          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'
 ! Test sticks
 
         RETURN
@@ -239,12 +239,12 @@
           end do
         END IF
 
-        ! WRITE(6,*) '-----------------'
-        ! WRITE(6,*) 'STICKS_SORT DEBUG'
+        ! WRITE( stdout,*) '-----------------'
+        ! WRITE( stdout,*) 'STICKS_SORT DEBUG'
         ! DO mc = 1, nct
-        !   WRITE(6, fmt="(4I10)" ) index(mc), ngcw( index(mc) ), ngcs( index(mc) ), ngc( index(mc) )
+        !   WRITE( stdout, fmt="(4I10)" ) index(mc), ngcw( index(mc) ), ngcs( index(mc) ), ngc( index(mc) )
         ! END DO
-        ! WRITE(6,*) '-----------------'
+        ! WRITE( stdout,*) '-----------------'
 
         RETURN
       END SUBROUTINE

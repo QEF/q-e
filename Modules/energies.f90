@@ -7,7 +7,8 @@
 !
 
       MODULE energies
-
+        
+        USE io_global,  ONLY : stdout
         USE kinds
         IMPLICIT NONE
         SAVE
@@ -96,7 +97,7 @@
           end do
           EII = ehti + ESR - ESELF
           etot_band = eband - ehte + (exc-vxc) + eii
-          write(6,200) etot_band, eband, ehte, (exc-vxc), eii
+          WRITE( stdout,200) etot_band, eband, ehte, (exc-vxc), eii
  200      FORMAT(' *** TOTAL ENERGY : ',F14.8,/ &
                 ,'     eband        : ',F14.8,/ &
                 ,'     eh           : ',F14.8,/ &
@@ -110,10 +111,10 @@
         SUBROUTINE print_energies( edft )
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           IF( PRESENT ( edft ) ) THEN
-            WRITE(6,1) edft%ETOT, edft%EKIN, edft%EHT, edft%ESELF, edft%ESR, &
+            WRITE( stdout,1) edft%ETOT, edft%EKIN, edft%EHT, edft%ESELF, edft%ESR, &
               edft%EPSEU, edft%ENL, edft%EXC, edft%EVDW, edft%emkin
           ELSE
-            WRITE(6,1) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, EVDW
+            WRITE( stdout,1) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, EVDW
           END IF
 1         FORMAT(/,/,6X,'                TOTAL ENERGY = ',F18.10,' A.U.'/ &
                     ,6X,'              KINETIC ENERGY = ',F18.10,' A.U.'/ &
@@ -133,13 +134,13 @@
         SUBROUTINE debug_energies( edft )
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           IF( PRESENT ( edft ) ) THEN
-            WRITE(6,2) edft%ETOT, edft%EKIN, edft%EHT, edft%ESELF, edft%ESR, &
+            WRITE( stdout,2) edft%ETOT, edft%EKIN, edft%EHT, edft%ESELF, edft%ESR, &
               edft%EPSEU, edft%ENL, edft%EXC, edft%VXC, edft%EVDW, edft%EHTE, &
               edft%EHTI, edft%ENT, edft%EBAND, (edft%EXC-edft%VXC), &
               (edft%EHTI+edft%ESR-edft%ESELF), &
               edft%EBAND-edft%EHTE+(edft%EXC-edft%VXC)+(edft%EHTI+edft%ESR-edft%ESELF)
           ELSE
-            WRITE(6,2) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, VXC, &
+            WRITE( stdout,2) ETOT, EKIN, EHT, ESELF, ESR, EPSEU, ENL, EXC, VXC, &
               EVDW, EHTE, EHTI, ENT, EBAND, (EXC-VXC), (EHTI+ESR-ESELF), &
               EBAND-EHTE+(EXC-VXC)+(EHTI+ESR-ESELF)
           END IF

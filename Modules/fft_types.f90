@@ -8,6 +8,8 @@
 
 MODULE fft_types
 
+  USE io_global,  ONLY :  stdout
+
   IMPLICIT NONE
   SAVE
 
@@ -268,7 +270,7 @@ CONTAINS
 
     IF( ANY( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) THEN
       DO ip = 1, nproc
-        WRITE(6,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
+        WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
       END DO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
     END IF
@@ -294,7 +296,7 @@ CONTAINS
 
     IF( ANY( nsp( 1:nproc ) /= ncp( 1:nproc ) ) ) THEN
       DO ip = 1, nproc
-        WRITE(6,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncp( ip )
+        WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncp( ip )
       END DO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
     END IF

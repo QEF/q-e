@@ -15,7 +15,8 @@
 !------------------------------------------------------------------------------!
     MODULE mp
 !------------------------------------------------------------------------------!
-      USE kinds, ONLY : dbl, i4b
+      USE kinds,     ONLY : dbl, i4b
+      USE io_global, ONLY : stdout
       USE parallel_include
       IMPLICIT NONE
 
@@ -1271,8 +1272,8 @@
       SUBROUTINE mp_stop(code)
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: code
-        WRITE(6, fmt='( "*** error in Message Passing (mp) module ***")' )
-        WRITE(6, fmt='( "*** error code: ",I5)' ) code
+        WRITE( stdout, fmt='( "*** error in Message Passing (mp) module ***")' )
+        WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
         CALL mpi_abort(mpi_comm_world,code)
 #endif
@@ -1900,8 +1901,8 @@
       END FUNCTION mp_size
 
       SUBROUTINE mp_report
-        WRITE(6, *) 
-        WRITE(6, *) '  mp: high_watermark (bytes): ', mp_high_watermark
+        WRITE( stdout, *) 
+        WRITE( stdout, *) '  mp: high_watermark (bytes): ', mp_high_watermark
         RETURN
       END SUBROUTINE mp_report
 

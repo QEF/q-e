@@ -9,6 +9,7 @@
 MODULE mytime
   !
   USE parameters, ONLY : DP
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -72,7 +73,7 @@ SUBROUTINE start_clock( label )
         ! store in t0 the starting time
         !
         IF ( t0(n) /= notrunning ) THEN
-           WRITE(6, '("start_clock: clock # ",I2," for ",A12, &
+           WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
                     & " already started")') n, label
         ELSE
            t0(n) = scnds()
@@ -86,7 +87,7 @@ SUBROUTINE start_clock( label )
   ! clock not found : add new clock for given label
   !
   IF ( nclock == maxclock ) THEN
-     WRITE(6, '("start_clock: Too many clocks! call ignored")')
+     WRITE( stdout, '("start_clock: Too many clocks! call ignored")')
   ELSE
      nclock              = nclock + 1
      clock_label(nclock) = label
@@ -118,7 +119,7 @@ SUBROUTINE stop_clock( label )
         ! add elapsed time, increase the counter of calls
         !
         IF ( t0(n) == notrunning ) THEN
-           WRITE(6, '("stop_clock: clock # ",I2," for ",A12, &
+           WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
                     & " not running")') n, label
         ELSE
            myclock(n) = myclock(n) + scnds() - t0(n)
@@ -131,7 +132,7 @@ SUBROUTINE stop_clock( label )
   !
   ! clock not found
   !
-  WRITE(6, '("stop_clock: no clock for ",A12," found !")') label
+  WRITE( stdout, '("stop_clock: no clock for ",A12," found !")') label
   !
   RETURN
   !
@@ -151,7 +152,7 @@ SUBROUTINE print_clock( label )
   !
   !
   IF ( label == ' ' ) THEN
-     WRITE(6, * )
+     WRITE( stdout, * )
      DO n = 1, nclock
         CALL print_this_clock( n )
      END DO
@@ -164,7 +165,7 @@ SUBROUTINE print_clock( label )
      END DO
      !
      ! clock not found
-     !         IF ( .NOT.no ) WRITE(6,'("print_clock: no clock for ",
+     !         IF ( .NOT.no ) WRITE( stdout,'("print_clock: no clock for ",
      !                                   A12," found !")') label
   END IF
   !
@@ -221,26 +222,26 @@ SUBROUTINE print_this_clock( n )
      nsec  = ( elapsed_cpu_time - 3600 * nhour ) - 60 * nmin
      !
      IF ( nhour > 0 ) THEN
-        WRITE(6, '(5X,A12," : ",3X,I2,"h",I2,"m CPU time"/)') &
+        WRITE( stdout, '(5X,A12," : ",3X,I2,"h",I2,"m CPU time"/)') &
              clock_label(n), nhour, nmin
      ELSE IF ( nmin > 0 ) THEN
-        WRITE(6, '(5X,A12," : ",I2,"m",F5.2,"s CPU time"/)') &
+        WRITE( stdout, '(5X,A12," : ",I2,"m",F5.2,"s CPU time"/)') &
              clock_label(n), nmin, nsec
      ELSE
-        WRITE(6, '(5X,A12," : ",3X,F5.2,"s CPU time"/)') &
+        WRITE( stdout, '(5X,A12," : ",3X,F5.2,"s CPU time"/)') &
              clock_label(n), nsec
      END IF
   ELSE IF ( called(n) == 1 .OR. t0(n) /= notrunning ) THEN
      ! For clocks that have been called only once
-     WRITE(6, '(5X,A12," :",F9.2,"s CPU")') &
+     WRITE( stdout, '(5X,A12," :",F9.2,"s CPU")') &
           clock_label(n), elapsed_cpu_time
   ELSE IF ( called(n) == 0 ) THEN
      ! For clocks that have never been called
-     WRITE(6, '("print_this: clock # ",I2," for ",A12, &
+     WRITE( stdout, '("print_this: clock # ",I2," for ",A12, &
               & " never called !")') n, clock_label(n)
   ELSE
      ! For all other clocks
-     WRITE(6, '(5X,A12," :",F9.2,"s CPU (", &
+     WRITE( stdout, '(5X,A12," :",F9.2,"s CPU (", &
               & I8," calls,",F8.3," s avg)")') clock_label(n), &
           elapsed_cpu_time, called(n) , ( elapsed_cpu_time / called(n) )
   END IF
@@ -295,7 +296,7 @@ FUNCTION get_clock( label )
   !
   get_clock = notrunning
   !
-  WRITE(6, '("get_clock: no clock for ",A12," found !")') label
+  WRITE( stdout, '("get_clock: no clock for ",A12," found !")') label
   !
   RETURN
   !

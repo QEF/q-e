@@ -8,6 +8,8 @@
 
       MODULE berry_phase
 
+        USE io_global,  ONLY : stdout
+      
         IMPLICIT NONE
 
         PRIVATE
@@ -74,7 +76,7 @@
       allocate( icnt_snd( nproc, 8 ) )
       allocate( icnt_rcv( nproc, 8 ) )
 
-      write(6,*) '  *** DIPOLEINIT *** '
+      WRITE( stdout,*) '  *** DIPOLEINIT *** '
 
       CALL ln_setup( mill, ngwt )
 
@@ -148,9 +150,9 @@
 
 
       call mp_max( icntix(1:8), group )
-      write(6, fmt="(3X,'Dipole init ')" )
+      WRITE( stdout, fmt="(3X,'Dipole init ')" )
       do i = 1, 8
-        write(6, fmt="(3X,'icntix ',I3,' = ',I5)" ) i, icntix(i)
+        WRITE( stdout, fmt="(3X,'icntix ',I3,' = ',I5)" ) i, icntix(i)
       end do
 
       CALL ln_closeup( )

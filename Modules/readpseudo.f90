@@ -64,7 +64,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   
   call scan_end (iunps, "HEADER")  
 
-  ! write ( *, * ) "Reading pseudopotential file in UPF format"  
+  ! WRITE( stdout, * ) "Reading pseudopotential file in UPF format"  
 
   !-------->Search for mesh information
   call scan_begin (iunps, "MESH", .true.)  

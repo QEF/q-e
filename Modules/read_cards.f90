@@ -13,7 +13,8 @@
 ! ...  Written by Carlo Cavazzoni 
 !
         USE kinds
-
+        USE io_global,  ONLY : stdout
+        
         USE parameters
         USE input_parameters
         USE constants, ONLY: angstrom_au
@@ -147,61 +148,61 @@
 
             CALL card_setnfi( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'OPTICAL' ) THEN
 
             CALL card_optical( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'CONSTRAINTS' ) THEN
 
             CALL card_constraints( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'VHMEAN' ) THEN
 
             CALL card_vhmean( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'DIPOLE' ) THEN
 
             CALL card_dipole( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'ESR' ) THEN
 
             CALL card_esr( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'K_POINTS' ) THEN
 
             CALL card_kpoints( input_line )
             IF( prog == 'CP' .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'NEIGHBOURS' ) THEN
 
             CALL card_neighbours( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'OCCUPATIONS' ) THEN
 
             CALL card_occupations( input_line )
 !            IF( prog == 'PW' .AND. ionode ) &
-!              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+!              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'PSTAB' ) THEN
 
             CALL card_pstab( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'CELL_PARAMETERS' ) THEN
 
@@ -211,36 +212,36 @@
 
             CALL card_turbo( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'ION_VELOCITIES' ) THEN
 
             CALL card_ion_velocities( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'KSOUT' ) THEN
 
             CALL card_ksout( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'KSOUT_EMPTY' ) THEN
 
             CALL card_ksout_empty( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'RHOOUT' ) THEN
 
             CALL card_rhoout( input_line )
             IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
+              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE
 
             IF( ionode ) &
-              WRITE (6,'(a)') '   Warning: card '//TRIM(input_line)//' ignored'
+              WRITE( stdout,'(a)') '   Warning: card '//TRIM(input_line)//' ignored'
 
           END IF
 

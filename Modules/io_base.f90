@@ -49,7 +49,7 @@
 !
 !
 
-
+  USE io_global,  ONLY : stdout
   USE kinds
   USE parameters
 
@@ -485,7 +485,7 @@
       END IF
 
       IF( restart_module_verbosity > 1000 ) &
-        WRITE( 6, fmt = " (3X,'W: read_restart_header, header not read from restart ' ) " )
+        WRITE( stdout, fmt = " (3X,'W: read_restart_header, header not read from restart ' ) " )
 !
       RETURN
     END SUBROUTINE
@@ -620,7 +620,7 @@
       END IF
 
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_xdim, xdim not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_xdim, xdim not read from restart ' )")
 
       RETURN
     END SUBROUTINE
@@ -797,7 +797,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_symmetry, symmetries not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_symmetry, symmetries not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -1462,7 +1462,7 @@
         READ(iuni) idum 
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_pseudo, pseudo not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_pseudo, pseudo not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -1661,7 +1661,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_gvec, data not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_gvec, data not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -1813,7 +1813,7 @@
       END IF
 
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_gkvec, xdim not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_gkvec, xdim not read from restart ' )")
 
       RETURN
     END SUBROUTINE
@@ -1980,7 +1980,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_cell, xdim not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_cell, xdim not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -2269,7 +2269,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_ions, Data Section not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_ions, Data Section not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -2625,7 +2625,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_electrons, Data Sections not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_electrons, Data Sections not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -2960,9 +2960,9 @@
         CALL mp_bcast( t0_, ionode_id )
 
         IF( .NOT. ( t0_ .AND. t0 ) .AND. ( restart_module_verbosity > 1000 ) ) &
-          WRITE(6,fmt="(3X,'W: read_restart_wfc, wf0 not read from restart ' )")
+          WRITE( stdout,fmt="(3X,'W: read_restart_wfc, wf0 not read from restart ' )")
 
-        ! ... WRITE(6,*) ' #### ', igwx_, igwx, ngwl, iks, ikt, ike ! DEBUG
+        ! ... WRITE( stdout,*) ' #### ', igwx_, igwx, ngwl, iks, ikt, ike ! DEBUG
 
         DO j = 1, nbnd
 
@@ -3001,7 +3001,7 @@
         CALL mp_bcast( tm_, ionode_id )
 
         IF( .NOT. ( tm_ .AND. tm ) .AND. ( restart_module_verbosity > 1000 ) ) &
-          WRITE(6,fmt="(3X,'W: read_restart_wfc, wfm not read from restart ' )")
+          WRITE( stdout,fmt="(3X,'W: read_restart_wfc, wfm not read from restart ' )")
 
         DO j = 1, nbnd
 
@@ -3074,7 +3074,7 @@
         END DO
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_wfc, Data Section not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_wfc, Data Section not read from restart ' )")
       RETURN
     END SUBROUTINE
 
@@ -3267,7 +3267,7 @@
         READ(iuni) idum
       END IF
       IF( restart_module_verbosity > 1000 ) &
-        WRITE(6,fmt="(3X,'W: read_restart_charge, Data Section not read from restart ' )")
+        WRITE( stdout,fmt="(3X,'W: read_restart_charge, Data Section not read from restart ' )")
       RETURN
     END SUBROUTINE
 

@@ -1,6 +1,9 @@
 !------------------------------------------------------------------------------!
     MODULE kinds
 !------------------------------------------------------------------------------!
+
+      USE io_global,  ONLY : stdout
+      
       IMPLICIT NONE
       SAVE
 ! ... kind definitions
@@ -24,27 +27,27 @@
 !
         IMPLICIT NONE
 !
-        WRITE (*,'(/,T2,A)') 'DATA TYPE INFORMATION:'
+        WRITE( stdout,'(/,T2,A)') 'DATA TYPE INFORMATION:'
 !
-        WRITE (*,'(/,T2,A,T78,A,2(/,T2,A,T75,I6),3(/,T2,A,T67,E14.8))') &
+        WRITE( stdout,'(/,T2,A,T78,A,2(/,T2,A,T75,I6),3(/,T2,A,T67,E14.8))') &
           'REAL: Data type name:', 'dbl', '      Kind value:', kind(0.0_dbl), &
           '      Precision:', precision(0.0_dbl), &
           '      Smallest nonnegligible quantity relative to 1:', &
           epsilon(0.0_dbl), '      Smallest positive number:', tiny(0.0_dbl), &
           '      Largest representable number:', huge(0.0_dbl)
-        WRITE (*,'(/,T2,A,T78,A,2(/,T2,A,T75,I6),3(/,T2,A,T67,E14.8))') &
+        WRITE( stdout,'(/,T2,A,T78,A,2(/,T2,A,T75,I6),3(/,T2,A,T67,E14.8))') &
           '      Data type name:', 'sgl', '      Kind value:', kind(0.0_sgl), &
           '      Precision:', precision(0.0_sgl), &
           '      Smallest nonnegligible quantity relative to 1:', &
           epsilon(0.0_sgl), '      Smallest positive number:', tiny(0.0_sgl), &
           '      Largest representable number:', huge(0.0_sgl)
-        WRITE (*,'(/,T2,A,T72,A,4(/,T2,A,T61,I20))') &
+        WRITE( stdout,'(/,T2,A,T72,A,4(/,T2,A,T61,I20))') &
           'INTEGER: Data type name:', '(default)', '         Kind value:', &
           kind(0), '         Bit size:', bit_size(0), &
           '         Largest representable number:', huge(0)
-        WRITE (*,'(/,T2,A,T72,A,/,T2,A,T75,I6,/)') 'LOGICAL: Data type name:', &
+        WRITE( stdout,'(/,T2,A,T72,A,/,T2,A,T75,I6,/)') 'LOGICAL: Data type name:', &
           '(default)', '         Kind value:', kind(.TRUE.)
-        WRITE (*,'(/,T2,A,T72,A,/,T2,A,T75,I6,/)') &
+        WRITE( stdout,'(/,T2,A,T72,A,/,T2,A,T75,I6,/)') &
           'CHARACEER: Data type name:', '(default)', '           Kind value:', &
           kind('C')
 !
