@@ -211,24 +211,20 @@ $ECHO " done"
 cat > pt.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/'     
-    prefix='ptt'
+    prefixl='ptt'
     band_file = 'bands.pt'
     ikind=0  
-    bdl1=0.0d0
-    bdl2=1.4142d0
     energy0=0.0d0
     denergy=-0.2d0
     ewind=4.d0
-    llapack=.true.
     epsproj=1.d-7
-    cutplot=2.d0
  /
     1
     0.0 0.0 1.0
     1
 EOF
 $ECHO "  running the calculation of the complex bands of Pt...\c"
-$PWCOND_COMMAND < pt.cond.in > pt.cond.out
+$PWCOND_COMMAND < pt.cond.in | tee pt.cond.out
 $ECHO " done"
 
 
