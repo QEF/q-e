@@ -273,7 +273,7 @@ SUBROUTINE sum_band()
                 !
                 rho(ir,current_spin) = rho(ir,current_spin) + &
                                                    w1 * REAL( psic(ir) )**2 + &
-                                                   w2 * IMAG( psic(ir) )**2
+                                                   w2 *DIMAG( psic(ir) )**2
                 !
              END DO
              !
