@@ -15,6 +15,7 @@ subroutine do_cond(nodenumber)
   use pwcom
   use cond 
   use io_files 
+  use io_global, only : ionode_id
 #ifdef __PARA
   use para, only: me
   use mp
