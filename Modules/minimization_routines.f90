@@ -53,7 +53,7 @@ MODULE minimization_routines
      SUBROUTINE velocity_Verlet_first_step( index )
        !---------------------------------------------------------------------- 
        !
-       USE neb_variables, ONLY : vel, mass, vel_zeroed
+       USE neb_variables, ONLY : vel, mass, vel_zeroed, pos_old, grad_old
        !
        IMPLICIT NONE
        !
@@ -76,6 +76,11 @@ MODULE minimization_routines
           pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
           !
        END IF
+       !
+       ! ... pos_old and grad_old are updated here
+       !   
+       pos_old(:,index)  = pos(:,index)
+       grad_old(:,index) = grad(:,index)
        !       
        RETURN
        !
@@ -189,11 +194,6 @@ MODULE minimization_routines
           vel(:,index) = 0.D0
           !
        END IF
-       !
-       ! ... pos_old and grad_old are updated here
-       !   
-       pos_old(:,index)  = pos(:,index)
-       grad_old(:,index) = grad(:,index)       
        !
        RETURN
        !

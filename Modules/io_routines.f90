@@ -93,7 +93,6 @@ MODULE io_routines
           END IF
           !
           READ( UNIT = iunrestart, FMT = * )
-          READ( UNIT = iunrestart, FMT = * ) frozen(1), vel_zeroed(1)
           READ( UNIT = iunrestart, FMT = * ) PES(1)
           !
           ia = 0  
@@ -125,7 +124,6 @@ MODULE io_routines
           DO i = 2, num_of_images
              !
              READ( UNIT = iunrestart, FMT = * )
-             READ( UNIT = iunrestart, FMT = * ) frozen(i), vel_zeroed(i)
              READ( UNIT = iunrestart, FMT = * ) PES(i)
              !
              DO j = 1, dim, 3 
@@ -167,26 +165,18 @@ MODULE io_routines
                 DO i = 1, num_of_images
                    !
                    READ( UNIT = iunrestart, FMT = * )
+                   READ( UNIT = iunrestart, FMT = * ) frozen(i), vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
                       READ( UNIT = iunrestart, FMT = * ) &
                           vel(j,i),                & 
                           vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
+                          vel((j+2),i)
                       !
                    END DO
                    !
-                   vel(:,i)      = vel(:,i) * &
-                                   REAL( RESHAPE( if_pos, (/ dim /) ) )
-                   grad_old(:,i) = grad_old(:,i) * &
-                                   REAL( RESHAPE( if_pos, (/ dim /) ) )
+                   vel(:,i) = vel(:,i) * REAL( RESHAPE( if_pos, (/ dim /) ) )
                    !
                 END DO
                 !
@@ -194,11 +184,12 @@ MODULE io_routines
                 !
                 ! ... a default initialization is provided
                 !
-                vel(:,:)      = 0.D0
-                pos_old(:,:)  = pos(:,:)
-                grad_old(:,:) = PES_gradient(:,:)
+                vel(:,:) = 0.D0
                 !   
              END IF
+             !
+             pos_old(:,:)  = pos(:,:)
+             grad_old(:,:) = PES_gradient(:,:)
              !
           END IF
           !
@@ -292,8 +283,6 @@ MODULE io_routines
           DO i = 1, num_of_images
              !
              WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-             WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
-                                                           vel_zeroed(i)
              WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
              !
              ia = 0
@@ -338,19 +327,15 @@ MODULE io_routines
              DO i = 1, num_of_images
                 !
                 WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+                WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                                                              vel_zeroed(i)
                 !
                 DO j = 1, dim, 3
                    !
                    WRITE( UNIT = iunrestart, FMT = quick_min ) &
                        vel(j,i),                & 
                        vel((j+1),i),            &
-                       vel((j+2),i),            &
-                       pos_old(j,i),            &
-                       pos_old((j+1),i),        &
-                       pos_old((j+2),i),        &
-                       grad_old(j,i),           &
-                       grad_old((j+1),i),       &
-                       grad_old((j+2),i)
+                       vel((j+2),i)
                    !
                 END DO
                 !
@@ -389,8 +374,6 @@ MODULE io_routines
              DO i = 1, num_of_images
                 !
                 WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
-                WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
-                                                              vel_zeroed(i)
                 WRITE( UNIT = iunrestart, FMT = energy ) PES(i)
                 !
                 ia = 0
@@ -435,19 +418,15 @@ MODULE io_routines
                 DO i = 1, num_of_images
                    !
                    WRITE( UNIT = iunrestart, FMT = '("Image: ",I4)' ) i
+                   WRITE( UNIT = iunrestart, FMT = '(2(L1,X))' ) frozen(i), &
+                                                                 vel_zeroed(i)
                    !
                    DO j = 1, dim, 3
                       !
                       WRITE( UNIT = iunrestart, FMT = quick_min ) &
                           vel(j,i),                & 
                           vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
+                          vel((j+2),i)
                       !
                    END DO
                    !

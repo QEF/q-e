@@ -156,7 +156,6 @@ MODULE neb_base
       elastic_gradient = 0.D0
       tangent          = 0.D0
       grad             = 0.D0
-      grad_old         = 0.D0
       norm_grad        = 0.D0
       error            = 0.D0
       mass             = 1.D0
@@ -302,8 +301,6 @@ MODULE neb_base
             pos_(:,:) = pos_(:,:) * alat
             !
          END IF
-         !
-         pos_old(:,:) = pos_(:,:)
          !
          DEALLOCATE( d_R )
          !
@@ -820,26 +817,24 @@ MODULE neb_base
     END SUBROUTINE path_tangent_
     !
     !------------------------------------------------------------------------
-    SUBROUTINE born_oppenheimer_PES( flag, stat )
+    SUBROUTINE born_oppenheimer_PES( stat )
       !------------------------------------------------------------------------
       !
       USE neb_variables, ONLY : num_of_images, Emax_index, Emin, Emax, &
-                                PES, suspended_image
+                                PES, suspended_image, optimization, istep_neb
       !
       IMPLICIT NONE
       !
       ! ... I/O variables
       !
-      LOGICAL, INTENT(IN)  :: flag
       LOGICAL, INTENT(OUT) :: stat
       !
       ! ... local variables
       !
-      INTEGER  :: i, image
       INTEGER  :: N_in, N_fin
       !
       !
-      IF ( flag ) THEN
+      IF ( optimization .OR. ( istep_neb == 0 ) ) THEN
          !
          N_in = 1
          N_fin = num_of_images
@@ -961,7 +956,7 @@ MODULE neb_base
          ! ... the programs checks if the user has required a soft
          ! ... exit or if if maximum CPU time has been exceeded
          !
-         IF ( check_stop_now( ) ) THEN
+         IF ( check_stop_now() ) THEN
             !
             CALL stop_pw( .FALSE. )
             !
@@ -970,15 +965,7 @@ MODULE neb_base
          ! ... energies and gradients acting on each image of the elastic band
          ! ... are computed calling a driver that perfoms the scf calculations
          !
-         IF ( istep_neb == 0 ) THEN
-            !
-            CALL born_oppenheimer_PES( .TRUE., stat )
-            !
-         ELSE
-            !
-            CALL born_oppenheimer_PES( optimization, stat )
-            !
-         END IF
+         CALL born_oppenheimer_PES( stat )
          !
          IF ( .NOT. stat ) THEN
             !
@@ -1095,6 +1082,10 @@ MODULE neb_base
          suspended_image = 0
          !
       END DO minimization
+      !
+      ! ... the restart file is written before exit 
+      !
+      CALL write_restart()
       !
       RETURN
       !

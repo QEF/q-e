@@ -20,7 +20,7 @@ MODULE formats
     restart_others = "(3(2X,F16.12),3(2X,F16.12))"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
-    quick_min = "(9(2X,F16.12))", &
+    quick_min = "(3(2X,F16.12))", &
     energy    = "(2X,F18.10)"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
