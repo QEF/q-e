@@ -124,69 +124,93 @@ with a restart file from CP, and vice versa.
 
 \subsection{People}
 
-The PWscf package was originally developed by
-Stefano Baroni\\
-\htmladdnormallink{(\texttt{baroni@sissa.it})}%
-                  {mailto:baroni@sissa.it},
-Stefano de Gironcoli
-\htmladdnormallink{(\texttt{degironc@sissa.it})}%
-                  {mailto:degironc@sissa.it},
-Andrea Dal Corso
-\htmladdnormallink{(\texttt{dalcorso@sissa.it})}%
-                  {mailto:dalcorso@sissa.it}
-(SISSA, Trieste)
-and Paolo Giannozzi\\
-\htmladdnormallink{(\texttt{giannozz@nest.sns.it})}%
-                  {mailto:giannozz@nest.sns.it} 
-(Scuola Normale Superiore, Pisa)
-who are the copyleft holders.
-
-The FPMD and CP packages are both derived from the original code by
-Roberto Car and Michele Parrinello (then at SISSA).
-FPMD has been subsequently developed by
-*** Chiarotti? Scandolo? Focher? ***
-(SISSA)
-and Carlo Cavazzoni
-\htmladdnormallink{(\texttt{c.cavazzoni@cineca.it})}%
-                  {mailto:c.cavazzoni@cineca.it}
-(SISSA, then CINECA),
-while CP has been developed by *** ??? ***
-
-PWgui was written by Anton Kokalj.
-
 \hyphenation{gian-noz-zi}
 The maintenance and further development of the ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of the Italian
 INFM
 (\htmladdnormallink{\texttt{http://www.democritos.it/}}%
                    {http://www.democritos.it/})
-under the coordination of Paolo Giannozzi, with the strong support of
+under the coordination of
+Paolo Giannozzi
+(\htmladdnormallink{\texttt{p.giannozzi@sns.it}}%
+                   {mailto:p.giannozzi@sns.it})
+(Scuola Normale Superiore, Pisa),
+with the strong support of
 the CINECA National Supercomputing Center in Bologna
 (\htmladdnormallink{\texttt{http://www.cineca.it/}}%
                    {http://www.cineca.it/}),
-under the responsibility of Carlo Cavazzoni.
-\hyphenation{ge-rar-do}
+under the responsibility of
+Carlo Cavazzoni\\
+(\htmladdnormallink{\texttt{c.cavazzoni@cineca.it}}%
+                   {mailto:c.cavazzoni@cineca.it}).
+
 Currently active developers include
 Gerardo Ballabio (CINECA), 
 Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
-(SISSA), 
+(SISSA, Trieste), 
 Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
-Several other people, mostly but not exclusively former SISSA students, 
-contribute or have contributed to PWscf. Among them we mention:
-\begin{quote}
-\hyphenation{laz-ze-ri}
-Dario Alf\`e, Francesco Antoniella, Mauro Boero, Claudia Bungaro,
-Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto
-Debernardi, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, Kurt
-M\"ader, Nicola Marzari, Francesco Mauri, Pasquale Pavone, Mickael
-Profeta, Guido Roma, Kurt Stokbro, Pascal Thibaudeau, Renata Wentzcovitch.
-\end{quote}
+The PWscf package was originally developed by
+Stefano Baroni, Stefano de Gironcoli, Andrea Dal Corso (SISSA),
+Paolo Giannozzi,
+and others.
+The web site for PWscf and related codes is:
+\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
+                  {http://www.pwscf.org/}
 
-\hyphenation{a-les-sio}
-The Berry phase calculation was implemented by Oswaldo Dieguez, 
-Alessio Filippetti, Lixin He, Jeff Neaton, in David Vanderbilt's 
-group at Rutgers University (Piscataway, NJ).
+The FPMD and CP codes are both based on the original code written by
+Roberto Car and Michele Parrinello.
+
+FPMD was developed by
+Carlo Cavazzoni, Gerardo Ballabio (CINECA),
+Sandro Scandolo (ICTP, Trieste),
+Guido Chiarotti (SISSA),
+Paolo Focher,
+and others.
+
+CP was developed by
+Alfredo Pasquarello (IRRMA, Lausanne),
+Kari Laasonen (Oulu),
+Andrea Trave (UCBerkeley),
+Roberto Car (Princeton),
+Nicola Marzari (MIT),
+Paolo Giannozzi,
+and others.
+
+PWgui was written by Anton Kokalj and is based on his GUIB concept
+(\htmladdnormallink{\texttt{http://www-k3.ijs.si/kokalj/guib/}}%
+                   {http://www-k3.ijs.si/kokalj/guib/}).
+
+The pseudopotential generation package ``atomic'' was written by
+Andrea Dal Corso and it is the result of many additions to
+the original code by Paolo Giannozzi.
+
+A list of further contributors includes:
+Dario Alf\`e,
+Francesco Antoniella,
+Mauro Boero,
+Claudia Bungaro,
+Paolo Cazzato,
+Gabriele Cipriani,
+Matteo Cococcioni,
+Alberto Debernardi,
+Oswaldo Dieguez,
+Guido Fratesi,
+Ralph Gebauer,
+Yosuke Kanai,
+Konstantin Kudin,
+Michele Lazzeri,
+Kurt Maeder,
+Francesco Mauri,
+Pasquale Pavone,
+Mickael Profeta,
+Guido Roma,
+Kurt Stokbro,
+Antonio Tilocca,
+Renata Wentzcovitch,
+Yudong Wu,
+Xiaofei Wang,
+and let us apologize to everybody we have forgotten.
 
 This manual was (mostly) written by Paolo Giannozzi.
 
@@ -266,8 +290,7 @@ use this instead:
 
 \subsection{Configure}
 
-\hyphenation{es-pres-so}
-An automatic configuration procedure, generated with the GNU Autoconf
+An automatic configuration script, generated with the GNU Autoconf
 package, is available since version 2.0.
 From the top directory of the ESPRESSO source tree, just type:
 \begin{verbatim}
@@ -825,9 +848,9 @@ tables, such as e.g.:
 or otherwise it must be generated.
 This is not as daunting a task as most people think.
 
-Since ESPRESSO v.~2.1, a PP generation package is provided with
-ESPRESSO, in the directory \texttt{atomic/} (sources) and
-\texttt{atomic\_doc/} (documentation, tests and examples). 
+Since version 2.1, ESPRESSO includes a PP generation package, in the
+directory \texttt{atomic/} (sources) and \texttt{atomic\_doc/}
+(documentation, tests and examples). 
 The package can generate both NC and US PPs, in various formats that
 are directly read by PWscf.
 We refer to its documentation for instructions on how to generate PPs

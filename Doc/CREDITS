@@ -1,50 +1,56 @@
 The ESPRESSO package (opEn-Source Package for Research in Electronic 
 Structure, Simulation, and Optimization) is the result of the merge
-of several pre-existing packages for electronic-structure calculations:
+of several pre-existing packages for electronic-structure
+calculations:
 - the PWscf package
 - the FPMD code
 - the CP code
 and of several utilities, in particular:
-- a GUI (Graphical User Interface) for generating input data files
+- the PWgui graphical user interface for generating input data files
 - a pseudopotential generation code.
 
-The maintenance and further development of the ESPRESSO code is promoted 
-by the DEMOCRITOS National Simulation Center (http://www.democritos.it) 
-of the Italian INFM, under the coordination of Paolo Giannozzi, with the 
-strong support of the CINECA National Supercomputing Center in Bologna, 
-under the responsability of Carlo Cavazzoni. Currently active developers 
-include Gerardo Ballabio (CINECA), Gernot Deinzer, Stefano Fabris, 
-Adriano Mosca Conte, Carlo Sbraccia (SISSA), Anton Kokalj (IJS).
+The maintenance and further development of the ESPRESSO code is
+promoted by the DEMOCRITOS National Simulation Center of the Italian
+INFM (http://www.democritos.it/), under the coordination of Paolo
+Giannozzi (p.giannozzi@sns.it) (Scuola Normale Superiore, Pisa), with
+the strong support of the CINECA National Supercomputing Center in
+Bologna (http://www.cineca.it/), under the responsibility of Carlo
+Cavazzoni (c.cavazzoni@cineca.it).
+
+Currently active developers include Gerardo Ballabio (CINECA), Gernot
+Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
+Trieste), Anton Kokalj (Joszef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi
-(Scuola Normale Superiore, Pisa), and others.
-The web site for PWSCF and related codes is http://www.pwscf.org
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
+The web site for PWSCF and related codes is: http://www.pwscf.org/
 
-The CP code, based on the original code written by R. Car and M. Parrinello,
-was developed by A. Pasquarello (IRRMA, Lausanne), K. Laasonen (Oulu),
-A. Trave (UCBerkeley), R. Car (Princeton), P. Giannozzi, N. Marzari (MIT),
-and others.
+The FPMD and CP codes are both based on the original code written by
+Roberto Car and Michele Parrinello.
 
-The FPMD code, also based on the original code written by R. Car and 
-M. Parrinello. was developed by C. Cavazzoni (CINECA, Bologna), S. Scandolo 
-(ICTP, Trieste), G. Chiarotti (SISSA, Trieste), P. Focher, G. Ballabio, and 
-others.
+FPMD was developed by Carlo Cavazzoni, Gerardo Ballabio (CINECA),
+Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA), Paolo
+Focher, and others.
 
-The GUI for PWscf was written by Anton Kokalj (IJS) and it is based on 
-his GUIB concept: http://www-k3.ijs.si/kokalj/guib/.
+CP was developed by Alfredo Pasquarello (IRRMA, Lausanne), Kari
+Laasonen (Oulu), Andrea Trave (UCBerkeley), Roberto Car (Princeton),
+Nicola Marzari (MIT), Paolo Giannozzi, and others.
+
+PWgui was written by Anton Kokalj (IJS) and is based on his GUIB
+concept (http://www-k3.ijs.si/kokalj/guib/).
 
 The pseudopotential generation package "atomic" was written by 
 Andrea Dal Corso and it is the result of many additions to 
 the original code by Paolo Giannozzi.
 
-A list of contributors to the ESPRESSO code includes:
+A list of further contributors includes:
 Dario Alfe', Francesco Antoniella, Mauro Boero, Claudia Bungaro, 
-Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni, Alberto Debernardi,
-Oswaldo Dieguez, Guido Fratesi, Ralph Gebauer, Michele Lazzeri, 
-Kurt Maeder, Nicola Marzari, Francesco Mauri, Pasquale Pavone, 
-Mickael Profeta, Guido Roma, Kurt Stokbro, Renata Wentzcovitch, 
-Yudong Wu, Xiaofei Wang, Yosuke Kanai, Antonio Tilocca, Konstantin Kudin,
+Paolo Cazzato, Gabriele Cipriani, Matteo Cococcioni,
+Alberto Debernardi, Oswaldo Dieguez, Guido Fratesi, Ralph Gebauer,
+Yosuke Kanai, Konstantin Kudin, Michele Lazzeri, Kurt Maeder,
+Francesco Mauri, Pasquale Pavone, Mickael Profeta, Guido Roma,
+Kurt Stokbro, Antonio Tilocca, Renata Wentzcovitch, Yudong Wu,
+Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
 All the material included in this distribution is free software;
