@@ -298,6 +298,16 @@ Presently it is expected to work for Linux PCs, IBM sp machines, SGI
 Origin, some HP-Compaq Alpha machines, Cray X1.
 See also the \texttt{README.install} file.
 
+\texttt{configure} accepts the following options:
+\begin{quote}
+\texttt{--disable-parallel}: compile a serial code, also on parallel
+ machines with available parallel environment\\
+\texttt{--disable-shared}:   do not use shared libraries (makes the
+code more portable)  \\
+\texttt{--enable-shared}:    use shared libraries if available 
+(may be needed in some cases)
+\end{quote}
+
 If \texttt{configure} doesn't recognize your configuration, you may 
 resort to the manual configuration, described below, or try to
 generate a better \texttt{configure} file following the instructions 
@@ -520,9 +530,6 @@ targets:
     conversion in directory \texttt{upftools/} (see
     ``Pseudopotential'' section).
   \item
-    \texttt{make links} produces links to all executables in directory
-    \texttt{bin/}.
-  \item
     \texttt{make cp} produces the Car-Parrinello code CP in
     \texttt{CPV/cp.x}.
   \item
@@ -560,8 +567,9 @@ The codes for data postprocessing in \texttt{PP/} are:
         polyhedra (obsolete, use at your own risk)
   \item \texttt{dos.x} calculates electronic Density of States
         (DOS).
-  \item \texttt{pw2wan.x}: interface with a code calculating
-        Wannier functions, soon to be released: see 
+  \item \texttt{pw2wan.x}: interface with code \texttt{WanT} for
+        calculation of transport properties via Wannier (also known
+        as Boyd) functions: see
         \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
                        {http://www.wannier-transport.org/}.
   \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
@@ -742,6 +750,8 @@ If this happens and no executable is produced, add the following to
 \texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
 
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
+If \texttt{configure} doesn't find them, try
+\texttt{configure --enable-shared}.
 Note that MKL also contains optimized FFT routines, but they are
 presently not supported: use FFTW instead. Also note that Intel 
 compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
@@ -926,8 +936,7 @@ Tests and examples can be downloaded from the Test and Examples Page
 The necessary pseudopotentials are included.
 See the documentation contained there.
 The examples assume that all executables reside in a subdirectory
-\texttt{bin/}: use command \texttt{make links} in the top directory
-to create links to all executables in \texttt{bin/}.
+\texttt{bin/}. The Makefile should automatically take care of this.
 
 Note about exchange-correlation: the type of exchange-correlation used
 in the calculation is read from PP files.
@@ -1965,10 +1974,18 @@ Possible reasons:
     If you are \emph{not} running on the same machines on which the
     code was compiled: you need either to have the same shared
     libraries installed on both machines, or to load statically all
-    libraries (using appropriate compiler or loader options). The
-    same applies to Beowulf-style parallel machines: the needed 
+    libraries (using appropriate \texttt{configure} or loader options). 
+    The same applies to Beowulf-style parallel machines: the needed 
     shared libraries must be present on all PC's.
 \end{itemize}
+
+\paragraph{errors in examples with parallel execution}
+
+If you get error messages in the example scripts -- i.e. not errors
+in the codes -- on a parallel  machine, such as e.g. :
+``\texttt{run\_example: -n: command not found}''
+you have forgotten the `''` in the definitions of 
+\texttt{PARA\_PREFIX} and \texttt{PARA\_POSTFIX}.
 
 \paragraph{\texttt{pw.x} stops with error in reading.}
 

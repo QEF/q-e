@@ -1,3 +1,12 @@
+ 1 Sep 2004 The error message is no longer written on /dev/stderr 
+            (on linux clusters), but only on unit *. (C.S.)
+            missing ZSYRK and ZSYR2K subroutines added to the 
+            local copy of blas (PC)
+            Small configure fix for Mac; examples, minor fix (GB)
+
+30 Aug 2004 Some cleanup of the path code, fixed a small bug in the prefix.dat 
+            file. (C.S.)
+
 27 Aug 2004  Misc Alpha fixes (C.S.)
              Z* are  written on output in a consistent way (Gernot)
              More merging between CP and FPMD:
