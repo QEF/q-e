@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -839,8 +839,8 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   IMPLICIT NONE
   !
   INTEGER       :: n_atom_wfc
-  INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix, npsx)
-  REAL(KIND=DP) :: oc(nchix, npsx), jchi(nchix,npsx)
+  INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix,npsx)
+  REAL(KIND=DP) :: oc(nchix,npsx), jchi(nchix,npsx)
   INTEGER       :: na, nt, n
   !
   !
