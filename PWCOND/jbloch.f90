@@ -1,0 +1,221 @@
+!
+! Copyright (C) 2003 A. Smogunov 
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
+                     vec, kval, c1, c2, sarea, nchan)
+!
+! This routine computes the current I carrying by the Bloch state
+! so that <psi_k|I|psi_k'> = \delta_{kk'} I_k and does some
+! rearrangements.   
+!
+#include "machine.h"
+  use parameters, only : DP
+  implicit none
+
+  real(kind=DP), parameter :: eps=1.d-4 
+  complex(kind=DP), parameter :: cim=(0.d0, 1.d0) 
+  integer ::                                     & 
+      n2d,     &  ! 2D-dimension  
+      noins,   &  ! number of interior orbitals 
+      nocros,  &  ! number of the orbitals crossing the boundary 
+      norbnow, &  ! total number of orbitals =noins+2*nocros 
+      norbf,   &  ! max number of orbitals
+      nst,     &  ! number of Bloch states =2*(n2d+nocros) 
+      nchan,   &  ! number of propagating channels
+      info, i, j, k, n, iorb, n1, il, ir, in
+  real(kind=DP) ::    &
+      sarea,                & ! cross-section
+      k1, k2
+  complex(kind=DP) ::                           &  
+      kfun(n2d, nst),                           & ! phi_k(d)
+      kfund(n2d, nst),                          & ! phi'_k(d)
+      vec(2*n2d+norbnow, nst),                  & ! exp. coeff. for phi_k 
+      kval(nst),                                & ! k of phi_k
+      c1(norbf,2*n2d), c2(norbf,norbf),         & ! nonlocal integrals 
+      z, z1, ZDOTC
+  integer, allocatable ::   &
+      ncond(:)    ! channel --> Bloch state correspondence 
+  real(kind=DP), allocatable :: ej(:), kcur(:)
+  complex(kind=DP), allocatable :: kval1(:), vec1(:,:), kcoef(:,:), &
+                               kcuroff(:,:), valj(:,:) 
+
+  noins = norbnow-2*nocros
+!
+! To compute the number of channels and ncond(+-,>,<) --> (...)
+!
+  allocate( ncond( nst ) ) 
+  nchan=0
+  do k=1, nst
+    if (abs(DIMAG(kval(k))).le.eps) then
+      nchan=nchan+1      
+      ncond(nchan)=k
+    endif
+  enddo
+  nchan=nchan/2
+
+  allocate( kcoef( nocros, 2*nchan ) )
+  allocate( kcuroff( 2*nchan, 2*nchan ) )
+  allocate( ej( 2*nchan ) )
+  allocate( valj( 2*nchan, 2*nchan ) )
+  allocate( kval1( nst ) )
+  allocate( kcur( nst ) )
+  allocate( vec1( (2*n2d+norbnow), nst ) )
+
+  kcur=0.d0
+  kcoef=(0.d0,0.d0)
+
+  do k=1, 2*nchan
+    ir=ncond(k)
+    do iorb=1, nocros
+      do j=1, 2*n2d
+        kcoef(iorb,k)=kcoef(iorb,k)+       &
+                      vec(j,ir)*c1(nocros+noins+iorb,j)
+      enddo
+      do j=1, norbnow
+        kcoef(iorb,k)=kcoef(iorb,k)+       &
+           vec(2*n2d+j,ir)*c2(nocros+noins+iorb,j)
+      enddo
+    enddo                                         
+  enddo
+
+!
+! Calculation of the current matrix <phi_k|I|phi_n>
+!
+  do k=1, 2*nchan
+    do n=1, 2*nchan 
+      ir=ncond(k)
+      il=ncond(n)     
+      z=ZDOTC(n2d,kfun(1,ir),1,kfund(1,il),1)
+      kcuroff(k,n)=-cim*          &
+              (z-ZDOTC(n2d,kfund(1,ir),1,kfun(1,il),1))*sarea
+!     ---------------------------------------------
+      do iorb=1, nocros
+        kcuroff(k,n)=kcuroff(k,n)-cim*(                               &
+            conjg(vec(2*n2d+nocros+noins+iorb,ir))*kcoef(iorb,n)-     &
+            vec(2*n2d+nocros+noins+iorb,il)*conjg(kcoef(iorb,k)))
+      enddo
+ !  write(6,'(2i5, 2f12.6)') k,n,DREAL(kcuroff(k,n)),DIMAG(kcuroff(k,n))  
+    enddo
+  enddo
+
+!
+! Diagonalizing of the current matrix
+!
+  if(nchan.gt.0) then
+   info=-1
+   call hev_ab(2*nchan, kcuroff, 2*nchan, ej, valj, 0.d0, 0.d0, info)
+  endif
+
+!
+! Right ordering (+, >, -, <)
+!
+!-- propagating modes 
+    ir=0
+    il=nst/2
+    do in=1, 2*nchan
+      if (ej(in).gt.0.d0) then 
+        ir=ir+1
+        do n=1, 2*n2d+norbnow
+          vec1(n,ir)=0.d0
+          do j=1, 2*nchan
+            vec1(n,ir)=vec1(n,ir)+vec(n,ncond(j))*valj(j,in)
+          enddo
+        enddo
+        kcur(ir)=ej(in)
+        do n=1, 2*nchan
+          k1=DREAL(valj(n,in))**2+DIMAG(valj(n,in))**2
+          if(abs(k1).gt.eps) kval1(ir)=kval(ncond(n))
+        enddo                      
+      else
+        il=il+1
+        do n=1, 2*n2d+norbnow
+          vec1(n,il)=0.d0
+          do j=1, 2*nchan
+            vec1(n,il)=vec1(n,il)+vec(n,ncond(j))*valj(j,in)
+          enddo
+        enddo
+        kcur(il)=ej(in)
+        do n=1, 2*nchan
+          k1=DREAL(valj(n,in))**2+DIMAG(valj(n,in))**2
+          if(abs(k1).gt.eps) kval1(il)=kval(ncond(n))    
+        enddo                              
+      endif
+    enddo
+!--  decaying states 
+    do in=1, nst  
+      if (DIMAG(kval(in)).gt.eps) then
+        ir=ir+1
+        kval1(ir)=kval(in)
+        call DCOPY(2*(2*n2d+norbnow),vec(1,in),1,vec1(1,ir),1)
+      endif
+      if (-DIMAG(kval(in)).gt.eps) then
+        il=il+1
+        kval1(il)=kval(in)
+        call DCOPY(2*(2*n2d+norbnow),vec(1,in),1,vec1(1,il),1)
+      endif
+    enddo           
+
+!
+! Normalization to the unit current
+!
+  do k=1, nchan
+    k1=1.d0/abs(kcur(k))
+    call DSCAL(2*(2*n2d+norbnow),sqrt(k1),vec1(1,k),1)
+  enddo               
+  do k=nst/2+1, nst/2+nchan
+    k1=1.d0/abs(kcur(k))
+    call DSCAL(2*(2*n2d+norbnow),sqrt(k1),vec1(1,k),1)
+  enddo       
+
+!
+! Final rearrangement to ascending |Re(k)|
+!
+    do k=1, nst
+      ncond(k)=k
+    enddo
+    do k=1, nchan
+      kval(k)=1.d2
+      do n=1, nchan
+        if(abs(DREAL(kval1(n))).le.abs(DREAL(kval(k)))) then
+          kval(k)=kval1(n)
+          ncond(k)=n 
+        endif 
+      enddo
+      kval1(ncond(k))=1.d3
+    enddo
+    do k=nchan+1, nst/2
+      kval(k)=kval1(k)
+    enddo               
+    do k=nst/2+1, nst/2+nchan
+      kval(k)=1.d2
+      do n=nst/2+1, nst/2+nchan
+        if(abs(DREAL(kval1(n))).le.abs(DREAL(kval(k)))) then
+          kval(k)=kval1(n)
+          ncond(k)=n
+        endif
+      enddo             
+      kval1(ncond(k))=1.d3
+    enddo
+    do k=nst/2+nchan+1, nst
+      kval(k)=kval1(k)
+    enddo    
+    do k=1, nst
+      call DCOPY(2*(2*n2d+norbnow),vec1(1,ncond(k)),1,vec(1,k),1)
+    enddo
+
+  deallocate(kcoef)
+  deallocate(kval1)
+  deallocate(kcur)
+  deallocate(vec1)
+  deallocate(ncond)
+  deallocate(kcuroff)
+  deallocate(ej)
+  deallocate(valj)
+
+  return
+end subroutine jbloch
+

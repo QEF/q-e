@@ -1,0 +1,128 @@
+!
+! Copyright (C) 2003 A. Smogunov 
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+subroutine init_gper(ik)
+!
+! - To compute the number of 2D G vectors with |G+k|^2<ecut2d (ngper), 
+! - the number of shells (ngpsh) for them,
+!
+#include "machine.h"
+  use pwcom
+  use cond  
+  implicit none
+  integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw 
+  integer, allocatable :: nshell(:,:)
+  real(kind=DP) :: norm2
+  real(kind=DP), parameter :: eps=1.d-8
+  real(kind=DP), allocatable :: gnorm2(:)
+
+  allocate( gnorm2( nr1s * nr2s ) ) 
+  allocate( nshell( nr1s, nr2s ) )
+!
+! Compute ngper, ngpsh, and (i,j) --> shell
+!
+  do i=1, nr1s
+    do j=1, nr2s 
+      nshell(i,j)=0
+    enddo
+  enddo
+
+  ngper=1
+  ngpsh=1
+  gnorm2(1)=(xyk(1,ik)**2+xyk(2,ik)**2)*tpiba2  
+  nshell(1,1)=1
+  do i=1, nr1s
+    il=i-1
+    if (il.gt.nr1s/2) il=il-nr1s
+    do j=1, nr2s
+      jl=j-1
+      if (jl.gt.nr2s/2) jl=jl-nr2s
+      norm2=(((il+xyk(1,ik))*bg(1,1)+(jl+xyk(2,ik))*bg(1,2))**2+ &
+            ((il+xyk(1,ik))*bg(2,1)+(jl+xyk(2,ik))*bg(2,2))**2)* &
+                 tpiba2
+      if (norm2.le.ecut2d.and.(i*j).ne.1) then
+         ngper=ngper+1
+         icount=0  
+         do iw=1, ngpsh
+           if (abs(norm2-gnorm2(iw)).gt.eps) then
+             icount=icount+1 
+           else
+             nshell(i,j)=iw
+           endif
+         enddo
+         if (icount.eq.ngpsh) then
+           ngpsh=ngpsh+1
+           gnorm2(ngpsh)=norm2
+           nshell(i,j)=ngpsh
+         endif 
+      endif
+    enddo
+  enddo              
+
+!
+! Global variables
+!
+  allocate( gper( 2, ngper ) )
+  allocate( ninsh( ngpsh ) )
+  allocate( gnsh( ngpsh ) ) 
+!
+! construct the g perpendicular vectors
+!
+
+! ninsh() is used as a pointer on the (first-1) element
+! in each shell
+!
+  do i=1, ngpsh
+    ninsh(i)=0
+  enddo
+  do i=1, nr1s
+    do j=1, nr2s
+      if (nshell(i,j).ne.0) then
+        do k=nshell(i,j)+1, ngpsh
+           ninsh(k)=ninsh(k)+1
+        enddo
+      endif
+    enddo
+  enddo
+!
+! To form g
+!
+  do i=1, nr1s
+    il=i-1
+    if (il.gt.nr1s/2) il=il-nr1s
+    do j=1, nr2s
+      jl=j-1
+      if (jl.gt.nr2s/2) jl=jl-nr2s
+      if (nshell(i,j).ne.0) then
+         ninsh(nshell(i,j))=ninsh(nshell(i,j))+1
+         igper=ninsh(nshell(i,j))
+         do ipol=1,2
+           gper(ipol,igper)=(il+xyk(1,ik))*bg(ipol,1)+   &
+                             (jl+xyk(2,ik))*bg(ipol,2)
+         enddo
+      endif
+    enddo
+  enddo             
+!
+! To set up |g| and number of g in each shell
+!
+  do i=ngpsh, 2, -1
+    igper=ninsh(i)
+    gnsh(i)=sqrt(gper(1,igper)**2+gper(2,igper)**2)*tpiba
+    ninsh(i)=ninsh(i)-ninsh(i-1)
+  enddo
+  igper=ninsh(1)
+  gnsh(1)=sqrt(gper(1,igper)**2+gper(2,igper)**2)*tpiba
+  ninsh(1)=igper
+
+  write(6,*) 'ngper, shell number = ', ngper, ngpsh
+
+  deallocate(gnorm2) 
+  deallocate(nshell) 
+
+  return 
+end subroutine init_gper
