@@ -332,8 +332,8 @@ case "$arch:$f90_id" in
 linux64:ifort )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_fflags_noopt="-O0 -assume byterecl"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -344,7 +344,7 @@ linux64:ifc )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -355,7 +355,7 @@ linux64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -363,8 +363,8 @@ linux64:pgf* )
 linux32:ifort )
         try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_fflags_noopt="-O0 -assume byterecl"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -375,7 +375,7 @@ linux32:ifc )
         try_fflags="-Vaxlib -O2 -tpp6"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -387,6 +387,7 @@ linux32:ifc )
 		# old versions of ifc require this stuff
 		echo $ECHO_N "setting up ifc environment... $ECHO_C"
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
+		try_f90flags_noopt="\$(FFLAGS_NOOPT) -cl,./intel.pcl"
 		pcl_ph="D3 Raman"
 		pcl_pw="PH PP Gamma PWCOND pwtools $pcl_ph"
 		pcl_modules="PW CPV flib upftools atomic $pcl_pw"
@@ -414,7 +415,7 @@ linux32:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -423,17 +424,17 @@ linux*:g95 )
 	try_fflags="-O3"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	#try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__G95"
 	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
--qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -Q -qalias=nointptr"
-	try_f90flags="\$(FFLAGS) -qfree=f90"
+-qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
+	try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
-	try_f90flags_noopt="-q64 -O0 -qfree=f90"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -qsuffix=cpp=f90 -qfree=f90"
 	try_ldflags="-q64"
 	# try_ldflags_static="-bstatic"
 	pre_fdflags="-WF,"
@@ -444,7 +445,7 @@ mips:f90 )
 	try_fflags="-mips4 -64 -O2 -r10000 -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-mips4 -64 -O0"
-	try_f90flags_noopt="-mips4 -64 -O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags="-mips4 -64"
 	pre_fdflags="-cpp "
 	have_cpp=1
@@ -453,23 +454,25 @@ alinux:fort )
 	have_cpp=1
 	pre_fdflags="-cpp "
 	try_fflags="-O -r8 -align dcommons -align records"
-	try_f77flags="\$(FFLAGS)"
 	try_f90flags="\$(FFLAGS) -free"
+	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
         try_ldflags_static="-non_shared"
 	;;
 alpha:f90 )
 	have_cpp=1
 	pre_fdflags="-cpp "
 	try_fflags="-O -real_size 64 -align dcommons -align records"
-	try_f77flags="\$(FFLAGS)"
 	try_f90flags="\$(FFLAGS) -free"
+	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
 	;;
 sparc:mpf90 | sparc:f90 )
 	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
 -xarch=v8plusb -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"
-	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_fflags_noopt="-O0 -xlic_lib=sunperf"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	imod="-M"
 	;;
@@ -478,7 +481,7 @@ crayx1:ftn )
 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
-        try_f90flags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
+        try_f90flags_noopt="\$(FFLAGS_NOOPT)"
         try_ldflags="-s default64 -f nan64"
         try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
@@ -489,7 +492,7 @@ mac:* )
 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -qfree=f90"
 	try_ldflags=""
 	pre_fdflags="-WF,"
 	xlf_flags=1
@@ -500,7 +503,7 @@ mac:* )
 	try_fflags="-O"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="-O0"
+	try_f90flags_noopt="$\(FFLAGS_NOOPT)"
 	try_ldflags=""
 	;;
 esac

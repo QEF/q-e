@@ -1,5 +1,7 @@
 # @configure_input@
 
+# compilation rules
+
 .SUFFIXES :
 .SUFFIXES : .o .c .f .f90
 
@@ -15,22 +17,30 @@
 @SET_MAKE@
 CC             = @cc@
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
+CPP            = @cpp@
+CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
+F77            = @f77@
+F90            = @f90@
+FFLAGS         = @fflags@
+F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+FFLAGS_NOOPT   = @fflags_noopt@
+F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+LD             = @ld@
+LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
+AR             = @ar@
+ARFLAGS        = @arflags@
+RANLIB         = @ranlib@
+
+# -----------------------------
+# application-specific settings
+
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@
 IFLAGS         = -I../include @ifftw@
 MODFLAGS       = @imod@. @imod@../Modules @imod@../PW @imod@../PH
-CPP            = @cpp@
-CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
-F77            = @f77@
-F90            = @f90@
-FFLAGS         = @fflags@ $(IFLAGS)
-F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(MODFLAGS)
-FFLAGS_NOOPT   = @fflags_noopt@
-F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS) $(MODFLAGS)
-LD             = @ld@
-LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
+
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 # LIBS must contain the location of all needed external libraries
 LIBS           = @libs@
@@ -46,6 +56,3 @@ LIBS           = @libs@
 # lapack_mkl : compile only lapack routines not present in Intel MKL
 #              use this together with Intel MKL
 MYLIB          = @mylib@
-AR             = @ar@
-ARFLAGS        = @arflags@
-RANLIB         = @ranlib@
