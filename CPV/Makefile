@@ -140,11 +140,11 @@ cp.x : cprstart.o $(FOBJS) $(LIBOBJ)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 
-cp_version.o : cpver
+cp_version.o : cpver.h
 
-cpver :
+cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
-		> cpver
+		> cpver.h
 
 fpmd.x : start.o $(FOBJS) $(LIBOBJ)
 	$(LD) -o fpmd.x start.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
