@@ -1,0 +1,67 @@
+/* Machine-dependent definitions :
+
+   Machine-dependent definitions are contained in two different files:
+   
+   1) f_defs.h	for definitions to be included in FORTRAN files ONLY
+   2) c_defs.h  for definitions to be included in C       files ONLY
+
+
+   Input Machine definitions:
+
+      __AIX     ibm rs/6000 machines
+      __T3E     t3d/t3e machines 
+      __LINUX   intel/amd 32-bit pc's (pentium, athlon) running Linux
+      __LINUX64 intel/amd 64-bit cpu's (Opteron, Itanium?) pc's running Linux
+      __HP      hp-compaq PA-RISC workstations and parallel machines
+      __HP64    64-bit mode for hp-compaq machines
+      __SGI     all sgi machines
+      __SGI64   64-bit mode for sgi machines
+      __ALTIX   sgi altix 350/3000 machines running Linux
+      __ORIGIN  sgi origin 2k or 3k machines
+      __ALPHA   hp-compaq (formerly dec) alphas
+      __SX4     nec sx-4/5 vector machines (obsolete)
+      __SX6     nec sx-6 vector machines
+      CRAYY     cray vector machines (obsolete)
+      FUJ64     Fujitsu VPP5000 vector machines
+   
+   Other Input definitions:
+      ABSOFT       for intel pc's with absoft compiler
+      ADD_BLAS_TWO_UNDERSCORES
+      ADD_BLAS_ONE_UNDERSCORE
+                   may be needed depending on how blas/lapack are
+                   compiled and how they are called by the compiler
+      __BENCHLIB   t3e machines with benchlib library
+      __LAM        LAM-MPI version
+   
+   Other definitions not used in the machine.h file:
+      __FFTW                use the FFTW library
+      __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
+
+   Output Definitions:
+
+      FLUSH            : define FLUSH if you want output to be written 
+                         immediately to disk and not keep in buffers
+                         (useful in case of crash)
+      DIRECT_IO_FACTOR : record length in direct-access I/O is given by
+                         the number of real*8 words times DIRECT_IO_FACTOR
+      C_POINTER        : the type for C pointer
+                            integer*8 for 64-bit machines,
+                            integer on most other machines
+      DIMAG            : intrinsic functions for imaginary part of a 
+                         complex number in double precision
+                         dimag for 32-bit machines, aimag otherwise
+      DREAL            : intrinsic functions for real part of a 
+                         complex number in double precision
+                         dreal for 32-bit machines, real otherwise
+      DCMPLX           : intrinsic functions for (real,real) to complex 
+                         conversion in double precision
+                         dcmplx for 32-bit machines, cmplx otherwise
+      Blas/Lapack names: single-precision names for 64-bit machines,
+                         double-precision names for 32-bit machines,
+                         with underscores appended if requested
+
+*/
+
+/* Note that ZHETRD is not a call but a string passed as argument 
+   to "ilaenv". For this reason it should be defined as uppercase */
+
