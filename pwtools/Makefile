@@ -17,7 +17,7 @@ MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o
 #
 # Targets
 #
-all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x
+all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x kpoints.x
 
 band_plot.x:  band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
@@ -36,6 +36,12 @@ dynmat.x: dynmat.o rigid.o
 
 fqha.x:  fqha.o
 	$(LD) -o fqha.x fqha.o  $(LDFLAGS)
+
+ev.x:	ev.o
+	$(LD) -o ev.x ev.o ../PW/random.o ../PW/error.o 
+
+kpoints.x: kpoints.o
+	$(LD) -o kpoints.x kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean_:
 	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc

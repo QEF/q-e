@@ -15,28 +15,21 @@ program cg_raman
   use io
   use cgcom
   use mp, only: mp_end
+  use global_version
 #ifdef __PARA
   use para
 #endif
   implicit none
   real(kind=DP), allocatable :: deps_dtau(:,:,:,:), dynout(:,:)
   real(kind=DP), allocatable :: w2(:)
-  !
+  character(len=9) :: cdate, ctime, code = 'RAMAN'
   logical :: exst
   integer :: i
-  character(len=9) cdate, ctime
-  character(len=12), parameter:: version='RAMAN V. -1'
   external date_and_tim
   !
   call init_clocks(.true.)
   call start_clock('raman')
-#ifdef __PARA
-  call startup( nd_nmbr, version )
-#else
-  nd_nmbr='   '
-  call date_and_tim(cdate,ctime)
-  write (6,9000) version,cdate,ctime
-#endif
+  call startup( nd_nmbr, code, version_number )
   !
   gamma_only = .true.
   call cg_readin

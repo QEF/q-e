@@ -885,8 +885,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   do ipol=1,3
      dipol(ipol)=dipol(ipol) / suma * omega * alat
   enddo
-  print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, rhomax, &
-                                                        rhotot, rhoabs
+  print '(/5x,"Min, Max, Total, Abs charge: ",2f10.6,2x,2f10.4)',&
+     rhomin, rhomax, rhotot, rhoabs
 
   if (output_format == 4) then
      !

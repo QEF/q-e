@@ -27,7 +27,7 @@ subroutine d3_readin
   ! counters
   character(len=256) :: outdir
 
-  namelist / inputph / ethr_ph, amass, iverbosity, outdir, filpun, &
+  namelist / inputph / ethr_ph, amass, iverbosity, outdir, prefix, &
        fildyn, fildrho, fild0rho, q0mode_todo, wraux, recv, istop, &
        testflag, testint, testreal
   ! convergence threshold
@@ -58,7 +58,7 @@ subroutine d3_readin
   ethr_ph = 1.d-5
   iverbosity = 0
   outdir = './'
-  filpun = ' '
+  prefix = 'pwscf'
   fildyn = 'd3dyn'
   fildrho = ' '
   fild0rho = ' '
@@ -91,15 +91,11 @@ subroutine d3_readin
   !
   !     Check all namelist variables
   !
-  if (ethr_ph.le.0.d0) call errore (' d3_readin', ' Wrong ethr_ph ', &
-       1)
-  if (iverbosity.ne.0.and.iverbosity.ne.1) call errore ('d3_readin', ' Wrong &
-       &iverbosity ', 1)
-  if (fildyn.eq.' ') call errore ('d3_readin', ' Wrong fildyn ', 1)
-  if (filpun.eq.' ') call errore ('d3_readin', ' Wrong filpun ', 1)
+  if (ethr_ph.le.0.d0) call errore (' d3_readin', ' Wrong ethr_ph ', 1)
+  if (iverbosity.ne.0.and.iverbosity.ne.1) &
+       call errore ('d3_readin', ' Wrong iverbosity ', 1)
   if (fildrho.eq.' ') call errore ('d3_readin', ' Wrong fildrho ', 1)
-  if (fild0rho.eq.' ') call errore ('d3_readin', ' Wrong fild0rho ', &
-       1)
+  if (fild0rho.eq.' ') call errore ('d3_readin', ' Wrong fild0rho ', 1)
   !
   !    reads the q point
   !

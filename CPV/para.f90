@@ -92,6 +92,7 @@ end module para_mod
 !
       use para_mod
       use mp, only: mp_start, mp_env
+      use global_version
 !
       implicit none
 
@@ -108,11 +109,11 @@ end module para_mod
       if ( nproc > maxproc) &
      &   call errore('startup',' too many processors ',nproc)
 !
-      if (me.lt.10) then
+      if (me < 10) then
          write(node,'(i1,2x)') me
-      else if (me.lt.100) then
+      else if (me < 100) then
          write(node,'(i2,1x)') me
-      else if (me.lt.1000) then
+      else if (me < 1000) then
          write(node,'(i3)') me
       else
          call errore('startup','wow, >1000 nodes !!',nproc)
@@ -121,6 +122,14 @@ end module para_mod
 ! only the first processor writes
 !
       if ( me == 1 ) then
+         write(6,'(72("*"))')
+         write(6,'(4("*"),64x,4("*"))')
+         write(6,'(4("*"),"  CPV: variable-cell Car-Parrinello ", &
+              &  "molecular dynamics          ",4("*"))') 
+         write(6,'(4("*"),"  using ultrasoft Vanderbilt ", &
+              &  "pseudopotentials - v.",a6,8x,4("*"))') version_number
+         write(6,'(4("*"),64x,4("*"))')
+         write(6,'(72("*"))')
          write(6,'(/5x,''Parallel version (MPI)'')')
          write(6,'(5x,''Number of processors in use:   '',i4)') nproc
       else

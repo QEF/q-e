@@ -577,11 +577,6 @@ CONTAINS
 !     --------------------------------------------------------
 !     print out heading
 !
-      write(6,400) 
-      write(6,410) 
-      write(6,420) 
-      write(6,410) 
-      write(6,400) 
       write(6,500) nbeg_ , nomore_ , iprint_ , ndr_ , ndw_
       write(6,505) delt_
       write(6,510) emass_ , emaec_
@@ -676,12 +671,6 @@ CONTAINS
       write(6,700) iprsta_
 
 !     
- 400  format('************************************',                    &
-     &     '************************************')
- 410  format('****                                ',                    &
-     &       '                                ****')
- 420  format('****  ab-initio molecular dynamics: ',                    &
-     &       ' car-parrinello vanderbilt bhs  ****')
  500  format(//                                                         &
      &       ' nbeg=',i3,' nomore=',i7,3x,' iprint=',i4,/               &
      &       ' reads from',i3,' writes on',i3)

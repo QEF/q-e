@@ -8,7 +8,7 @@
 !
 #include "machine.h"
 !-----------------------------------------------------------------------
-subroutine startup (nd_nmbr, version)
+subroutine startup (nd_nmbr, code, version)
   !-----------------------------------------------------------------------
   !
   !  This subroutine initializes MPI
@@ -45,7 +45,7 @@ subroutine startup (nd_nmbr, version)
   use mp, only: mp_start, mp_env, mp_barrier, mp_bcast
 
   implicit none
-  character :: nd_nmbr * 3, version * 12
+  character :: nd_nmbr*3, code*9, version*6
 
   integer :: gid
 
@@ -149,7 +149,7 @@ subroutine startup (nd_nmbr, version)
 #  endif
   if (me == 1) then
      call date_and_tim (cdate, ctime)
-     write (6, 9000) version, cdate, ctime
+     write (6, 9000) code, version, cdate, ctime
      write (6, '(/5x,"Parallel version (MPI)")')
      write (6, '(5x,"Number of processors in use:   ",i4)') nproc
      if (npool /= 1) &
@@ -162,11 +162,11 @@ subroutine startup (nd_nmbr, version)
 
   nd_nmbr = '   '
   call date_and_tim (cdate, ctime)
-  write (6, 9000) version, cdate, ctime
+  write (6, 9000) code, version, cdate, ctime
 
 #endif
 
-9000 format (/5x,'Program ',a12,' starts ...',/5x, &
+9000 format (/5x,'Program ',a9,' v.',a6,' starts ...',/5x, &
        &            'Today is ',a9,' at ',a9)
 
   !

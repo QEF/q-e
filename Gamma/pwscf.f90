@@ -10,12 +10,13 @@
 program pwscf
   !-----------------------------------------------------------------------
   !
-  !     Plane Wave Self-Consistent Field                                 c
+  !     Plane Wave Self-Consistent Field
   !
   use pwcom
   use io
+  use global_version
   implicit none
-  character :: version * 12
+  character(len=9) :: code = 'PWSCF'
   external date_and_tim
   ! use ".false." to disable all clocks except the total cpu time clock
   ! use ".true."  to enable clocks
@@ -23,9 +24,8 @@ program pwscf
 
   call init_clocks (.true.)
   call start_clock ('PWSCF')
-  version = 'PWSCF 1.2.1'
   gamma_only =.true.
-  call startup (nd_nmbr, version)
+  call startup (nd_nmbr, code, version_number)
   call init_run
   istep = 0
   do while (istep.lt.nstep)

@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2003 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !----------------------------------------------------------------------
       program dist
 !----------------------------------------------------------------------
@@ -7,8 +14,15 @@
 !
 ! Input file:
 !   first line contains  nat, ibrav, celldm(1-6)
-!   followed by card ATOMIC_POSITIONS
-!   followed by cards with atomic positions
+!   if (ibrav.eq.0) :
+!       card CELL_PARAMETERS
+!       a(1,1) a(2,1) a(3,1)
+!       a(1,2) a(2,2) a(3,2)
+!       a(1,3) a(2,3) a(3,3)
+!       [ alat units if celldm(1) was specified, a.u. if celldm(1)=0 ]
+!   end if
+!   card ATOMIC_POSITIONS
+!   cards with atomic positions
 ! See documentation of pw.x input for more details
 !
       implicit none
@@ -22,16 +36,16 @@
       character*80 filename, line
       character*1  capital, other_cell(ndistx)
       real*8 at(3,3), bg(3,3), celldm(6), omega, d(ndistx)
-      real rr(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scale
-      real angolo(nnx*(nnx-1)/2), drv(3), drn(3,nnx), temp, rtemp(3)
-      real fact /0.529177/, pi/3.1415926/
-      logical matches
+      real*8 tau(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scale
+      real*8 angolo(nnx*(nnx-1)/2), drv(3), drn(3,nnx), temp, rtemp(3)
+      real*8 fact /0.529177/, pi/3.1415926/
+      logical crys, matches
       external capital, matches, iargc
 !
 !
       i=iargc()
       if (i.eq.0) then
-         print '(''  input file > '',$)'
+         print '(''input file > '',$)'
          read(5,'(a)',end=20,err=20)  filename
       else if(i.eq.1) then
          call getarg(1,filename)
@@ -43,16 +57,40 @@
          print '(''   file not found '')'
          stop
       end if
-!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Begin data reading
       read(1,*) nat, ibrav, celldm
       if (nat.le.0.or.nat.gt.nax) stop ' nat!'
-      if (ibrav.le.0.or.ibrav.gt.14) stop ' ibrav!'
-      call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
-      do i=1,3
-         at(i,1) = at(i,1)/celldm(1)
-         at(i,2) = at(i,2)/celldm(1)
-         at(i,3) = at(i,3)/celldm(1)
-      end do
+      if (ibrav.lt.0.or.ibrav.gt.14) stop ' ibrav!'
+      if (ibrav.eq.0) then
+! read cell unit vectors from input
+         read(1,'(a)') line
+         do i=1,len(line)
+            line(i:i) = capital(line(i:i))
+         end do
+         if (matches('CELL_PARAMETERS',line)) then
+            READ (1,*) ( ( at(i,n), i=1,3 ), n=1,3 )
+         else
+            stop ' expecting card CELL_PARAMETERS'
+         end if
+!
+         if (celldm (1).eq.0.d0) then
+! input at are in atomic units: define alat
+            celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
+            do i=1,3
+               at(i,1) = at(i,1)/celldm(1)
+               at(i,2) = at(i,2)/celldm(1)
+               at(i,3) = at(i,3)/celldm(1)
+            end do
+         end if
+      else
+! generate cell unit vectors 
+         call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+         do i=1,3
+            at(i,1) = at(i,1)/celldm(1)
+            at(i,2) = at(i,2)/celldm(1)
+            at(i,3) = at(i,3)/celldm(1)
+         end do
+      end if
       call recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
 !
       read(1,'(a)') line
@@ -61,25 +99,29 @@
       end do
       if (matches('ATOMIC_POSITIONS',line)) then
          if ( matches('ALAT', line) ) then
-            scale = 1.0
+            scale = 1.d0
+            crys = .false.
          else if ( matches('BOHR', line) ) then
             scale = celldm(1)
+            crys = .false.
          else if ( matches('CRYSTAL', line) ) then
-            stop 'option crystal not implemented'
+            scale = 1.d0
+            crys = .true.
          else if ( matches('ANGSTROM', line) ) then
             scale = celldm(1) * fact
+            crys = .false.
          else
-            scale = 1.0
+            scale = 1.d0
+            crys = .false.
          end if
       else
          read(line,*) scale
       end if
+      if (scale.le.0.d0 .or. scale.gt.1000.d0) stop ' scale ! '
 
-      if (scale.le.0.0) stop ' scale ! '
-      fact=fact*celldm(1)
       nsp = 0
       do na=1,nat
-         read(1,*) atm1, (rr(i,na),i=1,3)
+         read(1,*) atm1, (tau(i,na),i=1,3)
          do n = 1, nsp
             if ( atm1 .eq. atm(n) ) then
                ityp(na) = n
@@ -91,13 +133,19 @@
          atm(nsp) = atm1
          ityp(na) = nsp
  10      continue
-         do i=1,3
-            rr(i,na)=rr(i,na)/scale
-         end do
       enddo
+      if (crys) then
+         call cryst_to_cart ( nat , tau, at, 1)
+      else
+         do na=1,nat
+            do i=1,3
+               tau(i,na)=tau(i,na)/scale
+            end do
+         end do
+      end if
       close(unit=1)
-!
-      print '(''  output file (CR=output) > '',$)'
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! End data reading
+      print '(''output file (CR=output) > '',$)'
       read(5,'(a)',end=20,err=20) filename
       if (filename.eq.' ') then
          iout=6
@@ -106,22 +154,26 @@
          open(unit=1,file=filename,form='formatted')
       end if
 !
+      scale=fact*celldm(1)
  30   continue
       if (nsp.gt.1) then
          do n = 1, nsp
-            print '(''  species # '',i1,'' : '', a3)', n, atm(n)
+            print '(''species # '',i1,'' : '', a3)', n, atm(n)
          end do
-         print '(''  indeces of species 1 and 2 > '',$)'
+         print '(''indeces of species 1 and 2 > '',$)'
          read(5,*,end=20,err=20)  nsp1, nsp2
          if (nsp1 .le. 0 .or. nsp2 .le. 0 .or.                          &
-     &       nsp1 .gt. nspx .or. nsp2 .gt. nspx) go to 30
+     &       nsp1 .gt. nspx .or. nsp2 .gt. nspx) then
+            print '(''  wrong indices (type control-D to exit)'')'
+            go to 30
+         end if
       else
          nsp1 = nsp
          nsp2 = nsp
       end if
       atm1=atm(nsp1)
       atm2=atm(nsp2)
-      print '(''  min and max distance  > '',$)'
+      print '(''min and max distance  > '',$)'
       read(5,*,end=20,err=20) dmin, dmax
       if (dmin.ge.dmax.or.dmax.le.0.0) go to 20
 !
@@ -139,9 +191,9 @@
                if (atm(ityp(nb)) .eq. atm2) then
 
                   do i=1,3
-                     dr(i) = (rr(1,na)-rr(1,nb))*bg(1,i) +              &
-     &                       (rr(2,na)-rr(2,nb))*bg(2,i) +              &
-     &                       (rr(3,na)-rr(3,nb))*bg(3,i)
+                     dr(i) = (tau(1,na)-tau(1,nb))*bg(1,i) +            &
+     &                       (tau(2,na)-tau(2,nb))*bg(2,i) +            &
+     &                       (tau(3,na)-tau(3,nb))*bg(3,i)
                   enddo
                   do nn1=-2,2
                      dn1=dr(1)-nn1
@@ -149,16 +201,10 @@
                         dn2=dr(2)-nn2
                         do nn3=-2,2
                            dn3=dr(3)-nn3
-                           dd = fact * sqrt(                            &
-     &                                (dn1*at(1,1) +                    &
-     &                                 dn2*at(1,2) +                    &
-     &                                 dn3*at(1,3) )**2 +               &
-     &                                (dn1*at(2,1) +                    &
-     &                                 dn2*at(2,2) +                    &
-     &                                 dn3*at(2,3) )**2 +               &
-     &                                (dn1*at(3,1) +                    &
-     &                                 dn2*at(3,2) +                    &
-     &                                 dn3*at(3,3) )**2 )    
+                           dd = scale* sqrt(                            &
+     &                       ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2+&
+     &                       ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2+&
+     &                       ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2)    
                            if(dd.ge.dmin.and.dd.le.dmax) then
                               ndist=ndist+1
                               if (ndist.gt.ndistx) stop ' ndist !'
@@ -192,15 +238,17 @@
 !
       go to 30
 !
- 20   print '(''  number of neighbors (max 4) for species '',           &
-     &     a3,'' > '', $)', atm1
-      read(5,*) nn
+ 20   nn = nnx
+      print '(/''number of neighbors (max '',i1,'') > '', $)', nnx
+      read(5,*,end=21,err=21) n
+      nn = n
       if (nn.gt.nnx) stop ' too many neighbors' 
+ 21   continue
 !
 ! look for nearest neighbors
 !
       do na=1,nat
-         if (atm(ityp(na)) .eq. atm1) then
+!!!         if (atm(ityp(na)) .eq. atm1) then
 !
 ! ndist (.le.nnx) keep tracks of how many neighbors have been found
 !
@@ -213,9 +261,9 @@
             end do
             do nb=1,nat
                do i=1,3
-                  dr(i)=(rr(1,na)-rr(1,nb))*bg(1,i) +                   &
-     &                  (rr(2,na)-rr(2,nb))*bg(2,i) +                   &
-     &                  (rr(3,na)-rr(3,nb))*bg(3,i)
+                  dr(i)=(tau(1,na)-tau(1,nb))*bg(1,i) +                 &
+     &                  (tau(2,na)-tau(2,nb))*bg(2,i) +                 &
+     &                  (tau(3,na)-tau(3,nb))*bg(3,i)
                end do
                do nn1=-1,1
                   dn1=dr(1)-nn1
@@ -223,18 +271,12 @@
                      dn2=dr(2)-nn2
                      do nn3=-1,1
                         dn3=dr(3)-nn3
-                        dd = fact * sqrt(                               &
-     &                       (dn1*at(1,1) +                             &
-     &                        dn2*at(1,2) +                             &
-     &                        dn3*at(1,3) )**2 +                        &
-     &                       (dn1*at(2,1) +                             &
-     &                        dn2*at(2,2) +                             &
-     &                        dn3*at(2,3) )**2 +                        &
-     &                       (dn1*at(3,1) +                             &
-     &                        dn2*at(3,2) +                             &
-     &                        dn3*at(3,3) )**2 )       
+                        dd = scale* sqrt(                               &
+     &                      ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2 +&
+     &                      ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 +&
+     &                      ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2 )
                         do i=1,3
-                           drv(i) = rr(i,na)-rr(i,nb) -                 &
+                           drv(i) = tau(i,na)-tau(i,nb) -               &
      &                          (nn1*at(i,1)+nn2*at(i,2)+nn3*at(i,3))
                         end do
 !
@@ -276,7 +318,7 @@
             do nn1=1,nn
                do nn2=nn1+1,nn
                   nd=nd+1
-                  angolo(nd) = 360/(2*pi) * acos ( fact**2 *            &
+                  angolo(nd) = 360/(2*pi) * acos (scale**2 *            &
      &                 ( drn(1,nn1)*drn(1,nn2) +                        &
      &                   drn(2,nn1)*drn(2,nn2) +                        &
      &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2) )
@@ -286,18 +328,18 @@
 !
 ! dd is the distance from the origin
 !
-            dd = sqrt( rr(1,na)**2 + rr(2,na)**2 + rr(3,na)**2 ) * fact
+            dd = sqrt(tau(1,na)**2 + tau(2,na)**2 + tau(3,na)**2)*scale
             write(iout,250) atm(ityp(na)), na, (d(nn1),nn1=1,nn)
             write(iout,300) dd, (angolo(nn1),nn1=1,nn*(nn-1)/2)
-         end if
+!!!         end if
       end do
 !
       stop
 !
- 100  format(2x, ' species: ',a3,' - ',a3,3x,f6.2,' < D <',f6.2)
- 200  format(2x, ' atoms:', 2i6,a1, ' distance =',f10.5,' A')
- 250  format(2x,  a3, i3, '  d(neigh):',8f8.3)
- 300  format(2x, ' d(O) :',f6.3,' A     angles  :',8f8.1)
+ 100  format(' species: ',a3,' - ',a3,3x,f6.2,' < D <',f6.2)
+ 200  format(' atoms:', 2i6,a1, ' distance =',f10.5,' A')
+ 250  format(a3,i3,':  neighbors at ',4f8.3,' A')
+ 300  format(9x,'d(center):',f6.3,' A  angles  :',6f8.1)
 !
 !
       end

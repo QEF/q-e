@@ -15,8 +15,9 @@ program d3toten
   use phcom
   use d3com
   use io
+  use global_version
   implicit none
-  character :: cdate * 9, ctime * 9, version * 12
+  character(len=9) :: cdate, ctime, code = 'D3TOTEN'
   integer :: nu_i, nu_i0, irecv
   real (kind=DP) :: t0, t1, get_clock
 
@@ -28,10 +29,7 @@ program d3toten
 
   call init_clocks (.true.)
   call start_clock ('D3TOTEN')
-  version = 'D3TOTEN1.2.1'
-  call startup (nd_nmbr, version)
-  write (6, '(/5x,"UltraSoft (Vanderbilt) ", &
-       &                "Pseudopotentials")')
+  call startup (nd_nmbr, code, version_number)
   !
   ! Initialization routines
   !

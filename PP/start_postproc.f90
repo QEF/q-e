@@ -11,13 +11,12 @@ subroutine start_postproc (nodenumber)
   !
   !  Wrapper routine for postprocessing initialization
   !
-#include "machine.h"
+  use global_version
   implicit none
   character(len=3) :: nodenumber
-  character(len=12):: version = 'POSTPROC-121'
+  character(len=9) :: code = 'POST-PROC'
   !
-  nodenumber = ' '
-  call startup (nodenumber, version)
+  call startup (nodenumber, code, version_number)
 #ifdef __PARA
   call init_pool
 #endif

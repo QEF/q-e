@@ -13,10 +13,12 @@ program pwmemory
   use pwcom
   use io
   use mp, only : mp_end
+  use global_version
   implicit none
   logical :: lgamma
+  character(len=9) :: code = 'memory'
   !
-  call startup (nd_nmbr, 'memory 1.2.1')
+  call startup (nd_nmbr, code, version_number)
   !
   call iosys
   call setup

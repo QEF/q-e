@@ -113,8 +113,6 @@ FPMD:
 
 - Documentation is nonexistent
 
-- version number
-
 CPV: 
 
 - Documentation needs serious improvements
@@ -126,4 +124,3 @@ CPV:
 
 - replace calls to zero, ssum, csum, blas copy, scal, with f90
 
-- version number

@@ -21,9 +21,10 @@ program phonon
   use parameters, only : DP
   use phcom
   use io
+  use global_version
   implicit none
 
-  character :: cdate * 9, ctime * 9, version * 12
+  character (len=9) :: cdate, ctime, code = 'PHONON'
 
   external date_and_tim
   !      call sigcatch( )
@@ -33,8 +34,7 @@ program phonon
 
   call init_clocks (.true.)
   call start_clock ('PHONON')
-  version = 'PHONON 1.2.1'
-  call startup (nd_nmbr, version)
+  call startup (nd_nmbr, code, version_number)
   write (6, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   !
   !   and begin with the initialization part

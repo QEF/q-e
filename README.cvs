@@ -1,0 +1,27 @@
+
+The current (development) version is available using anonymous CVS. 
+Define environmental variables:
+   setenv CVS_RSH ssh
+   setenv CVSROOT :pserver:cvsanon@democritos.sissa.it:/home/cvs
+(tcsh/csh) or
+   export CVS_RSH=ssh
+   export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
+(sh/bash). Then:
+   cvs login
+(password: cvsanon). For the first code download:
+   cvs co O-sesame
+for the entire repository (the code appears in directory O-sesame/).
+Alternatively, "cvs co pwscf", or "cp", or "fpmd" will download only
+PWscf, CP, FPMD, respectively, in directories with the same name.
+For updating the code to the current version:
+   cvs update -d
+in the directory containing the distribution.
+
+PLEASE NOTE: re-run "./configure" if files have been moved/added/removed
+since the last checkout, otherwise "make" may not work properly due to
+obsolete or missing dependencies. Do not blindly re-use a "make.sys" file
+from a preceding version: it may no longer work.
+
+PLEASE ALSO NOTE: the development version may not work properly, and
+sometimes not even compile properly. Use at your own risk.
+

@@ -53,6 +53,7 @@ subroutine bcast_d3_input
   call mp_bcast (fildrho, root)
   call mp_bcast (fild0rho, root)
   call mp_bcast (tmp_dir, root)
+  call mp_bcast (prefix, root)
 #endif
   return
 end subroutine bcast_d3_input

@@ -8,7 +8,7 @@
 
 #include "../include/opt_param.h"
 
-!     OPTIMIZED DRIVER FOR MATRIX TRASPOSITIN
+!     OPTIMIZED DRIVER FOR MATRIX TRASPOSITION
 !   
 !     written by Carlo Cavazzoni 
 !

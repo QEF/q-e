@@ -55,7 +55,7 @@ cp: modules libs
 
 links:
 	test -d bin || mkdir bin
-	( cd bin/ ; ln -fs ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x . )
+	( cd bin/ ; ln -fs ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x ../PP/plotband.x ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x ../pwtools/kpoints.x . )
 
 clean:
 	( cd PW ; make clean_ ) ; \
