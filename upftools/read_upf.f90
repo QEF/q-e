@@ -147,8 +147,7 @@ subroutine scan_begin (iunps, string, rew)
   character (len=80) :: rstring  
   ! String read from file
   integer :: ios
-  logical :: matches 
-  external matches  
+  logical, external :: matches 
 
   ios = 0
   if (rew) rewind (iunps)  
@@ -171,8 +170,7 @@ subroutine scan_end (iunps, string)
   ! String read from file
   character (len=80) :: rstring
   integer :: ios
-  logical :: matches  
-  external matches  
+  logical, external :: matches 
 
   read (iunps, '(a)', iostat = ios, err = 300) rstring  
   if (matches ("</PP_"//string//">", rstring) ) return  
@@ -192,8 +190,7 @@ subroutine read_pseudo_header (is, iunps)
   !
   integer :: nv, ios, nw  
   character (len=75) :: dummy  
-  logical :: matches  
-  external matches  
+  logical, external :: matches 
 
   read (iunps, *, err = 100, iostat = ios) nv, dummy  
   read (iunps, *, err = 100, iostat = ios) psd (is), dummy  
@@ -405,26 +402,3 @@ subroutine errore(a,b,n)
      stop
   end if
 end subroutine errore
-!
-!-----------------------------------------------------------------------
-logical function matches (string1, string2)  
-  !-----------------------------------------------------------------------
-  !
-  implicit none  
-  character (len=*) :: string1, string2  
-  integer :: len1, len2, l  
-
-
-  len1 = len_trim(string1)  
-  len2 = len_trim(string2)  
-  do l = 1, len2 - len1 + 1  
-     if (string1 (1:len1) .eq.string2 (l:l + len1 - 1) ) then  
-        matches = .true.  
-        return  
-     endif
-
-  enddo
-
-  matches = .false.  
-  return  
-end function matches
