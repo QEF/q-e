@@ -319,17 +319,22 @@ subroutine elphsum
   ngauss1 = 1
   nsig = 10
   if (filelph.ne.' ') then
-     iuelph = 4
 #ifdef __PARA
-     ! parallel case: only first node writes (unit 6=/dev/null)
-     if (me.ne.1) iuelph = 6
+     ! parallel case: only first node writes
+     if (me.ne.1) then
+        iuelph = 0
+     else
 #endif
+     iuelph = 4
      open (unit = iuelph, file = filelph, status = 'unknown', err = &
           100, iostat = ios)
 100  call errore ('elphon', 'opening file'//filelph, abs (ios) )
      rewind (iuelph)
      write (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
      write (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
+#ifdef __PARA
+     end if
+#endif
   else
      iuelph = 0
   endif
