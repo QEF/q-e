@@ -60,7 +60,8 @@ can be found in:
 
         See the PWscf web site for instructions on how to register and
         how to search the archives of the mailing list.
-  \item the ``Scientific Software'' page of the Democritos web site\\
+  \item the ``Scientific Software'' page of the Democritos web site
+        \hfill\break
         (\htmladdnormallink%
          {\texttt{http://www.democritos.it/scientific.php}}%
          {http://www.democritos.it/scientific.php})
@@ -133,7 +134,7 @@ under the coordination of Paolo Giannozzi
 CINECA National Supercomputing Center in Bologna
 (\htmladdnormallink{\texttt{http://www.cineca.it/}}%
                    {http://www.cineca.it/}),
-under the responsibility of Carlo Cavazzoni\\
+under the responsibility of Carlo Cavazzoni\break
 (\htmladdnormallink{\texttt{c.cavazzoni@cineca.it}}%
                    {mailto:c.cavazzoni@cineca.it}).
 Currently active developers include Gerardo Ballabio (CINECA), Gernot
@@ -341,19 +342,24 @@ in vendor-specific mathematical libraries, such as:
 \end{quote}
 
 Otherwise, it is a good idea to use optimized ATLAS libraries instead
-of plain BLAS/LAPACK. Download the appropriate binaries from:\\
+of the standard BLAS and LAPACK.
+Download the appropriate binaries from:
 \htmladdnormallink{\texttt{http://www.netlib.org/}}%
                   {http://www.netlib.org/},
-or download and compile the sources (this  may take some time and effort). 
-Note that ATLAS is not a complete replacement for LAPACK: ATLAS contains 
-all of the BLAS, plus the LU code, plus the full storage Cholesky code.
-Follow the instructions in the ATLAS distributions to produce a full 
+or download and compile the sources (this may take some time and
+effort). 
+Note that ATLAS is not a complete replacement for LAPACK: ATLAS
+contains all of the BLAS, plus the LU code, plus the full storage
+Cholesky code.
+Follow the instructions in the ATLAS distributions to produce a full
 LAPACK replacement.
 
 Sergei Lisenkov reported success and good performances with
-optimized BLAS by Kazushige Goto:
-\htmladdnormallink{\texttt{http://www.cs.utexas.edu/users/flame/goto}}
-{http://www.cs.utexas.edu/users/flame/goto}.
+optimized BLAS by Kazushige Goto.
+They can be downloaded freely (but not redistributed!) from:
+\htmladdnormallink%
+{\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
+{http://www.cs.utexas.edu/users/flame/goto/}
 
 ESPRESSO uses the Fast Fourier Transform from the FFTW library
 (\htmladdnormallink{\texttt{http://www.fftw.org/}}%
@@ -389,18 +395,18 @@ where \emph{your-system} is one of the following:
                       \strut\qquad compiler\\
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
   \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
-  \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler \\ %(+)
-  \texttt{hitachi}:   Hitachi SR8000 \\
+  \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler\\ %(+)
+  \texttt{hitachi}:   Hitachi SR8000\\
   \texttt{hp}:        HP PA-RISC workstations, HP compiler\\
   \texttt{hpMPI}:     HP PA-RISC parallel machines, HP compiler\\
   \texttt{ia64}:      HP Itanium workstations, HP compiler\\
   \texttt{irix}:      SGI workstations, SGI compiler\\
-  \texttt{pc\_abs}:   Linux PCs, Absoft compiler \\ %(+)
-  \texttt{pc\_lahey}: Linux PCs, Lahey compiler \\ %(+)
-  \texttt{pc\_pgi}:   Linux PCs, Portland compiler \\ %(+)
-  \texttt{sun}:       Sun workstations, Sun compiler \\ %(+)
-  \texttt{sunmpi}:    Sun parallel machines, Sun compiler \\ %(+)
-  \texttt{sxcross}:   NEC SX-6 \\ %(+)
+  \texttt{pc\_abs}:   Linux PCs, Absoft compiler\\ %(+)
+  \texttt{pc\_lahey}: Linux PCs, Lahey compiler\\ %(+)
+  \texttt{pc\_pgi}:   Linux PCs, Portland compiler\\ %(+)
+  \texttt{sun}:       Sun workstations, Sun compiler\\ %(+)
+  \texttt{sunmpi}:    Sun parallel machines, Sun compiler\\ %(+)
+  \texttt{sxcross}:   NEC SX-6\\ %(+)
   \texttt{t3e}:       Cray T3E, Cray compiler
 \end{quote}
 and has a corresponding file \texttt{Make.}\emph{your-system}
@@ -604,7 +610,7 @@ The utility programs in \texttt{pwtools/} are:
 \end{verbatim}
         The files so produced are suitable for use with
         \texttt{xbs}, a very simple X-windows utility to display
-        molecules, available at:\\
+        molecules, available at:\hfill\break
         \htmladdnormallink%
         {\texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}}%
         {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
@@ -646,7 +652,7 @@ still missing, see below (for Linux PC).
 
 If at linking stage you get error messages like: ``undefined reference
 to `for\_check\_mult\_overflow64' '' with Compaq/HP fortran compiler
-on Linux Alphas, check the following page:\\ 
+on Linux Alphas, check the following page:\break
 \htmladdnormallink%
 {\texttt{http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}}%
 {http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}.
@@ -693,11 +699,10 @@ the Portland Group compiler.  In particular, with some versions PWscf
 works only for small systems, but not for larger systems.  We think
 that this is a compiler bug.  Use the latest version of each release
 of the compiler, with patches if available: see the Portland Group web
-site,\\
-
+site,\hfill\break
 \htmladdnormallink%
 {\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}}%
-{http://www.pgroup.com/faq/install.htm\#release\_info}.
+{http://www.pgroup.com/faq/install.htm\#release\_info}
 
 \paragraph{Linux PCs (Pentium) with Intel compiler (ifort, formerly
 ifc)}
@@ -724,7 +729,8 @@ respectively), available via Intel Premier support (registration free
 of charge for Linux): 
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
-{http://developer.intel.com/software/products/support/\#premier}.\\
+{http://developer.intel.com/software/products/support/\#premier}
+
 Also note that \texttt{pwcond.x} does not work with some (but not all)
 releases of Intel compiler v.~7 and 8, for no apparent good reason.
 
@@ -831,7 +837,7 @@ Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
 implemented with US PPs. Presently FPMD supports only NC PPs.
 
-The ESPRESSO package uses a unified pseudopotential format (UPF)\\
+The ESPRESSO package uses a unified pseudopotential format (UPF)\break
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
 for all types of PPs, but still accepts a number of other formats:
@@ -877,17 +883,17 @@ Other PP generation packages are available on-line:
 
 \begin{itemize}
   \item
-    David Vanderbilt's code (UltraSoft PPs):\\
+    David Vanderbilt's code (UltraSoft PPs):\hfill\break
     \htmladdnormallink%
     {\texttt{http://www.physics.rutgers.edu/\~{}dhv/uspp/index.html}}%
     {http://www.physics.rutgers.edu/~dhv/uspp/index.html}
   \item
-    Fritz Haber's code (Norm-Conserving PPs):\\
+    Fritz Haber's code (Norm-Conserving PPs):\hfill\break
     \htmladdnormallink%
     {\texttt{http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}}%
     {http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}
   \item
-    Jos\'e-Lu\'\i{}s Martins' code (Norm-Conserving PPs):\\
+    Jos\'e-Lu\'\i{}s Martins' code (Norm-Conserving PPs):\hfill\break
     \htmladdnormallink%
     {\texttt{http://bohr.inesc-mn.pt/\~{}jlm/pseudo.html}}%
     {http://bohr.inesc-mn.pt/~jlm/pseudo.html}
@@ -914,7 +920,7 @@ with the PWscf package.
 See \texttt{PWgui-X.Y.Z/INSTALL} for more info on this subject (or
 \texttt{GUI/README} if you are using CVS sources).
 
-Tests and examples can be downloaded from the Test and Examples Page\\
+Tests and examples can be downloaded from the Test and Examples Page\break
 (\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
                    {http://www.pwscf.org/tests.htm}).
 The necessary pseudopotentials are included.
@@ -927,7 +933,7 @@ Note about exchange-correlation: the type of exchange-correlation used
 in the calculation is read from PP files.
 All PP's must have been generated using the same exchange-correlation. 
 
-In the following, ``Example N'' refers to the contents of directory\\
+In the following, ``Example N'' refers to the contents of the directory
 \texttt{examples/exampleN}.
 
 \subsection{Electronic and ionic structure calculations}
@@ -983,7 +989,7 @@ with self-explanatory names:
   \texttt{ATOMIC\_SPECIES}\\
   \texttt{ATOMIC\_POSITIONS}\\
   \texttt{K\_POINTS}\\
-  \texttt{CELL\_PARAMETERS} (optional) \\
+  \texttt{CELL\_PARAMETERS} (optional)\\
   \texttt{CLIMBING\_IMAGES} (optional)
 \end{quote}
 
@@ -1086,7 +1092,8 @@ If $\mathbf{q}=0$, the data files can be produced directly by a simple
 SCF calculation.
 For phonons at a generic \textbf{q}-vector, you need to perform first
 a SCF calculation, then a band-structure calculation (see above)
-with\\ \texttt{calculation='phonon'}, specifying the \textbf{q}-vector
+with\hfill\break
+\texttt{calculation='phonon'}, specifying the \textbf{q}-vector
 in variable \texttt{xq} of namelist \texttt{\&PHONON}.
 
 The output data file appear in the directory specified by variables
@@ -1581,7 +1588,7 @@ H 1.00d0 h.ps
 \end{verbatim}
     If you want to specify the initial velocities for ions, you have
     to set \texttt{ion\_velocities = 'from\_input'}, and add the
-    \texttt{IONIC\_VELOCITIES}\\ card, with the list of velocities in
+    \texttt{IONIC\_VELOCITIES}\break card, with the list of velocities in
     atomic units.
 
     IMPORTANT: in restarting the dynamics after the first CP run,
@@ -1664,30 +1671,40 @@ Some typical cases:
 
 \begin{itemize}
   \item
-    IBM SP machines, batch:\\
-    \texttt{pw.x -npool 8 < input}\\
+    IBM SP machines, batch:
+\begin{verbatim}
+pw.x -npool 8 < input
+\end{verbatim}
     (\texttt{PARA\_PREFIX=""}, \texttt{PARA\_POSTFIX="-npool 8"}). 
     This might also work interactively, with environment variables
     \texttt{NPROC} set to 16, \texttt{MP\_HOSTFILE} set to the file
     containing a list of processors.
   \item
-    IBM SP machines, interactive, using \texttt{poe}:\\
-    \texttt{poe pw.x -procs 16 -npool 8 < input}\\
+    IBM SP machines, interactive, using \texttt{poe}:
+\begin{verbatim}
+poe pw.x -procs 16 -npool 8 < input
+\end{verbatim}
     (\texttt{PARA\_PREFIX="poe"}, \texttt{PARA\_POSTFIX="-procs 16
     -npool 8"}).
   \item
-    SGI Origin, PC clusters using \texttt{mpirun}:\\
-    \texttt{mpirun -np 16 pw.x -npool 8 < input}\\
+    SGI Origin, PC clusters using \texttt{mpirun}:
+\begin{verbatim}
+mpirun -np 16 pw.x -npool 8 < input
+\end{verbatim}
     (\texttt{PARA\_PREFIX="mpirun -np 16"},
     \texttt{PARA\_POSTFIX="-npool 8"}).
   \item
-    Cray T3E (old):\\
-    \texttt{mpprun -n 16 pw.x -npool 8 < input}\\
+    Cray T3E (old):
+\begin{verbatim}
+mpprun -n 16 pw.x -npool 8 < input
+\end{verbatim}
     (\texttt{PARA\_PREFIX="mpprun -n 16"},
     \texttt{PARA\_POSTFIX="-npool 8"}).
   \item
-    PC clusters using \texttt{mpiexec}:\\
-    \texttt{mpiexec -n 16 pw.x -npool 8 < input}\\
+    PC clusters using \texttt{mpiexec}:
+\begin{verbatim}
+mpiexec -n 16 pw.x -npool 8 < input
+\end{verbatim}
     (\texttt{PARA\_PREFIX="mpiexec -n 16"},
     \texttt{PARA\_POSTFIX="-npool 8"}).
 \end{itemize}
@@ -2004,7 +2021,7 @@ Possible reasons:
 
 \paragraph{\texttt{pw.x} crashes with ``floating invalid'' or ``floating divide by zero''.}
 
-If this happens on HP-Compaq\\ True64 Alpha machines with an old
+If this happens on HP-Compaq True64 Alpha machines with an old
 version of the compiler: the compiler is most likely buggy.
 Otherwise, move to next item.
 
