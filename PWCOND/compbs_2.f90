@@ -98,9 +98,12 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 !
 !     To invert hmt=hmat^{-1}
 !
+  info=0
   if (noins.gt.0)                                            &
        call ZGESV(noins,noins,hmat,noins,ipiv,hmt,noins,info)  
 
+  if (info.ne.0) call errore('compbs_2','problems with the linear system', &
+                                                               abs(info))
 !
 !  Set up new matrices amt, bmt 
 !

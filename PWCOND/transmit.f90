@@ -195,6 +195,9 @@ implicit none
 !
   call ZGESV(ntran, nchanl, amat, ntran, ipiv, vec1,  &
              ntran, info)
+
+  if (info.ne.0) call errore('transmit','problems with the linear system', &
+                                                              abs(info))
 !
 ! transmission coeff. k --> i
 !
