@@ -33,7 +33,7 @@ lapack_t3e : lapack_t3e.o
 	$(RANLIB) flib.a
 
 eispack : eispack.o
-
+	echo eispack
 
 dlamch.o : dlamch.f
 	$(F77) $(F77FLAGS_NOOPT) -c $<
