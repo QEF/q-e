@@ -52,7 +52,9 @@ PWOBJS = \
 ../PW/davcio.o \
 ../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
-../PW/diis_module.o \
+../PW/diis_base.o \
+../PW/real_diis_module.o \
+../PW/complex_diis_module.o \
 ../PW/diropn.o \
 ../PW/divide_et_impera.o \
 ../PW/divide.o \

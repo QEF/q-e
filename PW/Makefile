@@ -58,7 +58,9 @@ data_structure.o \
 davcio.o \
 delta_e.o \
 deriv_drhoc.o \
-diis_module.o \
+diis_base.o \
+real_diis_module.o \
+complex_diis_module.o \
 diropn.o \
 divide.o \
 divide_et_impera.o \
