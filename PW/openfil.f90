@@ -23,6 +23,7 @@ SUBROUTINE openfil()
   USE io_files,       ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
                              nwordwfc, nwordatwfc
   USE restart_module, ONLY : readfile_new
+  USE noncollin_module, ONLY : npol
   USE para,           ONLY : kunit
   !
   IMPLICIT NONE
@@ -35,7 +36,7 @@ SUBROUTINE openfil()
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
   !
-  nwordwfc = 2 * nbnd * npwx
+  nwordwfc = 2 * nbnd * npwx * npol
   !
   CALL diropn( iunwfc, TRIM( prefix )//'.wfc', nwordwfc, exst )
   !

@@ -178,7 +178,7 @@
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
       ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
       modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
-      lda_plus_u, &
+      noncolin, lspinorb, lda_plus_u, &
       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 !
       USE io_global, ONLY: ionode
@@ -227,6 +227,8 @@
       !  gamma_only is .TRUE. if calculation is at gamma (G-vecs span only half space)
       LOGICAL, INTENT(IN) :: gamma_only  
       LOGICAL, INTENT(IN) :: lda_plus_u
+      LOGICAL, INTENT(IN) :: noncolin
+      LOGICAL, INTENT(IN) :: lspinorb
 
       LOGICAL, INTENT(IN) :: tfixed_occ
       LOGICAL, INTENT(IN) :: tefield
@@ -260,7 +262,7 @@
           nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
           kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
           natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, &
-          gamma_only, lda_plus_u, & 
+          gamma_only, noncolin, lspinorb, lda_plus_u, & 
           tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         WRITE(iuni) (na(i),i=1,ntyp), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
         WRITE(iuni) t_, c_, tmp_dir_
@@ -302,7 +304,8 @@
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
       k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
       natomwfc, gcutm, gcuts, dual, doublegrid, modenum, &
-      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, lda_plus_u,&
+      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, noncolin, &
+      lspinorb, lda_plus_u,&
       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
 !
@@ -347,6 +350,8 @@
       LOGICAL, INTENT(OUT) :: tupf
       LOGICAL, INTENT(OUT) :: gamma_only
       LOGICAL, INTENT(OUT) :: lda_plus_u
+      LOGICAL, INTENT(OUT) :: noncolin
+      LOGICAL, INTENT(OUT) :: lspinorb
 
       LOGICAL, INTENT(OUT) :: tfixed_occ
       LOGICAL, INTENT(OUT) :: tefield
@@ -378,7 +383,7 @@
             nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, &
             alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, &
             ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, &
-            lforce, tupf, gamma_only, lda_plus_u,&
+            lforce, tupf, gamma_only, noncolin, lspinorb, lda_plus_u,&
             tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         END IF
 !
@@ -427,6 +432,8 @@
         CALL mp_bcast( lforce, ionode_id )
         CALL mp_bcast( tupf, ionode_id )
         CALL mp_bcast( gamma_only, ionode_id )
+        CALL mp_bcast( noncolin, ionode_id )
+        CALL mp_bcast( lspinorb, ionode_id )
         CALL mp_bcast( lda_plus_u, ionode_id )
 
         CALL mp_bcast( tfixed_occ, ionode_id ) 
@@ -984,9 +991,9 @@
 
     SUBROUTINE write_restart_pseudo1(iuni, &
       zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
-      rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
+      rho_atc, mesh, msh, nchi, lchi, jchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
       nnl, lmax, lloc, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
-      kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
+      kkbeta, nqf, nqlc, ifqopt, lll, jjj, iver, tvanp, okvan, newpseudo, iexch, icorr, &
       igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd)
 !
       USE io_global, ONLY: ionode, ionode_id
@@ -1000,12 +1007,14 @@
       REAL(dbl), INTENT(IN) :: r(:), rab(:), vloc_at(:), chi(:,:)
       REAL(dbl), INTENT(IN) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(IN) :: mesh, msh, nchi, lchi(:)
+      REAL(dbl), INTENT(IN) :: jchi(:)
       LOGICAL, INTENT(IN) :: numeric
       REAL(dbl), INTENT(IN) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(IN) :: nlc, nnl, lmax, lloc
       REAL(dbl), INTENT(IN) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(IN) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(IN) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(3)
+      REAL(dbl), INTENT(IN) :: jjj(:)
       LOGICAL, INTENT(IN) :: tvanp, okvan, newpseudo
       INTEGER, INTENT(IN) :: iexch, icorr, igcx, igcc
       LOGICAL, INTENT(IN) :: lsda
@@ -1072,12 +1081,13 @@
             a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
           WRITE(iuni) r( 1:mesh_ ), rab( 1:mesh_ ), &
             vloc_at( 1:mesh_ ), chi( 1:mesh_, 1:nchi_ ), &
-            oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_), lchi( 1:nchi_)
+            oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_ ), &
+            lchi( 1:nchi_ ), jchi(1:nchi_)
           WRITE(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
           WRITE(iuni) dion( 1:nbeta_, 1:nbeta_ ), betar( 1:mesh_, 1:nbeta_ ), &
             qqq( 1:nbeta_, 1:nbeta_ ), qfunc( 1:mesh_, 1:nbeta_, 1:nbeta_ ), &
             qfcoef( 1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_ ), &
-            rinner( 1:nqlc_ ), lll( 1:nbeta_ ), iver(1:3)
+            rinner( 1:nqlc_ ), lll( 1:nbeta_ ), jjj(1:nbeta_), iver(1:3)
 
         END IF
 
@@ -1092,8 +1102,9 @@
 
     SUBROUTINE write_restart_pseudo3(iuni, &
       generated, date_author, comment, psd, typ, tvanp, nlcc, dft, zp, etotps, &
-      ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, els, lchi, oc, r, rab, &
-      rho_atc, vloc, lll, kkbeta, beta, nd, dion, nqf, nqlc, rinner, qqq, &
+      ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, els, lchi, jchi, &
+      oc, r, rab, &
+      rho_atc, vloc, lll, jjj, kkbeta, beta, nd, dion, nqf, nqlc, rinner, qqq, &
       qfunc, qfcoef, chi, rho_at )
 !
       USE io_global, ONLY: ionode, ionode_id
@@ -1123,12 +1134,14 @@
       INTEGER :: nbeta              ! number of projectors
       CHARACTER(LEN=2) :: els(:)  ! els(nwfc)
       INTEGER :: lchi(:)   ! lchi(nwfc)
+      REAL(dbl) :: jchi(:)   ! jchi(nwfc)
       REAL(dbl) :: oc(:)   ! oc(nwfc)
       REAL(dbl) :: r(:)    ! r(mesh)
       REAL(dbl) :: rab(:)  ! rab(mesh)
       REAL(dbl) :: rho_atc(:) ! rho_atc(mesh)
       REAL(dbl) :: vloc(:)    ! vloc(mesh)
       INTEGER :: lll(:)       ! lll(nbeta)
+      REAL(dbl) :: jjj(:)     ! jjj(nbeta)
       INTEGER :: kkbeta(:)    ! kkbeta(nbeta)
       REAL(dbl) :: beta(:,:)  ! beta(mesh,nbeta)
       INTEGER :: nd
@@ -1196,13 +1209,14 @@
           WRITE(iuni) generated, date_author, comment, psd, typ, tvanp, nlcc, dft, &
            zp, etotps, ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, nd, nqf, nqlc
 !           
-          WRITE(iuni) els(1:nwfc), lchi(1:nwfc), oc(1:nwfc), r(1:mesh), &
-               rab(1:mesh), rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), &
-               kkbeta(1:nbeta), beta(1:mesh,1:nbeta), dion(1:nbeta,1:nbeta), &
-               rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-               qfunc(1:mesh, 1:nbeta, 1:nbeta), &
-               qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-               chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
+          WRITE(iuni) els(1:nwfc), lchi(1:nwfc), jchi(1:nwfc), oc(1:nwfc), &
+            r(1:mesh), rab(1:mesh), &
+            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), jjj(1:nbeta), &
+            kkbeta(1:nbeta), &
+            beta(1:mesh,1:nbeta), &
+            dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
+            qfunc(1:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+            chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
 
           WRITE(iuni) idum
           WRITE(iuni) idum
@@ -1245,9 +1259,9 @@
 
     SUBROUTINE read_restart_pseudo1(iuni, &
       zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
-      rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
+      rho_atc, mesh, msh, nchi, lchi, jchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
       nnl, lmax, lloc, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
-      kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
+      kkbeta, nqf, nqlc, ifqopt, lll, jjj, iver, tvanp, okvan, newpseudo, iexch, icorr, &
       igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd )
 
 !
@@ -1262,12 +1276,15 @@
       REAL(dbl), INTENT(OUT) :: r(:), rab(:), vloc_at(:), chi(:,:)
       REAL(dbl), INTENT(OUT) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(OUT) :: mesh, msh, nchi, lchi(:)
+      REAL(dbl), INTENT(OUT) :: jchi(:)
       LOGICAL, INTENT(OUT) :: numeric
       REAL(dbl), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(OUT) :: nlc, nnl, lmax, lloc
       REAL(dbl), INTENT(OUT) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
-      INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(:)
+      INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, &
+                              lll(:), iver(:)
+      REAL(dbl), INTENT(OUT) :: jjj(:)
       LOGICAL, INTENT(OUT) :: tvanp, okvan, newpseudo
       INTEGER, INTENT(OUT) :: iexch, icorr, igcx, igcc
       LOGICAL, INTENT(OUT) :: lsda
@@ -1390,11 +1407,12 @@
 
         IF( ionode ) THEN
           READ(iuni) r(1:mesh_), rab(1:mesh_), vloc_at(1:mesh_), chi(1:mesh_,1:nchi_), &
-            oc(1:nchi_), rho_at(1:mesh_), rho_atc(1:mesh_), lchi(1:nchi_)
+            oc(1:nchi_), rho_at(1:mesh_), rho_atc(1:mesh_), lchi(1:nchi_), &
+            jchi(1:nchi_)
           READ(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
           READ(iuni) dion(1:nbeta_,1:nbeta_), betar(1:mesh_,1:nbeta_), qqq(1:nbeta_,1:nbeta_), &
             qfunc(1:mesh_, 1:nbeta_, 1:nbeta_), qfcoef(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
-            rinner(1:nqlc_), lll(1:nbeta_), iver(1:3)
+            rinner(1:nqlc_), lll(1:nbeta_), jjj(1:nbeta_), iver(1:3)
         END IF
 
         CALL mp_bcast( r, ionode_id )
@@ -1405,6 +1423,7 @@
         CALL mp_bcast( rho_at, ionode_id )
         CALL mp_bcast( rho_atc, ionode_id )
         CALL mp_bcast( lchi, ionode_id )
+        CALL mp_bcast( jchi, ionode_id )
         CALL mp_bcast( cc, ionode_id )
         CALL mp_bcast( alpc, ionode_id )
         CALL mp_bcast( aps, ionode_id )
@@ -1416,6 +1435,7 @@
         CALL mp_bcast( qfcoef, ionode_id )
         CALL mp_bcast( rinner, ionode_id )
         CALL mp_bcast( lll, ionode_id )
+        CALL mp_bcast( jjj, ionode_id )
         CALL mp_bcast( iver, ionode_id )
 
       RETURN
@@ -1429,9 +1449,9 @@
 
     SUBROUTINE read_restart_pseudo3(iuni, &
       generated, date_author, comment, psd, typ, tvanp, nlcc, dft, zp, etotps, &
-      ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, els, lchi, oc, r, rab, &
-      rho_atc, vloc, lll, kkbeta, beta, nd, dion, nqf, nqlc, rinner, qqq, &
-      qfunc, qfcoef, chi, rho_at )
+      ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, els, lchi, jchi, &
+      oc, r, rab, rho_atc, vloc, lll, jjj, kkbeta, beta, nd, dion, nqf, &
+      nqlc, rinner, qqq, qfunc, qfcoef, chi, rho_at )
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -1460,12 +1480,14 @@
       INTEGER :: nbeta              ! number of projectors
       CHARACTER(LEN=2) :: els(:)  ! els(nwfc)
       INTEGER :: lchi(:)   ! lchi(nwfc)
+      REAL(dbl) :: jchi(:)   ! jchi(nwfc)
       REAL(dbl) :: oc(:)   ! oc(nwfc)
       REAL(dbl) :: r(:)    ! r(mesh)
       REAL(dbl) :: rab(:)  ! rab(mesh)
       REAL(dbl) :: rho_atc(:) ! rho_atc(mesh)
       REAL(dbl) :: vloc(:)    ! vloc(mesh)
       INTEGER :: lll(:)       ! lll(nbeta)
+      REAL(dbl) :: jjj(:)    ! jjj(nbeta)
       INTEGER :: kkbeta(:)    ! kkbeta(nbeta)
       REAL(dbl) :: beta(:,:)  ! beta(mesh,nbeta)
       INTEGER :: nd
@@ -1573,13 +1595,15 @@
 
         IF( ionode ) THEN
 !           
-          READ(iuni) els(1:nwfc), lchi(1:nwfc), oc(1:nwfc), r(1:mesh), &
-               rab(1:mesh), rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), &
-               kkbeta(1:nbeta), beta(1:mesh,1:nbeta), dion(1:nbeta,1:nbeta), &
-               rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-               qfunc(1:mesh, 1:nbeta, 1:nbeta), &
-               qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-               chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
+          READ(iuni) els(1:nwfc), lchi(1:nwfc), jchi(1:nwfc), oc(1:nwfc), &
+            r(1:mesh), rab(1:mesh), &
+            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), jjj(1:nbeta), &
+            kkbeta(1:nbeta), &
+            beta(1:mesh,1:nbeta), &
+            dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
+            qfunc(1:mesh, 1:nbeta, 1:nbeta), &
+            qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+            chi(1:mesh, 1:nwfc), rho_at(1:mesh) 
 
           READ(iuni) idum
           READ(iuni) idum
@@ -1588,12 +1612,14 @@
 
         CALL mp_bcast( els(1:nwfc), ionode_id ) 
         CALL mp_bcast( lchi(1:nwfc), ionode_id ) 
+        CALL mp_bcast( jchi(1:nwfc), ionode_id ) 
         CALL mp_bcast( oc(1:nwfc), ionode_id ) 
         CALL mp_bcast( r(1:mesh), ionode_id ) 
         CALL mp_bcast( rab(1:mesh), ionode_id ) 
         CALL mp_bcast( rho_atc(1:mesh), ionode_id ) 
         CALL mp_bcast( vloc(1:mesh), ionode_id ) 
         CALL mp_bcast( lll(1:nbeta), ionode_id ) 
+        CALL mp_bcast( jjj(1:nbeta), ionode_id ) 
         CALL mp_bcast( kkbeta(1:nbeta), ionode_id ) 
         CALL mp_bcast( beta(1:mesh,1:nbeta), ionode_id ) 
         CALL mp_bcast( dion(1:nbeta,1:nbeta), ionode_id ) 

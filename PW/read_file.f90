@@ -32,8 +32,9 @@ subroutine read_file
   USE gsmooth,        ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
   USE scf,            ONLY : rho, vr
   USE vlocal,         ONLY : strf
-  USE io_files,       only : tmp_dir, prefix, iunpun
-  USE restart_module, only : readfile_new
+  USE io_files,       ONLY : tmp_dir, prefix, iunpun
+  USE restart_module, ONLY : readfile_new
+  USE noncollin_module, ONLY : noncolin, npol
 #ifdef __PARA
   USE para
 #endif
@@ -107,8 +108,14 @@ subroutine read_file
   !
   if (lsda) then
      nspin = 2
+     npol=1
+  elseif (noncolin) then
+     nspin=4
+     npol = 2
+     current_spin=1
   else
      nspin = 1
+     npol=1
      current_spin = 1
   endif
   cell_factor = 1.d0

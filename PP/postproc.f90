@@ -22,9 +22,9 @@ program postproc
   USE gvect
   USE ener, ONLY: ef
   USE vlocal, ONLY: strf
-  use io_files, only: tmp_dir, nd_nmbr, prefix
+  USE io_files, ONLY: tmp_dir, nd_nmbr, prefix
 #ifdef __PARA
-  use para, only: me
+  use para, ONLY: me
   use mp
 #endif
   implicit none
@@ -117,12 +117,17 @@ program postproc
 #endif
   !     Check of namelist variables
   !
-  if (plot_num < 0 .or. plot_num > 12) call errore ('postproc', &
+  if (plot_num < 0 .or. plot_num > 13) call errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
   if ( (plot_num == 0 .or. plot_num == 1) .and.  &
        (spin_component < 0 .or. spin_component > 2) ) call errore &
          ('postproc', 'wrong value of spin_component', 1)
+
+  if ( (plot_num == 13) .and.   &
+       (spin_component < 0 .or. spin_component > 3) ) call errore &
+          ('postproc', 'wrong spin_component', 1)
+
 
   if (plot_num == 10) then
      emin = emin / 13.6058d0

@@ -47,16 +47,17 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   USE symme,                ONLY : s, irt, ftau, nsym, invsym
   USE ener,                 ONLY : ef
   USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
-                                   rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
+                                   rho_atc, mesh, msh, nchi, lchi, jchi, &
+                                   numeric, nlcc
   USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
                                    lloc, a_nlcc, b_nlcc, alpha_nlcc
   USE us,                   ONLY : okvan
   USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
                                    rinner, psd, nbeta, kkbeta, nqf, nqlc, &
-                                   ifqopt, lll, iver, nh, tvanp, newpseudo
+                                   ifqopt, lll, jjj, iver, nh, tvanp, newpseudo
   USE extfield,             ONLY : tefield, dipfield, edir, emaxpos, eopreg, &
                                    eamp
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module, ONLY : evc, evc_nc
   USE fixed_occ,            ONLY : tfixed_occ 
   USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
   USE io_files,             ONLY : prefix, tmp_dir, pseudo_dir, psfile, &
@@ -78,6 +79,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
                                    Hubbard_U, Hubbard_alpha
   USE read_pseudo_module
   USE pseudo_types
+  USE spin_orb, ONLY : lspinorb
+  USE noncollin_module, ONLY : noncolin, npol
+
   !
   implicit none
   !
@@ -111,7 +115,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   integer :: ngm_p( nproc_pool )
   character(len=256) :: filename, file_pseudo
   LOGICAL :: twf0, twfm, tupf
-  INTEGER :: nkl, nkr, nkbl, iks, ike, npw_g
+  INTEGER :: nkl, nkr, nkbl, iks, ike, npw_g, ipol, j
   INTEGER :: npool, ipmask( nproc ), ipsour
   real(kind=DP) :: wfc_scal
 
@@ -121,6 +125,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   INTEGER :: iunps, ios, flen, ierr
   LOGICAL :: opnd
   LOGICAL :: lgamma
+  COMPLEX(KIND=DP), ALLOCATABLE :: wfc_restart(:,:)
   TYPE (pseudo_upf) :: upf
 
   external DSCAL
@@ -244,7 +249,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
        kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
        natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
-       title, crystal, tmp_dir, tupf, lgamma, lda_plus_u, &
+       title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
 
    else
@@ -360,25 +365,36 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          call read_pseudo_upf(iunps, upf, ierr)
 
          CALL write_restart_pseudo( ndw, &
-           upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, upf%tvanp,  &
-           upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, upf%ecutrho, upf%nv,   &
-           upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els(:), upf%lchi(:), upf%oc(:), &
-           upf%r(:), upf%rab(:), upf%rho_atc(:), upf%vloc(:), upf%lll(:), upf%kkbeta(:), &
-           upf%beta(:,:), upf%nd, upf%dion(:,:), upf%nqf, upf%nqlc, upf%rinner(:), &
-           upf%qqq(:,:), upf%qfunc(:,:,:), upf%qfcoef(:,:,:,:), upf%chi(:,:), upf%rho_at(:) )
+           upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, &
+           upf%tvanp,  &
+           upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, upf%ecutrho, &
+           upf%nv,   &
+           upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els(:), upf%lchi(:), &
+           upf%jchi(:), upf%oc(:), &
+           upf%r(:), upf%rab(:), upf%rho_atc(:), upf%vloc(:), upf%lll(:), &
+           upf%jjj(:), upf%kkbeta(:), &
+           upf%beta(:,:), upf%nd, upf%dion(:,:), upf%nqf, upf%nqlc, &
+           upf%rinner(:), &
+           upf%qqq(:,:), upf%qfunc(:,:,:), upf%qfcoef(:,:,:,:), &
+           upf%chi(:,:), upf%rho_at(:) )
 
          CALL deallocate_pseudo_upf( upf )
          close( iunps )
        ELSE
          CALL write_restart_pseudo( ndw, &
-           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
+           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), &
+           chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
+           jchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
            zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
            betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
-           rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
-           lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &
-           igcx, igcc, lsda, a_nlcc(i), b_nlcc(i), alpha_nlcc(i), nlcc(i), psd(i) )
+           rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), &
+           ifqopt(i), &
+           lll(:,i), jjj(:,i), iver(:,i), tvanp(i), okvan, &
+           newpseudo(i), iexch, icorr, &
+           igcx, igcc, lsda, a_nlcc(i), b_nlcc(i), alpha_nlcc(i), &
+           nlcc(i), psd(i) )
        END IF
      ELSE
        CALL write_restart_pseudo( ndw )
@@ -475,14 +491,31 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
      DO ik = 1, nkstot
 
        IF( (ik >= iks) .AND. (ik <= ike) ) THEN
-         call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+         if (noncolin) then
+            call davcio (evc_nc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+         else
+            call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
+         endif
        END IF
        ispin = isk( ik )
        ! WRITE( stdout,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
-       CALL write_restart_wfc(ndw, ik, nkstot, kunit, ispin, nspin, &
-         wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
+       if (noncolin) then
+         allocate (wfc_restart(npwx, nbnd ))
+         wfc_restart=(0.d0,0.d0)
+         do ipol = 1, npol
+            wfc_restart = evc_nc(:,ipol,:)
+            CALL write_restart_wfc(ndw, ik, nkstot, kunit, ispin, nspin, &
+            wfc_scal, wfc_restart, twf0, wfc_restart, twfm, npw_g, nbnd, &
+            igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
+         enddo
+         deallocate(wfc_restart)
+       else
+         CALL write_restart_wfc(ndw, ik, nkstot, kunit, ispin, nspin, &
+            wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), &
+            ngk(ik-iks+1) )
+       endif
 
-     END DO
+     ENDDO
 
    ELSE
 
@@ -534,16 +567,17 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE symme,                ONLY : s, irt, ftau, nsym, invsym
   USE ener,                 ONLY : ef
   USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
-                                   rho_atc, mesh, msh, nchi, lchi, numeric, &
+                                   rho_atc, mesh, msh, nchi, lchi, jchi, &
+                                   numeric, &
                                    nlcc
   USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
                                    lloc, a_nlcc, b_nlcc, alpha_nlcc
   USE us,                   ONLY : okvan
   USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
                                    rinner, psd, nbeta, kkbeta, nqf, nqlc, &
-                                   ifqopt, lll, iver, nh, tvanp, newpseudo
+                                   ifqopt, lll, jjj, iver, nh, tvanp, newpseudo
   USE extfield,             ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module, ONLY : evc, evc_nc
   USE fixed_occ,            ONLY : tfixed_occ 
   USE control_flags,        ONLY : twfcollect, noinv, istep, iswitch, modenum
   USE funct,                ONLY : iexch, icorr, igcx, igcc
@@ -560,9 +594,12 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
                                    read_restart_symmetry, read_restart_xdim, &
                                    read_restart_pseudo, read_restart_ldaU
   USE parameters,           ONLY : nacx, nsx
+  USE spin_orb,             ONLY : lspinorb
+  USE noncollin_module,     ONLY : noncolin, npol
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                    Hubbard_U, Hubbard_alpha
   USE upf_to_internal
+
   !
   implicit none
   !
@@ -604,10 +641,11 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   INTEGER :: npool, ipmask( nproc ), ipsour, ipdest
   LOGICAL :: trdhead, trdxdim, trdcell, trdpos, trdpseudo, trdchden
   LOGICAL :: trdocc, trdgvec, trdgkvec, trdwfc, trdsym, tupf
-  INTEGER :: npw, npw_g
+  INTEGER :: npw, npw_g, ipol, j
   LOGICAL :: lgamma
 
   real(kind=DP) :: wfc_scal
+  COMPLEX(KIND=DP), ALLOCATABLE :: wfc_restart(:,:)
 
   TYPE( pseudo_upf ) :: upf
 
@@ -693,7 +731,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
        natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
-       title_, crystal_, tmp_dir_, tupf, lgamma, lda_plus_u,&
+       title_, crystal_, tmp_dir_, tupf, lgamma, noncolin, lspinorb, &
+       lda_plus_u,&
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
      gamma_only = lgamma
@@ -854,18 +893,27 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
        if( tupf ) then
 
-         ALLOCATE( upf%els( nchix ),  upf%lchi( nchix ), upf%oc( nchix ), &
-            upf%r( ndmx ), upf%rab( ndmx ), upf%rho_atc( ndmx ), upf%vloc( ndmx ), &
-            upf%lll( 1:nbrx ), upf%kkbeta( 1:nbrx ), upf%beta( ndmx, 1:nbrx ), &
-            upf%dion( 1:nbrx, 1:nbrx ), upf%rinner( 1:lqmax ), upf%qqq( 1:nbrx, 1:nbrx ), &
-            upf%qfunc( ndmx, 1:nbrx, 1:nbrx ), upf%qfcoef( 1:nqfx, 1:lqmax, 1:nbrx, 1:nbrx ), &
+         ALLOCATE( upf%els( nchix ),  upf%lchi( nchix ), upf%jchi(nchix), &
+            upf%oc( nchix ), &
+            upf%r( ndmx ), upf%rab( ndmx ), upf%rho_atc( ndmx ), &
+            upf%vloc( ndmx ), &
+            upf%lll( 1:nbrx ), upf%jjj(1:nbrx), upf%kkbeta( 1:nbrx ), &
+            upf%beta( ndmx, 1:nbrx ), &
+            upf%dion( 1:nbrx, 1:nbrx ), upf%rinner( 1:lqmax ), &
+            upf%qqq( 1:nbrx, 1:nbrx ), &
+            upf%qfunc( ndmx, 1:nbrx, 1:nbrx ), &
+            upf%qfcoef( 1:nqfx, 1:lqmax, 1:nbrx, 1:nbrx ), &
             upf%chi( ndmx, nchix ), upf%rho_at( ndmx ) )
 
          CALL read_restart_pseudo( ndr, &
-           upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, upf%tvanp,  &
-           upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, upf%ecutrho, upf%nv,   &
-           upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els, upf%lchi, upf%oc, &
-           upf%r, upf%rab, upf%rho_atc, upf%vloc, upf%lll, upf%kkbeta, &
+           upf%generated, upf%date_author, upf%comment, upf%psd, upf%typ, &
+           upf%tvanp,  &
+           upf%nlcc, upf%dft, upf%zp, upf%etotps, upf%ecutwfc, &
+           upf%ecutrho, upf%nv,   &
+           upf%lmax, upf%mesh, upf%nwfc, upf%nbeta, upf%els, upf%lchi, &
+           upf%jchi, upf%oc, &
+           upf%r, upf%rab, upf%rho_atc, upf%vloc, upf%lll, upf%jjj, &
+           upf%kkbeta, &
            upf%beta, upf%nd, upf%dion, upf%nqf, upf%nqlc, upf%rinner, &
            upf%qqq, upf%qfunc, upf%qfcoef, upf%chi, upf%rho_at )
 
@@ -877,23 +925,28 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
          ! UPF is RRKJ3-like
          newpseudo (i) = .true.
 
-         DEALLOCATE( upf%els,  upf%lchi, upf%oc, upf%r, upf%rab )
-         DEALLOCATE( upf%rho_atc, upf%vloc, upf%lll, upf%kkbeta, upf%beta, &
-             upf%dion, upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef, upf%chi, upf%rho_at )
-
+         DEALLOCATE( upf%els,  upf%lchi, upf%jchi, upf%oc, upf%r, upf%rab )
+         DEALLOCATE( upf%rho_atc, upf%vloc, upf%lll, upf%jjj, &
+             upf%kkbeta, upf%beta, &
+             upf%dion, upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef, &
+             upf%chi, upf%rho_at )
 
        else
 
          CALL read_restart_pseudo( ndr, &
-           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
+           zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), &
+           chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
+           jchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
            zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
            betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
-           rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
-           lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &
-           igcx, igcc, lsda, a_nlcc(i), b_nlcc(i), alpha_nlcc(i), nlcc(i), psd(i) )
-
+           rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), &
+           ifqopt(i), &
+           lll(:,i), jjj(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), &
+           iexch, icorr, &
+           igcx, igcc, lsda, a_nlcc(i), b_nlcc(i), alpha_nlcc(i), &
+           nlcc(i), psd(i) )
        endif
 
      else
@@ -1039,15 +1092,36 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
        CALL mp_bcast( npw_g, ipdest, intra_image_comm )
 
-       CALL read_restart_wfc(ndr, ik, nkstot, kunit, ispin_, nspin_, &
-         wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd_, igk_l2g(:,ik-iks+1), npw )
+       if (noncolin) then
+         allocate (wfc_restart(npwx, nbnd ))
+         wfc_restart = (0.d0,0.d0)
+         do ipol = 1, npol
+           CALL read_restart_wfc(ndr, ik, nkstot, kunit, ispin_, nspin_, &
+                 wfc_scal, wfc_restart, twf0, wfc_restart, twfm, npw_g, &
+                 nbnd_, igk_l2g(:,ik-iks+1), npw )
+            evc_nc(:,ipol,:)=wfc_restart(:,:)
+         enddo
+         deallocate (wfc_restart)
+       else
+         CALL read_restart_wfc(ndr, ik, nkstot, kunit, ispin_, nspin_, &
+                        wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd_,  &
+                        igk_l2g(:,ik-iks+1), npw )
+       endif
 
        IF( twf0 ) THEN
          IF( (ik >= iks) .AND. (ik <= ike) ) THEN
            IF( wfc_scal /= 1.0d0 ) THEN
-             CALL DSCAL( 2*nsizwfc, wfc_scal, evc, 1)
+             if (noncolin) then
+                CALL DSCAL( 2*nsizwfc, wfc_scal, evc_nc, 1)
+             else
+                CALL DSCAL( 2*nsizwfc, wfc_scal, evc, 1)
+             endif
            END IF
-           call davcio (evc(1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
+             if (noncolin) then
+                call davcio (evc_nc(1,1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
+             else
+                call davcio (evc(1,1), nsizwfc, iunitwfc, (ik-iks+1), 1)
+             endif
          END IF
        ELSE
          ierr = 1
@@ -1124,7 +1198,8 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
   real(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
   real(kind=DP) :: acc_(nacx)
-  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, lgamma_, lda_plus_u_
+  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, &
+             lgamma_, noncolin_, lspinorb_, lda_plus_u_
   character(len=80) :: title_, crystal_, tmp_dir_
 
   real(kind=DP) :: celldm_(6)
@@ -1169,10 +1244,14 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
    CALL read_restart_header(ndr, istep_, iswitch_, trutime_, nr1_, nr2_, nr3_, &
      nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
-     kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, ntetra_, ltetra_, &
-     natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, lforce_, &
-     title_, crystal_, tmp_dir_, tupf_, lgamma_, lda_plus_u_, &
-     tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
+     kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, &
+     ntetra_, ltetra_, &
+     natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, &
+     lforce_, &
+     title_, crystal_, tmp_dir_, tupf_, lgamma_, noncolin_, lspinorb_, &
+     lda_plus_u_, &
+     tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, &
+     twfcollect_ )
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==

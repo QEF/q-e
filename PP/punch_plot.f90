@@ -30,6 +30,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !             10                 integrated local dos from emin to emax
   !             11                 the V_bare + V_H potential
   !             12                 The electric field potential
+  !             13                 The noncolinear magnetization.
   !
   !     The output quantity is written (formatted) on file filplot.
   !
@@ -48,6 +49,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE io_global,  ONLY : stdout
   USE scf, ONLY: rho, vltot, vr
   USE wvfct, ONLY: npw, nbnd, wg, igk, gamma_only
+  USE noncollin_module, ONLY : noncolin
 #ifdef __PARA
   use para
 #endif
@@ -195,6 +197,18 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
          call add_efield(raux)
      else
          call errore('punch_plot','e_field is not calculated',-1)
+     endif
+  elseif (plot_num == 13) then
+     if (noncolin) then
+        if (spin_component==0) then
+           raux(:) = sqrt(rho(:,2)**2 + rho(:,3)**2 + rho(:,4)**2 )
+        elseif (spin_component >= 1 .or. spin_component <=3) then
+           raux(:) = rho(:,spin_component+1)
+        else
+           call errore('punch_plot','spin_component not allowed',1)
+        endif
+     else
+        call errore('punch_plot','noncollinear spin required',1)
      endif
   else
 
