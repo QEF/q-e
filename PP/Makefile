@@ -294,9 +294,6 @@ voronoy.x:  $(PPOBJS) voromain.o
 dos.x:  $(PPOBJS) dos.o
 	$(LD) -o dos.x dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 
-projdos.x:  $(PPOBJS) projected_dos.o
-	$(LD) -o projdos.x projected_dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
-
 bands.x: $(PPOBJS) bands.o
 	$(LD) -o bands.x bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 

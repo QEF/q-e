@@ -23,8 +23,13 @@ subroutine s_psi (lda, n, m, psi, spsi )
   !     spsi  S*psi
   !
 #include "machine.h"
-  use pwcom
+  use us, only: vkb, nkb, okvan, nh, tvanp, qq
+  use wvfct, only: igk, g2kin
+  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  use ldaU, only : lda_plus_u
+  use basis, only : ntyp, ityp, nat
   use becmod
+  use workspace
   implicit none
   !
   !     First the dummy variables

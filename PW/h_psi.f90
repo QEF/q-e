@@ -20,8 +20,14 @@ subroutine h_psi (lda, n, m, psi, hpsi)
   ! output:
   !     hpsi  H*psi
   !
-  use pwcom
+  use us, only: vkb, nkb
+  use wvfct, only: igk, g2kin
+  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  use ldaU, only : lda_plus_u
+  use lsda_mod, only : current_spin
+  use scf, only: vrs
   use becmod
+  use workspace
   implicit none
   !
   integer :: lda, n, m
@@ -32,7 +38,7 @@ subroutine h_psi (lda, n, m, psi, hpsi)
 
   call start_clock ('h_psi')
   call start_clock ('init')
-  call ccalbec (nkb, npwx, n, m, becp, vkb, psi)
+  call ccalbec (nkb, lda, n, m, becp, vkb, psi)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !

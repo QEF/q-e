@@ -20,9 +20,15 @@ subroutine h_psi (lda, n, m, psi, hpsi)
   ! output:
   !     hpsi  H*psi
   !
-  use pwcom
-  use gamma
+  use us, only: vkb, nkb
+  use wvfct, only: igk, g2kin
+  use gvect, only : gstart
+  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  use ldaU, only : lda_plus_u
+  use lsda_mod, only : current_spin
+  use scf, only: vrs
   use rbecmod
+  use workspace
   implicit none
   !
   integer :: lda, n, m
@@ -55,7 +61,7 @@ subroutine h_psi (lda, n, m, psi, hpsi)
   !
   !  Here the product with the non local potential V_NL psi
   !
-  call pw_gemm ('Y', nkb, m, n, vkb, npwx, psi, npwx, becp, nkb)
+  call pw_gemm ('Y', nkb, m, n, vkb, lda, psi, lda, becp, nkb)
   if (nkb > 0) call add_vuspsi (lda, n, m, psi, hpsi)
   call stop_clock ('h_psi')
   return

@@ -55,7 +55,7 @@ module dynam
   !
   !    Variables needed for the dynamics
   !
-  real(kind=8) ::                                                    &
+  real(kind=DP) ::                                                   &
        amass(ntypx),   &! mass of atoms
        dt,             &! time step
        temperature,    &! starting temperature

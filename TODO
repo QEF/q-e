@@ -1,4 +1,4 @@
-TODO LIST - 19 May 2003
+TODO LIST - 28 May 2003
 
 INSTALLATION
 
@@ -14,7 +14,10 @@ COMMON
   for charged systems. Total energies for charged systems
   must be the same!!!
 
-- merge diagonalization routines, use parallel diag everywhere
+- merge (standard) diagonalization routines
+  use parallel diagonalization in CP and PW
+
+- file format unification must be finished
 
 - start merge of input routines
 
@@ -24,7 +27,7 @@ COMMON
 
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
-- update to fftw v.3 (if convenient)?
+- Nudged Elastic Band
 
 PW
 
@@ -62,7 +65,10 @@ PW
 
 - complete and verify memory estimator
 
+- CG, DIIS are so slooooooow
+
 - ultrasoft PP: newd and addusdens are too slow
+  import "small boxes" from CP
 
 - output should be more informative and less confused
 
@@ -99,6 +105,8 @@ FPMD:
 
 - Documentation is nonexistent
 
+- version number
+
 CPV: 
 
 - Documentation needs serious improvements
@@ -109,3 +117,5 @@ CPV:
 - check on small box size
 
 - remove all calls to zero and to blas copy, scal
+
+- version number
