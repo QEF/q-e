@@ -641,8 +641,7 @@ then
 		pgf* )
 			try_libdirs="/usr/local/lib
 				     /usr/local/pgi/linux86/lib
-				     /opt/pgi/linux86/5.1/lib
-				     /cineca/lib /cineca/prod/pgi/lib"
+				     /opt/pgi/linux86/5.1/lib"
 			;;
 		esac
 		;;
@@ -656,14 +655,17 @@ then
 				     /opt/intel/mkl/mkl61/lib/32
 				     /opt/intel/mkl/lib/32
 				     /opt/intel/mkl61/lib/32
-				     /cineca/lib /cineca/prod/intel/lib"
+				     /cineca/prod/intel/lib"
 			;;
 		pgf* )
 			try_libdirs="/usr/local/lib
 				     /usr/local/pgi/linux86/lib
 				     /opt/pgi/linux86/5.1/lib
-				     /cineca/lib /cineca/prod/pgi/lib"
+				     /cineca/prod/pgi/lib"
 			;;
+		g95 )
+			try_libdirs="/usr/local/lib
+				     /cineca/prod/gnu/lib"
 		esac
 		;;
 	aix )    try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass" ;;
