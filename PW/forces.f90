@@ -21,7 +21,7 @@ SUBROUTINE forces
   !    e)   force_corr  correction term for incomplete self-consistency
   !
   !
-  USE kinds, ONLY : DP
+  USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   USE brilz,      ONLY : at, bg, alat, omega  
   USE basis,      ONLY : nat, ntyp, ityp, tau
@@ -159,10 +159,7 @@ SUBROUTINE forces
   END DO
   !
   WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
-              &  "Total SCF correction = ",F12.6)') SQRT(sum), SQRT(sumscf)
-#ifdef __PARA
-  CALL check( ( 3 * nat ), force )
-#endif
+              &  "Total SCF correction = ",F12.6)') SQRT( sum ), SQRT( sumscf )
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !
@@ -172,6 +169,5 @@ SUBROUTINE forces
   RETURN
   !
 9035 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)
-!
+  !
 END SUBROUTINE forces
-
