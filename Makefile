@@ -75,7 +75,7 @@ links :
 clean :
 	touch make.rules make.sys # make complains if they aren't there
 	#                         # same with .dependencies below
-	for dir in PW PWNC NEB PH PP D3 PWCOND Gamma pwtools upftools \
+	for dir in PW PWNC PH PP D3 PWCOND Gamma pwtools upftools \
 		   Modules install clib flib FPMD CPV ; do \
 	  if test -d $$dir ; then \
 	    ( cd $$dir ; touch .dependencies ; make clean ) \
