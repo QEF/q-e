@@ -148,7 +148,6 @@ potinit.o  \
 print_clock_pw.o  \
 psymrho.o  \
 punch.o  \
-pwscf.o  \
 qvan2.o  \
 random.o  \
 read_conf_from_file.o  \
@@ -252,8 +251,11 @@ MODULES = ../Modules/*.o
 #
 include .dependencies
 
-all: $(PWOBJS)
-	$(LD) -o pw.x $(PWOBJS) $(MODULES) $(LDFLAGS)
+memory: $(PWOBJS) memory.o
+	$(LD) -o memory.x memory.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+
+all: $(PWOBJS) pwscf.o
+	$(LD) -o pw.x pwscf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 clean_:
 	-/bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
 #

@@ -148,7 +148,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/check.o  \
 ../PW/checksym.o  \
 ../PW/cinitcgg.o  \
-../PW/clocks.o  \
 ../PW/constrain.o  \
 ../PW/conv_to_num.o  \
 ../PW/coset.o  \

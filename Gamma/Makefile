@@ -32,7 +32,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/cft_sp.o \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
-../PW/clocks.o \
 ../PW/constrain.o \
 ../PW/conv_to_num.o \
 ../PW/coset.o \

@@ -24,6 +24,21 @@ subroutine init_run
 
   call iosys
   call setup
+  !
+  !   allocate memory for G- and R-space fft arrays
+  !
+  call allocate_fft
+  !
+  !   generate reciprocal-lattice vectors and fft indices
+  !
+  call ggen
+#ifndef __PARA
+  !
+  !   generates pencils for 3d-fft of psi and related quantities
+  !
+  call set_pencils (nks, xk, ngms, gg, nls, ecutwfc / tpiba2, &
+       nrx1s, nr1s, nr2s, nr3s)
+#endif
   call summary
   call allocate_nlpot
   call allocate_locpot

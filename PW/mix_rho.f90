@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2002-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -59,12 +59,11 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 iwork(maxmix),&! dummy array used as output by libr. routines
                 info        ! flag saying if the exec. of libr. routines was ok
 
-  complex (kind=DP), allocatable :: aux(:), rhocin(:,:), rhocout(:,:), &
+  complex (kind=DP), allocatable :: rhocin(:,:), rhocout(:,:), &
                 rhoinsave(:), rhoutsave(:), &
                 nsinsave(:,:,:,:),  nsoutsave(:,:,:,:)
   complex (kind=DP), allocatable, save :: df(:,:), dv(:,:), &
                                       df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:)
-                ! aux(nrxx)            : auxiliary array used for FFT
                 ! rhocin(ngm0,nspin)
                 ! rhocout(ngm0,nspin)
                 ! rhoinsave(ngm0*nspin): work space
@@ -76,53 +75,49 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   integer :: ldim
 
-  real (kind=DP) :: betamix(maxmix,maxmix), gamma, work(maxmix), dehar
+  real (kind=DP) :: betamix(maxmix,maxmix), gamma0, work(maxmix), dehar
 
   logical ::    &
                 saveonfile, &! save intermediate steps on file "filename"
                 opnd,       &! if true the file is already opened
                 exst         ! if true the file exists
 
-  real (kind=DP) :: rho_dot_product, ns_dot_product, fn_dehar
+  real (kind=DP), external :: rho_dot_product, ns_dot_product, fn_dehar
 
-  external DCOPY, DSYTRF, DSYTRI, DSCAL
-  external diropn, davcio, setv, &
-           rho_dot_product, ns_dot_product, fn_dehar
 
   call start_clock('mix_rho')
 
-
-  if (iter.lt.1) call errore('mix_rho','iter is wrong',1)
-  if (n_iter.gt.maxmix) call errore('mix_rho','n_iter too big',1)
+  if (iter < 1) call errore('mix_rho','iter is wrong',1)
+  if (n_iter > maxmix) call errore('mix_rho','n_iter too big',1)
   if (lda_plus_u) ldim = 2 * Hubbard_lmax + 1
 
   saveonfile=filename.ne.' '
 
 !  call DAXPY(nrxx*nspin,-1.d0,rhoin,1,rhout,1)
 
-  allocate(aux(nrxx), rhocin(ngm0,nspin), rhocout(ngm0,nspin))
-
+  allocate(rhocin(ngm0,nspin), rhocout(ngm0,nspin))
+  !
+  ! psic is used as work space - must be already allocated !
+  !
   do is=1,nspin
-     call setv(2*nrxx,0.d0,aux,1)
-     call DCOPY(nrxx,rhoin(1,is),1,aux,2)
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+     psic(:) = DCMPLX (rhoin(:,is), 0.d0)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      do ig=1,ngm0
-        rhocin(ig,is) = aux(nl(ig))
+        rhocin(ig,is) = psic(nl(ig))
      end do
-     call setv(2*nrxx,0.d0,aux,1)
-     call DCOPY(nrxx,rhout(1,is),1,aux,2)
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+     psic(:) = DCMPLX (rhout(:,is), 0.d0)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      do ig=1,ngm0
-        rhocout(ig,is) = aux(nl(ig)) - rhocin(ig,is)
+        rhocout(ig,is) = psic(nl(ig)) - rhocin(ig,is)
      end do
   end do
   if (lda_plus_u) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
 
   dr2=rho_dot_product(rhocout,rhocout) + ns_dot_product(nsout,nsout)
-!  if (lda_plus_u) write (6,*) ' ns_dr2 =', ns_dot_product(nsout,nsout)
-  conv = dr2.lt.tr2
+  conv = (dr2 < tr2)
   dehar = fn_dehar(rhocout)
 #ifdef DEBUG
+!  if (lda_plus_u) write (6,*) ' ns_dr2 =', ns_dot_product(nsout,nsout)
   if (conv) then
      write (6,100) dr2, rho_dot_product(rhocout,rhocout) + &
                         ns_dot_product(nsout,nsout)
@@ -154,7 +149,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
            call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
            close (unit=iunmix2, status='delete')
         end if
-        deallocate (aux, rhocin, rhocout)
+        deallocate (rhocin, rhocout)
         call stop_clock('mix_rho')
         return
      end if
@@ -162,7 +157,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      call diropn(iunmix,filename,2*ngm0*nspin,exst)
      if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
 
-     if (iter.gt.1 .and. .not.exst) then
+     if (iter > 1 .and. .not.exst) then
         call errore('mix_rho','file not found, restarting',-1)
         iter=1
      end if
@@ -171,7 +166,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         allocate (df_ns(nat,nspin,ldim,ldim,n_iter), &
                   dv_ns(nat,nspin,ldim,ldim,n_iter))
   else
-     if (iter.eq.1) then
+     if (iter == 1) then
         allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
         if (lda_plus_u) &
            allocate (df_ns(nat,nspin,ldim,ldim,n_iter),&
@@ -180,7 +175,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      if (conv) then
         if (lda_plus_u) deallocate(df_ns, dv_ns)
         deallocate (df, dv)
-        deallocate (aux, rhocin, rhocout)
+        deallocate (rhocin, rhocout)
         call stop_clock('mix_rho')
         return
      end if
@@ -195,12 +190,12 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   call DCOPY(nrxx*nspin,rhout,1,rhoin,1)
   do is=1,nspin
-     call setv(2*nrxx,0.d0,aux,1)
+     psic(:) = (0.d0, 0.d0)
      do ig=1,ngm0
-        aux(nl(ig)) = rhocin(ig,is)+rhocout(ig,is)
+        psic(nl(ig)) = rhocin(ig,is)+rhocout(ig,is)
      end do
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     call DAXPY(nrxx,-1.d0,aux,2,rhoin(1,is),1)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+     call DAXPY(nrxx,-1.d0,psic,2,rhoin(1,is),1)
   end do
   !
   ! iter_used = iter-1  if iter <= n_iter
@@ -213,7 +208,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   ipos =iter-1-((iter-2)/n_iter)*n_iter
   !
-  if (iter.gt.1) then
+  if (iter > 1) then
      if (saveonfile) then
         call davcio(df(1,ipos),2*ngm0*nspin,iunmix,1,-1)
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2,-1)
@@ -247,14 +242,14 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end do
      call davcio(rhocout,2*ngm0*nspin,iunmix,1,1)
      call davcio(rhocin ,2*ngm0*nspin,iunmix,2,1)
-     if (iter.gt.1) then
+     if (iter > 1) then
         call davcio(df(1,ipos),2*ngm0*nspin,iunmix,2*ipos+1,1)
         call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2*ipos+2,1)
      end if
      if (lda_plus_u) then
         call davcio(nsout,nat*nspin*ldim*ldim,iunmix2,1,1)
         call davcio(nsin ,nat*nspin*ldim*ldim,iunmix2,2,1)
-        if (iter.gt.1) then
+        if (iter > 1) then
            call davcio(df_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,2*ipos+1,1)
            call davcio(dv_ns(1,1,1,1,ipos),nat*nspin*ldim*ldim,iunmix2,2*ipos+2,1)
         end if
@@ -292,16 +287,16 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   end do
   !
   do i=1,iter_used
-     gamma=0.d0
+     gamma0=0.d0
      do j=1,iter_used
-        gamma = gamma + betamix(j,i)*work(j)
+        gamma0 = gamma0 + betamix(j,i)*work(j)
      end do
 
-     call DAXPY(2*ngm0*nspin,-gamma,dv(1,i),1,rhocin,1)
-     call DAXPY(2*ngm0*nspin,-gamma,df(1,i),1,rhocout,1)
+     call DAXPY(2*ngm0*nspin,-gamma0,dv(1,i),1,rhocin,1)
+     call DAXPY(2*ngm0*nspin,-gamma0,df(1,i),1,rhocout,1)
      if (lda_plus_u) then
-        call DAXPY(nat*nspin*ldim*ldim,-gamma,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
-        call DAXPY(nat*nspin*ldim*ldim,-gamma,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
+        call DAXPY(nat*nspin*ldim*ldim,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
+        call DAXPY(nat*nspin*ldim*ldim,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
      end if
   end do
   !
@@ -334,9 +329,9 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   ! - preconditioning the new search direction (if imix.gt.0)
 
-  if (imix.eq.1) then
+  if (imix == 1) then
      call approx_screening(rhocout)
-  else if (imix.eq.2) then
+  else if (imix == 2) then
      call approx_screening2(rhocout,rhocin)
   end if
 
@@ -345,12 +340,12 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   call DAXPY(2*ngm0*nspin,alphamix,rhocout,1,rhocin,1)
 
   do is=1,nspin
-     aux(:) = (0.d0,0.d0)
+     psic(:) = (0.d0,0.d0)
      do ig=1,ngm0
-        aux(nl(ig)) = rhocin(ig,is)
+        psic(nl(ig)) = rhocin(ig,is)
      end do
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     call DAXPY(nrxx,1.d0,aux,2,rhoin(1,is),1)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+     call DAXPY(nrxx,1.d0,psic,2,rhoin(1,is),1)
   end do
   if (lda_plus_u) call DAXPY(nat*nspin*ldim*ldim,alphamix,nsout,1,nsin,1)
 
@@ -358,7 +353,6 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   deallocate(rhocout)
   deallocate(rhocin)
-  deallocate(aux)
   call stop_clock('mix_rho')
 
   return
@@ -483,7 +477,7 @@ function fn_dehar (drho)
   integer  :: is, ig
 
   fn_dehar = 0.d0
-  if (nspin.eq.1) then
+  if (nspin == 1) then
      is=1
      do ig = gstart,ngm0
         fac = e2*fpi / (tpiba2*gg(ig))
@@ -530,7 +524,7 @@ subroutine approx_screening (drho)
   write (6,'(a,f12.6,a,f12.6)') ' avg rs  =', rs, ' avg rho =', nelec/omega
 #endif
 
-  if (nspin.eq.1) then
+  if (nspin == 1) then
      is = 1
      do ig = 1,ngm0
         drho(ig,is) =  drho(ig,is) * gg(ig)/(gg(ig)+agg0)
@@ -572,18 +566,17 @@ end subroutine approx_screening
                     vec(mmx),agg0
   complex (kind=DP) :: rrho, rmag
 
-  complex (kind=DP), allocatable :: aux(:), v(:,:), w(:,:), dv(:), &
+  complex (kind=DP), allocatable :: v(:,:), w(:,:), dv(:), &
                                 vbest(:), wbest(:)
-  ! aux(nrxx), v(ngm0,mmx), w(ngm0,mmx), dv(ngm0), vbest(ngm0), wbest(ngm0)
+  ! v(ngm0,mmx), w(ngm0,mmx), dv(ngm0), vbest(ngm0), wbest(ngm0)
   real (kind=DP), allocatable :: alpha(:)
   ! alpha(nrxx)
 
   integer :: is, ir, ig
 
-  real (kind=DP) rho_dot_product
-  external rho_dot_product
+  real (kind=DP), external :: rho_dot_product
 
-  if (nspin.eq.2) then
+  if (nspin == 2) then
      do ig=1,ngm0
         rrho       = drho(ig,1) + drho(ig,2)
         rmag       = drho(ig,1) - drho(ig,2)
@@ -599,9 +592,9 @@ end subroutine approx_screening
 
 !  write (6,*) ' eccoci qua '
 
-  if (gg(1).lt.1.d-8) drho(1,is) = (0.d0,0.d0)
+  if (gg(1) < 1.d-8) drho(1,is) = (0.d0,0.d0)
 
-  allocate (alpha(nrxx), aux(nrxx), v(ngm0,mmx), w(ngm0,mmx), &
+  allocate (alpha(nrxx), v(ngm0,mmx), w(ngm0,mmx), &
             dv(ngm0), vbest(ngm0), wbest(ngm0))
 
   v(:,:) = (0.d0,0.d0)
@@ -614,19 +607,19 @@ end subroutine approx_screening
   ! - calculate alpha from density smoothed with a lambda=0 a.u.
   !
   l2smooth = 0.d0
-  aux (:) = (0.d0,0.d0)
-  if (nspin.eq.1) then
+  psic(:) = (0.d0,0.d0)
+  if (nspin == 1) then
      do ig=1,ngm0
-        aux(nl(ig)) = rhobest(ig,1) * exp(-0.5*l2smooth*tpiba2*gg(ig))
+        psic(nl(ig)) = rhobest(ig,1) * exp(-0.5*l2smooth*tpiba2*gg(ig))
      end do
   else
      do ig=1,ngm0
-        aux(nl(ig)) =(rhobest(ig,1) + rhobest(ig,2)) &
+        psic(nl(ig)) =(rhobest(ig,1) + rhobest(ig,2)) &
                                     * exp(-0.5*l2smooth*tpiba2*gg(ig))
      end do
   end if
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-  alpha(:) = real(aux(:))
+  call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  alpha(:) = real(psic(:))
 
   min_rs = (3.d0*omega/fpi/nelec)**(1.d0/3.d0)
   max_rs = min_rs
@@ -663,18 +656,18 @@ end subroutine approx_screening
   !
   ! - calculate deltaV and the first correction vector
   !
-  aux(:) = (0.d0,0.d0)
+  psic(:) = (0.d0,0.d0)
   do ig=1,ngm0
-     aux(nl(ig)) = drho(ig,is)
+     psic(nl(ig)) = drho(ig,is)
   end do
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   do ir=1,nrxx
-     aux(ir) = aux(ir) * alpha(ir)
+    psic(ir) = psic(ir) * alpha(ir)
   end do
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   do ig=1,ngm0
-     dv(ig) = aux(nl(ig))*gg(ig)*tpiba2
-     v(ig,1)= aux(nl(ig))*gg(ig)/(gg(ig)+agg0)
+     dv(ig) = psic(nl(ig))*gg(ig)*tpiba2
+     v(ig,1)= psic(nl(ig))*gg(ig)/(gg(ig)+agg0)
   end do
   m=1
   ccc = rho_dot_product(dv,dv)
@@ -688,17 +681,17 @@ end subroutine approx_screening
   do ig=1,ngm0
      w(ig,m) = gg(ig)*tpiba2*v(ig,m)
   end do
-  aux(:) = (0.d0,0.d0)
+  psic(:) = (0.d0,0.d0)
   do ig=1,ngm0
-     aux(nl(ig)) = v(ig,m)
+     psic(nl(ig)) = v(ig,m)
   end do
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+  call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   do ir=1,nrxx
-     aux(ir) = aux(ir)*fpi*e2/alpha(ir)
+     psic(ir) = psic(ir)*fpi*e2/alpha(ir)
   end do
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   do ig=1,ngm0
-     w(ig,m) = w(ig,m) + aux(nl(ig))
+     w(ig,m) = w(ig,m) + psic(nl(ig))
   end do
 
   !
@@ -744,25 +737,25 @@ end subroutine approx_screening
   end do
 
   dr2_best= rho_dot_product(wbest,wbest)
-  if (target.eq.0.d0) target = 1.d-6 * dr2_best
+  if (target == 0.d0) target = 1.d-6 * dr2_best
 !  write (6,*) m, dr2_best, cbest
 
-  if (dr2_best .lt. target) then
+  if (dr2_best < target) then
 !     write(6,*) ' last', dr2_best/target * 1.d-6
-     aux(:) = (0.d0,0.d0)
+     psic(:) = (0.d0,0.d0)
      do ig=1,ngm0
-        aux(nl(ig)) = vbest(ig)
+        psic(nl(ig)) = vbest(ig)
      end do
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      do ir=1,nrxx
-        aux(ir) = aux(ir)/alpha(ir)
+        psic(ir) = psic(ir)/alpha(ir)
      end do
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+     call cft3(psic,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      do ig=1,ngm0
-        drho(ig,is) = aux(nl(ig))
+        drho(ig,is) = psic(nl(ig))
      end do
      nspin = nspin_save
-     if (nspin.eq.2) then
+     if (nspin == 2) then
         do ig=1,ngm0
            rrho = drho(ig,1)
            rmag = drho(ig,2)
@@ -770,9 +763,9 @@ end subroutine approx_screening
            drho(ig,2) = 0.5d0 * ( rrho - rmag )
         end do
      end if
-     deallocate (alpha, aux, v, w, dv, vbest, wbest)
+     deallocate (alpha, v, w, dv, vbest, wbest)
      return
-  else if (m.ge.mmx) then
+  else if (m >= mmx) then
 !     write (6,*) m, dr2_best, cbest
      m=1
      do ig=1,ngm0

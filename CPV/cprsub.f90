@@ -233,8 +233,8 @@
                   dxc(i,j) = dxc(i,j) + dexc(i,j)
                end do
             end do
-            deallocate(gradr)
          end if
+         deallocate(gradr)
       end if
 !
       return
