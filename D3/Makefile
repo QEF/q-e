@@ -231,7 +231,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/efermit.o  \
 ../PW/electrons.o  \
 ../PW/eqvect.o  \
-../PW/erf.o  \
 ../PW/error.o  \
 ../PW/error_handler.o  \
 ../PW/estimate.o  \
@@ -264,7 +263,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/hinit0.o  \
 ../PW/hinit1.o  \
 ../PW/h_psi.o  \
-../PW/hpsort.o  \
 ../PW/init_ns.o  \
 ../PW/init_pool.o  \
 ../PW/init_run.o  \
@@ -358,7 +356,6 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/sgam_ph.o  \
 ../PW/s_gemm.o  \
 ../PW/show_memory.o  \
-../PW/simpson.o  \
 ../PW/smallg_q.o  \
 ../PW/sph_bes.o  \
 ../PW/s_psi.o  \

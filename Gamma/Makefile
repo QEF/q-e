@@ -55,7 +55,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/eqvect.o \
-../PW/erf.o \
 ../PW/error.o \
 ../PW/estimate.o \
 ../PW/ewald.o \
@@ -74,7 +73,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
-../PW/hpsort.o \
 ../PW/init_ns.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
@@ -137,7 +135,6 @@ PWOBJS=../PW/pwcom.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
 ../PW/show_memory.o \
-../PW/simpson.o \
 ../PW/smallg_q.o \
 ../PW/sph_bes.o \
 ../PW/stop_pw.o \
