@@ -89,6 +89,13 @@ sparc-sun-* )
 	try_ar="ar"
 	try_arflags="ruv"
 	;;
+*cray-unicosmp* )
+	is_x1=1
+	try_f90="ftn"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__X1"
+	;;
 * )
 	AC_MSG_WARN(unsupported architecture)
 	problems="$problems\\
@@ -173,6 +180,10 @@ alphaev*-dec-osf* )
 sparc-sun-*:* )
 	try_cc="cc gcc"
 	try_f77="f77 $f90"
+	;;
+*cray-unicosmp*:ftn )
+	try_cc="cc"
+	try_f77="$f90"
 	;;
 * )
 	# unknown, try these
@@ -263,6 +274,7 @@ x86_64-*-linux-gnu:pgcc:pgf90 )                   ;;
 mips-sgi-*:cc:f90 )                               ;;
 alphaev*-dec-osf*:cc:f90 )                        ;;
 # sparc-sun-*:mpcc:mpf90 | sparc-sun-*:cc:f90 )     ;;
+# *cray-unicosmp*:cc:ftn )                          ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -392,6 +404,15 @@ sparc-sun-*:mpf90 | sparc-sun-*:f90 )
 	try_ldflags=""
 	try_dflags="-DSUN"
 	;;
+*cray-unicosmp*:ftn )
+        try_fflags="-s default64 -dp -rma -e0 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="FFLAGS = -s default64 -dp -rma -e0 -O0 -Z"
+        try_ldflags="-s default64 -f nan64"
+        try_dflags="$try_dflags -D__X1_COA"
+        pre_f_dflags="-e Z -F"
+        have_cpp=1
+	;;
 *:g77 )
 	# g77 is known not to work, but one might want to try anyway
 	try_fflags=""
@@ -456,6 +477,10 @@ sparc-sun-*:mpcc | sparc-sun-*:cc )
 -xlic_lib=sunperf"
 	try_cpp="fpp"
 	;;
+*cray-unicosmp*:cc )
+        try_cflags=""
+        c_ldflags=""
+        ;;
 *:gcc )
 	try_cflags="-O3 -fomit-frame-pointer"
 	try_cpp="cpp"
