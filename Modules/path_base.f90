@@ -1213,7 +1213,7 @@ MODULE path_base
             !
             IF ( num_of_scf_images > nimage ) EXIT find_scf_images
             !
-            free_me = MAXLOC( error, 1, frozen == .TRUE. )
+            free_me = MAXLOC( error, 1, frozen )
             !
             frozen(free_me) = .FALSE.
             !
