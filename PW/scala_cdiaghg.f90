@@ -1,17 +1,13 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
-#ifdef __T3E
-#ifdef __AIX
-#define PCELSET pzelset
-#define PCHEGVX pzhegvx
-#endif
+!----------------------------------------------------------------------------
+SUBROUTINE scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
+  !----------------------------------------------------------------------------
   !
   !     Solves the generalized problem Ax=lambdaBx for
   !     hermitian comples matrix using Blacs and
@@ -39,33 +35,42 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !
   ! This  driver work just if npool=1
   !
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
   USE io_global,  ONLY :  stdout
-  implicit none
-  integer :: n, ilda, ildb, ildz
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: n, ilda, ildb, ildz
   ! input: size of the matrix to diagonalize
   ! input: see before
 
-  real (kind=DP) :: w (n)
+  REAL (kind=DP) :: w (n)
   ! output: eigenvalues
 
-  complex (kind=DP) :: a (ilda, n), b (ildb, n), z (ildz, n)
+  COMPLEX (kind=DP) :: a (ilda, n), b (ildb, n), z (ildz, n)
   ! input: matrix to diagonalize
   ! input: overlap matrix
   ! output: eigenvectors
-  real (kind=DP) :: zero, mone
+  !
+#if defined (__T3E)
+#  if defined (__AIX)
+#define PCELSET pzelset
+#define PCHEGVX pzhegvx
+#endif
+  !
+  REAL (kind=DP) :: zero, mone
   ! zero
   ! minus one
 
-  parameter (zero = 0.0d+0, mone = - 1.d0)
+  PARAMETER (zero = 0.0d+0, mone = - 1.d0)
 
-  integer :: maxprocs, maxn
+  INTEGER :: maxprocs, maxn
   ! maximum number of processors
   ! maximum dimension of the matrix
 
-  parameter (maxn = 2000, maxprocs = 256)
+  PARAMETER (maxn = 2000, maxprocs = 256)
 
-  integer :: context, i, j, info, npcol, nprow, mycol, myrow, &
+  INTEGER :: context, i, j, info, npcol, nprow, mycol, myrow, &
        rowsize, colsize, lda, nb, idum, iam_blacs, nprocs_blacs, lwork, &
        lrwork, liwork, m, nz, desca (50), descb (50), descz (50), &
        iclustr (maxprocs * 2), ifail (maxn)
@@ -88,47 +93,47 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   ! clustering of eigenvalues
   ! on output tells which eigenvalues not conv
 
-  real (kind=DP) :: gap (maxprocs)
+  REAL (kind=DP) :: gap (maxprocs)
   ! gap between eigenvalues
-  complex (kind=DP), allocatable::at (:, :)
+  COMPLEX (kind=DP), ALLOCATABLE::at (:, :)
   ! local matrices of this p
-  complex (kind=DP), allocatable::bt (:, :)
+  COMPLEX (kind=DP), ALLOCATABLE::bt (:, :)
 
-  complex (kind=DP), allocatable::zt (:, :)
+  COMPLEX (kind=DP), ALLOCATABLE::zt (:, :)
   ! some variables needed to determine the workspace's size
 
-  integer :: nn, np, npO, nq0, mq0
-  complex (kind=DP), allocatable::work (:)
+  INTEGER :: nn, np, npO, nq0, mq0
+  COMPLEX (kind=DP), ALLOCATABLE::work (:)
   ! work space
-  real (kind=DP), allocatable::rwork (:)
-  integer, allocatable::iwork (:)
-  integer :: PSLAMCH, iceil, numroc
+  REAL (kind=DP), ALLOCATABLE::rwork (:)
+  INTEGER, ALLOCATABLE::iwork (:)
+  INTEGER :: PSLAMCH, iceil, numroc
 
-  external PSLAMCH, iceil, numroc
-  integer :: iws, first
+  EXTERNAL PSLAMCH, iceil, numroc
+  INTEGER :: iws, first
 
-  real (kind=DP) :: time1, time2, tt
-  if (n.gt.maxn) call errore ('scala_cdiaghg', 'n is too large', n)
+  REAL (kind=DP) :: time1, time2, tt
+  IF (n.GT.maxn) CALL errore ('scala_cdiaghg', 'n is too large', n)
   !
   !   Ask for the number of processors
   !
-  call blacs_pinfo (iam_blacs, nprocs_blacs)
-  if (nprocs_blacs.gt.32) call errore ('scala_cdiaghg', &
+  CALL blacs_pinfo (iam_blacs, nprocs_blacs)
+  IF (nprocs_blacs.GT.32) CALL errore ('scala_cdiaghg', &
        'work space not optimized ',  - nprocs_blacs)
   !
   !     Set the dimension of the 2D processors grid
   !
-  call gridsetup_local (nprocs_blacs, nprow, npcol)
+  CALL gridsetup_local (nprocs_blacs, nprow, npcol)
   !
   !     Initialize a single total BLACS context
   !
-  call blacs_get ( - 1, 0, context)
-  call blacs_gridinit (context, 'R', nprow, npcol)
-  call blacs_gridinfo (context, nprow, npcol, myrow, mycol)
+  CALL blacs_get ( - 1, 0, context)
+  CALL blacs_gridinit (context, 'R', nprow, npcol)
+  CALL blacs_gridinfo (context, nprow, npcol, myrow, mycol)
   !
   !     Calculate the blocking factor for the matrix
   !
-  call blockset_priv (nb, 32, n, nprow, npcol)
+  CALL blockset_priv (nb, 32, n, nprow, npcol)
   !
   !     These are basic array descriptors
   !
@@ -138,20 +143,20 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !
   !     allocate local array
   !
-  allocate (at (rowsize, colsize) )
-  allocate (bt (rowsize, colsize) )
-  allocate (zt (rowsize, colsize) )
+  ALLOCATE (at (rowsize, colsize) )
+  ALLOCATE (bt (rowsize, colsize) )
+  ALLOCATE (zt (rowsize, colsize) )
   !
   !     initialize the data structure of description of the matrix partiti
   !
-  call descinit (desca, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call errore ('scala_cdiaghg', &
+  CALL descinit (desca, n, n, nb, nb, 0, 0, context, lda, info)
+  IF (info.NE.0) CALL errore ('scala_cdiaghg', &
        'something wrong with descinit1', info)
-  call descinit (descb, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call errore ('scala_cdiaghg', &
+  CALL descinit (descb, n, n, nb, nb, 0, 0, context, lda, info)
+  IF (info.NE.0) CALL errore ('scala_cdiaghg', &
        'something wrong with descinit2', info)
-  call descinit (descz, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call errore ('scala_cdiaghg', &
+  CALL descinit (descz, n, n, nb, nb, 0, 0, context, lda, info)
+  IF (info.NE.0) CALL errore ('scala_cdiaghg', &
        'something wrong with descinit3', info)
   !
   !   allocate  workspace needed
@@ -165,33 +170,33 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !
   iws = 0
 
-  if (iws.eq.0) then
+  IF (iws.EQ.0) THEN
      lwork = 40 * n / (nprocs_blacs / 16.d0)
-     if (n.gt.1000) then
+     IF (n.GT.1000) THEN
         lrwork = 300 * n / (nprocs_blacs / 16.d0)
         liwork = 8 * n
-     else
+     ELSE
         liwork = 10 * n
         lrwork = 300 * n / (nprocs_blacs / 16.d0)
-     endif
-     lwork = max (10000, lwork)
-     lrwork = max (2000, lrwork)
-     liwork = max (2000, liwork)
-  endif
+     ENDIF
+     lwork = MAX (10000, lwork)
+     lrwork = MAX (2000, lrwork)
+     liwork = MAX (2000, liwork)
+  ENDIF
   !
   !  following the notes included in the man page
   !
 
-  if (iws.eq.1) then
-     nn = max (n, nb, 2)
+  IF (iws.EQ.1) THEN
+     nn = MAX (n, nb, 2)
      npo = numroc (nn, nb, 0, 0, nprow)
-     nq0 = max (numroc (n, nb, 0, 0, npcol), nb)
+     nq0 = MAX (numroc (n, nb, 0, 0, npcol), nb)
 
-     mq0 = numroc (max (n, nb, 2), nb, 0, 0, npcol)
+     mq0 = numroc (MAX (n, nb, 2), nb, 0, 0, npcol)
 
 
 
-     lrwork = 4 * n + max (5 * nn, npo * mq0) + iceil (n, nprow * &
+     lrwork = 4 * n + MAX (5 * nn, npo * mq0) + iceil (n, nprow * &
           npcol) * nn
      ! note: the following few lines from the man page are wrong: the right s
      ! the other way around !!!!!!!
@@ -204,56 +209,56 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
      !
 
      lwork = n + nb * (npo + mq0 + nb)
-     liwork = 6 * max (n, nprow * npcol + 1, 4)
+     liwork = 6 * MAX (n, nprow * npcol + 1, 4)
 
-  endif
+  ENDIF
 
-  if (iws.eq.2) then
+  IF (iws.EQ.2) THEN
      ! the first way we did ( just to compare)
      nb = desca (6)
-     nn = max (n, nb, 2)
+     nn = MAX (n, nb, 2)
 
      np = numroc (n, nb, myrow, 0, nprow)
 
-     liwork = 6 * max (n, nprow * npcol + 1, 4)
+     liwork = 6 * MAX (n, nprow * npcol + 1, 4)
      npo = numroc (nn, nb, 0, 0, nprow)
-     nq0 = max (numroc (n, nb, 0, 0, npcol), nb)
+     nq0 = MAX (numroc (n, nb, 0, 0, npcol), nb)
 
-     mq0 = numroc (max (n, nb, 2), nb, 0, 0, npcol)
-     lrwork = 4 * n + max (5 * nn, npo * mq0) + iceil (n, nprow * &
+     mq0 = numroc (MAX (n, nb, 2), nb, 0, 0, npcol)
+     lrwork = 4 * n + MAX (5 * nn, npo * mq0) + iceil (n, nprow * &
           npcol) * nn
 
-     lwork = n + max (nb * (npo + 1), 3)
+     lwork = n + MAX (nb * (npo + 1), 3)
 
-     lwork = 3 * (max (liwork, lrwork, 2 * lwork) + 3) + 200000
+     lwork = 3 * (MAX (liwork, lrwork, 2 * lwork) + 3) + 200000
      lwork = lwork / 3
      lrwork = lwork
 
      liwork = lwork
 
 
-  endif
+  ENDIF
   !
   !   allocate sufficient work space:
   !
-  allocate (work (lwork) )
-  allocate (rwork (lrwork) )
+  ALLOCATE (work (lwork) )
+  ALLOCATE (rwork (lrwork) )
 
-  allocate (iwork (liwork) )
+  ALLOCATE (iwork (liwork) )
   !
   !     copy the elements on the local matrices
   !
-  do i = 1, n
-     do j = i, n
-        call PCELSET (at, i, j, desca, a (i, j) )
-        call PCELSET (bt, i, j, descb, b (i, j) )
-     enddo
-  enddo
+  DO i = 1, n
+     DO j = i, n
+        CALL PCELSET (at, i, j, desca, a (i, j) )
+        CALL PCELSET (bt, i, j, descb, b (i, j) )
+     ENDDO
+  ENDDO
   !
   !     compute work parameters and allocate workspace
   !
 
-  call PCHEGVX (1, 'V', 'A', 'U', n, at, 1, 1, desca, bt, 1, 1, &
+  CALL PCHEGVX (1, 'V', 'A', 'U', n, at, 1, 1, desca, bt, 1, 1, &
        descb, zero, zero, idum, idum, mone, m, nz, w, mone, zt, 1, 1, &
        descz, work, lwork, rwork, lrwork, iwork, liwork, ifail, iclustr, &
        gap, info)
@@ -261,62 +266,62 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !   check the info variable to detect problems
   !
 #ifdef DEBUG
-  if (info.ne.0) then
+  IF (info.NE.0) THEN
 
 
-     if (iam_blacs.eq.0) then
-        if (info.lt.0) then
-           if (info> - 100) then
+     IF (iam_blacs.EQ.0) THEN
+        IF (info.LT.0) THEN
+           IF (info> - 100) THEN
               WRITE( stdout,  * ) 'scala_cdiaghg: Argument',  - info, &
                    'to PCHEGVX had an illegal value'
 
-           endif
-           if (info< - 100) then
+           ENDIF
+           IF (info< - 100) THEN
               i = - info / 100
-              j = mod ( - info, 100)
+              j = MOD ( - info, 100)
               WRITE( stdout,  * ) 'scala_cdiagh: Element', j, 'of argument', i, &
                    'to PCHEGVX had an illegal value'
-           endif
-        endif
+           ENDIF
+        ENDIF
         WRITE( stdout, * ) 'given and requested lwork', lwork, work (1)
         WRITE( stdout, * ) 'given and requested lrwork', lrwork, rwork (1)
 
 
         WRITE( stdout, * ) 'given and requested liwork', liwork, iwork (1)
-        if (info.gt.0) then
-           if (mod (info, 2) .ne.0) then
+        IF (info.GT.0) THEN
+           IF (MOD (info, 2) .NE.0) THEN
               WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Calculation failed', &
                    ' to converge'
 
-           endif
-           if (mod (info / 2, 2) .ne.0) then
+           ENDIF
+           IF (MOD (info / 2, 2) .NE.0) THEN
               WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
                    ' to orthogonalize eigenvectors'
 
-           endif
-           if (mod (info / 4, 2) .ne.0) then
+           ENDIF
+           IF (MOD (info / 4, 2) .NE.0) THEN
               WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
                    ' to compute all eigenvectors'
-           endif
-        endif
-     endif
-  endif
+           ENDIF
+        ENDIF
+     ENDIF
+  ENDIF
 #endif
   !
   !    compute the eigenvalues
   !
 
-  call eigen (n, z, ildz, zt, descz, work)
-  deallocate (at)
-  deallocate (bt)
-  deallocate (zt)
-  deallocate (iwork)
-  deallocate (rwork)
-  deallocate (work)
+  CALL eigen (n, z, ildz, zt, descz, work)
+  DEALLOCATE (at)
+  DEALLOCATE (bt)
+  DEALLOCATE (zt)
+  DEALLOCATE (iwork)
+  DEALLOCATE (rwork)
+  DEALLOCATE (work)
   !
-  call blacs_gridexit (context)
+  CALL blacs_gridexit (context)
   !
 #endif
-  return
-end subroutine scala_cdiaghg
+  RETURN
+END SUBROUTINE scala_cdiaghg
 

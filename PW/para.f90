@@ -75,8 +75,6 @@ SUBROUTINE reduce( dim, ps )
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
   ! ...              uses SHMEM for the T3D/T3E, MPI otherwhise
   !
-#if defined (__PARA)
-  !
   USE mp_global, ONLY : intra_pool_comm, my_pool_id, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
@@ -86,6 +84,9 @@ SUBROUTINE reduce( dim, ps )
   !
   INTEGER            :: dim
   REAL (KIND=DP)     :: ps(dim)
+  !
+#if defined (__PARA)  
+  !
   INTEGER            :: info, n, nbuf
   INTEGER, PARAMETER :: maxb = 10000
   REAL (KIND=DP)     :: buff(maxb)  
@@ -178,8 +179,6 @@ SUBROUTINE ireduce( dim, is )
   !
   ! ... sums a distributed variable is(dim) over the processors.
   !
-#if defined (__PARA)
-  !
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
   USE parallel_include    
@@ -187,6 +186,9 @@ SUBROUTINE ireduce( dim, is )
   IMPLICIT NONE
   !
   INTEGER            :: dim, is(dim)
+  !
+#if defined (__PARA)  
+  !
   INTEGER            :: info, n, m, nbuf
   INTEGER, PARAMETER :: maxi = 500
   INTEGER            :: buff(maxi)
@@ -236,9 +238,7 @@ SUBROUTINE poolreduce( dim, ps )
   !
   ! ... Sums a distributed variable ps(dim) over the pools.
   ! ... This MPI-only version uses a fixed-length buffer
-  !       
-#if defined (__PARA)
-  !  
+  !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
                         my_pool_id, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
@@ -249,6 +249,9 @@ SUBROUTINE poolreduce( dim, ps )
   !
   INTEGER            :: dim
   REAL (KIND=DP)     :: ps(dim)
+  !
+#if defined (__PARA)  
+  !
   INTEGER, PARAMETER :: maxb = 10000
   REAL (KIND=DP)     :: buff(maxb)
   INTEGER            :: info, nbuf, n
@@ -272,7 +275,6 @@ SUBROUTINE poolreduce( dim, ps )
      CALL errore( 'poolreduce', 'info<>0 at allreduce1', info )
      !
      ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
-     !CALL DCOPY( maxb, buff, 1, ps(1+(n-1)*maxb), 1 )
      !
   END DO
   !
@@ -284,7 +286,6 @@ SUBROUTINE poolreduce( dim, ps )
      CALL errore( 'poolreduce', 'info<>0 at allreduce2', info )
      !
      ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
-     !CALL DCOPY( dim-nbuf*maxb, buff, 1, ps(1+nbuf*maxb), 1 )
      !
   END IF
   !
@@ -307,8 +308,6 @@ SUBROUTINE gather( f_in, f_out )
   ! ... REAL*8  f_in  = distributed variable (nxx)
   ! ... REAL*8  f_out = gathered variable (nrx1*nrx2*nrx3)
   !
-#if defined (__PARA)
-  !
   USE pfft,      ONLY : ncplane, npp, nxx   
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -318,6 +317,9 @@ SUBROUTINE gather( f_in, f_out )
   IMPLICIT NONE
   !
   REAL (KIND=DP) :: f_in(nxx), f_out(*)
+  !
+#if defined (__PARA)  
+  !
   INTEGER        :: proc, info
   INTEGER        :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
   !
@@ -364,8 +366,6 @@ SUBROUTINE cgather_sym( f_in, f_out )
   ! ... COMPLEX*16  f_in  = distributed variable (nrxx)
   ! ... COMPLEX*16  f_out = gathered variable (nrx1*nrx2*nrx3)
   !
-#if defined (__PARA)
-  !
   USE pfft,      ONLY : ncplane, npp, nxx     
   USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
                         nproc_pool, me_pool
@@ -375,6 +375,9 @@ SUBROUTINE cgather_sym( f_in, f_out )
   IMPLICIT NONE
   !
   COMPLEX(KIND=DP) :: f_in(nxx), f_out(*)
+  !
+#if defined (__PARA)  
+  !
   INTEGER          :: proc, info
   INTEGER          :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
   !
@@ -426,8 +429,6 @@ SUBROUTINE scatter( f_in, f_out )
   ! ... REAL*8  f_in  = gathered variable (nrx1*nrx2*nrx3)
   ! ... REAL*8  f_out = distributed variable (nxx)
   !
-#if defined (__PARA)
-  !
   USE pfft,      ONLY : ncplane, npp, nxx 
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
                         me_pool, root_pool
@@ -438,6 +439,9 @@ SUBROUTINE scatter( f_in, f_out )
   IMPLICIT NONE
   !
   REAL (KIND=DP) :: f_in(*), f_out(nxx)
+  !
+#if defined (__PARA)  
+  !
   INTEGER        :: proc, info
   INTEGER        :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
   !
@@ -487,8 +491,6 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... On input, f_in is required only on the first node of the first pool. 
   ! ... f_in and f_out may coincide.
   ! ... Not a smart implementation!
-  !  
-#if defined (__PARA)
   !
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, &
@@ -504,6 +506,9 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   REAL (KIND=DP) :: f_in(nsize,nkstot), f_out(nsize,nks)
     ! input  ( contains values for all k-point )
     ! output ( only for k-points of mypool )
+  !
+#if defined (__PARA)  
+  !
   INTEGER :: rest, nbase
     ! the rest of the integer division nkstot / npo
     ! the position in the original list
@@ -524,7 +529,6 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
   !
   f_out(:,1:nks) = f_in(:,(nbase+1):(nbase+nks))
-  !CALL DCOPY( nsize * nks, f_in(1,nbase+1), 1, f_out, 1 )
   !
   ! ... copy from the first node of every pool
   ! ... to the other nodes of every pool
@@ -570,8 +574,6 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
   !
   ! ...  The output is overwritten on f_in ; f_aux is used as work space
   !
-#if defined (__PARA)
-  !
   USE para_const, ONLY : maxproc
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool
   USE mp,         ONLY : mp_barrier
@@ -581,6 +583,9 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
   !
   INTEGER        :: nrx3, nxx_, sign, ncp_(maxproc), npp_(maxproc)
   REAL (KIND=DP) :: f_in(2*nxx_), f_aux(2*nxx_)
+  !
+#if defined (__PARA)  
+  !
   INTEGER        :: dest, from, k, proc, ierr
   INTEGER        :: offset1(0:maxproc-1), sendcount(0:maxproc-1), &
                     sdispls(0:maxproc-1), recvcount(0:maxproc-1), &
@@ -705,8 +710,6 @@ SUBROUTINE poolextreme( ps, iflag )
   ! ... Finds the maximum (iflag.gt.0) or the minimum (iflag.le.0) value o
   ! ... a real variable among the values distributed across the pools and
   ! ... returns this value to all pools.
-  !       
-#if defined (__PARA)
   !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, npool
   USE mp,        ONLY : mp_barrier  
@@ -714,8 +717,13 @@ SUBROUTINE poolextreme( ps, iflag )
   !
   IMPLICIT NONE
   !
+  INTEGER        :: iflag
+  REAL (KIND=DP) :: ps
+  !
+#if defined (__PARA)  
+  !
   INTEGER        :: iflag, info
-  REAL (KIND=DP) :: ps, psr
+  REAL (KIND=DP) :: ps, psr 
   !
   !
   IF ( npool <= 1 ) RETURN
@@ -753,8 +761,6 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   ! ... recovers on the first processor of the first pool a 
   ! ... distributed vector
   !
-#if defined (__PARA)
-  !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
                         npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
@@ -762,9 +768,13 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  INTEGER        :: status(MPI_STATUS_SIZE)
-  INTEGER        :: length, i, nks1, rest, fine, nbase, info, nks, nkstot
   REAL (KIND=DP) :: vec(length,nkstot)
+  INTEGER        :: length, nks, nkstot
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: status(MPI_STATUS_SIZE)
+  INTEGER :: i, nks1, rest, fine, nbase, info
   !
   !
   IF ( npool <= 1 ) RETURN
@@ -826,8 +836,6 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   !
   ! ... as above, for an integer vector
   !
-#if defined (__PARA)
-  !  
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
                         npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
@@ -835,9 +843,13 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  INTEGER :: status(MPI_STATUS_SIZE)
-  INTEGER :: length, i, nks1, rest, fine, nbase, info, nks, nkstot
   INTEGER :: ivec(length,nkstot)
+  INTEGER :: length, nks, nkstot
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: status(MPI_STATUS_SIZE)
+  INTEGER :: i, nks1, rest, fine, nbase, info
   !
   !
   IF ( npool <= 1 ) RETURN
@@ -900,16 +912,19 @@ SUBROUTINE extreme( ps, iflag )
   ! ... Finds the maximum (iflag.gt.0) or the minimum (iflag.le.0) value
   ! ... of a real variable among the values distributed on a given pool
   !
-#if defined (__PARA)
-  !
   USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP) :: ps, psr
-  INTEGER        :: iflag, info
+  REAL (KIND=DP) :: ps
+  INTEGER        :: iflag
+  !
+#if defined (__PARA)  
+  !
+  REAL (KIND=DP) :: psr
+  INTEGER        :: info
   !
   !
   CALL mp_barrier( intra_image_comm )

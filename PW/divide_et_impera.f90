@@ -14,27 +14,28 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   ! ... This routine divides the k points (with granularity kunit) among nodes
   ! ... and sets the variable nkstot equal to the total number of k-points
   !
-#if defined (__PARA)
-  !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, npool, kunit
   !
   IMPLICIT NONE
   !
-  INTEGER :: nkstot, nks, ik, isk(nks), rest, nbase
-    ! total number of k-points
-    ! number of k-points per pool
-    ! counter on kpoints
-    ! spin index of each kpoint (when lsda=.t.)
-    ! the rest of the integer division nkstot/npool
-    ! the position in the original list of the fi
-    ! point that belongs to this pool - 1
   LOGICAL :: lsda
     ! logical for local spin density approx.
   REAL (KIND=DP) :: xk(3,nks), wk(nks)
     ! k-points
     ! k-point weights
+  INTEGER :: nkstot, nks, isk(nks)
+    ! total number of k-points
+    ! number of k-points per pool
+    ! spin index of each kpoint (when lsda=.t.)
+  !
+#if defined (__PARA)
+  !
+  INTEGER :: ik, nbase
+    ! counter on kpoints
+    ! the position in the original list of the fi
+    ! point that belongs to this pool - 1
   !
   !
   IF ( MOD( nks, kunit ) /= 0 ) &

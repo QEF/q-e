@@ -13,17 +13,18 @@ SUBROUTINE psymrho( rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
   !
   ! ...  p-symmetrize the charge density.
   !
-#if defined  (__PARA)
-  !
   USE kinds,     ONLY : DP
   USE pfft,      ONLY : nxx
   USE mp_global, ONLY : me_pool
   !
   IMPLICIT NONE
   !
-  INTEGER                     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
-  REAL (KIND=DP)              :: rho (nxx)
-  REAL (KIND=DP), ALLOCATABLE :: rrho (:)
+  INTEGER        :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
+  REAL (KIND=DP) :: rho(nxx)
+  !
+#if defined  (__PARA)
+  !
+  REAL (KIND=DP), ALLOCATABLE :: rrho(:)
   !
   !
   ALLOCATE (rrho( nrx1 * nrx2 * nrx3))    

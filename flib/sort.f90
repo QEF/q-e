@@ -397,6 +397,10 @@ end subroutine ihpsort
 !     == THE WORK-SPACE 'MARK' OF LENGTH 50 PERMITS UP TO 2**(50/2)   ==
 !     ==--------------------------------------------------------------==
       USE kinds
+      
+      INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+                 IY, INTEST, K, IFK, K1, IP, LNGTH
+      
       logical :: cpgt,cplt
       REAL(dbl) :: COUNT(N),AV,X
       
@@ -548,6 +552,11 @@ end subroutine ihpsort
 !     == same as rqsort but for array of integers                     ==
 !     ==--------------------------------------------------------------==
       USE kinds
+      
+      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+                 IY, INTEST, K, IFK, K1, IP, LNGTH
+            
+      
       INTEGER :: COUNT(N),AV,X
       
       INTEGER INDEX(N)
@@ -700,6 +709,10 @@ end subroutine ihpsort
 !     == THE WORK-SPACE 'MARK' OF LENGTH 50 PERMITS UP TO 2**(50/2)   ==
 !     ==--------------------------------------------------------------==
       USE kinds
+      
+      INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+                 IY, INTEST, K, IFK, K1, IP, LNGTH
+      
       REAL(dbl) COUNT(N),AV,X
       
       INTEGER INDEX(N)
