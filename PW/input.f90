@@ -722,6 +722,10 @@ SUBROUTINE iosys()
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown mixing ' // TRIM( mixing_mode ), 1 )
   END SELECT
+
+  IF ( dipfield .AND. imix.ne.-1  ) THEN
+     CALL errore( 'input', 'use mixing_mod=potential with dipfield' , 1 )
+  END IF
   !
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
