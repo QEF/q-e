@@ -721,10 +721,13 @@ SUBROUTINE setup()
   END IF
   !
   ! ... non scf calculation: do not change the number of k-points
+  ! ... to account for reduced symmetry, unless you need to
+  ! ... (as in phonon or raman or DOS calculations, or whenever the
+  ! ...  Fermi energy has to be calculated)
   !
-  ltest = ( nks /= input_nks ) .AND. &
-          ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) )
-  !
+  ltest = ( nks /= input_nks ) .AND. & 
+          ( .NOT. ( ltetra .OR. lgauss ) ) .AND. &
+          ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) ) 
   IF ( ltest ) THEN
      !
      WRITE( stdout, '(/,5X,"Only input k-points are used ", &

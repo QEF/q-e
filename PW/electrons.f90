@@ -38,10 +38,10 @@ SUBROUTINE electrons()
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid  
-  USE klist,                ONLY : xk, degauss, nelec, ngk, nks, nkstot, &
-                                   lgauss    
+  USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
+                                   lgauss, ngauss, degauss    
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag
-  USE ktetra,               ONLY : ltetra  
+  USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only  
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
@@ -178,6 +178,18 @@ SUBROUTINE electrons()
         WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
         !
      END DO
+     !
+     IF ( lgauss ) THEN
+        !
+        call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef)
+        WRITE( stdout, 9040 ) ef * rytoev
+        !
+     ELSE IF ( ltetra ) THEN
+        !
+        CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef)
+        WRITE( stdout, 9040 ) ef * rytoev
+        !
+     END IF
      !
 #if defined (FLUSH)
      CALL flush( stdout )
