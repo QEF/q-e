@@ -544,7 +544,7 @@
       use betax
 !
       implicit none
-      integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj
+      integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj, ierr
       real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
       real(kind=8), allocatable:: ylmb(:,:), ylm(:,:), &
                                   dylmb(:,:,:,:), dylm(:,:,:,:)
@@ -552,15 +552,19 @@
       real(kind=8) xg, c, betagl, dbetagl, gg
 !
 ! 
-      allocate(ylmb(ngb,lmaxq*lmaxq))
+      allocate( ylmb( ngb, lmaxq*lmaxq ), STAT=ierr )
+      IF( ierr  /= 0 ) &
+        CALL errore(' newnlinit ', ' cannot allocate ylmb ', 1 )
 !
       qradb(:,:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
+
 
 !     ===============================================================
 !     initialization for vanderbilt species
 !     ===============================================================
       do is=1,nvb
+
 !     ---------------------------------------------------------------
 !     calculation of array qradb(igb,iv,jv,is)
 !     ---------------------------------------------------------------
@@ -586,6 +590,7 @@
                enddo
             enddo
          enddo
+
 !
 !     ---------------------------------------------------------------
 !     stocking of qgb(igb,ijv,is) and of qq(iv,jv,is)
@@ -606,6 +611,7 @@
 !
             end do
          end do
+
       end do
 !
       if (tpre) then
@@ -1101,7 +1107,9 @@
 !     ===============================================================
 !     initialization that is common to all species
 !     ===============================================================
+      WRITE( stdout, fmt="(//,3X,'Common initialization' )" )
       do is=1,nsp
+         WRITE( stdout, fmt="(/,3X,'Specie: ',I5)" ) is
 !!!         if (.not.numeric(is)) then
          if (ipp(is).eq.3) then
             fac=1.0
@@ -1219,7 +1227,7 @@
 ! and derivatives wrt cell    dbeta dqrad
 !
       call newnlinit
-!
+
       return
       end
 
@@ -1241,7 +1249,7 @@
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
-      real(kind=8) :: ylm(ngb,lmaxq*lmaxq), dylm(ngb,lmaxq*lmaxq,3,3)
+      real(kind=8) :: ylm(ngb,lmaxq*lmaxq)
 ! 
 !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
 !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -1292,7 +1300,7 @@
             qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ivs,jvs,l,is)
          end do
       end do
-!
+
       return
       end
 
