@@ -41,7 +41,7 @@
   LNKFLAGS=  $(ARCHFLAGS) 
 #
 # Flag for the compilation of the c source files
-  CFLAGS=   $(CARCHFLAGS) $(CPMACRO) -tune $(CPUTYPE) -fast
+  CCFLAGS=   $(CARCHFLAGS) $(CPMACRO) -tune $(CPUTYPE) -fast
 #
 # Libraries
   LIB=  $(COMMLIB) $(SCILIB)

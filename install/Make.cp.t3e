@@ -32,7 +32,7 @@
   LNKFLAGS = $(ARCHFLAGS)
 #
 # Flag for the compilation of the c source files
-  CFLAGS= -O2 $(CPMACRO)
+  CCFLAGS= -O2 $(CPMACRO)
 #
 # Libraries
   LIB= $(BENCHLIB)
