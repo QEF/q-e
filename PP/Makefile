@@ -34,7 +34,6 @@ MODULES = \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
-../Modules/formats.o \
 ../Modules/functionals.o \
 ../Modules/io_base.o \
 ../Modules/io_files.o \

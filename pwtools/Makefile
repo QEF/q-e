@@ -32,7 +32,6 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/io_files.o \
 ../Modules/fft_scalar.o \
-../Modules/formats.o \
 ../Modules/kind.o \
 ../Modules/mp.o \
 ../Modules/mp_global.o \

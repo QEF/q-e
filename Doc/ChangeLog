@@ -1,3 +1,7 @@
+18 Aug 2004  Duplicated routines "matches", "capital" removed,
+             unused case calculation='dispersion' removed (PG)
+             Various missing README added, minor manual changes [Gerardo]
+
 18 Aug 2004  NEB code reorganization. All the routines involved in "path" 
              optimization are grouped into modules starting with "path_". 
              The output has been slightly restyled. 

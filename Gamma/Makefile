@@ -232,7 +232,6 @@ MODULES = \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
-../Modules/formats.o \
 ../Modules/functionals.o \
 ../Modules/input_parameters.o \
 ../Modules/io_base.o \
@@ -244,7 +243,6 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
-../Modules/neb_variables.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
