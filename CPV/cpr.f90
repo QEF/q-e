@@ -128,7 +128,7 @@
       use ions_positions, only: ions_hmove, ions_move
       use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
                            ions_noseupd, tempw
-      use electrons_nose, only: qne, ekincw
+      use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe
 
 ! wavefunctions
 !
@@ -225,12 +225,10 @@
       complex(kind=8), allocatable:: c2(:), c3(:)
       complex(kind=8)  speed
       real(kind=8)                                                      & 
-     &       tempp, xnhe0, verl1, verl2, verl3,     &
-     &       fccc, xnhem, vnhe, savee, saveh, savep,             &
-     &       enthal, epot, xnhep, epre, enow, tps, econs, econt, &
-     &       ettt,                       &
-     &       ccc, bigr, dt2,               &
-     &       dt2by2, twodel, dt2bye, dt2hbe
+     &       tempp, verl1, verl2, verl3,     &
+     &       fccc, savee, saveh, savep,             &
+     &       enthal, epot, epre, enow, tps, econs, econt, &
+     &       ettt, ccc, bigr, dt2, dt2by2, twodel, dt2bye, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
       real(kind=8) temps(nsx)
       integer is, nacc, ia, j, iter, nfi, i, isa, ipos

@@ -847,8 +847,15 @@
 !
       IMPLICIT NONE
 
-      REAL(dbl) :: vnhp, xnhp0, xnhpm, xnhpp, qnp, gkbt
-      REAL(dbl) :: tempw, fnosep
+      REAL(dbl) :: vnhp = 0.0d0
+      REAL(dbl) :: xnhp0 = 0.0d0
+      REAL(dbl) :: xnhpm = 0.0d0
+      REAL(dbl) :: xnhpp = 0.0d0
+      REAL(dbl) :: xnhpm2 = 0.0d0
+      REAL(dbl) :: qnp = 0.0d0
+      REAL(dbl) :: gkbt = 0.0d0
+      REAL(dbl) :: tempw = 0.0d0
+      REAL(dbl) :: fnosep = 0.0d0
 
 !------------------------------------------------------------------------------!
   CONTAINS 
@@ -863,6 +870,7 @@
     vnhp  = 0.0d0
     xnhp0 = 0.0d0
     xnhpm = 0.0d0 
+    xnhpm2 = 0.0d0 
     xnhpp = 0.0d0
     tempw = tempw_
     fnosep = fnosep_

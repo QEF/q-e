@@ -56,6 +56,12 @@
       REAL(dbl) :: fnosee   = 0.0d0   !  frequency of the thermostat ( in THz )
       REAL(dbl) :: qne      = 0.0d0   !  mass of teh termostat
       REAL(dbl) :: ekincw   = 0.0d0   !  kinetic energy to be kept constant
+
+      REAL(dbl) :: xnhe0   = 0.0d0   
+      REAL(dbl) :: xnhep   = 0.0d0   
+      REAL(dbl) :: xnhem   = 0.0d0   
+      REAL(dbl) :: xnhem2  = 0.0d0   
+      REAL(dbl) :: vnhe    = 0.0d0   
 !
 
 !------------------------------------------------------------------------------!
