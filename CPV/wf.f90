@@ -1267,13 +1267,11 @@ end subroutine wf
   use constants
   use elct
   use control_flags, only: iprsta
+  use parallel_include
 #ifdef __PARA
   use para_mod
 #endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
 
   integer :: f3(nw), f4(nw), i,j,inw
   integer ,intent(in) :: m
@@ -1604,13 +1602,11 @@ end subroutine wf
    use wfparm
 !   use cell_base
         use cvan
+   use parallel_include     
 #ifdef __PARA
    use para_mod
 #endif
    implicit none   
-#ifdef __PARA
-   include 'mpif.h'
-#endif
         real(kind=8), intent(in) :: b1(3),b2(3),b3(3)
 #ifdef __PARA
    integer :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
@@ -2660,14 +2656,12 @@ end subroutine wf
    use efcalc
    use cell_base
 !   use parms
-        use smooth_grid_dimensions, nnrs=>nnrsx
+   use smooth_grid_dimensions, nnrs=>nnrsx
+   use parallel_include
 #ifdef __PARA
    use para_mod
 #endif
    implicit none
-#ifdef __PARA
-   include 'mpif.h'
-#endif
 
    integer ir1, ir2, ir3, ibig3
    allocate(xdist(nnrs))
@@ -2826,13 +2820,11 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
         use constants
         use wfparm
         use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+        use parallel_include
 #ifdef __PARA
         use para_mod
 #endif
         implicit none
-#ifdef __PARA
-        include 'mpif.h'
-#endif
 
         integer ir1, ir2, ir3, ibig3 , inw
         real(kind=8) x
@@ -2925,15 +2917,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use gvecp, only: ng=>ngm
       use gvec, only: gx, mill_l
       use elct
+      use parallel_include
 #ifdef __PARA 
       use para_mod
 #endif
 
       implicit none
 
-#ifdef __PARA 
-      include 'mpif.h'
-#endif
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
       complex(kind=8) ,intent(in) :: rhog(ng,nspin) 
       complex(kind=8),allocatable :: bigrho(:)
@@ -3074,13 +3064,12 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !      use ion_parameters
       use ions_base
       use constants
+      use parallel_include
 #ifdef __PARA
       use para_mod
 #endif
       implicit none
-#ifdef __PARA
-      include 'mpif.h'
-#endif
+
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
       complex(kind=8) ,intent(in) :: rhog(ng,nspin)
       complex(kind=8),allocatable :: bigrho(:)
@@ -3406,13 +3395,11 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
     use wfparm2
     use control_flags
     use cell_base
+    use parallel_include
 #ifdef __PARA
       use para_mod
 #endif
   implicit none
-#ifdef __PARA
-      include 'mpif.h'
-#endif
 
 !    (m,m) is the size of the matrix Ospin.
 !    Ospin is input overlap matrix.
@@ -3986,9 +3973,10 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !      use parms
       use gvecw , only : ngw
       use work, only : wrk1
+      use parallel_include
 !
       implicit none
-      include 'mpif.h'
+
       integer unit, jw
       complex*16 c(ngw,nx)
       complex*16, pointer:: psis(:)
