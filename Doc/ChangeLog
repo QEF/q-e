@@ -1,5 +1,17 @@
+23 Nov 2004 Incorrect call to v_of_rho in pw2casino
+            Check on occupancy in lsda calculations re-introduced
+            Documentation updated (PG)
+
+22 Nov 2004 use "sort -d" to obtain machine-independent results,
+            update dependencies [Gerardo]
+            Minor compilation and format problems with g95 (PG)
+
 19 Nov 2004 punch_plot can now write the charge density of each state
             in the noncollinear case (ADC)
+            XML like restart for CP/FPMD: Modules/cp_restart.f90 (CC)
+            PW/input.f90 cleanup, fixed vc-md bug (PC)
+            Routines moved to flib no longer in Makefiles
+            Minor problems in parallel compilation (PG)
 
 18 Nov 2004 Reduction in memory requirements for phonon calculation
             with uspp (routine dvanqq) - courtesy of N. Mounet

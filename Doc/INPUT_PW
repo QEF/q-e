@@ -126,13 +126,17 @@ max_seconds    INTEGER
                jobs stops after max_seconds CPU time
 
 etot_conv_thr  REAL ( default = 1.0D-4 )
-               convergence threshold on total energy (a.u)
-               for ionic minimization. 
+               convergence threshold on total energy (a.u) for ionic 
+               minimization: the convergence criterion is satisfied
+               when the total energy changes less than etot_conv_thr
+               between two consecutive scf steps.
                See also forc_conv_thr - both criteria must be satisfied
 
 forc_conv_thr  REAL ( default = 1.0D-3 )
-               convergence threshold on forces (a.u)
-               for ionic minimization.
+               convergence threshold on forces (a.u) for ionic 
+               minimization: the convergence criterion is satisfied
+               when all components of all forces are smaller than
+               forc_conv_thr.
                See also etot_conv_thr - both criteria must be satisfied
 
 disk_io        CHARACTER
