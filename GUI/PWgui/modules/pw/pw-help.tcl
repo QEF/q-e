@@ -355,6 +355,19 @@ set _hubbard {
 help lda_plus_u     -vartype logical -helpfmt txt2html -helptext "$_hubbard\n          (default: .false.)"
 help Hubbard_U      -vartype real -helpfmt txt2html -helptext "$_hubbard\n             (default: 0.0 for all species)"
 help Hubbard_alpha  -vartype real -helpfmt txt2html -helptext "$_hubbard\n             (default: 0.0 for all species)"
+help U_projector_type -vartype character -helpfmt txt2html -helptext {
+               Only active when lda_plus_U is .true., specifies the type
+               of projector on localized orbital to be used in the LDA+U
+               scheme.
+               Currently available choices:
+               'atomic': use atomic wfc's (as they are) to build the projector 
+               'ortho-atomic': use Lowdin orthogonalized atomic wfc's
+               'file': use the information from file "prefix".atwfc that must
+                       have been generated previously, for instance by pmw.x
+                       (see PP/poormanwannier.f90 for details)
+               NB: forces and stress currently implemented only for the
+                   'atomic' choice.
+}
 
 help edir         -vartype integer -helpfmt txt2html -helptext { 
              1, 2 or 3. Used only if tefield is .TRUE. The direction of the
@@ -805,7 +818,7 @@ help atomic_coordinates_last \
     -vartype {character, real, real, real} \
     -helpfmt txt2html -helptext $_pos
 
-# BEWARE: is is assumed that 50 intermediate images is the
+# BEWARE: it is assumed that 50 intermediate images is the
 # largest allowed number (this is dirty)
 for {set i 1} {$i <= 50} {incr i} {
     help atomic_coordinates_${i}_inter \

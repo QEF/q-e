@@ -341,14 +341,14 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		separator -label "--- Spin polarization ---"
 
 		var nspin {
-		    -label     "Perform spin-polarized calculation:"
+		    -label     "Perform spin-polarized calculation (nspin):"
 		    -textvalue {No Yes}
 		    -value     {1  2}
 		    -widget    radiobox
 		}
 
 		dimension starting_magnetization {
-		    -label "Starting magnetization"
+		    -label "Starting magnetization (starting_magnetization):"
 		    -text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" atom"
 		    -validate  fortranreal
 		    -start 1
@@ -358,7 +358,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		separator -label "--- LDA + U parameters ---"
 	       
 		var lda_plus_u {
-		    -label     "Perform LDA + U calculation:"
+		    -label     "Perform LDA + U calculation (lda_plus_u):"
 		    -textvalue {No Yes}
 		    -value     {.false.  .true.}
 		    -widget    radiobox
@@ -366,16 +366,31 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    
 		group hubbard -name Hubbard {
 		    dimension Hubbard_U {
-			-label     "Hubbarb U:"
+			-label     "Hubbarb U (Hubbard_U):"
 			-validate  fortranreal
 			-start 1 -end 1
 		    }
 		    
 		    dimension Hubbard_alpha {
-			-label     "Hubbard alpha:"
+			-label     "Hubbard alpha (Hubbard_alpha):"
 			-validate  fortranreal
 			-start 1 -end 1
 		    }
+
+		    var U_projector_type {
+			-label  "Type of projector on localized orbital (U_projector_type):"
+			-widget optionmenu
+			-textvalue {
+			    "use atomic wfc's (as they are) to build the projector <atomic>"
+			    "use Lowdin orthogonalized atomic wfc's <ortho-atomic>"
+			    " use the information from file \"prefix\".atwfc <file>"
+			}
+			-value {
+			    'atomic'
+			    'ortho-atomic'
+			    'file'
+			}
+		    }		
 		}
 
 		separator -label "--- Variable cell parameters ---"
@@ -998,7 +1013,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 
 	# intermediate_image
 	    
-	# BEWARE: is is assumed that 50 intermediate images is the
+	# BEWARE: it is assumed that 50 intermediate images is the
 	# largest allowed number (this is dirty)
 	    	
 	for {set i 1} {$i <= 50} {incr i} {
