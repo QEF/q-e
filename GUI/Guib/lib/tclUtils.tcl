@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.6 2004-09-03 07:52:26 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.7 2004-09-20 07:28:41 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -1292,11 +1292,17 @@ proc ::tclu::stringMatch {pattern string {nocase 0}} {
 #                                    return-value of the previous 
 #                                    "nonblocking open" call.
 #    
-#    3. nonblocking unset id      -- will unset all nonblocking(*,$id) array 
+#    3. nonblocking stdout id cmd -- will call the cmd and pass the new
+#                                    text on stdout to a proc "cmd". The 
+#                                    proc should be of form:  cmd id text
+#
+#    4. nonblocking save id file  -- will save the stdout to file
+#
+#    5. nonblocking unset id      -- will unset all nonblocking(*,$id) array 
 #                                    elements. Call this when a nonblocking id'th
 #                                    information is not needed anymore.
 #
-#    4. nonblocking kill id       -- kills the nonblocking id process
+#    6. nonblocking kill id       -- kills the nonblocking id process
 #
 #  RETURN VALUE
 #    1. In mode "open" the routine returns the ID.
@@ -1315,7 +1321,9 @@ proc ::tclu::nonblocking {mode args} {
 
     switch -exact -- $mode {
 	open {
-	    return [incr nonblocking(counter)]
+	    set count [incr nonblocking(counter)]
+	    set nonblocking(status,$count) 1
+	    return $count
 	}
 
 	exec {
@@ -1323,7 +1331,7 @@ proc ::tclu::nonblocking {mode args} {
 	    set args  [lrange $args 1 end]
 	    if { [info exists nonblocking(done,$count)] } {
 		::tclu::ERROR "statement \"::tclu::nonblocking exec\" executed before \"::tclu::nonblocking open\""
-		return
+		return 0
 	    }
 	    set nonblocking(done,$count) 0
 	    set nonblocking(fID,$count)  [open [concat | $args] r]
@@ -1332,7 +1340,18 @@ proc ::tclu::nonblocking {mode args} {
 	    
 	    tkwait variable ::tclu::nonblocking(done,$count)    
 	    #::tclu::DEBUG nonblocking: releasing tkwait variable nonblocking(done,$count) ...
-	    return $count
+	    return $nonblocking(status,$count)
+	}
+
+	stdout {
+	    set count [lindex $args 0]	    
+	    set nonblocking(stdoutCmd,$count) [lindex $args 1]
+	}
+	
+	save {
+	    set count    [lindex $args 0]
+	    set saveFile [lindex $args 1]
+	    writeFile $saveFile $nonblocking(output,$count)
 	}
 
 	unset {
@@ -1358,12 +1377,32 @@ proc ::tclu::_nonblockingEvent {count} {
     variable nonblocking
     #::tclu::DEBUG nonblocking: Event ...
     if { ! [eof $nonblocking(fID,$count)] } {
-	append nonblocking(output,$count) [gets $nonblocking(fID,$count)]\n
+	set txt [gets $nonblocking(fID,$count)]
+	append nonblocking(output,$count) $txt\n
+	
+	if { [info exists nonblocking(stdoutCmd,$count) ] } {
+	    # form of stdout cmd is: 
+	    # either: cmd id text
+	    # or:     {cmd arg1 arg2 ...} id text
+	    # so we should use eval ...
+	    eval $nonblocking(stdoutCmd,$count) $count [list $txt\n]
+	}
+
     } else {
 	if { [catch {close $nonblocking(fID,$count)}] } {
 	    ::tclu::errorDialog "error while closing nonblocking execution \#.$count"
+	    set nonblocking(status,$count) 0
 	}
+
+	if { [info exists nonblocking(stdoutCmd,$count) ] } {
+	    #signal end of run to the stdout ...
+	    eval $nonblocking(stdoutCmd,$count) $count [list {
+		*** END-OF-RUN ***
+	    }]
+	}
+
 	set nonblocking(done,$count) 1
+
     }
 }
 
