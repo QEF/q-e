@@ -172,7 +172,7 @@ program phonon
      !
      if (.not. lgamma .and. lnscf) then
 
-        WRITE(stdout,'("Calculation of q = "3f8.4)') XQQ
+        WRITE(stdout,'("Calculation of q = ",3f8.4)') XQQ
 
         call clean_pw(.false.)
         CALL close_files()
