@@ -80,7 +80,7 @@ SUBROUTINE compute_casino
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
   INTEGER, ALLOCATABLE :: INDEX(:), igtog(:)
   LOGICAL :: exst, found
-  REAL(kind=DP) :: ek, eloc, enl,charge
+  REAL(kind=DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(kind=DP), ALLOCATABLE :: aux(:), hpsi(:,:)
   INTEGER :: ios
   REAL (KIND=DP), EXTERNAL :: ewald
@@ -124,6 +124,7 @@ SUBROUTINE compute_casino
   ek  = 0.d0
   eloc= 0.d0
   enl = 0.d0
+  !
   DO ispin = 1, nspin 
      !
      !     calculate the local contribution to the total energy
@@ -216,7 +217,7 @@ SUBROUTINE compute_casino
   !
   CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, charge, vnew )
+       ehart, etxc, vtxc, etotefield, charge, vnew )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   !
