@@ -820,6 +820,15 @@ $libs"
 			AC_SEARCH_LIBS(pmpi_init, pmpi, libs="$LIBS")
 		fi
 		;;
+	sparc)
+		# check for SUNperf library
+		unset ac_cv_search_zfft3i # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$libs"
+		AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1 have_blas=1
+			       have_lapack=1 libs="-xlic_lib=sunperf $LIBS")
+		;;
 	esac
 
 	if ! test $have_fft
