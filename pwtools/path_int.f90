@@ -34,7 +34,6 @@ PROGRAM images_interpolator
   USE io_files,               ONLY : iunrestart
   USE constants,              ONLY : eps16
   USE formats
-  USE parser,                 ONLY : matches 
   USE basic_algebra_routines, ONLY : norm
   USE supercell,              ONLY : pbc, at, alat
   USE int_global_variables
@@ -47,6 +46,7 @@ PROGRAM images_interpolator
   INTEGER             :: ierr
   REAL (KIND=DP)      :: R, delta_R, x
   LOGICAL             :: no_interpolation
+  LOGICAL, EXTERNAL   :: matches 
   CHARACTER (LEN=20)  :: cell_parameters
   !
   !

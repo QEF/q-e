@@ -125,12 +125,11 @@ contains
 
 ! ... This sub. check if a given fortran unit 'iunit' contains a UPF pseudopot.
 
-        use parser, only: matches
-
         INTEGER, INTENT(IN) :: iunit
         INTEGER, INTENT(OUT) :: info
         CHARACTER(LEN=80) :: dummy
         INTEGER :: ios
+        LOGICAL, EXTERNAL :: matches
         info = 0
         ios  = 0
         header_loop: do while (ios == 0)

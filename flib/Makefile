@@ -5,11 +5,13 @@ include ../make.rules
 
 OBJS = \
 avrec.o \
+capital.o \
 erf.o \
 iceil.o \
 iglocal.o \
 invmat.o \
 latgen.o \
+matches.o \
 ngnr_set.o \
 recips.o \
 rranf.o \

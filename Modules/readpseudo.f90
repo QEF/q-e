@@ -29,7 +29,6 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   !   from unit "iunps" - return error code in "ierr" (success: ierr=0)
   !
   use pseudo_types
-  use parser, only: matches
   !
   implicit none
   !
@@ -40,6 +39,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   !
   integer :: ios
   character (len=80) :: dummy  
+  logical, external :: matches
   !
   !
   CALL nullify_pseudo_upf( upf )
@@ -126,7 +126,6 @@ end subroutine read_pseudo_upf
 subroutine scan_begin (iunps, string, rew)  
   !---------------------------------------------------------------------
   !
-  USE parser, ONLY: matches
   implicit none
   ! Unit of the input file
   integer :: iunps  
@@ -135,6 +134,7 @@ subroutine scan_begin (iunps, string, rew)
   ! String read from file
   character (len=75) :: rstring  
   ! Flag if .true. rewind the file
+  logical, external :: matches
   logical :: rew  
   integer :: ios
 
@@ -151,7 +151,6 @@ end subroutine scan_begin
 
 subroutine scan_end (iunps, string)  
   !---------------------------------------------------------------------
-  USE parser, ONLY: matches
   implicit none
   ! Unit of the input file
   integer :: iunps, ios
@@ -159,6 +158,7 @@ subroutine scan_end (iunps, string)
   character (len=*) :: string  
   ! String read from file
   character (len=75) :: rstring
+  logical, external :: matches
   logical :: rew
 
   read (iunps, '(a)', iostat = ios, err = 300) rstring  
@@ -175,7 +175,6 @@ subroutine read_pseudo_header (upf, iunps)
   !
   USE pseudo_types, ONLY: pseudo_upf
   USE kinds
-  USE parser, ONLY: matches
 
   implicit none
   !
@@ -185,6 +184,7 @@ subroutine read_pseudo_header (upf, iunps)
   integer :: is, ierr  
   integer :: nb, ios, nw  
   character (len=80) :: dummy  
+  logical, external :: matches
 
   ! Version number (presently ignored)
   read (iunps, *, err = 100, iostat = ios) upf%nv , dummy  

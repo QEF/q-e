@@ -10,7 +10,7 @@ all_electron.o \
 ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
-capital.o \
+atomic_number.o \
 cfdsol.o \
 charge.o \
 chargeps.o \
@@ -46,7 +46,6 @@ ld1_writeout.o \
 lderiv.o \
 lderivps.o \
 lschps.o \
-matches.o \
 newd_at.o \
 new_potential.o \
 nodenum.o \
@@ -91,9 +90,6 @@ MODULES = \
 ../Modules/functionals.o \
 ../Modules/io_global.o \
 ../Modules/kind.o \
-../Modules/mp.o \
-../Modules/mp_global.o \
-../Modules/parser.o \
 ../PW/bachel.o \
 ../PW/functionals.o \
 ../PW/lsda_functionals.o

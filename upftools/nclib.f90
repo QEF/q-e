@@ -203,18 +203,16 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
   ! local
   integer :: len, l, i, notset  
-  character (len=1) :: capital
   character (len=50):: dftout * 50  
-  logical :: matches  
-  external capital, matches  
+  character (len=1), external :: capital
+  logical, external :: matches  
   data notset / -1 /  
   data exc / 'NOX', 'SLA' /  
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
        'OBW', 'GL' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBE' /  
-
-
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBE' /  
+
   ! convert to uppercase
   len = len_trim(dft)  
   dftout = ' '  
@@ -304,53 +302,6 @@ subroutine set_dft_value (m, i)
   return  
 
 end subroutine set_dft_value
-!-----------------------------------------------------------------------
-logical function matches (string1, string2)  
-  !-----------------------------------------------------------------------
-  !
-  implicit none  
-  character (len=*) :: string1, string2  
-  integer :: len1, len2, l  
-
-
-  len1 = len_trim(string1)  
-  len2 = len_trim(string2)  
-  do l = 1, len2 - len1 + 1  
-     if (string1 (1:len1) .eq.string2 (l:l + len1 - 1) ) then  
-        matches = .true.  
-        return  
-     endif
-
-  enddo
-
-  matches = .false.  
-  return  
-end function matches
-!
-!-----------------------------------------------------------------------
-function capital (character)  
-  !-----------------------------------------------------------------------
-  !
-  !   converts character to capital if lowercase
-  !   copy character to output in all other cases
-  !
-  implicit none  
-  character (len=1) :: capital, character
-  !
-  character(len=26) :: minuscole='abcdefghijklmnopqrstuvwxyz', &
-                       maiuscole='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  integer :: i
-  !
-  do i=1,26
-     if (character.eq.minuscole(i:i)) then
-        capital=maiuscole(i:i)
-        return
-     end if
-  end do
-  capital = character  
-  !
-  return  
-end function capital
 !
 ! ------------------------------------------------------------------
 function atom_name(atomic_number)

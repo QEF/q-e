@@ -89,8 +89,6 @@ CONTAINS
     ! translates a string containing the exchange-correlation name
     ! into internal indices iexch, icorr, igcx, igcc
     !
-    USE parser, ONLY: matches, capital
-    !
     implicit none
     ! input
     character (len=*) :: dft_
@@ -103,7 +101,10 @@ CONTAINS
     ! local
     integer :: len, l, i
     integer, parameter:: notset = -1
-    character (len=50):: dftout * 50
+    character (len=50):: dftout
+    logical, external :: matches
+    character (len=1), external :: capital
+    !
     data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
          'OBW', 'GL' /

@@ -31,7 +31,6 @@ MODULE io_routines
                                     reset_vel, k_min, k_max, pos_old, grad_old
        USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
-       USE parser,           ONLY : matches
        !
        IMPLICIT NONE
        !
@@ -39,7 +38,7 @@ MODULE io_routines
        !    
        INTEGER              :: i, j, ia
        CHARACTER (LEN=256)  :: input_line
-       LOGICAL              :: file_exists
+       LOGICAL, EXTERNAL    :: matches
        !
        ! ... end of local variables
        !

@@ -122,13 +122,13 @@ MODULE read_cards_module
      SUBROUTINE read_cards( prog )
        !----------------------------------------------------------------------
        !
-       USE parser, ONLY: capital
        !
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)   :: prog   ! calling program ( FP, PW, CP )
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=80)  :: card
+       CHARACTER(LEN=1), EXTERNAL :: capital
        LOGICAL            :: tend
        INTEGER            :: i
        !
@@ -393,14 +393,13 @@ MODULE read_cards_module
      !
      SUBROUTINE card_atomic_positions( input_line, prog )
        !
-       USE parser,           ONLY :  matches
-       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
        CHARACTER(LEN=4)   :: lb_pos
        INTEGER            :: ia, ip, i, k, is, nfield, index
+       LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
@@ -694,12 +693,11 @@ MODULE read_cards_module
      !
      SUBROUTINE card_kpoints( input_line )
        ! 
-       USE parser, ONLY: matches
-       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=256) :: input_line
        INTEGER            :: i
+       LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
@@ -1237,12 +1235,11 @@ MODULE read_cards_module
      !
      SUBROUTINE card_cell_parameters( input_line )
        ! 
-       USE parser, ONLY: matches
-       ! 
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
        INTEGER            :: i, j
+       LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
@@ -1736,12 +1733,14 @@ MODULE read_cards_module
      !
      SUBROUTINE card_climbing_images( input_line )
        !
-       USE parser,        ONLY :  matches, int_to_char
+       USE parser,        ONLY :  int_to_char
        !
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
        LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, EXTERNAL  :: matches
+       ! 
        INTEGER            :: i
        CHARACTER (LEN=5)  :: i_char 
        !
