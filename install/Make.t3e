@@ -8,7 +8,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -40,12 +40,11 @@ F77          = f90
 # the use of DOUBLE PRECISION constants in the code. (SdG)
 
 # More aggressive optimization flags: 
-# FFLAGS       = -O3 -O unroll2  -O pipeline3 -O aggress -O fusion -O bl
+# FFLAGS       = -O3 -O unroll2  -O pipeline3 -O aggress -O fusion -O bl -eZ
 
-FFLAGS       = -em -dp -M1110
+FFLAGS       = -em -dp -M1110 -eZ
 
-F90FLAGS     = $(FFLAGS) -F -eZ $(CPPFLAGS) -p../Modules -p../PW -p../PH
-F77FLAGS     = $(FFLAGS) -eZ 
+F90FLAGS     = $(FFLAGS) -F $(CPPFLAGS) -p../Modules -p../PW -p../PH
 CFLAGS       = $(CPPFLAGS) -O2
 
 # usually blas and lapack are automatically loaded

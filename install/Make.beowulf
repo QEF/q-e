@@ -9,7 +9,7 @@
 	$(F90) $(F90FLAGS) -c $*.F90 -o $*.o
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -41,8 +41,8 @@ F77          = mpif77
 CC           = mpicc
 
 # Please note: -r8 is necessary for numerical stability ..
+FFLAGS       = -fast -r8
 F90FLAGS     = -fast -r8 -I../Modules -I../PW -I../PH
-F77FLAGS     = -fast -r8
 CFLAGS       = -fast $(CPPFLAGS)
 
 # use precompiled pgi libraries ( not very efficient but stable )

@@ -8,7 +8,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -28,7 +28,6 @@ F77          = f77
 CC           = cc
 FFLAGS       = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
                -I../include -I/usr/mpi/include
-F77FLAGS     = $(FFLAGS)
 F90FLAGS     = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH
 CFLAGS       = -D__FFTW -I$(FFTW_INC_DIR)
 

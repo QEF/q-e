@@ -12,7 +12,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -47,12 +47,10 @@ F77          = f90
 CC           = cc
 
 # use -O3 only if you are sure that it actually works 
-FFLAGS       = -mips4 -64 -r8 -TARG:platform=ip35
+FFLAGS       = -mips4 -64 -r8 -TARG:platform=ip35 $(OFLAGS)
 OFLAGS       = -O3 -OPT:Olimit=0:IEEE_arithmetic=3:roundoff=3 \
                -LNO:cs2=8m:fusion=0
-F77FLAGS     = $(FFLAGS) $(OFLAGS)
-F90FLAGS     = $(FFLAGS) $(OFLAGS) -cpp $(CPPFLAGS) \
-               -I../Modules -I../PW -I../PH
+F90FLAGS     = $(FFLAGS) -cpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 CFLAGS       = -mips4 -64 $(OFLAGS) $(CPPFLAGS) 
 
 # SCSL

@@ -13,7 +13,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -22,56 +22,54 @@
 # In this case, specify also  how to load the fftw library (FFTW_LIB)
 # and the path to the fftw.h include file (FFTW_INC_DIR). Example:
 #  32-bit version
-FFTW_LIB       = -L/nethome/proffess/lib/fftw-2.1.5/32/lib -lfftw
-FFTW_INC_DIR   = /nethome/proffess/lib/fftw-2.1.5/32/include
+FFTW_LIB     = -L/nethome/proffess/lib/fftw-2.1.5/32/lib -lfftw
+FFTW_INC_DIR = /nethome/proffess/lib/fftw-2.1.5/32/include
 
 #  64-bit version
-# FFTW_LIB       = -L/nethome/proffess/lib/fftw-2.1.5/64/lib -lfftw
-# FFTW_INC_DIR   = /nethome/proffess/lib/fftw-2.1.5/64/include
+# FFTW_LIB     = -L/nethome/proffess/lib/fftw-2.1.5/64/lib -lfftw
+# FFTW_INC_DIR = /nethome/proffess/lib/fftw-2.1.5/64/include
 
 # Add -D__HP64 to CPPFLAGS for 64-bit compilation
-CPPFLAGS       = -I../include -D__HP -D__FFTW -D__PARA -D__MPI -I$(FFTW_INC_DIR)
+CPPFLAGS     = -I../include -D__HP -D__FFTW -D__PARA -D__MPI -I$(FFTW_INC_DIR)
 
 ## Use the local copy of fftw
-# CPPFLAGS       = -I../include -D__HP -D__FFTW -D__PARA -D__MPI \
-#                  -D__USE_INTERNAL_FFTW
+# CPPFLAGS     = -I../include -D__HP -D__FFTW -D__PARA -D__MPI \
+#                -D__USE_INTERNAL_FFTW
 
-F90            = f90
-F77            = $(F90)
-CC             = mpicc
-
-# 32-bit
-FFLAGS         = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 \
-                 +DA2.0 +DS2.0
-## 64-bit
-# FFLAGS         = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 \
-#                  +DA2.0W +DS2.0W +noppu
-
-F90FLAGS       = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH \
-                 -I/opt/mpi/include
-F77FLAGS       = $(FFLAGS)
-F77FLAGS_NOOPT = -O0
+F90          = f90
+F77          = $(F90)
+CC           = mpicc
 
 # 32-bit
-CFLAGS         = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
+FFLAGS       = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 \
+               +DA2.0 +DS2.0
 ## 64-bit
-# CFLAGS         = $(CPPFLAGS) +O2 +DA2.0W +DS2.0W +DD64 \
-#                  +Odataprefetch +Onolimit
+# FFLAGS       = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 \
+#                +DA2.0W +DS2.0W +noppu
+
+F90FLAGS     = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH \
+               -I/opt/mpi/include
+FFLAGS_NOOPT = -O0
+
+# 32-bit
+CFLAGS       = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
+## 64-bit
+# CFLAGS       = $(CPPFLAGS) +O2 +DA2.0W +DS2.0W +DD64 +Odataprefetch +Onolimit
 
 ## 32-bit
-# LIBS           = -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm
+# LIBS         = -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm
 ## 64-bit
-# LIBS           = -L/opt/mlib/lib/pa20_64 -lveclib -llapack $(FFTW_LIB) -lm
+# LIBS         = -L/opt/mlib/lib/pa20_64 -lveclib -llapack $(FFTW_LIB) -lm
 
-LD             = $(F90)
+LD           = $(F90)
 
 # 32-bit
-LDFLAGS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-                 +U77 +DA2.0 +DS2.0 +O2  $(LIBS) -lpthread
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
+               +U77 +DA2.0 +DS2.0 +O2  $(LIBS) -lpthread
 ## 64-bit
-# LDFLAGS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-                   +U77 +DA2.0W +DS2.0W +O2  $(LIBS) -lpthread
+# LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
+                 +U77 +DA2.0W +DS2.0W +O2  $(LIBS) -lpthread
 
-AR             = ar
-ARFLAGS        = ruv
-RANLIB         = echo
+AR           = ar
+ARFLAGS      = ruv
+RANLIB       = echo

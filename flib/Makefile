@@ -92,7 +92,7 @@ eispack : eispack.o
 	touch $@
 
 dlamch.o : dlamch.f
-	$(F77) $(F77FLAGS_NOOPT) -c $<
+	$(F77) $(FFLAGS_NOOPT) -c $<
 
 ptools.a : $(POBJS)
 	$(AR) $(ARFLAGS) $@ $?

@@ -9,7 +9,7 @@
 	$(F90) $(F90FLAGS) -c $*.F90 -o $*.o
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -36,7 +36,7 @@ CPPFLAGS     = -D__LINUX -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW \
 F90          = pgf90
 F77          = pgf77
 CC           = pgcc
-F77FLAGS     = -fast -r8
+FFLAGS       = -fast -r8
 F90FLAGS     = -fast -r8 -I../Modules -I../PW -I../PH
 CFLAGS       = -fast $(CPPFLAGS)
 

@@ -8,7 +8,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -38,7 +38,6 @@ FFLAGS       = -O -fpe0 -real_size 64 -align dcommons -align records
 # FFLAGS       = -double_size 64 -fpconstant -real_size 64 -fast \
 #                -math_library fast -tune ev68
 
-F77FLAGS     = $(FFLAGS)
 F90FLAGS     = $(FFLAGS) -free -cpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 CFLAGS       = -O $(CPPFLAGS)
 

@@ -7,7 +7,7 @@
 	@f90rule@
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -26,9 +26,8 @@ CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
 F77            = @f77@
 F90            = @f90@
 FFLAGS         = @fflags@ $(IFLAGS)
-F77FLAGS       = $(FFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(MODFLAGS)
-F77FLAGS_NOOPT = @fflags_noopt@
+FFLAGS_NOOPT   = @fflags_noopt@
 F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS) $(MODFLAGS)
 LD             = @ld@
 LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)

@@ -9,7 +9,7 @@
 	$(F90) $(F90FLAGS) -c $*.F90 -o $*.o
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -22,9 +22,8 @@ CPPFLAGS = -P -D__SUN -DHAS_ZHEGVX -I../include
 
 F90      = f90
 F77      = f77
-F77FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
-F90FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf \
-           -M../Modules -M../PW -M../PH
+FFLAGS   = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
+F90FLAGS = $(FFLAGS) -M../Modules -M../PW -M../PH
 
 LIBS     = -L/usr/opt/SUNWhpc/lib -R/opt/SUNWhpc/lib -lmvec 
 

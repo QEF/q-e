@@ -20,7 +20,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -64,10 +64,9 @@ F77          = ifort
 # -safe_cray_ptr    assume that CRAY pointers do not alias other variables
 # -assume byterecl  assume that record lengths are in bytes
 # -r8               defines real variables to be REAL(KIND=8)
-FFLAGS       = -cm -w -r8 -ftz -tpp2 -assume byterecl
+FFLAGS       = -cm -w -r8 -ftz -tpp2 -assume byterecl $(OFLAGS)
 OFLAGS       = -O3 -fno-alias -safe_cray_ptr -ip
-F77FLAGS     = $(FFLAGS) $(OFLAGS)
-F90FLAGS     = $(FFLAGS) $(OFLAGS) -fpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
+F90FLAGS     = $(FFLAGS) -fpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 
 # Use the Intel 8.0 C/C++ compiler
 CC           = icc

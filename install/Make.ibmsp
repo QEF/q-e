@@ -8,15 +8,15 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 ## If the mass library is available, use
-# CPPFLAGS       = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
+# CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
 
-CPPFLAGS       = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
+CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 
 # Fortran compiler:
 # Use -g -C without -s in LDFLAGS for debugging
@@ -25,36 +25,35 @@ CPPFLAGS       = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
-F90            = mpxlf
-F77            = $(F90)
-FFLAGS         = -qalias=noaryovrlp -I../include \
-                 -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
-                 -qdpc -Q -qalias=nointptr
-F77FLAGS       = $(FFLAGS)
-F77FLAGS_NOOPT = -O0
-F90FLAGS       = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS) \
-                 -I../Modules -I../PW -I../PH
-CFLAGS         = -I../include -Wp,$(CPPFLAGS) -O2
+F90          = mpxlf
+F77          = $(F90)
+FFLAGS       = -qalias=noaryovrlp -I../include \
+               -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
+               -qdpc -Q -qalias=nointptr
+FFLAGS_NOOPT = -O0
+F90FLAGS     = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS) \
+               -I../Modules -I../PW -I../PH
+CFLAGS       = -I../include -Wp,$(CPPFLAGS) -O2
 
 # We assume that essl is installed and that lapack is in /usr/local/lib
 # NOTA BENE: essl must be loaded BEFORE lapack in order to load the correct
 #            version of diagonalization routines
 #            use esslp2 if available on power2 machines
-LIBS           = -lessl  -L/usr/local/lib -llapack
+LIBS         = -lessl  -L/usr/local/lib -llapack
 
 # For Cineca machines:
-# LIBS           = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass \
-#                  -lmassvp4 -lmass
+# LIBS         = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass \
+#                -lmassvp4 -lmass
 
 # use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
 # use -bnso -bI:/usr/lib/syscalls.exp for static linking
 # use -s for stripped executable (smaller file but no debugging)
-LD             = $(F90)
+LD           = $(F90)
 
-# LDFLAGS        = ../flib/ptools.a ../flib/flib.a $(LIBS) -s
-LDFLAGS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
-                 -s -bmaxdata:512000000
+# LDFLAGS      = ../flib/ptools.a ../flib/flib.a $(LIBS) -s
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
+               -s -bmaxdata:512000000
 
-AR             = ar
-ARFLAGS        = ruv
-RANLIB         = echo
+AR           = ar
+ARFLAGS      = ruv
+RANLIB       = echo

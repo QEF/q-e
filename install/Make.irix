@@ -8,7 +8,7 @@
 	$(F90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(F77FLAGS) -c $<
+	$(F77) $(FFLAGS) -c $<
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -35,7 +35,6 @@ CC           = cc
 # use -O3 only if you are sure that it actually works 
 # use -64 if compiling with 64 bits
 FFLAGS       = -mips4 -O2 -r10000 -r8
-F77FLAGS     = $(FFLAGS)
 F90FLAGS     = $(FFLAGS) -cpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 CFLAGS       =  -mips4 -O2 -r10000 $(CPPFLAGS) 
 
