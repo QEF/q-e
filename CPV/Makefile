@@ -26,7 +26,7 @@ default:
 
 cp90 : $(FOBJS) cpflush.o
 	$(LD) -o $(PROGNAME) $(LDFLAGS) $(FOBJS) ../Modules/*.o cpflush.o \
-          ../flib/flib.a ../flib/eispack.o $(LIB)
+          ../flib/flib.a ../flib/eispack.o $(LIBS)
 	chmod a+r $(PROGNAME)
 	chmod a+x $(PROGNAME)
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -64,7 +64,6 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   allocate (raux1( nrx1 * nrx2 * nrx3))    
 #endif
 
-  if (plot_num.eq.5) call work_function (wf)
   write (6, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
   !
   allocate (raux( nrxx))    
@@ -122,6 +121,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      call local_dos (2, lsign, kpoint, kband, emin, emax, raux)
   elseif (plot_num.eq.5) then
+     call work_function (wf)
 #ifdef __PARA
      call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
 #else
@@ -143,8 +143,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
         call DCOPY (nrxx, rho (1, 1), 1, raux, 1)
         call DAXPY (nrxx, - 1.d0, rho (1, 2), 1, raux, 1)
      else
-        call setv (nrxx, 0.d0, raux, 1)
-
+        raux(:) = 0.d0
      endif
 
   elseif (plot_num.eq.7) then

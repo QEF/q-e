@@ -37,7 +37,7 @@
   ARFLAGS = rv
 #
 # Libraries
-  LIB= $(BENCHLIB)
+  LIBS= $(BENCHLIB)
   MODULEFLAG=-p $(OSHOME)/CPV -p $(OSHOME)/Modules
 #
 # Name of the fortran compiler

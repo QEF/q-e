@@ -30,8 +30,7 @@ oldcp2upf:  oldcp2upf.o $(OBJS) nclib.o
 
 fpmd2upf.x : fpmd2upf.o
 	$(LD) -o $@ $(LDFLAGS) fpmd2upf.o \
-        ../Modules/*.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIB)
-
+        ../Modules/*.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
 
 read_upf:
 	$(LD) -o $@  read_upf.o $(LDFLAGS)

@@ -94,5 +94,5 @@
 #
 # --- Library ---
 # to link -lfmpich compiled with GNU compiler
-  LIB= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib -lm -lc
+  LIBS= $(LAPACK) $(LIBMPI) $(LIBGM) -Vaxlib -lm -lc
 #

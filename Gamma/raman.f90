@@ -154,7 +154,7 @@ subroutine cg_deps(deps_dtau)
   na_  =1
   ipol_=1
   nd_  =1
-  call setv(3*3*3*nat,0.d0,deps_dtau,1)
+  deps_dtau(:,:,:,:) = 0.d0
   write(6,'(5x,"Starting over from the beginning")')
 2 continue
   !
@@ -367,7 +367,7 @@ subroutine cg_neweps
   !
   !  new derivative of the xc potential
   !
-  call setv(nrxx,0.d0,dmuxc,1)
+  dmuxc(:) = 0.d0
   do i = 1,nrxx
      rhotot = rho(i,current_spin)+rho_core(i)
      if ( rhotot.gt. 1.d-30 ) dmuxc(i)= dmxc( rhotot)
@@ -536,7 +536,7 @@ subroutine raman_cs2(w2,dynout)
 1 close(unit=iunres)
   nu_=1
   nd_=1
-  call setv(3*3*(last-first+1),0.d0,raman_activity,1)
+  raman_activity(:,:,:) = 0.d0
   write(6,'(5x,"Starting over from the beginning")')
 2 continue
   !
@@ -676,7 +676,7 @@ subroutine raman_cs2(w2,dynout)
   end do
   !
   write (6,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
-  write (6,'(/5x,"(e moltiplicate per 1000)")')
+  write (6,'(/5x,"(multiplied by 1000)")')
   write (6,'(5x,"Raman cross sections are in A^4/amu units")')
   write (6,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
   !
@@ -687,16 +687,24 @@ subroutine raman_cs2(w2,dynout)
      !
      ! alpha, beta2: see PRB 54, 7830 (1996) and refs quoted therein
      !
-     alpha = (raman_activity(1,1,nu) + raman_activity(2,2,nu) + &
-          raman_activity(3,3,nu))/3.d0
-     beta2 = ( (raman_activity(1,1,nu) - raman_activity(2,2,nu))**2 + &
-          (raman_activity(1,1,nu) - raman_activity(3,3,nu))**2 + &
-          (raman_activity(2,2,nu) - raman_activity(3,3,nu))**2 + 6.d0 * &
-          (raman_activity(1,2,nu)**2 + raman_activity(1,3,nu)**2 + &
-          raman_activity(2,3,nu)**2) )/2.d0
+     if( nu >= first .and. nu<= last ) then
+        nu_ = nu-first+1
+        alpha = (raman_activity(1,1,nu_) + &
+                 raman_activity(2,2,nu_) + &
+                 raman_activity(3,3,nu_))/3.d0
+        beta2 = ( (raman_activity(1,1,nu_) - raman_activity(2,2,nu_))**2 + &
+                  (raman_activity(1,1,nu_) - raman_activity(3,3,nu_))**2 + &
+                  (raman_activity(2,2,nu_) - raman_activity(3,3,nu_))**2 + &
+                  6.d0 * (raman_activity(1,2,nu_)**2 + &
+                          raman_activity(1,3,nu_)**2 + &
+                          raman_activity(2,3,nu_)**2) )/2.d0
+     else
+        alpha = 0
+        beta2 = 0
+     end if
      write (6,'(i5,f10.2,f12.4,2f10.4)') &
-         nu, freq, freq*cm1thz, infrared(nu)*irfac*1000, &
-         (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
+          nu, freq, freq*cm1thz, infrared(nu)*irfac*1000, &
+          (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
   end do
   !
   deallocate (infrared)

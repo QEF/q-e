@@ -49,7 +49,7 @@ function allowed (nr)
      ! fft dimension contains factors > 11 : no good in any case
      allowed = .false.
   else
-#ifdef CERNLIB
+#ifdef __CERNFFT
      ! this is for the generic (cernlib) case
      allowed = .true.
      ! specific (machine- and library-dependent cases

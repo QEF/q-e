@@ -1,13 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 subroutine work_function (wf)
-#include "machine.h"
   !
   ! Print out the workfunction, calculated as the difference between the
   ! potential energy and the fermi energy.
@@ -16,46 +14,43 @@ subroutine work_function (wf)
   use pwcom
 #ifdef __PARA
   use para
+  use mp
 #endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
 
-  integer :: ierr
-
+  integer :: ionode_id = 0
   real(kind=DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, vx, vc, ex, &
        ec, rhox, rs, vcca, wf
-
   integer :: n1, n2, ni, nmean
-
   logical :: exst
   real(kind=DP), allocatable :: raux1 (:), vaux1 (:), aux (:)
   ! auxiliary vectors for charge and potential
 
-
   allocate (raux1( nrx1 * nrx2 * nrx3))    
   allocate (vaux1( nrx1 * nrx2 * nrx3))    
-  allocate (aux  ( nrxx))    
 
-  if (.not.lscf) call sum_band
-  call DCOPY (nrxx, rho, 1, aux, 1)
-
-  call DAXPY (nrxx, 1.d0, rho_core, 1, aux, 1)
+  ! if (.not.lscf) call sum_band
+  ! TEMP: lscf no longer read, igk indices not written to disk
+  if (nspin .ne. 1) &
+     call errore ('work_function','spin polarization not implemented',1)
+  current_spin = 1
 #ifdef __PARA
+  allocate (aux  ( nrxx))    
+  aux(:) = rho(:,current_spin) + rho_core(:)
   call gather (aux, raux1)
 #else
-  call DCOPY (nrxx, aux, 1, raux1, 1)
+  raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)
 #endif
-  call DCOPY (nrxx, vltot, 1, aux, 1)
-
-  call DAXPY (nrxx, 1.d0, vr, 1, aux, 1)
+  !
 #ifdef __PARA
+  aux(:) = vltot(:) + vr(:,current_spin)
   call gather (aux, vaux1)
 #else
-  call DCOPY (nrxx, aux, 1, vaux1, 1)
+  vaux1(1:nrxx) = vltot(1:nrxx) + vr(1:nrxx,current_spin)
 #endif
+  !
 #ifdef __PARA
+  deallocate(aux)
   if (me.eq.1.and.mypool.eq.1) then
 #endif
      call seqopn (17, 'workf', 'formatted', exst)
@@ -102,21 +97,17 @@ subroutine work_function (wf)
      enddo
 #ifdef __PARA
   endif
-
-  call mpi_bcast (wf, 1, MPI_REAL8, 0, MPI_COMM_WORLD, ierr)
+  CALL mp_bcast( wf, ionode_id )
 #endif
   write (6, '(/5x,"Work function written on file workf")')
-
-    write (6, '(5x,"Planar mean charge written on file charge")')
+  write (6, '( 5x,"Planar mean charge written on file charge")')
 
 9130 format (/'     workfunction     = ',f10.4,' +- ',f6.4,' eV', &
-         &        /'     without exchcorr = ',f10.4,' +- ',f6.4,' eV')
-    close (17)
+    &        /'     without exchcorr = ',f10.4,' +- ',f6.4,' eV')
+  close (17)
+  close (19)
+  deallocate(raux1)
+  deallocate(vaux1)
+  return
 
-    close (19)
-    deallocate(raux1)
-    deallocate(vaux1)
-    deallocate(aux)
-    return
-
-  end subroutine work_function
+end subroutine work_function

@@ -40,8 +40,8 @@
   ARFLAGS   = rv
 
 # Libraries
-  LIB= -leispack_64 -llinpack_64 -lfft_64 -lblas_64
-#  LIB= -llapack -lblas -lmpi
+  LIBS= -leispack_64 -llinpack_64 -lfft_64 -lblas_64
+#  LIBS= -llapack -lblas -lmpi
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
 # Name of the fortran compiler

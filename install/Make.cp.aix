@@ -46,6 +46,6 @@
   LD= xlf90
 
 # Libraries
-  LIB= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
+  LIBS= $(ESSL) $(LAPACK) $(MASS)  -lm -lc
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #

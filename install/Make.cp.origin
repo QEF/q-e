@@ -43,7 +43,7 @@ CPUTYPE=-r14000
   ARFLAGS   = rv
 
 # Libraries
-  LIB=  $(COMMLIB) $(SCILIB) 
+  LIBS=  $(COMMLIB) $(SCILIB) 
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
 # Name of the fortran compiler
