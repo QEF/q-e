@@ -18,7 +18,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   ! Input
   !
-  integer :: lmax2, ng, ngx
+  integer :: lmax2, ng
   real(kind=DP) :: g (3, ng), gg (ng)
   !
   ! Output

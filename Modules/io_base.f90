@@ -823,14 +823,14 @@
 !
       INTEGER, INTENT(IN) :: iuni
       REAL(dbl), INTENT(IN) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(IN) :: r(0:), rab(0:), vnl(0:,0:), chi(0:,:)
-      REAL(dbl), INTENT(IN) :: oc(:), rho_at(0:), rho_atc(0:)
+      REAL(dbl), INTENT(IN) :: r(:), rab(:), vnl(:,0:), chi(:,:)
+      REAL(dbl), INTENT(IN) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(IN) :: mesh, msh, nchi, lchi(:)
       LOGICAL, INTENT(IN) :: numeric
       REAL(dbl), INTENT(IN) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(IN) :: nlc, nnl, lmax, lloc
       LOGICAL, INTENT(IN) :: bhstype
-      REAL(dbl), INTENT(IN) :: dion(:,:), betar(0:,:), qqq(:,:), qfunc(0:,:,:)
+      REAL(dbl), INTENT(IN) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(IN) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(IN) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(3)
       LOGICAL, INTENT(IN) :: tvanp, okvan, newpseudo
@@ -896,12 +896,12 @@
           WRITE(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, nlc, nnl, lmax, lloc, &
             bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
             iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
-          WRITE(iuni) r( 0:mesh_ ), rab( 0:mesh_ ), &
-            vnl( 0:mesh_, 0:lloc_ ), chi( 0:mesh_, 1:nchi_ ), &
-            oc( 1:nchi_ ), rho_at( 0:mesh_ ), rho_atc( 0:mesh_ ), lchi( 1:nchi_ )
+          WRITE(iuni) r( 1:mesh_ ), rab( 1:mesh_ ), &
+            vnl( 1:mesh_, 0:lloc_ ), chi( 1:mesh_, 1:nchi_ ), &
+            oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_ ), lchi( 1:nchi_ )
           WRITE(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
-          WRITE(iuni) dion( 1:nbeta_, 1:nbeta_ ), betar( 0:mesh_, 1:nbeta_ ), &
-            qqq( 1:nbeta_, 1:nbeta_ ), qfunc( 0:mesh_, 1:nbeta_, 1:nbeta_ ), &
+          WRITE(iuni) dion( 1:nbeta_, 1:nbeta_ ), betar( 1:mesh_, 1:nbeta_ ), &
+            qqq( 1:nbeta_, 1:nbeta_ ), qfunc( 1:mesh_, 1:nbeta_, 1:nbeta_ ), &
             qfcoef( 1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_ ), &
             rinner( 1:nqlc_ ), lll( 1:nbeta_ ), iver(1:3)
 
@@ -984,19 +984,19 @@
           CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(oc) < nwfc ) &
           CALL errore( sub_name, ' wrong size ', 3 )
-        IF( SIZE(r) < ( mesh + 1 ) ) &
+        IF( SIZE(r) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 4 )
-        IF( SIZE(rab) < ( mesh + 1 ) ) &
+        IF( SIZE(rab) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_atc) < ( mesh + 1 ) ) &
+        IF( SIZE(rho_atc) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF(  SIZE(vloc) < ( mesh + 1 ) ) &
+        IF(  SIZE(vloc) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lll) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 8 )
         IF( SIZE(kkbeta) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(beta,1) < ( mesh + 1 ) ) .OR. ( SIZE(beta,2) < nbeta ) ) &
+        IF( ( SIZE(beta,1) < mesh ) .OR. ( SIZE(beta,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(dion,1) < nbeta ) .OR. ( SIZE(dion,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 11 )
@@ -1004,15 +1004,15 @@
           CALL errore( sub_name, ' wrong size ', 12 )
         IF( ( SIZE(qqq,1) < nbeta ) .OR. ( SIZE(qqq,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 13 )
-        IF( ( SIZE(qfunc,1) < ( mesh + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
+        IF( ( SIZE(qfunc,1) < mesh ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
             ( SIZE(qfunc,3) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 14 )
         IF( ( SIZE(qfcoef,1) < nqf ) .OR. ( SIZE(qfcoef,2) < nqlc ) .OR. &
             ( SIZE(qfcoef,3) < nbeta ) .OR. ( SIZE(qfcoef,4) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 15 )
-        IF( ( SIZE(chi,1) < ( mesh + 1 ) ) .OR. ( SIZE(chi,2) < nwfc ) ) &
+        IF( ( SIZE(chi,1) < mesh ) .OR. ( SIZE(chi,2) < nwfc ) ) &
           CALL errore( sub_name, ' wrong size ', 16 )
-        IF( SIZE(rho_at) < ( mesh + 1 ) ) &
+        IF( SIZE(rho_at) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 17 )
 
         IF( ionode ) THEN
@@ -1022,11 +1022,11 @@
           WRITE(iuni) generated, date_author, comment, psd, typ, tvanp, nlcc, dft, &
            zp, etotps, ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, nd, nqf, nqlc
 !           
-          WRITE(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(0:mesh), rab(0:mesh), &
-            rho_atc(0:mesh), vloc(0:mesh), lll(1:nbeta), kkbeta(1:nbeta), beta(0:mesh,1:nbeta), &
+          WRITE(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(1:mesh), rab(1:mesh), &
+            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), kkbeta(1:nbeta), beta(1:mesh,1:nbeta), &
             dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-            qfunc(0:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-            chi(0:mesh, nwfc), rho_at(0:mesh) 
+            qfunc(1:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+            chi(1:mesh, nwfc), rho_at(1:mesh) 
 
           WRITE(iuni) idum
           WRITE(iuni) idum
@@ -1083,14 +1083,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       REAL(dbl), INTENT(OUT) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(OUT) :: r(0:), rab(0:), vnl(0:,0:), chi(0:,:)
-      REAL(dbl), INTENT(OUT) :: oc(:), rho_at(0:), rho_atc(0:)
+      REAL(dbl), INTENT(OUT) :: r(:), rab(:), vnl(:,0:), chi(:,:)
+      REAL(dbl), INTENT(OUT) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(OUT) :: mesh, msh, nchi, lchi(:)
       LOGICAL, INTENT(OUT) :: numeric
       REAL(dbl), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(OUT) :: nlc, nnl, lmax, lloc
       LOGICAL, INTENT(OUT) :: bhstype
-      REAL(dbl), INTENT(OUT) :: dion(:,:), betar(0:,:), qqq(:,:), qfunc(0:,:,:)
+      REAL(dbl), INTENT(OUT) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(:)
       LOGICAL, INTENT(OUT) :: tvanp, okvan, newpseudo
@@ -1215,11 +1215,11 @@
           CALL errore( sub_name, ' wrong size ', 14 )
 
         IF( ionode ) THEN
-          READ(iuni) r(0:mesh_), rab(0:mesh_), vnl(0:mesh_,0:lloc_), chi(0:mesh_,1:nchi_), &
-            oc(1:nchi_), rho_at(0:mesh_), rho_atc(0:mesh_), lchi(1:nchi_)
+          READ(iuni) r(1:mesh_), rab(1:mesh_), vnl(1:mesh_,0:lloc_), chi(1:mesh_,1:nchi_), &
+            oc(1:nchi_), rho_at(1:mesh_), rho_atc(1:mesh_), lchi(1:nchi_)
           READ(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
-          READ(iuni) dion(1:nbeta_,1:nbeta_), betar(0:mesh_,1:nbeta_), qqq(1:nbeta_,1:nbeta_), &
-            qfunc(0:mesh_, 1:nbeta_, 1:nbeta_), qfcoef(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
+          READ(iuni) dion(1:nbeta_,1:nbeta_), betar(1:mesh_,1:nbeta_), qqq(1:nbeta_,1:nbeta_), &
+            qfunc(1:mesh_, 1:nbeta_, 1:nbeta_), qfcoef(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
             rinner(1:nqlc_), lll(1:nbeta_), iver(1:3)
         END IF
 
@@ -1287,23 +1287,23 @@
       CHARACTER(LEN=2) :: els(:)  ! els(nwfc)
       INTEGER :: lchi(:)   ! lchi(nwfc)
       REAL(dbl) :: oc(:)   ! oc(nwfc)
-      REAL(dbl) :: r(0:)    ! r(mesh)
-      REAL(dbl) :: rab(0:)  ! rab(mesh)
-      REAL(dbl) :: rho_atc(0:) ! rho_atc(mesh)
-      REAL(dbl) :: vloc(0:)    ! vloc(mesh)
+      REAL(dbl) :: r(:)    ! r(mesh)
+      REAL(dbl) :: rab(:)  ! rab(mesh)
+      REAL(dbl) :: rho_atc(:) ! rho_atc(mesh)
+      REAL(dbl) :: vloc(:)    ! vloc(mesh)
       INTEGER :: lll(:)       ! lll(nbeta)
       INTEGER :: kkbeta(:)    ! kkbeta(nbeta)
-      REAL(dbl) :: beta(0:,:)  ! beta(mesh,nbeta)
+      REAL(dbl) :: beta(:,:)  ! beta(mesh,nbeta)
       INTEGER :: nd
       REAL(dbl) :: dion(:,:)  ! dion(nbeta,nbeta)
       INTEGER :: nqf
       INTEGER :: nqlc
       REAL(dbl) :: rinner(:)  ! rinner(0:2*lmax)
       REAL(dbl) :: qqq(:,:)   ! qqq(nbeta,nbeta)
-      REAL(dbl) :: qfunc(0:,:,:) ! qfunc(mesh,nbeta,nbeta)
+      REAL(dbl) :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
       REAL(dbl) :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-      REAL(dbl) :: chi(0:,:) !  chi(mesh,nwfc)
-      REAL(dbl) :: rho_at(0:) !  rho_at(mesh)
+      REAL(dbl) :: chi(:,:) !  chi(mesh,nwfc)
+      REAL(dbl) :: rho_at(:) !  rho_at(mesh)
 !
 !
 !
@@ -1366,19 +1366,19 @@
           CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(oc) < nwfc ) &
           CALL errore( sub_name, ' wrong size ', 3 )
-        IF( SIZE(r) < ( mesh + 1 ) ) &
+        IF( SIZE(r) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 4 )
-        IF( SIZE(rab) < ( mesh + 1 ) ) &
+        IF( SIZE(rab) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_atc) < ( mesh + 1 ) ) &
+        IF( SIZE(rho_atc) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF(  SIZE(vloc) < ( mesh + 1 ) ) &
+        IF(  SIZE(vloc) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lll) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 8 )
         IF( SIZE(kkbeta) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(beta,1) < ( mesh + 1 ) ) .OR. ( SIZE(beta,2) < nbeta ) ) &
+        IF( ( SIZE(beta,1) < mesh ) .OR. ( SIZE(beta,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(dion,1) < nbeta ) .OR. ( SIZE(dion,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 11 )
@@ -1386,25 +1386,25 @@
           CALL errore( sub_name, ' wrong size ', 12 )
         IF( ( SIZE(qqq,1) < nbeta ) .OR. ( SIZE(qqq,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 13 )
-        IF( ( SIZE(qfunc,1) < ( mesh + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
+        IF( ( SIZE(qfunc,1) < mesh ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
             ( SIZE(qfunc,3) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 14 )
         IF( ( SIZE(qfcoef,1) < nqf ) .OR. ( SIZE(qfcoef,2) < nqlc ) .OR. &
             ( SIZE(qfcoef,3) < nbeta ) .OR. ( SIZE(qfcoef,4) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 15 )
-        IF( ( SIZE(chi,1) < ( mesh + 1 ) ) .OR. ( SIZE(chi,2) < nwfc ) ) &
+        IF( ( SIZE(chi,1) < mesh ) .OR. ( SIZE(chi,2) < nwfc ) ) &
           CALL errore( sub_name, ' wrong size ', 16 )
-        IF( SIZE(rho_at) < ( mesh + 1 ) ) &
+        IF( SIZE(rho_at) < mesh ) &
           CALL errore( sub_name, ' wrong size ', 17 )
 
         IF( ionode ) THEN
 !           
-          READ(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(0:mesh), rab(0:mesh), &
-            rho_atc(0:mesh), vloc(0:mesh), lll(1:nbeta), kkbeta(1:nbeta), &
-            beta(0:mesh,1:nbeta), &
+          READ(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(1:mesh), rab(1:mesh), &
+            rho_atc(1:mesh), vloc(1:mesh), lll(1:nbeta), kkbeta(1:nbeta), &
+            beta(1:mesh,1:nbeta), &
             dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
-            qfunc(0:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
-            chi(0:mesh, nwfc), rho_at(0:mesh) 
+            qfunc(1:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+            chi(1:mesh, nwfc), rho_at(1:mesh) 
 
           READ(iuni) idum
           READ(iuni) idum
@@ -1414,20 +1414,20 @@
         CALL mp_bcast( els(1:nwfc), ionode_id ) 
         CALL mp_bcast( lchi(nwfc), ionode_id ) 
         CALL mp_bcast( oc(nwfc), ionode_id ) 
-        CALL mp_bcast( r(0:mesh), ionode_id ) 
-        CALL mp_bcast( rab(0:mesh), ionode_id ) 
-        CALL mp_bcast( rho_atc(0:mesh), ionode_id ) 
-        CALL mp_bcast( vloc(0:mesh), ionode_id ) 
+        CALL mp_bcast( r(mesh), ionode_id ) 
+        CALL mp_bcast( rab(mesh), ionode_id ) 
+        CALL mp_bcast( rho_atc(mesh), ionode_id ) 
+        CALL mp_bcast( vloc(mesh), ionode_id ) 
         CALL mp_bcast( lll(1:nbeta), ionode_id ) 
         CALL mp_bcast( kkbeta(1:nbeta), ionode_id ) 
-        CALL mp_bcast( beta(0:mesh,1:nbeta), ionode_id ) 
+        CALL mp_bcast( beta(1:mesh,1:nbeta), ionode_id ) 
         CALL mp_bcast( dion(1:nbeta,1:nbeta), ionode_id ) 
         CALL mp_bcast( rinner(1:nqlc), ionode_id ) 
         CALL mp_bcast( qqq(1:nbeta,1:nbeta), ionode_id ) 
-        CALL mp_bcast( qfunc(0:mesh, 1:nbeta, 1:nbeta), ionode_id )
+        CALL mp_bcast( qfunc(1:mesh, 1:nbeta, 1:nbeta), ionode_id )
         CALL mp_bcast( qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), ionode_id ) 
-        CALL mp_bcast( chi(0:mesh, nwfc), ionode_id ) 
-        CALL mp_bcast( rho_at(0:mesh), ionode_id )
+        CALL mp_bcast( chi(1:mesh, nwfc), ionode_id ) 
+        CALL mp_bcast( rho_at(1:mesh), ionode_id )
 !
       RETURN
     END SUBROUTINE

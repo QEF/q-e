@@ -61,7 +61,7 @@ implicit none
   itp=itnew(alpha)
   nbb=nbnew(alpha)
   lb=ls(alpha)
-  nmesh=indexr(rsph(nbb,itp)*alat,msh(itp),r(0,itp))
+  nmesh=indexr(rsph(nbb,itp)*alat,msh(itp),r(1,itp))
   dz1=dz/nz1
   zsl(1)=(z(k)+dz1*0.5d0-taunew(3,alpha))*alat
   do kz=2, nz1
@@ -74,7 +74,7 @@ implicit none
      gn=gnsh(ign)
      do kz=1, nz1
        if (abs(zsl(kz))+eps.le.rsph(nbb,itp)*alat) then
-         iz=indexr(zsl(kz),nmesh,r(0,itp))
+         iz=indexr(zsl(kz),nmesh,r(1,itp))
          if ((nmesh-iz)/2*2.eq.nmesh-iz) then
             nmeshs=nmesh
          else
@@ -220,11 +220,11 @@ function indexr(zz, ndim, r)
   implicit none
 
   integer :: iz, ndim, indexr
-  real(kind=DP) :: zz, r(0:ndim) 
+  real(kind=DP) :: zz, r(ndim) 
 !
 !     abs(zz)<r(indexr)
 !
-  iz=0       
+  iz=1       
   do while(r(iz).le.abs(zz)+1.d-10)
     iz=iz+1
   enddo

@@ -113,8 +113,6 @@ subroutine read_ncpp (np, iunps)
   !
   !    compute the radial mesh
   !
-  r (0, np) = 0.d0
-  rab (0, np) = 0.d0
   do ir = 1, mesh (np)
      x = xmin (np) + dble (ir - 1) * dx (np)
      r (ir, np) = exp (x) / zmesh (np)

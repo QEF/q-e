@@ -125,7 +125,6 @@ subroutine init_us_1
         do l = 0, lmax (nt)
            if (l.ne.lloc (nt) ) then
               dion (nb, nb, nt) = 1.d0 / vll (l)
-              betar (0, nb, nt) = 0.d0
               do ir = 1, kkbeta (nt)
                  betar (ir, nb, nt) = vnl (ir, l, nt) * chi (ir, l + 1, nt)
               enddo

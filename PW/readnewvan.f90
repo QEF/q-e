@@ -102,7 +102,6 @@ subroutine readnewvan (is, iunps)
      do ir = ikk + 1, mesh (is)
         betar (ir, nb, is) = 0.d0
      enddo
-     betar (0, nb, is) = 0.d0
      do mb = 1, nb
         read (iunps, '(1p4e19.11)', err = 100, iostat = ios) dion (nb, mb, is)
         dion (mb, nb, is) = dion (nb, mb, is)
@@ -111,8 +110,7 @@ subroutine readnewvan (is, iunps)
            qqq (mb, nb, is) = qqq (nb, mb, is)
            read (iunps, '(1p4e19.11)', err = 100, iostat = ios) &
                 (qfunc (n, nb, mb, is) , n = 1, mesh (is) )
-           qfunc (0, nb, mb, is) = 0.d0
-           do n = 0, mesh (is)
+           do n = 1, mesh (is)
               qfunc (n, mb, nb, is) = qfunc (n, nb, mb, is)
            enddo
         else
@@ -131,21 +129,18 @@ subroutine readnewvan (is, iunps)
   lloc (is) = 0
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) rdum, &
        (vnl (ir, lloc (is) , is) , ir = 1, mesh (is) )
-  vnl (0, lloc (is), is) = 0.d0
   !
   !     reads the atomic charge
   !
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rho_at (ir, &
        is) , ir = 1, mesh (is) )
 
-  rho_at (0, is) = 0.d0
   !
   !  if present reads the core charge
   !
   if (nlcc (is) ) then
      read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rho_atc ( &
           ir, is) , ir = 1, mesh (is) )
-     rho_atc (0, is) = 0.d0
   endif
   !
   !    read the pseudo wavefunctions of the atom
@@ -154,9 +149,6 @@ subroutine readnewvan (is, iunps)
        nb, is) , ir = 1, mesh (is) ) , nb = 1, nwfs)
 
 100 call errore ('readnewvan', 'Reading pseudo file', abs (ios) )
-  do nb = 1, nwfs
-     chi (0, nb, is) = 0.d0
-  enddo
   !
   !    set several variables for compatibility with the rest of the
   !    code
@@ -173,8 +165,6 @@ subroutine readnewvan (is, iunps)
   !
   !    compute the radial mesh
   !
-  r (0, is) = 0.d0
-  rab (0, is) = 0.d0
   do ir = 1, mesh (is)
      x = xmin (is) + dble (ir - 1) * dx (is)
      r (ir, is) = exp (x) / zmesh (is)
