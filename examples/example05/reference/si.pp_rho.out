@@ -1,8 +1,14 @@
 
-     Program POST-PROC v.2.0    starts ...
-     Today is  3Feb2004 at 11:40:40 
+     Program POST-PROC v.2.1    starts ...
+     Today is 24Aug2004 at 16: 4:23 
 
-     nbndx  =     8  nbnd   =     4  natomwfc =     8  npwx   =     350
+     Reading file si.save ... 
+     read complete
+
+     Reading file si.save ... 
+     read complete
+
+     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350
      nelec  =    8.00 nkb   =     8  ngl    =      65
 
      Calling punch_plot, plot_num =   0
