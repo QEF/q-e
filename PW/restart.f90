@@ -110,7 +110,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   real(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
   real(kind=DP) :: bg1_(3), bg2_(3), bg3_(3)
   real(kind=DP), allocatable :: occtmp(:), lambda(:,:), g_g(:)
-  integer :: tetratmp(4), strlen
+  integer :: strlen
   integer, allocatable :: mill(:,:)
   integer :: ngm_p( nproc_pool )
   character(len=256) :: filename, file_pseudo
@@ -248,7 +248,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
        nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
        kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
+       tetra, natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
 
@@ -455,14 +455,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    DO ik = 1, nkstot
      IF( twrgkvec ) THEN
-       IF( ltetra ) THEN
-         tetratmp = tetra(:,ik)
-       ELSE
-         tetratmp = 0
-       END IF
        npwt = npwx
        CALL write_restart_gkvec(ndw, ik, nkstot, ngk_g(ik), &
-         xk(:,ik), wk(ik), tetratmp, isk(ik))
+         xk(:,ik), wk(ik), isk(ik))
      ELSE
        CALL write_restart_gkvec( ndw )
      END IF
@@ -636,7 +631,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   real(kind=DP) :: xenos0_, xenosm_, xenosm2_, xenosp_
   LOGICAL :: tocc, tlam, teig, tmill, twf0, twfm, tigl
   INTEGER :: ldim, flen
-  integer :: tetratmp(4)
   INTEGER :: nkl, nkr, nkbl, iks, ike
   INTEGER :: npool, ipmask( nproc ), ipsour, ipdest
   LOGICAL :: trdhead, trdxdim, trdcell, trdpos, trdpseudo, trdchden
@@ -730,7 +724,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
+       tetra, natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title_, crystal_, tmp_dir_, tupf, lgamma, noncolin, lspinorb, &
        lda_plus_u,&
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
@@ -1003,10 +997,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    DO ik = 1, nkstot
      IF ( trdgkvec ) THEN
        CALL read_restart_gkvec(ndr, &
-         ik_, nkstot_, ngk_g(ik), xk(:,ik), wk(ik), tetratmp, isk(ik))
-       IF( ltetra ) THEN
-         tetra(:,ik) = tetratmp
-       END IF
+         ik_, nkstot_, ngk_g(ik), xk(:,ik), wk(ik), isk(ik))
      ELSE
        CALL read_restart_gkvec( ndr )
      END IF
@@ -1164,6 +1155,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   USE mp,         ONLY : mp_bcast
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                          Hubbard_U, Hubbard_alpha
+  USE ktetra,     ONLY : ntetra, ltetra
   USE io_base,    ONLY : read_restart_header, read_restart_ions, &
                          read_restart_cell, read_restart_electrons, &
                          read_restart_gvec, read_restart_gkvec, &
@@ -1205,6 +1197,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: celldm_(6)
   integer :: ibrav_
   integer :: ntau
+  integer, allocatable :: tetra_( :, : )
 
   logical :: tfixed_occ_, tefield_, dipfield_
   integer :: edir_
@@ -1237,6 +1230,12 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
     return
   end if
 
+  if( ltetra ) then
+    allocate( tetra_ ( 4, ntetra ) )
+  else
+    allocate( tetra_ ( 4, 1 ) )
+  end if
+
 !  ==--------------------------------------------------------------==
 !  ==  HEADER INFORMATION                                          ==
 !  ==--------------------------------------------------------------==
@@ -1245,13 +1244,13 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
      nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
      kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, &
-     ntetra_, ltetra_, &
+     ntetra_, ltetra_, tetra_ , &
      natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, &
-     lforce_, &
-     title_, crystal_, tmp_dir_, tupf_, lgamma_, noncolin_, lspinorb_, &
-     lda_plus_u_, &
-     tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, &
+     lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, noncolin_, lspinorb_, &
+     lda_plus_u_, tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, &
      twfcollect_ )
+
+   deallocate( tetra_ )
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==

@@ -499,7 +499,7 @@
          call formf(tfirst,eself)
          call calbec (1,nsp,eigr,cm,bec)
          if (tpre) call caldbec(1,nsp,eigr,cm)
-         call rhoofr (nfi,cm,irb,eigrb,bec,rhor,rhog,rhos,enl,ekin)
+         call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
          if(iprsta.gt.0) WRITE( stdout,*) ' out from rhoofr'
 !
 !     put core charge (if present) in rhoc(r)
@@ -525,7 +525,7 @@
 !
 !     newd calculates deeq and a contribution to fion
 !
-         call newd(rhor,irb,eigrb,fion)
+         call newd(rhor,irb,eigrb,rhovan,fion)
          WRITE( stdout,*) ' out from newd'
          call prefor(eigr,betae)
 !
@@ -794,7 +794,7 @@
       nfi=nfi+1
       tlast=(nfi.eq.nomore)
 !
-      call rhoofr (nfi,c0,irb,eigrb,bec,rhor,rhog,rhos,enl,ekin)
+      call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !
 #ifdef __PARA     
       if(trhow .and. tlast) call write_rho(47,nspin,rhor)
@@ -827,7 +827,7 @@
 !
 !=======================================================================
 !
-      call newd(rhor,irb,eigrb,fion)
+      call newd(rhor,irb,eigrb,rhovan,fion)
       call prefor(eigr,betae)
 !
 !==== set friction ====

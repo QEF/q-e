@@ -176,7 +176,7 @@
       nfi, iswitch, trutim, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
       ngwk_g, nspin, nbnd, nel, nelu, neld, nat, ntyp, na, acc, nacc, &
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
-      ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
+      ngauss, lgauss, ntetra, ltetra, tetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
       modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
       noncolin, lspinorb, lda_plus_u, &
       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
@@ -209,6 +209,7 @@
       LOGICAL, INTENT(IN) :: lgauss
       INTEGER, INTENT(IN) :: ntetra
       LOGICAL, INTENT(IN) :: ltetra
+      INTEGER, INTENT(IN) :: tetra(:,:)
 
       INTEGER, INTENT(IN) :: natomwfc
       LOGICAL, INTENT(IN) :: doublegrid
@@ -239,22 +240,37 @@
       REAL(dbl), INTENT(IN) :: eamp
       LOGICAL, INTENT(IN) :: twfcollect
 
-      INTEGER :: i
+      INTEGER :: i, j
       CHARACTER(LEN=80) :: t_ , c_ , tmp_dir_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
       CHARACTER(LEN=20) :: section_name = 'header'
       LOGICAL :: twrite = .TRUE.
+      INTEGER, ALLOCATABLE :: tetra_ ( :, : )
+      INTEGER :: ntetra_
 
       t_ = title
       c_ = crystal
       tmp_dir_ = tmp_dir
 
       IF( ntyp > SIZE( na ) ) &
-        CALL errore(sub_name, ' wrong size ', 1 )
+        CALL errore(sub_name, ' wrong size: na ', 1 )
       IF( nk_g > SIZE( ngwk_g ) ) &
-        CALL errore(sub_name, ' wrong size ', 3 )
+        CALL errore(sub_name, ' wrong size: ngwk_g ', 3 )
       IF( nacc > SIZE( acc ) ) &
-        CALL errore(sub_name, ' wrong size ', 4 )
+        CALL errore(sub_name, ' wrong size: acc ', 4 )
+      IF( ltetra ) THEN
+        IF( ntetra > SIZE( tetra, 2 ) ) &
+          CALL errore(sub_name, ' wrong size: tetra ', 5 )
+        IF( ntetra < 1 ) &
+          CALL errore(sub_name, ' wrong ntetra: less than 1 ', 5 )
+        ALLOCATE( tetra_ ( 4, ntetra ) )
+        tetra_( :, 1:ntetra ) = tetra( :, 1:ntetra ) 
+        ntetra_ = ntetra
+      ELSE
+        ALLOCATE( tetra_ ( 4, 1 ) )
+        tetra_  = 0
+        ntetra_ = 1
+      END IF
 
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version, section_name
@@ -265,8 +281,10 @@
           gamma_only, noncolin, lspinorb, lda_plus_u, & 
           tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         WRITE(iuni) (na(i),i=1,ntyp), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
-        WRITE(iuni) t_, c_, tmp_dir_
+        WRITE(iuni) t_ , c_ , tmp_dir_ , ( ( tetra_(i,j), i = 1, 4 ) , j = 1, ntetra_ )
       END IF
+
+      DEALLOCATE( tetra_ )
 
       RETURN
     END SUBROUTINE
@@ -302,7 +320,7 @@
     SUBROUTINE read_restart_header1(iuni, nfi, iswitch, trutim, nr1, nr2, nr3, &
       nr1s, nr2s, nr3s, ng_g, nk_g, ngwk_g, nspin, nbnd, nel, nelu, neld, &
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
-      k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
+      k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, tetra, &
       natomwfc, gcutm, gcuts, dual, doublegrid, modenum, &
       lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, noncolin, &
       lspinorb, lda_plus_u,&
@@ -336,6 +354,7 @@
       LOGICAL, INTENT(OUT) :: lgauss
       INTEGER, INTENT(OUT) :: ntetra
       LOGICAL, INTENT(OUT) :: ltetra
+      INTEGER, INTENT(OUT) :: tetra(:,:)
 
       INTEGER, INTENT(OUT) :: natomwfc
       LOGICAL, INTENT(OUT) :: doublegrid
@@ -364,12 +383,15 @@
 
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
 !
-      INTEGER :: i, ierr
+      INTEGER :: i, j, ierr
       INTEGER :: idum = 0
       LOGICAL :: twrite_
       CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
       CHARACTER(LEN=20) :: section_name = 'header'
       CHARACTER(LEN=20) :: section_name_
+
+      INTEGER, ALLOCATABLE :: tetra_ ( :, : )
+      INTEGER :: ntetra_
 !
 ! ... Subroutine Body
 !
@@ -460,17 +482,40 @@
         CALL mp_bcast( ngwk_g, ionode_id )
         CALL mp_bcast( acc, ionode_id )
 
-        IF( ionode ) THEN
-          READ(iuni) t_, c_, tmp_dir_
+        IF( ltetra ) THEN
+          IF( ntetra > SIZE( tetra, 2 ) ) &
+            CALL errore(sub_name, ' wrong size: tetra ', 5 )
+          IF( ntetra < 1 ) &
+            CALL errore(sub_name, ' wrong ntetra: less than 1 ', 5 )
+          ALLOCATE( tetra_ ( 4, ntetra ) )
+          ntetra_ = ntetra
+        ELSE
+          ALLOCATE( tetra_ ( 4, 1 ) )
+          ntetra_ = 1
         END IF
 
-        CALL mp_bcast( t_, ionode_id )
-        CALL mp_bcast( c_, ionode_id )
-        CALL mp_bcast( tmp_dir_, ionode_id )
+        IF( ionode ) THEN
+          READ(iuni) t_, c_, tmp_dir_ , ( ( tetra_(i,j), i = 1, 4 ) , j = 1, ntetra_ )
+        END IF
 
-        title = t_
+        CALL mp_bcast( t_ , ionode_id )
+        CALL mp_bcast( c_ , ionode_id )
+        CALL mp_bcast( tmp_dir_ , ionode_id )
+        CALL mp_bcast( tetra_ , ionode_id )
+
+        title   = t_
         crystal = c_
         tmp_dir = tmp_dir_
+
+        IF( ltetra ) THEN
+          IF( SIZE( tetra, 2 ) /= ntetra ) THEN
+            WRITE( stdout, fmt = " (3X,'W: read_restart_header, size of tetra differs from ntetra ' ) " )
+            ntetra_ = MIN( SIZE( tetra, 2 ),  ntetra_ )
+          END IF
+          tetra( :, 1:ntetra_ ) = tetra_ ( :, 1:ntetra_ )
+        END IF
+
+        DEALLOCATE( tetra_ )
 
       RETURN
     END SUBROUTINE
@@ -1880,7 +1925,7 @@
 ! xk(.)   = k point coordinate
 ! wk      = k point weight
 
-    SUBROUTINE write_restart_gkvec1(iuni, ik, nk, ngwk, xk, wk, tetra, isk)
+    SUBROUTINE write_restart_gkvec1(iuni, ik, nk, ngwk, xk, wk, isk)
 
       USE io_global, ONLY: ionode
 
@@ -1888,17 +1933,19 @@
 
       INTEGER, INTENT(IN) :: iuni
       ! ... INTEGER, INTENT(IN) :: igk(:)
-      INTEGER, INTENT(IN) :: ik, nk, ngwk, tetra(4), isk
+      INTEGER, INTENT(IN) :: ik, nk, ngwk, isk
       REAL(dbl), INTENT(IN) :: xk(3)
       REAL(dbl), INTENT(IN) :: wk
       INTEGER :: i, idum = 0
       CHARACTER(LEN=20) :: section_name = 'gkvec'
 
+      INTEGER :: ised( 4 )
+
       LOGICAL :: twrite = .TRUE.
 
         IF( ionode ) THEN
           WRITE(iuni) twrite, file_version, section_name
-          WRITE(iuni) ik, nk, ngwk, tetra(1:4), isk
+          WRITE(iuni) ik, nk, ngwk, ised(1:4), isk
           WRITE(iuni) (xk(i),i=1,3), wk
           WRITE(iuni) idum ! (igk(i),i=1,ngwk)
         END IF
@@ -1935,7 +1982,7 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_gkvec1(iuni, &
-      ik, nk, ngwk, xk, wk, tetra, isk )
+      ik, nk, ngwk, xk, wk, isk )
 
 !
       USE io_global, ONLY: ionode, ionode_id
@@ -1944,9 +1991,11 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       ! ... INTEGER, INTENT(INOUT) :: igk(:)
-      INTEGER,   INTENT(OUT) :: ngwk, ik, nk, tetra(4), isk
+      INTEGER,   INTENT(OUT) :: ngwk, ik, nk, isk
       REAL(dbl), INTENT(OUT) :: xk(3)
       REAL(dbl), INTENT(OUT) :: wk
+
+      INTEGER :: ised( 4 )
 
       INTEGER :: i
 
@@ -1965,11 +2014,11 @@
         CALL errore(' read_restart_gkvec ',' Data Section not present in restart file ', 1)
 
         IF( ionode ) THEN
-          READ(iuni) ik, nk, ngwk, tetra( 1 : 4 ), isk
+          READ(iuni) ik, nk, ngwk, ised( 1 : 4 ), isk
           READ(iuni) ( xk ( i ), i = 1, 3 ), wk
         END IF
         CALL mp_bcast( ngwk, ionode_id )
-        CALL mp_bcast( tetra, ionode_id )
+        CALL mp_bcast( ised, ionode_id )
         CALL mp_bcast( ik, ionode_id )
         CALL mp_bcast( isk, ionode_id )
         CALL mp_bcast( nk, ionode_id )

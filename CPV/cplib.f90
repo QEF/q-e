@@ -1038,7 +1038,7 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine drhov(irb,eigrb,rhog,rhor)
+      subroutine drhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
 !     this routine calculates arrays drhog drhor, derivatives wrt h of:
 !
@@ -1053,7 +1053,6 @@
       use ions_base, only: na, nsp, nat, nas => nax
       use gvec
       use cvan
-      use uspp, only: rhovan => becsum
       use uspp_param, only: nhm, nh
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
@@ -1075,6 +1074,7 @@
 ! input
       integer, intent(in) ::  irb(3,natx,nsx)
       real(kind=8), intent(in)::  rhor(nnr,nspin)
+      real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       complex(kind=8), intent(in)::  eigrb(ngb,nas,nsp), rhog(ng,nspin)
 ! local
       integer i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
@@ -1364,19 +1364,20 @@
       end
 !
 !-----------------------------------------------------------------------
-      real(kind=8) function ennl(bec)
+      real(kind=8) function ennl(rhovan, bec)
 !-----------------------------------------------------------------------
 !
 ! calculation of nonlocal potential energy term
 !
       use cvan, only: ish
       use uspp_param, only: nhm, nh
-      use uspp, only :nhsa=>nkb, dvan, rhovan => becsum
+      use uspp, only :nhsa=>nkb, dvan
       use elct
       use ions_base, only: nsp, nat, na
       implicit none
 ! input
       real(kind=8) bec(nhsa,n)
+      real(kind=8) rhovan(nhm*(nhm+1)/2,nat,nspin)
 ! local
       real(kind=8) sum, sums(2)
       integer is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
@@ -3350,7 +3351,7 @@
       end
 !
 !-------------------------------------------------------------------------
-      subroutine newd(vr,irb,eigrb,fion)
+      subroutine newd(vr,irb,eigrb,rhovan,fion)
 !-----------------------------------------------------------------------
 !     this routine calculates array deeq:
 !         deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
@@ -3360,7 +3361,7 @@
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
       use uspp_param, only: nh, nhm
-      use uspp, only: deeq, rhovan => becsum
+      use uspp, only: deeq
       use cvan, only: nvb
       use ions_base, only: nas => nax, nat, nsp, na
       use parameters, only: natx, nsx
@@ -3381,6 +3382,7 @@
       implicit none
 ! input
       integer irb(3,natx,nsx)
+      real(kind=8) rhovan(nhm*(nhm+1)/2,nat,nspin)
       complex(kind=8) eigrb(ngb,nas,nsp)
       real(kind=8)  vr(nnr,nspin)
 ! output
@@ -5756,7 +5758,7 @@ end function pseudo_type
       return
       end
 !-----------------------------------------------------------------------
-   subroutine rhoofr (nfi,c,irb,eigrb,bec,rhor,rhog,rhos,enl,ekin)
+   subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
 !     the normalized electron density rhor in real space
 !     the kinetic energy ekin
@@ -5777,7 +5779,7 @@ end function pseudo_type
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use uspp, only: nhsa => nkb, rhovan => becsum
+      use uspp, only: nhsa => nkb
       use uspp_param, only: nh, nhm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
@@ -5794,7 +5796,7 @@ end function pseudo_type
       use io_global, only: stdout
 !
       implicit none
-      real(kind=8) bec(nhsa,n)
+      real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
@@ -5827,7 +5829,7 @@ end function pseudo_type
 !     ==================================================================
 !     calculation of non-local energy
 !     ==================================================================
-      enl=ennl(bec)
+      enl=ennl(rhovan, bec)
       if(tpre) call dennl(bec,denl)
 !    
 !    warning! trhor and thdyn are not compatible yet!   
@@ -6009,9 +6011,9 @@ end function pseudo_type
 !
 !     drhov called before rhov because input rho must be the smooth part
 !
-         if (tpre) call drhov(irb,eigrb,rhog,rhor)
+         if (tpre) call drhov(irb,eigrb,rhovan,rhog,rhor)
 !
-         call rhov(irb,eigrb,rhog,rhor)
+         call rhov(irb,eigrb,rhovan,rhog,rhor)
       endif
 !     ======================================endif for trhor=============
 !
@@ -6134,7 +6136,7 @@ end function pseudo_type
       end
 !
 !-----------------------------------------------------------------------
-      subroutine rhov(irb,eigrb,rhog,rhor)
+      subroutine rhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
 !     Add Vanderbilt contribution to rho(r) and rho(g)
 !
@@ -6148,7 +6150,7 @@ end function pseudo_type
       use gvec
       use cvan, only: nvb
       use uspp_param, only: nh, nhm
-      use uspp, only: deeq, rhovan => becsum
+      use uspp, only: deeq
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use elct
@@ -6167,6 +6169,7 @@ end function pseudo_type
 !
       implicit none
 !
+      real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       integer, intent(in) :: irb(3,natx,nsx)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(inout):: rhor(nnr,nspin)

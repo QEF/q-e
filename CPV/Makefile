@@ -24,6 +24,12 @@ read_pseudo.o \
 restart.o \
 neb_routines.o \
 stop_pw.o \
+smd.o  \
+restartsm.o \
+redis.o \
+smcp.o \
+smlam.o \
+smd_modules.o \
 $(WRAPPERS)
 
 all : cp.x

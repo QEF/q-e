@@ -1,4 +1,4 @@
-MODULE restart
+MODULE restartsm
   IMPLICIT NONE
   SAVE
 
@@ -6,8 +6,8 @@ CONTAINS
 
 !-----------------------------------------------------------------------
       subroutine writefile_new                                         &
-     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
+     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !-----------------------------------------------------------------------
 !
@@ -15,9 +15,9 @@ CONTAINS
 !
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
-!      use reciprocal_vectors, only: gstart
+!      use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: nsp, na
-      use parameters, only: natx
+      use parameters, only: natx, nsx, nacx			! YK
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
@@ -38,10 +38,18 @@ CONTAINS
       implicit none
       integer :: ndw, nfi
       real(kind=8) :: h(3,3), hold(3,3)
-      complex(kind=8) :: c0(:,:), cm(:,:)
-      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
-      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
-      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
+! YK
+      complex(kind=8) :: c0(ngw,nx), cm(ngw,nx)
+      real(kind=8) :: tausm(3,natx,nsx),taus(3,natx,nsx), fion(3,natx,nsx)
+      real(kind=8) :: vels(3,natx,nsx), velsm(3,natx,nsx)
+      real(kind=8) :: acc(nacx),lambda(nx,nx), lambdam(nx,nx)
+
+!YK
+!      complex(kind=8) :: c0(:,:), cm(:,:)
+!      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
+!      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
+!      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
+
       real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8), INTENT(in) :: ecut, ecutw, delt
@@ -51,7 +59,9 @@ CONTAINS
       integer :: nk = 1
       integer :: ngwkg(1), nbnd, nelt, nelu, neld, ntyp, nb_g
       integer :: nat = 0
-      integer :: nacx = 10
+
+! YK
+!      integer :: nacx = 10
       real(kind=8) :: trutime = 0.0d0
       real(kind=8) :: ecutwfc, ecutrho
 
@@ -94,8 +104,6 @@ CONTAINS
       LOGICAL :: lgauss
       LOGICAL :: ltetra
       LOGICAL :: lgamma
-      LOGICAL :: lda_plus_u
-      LOGICAL :: noncolin, lspinorb
       INTEGER, ALLOCATABLE :: ityp(:)
       INTEGER :: isk, tetra(4,1)
       REAL(dbl) :: zmesh_, xmin_, dx_
@@ -104,6 +112,8 @@ CONTAINS
       LOGICAL :: tfixed_occ_, tefield_, dipfield_
       INTEGER :: edir_
       REAL(dbl) :: emaxpos_, eopreg_, eamp_
+      LOGICAL :: noncolin, lspinorb, lda_plus_u
+
 
 
 !
@@ -168,8 +178,7 @@ CONTAINS
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, tetra, &
         natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, &
-        lda_plus_u, &
+        title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u,&
         tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect )
 
 !     ==--------------------------------------------------------------==
@@ -241,7 +250,7 @@ CONTAINS
 !         zmesh_, xmin_, dx_, r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
 !         rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
 !         numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
-!         zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
+!         zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &
 !         betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
 !         rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
 !         lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &
@@ -323,7 +332,7 @@ CONTAINS
       tw0 = .TRUE.
       twm = .TRUE.
         
-      call invmat (3, h, ainv, deth)
+      call invmat(h,ainv,deth)
       wfc_scal_cp90 = 1.0d0 / SQRT(ABS(deth))
       DO j = 1, nspin
         DO i = 1, nk
@@ -351,9 +360,9 @@ CONTAINS
 !
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
-!      use reciprocal_vectors, only: gstart
+!      use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: nsp, na
-      use parameters, only: natx, nsx
+      use parameters, only: natx, nsx, nacx
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &
@@ -372,10 +381,21 @@ CONTAINS
       implicit none
       integer :: ndr, nfi, flag
       real(kind=8) :: h(3,3), hold(3,3)
-      complex(kind=8) :: c0(:,:), cm(:,:)
-      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
-      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
-      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
+
+! YK
+!      complex(kind=8) :: c0(:,:), cm(:,:)
+!      real(kind=8) :: tausm(:,:,:),taus(:,:,:), fion(:,:,:)
+!      real(kind=8) :: vels(:,:,:), velsm(:,:,:)
+!      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
+
+
+! YK
+      complex(kind=8) :: c0(ngw,nx), cm(ngw,nx)
+      real(kind=8) :: tausm(3,natx,nsx),taus(3,natx,nsx), fion(3,natx,nsx)
+      real(kind=8) :: vels(3,natx,nsx), velsm(3,natx,nsx)
+      real(kind=8) :: acc(nacx),lambda(nx,nx), lambdam(nx,nx)
+
+
       real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
       real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8), INTENT(in) :: ecut, ecutw, delt
@@ -384,7 +404,7 @@ CONTAINS
       integer, INTENT(in) :: ibrav
 
       integer :: nx_, nbnd_, nelt, nb_g
-      integer :: nacx = 10
+!      integer :: nacx = 10
       real(kind=8) :: trutime_
       real(kind=8) :: ecutwfc, ecutrho
 
@@ -425,8 +445,7 @@ CONTAINS
       integer :: strlen, ibrav_, kunit_
       character(len=80) :: filename
       LOGICAL :: tscal
-      LOGICAL :: tmill, tigl, lgamma_, lda_plus_u_
-      LOGICAL :: noncolin_, lspinorb_
+      LOGICAL :: tmill, tigl, lgamma_
       LOGICAL :: teig, tupf_
       INTEGER, ALLOCATABLE :: ityp(:)
       REAL(dbl) :: wfc_scal, wfc_scal_cp90
@@ -443,6 +462,7 @@ CONTAINS
       REAL(dbl) :: ecutwfc_, ecutrho_
       REAL(dbl) :: alat_, ekincm_ 
       LOGICAL :: twfcollect_
+      LOGICAL :: noncolin_ , lspinorb_ , lda_plus_u_
 
       INTEGER :: iswitch_ 
 !
@@ -479,8 +499,8 @@ CONTAINS
         rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
         alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
         lgauss_, ntetra_, ltetra_, tetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, &
-        modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, &
-        lgamma_, noncolin_, lspinorb_, lda_plus_u_, &
+        modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, &
+        noncolin_ , lspinorb_ , lda_plus_u_ , &
         tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
 
       if( .not. lgamma_ ) &
@@ -648,19 +668,26 @@ CONTAINS
 !       ==  WAVEFUNCTIONS                                               ==
 !       ==--------------------------------------------------------------==
 
+        tigl = .FALSE.
+
+
         DO j = 1, nspin
-          tigl = .FALSE.
-          IF( flag == -1 ) THEN
-            tw0 = .FALSE.
-            twm = .FALSE.
-          ELSE IF( flag == 0 ) THEN
-            tw0 = .TRUE.
-            twm = .FALSE.
-          ELSE
-            tw0 = .TRUE.
-            twm = .TRUE.
-          END IF
           DO i = 1, nk
+
+! TMP YK
+        IF( flag == -1 ) THEN
+          tw0 = .FALSE.
+          twm = .FALSE.
+        ELSE IF( flag == 0 ) THEN
+          tw0 = .TRUE.
+          twm = .FALSE.
+        ELSE
+          tw0 = .TRUE.
+          twm = .TRUE.
+        END IF
+
+
+
             CALL read_restart_wfc(ndr, ik_, nk_, kunit_, ispin_, nspin_, &
               wfc_scal, c0, tw0, cm, twm, ngwt_, nbnd_, ig_l2g, ngw )
           END DO
@@ -675,6 +702,7 @@ CONTAINS
       end subroutine
 
 !=----------------------------------------------------------------------------=!
+
 
         LOGICAL FUNCTION check_restartfile( scradir, ndr )
 
@@ -703,4 +731,4 @@ CONTAINS
         END FUNCTION
 
 
-END MODULE restart
+END MODULE restartsm
