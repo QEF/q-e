@@ -13,6 +13,7 @@ MODULE noncollin
   SAVE
   !
   INTEGER :: &
+      baco_ibm_xlf,       & !  variable used to avoid a bug in mpxlf_r compiler
       npol,               & !  number of coordinates of wfc
       report,             & !  print the local quantities (magnet. and rho)
                             !  every #report iterations
