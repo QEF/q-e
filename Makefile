@@ -1,4 +1,4 @@
-default:
+default :
 	@echo 'to install, type at the shell prompt:'
 	@echo '  ./configure.new'
 	@echo '  make target'
@@ -21,45 +21,45 @@ default:
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
 
-pw: modules libs
+pw : modules libs
 	( cd PW; make all )
-fpmd: modules libs
+fpmd : modules libs
 	( cd FPMD; make all )
-cp: modules libs
+cp : modules libs
 	( cd CPV; make all )
 
-ph: pw
+ph : pw
 	( cd PH; make all )
-pp: pw
+pp : pw
 	( cd PP; make all )
-gamma: pw
+gamma : pw
 	( cd Gamma; make all )
-nc: pw
+nc : pw
 	( cd PWNC;  make all )
-pwneb: pw
+pwneb : pw
 	( cd NEB; make all )
 
-pwcond: pw pp
+pwcond : pw pp
 	( cd PWCOND; make all )
-d3: pw ph
+d3 : pw ph
 	( cd D3; make all )
 
-tools: libs
+tools : libs
 	( cd pwtools ; make all )
-upf: libs
+upf : libs
 	( cd upftools ; make all )
 
-all: pw ph pp gamma pwcond d3 tools
-all_: all fpmd cp nc pwneb upf
+all : pw ph pp gamma pwcond d3 tools
+all_ : all fpmd cp nc pwneb upf
 
-modules:
+modules :
 	( cd Modules; make all )
-libs: modules
+libs : modules
 	( cd clib; make all )
 	( cd flib; make all )
 
 # create link only if file exists
-links:
+links :
 	test -d bin || mkdir bin
 	( cd bin/ ; \
 	  for exe in ../PW/pw.x ../PW/memory.x ../NEB/pwneb.x ../PH/ph.x \
@@ -75,23 +75,24 @@ links:
 	)
 
 # remove object files and executables
-clean:
+clean :
 	touch make.rules make.sys # make complains if they aren't there
-				  # same with .dependencies below
+	#                         # same with .dependencies below
 	for dir in PW PWNC NEB PH PP D3 PWCOND Gamma pwtools upftools \
 		   Modules install clib flib FPMD CPV ; do \
 	  if test -d $$dir ; then \
-	    ( cd $$dir ; touch .dependencies ; make clean_ ) \
+	    ( cd $$dir ; touch .dependencies ; make clean ) \
 	  fi \
 	done
 
 # remove configuration files too
-veryclean: clean
+veryclean : clean
 	- /bin/rm -rf make.rules make.sys */.dependencies \
 		      config.log config.status */dum1 */dum2 bin/*.x \
-		      autom4te.cache pw.tar.gz FPMD/version.h
+		      autom4te.cache pw.tar.gz FPMD/version.h \
+		      intel.pcl */intel.pcl
 
-tar:
+tar :
 	tar cvf pw.tar \
 	    License README */README README.cvs INSTALL Makefile */Makefile \
 	    configure.new configure.ac config.guess config.sub install-sh \

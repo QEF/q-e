@@ -1,19 +1,29 @@
+# Makefile for clib
 
 include ../make.sys
+include ../make.rules
 
-all: clib.a
+OBJS = \
+c_mkdir.o \
+c_getenv.o \
+c_today.o \
+cpflush.o \
+cptimer.o \
+factor.o \
+fft_stick.o \
+indici.o \
+memstat.o \
+qsort.o \
+readocc.o \
+round2.o
 
-OBJS = c_mkdir.o c_getenv.o c_today.o cpflush.o factor.o indici.o \
-       memstat.o qsort.o readocc.o round2.o cptimer.o fft_stick.o 
-
+all : clib.a
 
 clib.a : $(OBJS) 
 	$(AR) $(ARFLAGS) $@ $?
 
-source:
+source :
 	co -l $(OBJS:.o=.c)
 
-clean_:
+clean :
 	- rm -f clib.a *.o *.mod *.i core*
-
-include ../make.rules

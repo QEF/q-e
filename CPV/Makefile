@@ -1,38 +1,37 @@
-
-CODEDIR=CPV
+# Makefile for CP
 
 include	../make.sys
+include ../make.rules
 
+# CODEDIR = CPV
 
-all: cp90
+WRAPPERS = wrapper.o
 
-#   Name of the program
-PROGNAME= cp.x
+FOBJS = \
+cplib.o \
+cpr.o \
+cpr_mod.o \
+cprsub.o \
+crayfft.o \
+errore.o \
+fft_cp.o \
+input.o \
+macdep.o \
+modules.o \
+para.o \
+read_pseudo.o \
+restart.o \
+which_dft.o \
+$(WRAPPERS)
 
-######################################################################
+all : cp.x
 
-WRAPPERS= wrapper.o
-
-#   Fortran objects
-FOBJS= modules.o crayfft.o para.o \
-read_pseudo.o cplib.o input.o cpr.o \
-macdep.o which_dft.o $(WRAPPERS) \
-restart.o cpr_mod.o cprsub.o fft_cp.o errore.o
-
-######################################################################
-
-default:
-	make $(PROGNAME)
-
-cp90 : $(FOBJS) cpflush.o
-	$(LD) -o $(PROGNAME) $(FOBJS) ../Modules/*.o cpflush.o \
+cp.x : $(FOBJS) cpflush.o
+	$(LD) -o cp.x $(FOBJS) ../Modules/*.o cpflush.o \
           ../flib/flib.a ../flib/eispack.o $(LDFLAGS)
-	chmod a+r $(PROGNAME)
-	chmod a+x $(PROGNAME)
+	chmod a+rx cp.x
 
-
-clean_:
-	- rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x
+clean :
+	- /bin/rm -f *.o *.i core* fort* *.mod *.s *.d work.pc cp.x
 
 include .dependencies
-include ../make.rules

@@ -184,7 +184,7 @@ case "$build:$f90" in
 			pcl_ph="D3"
 			pcl_pw="PH PP Gamma PWNC PWCOND pwtools $pcl_ph"
 			pcl_modules="PW FPMD CPV flib $pcl_pw"
-			pcl_dot="Modules upftools $pcl_modules"
+			pcl_dot=". Modules upftools $pcl_modules"
 			for dir in $pcl_dot
 			do
 				echo work.pc > $topdir/$dir/intel.pcl

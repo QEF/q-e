@@ -1,5 +1,7 @@
-#
 # Makefile for Modules
+
+include ../make.rules
+include ../make.sys
 
 MODULES = \
 berry_phase.o \
@@ -43,13 +45,9 @@ stick_base.o \
 version.o \
 wavefunctions.o
 
-include ../make.rules
-include ../make.sys
+all : $(MODULES)
 
-# targets
-all: $(MODULES)
-
-clean_:
-	-/bin/rm -f *.o *.d *~ *.F90 *.mod work.pc
+clean :
+	- /bin/rm -f *.o *.d *~ *.F90 *.mod work.pc
 
 include .dependencies
