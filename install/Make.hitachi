@@ -1,7 +1,7 @@
 # System-dependent definitions for Hitachi SR8000
 # contributed by Noejung Park
 #
-CPPFLAGS =-DHITACHI -DPARA -D__FFTW
+CPPFLAGS =-DHITACHI -DPARA -D__MPI -D__FFTW
 #
 # Fortran compiler:
 #

@@ -5,7 +5,7 @@
 # add -D__FFTW to CPPFLAGS
 #
 CPP = fpp
-CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -DHAS_ZHEGVX -I$(OSHOME)/include
+CPPFLAGS = -P -DSUN -DNOPENCILS -DPARA -D__MPI -DHAS_ZHEGVX -I$(OSHOME)/include
 # Fortran compiler:
 F90 = mpf90
 F77 = mpf77
