@@ -1789,7 +1789,7 @@ If the above doesn't help: verify if your system is metallic or is
 close to a metallic state, especially if you have few k-points.
 If the highest occupied and lowest unoccupied state(s) keep exchanging
 place during self-consistency, forget about reaching convergence. A 
-typical sign of such behavious is that the self-consistency error 
+typical sign of such behaviours is that the self-consistency error 
 goes down, down, down, than all of a sudden up again, and so on.
 Usually one can solve the problem by adding a few empty bands and a
 broadening.
@@ -1800,63 +1800,42 @@ truncation at finite cutoff may give convergence problems.
 Raising the \texttt{ecutrho} cutoff for charge density will usually
 help, especially in gradient-corrected calculations.
 
-\paragraph{structural optimization goes wild after first or second
-           step.}
-
-The algorithm used in structural optimization is not very robust.
-If you start too far away from minimum, it may lead to badly wrong
-atomic positions.
-Restart from a better starting point.
-
-\paragraph{structural optimization stops with ``unexpected error''.}
-
-The line minimization algorithm (\texttt{linmin}) looks for a minimum
---- using atomic positions and forces at the current and preceding
-step, and 3rd- or 2nd-degree polynomial interpolation --- along a
-given direction (determined by the BFGS algorithm).
-If this minimum turns out to be where it shouldn't be (for instance,
-on the wrong side with respect to forces), the code stops with
-``unexpected error''.
-
-In practice, this means that there is an inconsistency between forces
-and energies (see next item).
-If the error arises when forces are very small, just increase the
-thresholds for convergence of structural optimization.
 
 \paragraph{structural optimization is slow or does not converge.}
 
+Typical structural optimizations, based on the BFGS algorithm, converge to 
+the default thresholds ( \texttt{etot\_conv\_thr} and 
+\texttt{forc\_conv\_thr} ) in 15-25 BFGS steps (depending on the starting 
+configuration). This may not happen when your system is characterized by 
+``floppy'' low-energy modes, that make very difficult --- and of little use 
+anyway --- to reach a well converged structure, no matter what.  Other 
+possible reasons for a problematic convergence are listed below.
+
 Close to convergence the self-consistency error in forces may become
-large with respect to the value of forces.
-The resulting mismatch between forces and energies may confuse the
-line minimization algorithm, which assumes consistency between the
-two.
-The code reduces the starting self-consistency threshold
+large with respect to the value of forces.  The resulting mismatch
+between forces and energies may confuse the line minimization
+algorithm, which assumes consistency between the two.  The code
+reduces the starting self-consistency threshold
 \texttt{conv\_thr} when approaching the minimum energy configuration,
-up to a factor defined by \texttt{upscale}.
-Reducing \texttt{conv\_thr} (or increasing \texttt{upscale}) yields a
-smoother structural optimization, but if \texttt{conv\_thr} becomes
-too small, electronic self-consistency may not converge.
-You may also increase variables \texttt{etot\_conv\_thr} and
+up to a factor defined by \texttt{upscale}.  Reducing
+\texttt{conv\_thr} (or increasing \texttt{upscale}) yields a smoother
+structural optimization, but if \texttt{conv\_thr} becomes too small,
+electronic self-consistency may not converge.  You may also increase
+variables \texttt{etot\_conv\_thr} and
 \texttt{forc\_conv\_thr} that determine the threshold for convergence
 (the default values are quite strict).
 
 A limitation to the accuracy of forces comes from the absence of
-perfect translational invariance.
-If we had only the Hartree potential, our PW calculation would be
-translationally invariant to machine precision.
-The presence of an exchange-correlation potential introduces Fourier
-components in the potential that are not in our basis set.
-This loss of precision (more serious for gradient-corrected
-functionals) translates into a slight but detectable loss of
-translational invariance (the energy changes if all atoms are
-displaced by the same quantity, not commensurate with the FFT grid).
-This puts a limit to the accuracy of forces.
-The situation improves somewhat by increasing the \texttt{ecutrho}
-cutoff.
-
-Also note that in many systems you may have ``floppy'' low-energy
-modes, that make very difficult --- and of little use anyway --- to
-reach a well converged structure, no matter what.
+perfect translational invariance.  If we had only the Hartree
+potential, our PW calculation would be translationally invariant to
+machine precision.  The presence of an exchange-correlation potential
+introduces Fourier components in the potential that are not in our
+basis set.  This loss of precision (more serious for
+gradient-corrected functionals) translates into a slight but
+detectable loss of translational invariance (the energy changes if all
+atoms are displaced by the same quantity, not commensurate with the
+FFT grid).  This puts a limit to the accuracy of forces.  The
+situation improves somewhat by increasing the \texttt{ecutrho} cutoff.
 
 \paragraph{\texttt{ph.x} stops with ``error reading file''.}
 
