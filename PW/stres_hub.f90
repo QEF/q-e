@@ -23,7 +23,7 @@ subroutine stres_hub ( sigmah )
    implicit none
    real (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
-   integer :: ipol, jpol, nworddw, nworddb, na, nt, is,isi, m1,m2,m3,m4
+   integer :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4
    integer :: ldim
    real (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
    logical :: exst
@@ -45,14 +45,6 @@ subroutine stres_hub ( sigmah )
 #ifdef __PARA
    end if
 #endif
-
-   ! now we open the files containing dwfc and dbeta
-
-   nworddw = 2*npwx*natomwfc
-   nworddb = 2*npwx*nkb
-
-   call diropn(23,'dwat',nworddw,exst)
-   call diropn(25,'dbeta',nworddb,exst)
 
 #ifdef DEBUG
    do na=1,nat
@@ -106,9 +98,6 @@ subroutine stres_hub ( sigmah )
    call trntns(sigmah,at,bg,-1)
    call symtns(sigmah,nsym,s)
    call trntns(sigmah,at,bg,1)
-
-   close(23,status='delete')
-   close(25,status='delete')
 
    deallocate (dns)
 

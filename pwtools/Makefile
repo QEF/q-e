@@ -4,7 +4,7 @@
 include ../make.sys
 include ../make.rules
 #
-PWOBJS = ../PW/error.o \
+PWOBJS = ../PW/error.o ../PW/wsweight.o\
          ../PW/cryst_to_car.o ../PW/cubicsym.o ../PW/hexsym.o \
          ../PW/kpoint_grid.o ../PW/sgama.o ../PW/sgam_at.o  \
          ../PW/sgam_ph.o ../PW/coset.o ../PW/multable.o \

@@ -20,7 +20,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
-
   use pwcom
   USE wavefunctions,  ONLY: evc
   USE constants,  ONLY: degspin
@@ -168,8 +167,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ltaver = 0
 
      lintercall = 0
-     call setv (2 * nrxx * nspin * npe, 0.d0, drhoscf, 1)
-     call setv (npe * nhm * (nhm + 1) * nat * nspin, 0.d0, dbecsum, 1)
+     drhoscf(:,:,:) = (0.d0, 0.d0)
+     dbecsum(:,:,:,:) = (0.d0, 0.d0)
      !
      if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
@@ -226,8 +225,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !  At the first iteration dpsi and dvscfin are set to zero,
               !  dvbare_q*psi_kpoint is calculated and written to file
               !
-              call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
-              call setv (2 * nrxx * nspin, 0.d0, dvscfin (1, 1, ipert), 1)
+              dpsi(:,:) = (0.d0, 0.d0) 
+              dvscfin (:, :, ipert) = (0.d0, 0.d0)
               call dvqpsi_us (ik, mode, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
               !
@@ -246,7 +245,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !
               call start_clock ('vpsifft')
               do ibnd = 1, nbnd_occ (ikk)
-                 call setv (2 * nrxxs, 0.d0, aux1, 1)
+                 aux1(:) = (0.d0, 0.d0)
                  do ig = 1, npw
                     aux1 (nls (igk (ig) ) ) = evc (ig, ibnd)
                  enddo
@@ -286,7 +285,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
                  w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
               endif
-              call setv (2 * npwx, 0.d0, auxg, 1)
+              auxg(:) = (0.d0,0.d0)
               do jbnd = 1, nbnd
                  if (degauss.ne.0.d0) then
 !  metals
@@ -359,9 +358,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            call cgsolve_all (ch_psi_all, cg_psi, et(1,ikk), dvpsi, dpsi, &
                              h_diag, npwx, npwq, thresh, ik, lter, conv_root, &
                              anorm, nbnd_occ(ikk) )
+
            ltaver = ltaver + lter
            lintercall = lintercall + 1
-
            if (.not.conv_root) write (6, '(5x,"kpoint",i4," ibnd",i4,  &
                 &              " linter: root not converged ",e10.3)') &
                 &              ik , ibnd, anorm
@@ -382,8 +381,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         ! on k-points
      enddo
 #ifdef __PARA
+     !
+     !  The calculation of dbecsum is distributed across processors (see addusdbec)
+     !  Sum over processors the contributions coming from each slice of bands
+     !
      call reduce (nhm * (nhm + 1) * nat * nspin * npe, dbecsum)
 #endif
+
      if (doublegrid) then
         do is = 1, nspin
            do ipert = 1, npert (irr)

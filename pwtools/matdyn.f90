@@ -559,55 +559,6 @@ subroutine setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
   !
   return
 end subroutine setupmat
-!
-!-----------------------------------------------------------------------
-subroutine WSinit(rws,nrwsx,nrws,atw)
-  !-----------------------------------------------------------------------
-  !
-  implicit none
-  integer i, ii, ir, it, jr, kr, nrws, nrwsx, nx, nxx
-  real(kind=8) rt, eps, rws(0:3,nrwsx), atw(3,3)
-  parameter (eps=1.0e-6,nx=2, nxx=(2*nx+1)**3)
-  real(kind=8) r(0:3,nxx)
-  ii = 1
-  do ir=-nx,nx
-     do jr=-nx,nx
-        do kr=-nx,nx
-           do i=1,3
-              rws(i,ii) = atw(i,1)*ir + atw(i,2)*jr + atw(i,3)*kr
-           end do
-           rws(0,ii)=rws(1,ii)*rws(1,ii)+rws(2,ii)*rws(2,ii)+            &
-                &              rws(3,ii)*rws(3,ii)
-           rws(0,ii)=0.5*rws(0,ii)
-           if (rws(0,ii).gt.eps) ii = ii + 1
-           if (ii.gt.nrwsx) stop 'ii.gt.nrwsx'
-        end do
-     end do
-  end do
-  nrws = ii - 1
-  return
-end subroutine WSinit
-!
-!-----------------------------------------------------------------------
-function WSweight(r,rws,nrws)
-  !-----------------------------------------------------------------------
-  !
-  implicit none
-  integer ir, i, nreq, nrws
-  real(kind=8) r(3), rrt, ck, eps, rws(0:3,nrws), wsweight
-  parameter (eps=1.0e-6)
-  !
-  wsweight = 0.0d0
-  nreq = 1
-  do ir =1,nrws
-     rrt = r(1)*rws(1,ir) + r(2)*rws(2,ir) + r(3)*rws(3,ir)
-     ck = rrt-rws(0,ir)
-     if ( ck .gt. eps ) return
-     if ( abs(ck) .lt. eps ) nreq = nreq + 1
-  end do
-  wsweight = 1.0/float(nreq)
-  return
-end function WSweight
 !----------------------------------------------------------------------
 subroutine set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat,nax)
   !-----------------------------------------------------------------------

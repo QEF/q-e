@@ -44,7 +44,6 @@ subroutine phq_setup
   !
 #include "machine.h"
 
-
   use pwcom
   USE constants,  ONLY: degspin
   use parameters, only : DP
@@ -88,7 +87,7 @@ subroutine phq_setup
   !
   call DSCAL (ntyp, amconv, amass, 1)
   !
-  ! 2) Computes the total local potential (external+scf) on the smoot grid
+  ! 2) Computes the total local potential (external+scf) on the smooth grid
   !
   call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   !
@@ -103,7 +102,7 @@ subroutine phq_setup
   !
   ! 3) Computes the derivative of the xc potential
   !
-  call setv (nrxx * nspin * nspin, 0.d0, dmuxc, 1)
+  dmuxc(:,:,:) = 0.d0
   if (lsda) then
      do ir = 1, nrxx
         rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
@@ -250,7 +249,7 @@ subroutine phq_setup
   ! 8) Set the ubar
   !
 
-  call setv (6 * nat, 0.d0, ubar, 1)
+  ubar(:) =( 0.d0,0.d0)
   !
   !   NB: the following instructions are for testing purposes of delta rho
   !       the user must know how many atoms there are in the system

@@ -464,6 +464,7 @@ module units
        iunat,            &! unit for saving orthogonal atomic wfcs
        iunocc,           &! unit for saving the atomic n_{ij}
        iunoldwfc,        &! unit with old wavefunctions (molecular dynamics)
+       iunoldwfc2,       &! as above at step -2
        iunigk,           &! unit for saving indices
        iunres,           &! unit for the restart of the run
        nwordwfc,         &! lenght of record in wavefunction file

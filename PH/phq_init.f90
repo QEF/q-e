@@ -32,7 +32,6 @@ subroutine phq_init
   !
 #include"machine.h"
 
-
   use pwcom
   USE wavefunctions,  ONLY: evc
   use parameters, only : DP
@@ -81,7 +80,7 @@ subroutine phq_init
   !
   !   b) the fourier components of the local potential at q+G
   !
-  call setv (ngm * ntyp, 0.d0, vlocq, 1)
+  vlocq(:,:) = 0.d0
   do nt = 1, ntyp
      call setlocq (xq, lloc (nt), lmax (nt), numeric (nt), mesh (nt), &
           msh (nt), rab (1, nt), r (1, nt), vnl (1, lloc (nt), nt), &
@@ -113,6 +112,7 @@ subroutine phq_init
         ikk = 2 * ik - 1
         ikq = ikk + 1
      endif
+     !
      if (lsda) current_spin = isk (ikk)
      !
      !  g2kin is used here as work space

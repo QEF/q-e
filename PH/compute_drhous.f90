@@ -31,7 +31,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !output:the derivative of becsum
   ! output: add the orthogonality term
   ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+q\
+  ! input: the alphap with psi_{k+q}
 
   real(kind=DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
@@ -59,9 +59,8 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   call start_clock ('com_drhous')
   allocate (evcr( nrxxs , nbnd))    
   !
-  call setv (2 * nrxxs * nspin * 3 * nat, 0.d0, drhous, 1)
-
-  call setv (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.d0, dbecsum, 1)
+  drhous(:,:,:) = (0.d0, 0.d0)
+  dbecsum (:,:,:,:) = (0.d0, 0.d0)
 
   if (nksq.gt.1) rewind (unit = iunigk)
   do ik = 1, nksq
@@ -93,7 +92,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
      !
 
      call davcio (evc, lrwfc, iuwfc, ikk, - 1)
-     call setv (2 * nrxxs * nbnd, 0.d0, evcr, 1)
+     evcr(:,:) = (0.d0, 0.d0)
      do ibnd = 1, nbnd
         do ig = 1, npw
            evcr (nls (igk (ig) ), ibnd) = evc (ig, ibnd)

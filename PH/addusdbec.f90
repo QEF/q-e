@@ -71,7 +71,10 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   !  And then we add the product to becsum
   !
+  !  Band parallelization: each processor takes care of its slice of bands
+  !
   call divide (nbnd_occ (ikk), startb, lastb)
+  !
   ijkb0 = 0
   do nt = 1, ntyp
      if (tvanp (nt) ) then
@@ -107,7 +110,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
         enddo
      endif
   enddo
-
+  !
   deallocate (dbecq)
 
   call stop_clock ('addusdbec')

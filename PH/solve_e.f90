@@ -184,7 +184,7 @@ subroutine solve_e
               ! dvscf_q from previous iteration (mix_potential)
               !
               do ibnd = 1, nbnd_occ (ik)
-                 call setv (2 * nrxxs, 0.d0, aux1, 1)
+                 aux1(:) = (0.d0, 0.d0)
                  do ig = 1, npw
                     aux1 (nls(igk(ig)))=evc(ig,ibnd)
                  enddo
@@ -212,7 +212,7 @@ subroutine solve_e
            ! Orthogonalize dvpsi
            !
            do ibnd = 1, nbnd_occ (ik)
-              call setv (2 * npwx, 0.d0, auxg, 1)
+              auxg(:) = (0.d0, 0.d0)
               do jbnd = 1, nbnd_occ (ik)
                  ps(jbnd)=-ZDOTC(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
@@ -273,10 +273,14 @@ subroutine solve_e
                             ik, dbecsum(1,1,current_spin,ipol), 1)
         enddo   ! on perturbation
      enddo      ! on k points
-
 #ifdef __PARA
-     call reduce (nhm * (nhm + 1) * nat * 3* nspin, dbecsum)
+     !
+     !  The calculation of dbecsum is distributed across processors (see addusdbec)
+     !  Sum over processors the contributions coming from each slice of bands
+     !
+     call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
 #endif
+
      if (doublegrid) then
         do is=1,nspin
            do ipol=1,3

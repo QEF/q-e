@@ -49,7 +49,7 @@ subroutine drho
   ! the derivative
 
   if (recover) return
-  call setv (18 * nat * nat, 0.d0, dyn00, 1)
+  dyn00(:,:) = (0.d0,0.d0)
   if (.not.okvan) return
   call start_clock ('drho')
   !
@@ -100,7 +100,7 @@ subroutine drho
   !
   allocate (dvlocin( nrxxs))    
 
-  call setv (2 * 3 * nat * 3 * nat, 0.d0, wdyn, 1)
+  wdyn (:,:) = (0.d0, 0.d0)
   nrstot = nr1s * nr2s * nr3s
   do nu_i = 1, 3 * nat
      call compute_dvloc (nu_i, dvlocin)
@@ -141,6 +141,10 @@ subroutine drho
   allocate (drhoust( nrxx , nspin , 3))    
   call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
 #ifdef __PARA
+  !
+  !  The calculation of dbecsum is distributed across processors (see addusdbec)
+  !  Sum over processors the contributions coming from each slice of bands
+  !
   call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
 #endif
   mode = 0

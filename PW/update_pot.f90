@@ -12,26 +12,26 @@ subroutine update_pot
   !
   !     update potential, use the integer variable order to decide the way
   !
-  !     order = 0         copy the old potential (nothing is done)
+  !     order = 0       copy the old potential (nothing is done)
   !
-  !     order = 1         subtract old atomic charge density and sum the n
-  !                       if dynamics is done the routine extrapolates als
-  !                       the difference between the the scf charge and th
-  !                       atomic one,
+  !     order = 1       subtract old atomic charge density and sum the new
+  !                     if dynamics is done the routine extrapolates also
+  !                     the difference between the the scf charge and the
+  !                     atomic one,
   !
-  !     order = 2         extrapolate the wavefunctions:
+  !     order = 2       extrapolate the wavefunctions:
   !                       |psi(t+dt)> = 2*|psi(t)> - |psi(t-dt)>
   !
-  !     order = 3         extrapolate the wavefunctions with the second or
-  !                       formula:
+  !     order = 3       extrapolate the wavefunctions with the second-order
+  !                     formula:
   !                       |psi(t+dt)> = |psi(t) +
-  !                                      + alpha0*(|psi(t)> -    |psi(t-dt
-  !                                      + beta0* (|psi(t-dt)> - |psi(t-2*
+  !                                   + alpha0*(|psi(t)> -    |psi(t-dt)>
+  !                                   + beta0* (|psi(t-dt)> - |psi(t-2*dt)>
   !
-  !                       where alpha0 and beta0 are calculated in "dynami
-  !                       that |tau'-tau(t+dt)| is minimum; tau' and tau(t
-  !                       are respectively the atomic positions at time t+
-  !                       the extrapolated one:
+  !                     where alpha0 and beta0 are calculated in "dynamics" so
+  !                     that |tau'-tau(t+dt)| is minimum; tau' and tau(t+dt)
+  !                     are respectively the atomic positions at time t+dt
+  !                     and  the extrapolated one:
   !                       tau(t+dt) = tau(t) +
   !                                    + alpha0*( tau(t) - tau(t-dt) )
   !                                    + beta0*( tau(t-dt) -tau(t-2*dt) )
@@ -70,16 +70,14 @@ subroutine extrapolate_charge
   ! do-loop variable on FFT grid
 
   real(kind=DP), allocatable :: work (:), work1 (:)
+  ! work is the difference between charge density and atomic charge at time t
+  ! work1 is the same thing at time t-dt
   real(kind=DP) :: charge
-  ! workspace, is the difference between t
-  ! charge density and the atomic one at t
-  ! the same thing at time t-dt
-  ! charge
 
   allocate(work(nrxx))
   work(:) = 0.d0
   !
-  !     if order = 1 update the potential subtracting to the charge densit
+  !     if order = 1 update the potential subtracting to the charge density
   !     the "old" atomic charge and summing the new one
   !
   write (6,'(/5x,"NEW-OLD atomic charge density approx. for the potential")')
@@ -228,7 +226,7 @@ subroutine extrapolate_wfcs
         call davcio (evcold, nwordwfc, iunoldwfc, ik, - 1)
         call davcio (evc, nwordwfc, iunwfc, ik, - 1)
         if (istep.eq.2.and.order.gt.2) then
-           call davcio (evcold, nwordwfc, 10, ik, 1)
+           call davcio (evcold, nwordwfc, iunoldwfc2, ik, 1)
         endif
         !
         !     construct s_m = <evcold|evc>
@@ -291,7 +289,7 @@ subroutine extrapolate_wfcs
                       * evcold (i, j)
               enddo
            enddo
-           call davcio (evcold, nwordwfc, 10, ik, - 1)
+           call davcio (evcold, nwordwfc, iunoldwfc2, ik, - 1)
            do j = 1, nbnd
               do i = 1, npw
                  evc (i, j) = evc (i, j) - beta0 * evcold (i, j)
@@ -309,7 +307,7 @@ subroutine extrapolate_wfcs
         !
         if (order.gt.2) then
            call davcio (evcold, nwordwfc, iunoldwfc, ik, - 1)
-           call davcio (evcold, nwordwfc, 10, ik, 1)
+           call davcio (evcold, nwordwfc, iunoldwfc2, ik, 1)
         endif
         call davcio (evcold, nwordwfc, iunwfc, ik, - 1)
         call davcio (evcold, nwordwfc, iunoldwfc, ik, 1)
