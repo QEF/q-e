@@ -531,7 +531,6 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
 
 end subroutine cft_3
 #endif
-#ifdef DEC
 #ifdef DXML
 #define PRESENT
 !----------------------------------------------------------------------
@@ -602,7 +601,6 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   return
 
 end subroutine cft_3
-#endif
 #endif
 
 #ifdef FUJ64

@@ -12,7 +12,7 @@
 
 void MEMSTAT(int *me)
 {
-#if defined __QSW
+#if defined __ALPHA
   /* printf("\n   MEMORY STATISTICS FROM PE(%d) : \n",*me); */
 #endif
 #if defined __LINUX

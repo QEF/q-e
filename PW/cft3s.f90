@@ -200,11 +200,6 @@ end subroutine cft3s
 #else
 
 # define NOPENCILS
-# ifdef DEC
-#  ifdef DXML
-#   define NOPENCILS
-#  endif
-# endif
 
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"

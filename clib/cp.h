@@ -210,7 +210,7 @@
 #endif
 
 
-#if defined __TRU64
+#if defined __ALPHA
 
 #  define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
 #  define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_
@@ -250,7 +250,7 @@
 
 #endif
 
-#if defined __QSW && defined __LINUX
+#if defined __ALPHA && defined __LINUX
 
 #    define FFTW_INPLACE_DRV_1D fftw_inplace_drv_1d_
 #    define FFTW_INPLACE_DRV_2D fftw_inplace_drv_2d_

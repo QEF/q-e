@@ -777,7 +777,7 @@ SUBROUTINE c_phase
       &   /,8X,'of the reciprocal lattice gives the following contribution to', &
       &   /,8X,'the polarization vector (in different units, and being Omega', &
       &   /,8X,'the volume of the unit cell):')") &
-      &   gdir
+          gdir
 !  --- Calculate direction of polarization and modulus of lattice vector ---
    rmod=SQRT(at(1,gdir)*at(1,gdir)+at(2,gdir)*at(2,gdir) &
             +at(3,gdir)*at(3,gdir))

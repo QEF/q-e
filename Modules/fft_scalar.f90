@@ -62,7 +62,7 @@
 
 #endif
 
-#if defined __SGI64 || defined __COMPAQ || defined __TRU64
+#if defined __SGI64 || defined __ALPHA
 
         INTEGER, PARAMETER :: ipt = 8
 

@@ -7,7 +7,7 @@
 #  define C_POINTER  integer
 #endif
 
-#if defined (FUJ64)|| defined (DEC) || defined (__SX6)
+#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6)
 #  define C_POINTER  integer*8
 #endif
 
@@ -25,7 +25,7 @@
 
 #if defined(__SX4)
 #  define DIRECT_IO_FACTOR 1
-#elif defined(DEC)
+#elif defined(__ALPHA)
 #  define DIRECT_IO_FACTOR 2
 #else
 #  define DIRECT_IO_FACTOR 8 
