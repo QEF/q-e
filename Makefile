@@ -1,6 +1,6 @@
 default :
 	@echo 'to install, type at the shell prompt:'
-	@echo '  ./configure'
+	@echo '  ./configure.new'
 	@echo '  make target'
 	@echo 'where target is one of the following:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
@@ -67,7 +67,7 @@ links :
 		     ../PWCOND/pwcond.x ../pwtools/band_plot.x \
 		     ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x \
 		     ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x \
-		     ../pwtools/kpoints.x ; do \
+		     ../pwtools/kpoints.x ../pwtools/path_int.x ; do \
 	    if test -f $$exe ; then ln -fs $$exe . ; fi \
 	  done \
 	)
@@ -93,7 +93,7 @@ veryclean : clean
 tar :
 	tar cvf pw.tar \
 	    License README */README README.cvs INSTALL Makefile */Makefile \
-	    configure.old configure.ac config.guess config.sub install-sh \
+	    configure.new configure.ac config.guess config.sub install-sh \
 	    makedeps.sh moduledep.sh make.rules.in make.sys.in configure \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh

@@ -41,6 +41,7 @@ readpseudo.o \
 recvec.o \
 shmem_include.o \
 smallbox.o \
+splinelib.o \
 stick_base.o \
 version.o \
 wavefunctions.o

@@ -24,15 +24,22 @@ PWOBJS = \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
 ../PW/smallg_q.o \
+../PW/supercell.o \
 ../PW/trnvecc.o \
 ../PW/wsweight.o
 
 MODULES = \
+../Modules/basic_algebra_routines.o \
 ../Modules/constants.o \
 ../Modules/io_global.o \
+../Modules/io_files.o \
 ../Modules/fft_scalar.o \
+../Modules/formats.o \
 ../Modules/kind.o \
-../Modules/parameters.o
+../Modules/mp.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/splinelib.o 
 
 all : band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x ev.x \
       kpoints.x pwi2xsf pwi2xsf_new
@@ -67,6 +74,9 @@ pwi2xsf : pwi2xsf.o pwi2xsflib.o
 pwi2xsf_new : pwi2xsf_new.o pwi2xsflib.o
 	$(LD) -o pwi2xsf_new pwi2xsf_new.o pwi2xsflib.o \
         $(PWOBJS) $(MODULES) $(LDFLAGS)
+
+path_int : path_int.o
+	$(LD) -o path_int.x path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean :
 	- /bin/rm -f pwi2xsf pwi2xsf_new *.x *.o *~ *.F90 *.mod *.d *.i work.pc
