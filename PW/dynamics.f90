@@ -81,7 +81,11 @@ SUBROUTINE dynamics()
   !
   IF ( istep == 1 ) THEN
      IF ( ldamped ) THEN
-        WRITE( UNIT = stdout, FMT = '(/,5X,"Damped Dynamics Calculation")' )
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Damped Dynamics Calculation")' )
+     ELSE
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Molecular Dynamics Calculation")' )
      END IF
   END IF
   !
@@ -195,7 +199,14 @@ SUBROUTINE dynamics()
      !
   ELSE
      !
-     IF ( istep == nstep ) conv_ions = .TRUE.
+     IF ( istep == nstep ) THEN
+        !
+        conv_ions = .TRUE.
+        !
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"End of molecular dynamics calculation")' )
+        !
+     END IF
      !   
   END IF
   !

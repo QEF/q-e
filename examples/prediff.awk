@@ -97,6 +97,14 @@ function check_line()
       print_key("ITERATION");
       print "@CHECKPOINT@";
     }
+  else if (match($0, "Molecular Dynamics Calculation"))
+    {
+      print_key("ITERATION");
+      while (getline && ! match($0, "End of  dynamics calculation"))
+	print_key("ITERATION");
+      print_key("ITERATION");
+      print "@CHECKPOINT@";
+    }
   else if (match($0, "Damped Dynamics Calculation"))
     {
       print_key("ITERATION");
@@ -190,6 +198,15 @@ function check_line()
   else if (match($0, "Final energy *="))
     {
       print_key("ENERGY");
+    }
+  else if (match($0, "kinetic energy (Ekin) =") ||
+	   match($0, "Ekin + Etot (const)   ="))
+    {
+      print_key("ENERGY");
+    }
+  else if (match($0, "temperature           ="))
+    {
+      print_key("TEMPERATURE");
     }
   else if (match($0, "Ekin =.*T =.*Etot ="))
     {
