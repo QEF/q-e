@@ -1,4 +1,12 @@
 Version: 2.1
+	* A "Run" menubutton was added. PWgui is now a complete PWscf
+		GUI, and not only input manager. Features:
+		- management of input files
+		- display of atomic structures for pw.x input files with XCRYSDEN
+		- running the calculations and display of atomic
+		  structures from pw.x output files with XCRYSDEN
+		- display of properties from XSF files as calculated
+                  with chdens.x by XCRYSDEN
 	* PWgui version was set equal to version of PWscf so that the
 		compatibility of the two codes can be ascertained from
 		the version number. The structure of the PWgui version

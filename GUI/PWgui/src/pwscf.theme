@@ -45,5 +45,12 @@
 *Toolbar.padX: 0
 *Toolbar.padY: 0
 
+*Labeledframe*justify: left
+
+!! doesn't work yet:
+*Dialogshell.width:                                800
+*Dialogshell.Frame.width:                          800
+*Shell.width:                                      800
+
 !!*font: fixed
 !!*labelFont: fixed

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: view.itcl,v 1.2 2004-02-23 12:15:10 kokalj Exp $ 
+# $Id: view.itcl,v 1.3 2004-09-20 07:07:16 kokalj Exp $ 
 #
 
 proc ::pwscf::view::inputByPager {guiObj} {
@@ -79,7 +79,7 @@ proc ::pwscf::view::structByXcrysden {guiObj} {
 
 	::tclu::DEBUG structByXcrysden.2		
 	set execID [::tclu::nonblocking open]
-	eval ::tclu::nonblocking exec $execID xcrysden --use $winID --pwi $tmpFile 
+	eval ::tclu::nonblocking exec $execID xcrysden --use $winID --pwi $tmpFile
 	::tclu::DEBUG structByXcrysden.3
 
 	::tclu::nonblocking unset $execID    
