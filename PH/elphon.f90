@@ -353,7 +353,7 @@ SUBROUTINE elphsum
      ! Note that the weights of k+q points must be set to zero for the
      ! following call to yield correct results
      !
-     CALL efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, ef1)
+     CALL efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, ef1, 0, isk)
      dosef = dos_ef (ngauss1, degauss1, ef1, et, wk, nks, nbnd)
      ! N(Ef) is the DOS per spin, not summed over spin
      dosef = dosef / 2.d0

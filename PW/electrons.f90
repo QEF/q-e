@@ -40,7 +40,7 @@ SUBROUTINE electrons()
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
                                    lgauss, ngauss, two_fermi_energies
-  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag
+  USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only, wg  
@@ -187,12 +187,12 @@ SUBROUTINE electrons()
      !
      IF ( lgauss ) THEN
         !
-        call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef)
+        call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk)
         WRITE( stdout, 9040 ) ef * rytoev
         !
      ELSE IF ( ltetra ) THEN
         !
-        CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef)
+        CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk)
         WRITE( stdout, 9040 ) ef * rytoev
         !
      END IF
