@@ -189,3 +189,13 @@ example20:
 example21:
     This example shows how to use par2.x to perform molecular dynamics
     simulation of medium to large systems.
+
+example22:
+    This example shows how to use pwnc.x to calculate the total energy
+    and the band structure of fcc-Pt with a fully relativistic US-PP
+    which includes spin-orbit effects.
+
+example23:
+    This example shows how to use cp.x to calculate Wannier functions
+    and to perform dynamics with an external electric field.
+    (contributed by Manu Sharma)
