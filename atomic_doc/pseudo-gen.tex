@@ -9,7 +9,9 @@
 \def\r{{\bf r}}
 \begin{document} 
 \title{Notes on pseudopotential generation}
-\author{\em Paolo Giannozzi, DEMOCRITOS and Scuola Normale Superiore di Pisa\\
+\author{\em Paolo Giannozzi\\
+Scuola Normale Superiore di Pisa and \\
+Democritos National Simulation Center\\
 e-mail: {\tt giannozz@nest.sns.it}\\
 URL: {\tt http://www.sns.it/\~{}giannozz}}
 \maketitle
@@ -51,23 +53,23 @@ those of Goedecker, Teter, and Hutter \cite{Goedecker}.
 Moreover, all major packages for electronic-structure calculations
 include a downloadable table of PP's. One could then wonder 
 what a PP generation code is useful for. The problem is that 
-sometimes published PP's will not suit your needs. For instance,
-you may need:
+sometimes available PP's will not suit your needs. For instance,
+you may want:
 \begin{enumerate}
- \item[--] a better accuracy than what is provided 
-     by PP's in the published PP tables;
- \item[--] PP's generated with an exchange-correlation
-     functional that is not available in the tables;
- \item[--] a distinction between "valence" and "core"
-     electrons that is different from the one chosen in the tables.
- \item[--] ``softer'' PP's than those in the tables.
- \item[--] PP's with a core hole for calculations of
-     XPS or NEXAFS
- \item[--] all-electron and pseudo atomic orbitats for
-     all-electron wavefunction reconstruction
- \item[--] ...
+ \item[--] a better accuracy;
+ \item[--] PP's generated with some exotic or new exchange-correlation
+     functional;
+ \item[--] a different partition of electrons into valence and core;
+ \item[--] ``softer'' PP's (i.e. PP that require a smaller cutoff
+           in plane-wave calculations);
+ \item[--] PP's with a core hole for calculations of XPS or NEXAFS
+           cross sections;
+ \item[--] all-electron wavefunctions reconstruction (requires the
+           knowledge of all-electron and pseudo orbitals used in
+           the generation of PP's);
 \end{enumerate}
-...or you may simply need to know how to produce a PP!
+or you may simply want to know what is a PP, how to produce PP's, 
+how reliable they are.
 
 \subsection{About similar work}
 
@@ -83,12 +85,11 @@ Those I am aware of include:
 \item David Vanderbilt's US-PP package \cite{van}:\\
 {\tt http://www.physics.rutgers.edu/\~{}dhv/uspp/index.html}.
 \end{itemize}
-Other codes may be available upon request from the authors 
-(I have heard of codes by Hamann and by Bachelet).
+Other codes may be available upon request from the authors.
 
 Years ago, it occurred to me that a web-based PP generation
 tool would have been nice. Being too lazy and too ignorant 
-in web-based applications, I did nothing. 
+in web-based applications, I did nothing.
 I recently discovered that Miguel Marques {\em et al.} have
 implemented something like this: see
 {\tt http://www.tddft.org/programs/octopus/pseudo.php}.
@@ -100,7 +101,7 @@ is known to the reader. Otherwise, see
 Refs.\cite{NC,BHS,TM,fhi98PP,RRKJ} and references quoted 
 therein for NC-PP's; Refs.\cite{van,PAW} for US-PP's. 
 I am also assuming that the generated PP's are to be used
-with a plane-wave (PW) basis set.
+in separable form \cite{KB} with a plane-wave (PW) basis set.
 
 The PP generation is a three-step process. First, one generates
 atomic levels and wavefunctions with Density-functional theory (DFT). 
@@ -120,7 +121,7 @@ The second step exists in many variants. One can generate ``traditional''
 single-projector NC-PP's; multiple-projector NC-PP's; or US-PP's.
 In the following we will consider mostly the case of ``traditional'' 
 NC-PP's. The crucial step is the generation of smooth, nodeless
-``pseudo-orbitals'' from atomic all-electron orbitals. Two popular 
+``pseudo-orbitals'' from atomic all-electron (AE) orbitals. Two popular 
 methods are presently implemented: Troullier-Martins \cite{TM}
 and Rappe-Rabe-Kaxiras-Joannopoulos \cite{RRKJ} (RRKJ).
 
@@ -138,16 +139,16 @@ following:
 
 \begin{enumerate}
 \item choose the exchange-correlation functional
-\item choose the electronic reference configuration
 \item choose the valence-core partition
+\item choose the electronic reference configuration
 \item choose which reference states to pseudize, and at which energies
 \item choose the type of pseudization
 \item choose the matching radii
-\item choose the parameters for the ``nonlinear core correction''
+\item choose the parameters for the ``nonlinear core 
+      xcorrection''\cite{CoreCorr}
 \item choose the local potential
 \item generate the pseudopotential
-\item check its transferability
-\item check the required cutoff
+\item check for transferability
 \end{enumerate}
 
 \subsection{Choosing the exchange-correlation functional}
@@ -161,17 +162,17 @@ some exotic or seldom-used functionals might contain bugs.
 PP's must be generated with the SAME functional that will
 be later used in calculations. The use of, for instance,
 GGA functionals with LDA PP's is inconsistent. This is why
-the PP contain information on the DFT level used in their
+the PP file contains information on the DFT level used in their
 generation: if you or your code ignore it, you do it at your
 own risk.
 
-NOTE THAT GGA functionals may present numerical problems
+Note that functionals may present numerical problems
 when the charge density goes to zero. For instance, the Becke
 gradient correction to the exchange may diverge for 
 $\rho \rightarrow 0$. This does not happen in a free atom
 if the charge density behaves as it should, that is, as
 $\rho(r)\rightarrow exp(-\alpha r)$ for $r \rightarrow \infty$.
-However in a pseudoatom a weird behavior may arise 
+In a pseudoatom, however, a weird behavior may arise 
 around the core region, $r\rightarrow 0$, because the 
 pseudocharge in that region is very small or sometimes 
 vanishing (if there are no filled $s$ states). As a consequence,
@@ -184,19 +185,53 @@ spikes, or if you experience problems, you have the following
 choices:
 \begin{enumerate}
 \item[--] Use a better-behaved GGA, such as PBE
-\item[--] Use the ``nonlinear core correction'' (see below; 
-it ensures the presence of some charge close to the nucleus).
+\item[--] Use the nonlinear core correction,
+which  ensures the presence of some charge close to the nucleus.
 % \item[--] cut out the gradient correction for small $r$
 % (set variable {\tt rcut} to $\sim 0.001$ or so).
 \end{enumerate}
 
+\subsection{Choosing the valence-core partition}
+
+This seems to be a trivial step, and often it is: valence states 
+are those that contribute to bonding, core states are those that 
+do not contribute. Things may sometimes be more complicated than 
+this. For instance:
+\begin{enumerate}
+\item[--] in transition metals, whose typical outer electronic
+configuration is: \\
+$nd^i(n+1)s^j(n+1)p^k$ ($n=$main quantum number), it is not
+always evident that the $ns$ and $np$ states (``semicore states'')
+can be safely put into the core. The problem is that $nd$ states 
+are localized in the same spatial region as $ns$ and $np$ states, 
+deeper than $(n+1)s$ and $(n+1)p$ states. This may lead to poor 
+transferability. Typically, PP's with semicore states in the core 
+work well in solids with weak or metallic bonding, but perform poorly 
+in compounds with a stronger (chemical) type of bonding.
+\item[--] Heavy alkali metals (Rb, Cs, maybe also K) have a large
+polarizable core. PP's with just one electron may not always give
+satisfactory results.
+\item[--] In some II-VI and III-V semiconductors, such as ZnSe and
+GaN, the contribution of the $d$ states of the cation to the bonding 
+is not negligible and may require explicit inclusion of those $d$ 
+states into the valence.
+\end{enumerate}
+In all these cases, promoting the highest core states $ns$ and $np$,
+or $nd$ into valence may be a computationally
+expensive but obliged way to improve poor transferability. . 
+
+Note that including semicore states into valence could make your
+PP harder, will increase the number of electrons, and may require
+more than one projector per angular momentum, or lead to slightly
+worse results for those cases in which such inclusion is not needed. 
+Include semicore states into valence only if it is really needed.
 
 \subsection{Choosing the electronic reference configuration}
 
 This may be any reasonable configuration not too far away from
 the expected configuration in solids or molecules. As a first
-choice, use the atomic ground state. Use the ground state if you 
-do not have a good reason to do otherwise, such as for instance:
+choice, use the atomic ground state, unless you have a reason 
+to do otherwise, such as for instance:
 \begin{enumerate}
 \item[--]
    You do not want to deal with unbound states.
@@ -205,8 +240,8 @@ do not have a good reason to do otherwise, such as for instance:
    ground state $3s^23p^2$, at least with LDA or GGA). In such a case 
    one has the choice between 
    \begin{enumerate} 
-      \item[--] using different configurations for higher and lower $l$, 
-                as in Refs.\cite{BHS,Gonze};
+      \item[--] using one configuration for $s$ and $p$, another, more
+                ionic one, for $d$, as in Refs.\cite{BHS,Gonze};
       \item[--] choosing a single, more ionic configuration for which 
                 all desired states are bound;
       \item[--] generate PP's on unbound states: requires to choose
@@ -215,13 +250,13 @@ do not have a good reason to do otherwise, such as for instance:
 \item[--]
    The results of your PP are very sensitive to the chosen configuration.
    This is something that in principle should not happen, but
-   I have encountered in my career at least one remarkable case
-   in which it does. In III-V zincblende semiconductors, the 
-   equilibrium lattice parameter is rather sensitive to the form
-   of the $d$ potential of the cation (due to the presence of $p-d$ 
-   coupling between anion $p$ states and cation $d$ states 
-   \cite{Zunger}). By varying the reference configuration, one 
-   can change the equilibrium lattice parameter by as much as $1-2\%$. 
+   I am aware of at least one case in which it does. In III-V
+   zincblende semiconductors, the equilibrium lattice parameter
+   is rather sensitive to the form of the $d$ potential of the 
+   cation (due to the presence of $p-d$ coupling between anion 
+   $p$ states and cation $d$ states \cite{Zunger}). By varying
+   the reference configuration, one can change the equilibrium 
+   lattice parameter by as much as $1-2\%$. 
    The problem arises if you want to calculate accurate dynamical
    properties of GaAs/AlAs alloys and superlattices: you need to
    get a good theoretical lattice matching between GaAs and AlAs,
@@ -230,19 +265,19 @@ do not have a good reason to do otherwise, such as for instance:
    than to tweak the $4d$ reference configuration for Ga until I got
    the observed lattice-matching.
 \item[--]
-   You know that the atom will be in a given configuration in the
-   system you are interested in and you try to stay close to it.
-   This is not very elegant but sometimes it is useful: in transition
-   metals, with semicore states in the core, it is probably better to
-   chose a reasonable configuration for $d$ states and not to use it
-   for systems with very different $d$ configuration. The problem is that
-   the $(n+1)s$ and $(n+1)p$ PP have a hard time in reproducing the true
-   potential if the $nd$ state changes a lot with respect to the
-   starting configuration (consider this no more than a hand-waiving 
-   argument). In Rare-Earth compounds, leaving the $4f$ electrons in the 
-   core with the correct occupancy (if known) may be a quick and dirty way 
-   to avoid the well-known problems of DFT yielding the wrong occupancy 
-   in highly correlated materials.
+   You know that for the system you are interested in, the atom will 
+   be in a given configuration and you try to stay close to it.
+   This is not very elegant but sometimes it is needed. For instance,
+   in transition metals described by a PP with semicore states in the 
+   core, it is probably wise to chose an electronic configuration for 
+   $d$ states that is close to what you expect in your system (as a
+   hand-waiving argument, consider that the $(n+1)s$ and $(n+1)p$ PP 
+   have a hard time in reproducing the true potential if the $nd$ state,
+   which is much more localized, changes a lot with respect to the
+   starting configuration). In Rare-Earth compounds, leaving the $4f$ 
+   electrons in the core with the correct occupancy (if known) may be 
+   a quick and dirty way to avoid the well-known problems of DFT yielding 
+   the wrong occupancy in highly correlated materials.
 \item[--]
    You don't manage to build a decent PP with the ground state configuration, 
    for whatever reason.
@@ -255,7 +290,7 @@ need a PP with angular momenta up to $l=l_c+1$. Angular momenta
 $l>l_c+1$ will feel the same potential as $l=l_c+1$, because
 for all of them there is no orthogonalization to core states.
 As a consequence a PP should have projectors on angular momenta up to
-$l_c$ and $l=l_c+1$ should be the local reference state for PW
+$l_c$; $l=l_c+1$ should be the local reference state for PW
 calculations. This rule is not very strict and may be relaxed: high
 angular momenta are seldom important (but be careful if they are). 
 Moreover separable PP pose serious constraints on local reference $l$
@@ -265,78 +300,21 @@ be.
 
 NOTE 2: a completely empty configuration ($s^0p^0d^0$) or
 a configuration with fractional occupation numbers are both
-perfectly acceptable. Even if fractional occupation numbers do
+acceptable. Even if fractional occupation numbers do
 not correspond to a physical state, they correspond to a
-perfectly defined mathematical object.
+well-defined mathematical object.
 
 NOTE 3: if you generate a single-projector PP using a configuration
 with semicore states in the valence, remember that for each $l$
-only the state with lowest $n$can be used to generate the PP, 
+only the state with lowest $n$ can be used to generate the PP, 
 and that the state with same $l$ and higher $n$ MUST BE EMPTY.
 
 NOTE 4: PP could in principle be generated on a spin-polarized
 configuration, but a spin-unpolarized one is typically used.
 Since PP are constructed to be transferrable, they can describe
-spin-polarized configurations as well. The "nonlinear core correction" 
+spin-polarized configurations as well. The nonlinear core correction
 is typically needed if you plan to use PP in spin-polarized (magnetic)
 systems.
-
-\subsubsection{Generating all-electron results}
-
-You may now generate all-electron (AE) wavefunctions and one-electron
-levels for the reference configuration. This is done by using program
-{\tt ld1.x}. You must specify in the input data: atomic symbol, what
-you choose as exchange-correlation functional (not needed if you stick 
-to LDA), electronic reference configuration.
-A complete description of the input is contained in file
-{\tt INPUT\_LD1}. If you want accurate AE results for heavy atoms,
-you may want to specify a denser grid in $r$-space than the default
-one. The defaults one should be good enough for PP generation, though.
-
-Before you proceed, it is a good idea to verify that the atomic data
-you just produced actually make sense. Some kind souls have posted on
-the web a complete set of reference atomic data :
-
-{\tt http://physics.nist.gov/PhysRefData/DFTdata/ }
-\par\noindent
-These data have been obtained with the Vosko-Wilk-Nusair functional,
-that for the unpolarized case is very similar to the Perdew-Zunger 
-functional.
-
-\subsection{Choosing the valence-core partition}
-
-This seems a trivial step, and often it is: valence states are those
-that contribute to bonding, core states are those that do not
-contribute. Things may sometimes be more complicated than this.
-For instance:
-\begin{enumerate}
-\item[--] in transition metals, whose typical outer electronic
-configuration is $nd^i(n+1)s^j(n+1)p^k$ ($n=$main quantum number), 
-it is not
-always evident that the $ns$ and $np$ states can be safely put into
-the core. The problem is that $nd$ states are localized in the same
-spatial region as $ns$ and $np$ states, deeper than $(n+1)s$ and
-$(n+1)p$ states. This may lead to intolerable loss of transferability.
-\item[--] Heavy alkali metals (Rb, Cs, maybe also K) have a large
-polarizable core. PP's with just one electron may not work properly
-(even with ``nonlinear core correction'', see below) 
-\item[--] In some II-VI and III-V semiconductors, such as ZnSe and
-GaN, the contribution of the $d$ states of the cation to the bonding 
-is not negligible and may require explicit inclusion of those $d$ 
-states into the valence.
-\end{enumerate}
-In all these cases, promoting the highest core states $ns$ and $np$,
-or $nd$ (the "semicore" states) into valence may be a computationally
-expensive but obliged way to improve poor transferability. It may
-happen that the same atom that works great with the "natural" valence
-in a solid with weak or metallic bonding does not work well at all in
-another compound with a different (stronger) type of bonding. This
-happens for many transition and noble metals.
-Note that including semicore states into valence could make your
-PP harder, will increase the number of electrons, and may require
-more than one projector per angular momentum, or lead to slightly
-worse results for those cases in which such inclusion is not needed. 
-Include semicore states into valence only if it is really needed.
 
 \subsection{Choosing reference states to pseudize, reference energies}
 
@@ -347,8 +325,9 @@ to pseudize: for each $l$, the bound valence eigenstate is pseudized
 at the corresponding eigenvalue.
 It is however possible to generate PP's by pseudizing atomic waves,
 i.e. regular solutions of the radial Kohn-Sham equation, at any
-energy. More than one such atomic waves at the same $l$ can be 
-pseudized, resulting in a PP with more than one projector per $l$. 
+energy. More than one such atomic waves of different energy can be
+pseudized for the same $l$, resulting in a PP with more than one 
+projector per $l$. 
 This possibility considerably extends the number of ``degrees of 
 freedom'' in the generation of a PP. As a rule of thumb: start first 
 with one projector per $l$, at the energy of the bound state. For
@@ -367,58 +346,65 @@ to yield optimally smooth PP's:
 \end{itemize}
 Both pseudizations replace atomic orbitals in the core region 
 with smooth nodeless pseudo-orbitals. The TM method uses an
-exponential of a polynomial; the RRKJ method uses three or four
+exponential of a polynomial (see Appendix B); the RRKJ method 
+uses three or four
 Bessel functions. The former is very robust. The latter may 
 occasionally fail to produce the required nodeless pseudo-orbital.
-If this happens, there is an option to set a small nonzero value of 
+If this happens, use the option to set a small nonzero value of 
 the charge density at the origin: this forces the use of four Bessel 
 functions.
 
 \subsection{Choosing the matching radii}
 
-At the matching radius $r_c$ the AE and PP wavefunction
-of angular momentum $l$ match, with at least continuous first
-derivative. The choice of the $r_c$ is very important and must be
-guided by the following criteria: 
-\begin{enumerate}
-\item[--] the $r_c$ must be larger than the outermost node (if any)
-of the wavefunction for any given $l$
-\item[--] a typical $r_c$ is the outermost peak, beyond if needed
-(see following point)
-\item[--] the larger the $r_c$, the softer the potential (less PW
-needed), but also the less transferable
-\item[--] usually there is one $l$ that is harder than the others
-(in transition metals, the $d$ state, in second-row elements N, O, F, 
-the $p$ state). One should concentrate on this one and push outwards 
-its $r_c$ as much as possible.
-\item[--] this is not very important, and usually impossible to
-achieve: one should try to have not too different $r_c$'s for
-different angular momenta
-\end{enumerate}
-To make a long story short: the difficult question is ``how much
-should I push $r_c$ outwards in order to have reasonable results for
-unreasonable hard atoms''. There is no well-defined answer. A typical
-wavefunction maximum for hard atoms is 0.7-0.8 a.u (in general, the
-outermost peak, but hard atoms are those with $2p$, $3d$, $4f$ valence
-states, with no orthogonalization to core states of the same $l$ and
-no nodes) (this is why they are hard, anyway). $r_c=0.8$ a.u. will
-yield unacceptably hard PP's. With a little bit of experience one can
-say that for second-row ($2p$) elements $r_c=1.1-1.2$ will yield
+Beyond the matching radius $r_c$, the AE orbital and the corresponding 
+PP orbital match, with continuous first derivative at $r=r_c$. 
+For bound states, $r_c$ is typically at the outermost peak or 
+somewhat larger. The larger the $r_c$, the softer the potential 
+(less PW needed in the calculations), but also the less transferable.
+In most cases one has to strike a compromise between softness
+and transferability.
+
+The choice of $r_c$ is very important, especially in ``hard'' atoms
+i.e. second-row elements N, O, F, $3d$ transition metals, rare earths.
+The frequently-asked question is ``how much should I push $r_c$ outwards
+in order to have reasonable results with a reasonable PW cutoff for 
+unreasonably hard atoms''. 
+There is no well-defined answer. Hard atoms have $2p$ (N, O, F), or
+$3d$ (transition metals), or $4f$ (rare earths) valence states with 
+no orthogonalization to core states of the same $l$ and no nodes.
+The choice of $r_c$ at the outermost maximum (typically 0.7-0.8 a.u,
+even less for $4f$ electrons) yields unacceptably hard PP's. With a 
+little bit of experience one can say that for second-row ($2p$) elements,
+$r_c=1.1-1.2$ will yield
 reasonably good results for 50-70 Ry PW kinetic energy cutoff; for
 $3d$ transition metals, the same $r_c$ will require $> 80$ Ry cutoff
-(highest $l$ have slower convergence for the same $r_c$).
+(highest $l$ have slower convergence for the same $r_c$). The above
+holds for TM pseudization. RRKJ pseudization will yield an
+estimate of the required cutoff.
+
+My advice: use US-PP's for transition metals and rare earths 
+(for the latter, remember that the problem of DFT reliability 
+preempts the problem of generating a PP). With US-PP's one
+can push the $r_c$ outwards quite a bit, at the price of losing
+norm conservation and introducing an augmentation charge that
+compensates for the missing charge. The code {\tt ld1.x} can
+generate US-PP's starting from a ``hard'' NC-PP.
 
 Note that it is the hardest atom that determines the PW cutoff in a
 solid or molecule. Do not waste time trying to find optimally soft 
-PP's if you have harder atoms around.
+PP's if you have harder atoms around. Also note that one should try 
+to have not too different $r_c$'s for different angular momenta, but 
+it is not always possible. The $r_c$
+cannot be smaller than the outermost node.
 
-\subsection{Choosing the parameters for the ``nonlinear core correction''}
+\subsection{Choosing the parameters for the nonlinear core correction}
 
 The core correction accounts at least partially for the nonlinearity
 in the exchange-correlation potential. In the generation of a PP one
 first produces a potential with the desired pseudowavefunctions and
-pseudoenergies. In order to separate a ``bare'' PP from the screening
-part, one removes the screening potential generated by the valence
+pseudoenergies. In order to extract a ``bare'' PP that can be used
+in a self-consitent DFT calculation, one subracts out the screening 
+(Hartree and exchange-correlation) potential generated by the valence 
 charge only. This introduces an error because the XC potential is not
 linear in the charge density. With the core correction one keeps a  
 smoothed core charge to be added to the valence charge both at the
@@ -442,8 +428,62 @@ but also the harder the smoothened core charge, and vice versa.
 
 \subsection{Choosing the local potential}
 
+For single-projector PP's, see Note 1 in Sec. 3.2. If one uses
+the semilocal form, the choice of the local ($l$-independent)
+potential is in most cases natural, and it would affect only PW 
+components with $l> l_c$, that are seldom important.
+In most PW calculations, however, a separable, fully nonlocal form -- 
+one in which the PP's is written as a local potential plus projectors -- 
+is used.
+An arbitrary function can be added to the local potential and 
+subtracted to all $l$ components. Generally one exploits this 
+arbitrariness to remove one $l$ component using it as local potential.
+The separable form can be either obtained by the Kleinman-Bylander
+projection \cite{KB} applied to single-projector PP's, or directly 
+produced using Vanderbilt's procedure \cite{van} (for single-projector
+PP's the two approaches are equivalent).
+
+Unfortunately the separable form is not guaranteed to have the
+correct ground state (the semilocal form is guaranteed, by 
+construction): ``ghost'' states, having the wrong number of nodes, 
+can appear among the occupied states or close to them, making the 
+PP completely useless. The freedom in choosing the ``local part'' 
+can (and usually must) be used in order to avoid the appearence 
+of ghosts.
+
+For PW calculations it is convenient to choose as local part the
+highest $l$, because this removes more projectors ($2l+1$ per atom)
+than for low $l$. According to Murphy's law, this is also the choice 
+that more often gives raise to problems, and one is forced to use
+a different $l$. Another possibility is to generate a local potential
+by pseudizing the AE potential.
+
+Note that multiple-projectors PP's and US-PP's can also have
+ghosts. Also note that ghosts are invisible to atomic codes 
+like {\tt ld1.x}, because the algorithm used in the integration 
+of radial orbitals discards states with wrong number of nodes.
 
 \subsection{Generating the pseudopotential}
+
+As a first step, one can generate AE wavefunctions and one-electron 
+levels for the reference configuration. This is done by using program
+{\tt ld1.x}. You must specify in the input data: atomic symbol, 
+what you choose as exchange-correlation functional (not needed 
+if you stick to LDA), electronic reference configuration.
+A complete description of the input is contained in file
+{\tt INPUT\_LD1}. If you want accurate AE results for heavy atoms,
+you may want to specify a denser grid in $r$-space than the default
+one. The defaults one should be good enough for PP generation, though.
+
+Before you proceed, it is a good idea to verify that the atomic data
+you just produced actually make sense. Some kind souls have posted on
+the web a complete set of reference atomic data :
+
+{\tt http://physics.nist.gov/PhysRefData/DFTdata/ }
+\par\noindent
+These data have been obtained with the Vosko-Wilk-Nusair functional,
+that for the unpolarized case is very similar to the Perdew-Zunger 
+functional.
 
 The generation step is also done by program {\tt ld1.x}.
 One has to supply, in addition to AE data: a list of 
@@ -466,22 +506,6 @@ The code {\tt ld1.x} has a ``testing'' mode in which it does
 exactly the above operation. You provide the input PP file and
 a number of test configurations.
 
-% It is very important to check that the pseudowavefunction match the
-% atomic wavefunction as accurately as possible beyond $r_c$.
-% Very primitive plotting programs, producing postscript output,
-% are available for plotting and comparing pseudo and atomic
-% wavefunctions ({\tt wfcgraf}) and for plotting the pseudopotential in
-% real space ({\tt psrgraf}). 
-
-% NOTE: in order to use the plotting programs, the labeling of
-% states of the PP calculation should be the same as for the AE
-% calculations without core states. The appropriate principal
-% quantum numbers for valence electrons (i.e. the lowest $s$ state
-% must have $n=1$, the lowest $p$ and second $s$ states must have 
-% $n=2$ and so on) are automagically generated from wavefunctions
-% labels (please check!). Labels are used to identify the AE-PP
-% wavefunction correspondence.
-
 Another way to check for transferability is to compare AE and PS 
 logarithmic derivatives, also calculated by {\tt ld1.x}. Typically 
 this comparison is done on the reference configuration,
@@ -494,7 +518,7 @@ but not necessarily. You should supply on input:
           of points for the plot. The energy range
           should cover the typical valence one-electron energy 
           range expected in the targeted application of the PP. 
-\item[--] output file names (one fro AE, one for PP) where results 
+\item[--] output file names (one for AE, one for PP) where results 
           are written.
 \end{enumerate}
 The file containing logarithmic derivatives can be easily read and 
@@ -503,92 +527,11 @@ Sizable discrepancies between AE and PS logarithmic derivatives
 are a sign of trouble (unless your energy range is too large or 
 not centered around the range of pseudization energies, of course).
 
-Note that 
-\subsection{Checking for required cutoff}
+Note that the above checks, based on atomic calculations only,
+do not replace the usual checks (convergence tests, bond lengths,
+etc) one has to perform in at least some simple solid-state or 
+molecular systems before starting a serious calculation.
 
-One can have a feeling of the hardness of the potential from the
-following indicators:
-\begin{enumerate}
-\item[--] the value of $r_c$ (see above)
-\item[--] the behavior of the Fourier transform $V_l(q)$. A very
-          primitive plotting program {\tt psqgraf} can be used to plot
-          $V_l(q)$ on a postscript file. Note that $q^2$ is the energy
-          in Ry.
-\item[--] an atomic calculation with a basis set of spherical 
-          Bessel functions $j_l(qr)$ (equivalent to projecting PW's
-          on states with given $l$).
-\end{enumerate}
-The latter is performed by program {\tt ldb}. It requires on input
-a PP file, the energy cutoff in Ry, and the electronic configuration.
-The first set of
-numbers, under ``Semilocal orbital energies:'', shows the one-electron
-levels. At convergence they should be, within numerical accuracy,
-equal to those of program {\tt ld1} with the same PP and electronic
-configuration. The behavior of the energy levels as a function of the
-cutoff will be very close to what one will get in a PW calculation.
-
-NOTE: the above does not replace the usual cutoff checks in
-solid-state or molecular calculations. Direct checks on the quantity
-of interest in your system are still needed.
-
-\subsection{Checking for separable form}
-
-The separable (KB) form of PP's is exceedingly convenient in
-electronic structure calculations, unless you are doing exceedingly
-simple systems (crystalline silicon...). In the KB formalism, one
-rewrites the PP's as projectors. An arbitrary function can be
-added to the local ($l$-independent) part of the PP and subtracted to
-all $l$ components. Generally one exploits this arbitrariness to
-remove one $l$ component using it as local part.
-
-Unfortunately the KB projection can lead to loss of transferability
-(often negligible, sometimes not) or even to the appearance of
-``ghost states'' -- states with the wrong number of nodes that are
-absent in the all-electron atom -- that make the PP completely
-useless.  For practical use, one has to check
-carefully whether KB PP are useful or not. In particular one must
-exploit the freedom in choosing the ``local part'' in order avoid
-ghosts.
-
-For PW calculations it is convenient to choose as local part the
-highest $l$, because this removes more projectors ($2l+1$ per atom)
-than for low $l$. This is the default choice done by program {\tt trou}.
-According to Murphy's law, this is also the choice that
-more often gives raise to problems.
-
-% There are three methods to check for ghosts:
-% \begin{itemize}
-% \item[--] use known criteria for  the appearance of
-% ``ghosts''\cite{Gonze} (not implemented).
-% \item[--] compare the all-electron (or PP) logarithmic derivative with
-% the KB logarithmic derivative (see above). The former are written by
-% program {\tt ld1} to a file with suffix {\tt .pp}. The latter (calculated 
-% using the KB form for PP but keeping the same SCF potential of semilocal 
-% PP) are written to a file with suffix {\tt .kb}. Plot the two, for
-% instance using {\tt xmgr}. Any sizable discrepancy between the two 
-% is a sign of trouble. Note that for {\tt l=lloc} you must obtain exactly 
-% the same values. Use the value of {\tt lloc} that seems to yield better 
-% results: edit the PP file to change it (see above).
-% \item[--] use program {\tt ldb}. Atomic codes using the integration of
-% radial wavefunction (like {\tt ld1}) are unable to find spurious states,
-% because their algorithm discards states with wrong number of
-% nodes. However if a basis set is used the spurious states will show
-% up. The self-consistent calculation is performed first on the PP in the
-% normal form. Then a KB Hamiltonian is constructed, using the atomic
-% pseudowavefunction and the screening potential just calculated,
-% and diagonalized on the spherical Bessel basis set (without
-% redoing the self-consistency, it is not needed for our purposes). 
-% The results are written in the right-hand part of the output, after 
-% ``KB orbital energies:'', and should match as exactly as possible the
-% results of the left-hand part. This must be tried at least on the
-% reference configuration, for a few occupied and unoccupied 
-% (pseudo)states, for all possible local parts.
-% \end{itemize}
-
-% A very unfortunate case may sometimes occur: you generate
-% a marvelous PP but, no matter what you choose as local reference
-% state, ghosts appear. You have to retry with a different reference
-% configuration  or matching radii. Good luck.
 \appendix
 
 \section{Atomic Calculations}
