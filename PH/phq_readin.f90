@@ -161,7 +161,7 @@ subroutine phq_readin
      nksq = nks / 2  
   endif
   !
-  if ( (epsil.or.zue) .and.okvan) then  
+  if ( (zue) .and.okvan) then  
      call error ('phq_readin', 'No electric field in US case', &
           - 1)
      epsil = .false.  

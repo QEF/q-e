@@ -9,9 +9,11 @@ include ../make.sys
 PHOBJS = phcom.o  \
 addcore.o  \
 adddvscf.o  \
+adddvepsi_us.o  \
 addnlcc.o  \
 addusdbec.o  \
 addusddens.o  \
+addusddense.o  \
 addusdynmat.o  \
 addusldos.o  \
 add_zstar_ue.o  \
@@ -29,6 +31,7 @@ compute_becsum.o  \
 compute_drhous.o  \
 compute_dvloc.o  \
 compute_nldyn.o  \
+compute_qdipol.o  \
 compute_weight.o  \
 d2ionq.o  \
 davcio_drho.o  \

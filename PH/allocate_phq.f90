@@ -64,6 +64,7 @@ subroutine allocate_phq
      call mallocate(int3 , nhm , nhm , 3 , nat , nspin)  
      call mallocate(int4 , nhm * (nhm + 1)/2,  3 , 3 , nat, nspin)
      call mallocate(int5 , nhm * (nhm + 1)/2 , 3 , 3 , nat , nat)
+     call mallocate(dpqq, nhm, nhm, 3, ntyp)
      call mallocate(alphasum , nhm * (nhm + 1)/2 , 3 , nat , nspin)
   endif
   call mallocate(alphap , nkb , nbnd , 3 , nksq)  

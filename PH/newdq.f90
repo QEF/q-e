@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine newdq (dvscf, irr, npe)  
+subroutine newdq (dvscf, npe)  
   !----------------------------------------------------------------------
   !
   !     This routine computes the contribution of the selfconsistent
@@ -30,9 +30,7 @@ subroutine newdq (dvscf, irr, npe)
 
   complex(kind=DP) :: dvscf (nrxx, nspin, npe)  
   ! input: the change of the self
-  !consistent pot.
-  integer :: irr  
-  ! input: the irreducible representation
+  ! consistent pot.
   !
   !   And the local variables
   !
@@ -92,7 +90,7 @@ subroutine newdq (dvscf, irr, npe)
   !     integrate the change of the self consistent potential and
   !     the Q functions
   !
-  do ipert = 1, npert (irr)  
+  do ipert = 1, npe  
      do is = 1, nspin  
         do ir = 1, nrxx  
            veff (ir) = dvscf (ir, is, ipert)  
@@ -111,12 +109,11 @@ subroutine newdq (dvscf, irr, npe)
                  do na = 1, nat  
                     if (ityp (na) .eq.nt) then  
                        do ig = 1, ngm  
-                          aux1 (ig) = qgm (ig) * eigts1 (ig1 (ig), na) * eigts2 (ig2 ( &
-                               ig), na) * eigts3 (ig3 (ig), na) * eigqts (na)
-
+                          aux1(ig)=qgm(ig)*eigts1(ig1(ig),na)*eigts2(ig2( &
+                               ig),na)*eigts3(ig3(ig),na)*eigqts(na)
                        enddo
                        do is = 1, nspin  
-                          int3 (ih, jh, ipert, na, is) = omega * ZDOTC (ngm, aux1, 1, &
+                          int3(ih,jh,ipert,na,is)=omega*ZDOTC(ngm,aux1,1, &
                                aux2 (1, is), 1)
                        enddo
                        !
@@ -135,7 +132,7 @@ subroutine newdq (dvscf, irr, npe)
                  do ih = 1, nh (nt)  
                     do jh = ih, nh (nt)  
                        do is = 1, nspin  
-                          int3 (jh, ih, ipert, na, is) = int3 (ih, jh, ipert, na, is)  
+                          int3 (jh,ih,ipert,na,is)=int3(ih,jh,ipert,na,is)  
                        enddo
                     enddo
                  enddo

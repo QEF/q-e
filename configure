@@ -22,8 +22,13 @@ then
 	echo OSHOME=$PWD > make.sys 
 	if [ "$1" = "pc_ifc" ]
 	then
-                echo creating the library file
+                echo creating catalog file for Intel compiler
 		echo work.pc > $PWD/Modules/intel.pcl
+
+		echo work.pc > $PWD/upftools/intel.pcl
+
+		echo work.pc > $PWD/flib/intel.pcl
+		echo $PWD/Modules/work.pc >> $PWD/flib/intel.pcl
 
 		echo work.pc > $PWD/PW/intel.pcl
 		echo $PWD/Modules/work.pc >> $PWD/PW/intel.pcl

@@ -355,14 +355,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
            do ibnd = 1, nbnd_occ (ikk)  
               do ig = 1, npwq  
-                 h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )  
+                 h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))  
               enddo
            enddo
            conv_root = .true.  
 
-           call cgsolve_all (ch_psi_all, cg_psi, et (1, ikk), dvpsi, dpsi, &
-                h_diag, npwx, npwq, thresh, ik, lter, conv_root, anorm, nbnd_occ ( &
-                ikk) )
+           call cgsolve_all (ch_psi_all,cg_psi,et(1,ikk),dvpsi,dpsi, &
+                h_diag,npwx,npwq,thresh,ik,lter,conv_root,anorm,nbnd_occ(ikk))
+
            ltaver = ltaver + lter  
            lintercall = lintercall + 1  
 
@@ -457,7 +457,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !     of the change of potential and Q
      !
 
-     call newdq (dvscfin, irr, npe)  
+     call newdq (dvscfin, npe)  
 #ifdef PARA
      aux_avg (1) = dfloat (ltaver)  
      aux_avg (2) = dfloat (lintercall)  

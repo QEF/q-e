@@ -16,7 +16,6 @@ subroutine zstar_eu
 
 
   use pwcom 
-  use allocate 
   use parameters, only : DP 
   use phcom  
   implicit none 
@@ -41,6 +40,14 @@ subroutine zstar_eu
   complex(kind=DP) :: ZDOTC  
   !  scalar product
   call setv (2 * 9 * nat, 0.d0, zstareu0, 1)  
+  call setv (9 * nat, 0.d0, zstareu, 1)  
+
+  if (okvan) then
+     call error('zstar_eu', 'Effective charges not implemented',-1)
+     return
+  endif
+
+
   if (nksq.gt.1) rewind (iunigk)  
   do ik = 1, nksq  
      if (nksq.gt.1) read (iunigk) npw, igk  
@@ -64,8 +71,8 @@ subroutine zstar_eu
               !
               call davcio (dpsi, lrdwf, iudwf, nrec, - 1)  
               do ibnd = 1, nbnd  
-                 zstareu0 (jpol, mode) = zstareu0 (jpol, mode) + 2.d0 * weight * &
-                      ZDOTC (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+                 zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
+                      ZDOTC(npw,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
               enddo
            enddo
         enddo
@@ -77,7 +84,6 @@ subroutine zstar_eu
 
   call poolreduce (18 * nat, zstareu0)  
 #endif
-  call setv (9 * nat, 0.d0, zstareu, 1)  
   !
   ! bring the mode index to cartesian coordinates
   !

@@ -181,6 +181,9 @@ subroutine phq_init
      call drho  
 
   endif
+  if (epsil.and.okvan) then
+     call compute_qdipol
+  endif
   call stop_clock ('phq_init')  
   return  
 end subroutine phq_init

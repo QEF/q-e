@@ -147,14 +147,15 @@ end module gc_ph
 !
 module phus
   use parameters, only : DP
-  real (kind=DP), pointer  :: alphasum (:,:,:,:) ! nhm*(nhm+1)/2,3,nat,nspin)  
-  ! used to compute modes
+  real (kind=DP), pointer  :: alphasum (:,:,:,:),&! nhm*(nhm+1)/2,3,nat,nspin)  
+                                                  ! used to compute modes
+       dpqq(:,:,:,:)                              ! dipole moment of each Q
   complex (kind=DP), pointer :: int1 (:,:,:,:,:),&! nhm, nhm, 3, nat, nspin),&
        int2 (:,:,:,:,:),&                 ! nhm, nhm, 3,nat, nat),&
        int3 (:,:,:,:,:),&                 ! nhm, nhm, 3, nat, nspin),&
        int4 (:,:,:,:,:),&                 ! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5 (:,:,:,:,:),&                 ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
-       becp1 (:,:,:),&                    ! nkbtot, nbnd, nksq),&
+       becp1 (:,:,:),   &                 ! nkbtot, nbnd, nksq),&
        alphap (:,:,:,:)                   ! nkbtot, nbnd, 3, nksq)
   ! integrals of dQ and V_eff
   ! integrals of dQ and V_loc
@@ -164,7 +165,6 @@ module phus
   ! the becq used in ch_psi
   ! the derivative of the bec
 end module phus
-
 !
 !   the variables needed for partial computation of dynamical matrix
 !
