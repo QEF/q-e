@@ -62,33 +62,6 @@ MODULE pffts
   !
 END MODULE pffts
 !
-!
-!----------------------------------------------------------------------------
-MODULE para
-  !----------------------------------------------------------------------------
-  !
-  ! ... tis module contains data and methods needed for parallel version of
-  ! ... PWscf code
-  !
-  USE pfft
-  USE pffts
-  USE kinds, ONLY : DP  
-  !
-  SAVE
-  !
-  ! ... number of processors =  # of tasks
-  !
-  ! ... general parallel information
-  !
-  INTEGER :: &
-      npool  = 1,         &!  number of pools
-      nprocp = 1,         &!  number of processors in this task pool
-      mypool = 1,         &!  identifier of this task pool
-      me     = 1,         &!  identifier of this task within his pool
-      kunit  = 1           !  granularity of k-point distribution
-  !
-END MODULE para
-!
 ! ... here are all parallel subroutines (wrappers to MPI calls) used 
 ! ... by the PWscf code
 !
@@ -519,8 +492,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   !
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, &
-                        my_pool_id, npool, me_pool, root_pool
-  USE para,      ONLY : kunit
+                        my_pool_id, npool, me_pool, root_pool, kunit
   USE mp,        ONLY : mp_bcast  
   !
   IMPLICIT NONE
@@ -784,8 +756,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
 #if defined (__PARA)
   !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id
-  USE para,      ONLY : kunit
+                        npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
   !
@@ -858,8 +829,7 @@ SUBROUTINE ipoolrecover( ivec, length, nkstot, nks )
 #if defined (__PARA)
   !  
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        npool, me_pool, root_pool, my_pool_id
-  USE para,      ONLY : kunit
+                        npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  
   USE parallel_include    
   !
