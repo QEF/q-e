@@ -17,12 +17,12 @@ help calculation -vartype character -helpfmt html -helptext {
     <b>Allowed values:</b> 'scf', 'nscf', 'phonon', 'relax', 
                            'md', 'vc-relax', 'vc-md', 'neb', 
                            'smd' (vc = variable-cell). 
-    <p>
-    <b>Default:</b> 'scf'
+    <b> ( default = 'scf' )
 }
 
 help title -vartype character -helpfmt txt2html -helptext {
-             reprinted on output. Default: ' '
+             reprinted on output. 
+<p> ( default = ' ' )
 }
 
 help verbosity    -vartype character -helpfmt txt2html -helptext { 
@@ -30,17 +30,31 @@ help verbosity    -vartype character -helpfmt txt2html -helptext {
 }
 
 help restart_mode -vartype character -helpfmt txt2html -helptext { 
-             'from_scratch'  : from scratch ( default )
+             'from_scratch'  : from scratch 
 	                       NEB and SMD only: the starting path is obtained
                                with a linear interpolation between the images
                                specified in the ATOMIC_POSITIONS card.
 			       Note that in the linear interpolation
                                periodic boundary conditions ARE NON USED.
              'restart'       : from previous interrupted run
+<p> ( default = 'from_scratch' )
+}
+
+help wf_collect -vartype logical -helpfmt txt2html -helptext { 
+               This flag controls the way in which wave functions are stored
+               to disk :
+               .TRUE.  collect wave functions from all processors and store 
+                       them in a single restart file ( outdir/prefix.save )
+               .FALSE. do not collect wave function and leave them in temporary
+                       local files (one per processor)
+<p> ( default = .FALSE. )
+
+
 }
 
 help nstep        -vartype integer -helpfmt txt2html -helptext {                          
              number of ionic+electronic steps
+<p>
              default:  1 if calculation = 'scf', 'nscf'
                        0 if calculation = 'neb', 'smd'
                       50 for the other cases
@@ -48,7 +62,7 @@ help nstep        -vartype integer -helpfmt txt2html -helptext {
 
 help iprint       -vartype integer -helpfmt txt2html -helptext { 
              band energies are written every iprint iterations
-             default: write only at convergence
+<p> ( default = write only at convergence )
 }
 
 help tstress      -vartype logical -helpfmt txt2html -helptext { 
@@ -67,12 +81,13 @@ help dt           -vartype real -helpfmt txt2html -helptext {
 
 help outdir       -vartype character -helpfmt txt2html -helptext { 
              input, temporary, output files are found in this directory
-             Default: current directory ('./')
+<p> ( default = current directory, i.e. './' )
 }
             
 help prefix       -vartype character -helpfmt txt2html -helptext { 
              prepended to input/output filenames: 
-             prefix.wfc, prefix.rho, etc. Default: 'pwscf'
+             prefix.wfc, prefix.rho, etc. 
+<p> ( default = 'pwscf' )
 }
 
 help max_seconds  -vartype integer -helpfmt txt2html -helptext { 
@@ -81,14 +96,16 @@ help max_seconds  -vartype integer -helpfmt txt2html -helptext {
 
 help etot_conv_thr     -vartype real -helpfmt txt2html -helptext { 
              convergence threshold on total energy (a.u)
-             for ionic minimization. Default: 1.D-4
-             See also forc_conv_thr - both criteria must be satisfied
+             for ionic minimization. 
+             See also <i>forc_conv_thr</i> - both criteria must be satisfied
+<p> ( default = 1.D-4 )
 }
 
 help forc_conv_thr     -vartype real -helpfmt txt2html -helptext { 
              convergence threshold on forces (a.u)
-             for ionic minimization. Default: 1.D-3
-             Ssee also etot_conv_thr - both criteria must be satisfied
+             for ionic minimization. 
+             Ssee also <i>etot_conv_thr</i> - both criteria must be satisfied
+<p> ( default = 1.D-3 )
 }
 
 help disk_io      -vartype character -helpfmt txt2html -helptext { 
@@ -97,12 +114,13 @@ help disk_io      -vartype character -helpfmt txt2html -helptext {
 
 help pseudo_dir   -vartype character -helpfmt txt2html -helptext {
              directory containing pseudopotential files
-             Default: '$HOME/pw/pseudo/'
+<p> ( default = '$HOME/pw/pseudo/' )
 }
 	
 help tefield      -vartype logical -helpfmt txt2html -helptext {  
              If .TRUE. a sawlike potential is added to the 
-               bare ionic potential.  Default: .FALSE.
+               bare ionic potential.  
+<p> ( default = .FALSE. )
 }	
 
 
@@ -281,7 +299,7 @@ help nosym        -vartype logical -helpfmt txt2html -helptext {
              k-point grid will contain only points in the irreducible BZ 
              of the lattice.  Use with care in low-symmetry large cells 
              if you cannot afford a k-point grid with the correct symmetry.
-             Default: .FALSE.
+<p> ( default = .FALSE. )
 }
 
 help starting_magnetization -vartype real -helpfmt txt2html -helptext { 
@@ -309,13 +327,14 @@ help occupations  -vartype character -helpfmt txt2html -helptext {
 
 help degauss      -vartype real -helpfmt txt2html -helptext { 
              value of the gaussian spreading (Ry) for brillouin-zone
-             integration in metals. Default: 0.D0
+             integration in metals. 
+<p> ( default = 0.D0 )
 }
 
 
 help smearing     -vartype character -helpfmt txt2html -helptext { 
              'gaussian', 'gauss':  
-                  ordinary Gaussian spreading (Default)
+                  ordinary Gaussian spreading 
              'methfessel-paxton', 'm-p', 'mp':
                   Methfessel-Paxton first-order spreading
                   (see PRB 40, 3616 (1989)).
@@ -324,6 +343,7 @@ help smearing     -vartype character -helpfmt txt2html -helptext {
                   (see PRL 82, 3296 (1999))
              'fermi-dirac', 'f-d', 'fd':
                   smearing with Fermi-Dirac function
+<p> ( default = 'gaussian' )
 }
 
 foreach var {nelup neldw} {
@@ -334,8 +354,9 @@ foreach var {nelup neldw} {
 }
 
 help nspin        -vartype integer -helpfmt txt2html -helptext { 
-             nspin=1 :  non-polarized calculation (default)
+             nspin=1 :  non-polarized calculation 
              nspin=2 : spin-polarized calculation
+<p> ( default = 1 )
 }
 
 help ecfixed      -vartype real -helpfmt txt2html -helptext { 
@@ -397,17 +418,19 @@ help edir         -vartype integer -helpfmt txt2html -helptext {
 
 help emaxpos      -vartype real -helpfmt txt2html -helptext { 
              Position of the maximum of the sawlike potential within the 
-             unit cell (0<emaxpos<1). Default: 0.5D0
+             unit cell (0<emaxpos<1). 
+<p> ( default = 0.5D0 )
 }
 
 help eopreg       -vartype real -helpfmt txt2html -helptext { 
              Part of the unit cell where the sawlike potential decreases.
-             ( 0 < eopreg < 1 ). Default: 0.1D0
+             ( 0 < eopreg < 1 ). 
+<p> ( default = 0.1D0 )
 }
 
 help eamp         -vartype real -helpfmt txt2html -helptext { 
              Amplitude of the electric field (in a.u.) ( 1 a.u. = 51.44 10^11 V/m )
-             Default: 0.001 a.u.
+<p> ( default = 0.001 a.u. )
 }
 
 
@@ -418,48 +441,53 @@ help eamp         -vartype real -helpfmt txt2html -helptext {
 
 help electron_maxstep  -vartype integer -helpfmt txt2html -helptext { 
              maximum number of iterations in a scf step
-             (default: 50)
+<p> ( default = 50)
 }
 
 help conv_thr     -vartype real -helpfmt txt2html -helptext { 
              Convergence threshold for selfconsistency: 
-             estimated energy error < conv_thr ( Default 1.D-6 )
+             estimated energy error < conv_thr 
+<p> ( default = 1.D-6 )
 }
 
 help mixing_mode  -vartype character -helpfmt txt2html -helptext { 
-             'plain'    : charge density Broyden mixing (default)
+             'plain'    : charge density Broyden mixing 
              'TF'       : as above, with simple Thomas-Fermi screening
                           (for highly homogeneous systems)
              'local-TF' : as above, with local-density-dependent TF screening
                           (for highly inhomogeneous systems)
              'potential': (obsolete) potential mixing
+<p> ( default = 'plain' )
 }
 
 help mixing_beta  -vartype real -helpfmt txt2html -helptext { 
-             mixing factor for self-consistency (default: 0.7D0)
+             mixing factor for self-consistency 
+<p> ( default = 0.7D0 )
 }
 
 help mixing_ndim  -vartype integer -helpfmt txt2html -helptext { 
-             number of iterations used in mixing scheme (default: 8)
+             number of iterations used in mixing scheme 
+<p> ( default = 8 )
 }
 
 help mixing_fixed_ns   -vartype integer -helpfmt txt2html -helptext { 
              For LDA+U : number of iterations with fixed ns (ns is the
-             atomic density appearing in the Hubbard term) (default: 0)
+             atomic density appearing in the Hubbard term) 
+<p> ( default = 0 )
 }
 
 help diagonalization   -vartype character -helpfmt txt2html -helptext { 
             'david': Davidson iterative diagonalization with overlap matrix
-                     (default)
             'diis' : DIIS-like diagonalization
             'cg'   : conjugate-gradient-like band-by-band diagonalization
+<p> ( default = 'david' )
 }
 
 help diago_thr_init -vartype real -helpfmt txt2html -helptext {
                Convergence threshold for the firts iterative diagonalization.
                The threshold (ethr) is automatically updated along the
                self consistency loop.
-               <p>Default: 1.D-2
+<p> ( default = 1.D-2 )
 }
 
 help diago_cg_maxiter  -vartype integer -helpfmt txt2html -helptext { 
@@ -471,11 +499,13 @@ help diago_david_ndim  -vartype integer -helpfmt txt2html -helptext {
              For Davidson diagonalization: dimension of workspace 
              (number of wavefunction packets, at least 2 needed). 
              A larger value may yield a faster algorithm but uses 
-             more memory.<p>Default: 4
+             more memory.
+<p> ( default = 4 )
 }
 
 help diago_diis_ndim   -vartype integer -helpfmt txt2html -helptext { 
-             For DIIS: dimension of the reduced space.<p>Default: 3
+             For DIIS: dimension of the reduced space.
+<p> ( default = 3 )
 }
 
 
@@ -487,11 +517,12 @@ help startingpot  -vartype character -helpfmt txt2html -helptext {
 }
 
 help startingwfc  -vartype character -helpfmt txt2html -helptext { 
-             'atomic': start from superposition of atomic orbitals (default)
+             'atomic': start from superposition of atomic orbitals 
                        If not enough atomic orbitals are available,
                        fill with random numbers the remaining wfcs
              'random': start from random wfcs
              'file'  : start from a wavefunction file
+<p> ( default = 'atomic' )
 }
 
 
@@ -545,7 +576,7 @@ help tolp         -vartype real -helpfmt txt2html -helptext {
              tolerance for velocity rescaling. Velocities are
              not rescaled if the ratio of the run-averaged and 
              target temperature differs from unit less than tolp
-             (default: 1.D-3)
+<p> ( default = 1.D-3 )
 }
 
 help upscale      -vartype real -helpfmt txt2html -helptext { 
@@ -553,7 +584,8 @@ help upscale      -vartype real -helpfmt txt2html -helptext {
                conv_thr is automatically reduced when the relaxation 
                approaches convergence so that forces are still accurate,
                but conv_thr will not be reduced to less that 
-               conv_thr / upscale. (default: 10.D0)
+               conv_thr / upscale. 
+<p> ( default = 10.D0 )
 }
 
 help potential_extrapolation     -vartype character -helpfmt txt2html -helptext { 
@@ -732,7 +764,7 @@ help cell_dynamics     -vartype character -helpfmt txt2html -helptext {
 
 help press        -vartype real -helpfmt txt2html -helptext { 
              target pressure [KBar] in a variable-cell md simulation
-             (default: 0.D0)
+<p> ( default = 0.D0 )
 }
 
 help wmass        -vartype real -helpfmt txt2html -helptext { 
@@ -742,7 +774,8 @@ help wmass        -vartype real -helpfmt txt2html -helptext {
 help cell_factor  -vartype real -helpfmt txt2html -helptext { 
              used in the construction of the pseudopotential tables. 
              It should exceed the maximum linear contraction of the
-             cell during a simulation. Default: 1.2D0
+             cell during a simulation. 
+<p> ( default = 1.2D0 )
 }
 
 

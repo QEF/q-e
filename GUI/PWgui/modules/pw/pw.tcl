@@ -68,6 +68,13 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -default  "from scratch <from_scratch>"
 		}
 
+		var wf_collect {
+		    -label     "Make a single restart file (wf_collect):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		separator -label "--- Directories/Files/Stdout ---"
 		
 		var outdir {
