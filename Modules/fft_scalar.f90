@@ -63,7 +63,7 @@
 
 #endif
 
-#if defined __SGI64 || defined __ALPHA
+#if defined __SGI64 || defined __ALPHA || defined __T3E
 
         INTEGER, PARAMETER :: ipt = 8
 
