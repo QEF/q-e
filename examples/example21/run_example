@@ -239,9 +239,12 @@ KSOUT
  1 4
 EOF
 $ECHO "  running the calculation with 32 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-32.in > h2o-32.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 32 ; then
+    $FPMD_COMMAND < h2o-32.in > h2o-32.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 # molecular dynamics calculation
 cat > h2o-64.in << EOF
@@ -501,9 +504,12 @@ ATOMIC_POSITIONS (crystal)
  H      0.0492   0.9894   0.9603
 EOF
 $ECHO "  running the calculation with 64 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-64.in > h2o-64.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 64 ; then
+    $FPMD_COMMAND < h2o-64.in > h2o-64.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 # molecular dynamics calculation
 cat > h2o-128.in << EOF
@@ -955,9 +961,12 @@ ATOMIC_POSITIONS (crystal)
  H      0.0492   0.9947   0.9603
 EOF
 $ECHO "  running the calculation with 128 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-128.in > h2o-128.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 128 ; then
+    $FPMD_COMMAND < h2o-128.in > h2o-128.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 # molecular dynamics calculation
 cat > h2o-256.in << EOF
@@ -1793,9 +1802,12 @@ ATOMIC_POSITIONS (crystal)
  H      0.5246   0.9947   0.9603
 EOF
 $ECHO "  running the calculation with 256 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-256.in > h2o-256.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 256 ; then
+    $FPMD_COMMAND < h2o-256.in > h2o-256.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 # molecular dynamics calculation
 cat > h2o-384.in << EOF
@@ -3015,9 +3027,12 @@ ATOMIC_POSITIONS (crystal)
  H      0.5246   0.9947   0.9736
 EOF
 $ECHO "  running the calculation with 384 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-384.in > h2o-384.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 384 ; then
+    $FPMD_COMMAND < h2o-384.in > h2o-384.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 # molecular dynamics calculation
 cat > h2o-512.in << EOF
@@ -4621,9 +4636,12 @@ ATOMIC_POSITIONS (crystal)
  H      0.5246   0.9947   0.9802
 EOF
 $ECHO "  running the calculation with 512 H2O molecules...\c"
-#$FPMD_COMMAND < h2o-512.in > h2o-512.out
-#$ECHO " done"
-$ECHO " skipped" # too big, don't run
+if test "0$1" -ge 512 ; then
+    $FPMD_COMMAND < h2o-512.in > h2o-512.out
+    $ECHO " done"
+else
+    $ECHO " skipped" # too big, don't run
+fi
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"
