@@ -13,13 +13,17 @@ PWOBJS = ../PW/error.o \
          ../PW/irrek.o ../PW/mode_group.o \
          ../PW/cft_3.o ../PW/error_handler.o
 MODULES = ../Modules/parameters.o ../Modules/kind.o ../Modules/fft_scalar.o
+
 #
 # Targets
 #
-all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x
+all: band_plot.x q2r.x matdyn.x dynmat.x fqha.x dist.x
 
 band_plot.x:  band_plot.o
 	$(LD) -o band_plot.x band_plot.o  $(LDFLAGS)
+
+dist.x:  dist.o
+	$(LD) -o dist.x dist.o $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 q2r.x: q2r.o rigid.o
 	$(LD) -o q2r.x q2r.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)

@@ -116,57 +116,10 @@ subroutine set_dft_value (m, i)
 
   parameter (notset = - 1)
 
-  if (m.ne.notset.and.m.ne.i) call errore ('decifra', 'two conflictin &
-       &g matching values', 1)
+  if (m.ne.notset.and.m.ne.i) call errore ('decifra', 'two conflicting &
+       & matching values', 1)
 
   m = i
   return
 
 end subroutine set_dft_value
-!-----------------------------------------------------------------------
-logical function matches (string1, string2)
-  !-----------------------------------------------------------------------
-  !
-  implicit none
-  character (len=*) :: string1, string2
-  integer :: len1, len2, l
-
-
-  len1 = len_trim(string1)
-  len2 = len_trim(string2)
-  do l = 1, len2 - len1 + 1
-     if (string1 (1:len1) .eq.string2 (l:l + len1 - 1) ) then
-        matches = .true.
-        return
-     endif
-
-  enddo
-
-  matches = .false.
-  return
-end function matches
-!
-!-----------------------------------------------------------------------
-function capital (character)
-  !-----------------------------------------------------------------------
-  !
-  !   converts character to capital if lowercase
-  !   copy character to output in all other cases
-  !
-  implicit none
-  character (len=1) :: capital, character
-  !
-  character(len=26) :: minuscole='abcdefghijklmnopqrstuvwxyz', &
-                       maiuscole='ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-  integer :: i
-  !
-  do i=1,26
-     if (character.eq.minuscole(i:i)) then
-        capital=maiuscole(i:i)
-        return
-     end if
-  end do
-  capital = character
-  !
-  return
-end function capital
