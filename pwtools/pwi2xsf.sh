@@ -60,11 +60,13 @@ BEGIN {
 
 toupper($0) ~ /&SYSTEM/          { print; }
 
-toupper($1) ~ /^IBRAV($|=)|^CELLDM\([1-6]\)($|=)|^NAT($|=)|^A($|=)|^B($|=)|^C($|=)|^COSAB($|=)|^COSAC($|=)|^COSBC($|=)/ { print; }
+/=/ { 
+  if ( toupper($1) ~ /^IBRAV($|=)|^CELLDM\([1-6]\)($|=)|^NAT($|=)|^A($|=)|^B($|=)|^C($|=)|^COSAB($|=)|^COSAC($|=)|^COSBC($|=)/ ) { print; } 
+  
+  if ( toupper($1) ~ /^CALCULATION($|=)/ ) { calculation=toupper($0); }
 
-toupper($1) ~ /^CALCULATION($|=)/ { calculation=toupper($0); }
-
-toupper($1) ~ /^NUM_OF_IMAGES($|=)/ { num_of_images=toupper($0); }
+  if ( toupper($1) ~ /^NUM_OF_IMAGES($|=)/ ) { num_of_images=toupper($0); }
+}
 
 /ATOMIC_POSITIONS|CELL_PARAMETERS/ {
   if ( !nml_end) {
