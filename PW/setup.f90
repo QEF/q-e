@@ -50,7 +50,7 @@ subroutine setup
   !
   real(kind=DP), parameter :: rcut = 10.d0, eps = 1.0d-12
   !
-  integer :: na, ir, nt, nrot, iter, ierr, irot, isym, &
+  integer :: na, ir, nt, input_nks, nrot, iter, ierr, irot, isym, &
        ipol, jpol, tipo
   logical :: minus_q  
   integer, external ::n_atom_wfc, set_Hubbard_l
@@ -256,6 +256,7 @@ subroutine setup
   !   the missing k-points. If nosym is true (see above) we do not use
   !   any point-group symmetry and leave k-points unchanged.
   !
+  input_nks = nks
   !
   call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xqq, &
@@ -284,8 +285,14 @@ subroutine setup
      ntetra = 0
   end if
   !
-
+  ! Berry phase calculation: do not change the number of k-points
+  !
+  if ( lberry ) nks = input_nks
+  !
+  ! phonon calculation: add k+q to the list of k
+  !
   if (iswitch <= -2) call set_kplusq (xk, wk, xqq, nks, npk)
+  !
   if (lsda) then
      !
      ! LSDA case: two different spin polarizations, each with its own kpoints

@@ -100,8 +100,8 @@ subroutine work_function (wf)
   write (6, '(/5x,"Work function written on file workf")')
   write (6, '( 5x,"Planar mean charge written on file charge")')
 
-9130 format (/'     workfunction     = ',f10.4,' +- ',f6.4,' eV', &
-    &        /'     without exchcorr = ',f10.4,' +- ',f6.4,' eV')
+9130 format (/'     workfunction     = ',f10.4,' +- ',f10.4,' eV', &
+    &        /'     without exchcorr = ',f10.4,' +- ',f10.4,' eV')
   close (17)
   close (19)
   deallocate(raux1)

@@ -62,18 +62,16 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   allocate (a ( npwx))    
   allocate (psi(nrx1, nrx2))    
   !
-  write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  write ( * ,  * ) '!this routine has not been tested since last changes!'
-  write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-  !
   !     if matching is .true. then matches the wfc's and uses their
   !     exponential behaviour, otherwise uses the true wfc's on fft grid
   !
   stmdos(:) = 0.d0
   if (.not.stm_wfc_matching) rho(:,:) = 0.d0
   if (stm_wfc_matching) then
+     write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+     write ( * ,  * ) '! stm_wfc_matching untested since a long time !'
+     write ( * ,  * ) '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
      z = z * alat
-
      dz = dz * alat
      write (6, '(5x,"Matching plane at z  =",f6.2, &
           &       " alat units")') z / alat
@@ -137,19 +135,18 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   endif
   do ik = 1, nks
      do ibnd = 1, nbnd
-        if (et (ibnd, ik) .gt.down.and.et (ibnd, ik) .lt.up) then
+        if (et (ibnd, ik) > down .and. et (ibnd, ik) < up) then
            wg (ibnd, ik) = wk (ik)
-        elseif (et (ibnd, ik) .lt.down) then
+        elseif (et (ibnd, ik) < down) then
            wg (ibnd, ik) = wk (ik) * w0gauss ( (down - et (ibnd, ik) ) &
                 / degauss, ngauss)
-        elseif (et (ibnd, ik) .gt.up) then
+        elseif (et (ibnd, ik) > up) then
            wg (ibnd, ik) = wk (ik) * w0gauss ( (up - et (ibnd, ik) ) &
                 / degauss, ngauss)
         endif
      enddo
-
-
   enddo
+  !
   istates = 0
   !
   !     here we sum for each k point the contribution
@@ -172,8 +169,9 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               !     if the surface part of G is equal to at least one of the
               !     surface vectors already found then uguale = .true.
               !
-              uguale = uguale.or. (g (1, igk (ig) ) .eq.gs (1, igs) .and.g ( &
-                   2, igk (ig) ) .eq.gs (2, igs) )
+              uguale = uguale .or. (g (1, igk (ig) ) == gs (1, igs) .and. &
+                                    g (2, igk (ig) ) == gs (2, igs) )
+              if (uguale) exit
            enddo
            !
            !     if G is not equal to any surface vector then G is a new
@@ -189,7 +187,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      !
      do ibnd = 1, nbnd
         w1 = wg (ibnd, ik) / omega
-        if (et (ibnd, ik) .gt.up1.or.et (ibnd, ik) .lt.down1) goto 10
+        if (et (ibnd, ik) > up1 .or. et (ibnd, ik) < down1) goto 10
         write (6, * ) w1, ibnd, ik
         !
         !     istates is a counter on the states used to compute the image
@@ -204,16 +202,17 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            wf1 = wf - (et (ibnd, ik) - ef - sample_bias)
            do igs = 1, npws
               a (igs) = (0.d0, 0.d0)
-              fac = exp (z * sqrt (wf1 + ( (xk (1, ik) + gs (1, igs) ) **2 + &
-                   (xk (2, ik) + gs (2, igs) ) **2) * tpiba2) )
+              fac = exp (z * sqrt (wf1 + ( (xk(1, ik) + gs(1, igs))**2 +   &
+                                           (xk(2, ik) + gs(2, igs))**2 ) * &
+                                   tpiba2) )
               do ig = 1, npw
                  !
                  !     sum over the z-component of the G vector
                  !
-                 if (g (1, igk (ig) ) .eq.gs (1, igs) .and.g (2, igk (ig) ) &
-                      .eq.gs (2, igs) ) then
-                    a (igs) = a (igs) + evc (ig, ibnd) * fac * exp (i * z * &
-                         (xk (3, ik) + g (3, igk (ig) ) ) * tpiba)
+                 if (g (1, igk (ig) ) == gs (1, igs) .and. &
+                     g (2, igk (ig) ) == gs (2, igs) ) then
+                    a (igs) = a (igs) + evc (ig, ibnd) * fac * &
+                         exp (i * z * (xk(3, ik) + g(3, igk(ig)) ) * tpiba)
                  endif
               enddo
            enddo
@@ -232,23 +231,24 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               zz = z + dz * (irz - 2)
               psi(:,:) = (0.d0, 0.d0)
               do igs = 1, npws
-                 fac = exp ( - sqrt (wf1 + ( (xk (1, ik) + gs (1, igs) ) **2 + &
-                      (xk (2, ik) + gs (2, igs) ) **2) * tpiba2) * zz)
+                 fac = exp ( - sqrt (wf1 + ( (xk(1, ik) + gs(1, igs) )**2 +   &
+                                             (xk(2, ik) + gs(2, igs) )**2 ) * &
+                                     tpiba2) * zz)
                  do iry = 1, nr2
                     do irx = 1, nr1
                        !
                        !     works for the z axis orthogonal to the xy plane
                        !
-                       x = at (1, 1) * real (irx - 1) / nr1 + at (1, 2) * real (iry - &
-                            1) / nr2
-                       y = at (2, 1) * real (irx - 1) / nr1 + at (2, 2) * real (iry - &
-                            1) / nr2
+                       x = at (1,1) * real (irx-1) / nr1 + at (1,2) * &
+                            real (iry-1) / nr2
+                       y = at (2,1) * real (irx-1) / nr1 + at (2,2) * &
+                            real (iry-1) / nr2
                        !
                        !     psi is the wfc in the plane xy at height zz
                        !
-                       psi (irx, iry) = psi (irx, iry) + a (igs) * fac * exp (tpi * i &
-                            * ( (xk (1, ik) + gs (1, igs) ) * x + (xk (2, ik) + gs (2, igs) &
-                            ) * y) )
+                       psi (irx, iry) = psi (irx, iry) + a (igs) * fac * &
+                            exp (tpi * i * ( (xk(1, ik) + gs(1, igs) ) * x + &
+                                             (xk(2, ik) + gs(2, igs) ) * y) )
                     enddo
                  enddo
               enddo
@@ -262,11 +262,12 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               do iry = 1, nr2
                  do irx = 1, nr1
                     ir = irx + (iry - 1) * nrx1 + (irz - 1) * nrx1 * nrx2
-                    stmdos (ir) = stmdos (ir) + w1 * psi (irx, iry) * conjg (psi ( &
-                         irx, iry) )
+                    stmdos (ir) = stmdos (ir) + &
+                         w1 * psi (irx, iry) * conjg (psi (irx, iry) )
                  enddo
               enddo
            enddo
+           write (6, * ) 'end of if (1)'
         else
            !
            !     do not match
@@ -274,7 +275,6 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
            psic(:) = (0.d0, 0.d0)
            do ig = 1, npw
               psic (nl (igk (ig) ) ) = evc (ig, ibnd)
-
            enddo
 
            call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)

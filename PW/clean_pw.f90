@@ -1,14 +1,23 @@
 SUBROUTINE clean_pw
 
-  USE pwcom,		ONLY : tau, force, ityp, tetra, irt, ig_l2g, & 
-                               gg, nl, igtongl, ig1, ig2, ig3, rho, rho_save, &
-                               vr, vltot, vnew, rho_core, psic, vrs, nls, &
-			       vloc, strf, eigts1, eigts2, eigts3, &
-			       igk, igk_l2g, g2kin, indv, nhtol, nhtom, qq, &
-			       dvan, deeq, qrad, vkb, qgm, becsum, ns, nsnew, &
-			       tab, et, wg, swfcatom, doublegrid
-  USE becmod,		ONLY : becp			       
-  USE sticks,		ONLY : dfftp, dffts  
+  USE basis,            ONLY : ityp, tau
+  USE gvect,            ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
+                               eigts1, eigts2, eigts3
+  USE gsmooth,          ONLY : nls, nlsm, doublegrid
+  USE ktetra,           ONLY : tetra
+  USE reciprocal_vectors, ONLY: ig_l2g
+  USE symme,            ONLY : irt
+  USE vlocal,           ONLY : strf, vloc, vnew
+  USE wvfct,            ONLY : igk, igk_l2g, g2kin, et, evc, wg, gamma_only
+  USE force_mod,        ONLY : force
+  USE scf,              ONLY : rho, rho_save,vr, vltot, rho_core, vrs
+  USE workspace,        ONLY : psic
+  USE us,               ONLY : indv, nhtol, nhtom, qq, dvan, deeq, qrad, &
+                               vkb, qgm, becsum, tab
+  USE ldaU,             ONLY : ns, nsnew, swfcatom
+  USE extfield,         ONLY : forcefield
+  USE becmod,           ONLY : becp
+  USE sticks,           ONLY : dfftp, dffts  
   USE stick_base,       ONLY : sticks_deallocate
   USE berry_phase,      ONLY : berry_closeup
 
@@ -18,18 +27,19 @@ SUBROUTINE clean_pw
 
 #endif  
 
-  USE fft_types,	ONLY : fft_dlay_deallocate
+  USE fft_types,        ONLY : fft_dlay_deallocate
 
   IMPLICIT NONE
   
   
   !  arrays allocated in input.f90, read_file.f90 or setup.f90
   
-  IF ( ALLOCATED( tau )	)	DEALLOCATE( tau )
+  IF ( ALLOCATED( tau ) )	DEALLOCATE( tau )
   IF ( ALLOCATED( force ) )	DEALLOCATE( force )
   IF ( ALLOCATED( ityp ) )	DEALLOCATE( ityp )
   IF ( ALLOCATED( tetra ) )	DEALLOCATE( tetra )
-  IF ( ALLOCATED( irt )	)	DEALLOCATE( irt )
+  IF ( ALLOCATED( irt ) )	DEALLOCATE( irt )
+  IF ( ALLOCATED( forcefield )) DEALLOCATE( forcefield )
   
   !  arrays allocated in ggen.f90
   
@@ -39,20 +49,26 @@ SUBROUTINE clean_pw
   
   IF ( ALLOCATED( gg ) )	DEALLOCATE( gg )
   IF ( ALLOCATED( nl ) )	DEALLOCATE( nl)  
+  IF ( gamma_only ) THEN
+     IF ( ALLOCATED( nlm ) )    DEALLOCATE( nlm )
+  END IF
   IF ( ALLOCATED( igtongl ) )	DEALLOCATE( igtongl )  
   IF ( ALLOCATED( ig1 ) )	DEALLOCATE( ig1 )
-  IF ( ALLOCATED( ig2 )	)	DEALLOCATE( ig2 )
-  IF ( ALLOCATED( ig3 )	)	DEALLOCATE( ig3 )
-  IF ( ALLOCATED( rho )	)	DEALLOCATE( rho )
+  IF ( ALLOCATED( ig2 ) )	DEALLOCATE( ig2 )
+  IF ( ALLOCATED( ig3 ) )	DEALLOCATE( ig3 )
+  IF ( ALLOCATED( rho ) )	DEALLOCATE( rho )
   IF ( ALLOCATED( rho_save ) )	DEALLOCATE( rho_save )
   IF ( ALLOCATED( vr ) )	DEALLOCATE( vr )
   IF ( ALLOCATED( vltot ) )	DEALLOCATE( vltot )
   IF ( ALLOCATED( vnew ) )	DEALLOCATE( vnew )
   IF ( ALLOCATED( rho_core ) )	DEALLOCATE( rho_core )
   IF ( ALLOCATED( psic ) )	DEALLOCATE( psic )
-  IF ( ALLOCATED( vrs )	)	DEALLOCATE( vrs )
+  IF ( ALLOCATED( vrs ) )	DEALLOCATE( vrs )
   IF ( doublegrid ) THEN
     IF ( ASSOCIATED( nls ) )	DEALLOCATE( nls )
+  END IF
+  IF ( doublegrid .AND. gamma_only ) THEN
+     IF ( ASSOCIATED( nlsm )) DEALLOCATE( nlsm )
   END IF
   
   !  arrays allocated in allocate_locpot.f90 ( and never deallocated )
@@ -65,7 +81,7 @@ SUBROUTINE clean_pw
   
   !  arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   
-  IF ( ALLOCATED( igk )	)	DEALLOCATE( igk )
+  IF ( ALLOCATED( igk ) )	DEALLOCATE( igk )
   IF ( ALLOCATED( igk_l2g ) )	DEALLOCATE( igk_l2g )
   IF ( ALLOCATED( g2kin ) )	DEALLOCATE( g2kin )
   IF ( ALLOCATED( indv ) )	DEALLOCATE( indv )
@@ -86,6 +102,7 @@ SUBROUTINE clean_pw
  
   IF ( ALLOCATED( et ) ) 	DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )	DEALLOCATE( wg )
+  IF ( ALLOCATED( evc ) )	DEALLOCATE( evc )
   IF ( ALLOCATED( becp ) )	DEALLOCATE( becp )
   IF ( ALLOCATED( swfcatom ) )	DEALLOCATE( swfcatom )
 

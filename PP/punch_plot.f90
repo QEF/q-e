@@ -127,11 +127,12 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
      if (stm_wfc_matching) then
         write (title, '("Matching z = ",f4.2," dz in a.u. = ", &
-             &       f4.2," Bias in eV = ",f6.4," # states",i4)') z, dz * alat, sample_bias * rytoev, nint (wf)
+             &       f4.2," Bias in eV = ",f10.4," # states",i4)') &
+             z, dz * alat, sample_bias * rytoev, nint (wf)
      else
         write (title, '("No matching, scf wave-functions. ", &
-             &       " Bias in eV = ",f6.4," # states",i4)') sample_bias * &
-             rytoev, nint (wf)
+             &       " Bias in eV = ",f10.4," # states",i4)') &
+             sample_bias * rytoev, nint (wf)
      endif
 
   elseif (plot_num == 6) then
