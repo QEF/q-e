@@ -41,21 +41,26 @@
             do is=nspmn,nspmx
                do iv=1,nh(is)
                   l=nhtol(iv,is)
-                  if (l.eq.0) then
+                  if (l == 0) then
                      ixr = 1
                      ixi = 2
                      signre =  1.0
                      signim =  1.0
-                  else if (l.eq.1) then
+                  else if (l == 1) then
                      ixr = 2
                      ixi = 1
                      signre =  1.0
                      signim = -1.0
-                  else if (l.eq.2) then
+                  else if (l == 2) then
                      ixr = 1
                      ixi = 2
                      signre = -1.0
                      signim = -1.0
+                  else if (l == 3) then
+                     ixr = 2
+                     ixi = 1
+                     signre = -1.0
+                     signim =  1.0
                   endif
                   !
                   do ia=1,na(is)
@@ -882,22 +887,14 @@
       real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
       real(kind=8), allocatable:: ylmb(:,:), ylm(:,:), &
                                   dylmb(:,:,:,:), dylm(:,:,:,:)
-      complex(kind=8), allocatable:: qgbs(:), dqgbs(:,:,:)
+      complex(kind=8), allocatable:: dqgbs(:,:,:)
       real(kind=8) xg, c, betagl, dbetagl, gg
 !
 ! 
-      allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
       allocate(ylmb(ngb,lqx*lqx))
-      allocate(dqgbs(ngb,3,3))
-      allocate(qgbs(ngb))
 !
       qradb(:,:,:,:,:) = 0.d0
-      dqrad(:,:,:,:,:,:,:) = 0.d0
       call ylmr2 (lqx*lqx, ngb, gxb, gb, ylmb)
-      if (tpre) then
-         allocate(dylmb(ngb,lqx*lqx,3,3))
-         call dylmr2_(lqx*lqx, ngb, gxb, gb, ainv, dylmb)
-      end if
 
 !     ===============================================================
 !     initialization for vanderbilt species
@@ -918,37 +915,13 @@
                      if(jj.ge.mmx) then
                         qradb(ig,iv,jv,l,is)=0.
                         qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
-                        if (tpre) dqradb(ig,iv,jv,l,is)=0.
                      else
                         qradb(ig,iv,jv,l,is)=                           &
      &                       c*qradx(jj+1,iv,jv,l,is)*(gg-real(jj-1))+  &
      &                       c*qradx(jj,iv,jv,l,is)*(real(jj)-gg)
                         qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
-                        if (tpre) dqradb(ig,iv,jv,l,is)=                &
-     &                       dqradx(jj+1,iv,jv,l,is)*(gg-real(jj-1))+   &
-     &                       dqradx(jj,iv,jv,l,is)*(real(jj)-gg)
                      endif
                   enddo
-                  if (tpre) then
-                     do i=1,3
-                        do j=1,3
-                           dqrad(1,iv,jv,l,is,i,j)=-qradb(1,iv,jv,l,is)*&
-     &                                           ainv(j,i)
-                           dqrad(1,jv,iv,l,is,i,j)=dqrad(1,iv,jv,l,is,i,j)
-                           do ig=2,ngb
-                              dqrad(ig,iv,jv,l,is,i,j)=                 &
-     &                          -qradb(ig,iv,jv,l,is)*ainv(j,i)         &
-     &                          -c*dqradb(ig,iv,jv,l,is)*               &
-     &                          gxb(i,ig)/gb(ig)*                       &
-     &                          (gxb(1,ig)*ainv(j,1)+                   &
-     &                           gxb(2,ig)*ainv(j,2)+                   &
-     &                           gxb(3,ig)*ainv(j,3)) 
-                              dqrad(ig,jv,iv,l,is,i,j) =                &
-     &                          dqrad(ig,iv,jv,l,is,i,j)
-                           enddo
-                        enddo
-                     enddo
-                  end if
                enddo
             enddo
          enddo
@@ -965,15 +938,73 @@
 !       ijv :   1  2  3 ...  
 !
                ijv=ijv+1
-               call qvan2b(ngb,iv,jv,is,ylmb,dylmb,qgbs,dqgbs)
-               do ig=1,ngb
-                  qgb(ig,ijv,is)=qgbs(ig)
-               end do
+               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
 !
-               qq(iv,jv,is)=omegab*real(qgbs(1))
+               qq(iv,jv,is)=omegab*real(qgb(1,ijv,is))
                qq(jv,iv,is)=qq(iv,jv,is)
 !
-               if (tpre) then
+            end do
+         end do
+      end do
+
+      if (tpre) then
+         allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
+         allocate(dylmb(ngb,lqx*lqx,3,3))
+         allocate(dqgbs(ngb,3,3))
+         dqrad(:,:,:,:,:,:,:) = 0.d0
+         !
+         call dylmr2_(lqx*lqx, ngb, gxb, gb, ainv, dylmb)
+         !
+         do is=1,nvb
+            !
+            do l=1,nqlc(is)
+               do iv= 1,nbeta(is)
+                  do jv=iv,nbeta(is) 
+                    do ig=1,ngb
+                        gg=gb(ig)*tpibab*tpibab/refg
+                        jj=int(gg)+1
+                        if(jj.ge.mmx) then
+                           dqradb(ig,iv,jv,l,is) = 0.
+                        else
+                           dqradb(ig,iv,jv,l,is) =                      &
+     &                       dqradx(jj+1,iv,jv,l,is)*(gg-real(jj-1))+   &
+     &                       dqradx(jj,iv,jv,l,is)*(real(jj)-gg)
+                        endif
+                     enddo
+                     do i=1,3
+                        do j=1,3
+                           dqrad(1,iv,jv,l,is,i,j) = &
+                                -qradb(1,iv,jv,l,is) * ainv(j,i)
+                           dqrad(1,jv,iv,l,is,i,j) = &
+                                dqrad(1,iv,jv,l,is,i,j)
+                           do ig=2,ngb
+                              dqrad(ig,iv,jv,l,is,i,j) =                &
+     &                          -qradb(ig,iv,jv,l,is)*ainv(j,i)         &
+     &                          -c*dqradb(ig,iv,jv,l,is)*               &
+     &                          gxb(i,ig)/gb(ig)*                       &
+     &                          (gxb(1,ig)*ainv(j,1)+                   &
+     &                           gxb(2,ig)*ainv(j,2)+                   &
+     &                           gxb(3,ig)*ainv(j,3)) 
+                              dqrad(ig,jv,iv,l,is,i,j) =                &
+     &                          dqrad(ig,iv,jv,l,is,i,j)
+                           enddo
+                        enddo
+                     enddo
+                  end do
+               enddo
+            enddo
+            !
+            ijv=0
+            !
+            do iv= 1,nh(is)
+               do jv=iv,nh(is)
+                  !
+                  !       compact indices because qgb is symmetric:
+                  !       ivjv:  11 12 13 ... 22 23...
+                  !       ijv :   1  2  3 ...  
+                  !
+                  ijv=ijv+1
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
                   do i=1,3
                      do j=1,3
                         do ig=1,ngb
@@ -981,15 +1012,14 @@
                         enddo
                      enddo
                   enddo
-               end if
+               end do
             end do
          end do
-      end do
-      if (tpre) deallocate(dylmb)
-      deallocate(qgbs)
-      deallocate(dqgbs)
+         deallocate(dqgbs)
+         deallocate(dylmb)
+         deallocate(dqradb)
+      end if
       deallocate(ylmb)
-      deallocate(dqradb)
 !
 !     ===============================================================
 !     initialization that is common to all species
@@ -1496,24 +1526,21 @@
       end
 
 !-------------------------------------------------------------------------
-      subroutine qvan2b(ngy,iv,jv,is,ylm,dylm,qg,dqg)
+      subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
 !--------------------------------------------------------------------------
 !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
-!
-!     dq(i,j) derivatives wrt to h(i,j)
 !
       use control_flags, only: iprint, tpre
       use qradb_mod
       use cvan
       use uspp, only: nlx, lpx, lpl, ap
       use gvecb
-      use dqrad_mod
       use cdvan
       use ncprm, only: lqx
 ! 
       implicit none
       integer ngy, iv, jv, is
-      complex(kind=8)   qg(ngb), dqg(ngb,3,3)
+      complex(kind=8)   qg(ngb)
 !
       integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
       complex(kind=8) sig
@@ -1531,9 +1558,6 @@
       if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
 !
       qg(:) = (0.d0, 0.d0)
-      if(tpre) then
-         dqg(:,:,:) = (0.d0, 0.d0)
-      end if
 !
 !     lpx = max number of allowed y_lm
 !     lp  = composite lm to indentify them
@@ -1570,19 +1594,89 @@
          do ig=1,ngy
             qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ivs,jvs,l,is)
          end do
-         if(tpre)then
-            do ij=1,3
-               do ii=1,3
-                  do ig=1,ngy
-                     dqg(ig,ii,ij)=dqg(ig,ii,ij)+sig*                   &
-     &                    ( ylm(ig,lp) * dqrad(ig,ivs,jvs,l,is,ii,ij)+  &
-     &                     dylm(ig,lp,ii,ij)*qradb(ig,ivs,jvs,l,is)     )
-                  end do
-               end do
-            end do
-         endif
       end do
 !
+      return
+      end
+
+!-------------------------------------------------------------------------
+      subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
+!--------------------------------------------------------------------------
+!
+!     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
+!
+      use control_flags, only: iprint, tpre
+      use qradb_mod
+      use cvan
+      use uspp, only: nlx, lpx, lpl, ap
+      use gvecb
+      use dqrad_mod
+      use cdvan
+      use ncprm, only: lqx
+! 
+      implicit none
+      integer ngy, iv, jv, is
+      complex(kind=8) dqg(ngb,3,3)
+!
+      integer ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
+      complex(kind=8) sig
+      real(kind=8) :: ylm(ngb,lqx*lqx), dylm(ngb,lqx*lqx,3,3)
+! 
+!       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
+!       ivs = 1..4     s_1 s_2 p_1 p_2
+!       ivl = 1..4     s p_x p_z p_y
+! 
+      ivs=indv(iv,is)
+      jvs=indv(jv,is)
+      ivl=indlm(iv,is)
+      jvl=indlm(jv,is)
+      if(ivl > nlx)  call errore(' qvan2b ',' ivl out of bounds ',ivl)
+      if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
+!
+      dqg(:,:,:) = (0.d0, 0.d0)
+!
+!     lpx = max number of allowed y_lm
+!     lp  = composite lm to indentify them
+!
+      do i=1,lpx(ivl,jvl)
+         lp=lpl(ivl,jvl,i)
+         if (lp > lqx*lqx) call errore(' dqvan2b ',' lp out of bounds ',lp)
+!
+!     extraction of angular momentum l from lp:  
+!     l = int ( sqrt( float(l-1) + epsilon) ) + 1
+!
+         if (lp == 1) then
+            l=1         
+         else if ((lp >= 2) .and. (lp <= 4)) then
+            l=2
+         else if ((lp >= 5) .and. (lp <= 9)) then
+            l=3
+         else if ((lp >= 10).and.(lp <= 16)) then
+            l=4
+         else if ((lp >= 17).and.(lp <= 25)) then
+            l=5
+         else if ((lp >= 26).and.(lp <= 36)) then 
+            l=6
+         else if ((lp >= 37).and.(lp <= 49)) then 
+            l=7
+         else
+            call errore(' qvan2b ',' not implemented ',lp)
+         endif
+!     
+!       sig= (-i)^l
+!
+         sig=(0.,-1.)**(l-1)
+         sig=sig*ap(lp,ivl,jvl)
+         do ij=1,3
+            do ii=1,3
+               do ig=1,ngy
+                  dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
+     &                    ( ylm(ig,lp) * dqrad(ig,ivs,jvs,l,is,ii,ij) + &
+     &                     dylm(ig,lp,ii,ij)*qradb(ig,ivs,jvs,l,is)   )
+               end do
+            end do
+         end do
+      end do
 !
       return
       end
