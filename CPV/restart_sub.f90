@@ -125,8 +125,9 @@ CONTAINS
 !
     if ( nlcc_any ) call set_cc( irb, eigrb, rhoc )
 
-    call vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast,                 &
-     &  ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+    call vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,                 &
+     &  ei1(1,1,1), ei2(1,1,1), ei3(1,1,1), irb(1,1,1), eigrb(1,1,1), sfac(1,1), & 
+     &  tau0(1,1), fion(1,1) )
 
     call compute_stress( stress, detot, h, omega )
 
