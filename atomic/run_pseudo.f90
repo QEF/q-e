@@ -60,29 +60,25 @@ subroutine run_pseudo
                     ind=2
                  endif
                  do n=1,mesh
-                    vpstot(n,is)=vpstot(n,is)+vnlo(n,llts(ns),ind)
-                    vaux(n)=vnlo(n,llts(ns),ind)
+                    vaux(n)=vpstot(n,is)+vnlo(n,llts(ns),ind)
                  enddo
               else
                  do n=1,mesh
-                    vpstot(n,is)=vpstot(n,is)+vnl(n,llts(ns))
-                    vaux(n)=vnl(n,llts(ns))
+                    vaux(n)=vpstot(n,is)+vnl(n,llts(ns))
                  enddo
               endif
-           endif
-           call ascheqps(nnts(ns),llts(ns),jjts(ns),enls(ns),  &
-                mesh,ndm,dx,r,r2,sqr,vpstot(1,is),     &
-                thresh,phis(1,ns),                     &
-                betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
-           !               write(6,*) 'run_pseu',ns, nwfts, nnts(ns),llts(ns), jjts(ns),enls(ns)  
-           if (pseudotype.eq.1) then
+           else
               do n=1,mesh
-                 vpstot(n,is)=vpstot(n,is)-vaux(n)
+                 vaux(n)=vpstot(n,is)
               enddo
            endif
+           !
+           call ascheqps(nnts(ns), llts(ns), jjts(ns), enls(ns),  &
+                mesh, ndm, dx, r, r2, sqr, vaux(1), thresh, phis(1,ns), &
+                betas, ddd(1,1,is), qq, nbf, nwfsx, lls, jjs, ikk)
+           ! write(6,*) 'run_pseu',ns, nwfts, nnts(ns),llts(ns), jjts(ns),enls(ns)  
         endif
      enddo
-
 
      call normalize
      call chargeps(nwfts,llts,jjts,octs,iswts)
@@ -130,27 +126,24 @@ subroutine run_pseudo
                  ind=2
               endif
               do n=1,mesh
-                 vpstot(n,is)=vpstot(n,is)+vnlo(n,llts(ns),ind)
-                 vaux(n)=vnlo(n,llts(ns),ind)
+                 vaux(n)=vpstot(n,is)+vnlo(n,llts(ns),ind)
               enddo
            else
               do n=1,mesh
-                 vpstot(n,is)=vpstot(n,is)+vnl(n,llts(ns))
-                 vaux(n)=vnl(n,llts(ns))
+                 vaux(n)=vpstot(n,is)+vnl(n,llts(ns))
               enddo
            endif
-        endif
-        call ascheqps(nnts(ns),llts(ns),jjts(ns),enls(ns), &
-             mesh,ndm,dx,r,r2,sqr,vpstot(1,is),    &
-             thresh,phis(1,ns),                    &
-             betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
-
-        !           write(6,*) ns, nnts(ns),llts(ns), enls(ns)  
-        if (pseudotype.eq.1) then
+        else
            do n=1,mesh
-              vpstot(n,is)=vpstot(n,is)-vaux(n)
+              vaux(n)=vpstot(n,is)
            enddo
         endif
+        !
+        call ascheqps(nnts(ns), llts(ns), jjts(ns), enls(ns),  &
+             mesh, ndm, dx, r, r2, sqr, vaux(1), thresh, phis(1,ns), &
+             betas, ddd(1,1,is), qq, nbf, nwfsx, lls, jjs, ikk)
+
+        !           write(6,*) ns, nnts(ns),llts(ns), enls(ns)  
      endif
   enddo
 
