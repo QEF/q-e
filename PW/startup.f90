@@ -225,14 +225,14 @@ SUBROUTINE startup( nd_nmbr, code, version )
      WRITE( stdout, '(5X,"Number of processors in use:    ",I4)' ) nproc
      !
      IF ( nimage > 1 ) &
-        WRITE( UNIT = stdout, &
-               FMT = '(5X,"path-images division:  nimage  = ",I4)' ) nimage
+        WRITE( stdout, &
+               '(5X,"path-images division:  nimage    = ",I4)' ) nimage
      IF ( npool > 1 ) &
-        WRITE( UNIT = stdout, &
-               FMT = '(5X,"K-points division:     npool   = ",I4)' ) npool
+        WRITE( stdout, &
+               '(5X,"K-points division:     npool     = ",I4)' ) npool
      IF ( nproc_pool > 1 ) &
-        WRITE( UNIT = stdout, &
-               FMT = '(5X,"R & G space division:  proc/pool=",I4)' ) nproc_pool
+        WRITE( stdout, &
+               '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
      !
   END IF   
   !
