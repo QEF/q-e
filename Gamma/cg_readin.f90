@@ -117,6 +117,9 @@ subroutine cg_readin
   if (nmodes.gt.3*nat .or. nmodes.lt.0)                             &
        &     call errore('cg_readin','wrong number of normal modes',1)
   if (epsil .and. nmodes.ne.0) call errore('cg_readin','not allowed',1)
+  !
+  if (raman) call errore &
+      ('phcg.x','Raman with finite differences no longer maintained',1)
   if (raman .and. deltatau.le.0.d0)                                 &
        &     call errore('cg_readin','deltatau > 0 needed for raman CS',1)
   if (nderiv.ne.2 .and. nderiv.ne.4) &
