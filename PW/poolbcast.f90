@@ -20,11 +20,13 @@ subroutine poolbcast (ndata, data)
   implicit none
   ! on INPUT
   integer :: ndata
-  real (8) :: data (ndata)
+  real (kind=DP) :: data (ndata)
 #ifdef __PARA
+#include "machine.h"
   include 'mpif.h'
   integer :: root, ierr
-  if (npool.eq.1) return
+  !
+  if (npool == 1) return
   !
   ! root is the "broadcasting" processor.
   !

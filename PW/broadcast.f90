@@ -13,18 +13,20 @@ subroutine broadcast (ndata, data)
   ! this routine broadcasts the real*8 vector 'data' from the first proces
   ! of each pool to all the other processors of the pool
   !
+  use parameters, only : DP
 #ifdef __PARA
   use para
 #endif
   implicit none
   ! on INPUT
   integer :: ndata
-  real (8) :: data (ndata)
+  real (kind=DP) :: data (ndata)
 #ifdef __PARA
+#include "machine.h"
   include 'mpif.h'
 
   integer :: root, ierr
-  if (nprocp.le.1) return
+  if (nprocp <= 1) return
   !
   ! root is the "broadcasting" processors.
   ! N.B. in MPI the processors are labeled from 0 to nproc-1

@@ -1,4 +1,4 @@
-TODO LIST -  15 October 2003
+TODO LIST -  28 October 2003
 
 INSTALLATION/PORTING
 
@@ -32,11 +32,20 @@ COMMON
 
 - Add code for NEB (Nudged Elastic Band)
 
+- Add interface for CASINO
+
 - calculation of <psi|exp(iGr)|psi'>
 
 - process numbering: 1 to nproc or 0 to nproc-1 ?
 
 PW
+
+- remove iswitch, replace with existing (minus_q, lscf)
+  or new logical variables
+
+- the assignment of correct weigths to k-points must be done
+  in a more general and less obscure way (needed for better
+  support of noncolinear stuff)
 
 - maximize merge of PW with Gamma and noncolinear code
 
