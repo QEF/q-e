@@ -39,6 +39,7 @@ bands.o : ../Modules/mp.o
 bands.o : ../Modules/uspp.o
 bands.o : ../Modules/wavefunctions.o
 bands.o : ../PW/pwcom.o
+ccalbec_nc.o : ../Modules/kind.o
 cft.o : ../Modules/kind.o
 cgracsc.o : ../Modules/kind.o
 chdens.o : ../Modules/cell_base.o
@@ -110,6 +111,7 @@ local_dos.o : ../Modules/kind.o
 local_dos.o : ../Modules/mp.o
 local_dos.o : ../Modules/uspp.o
 local_dos.o : ../Modules/wavefunctions.o
+local_dos.o : ../PW/noncol.o
 local_dos.o : ../PW/pwcom.o
 openfil_pp.o : ../Modules/control_flags.o
 openfil_pp.o : ../Modules/io_files.o
