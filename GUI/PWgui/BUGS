@@ -1,3 +1,6 @@
 BUGS -- known bugs. 
 
+* strange behaviour of checkbox widgets for atomic-coordinates (iforce
+components)
+
 BUGS ends here.

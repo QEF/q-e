@@ -109,7 +109,7 @@ _GUIB_TGZNAME  = guib-$(_GUIB_VERSION).tgz
 _GUIB_DIRNAME  = Guib-$(_GUIB_VERSION)
 
 cvsinit:
-	cd doc/pwdocs; $(MAKE)
+	-cd doc/pwdocs; $(MAKE)
 	-cd lib/; rm -f Guib-*;
 	-cd lib/; ln -sf $(_GUIB_DIR) $(_GUIB_DIRNAME)
 	@echo ""

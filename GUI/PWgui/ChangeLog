@@ -1,3 +1,6 @@
+Wed Mar 03 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* Makefile: cvsinit target: cd doc/pwdocs --> -cd /doc/pwdocs
+	
 Mon Feb 21 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding external/lib/Makefile
 	* adding _create_bin target to ./Makefile
