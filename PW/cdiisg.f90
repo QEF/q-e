@@ -22,7 +22,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
 #include "machine.h"
   use parameters, only : DP
   use g_psi_mod
-  use pwcom, only : nelec, lgauss, ltetra
+  use pwcom, only : nelec, lgauss, ltetra, okvan
 
   implicit none
   ! on INPUT
@@ -107,7 +107,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   !
   ! rotate
   !
-  call rotate_wfc (ndmx, ndim, nvec, nvec, evc, evc, e)
+  call rotate_wfc (ndmx, ndim, nvec, nvec, evc, okvan, evc, e)
 
   notcnv = nvec
   lam = 1.d0
