@@ -72,10 +72,10 @@ CONTAINS
      & , tfor_ , tsdp_ , fricp_ , greasp_ , tcp_ , tcap_ , tolp_ , trhor_ , trhow_ , tvlocw_ &
      & , tnosep_ , qnp_ , tempw_ , tnosee_ , qne_ , ekincw_                                &
      & , tpre_ , thdyn_ , thdiag_ , iforceh_ , wmass_ , frich_ , greash_ , press_           &
-     & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , ecutw_ , ecut_ , iforce_ &
+     & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , iforce_ &
      & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , f_ , nel_ , nspin_ , nupdwn_  &
      & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
-     & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , agg_ , sgg_ , e0gg_ &
+     & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ &
      & , psfile_ , pseudo_dir_, iprsta_, ispin_ &
      & , sm_p, smcp_, smlm_, smopt_, linr_, polm_, kwnp_, codfreq_, forfreq_, smwfreq_ &
      & , tol_, lmfreq_, maxlm_ )
@@ -113,6 +113,9 @@ CONTAINS
       USE control_flags, ONLY: tconvthrs, lneb, lsmd 
       USE check_stop, ONLY: check_stop_init
       USE ions_base, ONLY: ions_base_init
+
+      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+
       !
       implicit none
       !
@@ -120,7 +123,7 @@ CONTAINS
       real(kind=8) :: ampre_ , delt_ , ekincw_ , emass_ , emaec_ , eps_ ,       &
      &       frice_ , fricp_ , frich_ , grease_ , greasp_ , greash_ ,        &
      &       press_ , qnp_ , qne_ , qnh_ , tempw_ , temph_ , tolp_ , wmass_ ,    &
-             amprp_ ( nsx ), celldm_ ( 6 ), tau0_ ( 3, natx ), ecut_ , ecutw_ 
+             amprp_ ( nsx ), celldm_ ( 6 ), tau0_ ( 3, natx )
 
       integer :: nbeg_ , ndr_ , ndw_ , nomore_ , iprint_ , max_ , iforce_( 3, natx )
       integer :: isave_
@@ -135,7 +138,7 @@ CONTAINS
            iforceh_( 3, 3 )
 
       real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), ispin_ ( nbndxx ), &
-     &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 ), agg_ , sgg_ , e0gg_
+     &     omega_ , alat_ , a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
 
 
       character(len=80) :: psfile_ ( nsx ) , pseudo_dir_
@@ -225,9 +228,7 @@ CONTAINS
 
       ! ...   Set Values for the cutoff
 
-      ecutw_ = ecutwfc
-      if ( ecutrho <= 0.d0 ) ecutrho = 4.d0 * ecutwfc
-      ecut_ = ecutrho
+      CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
 
       ampre_ = ampre
       SELECT CASE ( restart_mode ) 
@@ -504,9 +505,6 @@ CONTAINS
       delt_   = dt
       emass_ = emass
       emaec_  = emass_cutoff
-      agg_ = qcutz
-      sgg_ = q2sigma
-      e0gg_= ecfixed
       eps_ = ortho_eps
       max_ = ortho_max
 
@@ -885,8 +883,8 @@ CONTAINS
             WRITE( stdout,606)
          endif
       endif
-      if ( agg_ .ne. 0.d0) then
-            WRITE( stdout,650) agg_, sgg_, e0gg_
+      if ( agg .ne. 0.d0) then
+            WRITE( stdout,650) agg, sgg, e0gg
       end if
       WRITE( stdout,700) iprsta_
 

@@ -419,7 +419,7 @@
               dot_tmp = DDOT( 2*(n-1), a(2), 1, b(2), 1)
               dot_tmp = 2.0d0 * dot_tmp + REAL( a(1) ) * REAL( b(1) ) 
             ELSE
-              dot_tmp = DDOT( 2*ng, a(1), 1, b(1), 1)
+              dot_tmp = DDOT( 2*n, a(1), 1, b(1), 1)
               dot_tmp = 2.0d0*dot_tmp
             END IF 
 

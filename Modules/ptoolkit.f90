@@ -1049,7 +1049,7 @@
         m=n
 
 2       if(m.ne.l)then
-          if(iter.eq.100) then
+          if(iter.eq.200) then
             call errore(' tqli ',' too many iterations ', iter)
           end if
           iter=iter+1

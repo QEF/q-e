@@ -143,6 +143,8 @@
       USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
             cell_nosevel, cell_noseupd, cell_nose_nrg
       USE cell_base, ONLY: cell_kinene, cell_gamma, cell_move, cell_hmove
+      USE gvecw, ONLY: ecutw
+      USE gvecp, ONLY: ecutp
 
 !
 !
@@ -225,7 +227,7 @@
 !
 ! work variables
 !
-      real(kind=8) celldm(6), ecut, ecutw
+      real(kind=8) celldm(6)
       real(kind=8) acc(nacx)
       complex(kind=8), allocatable:: c2(:), c3(:)
       complex(kind=8)  speed
@@ -300,10 +302,10 @@
      & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
      & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
      & , tpre , thdyn , thdiag , iforceh , wmass , frich , greash , press   &
-     & , tnoseh , qnh , temph , celldm , ibrav , tau0 , ecutw , ecut , iforce &
+     & , tnoseh , qnh , temph , celldm , ibrav , tau0 , iforce &
      & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
      & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
-     & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
+     & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s &
      & , psfile , pseudo_dir, iprsta, ispin_ &
      & , sm_p, smcp, smlm, smopt, linr, polm, kwnp, codfreq, forfreq, smwfreq &
      & , sm_tol, lmfreq, maxlm )
@@ -332,9 +334,9 @@
 !     initialize g-vectors, fft grids
 !     ==================================================================
 
-      call init1 ( tau0, ibrav, celldm, ecutw, ecut )
+      call init1 ( tau0, ibrav, celldm, ecutw, ecutp )
 
-      call init( ibrav, celldm, ecut, ecutw, ndr, nbeg, tfirst,  &
+      call init( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst,  &
            tau0, taus, delt, tps, iforce )
 
       WRITE( stdout,*) ' out from init'
@@ -463,7 +465,7 @@
          call readfile_new                                           &
      &     ( 1, ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
+     &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 !
          ! WRITE(6,*) 'DEBUG taus  = ', taus(:,1)
          ! WRITE(6,*) 'DEBUG tausm = ', tausm(:,1)
@@ -982,7 +984,7 @@
          call writefile_new                                         &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
+     &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 
       endif
 !
@@ -1018,7 +1020,7 @@
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
              ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
              xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
-             ecut, ecutw, delt, celldm, fion, tps )
+             ecutp, ecutw, delt, celldm, fion, tps )
       end if
 
       if( (nfi >= nomore) .OR. tstop ) EXIT MAIN_LOOP
@@ -1096,7 +1098,7 @@
 
     call writefile_new ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc, &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps)
+     &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps)
 
 !
     if( iprsta > 1 ) CALL print_lambda( lambda, n, n, 1.0d0 )

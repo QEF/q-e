@@ -40,7 +40,7 @@ MODULE path_routines
                                  k_min_          => k_min, &
                                  path_thr_       => path_thr
       !
-      USE input_parameters, ONLY : CI_scheme, minimization_scheme, &
+      USE input_parameters, ONLY : CI_scheme, opt_scheme, &
                                    num_of_images, first_last_opt, damp, &
                                    temp_req, ds, k_max, k_min, path_thr
       USE input_parameters, ONLY : outdir, prefix, restart_mode, calculation
@@ -91,7 +91,7 @@ MODULE path_routines
       ldamped_dyn = .FALSE.
       lmol_dyn    = .FALSE.      
       !
-      SELECT CASE ( minimization_scheme )
+      SELECT CASE ( opt_scheme )
       CASE ( "sd" )
          !
          lsteep_des  = .TRUE.
@@ -116,7 +116,7 @@ MODULE path_routines
       CASE default
          !
          CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
-                   & ': unknown minimization_scheme', 1 )
+                   & ': unknown opt_scheme', 1 )
          !
       END SELECT
       !

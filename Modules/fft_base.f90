@@ -17,8 +17,8 @@
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
 
-!#undef __FFT_BASE_TS1 
-#define __FFT_BASE_TS1 
+#undef __FFT_BASE_TS1 
+!#define __FFT_BASE_TS1 
 
 !=----------------------------------------------------------------------=!
       MODULE fft_base
@@ -110,7 +110,7 @@
 
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is
-          INTEGER :: npz, nz_l, ns_l, ns_lp
+          INTEGER :: npz, nz_l, ns_l, ns_lp, nz_lx
           INTEGER :: nsx_l, msgsiz
           INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1
           COMPLEX (dbl) :: zero
@@ -136,7 +136,8 @@
           END IF
 
           npz  = nproc
-          nz_l = dfft%npp( me )
+          nz_lx = MAXVAL( dfft%npp( 1 : nproc ) )
+
           IF( ABS( iopt ) == 2 ) THEN
             ns_l  = dfft%nsw( me )
             nsx_l = MAXVAL( dfft%nsw( : ) )
@@ -147,24 +148,26 @@
 
           zero = 0.0d0
 
-          msgsiz = nsx_l * nz_l 
+          msgsiz = nsx_l * nz_lx 
           CALL mp_allocate_buffers( msgsiz * npz )
 
           IF ( iopt < 1 ) THEN
 
-            r( 1 : ldx*ldy*nz_l ) = 0.0d0
+            r( 1 : ldx * ldy * dfft%npp( me ) ) = 0.0d0
 
+            k_start = 1
             DO ipz = 1, npz
-              k_start = (ipz-1)  * nz_l + 1
+              nz_l = dfft%npp( ipz )
               k_end   = k_start  + nz_l - 1
-              offset  = (ipz-1) * msgsiz - k_start + 1
+              offset  = ( ipz - 1 ) * msgsiz - k_start + 1
               DO is = 1, ns_l
-                is_offset = (is-1)*ldz
+                is_offset = ( is - 1 ) * ldz
                 DO k = k_start , k_end
                   mp_snd_buffer(k + offset) = zstick( k + is_offset )
                 END DO
                 offset = offset + nz_l
               END DO
+              k_start = k_start + nz_l
             END DO
 
 
@@ -172,7 +175,8 @@
 
 
             DO ipz = 1, npz
-              offset = (ipz-1) * msgsiz 
+              nz_l = dfft%npp( me )
+              offset = ( ipz - 1 ) * msgsiz 
               is_offset = dfft%iss( ipz )
               IF( ABS( iopt ) == 1 ) THEN
                 ns_lp  = dfft%nsp(ipz)
@@ -225,7 +229,8 @@
           ELSE IF ( iopt > 0 ) THEN
 
             DO ipz = 1, npz
-              offset = (ipz-1) * msgsiz 
+              nz_l = dfft%npp( me )
+              offset = ( ipz - 1 ) * msgsiz 
               is_offset = dfft%iss( ipz )
               IF( ABS( iopt ) == 1 ) THEN
                 ns_lp  = dfft%nsp(ipz)
@@ -277,8 +282,9 @@
 
             call mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
 
+            k_start = 1
             DO IPZ = 1, NPZ
-              k_start = (ipz-1) * nz_l + 1
+              nz_l = dfft%npp( ipz )
               k_end   = k_start + nz_l - 1
               offset  = (ipz-1) * msgsiz - k_start + 1
               DO is = 1, ns_l
@@ -288,6 +294,7 @@
                 END DO
                 offset = offset + nz_l
               END DO
+              k_start = k_start + nz_l
             END DO
 
           END IF
@@ -317,7 +324,7 @@
           INTEGER, INTENT(IN) :: ldz, ldx, ldy
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is, is_start, is_end
-          INTEGER :: npz, nz_l, ns_l, ns_lp, nbuf, ierr, itag, mype, nsx_l
+          INTEGER :: npz, nz_l, ns_l, ns_lp, nbuf, ierr, itag, mype, nsx_l, nz_lx
           INTEGER, ALLOCATABLE :: ishand( : )
           INTEGER, ALLOCATABLE :: irhand( : )
           INTEGER, ALLOCATABLE :: istatus( :, : )
@@ -353,6 +360,7 @@
           npz  = nproc
           mype = me - 1
           nz_l = dfft%npp( me )
+          nz_lx = MAXVAL( dfft%npp( 1 : nproc ) )
           IF( ABS( iopt ) == 2 ) THEN
             ns_l  = dfft%nsw( me )
             nsx_l = MAXVAL( dfft%nsw( : ) )
@@ -361,11 +369,11 @@
             nsx_l = MAXVAL( dfft%nsp( : ) )
           END IF
 
-          ALLOCATE( sndbuf( nsx_l * nz_l, npz ), ishand( npz ) )
-          ALLOCATE( rcvbuf( nsx_l * nz_l, npz ), irhand( npz ) )
+          ALLOCATE( sndbuf( nsx_l * nz_lx, npz ), ishand( npz ) )
+          ALLOCATE( rcvbuf( nsx_l * nz_lx, npz ), irhand( npz ) )
           ALLOCATE( rtest( npz ), rdone( npz ) )
           ALLOCATE( istatus( MPI_STATUS_SIZE, npz ) )
-          nbuf = nsx_l * nz_l
+          nbuf = nsx_l * nz_lx
 
           IF ( iopt < 0 ) THEN
 
@@ -375,8 +383,9 @@
                 MPI_COMM_WORLD, irhand(ipz), ierr )
             END DO
 
+            k_start = 1
             DO ipz = 1, npz
-              k_start = ( ipz - 1 )  * nz_l + 1
+              nz_l = dfft%npp( ipz )
               k_end   = k_start  + nz_l - 1
               offset  = - k_start + 1
               DO is = 1, ns_l
@@ -388,13 +397,15 @@
               itag = ipz + npz * mype
               CALL mpi_isend( sndbuf(1,ipz), nbuf, MPI_DOUBLE_COMPLEX, ipz-1, itag, &
                 MPI_COMM_WORLD, ishand(ipz), ierr )
+              k_start = k_start + nz_l
             END DO
 
-            r( 1 : ldx*ldy*nz_l ) = 0.0d0
+            r( 1 : ldx*ldy*dfft%npp( me ) ) = 0.0d0
             rdone = .FALSE.
 
    111      CONTINUE
             DO IPZ = 1, NPZ
+              nz_l = dfft%npp( me )
               call mpi_test(irhand(ipz), rtest(ipz), istatus(1,ipz), ierr)
               IF( rtest(ipz) .AND. .NOT. rdone(ipz) ) THEN
                 offset = 0
@@ -442,6 +453,7 @@
             END DO
 
             DO ipz = 1, npz
+              nz_l = dfft%npp( me )
               offset = 0
               is_offset = dfft%iss( ipz )
               IF( ABS( iopt ) == 2 ) THEN
@@ -465,10 +477,11 @@
             rdone = .FALSE.
 
    112      CONTINUE
+            k_start = 1
             DO IPZ = 1, NPZ
+              nz_l = dfft%npp( ipz )
               call mpi_test(irhand(ipz), rtest(ipz), istatus(1,ipz), ierr)
               IF( rtest(ipz) .AND. .NOT. rdone(ipz) ) THEN
-                k_start = (ipz-1) * nz_l + 1
                 k_end   = k_start + nz_l - 1
                 offset  = - k_start + 1
                 DO is = 1, ns_l
@@ -479,6 +492,7 @@
                 END DO
                 rdone( ipz ) = .TRUE.
               END IF
+              k_start = k_start + nz_l
             END DO
             IF( .NOT. ALL( rtest ) ) GO TO 112
 

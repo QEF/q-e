@@ -460,7 +460,7 @@
                WRITE( stdout,620) (oldp(k),k=1,3), (tau(k,isa),k=1,3)
              END DO
            END IF
-           isat = isat + 1
+           isat = isat + na(is)
          END DO
 
  600     FORMAT(//,3X,'Randomization of SCALED ionic coordinates')

@@ -124,6 +124,8 @@ subroutine smdmain( tau, fion_out, etot_out )
   use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
   USE cell_nose, ONLY: cell_nosevel, cell_noseupd
+  USE gvecw, ONLY: ecutw
+  USE gvecp, ONLY: ecutp
 
 
   !
@@ -203,7 +205,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !
   ! work variables
   !
-  real(kind=8) celldm(6), ecut, ecutw
+  real(kind=8) celldm(6)
   complex(kind=8), allocatable:: c2(:), c3(:)
   complex(kind=8)  speed
   real(kind=8)                                                      &
@@ -295,10 +297,10 @@ subroutine smdmain( tau, fion_out, etot_out )
        & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
        & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
        & , tpre , thdyn , thdiag , iforceh , wmass , frich , greash , press   &
-       & , tnoseh , qnh , temph , celldm , ibrav , tau0, ecutw , ecut , iforce &
+       & , tnoseh , qnh , temph , celldm , ibrav , tau0, iforce &
        & , nat , nsp , na , pmass , rcmax , f_ , nel , nspin , nupdwn  &
        & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
-       & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
+       & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s &
        & , psfile , pseudo_dir, iprsta, ispin_ &
        & , sm_p, smcp, smlm, smopt, linr, polm, kwnp, codfreq, forfreq, smwfreq &
        & , tol, lmfreq, maxlm )
@@ -444,7 +446,7 @@ subroutine smdmain( tau, fion_out, etot_out )
   !      ... taus is calculated here.
   !
 
-  call sminit( ibrav, celldm, ecut, ecutw, ndr, nbeg, tfirst, delt, tps, iforce )
+  call sminit( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst, delt, tps, iforce )
 
   !
   !
@@ -678,7 +680,7 @@ subroutine smdmain( tau, fion_out, etot_out )
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
                 &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
                 &       ekincm(sm_k),                           &
-                &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
+                &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
                 &       tps)
         endif
 
@@ -908,7 +910,7 @@ subroutine smdmain( tau, fion_out, etot_out )
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
              &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
              &       ekincm(sm_k),                                                         &
-             &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
+             &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
              &       tps)
 
 
@@ -1769,7 +1771,7 @@ subroutine smdmain( tau, fion_out, etot_out )
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
                 &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
-                &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,         &
+                &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
                 &       rep(sm_k)%fion, tps)
 
         endif
@@ -1936,7 +1938,7 @@ subroutine smdmain( tau, fion_out, etot_out )
           &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
           &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
-          &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,         &
+          &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
           &       rep(sm_k)%fion, tps)
 
      !

@@ -1013,3 +1013,111 @@ END SUBROUTINE
           RETURN
         END SUBROUTINE
 
+!------------------------------------------------------------------------------!
+!
+!
+!------------------------------------------------------------------------------!
+
+        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
+ 
+          USE kinds, ONLY: dbl
+          USE constants, ONLY: eps8
+          USE gvecw, ONLY: ecutw
+          USE gvecw, ONLY: ecfix, ecutz, ecsig, tecfix
+          USE gvecp, ONLY: ecutp
+          USE gvecs, ONLY: ecuts
+
+          IMPLICIT NONE
+          REAL(dbl), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
+          REAL(dbl) :: dual
+
+          ecutw = ecutwfc
+          ecutp = ecutrho
+          IF( ecutp <= 0.d0 ) THEN
+              ecutp = 4.0d0 * ecutw
+          ELSE IF( ecutp < ecutw ) THEN
+              CALL errore(' ecutoffs_setup ',' invalid ecutrho ', INT( ecutp ) )
+          END IF
+          dual  = 4.0d0
+          ecuts = dual * ecutwfc
+          ecfix = ecfixed
+          ecutz = qcutz
+          ecsig = q2sigma
+          IF( ABS( ecutz ) < eps8 ) THEN
+            tecfix = .FALSE.
+          ELSE
+            tecfix = .TRUE.
+          ENDIF
+
+          RETURN
+        END SUBROUTINE
+
+
+        SUBROUTINE gcutoffs_setup( alat, tk_inp, nk_inp, kpoints_inp )
+
+!  (describe briefly what this routine does...)
+!  ----------------------------------------------
+
+          USE kinds, ONLY: dbl
+          USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
+          USE gvecp, ONLY: ecutrho => ecutp,  gcutp
+          USE gvecs, ONLY: ecuts, gcuts
+          USE gvecb, ONLY: ecutb, gcutb
+          USE gvecw, ONLY: ecfix, gcfix, ecutz, gcutz, esig => ecsig, g2sig => gcsig, tecfix
+          USE gvecw, ONLY: ekcut, gkcut
+          USE constants, ONLY: eps8, pi
+
+          IMPLICIT NONE
+
+! ...     declare subroutine arguments
+          REAL(dbl), INTENT(IN) :: alat
+          INTEGER, INTENT(IN) :: nk_inp
+          LOGICAL, INTENT(IN) :: tk_inp
+          REAL(dbl), INTENT(IN) :: kpoints_inp(3,*)
+
+! ...     declare other variables
+          INTEGER i
+          REAL(dbl) kcut, ksq, dual
+          REAL(dbl) tpiba
+
+!  end of declarations
+!  ----------------------------------------------
+
+! ...   Set Values for the cutoff
+
+
+          IF( alat < eps8 ) THEN
+            CALL errore(' cut-off setup ', ' alat too small ', 0)
+          END IF
+
+          tpiba = 2.0d0 * pi / alat 
+
+          ! ...  Constant cutoff simulation parameters
+
+          gcfix = ecfix / tpiba**2
+          gcutz = ecutz / tpiba**2
+          g2sig = esig  / tpiba**2
+
+          gcutw = ecutwfc / tpiba**2  ! wave function cut-off
+          gcutp = ecutrho / tpiba**2  ! potential cut-off
+
+          gcuts = ecuts / tpiba**2    ! smooth mesh cut-off
+
+          kcut = 0.0_dbl
+          IF ( tk_inp ) THEN
+! ...       augment plane wave cutoff to include all k+G's
+            DO i = 1, nk_inp
+! ...         calculate modulus
+              ksq = kpoints_inp( 1, i ) ** 2 + kpoints_inp( 2, i ) ** 2 + kpoints_inp( 3, i ) ** 2
+              IF ( ksq > kcut ) kcut = ksq
+            END DO
+          END IF
+          gkcut = ( sqrt( kcut ) + sqrt( gcutw ) ) ** 2
+
+          ekcut = gkcut * tpiba ** 2
+
+          RETURN
+        END SUBROUTINE gcutoffs_setup
+
+!  ----------------------------------------------
+

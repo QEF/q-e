@@ -147,7 +147,7 @@
               WRITE( stdout,  1 ) edft%etot
               WRITE( stdout,  2 ) edft%ekin
               WRITE( stdout,  3 ) edft%eht
-              WRITE( stdout,  4 ) edft%eself
+              WRITE( stdout,  4 ) edft%eself   !   self interaction of the pseudocharges NOT SIC!
               WRITE( stdout,  5 ) edft%esr
               WRITE( stdout,  9 ) edft%epseu
               WRITE( stdout, 10 ) edft%enl
@@ -159,6 +159,8 @@
               WRITE( stdout, 12 ) edft%evdw
               WRITE( stdout, 13 ) edft%emkin
               IF( tsic ) THEN
+                WRITE( stdout, fmt = "('Sic contributes:')" )
+                WRITE( stdout, fmt = "('----------------')" )
                 WRITE( stdout, 14 ) edft%self_ehte
                 WRITE( stdout, 15 ) edft%self_sxc
                 WRITE( stdout, 16 ) vxc
