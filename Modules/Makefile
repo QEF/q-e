@@ -34,6 +34,7 @@ electrons_base.o \
 input_parameters.o \
 read_namelists.o \
 read_cards.o \
+berry_phase.o \
 energies.o
 #
 include ../make.rules

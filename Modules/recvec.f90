@@ -169,6 +169,11 @@
      !
      INTEGER, ALLOCATABLE, TARGET :: ig_l2g(:)
 
+     !     sortedig_l2g = array obtained by sorting ig_l2g
+     !
+     !
+     INTEGER, ALLOCATABLE, TARGET :: sortedig_l2g(:)
+
      !     igl = index of the g-vector shells
      !
      INTEGER, ALLOCATABLE, TARGET :: igl(:)

@@ -578,4 +578,95 @@
 
 !=----------------------------------------------------------------------------=!
 
+   SUBROUTINE pwscatter( c, ctmp, ngw, indi_l, sour_indi, dest_indi, &
+      n_indi_rcv, n_indi_snd, icntix, mpime, nproc, group )
+
+      USE kinds
+      USE parallel_include
+
+      implicit none
+
+      integer :: indi_l(:)     !  list of G-vec index to be exchanged
+      integer :: sour_indi(:)  !  the list of source processors
+      integer :: dest_indi(:)  !  the list of destination processors
+      integer :: n_indi_rcv    !   number of G-vectors to be received
+      integer :: n_indi_snd    !   number of G-vectors to be sent
+      integer :: icntix        !   total number of G-vec to be exchanged
+      INTEGER, INTENT(IN) :: nproc, mpime, group
+
+      COMPLEX(dbl) :: c(:)
+      COMPLEX(dbl) :: ctmp(:)
+      integer  ::  ngw
+
+      integer :: i, inl, ig, icsize
+      INTEGER :: me, idest, isour, ierr
+
+      COMPLEX(dbl), ALLOCATABLE :: my_buffer( : )
+      COMPLEX(dbl), ALLOCATABLE :: mp_snd_buffer( : )
+      COMPLEX(dbl), ALLOCATABLE :: mp_rcv_buffer( : )
+      INTEGER, ALLOCATABLE :: ibuf(:)
+
+
+!
+! ... SUBROUTINE BODY
+!
+
+      me = mpime + 1
+
+      if( icntix .lt. 1 ) then
+        icsize = 1
+      else
+        icsize = icntix
+      endif
+
+      ALLOCATE( mp_snd_buffer( icsize * nproc ) )
+      ALLOCATE( mp_rcv_buffer( icsize * nproc ) )
+      ALLOCATE( my_buffer( ngw ) )
+      ALLOCATE( ibuf( nproc ) )
+      ctmp = CMPLX( 0.0d0 )
+
+      ! write(6,*) 'D: ', nproc, mpime, group
+
+      ibuf = 0
+      DO IG = 1, n_indi_snd
+        idest = dest_indi(ig)
+        ibuf(idest) = ibuf(idest) + 1;
+        if(idest .ne. me) then
+          mp_snd_buffer( ibuf(idest) + (idest-1)*icsize ) = C( indi_l( ig ) )
+        else
+          my_buffer(ibuf(idest)) = C(indi_l(ig))
+        end if
+      end do
+
+      call MPI_ALLTOALL( mp_snd_buffer(1), icsize, MPI_DOUBLE_COMPLEX, &
+                         mp_rcv_buffer(1), icsize, MPI_DOUBLE_COMPLEX, &
+                         group, ierr)
+
+      ibuf = 0
+      DO IG = 1, n_indi_rcv
+        isour = sour_indi(ig)
+        if(isour.gt.0 .and. isour.ne.me) then
+          ibuf(isour) = ibuf(isour) + 1
+          CTMP(ig) = mp_rcv_buffer(ibuf(isour) + (isour-1)*icsize)
+        else if(isour.gt.0) then
+          ibuf(isour) = ibuf(isour) + 1
+          CTMP(ig) = my_buffer(ibuf(isour))
+        else
+          CTMP(ig) = (0.0d0,0.0d0)
+        end if
+      end do
+
+      DEALLOCATE( mp_snd_buffer )
+      DEALLOCATE( mp_rcv_buffer )
+      DEALLOCATE( my_buffer )
+      DEALLOCATE( ibuf )
+
+      RETURN
+    END SUBROUTINE PWSCATTER
+
+
+
+
+!=----------------------------------------------------------------------------=!
+
     END MODULE

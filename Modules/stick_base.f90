@@ -18,6 +18,12 @@
         SAVE
 
         PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
+        PUBLIC :: sticks_owner, sticks_deallocate
+ 
+! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
+! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
+
+        INTEGER, ALLOCATABLE, TARGET :: sticks_owner( : , : )       
 
         INTERFACE sticks_dist
           MODULE PROCEDURE sticks_dist1
@@ -463,10 +469,22 @@
 
       END IF
 
+      IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )
+      ALLOCATE( sticks_owner( lb(1): ub(1), lb(2):ub(2) ) )
+
+      sticks_owner( :, : ) = ABS( stown( :, :) )
+
       RETURN
     END SUBROUTINE
 
 !=----------------------------------------------------------------------=
+
+
+    SUBROUTINE sticks_deallocate
+      IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )
+      RETURN
+    END SUBROUTINE
+   
 
 !=----------------------------------------------------------------------=
    END MODULE stick_base

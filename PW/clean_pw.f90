@@ -9,6 +9,8 @@ SUBROUTINE clean_pw
 			       tab, et, wg, swfcatom, doublegrid
   USE becmod,		ONLY : becp			       
   USE sticks,		ONLY : dfftp, dffts  
+  USE stick_base,       ONLY : sticks_deallocate
+  USE berry_phase,      ONLY : berry_closeup
 
 #ifdef __SX6
 
@@ -99,6 +101,14 @@ SUBROUTINE clean_pw
 
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dffts )
+
+  !  sticks owners matrix allocates in sticks_base
+
+  CALL sticks_deallocate( )
+
+  !  deallocate indexes use in calculation of polarizability at gamma
+
+  CALL berry_closeup( )
 
 END SUBROUTINE clean_pw
 

@@ -154,10 +154,10 @@ void LN_DEALLOC(void )
 
 void LN_SET(int * IRI1, int * IRI2, int * IRI3, int * ig)
 {
-    if(*ig<1 || *ig>LN_SIZE) {
+    if( *ig<1 || *ig > LN_SIZE) {
        exit(*ig);
     }
-    IndexSet(&LN[*ig-1],*IRI1,*IRI2,*IRI3);
+    IndexSet( &LN[*ig-1], *IRI1, *IRI2, *IRI3 );
     IG[*ig-1] = *ig;
 
 }

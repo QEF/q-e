@@ -63,7 +63,7 @@ LIBS = -lessl  -L/usr/local/lib -llapack
 #
 LD=$(F90)
 #LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(LIBS) -s
-LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(LIBS) -s -bmaxdata:512000000
+LDFLAGS = $(OSHOME)/flib/ptools.a $(OSHOME)/flib/flib.a $(OSHOME)/clib/clib.a $(LIBS) -s -bmaxdata:512000000
 #
 # ar:
 #

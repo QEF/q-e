@@ -236,6 +236,10 @@ subroutine ggen
 
      enddo
      !
+     !  here to initialize berry_phase
+     !  work in progress ...
+     !  CALL berry_setup(ngm, ngm_g, nr1, nr2, nr3, mill_g)
+     !
      !     determine first nonzero g vector
      !
      if (gg(1).le.eps8) then

@@ -68,6 +68,7 @@ end module dynam
 !
 module gvect
   use parameters
+  use reciprocal_vectors, only: ig_l2g, sortedig_l2g
   !
   !    The variables describing the reciprocal lattice vectors
   !
@@ -85,10 +86,10 @@ module gvect
        nrxx,           &! maximum total fft
        ngl              ! number of |g| shells
 
-  integer , allocatable :: &
-       ig_l2g(:)        !"l2g" means local to global, this array convert a local
-                        ! G-vector index into the global index, in other words
-                        ! the index of the G-v. in the overall array of G-vectors
+  !integer , allocatable :: &
+  !     ig_l2g(:)        !"l2g" means local to global, this array convert a local
+  !                      ! G-vector index into the global index, in other words
+  !                      ! the index of the G-v. in the overall array of G-vectors
 
   integer , allocatable, target :: &
        nl(:),          &! correspondence fft <-> array of G vectors
