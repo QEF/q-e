@@ -12,12 +12,12 @@ MODULE input_cp
 
    PRIVATE
 
-   PUBLIC :: iosys2
+   PUBLIC :: iosys
 
 CONTAINS
 
 !-----------------------------------------------------------------------
-      subroutine iosys2( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_                       &
+      subroutine iosys( nbeg_ , ndr_ , ndw_ , nomore_ , iprint_                       &
      & , delt_ , emass_ , emaec_  , tsde_ , frice_ , grease_ , twall_                        &
      & , tortho_ , eps_ , max_ , trane_ , ampre_ , tranp_ , amprp_                           &
      & , tfor_ , tsdp_ , fricp_ , greasp_ , tcp_ , tcap_ , tolp_ , trhor_ , trhow_ , tvlocw_ &
@@ -129,9 +129,6 @@ CONTAINS
             if ( ampre_ == 0.d0 ) ampre_ = 0.02
          CASE ('reset_counters')
             nbeg_ = 0
-            nomore_ = nstep
-         CASE ('upto')
-            nbeg_ = 1
             nomore_ = nstep
          CASE ('restart')
             nbeg_ = 1

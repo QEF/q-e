@@ -19,6 +19,7 @@ CONTAINS
       use ions_base, only: nsp, na
       use parameters, only: natx
       use grid_dimensions, ONLY: nr1, nr2, nr3
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: write_restart_header, write_restart_ions, &
           write_restart_cell, write_restart_electrons, &
@@ -30,6 +31,7 @@ CONTAINS
       use io_global
       use cell_base, only: boxdimensions, s_to_r, cell_init
       USE ncprm, ONLY: r, rab
+      use control_flags, only: twfcollect
 !
       implicit none
       integer :: ndw, nfi
@@ -44,9 +46,8 @@ CONTAINS
       real(kind=8), INTENT(in) :: pmass(:)
       real(kind=8), INTENT(in) :: celldm(:)
       integer, INTENT(in) :: ibrav
-      integer :: nbeg = 0
       integer :: nk = 1
-      integer :: ngwkl(1), ngwkg(1), nbnd, nelt, nelu, neld, ntyp, nb_g
+      integer :: ngwkg(1), nbnd, nelt, nelu, neld, ntyp, nb_g
       integer :: nat = 0
       integer :: nacx = 10
       real(kind=8) :: trutime = 0.0d0
@@ -73,7 +74,6 @@ CONTAINS
       integer :: strlen
       character(len=80) :: filename
 
-      LOGICAL :: tovrw = .FALSE.
       INTEGER ::  k1, k2, k3, nk1, nk2, nk3
       REAL(dbl) :: dgauss
       INTEGER :: ngauss
@@ -97,6 +97,11 @@ CONTAINS
       INTEGER :: isk, tetra(4)
       REAL(dbl) :: zmesh_, xmin_, dx_
       REAL(dbl) :: ainv(3,3), deth
+      INTEGER :: iswitch = 0
+      LOGICAL :: tfixed_occ_, tefield_, dipfield_
+      INTEGER :: edir_
+      REAL(dbl) :: emaxpos_, eopreg_, eamp_
+
 
 !
 ! Only the first node writes
@@ -118,7 +123,6 @@ CONTAINS
 !       ==--------------------------------------------------------------==
 
       ngwkg(1) = ngwt
-      ngwkl(1) = ngw 
       nbnd = n
       IF( nspin > 1 ) THEN
         nelu = nel(1)
@@ -142,12 +146,20 @@ CONTAINS
       twrite = .TRUE.
       tupf   = .TRUE.
       lgamma = .TRUE.
-      CALL write_restart_header(ndw, twrite, nfi, trutime, nbeg, nr1, nr2, nr3, &
-        nr1, nr2, nr3, ng, ng_g, nk, nk, ngwkl, ngwkg, nspin, nbnd, rnel, nelu, &
+      tfixed_occ_ = .FALSE.
+      tefield_ = .FALSE.
+      dipfield_ = .FALSE.
+      edir_ = 0
+      emaxpos_ = 0.0d0
+      eopreg_ = 0.0d0
+      eamp_ = 0.0d0
+      CALL write_restart_header(ndw, twrite, nfi, iswitch, trutime, nr1, nr2, nr3, &
+        nr1s, nr2s, nr3s, ng_g, nk, ngwkg, nspin, nbnd, rnel, nelu, &
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
         natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf, lgamma)
+        title, crystal, tmp_dir, tupf, lgamma, &
+        tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect )
 
 !     ==--------------------------------------------------------------==
 !     ==  MAX DIMENSIONS                                              ==
@@ -338,7 +350,7 @@ CONTAINS
       use gvecw, only: ngw, ngwt
       use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: nsp, na
-      use parameters, only: natx
+      use parameters, only: natx, nsx
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &
@@ -350,6 +362,7 @@ CONTAINS
       use mp_global
       use io_global
       use cell_base, only: boxdimensions, s_to_r, cell_init, r_to_s
+      use control_flags, only: twfcollect
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -364,12 +377,10 @@ CONTAINS
       real(kind=8), INTENT(in) :: pmass(:)
       real(kind=8), INTENT(in) :: celldm(6)
       integer, INTENT(in) :: ibrav
-      integer :: nbeg = 0
-      integer :: nk = 1
-      integer :: ngwkg(1), ngwkl(1), nbnd, nelt, nelu, neld, ntyp, nb_g
-      integer :: nat = 0
+
+      integer :: nx_, nbnd_, nelt, nb_g
       integer :: nacx = 10
-      real(kind=8) :: trutime = 0.0d0
+      real(kind=8) :: trutime_
       real(kind=8) :: ecutwfc, ecutrho
 
       REAL(dbl), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
@@ -386,35 +397,49 @@ CONTAINS
       real(dbl) :: xk(3), wk
       complex(kind=8), allocatable :: rhog(:), vg(:)
 
-      LOGICAL :: tovrw = .FALSE.
-      INTEGER ::  k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl) :: dgauss
-      INTEGER :: ngauss
-      LOGICAL :: lgauss
-      INTEGER :: ntetra
-      LOGICAL :: ltetra
-      INTEGER :: natomwfc
-      LOGICAL :: doublegrid
-      REAL(dbl) :: gcutm, gcuts, dual
-      INTEGER :: modenum
-      REAL(dbl) :: alat
+      INTEGER ::  k1_, k2_, k3_, nk1_, nk2_, nk3_
+      REAL(dbl) :: dgauss_
+      INTEGER :: ngauss_
+      LOGICAL :: lgauss_
+      INTEGER :: ntetra_
+      LOGICAL :: ltetra_
+      INTEGER :: natomwfc_
+      LOGICAL :: doublegrid_
+      REAL(dbl) :: gcutm_, gcuts_, dual_
+      INTEGER :: modenum_
       REAL(dbl) :: ef, rnel
-      LOGICAL :: lstres, lforce
-      character(len=80) :: title, crystal, tmp_dir
+      LOGICAL :: lstres_, lforce_
+      character(len=80) :: title_, crystal_, tmp_dir_
       character(len=4) :: atom_label(nsp)
+      real(kind=8) :: bi1_(3), bi2_(3), bi3_(3)
 !
       integer :: i, ia, is, j
-      integer :: nfi_, ik_, nk_, ispin_, nspin_, isk_, tetra_(4)
+      integer :: nfi_, ik_, nk, nk_, ispin_, nspin_, isk_, tetra_(4)
       real(kind=8) :: acc_(10), celldm_(6)
       real(kind=8) :: vnhp_, xnhp0_, xnhpm_
-      integer :: strlen, ibrav_, kunit
+      integer :: strlen, ibrav_, kunit_
       character(len=80) :: filename
       LOGICAL :: tread
       LOGICAL :: tscal
-      LOGICAL :: tmill, tigl, lgamma
-      LOGICAL :: teig, tupf
+      LOGICAL :: tmill, tigl, lgamma_
+      LOGICAL :: teig, tupf_
       INTEGER, ALLOCATABLE :: ityp(:)
       REAL(dbl) :: wfc_scal, wfc_scal_cp90
+
+      LOGICAL :: tfixed_occ_, tefield_, dipfield_
+      INTEGER :: edir_
+      REAL(dbl) :: emaxpos_, eopreg_, eamp_
+      INTEGER :: nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, ngwkg_(1)
+      INTEGER :: ngwt_
+      REAL(dbl) :: rnel_
+      INTEGER :: nelu_, neld_
+      INTEGER :: nat_, ntyp_, na_( nsx )
+      INTEGER :: nacx_
+      REAL(dbl) :: ecutwfc_, ecutrho_
+      REAL(dbl) :: alat_, ekincm_ 
+      LOGICAL :: twfcollect_
+
+      INTEGER :: iswitch_ 
 !
 ! Only the first node read
 !
@@ -441,39 +466,29 @@ CONTAINS
 !     ==  READ HEADER INFORMATION                                     ==
 !     ==--------------------------------------------------------------==
 
-      ngwkl(1) = ngw 
-      ngwkg(1) = ngwt
-      nbnd = n
-      IF( nspin > 1 ) THEN
-        nelu = nel(1)
-        neld = nel(2)
-      ELSE
-        nelu = 0
-        neld = 0
-      END IF
-      nelt = nel(1)+nel(2)
-      rnel = REAL(nelt)
-      ntyp = nsp
-      nat = SUM( na(1:ntyp) )
-      kunit = nk
-      ecutwfc = ecutw
-      ecutrho = ecut
       tread = .TRUE.
-      tovrw = .FALSE.
-      CALL read_restart_header(ndr, tovrw, tread, nfi_, trutime, nbeg, nr1, nr2, nr3, &
-        nr1, nr2, nr3, ng, ng_g, nk, nk, ngwkl, ngwkg, nspin, nbnd, rnel, nelu, neld, &
-        nat, ntyp, na, acc_, nacx, ecutwfc, ecutrho, alat, ekincm, &
-        kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
-        natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf, lgamma)
+      CALL read_restart_header( ndr, tread, nfi_, iswitch_, trutime_, &
+        nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, nk_, ngwkg_, nspin_, nbnd_, &
+        rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
+        alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
+        lgauss_, ntetra_, ltetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, &
+        modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, &
+        tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
 
-!      if( .not. lgamma ) &
-!        call errore(' readfile ',' restart contains a system not at gamma ',1)
+      if( .not. lgamma_ ) &
+        call errore(' readfile ',' restart contains a system not at gamma ',1)
 
+      if( nbnd_ /= n ) &
+        call errore(' readfile ',' inconsistent number of bands in restart ',1)
+      if( nk_ /= 1 ) &
+        call errore(' readfile ',' inconsistent number of kpoints in restart ',1)
+
+      ekincm = ekincm_
       if (flag > -1) then
         nfi = nfi_
         acc = acc_
       end if
+      nk = nk_
 
 !     ==--------------------------------------------------------------==
 !     ==  MAX DIMENSIONS                                              ==
@@ -488,15 +503,13 @@ CONTAINS
       hdum = 0.0d0
       htm2 = 0.0d0
         
-      tovrw = .FALSE.
       tread = .TRUE.
-      celldm_ = celldm
-      CALL read_restart_cell( ndr, tovrw, tread, ibrav_, celldm_, ht, htm, &
+      CALL read_restart_cell( ndr, tread, ibrav_, celldm_, ht, htm, &
         htm2, htvel, vnhh, xnhh0, xnhhm, hdum)
 
-      h = TRANSPOSE(ht) 
-      hold = TRANSPOSE(htm) 
-      velh = TRANSPOSE(htvel) 
+      h    = TRANSPOSE( ht    ) 
+      hold = TRANSPOSE( htm   ) 
+      velh = TRANSPOSE( htvel ) 
 
       CALL cell_init(box, ht)
       CALL cell_init(boxm, htm)
@@ -505,23 +518,19 @@ CONTAINS
 !     ==  IONS                                                        ==
 !     ==--------------------------------------------------------------==
 
-        ALLOCATE( stau0(3, nat) )
-        ALLOCATE( staum(3, nat) )
-        ALLOCATE( svel0(3, nat) )
-        ALLOCATE( svelm(3, nat) )
-        ALLOCATE( tautmp(3, nat) )
-        ALLOCATE( fiontmp(3, nat) )
-        ALLOCATE( ityp(nat) )
+        ALLOCATE( stau0(3, nat_) )
+        ALLOCATE( staum(3, nat_) )
+        ALLOCATE( svel0(3, nat_) )
+        ALLOCATE( svelm(3, nat_) )
+        ALLOCATE( tautmp(3, nat_) )
+        ALLOCATE( fiontmp(3, nat_) )
+        ALLOCATE( ityp(nat_) )
 
-        DO i = 1, nsp
-          mass(i) = pmass(i)
-        END DO
         xdum = 0.0d0
         cdmi = 0.0d0
-        tovrw = .FALSE.
         tread = .TRUE.
-        CALL read_restart_ions(ndr, tovrw, tread, atom_label, tscal, stau0, svel0, &
-          staum, svelm, tautmp, fiontmp, cdmi, nat, ntyp, ityp, na, mass, vnhp_,   &
+        CALL read_restart_ions(ndr, tread, atom_label, tscal, stau0, svel0, &
+          staum, svelm, tautmp, fiontmp, cdmi, nat_, ntyp_, ityp, na_, mass, vnhp_,   &
           xnhp0_, xnhpm_, xdum)
 
         IF( flag > 0 ) THEN
@@ -568,7 +577,7 @@ CONTAINS
 !       ==  OCCUPATION NUMBER                                           ==
 !       ==--------------------------------------------------------------==
 
-        ALLOCATE( occ(nbnd), eigtmp(nbnd) )
+        ALLOCATE( occ(n), eigtmp(n) )
 
         occ = 0.0d0
         IF( flag > 0 ) THEN
@@ -578,11 +587,10 @@ CONTAINS
           tocc = .FALSE.
           tlam = .FALSE.
         END IF
-        tovrw = .FALSE.
         teig = .FALSE.
         tread = .TRUE.
-        CALL read_restart_electrons( ndr, tovrw, tread, occ, occ, tocc, lambda, &
-          lambdam, nx, tlam, nbnd, ispin_, nspin, ik_, nk, rnel, nelu, neld,    &
+        CALL read_restart_electrons( ndr, tread, occ, occ, tocc, lambda, &
+          lambdam, nx_, tlam, nbnd_, ispin_, nspin_, ik_, nk_, rnel_, nelu_, neld_,    &
           vnhe, xnhe0, xnhem, xdum, ef, teig, eigtmp, eigtmp)
 
         DEALLOCATE( occ, eigtmp )
@@ -598,10 +606,9 @@ CONTAINS
         END DO
         CALL mp_sum( mill )
         tread = .TRUE.
-        tovrw = .FALSE.
         tmill = .FALSE.
-        CALL read_restart_gvec( ndr, tovrw, tread, ng_g, bi1, bi2, bi3,  &
-          bi1, bi2, bi3, tmill, mill )
+        CALL read_restart_gvec( ndr, tread, ng_g_, bi1_, bi2_, bi3_,  &
+          bi1_, bi2_, bi3_, tmill, mill )
         DEALLOCATE( mill )
 
 !       ==--------------------------------------------------------------==
@@ -614,8 +621,7 @@ CONTAINS
           xk(3) = 0.0d0
           wk = 1.0d0
           tread = .TRUE.
-          tovrw = .FALSE.
-          CALL read_restart_gkvec(ndr, tovrw, tread, ik_, nk_, ngwkg(i), &
+          CALL read_restart_gkvec(ndr, tread, ik_, nk_, ngwkg_(i), &
             xk, wk, tetra_, isk_)
         END DO
 
@@ -628,9 +634,8 @@ CONTAINS
         DO j = 1, nspin
           ALLOCATE( rhog(ng), vg(ng) )
           tread = .TRUE.
-          tovrw = .FALSE.
-          CALL read_restart_charge(ndr, tovrw, tread, rhog, trho, vg, tv, ng_g, &
-            ispin_, nspin, ig_l2g, ng )
+          CALL read_restart_charge(ndr, tread, rhog, trho, vg, tv, ng_g_, &
+            ispin_, nspin_, ig_l2g, ng )
 !          CALL fft_initialize
 !          CALL pinvfft( vpot(:,:,:,i), rhog(:,i) )
 !          CALL pinvfft( rho(i)%r(:,:,:), vg(:,i) )
@@ -654,11 +659,9 @@ CONTAINS
         END IF
         DO j = 1, nspin
           DO i = 1, nk
-            nb_g = nx
             tread = .TRUE.
-            tovrw = .FALSE.
-            CALL read_restart_wfc(ndr, tovrw, tread, ik_, nk_, kunit, ispin_, nspin_, &
-              wfc_scal, c0, tw0, cm, twm, ngwt, nb_g, ig_l2g, tigl, ngw )
+            CALL read_restart_wfc(ndr, tread, ik_, nk_, kunit_, ispin_, nspin_, &
+              wfc_scal, c0, tw0, cm, twm, ngwt_, nbnd_, ig_l2g, ngw )
           END DO
         END DO
 

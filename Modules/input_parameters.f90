@@ -111,7 +111,7 @@
           ! define the verbosity of the code output
 
         CHARACTER(LEN=80) :: restart_mode = 'restart'
-          ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters' | 'upto'
+          ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters' 
           ! specify how to start/restart the simulation
           !   'from_scratch'    start a new simulation from scratch,
           !                     with random wave functions
@@ -120,8 +120,6 @@
           !   'reset_counters'  continue a previous simulation,
           !                     performs  "nstep" new steps, resetting
           !                     the counter and averages
-          !   'upto'            continue a previous simulation,
-          !                     and stops when the counter value is equal "nstep"
  
         INTEGER :: nstep = 10
           ! number of simulation steps, see "restart_mode"

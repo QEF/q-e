@@ -66,13 +66,13 @@
         IF( prog == 'PW' ) prefix = 'pwscf'  
         IF( prog == 'CP' ) prefix = 'cp'  
         IF( prog == 'FP' ) prefix = 'cp'  
-        IF( prog /= 'PW' ) pseudo_dir = './'  ! directory containing the pseudopotentials
+        pseudo_dir    = './'  ! directory containing the pseudopotentials
         max_seconds   = 1.d+6
         ekin_conv_thr = 1.d-6
         etot_conv_thr = 1.d-4
         forc_conv_thr = 1.d-3
         disk_io = 'default'
-        tefield = .FALSE.
+        tefield  = .FALSE.
         dipfield = .FALSE.
         lberry   = .FALSE.
         gdir     = 0
@@ -119,9 +119,7 @@
         nelup = 0.d0
         neldw = 0.d0
         nspin = 1
-        IF( prog == 'PW' ) nosym = .FALSE.
-        IF( prog == 'CP' ) nosym = .TRUE.
-        IF( prog == 'FP' ) nosym = .TRUE.
+        nosym = .FALSE.
         ecfixed = 0.d0
         qcutz   = 0.d0
         q2sigma = 0.01d0
@@ -160,7 +158,6 @@
         fnosee = 1.0d0
         ampre  = 0.0d0
         grease = 1.0d0
-        IF( prog == 'FP' ) grease = 0.0d0
         twall  = .FALSE.
         IF( prog == 'PW' ) THEN
           startingwfc = 'atomic'
@@ -193,22 +190,15 @@
         diis_ethr   = 0.0d0
         diis_chguess = .FALSE.
         mixing_mode ='plain'
-        IF( prog == 'FP' ) mixing_mode = ' '
         mixing_fixed_ns = 0
         mixing_beta = 0.7d0
         mixing_ndim = 8
-        IF( prog == 'FP' ) mixing_ndim = 0
         diagonalization = ' '
         diago_cg_maxiter = 20
-        IF( prog == 'FP' ) diago_cg_maxiter = 0
         diago_david_ndim = 4
-        IF( prog == 'FP' ) diago_david_ndim = 0
         diago_diis_buff = 200
-        IF( prog == 'FP' ) diago_diis_buff = 0
         diago_diis_ndim = 3
-        IF( prog == 'FP' ) diago_diis_ndim = 0
         diago_diis_start = 2
-        IF( prog == 'FP' ) diago_diis_start = 2
         diago_diis_keep = .FALSE.
         RETURN
       END SUBROUTINE
@@ -235,12 +225,10 @@
         tranp = .FALSE.
         amprp = 0.0d0
         greasp = 1.0d0
-        IF( prog == 'FP' ) greasp = 0.0d0
         tolp = 100.d0
         ion_nstepe = 1
         ion_maxstep = 100
-        upscale = 0
-        IF( prog == 'PW' ) upscale = 10
+        upscale = 10
         potential_extrapolation = 'default'
         RETURN
       END SUBROUTINE
@@ -262,9 +250,7 @@
         cell_temperature = 'not_controlled' ! ( 'nose' | 'not_controlled' | 'rescaling' )
         temph = 0.0d0
         fnoseh = 1.0d0
-        IF( prog == 'FP' ) fnoseh = 0.0d0
         greash = 1.0d0
-        IF( prog == 'FP' ) greash = 0.0d0
         cell_dofree = 'all' ! ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
         cell_factor = 0.0d0
         cell_nstepe = 1
@@ -519,7 +505,7 @@
         CHARACTER(LEN=20) :: sub_name = ' control_checkin '
         INTEGER :: i
         LOGICAL :: allowed = .FALSE.
-        DO i = 1, SIZE(calculation_allowed)
+        DO i = 1, SIZE( calculation_allowed )
           IF( TRIM(calculation) == calculation_allowed(i) ) allowed = .TRUE.
         END DO
         IF( .NOT. allowed ) &
@@ -531,28 +517,32 @@
             CALL errore( sub_name,' calculation '//calculation//' not implemented ',1)
         END IF
         IF( ndr < 50 ) &
-          CALL errore( sub_name,' ndr out of range ',ndr)
+          CALL errore( sub_name,' ndr out of range ', 1 )
         IF( ndw > 0 .AND. ndw < 50 ) &
-          CALL errore( sub_name,' ndw out of range ',ndw)
+          CALL errore( sub_name,' ndw out of range ', 1 )
         IF( nstep < 0 ) &
-          CALL errore( sub_name,' nstep out of range ',nstep)
+          CALL errore( sub_name,' nstep out of range ', 1 )
         IF( iprint < 1 ) &
-          CALL errore( sub_name,' iprint out of range ',iprint)
+          CALL errore( sub_name,' iprint out of range ', 1 )
         IF( isave < 1 ) &
-          CALL errore( sub_name,' isave out of range ',isave)
+          CALL errore( sub_name,' isave out of range ', 1 )
         IF( dt < 0.0d0 ) &
-          CALL errore( sub_name,' dt out of range ',-1)
+          CALL errore( sub_name,' dt out of range ', 1 )
         IF( max_seconds < 0.0d0 ) &
-          CALL errore( sub_name,' max_seconds out of range ',-1)
+          CALL errore( sub_name,' max_seconds out of range ', 1 )
         IF( ekin_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' ekin_conv_thr out of range ',-1)
+          CALL errore( sub_name,' ekin_conv_thr out of range ', 1 )
         IF( etot_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' etot_conv_thr out of range ',-1)
+          CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
         IF( forc_conv_thr < 0.0d0 ) &
-          CALL errore( sub_name,' force_conv_thr out of range ',-1)
-        IF( prog == 'FP' ) THEN
-          IF( disk_io /= 'default' ) &
-            CALL errore( sub_name,' disk_io not implemented yet ',-1)
+          CALL errore( sub_name,' force_conv_thr out of range ', 1 )
+        IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+          IF( tefield ) & 
+            CALL errore( sub_name,' tefield not implemented yet ',-1)
+          IF( dipfield ) & 
+            CALL errore( sub_name,' dipfield not implemented yet ',-1)
+          IF( lberry ) & 
+            CALL errore( sub_name,' lberry not implemented yet ',-1)
         END IF
         RETURN
       END SUBROUTINE
@@ -564,6 +554,7 @@
 !=----------------------------------------------------------------------------=!
 
       SUBROUTINE system_checkin( prog )
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         CHARACTER(LEN=80) :: msg
         CHARACTER(LEN=20) :: sub_name = ' system_checkin '
@@ -643,7 +634,7 @@
           IF( ANY(Hubbard_alpha /= 0.0d0) ) &
             CALL errore( sub_name ,' Hubbard_alpha is not used in FPMD ',-1)
           IF( nosym ) &
-            CALL errore( sub_name ,' nosym not implemented in FPMD ',-1)
+            CALL errore( sub_name ,' nosym not implemented in FPMD ', -1)
         END IF
         RETURN
       END SUBROUTINE
@@ -693,32 +684,6 @@
           CALL errore( sub_name, ' invalid empty_states_emass, less than 0 ',-1)
         IF( empty_states_ethr < 0.0d0 ) &
           CALL errore( sub_name, ' invalid empty_states_ethr, less than 0 ',-1)
-        IF( prog == 'FP' ) THEN
-          IF( mixing_mode /= ' ' ) &
-            CALL errore( sub_name, ' mixing_mode not used in FPMD ',-1)
-          IF( mixing_fixed_ns /= 0 ) &
-            CALL errore( sub_name, ' mixing_fixed_ns not used in FPMD ',-1)
-          IF( mixing_beta /= 0.0d0 ) &
-            CALL errore( sub_name, ' mixing_beta not used in FPMD ',-1)
-          IF( mixing_ndim /= 0 ) &
-            CALL errore( sub_name, ' mixing_ndim not used in FPMD ',-1)
-          IF( diago_cg_maxiter /= 0 ) &
-            CALL errore( sub_name, ' diago_cg_maxiter not used in FPMD ',-1)
-          IF( diago_david_ndim /= 0 ) &
-            CALL errore( sub_name, ' diago_david_ndim not used in FPMD ',-1)
-          IF( diago_diis_buff /= 0 ) &
-            CALL errore( sub_name, ' diago_diis_buff not used in FPMD ',-1)
-          IF( diago_diis_ndim /= 0 ) &
-            CALL errore( sub_name, ' diago_diis_buff not used in FPMD ',-1)
-          IF( diago_diis_start /= 0 ) &
-            CALL errore( sub_name, ' diago_diis_start not used in FPMD ',-1)
-          IF( diago_diis_keep ) &
-            CALL errore( sub_name, ' diago_diis_keep not used in FPMD ',-1)
-          IF( diagonalization /= ' ' ) &
-            CALL errore( sub_name, ' diagonalization not used in FPMD ',-1)
-          IF( startingpot /= ' ' ) &
-            CALL errore( sub_name, ' startingpot not used in FPMD ',-1)
-        END IF
         RETURN
       END SUBROUTINE
 
@@ -747,14 +712,6 @@
           CALL errore( sub_name,' ion_nstepe out of range ',-1)
         IF( ion_maxstep < 0 ) &
           CALL errore( sub_name,' ion_maxstep out of range ',-1)
-        IF( prog == 'FP' ) THEN
-          IF( upscale /= 0 ) &
-            CALL errore( sub_name,' upscale not used in FPMD ',-1)
-          IF( potential_extrapolation /= 'default' ) &
-            CALL errore( sub_name,' potential_extrapolation not used in FPMD ',-1)
-          IF( greasp /= 0.0d0 ) &
-            CALL errore( sub_name,' greasp not used in FPMD ',-1)
-        END IF
         RETURN
       END SUBROUTINE
 

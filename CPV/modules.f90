@@ -7,6 +7,8 @@
 !
 
 module van_parameters
+  implicit none
+  save
   !     nlx = combined angular momentum (for s,p,d states: nlx=9)
   !     lix = max angular momentum l+1 (lix=3 if s,p,d are included)
   !     lx  = max 2*l+1
@@ -17,12 +19,16 @@ end module van_parameters
 module bhs
   !     analytical BHS pseudopotential parameters
   use parameters, only: nsx
+  implicit none
+  save
   real(kind=8) rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
        rcl(3,nsx,3), al(3,nsx,3), bl(3,nsx,3)
   integer lloc(nsx)
 end module bhs
 
 module core
+  implicit none
+  save
   !     nlcc = 0 no core correction on any atom
   !     rhocb = core charge in G space (box grid)
   integer nlcc
@@ -33,6 +39,8 @@ module cvan
   !     ionic pseudo-potential variables
   use parameters, only: nsx
   use van_parameters
+  implicit none
+  save
   !     ap  = Clebsch-Gordan coefficients (?)
   !     lpx = max number of allowed Y_lm
   !     lpl = composite lm index of Y_lm
@@ -58,6 +66,8 @@ module cvan
 end module cvan
 
 module dft_mod
+  implicit none
+  save
   integer lda, blyp, becke, bp88, pw91, pbe
   parameter (lda=0, blyp=1, becke=2, bp88=3, pw91=4, pbe=5)
   integer dft
@@ -115,28 +125,19 @@ module gvec
   !     nm      = fft index for G<
   !     in1p,in2p,in3p = G components in crystal axis
   !
+  implicit none
+  save
   integer,allocatable:: np(:), nm(:), in1p(:),in2p(:),in3p(:)
 
 end module gvec
 
 
-!module ions_module
-!  use parameters, only: nsx, natx
-!  use ions_base, only: nsp, na, nat, nas => nax, zv, pmass, rcmax, ipp
-!  !     nsp       = number of species
-!  !     na(is)    = number of atoms of species is
-!  !     nas       = max number of atoms of a given species
-!  !     nat       = total number of atoms of all species
-!  !     ipp(is)   = PP type for species is (see INPUT)
-!  !     zv(is)    = (pseudo-)atomic charge
-!  !     pmass(is) = mass (converted to a.u.) of ions
-!  !     rcmax(is) = Ewald radius (for ion-ion interactions)
-!end module ions_module
-
 module ncprm
 
   use parameters, only: nsx, mmaxx, nqfx=>nqfm, nbrx, lqx=>lqmax
   use van_parameters
+  implicit none
+  save
 !
 !  lqx  :  maximum angular momentum of Q (Vanderbilt augmentation charges)
 !  nqfx :  maximum number of coefficients in Q smoothing
@@ -186,53 +187,29 @@ module ncprm
   real(kind=8)    r(mmaxx,nsx), rab(mmaxx,nsx), cmesh(nsx)
 end module ncprm
 
-!module parm
-!  !     nr1 ,nr2 ,nr3  = dense grid in real space (fft)
-!  !     nr1x,nr2x,nr3x = fft dimensions - may differ from fft transform 
-!  !                      lengths nr1,nr2,nr3 for efficiency reasons
-!  !     nnr,nnrs,nnrb  = data size of fft arrays the for dense grid
-!  !                      NOTA BENE: nnr .ne. nr1*nr2*nr3
-!  !                                 nnr = nr1x*nr2x*nr3x only for scalar case
-!  integer nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr
-!  !
-!  ! direct and reciprocal lattice vectors
-!  !
-!  ! real(kind=8) a1(3),a2(3),a3(3), ainv(3,3)
-!end module parm
-
-!module parmb
-!  !    as in module "parm", for the box grid
-!  real(kind=8) tpibab, omegab
-!  ! integer nr1b,nr2b,nr3b,nnrb,nr1bx,nr2bx,nr3bx
-!  real(kind=8) a1b(3),a2b(3),a3b(3), ainvb(3,3)
-!end module parmb
-
-!module parms
-!  !    as in module "parm", for the smooth grid
-!  integer nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrs
-!end module parms
-
 module pseu
+  implicit none
+  save
   !    rhops = ionic pseudocharges (for Ewald term)
   !    vps   = local pseudopotential in G space for each species
   real(kind=8), allocatable:: rhops(:,:), vps(:,:)
 end module pseu
 
-module psfiles
-  use parameters, only: nsx
-  !    psfile = name of files containing pseudopotential
-  character(len=80) :: pseudo_dir, psfile(nsx)
-end module psfiles
-
 module qgb_mod
+  implicit none
+  save
   complex(kind=8), allocatable::  qgb(:,:,:)
 end module qgb_mod
 
 module qradb_mod
+  implicit none
+  save
   real(kind=8), allocatable:: qradb(:,:,:,:,:)
 end module qradb_mod
 
 module timex_mod
+  implicit none
+  save
   integer maxclock
   parameter (maxclock=32)
   real(kind=8) cputime(maxclock), elapsed(maxclock)
@@ -275,6 +252,8 @@ end module timex_mod
 module wfc_atomic
   use parameters, only:nsx
   use ncprm, only:mmaxx
+  implicit none
+  save
   !  nchix=  maximum number of pseudo wavefunctions
   !  nchi =  number of atomic (pseudo-)wavefunctions
   !  lchi =  angular momentum of chi
@@ -286,47 +265,67 @@ module wfc_atomic
 end module wfc_atomic
 
 module work1
+  implicit none
+  save
   complex(kind=8), allocatable, target:: wrk1(:)
 end module work1
 
 module work_box
+  implicit none
+  save
   complex(kind=8), allocatable, target:: qv(:)
 end module work_box
 
 module work_fft
+  implicit none
+  save
   complex(kind=8), allocatable:: aux(:)
 end module work_fft
 
 module work2
+  implicit none
+  save
   complex(kind=8), allocatable, target:: wrk2(:,:)
 end module work2
 
 ! Variable cell
 module derho
+  implicit none
+  save
   complex(kind=8),allocatable:: drhog(:,:,:,:)
   real(kind=8),allocatable::     drhor(:,:,:,:)
 end module derho
 
 module dener
+  implicit none
+  save
   real(kind=8) detot(3,3), dekin(3,3), dh(3,3), dps(3,3), &
   &       denl(3,3), dxc(3,3), dsr(3,3)
 end module dener
 
 module dqgb_mod
+  implicit none
+  save
   complex(kind=8),allocatable:: dqgb(:,:,:,:,:)
 end module dqgb_mod
 
 module dpseu
+  implicit none
+  save
   real(kind=8),allocatable:: dvps(:,:), drhops(:,:)
 end module dpseu
 
 module cdvan
+  implicit none
+  save
   real(kind=8),allocatable:: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
                              drhovan(:,:,:,:,:)
 end module cdvan
 
 module pres_mod
   use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+  implicit none
+  save
   real(kind=8),allocatable:: ggp(:)
 end module pres_mod
 

@@ -1776,25 +1776,6 @@
       return
       end
 !-------------------------------------------------------------------------
-      subroutine errore(a,b,n)
-!-----------------------------------------------------------------------
-      character(len=*) a,b
-      integer n
-#ifdef __PARA
-      include 'mpif.h'
-      integer ierr
-#endif
-!
-      write(6,1) a,b,n
-    1 format(//' program ',a,':',a,'.',8x,i8,8x,'stop')
-#ifdef __MPI
-      call mpi_abort( MPI_COMM_WORLD, ierr, ierr)
-      call mpi_finalize(ierr)
-#endif
-!
-      stop
-      end
-!----------------------------------------------------------------------
       subroutine expxc(nnr,nspin,rhor,exc)
 !----------------------------------------------------------------------
 !
@@ -5194,7 +5175,7 @@
       use ncprm
       use cvan
       use ions_base, only: ipp, nsp
-      use psfiles
+      use io_files, only: psfile, pseudo_dir
 !
       implicit none
 !

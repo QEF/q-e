@@ -20,8 +20,9 @@
         USE parameters
 
         IMPLICIT NONE
-        PRIVATE
         SAVE
+
+        PRIVATE
 
         TYPE convergence_criteria
           LOGICAL :: active
@@ -31,17 +32,6 @@
           REAL(dbl) :: force
         END TYPE
 
-        TYPE do_ionic_step
-          LOGICAL :: active
-          INTEGER :: nstep
-          REAL(dbl) :: ekin
-        END TYPE
-
-        TYPE electronic_steepest_descent
-          LOGICAL :: active
-          INTEGER :: nstep
-          REAL(dbl) :: ekin
-        END TYPE
 
         TYPE ionic_conjugate_gradient
           LOGICAL :: active
@@ -52,102 +42,109 @@
         END TYPE
 
 
-
         PUBLIC :: tbeg, htbeg, nomore, &
                   nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, newnfi, tnewnfi, &
                   tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, tstress, tprnfor, prn, timing, &
                   memchk, tconjgrad, tprnsfac, toptical, &
-                  tcarpar, rhoout, trande, arande, trandp, arandp, &
+                  tcarpar, rhoout, trane, ampre, tranp, amprp, &
                   tdipole, t_diis, t_diis_simple, t_diis_rot, tnosee, tnosep, tnoseh, &
                   tcp, tcap, tnodump, tdamp, tdampions, tconvthrs, &
-                  convergence_criteria, do_ionic_step, tionstep, tsteepdesc, &
-                  electronic_steepest_descent, ionic_conjugate_gradient, tconjgrad_ion, &
-                  tatomicwfc, tscreen, gamma_only
+                  convergence_criteria, tionstep, nstepe, tsteepdesc, &
+                  ionic_conjugate_gradient, tconjgrad_ion, &
+                  tatomicwfc, tscreen, gamma_only, ekin_conv_thr, ekin_maxiter
 
 
-        PUBLIC ::  control_flags_setup, set_restart_mode, set_verbosity, set_ortho, &
-          set_electron_flags, fix_dependencies, check_flags, set_cell_flags, &
-          set_ele_steps, set_ion_dynamics, set_ion_flags
+        PUBLIC ::  fix_dependencies, check_flags
 
         PUBLIC :: tbuff, tvlocw, trhor, trhow, thdyn, iprsta
+
+        PUBLIC :: twfcollect
         
 
 
 ! ...   declare execution control variables
 
-        LOGICAL :: tbuff      ! save wfc on unit 21  ( only cp, never used)
-        LOGICAL :: tvlocw     ! write potential to unit 46 ( only cp, seldom used)
-        LOGICAL :: trhor      ! read rho from unit 47  (only cp, seldom used)
-        LOGICAL :: trhow      ! write rho to  unit 47 (only cp, seldom used)
+        LOGICAL :: tbuff     = .FALSE.  ! save wfc on unit 21  ( only cp, never used)
+        LOGICAL :: tvlocw    = .FALSE.  ! write potential to unit 46 ( only cp, seldom used)
+        LOGICAL :: trhor     = .FALSE.  ! read rho from unit 47  (only cp, seldom used)
+        LOGICAL :: trhow     = .FALSE.  ! write rho to  unit 47 (only cp, seldom used)
 
-        LOGICAL :: prn        ! verbosity
-        LOGICAL :: tsde       ! electronic steepest descent
-        LOGICAL :: tzeroe     ! set to zero the electronic velocities
-        LOGICAL :: tfor       ! move the ions ( calculate forces )
-        LOGICAL :: tsdp       ! ionic steepest descent
-        LOGICAL :: tzerop     ! set to zero the ionic velocities
-        LOGICAL :: tprnfor    ! print forces to standard output
-        LOGICAL :: taurdr     ! read ionic position from standard input
-        LOGICAL :: tv0rd      ! read ionic velocities from standard input
-        LOGICAL :: tpre       ! calculate stress, and (in fpmd) variable cell dynamic
-        LOGICAL :: thdyn      ! variable-cell dynamics (only cp)
-        LOGICAL :: tsdc       ! cell geometry steepest descent
-        LOGICAL :: tzeroc     ! set to zero the cell geometry velocities
-        LOGICAL :: tstress    ! print stress to standard output
-        LOGICAL :: tortho     ! use iterative orthogonalization 
-        LOGICAL :: tconjgrad  ! use conjugate gradient electronic minimization
-        LOGICAL :: timing     ! print out timing information
-        LOGICAL :: memchk     ! check for memory leakage
-        LOGICAL :: tprnsfac   ! print out structure factor 
-        LOGICAL :: toptical   ! print out optical properties
-        LOGICAL :: tcarpar    ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
-        LOGICAL :: rhoout     ! print out charge densities
-        LOGICAL :: tnodump    ! if true avoid the dump of the wavefunctions in resetart
-        LOGICAL :: tdamp      ! Use damped dinamics for electrons
-        LOGICAL :: tdampions  ! Use damped dinamics for electrons
-        LOGICAL :: tatomicwfc ! Use atomic wavefunctions as starting guess for ch. density
-        LOGICAL :: tscreen    ! Use screened coulomb potentials for cluster calculations
+        LOGICAL :: prn       = .FALSE.  ! verbosity
+        LOGICAL :: tsde      = .FALSE.  ! electronic steepest descent
+        LOGICAL :: tzeroe    = .FALSE.  ! set to zero the electronic velocities
+        LOGICAL :: tfor      = .FALSE.  ! move the ions ( calculate forces )
+        LOGICAL :: tsdp      = .FALSE.  ! ionic steepest descent
+        LOGICAL :: tzerop    = .FALSE.  ! set to zero the ionic velocities
+        LOGICAL :: tprnfor   = .FALSE.  ! print forces to standard output
+        LOGICAL :: taurdr    = .FALSE.  ! read ionic position from standard input
+        LOGICAL :: tv0rd     = .FALSE.  ! read ionic velocities from standard input
+        LOGICAL :: tpre      = .FALSE.  ! calculate stress, and (in fpmd) variable cell dynamic
+        LOGICAL :: thdyn     = .FALSE.  ! variable-cell dynamics (only cp)
+        LOGICAL :: tsdc      = .FALSE.  ! cell geometry steepest descent
+        LOGICAL :: tzeroc    = .FALSE.  ! set to zero the cell geometry velocities
+        LOGICAL :: tstress   = .FALSE.  ! print stress to standard output
+        LOGICAL :: tortho    = .FALSE.  ! use iterative orthogonalization 
+        LOGICAL :: tconjgrad = .FALSE.  ! use conjugate gradient electronic minimization
+        LOGICAL :: timing    = .FALSE.  ! print out timing information
+        LOGICAL :: memchk    = .FALSE.  ! check for memory leakage
+        LOGICAL :: tprnsfac  = .FALSE.  ! print out structure factor 
+        LOGICAL :: toptical  = .FALSE.  ! print out optical properties
+        LOGICAL :: tcarpar   = .FALSE.  ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
+        LOGICAL :: rhoout    = .FALSE.  ! print out charge densities
+        LOGICAL :: tnodump   = .FALSE.  ! if true avoid the dump of the wavefunctions in resetart
+        LOGICAL :: tdamp     = .FALSE.  ! Use damped dinamics for electrons
+        LOGICAL :: tdampions = .FALSE.  ! Use damped dinamics for electrons
+        LOGICAL :: tatomicwfc= .FALSE.  ! Use atomic wavefunctions as starting guess for ch. density
+        LOGICAL :: tscreen   = .FALSE.  ! Use screened coulomb potentials for cluster calculations
+        LOGICAL :: twfcollect = .FALSE. ! Collect wave function in the restart file at the end of run.
 
         TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence 
 
-        TYPE (do_ionic_step) :: tionstep
+! ... Ionic vs Electronic step frequency
+! ... When "ion_nstep > 1" and "electron_dynamics = 'md' | 'sd' ", ions are 
+! ... propagated every "ion_nstep" electronic step only if the electronic 
+! ... "ekin" is lower than "ekin_conv_thr"
+!
+        LOGICAL :: tionstep = .FALSE.
+        INTEGER :: nstepe   = 1
+
                               !  parameters to control how many electronic steps 
                               !  between ions move
 
-        TYPE (electronic_steepest_descent) :: tsteepdesc
+        LOGICAL :: tsteepdesc = .FALSE.
                               !  parameters for electronic steepest desceent
 
         TYPE (ionic_conjugate_gradient) :: tconjgrad_ion
                               !  conjugate gradient for ionic minimization
 
-        INTEGER :: nbeg   ! internal code for initialization ( -1, 0, 1, 2, .. )
-        INTEGER :: ndw
-        INTEGER :: ndr
-        INTEGER :: nomore
-        INTEGER :: iprint ! print output every iprint step
-        INTEGER :: isave  ! write restart to ndr unit every isave step
-        INTEGER :: nv0rd
-        INTEGER :: iprsta ! output verbosity (increasing from 0 to infinity)
+        INTEGER :: nbeg   = 0 ! internal code for initialization ( -1, 0, 1, 2, .. )
+        INTEGER :: ndw    = 0 !
+        INTEGER :: ndr    = 0 !
+        INTEGER :: nomore = 0 !
+        INTEGER :: iprint = 0 ! print output every iprint step
+        INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
+        INTEGER :: nv0rd  = 0 !
+        INTEGER :: iprsta = 0 ! output verbosity (increasing from 0 to infinity)
 
-        LOGICAL :: gamma_only !  true if only gamma point is used
+        LOGICAL :: gamma_only = .TRUE. !  true if only gamma point is used
 
 
         LOGICAL :: tnewnfi = .FALSE.
         INTEGER :: newnfi  = 0
 
 ! ...   Wave function randomization
-        LOGICAL :: trande
-        REAL(dbl) :: arande
+        LOGICAL   :: trane = .FALSE.
+        REAL(dbl) :: ampre = 0.0d0
 
 ! ...   Ionic position randomization
-        LOGICAL :: trandp(nsx)
-        REAL(dbl) :: arandp(nsx)
+        LOGICAL   :: tranp(nsx) = .FALSE.
+        REAL(dbl) :: amprp(nsx) = 0.0d0
 
 ! ...   Read the cell from standard input
-        LOGICAL :: tbeg = .FALSE.
-        REAL(dbl) :: htbeg(3,3)
+        LOGICAL   :: tbeg = .FALSE.
+        REAL(dbl) :: htbeg(3,3) = 0.0d0
 
 ! ...   This flags control the calculation of the Dipole Moments
         LOGICAL :: tdipole = .FALSE.
@@ -168,6 +165,13 @@
         LOGICAL :: tcap = .FALSE.
         LOGICAL :: tcp = .FALSE.
 
+        REAL(dbl) :: ekin_conv_thr = 0.0d0
+        INTEGER   :: ekin_maxiter = 100
+        REAL(dbl) :: etot_conv_thr = 0.0d0
+        INTEGER   :: etot_maxiter = 100
+        REAL(dbl) :: forc_conv_thr = 0.0d0
+        INTEGER   :: forc_maxiter = 100
+
 !  end of module-scope declarations
 !  ----------------------------------------------
 
@@ -175,411 +179,6 @@
   CONTAINS
 !=----------------------------------------------------------------------------=!
 
-       SUBROUTINE control_flags_setup(ndr_inp, ndw_inp, iprint_inp, isave_inp, &
-         tstress_inp, tprnfor_inp, tdipole_inp, toptical_inp, newnfi_inp,      &
-         tnewnfi_inp, gamma_inp )
-         IMPLICIT NONE
-          INTEGER, INTENT(IN) :: ndr_inp
-          INTEGER, INTENT(IN) :: ndw_inp
-          INTEGER, INTENT(IN) :: iprint_inp
-          INTEGER, INTENT(IN) :: isave_inp
-          LOGICAL, INTENT(IN) :: tstress_inp
-          LOGICAL, INTENT(IN) :: tprnfor_inp
-          LOGICAL, INTENT(IN) :: tdipole_inp
-          LOGICAL, INTENT(IN) :: toptical_inp
-          INTEGER, INTENT(IN) :: newnfi_inp
-          LOGICAL, INTENT(IN) :: tnewnfi_inp
-          LOGICAL, INTENT(IN) :: gamma_inp
-          ndr     = ndr_inp
-          ndw     = ndw_inp
-          iprint  = iprint_inp
-          isave   = isave_inp
-          tstress = tstress_inp
-          tprnfor = tprnfor_inp
-          tdipole = tdipole_inp
-          toptical = toptical_inp
-          newnfi = newnfi_inp
-          tnewnfi = tnewnfi_inp
-          gamma_only = gamma_inp
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-        
-      SUBROUTINE set_restart_mode(nstep, restart_mode)
-! ...   this subroutine set internal flags to restart the job properly
-        IMPLICIT NONE
-        INTEGER, INTENT(IN) :: nstep
-        CHARACTER(LEN=80), INTENT(IN) :: restart_mode
-        SELECT CASE ( TRIM(restart_mode) )
-          CASE ('from_scratch')
-            nbeg = -1
-            nomore = nstep
-          CASE ('reset_counters')
-            nbeg = 0
-            nomore = nstep
-          CASE ('upto')
-            nbeg = 1
-            nomore = nstep
-          CASE ('restart', 'default' )
-            nbeg = 2
-            nomore = nstep
-          CASE DEFAULT
-            CALL errore(' control_flag ',' unknown restart_mode '//TRIM(restart_mode), 1 )
-        END SELECT
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_verbosity( verbosity, tprnrho )
-
-! ...   this subroutine set the internal flags to the appropriate degree of 
-! ...   verbosity
-
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: verbosity
-        LOGICAL :: tprnrho
-
-        prn     = .FALSE.
-        tprnsfac   = .FALSE.
-          ! Print on file STRUCTURE_FACTOR the structure factor
-          ! gvectors and charge density, in reciprocal space.
-        rhoout = .false.
-          ! save charge density to file  CHARGEDENSITY if nspin = 1, and
-          ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
-        memchk = .FALSE.
-          ! The code performs a memory check, write on standard
-          ! output the allocated memory at each step.
-          ! Architecture Dependent
-        timing = .FALSE.
-          ! The code write to files fort.8 fort.41 fort.42 fort.43
-          ! a detailed report of subroutines timing
-
-        SELECT CASE ( TRIM(verbosity) )
-          CASE ('minimal')
-            prn = .FALSE.
-          CASE ('low', 'default')
-            prn = .FALSE.
-            timing = .TRUE.
-          CASE ('medium')
-            prn = .FALSE.
-            timing = .TRUE.
-            rhoout = .TRUE.
-            tprnsfac = .TRUE.
-          CASE ('high')
-            prn = .TRUE.
-            memchk = .TRUE.
-            timing = .TRUE.
-            rhoout = .TRUE.
-            tprnsfac = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown verbosity '//TRIM(verbosity), 1 )
-        END SELECT
-
-! ...   If explicitly requested force the charge density to be printed 
-
-        IF( tprnrho ) rhoout = .TRUE.
-
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_ortho(orthogonalization)
-! ...   this subroutine set the orthogonalization method to be used
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: orthogonalization
-        SELECT CASE ( TRIM(orthogonalization) )
-          CASE ('Gram-Schmidt')
-            tortho = .FALSE.
-          CASE ('ortho', 'default')
-            tortho = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown orthogonalization '//TRIM(orthogonalization), 1 )
-        END SELECT
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_electron_flags(electron_dynamics, electron_velocities, electron_temperature, &
-        diis_rot, startingwfc, arande_inp)
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: electron_dynamics
-        CHARACTER(LEN=80), INTENT(IN) :: electron_velocities
-        CHARACTER(LEN=80), INTENT(IN) :: electron_temperature
-        CHARACTER(LEN=80), INTENT(IN) :: startingwfc
-        LOGICAL, INTENT(IN) :: diis_rot
-        REAL(dbl), INTENT(IN) :: arande_inp
-! ... Electronic randomization
-        trande = .FALSE.
-        tatomicwfc = .FALSE.
-        SELECT CASE ( TRIM(startingwfc) )
-          CASE ('default','none')
-            trande = .FALSE.
-          CASE ('random')
-            trande = .TRUE.
-          CASE ('atomic')
-            tatomicwfc = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown startingwfc '//TRIM(startingwfc), 1 )
-        END SELECT
-        arande = arande_inp
-! ... Electron dynamics
-        tdamp          = .FALSE.
-        tconjgrad      = .FALSE.
-        tsteepdesc%active = .FALSE.
-        tsteepdesc%ekin  = 1.0d+10
-        tsteepdesc%nstep = 1
-        t_diis        = .FALSE.
-        t_diis_simple = .FALSE.
-        t_diis_rot    = .FALSE.
-        SELECT CASE ( TRIM(electron_dynamics) )
-          CASE ('sd', 'default')
-            tsde = .TRUE.
-          CASE ('verlet')
-            tsde = .FALSE.
-          CASE ('cg')
-            tsde      = .FALSE.
-            tconjgrad = .TRUE.
-          CASE ('damp')
-            tsde   = .FALSE.
-            tdamp  = .TRUE.
-          CASE ('diis')
-            tsde   = .FALSE.
-            t_diis = .TRUE.
-            IF( diis_rot ) THEN
-              t_diis_rot    = .TRUE.
-            ELSE
-              t_diis_simple = .TRUE.
-            END IF
-          CASE ('none')
-            tsde = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown electron_dynamics '//TRIM(electron_dynamics), 1 )
-        END SELECT
-! ... Electrons initial velocity
-        SELECT CASE ( TRIM(electron_velocities) )
-          CASE ('default')
-            tzeroe = .FALSE.
-          CASE ('zero')
-            tzeroe = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
-        END SELECT
-! ... Electronic Temperature
-        tnosee = .FALSE.
-        SELECT CASE ( TRIM(electron_temperature) )
-!         temperature control of electrons via Nose' thermostat
-          CASE ('nose')
-            tnosee = .TRUE.
-          CASE ('not_controlled', 'default')
-            tnosee = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
-        END SELECT
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_cell_flags(cell_dynamics, cell_velocities, cell_parameters, cell_temperature, rd_ht )
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: cell_dynamics
-        CHARACTER(LEN=80), INTENT(IN) :: cell_velocities
-        CHARACTER(LEN=80), INTENT(IN) :: cell_parameters
-        CHARACTER(LEN=80), INTENT(IN) :: cell_temperature
-        REAL(dbl), INTENT(IN) :: rd_ht(3,3)
-! ... Cell dynamics
-        SELECT CASE ( TRIM(cell_dynamics) )
-          CASE ('sd')
-            tpre = .TRUE.
-            tsdc = .TRUE.
-          CASE ('pr')
-            tpre = .TRUE.
-            tsdc = .FALSE.
-          CASE ('none', 'default')
-            tpre = .FALSE.
-            tsdc = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown cell_dynamics '//TRIM(cell_dynamics), 1 )
-        END SELECT
-! ... Starting/Restarting Cell parameters
-        SELECT CASE ( TRIM(cell_parameters) )
-          CASE ('default')
-            tbeg = .FALSE.
-          CASE ('from_input')
-            tbeg = .TRUE.
-            htbeg = rd_ht
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown cell_parameters '//TRIM(cell_parameters), 1 )
-        END SELECT
-! ... Cell initial velocities
-        SELECT CASE ( TRIM(cell_velocities) )
-          CASE ('default')
-            tzeroc = .FALSE.
-          CASE ('zero')
-            tzeroc = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown cell_velocities '//TRIM(cell_velocities), 1 )
-        END SELECT
-! ... Cell Temperature
-        SELECT CASE ( TRIM(cell_temperature) )
-!         cell temperature control of ions via Nose' thermostat
-          CASE ('nose')
-            tnoseh = .TRUE.
-            CALL errore(' control_flags ', &
-              ' cell_temperature = '//TRIM(cell_temperature)//' not yet implemented ', 1 )
-          CASE ('not_controlled', 'default')
-            tnoseh = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown cell_temperature '//TRIM(cell_temperature), 1 )
-        END SELECT
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_ion_flags(ion_temperature, ion_positions, ion_velocities, &
-        trandp_inp, arandp_inp)
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: ion_temperature
-        CHARACTER(LEN=80), INTENT(IN) :: ion_positions
-        CHARACTER(LEN=80), INTENT(IN) :: ion_velocities
-        LOGICAL, INTENT(IN) :: trandp_inp(:)
-        REAL(dbl), INTENT(IN) :: arandp_inp(:)
-! ... Ionic Temperature
-        tcap         = .FALSE.
-        tcp          = .FALSE.
-        tnosep       = .FALSE.
-        SELECT CASE ( TRIM(ion_temperature) )
-!         temperature control of ions via Nose' thermostat
-          CASE ('nose')
-            tnosep = .TRUE.
-          CASE ('not_controlled', 'default')
-            tnosep = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown ion_temperature '//TRIM(ion_temperature), 1 )
-        END SELECT
-! ... Starting/Restarting Atomic positions
-        taurdr = .FALSE.
-        SELECT CASE ( TRIM(ion_positions) )
-          CASE ( 'from_input' )
-            taurdr = .TRUE.   ! Positions read from standard input
-          CASE ( 'default' )
-            taurdr = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown ion_positions '//TRIM(ion_positions), 1 )
-        END SELECT
-! ... Starting/Restarting ionic velocities
-        SELECT CASE ( TRIM(ion_velocities) )
-          CASE ('default')
-            tzerop = .FALSE.
-            tv0rd = .FALSE.
-          CASE ('zero')
-            tzerop = .TRUE.
-            tv0rd = .FALSE.
-          CASE ('from_input')
-            tzerop = .TRUE.
-            tv0rd  = .TRUE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown ion_velocities '//TRIM(ion_velocities), 1 )
-        END SELECT
-! ... Ionic randomization
-        trandp = trandp_inp
-        arandp = arandp_inp
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-! ... Ionic vs Electronic step frequency
-! ... When "ion_nstep > 1" and "electron_dynamics = 'md' | 'sd' ", ions are 
-! ... propagated every "ion_nstep" electronic step only if the electronic 
-! ... "ekin" is lower than "ekin_conv_thr"
-!
-      SUBROUTINE set_ele_steps(ion_nstepe, cell_nstepe, ekin_conv_thr)
-        IMPLICIT NONE
-        INTEGER, INTENT(IN) :: ion_nstepe, cell_nstepe
-        REAL(dbl), INTENT(IN) :: ekin_conv_thr
-        tionstep%active = .FALSE.
-        tionstep%ekin  = 1.0d+10
-        tionstep%nstep = 1
-        IF( ( ion_nstepe > 1 ) .OR. ( cell_nstepe > 1 ) ) THEN
-!         This card is used to control the ionic step, when active ionic step are
-!         allowed only when the two criteria are met, i.e. the ions are allowed
-!         to move if MOD( NFI, NSTEP ) == 0 and EKIN < EKIN_THR .
-          tionstep%active = .TRUE.
-          tionstep%nstep  = MAX( ion_nstepe, cell_nstepe )
-          tionstep%ekin   = ekin_conv_thr
-        END IF
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE set_ion_dynamics(ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep, electron_maxstep )
-        IMPLICIT NONE
-        CHARACTER(LEN=80), INTENT(IN) :: ion_dynamics
-        REAL(dbl), INTENT(IN) :: ekin_conv_thr, etot_conv_thr, forc_conv_thr
-        INTEGER, INTENT(IN) :: ion_maxstep, electron_maxstep 
-! ... Ions dynamics
-        tdampions        = .FALSE.
-        tconvthrs%active = .FALSE.
-        tconvthrs%nstep  = 1
-        tconvthrs%ekin   = 0.0d0
-        tconvthrs%derho  = 0.0d0
-        tconvthrs%force  = 0.0d0
-        tconjgrad_ion%active = .FALSE.
-        tconjgrad_ion%nstepix = 1
-        tconjgrad_ion%nstepex = 1
-        tconjgrad_ion%ionthr = 1.0d+10
-        tconjgrad_ion%elethr = 1.0d+10
-        SELECT CASE ( TRIM(ion_dynamics) )
-          CASE ('sd')
-            tsdp = .TRUE.
-            tfor = .TRUE.
-            tconvthrs%ekin   = ekin_conv_thr
-            tconvthrs%derho  = etot_conv_thr
-            tconvthrs%force  = forc_conv_thr
-            tconvthrs%active = .TRUE.
-            tconvthrs%nstep  = 1
-          CASE ('verlet')
-            tsdp = .FALSE.
-            tfor = .TRUE.
-          CASE ('cg')       ! Conjugate Gradient minimization for ions
-            tsdp = .FALSE.
-            tfor = .TRUE.
-            tconjgrad_ion%active  = .TRUE.
-            tconjgrad_ion%nstepix = ion_maxstep    ! maximum number of iteration
-            tconjgrad_ion%nstepex = electron_maxstep  ! maximum number of iteration for the electronic minimization
-            tconjgrad_ion%ionthr  = etot_conv_thr ! energy threshold for convergence
-            tconjgrad_ion%elethr  = ekin_conv_thr ! energy threshold for convergence in the electrons minimization
-            tconvthrs%ekin   = ekin_conv_thr
-            tconvthrs%derho  = etot_conv_thr
-            tconvthrs%force  = forc_conv_thr
-            tconvthrs%active = .TRUE.
-            tconvthrs%nstep  = 1
-          CASE ('damp')
-            tsdp = .FALSE.
-            tfor = .TRUE.
-            tdampions = .TRUE.
-            tconvthrs%ekin   = ekin_conv_thr
-            tconvthrs%derho  = etot_conv_thr
-            tconvthrs%force  = forc_conv_thr
-            tconvthrs%active = .TRUE.
-            tconvthrs%nstep  = 1
-          CASE ('none', 'default')
-            tsdp = .FALSE.
-            tfor = .FALSE.
-          CASE DEFAULT
-            CALL errore(' control_flags ',' unknown ion_dynamics '//TRIM(ion_dynamics), 1 )
-        END SELECT
-        RETURN
-      END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
 
    SUBROUTINE fix_dependencies()
      IMPLICIT NONE
@@ -594,7 +193,7 @@
 
 ! ...   Car Parrinello simulation
         tcarpar     = .TRUE.
-        IF( tconjgrad .OR. t_diis .OR. tsteepdesc%active ) THEN
+        IF( tconjgrad .OR. t_diis .OR. tsteepdesc ) THEN
           tcarpar = .FALSE.
         END IF
 

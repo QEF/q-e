@@ -35,7 +35,8 @@ input_parameters.o \
 read_namelists.o \
 read_cards.o \
 berry_phase.o \
-energies.o
+energies.o \
+io_files.o
 #
 include ../make.rules
 #

@@ -43,7 +43,6 @@
 ! - iuni   - integer - the I/O fortran unit associated with the restart file
 ! - twrite - logical - true, write effective data; false, write dummy data
 ! - tread  - logical - true, read effective data; false, read dummy data
-! - tovrw  - logical - true, overvrite all input variables with the read data
 !
 ! All Data Sections have a well defined number of records, and the first
 ! record always contains the following _NON_ _DUMMY_ information:
@@ -58,7 +57,7 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PARAMETER :: file_version = 201
+  INTEGER, PARAMETER :: file_version = 202
   INTEGER :: restart_module_verbosity = 0
 
   INTERFACE write_restart_header
@@ -149,7 +148,6 @@
 ! iuni          = Restart file I/O fortran unit
 ! nfi           = Step counter
 ! trutim        = true time (in a.u.) since last 'from_scratch'
-! nbeg          = run flags
 ! nr1, nr2, nr3 = dims of the real space grid
 ! ng            = number of reciprocal vectors
 ! nk            = number of k points
@@ -168,11 +166,12 @@
 ! ecutrho       = charge density cutoff cutoff
 
     SUBROUTINE write_restart_header1(iuni, twrite, &
-      nfi, trutim, nbeg, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_l, ng_g, nk_l, nk_g, &
-      ngwk_l, ngwk_g, nspin, nbnd, nel, nelu, neld, nat, ntyp, na, acc, nacc, &
+      nfi, iswitch, trutim, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
+      ngwk_g, nspin, nbnd, nel, nelu, neld, nat, ntyp, na, acc, nacc, &
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
       ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
-      modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only )
+      modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
+      tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 !
       USE io_global, ONLY: ionode
 !
@@ -181,17 +180,16 @@
       INTEGER, INTENT(IN) :: iuni  
       LOGICAL, INTENT(IN) :: twrite
       INTEGER, INTENT(IN) :: nfi   
-      INTEGER, INTENT(IN) :: nbeg  
+      INTEGER, INTENT(IN) :: iswitch   
       INTEGER, INTENT(IN) :: nr1, nr2, nr3
       INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s
-      INTEGER, INTENT(IN) :: ng_l, ng_g
+      INTEGER, INTENT(IN) :: ng_g
       REAL(dbl), INTENT(IN) :: trutim  ! true time since last 'from_scratch'
       REAL(dbl), INTENT(IN) :: ecutwfc, ecutrho  ! wfc and density cutoff
       REAL(dbl), INTENT(IN) :: nel
-      INTEGER, INTENT(IN) :: nk_l  ! local number of k points (k points in the pool)
       INTEGER, INTENT(IN) :: nk_g  ! global number of k points
       INTEGER, INTENT(IN) :: nspin, nbnd, nelu, neld, nat, ntyp
-      INTEGER, INTENT(IN) :: ngwk_l(:), ngwk_g(:)
+      INTEGER, INTENT(IN) :: ngwk_g(:)
       INTEGER, INTENT(IN) :: na(:)
       REAL(dbl), INTENT(IN) :: acc(:)
       INTEGER, INTENT(IN) :: nacc
@@ -222,6 +220,15 @@
       !  gamma_only is .TRUE. if calculation is at gamma (G-vecs span only half space)
       LOGICAL, INTENT(IN) :: gamma_only  
 
+      LOGICAL, INTENT(IN) :: tfixed_occ
+      LOGICAL, INTENT(IN) :: tefield
+      LOGICAL, INTENT(IN) :: dipfield
+      INTEGER, INTENT(IN) :: edir
+      REAL(dbl), INTENT(IN) :: emaxpos
+      REAL(dbl), INTENT(IN) :: eopreg
+      REAL(dbl), INTENT(IN) :: eamp
+      LOGICAL, INTENT(IN) :: twfcollect
+
       INTEGER :: i
       CHARACTER(LEN=80) :: t_ , c_ , tmp_dir_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
@@ -233,8 +240,6 @@
 
       IF( ntyp > SIZE( na ) ) &
         CALL errore(sub_name, ' wrong size ', 1 )
-      IF( nk_g > SIZE( ngwk_l ) ) &
-        CALL errore(sub_name, ' wrong size ', 2 )
       IF( nk_g > SIZE( ngwk_g ) ) &
         CALL errore(sub_name, ' wrong size ', 3 )
       IF( nacc > SIZE( acc ) ) &
@@ -243,11 +248,12 @@
       IF( ionode ) THEN
         IF( twrite ) THEN
           WRITE(iuni) twrite, file_version, section_name
-          WRITE(iuni) nfi, nbeg, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_l, ng_g, nk_l, nk_g, &
+          WRITE(iuni) nfi, iswitch, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
             nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
             kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
-            natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, gamma_only 
-          WRITE(iuni) (na(i),i=1,ntyp), (ngwk_l(i),i=1,nk_g), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
+            natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, gamma_only, & 
+            tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
+          WRITE(iuni) (na(i),i=1,ntyp), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
           WRITE(iuni) t_, c_, tmp_dir_
         ELSE
           CALL write_restart_header2(iuni)
@@ -285,17 +291,17 @@
 
 ! ..  This subroutine read from disk dimensions, and status variables
 !
-    SUBROUTINE read_restart_header1(iuni, tovrw, tread, nfi, trutim, nbeg, nr1, nr2, nr3, &
-      nr1s, nr2s, nr3s, ng_l, ng_g, nk_l, nk_g, ngwk_l, ngwk_g, nspin, nbnd, nel, nelu, neld, &
+    SUBROUTINE read_restart_header1(iuni, tread, nfi, iswitch, trutim, nr1, nr2, nr3, &
+      nr1s, nr2s, nr3s, ng_g, nk_g, ngwk_g, nspin, nbnd, nel, nelu, neld, &
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
       k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
       natomwfc, gcutm, gcuts, dual, doublegrid, modenum, &
-      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only )
+      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
+      tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
 ! .. Subroutine output:
 !    if tread is true then on output the following variables are overwritten
 !      acc, trutim, nfi, ekinc
-!    if tovrw is true all variables are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -304,62 +310,51 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      INTEGER, INTENT(INOUT) :: nfi
-      INTEGER, INTENT(INOUT) :: nbeg, nr1, nr2, nr3, ng_l, ng_g
-      INTEGER, INTENT(INOUT) :: nr1s, nr2s, nr3s
+      INTEGER, INTENT(OUT) :: nfi
+      INTEGER, INTENT(OUT) :: iswitch
+      INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng_g
+      INTEGER, INTENT(OUT) :: nr1s, nr2s, nr3s
       REAL(dbl), INTENT(OUT) :: trutim
-      REAL(dbl), INTENT(INOUT) :: ecutwfc, ecutrho
-      REAL(dbl), INTENT(INOUT) :: nel
-      INTEGER, INTENT(INOUT) :: nk_l, nk_g, nspin, nbnd, nelu, neld, nat, ntyp
-      INTEGER, INTENT(INOUT) :: ngwk_l(:), ngwk_g(:)
-      INTEGER, INTENT(INOUT) :: na(:)
-      REAL(dbl), INTENT(INOUT) :: acc(:)
-      INTEGER, INTENT(INOUT) :: nacc
-      REAL(dbl), INTENT(INOUT) :: alat
-      REAL(dbl), INTENT(INOUT) :: ekinc
-      INTEGER, INTENT(INOUT) ::  kunit, k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl), INTENT(INOUT) :: dgauss
-      INTEGER, INTENT(INOUT) :: ngauss
-      LOGICAL, INTENT(INOUT) :: lgauss
-      INTEGER, INTENT(INOUT) :: ntetra
-      LOGICAL, INTENT(INOUT) :: ltetra
+      REAL(dbl), INTENT(OUT) :: ecutwfc, ecutrho
+      REAL(dbl), INTENT(OUT) :: nel
+      INTEGER, INTENT(OUT) :: nk_g, nspin, nbnd, nelu, neld, nat, ntyp
+      INTEGER, INTENT(OUT) :: ngwk_g(:)
+      INTEGER, INTENT(OUT) :: na(:)
+      REAL(dbl), INTENT(OUT) :: acc(:)
+      INTEGER, INTENT(OUT) :: nacc
+      REAL(dbl), INTENT(OUT) :: alat
+      REAL(dbl), INTENT(OUT) :: ekinc
+      INTEGER, INTENT(OUT) ::  kunit, k1, k2, k3, nk1, nk2, nk3
+      REAL(dbl), INTENT(OUT) :: dgauss
+      INTEGER, INTENT(OUT) :: ngauss
+      LOGICAL, INTENT(OUT) :: lgauss
+      INTEGER, INTENT(OUT) :: ntetra
+      LOGICAL, INTENT(OUT) :: ltetra
 
-      INTEGER, INTENT(INOUT) :: natomwfc
-      LOGICAL, INTENT(INOUT) :: doublegrid
-      REAL(dbl), INTENT(INOUT) :: gcutm, gcuts, dual
-      INTEGER, INTENT(INOUT) :: modenum
+      INTEGER, INTENT(OUT) :: natomwfc
+      LOGICAL, INTENT(OUT) :: doublegrid
+      REAL(dbl), INTENT(OUT) :: gcutm, gcuts, dual
+      INTEGER, INTENT(OUT) :: modenum
 
-      LOGICAL, INTENT(INOUT) :: lstres
-      LOGICAL, INTENT(INOUT) :: lforce
-      CHARACTER(LEN=*), INTENT(INOUT) :: title
-      CHARACTER(LEN=*), INTENT(INOUT) :: crystal
-      CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
-      LOGICAL, INTENT(INOUT) :: tupf
-      LOGICAL, INTENT(INOUT) :: gamma_only
+      LOGICAL, INTENT(OUT) :: lstres
+      LOGICAL, INTENT(OUT) :: lforce
+      CHARACTER(LEN=*), INTENT(OUT) :: title
+      CHARACTER(LEN=*), INTENT(OUT) :: crystal
+      CHARACTER(LEN=*), INTENT(OUT) :: tmp_dir
+      LOGICAL, INTENT(OUT) :: tupf
+      LOGICAL, INTENT(OUT) :: gamma_only
 
-      INTEGER :: nfi_, nbeg_, nr1_, nr2_, nr3_, ngl_, ngg_, nkl_, nkg_, nspin_
-      INTEGER :: nr1s_, nr2s_, nr3s_
-      INTEGER :: nbnd_, nelu_, neld_, nat_, ntyp_, nacc_
-      INTEGER :: na_(nsx)
-      INTEGER :: ngwkl_(npk)
-      INTEGER :: ngwkg_(npk)
-      REAL(dbl) :: acc_(nacx)
-      REAL(dbl) :: trutim_, ecutwfc_, ecutrho_, alat_, ekinc_
-      INTEGER ::  kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_
-      REAL(dbl) :: dgauss_, nel_
-      INTEGER :: ngauss_
-      LOGICAL :: lgauss_
-      INTEGER :: ntetra_
-      LOGICAL :: ltetra_
-      INTEGER :: natomwfc_ 
-      REAL(dbl) :: gcutm_, gcuts_, dual_
-      LOGICAL :: doublegrid_
-      INTEGER :: modenum_ 
-      LOGICAL :: lstres_, lforce_
+      LOGICAL, INTENT(OUT) :: tfixed_occ
+      LOGICAL, INTENT(OUT) :: tefield
+      LOGICAL, INTENT(OUT) :: dipfield
+      INTEGER, INTENT(OUT) :: edir
+      REAL(dbl), INTENT(OUT) :: emaxpos
+      REAL(dbl), INTENT(OUT) :: eopreg
+      REAL(dbl), INTENT(OUT) :: eamp
+      LOGICAL, INTENT(OUT) :: twfcollect
+
       CHARACTER(LEN=80) :: t_, c_, tmp_dir_
-      LOGICAL :: tupf_, gamma_only_
 !
       INTEGER :: i, ierr
       INTEGER :: idum = 0
@@ -378,83 +373,83 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) nfi_, nbeg_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngl_, ngg_, nkl_, nkg_, &
-            nspin_, nbnd_, nel_, nelu_, neld_, nat_, ntyp_, nacc_, trutim_, ecutwfc_, ecutrho_, &
-            alat_, ekinc_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, lgauss_, &
-            ntetra_, ltetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, modenum_, lstres_, &
-            lforce_, tupf_, gamma_only_
+          READ(iuni) nfi, iswitch, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
+            nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, &
+            alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, &
+            ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, &
+            lforce, tupf, gamma_only, &
+            tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         END IF
 !
-        CALL mp_bcast( nfi_, ionode_id )
-        CALL mp_bcast( nbeg_, ionode_id )
-        CALL mp_bcast( nr1_, ionode_id )
-        CALL mp_bcast( nr2_, ionode_id )
-        CALL mp_bcast( nr3_, ionode_id )
-        CALL mp_bcast( nr1s_, ionode_id )
-        CALL mp_bcast( nr2s_, ionode_id )
-        CALL mp_bcast( nr3s_, ionode_id )
-        CALL mp_bcast( ngl_, ionode_id )
-        CALL mp_bcast( ngg_, ionode_id )
-        CALL mp_bcast( nkl_, ionode_id )
-        CALL mp_bcast( nkg_, ionode_id )
-        CALL mp_bcast( nspin_, ionode_id )
-        CALL mp_bcast( nbnd_, ionode_id )
-        CALL mp_bcast( nel_, ionode_id )
-        CALL mp_bcast( nelu_, ionode_id )
-        CALL mp_bcast( neld_, ionode_id )
-        CALL mp_bcast( nat_, ionode_id )
-        CALL mp_bcast( ntyp_, ionode_id )
-        CALL mp_bcast( nacc_, ionode_id )
-        CALL mp_bcast( trutim_, ionode_id )
-        CALL mp_bcast( ecutwfc_, ionode_id )
-        CALL mp_bcast( ecutrho_, ionode_id )
-        CALL mp_bcast( alat_, ionode_id )
-        CALL mp_bcast( ekinc_, ionode_id )
-        CALL mp_bcast( kunit_, ionode_id )
-        CALL mp_bcast( k1_, ionode_id )
-        CALL mp_bcast( k2_, ionode_id )
-        CALL mp_bcast( k3_, ionode_id )
-        CALL mp_bcast( nk1_, ionode_id )
-        CALL mp_bcast( nk2_, ionode_id )
-        CALL mp_bcast( nk3_, ionode_id )
-        CALL mp_bcast( dgauss_, ionode_id )
-        CALL mp_bcast( ngauss_, ionode_id )
-        CALL mp_bcast( lgauss_, ionode_id )
-        CALL mp_bcast( ntetra_, ionode_id )
-        CALL mp_bcast( ltetra_, ionode_id )
-        CALL mp_bcast( natomwfc_, ionode_id )
-        CALL mp_bcast( gcutm_, ionode_id )
-        CALL mp_bcast( gcuts_, ionode_id )
-        CALL mp_bcast( dual_, ionode_id )
-        CALL mp_bcast( doublegrid_, ionode_id )
-        CALL mp_bcast( modenum_, ionode_id )
-        CALL mp_bcast( lstres_, ionode_id )
-        CALL mp_bcast( lforce_, ionode_id )
-        CALL mp_bcast( tupf_, ionode_id )
-        CALL mp_bcast( gamma_only_, ionode_id )
+        CALL mp_bcast( nfi, ionode_id )
+        CALL mp_bcast( iswitch, ionode_id )
+        CALL mp_bcast( nr1, ionode_id )
+        CALL mp_bcast( nr2, ionode_id )
+        CALL mp_bcast( nr3, ionode_id )
+        CALL mp_bcast( nr1s, ionode_id )
+        CALL mp_bcast( nr2s, ionode_id )
+        CALL mp_bcast( nr3s, ionode_id )
+        CALL mp_bcast( ng_g, ionode_id )
+        CALL mp_bcast( nk_g, ionode_id )
+        CALL mp_bcast( nspin, ionode_id )
+        CALL mp_bcast( nbnd, ionode_id )
+        CALL mp_bcast( nel, ionode_id )
+        CALL mp_bcast( nelu, ionode_id )
+        CALL mp_bcast( neld, ionode_id )
+        CALL mp_bcast( nat, ionode_id )
+        CALL mp_bcast( ntyp, ionode_id )
+        CALL mp_bcast( nacc, ionode_id )
+        CALL mp_bcast( trutim, ionode_id )
+        CALL mp_bcast( ecutwfc, ionode_id )
+        CALL mp_bcast( ecutrho, ionode_id )
+        CALL mp_bcast( alat, ionode_id )
+        CALL mp_bcast( ekinc, ionode_id )
+        CALL mp_bcast( kunit, ionode_id )
+        CALL mp_bcast( k1, ionode_id )
+        CALL mp_bcast( k2, ionode_id )
+        CALL mp_bcast( k3, ionode_id )
+        CALL mp_bcast( nk1, ionode_id )
+        CALL mp_bcast( nk2, ionode_id )
+        CALL mp_bcast( nk3, ionode_id )
+        CALL mp_bcast( dgauss, ionode_id )
+        CALL mp_bcast( ngauss, ionode_id )
+        CALL mp_bcast( lgauss, ionode_id )
+        CALL mp_bcast( ntetra, ionode_id )
+        CALL mp_bcast( ltetra, ionode_id )
+        CALL mp_bcast( natomwfc, ionode_id )
+        CALL mp_bcast( gcutm, ionode_id )
+        CALL mp_bcast( gcuts, ionode_id )
+        CALL mp_bcast( dual, ionode_id )
+        CALL mp_bcast( doublegrid, ionode_id )
+        CALL mp_bcast( modenum, ionode_id )
+        CALL mp_bcast( lstres, ionode_id )
+        CALL mp_bcast( lforce, ionode_id )
+        CALL mp_bcast( tupf, ionode_id )
+        CALL mp_bcast( gamma_only, ionode_id )
+
+        CALL mp_bcast( tfixed_occ, ionode_id ) 
+        CALL mp_bcast( tefield, ionode_id ) 
+        CALL mp_bcast( dipfield, ionode_id ) 
+        CALL mp_bcast( edir, ionode_id ) 
+        CALL mp_bcast( emaxpos, ionode_id ) 
+        CALL mp_bcast( eopreg, ionode_id ) 
+        CALL mp_bcast( eamp, ionode_id ) 
+        CALL mp_bcast( twfcollect, ionode_id )
 !
-        IF( ntyp_ > SIZE( na_ ) ) &
-          CALL errore(sub_name,' too many types ', ntyp_ )
-        IF( ( nkg_ > SIZE( ngwkl_ ) ) .OR. ( nkg_ > SIZE( ngwkg_ ) ) ) &
-          CALL errore(sub_name,' too many k points ', nkg_ )
-        IF( nacc_ > SIZE( acc_ ) ) &
-          CALL errore(sub_name,' too many accumulators ', nacc_ )
-!
-        IF( ntyp_ > SIZE( na ) ) &
-          CALL errore(sub_name,' wrong size for na ', ntyp_ )
-        IF( ( nkg_ > SIZE( ngwk_l ) ) .OR. ( nkg_ > SIZE( ngwk_g ) ) ) &
-          CALL errore(sub_name,' wrong size for ngwk_l or ngwk_g ', nkg_ )
-        IF( nacc_ > SIZE( acc ) ) &
-          CALL errore(sub_name,' wrong size for acc ', nacc_ )
+        IF( ntyp > SIZE( na ) ) &
+          CALL errore(sub_name,' too many types ', ntyp )
+        IF( nk_g > SIZE( ngwk_g ) ) &
+          CALL errore(sub_name,' too many k points ', nk_g )
+        IF( nacc > SIZE( acc ) ) &
+          CALL errore(sub_name,' too many accumulators ', nacc )
 !
         IF( ionode ) THEN
-          READ(iuni) (na_(i),i=1,ntyp_), (ngwkl_(i),i=1,nkg_), (ngwkg_(i),i=1,nkg_), (acc_(i),i=1,nacc_)
+          READ(iuni) (na(i),i=1,ntyp), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
         END IF
 
-        CALL mp_bcast( na_, ionode_id )
-        CALL mp_bcast( ngwkl_, ionode_id )
-        CALL mp_bcast( ngwkg_, ionode_id )
-        CALL mp_bcast( acc_, ionode_id )
+        CALL mp_bcast( na, ionode_id )
+        CALL mp_bcast( ngwk_g, ionode_id )
+        CALL mp_bcast( acc, ionode_id )
 
         IF( ionode ) THEN
           READ(iuni) t_, c_, tmp_dir_
@@ -464,69 +459,9 @@
         CALL mp_bcast( c_, ionode_id )
         CALL mp_bcast( tmp_dir_, ionode_id )
 
-        !  Variables acc, trutim, nfi, ekinc, tupf are ALWAYS overwritten on output 
-
-        acc(1:nacc_) = acc_(1:nacc_)
-        trutim       = trutim_
-        nfi          = nfi_
-        ekinc        = ekinc_
-        tupf         = tupf_
-        gamma_only   = gamma_only_
- 
-        IF( tovrw ) THEN
-          nfi = nfi_
-          nbeg = nbeg_
-          nr1 =  nr1_
-          nr2 =  nr2_
-          nr3 =  nr3_
-          nr1s =  nr1s_
-          nr2s =  nr2s_
-          nr3s =  nr3s_
-          ng_l = ngl_
-          ng_g = ngg_
-          nk_l = nkl_
-          nk_g = nkg_
-          nspin = nspin_
-          nbnd = nbnd_
-          nel = nel_
-          nelu = nelu_
-          neld = neld_
-          nat = nat_
-          ntyp = ntyp_
-          nacc = nacc_
-          trutim = trutim_
-          ecutwfc = ecutwfc_
-          ecutrho = ecutrho_
-          alat = alat_
-          ekinc = ekinc_
-          kunit =  kunit_
-          k1 =  k1_
-          k2 = k2_
-          k3 = k3_
-          nk1 = nk1_
-          nk2 = nk2_
-          nk3 = nk3_
-          dgauss = dgauss_
-          ngauss = ngauss_
-          lgauss = lgauss_
-          ntetra = ntetra_
-          ltetra =ltetra_
-          natomwfc =  natomwfc_
-          gcutm = gcutm_
-          gcuts = gcuts_
-          dual = dual_
-          doublegrid = doublegrid_
-          modenum = modenum_
-          lstres = lstres_
-          lforce = lforce_
-          na(1:ntyp_) = na_(1:ntyp_)
-          ngwk_l(1:nkg_) = ngwkl_(1:nkg_)
-          ngwk_g(1:nkg_) = ngwkg_(1:nkg_)
-          acc(1:nacc_) = acc_(1:nacc_)
-          title = t_
-          crystal = c_
-          tmp_dir = tmp_dir_
-        END IF
+        title = t_
+        crystal = c_
+        tmp_dir = tmp_dir_
 
       ELSE
 
@@ -645,13 +580,12 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_xdim1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_xdim1(iuni, tread, &
       npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs )
 
 ! .. Subroutine output:
 !    if tread is true then variables are read from file but the values are
 !      not copied on output variables
-!    if tovrw is true all variables are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -659,12 +593,9 @@
 !
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      INTEGER, INTENT(INOUT) :: npwx, nbndx
-      INTEGER, INTENT(INOUT) :: nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs
-      INTEGER :: npwx_, nbndx_
-      INTEGER :: nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
+      INTEGER, INTENT(OUT) :: npwx, nbndx
+      INTEGER, INTENT(OUT) :: nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs
       LOGICAL :: twrite_ 
       INTEGER :: ierr
       INTEGER :: idum
@@ -681,31 +612,18 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
+          READ(iuni) npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs
         END IF
-        CALL mp_bcast( npwx_, ionode_id )
-        CALL mp_bcast( nbndx_, ionode_id )
-        CALL mp_bcast( nrx1_, ionode_id )
-        CALL mp_bcast( nrx2_, ionode_id )
-        CALL mp_bcast( nrx3_, ionode_id )
-        CALL mp_bcast( nrxx_, ionode_id )
-        CALL mp_bcast( nrx1s_, ionode_id )
-        CALL mp_bcast( nrx2s_, ionode_id )
-        CALL mp_bcast( nrx3s_, ionode_id )
-        CALL mp_bcast( nrxxs_, ionode_id )
-
-        IF( tovrw ) THEN
-          npwx = npwx_
-          nbndx = nbndx_
-          nrx1 = nrx1_
-          nrx2 =  nrx2_
-          nrx3 =  nrx3_
-          nrxx =  nrxx_
-          nrx1s =  nrx1s_
-          nrx2s =  nrx2s_
-          nrx3s =  nrx3s_
-          nrxxs =  nrxxs_
-        END IF
+        CALL mp_bcast( npwx, ionode_id )
+        CALL mp_bcast( nbndx, ionode_id )
+        CALL mp_bcast( nrx1, ionode_id )
+        CALL mp_bcast( nrx2, ionode_id )
+        CALL mp_bcast( nrx3, ionode_id )
+        CALL mp_bcast( nrxx, ionode_id )
+        CALL mp_bcast( nrx1s, ionode_id )
+        CALL mp_bcast( nrx2s, ionode_id )
+        CALL mp_bcast( nrx3s, ionode_id )
+        CALL mp_bcast( nrxxs, ionode_id )
 
       ELSE
 
@@ -842,7 +760,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_symmetry1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_symmetry1(iuni, tread, &
       symm_type, sname, s, irt, nat, ftau, nsym, invsym, noinv )
 !
       USE io_global, ONLY: ionode, ionode_id
@@ -852,30 +770,24 @@
 ! .. Subroutine output:
 !    if tread is true then variables are read from file but the values are
 !      not copied on output variables
-!    if tovrw is true all variables are overvritten with values read from file
 !
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      CHARACTER(LEN=9), INTENT(INOUT) :: symm_type
-      CHARACTER(LEN=45), INTENT(INOUT) :: sname(:)
-      INTEGER, INTENT(INOUT) :: s(:,:,:)
-      INTEGER, INTENT(INOUT) :: irt(:,:)
-      INTEGER, INTENT(INOUT) :: ftau(:,:)
-      INTEGER, INTENT(INOUT) :: nsym
-      INTEGER, INTENT(INOUT) :: nat
-      LOGICAL, INTENT(INOUT) :: invsym
-      LOGICAL, INTENT(INOUT) :: noinv
+      CHARACTER(LEN=9),  INTENT(OUT) :: symm_type
+      CHARACTER(LEN=45), INTENT(OUT) :: sname(:)
+      INTEGER, INTENT(OUT) :: s(:,:,:)
+      INTEGER, INTENT(OUT) :: irt(:,:)
+      INTEGER, INTENT(OUT) :: ftau(:,:)
+      INTEGER, INTENT(OUT) :: nsym
+      INTEGER, INTENT(OUT) :: nat
+      LOGICAL, INTENT(OUT) :: invsym
+      LOGICAL, INTENT(OUT) :: noinv
 
-      LOGICAL :: noinv_, invsym_, twrite_
-      INTEGER :: nsym_, nat_, s_(3,3,48), ftau_(3,48)
-      CHARACTER(LEN=9) :: symm_type_
-      CHARACTER(LEN=45) :: sname_(48)
+      LOGICAL :: twrite_
       INTEGER :: i, j
       INTEGER :: idum, ierr
-      INTEGER, ALLOCATABLE :: irt_(:,:)
       CHARACTER(LEN=30) :: sub_name = ' read_restart_symmetry '
       CHARACTER(LEN=20) :: section_name = 'symmetry'
       CHARACTER(LEN=20) :: section_name_ 
@@ -891,57 +803,33 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) symm_type_, nsym_, invsym_, noinv_, nat_
+          READ(iuni) symm_type, nsym, invsym, noinv, nat
         END IF
-        CALL mp_bcast( symm_type_, ionode_id )
-        CALL mp_bcast( nsym_, ionode_id )
-        CALL mp_bcast( invsym_, ionode_id )
-        CALL mp_bcast( noinv_, ionode_id )
-        CALL mp_bcast( nat_, ionode_id )
-!
-! ...   Check temporary local variables
-        IF( SIZE(s_,3) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE(ftau_,2) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 2 )
-        IF( SIZE(sname_) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 3 )
+        CALL mp_bcast( symm_type, ionode_id )
+        CALL mp_bcast( nsym, ionode_id )
+        CALL mp_bcast( invsym, ionode_id )
+        CALL mp_bcast( noinv, ionode_id )
+        CALL mp_bcast( nat, ionode_id )
 !
 ! ...   Check dummy variables
-        IF( SIZE(s,3) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 4 )
-        IF( ( SIZE(irt,1) < nsym_ ) .OR. ( SIZE(irt,2) < nat_ ) ) &
+        IF( SIZE(s,3) < nsym ) &
+          CALL errore( sub_name, ' wrong size ', 1 )
+        IF( SIZE(ftau,2) < nsym ) &
+          CALL errore( sub_name, ' wrong size ', 2 )
+        IF( SIZE(sname) < nsym ) &
+          CALL errore( sub_name, ' wrong size ', 3 )
+        IF( ( SIZE(irt,1) < nsym ) .OR. ( SIZE(irt,2) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(ftau,2) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 6 )
-        IF( SIZE(sname) < nsym_ ) &
-          CALL errore( sub_name, ' wrong size ', 7 )
-!
-        ALLOCATE( irt_(nsym_, nat_) )
 !
         IF( ionode ) THEN
-          READ(iuni) (s_(:,:,i),i=1,nsym_), ((irt_(i,j),i=1,nsym_),j=1,nat_),  &
-            (ftau_(:,i),i=1,nsym_), (sname_(i),i=1,nsym_)
+          READ(iuni) (s(:,:,i),i=1,nsym), ((irt(i,j),i=1,nsym),j=1,nat),  &
+            (ftau(:,i),i=1,nsym), (sname(i),i=1,nsym)
         END IF
-        CALL mp_bcast( s_, ionode_id )
-        CALL mp_bcast( sname_(:), ionode_id )
-        CALL mp_bcast( ftau_, ionode_id )
-        CALL mp_bcast( irt_, ionode_id )
+        CALL mp_bcast( s, ionode_id )
+        CALL mp_bcast( sname(:), ionode_id )
+        CALL mp_bcast( ftau, ionode_id )
+        CALL mp_bcast( irt, ionode_id )
 !
-        IF( tovrw ) THEN
-          symm_type = symm_type_
-          nsym      = nsym_
-          invsym    = invsym_
-          noinv     = noinv_
-          nat       = nat_
-          s(:,:,1:nsym_) = s_(:,:,1:nsym_)
-          ftau(:,1:nsym_) = ftau_(:,1:nsym_)
-          irt(1:nsym_, 1:nat_) = irt_(1:nsym_, 1:nat_)
-          sname(1:nsym_) = sname_(1:nsym_)
-        END IF
-!
-        DEALLOCATE( irt_ )
-
       ELSE
 
         IF( ionode ) THEN
@@ -1260,7 +1148,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_pseudo1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_pseudo1(iuni, tread, &
       zmesh, xmin, dx, r, rab, vnl, chi, oc, rho_at, &
       rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
       nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
@@ -1270,7 +1158,6 @@
 ! .. Subroutine output:
 !    if tread is true then variables are read from file but the values are
 !      not copied on output variables
-!    if tovrw is true all variables are overvritten with values read from file
 !
 
       USE io_global, ONLY: ionode, ionode_id
@@ -1279,54 +1166,34 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
-      REAL(dbl), INTENT(INOUT) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(INOUT) :: r(0:), rab(0:), vnl(0:,0:), chi(0:,:)
-      REAL(dbl), INTENT(INOUT) :: oc(:), rho_at(0:), rho_atc(0:)
-      INTEGER, INTENT(INOUT) :: mesh, msh, nchi, lchi(:)
-      LOGICAL, INTENT(INOUT) :: numeric
-      REAL(dbl), INTENT(INOUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
-      INTEGER, INTENT(INOUT) :: nlc, nnl, lmax, lloc
-      LOGICAL, INTENT(INOUT) :: bhstype
-      REAL(dbl), INTENT(INOUT) :: dion(:,:), betar(0:,:), qqq(:,:), qfunc(0:,:,:)
-      REAL(dbl), INTENT(INOUT) :: qfcoef(:,:,:,:), rinner(:)
-      INTEGER, INTENT(INOUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(:)
-      LOGICAL, INTENT(INOUT) :: tvanp, okvan, newpseudo
-      INTEGER, INTENT(INOUT) :: iexch, icorr, igcx, igcc
-      LOGICAL, INTENT(INOUT) :: lsda
-      REAL(dbl), INTENT(INOUT) :: a_nlcc, b_nlcc, alpha_nlcc
-      LOGICAL, INTENT(INOUT) :: nlcc
-      CHARACTER(LEN=2), INTENT(INOUT) :: psd
+      REAL(dbl), INTENT(OUT) :: zmesh, xmin, dx
+      REAL(dbl), INTENT(OUT) :: r(0:), rab(0:), vnl(0:,0:), chi(0:,:)
+      REAL(dbl), INTENT(OUT) :: oc(:), rho_at(0:), rho_atc(0:)
+      INTEGER, INTENT(OUT) :: mesh, msh, nchi, lchi(:)
+      LOGICAL, INTENT(OUT) :: numeric
+      REAL(dbl), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
+      INTEGER, INTENT(OUT) :: nlc, nnl, lmax, lloc
+      LOGICAL, INTENT(OUT) :: bhstype
+      REAL(dbl), INTENT(OUT) :: dion(:,:), betar(0:,:), qqq(:,:), qfunc(0:,:,:)
+      REAL(dbl), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
+      INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(:)
+      LOGICAL, INTENT(OUT) :: tvanp, okvan, newpseudo
+      INTEGER, INTENT(OUT) :: iexch, icorr, igcx, igcc
+      LOGICAL, INTENT(OUT) :: lsda
+      REAL(dbl), INTENT(OUT) :: a_nlcc, b_nlcc, alpha_nlcc
+      LOGICAL, INTENT(OUT) :: nlcc
+      CHARACTER(LEN=2), INTENT(OUT) :: psd
      
 !
-      REAL(dbl) :: zmesh_, xmin_, dx_
-      REAL(dbl), ALLOCATABLE :: r_(:), rab_(:), vnl_(:,:), chi_(:,:)
-      REAL(dbl), ALLOCATABLE :: oc_(:), rho_at_(:), rho_atc_(:)
-      INTEGER, ALLOCATABLE :: lchi_(:)
-      INTEGER :: mesh_, msh_, nchi_
-      LOGICAL :: numeric_
-      REAL(dbl) :: cc_(2), alpc_(2), zp_, aps_(6,0:3), alps_(3,0:3), zv_
-      INTEGER :: nlc_, nnl_, lmax_, lloc_
-      LOGICAL :: bhstype_
-      REAL(dbl), ALLOCATABLE :: dion_(:,:), betar_(:,:), qqq_(:,:)
-      REAL(dbl), ALLOCATABLE :: qfunc_(:,:,:)
-      REAL(dbl), ALLOCATABLE :: qfcoef_(:,:,:,:), rinner_(:)
-      INTEGER, ALLOCATABLE :: lll_(:)
-      INTEGER :: nh_, nbeta_, kkbeta_, nqf_, nqlc_, ifqopt_, iver_(3)
-      LOGICAL :: tvanp_, okvan_, newpseudo_
-      INTEGER :: iexch_, icorr_, igcx_, igcc_
-      LOGICAL :: lsda_
-      REAL(dbl) :: a_nlcc_, b_nlcc_, alpha_nlcc_
-      LOGICAL :: nlcc_
-      CHARACTER(LEN=2) :: psd_
       LOGICAL :: twrite_
 !
       INTEGER :: idum, ierr
       CHARACTER(LEN=30) :: sub_name = ' read_restart_pseudo '
-      INTEGER :: mesh__, lloc__, nchi__, nbeta__, nqf__, nqlc__
       CHARACTER(LEN=20) :: section_name = 'pseudo'
       CHARACTER(LEN=20) :: section_name_
+
+      INTEGER :: mesh_, lloc_, nchi_, nbeta_, nqf_, nqlc_
 !
 ! ... Subroutine Body
 !
@@ -1339,200 +1206,129 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) zmesh_, xmin_, dx_, mesh_, msh_, nchi_, numeric_, zp_, zv_, nlc_, nnl_, lmax_, &
-            lloc_, bhstype_, nh_, nbeta_, kkbeta_, nqf_, nqlc_, ifqopt_, tvanp_, okvan_, newpseudo_, &
-            iexch_, icorr_, igcx_, igcc_, lsda_, a_nlcc_, b_nlcc_, alpha_nlcc_, nlcc_, psd_
+          READ(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, nlc, nnl, lmax, &
+            lloc, bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
+            iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
         END IF
 
-        CALL mp_bcast( zmesh_, ionode_id )
-        CALL mp_bcast( xmin_, ionode_id )
-        CALL mp_bcast( dx_, ionode_id )
-        CALL mp_bcast( mesh_, ionode_id )
-        CALL mp_bcast( msh_, ionode_id )
-        CALL mp_bcast( nchi_, ionode_id )
-        CALL mp_bcast( numeric_, ionode_id )
-        CALL mp_bcast( zp_, ionode_id )
-        CALL mp_bcast( zv_, ionode_id )
-        CALL mp_bcast( nlc_, ionode_id )
-        CALL mp_bcast( nnl_, ionode_id )
-        CALL mp_bcast( lmax_, ionode_id )
-        CALL mp_bcast( lloc_, ionode_id )
-        CALL mp_bcast( bhstype_, ionode_id )
-        CALL mp_bcast( nh_, ionode_id )
-        CALL mp_bcast( nbeta_, ionode_id )
-        CALL mp_bcast( kkbeta_, ionode_id )
-        CALL mp_bcast( nqf_, ionode_id )
-        CALL mp_bcast( nqlc_, ionode_id )
-        CALL mp_bcast( ifqopt_, ionode_id )
-        CALL mp_bcast( tvanp_, ionode_id )
-        CALL mp_bcast( okvan_, ionode_id )
-        CALL mp_bcast( newpseudo_, ionode_id )
-        CALL mp_bcast( iexch_, ionode_id )
-        CALL mp_bcast( icorr_, ionode_id )
-        CALL mp_bcast( igcx_, ionode_id )
-        CALL mp_bcast( igcc_, ionode_id )
-        CALL mp_bcast( lsda_, ionode_id )
-        CALL mp_bcast( a_nlcc_, ionode_id )
-        CALL mp_bcast( b_nlcc_, ionode_id )
-        CALL mp_bcast( alpha_nlcc_, ionode_id )
-        CALL mp_bcast( nlcc_, ionode_id )
-        CALL mp_bcast( psd_, ionode_id )
+        CALL mp_bcast( zmesh, ionode_id )
+        CALL mp_bcast( xmin, ionode_id )
+        CALL mp_bcast( dx, ionode_id )
+        CALL mp_bcast( mesh, ionode_id )
+        CALL mp_bcast( msh, ionode_id )
+        CALL mp_bcast( nchi, ionode_id )
+        CALL mp_bcast( numeric, ionode_id )
+        CALL mp_bcast( zp, ionode_id )
+        CALL mp_bcast( zv, ionode_id )
+        CALL mp_bcast( nlc, ionode_id )
+        CALL mp_bcast( nnl, ionode_id )
+        CALL mp_bcast( lmax, ionode_id )
+        CALL mp_bcast( lloc, ionode_id )
+        CALL mp_bcast( bhstype, ionode_id )
+        CALL mp_bcast( nh, ionode_id )
+        CALL mp_bcast( nbeta, ionode_id )
+        CALL mp_bcast( kkbeta, ionode_id )
+        CALL mp_bcast( nqf, ionode_id )
+        CALL mp_bcast( nqlc, ionode_id )
+        CALL mp_bcast( ifqopt, ionode_id )
+        CALL mp_bcast( tvanp, ionode_id )
+        CALL mp_bcast( okvan, ionode_id )
+        CALL mp_bcast( newpseudo, ionode_id )
+        CALL mp_bcast( iexch, ionode_id )
+        CALL mp_bcast( icorr, ionode_id )
+        CALL mp_bcast( igcx, ionode_id )
+        CALL mp_bcast( igcc, ionode_id )
+        CALL mp_bcast( lsda, ionode_id )
+        CALL mp_bcast( a_nlcc, ionode_id )
+        CALL mp_bcast( b_nlcc, ionode_id )
+        CALL mp_bcast( alpha_nlcc, ionode_id )
+        CALL mp_bcast( nlcc, ionode_id )
+        CALL mp_bcast( psd, ionode_id )
 
-        mesh__  = MAX( mesh_, 1 )
-        lloc__  = MAX( lloc_, 1 )
-        nchi__  = MAX( nchi_, 1 )
-        nbeta__ = MAX( nbeta_, 1 )
-        nqf__   = MAX( nqf_, 1 )
-        nqlc__  = MAX( nqlc_, 1 )
 
-! ...   Check dummy variables
-        IF( SIZE(r) < ( mesh__ + 1 ) ) &
-          CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE(rab) < ( mesh__ + 1 ) ) &
-          CALL errore( sub_name, ' wrong size ', 2 )
-        IF( ( SIZE(vnl,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc__ + 1 ) ) ) &
-          CALL errore( sub_name, ' wrong size ', 3 )
-        IF( ( SIZE(chi,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(chi,2) < nchi__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 4 )
-        IF( SIZE(oc) < nchi__ ) &
-          CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_at) < ( mesh__ + 1 ) ) &
-          CALL errore( sub_name, ' wrong size ', 6 )
-        IF( SIZE(rho_atc) < ( mesh__ + 1 ) ) &
-          CALL errore( sub_name, ' wrong size ', 7 )
-        IF( SIZE(lchi) < nchi__ ) &
-          CALL errore( sub_name, ' wrong size ', 8 )
-        IF( ( SIZE(dion,1) < nbeta__ ) .OR. ( SIZE(dion,2) < nbeta__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(betar,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 10 )
-        IF( ( SIZE(qqq,1) < nbeta__ ) .OR. ( SIZE(qqq,2) < nbeta__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 1 )
-        IF( ( SIZE(qfunc,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta__ ) .OR. &
-            ( SIZE(qfunc,3) < nbeta__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 11 )
-        IF( ( SIZE(qfcoef,1) < nqf__ ) .OR. ( SIZE(qfcoef,2) < nqlc__ ) .OR. &
-            ( SIZE(qfcoef,3) < nbeta__ ) .OR. ( SIZE(qfcoef,4) < nbeta__ ) ) &
-          CALL errore( sub_name, ' wrong size ', 12 )
-        IF( SIZE(rinner) < nqlc__ ) &
-          CALL errore( sub_name, ' wrong size ', 13 )
-        IF( SIZE(lll) < nbeta__ ) &
-          CALL errore( sub_name, ' wrong size ', 14 )
+        mesh_  = MAX( mesh, 1 )
+        lloc_  = MAX( lloc, 1 )
+        nchi_  = MAX( nchi, 1 )
+        nbeta_ = MAX( nbeta, 1 )
+        nqf_   = MAX( nqf, 1 )
+        nqlc_  = MAX( nqlc, 1 )
 
-        IF( mesh__ < 0 ) &
+        IF( mesh < 0 ) &
           CALL errore( sub_name, ' wrong value ', 1 )
-        IF( lloc__ < 0 ) &
+        IF( lloc < 0 ) &
           CALL errore( sub_name, ' wrong value ', 2 )
-        IF( nchi__ < 1 ) &
+        IF( nchi < 0 ) &
           CALL errore( sub_name, ' wrong value ', 3 )
-        IF( nbeta__ < 1 ) &
+        IF( nbeta < 0 ) &
           CALL errore( sub_name, ' wrong value ', 4 )
-        IF( nqf__ < 1 ) &
+        IF( nqf < 0 ) &
           CALL errore( sub_name, ' wrong value ', 5 )
-        IF( nqlc__ < 1 ) &
+        IF( nqlc < 0 ) &
           CALL errore( sub_name, ' wrong value ', 6 )
 
-        ALLOCATE ( r_(0:mesh__), rab_(0:mesh__), vnl_(0:mesh__,0:lloc__), chi_(0:mesh__,nchi__) )
-        ALLOCATE ( oc_(nchi__), rho_at_(0:mesh__), rho_atc_(0:mesh__) )
-        ALLOCATE ( lchi_(nchi__) )
-        ALLOCATE ( dion_(nbeta__,nbeta__), betar_(0:mesh__,nbeta__), qqq_(nbeta__,nbeta__) )
-        ALLOCATE ( qfunc_(0:mesh__,nbeta__,nbeta__) )
-        ALLOCATE ( qfcoef_(nqf__,nqlc__,nbeta__,nbeta__), rinner_(nqlc__) )
-        ALLOCATE ( lll_(nbeta__) )
+! ...   Check dummy variables
+        IF( SIZE(r) < ( mesh_ + 1 ) ) &
+          CALL errore( sub_name, ' wrong size ', 1 )
+        IF( SIZE(rab) < ( mesh_ + 1 ) ) &
+          CALL errore( sub_name, ' wrong size ', 2 )
+        IF( ( SIZE(vnl,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc_ + 1 ) ) ) &
+          CALL errore( sub_name, ' wrong size ', 3 )
+        IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 4 )
+        IF( SIZE(oc) < nchi_ ) &
+          CALL errore( sub_name, ' wrong size ', 5 )
+        IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
+          CALL errore( sub_name, ' wrong size ', 6 )
+        IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
+          CALL errore( sub_name, ' wrong size ', 7 )
+        IF( SIZE(lchi) < nchi_ ) &
+          CALL errore( sub_name, ' wrong size ', 8 )
+        IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 9 )
+        IF( ( SIZE(betar,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 10 )
+        IF( ( SIZE(qqq,1) < nbeta_ ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 1 )
+        IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
+            ( SIZE(qfunc,3) < nbeta_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 11 )
+        IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
+            ( SIZE(qfcoef,3) < nbeta_ ) .OR. ( SIZE(qfcoef,4) < nbeta_ ) ) &
+          CALL errore( sub_name, ' wrong size ', 12 )
+        IF( SIZE(rinner) < nqlc_ ) &
+          CALL errore( sub_name, ' wrong size ', 13 )
+        IF( SIZE(lll) < nbeta_ ) &
+          CALL errore( sub_name, ' wrong size ', 14 )
 
         IF( ionode ) THEN
-          READ(iuni) r_(0:mesh__), rab_(0:mesh__), vnl_(0:mesh__,0:lloc__), chi_(0:mesh__,1:nchi__), &
-            oc_(1:nchi__), rho_at_(0:mesh__), rho_atc_(0:mesh__), lchi_(1:nchi__)
-          READ(iuni) cc_(1:2), alpc_(1:2), aps_(1:6,0:3), alps_(1:3,0:3)
-          READ(iuni) dion_(1:nbeta__,1:nbeta__), betar_(0:mesh__,1:nbeta__), qqq_(1:nbeta__,1:nbeta__), &
-            qfunc_(0:mesh_, 1:nbeta__, 1:nbeta__), qfcoef_(1:nqf__, 1:nqlc__, 1:nbeta__, 1:nbeta__), &
-            rinner_(1:nqlc__), lll_(1:nbeta__), iver_(1:3)
+          READ(iuni) r(0:mesh_), rab(0:mesh_), vnl(0:mesh_,0:lloc_), chi(0:mesh_,1:nchi_), &
+            oc(1:nchi_), rho_at(0:mesh_), rho_atc(0:mesh_), lchi(1:nchi_)
+          READ(iuni) cc(1:2), alpc(1:2), aps(1:6,0:3), alps(1:3,0:3)
+          READ(iuni) dion(1:nbeta_,1:nbeta_), betar(0:mesh_,1:nbeta_), qqq(1:nbeta_,1:nbeta_), &
+            qfunc(0:mesh_, 1:nbeta_, 1:nbeta_), qfcoef(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
+            rinner(1:nqlc_), lll(1:nbeta_), iver(1:3)
         END IF
 
-        CALL mp_bcast( r_, ionode_id )
-        CALL mp_bcast( rab_, ionode_id )
-        CALL mp_bcast( vnl_, ionode_id )
-        CALL mp_bcast( chi_, ionode_id )
-        CALL mp_bcast( oc_, ionode_id )
-        CALL mp_bcast( rho_at_, ionode_id )
-        CALL mp_bcast( rho_atc_, ionode_id )
-        CALL mp_bcast( lchi_, ionode_id )
-        CALL mp_bcast( cc_, ionode_id )
-        CALL mp_bcast( alpc_, ionode_id )
-        CALL mp_bcast( aps_, ionode_id )
-        CALL mp_bcast( alps_, ionode_id )
-        CALL mp_bcast( dion_, ionode_id )
-        CALL mp_bcast( betar_, ionode_id )
-        CALL mp_bcast( qqq_, ionode_id )
-        CALL mp_bcast( qfunc_, ionode_id )
-        CALL mp_bcast( qfcoef_, ionode_id )
-        CALL mp_bcast( rinner_, ionode_id )
-        CALL mp_bcast( lll_, ionode_id )
-        CALL mp_bcast( iver_, ionode_id )
-
-        IF( tovrw ) THEN
-          zmesh     = zmesh_
-          xmin      = xmin_
-          dx        = dx_
-          mesh      = mesh_
-          msh       = msh_
-          nchi      = nchi_
-          numeric   = numeric_
-          zp        = zp_
-          zv        = zv_
-          nlc       = nlc_
-          nnl       = nnl_
-          psd       = psd_
-          lmax      = lmax_
-          lloc      = lloc_
-          bhstype   = bhstype_
-          nh        = nh_
-          nbeta     = nbeta_
-          kkbeta    = kkbeta_
-          nqf       = nqf_
-          nqlc      = nqlc_
-          ifqopt    = ifqopt_
-          tvanp     = tvanp_
-          okvan     = okvan_
-          newpseudo = newpseudo_
-          iexch     = iexch_
-          icorr     = icorr_
-          igcx      = igcx_
-          igcc      = igcc_
-          lsda      = lsda_
-          a_nlcc    = a_nlcc_
-          b_nlcc    = b_nlcc_
-          alpha_nlcc = alpha_nlcc_
-          nlcc      = nlcc_
-          r(0:mesh__) = r_(0:mesh__)
-          rab(0:mesh__) = rab_(0:mesh__)
-          vnl(0:mesh__,0:lloc__) = vnl_(0:mesh__,0:lloc__)
-          chi(0:mesh__,1:nchi__) = chi_(0:mesh__,1:nchi__)
-          oc(1:nchi__) = oc_(1:nchi__)
-          rho_at(0:mesh__) = rho_at_(0:mesh__)
-          rho_atc(0:mesh__) = rho_atc_(0:mesh__)
-          lchi(1:nchi__) = lchi_(1:nchi__)
-          cc(1:2) = cc_(1:2)
-          alpc(1:2) = alpc_(1:2)
-          aps(1:6,0:3) = aps_(1:6,0:3)
-          alps(1:3,0:3) = alps_(1:3,0:3)
-          dion(1:nbeta__,1:nbeta__) = dion_(1:nbeta__,1:nbeta__)
-          betar(0:mesh__,1:nbeta__) = betar_(0:mesh__,1:nbeta__)
-          qqq(1:nbeta__,1:nbeta__) = qqq_(1:nbeta__,1:nbeta__)
-          qfunc(0:mesh__, 1:nbeta__, 1:nbeta__) = qfunc_(0:mesh__, 1:nbeta__, 1:nbeta__)
-          qfcoef(1:nqf__, 1:nqlc__, 1:nbeta__, 1:nbeta__) = qfcoef_(1:nqf__, 1:nqlc__, 1:nbeta__, 1:nbeta__)
-          rinner(1:nqlc__) = rinner_(1:nqlc__)
-          lll(1:nbeta__) = lll_(1:nbeta__)
-          iver(1:3) = iver_(1:3)
-        END IF
-
-        DEALLOCATE ( r_, rab_, vnl_, chi_ )
-        DEALLOCATE ( oc_, rho_at_, rho_atc_ )
-        DEALLOCATE ( lchi_ )
-        DEALLOCATE ( dion_, betar_, qqq_ )
-        DEALLOCATE ( qfunc_ )
-        DEALLOCATE ( qfcoef_, rinner_ )
-        DEALLOCATE ( lll_ )
+        CALL mp_bcast( r, ionode_id )
+        CALL mp_bcast( rab, ionode_id )
+        CALL mp_bcast( vnl, ionode_id )
+        CALL mp_bcast( chi, ionode_id )
+        CALL mp_bcast( oc, ionode_id )
+        CALL mp_bcast( rho_at, ionode_id )
+        CALL mp_bcast( rho_atc, ionode_id )
+        CALL mp_bcast( lchi, ionode_id )
+        CALL mp_bcast( cc, ionode_id )
+        CALL mp_bcast( alpc, ionode_id )
+        CALL mp_bcast( aps, ionode_id )
+        CALL mp_bcast( alps, ionode_id )
+        CALL mp_bcast( dion, ionode_id )
+        CALL mp_bcast( betar, ionode_id )
+        CALL mp_bcast( qqq, ionode_id )
+        CALL mp_bcast( qfunc, ionode_id )
+        CALL mp_bcast( qfcoef, ionode_id )
+        CALL mp_bcast( rinner, ionode_id )
+        CALL mp_bcast( lll, ionode_id )
+        CALL mp_bcast( iver, ionode_id )
 
       ELSE
 
@@ -1555,7 +1351,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_pseudo3(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_pseudo3(iuni, tread, &
       generated, date_author, comment, psd, typ, tvanp, nlcc, dft, zp, etotps, &
       ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, els, lchi, oc, r, rab, &
       rho_atc, vloc, lll, kkbeta, beta, nd, dion, nqf, nqlc, rinner, qqq, &
@@ -1568,7 +1364,7 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw, tread
+      LOGICAL, INTENT(IN) :: tread
 !
       CHARACTER(LEN=80):: generated   ! 
       CHARACTER(LEN=80):: date_author ! Misc info
@@ -1609,44 +1405,6 @@
       REAL(dbl) :: rho_at(0:) !  rho_at(mesh)
 !
 !
-      CHARACTER(LEN=80):: generated_   ! 
-      CHARACTER(LEN=80):: date_author_ ! Misc info
-      CHARACTER(LEN=80):: comment_     !
-      CHARACTER(LEN=2) :: psd_       ! Element label
-      CHARACTER(LEN=20) :: typ_      ! Pseudo type ( NC or US )
-      LOGICAL  :: tvanp_             ! .true. if Ultrasoft
-      LOGICAL :: nlcc_               ! Non linear core corrections
-      CHARACTER(LEN=20) :: dft_      ! Exch-Corr type
-      REAL(dbl) :: zp_               ! z valence
-      REAL(dbl) :: etotps_           ! total energy
-      REAL(dbl) :: ecutwfc_          ! suggested cut-off for wfc
-      REAL(dbl) :: ecutrho_          ! suggested cut-off for rho
-      INTEGER :: nv_                 ! UPF file version number
-      INTEGER :: lmax_               ! maximum angular momentum component
-      INTEGER :: mesh_               ! number of point in the radial mesh
-      INTEGER :: nwfc_               ! number of wavefunctions
-      INTEGER :: nbeta_              ! number of projectors
-      CHARACTER(LEN=2), ALLOCATABLE :: els_(:)  ! els(nwfc)
-      INTEGER, ALLOCATABLE :: lchi_(:)   ! lchi(nwfc)
-      REAL(dbl), ALLOCATABLE :: oc_(:)   ! oc(nwfc)
-      REAL(dbl), ALLOCATABLE :: r_(:)    ! r(mesh)
-      REAL(dbl), ALLOCATABLE :: rab_(:)  ! rab(mesh)
-      REAL(dbl), ALLOCATABLE :: rho_atc_(:) ! rho_atc(mesh)
-      REAL(dbl), ALLOCATABLE :: vloc_(:)    ! vloc(mesh)
-      INTEGER, ALLOCATABLE :: lll_(:)       ! lll(nbeta)
-      INTEGER, ALLOCATABLE :: kkbeta_(:)    ! kkbeta(nbeta)
-      REAL(dbl), ALLOCATABLE :: beta_(:,:)  ! beta(mesh,nbeta)
-      INTEGER :: nd_
-      REAL(dbl), ALLOCATABLE :: dion_(:,:)  ! dion(nbeta,nbeta)
-      INTEGER :: nqf_
-      INTEGER :: nqlc_
-      REAL(dbl), ALLOCATABLE :: rinner_(:)  ! rinner(0:2*lmax)
-      REAL(dbl), ALLOCATABLE :: qqq_(:,:)   ! qqq(nbeta,nbeta)
-      REAL(dbl), ALLOCATABLE :: qfunc_(:,:,:) ! qfunc(mesh,nbeta,nbeta)
-      REAL(dbl), ALLOCATABLE :: qfcoef_(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-      REAL(dbl), ALLOCATABLE :: chi_(:,:) !  chi(mesh,nwfc)
-      REAL(dbl), ALLOCATABLE :: rho_at_(:) !  rho_at(mesh)
-!
 !
       LOGICAL :: twrite_
       INTEGER :: idum, ierr
@@ -1665,168 +1423,112 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) generated_, date_author_, comment_, psd_, typ_, tvanp_, nlcc_, dft_, &
-           zp_, etotps_, ecutwfc_, ecutrho_, nv_, lmax_, mesh_, nwfc_, nbeta_, nd_, nqf_, nqlc_
+          READ(iuni) generated, date_author, comment, psd, typ, tvanp, nlcc, dft, &
+           zp, etotps, ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, nd, nqf, nqlc
         END IF
-        CALL mp_bcast( generated_, ionode_id )
-        CALL mp_bcast( date_author_, ionode_id )
-        CALL mp_bcast( comment_, ionode_id )
-        CALL mp_bcast( psd_, ionode_id )
-        CALL mp_bcast( typ_, ionode_id )
-        CALL mp_bcast( tvanp_, ionode_id )
-        CALL mp_bcast( nlcc_, ionode_id )
-        CALL mp_bcast( dft_, ionode_id )
-        CALL mp_bcast( zp_, ionode_id )
-        CALL mp_bcast( etotps_, ionode_id )
-        CALL mp_bcast( ecutwfc_, ionode_id )
-        CALL mp_bcast( ecutrho_, ionode_id )
-        CALL mp_bcast( nv_, ionode_id )
-        CALL mp_bcast( lmax_, ionode_id )
-        CALL mp_bcast( mesh_, ionode_id )
-        CALL mp_bcast( nwfc_, ionode_id )
-        CALL mp_bcast( nbeta_, ionode_id )
-        CALL mp_bcast( nd_, ionode_id )
-        CALL mp_bcast( nqf_, ionode_id )
-        CALL mp_bcast( nqlc_, ionode_id )
+        CALL mp_bcast( generated, ionode_id )
+        CALL mp_bcast( date_author, ionode_id )
+        CALL mp_bcast( comment, ionode_id )
+        CALL mp_bcast( psd, ionode_id )
+        CALL mp_bcast( typ, ionode_id )
+        CALL mp_bcast( tvanp, ionode_id )
+        CALL mp_bcast( nlcc, ionode_id )
+        CALL mp_bcast( dft, ionode_id )
+        CALL mp_bcast( zp, ionode_id )
+        CALL mp_bcast( etotps, ionode_id )
+        CALL mp_bcast( ecutwfc, ionode_id )
+        CALL mp_bcast( ecutrho, ionode_id )
+        CALL mp_bcast( nv, ionode_id )
+        CALL mp_bcast( lmax, ionode_id )
+        CALL mp_bcast( mesh, ionode_id )
+        CALL mp_bcast( nwfc, ionode_id )
+        CALL mp_bcast( nbeta, ionode_id )
+        CALL mp_bcast( nd, ionode_id )
+        CALL mp_bcast( nqf, ionode_id )
+        CALL mp_bcast( nqlc, ionode_id )
 
-        IF( mesh_ < 0 ) &
+        IF( mesh < 0 ) &
           CALL errore( sub_name, ' wrong value ', 1 )
-        IF( nwfc_ < 1 ) &
+        IF( nwfc < 1 ) &
           CALL errore( sub_name, ' wrong value ', 2 )
-        IF( nbeta_ < 1 ) &
+        IF( nbeta < 1 ) &
           CALL errore( sub_name, ' wrong value ', 3 )
-        IF( nqf_ < 1 ) &
+        IF( nqf < 1 ) &
           CALL errore( sub_name, ' wrong value ', 4 )
-        IF( nqlc_ < 1 ) &
+        IF( nqlc < 1 ) &
           CALL errore( sub_name, ' wrong value ', 5 )
 
 
 ! ...   Check dummy variables
-        IF( SIZE(els) < nwfc_ ) &
+        IF( SIZE(els) < nwfc ) &
           CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE(lchi) < nwfc_ ) &
+        IF( SIZE(lchi) < nwfc ) &
           CALL errore( sub_name, ' wrong size ', 2 )
-        IF( SIZE(oc) < nwfc_ ) &
+        IF( SIZE(oc) < nwfc ) &
           CALL errore( sub_name, ' wrong size ', 3 )
-        IF( SIZE(r) < ( mesh_ + 1 ) ) &
+        IF( SIZE(r) < ( mesh + 1 ) ) &
           CALL errore( sub_name, ' wrong size ', 4 )
-        IF( SIZE(rab) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rab) < ( mesh + 1 ) ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_atc) < ( mesh + 1 ) ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF(  SIZE(vloc) < ( mesh_ + 1 ) ) &
+        IF(  SIZE(vloc) < ( mesh + 1 ) ) &
           CALL errore( sub_name, ' wrong size ', 7 )
-        IF( SIZE(lll) < nbeta_ ) &
+        IF( SIZE(lll) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 8 )
-        IF( SIZE(kkbeta) < nbeta_ ) &
+        IF( SIZE(kkbeta) < nbeta ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE(beta,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(beta,2) < nbeta_ ) ) &
+        IF( ( SIZE(beta,1) < ( mesh + 1 ) ) .OR. ( SIZE(beta,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
-        IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
+        IF( ( SIZE(dion,1) < nbeta ) .OR. ( SIZE(dion,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 11 )
-        IF( SIZE(rinner) < nqlc_ ) &
+        IF( SIZE(rinner) < nqlc ) &
           CALL errore( sub_name, ' wrong size ', 12 )
-        IF( ( SIZE(qqq,1) < nbeta_ ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
+        IF( ( SIZE(qqq,1) < nbeta ) .OR. ( SIZE(qqq,2) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 13 )
-        IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
-            ( SIZE(qfunc,3) < nbeta_ ) ) &
+        IF( ( SIZE(qfunc,1) < ( mesh + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
+            ( SIZE(qfunc,3) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 14 )
-        IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
-            ( SIZE(qfcoef,3) < nbeta_ ) .OR. ( SIZE(qfcoef,4) < nbeta_ ) ) &
+        IF( ( SIZE(qfcoef,1) < nqf ) .OR. ( SIZE(qfcoef,2) < nqlc ) .OR. &
+            ( SIZE(qfcoef,3) < nbeta ) .OR. ( SIZE(qfcoef,4) < nbeta ) ) &
           CALL errore( sub_name, ' wrong size ', 15 )
-        IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nwfc_ ) ) &
+        IF( ( SIZE(chi,1) < ( mesh + 1 ) ) .OR. ( SIZE(chi,2) < nwfc ) ) &
           CALL errore( sub_name, ' wrong size ', 16 )
-        IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
+        IF( SIZE(rho_at) < ( mesh + 1 ) ) &
           CALL errore( sub_name, ' wrong size ', 17 )
-
-        ALLOCATE( els_( nwfc_ ),  lchi_(nwfc_), oc_(nwfc_), r_(0:mesh_), rab_(0:mesh_), &
-            rho_atc_(0:mesh_), vloc_(0:mesh_), lll_(1:nbeta_), kkbeta_(1:nbeta_), &
-            beta_(0:mesh_,1:nbeta_), &
-            dion_(1:nbeta_,1:nbeta_), rinner_(1:nqlc_), qqq_(1:nbeta_,1:nbeta_), &
-            qfunc_(0:mesh_, 1:nbeta_, 1:nbeta_), qfcoef_(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
-            chi_(0:mesh_, nwfc_), rho_at_(0:mesh_) &
-        )
- 
 
         IF( ionode ) THEN
 !           
-          READ(iuni) els_(1:nwfc_), lchi_(nwfc_), oc_(nwfc_), r_(0:mesh_), rab_(0:mesh_), &
-            rho_atc_(0:mesh_), vloc_(0:mesh_), lll_(1:nbeta_), kkbeta_(1:nbeta_), &
-            beta_(0:mesh_,1:nbeta_), &
-            dion_(1:nbeta_,1:nbeta_), rinner_(1:nqlc_), qqq_(1:nbeta_,1:nbeta_), &
-            qfunc_(0:mesh_, 1:nbeta_, 1:nbeta_), qfcoef_(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), &
-            chi_(0:mesh_, nwfc_), rho_at_(0:mesh_) 
+          READ(iuni) els(1:nwfc), lchi(nwfc), oc(nwfc), r(0:mesh), rab(0:mesh), &
+            rho_atc(0:mesh), vloc(0:mesh), lll(1:nbeta), kkbeta(1:nbeta), &
+            beta(0:mesh,1:nbeta), &
+            dion(1:nbeta,1:nbeta), rinner(1:nqlc), qqq(1:nbeta,1:nbeta), &
+            qfunc(0:mesh, 1:nbeta, 1:nbeta), qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), &
+            chi(0:mesh, nwfc), rho_at(0:mesh) 
 
           READ(iuni) idum
           READ(iuni) idum
 
         END IF
 
-        CALL mp_bcast( els_(1:nwfc_), ionode_id ) 
-        CALL mp_bcast( lchi_(nwfc_), ionode_id ) 
-        CALL mp_bcast( oc_(nwfc_), ionode_id ) 
-        CALL mp_bcast( r_(0:mesh_), ionode_id ) 
-        CALL mp_bcast( rab_(0:mesh_), ionode_id ) 
-        CALL mp_bcast( rho_atc_(0:mesh_), ionode_id ) 
-        CALL mp_bcast( vloc_(0:mesh_), ionode_id ) 
-        CALL mp_bcast( lll_(1:nbeta_), ionode_id ) 
-        CALL mp_bcast( kkbeta_(1:nbeta_), ionode_id ) 
-        CALL mp_bcast( beta_(0:mesh_,1:nbeta_), ionode_id ) 
-        CALL mp_bcast( dion_(1:nbeta_,1:nbeta_), ionode_id ) 
-        CALL mp_bcast( rinner_(1:nqlc_), ionode_id ) 
-        CALL mp_bcast( qqq_(1:nbeta_,1:nbeta_), ionode_id ) 
-        CALL mp_bcast( qfunc_(0:mesh_, 1:nbeta_, 1:nbeta_), ionode_id )
-        CALL mp_bcast( qfcoef_(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_), ionode_id ) 
-        CALL mp_bcast( chi_(0:mesh_, nwfc_), ionode_id ) 
-        CALL mp_bcast( rho_at_(0:mesh_), ionode_id )
+        CALL mp_bcast( els(1:nwfc), ionode_id ) 
+        CALL mp_bcast( lchi(nwfc), ionode_id ) 
+        CALL mp_bcast( oc(nwfc), ionode_id ) 
+        CALL mp_bcast( r(0:mesh), ionode_id ) 
+        CALL mp_bcast( rab(0:mesh), ionode_id ) 
+        CALL mp_bcast( rho_atc(0:mesh), ionode_id ) 
+        CALL mp_bcast( vloc(0:mesh), ionode_id ) 
+        CALL mp_bcast( lll(1:nbeta), ionode_id ) 
+        CALL mp_bcast( kkbeta(1:nbeta), ionode_id ) 
+        CALL mp_bcast( beta(0:mesh,1:nbeta), ionode_id ) 
+        CALL mp_bcast( dion(1:nbeta,1:nbeta), ionode_id ) 
+        CALL mp_bcast( rinner(1:nqlc), ionode_id ) 
+        CALL mp_bcast( qqq(1:nbeta,1:nbeta), ionode_id ) 
+        CALL mp_bcast( qfunc(0:mesh, 1:nbeta, 1:nbeta), ionode_id )
+        CALL mp_bcast( qfcoef(1:nqf, 1:nqlc, 1:nbeta, 1:nbeta), ionode_id ) 
+        CALL mp_bcast( chi(0:mesh, nwfc), ionode_id ) 
+        CALL mp_bcast( rho_at(0:mesh), ionode_id )
 !
-!
-        generated   = generated_
-        date_author = date_author_
-        comment     = comment_
-        psd         = psd_
-        typ         = typ_
-        tvanp       = tvanp_
-        nlcc        = nlcc_
-        dft         = dft_
-        zp          = zp_
-        etotps      = etotps_
-        ecutwfc     = ecutwfc_
-        ecutrho     = ecutrho_
-        nv          = nv_
-        lmax        = lmax_
-        mesh        = mesh_
-        nwfc        = nwfc_
-        nbeta       = nbeta_
-        nd          = nd_
-        nqf         = nqf_
-        nqlc        = nqlc_
-
-        IF( tovrw ) THEN
-
-          els(1:nwfc_) = els_(1:nwfc_)
-          lchi(nwfc_)  = lchi_(nwfc_)
-          oc(nwfc_)    = oc_(nwfc_)
-          r(0:mesh_)   = r_(0:mesh_)
-          rab(0:mesh_) = rab_(0:mesh_)
-          rho_atc(0:mesh_) = rho_atc_(0:mesh_)
-          vloc(0:mesh_) = vloc_(0:mesh_)
-          lll(1:nbeta_) = lll_(1:nbeta_)
-          kkbeta(1:nbeta_) = kkbeta_(1:nbeta_)
-          beta(0:mesh_,1:nbeta_) = beta_(0:mesh_,1:nbeta_)
-          dion(1:nbeta_,1:nbeta_) = dion_(1:nbeta_,1:nbeta_)
-          rinner(1:nqlc_) = rinner_(1:nqlc_)
-          qqq(1:nbeta_,1:nbeta_) = qqq_(1:nbeta_,1:nbeta_)
-          qfunc(0:mesh_, 1:nbeta_, 1:nbeta_) = qfunc_(0:mesh_, 1:nbeta_, 1:nbeta_)
-          qfcoef(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_) = qfcoef_(1:nqf_, 1:nqlc_, 1:nbeta_, 1:nbeta_)
-          chi(0:mesh_, nwfc_) = chi_(0:mesh_, nwfc_)
-          rho_at(0:mesh_) = rho_at_(0:mesh_)
-
-        END IF
-
-        DEALLOCATE( els_,  lchi_, oc_, r_, rab_, rho_atc_, vloc_, lll_, kkbeta_, &
-            beta_, dion_, rinner_, qqq_, qfunc_, qfcoef_, chi_, rho_at_ )
-
       ELSE
 
         READ(iuni) idum
@@ -1974,7 +1676,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE read_restart_gvec1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_gvec1(iuni, tread, &
       ng, bi1, bi2, bi3, b1, b2, b3, tmill, mill )
 
       USE io_global, ONLY: ionode, ionode_id
@@ -1985,11 +1687,9 @@
 !    if tread is true then variables are read from file but values are
 !      not copied on output variables
 !    if tmill is true "mill" array is read from file
-!    if tovrw is true all variables other than "mill" are overvritten with values read from file
 !
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       LOGICAL, INTENT(IN) :: tmill
       INTEGER,   INTENT(OUT) :: ng
@@ -1998,10 +1698,6 @@
       INTEGER,   INTENT(OUT) :: mill(:,:)
 
       INTEGER :: i, j
-      INTEGER :: ng_
-      REAL(dbl) :: b1_(3), b2_(3), b3_(3)
-      REAL(dbl) :: bi1_(3), bi2_(3), bi3_(3)
-      INTEGER, ALLOCATABLE :: mill_(:,:)
       LOGICAL :: twrite_, tmill_
       INTEGER :: ierr
       INTEGER :: idum
@@ -2020,28 +1716,28 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) ng_, tmill_
-          READ(iuni) bi1_, bi2_, bi3_, b1_, b2_, b3_
+          READ(iuni) ng, tmill_
+          READ(iuni) bi1, bi2, bi3, b1, b2, b3
         END IF
-        CALL mp_bcast( ng_, ionode_id )
+        CALL mp_bcast( ng, ionode_id )
         CALL mp_bcast( tmill_, ionode_id )
-        CALL mp_bcast( bi1_, ionode_id )
-        CALL mp_bcast( bi2_, ionode_id )
-        CALL mp_bcast( bi3_, ionode_id )
-        CALL mp_bcast( b1_, ionode_id )
-        CALL mp_bcast( b2_, ionode_id )
-        CALL mp_bcast( b3_, ionode_id )
+        CALL mp_bcast( bi1, ionode_id )
+        CALL mp_bcast( bi2, ionode_id )
+        CALL mp_bcast( bi3, ionode_id )
+        CALL mp_bcast( b1, ionode_id )
+        CALL mp_bcast( b2, ionode_id )
+        CALL mp_bcast( b3, ionode_id )
 
         IF( tmill .AND. .NOT. tmill_ ) &
           CALL errore(sub_name, ' mill indexes not present in restart file ', 1)
 
         IF( tmill ) THEN
 
-          IF( ( SIZE( mill, 2) < ng_ ) .OR. ( SIZE( mill, 1 ) < 3 ) ) &
+          IF( ( SIZE( mill, 2) < ng ) .OR. ( SIZE( mill, 1 ) < 3 ) ) &
             CALL errore(sub_name, ' mill array too small ', 1)
 
           IF( ionode ) THEN
-            READ(iuni) ( ( mill( i, j ), i = 1, 3 ), j = 1, ng_ )
+            READ(iuni) ( ( mill( i, j ), i = 1, 3 ), j = 1, ng )
           END IF
           CALL mp_bcast( mill, ionode_id )
 
@@ -2053,16 +1749,6 @@
 
         END IF
   
-        IF( tovrw ) THEN
-          ng  = ng_
-          bi1 = bi1_
-          bi2 = bi2_
-          bi3 = bi3_
-          b1  = b1_
-          b2  = b2_
-          b3  = b3_
-        END IF
-
       ELSE
 
         IF( ionode ) THEN
@@ -2186,20 +1872,18 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_gkvec1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_gkvec1(iuni, tread, &
       ik, nk, ngwk, xk, wk, tetra, isk )
 
 ! .. Subroutine output:
 !    if tread is true then variables are read from file but values are
 !      not copied on output variables
-!    if tovrw is true all variables are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       ! ... INTEGER, INTENT(INOUT) :: igk(:)
       INTEGER,   INTENT(OUT) :: ngwk, ik, nk, tetra(4), isk
@@ -2207,10 +1891,6 @@
       REAL(dbl), INTENT(OUT) :: wk
 
       INTEGER :: i
-      INTEGER :: ngwk_, ik_, nk_, tetra_(4), isk_
-      REAL(dbl) :: xk_(3)
-      REAL(dbl) :: wk_
-      INTEGER, ALLOCATABLE :: igk_(:)
 
       INTEGER :: idum, nigk
       LOGICAL :: twrite_
@@ -2229,37 +1909,21 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) ik_, nk_, ngwk_, tetra_( 1 : 4 ), isk_
-          READ(iuni) ( xk_ ( i ), i = 1, 3 ), wk_
+          READ(iuni) ik, nk, ngwk, tetra( 1 : 4 ), isk
+          READ(iuni) ( xk ( i ), i = 1, 3 ), wk
         END IF
-        CALL mp_bcast( ngwk_, ionode_id )
-        CALL mp_bcast( tetra_, ionode_id )
-        CALL mp_bcast( ik_, ionode_id )
-        CALL mp_bcast( isk_, ionode_id )
-        CALL mp_bcast( nk_, ionode_id )
-        CALL mp_bcast( xk_, ionode_id )
-        CALL mp_bcast( wk_, ionode_id )
-
-        ! .. ALLOCATE( igk_( ngwk_ ) )
+        CALL mp_bcast( ngwk, ionode_id )
+        CALL mp_bcast( tetra, ionode_id )
+        CALL mp_bcast( ik, ionode_id )
+        CALL mp_bcast( isk, ionode_id )
+        CALL mp_bcast( nk, ionode_id )
+        CALL mp_bcast( xk, ionode_id )
+        CALL mp_bcast( wk, ionode_id )
 
         IF( ionode ) THEN
           READ(iuni) idum ! .. (igk_(i),i=1,ngwk_)
         END IF
         ! .. CALL mp_bcast( igk_, ionode_id )
- 
-        IF( tovrw ) THEN
-          ngwk = ngwk_
-          ik   = ik_
-          nk   = nk_
-          tetra = tetra_
-          isk  = isk_
-          xk   = xk_
-          wk   = wk_
-          ! ... nigk = MIN( SIZE(igk), ngwk_ )
-          ! ... igk(1:nigk) = igk_(1:nigk)
-        END IF
-
-        ! ... DEALLOCATE( igk_ )
 
       ELSE
 
@@ -2395,20 +2059,18 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_cell1( iuni, tovrw, tread, &
+    SUBROUTINE read_restart_cell1( iuni, tread, &
       ibrav, celldm, ht0, htm, htm2, htvel, xnosp, xnos0, xnosm, xnosm2)
 
 ! .. Subroutine output:
 !    if tread is true then the following variables are overwritten on output
 !      ht0, htm, htm2, htvel, xnosp, xnos0, xnosm, xnosm2
-!    if tovrw is true all variables are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       INTEGER,   INTENT(OUT) :: ibrav
       REAL(dbl), INTENT(OUT) :: celldm(6)
@@ -2422,10 +2084,6 @@
       REAL(dbl), INTENT(OUT) :: xnosm2(3,3)
 
       INTEGER :: i
-      INTEGER :: ibrav_
-      REAL(dbl) :: ht0_(3,3), htm_(3,3), htm2_(3,3), htvel_(3,3)
-      REAL(dbl) :: xnosp_(3,3), xnos0_(3,3), xnosm_(3,3), xnosm2_(3,3)
-      REAL(dbl) :: celldm_(6)
       LOGICAL :: twrite_
       INTEGER :: ierr
       INTEGER :: idum
@@ -2443,34 +2101,20 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) ibrav_, ( celldm_(i), i = 1, 6 )
-          READ(iuni) ht0_, htm_, htm2_, htvel_
-          READ(iuni) xnosp_, xnos0_, xnosm_, xnosm2_
+          READ(iuni) ibrav, ( celldm(i), i = 1, 6 )
+          READ(iuni) ht0, htm, htm2, htvel
+          READ(iuni) xnosp, xnos0, xnosm, xnosm2
         END IF
-        CALL mp_bcast( ibrav_, ionode_id )
-        CALL mp_bcast( celldm_, ionode_id )
-        CALL mp_bcast( ht0_, ionode_id )
-        CALL mp_bcast( htm_, ionode_id )
-        CALL mp_bcast( htm2_, ionode_id )
-        CALL mp_bcast( htvel_, ionode_id )
-        CALL mp_bcast( xnosp_, ionode_id )
-        CALL mp_bcast( xnos0_, ionode_id )
-        CALL mp_bcast( xnosm_, ionode_id )
-        CALL mp_bcast( xnosm2_, ionode_id )
-
-        ht0    = ht0_
-        htm    = htm_
-        htm2   = htm2_
-        htvel  = htvel_
-        xnosp  = xnosp_
-        xnos0  = xnos0_
-        xnosm  = xnosm_
-        xnosm2 = xnosm2_
-
-        IF( tovrw ) THEN
-          ibrav  = ibrav_
-          celldm = celldm_
-        END IF
+        CALL mp_bcast( ibrav, ionode_id )
+        CALL mp_bcast( celldm, ionode_id )
+        CALL mp_bcast( ht0, ionode_id )
+        CALL mp_bcast( htm, ionode_id )
+        CALL mp_bcast( htm2, ionode_id )
+        CALL mp_bcast( htvel, ionode_id )
+        CALL mp_bcast( xnosp, ionode_id )
+        CALL mp_bcast( xnos0, ionode_id )
+        CALL mp_bcast( xnosm, ionode_id )
+        CALL mp_bcast( xnosm2, ionode_id )
 
       ELSE
 
@@ -2657,14 +2301,13 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_ions1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_ions1(iuni, tread, &
       label, tscal, stau0, svel0, staum, svelm, taui, fion, &
       cdmi, nat, ntyp, ityp, na, mass, xnosp, xnos0, xnosm, xnosm2)
 
 ! .. Subroutine output:
 !    if tread is true then the following variables are overwritten on output
 !      tscal, stau0, svel0, staum, svelm, taui, fion, cdmi, xnosp, xnos0, xnosm, xnosm2
-!    if tovrw is true all variables are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -2673,10 +2316,9 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       LOGICAL, INTENT(OUT) :: tscal
-      CHARACTER(LEN=*), INTENT(INOUT) :: label(:)
+      CHARACTER(LEN=*), INTENT(OUT) :: label(:)
       REAL(dbl), INTENT(OUT) :: stau0(:,:)
       REAL(dbl), INTENT(OUT) :: svel0(:,:)
       REAL(dbl), INTENT(OUT) :: staum(:,:)
@@ -2684,10 +2326,10 @@
       REAL(dbl), INTENT(OUT) :: taui(:,:)
       REAL(dbl), INTENT(OUT) :: fion(:,:)
       REAL(dbl), INTENT(OUT) :: cdmi(:)
-      INTEGER, INTENT(INOUT) :: nat
-      INTEGER, INTENT(INOUT) :: ntyp
-      INTEGER, INTENT(INOUT) :: ityp(:)
-      INTEGER, INTENT(INOUT) :: na(:)
+      INTEGER, INTENT(OUT) :: nat
+      INTEGER, INTENT(OUT) :: ntyp
+      INTEGER, INTENT(OUT) :: ityp(:)
+      INTEGER, INTENT(OUT) :: na(:)
       REAL(dbl), INTENT(INOUT) :: mass(:)
       REAL(dbl), INTENT(OUT) :: xnosp
       REAL(dbl), INTENT(OUT) :: xnos0
@@ -2695,16 +2337,9 @@
       REAL(dbl), INTENT(OUT) :: xnosm2
 
       INTEGER   :: i, j
-      INTEGER   :: nat_, ntyp_, ntau
-      INTEGER   :: na_(nsx)
-      INTEGER   :: ityp_(natx)
-      REAL(dbl) :: mass_(nsx)
-      REAL(dbl) :: cdmi_(3)
-      REAL(dbl) :: xnosp_, xnos0_, xnosm_, xnosm2_
       CHARACTER(LEN=4) :: label_(nsx)
 
-      REAL(dbl), ALLOCATABLE :: stmp_(:,:)
-      LOGICAL :: twrite_, tscal_
+      LOGICAL :: twrite_
       INTEGER :: ierr
       INTEGER :: idum
       CHARACTER(LEN=30) :: sub_name = ' read_restart_ions '
@@ -2722,65 +2357,54 @@
       IF( tread ) THEN
 
         IF( ionode ) THEN
-          READ(iuni) nat_, ntyp_, tscal_
+          READ(iuni) nat, ntyp, tscal
         END IF
-        CALL mp_bcast(nat_, ionode_id)
-        CALL mp_bcast(ntyp_, ionode_id)
-        CALL mp_bcast(tscal_, ionode_id)
-        tscal = tscal_
+        CALL mp_bcast(nat, ionode_id)
+        CALL mp_bcast(ntyp, ionode_id)
+        CALL mp_bcast(tscal, ionode_id)
 
-        IF( ntyp_ > SIZE( na_ ) ) &
-            CALL errore( ' read_restart_ions ', ' too many types ', ntyp_ )
-        IF( nat_ > SIZE( ityp_ ) ) &
-          CALL errore( ' read_restart_ions ', ' too many atoms ', nat_ )
+        IF( ntyp > SIZE( na ) ) &
+            CALL errore( ' read_restart_ions ', ' too many types ', ntyp )
+        IF( nat > SIZE( ityp ) ) &
+          CALL errore( ' read_restart_ions ', ' too many atoms ', nat )
+        IF( SIZE( label ) < ntyp .OR. SIZE( label_ ) < ntyp ) &
+          CALL errore( sub_name, ' wrong size for label ', 1 )
+        IF( SIZE( mass ) < ntyp ) &
+          CALL errore( sub_name, ' wrong size for mass ', 4 )
 
         IF( ionode ) THEN
-          READ(iuni) ( ityp_(i), i = 1, nat_  ), ( na_(i), i = 1, ntyp_ ), ( label_(i), i = 1, ntyp_ )
-          READ(iuni) ( mass_(i), i = 1, ntyp_ )
+          READ(iuni) ( ityp(i), i = 1, nat  ), ( na(i), i = 1, ntyp ), ( label_(i), i = 1, ntyp )
+          READ(iuni) ( mass(i), i = 1, ntyp )
         END IF
-        CALL mp_bcast( ityp_  , ionode_id )
-        CALL mp_bcast( na_    , ionode_id )
+        CALL mp_bcast( ityp  , ionode_id )
+        CALL mp_bcast( na    , ionode_id )
         CALL mp_bcast( label_ , ionode_id )
-        CALL mp_bcast( mass_  , ionode_id )
- 
+        CALL mp_bcast( mass  , ionode_id )
 
-        IF( SIZE( label ) < ntyp_ ) &
-          CALL errore( sub_name, ' wrong size ', 1 )
-        IF( SIZE( ityp ) < nat_ ) &
-          CALL errore( sub_name, ' wrong size ', 2 )
-        IF( SIZE( na ) < ntyp_ ) &
-          CALL errore( sub_name, ' wrong size ', 3 )
-        IF( SIZE( mass ) < ntyp_ ) &
-          CALL errore( sub_name, ' wrong size ', 4 )
-        IF( ( SIZE( stau0, 1 ) < 3 ) .OR. ( SIZE( stau0, 2 ) < nat_ ) ) &
+        label( 1 : ntyp ) = label_( 1 : ntyp )
+
+        IF( ( SIZE( stau0, 1 ) < 3 ) .OR. ( SIZE( stau0, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 5 )
-        IF( ( SIZE( svel0, 1 ) < 3 ) .OR. ( SIZE( svel0, 2 ) < nat_ ) ) &
+        IF( ( SIZE( svel0, 1 ) < 3 ) .OR. ( SIZE( svel0, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 6 )
-        IF( ( SIZE( staum, 1 ) < 3 ) .OR. ( SIZE( staum, 2 ) < nat_ ) ) &
+        IF( ( SIZE( staum, 1 ) < 3 ) .OR. ( SIZE( staum, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 7 )
-        IF( ( SIZE( svelm, 1 ) < 3 ) .OR. ( SIZE( svelm, 2 ) < nat_ ) ) &
+        IF( ( SIZE( svelm, 1 ) < 3 ) .OR. ( SIZE( svelm, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 8 )
-        IF( ( SIZE( taui, 1 ) < 3 ) .OR. ( SIZE( taui, 2 ) < nat_ ) ) &
+        IF( ( SIZE( taui, 1 ) < 3 ) .OR. ( SIZE( taui, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 9 )
-        IF( ( SIZE( fion, 1 ) < 3 ) .OR. ( SIZE( fion, 2 ) < nat_ ) ) &
+        IF( ( SIZE( fion, 1 ) < 3 ) .OR. ( SIZE( fion, 2 ) < nat ) ) &
           CALL errore( sub_name, ' wrong size ', 10 )
         IF( SIZE( cdmi ) < 3 ) &
           CALL errore( sub_name, ' wrong size ', 11 )
 
-        ALLOCATE( stmp_( 3, nat_ ) )
         IF( ionode ) THEN
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          stau0 = stmp_
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          svel0 = stmp_
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          staum = stmp_
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          svelm = stmp_
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          taui = stmp_
-          READ(iuni) ( ( stmp_(i,j), i = 1, 3 ), j = 1, nat_ )
-          fion = stmp_
+          READ(iuni) ( ( stau0(i,j), i = 1, 3 ), j = 1, nat )
+          READ(iuni) ( ( svel0(i,j), i = 1, 3 ), j = 1, nat )
+          READ(iuni) ( ( staum(i,j), i = 1, 3 ), j = 1, nat )
+          READ(iuni) ( ( svelm(i,j), i = 1, 3 ), j = 1, nat )
+          READ(iuni) ( ( taui(i,j), i = 1, 3 ), j = 1, nat )
+          READ(iuni) ( ( fion(i,j), i = 1, 3 ), j = 1, nat )
         END IF
         CALL mp_bcast(stau0, ionode_id)
         CALL mp_bcast(svel0, ionode_id)
@@ -2788,33 +2412,17 @@
         CALL mp_bcast(svelm, ionode_id)
         CALL mp_bcast(taui, ionode_id)
         CALL mp_bcast(fion, ionode_id)
-        DEALLOCATE( stmp_ )
 
         IF( ionode ) THEN
-          READ(iuni) ( cdmi_(i), i = 1, 3 )
-          READ(iuni) xnosp_, xnos0_, xnosm_, xnosm2_
+          READ(iuni) ( cdmi(i), i = 1, 3 )
+          READ(iuni) xnosp, xnos0, xnosm, xnosm2
         END IF
-        CALL mp_bcast(cdmi_, ionode_id)
-        CALL mp_bcast(xnosp_, ionode_id)
-        CALL mp_bcast(xnos0_, ionode_id)
-        CALL mp_bcast(xnosm_, ionode_id)
-        CALL mp_bcast(xnosm2_, ionode_id)
+        CALL mp_bcast(cdmi, ionode_id)
+        CALL mp_bcast(xnosp, ionode_id)
+        CALL mp_bcast(xnos0, ionode_id)
+        CALL mp_bcast(xnosm, ionode_id)
+        CALL mp_bcast(xnosm2, ionode_id)
   
-        cdmi = cdmi_
-        xnosp = xnosp_
-        xnos0 = xnos0_
-        xnosm = xnosm_
-        xnosm2 = xnosm2_
-
-        IF( tovrw ) THEN
-          nat = nat_
-          ntyp = ntyp_
-          mass( 1:ntyp ) = mass_
-          na( 1:ntyp ) = na_
-          ityp( 1:nat ) = ityp_( 1:nat )
-          label( 1:ntyp ) = label_
-        END IF
-
       ELSE
 
         IF( ionode ) THEN
@@ -3040,7 +2648,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_electrons1( iuni, tovrw, tread, &
+    SUBROUTINE read_restart_electrons1( iuni, tread, &
       occ, occm, tocc, lambda, lambdam, ldim, tlam, nbnd, ispin, nspin, ik, nk, nel, nelu, &
       neld, xnosp, xnos0, xnosm, xnosm2, ef, teig, eig, weig)
 
@@ -3050,8 +2658,6 @@
 !    if tocc is true then "occ" and "occm" are overwritten
 !    if tlam is true then "lambda" and "lambdam" are overwritten
 !    if teig is true then "eig" and "weig" are overwritten
-!    if tovrw is true all variables but occ, occm, lambda, lambdam, eig, weig,
-!      are overvritten with values read from file
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -3060,7 +2666,6 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       REAL(dbl), INTENT(OUT) :: occ(:)
       REAL(dbl), INTENT(OUT) :: occm(:)
@@ -3084,13 +2689,8 @@
       LOGICAL, INTENT(IN) :: tocc, tlam, teig
       REAL(dbl), INTENT(OUT) :: ef
 
-      INTEGER :: i,j,k,l, nsiz
+      INTEGER :: i, j, k, l
       LOGICAL :: tocc_, tlam_, teig_
-      REAL(dbl) :: nel_
-      INTEGER :: nbnd_, ispin_, nspin_, ik_, nk_, nelu_, neld_, ldim_
-      REAL(dbl) :: xnosp_, xnos0_, xnosm_, xnosm2_, ef_
-      REAL(dbl), ALLOCATABLE :: otmp_(:)
-      REAL(dbl), ALLOCATABLE :: ltmp_(:,:)
       INTEGER :: idum
 
       LOGICAL :: twrite_
@@ -3108,17 +2708,17 @@
 
       IF( tread ) THEN
 
-        IF( ionode ) READ(iuni) nbnd_, ispin_, nspin_, ik_, nk_, nel_, nelu_, neld_, ldim_
+        IF( ionode ) READ(iuni) nbnd, ispin, nspin, ik, nk, nel, nelu, neld, ldim
 
-        CALL mp_bcast( nbnd_, ionode_id)
-        CALL mp_bcast( ispin_, ionode_id)
-        CALL mp_bcast( nspin_, ionode_id)
-        CALL mp_bcast( ik_, ionode_id)
-        CALL mp_bcast( nk_, ionode_id)
-        CALL mp_bcast( nel_, ionode_id)
-        CALL mp_bcast( nelu_, ionode_id)
-        CALL mp_bcast( neld_, ionode_id)
-        CALL mp_bcast( ldim_, ionode_id)
+        CALL mp_bcast( nbnd, ionode_id)
+        CALL mp_bcast( ispin, ionode_id)
+        CALL mp_bcast( nspin, ionode_id)
+        CALL mp_bcast( ik, ionode_id)
+        CALL mp_bcast( nk, ionode_id)
+        CALL mp_bcast( nel, ionode_id)
+        CALL mp_bcast( nelu, ionode_id)
+        CALL mp_bcast( neld, ionode_id)
+        CALL mp_bcast( ldim, ionode_id)
 
 !
 ! ..    Manage occ and occm
@@ -3131,20 +2731,16 @@
 
         IF( tocc ) THEN
 
-          nsiz = MIN( nbnd_, SIZE( occ ) )
-          ALLOCATE( otmp_( nbnd_) )
+          IF( nbnd >  SIZE( occ ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for occ ', 1)
+          IF( nbnd >  SIZE( occm ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for occm ', 1)
 
-          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
-          CALL mp_bcast( otmp_, ionode_id )
+          IF( ionode ) READ(iuni) ( occ(i), i = 1, nbnd )
+          CALL mp_bcast( occ, ionode_id )
 
-          occ( 1 : nsiz ) = otmp_( 1 : nsiz )
-
-          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
-          CALL mp_bcast( otmp_, ionode_id )
-
-          occm( 1 : nsiz ) = otmp_( 1 : nsiz )
-
-          DEALLOCATE( otmp_ )
+          IF( ionode ) READ(iuni) ( occm(i), i = 1, nbnd )
+          CALL mp_bcast( occm, ionode_id )
 
         ELSE
 
@@ -3163,20 +2759,16 @@
 
         IF( tlam ) THEN
 
-          nsiz = MIN( ldim_, SIZE( lambda, 1 ) )
-          ALLOCATE( ltmp_( ldim_, ldim_ ) )
+          IF( ldim > SIZE( lambda, 1 ) .OR. ldim > SIZE( lambda, 2 ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for lambda ', 1)
+          IF( ldim > SIZE( lambdam, 1 ) .OR. ldim > SIZE( lambdam, 2 ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for lambdam ', 1)
 
-          IF( ionode ) READ(iuni) ( ( ltmp_(l,i), l = 1, ldim_ ), i = 1, ldim_ )
-          CALL mp_bcast( ltmp_, ionode_id)
+          IF( ionode ) READ(iuni) ( ( lambda(l,i), l = 1, ldim ), i = 1, ldim )
+          CALL mp_bcast( lambda, ionode_id)
 
-          lambda( 1:nsiz, 1:nsiz ) = ltmp_( 1:nsiz, 1:nsiz )
-
-          IF( ionode ) READ(iuni) ( ( ltmp_(l,i), l = 1, ldim_ ), i = 1, ldim_ )
-          CALL mp_bcast( ltmp_, ionode_id)
-
-          lambdam( 1:nsiz, 1:nsiz ) = ltmp_( 1:nsiz, 1:nsiz )
-
-          DEALLOCATE( ltmp_ )
+          IF( ionode ) READ(iuni) ( ( lambdam(l,i), l = 1, ldim ), i = 1, ldim )
+          CALL mp_bcast( lambdam, ionode_id)
 
         ELSE
 
@@ -3185,20 +2777,13 @@
 
         END IF
 
-
-        IF( ionode ) READ(iuni) xnosp_, xnos0_, xnosm_, xnosm2_
-        CALL mp_bcast( xnosp_, ionode_id)
-        CALL mp_bcast( xnos0_, ionode_id)
-        CALL mp_bcast( xnosm_, ionode_id)
-        CALL mp_bcast( xnosm2_, ionode_id)
-  
-        IF( ionode ) READ(iuni) ef_
-        CALL mp_bcast( ef_, ionode_id )
-
-        xnosp  = xnosp_
-        xnos0  = xnos0_
-        xnosm  = xnosm_
-        xnosm2 = xnosm2_
+        IF( ionode ) READ(iuni) xnosp, xnos0, xnosm, xnosm2
+        IF( ionode ) READ(iuni) ef
+        CALL mp_bcast( xnosp, ionode_id)
+        CALL mp_bcast( xnos0, ionode_id)
+        CALL mp_bcast( xnosm, ionode_id)
+        CALL mp_bcast( xnosm2, ionode_id)
+        CALL mp_bcast( ef, ionode_id )
 
         IF( ionode ) READ(iuni) teig_
         CALL mp_bcast( teig_, ionode_id)
@@ -3208,20 +2793,16 @@
 
         IF( teig ) THEN
 
-          nsiz = MIN( nbnd_, SIZE( eig ) )
-          ALLOCATE( otmp_( nbnd_ ) )
+          IF( nbnd > SIZE( eig ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for eig ', 1)
+          IF( nbnd > SIZE( weig ) ) &
+            CALL errore( ' read_restart_electrons ',' wrong dimensions for weig ', 1)
 
-          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
-          CALL mp_bcast( otmp_, ionode_id )
+          IF( ionode ) READ(iuni) ( eig(i), i = 1, nbnd )
+          CALL mp_bcast( eig, ionode_id )
 
-          eig( 1:nsiz ) = otmp_( 1:nsiz )
-
-          IF( ionode ) READ(iuni) ( otmp_(i), i = 1, nbnd_ )
-          CALL mp_bcast( otmp_, ionode_id )
-
-          weig( 1:nsiz ) = otmp_( 1:nsiz )
-
-          DEALLOCATE( otmp_ )
+          IF( ionode ) READ(iuni) ( weig(i), i = 1, nbnd )
+          CALL mp_bcast( weig, ionode_id )
 
         ELSE
 
@@ -3230,21 +2811,6 @@
 
         END IF
   
-        IF( tovrw ) THEN
-
-          nbnd  = nbnd_
-          ispin = ispin_
-          nspin = nspin_
-          ik    = ik_
-          nk    = nk_ 
-          nel   = nel_
-          nelu  = nelu_
-          neld  = neld_
-          ldim  = ldim_
-          ef    = ef_
-
-        END IF
-
       ELSE
 
         IF( ionode ) THEN
@@ -3521,8 +3087,8 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_wfc1(iuni, tovrw, tread, &
-      ik, nk, kunit, ispin, nspin, scal, wf0, t0, wfm, tm, ngw, nbnd, igl, tigl, ngwl )
+    SUBROUTINE read_restart_wfc1(iuni, tread, &
+      ik, nk, kunit, ispin, nspin, scal, wf0, t0, wfm, tm, ngw, nbnd, igl, ngwl )
 !
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_put, mp_bcast, mp_max, mp_get
@@ -3533,29 +3099,26 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       COMPLEX(dbl), INTENT(INOUT) :: wf0(:,:)
       COMPLEX(dbl), INTENT(INOUT) :: wfm(:,:)
-      INTEGER, INTENT(INOUT) :: ngw, nbnd, ik, nk, kunit, ispin, nspin
-      REAL(dbl), INTENT(INOUT) :: scal
+      INTEGER, INTENT(IN) :: ik, nk, kunit
+      INTEGER, INTENT(OUT) :: ngw, nbnd, ispin, nspin
+      REAL(dbl), INTENT(OUT) :: scal
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
-      LOGICAL, INTENT(INOUT) :: t0, tm, tigl
-
-! ... If tigl is true then use the global to local mapping stored in the file
+      LOGICAL, INTENT(INOUT) :: t0, tm
 
       INTEGER :: i, j, idum
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
       LOGICAL :: t0_, tm_
-      INTEGER :: ngw_, nbnd_, ik_, nk_, ispin_, nspin_, kunit_
       LOGICAL :: twrite_
       INTEGER :: ierr
 
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx, igwx_
+      INTEGER :: ik_, nk_, kunit_
       INTEGER :: npool, ipmask( nproc ), ipdest
-      REAL(dbl) :: scal_
       CHARACTER(LEN=20) :: section_name = 'wfc'
       CHARACTER(LEN=20) :: section_name_
 !
@@ -3568,53 +3131,17 @@
 
       IF( tread ) THEN
 
-        IF( ionode ) READ(iuni) ngw_, nbnd_, ik_, nk_, kunit_, ispin_, nspin_, scal_
+        IF( ionode ) READ(iuni) ngw, nbnd, ik_, nk_, kunit_, ispin, nspin, scal
         IF( ionode ) READ(iuni) igwx_
-        CALL mp_bcast( ngw_, ionode_id )
-        CALL mp_bcast( nbnd_, ionode_id )
+        CALL mp_bcast( ngw, ionode_id )
+        CALL mp_bcast( nbnd, ionode_id )
         CALL mp_bcast( ik_, ionode_id )
         CALL mp_bcast( nk_, ionode_id )
         CALL mp_bcast( kunit_, ionode_id )
-        CALL mp_bcast( ispin_, ionode_id )
-        CALL mp_bcast( nspin_, ionode_id )
-        CALL mp_bcast( scal_, ionode_id )
+        CALL mp_bcast( ispin, ionode_id )
+        CALL mp_bcast( nspin, ionode_id )
+        CALL mp_bcast( scal, ionode_id )
         CALL mp_bcast( igwx_, ionode_id )
-
-        IF( tovrw ) THEN
-
-! ...     Use values read from the file
-          ngw   = ngw_
-          nbnd  = nbnd_
-          ik    = ik_
-          nk    = nk_
-          kunit = kunit_
-          ispin = ispin_
-          nspin = nspin_ 
-
-        ELSE
-
-          ! IF( ngw_ /= ngw ) THEN
-          !   WRITE(6,fmt="(3X,'W: read_restart_wfc, ngw changed' )")
-          !   WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") ngw_, ngw
-          ! END IF
-          IF( nbnd_ /= nbnd ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_wfc, nbnd changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") nbnd_, nbnd
-          END IF
-          IF( nspin_ /= nspin ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_wfc, nspin changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") nspin_, nspin
-          END IF
-          IF( nk_ /= nk ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_wfc, nk changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") nk_, nk
-          END IF
-          IF( kunit_ /= kunit ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_wfc, kunit changed' )")
-            WRITE(6,fmt="(3X,'W: old = ',I10,' new = ',I10 )") kunit_, kunit
-          END IF
-
-        END IF
 
         ! set working variables for k point index (ikt) and k points number (nkt)
         ikt = ik
@@ -3692,7 +3219,7 @@
 
         ! ... WRITE(6,*) ' #### ', igwx_, igwx, ngwl, iks, ikt, ike ! DEBUG
 
-        DO j = 1, nbnd_
+        DO j = 1, nbnd
 
           IF( t0_ .AND. t0 ) THEN
 
@@ -3701,19 +3228,15 @@
             IF( ionode ) READ(iuni) ( wtmp(i), i=1,igwx_ )
             IF( igwx > igwx_ ) wtmp( (igwx_ + 1) : igwx ) = 0.0d0
 
-            IF( j <=  nbnd ) THEN
-
-              IF( npool > 1 ) THEN
-                IF( ipdest /= ionode_id ) THEN
-                  CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
-                END IF
-                IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                  CALL splitwf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
-                END IF
-              ELSE
-                CALL splitwf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
+            IF( npool > 1 ) THEN
+              IF( ipdest /= ionode_id ) THEN
+                CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
               END IF
-
+              IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+                CALL splitwf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+              END IF
+            ELSE
+              CALL splitwf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
             END IF
 
             DEALLOCATE( wtmp )
@@ -3725,10 +3248,6 @@
           END IF
 
         END DO
-
-        IF( ( nbnd_ > nbnd ) .AND. ( restart_module_verbosity > 100 ) ) THEN
-          WRITE(6,fmt="(3X,'W: read_restart_wfc, not all wf0 read from restart ' )")
-        END IF
 
 !
 ! ...   Here read wave function at time t-dt
@@ -3739,7 +3258,7 @@
         IF( .NOT. ( tm_ .AND. tm ) .AND. ( restart_module_verbosity > 1000 ) ) &
           WRITE(6,fmt="(3X,'W: read_restart_wfc, wfm not read from restart ' )")
 
-        DO j = 1, nbnd_
+        DO j = 1, nbnd
 
           IF( tm_ .AND. tm ) THEN
 
@@ -3748,19 +3267,15 @@
             IF( ionode ) READ(iuni) ( wtmp(i), i=1,igwx_ )
             IF( igwx > igwx_ ) wtmp( (igwx_ + 1) : igwx ) = 0.0d0
 
-            IF( j <=  nbnd ) THEN
-
-              IF( npool > 1 ) THEN
-                IF( ipdest /= ionode_id ) THEN
-                  CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
-                END IF
-                IF( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                  CALL splitwf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
-                END IF
-              ELSE
-                CALL splitwf(wfm(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
+            IF( npool > 1 ) THEN
+              IF( ipdest /= ionode_id ) THEN
+                CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
               END IF
-
+              IF( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+                CALL splitwf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+              END IF
+            ELSE
+              CALL splitwf(wfm(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
             END IF
 
             DEALLOCATE( wtmp )
@@ -3773,27 +3288,22 @@
 
         END DO
 
-        IF( ( nbnd_ > nbnd ) .AND. ( restart_module_verbosity > 100 ) ) THEN
-          WRITE(6,fmt="(3X,'W: read_restart_wfc, not all wfm read from restart ' )")
-        END IF
-
 ! ...   this is to inform the calling subroutine on what has been read
 !
         t0   = t0_
         tm   = tm_
-        scal = scal_
 
       ELSE
 
         IF( ionode ) THEN
-          READ(iuni) idum, nbnd_
+          READ(iuni) idum, nbnd
           READ(iuni) idum
           READ(iuni) idum    ! t0
-          DO i = 1, nbnd_
+          DO i = 1, nbnd
             READ(iuni) idum
           END DO
           READ(iuni) idum    ! t1
-          DO i = 1, nbnd_
+          DO i = 1, nbnd
             READ(iuni) idum
           END DO
         END IF
@@ -3939,7 +3449,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_charge1(iuni, tovrw, tread, &
+    SUBROUTINE read_restart_charge1(iuni, tread, &
       rhog, tr, vg, tv, ng, ispin, nspin, igl, ngl)
 
       USE mp_wave
@@ -3949,13 +3459,13 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
       COMPLEX(dbl), INTENT(OUT) :: rhog(:)
       COMPLEX(dbl), INTENT(OUT) :: vg(:)
-      INTEGER, INTENT(INOUT) :: ispin, nspin, ng, ngl, igl(:)
+      INTEGER, INTENT(IN) :: ngl, igl(:)
+      INTEGER, INTENT(OUT) :: ispin, nspin, ng
       LOGICAL, INTENT(INOUT) :: tr, tv
-      INTEGER :: i, j, k, is, ng_, nspin_, ispin_
+      INTEGER :: i, j, k, is
       LOGICAL :: tr_, tv_
       COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
 
@@ -3974,18 +3484,10 @@
 
       IF( tread ) THEN
 
-        IF( ionode ) READ(iuni) ng_, ispin_, nspin_
-        CALL mp_bcast( ng_, ionode_id )
-        CALL mp_bcast( ispin_, ionode_id )
-        CALL mp_bcast( nspin_, ionode_id )
-
-        IF( .NOT. tovrw ) THEN
-          IF( nspin /= nspin_ ) &
-            CALL errore(' read_restart_charge ',' wrong spin ', 1)  
-          IF( ng_ /= ng ) THEN
-            WRITE(6,fmt="(3X,'W: read_restart_charge, number of G-vecs changed ' )")
-          END IF
-        END IF
+        IF( ionode ) READ(iuni) ng, ispin, nspin
+        CALL mp_bcast( ng, ionode_id )
+        CALL mp_bcast( ispin, ionode_id )
+        CALL mp_bcast( nspin, ionode_id )
 
         IF( ionode ) READ(iuni) tr_
         CALL mp_bcast( tr_, ionode_id )
@@ -3994,11 +3496,8 @@
           CALL errore(' read_restart_charge ',' rho not present in restart ', 1)  
 
         IF( tr_ ) THEN
-          ALLOCATE( vtmp( MAX(ng_, ng) ) )
-          IF( ionode ) THEN
-            READ(iuni) (vtmp(i),i=1,ng_)
-            IF( ng_ < ng ) vtmp( ng_+1 : ng ) = 0.0d0
-          END IF
+          ALLOCATE( vtmp( ng ) )
+          IF( ionode ) READ(iuni) (vtmp(i),i=1,ng)
           CALL splitwf(rhog(:), vtmp, ngl, igl, mpime, nproc, ionode_id)
           DEALLOCATE( vtmp )
         ELSE
@@ -4012,22 +3511,12 @@
           CALL errore(' read_restart_charge ',' V not present in restart ', 1)  
 
         IF( tv_ ) THEN
-          ALLOCATE( vtmp( MAX(ng_, ng) ) )
-          IF( ionode ) THEN
-            READ(iuni) (vtmp(i),i=1,ng_)
-            IF( ng_ < ng ) vtmp( ng_+1 : ng ) = 0.0d0
-          END IF
+          ALLOCATE( vtmp( ng ) )
+          IF( ionode ) READ(iuni) (vtmp(i),i=1,ng)
           CALL splitwf(vg(:), vtmp, ngl, igl, mpime, nproc, ionode_id)
           DEALLOCATE( vtmp )
         ELSE
           IF( ionode ) READ(iuni) idum
-        END IF
-  
-
-        IF( tovrw ) THEN
-          ng    = ng_
-          ispin = ispin_
-          nspin = nspin_
         END IF
 
       ELSE
@@ -4166,7 +3655,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_template1(iuni, tovrw, tread)
+    SUBROUTINE read_restart_template1(iuni, tread)
 
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
@@ -4175,7 +3664,6 @@
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: iuni
-      LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
 
       LOGICAL :: twrite_
@@ -4190,8 +3678,6 @@
 
       IF( tread ) THEN
         IF( ionode ) THEN
-        END IF
-        IF( tovrw ) THEN
         END IF
       ELSE
         IF( ionode ) THEN

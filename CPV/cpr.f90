@@ -52,13 +52,16 @@
 !
       use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
             tfor, tvlocw, trhow
-      use core
-      use cvan
+      use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
+            tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
+
+      use core, only: nlcc
+      use cvan, only: nvb, nhx, nhsa
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
-      use elct
-      use gvec
-      use gvecs
-      use gvecb
+      use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
+      use gvec, only: tpiba2, ng
+      use gvecs, only: ngs
+      use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
@@ -68,11 +71,10 @@
       use cell_base, only: h, hold, deth, wmass
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
-      use pseu
-      use timex_mod
-      use work1
-      use work_box
-      use work2
+      use pseu, only: vps, rhops
+      use work1, only: wrk1
+      use work_box, only: qv
+      use work2, only: wrk2
       use io_global, ONLY: io_global_start
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
@@ -87,15 +89,15 @@
       use restart
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
-      use psfiles, only: psfile, pseudo_dir
-      use input_cp, only: iosys2
+      use io_files, only: psfile, pseudo_dir
+      use input_cp, only: iosys
 !
       implicit none
 !
 ! control variables
 !
-      logical trane, twall, tbump, tnosee, tortho, tnosep
-      logical tsde, tranp(nsx), tsdp, tcp, tcap, tnoseh, thdiag
+      logical twall, tbump
+      logical thdiag
       logical tfirst, tlast
 !
 ! wavefunctions
@@ -164,7 +166,7 @@
       real(kind=8) ispin_(nbndxx)
       integer iforceh(3,3)
 !
-      integer ndr, ndw, nbeg, maxit, nomore
+      integer maxit
 !
 ! work variables
 !
@@ -176,7 +178,7 @@
      &       tempp, xnhe0, vnhp, xnhp0, xnhpm, verl1, verl2, verl3,     &
      &       fccc, xnhem, vnhe, anor, savee, saveh, savep, press,       &
      &       enthal, epot, xnhpp, xnhep, epre, enow, tps, econs, econt, &
-     &       ampre,  fricp, greasp, eps, qnp, tempw, qne,               &
+     &       fricp, greasp, eps, qnp, tempw, qne,               &
      &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
      &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
@@ -193,7 +195,7 @@
 !
       integer ibrav, k, ii, l, m
       real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
-     &     factp, temp1, temp2, temph, greash, qnh, randy, amprp(nsx) 
+     &     factp, temp1, temp2, temph, greash, qnh, randy
 
       logical :: twmass
 !
@@ -220,27 +222,13 @@
 !     ====  1 pico              = 1.e-12                            ====
 !     ==================================================================
 
-      factp   = 3.3989*0.00001
+      factp   = 3.3989 * 0.00001
 !
 !     ==================================================================
 !     read input from standard input (unit 5)
 !     ==================================================================
-      if( .false. ) then
-      call iosys      (nbeg,ndr,ndw,nomore,iprint                       &
-     &                ,delt,emass,emaec                                 &
-     &                ,tsde,frice,grease,twall                          &
-     &                ,tortho,eps,maxit                                 &
-     &                ,trane,ampre,tranp,amprp                          &
-     &                ,tfor,tsdp,fricp,greasp                           &
-     &                ,tcp,tcap,tolp,trhor,trhow,tvlocw                 &
-     &                ,tnosep,qnp,tempw                                 &
-     &                ,tnosee,qne,ekincw                                &
-     &                ,tpre,thdyn,thdiag,twmass,wmass                   &
-     &                ,frich,greash,press                               &
-     &                ,tnoseh,qnh,temph                                 &
-     &                ,celldm, ibrav, tau0, ecutw, ecut, iforce)
-      else
-      call iosys2( nbeg , ndr , ndw , nomore , iprint                       &
+
+      call iosys( nbeg , ndr , ndw , nomore , iprint                       &
      & , delt , emass , emaec  , tsde , frice , grease , twall              &
      & , tortho , eps , maxit , trane , ampre , tranp , amprp                &
      & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
@@ -257,21 +245,21 @@
       allocate( ispin( nx ) )
       ispin( :   ) = 0.0d0
       ispin( 1:n ) = ispin_( 1:n )
-      endif
+
 !     ==================================================================
 !
 !     general variables
 !
-      tfirst=.true.
-      tlast =.false.
-      nacc=5
+      tfirst = .true.
+      tlast  = .false.
+      nacc = 5
 !
-      gausp=delt*sqrt(tempw/factem)
-      twodel=2.d0*delt
-      dt2=delt*delt
-      dt2by2=.5d0*dt2
-      dt2bye=dt2/emass
-      dt2hbe=dt2by2/emass
+      gausp = delt * sqrt(tempw/factem)
+      twodel = 2.d0 * delt
+      dt2 = delt * delt
+      dt2by2 = .5d0 * dt2
+      dt2bye = dt2/emass
+      dt2hbe = dt2by2/emass
 ! 
 !     read pseudopotentials and wavefunctions
 ! 
@@ -281,18 +269,15 @@
 !     initialize g-vectors, fft grids
 !     ==================================================================
 
-      call init(ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,tfirst,  &
-           twmass,thdiag,iforceh,tau0,taus,delt)
+      call init( ibrav, celldm, ecut, ecutw, tranp, amprp, ndr, nbeg, tfirst,  &
+           twmass, thdiag, iforceh, tau0, taus, delt )
 
       write(6,*) ' out from init'
 !
 !     more initialization requiring atomic positions
 !
-      nas=0
-      do is=1,nsp
-         nas=max(nas,na(is))
-      end do
-      if(iprsta.gt.1) then
+      nas = MAXVAL( na( 1 : nsp ) )
+      if( iprsta > 1 ) then
          write(6,*) ' tau0 '
          write(6,'(3f14.8)') (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
       endif
@@ -633,7 +618,7 @@
 !     
       else
 !======================================================================
-!       nbeg = 0 or nbeg = 1 
+!       nbeg = 0, nbeg = 1 or nbeg = 2
 !======================================================================
 
             call readfile_new                                           &
@@ -706,7 +691,8 @@
       endif
 !         
       fccc=1.
-      nomore=nomore+nfi
+      !
+      nomore = nomore + nfi
 !
       call cofmass(taus,cdm0)
 !
