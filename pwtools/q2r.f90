@@ -38,12 +38,18 @@ program q2r
   !
   read (5,input)
   !
+  nr1=0
+  nr2=0
+  nr3=0
   !
   ! check input
   !
-  if (nr1.gt.nrx1) call error ('q2r',' nr1.gt.nrx1',1)
-  if (nr2.gt.nrx2) call error ('q2r',' nr2.gt.nrx2',1)
-  if (nr3.gt.nrx3) call error ('q2r',' nr3.gt.nrx3',1)
+  if (nr1 > nrx1) call error ('q2r',' nr1 too big, increase nrx1',nrx1)
+  if (nr2 > nrx2) call error ('q2r',' nr2 too big, increase nrx2',nrx2)
+  if (nr3 > nrx3) call error ('q2r',' nr3 too big, increase nrx3',nrx3)
+  if (nr1 < 1) call error ('q2r',' nr1 wrong or missing',1)
+  if (nr2 < 1) call error ('q2r',' nr2 wrong or missing',1)
+  if (nr3 < 1) call error ('q2r',' nr3 wrong or missing',1)
   !
   !
   ! copy nrX -> nr(X)
@@ -121,7 +127,7 @@ program q2r
            nqtot=nqtot+1
         else
            write (*,'(3i4)') (m(i),i=1,3)
-           call error('init',' nc already filled',1)
+           call error('init',' nc already filled: wrong q grid or wrong nr',1)
         end if
      end do
   end do
@@ -129,11 +135,9 @@ program q2r
   ! Check grid dimension
   !
   if (nqtot .eq. nr1*nr2*nr3) then
-     write (6,'(/5x,a,i4)')                                        &
-          &   ' q-space grid ok, #points = ',nqtot
+     write (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nqtot
   else
-     write (6,'(/5x,a)') ' missing q-point(s)!'
-     stop
+     call error('init',' missing q-point(s)!',1)
   end if
   !
   ! dyn.mat. FFT
@@ -157,7 +161,7 @@ program q2r
   open(unit=2,file=fild,status='unknown',form='formatted')
   write(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
   do nt = 1,ntyp
-     write(2,*) nt,' ''',atm(nt),''' ',amass(nt)
+     write(2,*) nt," '",atm(nt),"' ",amass(nt)
   end do
   do na=1,nat
      write(2,'(2i5,3f15.7)') na,ityp(na),(tau(j,na),j=1,3)
@@ -191,7 +195,7 @@ program q2r
      end do
   end do
   close(2)
-  write (6,'(/5x,'' fft-check: imaginary sum = '',e12.7)') resi
+  write (6,"(/5x,' fft-check: imaginary sum = ',e12.7)") resi
   ! 
 end program q2r
 !
