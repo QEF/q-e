@@ -946,8 +946,11 @@
             end do
          end do
       end do
-
+!
       if (tpre) then
+!     ---------------------------------------------------------------
+!     arrays required for stress calculation, variable-cell dynamics
+!     ---------------------------------------------------------------
          allocate(dqradb(ngb,nbrx,nbrx,lqx,nsp))
          allocate(dylmb(ngb,lqx*lqx,3,3))
          allocate(dqgbs(ngb,3,3))
@@ -1025,13 +1028,8 @@
 !     initialization that is common to all species
 !     ===============================================================
 !
-!
       allocate(ylm(ngw,(lmaxkb+1)**2))
       call ylmr2 ((lmaxkb+1)**2, ngw, gx, g, ylm)
-      if (tpre) then
-         allocate(dylm(ngw,(lmaxkb+1)**2,3,3))
-         call dylmr2_((lmaxkb+1)**2, ngw, gx, g, ainv, dylm)
-      end if
 !
       do is=1,nsp
 !     ---------------------------------------------------------------
@@ -1041,25 +1039,43 @@
          c=fpi/sqrt(omega)
          do iv=1,nh(is)
             lp=indlm(iv,is)
-            betagl=betagx(1,iv,is)
-            beta(1,iv,is)=c*ylm(1,lp)*betagl
-            if (tpre) then
+            do ig=1,ngw
+               gg=g(ig)*tpiba*tpiba/refg
+               jj=int(gg)+1
+               betagl=betagx(jj+1,iv,is)*(gg-real(jj-1))+               &
+     &              betagx(jj,iv,is)*(real(jj)-gg)
+               beta(ig,iv,is)=c*ylm(ig,lp)*betagl
+            end do
+         end do
+      end do
+!
+      if (tpre) then
+!     ---------------------------------------------------------------
+!     calculation of array dbeta required for stress, variable-cell
+!     ---------------------------------------------------------------
+         allocate(dylm(ngw,(lmaxkb+1)**2,3,3))
+         !
+         call dylmr2_((lmaxkb+1)**2, ngw, gx, g, ainv, dylm)
+         !
+         do is=1,nsp
+            if(iprsta.ge.4) WRITE( stdout,*)  '  dbeta  '
+            c=fpi/sqrt(omega)
+            do iv=1,nh(is)
+               lp=indlm(iv,is)
+               betagl=betagx(1,iv,is)
                do i=1,3
                   do j=1,3
                      dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)    &
      &                                 +c*dylm(1,lp,i,j)*betagl
                   enddo
                enddo
-            end if
-            do ig=ng0,ngw
-               gg=g(ig)*tpiba*tpiba/refg
-               jj=int(gg)+1
-               betagl=betagx(jj+1,iv,is)*(gg-real(jj-1))+               &
-     &              betagx(jj,iv,is)*(real(jj)-gg)
-               beta(ig,iv,is)=c*ylm(ig,lp)*betagl
-               if (tpre) then
-                  dbetagl=dbetagx(jj+1,iv,is)*(gg-real(jj-1))+          &
-     &                    dbetagx(jj,iv,is)*(real(jj)-gg)
+               do ig=ng0,ngw
+                  gg=g(ig)*tpiba*tpiba/refg
+                  jj=int(gg)+1
+                  betagl = betagx(jj+1,iv,is)*(gg-real(jj-1)) +         &
+     &                     betagx(jj,iv,is)*(real(jj)-gg)
+                  dbetagl= dbetagx(jj+1,iv,is)*(gg-real(jj-1)) +        &
+     &                     dbetagx(jj,iv,is)*(real(jj)-gg)
                   do i=1,3
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
@@ -1071,13 +1087,19 @@
      &                      gx(3,ig)*ainv(j,3))
                      end do
                   end do
-               end if
+               end do
             end do
          end do
+         !
+         deallocate(dylm)
+      end if
+      !
+      deallocate(ylm)
 !     ---------------------------------------------------------------
 !     non-linear core-correction   ( rhocb(ig,is) )
 !     ---------------------------------------------------------------
-         if(ifpcor(is).eq.1) then
+      do is=1,nsp
+         if(ifpcor(is) == 1) then
             allocate(fint(kkbeta(is)))
             allocate(jl(kkbeta(is)))
             c=fpi/omegab
@@ -1094,16 +1116,12 @@
                rhocb(ig,is)=c*rhocb(ig,is)
             end do
             if(iprsta.ge.4) WRITE( stdout,'(a,f12.8)')                     &
-     &              ' integrated core charge= ',omegab*rhocb(1,is)
+      &              ' integrated core charge= ',omegab*rhocb(1,is)
             deallocate(jl)
             deallocate(fint)
          endif
-! 
-!     ---------------------------------------------------------------
       end do
 !
-      if (tpre) deallocate(dylm)
-      deallocate(ylm)
 !
       return
       end
@@ -1564,7 +1582,7 @@
 !
       do i=1,lpx(ivl,jvl)
          lp=lpl(ivl,jvl,i)
-         if (lp > lqx*lqx) call errore(' qvanb ',' lp out of bounds ',lp)
+         if (lp > lqx*lqx) call errore(' qvan2b ',' lp out of bounds ',lp)
 !
 !     extraction of angular momentum l from lp:  
 !     l = int ( sqrt( float(l-1) + epsilon) ) + 1
@@ -1630,8 +1648,8 @@
       jvs=indv(jv,is)
       ivl=indlm(iv,is)
       jvl=indlm(jv,is)
-      if(ivl > nlx)  call errore(' qvan2b ',' ivl out of bounds ',ivl)
-      if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
+      if(ivl > nlx)  call errore(' dqvan2b ',' ivl out of bounds ',ivl)
+      if(jvl > nlx)  call errore(' dqvan2b ',' jvl out of bounds ',jvl)
 !
       dqg(:,:,:) = (0.d0, 0.d0)
 !
@@ -1684,8 +1702,9 @@
 subroutine dylmr2_(nylm, ngy, g, gg, ainv, dylm)
   !-----------------------------------------------------------------------
   !
-  ! temporary CP interace for PW routine dylmr2
-  ! dylmr2 calculates d Y_{lm} /d G_ipol
+  ! temporary CP interface for PW routine dylmr2
+  ! dylmr2  calculates d Y_{lm} /d G_ipol
+  ! dylmr2_ calculates G_ipol \sum_k h^(-1)(jpol,k) (dY_{lm} /dG_k)
   !
   USE kinds
   implicit none

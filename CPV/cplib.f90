@@ -3733,21 +3733,26 @@
       do is=nspmn,nspmx
          do iv=1,nh(is)
             l=nhtol(iv,is)
-            if (l.eq.0) then
+            if (l == 0) then
                ixr = 1
                ixi = 2
                signre =  1.0
                signim =  1.0
-            else if (l.eq.1) then
+            else if (l == 1) then
                ixr = 2
                ixi = 1
                signre =  1.0
                signim = -1.0
-            else if (l.eq.2) then
+            else if (l == 2) then
                ixr = 1
                ixi = 2
                signre = -1.0
                signim = -1.0
+            else if (l == 3) then
+               ixr = 2
+               ixi = 1
+               signre = -1.0
+               signim =  1.0
             endif
 !
             do ia=1,na(is)
@@ -3834,6 +3839,11 @@
                   ixr = 2
                   ixi = 1
                   signre = -1.0
+                  signim =  1.0
+               else if (l == 3) then
+                  ixr = 1
+                  ixi = 2
+                  signre =  1.0
                   signim =  1.0
                endif
 !     
