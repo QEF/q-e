@@ -1,134 +1,160 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF-FPMD-CPV groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!----------------------------------------------------------------------
-subroutine errore (routin, messag, ierr)
-  !----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE errore( calling_routine, message, ierr )
+  !----------------------------------------------------------------------------
   !
-  !    This is a simple routine which writes an error message to
-  !    output. If ierr = 0 it does nothing, if ierr < 0 it
-  !    writes the message but does not stop, if ierr > 0 stops.
+  ! ... This is a simple routine which writes an error message to output: 
+  ! ... if ierr = 0 it does nothing, 
+  ! ... if ierr < 0 it writes the message but does not stop, 
+  ! ... if ierr > 0 it stops.
   !
-  !    **** Important note for parallel execution ***
-  !    in parallel execution unit 6 is written only by the first node;
-  !    all other nodes have unit 6 redirected to nothing (/dev/null).
-  !    As a consequence an error not occurring on the first node
-  !    will be invisible. For t3e and origin machines, this problem
-  !    is solved by writing an error message to unit * instead of 6.
-  !    For ibm sp machines, we write to the standard error, unit 0
-  !    (this will appear in the error files produced by loadleveler).
+  ! ...          **** Important note for parallel execution ***
+  !
+  ! ... in parallel execution unit 6 is written only by the first node;
+  ! ... all other nodes have unit 6 redirected to nothing (/dev/null).
+  ! ... As a consequence an error not occurring on the first node
+  ! ... will be invisible. For T3E and ORIGIN machines, this problem
+  ! ... is solved by writing an error messagee to unit * instead of 6.
+  ! ... Whenever possible (IBM SP machines and LINUX clusters), we write
+  ! ... to the standard error, unit 0.
+  ! ... (the message will appear in the error files produced by loadleveler).
   !
   USE io_global,  ONLY : stdout
-  USE io_files, ONLY: crashunit, crash_file
+  USE io_files,   ONLY : crashunit, crash_file
   USE parallel_include
   !
-  implicit none
+  IMPLICIT NONE
   !
-  character (len=*) :: routin, messag
-    ! the name of the calling routine
-    ! the output message
-  integer :: ierr
+  CHARACTER(LEN=*), INTENT(IN) :: calling_routine, message
+    ! the name of the calling calling_routinee
+    ! the output messagee
+  INTEGER,          INTENT(IN) :: ierr
     ! the error flag
-  integer :: mpime
-    ! the task id
+  INTEGER                      :: mpime
+    ! the task id  
   !
   !
-  if (ierr == 0) return
-
-  WRITE( * , * ) ' '
-  WRITE( * , '(1x,78("%"))' )
-  WRITE( * , '(5x,"from ",a," : error #",i10)' ) routin, ierr
-  WRITE( * , '(5x,a)' ) messag
-  WRITE( * , '(1x,78("%"))' )
-
-#ifdef __PARA
-#ifdef __AIX
-  write (0, * ) ' '
-  write (0, '(1x,78("%"))')
-  write (0, '(5x,"from ",a," : error #",i10)') routin, ierr
-  write (0, '(5x,a)') messag
-  write (0, '(1x,78("%"))')
+  IF ( ierr == 0 ) RETURN
+  !
+  ! ... the error message is written un the "*" unit
+  !
+  WRITE( UNIT = *, FMT = '(/,1X,78("%"))' )
+  WRITE( UNIT = *, &
+         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = *, FMT = '(5X,A)' ) message
+  WRITE( UNIT = *, FMT = '(1X,78("%"),/)' )
+  !
+#if defined (__PARA) && defined (__AIX)
+  !
+  ! ... in the cas of ibm machines it is also written on the "0" unit
+  ! ... which is automatically connected to stderr
+  !
+  WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
+  WRITE( UNIT = 0, &
+         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = 0, FMT = '(5X,A)' ) message
+  WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
+  !
 #endif
+  !
+#if defined (__PARA) && defined (__LINUX)
+  !
+  ! ... in the cas of linux machines it is also written on the "0" unit
+  ! ... proviously connected to /dev/stderr
+  !
+  OPEN( UNIT = 0, FILE = '/dev/stderr' )
+  !
+  WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
+  WRITE( UNIT = 0, &
+         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = 0, FMT = '(5X,A)' ) message
+  WRITE( UNIT = 0, FMT = '(1X,78("%"),/)' )
+  !
+  CLOSE( UNIT = 0 )
+  !
+#endif  
+  !
+  IF ( ierr > 0 ) THEN
+     !
+     WRITE( stdout , '("     stopping ...")' )
+     !
+#if defined (FLUSH)
+     CALL flush( 6 )
 #endif
-
-  if (ierr.gt.0) then
-
-     WRITE( stdout , '("     stopping ...")')
-
-#ifdef FLUSH
-     call flush (6)
+     !
+#if defined (__PARA) && defined (__MPI)
+     !
+     mpime = 0
+     !
+     CALL MPI_COMM_RANK( mpi_comm_world, mpime, ierr )
+     !
+     !  .. write the message to a file and close it before exiting
+     !  .. this will prevent loss of information on systems that
+     !  .. do not flush the open streams
+     !  .. added by C.C.
+     !
+     OPEN( UNIT = crashunit, FILE = crash_file, &
+           POSITION = 'APPEND', STATUS = 'UNKNOWN' )
+     !      
+     WRITE( UNIT = crashunit, FMT = '(/,1X,78("%"))' )
+     WRITE( UNIT = crashunit, FMT = '(5X,"task #",I10)' ) mpime
+     WRITE( UNIT = crashunit, &
+            FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+     WRITE( UNIT = crashunit, FMT = '(5X,A)' ) message
+     WRITE( UNIT = crashunit, FMT = '(1X,78("%"),/)' )
+     !
+     CLOSE( UNIT = crashunit )
+     !
+     ! ... try to exit in a smooth way
+     !
+     CALL MPI_FINALIZE( ierr )
+     !
+     IF ( ierr /= 0 ) &
+        CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
+     !
 #endif
-
-      mpime = 0
-
-#ifdef __PARA
-#ifdef __MPI
-      CALL mpi_comm_rank( mpi_comm_world, mpime, ierr )
-#endif
-#endif
-
-      !  .. write the message to a file and close it before exiting
-      !  .. this will prevent loss of information on systems that
-      !  .. do not flush the open streams
-      !  .. added by C.C.
-
-      OPEN( UNIT = crashunit, FILE = crash_file, POSITION = 'append', STATUS = 'unknown' )
-      write (crashunit, * ) ' '
-      write (crashunit, '(1x,78("%"))')
-      write (crashunit, '(5x,"task #",i10)') mpime
-      write (crashunit, '(5x,"from ",a," : error #",i10)') routin, ierr
-      write (crashunit, '(5x,a)') messag
-      write (crashunit, '(1x,78("%"))')
-      CLOSE( UNIT = crashunit )
-
-#ifdef __PARA
-#ifdef __MPI
-     CALL mpi_finalize( ierr )  !  try to exit in a smooth way
-     IF ( ierr /= 0 ) THEN
-       CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
-     END IF
-#endif
-#endif
-
-     stop 2
-
-  else
-
-     WRITE( stdout, * ) ' '
-
-  endif
-
-end subroutine errore
-
-
+     !
+     STOP 2
+     !
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE errore
+!
+!
 !----------------------------------------------------------------------
-subroutine infomsg (routin, messag, info)
+SUBROUTINE infomsg( routine, message, info )
   !----------------------------------------------------------------------
   !
-  !    This is a simple routine which writes an info message 
-  !    from a given routine to output. 
+  ! ... This is a simple routine which writes an info message 
+  ! ... from a given routine to output. 
   !
   USE io_global,  ONLY : stdout, ionode
   USE parallel_include
   !
-  implicit none
+  IMPLICIT NONE
   !
-  character (len=*) :: routin, messag
+  CHARACTER (LEN=*) :: routine, message
     ! the name of the calling routine
     ! the output message
-  integer :: info
+  INTEGER :: info
     ! the info code
   !
-  IF( ionode ) THEN
-    WRITE( stdout , '(5x,"from ",a," : info #",i10)' ) routin, info
-    WRITE( stdout , '(5x,a)' ) messag
+  IF ( ionode ) THEN
+     !
+     WRITE( stdout , '(5X,"from ",A," : info #",I10)' ) routine, info
+     WRITE( stdout , '(5X,A)' ) message
+     !
   END IF
-
-  return
-
-end subroutine infomsg
+  !
+  RETURN
+  !
+END SUBROUTINE infomsg
