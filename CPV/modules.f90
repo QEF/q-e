@@ -248,48 +248,6 @@ contains
   end subroutine
 end module qradb_mod
 
-module timex_mod
-  implicit none
-  save
-  integer maxclock
-  parameter (maxclock=32)
-  real(kind=8) cputime(maxclock), elapsed(maxclock)
-  integer ntimes(maxclock)
-  character(len=10) routine
-  dimension routine(maxclock)
-  data routine / 'total time',  &
-                 'initialize',  &
-                 '  formf   ',  &
-                 '  rhoofr  ',  &
-                 '  vofrho  ',  &
-                 '  dforce  ',  &
-                 '  calphi  ',  &
-                 '  ortho   ',  &
-                 '  updatc  ',  &
-                 '  graham  ',  &
-                 '  newd    ',  &
-                 '  calbec  ',  &
-                 '  prefor  ',  &
-                 '  strucf  ',  &
-                 '  nlfl    ',  &
-                 '  nlfq    ',  &
-                 '  set_cc  ',  &
-                 '   rhov   ',  &
-                 '   nlsm1  ',  &
-                 '   nlsm2  ',  &
-                 '   forcecc',  &
-                 '     fft  ',  &
-                 '     ffts ',  &
-                 '     fftw ',  &
-                 '     fftb ',  &
-                 '     rsg  ',  &
-                 'setfftpara',  &
-                 'fftscatter',  &
-                 'reduce    ',  &
-                 'test1     ','test2     ','test3     ' /
-
-end module timex_mod
-
 module wfc_atomic
   use parameters, only:nsx
   use ncprm, only:mmaxx

@@ -60,7 +60,6 @@ cryst_to_car.o \
 cubicsym.o \
 d_matrix.o \
 data_structure.o \
-date_and_tim.o \
 davcio.o \
 delta_e.o \
 deriv_drhoc.o \

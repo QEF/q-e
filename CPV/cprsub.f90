@@ -289,7 +289,7 @@
 !     ==================================================================
 !     calculation of gaussian selfinteraction
 !     ==================================================================
-      call tictac(3,0)
+      call start_clock( 'formf' )
       eself=0.
       do is=1,nsp
          eself=eself+float(na(is))*zv(is)*zv(is)/rcmax(is)
@@ -477,7 +477,7 @@
       deallocate(vscr)
       deallocate(f)
       deallocate(figl)
-      call tictac(3,1)
+      call stop_clock( 'formf' )
 !
  1250 format(2x,'formf:     vps(g=0)=',f12.7,'     rhops(g=0)=',f12.7)
  1300 format(2x,'formf: sum_g vps(g)=',f12.7,' sum_g rhops(g)=',f12.7)

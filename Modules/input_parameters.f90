@@ -799,7 +799,10 @@ MODULE input_parameters
 
         REAL(dbl) :: amprp(nsx) = 0.0d0
           ! amprp(i) meaningful only if "tranp(i) = .TRUE.", amplitude of the
-          ! randomization ( allowed values: 0.0 - 1.0 ) for the i-th atomic specie
+          ! randomization ( allowed values: 0.0 - 1.0 ) for the i-th atomic specie.
+          ! Add to the positions a random displacements vector ( in bohr radius )
+          ! defined as:  amprp( i ) * ( X, Y, Z )
+          ! where X, Y, Z are pseudo random number in the interval [ -0.5 , 0.5 ]
 
         REAL(dbl) :: greasp = 0.0d0
           ! same as "grease", for ionic damped dynamics

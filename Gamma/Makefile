@@ -54,7 +54,6 @@ PWOBJS = \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
 ../PW/data_structure.o \
-../PW/date_and_tim.o \
 ../PW/davcio.o \
 ../PW/delta_e.o \
 ../PW/deriv_drhoc.o \

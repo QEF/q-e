@@ -303,7 +303,7 @@ end module para_mod
       integer :: nctw
       logical :: tk = .FALSE.
 !
-      call tictac(27,0)
+      call start_clock( 'setfftpara' )
 !
 ! set the dimensions of fft arrays
 !
@@ -450,7 +450,7 @@ end module para_mod
          nnrs = max(nr3sx*ncps(me), nr1sx*nr2sx*npps(me))
       end if
 
-      call tictac(27,1)
+      call stop_clock( 'setfftpara' )
 !
       return
       end
@@ -539,7 +539,7 @@ end module para_mod
 !
       if (nproc.le.1) return
       if (size.le.0) return
-      call tictac(29,0)
+      call start_clock( 'reduce' )
 !
 !  syncronize processes
 !
@@ -565,52 +565,10 @@ end module para_mod
      &         call errore('reduce','error in allreduce2',ierr)
           call DCOPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
       endif
-      call tictac(29,1)
+      call stop_clock( 'reduce' )
 !
       return
       end
-!
-!----------------------------------------------------------------------
-      subroutine print_para_times
-!----------------------------------------------------------------------
-!
-      use para_mod
-      use timex_mod
-      use io_global, only: stdout
-!
-      implicit none
-      include 'mpif.h'
-      integer i, ierr
-      real(kind=8) mincpu(maxclock), maxcpu(maxclock)
-!
-!  syncronize processes
-!
-      call mpi_barrier(MPI_COMM_WORLD,ierr)
-      if (ierr.ne.0)                                                    &
-     &     call errore('print_all_times','error in barrier',ierr)
-!
-      call mpi_allreduce (cputime, mincpu, maxclock,                    &
-     &     MPI_REAL8, MPI_MIN, MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0)                                                    &
-     &     call errore('print_para_times','error in minimum',ierr)
-      call mpi_allreduce (cputime, maxcpu, maxclock,                    &
-     &     MPI_REAL8, MPI_MAX, MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0)                                                    &
-     &     call errore('print_para_times','error in maximum',ierr)
-!
-      WRITE( stdout,*)
-      WRITE( stdout,*) ' routine     calls       cpu time        elapsed'
-      WRITE( stdout,*) '             node0  node0,  min,  max     node0'
-      WRITE( stdout,*)
-      do i=1, maxclock
-         if (ntimes(i).gt.0) WRITE( stdout,30) routine(i),                    &
-     &        ntimes(i), cputime(i), mincpu(i),maxcpu(i), elapsed(i)
-      end do
- 30   format(a10,i7,4f8.1)
-!
-      return
-      end
-!
 !
 !----------------------------------------------------------------------
       subroutine nrbounds(ngw,nr1s,nr2s,nr3s,in1p,in2p,in3p,nmin,nmax)

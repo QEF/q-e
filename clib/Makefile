@@ -5,16 +5,12 @@ include ../make.rules
 
 OBJS = \
 c_mkdir.o \
-c_today.o \
 cpflush.o \
 cptimer.o \
-factor.o \
 fft_stick.o \
 indici.o \
 memstat.o \
-qsort.o \
-readocc.o \
-round2.o
+qsort.o
 
 all : clib.a
 

@@ -68,6 +68,9 @@
       call io_global_start( (me-1), 0 )
       call mp_global_start(0, (me-1), mygroup, nproc )
 
+      CALL init_clocks( .TRUE. )
+      CALL start_clock( 'FPMD' )
+
       !
       !  readin the input file
       !
@@ -86,6 +89,9 @@
       ELSE
         call cpr_loop( 1 )
       END IF
+
+      CALL print_clock( 'FPMD' )
+      CALL stop_clock( 'FPMD' )
 
       call mp_end()
 

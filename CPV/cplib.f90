@@ -726,7 +726,7 @@
       integer is, ia, i , iv
 !
 !
-      call tictac(12,0)
+      call start_clock( 'calbec' )
       call nlsm1(n,nspmn,nspmx,eigr,c,bec)
 !
       if (iprsta.gt.2) then
@@ -745,7 +745,7 @@
             end if
          end do
       endif
-      call tictac(12,1)
+      call stop_clock( 'calbec' )
 !
       return
       end
@@ -772,7 +772,7 @@
       integer is, iv, jv, ia, inl, jnl, i, j
       real(kind=8) qtemp(nhsavb,n) ! automatic array
 !
-      call tictac(7,0)
+      call start_clock( 'calphi' )
       phi(:,:) = (0.d0, 0.d0)
 !
       if (nvb.gt.0) then
@@ -832,7 +832,7 @@
             end if
          end do
       endif
-      call tictac(7,1)
+      call stop_clock( 'calphi' )
 !
       return
       end
@@ -1197,7 +1197,7 @@
       complex(kind=8), pointer:: psi(:)
 !
 !
-      call tictac(6,0)
+      call start_clock( 'dforce' ) 
       psi => wrk1
 !
 !     important: if n is odd => c(*,n+1)=0.
@@ -1312,7 +1312,7 @@
          end do
       endif
 !
-      call tictac(6,1)
+      call stop_clock( 'dforce' ) 
 !
       return
       end
@@ -1940,7 +1940,7 @@
       external  boxdotgrid
 !
 !
-      call tictac(21,0)
+      call start_clock( 'forcecc' )
       ci = (0.d0,1.d0)
       fac = omega/dfloat(nr1*nr2*nr3*nspin)
       fcc = 0.d0
@@ -1997,7 +1997,7 @@
 !
       call DAXPY(3*natx*nsp,1.d0,fcc,1,fion1,1)
 !
-      call tictac(21,1)
+      call stop_clock( 'forcecc' )
       return
       end
 !
@@ -2157,7 +2157,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
-      call tictac(22,0)
+      call start_clock( 'fft' )
 #ifdef __PARA
       call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
 #else
@@ -2167,7 +2167,7 @@
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 # endif
 #endif
-      call tictac(22,1)
+      call stop_clock( 'fft' )
       return
       end
 !-----------------------------------------------------------------------
@@ -2181,7 +2181,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call tictac(23,0)
+      call start_clock( 'ffts' ) 
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1,dffts)
 #else
@@ -2191,7 +2191,7 @@
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 # endif
 #endif
-      call tictac(23,1)
+      call stop_clock( 'ffts' ) 
       return
       end
 !-----------------------------------------------------------------------
@@ -2205,7 +2205,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call tictac(24,0)
+      call start_clock( 'fftw' ) 
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-2,dffts)
 #else
@@ -2215,7 +2215,7 @@
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,-1)
 # endif
 #endif
-      call tictac(24,1)
+      call stop_clock( 'fftw' ) 
       return
       end
 !-----------------------------------------------------------------------
@@ -3235,7 +3235,7 @@
       integer i,k
       external cscnorm
 !
-      call tictac(10,0)
+      call start_clock( 'graham' )
 !
       do i=1,n
          call gracsc(bec,betae,cp,i,csc)
@@ -3253,7 +3253,7 @@
          call DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
       end do
 !
-      call tictac(10,1)
+      call stop_clock( 'graham' )
 !
       return
       end
@@ -3663,7 +3663,7 @@
 
       complex(kind=8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
-      call tictac(22,0)
+      call start_clock( 'fft' )
 #ifdef __PARA
       call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
 #else
@@ -3673,7 +3673,7 @@
       call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
 # endif
 #endif
-      call tictac(22,1)
+      call stop_clock( 'fft' )
 !
       return
       end 
@@ -3686,7 +3686,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1bx*nr2bx*nr3bx)
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
-      call tictac(25,0)
+      call start_clock( 'fftb' )
 #ifdef __PARA
       call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
 #else
@@ -3696,7 +3696,7 @@
       call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
 # endif
 #endif
-      call tictac(25,1)
+      call stop_clock( 'fftb' )
 !
       return
       end
@@ -3711,7 +3711,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call tictac(23,0)
+      call start_clock( 'ffts' )
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1,dffts)
 #else
@@ -3721,7 +3721,7 @@
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 # endif 
 #endif
-      call tictac(23,1)
+      call stop_clock( 'ffts' )
 !
       return
       end
@@ -3736,7 +3736,7 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
-      call tictac(24,0)
+      call start_clock('fftw')
 #ifdef __PARA
       call cfft_cp(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,2,dffts)
 #else
@@ -3746,7 +3746,7 @@
       call cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,1)
 # endif
 #endif
-      call tictac(24,1)
+      call stop_clock('fftw')
 !
       return
       end
@@ -3792,7 +3792,7 @@
       complex(kind=8) ci, facg1, facg2
       external boxdotgrid
 !
-      call tictac(11,0)
+      call start_clock( 'newd' )
       ci=(0.d0,1.d0)
       fac=omegab/float(nr1b*nr2b*nr3b)
       deeq (:,:,:,:) = 0.d0
@@ -3992,7 +3992,7 @@
 #endif
       call DAXPY(3*natx*nvb,-1.d0,fvan,1,fion,1)
 !
-  10  call tictac(11,1)
+  10  call stop_clock( 'newd' )
 !
       return
       end
@@ -4017,7 +4017,7 @@
       integer k, is, ia, iv, jv, i, j, inl
       real(kind=8) temp(nx,nx), tmpbec(nhx,nx),tmpdr(nx,nhx) ! automatic arrays
 !
-      call tictac(15,0)
+      call start_clock( 'nlfl' )
       do k=1,3
          do is=1,nvb
             do ia=1,na(is)
@@ -4065,7 +4065,7 @@
 !
 !     end of x/y/z loop
 !
-      call tictac(15,1)
+      call stop_clock( 'nlfl' )
       return
       end
 !-----------------------------------------------------------------------
@@ -4094,7 +4094,7 @@
 !
 !     nlsm2 fills becdr
 !
-      call tictac(16,0)
+      call start_clock( 'nlfq' )
       call nlsm2(eigr,c,becdr)
 !
       do k=1,3
@@ -4139,7 +4139,7 @@
 !
 !     end of x/y/z loop
 !
-      call tictac(16,1)
+      call stop_clock( 'nlfq' )
 !
       return
       end
@@ -4171,7 +4171,7 @@
       integer ig, is, iv, ia, l, ixr, ixi, inl, i
       real(kind=8) signre, signim, arg
 !
-      call tictac(19,0)
+      call start_clock( 'nlsm1' )
       do is=nspmn,nspmx
          do iv=1,nh(is)
             l=nhtol(iv,is)
@@ -4218,7 +4218,7 @@
          end do
 #endif
       end do
-      call tictac(19,1)
+      call stop_clock( 'nlsm1' )
       return
       end
 !-------------------------------------------------------------------------
@@ -4247,7 +4247,7 @@
       real(kind=8) signre, signim, arg
       real(kind=8), allocatable:: gk(:)
 !
-      call tictac(20,0)
+      call start_clock( 'nlsm2' )
       allocate(gk(ngw))
       becdr = 0.d0
 !
@@ -4304,7 +4304,7 @@
       call reduce(3*nhsa*n,becdr)
 #endif
       deallocate(gk)
-      call tictac(20,1)
+      call stop_clock( 'nlsm2' )
 !
       return
       end
@@ -4347,7 +4347,7 @@
 !
 !     calculation of becp and bephi
 !
-      call tictac(8,0)
+      call start_clock( 'ortho' )
       call nlsm1(n,1,nvb,eigr, cp, becp)
       call nlsm1(n,1,nvb,eigr,phi,bephi)
 !
@@ -4433,9 +4433,9 @@
             tmp1(i,i)=1.d0
          end do
          ifail=0
-         call tictac(26,0)
+         call start_clock( 'rsg' )
          call rs(nx,nss,rhos,diag,1,u,work1,work2,ifail) 
-         call tictac(26,1)
+         call stop_clock( 'rsg' )
 !
 !                calculation of lagranges multipliers
 !
@@ -4525,7 +4525,7 @@
       deallocate(qbecp )
       deallocate(qbephi)
 !
-      call tictac(8,1)
+      call stop_clock( 'ortho' )
       return
       end
 !
@@ -4833,7 +4833,7 @@
       integer is, iv, ia, inl, ig
       complex(kind=8) ci
 !
-      call tictac(13,0)
+      call start_clock( 'prefor' )
       do is=1,nsp
          do iv=1,nh(is)
             ci=(0.,-1.)**nhtol(iv,is)
@@ -4845,29 +4845,7 @@
             end do
          end do
       end do
-      call tictac(13,1)
-!
-      return
-      end
-!
-!----------------------------------------------------------------------
-      subroutine print_times
-!----------------------------------------------------------------------
-!
-      use timex_mod
-      use io_global, only: stdout
-!
-      implicit none
-      integer i
-!
-      WRITE( stdout,*) ' routine   calls  totcpu  avgcpu  tottime  avgtime' 
-      WRITE( stdout,*)
-      do i=1, maxclock
-         if (ntimes(i).gt.0) WRITE( stdout,30) routine(i), ntimes(i),         &
-     &                          cputime(i), cputime(i)/ntimes(i),       &
-     &                          elapsed(i), elapsed(i)/ntimes(i)
-      end do
- 30   format(a10,i7,f8.1,f8.3,f8.1,f8.3)
+      call stop_clock( 'prefor' )
 !
       return
       end
@@ -6203,7 +6181,7 @@
       complex(kind=8), pointer:: psi(:), psis(:)
 !
 !
-      call tictac(4,0)
+      call start_clock( 'rhoofr' )
       psi => wrk1
       psis=> wrk1
       ci=(0.0,1.0)
@@ -6452,7 +6430,7 @@
      &     ' density'/' in g-space =',f10.6,4x,                         &
      &     ' in r-space =',f10.6)
 !
-      call tictac(4,1)
+      call stop_clock( 'rhoofr' )
 !
       return
       end
@@ -6573,7 +6551,7 @@
       complex(kind=8), pointer:: v(:)
 !
       if (nvb.eq.0) return
-      call tictac(18,0)
+      call start_clock( 'rhov' )
       ci=(0.,1.)
 !
       v => wrk1
@@ -6797,7 +6775,7 @@
 !
       endif
       deallocate(qgbt)
-      call tictac(18,1)
+      call stop_clock( 'rhov' )
 !
       return
       end
@@ -6836,7 +6814,7 @@
       integer nfft, ig, is, ia, irb3, imin3, imax3
       complex(kind=8) ci
 !
-      call tictac(17,0)
+      call start_clock( 'set_cc' )
       ci=(0.,1.)
 !
       wrk1 (:) = (0.d0, 0.d0)
@@ -6884,7 +6862,7 @@
 !
       call DCOPY(nnr,wrk1,2,rhoc,1)
 !
-      call tictac(17,1)
+      call stop_clock( 'set_cc' )
 !
       return
       end
@@ -7218,7 +7196,7 @@
      &           ei3(-nr3:nr3,nas,nsp), sfac(ngs,nsp)
       integer is, ig, ia
 !
-      call tictac(14,0)
+      call start_clock( 'strucf' ) 
       do is=1,nsp
          do ig=1,ngs
             sfac(ig,is)=(0.,0.)
@@ -7232,7 +7210,7 @@
          end do
       end do
 !
-      call tictac(14,1)
+      call stop_clock( 'strucf' ) 
       return
       end
 !-------------------------------------------------------------------------
@@ -7329,7 +7307,7 @@
 !
 !     lagrange multipliers
 !
-      call tictac(9,0)
+      call start_clock( 'updatc' )
       wrk2 = (0.d0, 0.d0)
       do j=1,n
          call DSCAL(n,ccc,x0(1,j),1)
@@ -7381,7 +7359,7 @@
          call DSCAL(n,1.0/ccc,x0(1,j),1)
       end do
 !
-      call tictac(9,1)
+      call stop_clock( 'updatc' )
 !
       return
       end
@@ -7446,7 +7424,7 @@
       complex(kind=8), pointer:: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
-      call tictac(5,0)
+      call start_clock( 'vofrho' )
       ci=(0.,1.)
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
@@ -7725,7 +7703,7 @@
       deallocate(vtemp)
 !
 !
-      call tictac(5,1)
+      call stop_clock( 'vofrho' )
       if((nfi.eq.0).or.tfirst.or.tlast) goto 999
       if(mod(nfi-1,iprint).ne.0 ) return
 !

@@ -235,7 +235,7 @@
 !
 !     CP loop starts here
 !
-      call tictac(2,0)
+      call start_clock( 'initialize' ) 
       etot_out = 0.0d0
 
 !
@@ -757,11 +757,11 @@
 !
 !======================================================================
 !
-    call tictac(2,1)
+    call stop_clock( 'initialize' ) 
 
     MAIN_LOOP: DO
 
-      call tictac(1,0)
+      call start_clock( 'total_time' )
 !
 !     calculation of velocity of nose-hoover variables
 !
@@ -1453,7 +1453,7 @@
       fricp = fricp * greasp
       frich = frich * greash
 !     =====================================================
-      call tictac(1,1)
+      call stop_clock( 'total_time' )
 !
       delta_etot = ABS( epre - enow )
       tstop = check_stop_now()
@@ -1514,11 +1514,35 @@
       WRITE( stdout,1950) (acc(i),i=1,nacc)
  1950 format(4f14.5,f10.1)
 !
-#ifdef __PARA
-      call print_para_times
-#else
-      call print_times
-#endif
+
+      call print_clock( 'initialize' )
+      call print_clock( 'total_time' )
+      call print_clock( 'formf' )
+      call print_clock( 'rhoofr' )
+      call print_clock( 'vofrho' )
+      call print_clock( 'dforce' )
+      call print_clock( 'calphi' )
+      call print_clock( 'ortho' )
+      call print_clock( 'updatc' )
+      call print_clock( 'graham' )
+      call print_clock( 'newd' )
+      call print_clock( 'calbec' )
+      call print_clock( 'prefor' )
+      call print_clock( 'strucf' )
+      call print_clock( 'nlfl' )
+      call print_clock( 'nlfq' )
+      call print_clock( 'set_cc' )
+      call print_clock( 'rhov' )
+      call print_clock( 'nlsm1' )
+      call print_clock( 'nlsm2' )
+      call print_clock( 'forcecc' )
+      call print_clock( 'fft' )
+      call print_clock( 'ffts' )
+      call print_clock( 'fftw' )
+      call print_clock( 'fftb' )
+      call print_clock( 'rsg' )
+      call print_clock( 'setfftpara' )
+      call print_clock( 'reduce' )
 
 !
          call writefile_new                                         &

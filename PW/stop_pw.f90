@@ -110,18 +110,3 @@ SUBROUTINE closefile
   RETURN
   !
 END SUBROUTINE closefile
-!
-!
-!----------------------------------------------------------------------------
-SUBROUTINE cpflush
-  !----------------------------------------------------------------------------
-  !
-  ! TEMP: compatibility with Car-Parrinello code
-  !
-  PRINT *, "what am i doing in cpflush ?"
-  !
-  CALL stop_pw( .FALSE. )
-  !
-  RETURN
-  !
-END SUBROUTINE cpflush

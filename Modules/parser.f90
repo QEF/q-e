@@ -12,10 +12,6 @@ MODULE parser
   USE io_global,  ONLY : stdout
   USE kinds
   !
-  INTERFACE parser_error
-     MODULE PROCEDURE p_err_I, p_err_R, p_err_S, p_err_L
-  END INTERFACE
-  !
   CONTAINS
   !
   !-----------------------------------------------------------------------
@@ -78,8 +74,7 @@ MODULE parser
              OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
              CLOSE( UNIT = iunit, STATUS = 'DELETE' )
              WRITE( UNIT = stdout,         &
-                    FMT = '(/,5X"WARNING: ",A, &
-                           &" file was present; old file deleted")' ) filename
+                    FMT = '(/,5X,"WARNING: ",A," file was present; old file deleted")' ) filename
              !
              RETURN
              !
@@ -258,7 +253,7 @@ MODULE parser
 
     CALL field_count(nc, str)
     IF(nc .LT. nf) THEN
-      CALL parser_error(' field_compare ', ' wrong number of fields ', var)
+      CALL errore(' field_compare ', ' wrong number of fields: ' // TRIM(var), 1 )
     END IF
   END SUBROUTINE field_compare
 
@@ -295,120 +290,5 @@ MODULE parser
     END DO
     RETURN
   END SUBROUTINE con_cam
-
-  SUBROUTINE p_err_I(a,b,n)
-      USE mp
-      USE mp_global, ONLY: mpime
-      USE kinds
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      CHARACTER(LEN=*) a, b
-      INTEGER n
-
-! ... declare function
-
-! ... print the error message
-      WRITE( stdout,100) mpime, a, b, n
-
-! ... terminate the program
-      OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
-      WRITE (15,100) mpime, a, b, n
-      CALL cpflush  ! flush output streams
-      CALL mp_end   ! terminate MPI
-
-100   FORMAT (/,' *** from PE : ',I3,'  *** in routine ',A, &
-              /,' *** error msg. : ',A,' *** code ',I5, &
-              /,' *** aborting ***', /)
-      STOP
-  END SUBROUTINE p_err_I
-
-  SUBROUTINE p_err_R(a,b,r)
-
-      USE mp
-      USE mp_global, ONLY: mpime
-      USE kinds
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      CHARACTER(LEN=*) a, b
-      REAL(DBL) r
-
-! ... declare function
-
-! ... print the error message
-      WRITE( stdout,100) mpime, a, b, r
-
-! ... terminate the program
-      OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
-      WRITE (15,100) mpime, a, b, r
-      CALL cpflush  ! flush output streams
-      CALL mp_end   ! terminate MPI
-
-
-100   FORMAT (/,' *** from PE : ',I3,'  *** in routine ',A, &
-              /,' *** error msg. : ',A,' *** code ',F16.8, &
-              /,' *** aborting ***', /)
-      STOP
-  END SUBROUTINE p_err_R
-
-  SUBROUTINE p_err_S(a,b,c)
-
-      USE mp
-      USE mp_global, ONLY: mpime
-      USE kinds
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      CHARACTER(LEN=*) a, b, c
-
-! ... print the error message
-      WRITE( stdout,100) mpime, a, b, c
-
-! ... terminate the program
-      OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
-      WRITE (15,100) mpime, a, b, c
-      CALL cpflush  ! flush output streams
-      CALL mp_end   ! terminate MPI
-
-
-100   FORMAT (/,' *** from PE : ',I3,'  *** in routine ',A, &
-              /,' *** error msg. : ',A,' *** code ',A, &
-              /,' *** aborting ***', /)
-      STOP
-  END SUBROUTINE p_err_S
-
-  SUBROUTINE p_err_L(a,b,t)
-
-      USE mp
-      USE mp_global, ONLY: mpime
-      USE kinds
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      CHARACTER(LEN=*) a, b
-      LOGICAL t
-
-! ... declare function
-
-! ... print the error message
-      WRITE( stdout,100) mpime, a, b, t
-
-! ... terminate the program
-      OPEN(UNIT=15, FILE='CRASH', POSITION='append', STATUS='unknown')
-      WRITE (15,100) mpime, a, b, t
-      CALL cpflush  ! flush output streams
-      CALL mp_end   ! terminate MPI
-
-100   FORMAT (/,' *** from PE : ',I3,'  *** in routine ',A, &
-              /,' *** error msg. : ',A,' *** code ',L2, &
-              /,' *** aborting ***', /)
-      STOP
-  END SUBROUTINE p_err_L
-
 
 END MODULE parser
