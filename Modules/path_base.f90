@@ -106,7 +106,7 @@ MODULE path_base
          !
          num_of_modes = ( Nft - 1 )
          !
-         ft_coeff = 2.D0 / REAL( Nft )
+         ft_coeff = 2.D0 / DBLE( Nft )
          !
       END IF
       !  
@@ -211,7 +211,7 @@ MODULE path_base
          !
          path_length = SUM( image_spacing(:) )
          !
-         inter_image_dist = SUM( image_spacing(:) ) / REAL( num_of_images - 1 )
+         inter_image_dist = SUM( image_spacing(:) ) / DBLE( num_of_images - 1 )
          !
       ELSE
          !
@@ -328,7 +328,7 @@ MODULE path_base
           !
           path_length = SUM( image_spacing(:) )
           !
-          inter_image_dist = path_length / REAL( num_of_images - 1  )
+          inter_image_dist = path_length / DBLE( num_of_images - 1  )
           !
           FORALL( i = 1: ( input_images - 1 ) )
              !
@@ -610,16 +610,16 @@ MODULE path_base
       REAL (KIND=DP) :: x, pi_over_Nft
       !
       !
-      pi_over_Nft = pi / REAL( Nft )
+      pi_over_Nft = pi / DBLE( Nft )
       !
       DO n = 1, num_of_modes
          !
          DO j = 0, ( Nft - 1 )
             !
-            x = pi_over_Nft * REAL( n * j )
+            x = pi_over_Nft * DBLE( n * j )
             !
             ft_sin(n,j) = SIN( x )
-            ft_cos(n,j) = pi * REAL( n ) * COS( x )
+            ft_cos(n,j) = pi * DBLE( n ) * COS( x )
             !
          END DO
          !
@@ -658,13 +658,13 @@ MODULE path_base
          !
          DO j = 0, ( Nft_smooth - 1 )
             !
-            x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
+            x = DBLE( Nft_smooth * ( i - 1 ) + j ) / DBLE( Nft_smooth * Nft )
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
             DO n = 1, num_of_modes
                !
-               r_n(:) = r_n(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x )
+               r_n(:) = r_n(:) + ft_pos(:,n) * SIN( DBLE( n ) * pi * x )
                !
             END DO
             !
@@ -713,7 +713,7 @@ MODULE path_base
       !
       arc_length = 0.D0
       !
-      scale = path_length / REAL( num_of_images - 1 )
+      scale = path_length / DBLE( num_of_images - 1 )
       !
       r_h(:) = pos(:,1)
       !
@@ -721,19 +721,19 @@ MODULE path_base
          !
          DO j = 0, ( Nft_smooth - 1 )
             !
-            x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
+            x = DBLE( Nft_smooth * ( i - 1 ) + j ) / DBLE( Nft_smooth * Nft )
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
             DO n = 1, num_of_modes
                !
-               r_n(:) = r_n(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x )
+               r_n(:) = r_n(:) + ft_pos(:,n) * SIN( DBLE( n ) * pi * x )
                !
             END DO
             !
             arc_length = arc_length + norm( r_n - r_h )
             !
-            IF ( arc_length >= REAL( image ) * scale ) THEN
+            IF ( arc_length >= DBLE( image ) * scale ) THEN
                !
                image = image + 1
                !
@@ -785,7 +785,7 @@ MODULE path_base
       !
       DO j = 0, ( Nft - 1 )
          !
-         ratio = REAL( j ) / REAL( Nft )
+         ratio = DBLE( j ) / DBLE( Nft )
          !
          pos_star(:,j) = pos(:,j+1) - pos(:,1) - &
                          ratio * ( pos(:,num_of_images) - pos(:,1) )
@@ -866,7 +866,7 @@ MODULE path_base
       !
       DO j = 0, ( Nft - 1 )
          !
-         ratio = REAL( j ) / REAL( Nft )
+         ratio = DBLE( j ) / DBLE( Nft )
          !
          pes_star(j) = pes(j+1) - pes(1) - &
                        ratio * ( pes(num_of_images) - pes(1) )
@@ -933,7 +933,7 @@ MODULE path_base
       images_updated = .FALSE.
       !
       limit_path_thr = multistep_coeff * &
-                       REAL( num_of_images_inp - num_of_images ) * path_thr
+                       DBLE( num_of_images_inp - num_of_images ) * path_thr
       !
       IF ( istep_path == 0 ) THEN
          !
@@ -996,7 +996,7 @@ MODULE path_base
          !
          num_of_modes = ( Nft - 1 )
          !
-         ft_coeff = 2.D0 / REAL( Nft )
+         ft_coeff = 2.D0 / DBLE( Nft )
          !
          CALL compute_fourier_sin_and_cos()
          !
@@ -1227,13 +1227,13 @@ MODULE path_base
             !
             DO j = 0, ( Nft_smooth - 1 )
                !
-               x = REAL( Nft_smooth * ( i - 1 ) + j ) / REAL( Nft_smooth * Nft )
+               x = DBLE( Nft_smooth * ( i - 1 ) + j ) / DBLE( Nft_smooth * Nft )
                !
                E = x * delta_E
                !
                DO n = 1, num_of_modes
                   !
-                  E = E + ft_pes(n) * SIN( REAL( n ) * pi * x )
+                  E = E + ft_pes(n) * SIN( DBLE( n ) * pi * x )
                   !
                END DO
                !
@@ -1255,7 +1255,7 @@ MODULE path_base
          !
          DO n = 1, num_of_modes
             !
-            pos_ts(:) = pos_ts(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x_ts )
+            pos_ts(:) = pos_ts(:) + ft_pos(:,n) * SIN( DBLE( n ) * pi * x_ts )
             !
          END DO
          !

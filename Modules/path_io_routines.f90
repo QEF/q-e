@@ -4,7 +4,9 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-! 
+!
+#include "f_defs.h"
+!
 !----------------------------------------------------------------------------
 MODULE path_io_routines
   !----------------------------------------------------------------------------
@@ -164,7 +166,7 @@ MODULE path_io_routines
              !
              num_of_modes = ( Nft - 1 )
              !
-             ft_coeff = 2.D0 / REAL( Nft )
+             ft_coeff = 2.D0 / DBLE( Nft )
              !
              READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
              !
@@ -201,7 +203,7 @@ MODULE path_io_routines
                  if_pos(3,ia) 
              !
              grad_pes(:,1) = grad_pes(:,1) * &
-                             REAL( RESHAPE( if_pos, (/ dim /) ) )
+                             DBLE( RESHAPE( if_pos, (/ dim /) ) )
              !
           END DO
           !
@@ -223,7 +225,7 @@ MODULE path_io_routines
              END DO
              !
              grad_pes(:,i) = grad_pes(:,i) * &
-                             REAL( RESHAPE( if_pos, (/ dim /) ) )
+                             DBLE( RESHAPE( if_pos, (/ dim /) ) )
              !
           END DO
           !
@@ -270,10 +272,10 @@ MODULE path_io_routines
                       END DO
                       !
                       vel(:,i) = vel(:,i) * &
-                                 REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                       grad_old(:,i) = grad_old(:,i) * &
-                                      REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                    END DO
                    !
@@ -305,10 +307,10 @@ MODULE path_io_routines
                       END DO
                       !
                       ft_vel(:,i) = ft_vel(:,i) * &
-                                    REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                       ft_grad_old(:,i) = ft_grad_old(:,i) * &
-                                         REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                         DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                    END DO
                    !
@@ -336,10 +338,10 @@ MODULE path_io_routines
                       END DO
                       !
                       vel(:,i) = vel(:,i) * &
-                                 REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                       grad_old(:,i) = grad_old(:,i) * &
-                                      REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                       i = num_of_images
                       !
@@ -363,10 +365,10 @@ MODULE path_io_routines
                       END DO
                       !
                       vel(:,i) = vel(:,i) * &
-                                 REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                       grad_old(:,i) = grad_old(:,i) * &
-                                      REAL( RESHAPE( if_pos, (/ dim /) ) )
+                                      DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                    END IF
                    !
@@ -845,11 +847,11 @@ MODULE path_io_routines
           !
           image = 1
           !
-          delta_R = react_coord(num_of_images) / REAL(max_i)
+          delta_R = react_coord(num_of_images) / DBLE(max_i)
           !
           DO j = 0, max_i
              !
-             R = REAL(j) * delta_R 
+             R = DBLE(j) * delta_R 
              !
              IF ( ( R > react_coord(image+1) ) .AND. &
                   ( image < ( num_of_images - 1 ) ) ) image = image + 1
@@ -879,7 +881,7 @@ MODULE path_io_routines
           DO image = 1, num_of_images
              !
              WRITE( UNIT = iundat, FMT = dat_fmt ) &
-                 ( REAL( image - 1 ) / REAL( num_of_images - 1 ) ), &
+                 ( DBLE( image - 1 ) / DBLE( num_of_images - 1 ) ), &
                  ( pes(image) - pes(1) ) * au
              !
           END DO          
@@ -890,14 +892,14 @@ MODULE path_io_routines
              !
              DO j = 0, ( Nft_smooth - 1 )
                 !
-                x = REAL( Nft_smooth * ( i - 1 ) + j ) / &
-                    REAL( Nft_smooth * ( num_of_images - 1 ) )
+                x = DBLE( Nft_smooth * ( i - 1 ) + j ) / &
+                    DBLE( Nft_smooth * ( num_of_images - 1 ) )
                 !
                 E = x * delta_E
                 !
                 DO n = 1, num_of_modes
                    !
-                   E = E + ft_pes(n) * SIN( REAL( n ) * pi * x )
+                   E = E + ft_pes(n) * SIN( DBLE( n ) * pi * x )
                    !
                 END DO
                 !
@@ -1034,7 +1036,7 @@ MODULE path_io_routines
              !
           END DO
           !
-          inter_image_distance = path_length / REAL( num_of_images - 1 )
+          inter_image_distance = path_length / DBLE( num_of_images - 1 )
           !
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"path length",&

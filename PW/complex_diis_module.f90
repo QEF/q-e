@@ -1173,7 +1173,7 @@ MODULE complex_diis_module
          !
       END DO
       !
-      diis_iter = diis_iter + ANINT( REAL( holes_filler_iter ) / REAL( nbnd ) )
+      diis_iter = diis_iter + ANINT( DBLE( holes_filler_iter ) / DBLE( nbnd ) )
       !
       DEALLOCATE( lagrange )
       DEALLOCATE( ppsi )

@@ -563,7 +563,7 @@ FUNCTION rho_dot_product( rho1, rho2 )
         fac = e2 * fpi / ( tpiba2 * gg(ig) )
         !
         rho_dot_product = rho_dot_product + &
-                          fac * REAL( CONJG( rho1(ig,is) ) * rho2(ig,is) )
+                          fac * DBLE( CONJG( rho1(ig,is) ) * rho2(ig,is) )
         !
      END DO
      !
@@ -576,7 +576,7 @@ FUNCTION rho_dot_product( rho1, rho2 )
         fac = e2 * fpi / ( tpiba2 * gg(ig) )
         !
         rho_dot_product = rho_dot_product + &
-                          fac * REAL( CONJG( rho1(ig,1) + rho1(ig,2) ) * &
+                          fac * DBLE( CONJG( rho1(ig,1) + rho1(ig,2) ) * &
                                            ( rho2(ig,1) + rho2(ig,2) ) )
         !
      END DO
@@ -590,7 +590,7 @@ FUNCTION rho_dot_product( rho1, rho2 )
      IF ( gstart == 2 ) THEN
         !
         rho_dot_product = rho_dot_product + &
-                          fac * REAL( CONJG( rho1(1,1) - rho1(1,2) ) * &
+                          fac * DBLE( CONJG( rho1(1,1) - rho1(1,2) ) * &
                                            ( rho2(1,1) - rho2(1,2) ) )
         !
      END IF
@@ -600,7 +600,7 @@ FUNCTION rho_dot_product( rho1, rho2 )
      DO ig = gstart, ngm0
         !
         rho_dot_product = rho_dot_product + &
-                          fac * REAL( CONJG( rho1(ig,1) - rho1(ig,2) ) * &
+                          fac * DBLE( CONJG( rho1(ig,1) - rho1(ig,2) ) * &
                                            ( rho2(ig,1) - rho2(ig,2) ) )
         !
      END DO
@@ -920,7 +920,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
   !
-  alpha(:) = REAL( psic(:) )
+  alpha(:) = DBLE( psic(:) )
   !
   min_rs   = ( 3.D0 * omega / fpi / nelec )**( 1.D0 / 3.D0 )
   max_rs   = min_rs

@@ -224,7 +224,7 @@ SUBROUTINE dynamics()
   !
   ! ... constrains ( atoms kept fixed ) are reinforced 
   !
-  vel = vel * REAL( if_pos )
+  vel = vel * DBLE( if_pos )
   !
   tau = tau + dt * vel + 0.5D0 * dt**2 * acc
   !
@@ -467,7 +467,7 @@ SUBROUTINE dynamics()
           !
        END IF
        !
-       vel = vel * aux * REAL( if_pos )
+       vel = vel * aux * DBLE( if_pos )
        !
        RETURN
        !
