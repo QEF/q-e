@@ -175,6 +175,7 @@ PWOBJS = \
 ../PW/noncol.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
+../PW/output_tau.o \
 ../PW/para.o \
 ../PW/paw.o \
 ../PW/potinit.o \

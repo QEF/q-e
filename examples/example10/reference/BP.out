@@ -1,12 +1,12 @@
 
-     Program PWSCF     v.2.0    starts ...
-     Today is  3Feb2004 at 11:49:56 
+     Program PWSCF     v.2.1    starts ...
+     Today is 25Aug2004 at 11:55: 7 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
      ntypx =10   npk =40000  lmax = 3
-     nchix = 6  ndim = 2000  nbrx = 8 nqfm = 8
+     nchix = 6  ndmx = 2000  nbrx =14 nqfx = 8
 
 
      bravais-lattice index     =            1
@@ -47,7 +47,7 @@
                 l(5) =   2
                 l(6) =   2
      Q(r) pseudized with  8 coefficients,  rinner =    1.000   1.000   1.000
-                                                             1.000   1.000
+                                                       1.000   1.000
 
      PSEUDO 2 is Ti (US)    zval = 12.0   lmax= 2   lloc= 0
      Version   0  0  0 of US pseudo code
@@ -60,7 +60,7 @@
                 l(5) =   2
                 l(6) =   2
      Q(r) pseudized with  5 coefficients,  rinner =    1.000   1.000   1.000
-                                                             1.000   1.000
+                                                       1.000   1.000
 
      PSEUDO 3 is O  (US)    zval =  6.0   lmax= 1   lloc= 0
      Version   0  0  0 of US pseudo code
@@ -91,27 +91,27 @@
 
      number of k points=   21
                        cart. coord. in units 2pi/a_0
-        k(   1) = (   0.1250000   0.1250000  -0.5000000), wk =   0.0238095
-        k(   2) = (   0.1250000   0.1250000  -0.3333333), wk =   0.0238095
-        k(   3) = (   0.1250000   0.1250000  -0.1666667), wk =   0.0238095
-        k(   4) = (   0.1250000   0.1250000   0.0000000), wk =   0.0238095
-        k(   5) = (   0.1250000   0.1250000   0.1666667), wk =   0.0238095
-        k(   6) = (   0.1250000   0.1250000   0.3333333), wk =   0.0238095
-        k(   7) = (   0.1250000   0.1250000   0.5000000), wk =   0.0238095
-        k(   8) = (   0.1250000   0.3750000  -0.5000000), wk =   0.0476190
-        k(   9) = (   0.1250000   0.3750000  -0.3333333), wk =   0.0476190
-        k(  10) = (   0.1250000   0.3750000  -0.1666667), wk =   0.0476190
-        k(  11) = (   0.1250000   0.3750000   0.0000000), wk =   0.0476190
-        k(  12) = (   0.1250000   0.3750000   0.1666667), wk =   0.0476190
-        k(  13) = (   0.1250000   0.3750000   0.3333333), wk =   0.0476190
-        k(  14) = (   0.1250000   0.3750000   0.5000000), wk =   0.0476190
-        k(  15) = (   0.3750000   0.3750000  -0.5000000), wk =   0.0238095
-        k(  16) = (   0.3750000   0.3750000  -0.3333333), wk =   0.0238095
-        k(  17) = (   0.3750000   0.3750000  -0.1666667), wk =   0.0238095
-        k(  18) = (   0.3750000   0.3750000   0.0000000), wk =   0.0238095
-        k(  19) = (   0.3750000   0.3750000   0.1666667), wk =   0.0238095
-        k(  20) = (   0.3750000   0.3750000   0.3333333), wk =   0.0238095
-        k(  21) = (   0.3750000   0.3750000   0.5000000), wk =   0.0238095
+        k(   1) = (   0.1250000   0.1250000  -0.5000000), wk =   0.0714286
+        k(   2) = (   0.1250000   0.1250000  -0.3333333), wk =   0.0714286
+        k(   3) = (   0.1250000   0.1250000  -0.1666667), wk =   0.0714286
+        k(   4) = (   0.1250000   0.1250000   0.0000000), wk =   0.0714286
+        k(   5) = (   0.1250000   0.1250000   0.1666667), wk =   0.0714286
+        k(   6) = (   0.1250000   0.1250000   0.3333333), wk =   0.0714286
+        k(   7) = (   0.1250000   0.1250000   0.5000000), wk =   0.0714286
+        k(   8) = (   0.1250000   0.3750000  -0.5000000), wk =   0.1428571
+        k(   9) = (   0.1250000   0.3750000  -0.3333333), wk =   0.1428571
+        k(  10) = (   0.1250000   0.3750000  -0.1666667), wk =   0.1428571
+        k(  11) = (   0.1250000   0.3750000   0.0000000), wk =   0.1428571
+        k(  12) = (   0.1250000   0.3750000   0.1666667), wk =   0.1428571
+        k(  13) = (   0.1250000   0.3750000   0.3333333), wk =   0.1428571
+        k(  14) = (   0.1250000   0.3750000   0.5000000), wk =   0.1428571
+        k(  15) = (   0.3750000   0.3750000  -0.5000000), wk =   0.0714286
+        k(  16) = (   0.3750000   0.3750000  -0.3333333), wk =   0.0714286
+        k(  17) = (   0.3750000   0.3750000  -0.1666667), wk =   0.0714286
+        k(  18) = (   0.3750000   0.3750000   0.0000000), wk =   0.0714286
+        k(  19) = (   0.3750000   0.3750000   0.1666667), wk =   0.0714286
+        k(  20) = (   0.3750000   0.3750000   0.3333333), wk =   0.0714286
+        k(  21) = (   0.3750000   0.3750000   0.5000000), wk =   0.0714286
 
      G cutoff =  165.0991  (   8925 G-vectors)     FFT grid: ( 27, 27, 27)
 
@@ -121,11 +121,15 @@
      The initial potential is read from file      pwscf.pot
      Starting wfc are atomic
 
-     total cpu time spent up to now is      9.81 secs
+     total cpu time spent up to now is     10.84 secs
 
      Band Structure Calculation
      Davidson diagonalization (with overlap)
      ethr =  2.27E-08,  avg # of iterations =  9.2
+
+     total cpu time spent up to now is     45.97 secs
+
+     End of band structure calculation
 
           k = 0.1250 0.1250-0.5000     band energies (ev):
 
@@ -171,7 +175,7 @@
 
           k = 0.1250 0.3750-0.5000     band energies (ev):
 
-   -45.0385 -21.6886 -21.6779 -21.6240  -5.9694  -5.2534  -5.2018  -4.3353
+   -45.0385 -21.6886 -21.6779 -21.6240  -5.9694  -5.2534  -5.2018  -4.3352
     -4.2806  -4.2424  -4.1756  -3.9782   3.2268   6.3078   6.6176   6.8798
      7.1927   8.4571   8.9954   9.3020   9.4520  10.5720
 
@@ -185,7 +189,7 @@
 
    -45.0398 -21.6813 -21.6338 -21.6264  -6.1466  -5.4257  -5.3646  -4.3596
     -4.3051  -4.2797  -4.1939  -4.1064   3.5996   6.5889   7.0083   7.4756
-     8.0900   8.5313   8.9542   9.7619   9.8093  10.4448
+     8.0899   8.5313   8.9542   9.7619   9.8093  10.4448
 
           k = 0.1250 0.3750 0.0000     band energies (ev):
 
@@ -197,7 +201,7 @@
 
    -45.0398 -21.6813 -21.6338 -21.6264  -6.1466  -5.4257  -5.3646  -4.3596
     -4.3051  -4.2797  -4.1939  -4.1064   3.5996   6.5889   7.0083   7.4756
-     8.0900   8.5313   8.9542   9.7619   9.8093  10.4448
+     8.0899   8.5313   8.9542   9.7619   9.8093  10.4448
 
           k = 0.1250 0.3750 0.3333     band energies (ev):
 
@@ -207,7 +211,7 @@
 
           k = 0.1250 0.3750 0.5000     band energies (ev):
 
-   -45.0385 -21.6886 -21.6779 -21.6240  -5.9694  -5.2534  -5.2018  -4.3353
+   -45.0385 -21.6886 -21.6779 -21.6240  -5.9694  -5.2534  -5.2018  -4.3352
     -4.2806  -4.2424  -4.1756  -3.9782   3.2268   6.3078   6.6176   6.8798
      7.1927   8.4571   8.9954   9.3020   9.4520  10.5720
 
@@ -233,7 +237,7 @@
 
    -45.0389 -21.6794 -21.6785 -21.6125  -6.0639  -5.2667  -5.1937  -4.3407
     -4.3287  -4.3225  -4.1995  -4.0310   3.1945   6.5555   6.6510   7.8811
-     7.9843   8.0306   8.3888   9.1582  10.0288  10.4484
+     7.9842   8.0306   8.3888   9.1582  10.0288  10.4484
 
           k = 0.3750 0.3750 0.1667     band energies (ev):
 
@@ -343,45 +347,45 @@
 
 
 
-     Writing file pwscf.pun     for program phonon
+     Writing file     pwscf.save for program phonon
  
-     PWSCF        :    49.90s CPU time
+     PWSCF        :    53.66s CPU time
 
-     init_run     :     9.58s CPU
-     electrons    :    36.88s CPU
+     init_run     :    10.54s CPU
+     electrons    :    40.36s CPU
  
-     electrons    :    36.88s CPU
-     c_bands      :    31.48s CPU
-     sum_band     :     3.11s CPU
-     newd         :     0.55s CPU
+     electrons    :    40.36s CPU
+     c_bands      :    35.13s CPU
+     sum_band     :     2.43s CPU
+     newd         :     0.56s CPU
  
-     c_bands      :    31.48s CPU
-     init_us_2    :     0.70s CPU (      99 calls,   0.007 s avg)
-     cegterg      :    30.98s CPU (      21 calls,   1.475 s avg)
+     c_bands      :    35.13s CPU
+     init_us_2    :     0.73s CPU (      99 calls,   0.007 s avg)
+     cegterg      :    34.82s CPU (      21 calls,   1.658 s avg)
  
-     sum_band     :     3.11s CPU
-     sumbec       :     0.00s CPU (      21 calls,   0.000 s avg)
-     addusdens    :     0.48s CPU
+     sum_band     :     2.43s CPU
+     becsum       :     0.01s CPU (      21 calls,   0.000 s avg)
+     addusdens    :     0.46s CPU
  
-     wfcrot       :     4.99s CPU (      21 calls,   0.238 s avg)
-     cegterg      :    30.98s CPU (      21 calls,   1.475 s avg)
-     h_psi        :    26.73s CPU (     235 calls,   0.114 s avg)
-     g_psi        :     0.29s CPU (     193 calls,   0.002 s avg)
-     overlap      :     1.68s CPU (     193 calls,   0.009 s avg)
-     cdiaghg      :     2.11s CPU (     214 calls,   0.010 s avg)
-     update       :     1.48s CPU (     193 calls,   0.008 s avg)
-     last         :     1.27s CPU (      59 calls,   0.021 s avg)
+     wfcrot       :     5.95s CPU (      21 calls,   0.283 s avg)
+     cegterg      :    34.82s CPU (      21 calls,   1.658 s avg)
+     h_psi        :    30.45s CPU (     235 calls,   0.130 s avg)
+     g_psi        :     0.30s CPU (     193 calls,   0.002 s avg)
+     overlap      :     1.70s CPU (     193 calls,   0.009 s avg)
+     cdiaghg      :     2.03s CPU (     214 calls,   0.009 s avg)
+     update       :     2.06s CPU (     193 calls,   0.011 s avg)
+     last         :     1.33s CPU (      59 calls,   0.023 s avg)
  
-     h_psi        :    26.73s CPU (     235 calls,   0.114 s avg)
-     init         :     0.18s CPU (     235 calls,   0.001 s avg)
-     firstfft     :    10.96s CPU (    4015 calls,   0.003 s avg)
-     secondfft    :    11.06s CPU (    4015 calls,   0.003 s avg)
-     add_vuspsi   :     1.48s CPU (     235 calls,   0.006 s avg)
-     s_psi        :     1.60s CPU (     235 calls,   0.007 s avg)
+     h_psi        :    30.45s CPU (     235 calls,   0.130 s avg)
+     init         :     0.21s CPU (     235 calls,   0.001 s avg)
+     firstfft     :    13.00s CPU (    4015 calls,   0.003 s avg)
+     secondfft    :    12.73s CPU (    4015 calls,   0.003 s avg)
+     add_vuspsi   :     1.45s CPU (     235 calls,   0.006 s avg)
+     s_psi        :     1.58s CPU (     235 calls,   0.007 s avg)
  
-      General routines
-     ccalbec      :     1.47s CPU (     292 calls,   0.005 s avg)
-     cft3         :     0.02s CPU (       3 calls,   0.005 s avg)
-     cft3s        :    21.97s CPU (    8492 calls,   0.003 s avg)
-     davcio       :     0.68s CPU (     120 calls,   0.006 s avg)
+     General routines
+     ccalbec      :     1.49s CPU (     292 calls,   0.005 s avg)
+     cft3         :     0.02s CPU (       3 calls,   0.007 s avg)
+     cft3s        :    24.56s CPU (    8492 calls,   0.003 s avg)
+     davcio       :     0.17s CPU (     120 calls,   0.001 s avg)
  

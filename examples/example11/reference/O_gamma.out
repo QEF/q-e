@@ -1,0 +1,358 @@
+
+     Program PWSCF     v.2.1    starts ...
+     Today is 25Aug2004 at 12: 2:18 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+     ntypx =10   npk =40000  lmax = 3
+     nchix = 6  ndmx = 2000  nbrx =14 nqfx = 8
+
+     gamma-point specific algorithms are used
+
+
+
+     bravais-lattice index     =            1
+     lattice parameter (a_0)   =      14.0000  a.u.
+     unit-cell volume          =    2744.0000 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      27.0000  Ry
+     charge density cutoff     =     216.0000  Ry
+     convergence threshold     =      1.0E-08
+     beta                      =       0.2500
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PW   PBE  PBE (1434)
+     iswitch =  0
+
+     celldm(1)=  14.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  1.000000  0.000000  0.000000 )  
+               a(2) = (  0.000000  1.000000  0.000000 )  
+               a(3) = (  0.000000  0.000000  1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PSEUDO 1 is O  (US)    zval =  6.0   lmax= 2   lloc= 0
+     Version   0  0  0 of US pseudo code
+     Using log mesh of  1269 points
+     The pseudopotential has  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
+                                                       0.000   0.000
+
+     atomic species   valence    mass     pseudopotential
+        O              6.00    15.99994     O ( 1.00)
+
+     Starting magnetic structure 
+     atomic species   magnetization
+        O            0.500
+
+     No symmetry!
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           O   tau(  1) = (  0.0000000  0.0000000  0.0000000  )
+
+     number of k points=    2
+                       cart. coord. in units 2pi/a_0
+        k(   1) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
+        k(   2) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
+
+     G cutoff = 1072.3834  (  73495 G-vectors)     FFT grid: ( 72, 72, 72)
+     G cutoff =  536.1917  (  26018 G-vectors)  smooth grid: ( 48, 48, 48)
+
+     nbndx  =    24  nbnd   =     6  natomwfc =     4  npwx   =    3310
+     nelec  =    6.00 nkb   =     8  ngl    =     896
+
+     Initial potential from superposition of free atoms
+
+     npt with rhoup < 0:    49437, npt tot   373248,     13.25 %
+
+     npt with rhodw < 0:    49437, npt tot   373248,     13.25 %
+     Starting wfc are atomic +   2 random wfc
+
+     total cpu time spent up to now is      9.73 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  4.5
+
+     npt with |zeta| > 1:    22176, npt tot   373248,      5.94 %
+
+     npt with rhoup < 0:    76246, npt tot   373248,     20.43 %
+
+     npt with rhodw < 0:    60122, npt tot   373248,     16.11 %
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization with overlap
+     ethr =  2.23E-03,  avg # of iterations =  1.0
+
+     npt with |zeta| > 1:    25307, npt tot   373248,      6.78 %
+
+     npt with rhoup < 0:    81424, npt tot   373248,     21.81 %
+
+     npt with rhodw < 0:    60579, npt tot   373248,     16.23 %
+
+     npt with |zeta| > 1:     7641, npt tot   373248,      2.05 %
+
+     npt with rhoup < 0:    55890, npt tot   373248,     14.97 %
+
+     npt with rhodw < 0:    53999, npt tot   373248,     14.47 %
+
+     total cpu time spent up to now is     30.26 secs
+
+     total energy              =   -31.50341992 ryd
+     estimated scf accuracy    <     0.01336652 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  2     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  2.23E-04,  avg # of iterations =  1.5
+
+     npt with |zeta| > 1:    26878, npt tot   373248,      7.20 %
+
+     npt with rhoup < 0:    82382, npt tot   373248,     22.07 %
+
+     npt with rhodw < 0:    59680, npt tot   373248,     15.99 %
+
+     npt with |zeta| > 1:    24972, npt tot   373248,      6.69 %
+
+     npt with rhoup < 0:    80282, npt tot   373248,     21.51 %
+
+     npt with rhodw < 0:    59516, npt tot   373248,     15.95 %
+
+     total cpu time spent up to now is     43.30 secs
+
+     total energy              =   -31.50376957 ryd
+     estimated scf accuracy    <     0.00756364 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  3     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  1.26E-04,  avg # of iterations =  1.0
+
+     npt with |zeta| > 1:    22391, npt tot   373248,      6.00 %
+
+     npt with rhoup < 0:    79135, npt tot   373248,     21.20 %
+
+     npt with rhodw < 0:    60872, npt tot   373248,     16.31 %
+
+     npt with |zeta| > 1:    26166, npt tot   373248,      7.01 %
+
+     npt with rhoup < 0:    82706, npt tot   373248,     22.16 %
+
+     npt with rhodw < 0:    60668, npt tot   373248,     16.25 %
+
+     total cpu time spent up to now is     56.27 secs
+
+     total energy              =   -31.50424143 ryd
+     estimated scf accuracy    <     0.00024030 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  4     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  4.01E-06,  avg # of iterations =  7.0
+
+     npt with |zeta| > 1:    19829, npt tot   373248,      5.31 %
+
+     npt with rhoup < 0:    78555, npt tot   373248,     21.05 %
+
+     npt with rhodw < 0:    63508, npt tot   373248,     17.01 %
+
+     npt with |zeta| > 1:    22964, npt tot   373248,      6.15 %
+
+     npt with rhoup < 0:    79963, npt tot   373248,     21.42 %
+
+     npt with rhodw < 0:    61319, npt tot   373248,     16.43 %
+
+     total cpu time spent up to now is     70.57 secs
+
+     total energy              =   -31.50434032 ryd
+     estimated scf accuracy    <     0.00001135 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  5     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  1.89E-07,  avg # of iterations =  2.0
+
+     npt with |zeta| > 1:    19669, npt tot   373248,      5.27 %
+
+     npt with rhoup < 0:    78415, npt tot   373248,     21.01 %
+
+     npt with rhodw < 0:    63646, npt tot   373248,     17.05 %
+
+     npt with |zeta| > 1:    19427, npt tot   373248,      5.20 %
+
+     npt with rhoup < 0:    78339, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63894, npt tot   373248,     17.12 %
+
+     total cpu time spent up to now is     83.95 secs
+
+     total energy              =   -31.50434051 ryd
+     estimated scf accuracy    <     0.00000721 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  6     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  1.20E-07,  avg # of iterations =  2.0
+
+     npt with |zeta| > 1:    19489, npt tot   373248,      5.22 %
+
+     npt with rhoup < 0:    78345, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63762, npt tot   373248,     17.08 %
+
+     npt with |zeta| > 1:    19330, npt tot   373248,      5.18 %
+
+     npt with rhoup < 0:    78280, npt tot   373248,     20.97 %
+
+     npt with rhodw < 0:    63946, npt tot   373248,     17.13 %
+
+     total cpu time spent up to now is     97.36 secs
+
+     total energy              =   -31.50434344 ryd
+     estimated scf accuracy    <     0.00000034 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  7     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  5.65E-09,  avg # of iterations =  2.0
+
+     npt with |zeta| > 1:    19425, npt tot   373248,      5.20 %
+
+     npt with rhoup < 0:    78345, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63918, npt tot   373248,     17.12 %
+
+     npt with |zeta| > 1:    19408, npt tot   373248,      5.20 %
+
+     npt with rhoup < 0:    78328, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63884, npt tot   373248,     17.12 %
+
+     total cpu time spent up to now is    110.81 secs
+
+     total energy              =   -31.50434356 ryd
+     estimated scf accuracy    <     0.00000001 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     iteration #  8     ecut=    27.00 ryd     beta=0.25
+     Davidson diagonalization with overlap
+     ethr =  2.16E-10,  avg # of iterations =  2.0
+
+     npt with |zeta| > 1:    19407, npt tot   373248,      5.20 %
+
+     npt with rhoup < 0:    78345, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63936, npt tot   373248,     17.13 %
+
+     npt with |zeta| > 1:    19408, npt tot   373248,      5.20 %
+
+     npt with rhoup < 0:    78328, npt tot   373248,     20.99 %
+
+     npt with rhodw < 0:    63884, npt tot   373248,     17.12 %
+
+     total cpu time spent up to now is    123.59 secs
+
+     End of self-consistent calculation
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000 ( 3310 PWs)   bands (ev):
+
+   -25.0606 -10.0353 -10.0353 -10.0353  -0.5843   2.1125
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000 ( 3310 PWs)   bands (ev):
+
+   -21.6732  -6.8531  -6.8531  -6.8531  -0.4776   2.2657
+
+!    total energy              =   -31.50434356 ryd
+     estimated scf accuracy    <        7.3E-09 ryd
+
+     band energy sum           =    -6.15125802 ryd
+     one-electron contribution =   -37.61420377 ryd
+     hartree contribution      =    20.01376201 ryd
+     xc contribution           =    -6.60799396 ryd
+     ewald contribution        =    -7.29590784 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.00 Bohr mag/cell
+
+     convergence has been achieved
+
+     Writing file     pwscf.save for program phonon
+ 
+     PWSCF        :  2m 3.62s CPU time
+
+     init_run     :     9.64s CPU
+     electrons    :   113.86s CPU
+ 
+     electrons    :   113.86s CPU
+     c_bands      :    12.93s CPU (       9 calls,   1.437 s avg)
+     sum_band     :    11.95s CPU (       9 calls,   1.328 s avg)
+     v_of_rho     :    76.14s CPU (      18 calls,   4.230 s avg)
+     newd         :     6.61s CPU (       9 calls,   0.734 s avg)
+     mix_rho      :     8.11s CPU (       9 calls,   0.901 s avg)
+ 
+     c_bands      :    12.93s CPU (       9 calls,   1.437 s avg)
+     init_us_2    :     0.19s CPU (      38 calls,   0.005 s avg)
+     cegterg      :    12.76s CPU (      18 calls,   0.709 s avg)
+ 
+     sum_band     :    11.95s CPU (       9 calls,   1.328 s avg)
+     becsum       :     0.00s CPU (      18 calls,   0.000 s avg)
+     addusdens    :     7.16s CPU (       9 calls,   0.796 s avg)
+ 
+     cegterg      :    12.76s CPU (      18 calls,   0.709 s avg)
+     h_psi        :    12.12s CPU (      66 calls,   0.184 s avg)
+     g_psi        :     0.03s CPU (      46 calls,   0.001 s avg)
+     overlap      :     0.18s CPU (      46 calls,   0.004 s avg)
+     cdiaghg      :     0.04s CPU (      48 calls,   0.001 s avg)
+     update       :     0.23s CPU (      46 calls,   0.005 s avg)
+     last         :     0.09s CPU (      19 calls,   0.005 s avg)
+ 
+     h_psi        :    12.12s CPU (      66 calls,   0.184 s avg)
+     init         :     0.04s CPU (      66 calls,   0.001 s avg)
+     add_vuspsi   :     0.11s CPU (      66 calls,   0.002 s avg)
+     s_psi        :     0.07s CPU (      66 calls,   0.001 s avg)
+ 
+     General routines
+     ccalbec      :     0.02s CPU (      18 calls,   0.001 s avg)
+     cft3         :    41.73s CPU (     463 calls,   0.090 s avg)
+     cft3s        :    12.10s CPU (     396 calls,   0.031 s avg)
+     interpolate  :     5.03s CPU (      36 calls,   0.140 s avg)
+     davcio       :     0.04s CPU (      56 calls,   0.001 s avg)
+ 

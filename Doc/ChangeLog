@@ -1,3 +1,7 @@
+25 Aug 2004  Fixed some errors in constrained dynamics. "Fixed atoms" and
+             explicit constraints are now compatible when they do not involve
+             the same atoms. (CS) Makefiles, examples 10-11 updated (PG)
+
 24 Aug 2004  Fixed a bug in the way the prefix.dat file was written.
              Cleanup of debug code (C.S.)
              Examples 1-7 updated (PG)
