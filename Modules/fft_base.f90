@@ -451,7 +451,7 @@
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
-          INTEGER, INTENT(IN) :: iopt
+          INTEGER, INTENT(IN) :: iopt, ldx, ldy, ldz
 
           INTEGER :: i, j, k, is, nz, ns
           INTEGER, SAVE :: dfft_id = -1
