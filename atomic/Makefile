@@ -39,7 +39,6 @@ int_0_inf_dr.o \
 integrate_inward.o \
 integrate_outward.o \
 intref.o \
-invmat1.o \
 ld1_readin.o \
 ld1_setup.o \
 ld1_writeout.o \
