@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: validate.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: validate.itcl,v 1.2 2005-03-23 11:33:17 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------
@@ -40,6 +40,7 @@
 # (i.e. -validate option). The following validations are supported:
 # 
 #       whatever          --
+#       binary            --
 #       posint 		  --
 #       nonposint 	  --
 #       negint 		  --
@@ -61,6 +62,9 @@ proc ::guib::widgets::validate_functions {} {
 	switch -glob -- $itk_option(-validate) {
 	    whatever {
 		set itk_option(-validate) "::guib::widgets::whatever %P"
+	    }
+	    binary {
+		set itk_option(-validate) "::guib::widgets::binary %P"
 	    }
 	    posint* {
 		set itk_option(-validate) "::guib::widgets::posint %P"
@@ -116,6 +120,16 @@ proc ::guib::widgets::whatever {string} {
     return 1
 }
 
+
+# ------------------------------------------------------------------
+# PROCEDURE: binary string
+#
+# The binary procedure validates character input for a given
+# Entryfield to be a binary, i.e. 0 or 1, and returns the result.
+# ------------------------------------------------------------------
+proc ::guib::widgets::binary {string} {
+    return [regexp {^[01]$} $string]
+}
 
 # ------------------------------------------------------------------
 # PROCEDURE: posint string

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: spininthelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: spininthelp.itcl,v 1.2 2005-03-23 11:33:17 kokalj Exp $ 
 #
 
 
@@ -55,7 +55,7 @@
 #                                     E-mail: syockey@spd.dsccc.com
 #                                             yockey@acm.org
 #
-#   @(#) $Id: spininthelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $
+#   @(#) $Id: spininthelp.itcl,v 1.2 2005-03-23 11:33:17 kokalj Exp $
 # ----------------------------------------------------------------------
 #            Copyright (c) 1995 DSC Technologies Corporation
 # ======================================================================
@@ -108,7 +108,7 @@ itk::usual Spinint {
 #      -step 
 #      -wrap 
 #      -validate -- the validate command for the spinint widget (must be 
-#                   nonnegint, posint, nonposint, or negint)
+#                   binary, nonnegint, posint, nonposint, or negint)
 #  RETURN VALUE
 #    Returns the path of the spinint, i.e., pathName.
 #********
@@ -166,14 +166,14 @@ body ::guib::widgets::Spinint::constructor {args} {
 # Sets the validation function for spinner.
 # ------------------------------------------------------------------
 configbody ::guib::widgets::Spinint::validate {
-    # 1. allowed validations are of integer type: numeric, integer,
+    # 1. allowed validations are of integer type: binary, numeric, integer,
     # posint, negint, nonposint, nonnegint
     switch -glob -- $itk_option(-validate) {
-	{} - *numeric* - *integer* - *posint* - *negint* - *nonposint* - *nonnegint* {
+	{} - *numeric* - *integer* - *posint* - *negint* - *nonposint* - *nonnegint* - *binary* {
 	    # validation function is OK
 	}
 	default {
-	    error "invalid validation function \"$itk_option(-validate)\", should be one of numeric, integer, posinteger, neginteger, nonposinteger, or nonneginteger"
+	    error "invalid validation function \"$itk_option(-validate)\", should be one of binary, numeric, integer, posinteger, neginteger, nonposinteger, or nonneginteger"
 	    return
 	}
     }
@@ -181,6 +181,9 @@ configbody ::guib::widgets::Spinint::validate {
     # 2. validation for spinner-arrow mechanism
     set maxint 2147483647
     switch -glob -- $itk_option(-validate) {
+	binary* {
+	    set itk_option(-range) "0 1"
+	}
 	nonnegint* {
 	    set itk_option(-range) "0 $maxint"
 	}
@@ -412,7 +415,7 @@ body ::guib::widgets::Spinint::down {} {
 #  OPTIONS
 #    Special OPTIONS
 #      -validate    -- the validate command for the spinint widget (must be 
-#                      nonnegint, posint, nonposint, or negint)
+#                      binary, nonnegint, posint, nonposint, or negint)
 #      -helpcommand -- command for the help button
 #      -helppadx    -- "padx" for the help button
 #      -helppady    -- "pady" for the help button
