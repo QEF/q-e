@@ -1107,7 +1107,6 @@
             l=1
             do ig=1,ngb
                xg=sqrt(gb(ig))*tpibab
-               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
                call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
                do ir=1,kkbeta(is)
                   fint(ir)=r(ir,is)**2*rscore(ir,is)*jl(ir)
@@ -1253,7 +1252,7 @@
 !
       implicit none
 !
-      integer  lmax, is, il, l, ir, iv, jv, lm, ind, ltmp
+      integer  lmax, is, il, l, ir, iv, jv, lm, ind, ltmp, i0
       real(kind=8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
      &              dfint(:)
       real(kind=8) xg, xrg, fac
@@ -1356,27 +1355,32 @@
          do l=1,nqlc(is)
             do il=1,mmx
                xg=sqrt(refg*(il-1))
-               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
                call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
 !
                if(tpre) then
                   ltmp=l-1
-                  ! call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
-                  call sph_bes (kkbeta(is), r(1,is), xg, ltmp-1, jltmp )
-                  if(l.eq.1) then
-                     djl(1)=0.0
-                  else
-                     xrg=r(1,is)*xg
-                     djl(1)=jltmp(1)*xrg-l*jl(1)
-                  endif
-                  do ir=2,kkbeta(is)
-                     xrg=r(ir,is)*xg
-                     if((il.eq.1).and.(l.eq.1)) then
-                        djl(ir)=0.0
+                  !
+                  ! r(i0) is the first point such that r(i0) >0
+                  !
+                  i0 = 1
+                  if ( r(1,is) < 1.0d-8 ) i0 = 2  
+                  ! special case q=0
+                  if (xg < 1.0d-8) then
+                     if (l == 1) then
+                        ! Note that dj_1/dx (x=0) = 1/3
+                        jltmp(:) = 1.0d0/3.d0
                      else
-                        djl(ir)=jltmp(ir)*xrg-l*jl(ir)
-                     endif
+                        jltmp(:) = 0.0d0
+                     end if
+                  else
+                     call sph_bes &
+                          (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                  end if
+                  do ir=i0, kkbeta(is)
+                     xrg=r(ir,is)*xg
+                     djl(ir)=jltmp(ir)*xrg-l*jl(ir)
                   end do
+                  if (i0.eq.2) djl(1) = djl(2)
                endif
 !
                do iv= 1,nbeta(is)
@@ -1458,27 +1462,32 @@
             l=nhtol(iv,is)+1
             do il=1,mmx
                xg=sqrt(refg*(il-1))
-               ! call bess(xg,l,kkbeta(is),r(1,is),jl)
                call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
 !
                if(tpre)then
                   ltmp=l-1
-                  ! call bess(xg,ltmp,kkbeta(is),r(1,is),jltmp)
-                  call sph_bes (kkbeta(is), r(1,is), xg, ltmp-1, jltmp )
-                  if(l.eq.1) then
-                     djl(1)=0.0
-                  else
-                     xrg=r(1,is)*xg
-                     djl(1)=jltmp(1)*xrg-l*jl(1)
-                  endif
-                  do ir=2,kkbeta(is)
-                     xrg=r(ir,is)*xg
-                     if((il.eq.1).and.(l.eq.1)) then
-                        djl(ir)=0.0
+                  !
+                  ! r(i0) is the first point such that r(i0) >0
+                  !
+                  i0 = 1
+                  if ( r(1,is) < 1.0d-8 ) i0 = 2  
+                  ! special case q=0
+                  if (xg < 1.0d-8) then
+                     if (l == 1) then
+                        ! Note that dj_1/dx (x=0) = 1/3
+                        jltmp(:) = 1.0d0/3.d0
                      else
-                        djl(ir)=jltmp(ir)*xrg-l*jl(ir)
-                     endif
+                        jltmp(:) = 0.0d0
+                     end if
+                  else
+                     call sph_bes &
+                          (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                  end if
+                  do ir=i0, kkbeta(is)
+                     xrg=r(ir,is)*xg
+                     djl(ir)=jltmp(ir)*xrg-l*jl(ir)
                   end do
+                  if (i0.eq.2) djl(1) = djl(2)
 !
                endif
 !

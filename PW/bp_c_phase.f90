@@ -727,7 +727,7 @@ SUBROUTINE c_phase
    WRITE(6,"(2X,76('-'))")
    DO istring=1,nstring/nspin
       ind1=1+(istring-1)*nppstr
-      WRITE(6,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5' (mod ',I1,')')") &
+      WRITE(6,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
           &  istring,wstring(istring), &
           &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
    END DO
@@ -737,7 +737,7 @@ SUBROUTINE c_phase
 !     --- In unpolarized spin, just copy again the same data ---
       DO istring=1,nstring
          ind1=1+(istring-1)*nppstr
-         WRITE(6,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5' (mod ',I1,')')") &
+         WRITE(6,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
               istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
               pdl_elec(istring),mod_elec(istring)
       END DO
@@ -745,7 +745,7 @@ SUBROUTINE c_phase
 !     --- If there is spin polarization, write information for new strings ---
       DO istring=nstring/2+1,nstring
          ind1=1+(istring-1)*nppstr
-         WRITE(6,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5' (mod ',I1,')')") &
+         WRITE(6,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
            &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
            &    pdl_elec(istring),mod_elec(istring)
       END DO

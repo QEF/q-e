@@ -29,8 +29,6 @@ subroutine work_function (wf)
   allocate (raux1( nrx1 * nrx2 * nrx3))    
   allocate (vaux1( nrx1 * nrx2 * nrx3))    
 
-  ! if (.not.lscf) call sum_band
-  ! TEMP: lscf no longer read, igk indices not written to disk
   if (nspin .ne. 1) &
      call errore ('work_function','spin polarization not implemented',1)
   current_spin = 1

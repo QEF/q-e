@@ -486,12 +486,10 @@
 !
 !   radial fourier transform of the chi functions
 !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
-!              bess requires l+1, not l, on input
 !
          do nb = 1,nchi(is)
             l = lchi(nb,is)
             do i=1,ngw
-               ! call bess(q(i),l+1,mesh(is),r(1,is),jl)
                call sph_bes (mesh(is), r(1,is), q(i), l, jl)
                do ir=1,mesh(is)
                   vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
@@ -523,123 +521,6 @@
       deallocate(jl)
       deallocate(q)
       deallocate(ylm)
-!
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine bess(xg,l,mmax,r,jl)
-!-----------------------------------------------------------------------
-!     calculates spherical bessel functions jl = j_l(xg*r(i)), i=1, mmax
-!     NOTA BENE: input l is l+1 !!! it is assumed that r(1)=0 always
-!
-      implicit none
-      integer, intent(in)      :: l, mmax
-      real(kind=8), intent(in) :: xg, r(mmax)
-      real(kind=8), intent(out):: jl(mmax)
-      real(kind=8), parameter  :: eps=1.0d-8
-      real(kind=8)             :: xrg, xrg2
-      integer                  :: i, ir
-!
-!    l=-1 (for derivative  calculations)
-!
-      if(l.eq.0) then
-         if(xg.lt.eps) then 
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=cos(xrg)/xrg
-            end do
-         end if
-      end if
-!
-!    s part
-!
-      if(l.eq.1) then
-         if(xg.lt.eps) then 
-            do i=1,mmax
-               jl(i)=1.d0
-            end do
-         else
-            jl(1)=1.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=sin(xrg)/xrg
-            end do
-         endif
-      endif
-!
-!     p-part
-! 
-      if(l.eq.2) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=(sin(xrg)/xrg-cos(xrg))/xrg
-            end do
-         endif
-      endif
-!
-!     d part
-! 
-      if(l.eq.3) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=(sin(xrg)*(3.d0/(xrg*xrg)-1.d0)                   &
-     &              -3.d0*cos(xrg)/xrg) /xrg
-            end do
-         endif
-      endif
-!
-!     f part
-!
-      if(l.eq.4) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               xrg2=xrg*xrg
-               jl(ir)=( sin(xrg)*(15.d0/(xrg2*xrg)-6.d0/xrg)            &
-     &              +cos(xrg)*(1.d0-15.d0/xrg2)           )/xrg
-            end do
-         endif
-      endif
-!
-!     g part
-!
-      if(l.eq.5) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               xrg2=xrg*xrg
-               jl(ir)=( sin(xrg)*(105.d0/(xrg2*xrg2)-45.d0/xrg2+1.d0)   &
-     &              +cos(xrg)*(10.d0/xrg-105.d0/(xrg2*xrg)) )/xrg
-            end do
-         endif
-      endif
 !
       return
       end

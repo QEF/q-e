@@ -1,4 +1,4 @@
-TODO LIST - 25 June 2003
+TODO LIST -  1 July 2003
 
 INSTALLATION
 
@@ -30,6 +30,8 @@ COMMON
 - real vs dreal, cmplx vs dcmplx, dfloat etc
 
 - Nudged Elastic Band
+
+- calculation of <psi|exp(iGr)|psi'>
 
 - process numbering: 1 to nproc or 0 to nproc-1 ?
 
@@ -115,8 +117,6 @@ FPMD:
 - version number
 
 CPV: 
-
-- spherical bessel not working for variable-cell case !!!!
 
 - Documentation needs serious improvements
 
