@@ -96,14 +96,10 @@ Iron
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
     angle2(1) =  0.0
-    mcons(1,1) = 0.0
-    mcons(2,1) = 0.5
-    mcons(3,1) = 0.0
  /
  &electrons
-    conv_thr = 1.0e-12
+    conv_thr = 1.0e-8
     mixing_beta = 0.2
-    mixing_mode = 'potential'
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
@@ -141,16 +137,14 @@ Iron
     ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1, nbnd = 16
-    occupations='smearing', smearing='gaussian', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
     angle2(1) =  0.0
  /
  &electrons
-    conv_thr = 1.0e-12
+    conv_thr = 1.0e-8
     mixing_beta = 0.2
-    mixing_mode = 'potential'
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
@@ -214,16 +208,12 @@ cat > fe.pen.in << EOF
     starting_magnetization(1) = 0.5
     angle1(1) = 85.0
     angle2(1) =  0.0
-    mcons(1,1) = 0.0
-    mcons(2,1) = 0.0
-    mcons(3,1) = 0.5
-    i_cons = 1
+    constrained_magnetization='atomic'
     lambda = 1
  /
  &electrons
-    conv_thr = 1.0e-14
+    conv_thr = 1.0e-8
     mixing_beta = 0.2
-    mixing_mode = 'potential'
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF
@@ -265,14 +255,12 @@ cat > fe.angl.in << EOF
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
     angle2(1) =  0.0
-    mcons(1,1) = 0.0
-    i_cons = 2
+    constrained_magnetization='atomic direction'
     lambda = 1
  /
  &electrons
-    conv_thr = 1.0e-16
+    conv_thr = 1.0e-8
     mixing_beta = 0.2
-    mixing_mode = 'potential'
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF

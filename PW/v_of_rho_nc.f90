@@ -20,8 +20,9 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !     Hartree potential is computed in reciprocal space.
   !
   !
-  USE kinds, only: DP
+  USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : magtot_nc, bfield
+  USE io_global,        ONLY : stdout
   implicit none
   !
   !    first the dummy variables
@@ -80,6 +81,7 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
 
   integer :: ir, is, ig, ipol ,nt, na
   ! counters
+  real(kind=DP) :: etcon
 
   call start_clock ('v_of_rho')
   !
@@ -98,52 +100,62 @@ subroutine v_of_rho_nc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
 ! energy 
 
   vtcon = 0.d0
+  etcon = 0.d0
   if (i_cons.ne.0) then
 
 ! get the actual values of the local integrated quantities
      if (i_cons.lt.3) then
-        call get_locals(r_loc, m_loc)
+        call get_locals(r_loc, m_loc, rho)
 
-        do na = 1,ntyp
+        do na = 1,nat
            nt = ityp(na)
 
           ! i_cons = 1 means that the 3 components of the magnetization
           ! are constrained, they are given in the input-file
            if (i_cons.eq.1) then
               do ipol = 1,3
-                 m1(ipol) = m_loc(ipol,nt) - mcons(ipol,nt)
+                 m1(ipol) = m_loc(ipol,na) - mcons(ipol,nt)
               enddo
+              etcon = etcon + &
+                      lambda * (m1(1)*m1(1) + m1(2)*m1(2) + m1(3)*m1(3) )
            else if (i_cons.eq.2) then
            ! i_cons = 2 means that the angle theta between the local
            ! magn. moment and the z-axis is constrained
            ! mcons (1,nt) is the cos of the constraining angle theta
            ! the penalty functional in this case is
+           ! lambda*(m_loc(z)/|m_loc| - cos(theta) )^2
+               ma = dsqrt(m_loc(1,na)**2+m_loc(2,na)**2+m_loc(3,na)**2)
+               m1(1) = - m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
+               m1(2) = - m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
+               m1(3) = - m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma
+               etcon = etcon + &
+                      lambda * (m_loc(3,na)/ma - mcons(3,nt))**2
+           ! the penalty functional in this case is
            ! lambda*(acos(m_loc(z)/|m_loc|) - theta )^2
-               ma = dsqrt(m_loc(1,nt)**2+m_loc(2,nt)**2+m_loc(3,nt)**2)
-               xx = m_loc(3,nt)/ma
-               if (abs(xx - 1.d0).gt.1.d-10) then
-                  xxx = - (acos(xx) - mcons(1,nt))/sqrt(1.d0 - xx*xx)
-               else
-                  xxx = -1.d0
-               endif
-
-               m1(1) = - xxx * m_loc(1,nt)*m_loc(3,nt) / (ma*ma*ma)
-               m1(2) = - xxx * m_loc(2,nt)*m_loc(3,nt) / (ma*ma*ma)
-               m1(3) =   xxx * (ma*ma-m_loc(3,nt)*m_loc(3,nt)) / (ma*ma*ma)
-
+!               xx = m_loc(3,na)/ma
+!               if (abs(xx - 1.d0).gt.1.d-10) then
+!                  xxx = - (acos(xx) - mcons(1,nt))/sqrt(1.d0 - xx*xx)
+!               else
+!                  xxx = -1.d0
+!               endif
+!
+!               m1(1) = - xxx * m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
+!               m1(2) = - xxx * m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
+!               m1(3) =   xxx * (ma*ma-m_loc(3,na)*m_loc(3,na)) / (ma*ma*ma)
             endif
 
             do ir =1,pointnum(na)
                fact = 2.d0*lambda*factlist(ir,na)*omega/(nr1*nr2*nr3)
                do ipol = 1,3
-                  v(pointlist(ir,na),ipol+1) = v(pointlist(ir,na) &
-                         ,ipol+1) +fact*m1(ipol)
-!                  vtcon = vtcon + fact*m1(ipol)*rho(pointlist(ir,na),ipol+1)
+                  v(pointlist(ir,na),ipol+1) = &
+                       v(pointlist(ir,na),ipol+1) + fact * m1(ipol)
+                  vtcon = vtcon + fact*m1(ipol)*rho(pointlist(ir,na),ipol+1)
                enddo            ! ipol
             enddo               ! points
         enddo ! na
-!        call reduce(1,vtcon)
-!        vtcon = omega*vtcon/(nr1*nr2*nr3)
+        call reduce(1,vtcon)
+        vtcon = omega*vtcon/(nr1*nr2*nr3)
+        write (stdout,'(a,F15.8)' ) " constraint energy (Ryd) = ", etcon
      else if (i_cons==3) then
         fact = 2.d0*lambda
         do ipol=1,3

@@ -153,8 +153,7 @@ SUBROUTINE iosys()
   !
   USE noncollin_module, ONLY : noncolin_  => noncolin, &
                                lambda_    => lambda, &
-                               i_cons_    => i_cons, &
-                               mcons_     => mcons, &
+                               i_cons, mcons,        &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
@@ -194,8 +193,9 @@ SUBROUTINE iosys()
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
                                starting_ns_eigenvalue, U_projection_type, &
                                edir, emaxpos, eopreg, eamp, &
-                               noncolin, lambda, i_cons, mcons, angle1, &
-                               angle2, report, lspinorb
+                               noncolin, lambda, angle1, angle2, &
+                               constrained_magnetization, B_field, &
+                               fixed_magnetization, report, lspinorb
   !
   ! ELECTRONS namelist
   !
@@ -238,7 +238,9 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : pos 
   !
   USE basic_algebra_routines, ONLY : norm
-  USE read_namelists_module,  ONLY : read_namelists
+  USE read_namelists_module,  ONLY : read_namelists, SM_NOT_SET
+  !
+  USE kinds,                  ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -249,6 +251,7 @@ SUBROUTINE iosys()
   INTEGER, EXTERNAL   :: iargc
   CHARACTER (LEN=80)  :: input_file
   LOGICAL             :: ltest
+  REAL(kind=DP)       :: theta, phi
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
@@ -297,7 +300,7 @@ SUBROUTINE iosys()
      WRITE( stdout, &
             '(5x,"Presently stress not available with electric field",/)' )
   END IF
-  IF ( tefield .AND. ( nspin == 2 ) ) THEN
+  IF ( tefield .AND. ( nspin > 2 ) ) THEN
      CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
   END IF
   !
@@ -357,25 +360,97 @@ SUBROUTINE iosys()
      CALL errore( ' iosys ', ' neldw less than 0 ', 1 )
   END IF
   !
-  lsda = ( nspin == 2 )
-
+  SELECT CASE (nspin)
+     CASE ( 1 ) 
+        IF ( noncolin ) nspin=4
+     CASE ( 2 )
+        lsda = .true.
+        IF ( noncolin ) CALL errore( ' iosys ', &
+                        ' noncolin .and. nspin==2 are conflicting flags ', 1 )
+     CASE ( 4 )
+        noncolin = .TRUE.
+     CASE DEFAULT 
+        CALL errore( ' iosys ', 'wrong input value for nspin ', 1 )
+  END SELECT
+  !
   IF ( (nelup ==0.d0) .and. (neldw ==  0.d0) ) THEN
      two_fermi_energies = .false.
   ELSE
      two_fermi_energies = .true.
      IF ( .not. lsda ) THEN
-        CALL errore( ' iosys ', ' fixed nelup/neldw requires npsin=2 ', 1 )
+        CALL errore( ' iosys ', ' fixed nelup/neldw requires nspin=2 ', 1 )
      END IF
      IF ( abs (nelup + neldw - nelec) > 1.d-10 ) THEN
         CALL errore( ' iosys ', ' nelup + neldw must be equal to nelec ', 1 )
      END IF
   END IF
-  IF (i_cons==5) two_fermi_energies=.TRUE.
+
+  SELECT CASE ( TRIM( constrained_magnetization ) )
+    CASE ( 'none' )
+       i_cons = 0
+    CASE ( 'total' )
+       IF (nspin == 4) THEN
+          i_cons = 3
+          mcons(1,1) = fixed_magnetization(1)
+          mcons(2,1) = fixed_magnetization(2)
+          mcons(3,1) = fixed_magnetization(3)
+       ELSE IF (nspin == 2 ) THEN
+          i_cons = 5
+          two_fermi_energies=.TRUE.
+          mcons(3,1) = fixed_magnetization(3)
+          if ( fixed_magnetization(1) .ne. 0.d0 .OR. &
+               fixed_magnetization(2) .ne. 0.d0 ) CALL errore('iosys', &
+               & 'only fixed_magnetization(3) can be specified with nspin=2',1)
+       ELSE
+          CALL errore ( 'iosys',' constrained total magnetization ' // &
+                   &'requires nspin=2 or 4 ', 1 )
+       END IF
+    CASE ( 'atomic' )
+       IF (nspin==1) THEN 
+          CALL errore ( 'iosys',' constrained atomic magnetizations ' // &
+                   &'require nspin=2 or 4 ', 1 )
+       END IF
+       i_cons = 1
+       do nt =1,ntyp
+          theta = pi * angle1(nt) /180.d0
+          phi   = pi * angle2(nt) /180.d0
+          mcons(1,nt) = starting_magnetization(nt) * sin(theta) * cos(phi)
+          mcons(2,nt) = starting_magnetization(nt) * sin(theta) * sin(phi)
+          mcons(3,nt) = starting_magnetization(nt) * cos(theta)
+       end do
+    CASE ( 'atomic direction' )
+       IF (nspin==1) THEN 
+          CALL errore ( 'iosys',' constrained atomic magnetization ' // &
+                   &'directions require nspin=2 or 4 ', 1 )
+       END IF
+       i_cons = 2
+       do nt =1,ntyp
+          theta = pi * angle1(nt) /180.d0
+          mcons(3,nt) = cos(theta)
+       end do
+    CASE DEFAULT
+       CALL errore ( 'iosys',' constrained magnetization ' // &
+                  & TRIM( constrained_magnetization) // 'not implemented', 1 )
+  END SELECT
+
+  IF (B_field(1).ne.0.d0 .OR. B_field(2).ne.0.d0 .OR. B_field(3).ne. 0.d0) THEN
+
+     if (nspin==1) CALL errore ( 'iosys', &
+                  & ' non-zero external B_field requires nspin=2 or 4',1)
+
+     if ( TRIM( constrained_magnetization ) /= 'none' ) &
+        CALL errore ( 'iosys', 'constrained_magnetization and ' // &
+                  & 'non-zero external B_field are conflicting flags',1)
+
+     if (nspin==2 .and. (B_field(1).ne.0.d0 .OR. B_field(2).ne. 0.d0) ) &
+        CALL errore ( 'iosys', &
+                  & 'only B_field(3) can be specified with nspin=2',1)
+  END IF
   !
-  ! ... starting_magnetization(ia) = -2.D0 means "not set" -- set it to 0
+  ! ... starting_magnetization(ia) = SM_NOT_SET means "not set" -- set it to 0
   !
   DO ia = 1, ntyp
-     IF ( starting_magnetization(ia) == -2.D0 ) &
+     IF ( starting_magnetization(ia) == SM_NOT_SET ) &
         starting_magnetization(ia) = 0.D0 
   END DO  
   !
@@ -865,8 +940,6 @@ SUBROUTINE iosys()
   angle1_   = angle1
   angle2_   = angle2
   report_   = report
-  i_cons_   = i_cons
-  mcons_    = mcons
   lambda_   = lambda
   !
   Hubbard_U_( 1 : ntyp )     = hubbard_u( 1 : ntyp )

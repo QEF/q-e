@@ -22,8 +22,9 @@ MODULE read_namelists_module
   SAVE
   !
   PRIVATE
+  REAL (KIND=DP), PARAMETER :: SM_NOT_SET=-20.d0
   !
-  PUBLIC :: read_namelists
+  PUBLIC :: read_namelists, SM_NOT_SET
   !
   !  ... end of module-scope declarations
   !
@@ -152,17 +153,13 @@ MODULE read_namelists_module
        qcutz   = 0.D0
        q2sigma = 0.01D0
        xc_type = 'PZ'
-       IF ( prog == 'PW' ) THEN
-          !
-          ! ... set to an invalid value:
-          ! ... starting_magnetization MUST be set for at least one atomic type
-          !
-          starting_magnetization = -2.D0
-       ELSE
-          !
-          starting_magnetization =  0.D0
-          !
-       END IF
+!
+! ... set starting_magnetization to an invalid value:
+! ... in PW starting_magnetization MUST be set for at least one atomic type
+! ... in CP starting_magnetization MUST REMAIN UNSET 
+!
+       starting_magnetization = SM_NOT_SET
+
        IF ( prog == 'PW' ) THEN
           !
           starting_ns_eigenvalue = -1.D0
@@ -181,9 +178,10 @@ MODULE read_namelists_module
        !
        lspinorb = .FALSE.
        noncolin = .FALSE.
-       mcons = 0.0
        lambda = 1.0
-       i_cons = 0
+       constrained_magnetization= 'none'
+       fixed_magnetization = 0.d0
+       B_field = 0.d0
        angle1 = 0.0
        angle2 = 0.0
        report = 1
@@ -621,8 +619,9 @@ MODULE read_namelists_module
        CALL mp_bcast( angle1, ionode_id )
        CALL mp_bcast( angle2, ionode_id )
        CALL mp_bcast( report, ionode_id )
-       CALL mp_bcast( i_cons, ionode_id )
-       CALL mp_bcast( mcons, ionode_id )
+       CALL mp_bcast( constrained_magnetization, ionode_id )
+       CALL mp_bcast( B_field, ionode_id )
+       CALL mp_bcast( fixed_magnetization, ionode_id )
        CALL mp_bcast( lambda, ionode_id )       
        ! 
        RETURN
@@ -1055,7 +1054,7 @@ MODULE read_namelists_module
        IF( q2sigma < 0.D0 ) &
           CALL errore( sub_name ,' q2sigma out of range ',1)
        IF( prog == 'FP' ) THEN
-          IF( ANY(starting_magnetization /= 0.D0) ) &
+          IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
              CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in FPMD ',-1)
           IF( lda_plus_U ) &
@@ -1070,13 +1069,11 @@ MODULE read_namelists_module
        !
        IF( prog == 'PW' ) THEN
           !
-          ! ... stop if starting_magnetization is set to -2 for
+          ! ... stop if starting_magnetization is not set for
           ! ... all atomic types
           !
-          IF ( ( nspin == 2 ) .AND. &
-               ( SUM( starting_magnetization ) == -2.D0 * &
-                                           SIZE( starting_magnetization ) ) ) &
-            CALL errore( sub_name ,' starting_magnetization MUST be set ', 1 )
+          IF ( (nspin==2) .AND. ALL(starting_magnetization == SM_NOT_SET) ) &
+            CALL errore(sub_name,'some starting_magnetization MUST be set', 1 )
           !
        END IF
        !
@@ -1089,9 +1086,6 @@ MODULE read_namelists_module
           !
           IF ( diagonalization == 'diis' ) &
              CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
-          !
-          IF ( i_cons < 0 .OR. i_cons > 4 ) &
-             CALL errore( sub_name ,' wrong i_cons ', 1 )
           !
        END IF       
        !

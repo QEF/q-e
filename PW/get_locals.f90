@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------------
-      subroutine get_locals(rholoc,magloc)
+      subroutine get_locals(rholoc,magloc, rho)
 !---------------------------------------------------------------------------
 !
 !
@@ -18,14 +18,18 @@
 !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nat
-      use pwcom
+      USE cell_base,  ONLY : omega
+      USE gvect,      ONLY : nr1, nr2, nr3, nrxx
+      USE lsda_mod,   ONLY : nspin
+
       use noncollin_module
 
       implicit none
-      integer iat,i,ipol
       real(kind=DP) ::   &
           rholoc(nat),   &     ! integrated charge arount the atoms
           magloc(3,nat)        ! integrated magnetic moment around the atom
+      real(kind=DP) :: rho (nrxx, nspin)
+      integer iat,i,ipol
 
       do iat = 1,nat
          rholoc(iat) = 0.d0

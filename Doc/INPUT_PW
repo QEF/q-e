@@ -355,55 +355,50 @@ angle2(i)      REAL
                The angle expressed in degrees between the projection
                of the initial magnetization on x-y plane and the x-axis.
 
-i_cons         INTEGER
-               #if i_cons = 0; there isn't penalty fuctional
-
-               #if i_cons = 1; there is a penalty functional added to the
-               Hamiltonian of the form:
-                
+constrained_magnetization CHARACTER ( defalt = 'none' ) 
+               Used to perform constrained calculations in magnetic systems
+               Currently available choices:
+               `none` : no constraint
+               `total`: total magmetization is constrained
+                        If nspin=4 (noncolin=.True.) constraint is imposed by
+                        adding a penalty functional to the total energy: 
+     - LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
+                        where the sum over i runs over the three components of
+                        the magnetization. Lambda is a real number (see below). 
+                        If nspin=2 constraint is imposed by defining two Fermi
+                        energies for spin up and down.
+                        Only fixed_magnetization(3) can be defined in this case.
+               `atomic`: atomic magmetization are constrained to the defined 
+                        starting magnetization adding a penalty
      - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
+                        where i runs over the components (1-3) and itype over 
+                        the types (1-ntype).  
+                        mcons(:,:) array is defined from starting_magnetization,
+                        angle1 and angle2 variables. lambda is a real number
+               `atomic direction`: not all the components of the atomic 
+                        magnetic moment are constrained but only the cosinus 
+                        of angle1, and the penalty functional is:
+     - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp) )**2
 
-               where i runs over the components (1-3) and itype over the
-               types (1-ntype). Lambda is a real number (see below). 
+fixed_magnetization(3)  REAL (default 0.d0)
+               value of the total magnetization to be mantained fixed when 
+               constrained_magnetization='total'
 
-               #if i_cons = 2; not all the components of the magnetic
-               moment are constrained but only the cosinus of angle1. So
-               only mcons(1,ityp) must be specified and it represents
-               the cosinus of angle1, and the penalty functional is:
+B_field(3)     REAL (default = 0.d0)
+               A fixed magnetic field defined by the vector B_field is added 
+               to the exchange and correlation magnetic field. 
+               The three components of the magnetic field are given in Ry.
+               Only B_field(3) can be used if nspin=2.
 
-    - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - mcons(1,ityp) )**2
-
-               #if i_cons = 3; there is a penalty functional added to the
-               total energy to constrain each component of the
-               magnetization:
-
-    - LAMBDA * SUM_{i} ( magnetization(i) - mcons(i,1) )**2
-               where the sum over i runs over the three components of
-               the magnetization. NB: LAMBDA is reduced in the first iterations
-               and is increased slowly up to the input value.
-
-               #if i_cons = 4; then a fixed magnetic field is added to the
-               exchange and correlation magnetic field. The three components
-               of the magnetic field are given in Ry in the array mcons(i,1).
-
-               #if i_cons = 5; Fix the magnetization as in the 
-               constrained-moment approach using two Fermi energies. 
-               This option works only with lsda
-               mcons(3,1) fix the value of the magnetization.
-
-NB: i_cons=3,4 (works only with mixing_mode='potential').
-    In all calculations with a finite magnetic field,
-    we print the total energy WITHOUT the B dot M term.
-    In the calculations with the penalty functional we write
-    only the total energy, NOT the penalty functional.
-
+               In all calculations with a finite magnetic field,
+               we print the total energy WITHOUT the B dot M term.
+               In the calculations with the penalty functional we write
+               only the total energy, NOT the penalty functional.
 
 lambda         REAL
-               see I_CONS
-
-mcons(i,j)     REAL
-               I runs over the components (1-3), J over the atom types.
-               see I_CONS.
+               parameter used for constrained_magnetization calculations
+               NB: LAMBDA is reduced in the first iterations and is increased 
+                   slowly up to the input value.
 
 report         INTEGER
                It's the number of iterations after which the program

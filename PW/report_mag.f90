@@ -19,6 +19,7 @@
       USE ions_base,  ONLY : nat, tau
       USE io_global,  ONLY : stdout
       use constants,  ONLY : pi
+      USE scf,        ONLY : rho
       use noncollin_module
       implicit none
       real(kind=dp)  ::    theta,phi,norm,norm1
@@ -26,7 +27,7 @@
 !
 ! get_local integrates on the previously determined points
 !
-      call get_locals(r_loc,m_loc)
+      call get_locals(r_loc,m_loc,rho)
       
       do iat = 1,nat
 !
@@ -70,7 +71,7 @@
             if (i_cons.eq.1) then
                WRITE( stdout,1015) (mcons(ipol,iat),ipol=1,3)
             else if (i_cons.eq.2) then
-               WRITE( stdout,1017) 180.d0 * mcons(1,iat)/pi
+               WRITE( stdout,1017) 180.d0 * acos(mcons(3,iat))/pi
             endif
          endif
          WRITE( stdout,1010)

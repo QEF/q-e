@@ -740,10 +740,10 @@ SUBROUTINE electrons()
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X,'beta=',F4.2)
 9015 FORMAT(/' ------ SPIN UP ------------'/)
 9016 FORMAT(/' ------ SPIN DOWN ----------'/)
-9017 FORMAT(/'     total magnetization       =',F9.2,' Bohr mag/cell', &
-            /'     absolute magnetization    =',F9.2,' Bohr mag/cell')
-9018 FORMAT(/'     total magnetization     =',3f12.8,' Bohr mag/cell' &
-       &   ,/'     absolute magnetization    =',f9.2,' Bohr mag/cell')
+9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
+            /'     absolute magnetization    =', F9.2,' Bohr mag/cell')
+9018 FORMAT(/'     total magnetization       =',3f9.2,' Bohr mag/cell' &
+       &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell')
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
 9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
 9030 FORMAT( '  ',8F9.4)
@@ -760,9 +760,9 @@ SUBROUTINE electrons()
 9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd')
 9070 FORMAT( '     correction for metals     =',F15.8,' ryd')
-9071 FORMAT( '     Magnetic field          =',3F12.8,' ryd')
-9072 FORMAT( '     Magnetic field            =',F14.7,' ryd')
-9073 FORMAT( '     lambda                  = ',F10.2,' ryd')
+9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd')
+9072 FORMAT( '     Magnetic field            =', F12.7,' ryd')
+9073 FORMAT( '     lambda                    =', F11.2,' ryd')
 
 9080 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',0PF15.8,' ryd')

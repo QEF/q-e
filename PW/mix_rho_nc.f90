@@ -7,9 +7,12 @@
 !
 !
 #include "f_defs.h"
+!
+#define ZERO ( 0.D0, 0.D0 )
+!
 #undef DEBUG
 !-----------------------------------------------------------------------
-subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
+SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                     n_iter, filename, conv)
   !-----------------------------------------------------------------------
   !
@@ -22,6 +25,7 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   USE wavefunctions_module, ONLY : psic => psic_nc
   use pwcom
   USE control_flags,        ONLY : imix, ngm0, tr2
+  USE parser,               ONLY : find_free_unit
   implicit none
   !
   !   First the I/O variable
@@ -64,16 +68,16 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 info        ! flag saying if the exec. of libr. routines was ok
 
   complex (kind=DP), allocatable :: rhocin(:,:), rhocout(:,:), &
-                rhoinsave(:), rhoutsave(:), &
+                rhoinsave(:,:), rhoutsave(:,:), &
                 nsinsave(:,:,:,:),  nsoutsave(:,:,:,:)
-  complex (kind=DP), allocatable, save :: df(:,:), dv(:,:), &
+  complex (kind=DP), allocatable, save :: df(:,:,:), dv(:,:,:), &
                                       df_ns(:,:,:,:,:), dv_ns(:,:,:,:,:)
                 ! rhocin(ngm0,nspin)
                 ! rhocout(ngm0,nspin)
                 ! rhoinsave(ngm0*nspin): work space
                 ! rhoutsave(ngm0*nspin): work space
-                ! df(ngm0*nspin,n_iter): information from preceding iterations
-                ! dv(ngm0*nspin,n_iter):    "  "       "     "        "  "
+                ! df(ngm0,nspin,n_iter): information from preceding iterations
+                ! dv(ngm0,nspin,n_iter):    "  "       "     "        "  "
                 ! df_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
                 ! dv_ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat,n_iter):idem
 
@@ -94,7 +98,7 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   if (n_iter > maxmix) call errore('mix_rho_nc','n_iter too big',1)
   if (lda_plus_u) ldim = 2 * Hubbard_lmax + 1
 
-  saveonfile=filename.ne.' '
+  saveonfile = ( filename /= ' ' )
 
 !  call DAXPY(nrxx*nspin,-1.d0,rhoin,1,rhout,1)
 
@@ -102,184 +106,246 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   ! psic is used as work space - must be already allocated !
   !
-  do is=1,nspin
+  DO is=1,nspin
+     !
      psic(:,1) = DCMPLX (rhoin(:,is), 0.d0)
+     !
      call cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-     do ig=1,ngm0
-        rhocin(ig,is) = psic(nl(ig),1)
-     end do
+     !
+     rhocin(:,is) = psic(nl(:),1)
+     !
      psic(:,1) = DCMPLX (rhout(:,is), 0.d0)
-     call cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-     do ig=1,ngm0
-        rhocout(ig,is) = psic(nl(ig),1) - rhocin(ig,is)
-     end do
-  end do
-  if (lda_plus_u) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
-
-  dr2=rho_dot_product_nc(rhocout,rhocout) + ns_dot_product_nc(nsout,nsout)
+     !
+     call cft3( psic(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhocout(:,is) = psic(nl(:),1) - rhocin(:,is)
+     !
+  END DO
+  !
+  IF (lda_plus_u) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
+  !
+  dr2 = rho_dot_product_nc(rhocout,rhocout) + ns_dot_product_nc(nsout,nsout) 
+  !
   conv = (dr2 < tr2)
+  !
   dehar = fn_dehar_nc(rhocout)
+  !
 #ifdef DEBUG
 !  if (lda_plus_u) WRITE( stdout,*) ' ns_dr2 =', ns_dot_product_nc(nsout,nsout)
-  if (conv) then
+  IF (conv) THEN
      WRITE( stdout,100) dr2, rho_dot_product_nc(rhocout,rhocout) + &
                         ns_dot_product_nc(nsout,nsout)
      WRITE( stdout,'(" dehar =",f15.8)') dehar
-  end if
+  END IF
 #endif
 
-  if (saveonfile) then
-     do iunit=99,1,-1
-        inquire(unit=iunit,opened=opnd)
-        iunmix=iunit
-        if (.not.opnd) go to 10
-     end do
-     call errore('mix_rho_nc','free unit not found?!?',1)
-10   continue
-     if (lda_plus_u) then
-        do iunit=iunmix-1,1,-1
-           inquire(unit=iunit,opened=opnd)
-           iunmix2=iunit
-           if (.not.opnd) go to 20
-        end do
-        call errore('mix_rho_nc','second free unit not found?!?',1)
-20      continue
-     end if
-     if (conv) then
-        call diropn (iunmix, filename, 2*ngm0*nspin, exst)
-        close (unit=iunmix, status='delete')
-        if (lda_plus_u) then
-           call diropn (iunmix2, trim(filename)//'.ns',ldim*ldim*nspin*nat, exst)
-           close (unit=iunmix2, status='delete')
-        end if
-        deallocate (rhocin, rhocout)
-        call stop_clock('mix_rho')
-        return
-     end if
-
-     call diropn(iunmix,filename,2*ngm0*nspin,exst)
-     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',ldim*ldim*nspin*nat, exst)
-
-     if (iter > 1 .and. .not.exst) then
+  IF (saveonfile) THEN
+     !
+     iunmix = find_free_unit()
+     !
+     IF (lda_plus_u) iunmix2 = find_free_unit()
+     !
+     IF (conv) THEN
+        !
+        CALL diropn (iunmix, filename, ( 2 * ngm0 * nspin ), exst)
+        CLOSE( UNIT = iunmix, STATUS = 'DELETE')
+        !
+        IF ( lda_plus_u ) THEN
+           !
+           CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
+                        ( ldim * ldim * nspin * nat ), exst )
+           CLOSE( UNIT = iunmix2, STATUS = 'DELETE' )
+           !
+        END IF
+        !
+        DEALLOCATE (rhocin, rhocout)
+        !
+        CALL stop_clock('mix_rho')
+        !
+        RETURN
+        !
+     END IF
+     !
+     CALL diropn( iunmix, filename, ( 2 * ngm0 * nspin ), exst )
+     !
+     IF ( lda_plus_u ) &
+        CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
+                     ( ldim * ldim * nspin * nat ), exst )
+     !
+     IF ( iter > 1 .AND. .NOT. exst ) THEN
+        !
         call errore('mix_rho_nc','file not found, restarting',-1)
         iter=1
-     end if
-     allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
-     if (lda_plus_u) &
-        allocate (df_ns(ldim,ldim,nspin,nat,n_iter), &
+        !
+     END IF
+     !
+     ALLOCATE (df(ngm0,nspin,n_iter), dv(ngm0,nspin,n_iter))
+     IF (lda_plus_u) &
+        ALLOCATE (df_ns(ldim,ldim,nspin,nat,n_iter), &
                   dv_ns(ldim,ldim,nspin,nat,n_iter))
-  else
-     if (iter == 1) then
-        allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
-        if (lda_plus_u) &
-           allocate (df_ns(ldim,ldim,nspin,nat,n_iter),&
+  ELSE
+     !
+     IF (iter == 1) THEN
+        !
+        ALLOCATE (df(ngm0,nspin,n_iter), dv(ngm0,nspin,n_iter))
+        !
+        IF (lda_plus_u) &
+           ALLOCATE (df_ns(ldim,ldim,nspin,nat,n_iter),&
                      dv_ns(ldim,ldim,nspin,nat,n_iter))
-     end if
-     if (conv) then
-        if (lda_plus_u) deallocate(df_ns, dv_ns)
-        deallocate (df, dv)
-        deallocate (rhocin, rhocout)
-        call stop_clock('mix_rho')
-        return
-     end if
-     allocate (rhoinsave(ngm0*nspin), rhoutsave(ngm0*nspin))
-     if (lda_plus_u) &
-        allocate(nsinsave (ldim,ldim,nspin,nat), &
+     END If
+     !
+     IF (conv) THEN
+        !
+        IF (lda_plus_u) DEALLOCATE(df_ns, dv_ns)
+        !
+        DEALLOCATE (df, dv)
+        !
+        DEALLOCATE (rhocin, rhocout)
+        !
+        CALL stop_clock('mix_rho')
+        !
+        RETURN
+        !
+     END If
+     !
+     ALLOCATE (rhoinsave(ngm0,nspin), rhoutsave(ngm0,nspin))
+     !
+     IF (lda_plus_u) &
+        ALLOCATE(nsinsave (ldim,ldim,nspin,nat), &
                  nsoutsave(ldim,ldim,nspin,nat))
-  end if
+  END IF
   !
   ! copy only the high frequency Fourier component into rhoin
   !                                                (NB: rhout=rhout-rhoin)
   !
-  call DCOPY(nrxx*nspin,rhout,1,rhoin,1)
-  do is=1,nspin
-     psic(:,1) = (0.d0, 0.d0)
-     do ig=1,ngm0
-        psic(nl(ig),1) = rhocin(ig,is)+rhocout(ig,is)
-     end do
-     call cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     call DAXPY(nrxx,-1.d0,psic(1,1),2,rhoin(1,is),1)
-  end do
+  rhoin = rhout
+  !
+  DO is=1,nspin
+     !
+     psic(:,1) = ZERO
+     !
+     psic(nl(:),1) = rhocin(:,is) + rhocout(:,is)
+     !
+     CALL cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+     !
+     rhoin(:,is) = rhoin(:,is) - psic(:,1)
+     !
+  END DO
   !
   ! iter_used = iter-1  if iter <= n_iter
   ! iter_used = n_iter  if iter >  n_iter
   !
-  iter_used=min(iter-1,n_iter)
+  iter_used = MIN( ( iter - 1), n_iter )
   !
   ! ipos is the position in which results from the present iteration
   ! are stored. ipos=iter-1 until ipos=n_iter, then back to 1,2,...
   !
-  ipos =iter-1-((iter-2)/n_iter)*n_iter
+  ipos = iter - 1 - ( ( iter - 2 ) / n_iter ) * n_iter
   !
-  if (iter > 1) then
-     if (saveonfile) then
-        call davcio(df(1,ipos),2*ngm0*nspin,iunmix,1,-1)
-        call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2,-1)
-        if (lda_plus_u) then
-           call davcio(df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,1,-1)
-           call davcio(dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2,-1)
-        end if
-     end if
-        call DAXPY(2*ngm0*nspin,-1.d0,rhocout,1,df(1,ipos),1)
-        call DAXPY(2*ngm0*nspin,-1.d0,rhocin ,1,dv(1,ipos),1)
-!        norm = sqrt(rho_dot_product_nc(df(1,ipos),df(1,ipos)) + &
-!               ns_dot_product_nc(df_ns(1,1,1,1,ipos),df_ns(1,1,1,1,ipos)) )
-!        call DSCAL (2*ngm0*nspin,-1.d0/norm,df(1,ipos),1)
-!        call DSCAL (2*ngm0*nspin,-1.d0/norm,dv(1,ipos),1)
-     if (lda_plus_u) then
-        call DAXPY(ldim*ldim*nspin*nat,-1.d0,nsout,1,df_ns(1,1,1,1,ipos),1)
-        call DAXPY(ldim*ldim*nspin*nat,-1.d0,nsin ,1,dv_ns(1,1,1,1,ipos),1)
-     end if
-  end if
+  IF ( iter > 1 ) THEN
+     !
+     IF (saveonfile) THEN
+        !
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 1, -1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2, -1 )
+        !
+        IF (lda_plus_u) THEN
+           !
+           CALL davcio(df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,1,-1)
+           CALL davcio(dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2,-1)
+           !
+        END IF
+        !
+     END If
+     !
+     df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (:,:)
+     !
+     IF (lda_plus_u) THEN
+        !
+        df_ns(:,:,:,:,ipos) = df_ns(:,:,:,:,ipos) - nsout
+        dv_ns(:,:,:,:,ipos) = dv_ns(:,:,:,:,ipos) - nsin
+        !
+     END IF
+     !
+  END If
   !
-  if (saveonfile) then
-     do i=1,iter_used
-        if (i.ne.ipos) then
-           call davcio(df(1,i),2*ngm0*nspin,iunmix,2*i+1,-1)
-           call davcio(dv(1,i),2*ngm0*nspin,iunmix,2*i+2,-1)
-           if (lda_plus_u) then
-              call davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+1,-1)
-              call davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+2,-1)
-           end if
-        end if
-     end do
-     call davcio(rhocout,2*ngm0*nspin,iunmix,1,1)
-     call davcio(rhocin ,2*ngm0*nspin,iunmix,2,1)
-     if (iter > 1) then
-        call davcio(df(1,ipos),2*ngm0*nspin,iunmix,2*ipos+1,1)
-        call davcio(dv(1,ipos),2*ngm0*nspin,iunmix,2*ipos+2,1)
-     end if
-     if (lda_plus_u) then
-        call davcio(nsout,ldim*ldim*nspin*nat,iunmix2,1,1)
-        call davcio(nsin ,ldim*ldim*nspin*nat,iunmix2,2,1)
-        if (iter > 1) then
-           call davcio(df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2*ipos+1,1)
-           call davcio(dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix2,2*ipos+2,1)
-        end if
-     end if
-  else
-     call DCOPY(2*ngm0*nspin,rhocin ,1,rhoinsave,1)
-     call DCOPY(2*ngm0*nspin,rhocout,1,rhoutsave,1)
-     if (lda_plus_u) then
-        call DCOPY(ldim*ldim*nspin*nat,nsin ,1,nsinsave ,1)
-        call DCOPY(ldim*ldim*nspin*nat,nsout,1,nsoutsave,1)
-     end if
-  end if
+  IF ( saveonfile ) THEN
+     !
+     DO i = 1, iter_used
+        !
+        IF ( i /= ipos) THEN
+           !
+           CALL davcio( df(1,1,i), 2*ngm0*nspin, iunmix, 2*i+1, -1 )
+           CALL davcio( dv(1,1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
+           !
+           IF (lda_plus_u) THEN
+              !
+              CALL davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+1,-1)
+              CALL davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix2,2*i+2,-1)
+              !
+           END IF
+           !
+        END IF
+        !
+     END DO
+     !
+     CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
+     CALL davcio( rhocin , 2*ngm0*nspin, iunmix, 2, 1 )
+     !
+     IF ( iter > 1) THEN
+        !
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+1, 1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+2, 1 )
+        !
+     END IF
+     !
+     IF ( lda_plus_u ) THEN
+        !
+        CALL davcio( nsout, ldim*ldim*nspin*nat, iunmix2, 1, 1 )
+        CALL davcio( nsin , ldim*ldim*nspin*nat, iunmix2, 2, 1 )
+        !
+        IF ( iter > 1) THEN
+           !
+           CALL davcio( df_ns(1,1,1,1,ipos), ldim*ldim*nspin*nat, &
+                        iunmix2, 2*ipos+1, 1 )
+           CALL davcio( dv_ns(1,1,1,1,ipos), ldim*ldim*nspin*nat, &
+                        iunmix2, 2*ipos+2, 1 )
+        END IF
+        !
+     END IF
+     !
+  ELSE
+     !
+     rhoinsave = rhocin
+     rhoutsave = rhocout
+     !
+     IF (lda_plus_u) THEN
+        !
+        nsinsave  = nsin
+        nsoutsave = nsout
+        !
+     END IF
+     !
+  END IF
   !
   DO i = 1, iter_used
+     !
      DO j = i, iter_used
         !
-        betamix(i,j) = rho_dot_product_nc( df(1,j), df(1,i) ) 
+        betamix(i,j) = rho_dot_product_nc( df(1,1,j), df(1,1,i) )  
         !
         IF ( lda_plus_u ) &
            betamix(i,j) = betamix(i,j) + &
                      ns_dot_product_nc( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i) )
         !
      END DO
+     !
   END DO
   !
   call DSYTRF ('U',iter_used,betamix,maxmix,iwork,work,maxmix,info)
   call errore('mix_rho_nc','factorization',info)
+  !
   call DSYTRI ('U',iter_used,betamix,maxmix,iwork,work,info)
   call errore('mix_rho_nc','DSYTRI',info)
   !
@@ -291,7 +357,7 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   DO i = 1, iter_used
      !
-     work(i) = rho_dot_product_nc( df(1,i), rhocout )
+     work(i) = rho_dot_product_nc( df(1,1,i), rhocout )
      !
      IF ( lda_plus_u ) &
         work(i) = work(i) + ns_dot_product_nc( df_ns(1,1,1,1,i), nsout )
@@ -299,80 +365,101 @@ subroutine mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   END DO
   !
   do i=1,iter_used
-     gamma0=0.d0
-     do j=1,iter_used
-        gamma0 = gamma0 + betamix(j,i)*work(j)
-     end do
-
-     call DAXPY(2*ngm0*nspin,-gamma0,dv(1,i),1,rhocin,1)
-     call DAXPY(2*ngm0*nspin,-gamma0,df(1,i),1,rhocout,1)
-     if (lda_plus_u) then
-        call DAXPY(ldim*ldim*nspin*nat,-gamma0,dv_ns(1,1,1,1,i),1,nsin(1,1,1,1) ,1)
-        call DAXPY(ldim*ldim*nspin*nat,-gamma0,df_ns(1,1,1,1,i),1,nsout(1,1,1,1),1)
-     end if
-  end do
+     !
+     gamma0 = SUM( betamix(1:iter_used,i) * work(1:iter_used) )
+     !
+     rhocin (:,:) = rhocin (:,:) - gamma0 * dv(:,:,i)
+     rhocout(:,:) = rhocout(:,:) - gamma0 * df(:,:,i)
+     !
+     IF (lda_plus_u) THEN
+        !
+        nsin  = nsin  - gamma0 * dv_ns(:,:,:,:,i)
+        nsout = nsout - gamma0 * df_ns(:,:,:,:,i)
+        !
+     END IF
+     !
+  END DO
   !
-#ifdef DEBUG
-  WRITE( stdout,100) dr2, rho_dot_product_nc(rhocout,rhocout) + &
-                     ns_dot_product_nc(nsout,nsout)
-  WRITE( stdout,'(" dehar =",f15.8)') dehar
-#endif
-100  format (' dr2 =',1pe15.1, ' internal_best_dr2= ', 1pe15.1)
-
   ! - auxiliary vectors dv and df not needed anymore
-  if (saveonfile) then
-     if (lda_plus_u) then
-        close(iunmix2,status='keep')
-        deallocate (df_ns, dv_ns)
-     end if
-     close(iunmix,status='keep')
-     deallocate (df, dv)
-  else
-     inext=iter-((iter-1)/n_iter)*n_iter
-     if (lda_plus_u) then
-        call DCOPY(ldim*ldim*nspin*nat,nsoutsave,1,df_ns(1,1,1,1,inext),1)
-        call DCOPY(ldim*ldim*nspin*nat,nsinsave ,1,dv_ns(1,1,1,1,inext),1)
-        deallocate (nsinsave, nsoutsave)
-     end if
-     call DCOPY(2*ngm0*nspin,rhoutsave,1,df(1,inext),1)
-     call DCOPY(2*ngm0*nspin,rhoinsave,1,dv(1,inext),1)
-     deallocate (rhoinsave, rhoutsave)
-  end if
+  !
+  IF (saveonfile) THEN
+     !
+     IF (lda_plus_u) THEN
+        !
+        CLOSE( iunmix2, STATUS = 'KEEP' )
+        !
+        DEALLOCATE (df_ns, dv_ns)
+        !
+     END If
+     !
+     CLOSE( iunmix, STATUS = 'KEEP' )
+     !
+     DEALLOCATE (df, dv)
+     !
+  ELSE
+     !
+     inext = iter - ( ( iter - 1 ) / n_iter ) * n_iter
+     !
+     IF (lda_plus_u) THEN
+        !
+        df_ns(:,:,:,:,inext) = nsoutsave
+        dv_ns(:,:,:,:,inext) = nsinsave
+        !
+        DEALLOCATE( nsinsave, nsoutsave )
+        !
+     END IF
+     !
+     df(:,:,inext) = rhoutsave(:,:)
+     dv(:,:,inext) = rhoinsave(:,:)
+     !
+     DEALLOCATE( rhoinsave, rhoutsave )
+
+  END IF
 
   ! - preconditioning the new search direction (if imix.gt.0)
 
-  if (imix == 1) then
-     call approx_screening_nc(rhocout)
-  else if (imix == 2) then
-     call approx_screening2_nc(rhocout,rhocin)
-  end if
-
+  IF ( imix == 1 ) THEN
+     !
+     CALL approx_screening_nc(rhocout)
+     !
+  ELSE IF ( imix == 2 ) THEN
+     !
+     CALL approx_screening2_nc(rhocout,rhocin)
+     !
+  END IF
+  !
   ! - set new trial density
-
-  call DAXPY(2*ngm0*nspin,alphamix,rhocout,1,rhocin,1)
-
+  !
+  rhocin = rhocin + alphamix * rhocout
+  !
+  IF ( lda_plus_u ) nsin = nsin + alphamix * nsout
+  !
+  ! ... back ro real space
+  !
   do is=1,nspin
-     psic(:,1) = (0.d0,0.d0)
-     do ig=1,ngm0
-        psic(nl(ig),1) = rhocin(ig,is)
-     end do
-     call cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     call DAXPY(nrxx,1.d0,psic(1,1),2,rhoin(1,is),1)
-  end do
-  if (lda_plus_u) call DAXPY(ldim*ldim*nspin*nat,alphamix,nsout,1,nsin,1)
+     !
+     psic(:,1) = ZERO
+     !
+     psic(nl(:),1) = rhocin(:,is)
+     !
+     CALL cft3( psic(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     !
+     rhoin(:,is) = rhoin(:,is) + DBLE( psic(:,1) )
 
+  END DO
+  !
   ! - clean up
+  !
+  DEALLOCATE( rhocout )
+  DEALLOCATE( rhocin )
+  CALL stop_clock( 'mix_rho' )
 
-  deallocate(rhocout)
-  deallocate(rhocin)
-  call stop_clock('mix_rho')
-
-  return
-end subroutine mix_rho_nc
+  RETURN
+END SUBROUTINE mix_rho_nc
 
 !
 !--------------------------------------------------------------------
-function rho_dot_product_nc (rho1,rho2)
+FUNCTION rho_dot_product_nc (rho1,rho2)
   !--------------------------------------------------------------------
   ! this function evaluates the dot product between two input densities
   !
@@ -385,7 +472,7 @@ function rho_dot_product_nc (rho1,rho2)
   !
   real (kind=DP) :: rho_dot_product_nc ! (out) the function value
 
-  complex (kind=DP) :: rho1(ngm0,nspin), rho2(ngm0,nspin) ! (in) the two densities
+  complex (kind=DP), intent(in) :: rho1(ngm0,nspin), rho2(ngm0,nspin) ! (in) the two densities
 
   !
   ! and the local variables
@@ -394,30 +481,27 @@ function rho_dot_product_nc (rho1,rho2)
 
   integer  :: is, ig
 
+  if (nspin.ne.4)  call errore &
+      ('rho_dot_product_nc','it shoud be used only in the noncolinear case ',4)
+
   rho_dot_product_nc = 0.d0
-  if (nspin.eq.1) then
-     is=1
-     do ig = gstart,ngm0
-        fac = e2*fpi / (tpiba2*gg(ig))
-        rho_dot_product_nc = rho_dot_product_nc +  fac * &
-                          DREAL(conjg(rho1(ig,is))*rho2(ig,is))
-     end do
-  else
-     do ig = gstart,ngm0
-        fac = e2*fpi / (tpiba2*gg(ig))
-        rho_dot_product_nc = rho_dot_product_nc +  fac * &
-                          DREAL(conjg(rho1(ig,1)+rho1(ig,2))* &
-                                     (rho2(ig,1)+rho2(ig,2)))
-     end do
-     fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
-     do ig = 1,ngm0
-        rho_dot_product_nc = rho_dot_product_nc +  fac * &
-                          DREAL(conjg(rho1(ig,1)-rho1(ig,2))* &
-                                     (rho2(ig,1)-rho2(ig,2)))
-     end do
-  end if
+
+  do ig = gstart,ngm0
+     fac = e2*fpi / (tpiba2*gg(ig))
+     rho_dot_product_nc = rho_dot_product_nc +  fac * &
+                          DREAL( conjg( rho1(ig,1))*(rho2(ig,1) ))
+  end do
+
+  fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
+  do ig = 1,ngm0
+     rho_dot_product_nc = rho_dot_product_nc +  fac * &
+                        ( DREAL( conjg( rho1(ig,2))*(rho2(ig,2) )) + &
+                          DREAL( conjg( rho1(ig,3))*(rho2(ig,3) )) + &
+                          DREAL( conjg( rho1(ig,4))*(rho2(ig,4) )) )
+  end do
 
   rho_dot_product_nc = rho_dot_product_nc * omega / 2.d0
+  !
 #ifdef __PARA
   call reduce(1,rho_dot_product_nc)
 #endif
@@ -453,6 +537,7 @@ function ns_dot_product_nc (ns1,ns2)
   ns_dot_product_nc = 0.d0
   if (.not. lda_plus_u ) return
 
+  call errore('ns_dot_product_nc','not tested',1)
   do na = 1, nat
      nt = ityp (na)
      if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then

@@ -212,8 +212,8 @@ SUBROUTINE setup()
      END DO
      !
      bfield=0.d0
-     if (i_cons.ne.0.and.imix>=0) &
-        call errore('setup','use potential mixing with constraints',1)
+!     if (i_cons.ne.0.and.imix>=0) &
+!        call errore('setup','use potential mixing with constraints',1)
      IF ( i_cons == 2 ) THEN    
         !
         ! ... angle theta between the magnetic moments and the z-axis is
@@ -772,7 +772,7 @@ SUBROUTINE setup()
      ! ... LSDA case: two different spin polarizations, 
      ! ...            each with its own kpoints
      !
-     nspin = 2
+     if (nspin /= 2) call errore ('setup','nspin should be 2; check iosys',1)
      !
      CALL set_kup_and_kdw( xk, wk, isk, nks, npk )
      !
@@ -780,7 +780,7 @@ SUBROUTINE setup()
      !
      ! ... noncolinear magnetism: potential and charge have dimension 4 (1+3)
      !
-     nspin        = 4
+     if (nspin /= 4) call errore ('setup','nspin should be 4; check iosys',1)
      current_spin = 1
      !
   ELSE
@@ -788,8 +788,8 @@ SUBROUTINE setup()
      ! ... LDA case: the two spin polarizations are identical
      !
      wk(1:nks)    = wk(1:nks) * degspin
-     nspin        = 1
      current_spin = 1
+     if (nspin /= 1) call errore ('setup','nspin should be 1; check iosys',1)
      !
   END IF
   !
