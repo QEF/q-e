@@ -19,7 +19,7 @@
 !
       use ions_module, only: na, nas
       use elct, only: n, ngw, ng0
-      use cnst
+      use constants, only: pi, fpi
       use cvan
       use cdvan
       use work2
@@ -96,7 +96,7 @@
 !
       use cell_module
       use gvec
-      use cnst
+      use constants, only: pi, fpi
       use parm, only: ainv
       implicit none
 !
@@ -253,7 +253,7 @@
       use bhs
       use gvec
       use gvecs
-      use cnst
+      use constants, only: pi, fpi
       use parm
       use ions_module
       use pseu
@@ -679,7 +679,7 @@
       use parm
       use parms
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use parmb
 !
       use cell_module
@@ -830,9 +830,10 @@
       use control_module
       use gvec
       use parm
-      use cnst
+      use constants, only: pi, fpi
       use parmb
       use cell_module
+      use cell_base, only: recips
       use pres_mod
 !
       implicit none
@@ -841,6 +842,7 @@
 ! local
       integer i, j
       real(kind=8) alatb, gmax, b1(3),b2(3),b3(3), b1b(3),b2b(3),b3b(3)
+      real(kind=8) ddum
 !
 !
       alat=sqrt(h(1,1)*h(1,1)+h(2,1)*h(2,1)+h(3,1)*h(3,1))
@@ -859,7 +861,7 @@
          a3(i)=h(i,3)
       enddo
 !
-      call recips(alat,a1,a2,a3,b1,b2,b3)
+      call recips(alat,a1,a2,a3,b1,b2,b3,ddum)
       call gcal(b1,b2,b3,nr1,nr2,nr3,gmax)
 !
 !     ==============================================================
@@ -875,7 +877,7 @@
       enddo
       omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b)
+      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b,ddum)
       call gcalb(b1b,b2b,b3b,nr1b,nr2b,nr3b)
 !
       do i=1,3
@@ -913,7 +915,7 @@
       use gvec
       use cvan
       use core
-      use cnst
+      use constants, only: pi, fpi
       use ions_module
       use parm
       use elct
@@ -1120,7 +1122,7 @@
       use cvan
       use ions_module
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use parm
       use stre
       use cell_module
@@ -1214,7 +1216,7 @@
       use gvec
       use cvan
       use core
-      use cnst
+      use constants, only: pi, fpi
       use ions_module
       use parm
       use elct
@@ -1623,7 +1625,7 @@
 !-----------------------------------------------------------------------
 !     derivatives of real spherical harmonics (see ylmr2b)
 !
-      use cnst
+      use constants, only: pi, fpi
       use parm, only: ainv
 !
       implicit none

@@ -23,7 +23,7 @@
 !   this subroutine reads control variables from standard input (unit 5)
 !     ------------------------------------------------------------------
       use control_module, only: iprsta
-      use cnst, only: pi, scmass
+      use constants, only: pi, scmass, factem
       use parameters, only: nsx, natx
       use ions_module, only : nat, nsp, na, zv, pmass, rcmax, ipp ! ipp TEMP
       use elct, only: f, nel, nspin, nupdwn, iupdwn, n, nx
@@ -52,7 +52,7 @@
       !
       ! local variables
       !
-      real(kind=8), parameter:: terahertz = 2.418D-5, factem = 315795.26D0
+      real(kind=8), parameter:: terahertz = 2.418D-5
       real(kind=8) :: taus(3,natx,nsx)
       character (len=30) :: atomic_positions
       integer :: unit = 5, ionode_id = 0, i, ia, ios, is

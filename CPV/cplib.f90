@@ -13,7 +13,7 @@
 !-----------------------------------------------------------------------
 !
       use van_parameters
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 ! 
@@ -860,7 +860,7 @@
       use cvan
       use elct
       use parm
-      use cnst
+      use constants, only: pi, fpi
       use control_module
 !
       implicit none
@@ -1017,7 +1017,7 @@
       subroutine denkin(c,dekin)
 !-----------------------------------------------------------------------
 !
-      use cnst
+      use constants, only: pi, fpi
       use elct
       use gvec
       use parm
@@ -1076,7 +1076,7 @@
 ! wtemp work space
 ! eh input: hartree energy
 !
-      use cnst
+      use constants, only: pi, fpi
       use elct
       use ions_module
       use gvec
@@ -1269,7 +1269,7 @@
       use parm
       use parms
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use ions_module
       use work1
 !
@@ -1780,7 +1780,7 @@
 !
 ! calculation of kinetic energy term
 !
-      use cnst
+      use constants, only: pi, fpi
       use elct
       use gvec
       use parm
@@ -1889,7 +1889,7 @@
 !
 !       rhor contains rho(r) on input, vxc(r) on output
 !
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 !
@@ -2103,7 +2103,7 @@
 !
       use parameters, only: nsx, natx
       use control_module, only: tpre
-      use cnst
+      use constants, only: pi, fpi
       use ions_module
       use parm
       implicit none
@@ -2171,7 +2171,7 @@
 !
 ! Contribution to ionic forces from local pseudopotential
 !
-      use cnst
+      use constants, only: pi, fpi
       use elct
       use gvec
       use gvecs
@@ -3428,11 +3428,13 @@
       use parm
       use parms
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use parmb
       use control_module
       use pres_mod
       use fft_scalar, only: good_fft_dimension, good_fft_order
+      use constants, only: scmass
+      use cell_base, only: recips
 
       implicit none
 ! 
@@ -3441,7 +3443,7 @@
 !
       integer idum, ik, k, iss, i, in, is, ia
       real(kind=8) gcut, gcutw, gcuts, gcutb, ecutw, dual, fsum,        &
-     &     b1(3), b2(3), b3(3), b1b(3),b2b(3),b3b(3), alatb, ocp
+     &     b1(3), b2(3), b3(3), b1b(3),b2b(3),b3b(3), alatb, ocp, ddum
 !
 !     ===================================================
 !     ==== cell dimensions and lattice vectors      =====
@@ -3450,7 +3452,7 @@
 ! a1,a2,a3  are the crystal axis (the vectors generating the lattice)
 ! b1,b2,b3  are reciprocal crystal axis
 !
-      call recips(alat,a1,a2,a3,b1,b2,b3)
+      call recips(alat,a1,a2,a3,b1,b2,b3,ddum)
       write(6,*)
       write(6,210) 
 210   format(' unit vectors of full simulation cell',/,                 &
@@ -3600,7 +3602,7 @@
       end do
       omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b)
+      call recips(alatb,a1b,a2b,a3b,b1b,b2b,b3b,ddum)
       write(6,*)
       write(6,220) 
 220   format(' unit vectors of box grid cell',/,                        &
@@ -4086,7 +4088,7 @@
 !
       use cvan, only:nh, nhx, nvb
       use ions_module
-      use cnst
+      use constants, only: pi, fpi
       use parm
       use gvecb
       use parmb
@@ -4326,7 +4328,7 @@
       use gvec
       use cvan
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use parm
 !
       implicit none
@@ -4399,7 +4401,7 @@
       use cvan
       use ions_module
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use parm
 ! 
       implicit none
@@ -4480,7 +4482,7 @@
 !
       use ions_module, only: na, nas
       use elct, only: ngw, ng0
-      use cnst
+      use constants, only: pi, fpi
       use cvan
       use work2
 !
@@ -4556,7 +4558,7 @@
       use ions_module
       use elct
       use gvec
-      use cnst
+      use constants, only: pi, fpi
       use cvan
       use work2
 !
@@ -4890,7 +4892,7 @@
       use ions_module
       use gvecb
       use parmb
-      use cnst
+      use constants, only: pi, fpi
       use control_module
 !
       implicit none
@@ -5015,7 +5017,7 @@
       use ions_module
       use elct, only:ngw
       use parm
-      use cnst
+      use constants, only: pi, fpi
       use gvec
       use control_module
 !
@@ -6456,53 +6458,6 @@
       return
       end
 !-----------------------------------------------------------------------
-      subroutine recips(a,a1,a2,a3,b1,b2,b3)
-!-----------------------------------------------------------------------
-!   generates the reciprocal lattice vectors b1,b2,b3 given the real
-!   space vectors a1,a2,a3.  the b's are units of 2pi/a.
-!
-      implicit none
-      real(kind=8)  a1(3),a2(3),a3(3),b1(3),b2(3),b3(3)
-      real(kind=8) den,s,a
-      integer i,j,k,l,iperm, ir
-!
-      den=0.d0
-      i=1
-      j=2
-      k=3
-      s=1.d0
-    1 continue
-      do iperm=1,3
-         den=den+s*a1(i)*a2(j)*a3(k)
-         l=i
-         i=j
-         j=k
-         k=l
-      end do
-!
-      i=2
-      j=1
-      k=3
-      s=-s
-      if(s.lt.0.d0) go to 1
-      i=1
-      j=2
-      k=3
-      den=a/abs(den)
-!
-      do ir=1,3
-         b1(ir)=den*(a2(j)*a3(k)-a2(k)*a3(j))
-         b2(ir)=den*(a3(j)*a1(k)-a3(k)*a1(j))
-         b3(ir)=den*(a1(j)*a2(k)-a1(k)*a2(j))
-         l=i
-         i=j
-         j=k
-         k=l
-      end do
-!
-      return
-      end
-!-----------------------------------------------------------------------
       subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos)
 !-----------------------------------------------------------------------
 !     the normalized electron density rhor in real space
@@ -6525,7 +6480,7 @@
       use parm
       use parms
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use pseu
       use energies
       use work1
@@ -7236,7 +7191,7 @@
       use cvan
       use elct
       use parm
-      use cnst
+      use constants, only: pi, fpi
       implicit none
 ! input
       integer, intent(in)         :: n_atomic_wfc
@@ -7579,7 +7534,7 @@
       use gvec
       use gvecs
       use parm
-      use cnst
+      use constants, only: pi, fpi
       use ions_module
 !
       implicit none
@@ -7773,7 +7728,7 @@
       use parm
       use parms
       use elct
-      use cnst
+      use constants, only: pi, fpi
       use energies
       use pseu
       use core
@@ -8174,7 +8129,7 @@
 !     order:  s, p_x, p_z, p_y, d_xy, d_xz, d_z^2, d_yz, d_x^2-y^2
 !
       use gvec
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
       integer l, ig
@@ -8220,7 +8175,7 @@
 !        1.) elimination of the 7's from l=20 
 !        2.) addition of the factor 1./sqrt(12.) to l=25
 !
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
       integer, intent(in)      :: l, ngy, ngb
@@ -8426,7 +8381,7 @@
 !
       use gvec
       use parm
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 ! input
@@ -8791,7 +8746,7 @@
 !
       use gvec
       use parm
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 ! input
@@ -9162,7 +9117,7 @@
 !
       use gvec
       use parm
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 ! input
@@ -9825,7 +9780,7 @@
 !
       use gvec
       use parm
-      use cnst
+      use constants, only: pi, fpi
 !
       implicit none
 !

@@ -23,7 +23,7 @@
         REAL(dbl), PARAMETER :: K_BOLTZMAN_SI    = 1.38066D-23   ! J K^-1 
         REAL(dbl), PARAMETER :: K_BOLTZMAN_AU    = 3.1667D-6   ! Hartree K^-1 
         REAL(dbl), PARAMETER :: K_BOLTZMAN_M1_AU = 315795.26D0  ! Hartree^-1 K 
-        REAL(dbl), PARAMETER :: FACTEM           = 315795.26D0  ! Hartree^-1 K 
+        REAL(dbl), PARAMETER :: FACTEM           = 315795.26D0  ! 27.212d0*11605.d0 Hartree^-1 K 
 
 ! ...   Physical constants defining the Atomic Units System
         REAL(dbl), PARAMETER :: BOHR_RADIUS_SI   = 0.529177D-10 ! m
@@ -43,7 +43,7 @@
         REAL(dbl), PARAMETER :: RY               = 13.606D0    ! eV
         ! REAL(dbl), PARAMETER :: AU               = 27.211652d0    ! eV
         ! REAL(dbl), PARAMETER :: RY               = 13.605826d0    ! eV
-        REAL(dbl), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au
+        REAL(dbl), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au ( mass of a proton )
         REAL(dbl), PARAMETER :: UMA_AU           = 1822.89D0   ! au
         REAL(dbl), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz
         REAL(dbl), PARAMETER :: TERAHERTZ        = 2.418D-5    ! from au to THz

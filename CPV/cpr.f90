@@ -52,7 +52,6 @@
 !
       use control_module
       use core
-      use cnst
       use cvan
       use energies
       use elct
@@ -82,6 +81,7 @@
       use pres_mod
       use restart
       use parameters, only: nacx
+      use constants, only: pi, factem
 !
       implicit none
 !
@@ -167,7 +167,7 @@
      &       tempp, xnhe0, vnhp, xnhp0, xnhpm, verl1, verl2, verl3,     &
      &       fccc, xnhem, vnhe, anor, savee, saveh, savep, press,       &
      &       enthal, epot, xnhpp, xnhep, epre, enow, tps, econs, econt, &
-     &       ampre,  fricp, greasp, eps, qnp, tempw, qne, factem,       &
+     &       ampre,  fricp, greasp, eps, qnp, tempw, qne,               &
      &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
      &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
@@ -208,8 +208,7 @@
 !     ====  1 tera              = 1.e+12                            ====
 !     ====  1 pico              = 1.e-12                            ====
 !     ==================================================================
-      scmass  = 1822.89d0
-      factem  = 27.212d0*11605.d0
+
       factp   = 3.3989*0.00001
 !
 !     ==================================================================

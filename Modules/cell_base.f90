@@ -162,23 +162,29 @@
           REAL(dbl), intent(out) :: den
           INTEGER I,J,K,IPERM,IR,L
           REAL(dbl)  S
-            DEN=0.D0
-            I=1; J=2; K=3; S=1.D0
+            DEN = 0.D0
+            I = 1; J = 2; K = 3; S = 1.D0
             SIG: DO
-              DO IPERM=1,3
-                DEN=DEN+S*A1(I)*A2(J)*A3(K)
-                L=I; I=J; J=K; K=L
+              DO IPERM = 1, 3
+                DEN = DEN + S * A1(I) * A2(J) * A3(K)
+                L = I; I = J; J = K; K = L
               END DO
-              I=2; J=1; K=3; S=-S
-              IF(S.LT.0.D0) CYCLE SIG
+              I = 2; J = 1; K = 3; S = -S
+              IF( S < 0.D0) CYCLE SIG
               EXIT SIG 
             END DO SIG
-            I=1; J=2; K=3
-            DEN=ALAT/ABS(DEN)
-            DO IR=1,3
-              B1(IR)=DEN*(A2(J)*A3(K)-A2(K)*A3(J))
-              B2(IR)=DEN*(A3(J)*A1(K)-A3(K)*A1(J))
-              B3(IR)=DEN*(A1(J)*A2(K)-A1(K)*A2(J))
+            ! DEN =       A1(1) * A2(2) * A3(3)
+            ! DEN = DEN + A1(2) * A2(3) * A3(1)
+            ! DEN = DEN + A1(3) * A2(1) * A3(2)
+            ! DEN = DEN - A1(2) * A2(1) * A3(3)
+            ! DEN = DEN - A1(1) * A2(3) * A3(2)
+            ! DEN = DEN - A1(3) * A2(2) * A3(1)
+            I = 1; J = 2; K = 3
+            DEN = ALAT / ABS(DEN)
+            DO IR = 1, 3
+              B1(IR) = DEN*(A2(J)*A3(K)-A2(K)*A3(J))
+              B2(IR) = DEN*(A3(J)*A1(K)-A3(K)*A1(J))
+              B3(IR) = DEN*(A1(J)*A2(K)-A1(K)*A2(J))
               L=I; I=J; J=K; K=L
             END DO
           RETURN

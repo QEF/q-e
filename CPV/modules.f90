@@ -44,12 +44,6 @@ module core
   real(kind=8), allocatable:: rhocb(:,:)
 end module core
 
-module cnst
-  !     scmass = 1822.89d0 = mass of a proton, in a.u.
-  real(kind=8), parameter:: pi=3.14159265358979d0, fpi=4.d0*pi
-  real(kind=8)  scmass
-end module cnst
-
 module cvan
   !     ionic pseudo-potential variables
   use parameters, only: nsx
