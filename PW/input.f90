@@ -119,6 +119,9 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
+
+  USE spin_orb, ONLY : lspinorb_ => lspinorb   
+
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -150,7 +153,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, i_cons, mcons, angle1, &
-                               angle2, report
+                               angle2, report, lspinorb
   !
   ! ELECTRONS namelist
   !
@@ -760,6 +763,7 @@ SUBROUTINE iosys()
   degauss_ = degauss
   nelec_   = nelec
   !
+  lspinorb_ = lspinorb
   noncolin_ = noncolin
   angle1_   = angle1
   angle2_   = angle2
