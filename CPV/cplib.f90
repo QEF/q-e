@@ -1321,10 +1321,10 @@
       character(len=20) xctype
 !
                         xctype = ' unknown exch.-corr.'
-      if (dft.eq.lda)   xctype = '      ceperley-alder'
-      if (dft.eq.-1.)   xctype = '              wigner'
-      if (dft.eq.-2.)   xctype = '     hedin-lundqvist'
-      if (dft.eq.-3.)   xctype = ' gunnarson-lundqvist'
+      if (dft.eq.lda)   xctype = '      Ceperley-Alder'
+      if (dft.eq.-1.)   xctype = '              Wigner'
+      if (dft.eq.-2.)   xctype = '     Hedin-Lundqvist'
+      if (dft.eq.-3.)   xctype = ' Gunnarson-Lundqvist'
       if (dft.eq.-4.)   xctype = ' no exch-corr at all'
       if (dft.eq.blyp)  xctype = ' C-A + B88gx + LYPgc'
       if (dft.eq.becke) xctype = ' C-A + B88gx        '
@@ -3351,6 +3351,7 @@
       integer ibrav
       real(kind=8) tau(3,natx,nsx), celldm(6), ecut
 !
+      character (len=20) xctype
       integer idum, ik, k, iss, i, in, is, ia
       real(kind=8) gcut, gcutw, gcuts, gcutb, ecutw, dual, fsum,        &
      &     b1(3), b2(3), b3(3), b1b(3),b2b(3),b3b(3), alatb, ocp, ddum
@@ -3494,7 +3495,8 @@
      &            nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,                     &
      &            nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx
 !
-      write(6,38)
+      call dftname(xctype)
+      write(6,38) xctype
       write(6,334) ecutw,dual*ecutw,ecut
 !
       if(nspin.eq.1)then
@@ -3545,7 +3547,7 @@
     6 format(/' # of electrons=',i5,' # of states=',i5,/)
     7 format(/' # of up electrons=',i5,'  of down electrons=',i5,         &
               ' # of states=',i5,/)
-   38 format(' explicit calculation of xc',/)
+   38 format(' exchange-correlation potential: ',a20/)
   334 format(' ecutw=',f7.1,' ryd',3x,                                  &
      &       ' ecuts=',f7.1,' ryd',3x,' ecut=',f7.1,' ryd')
   166 format(/,' nspin=',i2)
@@ -5176,11 +5178,12 @@
       use cvan
       use ions_base, only: ipp, nsp
       use io_files, only: psfile, pseudo_dir
+      use dft_mod, only: dft
 !
       implicit none
 !
       character(len=256) :: filename
-      integer :: is, ierr, iunit=14
+      integer :: is, ierr, dft_, iunit=14
 !
 !     -----------------------------------------------------------------
 !     first vanderbilt species , then norm-conserving are read !!
@@ -5241,6 +5244,11 @@
                call errore('readpp', 'wrong pseudo type',ipp(is))
          end select
          close (unit=iunit)
+         if (is == 1) then
+            dft_ = dft
+         else if ( dft /= dft_) then
+            call errore('reapp','inconsistent DFT read',is)
+         end if
       end do
 !
       return
@@ -5271,11 +5279,7 @@
       if (zv(is) < 1 .or. zv(is) > 100 ) then
          call errore('readpp','wrong potential read',15)
       endif
-      if (is.eq.1) then
-         dft=exfact
-      else if (dft.ne.exfact) then
-         call errore('readpp','inconsistent DFT',is)
-      end if
+      dft=exfact
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
@@ -5472,6 +5476,7 @@
      &        mgcx, mgcc,     &! exch-corr functional indices 
      &        exfact,         &
      &        lmin, lmax       ! min and max l
+      integer, external :: cpv_dft
       logical nlcc             ! core correction flag (same as ifpcor)
 !
 !
@@ -5495,25 +5500,7 @@
       read( iunps, '(4i5)',err=100, iostat=ios ) mfxcx, mfxcc,          &
      &                                            mgcx, mgcc
 !
-      if (mfxcx.eq.1.and.mfxcc.eq.1.and.mgcx.eq.0.and.mgcc.eq.0) then
-         exfact=lda
-      else if (mfxcx.eq.1.and.mfxcc.eq.1.and.mgcx.eq.1.and.mgcc.eq.1) then
-         exfact=bp88
-      else if (mfxcx.eq.1.and.mfxcc.eq.4.and.mgcx.eq.2.and.mgcc.eq.2) then
-         exfact=pw91
-      else if(mfxcx.eq.1.and.mfxcc.eq.4.and.mgcx.eq.3.and.mgcc.eq.4) then
-         exfact=pbe
-      else if(mfxcx.eq.1.and.mfxcc.eq.3.and.mgcx.eq.1.and.mgcc.eq.3) then
-         exfact=blyp
-      else
-         call errore('readAdC','which functional is this?',1)
-      end if
-!
-      if (is.eq.1) then
-         dft=exfact
-      else if (dft.ne.exfact) then
-         call errore('readAdC','inconsistent DFT',is)
-      end if
+      dft = cpv_dft(mfxcx, mfxcc, mgcx, mgcc)
 !
       read( iunps, '(2e17.11,i5)') zv(is), etotps, lmax
       if ( zv(is) < 1 .or. zv(is) > 100 )                               &
@@ -5794,13 +5781,7 @@
       if (exfact.eq.-5) exfact=bp88
       if (exfact.eq.-6) exfact=pw91
 !
-! check that the same dft level is used by all potentials
-!
-      if (is.eq.1) then
-         dft=exfact
-      else if (dft.ne.exfact) then
-         call errore('readvan','inconsistent DFT',is)
-      end if
+      dft = exfact
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
      &     nchi(is), mesh(is), etotpseu
@@ -9687,3 +9668,23 @@
       return
       end
 
+  integer function cpv_dft (iexch, icorr, igcx, igcc)
+  use dft_mod
+  implicit none
+  integer :: iexch, icorr, igcx, igcc
+
+  if (iexch==1.and.icorr==1.and.igcx==0.and.igcc==0) then
+     cpv_dft = lda
+  else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
+     cpv_dft = blyp
+  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==1) then
+     cpv_dft = bp88
+  else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
+     cpv_dft = pw91
+  else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
+     cpv_dft = pbe
+  else
+     call errore('cpv_dft','which functional is this?',1)
+  end if
+  return
+end function cpv_dft

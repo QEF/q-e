@@ -23,7 +23,8 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   !     Local variables
   !
-  integer :: nb, iexch, icorr, igcx, igcc
+  integer :: nb, iexch, icorr, igcx, igcc, exfact
+  integer, external :: cpv_dft
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -41,19 +42,8 @@ subroutine read_pseudo (is, iunps, ierr)
   end if
   !
   call which_dft (upf%dft, iexch, icorr, igcx, igcc)  
-  if (iexch==1.and.icorr==1.and.igcx==0.and.igcc==0) then
-     dft = lda
-  else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
-     dft = blyp
-  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==1) then
-     dft = bp88
-  else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
-     dft = pw91
-  else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
-     dft = pbe
-  else
-     dft = -9
-  end if
+  !
+  dft = cpv_dft (iexch, icorr, igcx, igcc)
   !
   mesh(is) = upf%mesh
   if (mesh(is) > mmaxx) call errore('read_pseudo','increase mmaxx',mesh(is))
