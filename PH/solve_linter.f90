@@ -228,7 +228,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               call setv (2 * nbnd * npwx, 0.d0, dpsi, 1)
               call setv (2 * nrxx * nspin, 0.d0, dvscfin (1, 1, ipert), &
                    1)
-              call dvqpsi_us (ik, mode, u (1, mode) )
+              call dvqpsi_us (ik, mode, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
               !
               ! starting threshold for the iterative solution of the linear sistem (li

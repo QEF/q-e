@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us (ik, mode, uact)
+subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -30,11 +30,12 @@ subroutine dvqpsi_us (ik, mode, uact)
   ! input: the actual perturbation
   complex(kind=DP) :: uact (3 * nat)
   ! input: the pattern of displacements
+  logical :: addnlcc
   !
   !   And the local variables
   !
 
-  integer :: na, mu, ikk, ig, nt, ibnd, ir
+  integer :: na, mu, ikk, ig, nt, ibnd, ir, is
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -104,50 +105,50 @@ subroutine dvqpsi_us (ik, mode, uact)
   !
   ! add NLCC when present
   !
-  !      if (nlcc_any) then
-  !         call setv(2*nrxx,0.d0,aux,1)
-  !         do na = 1,nat
-  !            fact = tpiba*(0.d0,-1.d0)*eigqts(na)
-  !            mu = 3*(na-1)
-  !            if (abs(uact(mu+1))+abs(uact(mu+2))
-  !     +                      +abs(uact(mu+3)).gt.1.0d-12) then
-  !               nt=ityp(na)
-  !               u1 = uact(mu+1)
-  !               u2 = uact(mu+2)
-  !               u3 = uact(mu+3)
-  !               gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
-  !               if (nlcc(nt)) then
-  !                  do ig = 1,ngm
-  !                     gtau = eigts1(ig1(ig),na)*
-  !     +                      eigts2(ig2(ig),na)*
-  !     +                      eigts3(ig3(ig),na)
-  !                     gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
-  !                     aux(nl(ig))=aux(nl(ig))+drc(ig,nt)*gu*fact*gtau
-  !                  enddo
-  !               endif
-  !            endif
-  !         enddo
-  !         call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-  !         if (.not.lsda) then
-  !            do ir=1,nrxx
-  !               aux(ir) = aux(ir) * dmuxc(ir,1,1)
-  !            end do
-  !         else
-  !            is=isk(ikk)
-  !            do ir=1,nrxx
-  !               aux(ir) = aux(ir) * 0.5d0 *
-  !     +              (dmuxc(ir,is,1)+dmuxc(ir,is,2))
-  !            enddo
-  !         endif
-  !         call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-  !         if (doublegrid) then
-  !            call setv(2*nrxxs,0.d0,auxs,1)
-  !            do ig=1,ngms
-  !               auxs(nls(ig)) = aux(nl(ig))
-  !            enddo
-  !         endif
-  !         call DAXPY(2*nrxxs,1.d0,auxs,1,aux1,1)
-  !      endif
+   if (nlcc_any.and.addnlcc) then
+      call setv(2*nrxx,0.d0,aux,1)
+      do na = 1,nat
+         fact = tpiba*(0.d0,-1.d0)*eigqts(na)
+         mu = 3*(na-1)
+         if (abs(uact(mu+1))+abs(uact(mu+2))  &
+                         +abs(uact(mu+3)).gt.1.0d-12) then
+            nt=ityp(na)
+            u1 = uact(mu+1)
+            u2 = uact(mu+2)
+            u3 = uact(mu+3)
+            gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
+            if (nlcc(nt)) then
+               do ig = 1,ngm
+                  gtau = eigts1(ig1(ig),na)*   &
+                         eigts2(ig2(ig),na)*   &
+                         eigts3(ig3(ig),na)
+                  gu = gu0+g(1,ig)*u1+g(2,ig)*u2+g(3,ig)*u3
+                  aux(nl(ig))=aux(nl(ig))+drc(ig,nt)*gu*fact*gtau
+               enddo
+            endif
+         endif
+      enddo
+      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
+      if (.not.lsda) then
+         do ir=1,nrxx
+            aux(ir) = aux(ir) * dmuxc(ir,1,1)
+         end do
+      else
+         is=isk(ikk)
+         do ir=1,nrxx
+            aux(ir) = aux(ir) * 0.5d0 *  &
+                 (dmuxc(ir,is,1)+dmuxc(ir,is,2))
+         enddo
+      endif
+      call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+      if (doublegrid) then
+         call setv(2*nrxxs,0.d0,auxs,1)
+         do ig=1,ngms
+            auxs(nls(ig)) = aux(nl(ig))
+         enddo
+      endif
+      call DAXPY(2*nrxxs,1.d0,auxs,1,aux1,1)
+   endif
   !
   ! Now we compute dV_loc/dtau in real space
   !

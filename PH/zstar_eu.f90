@@ -61,7 +61,7 @@ subroutine zstar_eu
            !
            ! recalculate  DeltaV*psi(ion) for mode nu
            !
-           call dvqpsi_us (ik, mode, u (1, mode) )
+           call dvqpsi_us (ik, mode, u (1, mode),.true. )
            do jpol = 1, 3
               nrec = (jpol - 1) * nksq + ik
               !
