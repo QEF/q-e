@@ -30,8 +30,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
-  USE us,                   ONLY : becsum
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, becsum
   USE uspp_param,           ONLY : nh, tvanp
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
@@ -186,7 +185,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                    w1 * (real ( psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
               enddo
         !
-        !    If we have a US pseudopotential we compute here the sumbec term
+        !    If we have a US pseudopotential we compute here the becsum term
         !
 
               w1 = wg (ibnd, ik)

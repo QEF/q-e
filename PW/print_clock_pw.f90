@@ -67,7 +67,7 @@ SUBROUTINE print_clock_pw()
    WRITE( stdout, * )
    !
    CALL print_clock( 'sum_band' )
-   CALL print_clock( 'sumbec' )
+   CALL print_clock( 'becsum' )
    !
    CALL print_clock( 'addusdens' )
    !

@@ -705,7 +705,7 @@
                   do iss=1,nspin
                      do k=1,3
                         do j=1,3
-                           drhovan(isa,ijv,iss,j,k)=dsums(iss,j,k)
+                           drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
                            dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
                         enddo
                      enddo
@@ -1073,7 +1073,7 @@
       implicit none
 ! input
       integer, intent(in) ::  irb(3,natx,nsx)
-      real(kind=8), intent(in)::  rhovan(nat,nhm*(nhm+1)/2,nspin),      &
+      real(kind=8), intent(in)::  rhovan(nhm*(nhm+1)/2,nat,nspin),      &
      &                            rhor(nnr,nspin)
       complex(kind=8), intent(in)::  eigrb(ngb,nas,nsp), rhog(ng,nspin)
 ! local
@@ -1136,8 +1136,8 @@
                         do iv=1,nh(is)
                            do jv=iv,nh(is)
                               ijv=ijv+1
-                              sum = rhovan(isa+ifft-1,ijv,iss)
-                              dsum=drhovan(isa+ifft-1,ijv,iss,i,j)
+                              sum = rhovan(ijv,isa+ifft-1,iss)
+                              dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
                               if(iv.ne.jv) then
                                  sum =2.*sum
                                  dsum=2.*dsum
@@ -1220,8 +1220,8 @@
                         do iv= 1,nh(is)
                            do jv=iv,nh(is)
                               ijv=ijv+1
-                              sum=rhovan(isa,ijv,iss)
-                              dsum =drhovan(isa,ijv,iss,i,j)
+                              sum=rhovan(ijv,isa,iss)
+                              dsum =drhovan(ijv,isa,iss,i,j)
                               if(iv.ne.jv) then
                                  sum =2.*sum
                                  dsum=2.*dsum
@@ -1376,7 +1376,7 @@
       use ions_base, only: nsp, nat, na
       implicit none
 ! input
-      real(kind=8) bec(nhsa,n), rhovan(nat,nhm*(nhm+1)/2,nspin)
+      real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
 ! local
       real(kind=8) sum, sums(2)
       integer is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
@@ -1403,7 +1403,7 @@
                   end do
                   sum=0.d0
                   do iss=1,nspin
-                     rhovan(isa,ijv,iss) = sums(iss)
+                     rhovan(ijv,isa,iss) = sums(iss)
                      sum=sum+sums(iss)
                   end do
                   if(iv.ne.jv) sum=2.d0*sum
@@ -3382,7 +3382,7 @@
 ! input
       integer irb(3,natx,nsx)
       complex(kind=8) eigrb(ngb,nas,nsp)
-      real(kind=8)  vr(nnr,nspin), rhovan(nat,nhm*(nhm+1)/2,nspin)
+      real(kind=8)  vr(nnr,nspin), rhovan(nhm*(nhm+1)/2,nat,nspin)
 ! output
       real(kind=8)  deeq(nhm,nhm,nat,nspin), fion(3,natx,nsp)
 ! local
@@ -3491,13 +3491,13 @@
                      do jv=iv,nh(is)
                         ijv=ijv+1
                         if(iv.ne.jv) then
-                           fac1=2.d0*fac*tpibab*rhovan(isa,ijv,iss)
+                           fac1=2.d0*fac*tpibab*rhovan(ijv,isa,iss)
                            if (nfft.eq.2) fac2=2.d0*fac*tpibab*         &
-     &                                           rhovan(isa+1,ijv,iss)
+     &                                           rhovan(ijv,isa+1,iss)
                         else
-                           fac1=     fac*tpibab*rhovan(isa,ijv,iss)
+                           fac1=     fac*tpibab*rhovan(ijv,isa,iss)
                            if (nfft.eq.2) fac2=     fac*tpibab*        &
-     &                                           rhovan(isa+1,ijv,iss)
+     &                                           rhovan(ijv,isa+1,iss)
                         endif
                         if (nfft.eq.2) then
                            do ig=1,ngb
@@ -3558,11 +3558,11 @@
                      do jv=iv,nh(is)
                         ijv=ijv+1
                         if(iv.ne.jv) then
-                           fac1=2.d0*fac*tpibab*rhovan(isa,ijv,isup)
-                           fac2=2.d0*fac*tpibab*rhovan(isa,ijv,isdw)
+                           fac1=2.d0*fac*tpibab*rhovan(ijv,isa,isup)
+                           fac2=2.d0*fac*tpibab*rhovan(ijv,isa,isdw)
                         else
-                           fac1=     fac*tpibab*rhovan(isa,ijv,isup)
-                           fac2=     fac*tpibab*rhovan(isa,ijv,isdw)
+                           fac1=     fac*tpibab*rhovan(ijv,isa,isup)
+                           fac2=     fac*tpibab*rhovan(ijv,isa,isdw)
                         end if
                         do ig=1,ngb
                            facg1 = fac1 * cmplx(0.d0,-gxb(ik,ig)) *     &
@@ -5793,7 +5793,7 @@ end function pseudo_type
       use io_global, only: stdout
 !
       implicit none
-      real(kind=8) bec(nhsa,n), rhovan(nat,nhm*(nhm+1)/2,nspin)
+      real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
       complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
@@ -6166,7 +6166,7 @@ end function pseudo_type
       implicit none
 !
       integer, intent(in) :: irb(3,natx,nsx)
-      real(kind=8), intent(in):: rhovan(nat,nhm*(nhm+1)/2,nspin)
+      real(kind=8), intent(in):: rhovan(nhm*(nhm+1)/2,nat,nspin)
       complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
       real(kind=8), intent(inout):: rhor(nnr,nspin)
       complex(kind=8),  intent(inout):: rhog(ng,nspin)
@@ -6213,7 +6213,7 @@ end function pseudo_type
                   do iv= 1,nh(is)
                      do jv=iv,nh(is)
                         ijv=ijv+1
-                        sumrho=rhovan(isa+ifft-1,ijv,iss)
+                        sumrho=rhovan(ijv,isa+ifft-1,iss)
                         if(iv.ne.jv) sumrho=2.*sumrho
                         do ig=1,ngb
                            qgbt(ig,ifft)=qgbt(ig,ifft) +                &
@@ -6319,7 +6319,7 @@ end function pseudo_type
                   do iv=1,nh(is)
                      do jv=iv,nh(is)
                         ijv=ijv+1
-                        sumrho=rhovan(isa,ijv,iss)
+                        sumrho=rhovan(ijv,isa,iss)
                         if(iv.ne.jv) sumrho=2.*sumrho
                         do ig=1,ngb
                            qgbt(ig,iss)=qgbt(ig,iss)+sumrho*qgb(ig,ijv,is)

@@ -93,7 +93,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
                  w1 * (DREAL ( psic (j) ) **2 + DIMAG (psic (j) ) **2)
         enddo
         !
-        !    If we have a US pseudopotential we compute here the sumbec term
+        !    If we have a US pseudopotential we compute here the becsum term
         !
         w1 = weight * wdelta
         ijkb0 = 0

@@ -32,8 +32,8 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
-  USE us,                   ONLY : okvan, becsum
-  USE uspp,                 ONLY : nkb, vkb
+  USE us,                   ONLY : okvan
+  USE uspp,                 ONLY : nkb, vkb, becsum
   USE uspp_param,           ONLY : nh, tvanp
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
@@ -270,7 +270,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          ! ... If we have a US pseudopotential we compute here the sumbec term
+          ! ... If we have a US pseudopotential we compute here the becsum term
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
@@ -278,7 +278,7 @@ SUBROUTINE sum_band()
              CALL pw_gemm( 'Y', nkb, nbnd, npw, &
                            vkb, npwx, evc, npwx, becp, nkb )
           !
-          CALL start_clock( 'sumbec' )
+          CALL start_clock( 'becsum' )
           !
           DO ibnd = 1, nbnd
              !
@@ -339,7 +339,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          CALL stop_clock( 'sumbec' )
+          CALL stop_clock( 'becsum' )
           !
        END DO k_loop
        !
@@ -418,14 +418,14 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          ! ... If we have a US pseudopotential we compute here the sumbec term
+          ! ... If we have a US pseudopotential we compute here the becsum term
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF ( nkb > 0 ) &
              CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           !
-          CALL start_clock( 'sumbec' )
+          CALL start_clock( 'becsum' )
           !
           DO ibnd = 1, nbnd
              !
@@ -488,7 +488,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          CALL stop_clock( 'sumbec' )
+          CALL stop_clock( 'becsum' )
           !
        END DO k_loop
        !

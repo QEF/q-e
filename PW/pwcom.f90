@@ -447,8 +447,6 @@ MODULE us
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-       becsum(:,:,:)           ! the sum of <beta|psi> 
   LOGICAL :: &
        okvan                  ! if .TRUE. at least one pseudo is Vanderbilt
   !

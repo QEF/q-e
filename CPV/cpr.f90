@@ -59,7 +59,7 @@
       use core, only: deallocate_core
       use uspp_param, only: nhm
       use cvan, only: nvb
-      use uspp, only : nhsa=> nkb, deeq
+      use uspp, only : nhsa=> nkb, deeq, betae => vkb
       use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
@@ -164,7 +164,6 @@
 !     rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
 !     deeq  = \int V_eff(r) q_lm(r) dr
 !
-      complex(kind=8), allocatable::   betae(:,:)
       real(kind=8), allocatable:: bec(:,:), becdr(:,:,:)
       real(kind=8), allocatable:: bephi(:,:), becp(:,:)
       real(kind=8), allocatable:: rhovan(:,:,:)
@@ -389,13 +388,13 @@
       allocate(bephi(nhsa,n))
       allocate(becp (nhsa,n))
       allocate(deeq(nhm,nhm,nat,nspin))
-      allocate(rhovan(nat,nhm*(nhm+1)/2,nspin))
+      allocate(rhovan(nhm*(nhm+1)/2,nat,nspin))
       allocate(dbec (nhsa,n,3,3))
       allocate(dvps(ngs,nsp))
       allocate(drhops(ngs,nsp))
       allocate(drhog(ng,nspin,3,3))
       allocate(drhor(nnr,nspin,3,3))
-      allocate(drhovan(nat,nhm*(nhm+1)/2,nspin,3,3))
+      allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
 #ifdef __PARA
       allocate(aux(nnr))
 #endif
@@ -1618,7 +1617,6 @@
       IF( ALLOCATED( rhos ) ) DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) ) DEALLOCATE( rhog )
       IF( ALLOCATED( rhoc ) ) DEALLOCATE( rhoc )
-      IF( ALLOCATED( betae ) ) DEALLOCATE( betae )
       IF( ALLOCATED( bec ) ) DEALLOCATE( bec )
       IF( ALLOCATED( becdr ) ) DEALLOCATE( becdr )
       IF( ALLOCATED( bephi ) ) DEALLOCATE( bephi )

@@ -18,7 +18,7 @@ subroutine local_dos1d (ik, kband, plan)
   USE gvect
   USE gsmooth
   USE lsda_mod, ONLY: current_spin
-  USE us, ONLY: becsum
+  USE uspp, ONLY: becsum
   USE uspp_param, ONLY: nh, tvanp
   USE wvfct, ONLY: npw, wg, igk
   USE wavefunctions_module,  ONLY: evc, psic
@@ -87,7 +87,7 @@ subroutine local_dos1d (ik, kband, plan)
      aux(ir) = aux(ir) + w1 * (real(psic(ir))**2 + DIMAG(psic(ir))**2)
   enddo
   !
-  !    If we have a US pseudopotential we compute here the sumbec term
+  !    If we have a US pseudopotential we compute here the becsum term
   !
   ibnd = kband
 
