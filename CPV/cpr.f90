@@ -70,6 +70,7 @@
       use work2
       use io_global, ONLY: io_global_start
       use mp_global, ONLY: mp_global_start
+      use mp, ONLY: mp_end
       use para_mod
       use work_fft
       use dener
@@ -1503,8 +1504,12 @@
 !      
  1977 format(5x,//'====================== end cprvan ',                 &
      &            '======================',//)
-#ifdef __MPI
-      call mpi_finalize(i)
-#endif
+
+!
+! ...  Now stop the message passing environment and terminate the execution
+!
+
+      call mp_end()
+
       stop
       end

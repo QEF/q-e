@@ -54,38 +54,28 @@ end module para_mod
       subroutine startup
 !-----------------------------------------------------------------------
 !
-!  This subroutine initializes MPI processes. The number of processors
-!  "nproc" returned by this routine is determined by the way the process
-!  was started. This is configuration- and machine-dependent. For inter-
+!  This subroutine initializes the Message Passing environment. 
+!  The number of processors "nproc" returned by this routine is 
+!  determined by the way the process was started. 
+!  This is configuration- and machine-dependent. For inter-
 !  active execution it is determined by environment variable MP_PROCS
 !
       use para_mod
-      use parallel_include
+      use mp, only: mp_start, mp_env
 !
       implicit none
 
       integer ierr
 !
-#if defined __MPI
-      call mpi_init(ierr)
-      if (ierr.ne.0) call errore('startup','mpi_init',ierr)
-      call mpi_comm_size(MPI_COMM_WORLD,nproc,ierr)
-      if (ierr.ne.0) call errore('startup','mpi_comm_size',ierr)
-      call mpi_comm_rank(MPI_COMM_WORLD,   me,ierr)
-      if (ierr.ne.0) call errore('startup','mpi_comm_rank',ierr)
-      mygroup = MPI_COMM_WORLD
-      me=me+1
-#else
-      nproc = 1
-      me = 1
-      mygroup = 0
-#endif
+      call mp_start()
+      call mp_env( nproc, me, mygroup )
+      me = me + 1
 !
 !
 ! parent process (source) will have me=1 - child process me=2,...,NPROC
 ! (for historical reasons: MPI uses 0,...,NPROC-1 instead )
 !
-      if (nproc.gt.maxproc)                                             &
+      if ( nproc > maxproc) &
      &   call errore('startup',' too many processors ',nproc)
 !
       if (me.lt.10) then
@@ -100,7 +90,7 @@ end module para_mod
 !
 ! only the first processor writes
 !
-      if (me.eq.1) then
+      if ( me == 1 ) then
          write(6,'(/5x,''Parallel version (MPI)'')')
          write(6,'(5x,''Number of processors in use:   '',i4)') nproc
       else

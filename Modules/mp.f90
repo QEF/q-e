@@ -12,7 +12,7 @@
       USE kinds, ONLY : dbl, i4b
       USE parallel_include
 !      PRIVATE
-      PUBLIC :: mp_start, mp_end, mp_environ, mp_group, mp_cart_create, &
+      PUBLIC :: mp_start, mp_end, mp_env, mp_group, mp_cart_create, &
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_excng, mp_gather, mp_get, mp_put, mp_barrier, mp_report
 !
@@ -221,8 +221,8 @@
       END SUBROUTINE mp_end
 !
 !------------------------------------------------------------------------------!
-!..mp_environ
-      SUBROUTINE mp_environ(numtask, taskid, groupid)
+!..mp_env
+      SUBROUTINE mp_env(numtask, taskid, groupid)
         IMPLICIT NONE
         INTEGER, INTENT (OUT) :: numtask, taskid, groupid
         INTEGER :: ierr
@@ -243,7 +243,7 @@
 #endif
 
         RETURN
-      END SUBROUTINE mp_environ
+      END SUBROUTINE mp_env
 !------------------------------------------------------------------------------!
 !..mp_group
       SUBROUTINE mp_group(group_list, group_size, base_group, groupid)
@@ -1192,9 +1192,11 @@
 !------------------------------------------------------------------------------!
 !
 !..mp_stop
+!
       SUBROUTINE mp_stop(code)
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: code
+        WRITE(6, fmt='( "*** error in Message Passing (mp) module ***")' )
         WRITE(6, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
         CALL mpi_abort(mpi_comm_world,code)

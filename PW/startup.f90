@@ -39,53 +39,67 @@ subroutine startup (nd_nmbr, version)
   ! nuber, IDs and communicators
   use io_global, only: io_global_start
   use mp_global, only: mp_global_start
+  use mp, only: mp_start, mp_env, mp_barrier, mp_bcast
 
   implicit none
   character :: nd_nmbr * 3, version * 12
+
 #ifdef __PARA
-  include 'mpif.h'
+
   character :: np * 2, cdate * 9, ctime * 9
   external date_and_tim
   integer :: ierr, ilen, iargc, nargs
-#ifdef __T3E
+  integer :: gid
+
+#  ifdef __T3E
+
   integer ipxfargc
   !
   ! set streambuffers on
   !
 
   call set_d_stream (1)
-#endif
-  call mpi_init (ierr)
-  call errore ('startup', 'mpi_init', ierr)
-  call mpi_comm_size (MPI_COMM_WORLD, nproc, ierr)
-  call errore ('startup', 'mpi_comm_size', ierr)
-  call mpi_comm_rank (MPI_COMM_WORLD, me, ierr)
 
-  call errore ('startup', 'mpi_comm_rank', ierr)
+#  endif
+
+  call mp_start()
+  call mp_env( nproc, me, gid )
+
   !
   ! This is added for compatibility with PVM notations
   ! parent process (source) will have me=1 - child process me=2,...,NPROC
   !
-  me = me+1
+
+  me = me + 1
   if (me.eq.1) then
      !
      ! How many pools?
      !
-#ifdef __T3E
+
+#  ifdef __T3E
+
      nargs = ipxfargc ()
      if (nargs.ge.2) then
         call pxfgetarg (2, np, ilen, ierr)
-#else
-#ifdef HITACHI
+
+#  else
+
+#  ifdef HITACHI
+
      nargs = iargc ()
      if (nargs.ge.3) then
         call getarg (3, np)
-#else
+
+#  else
+
      nargs = iargc ()
      if (nargs.ge.2) then
         call getarg (2, np)
-#endif
-#endif
+
+#  endif
+
+#  endif
+
         read (np, '(i2)') npool
         if (npool.le.0) npool = 1
         if (npool.gt.nproc) npool = nproc
@@ -100,19 +114,20 @@ subroutine startup (nd_nmbr, version)
           &call errore ('startup','nproc.ne.nprocp*npool', 1)
 
   endif
-  call mpi_barrier (MPI_COMM_WORLD, ierr)
 
-  call errore ('startup', 'mpi_barrier', ierr)
+  call mp_barrier( gid ) 
+
   !
   ! transmit  nprocp and npool
   !
-  call mpi_bcast (nprocp, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  call errore ('startup', 'mpi_bcast 1', ierr)
-  call mpi_bcast (npool, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  call errore ('startup', 'mpi_bcast 2', ierr)
+
+  call mp_bcast ( nprocp, 0, gid )
+  call mp_bcast ( npool, 0, gid )
+
   !
   ! set the processor label for files
   !
+
   if (nproc.gt.maxproc) call errore ('startup', ' too many processors', nproc)
   nd_nmbr = '   '
   if (nproc.lt.10) then
@@ -159,11 +174,13 @@ subroutine startup (nd_nmbr, version)
   !
   ! Set global coordinate for this processor
   !
-  call mp_global_start( 0, (me-1), MPI_COMM_WORLD, nproc )
+  call mp_global_start( 0, (me-1), gid, nproc )
 
 9000 format (/5x,'Program ',a12,' starts ...'/5x, &
        &            'Today is ',a9,' at ',a9)
+
 #endif
+
   return
 end subroutine startup
 
