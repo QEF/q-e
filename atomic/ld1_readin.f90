@@ -28,6 +28,7 @@ subroutine ld1_readin
 
   character(len=80) :: config, configts(ncmax1)
   character(len=2) :: atom
+  logical, dimension(nwfsx) :: unbound
   character, external :: atom_name*2
   integer, external :: atomic_number
   logical, external :: matches
@@ -321,24 +322,30 @@ subroutine ld1_readin
                 call errore('ld1_readin','two wavefunctions for same l',1)
         enddo
         lmax=max(lmax,lls(ns))
-        if (enls(ns).ne.0.0_dp.and.ocs(ns).gt.0.0_dp) &
-                call errore('ld1_readin','unbound states must be empty',1)
-        if (rcut(ns).ne.rcutus(ns)) then
-!
-!         this channel is US. Check that there is at least another energy
-!
+        !
+        ! flag unbound states, i.e. those with negative occupancy
+        ! and those with zero occupancy and nonzero reference energy
+        ! WARNING: this is VERY bad and MUST be done in a cleaner way
+        !
+        unbound(ns) = (ocs(ns) < 0.0_dp) .or. &
+             (ocs(ns) == 0.0_dp .and. enls(ns) /= 0.0_dp) 
+        if (enls(ns) /= 0.0_dp .and. ocs(ns) > 0.0_dp) &
+             call errore('ld1_readin','unbound states must be empty',1)
+        if (rcut(ns) /= rcutus(ns)) then
+           !
+           ! this channel is US. Check that there is at least another energy
+           !
           c1=0
           do ns1=1,nwfs
-             if (els(ns).eq.els(ns1).and.jjs(ns).eq.jjs(ns1)) c1=c1+1 
+             if (els(ns) == els(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
           enddo
-          if (c1.lt.2) call errore('ld1_readin', &
+          if (c1 < 2) call errore('ld1_readin', &
                         'US requires at least two energies per channel',1)
         endif
      enddo
-     if (nwfs.gt.1) then
-        if (els(nwfs)==els(nwfs-1).and.jjs(nwfs)==jjs(nwfs-1).and.lloc.gt.-1) &
-                call errore('ld1_readin','only one local channel',1)
-                
+     if (nwfs > 1) then
+        if (els(nwfs)==els(nwfs-1) .and. jjs(nwfs)==jjs(nwfs-1) .and. &
+            lloc > -1) call errore('ld1_readin','only one local channel',1)
      endif
      nlc=0
      nnl=0
@@ -348,14 +355,22 @@ subroutine ld1_readin
      file_wavefunctionsps= ' '
      file_tests=' '
      nconf=1
-     nwftsc(1)  = nwfs
+     nwftsc = 0
      do n=1,nwfs
-        eltsc (n,1)= els (n)
-        nntsc (n,1)= nns (n)
-        lltsc (n,1)= lls (n)
-        octsc (n,1)= ocs (n)
-        iswtsc(n,1)= isws(n)
-        jjtsc (n,1)= jjs (n)
+        if (.not.unbound(n)) then
+           !
+           ! copy states used in the PP generation to the testing configuration
+           ! Only bound states must be copied ! Note that this WILL NOT WORK
+           ! if bound states are not used in the generation of the PP
+           !
+           nwftsc = nwftsc + 1
+           eltsc (nwftsc,1)= els (n)
+           nntsc (nwftsc,1)= nns (n)
+           lltsc (nwftsc,1)= lls (n)
+           octsc (nwftsc,1)= ocs (n)
+           iswtsc(nwftsc,1)= isws(n)
+           jjtsc (nwftsc,1)= jjs (n)
+        end if
      end do
      do n=1,nwf
         oc_old(n)=oc(n)

@@ -166,6 +166,7 @@ Needed for PP generation:
       nls, nns, lls, ocs = same as el, n, l, oc, for the reference configuration
       ener = energy used to pseudize the corresponding state
              if 0.d0, use the one-electron energy of the all-electron state
+             do not use 0.d0 for unbound states!
       rcut =  matching radius for norm conserving PP
       rcutus= matching radius for ultrasoft PP - used only if pseudotype=3 
 
