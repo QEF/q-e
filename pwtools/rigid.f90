@@ -276,7 +276,7 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
 end subroutine dyndiag
 !
 !-----------------------------------------------------------------------
-subroutine writemodes (nax,nat,q,w2,z,flout)
+subroutine writemodes (nax,nat,q,w2,z,iout)
   !-----------------------------------------------------------------------
   !
   !   write modes on output file in a readable way
@@ -284,21 +284,14 @@ subroutine writemodes (nax,nat,q,w2,z,flout)
  use allocate
  implicit none
  ! input
- integer nax, nat
+ integer nax, nat, iout
  real(kind=8) q(3), w2(3*nat)
  complex(kind=8) z(3*nax,3*nat)
- character(len=*) flout
  ! local
  integer nat3, na, nta, ipol, i, j, iout
  real(kind=8), pointer:: freq(:)
  real(kind=8):: rydthz,rydcm1,cm1thz,znorm
  !
- if (flout.eq.' ') then
-    iout=6
- else
-    iout=4
-    open (unit=iout,file=flout,status='unknown',form='formatted')
- end if
  nat3=3*nat
  call mallocate(freq, nat3)
  !
@@ -330,7 +323,6 @@ subroutine writemodes (nax,nat,q,w2,z,flout)
  end do
  write(iout,'(1x,74(''*''))')
  !
- if(iout.ne.6) close(unit=iout)
  !      if (flvec.ne.' ') then
  !         open (unit=iout,file=flvec,status='unknown',form='unformatted')
  !         write(iout) nat, nat3, (ityp(i),i=1,nat), (q(i),i=1,3)

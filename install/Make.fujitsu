@@ -13,7 +13,7 @@ CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I $(OSHOME)/include
 #
 # Fortran compiler:
 #
-F90C = frt
+F90 = frt
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9 -Kfreealloc -KA64
 #F90FLAGS = -O4 -X9 -AU -AR -Am -Kalign9
 #F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am

@@ -77,7 +77,10 @@
   LNK= ifc
 #
 # --- Modules --
-  MODULEFLAG= -cl,./intel.pcl
+# use this for version < 7
+# MODULEFLAG= -cl,./intel.pcl
+# use this for version = 7
+MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/CPV
 #
 # --- Library ---
 # to link -lfmpich compiled with GNU compiler

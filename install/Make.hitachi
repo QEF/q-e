@@ -7,7 +7,7 @@ CPPFLAGS =-DHITACHI -DPARA -DFFTW
 #
 F90 = f90
 FFLAGS = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
-         -I../include -I/usr/mpi/include
+         -I$(OSHOME)/include -I/usr/mpi/include
 F90FLAGS = $(FFLAGS) $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are

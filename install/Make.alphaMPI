@@ -2,26 +2,24 @@
 # System-dependent definitions for COMPAQ alpha parallel machines
 # (contributed by Guido Roma). Edit according to your needs
 #
-# Precompiler:
-CPP = /usr/bin/cpp
-#
-# -DLANGUAGE_FORTRAN avoids that // is considered as a C++ comment
-# -traditional has the same effect for GNU cpp
-#
 # Use -DDXML if you use fft routines from the dxml or cxml library
 # Use -DFFTW instead of -DDXML if you use fft routines from fftw library
 # Add -DNOPENCILS if you do not want to use the FFT with pencils
 # (in some cases it is slower than the full 3d FFT)
 #
-CPPFLAGS = -P -E -traditional -DDEC -DFFTW -DPARA -D__MPI \
-                 -DLANGUAGE_FORTRAN -I$(OSHOME)/include
+CPPFLAGS = -DDEC -DFFTW -DPARA -D__MPI -I$(OSHOME)/include
 
 #
 # Fortran compiler:
 #
 F90 = f90
-F90FLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
+#
+# Fortran options:
+#
+FFLAGS = -O -fpe0 -check underflow -real_size 64 -align dcommons \
 	-align records
+#
+F90FLAGS = $(FFLAGS) -cpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #

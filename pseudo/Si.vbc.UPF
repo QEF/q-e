@@ -2,7 +2,7 @@
 Generated using unknown code
 Author: Von Barth-Car (<1984)
 Info: automatically converted from PWSCF format
-    F        The Pseudo was generated with a Non-Relativistic Calculation
+    0        The Pseudo was generated with a Non-Relativistic Calculation
   0.00000000000E+00    Local Potential cutoff radius
 nl pn  l   occ               Rcut            Rcut US             E pseu
 3S  0  0  2.00      0.00000000000      0.00000000000      0.00000000000

@@ -11,8 +11,11 @@ CPPFLAGS = -P -DSUN -DNOPENCILS -DHAS_ZHEGVX -I$(OSHOME)/include
 #
 F90 = f90
 #
-F90FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf  \
-           -M$(OSHOME)/Modules -M$(OSHOME)/PW -M$(OSHOME)/PH
+F90FLAGS = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG=-M$(OSHOME)/Modules -M$(OSHOME)/PW -M$(OSHOME)/PH
 #
 LIBS = -L/usr/opt/SUNWhpc/lib -R/opt/SUNWhpc/lib -lmvec 
 #

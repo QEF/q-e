@@ -1003,9 +1003,9 @@ subroutine read_cards (pseudop, atomic_positions)
         IF( amass(is) <= 0.d0 ) THEN
            CALL error(' iosys ',' invalid  mass ', is) 
         END IF
+        atm(is) = atom_label(is)
 
      end do
-     atm(:) = atom_label(:)
      tatms =.true.
 
   else if (matches('ATOMIC_POSITIONS',line)) then

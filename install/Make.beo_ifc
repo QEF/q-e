@@ -3,8 +3,6 @@
 # Based on info from N. Marzari and B.R. Sahu
 # Edit according to your needs
 #
-CPP = /lib/cpp
-#
 # add -DMKL if using the Intel Mathematical Kernel Library
 # Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
 # two underscores at the end
@@ -23,8 +21,6 @@ CPPFLAGS = -I$(OSHOME)/include/ -DPC -DMKL -DPARA -D__MPI -DFFTW \
 F90 = mpif90
 #
 # fortran options:
-# -cl,mywork.pcl  needed to tell the compiler where modules are
-
 # -Vaxlib         enables the use of portability libraries (getarg
 #                 and maybe other library calls)
 # -W0             disable warnings
@@ -34,12 +30,15 @@ F90 = mpif90
 # -tpp7           Pentium 4  optimization
 #
 FFLAGS = -O2 -Vaxlib
+#
 F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
 #
-MODULEFLAG= -cl,./intel.pcl
-
+# use this for version < 7
+# MODULEFLAG= -cl,./intel.pcl
+# use this for version = 7
+MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW I $(OSHOME)/PH
 #
 # Loader:
 #

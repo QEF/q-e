@@ -97,7 +97,7 @@ program matdyn
   logical :: readtau
   !
   real(kind=8) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
-  integer :: n, i, j, it, nq, na, nb, ndos
+  integer :: n, i, j, it, nq, na, nb, ndos, iout
   namelist /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
   !
@@ -231,6 +231,12 @@ program matdyn
   !
   if(asr) call set_asr(nr1,nr2,nr3,nrx,frc,zeu,nat_blk,nax_blk)
   !
+  if (flvec.eq.' ') then
+     iout=6
+  else
+     iout=4
+     open (unit=iout,file=flvec,status='unknown',form='formatted')
+  end if
   do n=1, nq
      dyn(:,:,:,:) = (0.d0, 0.d0)
 
@@ -265,9 +271,11 @@ program matdyn
      !
      call dyndiag(nax,nat,amass,ityp,dyn,w2(1,n),z)
      !
-     call writemodes(nax,nat,q(1,n),w2(1,n),z,flvec)
+     call writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
      !
   end do
+  !
+  if(iout .ne. 6) close(unit=iout)
   !
   do n=1,nq
      ! freq(i,n) = frequencies in cm^(-1)

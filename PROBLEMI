@@ -1,11 +1,8 @@
 - __NEW_PUNCH : da mettere a posto
 - bisogna fare in modo che se qualche directory e' assente
   il make non si incasini 
-- il cercamoduli da' alcuni moduli come dipendenti da se stessi
-- Il compilatore IBM della sp3 di Princeton non gradisce la
-  restart.f90: va compilata senza ottimizzazione
 - la dipendenza da machine.h e' sparita: se si cambia qualcosa
-  bisogna ricompilare (poco male)
+  bisogna ricompilare
 - intel.pcl deve contenere tutte le directory con i moduli
 - bisogna specificare tutti i files che servono nei makefiles,
   uno per uno. Non si puo' usare *.o perche' molti loader si

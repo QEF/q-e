@@ -32,9 +32,10 @@ FFLAGS =-Vaxlib -O2 -tpp6
 F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
 #
 # This is needed to tell the compiler where modules are
-#
-MODULEFLAG= -cl,./intel.pcl
-
+# use this for version < 7
+# MODULEFLAG= -cl,./intel.pcl
+# use this for version = 7
+MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW I $(OSHOME)/PH
 #
 # Loader:
 #

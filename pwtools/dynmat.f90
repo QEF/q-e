@@ -34,7 +34,7 @@
       complex(kind=8) dyn(3,3,nax,nax), z(3*nax,3*nax)
       real(kind=8) tau(3,nax), amass(nax), amass_(nax), zstar(3,3,nax),&
            eps0(3,3), a0, omega, amconv, q(3), q_(3), w2(3*nax)
-      integer ityp(nax), itau(nax), nat, na, nt, ntyp, nu
+      integer ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout
       external latgen, recips, error, dyndiag, nonanal, readmat
       namelist /input/ amass,asr,flmat,flout,flmol,q
 !
@@ -84,7 +84,14 @@
 !
       call dyndiag(nax,nat,amass,ityp,dyn,w2,z)
 !
-      call writemodes(nax,nat,q_,w2,z,flout)
+      if (flout.eq.' ') then
+         iout=6
+      else
+         iout=4
+         open (unit=iout,file=flout,status='unknown',form='formatted')
+      end if
+      call writemodes(nax,nat,q_,w2,z,iout)
+      if(iout .ne. 6) close(unit=iout)
 !
       call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
 !

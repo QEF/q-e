@@ -2,7 +2,7 @@
 Generated using unknown code
 Author: X. Gonze et al (Phys. Rev. B 44, 8503 (1991))
 Info: automatically converted from PWSCF format                                 
-    T        The Pseudo was generated with a Relativistic Calculation
+    1        The Pseudo was generated with a Scalar-Relativistic Calculation
   0.00000000000E+00    Local Potential cutoff radius
 nl pn  l   occ               Rcut            Rcut US             E pseu
 4S  0  0  2.00      0.00000000000      0.00000000000      0.00000000000

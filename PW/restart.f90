@@ -219,7 +219,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   END IF
 
    tupf = .FALSE.  ! the pseudopotential are not saved in UPF format
-   tupf = .TRUE.  ! the pseudopotential are saved in UPF format
+   ! tupf = .TRUE.  ! the pseudopotential are saved in UPF format
 
    CALL write_restart_header(ndw, twrhead, istep, trutime, iswitch, nr1, nr2, nr3, &
      nr1s, nr2s, nr3s, ngm, ngm_g, nks, nkstot, ngk_l, ngk_g, nspin, nbnd, nelec, nelu, neld, &
