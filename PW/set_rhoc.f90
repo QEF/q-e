@@ -118,8 +118,8 @@ subroutine set_rhoc
   !   allocate (dum(nrxx , nspin))    
   !   dum(:,:) = 0.d0
   !   call v_xc (dum, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-  !        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-  !        ehart, etxcc, vtxcc, aux)
+  !        nrxx, nl, ngm, g, nspin, alat, omega, etxcc, vtxcc, aux)
+  !
   !   deallocate(dum)
   !   WRITE( stdout, 9000) etxcc
   !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
