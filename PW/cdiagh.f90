@@ -15,11 +15,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   ! ... hermitean matrix H . On output, the matrix is unchanged
   !
   USE kinds,     ONLY : DP
-#if defined (__PARA)
-  USE para,      ONLY : me, mypool, npool, MPI_COMM_POOL
-  USE io_global, ONLY : ionode_id
+  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm, my_image_id
   USE mp,        ONLY : mp_bcast  
-#endif
   !
   IMPLICIT NONE
   !
@@ -98,7 +95,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
       ! ... only the first processor diagonalize the matrix
       !
-      IF ( me == 1 ) THEN
+      IF ( me_pool == root_pool ) THEN
          !
 # endif
          !
@@ -108,8 +105,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
-      CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )
+      CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
+      CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
       !
 # endif
       !
@@ -131,7 +128,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
       ! ... local variables (Cray Eispack/Scilib version)
       !
-      INTEGER :: i, j, k, info
+      INTEGER       :: i, j, k, info
       REAL(KIND=DP) :: ar(ldh,n), ai(ldh,n), zr(ldh,n), zi(ldh,n)
         ! real and imaginary part of  h(ldh,n) and of  v(ldh,n)
         ! (used as auxiliary arrays)
@@ -161,7 +158,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
       IMPLICIT NONE
       ! workaround for Intel ifc8 bug:
-      COMPLEX(KIND=DP) ::  v(ldh,n)
+      COMPLEX(KIND=DP) :: v(ldh,n)
       !
       ! ... local variables (LAPACK version)
       !
@@ -207,7 +204,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
       ! ... else only the first processor diagonalize the matrix
       !
-      IF ( me == 1 ) THEN
+      IF ( me_pool == root_pool ) THEN
 #  endif
          !
          ! ... allocate workspace
@@ -230,8 +227,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
-      CALL mp_bcast( e, ionode_id, MPI_COMM_POOL )
-      CALL mp_bcast( v, ionode_id, MPI_COMM_POOL )      
+      CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
+      CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )      
       !
 #  endif
       !

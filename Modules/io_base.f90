@@ -2646,7 +2646,7 @@
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_get, mp_bcast, mp_max
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool
+        nproc_pool, intra_pool_comm, root_pool, my_image_id
       USE io_global, ONLY: ionode, ionode_id
 !
       IMPLICIT NONE
@@ -2729,7 +2729,7 @@
 
         ! get the maximum index within the pool
         !
-        CALL mp_max( igwx, intra_pool_comm ) 
+        CALL mp_max( igwx, intra_pool_comm(my_image_id) ) 
 
         ! now notify all procs if an error has been found 
         !
@@ -2745,7 +2745,7 @@
         IF( ionode ) WRITE(iuni) ngw, nbnd, ik, nk, kunit, ispin, nspin, scal
         IF( ionode ) WRITE(iuni) igwx
 
-        ! write(200+mpime+ik*10,*) mpime, nproc, root, me_pool, my_pool_id, nproc_pool, intra_pool_comm, root_pool, npool
+        ! write(200+mpime+ik*10,*) mpime, nproc, root, me_pool, my_pool_id, nproc_pool, intra_pool_comm(my_image_id), root_pool, npool
         ! write(200+mpime+ik*10,*) ngwl, nkbl, kunit, iks, ike, ngw, nbnd, ik, nk, kunit, ispin, nspin, scal, igwx, ierr
         ! close(200+mpime+ik*10)
 
@@ -2758,7 +2758,7 @@
           IF( t0 ) THEN
             IF( npool > 1 ) THEN
               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                CALL mergewf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL mergewf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm(my_image_id))
               END IF
               IF( ipsour /= ionode_id ) THEN
                 CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
@@ -2778,7 +2778,7 @@
           IF( tm ) THEN
             IF( npool > 1 ) THEN
               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                CALL mergewf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL mergewf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm(my_image_id))
               END IF
               IF( ipsour /= ionode_id ) THEN
                 CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
@@ -2841,7 +2841,7 @@
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_put, mp_bcast, mp_max, mp_get
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool
+        nproc_pool, intra_pool_comm, root_pool, my_image_id
       USE io_global, ONLY: ionode, ionode_id
 !
       IMPLICIT NONE
@@ -2940,7 +2940,7 @@
 
         ! get the maximum index within the pool
         !
-        CALL mp_max( igwx, intra_pool_comm ) 
+        CALL mp_max( igwx, intra_pool_comm(my_image_id) ) 
 
         ! now notify all procs if an error has been found 
         !
@@ -2978,7 +2978,7 @@
                 CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
               END IF
               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                CALL splitwf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL splitwf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm(my_image_id))
               END IF
             ELSE
               CALL splitwf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
@@ -3017,7 +3017,7 @@
                 CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
               END IF
               IF( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                CALL splitwf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL splitwf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm(my_image_id))
               END IF
             ELSE
               CALL splitwf(wfm(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)

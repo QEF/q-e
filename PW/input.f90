@@ -22,7 +22,7 @@ SUBROUTINE iosys()
   !
   !
   USE constants,     ONLY : AU, eV_to_kelvin
-  USE para,          ONLY : npool  
+  USE mp_global,     ONLY : npool  
   !
   USE io_global,     ONLY : stdout
   USE bp,            ONLY : nppstr_ => nppstr, &
@@ -1227,10 +1227,11 @@ SUBROUTINE verify_tmpdir()
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
-  USE control_flags,            ONLY : lneb
+  USE control_flags,    ONLY : lneb
   USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr
   USE neb_variables,    ONLY : num_of_images
-  USE para,             ONLY : me, mypool
+  USE mp_global,        ONLY : mpime
+  USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   !
   USE parser,           ONLY : int_to_char, delete_if_present
@@ -1238,7 +1239,7 @@ SUBROUTINE verify_tmpdir()
   IMPLICIT NONE
   !
   INTEGER            :: l, ios, image
-  CHARACTER (LEN=80) :: tmp_dir_saved
+  CHARACTER (LEN=80) :: file_path, tmp_dir_saved
   INTEGER            :: c_mkdir
   EXTERNAL              c_mkdir
   !
@@ -1256,8 +1257,10 @@ SUBROUTINE verify_tmpdir()
   !
   ios = 0
   !
-  OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'pwscf' // nd_nmbr, &
-        STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+  file_path = TRIM( tmp_dir ) // 'pwscf'
+  !
+  OPEN( UNIT = 4, FILE = TRIM( file_path ) // TRIM( int_to_char( mpime ) ), &
+      & STATUS = 'UNKNOWN',  FORM = 'UNFORMATTED', IOSTAT = ios )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !
   IF ( ios /= 0 ) CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
@@ -1266,21 +1269,23 @@ SUBROUTINE verify_tmpdir()
   ! ... if starting from scratch all temporary files are removed
   ! ... from tmp_dir ( only by the master node )  
   !
+  file_path = TRIM( tmp_dir ) // TRIM( prefix )  
+  !
   IF ( restart_mode == 'from_scratch' ) THEN
      !
-     IF ( me == 1 .AND. mypool == 1 ) THEN
+     IF ( ionode ) THEN
         !
         ! ... wfc-extrapolation file is removed
         !     
-        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
+        CALL delete_if_present( TRIM( file_path ) // '.update' )
         !
         ! ... MD restart file is removed
         !
-        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+        CALL delete_if_present( TRIM( file_path ) // '.md' )
         !
         ! ... BFGS rstart file is removed       
         !     
-        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
+        CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
         !
      END IF
      !
@@ -1292,6 +1297,15 @@ SUBROUTINE verify_tmpdir()
   !
   IF ( lneb ) THEN
      !
+     IF ( ionode ) THEN
+        !
+        ! ... files needed by parallelization among images are removed
+        !               
+        CALL delete_if_present( TRIM( file_path ) // '.BLOCK' )
+        CALL delete_if_present( TRIM( file_path ) // '.para' )
+        !
+     END IF   
+     !
      tmp_dir_saved = tmp_dir
      ! 
      DO image = 1, num_of_images
@@ -1300,7 +1314,7 @@ SUBROUTINE verify_tmpdir()
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
                   TRIM( int_to_char( image ) ) // '/'
         !
-        IF ( me == 1 .AND. mypool == 1 ) THEN
+        IF ( ionode ) THEN
            !
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
@@ -1315,9 +1329,10 @@ SUBROUTINE verify_tmpdir()
         !
         ! ... each job checks whether the scratch directory is accessible
         ! ... or not
-        ! 
-        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // 'pwscf' // nd_nmbr, &
-              STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+        !
+        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
+            & TRIM( int_to_char( mpime ) ), &
+            & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
         CLOSE( UNIT = 4, STATUS = 'DELETE' ) 
         ! 
         IF ( ios /= 0 ) &
@@ -1329,7 +1344,12 @@ SUBROUTINE verify_tmpdir()
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-           IF ( me == 1 .AND. mypool == 1 ) THEN
+           IF ( ionode ) THEN
+              !
+              ! ... wfc-extrapolation file is removed
+              !     
+              CALL delete_if_present( TRIM( tmp_dir ) // &
+                                    & TRIM( prefix ) // '.update' )              
               !
               ! ... standard output of the self-consistency is removed
               !      

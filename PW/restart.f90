@@ -59,8 +59,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   use io_global, only: ionode
   use mp, only: mp_sum, mp_max, mp_end
   use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool, inter_pool_comm
-
+        nproc_pool, intra_pool_comm, root_pool, inter_pool_comm, my_image_id
 
   USE io_base, only: write_restart_header, write_restart_ions, &
             write_restart_cell, write_restart_electrons, &
@@ -215,13 +214,13 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
      ike = iks + nkl - 1
 
      ngk_g(iks:ike) = ngk(1:nkl)
-     CALL mp_sum( ngk_g, intra_pool_comm )
+     CALL mp_sum( ngk_g, intra_pool_comm(my_image_id) )
 
      !write(400+mpime,*) what, ngk(1:nks), nkstot
      !write(400+mpime,*) what, ngk_g(1:nkstot)
 
      IF( npool > 1 ) THEN
-       CALL mp_sum( ngk_g, inter_pool_comm )
+       CALL mp_sum( ngk_g, inter_pool_comm(my_image_id) )
        !write(400+mpime,*) what, ngk_g(1:nkstot)
      END IF
 
@@ -529,7 +528,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE pseudo_types, ONLY: pseudo_upf
   use mp, only: mp_sum, mp_bcast, mp_max, mp_end
   use mp_global, only: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool
+        nproc_pool, intra_pool_comm, root_pool, intra_image_comm, my_image_id
   use io_global, only: ionode, ionode_id
 
   USE io_base, only: read_restart_header, read_restart_ions, &
@@ -606,7 +605,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
     endif
     rewind ndr
   end if
-  call mp_bcast( ierr, ionode_id )
+  call mp_bcast( ierr, ionode_id, intra_image_comm )
   if( ierr /= 0 ) then
     return
   end if
@@ -984,7 +983,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
          IF( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
            IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
          END IF
-         CALL mp_sum( ipmask )
+         CALL mp_sum( ipmask, intra_image_comm )
          DO i = 1, nproc
            IF( ipmask(i) == 1 ) ipdest = ( i - 1 )
          END DO
@@ -994,10 +993,10 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
          CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
          CALL gk_l2gmap (ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik-iks+1))
          npw_g = MAXVAL( igk_l2g(:,ik-iks+1) )
-         CALL mp_max( npw_g, intra_pool_comm )
+         CALL mp_max( npw_g, intra_pool_comm(my_image_id) )
        END IF
 
-       CALL mp_bcast( npw_g, ipdest )
+       CALL mp_bcast( npw_g, ipdest, intra_image_comm )
 
        CALL read_restart_wfc(ndr, ik, nkstot, kunit, ispin_, nspin_, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd_, igk_l2g(:,ik-iks+1), npw )
@@ -1046,6 +1045,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   USE parameters, only: npk, nacx, nsx
   use io_files, only: prefix, tmp_dir
   use io_global, only: ionode, ionode_id
+  USE mp_global, ONLY : intra_image_comm
   use mp, only: mp_bcast
 
   USE io_base, only: read_restart_header, read_restart_ions, &
@@ -1109,7 +1109,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
     endif
     rewind ndr
   end if
-  call mp_bcast( ierr, ionode_id )
+  call mp_bcast( ierr, ionode_id, intra_image_comm )
   !
   !  if the file is not present or unreadable
   !  return immediately

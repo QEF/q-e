@@ -11,24 +11,19 @@
 SUBROUTINE io_pot( iop, filename, pot, nc )
   !----------------------------------------------------------------------------
   !
-  ! ... This routine reads (iop=-1) or write (iop=1) the potential
-  ! ... in real space onto a file
-  !
-  ! ... rewritten to use mp wrappers
+  ! ... This routine reads ( iop = - 1 ) or write ( iop = + 1 ) the
+  ! ... potential in real space onto a file
   !
   USE kinds,        ONLY : DP
   USE gvect,        ONLY : nrxx, nrx1, nrx2, nrx3
-#if defined (__PARA)
-  USE para,         ONLY : me, mypool
-  USE mp_global,    ONLY : intra_pool_comm, inter_pool_comm
-  USE io_global,    ONLY : ionode_id
-  USE mp,           ONLY : mp_bcast, mp_gather
-#endif
+  USE mp_global,    ONLY : inter_pool_comm, me_pool, &
+                           root_pool, me_image, root_image, my_image_id
+  USE mp,           ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
   INTEGER           :: iop, nc, ic
-    ! option: write if +1, read if -1
+    ! option: write if + 1,  read if - 1
     ! number of components and index for them
   CHARACTER (LEN=*) :: filename
   REAL(KIND=DP)     :: pot(nrxx,nc)
@@ -42,13 +37,11 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   ! ... parallel case
   !
-  IF ( me == 1 ) ALLOCATE( allv( nrx1*nrx2*nrx3, nc ) )
+  IF ( me_pool == root_pool ) ALLOCATE( allv( nrx1*nrx2*nrx3, nc ) )
   !
   ! ... On writing: gather the potential on the first node of each pool
   !
   IF ( iop == 1 ) THEN
-     !
-     ! ... CALL mp_gather( pot(:,:), allv(:,:), ionode_id, intra_pool_comm )
      !
      DO ic = 1, nc
         !
@@ -58,7 +51,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
      !
   END IF
   !
-  IF ( me == 1 .AND. mypool == 1 ) THEN
+  IF ( me_image == root_image ) THEN
      !
      ! ... Only the first node of the first pool reads or writes the file
      !
@@ -81,9 +74,10 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   ! ... On reading: copy the potential on the first node  of all pools
   ! ...             scatter the potential on all nodes of each pool
   !
-  IF ( iop == -1 ) THEN
+  IF ( iop == - 1 ) THEN
      !
-     IF ( me == 1 ) CALL mp_bcast( allv, ionode_id, inter_pool_comm )
+     IF ( me_pool == root_pool ) &
+        CALL mp_bcast( allv, root_pool, inter_pool_comm(my_image_id) )
      !
      DO ic = 1, nc
         !        
@@ -93,7 +87,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
      !
   END IF
   !
-  IF ( me == 1 ) DEALLOCATE( allv )
+  IF ( me_pool == root_pool ) DEALLOCATE( allv )
   !
 #else
   !
@@ -117,7 +111,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   RETURN
   !
-10 CALL errore( 'io_pot', 'error writing '//filename, 1 )
-20 CALL errore( 'io_pot', 'error reading '//filename, 2 )
+10 CALL errore( 'io_pot', 'error writing ' // filename, 1 )
+20 CALL errore( 'io_pot', 'error reading ' // filename, 2 )
   !
 END SUBROUTINE io_pot

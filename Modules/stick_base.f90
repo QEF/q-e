@@ -36,7 +36,7 @@
       SUBROUTINE  sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm
+          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, my_image_id
 
           LOGICAL, INTENT(IN) :: tk    !  if true use the full space grid
           INTEGER, INTENT(IN) :: ub(:) !  upper bounds for i-th grid dimension
@@ -163,9 +163,9 @@
 
           END IF
 
-          CALL mp_sum(st  ,intra_pool_comm)
-          CALL mp_sum(stw ,intra_pool_comm)
-          CALL mp_sum(sts ,intra_pool_comm)
+          CALL mp_sum(st  ,intra_pool_comm(my_image_id) )
+          CALL mp_sum(stw ,intra_pool_comm(my_image_id) )
+          CALL mp_sum(sts ,intra_pool_comm(my_image_id) )
 
 ! Test sticks
 !          WRITE( stdout,*) 'testtesttesttesttesttesttesttesttesttest'

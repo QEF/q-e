@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3_exc
@@ -13,17 +14,18 @@ subroutine d3_exc
   !    Calculates the contribution to the derivative of the dynamical
   !    matrix due to the third derivative of the exchange and correlation
   !    energy
-#include "machine.h"
-  USE kinds, only : DP
+
+  USE kinds, ONLY : DP
   use pwcom
   use phcom
   use d3com
-#ifdef __PARA
   use para
   USE io_global, ONLY : ionode_id
+  USE mp_global, ONLY : inter_pool_comm, my_image_id
   USE mp,        ONLY : mp_bcast  
-#endif
+
   implicit none
+  
   integer :: errcode, ir, ipert, jpert, kpert, npert1, npert2
   real (kind = dp) :: d2mxc, rhotot, xq0 (3)
   real (kind = dp), allocatable :: d2muxc (:)
@@ -74,7 +76,8 @@ subroutine d3_exc
   enddo
 #ifdef __PARA
 100 continue  
-  IF ( npool /= 1 ) CALL mp_bcast( d3dyn1, ionode_id, MPI_COMM_ROW )
+  IF ( npool /= 1 ) &
+     CALL mp_bcast( d3dyn1, ionode_id, inter_pool_comm(my_image_id) )
 #endif
 
   d3dyn = d3dyn  + d3dyn1

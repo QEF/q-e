@@ -28,8 +28,10 @@ MODULE formats
     axsf_fmt = "(A2,6(2X,F14.10))"
   !  
   CHARACTER (LEN=*), PARAMETER :: &  
-    scf_fmt            = "(5X,'tcpu = ',F10.2," // &
+    scf_fmt            = "(5X,'tcpu = ',F8.2," // &
                        & "';  self-consistency for image ', I3)", &
+    scf_fmt_para       = "(5X,'cpu = ',I2,'; tcpu = ',F8.2," // &
+                       & "';  self-consistency for image ', I3)", &                   
     run_output         = "(/,5X,'iteration: ',I3,5X,'E activation ='," // &
                        & " F10.6,5X,'error =',F10.6,/)", &
     run_output_T_const = "(/,5X,'iteration: ',I3,5X,'temperature ='," // &

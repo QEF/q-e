@@ -44,24 +44,27 @@ SUBROUTINE startup( nd_nmbr, code, version )
   ! ... The following two modules hold global information about processors
   ! ... number, IDs and communicators
   !
-  USE io_global,  ONLY :  stdout, io_global_start, ionode_id
-  USE mp_global,  ONLY :  mp_global_start, nproc
+  USE io_global,  ONLY :  stdout, io_global_start, ionode, ionode_id
+  USE mp_global,  ONLY :  nproc, nimage, mpime, me_image, root, root_image
+  USE mp_global,  ONLY :  mp_global_start
   USE mp,         ONLY :  mp_start, mp_env, mp_barrier, mp_bcast
   USE para_const, ONLY :  maxproc
-  USE para,       ONLY :  me, mypool, npool, nprocp 
+  USE para,       ONLY :  me, npool, nprocp 
   !
   IMPLICIT NONE
   !
-  CHARACTER :: nd_nmbr*3, code*9, version*6
-  INTEGER   :: gid
-  CHARACTER :: np*80, cdate*9, ctime*9
-  EXTERNAL     date_and_tim
-  INTEGER   :: ierr, ilen, iargc, nargs, iiarg
+  CHARACTER (LEN=3)  :: nd_nmbr
+  CHARACTER (LEN=6)  :: version
+  CHARACTER (LEN=9)  :: code, cdate, ctime
+  CHARACTER (LEN=80) :: np
+  INTEGER            :: gid
+  EXTERNAL              date_and_tim
+  INTEGER            :: ierr = 0, ilen, iargc, nargs, iiarg
   !
   !
 #if defined (__PARA)
   !
-  ! ... prallel case
+  ! ... prallel case setup :  MPI environment is initialized
   !  
 #  if defined (__T3E)
   !
@@ -83,12 +86,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   CALL mp_global_start( 0, me, gid, nproc )  
   !
-  ! ... This is added for compatibility with PVM notations
-  ! ... parent process (source) will have me=1 - child process me=2,...,NPROC
-  !
-  me = me + 1
-  !
-  IF ( me == 1 ) THEN
+  IF ( ionode ) THEN
      !
      ! ... How many pools ?
      !
@@ -111,101 +109,120 @@ SUBROUTINE startup( nd_nmbr, code, version )
      npool = MAX( npool, 1 )
      npool = MIN( npool, nproc )
      !
-     ! ... set number of processes per pool ( must be equal for all pools )
+     ! ... How many parallel images ?
      !
-     nprocp = nproc / npool
+     nargs = iargc() 
      !
-     IF ( nproc /= ( nprocp * npool ) ) &
-        CALL errore( 'startup', 'nproc /= nprocp*npool', 1 )
+     DO iiarg = 1, ( nargs - 1 )
+        !
+        CALL getarg( iiarg, np )
+        !
+        IF ( TRIM( np ) == '-nimage' .OR. TRIM( np ) == '-nimages' ) THEN
+          !
+          CALL getarg( ( iiarg + 1 ), np )  
+          READ( np, * ) nimage 
+          !
+        END IF
+        !
+     END DO
      !
+     nimage = MAX( nimage, 1 )
+     nimage = MIN( nimage, nproc )
+     !          
   END IF
   !
   CALL mp_barrier( gid ) 
   !
-  ! ... transmit nprocp and npool
+  ! ... transmit npool and nimage
   !
-  CALL mp_bcast( nprocp, ionode_id, gid )
-  CALL mp_bcast( npool, ionode_id, gid )
-  !
-  ! ... set the processor label for files
+  CALL mp_bcast( npool,  ionode_id, gid )
+  CALL mp_bcast( nimage, ionode_id, gid )
   !
   IF ( nproc > maxproc ) &
      CALL errore( 'startup', ' too many processors', nproc )
-  !   
+  !
+  ! ... all pools are initialized here
+  !
+  CALL init_pool()  
+  !
+  ! ... set the processor label for files
+  !
   nd_nmbr = '   '
   !
   IF ( nproc < 10 ) THEN
      !
-     WRITE( nd_nmbr(1:1) , '(I1)' ) me
+     WRITE( nd_nmbr(1:1) , '(I1)' ) ( me_image + 1 )
      !
   ELSE IF ( nproc < 100 ) THEN
      !
      IF ( me < 10 ) THEN
         nd_nmbr = '0'
-        WRITE( nd_nmbr(2:2) , '(I1)' ) me
+        WRITE( nd_nmbr(2:2) , '(I1)' ) ( me_image + 1 )
      ELSE
-        WRITE( nd_nmbr(1:2) , '(I2)' ) me
+        WRITE( nd_nmbr(1:2) , '(I2)' ) ( me_image + 1 )
      END IF
      !
   ELSE
      !
      IF ( me < 10 ) THEN
         nd_nmbr = '00'
-        WRITE( nd_nmbr(3:3) , '(I1)' ) me
+        WRITE( nd_nmbr(3:3) , '(I1)' ) ( me_image + 1 )
      ELSE IF ( me < 100 ) THEN
         nd_nmbr = '0'
-        WRITE( nd_nmbr(2:3) , '(I2)' ) me
+        WRITE( nd_nmbr(2:3) , '(I2)' ) ( me_image + 1 )
      ELSE
-        WRITE( nd_nmbr, '(I3)' ) me
+        WRITE( nd_nmbr, '(I3)' ) ( me_image + 1 )
      END IF
      !
-  END IF
+  END IF    
   !
-  ! ... pools are initialized here
-  !
-  CALL init_pool()  
-  !
-  ! ... stdout is printed only by the first cpu ( me == 1, mypool == 1 )
+  ! ... stdout is printed only by the root_image (set in init_pool())
   !
 #  if defined (DEBUG)
   !
-  IF ( me /= 1 .OR. mypool /= 1 ) &
+  IF ( me_image /= root_image ) &
      OPEN( UNIT = stdout, FILE = './out_'//nd_nmbr, STATUS = 'UNKNOWN' )
   !   
 #  else
   !
-  IF ( me /= 1 .OR. mypool /= 1 ) &
+  IF ( me_image /= root_image ) &
      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
   !   
 #  endif
   !
   ! ... information printout
-  !
-  CALL date_and_tim( cdate, ctime )
-  !
-  WRITE( stdout, 9000 ) code, version, cdate, ctime
-  WRITE( stdout, '(/5X,"Parallel version (MPI)")' )
-  WRITE( stdout, '(5X,"Number of processors in use:   ",I4)' ) nproc
-  IF ( npool /= 1 ) &
-     WRITE( stdout, '(5X,"K-points division:    npool  = ",i4)' ) npool
-  IF ( nprocp /= 1 ) &
-     WRITE( stdout, '(5X,"R & G space division: nprocp = ",i4/)' ) nprocp
+  !  
+  IF ( mpime == root ) THEN
+     !
+     CALL date_and_tim( cdate, ctime )
+     !
+     WRITE( stdout, '(/5X,"Program ",A9," v.",A6," starts ...",&
+                     &/5X,"Today is ",A9," at ",A9)' ) &
+         code, version, cdate, ctime
+     WRITE( stdout, '(/5X,"Parallel version (MPI)")' )
+     WRITE( stdout, '(5X,"Number of processors in use:   ",I4)' ) nproc
+     IF ( nimage > 1 ) &
+        WRITE( stdout, '(5X,"NEB images division:  nimage = ",i4)' ) nimage
+     IF ( npool > 1 ) &
+        WRITE( stdout, '(5X,"K-points division:    npool  = ",i4)' ) npool
+     IF ( nprocp > 1 ) &
+        WRITE( stdout, '(5X,"R & G space division: nprocp = ",i4/)' ) nprocp
+     !
+  END IF   
   !
 #else
   !
-  ! ... serial case :  only information printout
+  ! ... serial case setup :  only information printout
   !
   nd_nmbr = '   '
   !
   CALL date_and_tim( cdate, ctime )
   !
-  WRITE( stdout, 9000 ) code, version, cdate, ctime
+  WRITE( stdout, '(/5X,"Program ",A9," v.",A6," starts ...",&
+                  &/5X,"Today is ",A9," at ",A9)' ) code, version, cdate, ctime
   !
 #endif
   !
   RETURN
-  !
-9000 FORMAT( /5X,'Program ',A9,' v.',A6,' starts ...',/5X, &
-           &     'Today is ',A9,' at ',A9)
   !     
 END SUBROUTINE startup

@@ -7,18 +7,19 @@
 !
 #include "machine.h"
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
-  ! ... This routine divides the k points (with granularity kunit) among no
+  ! ... This routine divides the k points (with granularity kunit) among nodes
   ! ... and sets the variable nkstot equal to the total number of k-points
   !
 #if defined (__PARA)
   !
-  USE kinds, ONLY : DP
-  
-  USE para,  ONLY : mypool, npool, kunit
+  USE io_global, only : stdout
+  USE kinds,     ONLY : DP
+  USE mp_global, ONLY : my_pool_id, npool
+  USE para,      ONLY : kunit
   !
   IMPLICIT NONE
   !
@@ -47,22 +48,24 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   rest = ( nkstot - nks * npool ) / kunit
   !
-  IF ( mypool <= rest ) nks = nks + kunit
+  IF ( ( my_pool_id + 1 ) <= rest ) nks = nks + kunit
   !
   ! ... calculates nbase = the position in the list of the first point that
   ! ...                    belong to this npool - 1
   !
-  nbase = nks * ( mypool - 1 )
+  nbase = nks * my_pool_id
   !
-  IF ( mypool > rest ) nbase = nbase + rest * kunit
+  IF ( ( my_pool_id + 1 ) > rest ) nbase = nbase + rest * kunit
   !
   ! ... displaces these points in the first positions of the list
   !
   IF ( nbase > 0 ) THEN
      !
-     xk(:,1:nks) =  xk(:,nbase:nbase+nks)
+     xk(:,1:nks) =  xk(:,nbase+1:nbase+nks)
      !
-     IF ( lsda ) isk(1:nks) = isk(nbase:nbase+nks)
+     wk(1:nks) = wk(nbase+1:nbase+nks)
+     !
+     IF ( lsda ) isk(1:nks) = isk(nbase+1:nbase+nks)
      !
   END IF
   !

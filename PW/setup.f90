@@ -38,38 +38,36 @@ SUBROUTINE setup()
   !    invsym    if true the system has inversion symmetry
   !  + LDA+U-related quantities.
   !
-  !
-  USE kinds,       ONLY :  DP
-  USE parameters,  ONLY :  npsx, nchix, npk
-  USE io_global,   ONLY :  stdout
-  USE constants,   ONLY :  pi
-  USE brilz,       ONLY :  at, bg, alat, tpiba, tpiba2, ibrav, symm_type
-  USE basis,       ONLY :  nat, tau, ntyp, ityp, startingwfc, startingpot, &
-                           natomwfc
-  USE gvect,       ONLY :  gcutm, ecutwfc, dual, nr1, nr2, nr3
-  USE gsmooth,     ONLY :  doublegrid, gcutms
-  USE klist,       ONLY :  xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
-                           nkstot
-  USE lsda_mod,    ONLY :  lsda, nspin, current_spin, isk
-  USE ktetra,      ONLY :  nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
-  USE symme,       ONLY :  s, irt, ftau, nsym, invsym
-  USE atom,        ONLY :  r, oc, nchi, lchi, mesh, msh
-  USE pseud,       ONLY :  zv, zp, nlc, nnl, bhstype, alps, aps, lmax
-  USE wvfct,       ONLY :  nbnd, nbndx
-  USE control_flags,       ONLY :  tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
-                           lphonon, david, isolve, imix, niter, noinv,   &
-                           restart, nosym, modenum
-  USE relax,       ONLY :  dtau_ref, starting_diag_threshold
-  USE cellmd,      ONLY :  calc
-  USE us,          ONLY :  tvanp, okvan, newpseudo
-  USE ldaU,        ONLY :  d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
-                           Hubbard_alpha, Hubbard_lmax
-  USE bp,          ONLY :  gdir, lberry, nppstr
-  USE fixed_occ,   ONLY :  f_inp, tfixed_occ   
-  USE char,        ONLY :  sname, psd
-#ifdef __PARA
-  USE para
-#endif
+  USE kinds,         ONLY : DP
+  USE parameters,    ONLY : npsx, nchix, npk
+  USE io_global,     ONLY : stdout
+  USE constants,     ONLY : pi
+  USE brilz,         ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE basis,         ONLY : nat, tau, ntyp, ityp, startingwfc, startingpot, &
+                            natomwfc
+  USE gvect,         ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
+  USE gsmooth,       ONLY : doublegrid, gcutms
+  USE klist,         ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, lxkcry, &
+                            nkstot
+  USE lsda_mod,      ONLY : lsda, nspin, current_spin, isk
+  USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
+  USE symme,         ONLY : s, irt, ftau, nsym, invsym
+  USE atom,          ONLY : r, oc, nchi, lchi, mesh, msh
+  USE pseud,         ONLY : zv, zp, nlc, nnl, bhstype, alps, aps, lmax
+  USE wvfct,         ONLY : nbnd, nbndx
+  USE control_flags, ONLY : tr2, ethr, alpha0, beta0, iswitch, lscf, lmd, &
+                            lneb, lphonon, david, isolve, imix, niter, noinv, &
+                            restart, nosym, modenum
+  USE relax,         ONLY : dtau_ref, starting_diag_threshold
+  USE cellmd,        ONLY : calc
+  USE us,            ONLY : tvanp, okvan, newpseudo
+  USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
+                            Hubbard_alpha, Hubbard_lmax
+  USE bp,            ONLY : gdir, lberry, nppstr
+  USE fixed_occ,     ONLY : f_inp, tfixed_occ   
+  USE char,          ONLY : sname, psd
+  USE para,          ONLY : kunit
+  USE mp_global,     ONLY : nimage
   !
   IMPLICIT NONE
   !
@@ -106,6 +104,9 @@ SUBROUTINE setup()
   !
   ! ... end of local variables
   !
+  !
+  IF ( nimage > 1 .AND. .NOT. lneb ) &
+     CALL errore( 'setup', 'images parallelization not permitted', 1 )
   !
   DO nt = 1, ntyp
      DO ir = 1, mesh(nt)

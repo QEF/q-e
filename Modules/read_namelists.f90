@@ -1268,8 +1268,6 @@ MODULE read_namelists_module
        !
        ! ... CONTROL namelist
        !
-       CALL control_defaults( prog )       
-       !
        ios = 0
        IF( ionode ) THEN
           READ( 5, control, iostat = ios ) 
@@ -1283,7 +1281,7 @@ MODULE read_namelists_module
        CALL control_bcast( )
        CALL control_checkin( prog )
        !
-       ! ... defaults values are changed according to the CONTROL namelist
+       ! ... defaults values are changed here according to the CONTROL namelist
        !
        CALL fixval( prog )
        !

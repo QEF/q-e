@@ -11,11 +11,10 @@ SUBROUTINE close_files()
   !
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
-  USE control_flags,    ONLY :  order
-  USE io_files, ONLY :  prefix, iunwfc, iunoldwfc, iunoldwfc2, iunigk
-#ifdef __PARA
-  USE mp,       ONLY :  mp_barrier
-#endif
+  USE control_flags, ONLY : order
+  USE io_files,      ONLY : prefix, iunwfc, iunoldwfc, iunoldwfc2, iunigk
+  USE mp_global,     ONLY : intra_image_comm
+  USE mp,            ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
@@ -27,19 +26,11 @@ SUBROUTINE close_files()
   !
   CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
   !
-  IF ( order > 1 ) &
-     CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' ) 
-  !
-  IF ( order > 2 ) &
-     CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )   
-  !
   ! ... iunigk is kept open during the execution - close and remove
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
-#ifdef __PARA
-  CALL mp_barrier()  
-#endif
+  CALL mp_barrier( intra_image_comm )  
   !
 #ifdef __T3E
   !

@@ -28,8 +28,7 @@ MODULE io_routines
                                     PES_gradient, suspended_image,     &
                                     Emax, Emin, Emax_index,            &
                                     lquick_min , ldamped_dyn, lmol_dyn
-       USE mp_global,        ONLY : mpime, my_pool_id
-       USE io_global,        ONLY : ionode_id
+       USE io_global,        ONLY : ionode, ionode_id
        USE mp,               ONLY : mp_bcast
        !
        IMPLICIT NONE
@@ -42,7 +41,7 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
+       IF ( ionode ) THEN
 
           WRITE( UNIT = iunneb, &
                  FMT = '(/,5X,"reading file ", A,/)') TRIM( neb_file )
@@ -147,20 +146,20 @@ MODULE io_routines
        !
        ! ... broadcast to all nodes
        !
-       CALL mp_bcast( istep, ionode_id )
-       CALL mp_bcast( nstep, ionode_id )
+       CALL mp_bcast( istep,           ionode_id )
+       CALL mp_bcast( nstep,           ionode_id )
        CALL mp_bcast( suspended_image, ionode_id )
        ! 
-       CALL mp_bcast( pos, ionode_id )  
-       CALL mp_bcast( if_pos, ionode_id )  
-       CALL mp_bcast( PES, ionode_id )
+       CALL mp_bcast( pos,          ionode_id )  
+       CALL mp_bcast( if_pos,       ionode_id )  
+       CALL mp_bcast( PES,          ionode_id )
        CALL mp_bcast( PES_gradient, ionode_id )
        !
        IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) &
           CALL mp_bcast( vel, ionode_id )
        !   
-       CALL mp_bcast( Emax, ionode_id )  
-       CALL mp_bcast( Emin, ionode_id )
+       CALL mp_bcast( Emax,       ionode_id )  
+       CALL mp_bcast( Emin,       ionode_id )
        CALL mp_bcast( Emax_index, ionode_id )
        !
      END SUBROUTINE read_restart
@@ -178,7 +177,7 @@ MODULE io_routines
                                     lquick_min , ldamped_dyn, lmol_dyn
        USE formats,          ONLY : energy, restart_first, restart_others, &
                                     velocities
-       USE mp_global,        ONLY : mpime, my_pool_id
+       USE io_global,        ONLY : ionode
        !
        IMPLICIT NONE
        !
@@ -189,7 +188,7 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
+       IF ( ionode ) THEN
 
           OPEN( UNIT = iunrestart, FILE = neb_file, STATUS = "UNKNOWN", &
                 ACTION = "WRITE" )
@@ -287,7 +286,7 @@ MODULE io_routines
        USE io_files,               ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                           dat_file, int_file, xyz_file,    &
                                           axsf_file
-       USE mp_global,              ONLY : mpime, my_pool_id
+       USE io_global,              ONLY : ionode
        !
        IMPLICIT NONE
        !
@@ -304,7 +303,8 @@ MODULE io_routines
        ! ... end of local variables
        !
        !
-       IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
+       IF ( ionode ) THEN
+          !
           ALLOCATE( d_R( dim ) )
           !
           ALLOCATE( a( num_of_images - 1 ) )

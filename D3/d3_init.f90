@@ -5,21 +5,20 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include"machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3_init
 !-----------------------------------------------------------------------
-#include"machine.h"
+
   use pwcom
   use phcom
   use d3com
-#ifdef __PARA
   use para
-#endif
+  USE mp,    ONLY : mp_barrier
+  
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
+
   integer :: nt, irr, irr1, ipert, imode0, errcode
 ! counter on atom types
 #ifdef DEBUG
@@ -130,9 +129,7 @@ subroutine d3_init
   endif
 #ifdef __PARA
 100 continue
-  call MPI_barrier (MPI_COMM_WORLD, errcode)
-
-  call errore ('d3_init', 'at barrier', errcode)
+  call mp_barrier()
 #endif
 
   deallocate(drhoscf)

@@ -17,10 +17,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   ! ... Uses LAPACK routines
   !
   USE kinds,     ONLY : DP
-  USE para,      ONLY : me
   USE mp,        ONLY : mp_bcast
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm, my_image_id
   !
   IMPLICIT NONE
   !
@@ -90,7 +88,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalize the matrix
   !
-  IF ( me == 1 ) THEN
+  IF ( me_pool == root_pool ) THEN
      !
      IF ( all_eigenvalues ) THEN
         !
@@ -129,8 +127,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL mp_bcast( e, ionode_id, intra_pool_comm )
-  CALL mp_bcast( v, ionode_id, intra_pool_comm )
+  CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
+  CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
   !
   ! ... deallocate workspace
   !

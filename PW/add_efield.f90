@@ -47,6 +47,7 @@
     USE io_global,  ONLY : stdout
     USE control_flags, ONLY: mixing_beta
 #ifdef __PARA
+    USE mp_global,     ONLY : intra_image_comm
     use para
     use mp
 #endif
@@ -116,7 +117,7 @@
      dipold=dip
   endif
 #ifdef __PARA
-  call mp_bcast(dip,0)
+  call mp_bcast(dip,0,intra_image_comm)
 #endif
   if (.not.dipfield) then
      etotefield=-2.d0*dipion*eamp*omega/fpi 

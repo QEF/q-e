@@ -17,13 +17,13 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, dr2, ethr, ethr_min, &
   ! ...         d.d. johnson prb 38, 12807 (1988)
   ! ... On output: the mixed density is in rhoin, rhout is UNCHANGED
   !
-  USE kinds,           ONLY : DP
+  USE kinds,                ONLY : DP
   USE basis,                ONLY : nat
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, nlm
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,                ONLY : imix, ngm0, tr2
+  USE control_flags,        ONLY : imix, ngm0, tr2
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !

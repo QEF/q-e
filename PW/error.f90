@@ -25,16 +25,17 @@ subroutine errore (routin, messag, ierr)
   !
   USE io_global,  ONLY : stdout
   USE kinds
+  USE parallel_include
+  !
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
+  !
   character (len=*) :: routin, messag
-  ! the name of the calling routine
-  ! the output message
-
+    ! the name of the calling routine
+    ! the output message
   integer :: ierr
-  ! the error flag
+    ! the error flag
+  !
+  !
   if (ierr.eq.0) return
   WRITE( * , * ) ' '
   WRITE( * , '(1x,78("%"))' )
@@ -56,7 +57,7 @@ subroutine errore (routin, messag, ierr)
      call flush (6)
 #endif
 #ifdef __PARA
-     call mpi_abort (MPI_COMM_WORLD, ierr, ierr)
+     CALL MPI_ABORT( MPI_COMM_WORLD, ierr, ierr )
 #endif
      stop 2
   else
@@ -64,4 +65,3 @@ subroutine errore (routin, messag, ierr)
      return
   endif
 end subroutine errore
-

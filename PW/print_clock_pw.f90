@@ -1,111 +1,144 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-
-subroutine print_clock_pw
+!----------------------------------------------------------------------------
+SUBROUTINE print_clock_pw()
+   !---------------------------------------------------------------------------
    !
-   ! this routine prints out the clocks at the end of the run
-   ! it tries to construct the calling tree of the program.
-
-   USE io_global,  ONLY : stdout
-   USE control_flags, ONLY: isolve, imix
-   USE force_mod, ONLY: lforce, lstres
-   implicit none
-
+   ! ... this routine prints out the clocks at the end of the run
+   ! ... it tries to construct the calling tree of the program.
+   !
+   USE io_global,     ONLY : stdout
+   USE control_flags, ONLY : isolve, imix
+   USE force_mod,     ONLY : lforce, lstres
+   USE mp_global,     ONLY : mpime, root
+   !
+   IMPLICIT NONE
+   !
+   !
+   IF ( mpime /= root ) &
+      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
+   !
    WRITE( stdout, * )
-   call print_clock ('PWSCF')
-   call print_clock ('init_run')
-   call print_clock ('electrons')
-   if (lforce) call print_clock ('forces')
-   if (lstres) call print_clock ('stress')
-
+   !
+   CALL print_clock( 'PWSCF' )
+   CALL print_clock( 'init_run' )
+   CALL print_clock( 'electrons' )
+   !
+   IF ( lforce ) CALL print_clock( 'forces' )
+   IF ( lstres ) CALL print_clock( 'stress' )
+   !
    WRITE( stdout, * )
-   call print_clock ('electrons')
-   call print_clock ('c_bands')
-   call print_clock ('sum_band')
-   call print_clock ('v_of_rho')
-   call print_clock ('newd')
+   !
+   CALL print_clock( 'electrons' )
+   CALL print_clock( 'c_bands' )
+   CALL print_clock( 'sum_band' )
+   CALL print_clock( 'v_of_rho' )
+   CALL print_clock( 'newd' )
+   !
 #ifdef DEBUG_NEWD
    WRITE( stdout,*) "nhm*(nhm+1)/2       = ", nhm*(nhm+1)/2, nhm
    WRITE( stdout,*) "nbrx*(nbrx+1)/2*lqx = ", nbrx*(nbrx+1)/2*lqx, nbrx,lqx
-   call print_clock ('newd:fftvg')
-   call print_clock ('newd:qvan2')
-   call print_clock ('newd:int1')
-   call print_clock ('newd:int2')
+   !
+   CALL print_clock( 'newd:fftvg' )
+   CALL print_clock( 'newd:qvan2' )
+   CALL print_clock( 'newd:int1' )
+   CALL print_clock( 'newd:int2' )
 #endif
-   if (imix.ge.0) then
-      call print_clock ('mix_rho')
-   else
-      call print_clock ('mix_pot')
-   endif
+   !
+   IF ( imix >= 0 ) THEN
+      CALL print_clock( 'mix_rho' )
+   ELSE
+      CALL print_clock( 'mix_pot' )
+   END IF
+   !
    WRITE( stdout, * )
-   call print_clock ('c_bands')
-   call print_clock ('init_us_2')
-   call print_clock ('cegterg')
-   call print_clock ('ccgdiagg')
-   call print_clock ('diis')
+   !
+   CALL print_clock( 'c_bands' )
+   CALL print_clock( 'init_us_2' )
+   CALL print_clock( 'cegterg' )
+   CALL print_clock( 'ccgdiagg' )
+   CALL print_clock( 'diis' )
+   !
    WRITE( stdout, * )
-   call print_clock ('sum_band')
-   call print_clock ('sumbec')
-
-   call print_clock ('addusdens')
+   !
+   CALL print_clock( 'sum_band' )
+   CALL print_clock( 'sumbec' )
+   !
+   CALL print_clock( 'addusdens' )
+   !
 #ifdef DEBUG_ADDUSDENS
-   call print_clock ('addus:qvan2')
-   call print_clock ('addus:strf')
-   call print_clock ('addus:aux2')
-   call print_clock ('addus:aux')
+   CALL print_clock( 'addus:qvan2' )
+   CALL print_clock( 'addus:strf' )
+   CALL print_clock( 'addus:aux2' )
+   CALL print_clock( 'addus:aux' )
 #endif
+   !
    WRITE( stdout, * )
-   call print_clock ('wfcrot')
-   call print_clock ('wfcrot1')
-   call print_clock ('cegterg')
-   call print_clock ('ccdiagg')
-   call print_clock ('cdiisg')
-   if (isolve == 0) then
-      call print_clock ('h_psi')
-      call print_clock ('g_psi')
-      call print_clock ('overlap')
-      call print_clock ('cdiaghg')
-      call print_clock ('update')
-      call print_clock ('last')
+   !
+   CALL print_clock( 'wfcrot' )
+   CALL print_clock( 'wfcrot1' )
+   CALL print_clock( 'cegterg' )
+   CALL print_clock( 'ccdiagg' )
+   CALL print_clock( 'cdiisg' )
+   !
+   IF ( isolve == 0 ) THEN
+      !
+      CALL print_clock( 'h_psi' )
+      CALL print_clock( 'g_psi' )
+      CALL print_clock( 'overlap' )
+      CALL print_clock( 'cdiaghg' )
+      CALL print_clock( 'update' )
+      CALL print_clock( 'last' )
+      !
       WRITE( stdout, * )
-      call print_clock ('h_psi')
-      call print_clock ('init')
-      call print_clock ('firstfft')
-      call print_clock ('secondfft')
-      call print_clock ('add_vuspsi')
-      call print_clock ('s_psi')
-   else
-      call print_clock ('h_1psi')
-      call print_clock ('s_1psi')
-      call print_clock ('cdiaghg')
+      !
+      CALL print_clock( 'h_psi' )
+      CALL print_clock( 'init' )
+      CALL print_clock( 'firstfft' )
+      CALL print_clock( 'secondfft' )
+      CALL print_clock( 'add_vuspsi' )
+      CALL print_clock( 's_psi' )
+      !
+   ELSE
+      !
+      CALL print_clock( 'h_1psi' )
+      CALL print_clock( 's_1psi' )
+      CALL print_clock( 'cdiaghg' )
+      !
       WRITE( stdout, * )
-      call print_clock ('h_1psi')
-      call print_clock ('init')
-      call print_clock ('firstfft')
-      call print_clock ('secondfft')
-      call print_clock ('add_vuspsi')
-   endif
+      !
+      CALL print_clock( 'h_1psi' )
+      CALL print_clock( 'init' )
+      CALL print_clock( 'firstfft' )
+      CALL print_clock( 'secondfft' )
+      CALL print_clock( 'add_vuspsi' )
+      !
+   END IF
+   !
    WRITE( stdout, * )
-   WRITE( stdout, * ) '     General routines'
-   call print_clock ('ccalbec')
-   call print_clock ('cft3')
-   call print_clock ('cft3s')
-   call print_clock ('interpolate')
-   call print_clock ('davcio')
+   WRITE( stdout, '(5X,"General routines")' )
+   !
+   CALL print_clock( 'ccalbec' )
+   CALL print_clock( 'cft3' )
+   CALL print_clock( 'cft3s' )
+   CALL print_clock( 'interpolate' )
+   CALL print_clock( 'davcio' )
+   !    
    WRITE( stdout, * )
-#ifdef __PARA
-   WRITE( stdout,  * ) '     Parallel routines'
-   call print_clock ('reduce')
-   call print_clock ('fft_scatter')
-!   call print_clock('poolreduce')
+   !
+#if defined (__PARA)
+   WRITE( stdout, '(5X,"Parallel routines")' )
+   !
+   CALL print_clock( 'reduce' )
+   CALL print_clock( 'fft_scatter' )
+   CALL print_clock( 'poolreduce' )
 #endif
-   return
-
-end subroutine print_clock_pw
-
+   !
+   RETURN
+   !
+END SUBROUTINE print_clock_pw

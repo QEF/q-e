@@ -16,16 +16,12 @@ subroutine stop_d3 (flag)
   use pwcom
   use phcom
   use d3com
-  USE io_files,      ONLY : iunigk
-  use mp, only: mp_end
-#ifdef __PARA
+  USE io_files,   ONLY : iunigk
+  use mp,         ONLY : mp_end, mp_barrier
   use para
-#endif
+
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-  integer :: info
-#endif
+
   logical :: flag
 
   close (unit = iuwfc, status = 'keep')
@@ -56,10 +52,7 @@ subroutine stop_d3 (flag)
   call print_clock_d3
   call show_memory ()
 
-#ifdef __PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)
-  ! call mpi_finalize (info)
-#endif
+  call mp_barrier()
 
   call mp_end()
 

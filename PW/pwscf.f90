@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,9 +23,8 @@ PROGRAM pwscf
   USE neb_variables,    ONLY : neb_deallocation
   USE input_parameters, ONLY : deallocate_input_parameters
   USE neb_routines,     ONLY : initialize_neb, search_mep
-#ifdef __PARA
-  USE para,             ONLY : me, mypool
-#endif
+  USE mp_global,        ONLY : me_image, root_image
+  USE io_global,        ONLY : ionode
   !
   IMPLICIT NONE
   !  
@@ -40,17 +39,22 @@ PROGRAM pwscf
   !
   CALL startup( nd_nmbr, code, version_number )
   !
-  WRITE( UNIT = stdout, &
-         FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
-  !
-  WRITE( unit = stdout, FMT = 9010 ) ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
+  IF ( ionode) THEN
+     !
+     WRITE( UNIT = stdout, &
+            FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+     !
+     WRITE( unit = stdout, FMT = 9010 ) &
+         ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
+     !
+  END IF   
   !
   CALL iosys()
   !
-  IF ( noncolin ) &
+  IF ( ionode .AND. noncolin ) &
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"non-colinear magnetization allowed",/)' )
-  IF ( gamma_only ) &
+  IF ( ionode .AND. gamma_only ) &
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
   !
@@ -59,17 +63,9 @@ PROGRAM pwscf
   IF ( lneb ) THEN
      !
      ! ... stdout is connected to a file ( specific for each image ) 
-     ! ... via unit 17
+     ! ... via unit 17 ( only root_image performes I/O )
      !
-#ifdef __PARA
-     IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
-        !
-        stdout = 17
-        !
-#ifdef __PARA
-     END IF
-#endif     
+     IF ( me_image == root_image ) stdout = 17
      !
      CALL initialize_neb( 'PW' )
      !
@@ -79,7 +75,7 @@ PROGRAM pwscf
      !
      ! ... stdout is reconnected to standard output
      !
-     stdout = 6
+     stdout = 6 
      !  
      CALL stop_pw( conv_neb )
      !

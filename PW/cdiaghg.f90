@@ -18,9 +18,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
   USE kinds,     ONLY : DP
-  USE para,      ONLY : me, npool
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : intra_pool_comm
+  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm, my_image_id
   USE mp,        ONLY : mp_bcast  
   !
   IMPLICIT NONE
@@ -115,7 +113,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalize the matrix
   !
-  IF ( me == 1 ) THEN
+  IF ( me_pool == root_pool ) THEN
      !
      IF ( all_eigenvalues ) THEN
         !
@@ -144,8 +142,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... broadcast the eigenvectors and the eigenvalues
   !
-  CALL mp_bcast( e, ionode_id, intra_pool_comm )
-  CALL mp_bcast( v, ionode_id, intra_pool_comm )
+  CALL mp_bcast( e, root_pool, intra_pool_comm(my_image_id) )
+  CALL mp_bcast( v, root_pool, intra_pool_comm(my_image_id) )
   !
   ! ... deallocate workspace
   !

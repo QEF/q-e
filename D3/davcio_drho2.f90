@@ -19,24 +19,20 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   use pwcom
   USE kinds, only : DP
   use phcom
-#ifdef __PARA
   use para
   USE io_global,     ONLY : ionode_id
-  USE mp,            ONLY : mp_bcast  
-#endif
+  USE mp_global,     ONLY : intra_pool_comm, my_image_id
+  USE mp,            ONLY : mp_bcast, mp_barrier
+
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
+
   integer :: iunit, lrec, nrec, isw
   complex(kind=DP) :: drho (nrxx)
 #ifdef __PARA
   !
   ! local variables
   !
-
   integer :: root, errcode, itmp, proc
-
   complex(kind=DP), allocatable :: ddrho (:)
 
   allocate (ddrho( nrx1 * nrx2 * nrx3 ))    
@@ -47,8 +43,7 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
      !
      call cgather_sym (drho, ddrho)
      root = 0
-     call MPI_barrier (MPI_COMM_POOL, errcode)
-     call errore ('davcio_drho2', 'at barrier', errcode)
+     call mp_barrier()
      if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)
   elseif (isw < 0) then
      !
@@ -56,7 +51,7 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
      ! processors of the pool
      !
      if (me == 1) call davcio (ddrho, lrec, iunit, nrec, - 1)
-     call mp_bcast( ddrho, ionode_id, MPI_COMM_POOL )
+     call mp_bcast( ddrho, ionode_id, intra_pool_comm(my_image_id) )
      !
      ! Distributes ddrho between between the tasks of the pool
      !

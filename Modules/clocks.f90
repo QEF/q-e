@@ -179,7 +179,7 @@ SUBROUTINE print_this_clock( n )
   USE kinds, ONLY : DP
   USE mytime
   USE mp,         ONLY : mp_max, mp_min
-  USE mp_global,  ONLY : group, inter_pool_comm 
+  USE mp_global,  ONLY : group, inter_pool_comm, my_image_id
   !
   IMPLICIT NONE
   !
@@ -212,7 +212,7 @@ SUBROUTINE print_this_clock( n )
   !
 #ifndef DEBUG
   CALL mp_max( elapsed_cpu_time, group )
-  CALL mp_max( elapsed_cpu_time, inter_pool_comm )
+  CALL mp_max( elapsed_cpu_time, inter_pool_comm(my_image_id) )
 #endif
 #endif
   IF ( n == 1 ) THEN
@@ -256,7 +256,7 @@ FUNCTION get_clock( label )
   USE kinds, ONLY : DP
   USE mytime
   USE mp,         ONLY : mp_max, mp_min
-  USE mp_global,  ONLY : group, inter_pool_comm 
+  USE mp_global,  ONLY : group, intra_image_comm 
   !
   IMPLICIT NONE
   !
@@ -285,8 +285,8 @@ FUNCTION get_clock( label )
         !
         ! ... In the parallel case, use the maximum over all nodes and pools
         !
-        CALL mp_max( get_clock, group )
-        CALL mp_max( get_clock, inter_pool_comm )
+        CALL mp_max( get_clock, intra_image_comm )
+       ! CALL mp_max( get_clock, inter_pool_comm(my_image_id) )
 #endif
         RETURN
      END IF

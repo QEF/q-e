@@ -69,7 +69,7 @@
      INTEGER :: iunwfc      = 10 ! unit with wavefunctions
      INTEGER :: iunat       = 13 ! unit for saving orthogonal atomic wfcs
      INTEGER :: iunocc      = 14 ! unit for saving the atomic n_{ij}
-     INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions (molecular dynamics)
+     INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
      INTEGER :: iunoldwfc2  = 12 ! as above at step -2
      INTEGER :: iunigk      = 16 ! unit for saving indices
      INTEGER :: iunres      =  1 ! unit for the restart of the run
@@ -77,6 +77,11 @@
      !
      INTEGER :: nwordwfc    =  2 ! lenght of record in wavefunction file
      INTEGER :: nwordatwfc  =  2 ! lenght of record in atomic wfc file
+     !
+     INTEGER :: iunexit     = 26 ! unit for a soft exit  
+     INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
+     INTEGER :: iunpara     = 28 ! unit for parallelization among images
+     INTEGER :: iunblock    = 29 ! as above (blocking file)
      !
      ! ... NEB specific
      !
@@ -86,7 +91,6 @@
      INTEGER :: iunint      = 23 ! unit for saving the interpolated energy profile
      INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
      INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
-     INTEGER :: iunexit     = 26 ! unit for a soft exit  
 
 !=----------------------------------------------------------------------------=!
    END MODULE io_files

@@ -34,7 +34,7 @@ SUBROUTINE move_ions()
   ! ... also computed here
   !
   USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_files,      ONLY : tmp_dir, prefix, iunupdate
   USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
   USE brilz,         ONLY : alat, at, bg
@@ -45,12 +45,11 @@ SUBROUTINE move_ions()
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
   USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
-                            lmd, conv_ions, alpha0, beta0, tr2
+                            lmd, conv_ions, history, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,        ONLY : lmovecell, calc
-  USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm
-  USE para,          ONLY : me, mypool, npool
-  USE io_global,     ONLY : ionode_id
+  USE mp_global,     ONLY : intra_image_comm
+  USE io_global,     ONLY : ionode_id, ionode
   USE mp,            ONLY : mp_bcast
   !
   ! ... external procedures
@@ -74,7 +73,7 @@ SUBROUTINE move_ions()
   !
   ! ... only one node does the calculation in the parallel case
   !
-  IF ( me == 1 .AND. mypool == 1 ) THEN 
+  IF ( ionode ) THEN 
      !
      conv_ions = .FALSE.
      !
@@ -82,25 +81,26 @@ SUBROUTINE move_ions()
      !
      ! ... constrains are imposed here
      !  
-     IF ( lconstrain ) &
-        CALL impose_constrains()
+     IF ( lconstrain ) CALL impose_constrains()
      !
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
      !
      IF ( exst ) THEN
         !
-        READ( UNIT = 4, FMT = * ) tauold
+        READ( UNIT = iunupdate, FMT = * ) history
+        READ( UNIT = iunupdate, FMT = * ) tauold
         !
      ELSE
         !
-        tauold = 0.D0
+        history = 0
+        tauold  = 0.D0
         !
      END IF
      !
-     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
      !
      ! ... save the previous two steps ( a total of three steps is saved )
      !
@@ -123,7 +123,7 @@ SUBROUTINE move_ions()
         ALLOCATE( pos( 3 * nat ) )
         ALLOCATE( gradient( 3 * nat ) )
         !
-        pos      =   RESHAPE( SOURCE = tau, SHAPE = (/ 3 * nat /) ) * alat
+        pos      =   RESHAPE( SOURCE = tau,   SHAPE = (/ 3 * nat /) ) * alat
         gradient = - RESHAPE( SOURCE = force, SHAPE = (/ 3 * nat /) )
         !
         IF ( lbfgs_ndim == 1 ) THEN
@@ -157,8 +157,8 @@ SUBROUTINE move_ions()
            !
         END IF
         !   
-        tau   =   RESHAPE( SOURCE = pos, SHAPE = (/ 3 , nat /) ) / alat
-        force = - RESHAPE( SOURCE = gradient, SHAPE = (/ 3 , nat /) )
+        tau   =   RESHAPE( SOURCE = pos, SHAPE = (/ 3, nat /) ) / alat
+        force = - RESHAPE( SOURCE = gradient, SHAPE = (/ 3, nat /) )
         !
         CALL output_tau( conv_ions )
         !
@@ -196,11 +196,14 @@ SUBROUTINE move_ions()
      !
      CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     history = MIN( 3, ( history + 1 ) )
      !
-     WRITE( UNIT = 4, FMT = * ) tauold
+     CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
      !
-     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     WRITE( UNIT = iunupdate, FMT = * ) history
+     WRITE( UNIT = iunupdate, FMT = * ) tauold
+     !
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
      !  
      DEALLOCATE( tauold )
      !
@@ -208,17 +211,14 @@ SUBROUTINE move_ions()
   !  
   ! ... broadcast calculated quantities to all nodes
   !
-  CALL mp_bcast( conv_ions, ionode_id )
-  CALL mp_bcast( tau,       ionode_id )
-  CALL mp_bcast( force,     ionode_id )
-  CALL mp_bcast( tr2,       ionode_id )
-  CALL mp_bcast( conv_ions, ionode_id )
-  !
-  IF ( me == 1 ) CALL mp_bcast( alpha0, ionode_id, inter_pool_comm )
-  IF ( me == 1 ) CALL mp_bcast( beta0,  ionode_id, inter_pool_comm )
-  !
-  CALL mp_bcast( alpha0, ionode_id, intra_pool_comm )
-  CALL mp_bcast( beta0,  ionode_id, intra_pool_comm )
+  CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
+  CALL mp_bcast( tau,       ionode_id, intra_image_comm )
+  CALL mp_bcast( force,     ionode_id, intra_image_comm )
+  CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
+  CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
+  CALL mp_bcast( alpha0,    ionode_id, intra_image_comm )
+  CALL mp_bcast( beta0,     ionode_id, intra_image_comm )
+  CALL mp_bcast( history,   ionode_id, intra_image_comm )
   ! 
   RETURN
   !
@@ -346,8 +346,8 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   ! ...    | tau(t+dt) - tau' | is minimum, where
   !
-  ! ...    tau' = alpha0 * ( tau(t) - tau(t-dt) ) +
-  ! ...            beta0 * ( tau(t-dt) - tau(t-2*dt) )
+  ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
+  ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
   !
   USE constants, ONLY : eps8
   USE kinds,     ONLY : DP
@@ -363,7 +363,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   a11 = 0.D0
   a12 = 0.D0
   a21 = 0.D0
-  a22 = 0.D0 + eps8
+  a22 = 0.D0
   b1  = 0.D0
   b2  = 0.D0
   c   = 0.D0
@@ -395,11 +395,20 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   det = a11 * a22 - a12 * a21
   !
-  IF ( det < 0.D0 ) CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
+  IF ( det < 0.D0 ) THEN
+     !
+     alpha0 = 0.D0
+     beta0  = 0.D0
+     !
+     PRINT *, "WARNING IN find_alpha_and_beta:  det < 0"
+     !
+     !CALL errore( 'find_alpha_and_beta', ' det < 0', 1 )
+     !
+  END IF   
   !
   ! ... case det > 0:  a well defined minimum exists
   !
-  IF ( det > 0.D0 ) THEN
+  IF ( det > eps8 ) THEN
      !
      alpha0 = ( b1 * a22 - b2 * a12 ) / det
      beta0  = ( a11 * b2 - a21 * b1 ) / det
@@ -407,10 +416,10 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   ELSE
      !
      ! ... case det = 0 : the two increments are linearly dependent, 
-     ! ...                chose solution with beta = 0 
+     ! ...                chose solution with alpha = 0 and beta = 0 
      ! ...                ( discard oldest configuration )
      !
-     alpha0 = 1.D0
+     alpha0 = 0.D0
      beta0  = 0.D0
      !
      IF ( a11 > 0.D0 ) alpha0 = b1 / a11
@@ -431,7 +440,16 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      !
   END DO
   !
-  !WRITE( stdout, * ) chi, alpha0, beta0
+#if defined (__DEBUG_EXTR)  
+  PRINT *, ""
+  PRINT *, "chi   = ", chi,    "  det  = ", det
+  PRINT *, "alpha = ", alpha0, "  beta = ", beta0
+  PRINT *, ""
+  PRINT *, "PREDICTED POSITIONS:"
+  PRINT *, tauold(1,:,1) + alpha0 * ( tauold(1,:,1) - tauold(1,:,2) ) + &
+                            beta0 * ( tauold(1,:,2) - tauold(1,:,3) )
+  PRINT *, ""
+#endif  
   !
   RETURN
   !

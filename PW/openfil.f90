@@ -23,9 +23,6 @@ SUBROUTINE openfil()
                               iunat, iunocc, iunwfc, iunoldwfc, iunoldwfc2, &
                               iunigk, nwordwfc, nwordatwfc, iunneb
   USE restart_module, ONLY :  readfile_new
-!#ifdef __PARA
-  USE para,           ONLY : 
-!#endif
   !
   IMPLICIT NONE
   !
@@ -33,15 +30,6 @@ SUBROUTINE openfil()
   INTEGER       :: ndr, kunittmp, ierr
   REAL(KIND=DP) :: edum(1,1), wdum(1,1)
   !
-  !
-  ! ... iunwfc contains the wavefunctions
-  !
-  iunwfc = 10
-  !
-  ! ... iunoldwfc contains the old wavefunctions, used in molecular dynamics
-  !
-  iunoldwfc = 11
-  iunoldwfc2= 12
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
@@ -88,15 +76,6 @@ SUBROUTINE openfil()
   !
   iunocc = 14
   !
-  ! ... if extrapolation of wfc's is requested (order=2)
-  ! ... another file is needed to store the "old" wfc's
-  !
-  IF ( order > 1 ) &
-     CALL diropn( iunoldwfc, TRIM( prefix )//'.oldwfc', nwordwfc, exst )
-  !
-  IF ( order > 2 ) &
-     CALL diropn( iunoldwfc2, TRIM( prefix )//'.oldwfc2', nwordwfc, exst )
-  !
   ! ... iunigk contains the number of PW and the indices igk
   ! ... Note that unit 15 is reserved for error messages 
   !
@@ -106,4 +85,3 @@ SUBROUTINE openfil()
   RETURN
   !
 END SUBROUTINE openfil
-

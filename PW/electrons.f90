@@ -7,11 +7,6 @@
 !  
 #include "machine.h"
 !
-! ... uncomment the following line to use the "old ethr" 
-! ... for the first iteration  
-!
-!#define __OLDSTYLE
-!
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
@@ -57,10 +52,8 @@ SUBROUTINE electrons()
   USE extfield,             ONLY : tefield, etotefield  
   USE bp,                   ONLY : lberry  
   USE wavefunctions_module, ONLY : evc
-#if defined (__PARA)
-  USE para,                 ONLY : me, mypool, npp, ncplane
-  USE mp,                   ONLY : mp_barrier
-#endif
+  USE mp_global,            ONLY : me_image, root_image
+  USE para,                 ONLY : npp, ncplane
   !
   IMPLICIT NONE
   !
@@ -69,7 +62,7 @@ SUBROUTINE electrons()
 #if defined (__PARA)
   INTEGER :: &
       ngkp(npk)       !  number of plane waves summed on all nodes
-#define NRXX ncplane*npp(me)
+#define NRXX ncplane*npp(me_image+1)
   ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
 #else
 #define NRXX nrxx
@@ -83,8 +76,8 @@ SUBROUTINE electrons()
       mag,           &!  local magnetization
       magtot,        &!  total magnetization
       absmag,        &!  total absolute magnetization
-      tcpu          !
-  INTEGER :: &
+      tcpu            !  cpu time
+   INTEGER :: &
       i,             &!  counter on polarization
       ir,            &!  counter on the mesh points
       ig,            &!
@@ -102,11 +95,10 @@ SUBROUTINE electrons()
       charge_new      !
   REAL (KIND=DP) :: &
       ethr_min        ! minimal threshold for diagonalization at the first scf
-                      ! iteration of a MD calculation 
+                      ! iteration 
   REAL (KIND=DP), EXTERNAL :: ewald, get_clock
   LOGICAL :: &
-      exst,          &!
-      file_exists     !  .TRUE. if a soft exit has been required
+      exst
   !
   !
   CALL start_clock( 'electrons' )
@@ -125,6 +117,7 @@ SUBROUTINE electrons()
         ! ...jump to the end 
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho
+        !
         CALL stop_clock( 'electrons' )
         !
         RETURN
@@ -141,10 +134,15 @@ SUBROUTINE electrons()
                    g, gg, ngm, gcutm, gstart, gamma_only, strf )
      !               
      IF ( reduce_io ) THEN
+        !
         flmix = ' '
+        !
      ELSE
+        !
         flmix = 'flmix'
+        !
      END IF
+     !
   END IF 
   !
   ! ... Convergence threshold for iterative diagonalization
@@ -152,15 +150,7 @@ SUBROUTINE electrons()
   ! ... for the first scf iteration of each ionic step (except than for the
   ! ... first) the threshold is fixed to a default value of 1.D-5
   !
-#if defined (__OLDSTYLE)
-  IF ( .FALSE. ) THEN
-#else
-  IF ( istep > 1 ) THEN
-#endif     
-     !
-     ethr = 1.D-5
-     !
-  END IF  
+  IF ( istep > 1 ) ethr = 1.D-5
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
@@ -171,17 +161,24 @@ SUBROUTINE electrons()
   DO idum = 1, niter
      !
      tcpu = get_clock( 'PWSCF' )
+     !
      WRITE( stdout, 9000 ) tcpu
      !
-     IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
-     !
+     IF ( imix >= 0 ) rho_save = rho
+     !IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
+     !  
      iter = iter + 1
      !
      IF ( lscf ) THEN
+        !
         WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
+        !
      ELSE
+        !
         WRITE( stdout, 9009 )
+        !
      END IF
+     !
 #if defined (FLUSH)
      CALL flush( stdout )
 #endif
@@ -207,6 +204,8 @@ SUBROUTINE electrons()
         !
      END IF
      !
+     ! ... diagonalziation of the KS hamiltonian
+     !
      CALL c_bands( iter, ik_, dr2 )
      !
      ! ... skip all the rest if not lscf
@@ -215,17 +214,20 @@ SUBROUTINE electrons()
         !
         conv_elec = .TRUE.
         !
-#if defined (__PARA)
         CALL poolrecover( et, nbnd, nkstot, nks )
-#endif
         !
         DO ik = 1, nkstot
+           !
            IF ( lsda ) THEN
+              !   
               IF ( ik == 1 ) WRITE( stdout, 9015 )
               IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
+              !
            END IF
+           !
            WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
            WRITE( stdout, 9030 ) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
+           !
         END DO
         !
         ! ... do a Berry phase polarization calculation if required
@@ -235,6 +237,7 @@ SUBROUTINE electrons()
         ! ... jump to the end
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
+        !
         CALL stop_clock( 'electrons' )
         !
         RETURN
@@ -254,7 +257,7 @@ SUBROUTINE electrons()
      IF ( lda_plus_u ) CALL write_ns()
      !
      IF ( iter == 1 .AND. lda_plus_u .AND. &
-          startingpot=='atomic' .AND. istep == 1 ) CALL ns_adj()
+          startingpot == 'atomic' .AND. istep == 1 ) CALL ns_adj()
      !
      ! ... calculate total and absolute magnetization
      !
@@ -272,15 +275,12 @@ SUBROUTINE electrons()
         IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
            !
            ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-           CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )
+           nsnew = ns 
+           !CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )
            !
         END IF
         !
-#if defined (__OLDSTYLE)
-        IF ( .FALSE. ) THEN
-#else
         IF ( iter == 1 ) THEN
-#endif        
            !
            ! ... for the first scf iteration ethr_min is set for a check 
            ! ... in mix_rho ( in mix_rho ethr_min = dr2 * ethr_min )
@@ -302,11 +302,7 @@ SUBROUTINE electrons()
         ! ... for the first scf iteration it is controlled that the threshold 
         ! ... is small enought for the diagonalization to be adequate
         !
-#if defined (__OLDSTYLE)
-        IF ( .FALSE. ) THEN
-#else
         IF ( iter == 1 .AND. ethr >= ethr_min ) THEN
-#endif
            !
            ! ... a new diagonalization is needed       
            !
@@ -342,7 +338,8 @@ SUBROUTINE electrons()
            IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
               !
               ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-              CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )                 
+              nsnew = ns
+              !CALL DCOPY( ( ldim2 * nspin * nat ), ns, 1, nsnew, 1 )                 
               !
            END IF
            !
@@ -353,7 +350,8 @@ SUBROUTINE electrons()
            !
         END IF             
         !
-        CALL DAXPY( ( nspin * nrxx ), -1.D0, vr, 1, vnew, 1 )
+        vnew =  vnew - vr
+        !CALL DAXPY( ( nspin * nrxx ), -1.D0, vr, 1, vnew, 1 )
         !
         CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
@@ -381,17 +379,19 @@ SUBROUTINE electrons()
         !
         ldim2 = ( 2 * Hubbard_lmax + 1 )**2
         !
-        IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) &
-           CALL DCOPY( ( ldim2 * nspin * nat ), nsnew, 1, ns, 1 )    
-#if defined (__PARA)
-        IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
-           CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'formatted', exst )
+        IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) ns = nsnew
+        !   CALL DCOPY( ( ldim2 * nspin * nat ), nsnew, 1, ns, 1 )    
+        !
+        IF ( me_image == root_image ) THEN
+           !
+           CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'FORMATTED', exst )
+           !
            WRITE( iunocc, * ) ns
+           !
            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-#if defined (__PARA)
+           !
         END IF
-#endif
+        !
      END IF
      !
      ! ... In the US case we need to recompute the self consistent term in
@@ -401,8 +401,9 @@ SUBROUTINE electrons()
      !
      ! ... write the potential (and rho) on file
      !     
-     IF ( imix >= 0 ) CALL io_pot( +1, TRIM( prefix )//'.rho', rho_save, nspin )
-     CALL io_pot( +1, TRIM( prefix )//'.pot', vr, nspin )     
+     IF ( imix >= 0 ) CALL io_pot( 1, TRIM( prefix )//'.rho', rho_save, nspin )
+     !
+     CALL io_pot( 1, TRIM( prefix )//'.pot', vr, nspin )     
      !
      ! ... save converged wfc if they have not been written previously
      !     
@@ -419,20 +420,22 @@ SUBROUTINE electrons()
         !IF ( lda_plus_u ) CALL write_ns()
         !
 #if defined (__PARA)
-        DO ik = 1, nks
-           ngkp(ik) = ngk(ik)
-        END DO
+        !
+        ngkp(1:nks) = ngk(1:nks)
         !
         CALL ireduce( nks, ngkp )
         CALL ipoolrecover( ngkp, 1, nkstot, nks )
         CALL poolrecover( et, nbnd, nkstot, nks )
+        !
 #endif
         !
         DO ik = 1, nkstot
            !
            IF ( lsda ) THEN
+              !
               IF ( ik == 1 ) WRITE( stdout, 9015)
               IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016)
+              !
            END IF
            !
            IF ( conv_elec ) THEN
@@ -466,9 +469,13 @@ SUBROUTINE electrons()
           ( iswitch <= 2 ) ) THEN
         !  
         IF ( imix >= 0 ) THEN
+           !
            WRITE( stdout, 9081 ) etot, dr2
+           !
         ELSE
+           !
            WRITE( stdout, 9086 ) etot, dr2
+           !
         END IF
         !
         WRITE( stdout, 9060 ) &
@@ -481,17 +488,25 @@ SUBROUTINE electrons()
      ELSE IF ( conv_elec .AND. iswitch > 2 ) THEN
         !
         IF ( imix >= 0 ) THEN
+           !   
            WRITE( stdout, 9081 ) etot, dr2
+           !   
         ELSE
+           !   
            WRITE( stdout, 9086 ) etot, dr2
+           !   
         END IF
         !
      ELSE
         !
         IF ( imix >=  0 ) THEN
+           !   
            WRITE( stdout, 9080 ) etot, dr2
+           !   
         ELSE
+           !   
            WRITE( stdout, 9085 ) etot, dr2
+           !   
         END IF
         !
      END IF
@@ -520,7 +535,8 @@ SUBROUTINE electrons()
      !
      !CALL forces()
      !
-     IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho_save, 1, rho, 1 )
+     IF ( imix >= 0 ) rho = rho_save
+     !IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho_save, 1, rho, 1 )
      !
   END DO
   !
@@ -584,7 +600,8 @@ SUBROUTINE electrons()
        !
        DO ir = 1, nrxx
           !   
-          mag    = rho(ir,1) - rho(ir,2)
+          mag = rho(ir,1) - rho(ir,2)
+          !
           magtot = magtot + mag
           absmag = absmag + ABS( mag )
           !
@@ -593,10 +610,8 @@ SUBROUTINE electrons()
        magtot = magtot * omega / ( nr1 * nr2 * nr3 )
        absmag = absmag * omega / ( nr1 * nr2 * nr3 )
        !
-#if defined (__PARA)
        CALL reduce( 1, magtot )
        CALL reduce( 1, absmag )
-#endif
        !
        RETURN
        !
@@ -621,7 +636,9 @@ SUBROUTINE electrons()
                  tcpu, max_seconds
           END IF       
           !
-          CALL stop_pw( .FALSE. )
+          conv_elec = .FALSE.
+          !
+          RETURN
           !
        END IF
        !
@@ -644,7 +661,9 @@ SUBROUTINE electrons()
                               & 5X,"stopping in electrons ...",/)' )  
           END IF
           !  
-          CALL stop_pw( .FALSE. )
+          conv_elec = .FALSE.
+          !
+          RETURN          
           !
        END IF              
        !

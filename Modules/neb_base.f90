@@ -51,6 +51,7 @@ MODULE neb_base
       USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
       USE formats,          ONLY : stringfmt   
+      USE io_global,        ONLY : ionode
       !
       IMPLICIT NONE
 
@@ -172,31 +173,35 @@ MODULE neb_base
       !
       CALL compute_deg_of_freedom()
       !
-      ! ... details of the calculation are written on output
+      ! ... details of the calculation are written on output (only by ionode)
       !
-      WRITE( UNIT = iunneb, FMT = stringfmt ) &
-          "calculation", TRIM( calculation )
-      WRITE( UNIT = iunneb, FMT = stringfmt ) &
-          "restart_mode", TRIM( restart_mode )
-      WRITE( UNIT = iunneb, FMT = stringfmt ) &
-          "CI_scheme", TRIM( CI_scheme )
-      WRITE( UNIT = iunneb, FMT = stringfmt ) &
-          "VEC_scheme", TRIM( VEC_scheme )
-      WRITE( UNIT = iunneb, FMT = stringfmt ) &
-          "minimization_scheme", TRIM( minimization_scheme )
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"optimization",T35," = ",L1))' ) optimization
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"num_of_images",T35," = ",I3)' ) num_of_images
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"ds",T35," = ",F6.4)' ) ds
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"k_max",T35," = ",F6.4)' ) k_max
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"k_min",T35," = ",F6.4)' ) k_min
-      WRITE( UNIT = iunneb, &
-             FMT = '(5X,"neb_thr",T35," = ",F6.4)' ) neb_thr     
-      WRITE( UNIT = iunneb, FMT = '(/)' )
+      IF ( ionode ) THEN
+         !
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "calculation", TRIM( calculation )
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "restart_mode", TRIM( restart_mode )
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "CI_scheme", TRIM( CI_scheme )
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "VEC_scheme", TRIM( VEC_scheme )
+         WRITE( UNIT = iunneb, FMT = stringfmt ) &
+             "minimization_scheme", TRIM( minimization_scheme )
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"optimization",T35," = ",L1))' ) optimization
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"num_of_images",T35," = ",I3)' ) num_of_images
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"ds",T35," = ",F6.4)' ) ds
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"k_max",T35," = ",F6.4)' ) k_max
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"k_min",T35," = ",F6.4)' ) k_min
+         WRITE( UNIT = iunneb, &
+                FMT = '(5X,"neb_thr",T35," = ",F6.4)' ) neb_thr     
+         WRITE( UNIT = iunneb, FMT = '(/)' )
+         !
+      END IF
       !
       RETURN
       !
@@ -226,7 +231,6 @@ MODULE neb_base
          END SUBROUTINE compute_deg_of_freedom
          !
     END SUBROUTINE initialize_neb
-    !
     !
     !
     !------------------------------------------------------------------------
@@ -619,8 +623,7 @@ MODULE neb_base
     !!! workaround for ifc8 compiler internal error
     END SUBROUTINE path_tangent_
     !
-
-
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_PES( flag, stat )
       !-----------------------------------------------------------------------
@@ -696,6 +699,7 @@ MODULE neb_base
                                 ldamped_dyn, lmol_dyn, istep_neb, nstep_neb
       USE io_routines,   ONLY : write_restart, write_dat_files, write_output
       USE check_stop,    ONLY : check_stop_now
+      USE io_global,     ONLY : ionode
 #if defined (__LANGEVIN)
       USE parser,        ONLY : int_to_char
 #endif
@@ -812,6 +816,8 @@ MODULE neb_base
          !
          IF ( .NOT. stat ) THEN
             !
+            conv_neb = .FALSE.
+            !
             EXIT minimization
             !
          END IF
@@ -885,27 +891,35 @@ MODULE neb_base
              SUM( langevin_action )  * ( AU * BOHR_RADIUS_ANGS )
 #endif
          !
-         IF ( lmol_dyn ) THEN
+         IF ( ionode ) THEN
             !
-            WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
-                istep_neb,                    &
-                temp * AU * eV_to_kelvin, &
-                err * ( AU / BOHR_RADIUS_ANGS )
+            IF ( lmol_dyn ) THEN
+               !
+               WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
+                   istep_neb,                    &
+                   temp * AU * eV_to_kelvin, &
+                   err * ( AU / BOHR_RADIUS_ANGS )
+               !
+            ELSE
+               !
+               WRITE( UNIT = iunneb, FMT = run_output ) &
+                   istep_neb,                  &
+                   ( Emax - PES(1) ) * AU, &
+                   err * ( AU / BOHR_RADIUS_ANGS )
+               !
+            END IF
             !
-         ELSE
-            !
-            WRITE( UNIT = iunneb, FMT = run_output ) &
-                istep_neb,                  &
-                ( Emax - PES(1) ) * AU, &
-                err * ( AU / BOHR_RADIUS_ANGS )
+            CALL write_output()
             !
          END IF
-         !
-         CALL write_output()
-         !
+         !   
          ! ... the program checks if the convergence has been achieved
          !
          IF ( ( err * AU / BOHR_RADIUS_ANGS ) <= neb_thr )  THEN
+            !
+            IF ( ionode ) &
+               WRITE( UNIT = iunneb, &
+                      FMT = '(/,5X,"NEB convergence achieved")' )
             !
             conv_neb = .TRUE.
             !

@@ -35,12 +35,8 @@ SUBROUTINE sum_band()
   USE us,                   ONLY : okvan, tvanp, becsum, nh, nkb, vkb
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-#if defined (__PARA)
-  USE para,                 ONLY : me, mypool
-  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm  
-  USE io_global,            ONLY : ionode_id
+  USE mp_global,            ONLY : intra_image_comm, me_image, root_image
   USE mp,                   ONLY : mp_bcast
-#endif
   !
   IMPLICIT NONE
   !
@@ -73,24 +69,18 @@ SUBROUTINE sum_band()
      !
   ELSE IF ( ltetra ) THEN
      !
-#if defined (__PARA)
      CALL poolrecover( et, nbnd, nkstot, nks )
      !
-     IF ( me == 1 .AND. mypool == 1 ) THEN
+     IF ( me_image == root_image ) THEN
         !
-#endif
         CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg )
-#if defined (__PARA)
         !
      END IF
      !
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )
      !
-     IF ( me == 1 ) CALL mp_bcast( ef, ionode_id, inter_pool_comm )
+     CALL mp_bcast( ef, root_image, intra_image_comm )
      !
-     CALL mp_bcast( ef, ionode_id, intra_pool_comm )
-     !
-#endif
   ELSE IF ( lgauss ) THEN
      !
      CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg )
@@ -146,12 +136,8 @@ SUBROUTINE sum_band()
   !
   IF ( okvan ) CALL addusdens()
   !
-#if defined (__PARA)
-  !
   CALL poolreduce( 1, eband )
   CALL poolreduce( 1, demet )
-  !
-#endif
   !
   ! ... symmetrization of the charge density (and local magnetization)
   !

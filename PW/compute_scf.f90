@@ -9,10 +9,14 @@
 SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !----------------------------------------------------------------------------
   !
+  ! ... this subroutine is the main scf-driver for NEB 
+  ! ... ( called by Modules/neb_base.f90, born_oppenheimer() subroutine ) 
+  !
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot
+  USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
+                               diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, alpha0, beta0
+  USE control_flags,    ONLY : conv_elec, istep, history, alpha0, beta0, ethr
   USE check_stop,       ONLY : check_stop_now
   USE brilz,            ONLY : alat
   USE basis,            ONLY : tau, ityp, nat, &
@@ -23,16 +27,16 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE relax,            ONLY : if_pos_ => if_pos
   USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
-                               iunneb, iunexit, exit_file
+                               iunneb, iunupdate
   USE io_global,        ONLY : stdout
-  USE formats,          ONLY : scf_fmt
+  USE formats,          ONLY : scf_fmt, scf_fmt_para
   USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
                                dim, suspended_image, istep_neb
   USE parser,           ONLY : int_to_char
-  USE para,             ONLY : me, mypool
-  USE io_global,        ONLY : ionode_id
-  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm    
-  USE mp,               ONLY : mp_bcast, mp_barrier 
+  USE io_global,        ONLY : ionode
+  USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
+                               my_image_id, me_image, root_image, nimage
+  USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum
   !
   IMPLICIT NONE
   !
@@ -43,7 +47,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   ! ... local variables definition
   !
-  INTEGER              :: image, ia
+  INTEGER              :: image, ia, istat
   REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms  
   REAL (KIND=DP)       :: tcpu 
@@ -59,36 +63,60 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... end of external functions definition
   !
   !
-  istep = istep_neb
+  ! ... all processes are syncronized (needed to have an ordered output)
   !
-  stat = .TRUE.
+  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( inter_image_comm )  
+  !
+  istep = istep_neb
+  istat = 0 
+  !
+  ! ... only the first cpu on each image needs the tauold vector
+  !
+  IF ( me_image == root_image ) ALLOCATE( tauold( 3, nat, 3 ) )  
   !
   tmp_dir_saved = tmp_dir
   !
-  IF ( me == 1 .AND. mypool == 1 ) THEN
-     !
-     ALLOCATE( tauold( 3, nat, 3 ) )
-     !
-  END IF    
+  ! ... vectors PES and PES_gradient are initalized to zero for all images on
+  ! ... all nodes: this is needed for the final mp_sum()
+  !
+  PES(N_in:N_fin)            = 0.D0
+  PES_gradient(:,N_in:N_fin) = 0.D0
+  !
+  ! ... only the first cpu initializes the file needed by parallelization 
+  ! ... among images
+  !
+  IF ( ionode ) CALL para_file_init()
+  !
+  image = N_in + my_image_id
   ! 
-  DO image = N_in, N_fin
-     !
+  scf_loop: DO
+     !     
      suspended_image = image
      !
-     IF( check_stop_now() ) THEN
+     IF ( check_stop_now() ) THEN
         !   
-        stat = .FALSE.
+        istat = 1
         !
-        RETURN
+        EXIT scf_loop
         !    
      END IF
      !
      tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                TRIM( int_to_char( image ) ) // "/" 
-
+               
+     !
      tcpu = get_clock( 'PWSCF' )
      !
-     WRITE( UNIT = iunneb, FMT = scf_fmt ) tcpu, image
+     IF ( nimage > 1 ) THEN
+        !
+        WRITE( UNIT = iunneb, FMT = scf_fmt_para ) my_image_id, tcpu, image
+        !
+     ELSE
+        !
+        WRITE( UNIT = iunneb, FMT = scf_fmt ) tcpu, image
+        !
+     END IF   
      !
      CALL clean_pw()
      !
@@ -96,7 +124,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... unit stdout is connected to the appropriate file
      !
-     IF ( me == 1 .AND. mypool == 1 ) THEN
+     IF ( me_image == root_image ) THEN
         !  
         INQUIRE( UNIT = stdout, OPENED = opnd )
         IF ( opnd ) CLOSE( UNIT = stdout )
@@ -122,40 +150,48 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      CALL init_run()
      !
-     IF ( me == 1 .AND. mypool == 1 ) THEN 
+     IF ( me_image == root_image ) THEN 
         !     
         ! ... the file containing old positions is opened 
         ! ... ( needed for extrapolation )
         !
-        CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', file_exists ) 
+        CALL seqopn( iunupdate, TRIM( prefix ) // '.update', &
+                     'FORMATTED', file_exists ) 
         !
         IF ( file_exists ) THEN
            !
-           READ( UNIT = 4, FMT = * ) tauold
+           READ( UNIT = iunupdate, FMT = * ) history
+           READ( UNIT = iunupdate, FMT = * ) tauold
            !
         ELSE
            !
-           tauold = 0.D0
+           history = 0
+           tauold  = 0.D0
            !
         END IF
         !
-        CLOSE( UNIT = 4, STATUS = 'KEEP' )  
+        CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )  
         !
         ! ... find the best coefficients for the extrapolation of the potential
+        !
+       ! WRITE( UNIT = *, FMT = * ) 
+       ! WRITE( UNIT = *, FMT = * ) tau(1,:)
+       ! WRITE( UNIT = *, FMT = * ) 
+       ! WRITE( UNIT = *, FMT = * ) tauold(1,:,:)                
         !
         CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )        
         !
      END IF
      !
-     IF ( me == 1 ) CALL mp_bcast( alpha0, ionode_id, inter_pool_comm )
-     IF ( me == 1 ) CALL mp_bcast( beta0,  ionode_id, inter_pool_comm )
-     !
-     CALL mp_bcast( alpha0, ionode_id, intra_pool_comm )
-     CALL mp_bcast( beta0,  ionode_id, intra_pool_comm )     
+     CALL mp_bcast( alpha0,  root_image, intra_image_comm )
+     CALL mp_bcast( beta0,   root_image, intra_image_comm ) 
+     CALL mp_bcast( history, root_image, intra_image_comm )    
      !
      ! ... potential and wavefunctions are extrapolated
      !
      CALL update_pot()
+     !
+     ! ... self-consistency loop
      !
      CALL electrons()
      !
@@ -164,11 +200,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         WRITE( iunneb, '(/,5X,"WARNING :  scf convergence NOT achieved",/, &
                          & 5X,"stopping in compute_scf()...",/)' )
         !   
-        stat = .FALSE.
+        istat = 1
         !
-        RETURN
+        EXIT scf_loop
         !
      END IF
+     !
+     ! ... self-consistent forces
      !
      CALL forces()
      !
@@ -182,7 +220,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      PES_gradient(:,image) = - RESHAPE( SOURCE = force, &
                                         SHAPE = (/ dim /) ) / e2 
      !
-     IF ( me == 1 .AND. mypool == 1 ) THEN 
+     IF ( me_image == root_image ) THEN 
         !
         ! ... save the previous two steps ( a total of three steps is saved )
         !
@@ -190,33 +228,152 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         tauold(:,:,2) = tauold(:,:,1)
         tauold(:,:,1) = tau(:,:)              
         !
-        CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', file_exists ) 
+        history = MIN( 3, ( history + 1 ) )
         !
-        WRITE( UNIT = 4, FMT = * ) tauold
+        CALL seqopn( iunupdate, &
+                   & TRIM( prefix ) // '.update', 'FORMATTED', file_exists ) 
         !
-        CLOSE( UNIT = 4, STATUS = 'KEEP' )
+        WRITE( UNIT = iunupdate, FMT = * ) history
+        WRITE( UNIT = iunupdate, FMT = * ) tauold
+        !
+        CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+        !
+        ! ... the new image is obtained
+        !
+        CALL get_new_image( image )
         !
      END IF   
      !
+     CALL mp_bcast( image, root_image, intra_image_comm )
+     !        
      ! ... input values are restored at the end of each iteration
      !
      startingpot_ = startingpot
      startingwfc_ = startingwfc
      !
+     ethr = diago_thr_init     
+     !
      CALL reset_k_points()
      !
-  END DO
+     ! ... exit if finished
+     !
+     IF ( image > N_fin ) EXIT scf_loop     
+     !
+  END DO scf_loop
   !
-  IF ( me == 1 .AND. mypool == 1 ) THEN
-     !
-     DEALLOCATE( tauold )
-     !
-  END IF      
+  IF ( me_image == root_image ) DEALLOCATE( tauold )
   !
   tmp_dir = tmp_dir_saved
   !
   suspended_image = 0
   !
+  CALL mp_barrier( intra_image_comm )
+  CALL mp_barrier( inter_image_comm )
+  !
+  ! ... PES and PES_gradient are communicated among "image" pools
+  !
+  CALL mp_sum( PES(N_in:N_fin),            inter_image_comm )
+  CALL mp_sum( PES_gradient(:,N_in:N_fin), inter_image_comm )
+  CALL mp_sum( istat,                      inter_image_comm )
+  !
+  ! ... global status is computed here
+  !
+  IF ( istat == 0 ) THEN
+     !
+     stat = .TRUE.
+     !
+  ELSE
+     !
+     stat = .FALSE.
+     !
+  END IF      
+  !
   RETURN
   !
+  CONTAINS
+     !
+     ! ... internal procedures
+     !
+     SUBROUTINE para_file_init()
+       !
+       ! ... this subroutine initializes the file needed for the 
+       ! ... parallelization among images
+       !
+       USE io_files,  ONLY : iunpara
+       USE mp_global, ONLY : nimage
+       !
+       IMPLICIT NONE       
+       !
+       !
+       OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
+           & TRIM( prefix ) // '.para' , STATUS = 'UNKNOWN' )
+       !
+       WRITE( iunpara, * ) N_in + nimage
+       ! 
+       CLOSE( UNIT = iunpara, STATUS = 'KEEP' )       
+       !
+       RETURN
+       !
+     END SUBROUTINE para_file_init
+     !
+     SUBROUTINE get_new_image( image )
+       !
+       ! ... this subroutine is used to get the new image to work on
+       ! ... the *.BLOCK file is other needed to avoid that other jobs
+       ! ... try to read/write on file "para" 
+       !
+       USE io_files,  ONLY : iunpara, iunblock
+       USE mp_global, ONLY : my_image_id
+       !
+       IMPLICIT NONE
+       !
+       INTEGER, INTENT(OUT) :: image
+       INTEGER              :: ioerr
+       LOGICAL              :: opened, exists
+       !
+       !
+       open_loop: DO
+          !          
+          OPEN( UNIT = iunblock, FILE = TRIM( tmp_dir_saved ) // &
+              & TRIM( prefix ) // '.BLOCK' , IOSTAT = ioerr, STATUS = 'NEW' )
+          !
+          IF ( ioerr > 0 ) CYCLE open_loop
+          !
+          INQUIRE( UNIT = iunpara, OPENED = opened )
+          !
+          IF ( .NOT. opened ) THEN
+             !
+             INQUIRE( FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.para', EXIST = exists )
+             !
+             IF ( exists ) THEN
+                !
+                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.para' , STATUS = 'OLD' )
+                !
+                READ( iunpara, * ) image
+                !
+                CLOSE( UNIT = iunpara, STATUS = 'DELETE' )
+                !
+                OPEN( UNIT = iunpara, FILE = TRIM( tmp_dir_saved ) // &
+                    & TRIM( prefix ) // '.para' , STATUS = 'NEW' )
+                !
+                WRITE( iunpara, * ) image + 1
+                ! 
+                CLOSE( UNIT = iunpara, STATUS = 'KEEP' )
+                !
+                EXIT open_loop
+                !
+             END IF
+             !
+          END IF
+          !
+       END DO open_loop
+       !
+       CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+       !
+       RETURN
+       !
+     END SUBROUTINE get_new_image
+     !
 END SUBROUTINE compute_scf

@@ -1,52 +1,81 @@
 !
-! Copyright (C) 2001,2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-subroutine restart_from_file
-  !-----------------------------------------------------------------------
-  USE io_global,  ONLY : stdout
-  USE io_files,  ONLY : iunres
-  USE control_flags, ONLY: restart
-  implicit none
-
-  character :: where * 20  ! parameter indicating from where to restart
-  logical :: exst
+!----------------------------------------------------------------------------
+SUBROUTINE restart_from_file
+  !----------------------------------------------------------------------------
   !
-  !     check if restart file is present
+  USE io_global,     ONLY : stdout
+  USE io_files,      ONLY : iunres, tmp_dir
+  USE control_flags, ONLY : restart
+  USE parser,        ONLY : delete_if_present
+  USE mp_global,     ONLY : mpime
   !
-  iunres = 1
-  if (.not.restart) then
-     ! WRITE( stdout, '(/5x,"RECOVER from restart file has been switched off on input")')
-     call seqopn (iunres, 'restart', 'unformatted', exst)
-     ! if (exst) WRITE( stdout,'(/5x,"Existing restart file has been removed")')
-     close (unit = iunres, status = 'delete')
-     return
-  endif
-
-  call seqopn (iunres, 'restart', 'unformatted', restart)
-  if (.not.restart) then
-     WRITE( stdout, '(/5x,"RECOVER from restart file failed: file not found")')
-     close (unit = iunres, status = 'delete')
-     return
-  endif
+  IMPLICIT NONE
   !
-  WRITE( stdout, '(/5x,"read information from restart file")')
-  read (iunres, err = 10, end = 10) where
-  WRITE( stdout, '(5x,"Restarting in ",a)') where
-  if (where.ne.'ELECTRONS'.and.where.ne.'IONS') then
-     WRITE( stdout,*) where, '......?'
-     call errore ('readin', ' wrong recover file ', 1)
-  endif
+  CHARACTER(LEN=20) :: where_restart  
+    ! parameter indicating from where to restart
+  LOGICAL           :: exst
   !
-  !  close the file for later use
   !
-  close (unit = iunres, status = 'keep')
-
-  return
-
-10 call errore ('readin', 'problems in reading recover file', 1)
-end subroutine restart_from_file
+  ! ... check if restart file is present
+  !
+  IF ( mpime == 0 ) THEN
+     !
+     iunres = 1
+     !
+     IF ( .NOT. restart ) THEN
+        !
+        !WRITE( UNIT = stdout, &
+        !     & FMT = '(/5X,"RECOVER from restart file has been", &
+        !     &             " switched off on input")' )
+        !
+        CALL delete_if_present( TRIM( tmp_dir ) // 'restart' )
+        !
+        RETURN
+        !
+     END IF
+     !
+     CALL seqopn( iunres, 'restart', 'UNFORMATTED', restart )
+     !
+     IF ( .NOT. restart ) THEN
+        !
+        WRITE( UNIT = stdout, &
+             & FMT = '(/5X,"RECOVER from restart file failed:", &
+             &             " file not found")')
+        !
+        CLOSE( UNIT = iunres, STATUS = 'DELETE' )
+        !
+        RETURN
+        !
+     END IF
+     !
+     WRITE( UNIT = stdout, FMT = '(/5X,"read information from restart file")' )
+     !
+     READ( iunres, ERR = 10, END = 10 ) where_restart 
+     !
+     WRITE( UNIT = stdout, FMT = '(5X,"Restarting in ",A)' ) where_restart 
+     !
+     IF ( where_restart /= 'ELECTRONS' .AND. where_restart /= 'IONS' ) THEN
+        !
+        WRITE( UNIT = stdout, FMT = * ) where_restart , '......?'
+        !
+        CALL errore( 'restart_from_file', ' wrong recover file ', 1 )
+        !
+     END IF
+     !
+     ! ... close the file for later use
+     !
+     CLOSE( UNIT = iunres, STATUS = 'KEEP' )
+     !
+  END IF
+  !
+  RETURN
+  !
+10 CALL errore( 'restart_from_file', 'problems in reading recover file', 1 )
+  !
+END SUBROUTINE restart_from_file

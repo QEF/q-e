@@ -203,6 +203,7 @@
        max_cg_iter,      &! maximum number of iterations in a CG di
        diis_buff,        &! dimension of the buffer in diis
        diis_ndim,        &! dimension of reduced basis in DIIS
+       history,          &! number of old steps available for potential updating
        order              ! type of potential updating ( see update_pot )
   !
   LOGICAL, PUBLIC :: &

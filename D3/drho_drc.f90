@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "machine.h"
 !
 !-----------------------------------------------------------------------
 subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
@@ -13,18 +14,15 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   !  it according to the variation of the core_charge
   !  It is used by drho_cc. Have a look there for more explanation
   !
-#include "machine.h"
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
   use pwcom
   use phcom
   use d3com
-#ifdef __PARA
   use para
-#endif
+  USE mp,    ONLY : mp_barrier
+
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
+
 
   integer :: iudrho_x
   !input: the unit containing the charge variation
@@ -79,8 +77,7 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   enddo
 #ifdef __PARA
 100 continue
-  call MPI_barrier (MPI_COMM_WORLD, errcode)
-  call errore ('drho_drc', 'at barrier', errcode)
+  call mp_barrier()
 #endif
   deallocate (drhoc)
   deallocate (drhov)

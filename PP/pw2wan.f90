@@ -11,9 +11,9 @@ program wannier
   !
   USE io_global,  ONLY : stdout, ionode
   USE mp_global,  ONLY : mpime
-  USE mp,  ONLY : mp_bcast
+  USE mp,         ONLY : mp_bcast
   use pwcom  
-  use para,       only : kunit
+  use para,       ONLY : kunit
   use io_files
   !
   implicit none
@@ -110,7 +110,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
   use io_base,        only : write_restart_wfc
   use io_global,      only : ionode
   use mp_global,      only : nproc, nproc_pool, mpime
-  use mp_global,      only : my_pool_id, intra_pool_comm, inter_pool_comm
+  use mp_global,      only : my_pool_id, my_image_id, intra_pool_comm
   use mp,             only : mp_sum, mp_max
 
 
@@ -171,7 +171,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
 
   ! find out the global number of G vectors: ngm_g  
   ngm_g = ngm
-  call mp_sum( ngm_g , intra_pool_comm )
+  call mp_sum( ngm_g, intra_pool_comm(my_image_id) )
 
   allocate ( ei_k ( nbnd, nkstot ) )  ! eigenvectors
   allocate ( ei_kw( nbnd, nkstot/nspin ) )  ! eigenvectors
@@ -238,7 +238,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
     itmp( 2, ig_l2g( ig ) ) = ig2( ig )
     itmp( 3, ig_l2g( ig ) ) = ig3( ig )
   end do
-  call mp_sum( itmp , intra_pool_comm )
+  call mp_sum( itmp, intra_pool_comm(my_image_id) )
 
   ! write G space parameters and vectors
   if( ionode ) then

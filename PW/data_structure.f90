@@ -28,7 +28,7 @@ subroutine data_structure( lgamma )
     ncp0, ncp0s, nxx, nxxs, nct, ncts, ncp, ncps
 #endif
   use mp, only: mp_sum
-  use mp_global, only: intra_pool_comm, nproc_pool, me_pool
+  use mp_global, only: intra_pool_comm, nproc_pool, me_pool, my_image_id
   use stick_base
   use fft_scalar, only: good_fft_dimension
   use fft_types, only: fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
@@ -376,8 +376,8 @@ subroutine data_structure( lgamma )
   ngms_l = ngms
   ngm_g  = ngm
   ngms_g = ngms
-  call mp_sum( ngm_g , intra_pool_comm )
-  call mp_sum( ngms_g, intra_pool_comm )
+  call mp_sum( ngm_g , intra_pool_comm(my_image_id) )
+  call mp_sum( ngms_g, intra_pool_comm(my_image_id) )
 
   return
 

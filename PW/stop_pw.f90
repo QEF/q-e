@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,16 +14,13 @@ SUBROUTINE stop_pw( flag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE io_global,         ONLY :  stdout
-  USE control_flags,             ONLY :  order, lneb
-  USE io_files,          ONLY :  prefix, &
-                                 iunwfc, iunoldwfc, iunoldwfc2, iunigk, iunres
+  USE io_global,         ONLY :  stdout, ionode
+  USE control_flags,     ONLY :  lneb
+  USE io_files,          ONLY :  prefix, iunwfc, iunigk, iunres
   USE input_parameters,  ONLY :  deallocate_input_parameters
   USE io_routines,       ONLY :  write_restart
   USE neb_variables,     ONLY :  neb_deallocation
-#ifdef __PARA
   USE mp,                ONLY :  mp_barrier, mp_end
-#endif  
   !
   IMPLICIT NONE
   !
@@ -39,24 +36,24 @@ SUBROUTINE stop_pw( flag )
   ! ... the execution - close and save the file
   !
   CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
-  !
-  IF ( order > 1 ) &
-     CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' ) 
-  !
-  IF ( order > 2 ) &
-     CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' ) 
   !      
-  IF ( flag ) THEN
+  IF ( flag .AND. ionode ) THEN
      !
      ! ... all other files must be reopened and removed
      !
      CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iunres, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
+     CALL seqopn( 4, TRIM( prefix ) // '.bfgs', 'UNFORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix )//'.md', 'FORMATTED', exst )
+     CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     !
+     CALL seqopn( 4, TRIM( prefix ) // '.para', 'FORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     !
+     CALL seqopn( 4, TRIM( prefix ) // '.BLOCK', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
   END IF
@@ -64,18 +61,18 @@ SUBROUTINE stop_pw( flag )
   ! ... iunigk is kept open during the execution - close and remove
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
-  CALL print_clock_pw
+  !
+  CALL print_clock_pw()
   !
   ! ... NEB specific
   !
   IF ( lneb ) CALL write_restart()
   !
-  CALL show_memory ()
+  CALL show_memory()
   !
-#ifdef __PARA
   CALL mp_barrier()
+  !
   CALL mp_end()
-#endif
   !
 #ifdef __T3E
   !
