@@ -38,7 +38,7 @@ SUBROUTINE move_ions()
   USE bfgs_module,   ONLY : lbfgs_ndim, new_bfgs => bfgs, lin_bfgs
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : alat, at, bg
-  USE basis,         ONLY : nat, ityp, tau, atm
+  USE ions_base,     ONLY : nat, ityp, tau, atm
   USE gvect,         ONLY : nr1, nr2, nr3
   USE klist,         ONLY : nelec
   USE symme,         ONLY : s, ftau, nsym, irt
@@ -192,11 +192,11 @@ SUBROUTINE move_ions()
      CALL checkallsym( nsym, s, nat, tau, ityp, &
                        at, bg, nr1, nr2, nr3, irt, ftau )
      !
+     history = MIN( 3, ( history + 1 ) )
+     !
      ! ... find the best coefficients for the extrapolation of the potential
      !
      CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-     !
-     history = MIN( 3, ( history + 1 ) )
      !
      CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
      !
@@ -349,14 +349,30 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
   ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
   !
-  USE constants, ONLY : eps8
-  USE kinds,     ONLY : DP
+  USE constants,     ONLY : eps8
+  USE kinds,         ONLY : DP
+  USE io_global,     ONLY : stdout
+  USE control_flags, ONLY : order, history
   !
   IMPLICIT NONE
   !
   INTEGER       :: nat, na, ipol
   REAL(KIND=DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
   REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
+  !
+  !
+  IF ( MIN( history, order ) < 2 ) THEN
+     !
+     RETURN
+     !
+  ELSE IF ( MIN( history, order ) == 2 ) THEN  
+     !
+     alpha0 = 1.D0
+     beta0  = 0.D0
+     !
+     RETURN
+     !
+  END IF
   !
   ! ... solution of the linear system
   !
@@ -395,12 +411,13 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   det = a11 * a22 - a12 * a21
   !
-  IF ( det < 0.D0 ) THEN
+  IF ( det < - eps8 ) THEN
      !
      alpha0 = 0.D0
      beta0  = 0.D0
      !
-     CALL errore( 'find_alpha_and_beta', ' det < 0', -1 )
+     WRITE( UNIT = stdout, &
+            FMT = '(5X,"WARNING: in find_alpha_and_beta  det = ",F10.6)' ) det
      !
   END IF   
   !

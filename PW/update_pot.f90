@@ -122,8 +122,8 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE cell_base,         ONLY : omega, bg, alat
-  USE basis,         ONLY : nat, tau, ntyp, ityp
+  USE cell_base,     ONLY : omega, bg, alat
+  USE ions_base,     ONLY : nat, tau, nsp, ityp
   USE gvect,         ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
                             eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
   USE lsda_mod,      ONLY : lsda, nspin
@@ -153,8 +153,8 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   work(:) = 0.D0
   !
-  ! ... if order = 1 update the potential subtracting to the charge density
-  ! ... the "old" atomic charge and summing the new one
+  ! ... if rho_order = 1 update the potential subtracting to the charge density
+  ! ...                  the "old" atomic charge and summing the new one
   !
   WRITE( stdout,'(/5X,"NEW-OLD atomic charge density approx. for the potential")' )
   !
@@ -173,7 +173,7 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   IF ( lmovecell ) rho(:,1) = rho(:,1) * omega_old
   !
-  ! ... extrapolate the difference between the atomic charge a
+  ! ... extrapolate the difference between the atomic charge and
   ! ... the self-consistent one
   !
   IF ( rho_order == 1 ) THEN
@@ -229,7 +229,7 @@ SUBROUTINE extrapolate_charge( rho_order )
   !
   IF ( lmovecell ) CALL scale_h()
   !
-  CALL struc_fact( nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, nr1, nr2, nr3, &
                    strf, eigts1, eigts2, eigts3 )
   !
   ! ... add atomic charges in the new positions
@@ -406,9 +406,12 @@ SUBROUTINE extrapolate_wfcs( wfc_order )
         !
         CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
         !
-        ! ... extrapolate the wfc's,
+        ! ... extrapolate the wfc's (note that evcold contains wavefcts 
+        ! ... at (t) and evc contains wavefcts at (t-dt) )
         !
-        evc = 2.D0 * evcold - evc
+        ! evc = 2.D0 * evcold - evc   <=  this was the previous recipe 
+        !
+        evc = evcold + alpha0 * ( evcold - evc )
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
