@@ -201,7 +201,6 @@ sgam_ph.o  \
 s_gemm.o  \
 show_memory.o  \
 smallg_q.o  \
-sph_bes.o  \
 s_psi.o  \
 startup.o  \
 stop_pw.o  \

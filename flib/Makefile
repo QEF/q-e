@@ -4,7 +4,7 @@ include ../make.sys
 all: flib.a ptools.a eispack $(MYLIB)
 
 OBJS = inv3.o itoa.o sort.o simpsn.o \
-       transto.o iceil.o erf.o
+       transto.o iceil.o erf.o sph_bes.o
 
 POBJS = gridsetup.o blockset.o hangup.o reduce.o \
        matmul.o localindex.o localdim.o ownerof.o \
