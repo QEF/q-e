@@ -186,12 +186,38 @@ SUBROUTINE iosys()
   !
   ! ... local variables
   !
-  INTEGER :: unit = 5, i, ia, ios, ierr, ilen, is, image
+  INTEGER             :: unit = 5, &! standard input unit
+                         i, iiarg, nargs, ia, ios, ierr, ilen, is, image
+  INTEGER             :: iargc
+  EXTERNAL               iargc                 
+  CHARACTER (LEN=80)  :: input_file
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
   !
   pseudo_dir = TRIM( pseudo_dir ) // '/pw/pseudo/'
+  !
+  ! ... Input from file ?
+  !
+  nargs = iargc() 
+  !
+  DO iiarg = 1, ( nargs - 1 )
+     !
+     CALL getarg( iiarg, input_file )  
+     IF ( TRIM( input_file ) == '-input' .OR. &
+          TRIM( input_file ) == '-inp'   .OR. &
+          TRIM( input_file ) == '-in' ) THEN
+        !
+        CALL getarg( ( iiarg + 1 ) , input_file )  
+        OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
+               STATUS = 'OLD', IOSTAT = ierr )
+        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
+                   & ' not found' , ierr )
+        !
+     END IF
+     !
+  END DO
+  !
   !
   CALL read_namelists( 'PW' )
   !

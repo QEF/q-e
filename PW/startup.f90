@@ -94,24 +94,20 @@ SUBROUTINE startup( nd_nmbr, code, version )
      ! ... How many pools ?
      !
      npool = 1
-     nargs = IARGC() 
+     nargs = iargc() 
      !
      DO iiarg = 1, ( nargs - 1 )
+        !
         CALL getarg( iiarg, np )  
         IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
-          CALL GETARG( ( iiarg + 1 ), np )  
-          READ(np,*) npool  
+          !
+          CALL getarg( ( iiarg + 1 ), np )  
+          READ( np, * ) npool  
+          !
         END IF
-        IF ( TRIM( np ) == '-input' .OR. TRIM( np ) == '-inp' .OR. &
-             TRIM( np ) == '-in' ) THEN
-           CALL GETARG( ( iiarg + 1 ) , np )  
-           OPEN ( UNIT = 5, FILE = np, FORM = 'formatted', &
-                STATUS = 'old', IOSTAT = ierr)
-           CALL errore( 'startup', 'input file '//TRIM(np)//' not found',&
-                ierr )
-        end if
-
+        !
      END DO
+     !
      npool = MAX( npool, 1 )
      npool = MIN( npool, nproc )
      !
@@ -133,7 +129,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   ! ... set the processor label for files
   !
   IF ( nproc > maxproc ) &
-     call errore( 'startup', ' too many processors', nproc )
+     CALL errore( 'startup', ' too many processors', nproc )
   nd_nmbr = '   '
   IF ( nproc < 10 ) THEN
      WRITE( nd_nmbr(1:1) , '(I1)' ) me
