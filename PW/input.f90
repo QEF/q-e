@@ -25,28 +25,38 @@ SUBROUTINE iosys()
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout
+  !
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
                             lberry_ => lberry
+  !
   USE cell_base,     ONLY : at, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
+  !
   USE ions_base,     ONLY : if_pos, &
                             ntyp_ => nsp
+  !
   USE ions_base,     ONLY : nat_  => nat, ityp, tau, atm  
+  !
   USE basis,         ONLY : atomic_positions, &
                             startingwfc_ => startingwfc, &
                             startingpot_ => startingpot, &
                             startingconfig
+  !
   USE char,          ONLY : title_ => title, &
                             crystal
+  !
   USE cellmd,        ONLY : cmass, ttol, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
                             press_       => press, &
                             calc, lmovecell
+  !
   USE constants,     ONLY : pi, rytoev, uakbar, amconv, bohr_radius_angs
+  !
   USE dynam,         ONLY : dt_ => dt, &
                             temperature, amass, delta_t, nraise
+  !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
                             edir_     => edir, &
@@ -54,8 +64,11 @@ SUBROUTINE iosys()
                             eopreg_   => eopreg, &
                             eamp_     => eamp, &
                             forcefield
+  !
   USE io_files,      ONLY : input_drho, output_drho
+  !
   USE force_mod,     ONLY : lforce, lstres, force
+  !
   USE gvect,         ONLY : dual, &
                             nr1_     => nr1, &
                             nr2_     => nr2, &
@@ -64,29 +77,37 @@ SUBROUTINE iosys()
                             ecfixed_ => ecfixed, &
                             qcutz_   => qcutz, &
                             q2sigma_ => q2sigma
+  !
   USE gsmooth,       ONLY : nr1s_ => nr1s, &
                             nr2s_ => nr2s, &
                             nr3s_ => nr3s
+  !
   USE klist,         ONLY : xk, wk, nks, ngauss,&
                             xqq_     => xqq, &
                             degauss_ => degauss, &
                             nelec_   => nelec, &
                             b_length_ => b_length, &
                             lcart_   => lcart
+  !
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
+  !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
                             niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
+  !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
                             lsda
+  !
   USE io_files,      ONLY : tmp_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             psfile
+  !
   USE relax,         ONLY : epsf, starting_scf_threshold, &
                             restart_bfgs, epse
+  !
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
                             iverbosity, tr2, niter, order, iswitch, &
@@ -99,11 +120,16 @@ SUBROUTINE iosys()
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, &
                             noinv, restart, loldbfgs, lconstrain
+  !
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
+  !
   USE fixed_occ,     ONLY : tfixed_occ
+  !
   USE control_flags, ONLY : twfcollect 
+  !
   USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, lmol_dyn, &
+                             write_save_     => write_save, &
                              reset_vel_      => reset_vel, &
                              CI_scheme_      => CI_scheme, &
                              k_max_          => k_max, & 
@@ -114,6 +140,7 @@ SUBROUTINE iosys()
                              temp_req_       => temp_req, &
                              path_thr_       => path_thr, &
                              nstep_path
+  !
   USE noncollin_module, ONLY : baco_ibm_xlf, &
                                noncolin_  => noncolin, &
                                lambda_    => lambda, &
@@ -122,11 +149,11 @@ SUBROUTINE iosys()
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
-
+  !
   USE spin_orb, ONLY : lspinorb_ => lspinorb
-  
+  !
   USE constraints_module, ONLY : nconstr, constr_tol, constr, target
-  
+  !
   USE bfgs_module,   ONLY : bfgs_xlf_bug, &
                             lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -175,7 +202,7 @@ SUBROUTINE iosys()
                                tempw, tolp, upscale, potential_extrapolation, &
                                CI_scheme, minimization_scheme, reset_vel, &
                                num_of_images, first_last_opt, damp, temp_req, &
-                               k_max, k_min, path_thr, &
+                               k_max, k_min, path_thr, write_save, &
                                trust_radius_max, trust_radius_min, &
                                trust_radius_ini, trust_radius_end, &
                                w_1, w_2, lbfgs_ndim
@@ -809,6 +836,7 @@ SUBROUTINE iosys()
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
   reset_vel_      = reset_vel
+  write_save_     = write_save
   damp_           = damp
   temp_req_       = temp_req
   path_thr_       = path_thr

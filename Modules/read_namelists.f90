@@ -328,6 +328,7 @@ MODULE read_namelists_module
        num_of_images       = 0
        first_last_opt      = .FALSE.
        reset_vel           = .FALSE.
+       write_save          = .FALSE.
        minimization_scheme = 'quick-min'
        damp                = 1.D0
        temp_req            = 0.D0
@@ -699,6 +700,7 @@ MODULE read_namelists_module
        CALL mp_bcast( num_of_images, ionode_id )
        CALL mp_bcast( first_last_opt, ionode_id )
        CALL mp_bcast( reset_vel, ionode_id )
+       CALL mp_bcast( write_save, ionode_id )
        CALL mp_bcast( CI_scheme, ionode_id )
        CALL mp_bcast( minimization_scheme, ionode_id )
        CALL mp_bcast( damp, ionode_id )

@@ -23,8 +23,9 @@ MODULE path_variables
                                   ! will be optimized
        conv_path,                &! .TRUE. if NEB convergence has been
                                   ! achieved
-       reset_vel                  ! .TRUE. if velocities have to be reset at
-                                  ! restart time           
+       reset_vel,                &! .TRUE. if velocities have to be reset at
+                                  ! restart time
+       write_save                 ! .TRUE. if the save file has to be written
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images

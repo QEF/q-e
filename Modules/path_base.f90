@@ -330,33 +330,33 @@ MODULE path_base
              "nstep", TRIM( nstep_path_char )   
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"first_last_opt",T35," = ",L1))' ) first_last_opt
+                FMT = '(5X,"first_last_opt",T35," = ",X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"reset_vel",T35," = ",L1))' ) reset_vel
+                FMT = '(5X,"reset_vel",T35," = ",X,L1))' ) reset_vel
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"ds",T35," = ",F6.4," a.u.")' ) ds
+                FMT = '(5X,"ds",T35," = ",X,F6.4," a.u.")' ) ds
          !
          IF ( lneb ) THEN
             !
             WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"k_max",T35," = ",F6.4," a.u.")' ) k_max
+                   FMT = '(5X,"k_max",T35," = ",X,F6.4," a.u.")' ) k_max
             WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"k_min",T35," = ",F6.4," a.u.")' ) k_min
+                   FMT = '(5X,"k_min",T35," = ",X,F6.4," a.u.")' ) k_min
             !
          END IF
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"path_thr",T35," = ",F6.4," eV / A")' ) path_thr
+                FMT = '(5X,"path_thr",T35," = ",X,F6.4," eV / A")' ) path_thr
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"initial path length",&
-                      & T35," = ",F6.4," bohr")' ) path_length  
+                      & T35," = ",F7.4," bohr")' ) path_length  
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"initial inter-image distance", &
-                      & T35," = ",F6.4," bohr")' ) inter_image_dist
+                      & T35," = ",F7.4," bohr")' ) inter_image_dist
          !
       END IF
       !
@@ -1362,7 +1362,7 @@ MODULE path_base
       !
       USE control_flags,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : istep_path, nstep_path, first_last_opt, &
-                                   grad_pes, suspended_image
+                                   grad_pes, suspended_image, reset_vel
       USE path_variables,   ONLY : grad
       USE path_variables,   ONLY : ft_pos, ft_grad, ft_pos_old, ft_grad_old
       USE path_io_routines, ONLY : write_dat_files, write_output
@@ -1379,9 +1379,10 @@ MODULE path_base
             CALL neb_gradient()
             !
             ! ... the error is computed only when the run is not starting 
-            ! ... from scratch
+            ! ... from scratch or when reset_vel == .FALSE. 
             !
-            IF ( istep_path > 0 ) CALL compute_error()
+            IF ( ( istep_path > 0 ) .AND. &
+                 ( .NOT. reset_vel ) ) CALL compute_error()
             !
          ELSE IF ( lsmd ) THEN
             !

@@ -37,7 +37,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE path_formats,     ONLY : scf_iter_fmt, scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, num_of_images, &
                                dim, suspended_image, istep_path,  &
-                               first_last_opt, frozen
+                               first_last_opt, frozen, write_save
   USE parser,           ONLY : int_to_char
   USE io_global,        ONLY : ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
@@ -136,10 +136,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... self-consistency ( for non-frozen images only, in neb case )
      !
-     IF ( lsmd .OR. lneb .AND. .NOT. frozen(image) ) THEN
+     IF ( lsmd .OR. ( lneb .AND. .NOT. frozen(image) ) ) THEN
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
-                  TRIM( int_to_char( image ) ) // "/"             
+                  TRIM( int_to_char( image ) ) // "/"
         !
         tcpu = get_clock( 'PWSCF' )
         !
@@ -289,6 +289,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            WRITE( UNIT = iunupdate, FMT = * ) tauold
            !
            CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+           !
+           ! ... the save file is written ( if required )
+           !
+           IF ( write_save ) CALL punch()
            !
         END IF
         !

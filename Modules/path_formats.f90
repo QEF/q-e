@@ -41,6 +41,6 @@ MODULE path_formats
                        & "F10.6,3X,'error = ',F8.4,' eV / A')"                    
   !
   CHARACTER (LEN=*), PARAMETER :: &
-    summary_fmt = "(5X,A,T35,' = ',A)"      
+    summary_fmt = "(5X,A,T35,' = ',X,A)"      
   !
 END MODULE path_formats

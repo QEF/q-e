@@ -553,6 +553,10 @@ path_thr       REAL ( default = 0.05D0 eV / Angstrom )
 reset_vel      LOGICAL ( default = .FALSE. )
                used to reset quick-min velocities at restart time
                (sort of clean-up of the history)
+               
+write_save     LOGICAL ( default = .FALSE. )
+               used to write the prefix.save file for each image needed for
+               post-processing
 
 ===============================================================================
 NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-md' )
