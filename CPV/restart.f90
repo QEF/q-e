@@ -94,6 +94,7 @@ CONTAINS
       LOGICAL :: lgauss
       LOGICAL :: ltetra
       LOGICAL :: lgamma
+      LOGICAL :: lda_plus_u
       INTEGER, ALLOCATABLE :: ityp(:)
       INTEGER :: isk, tetra(4)
       REAL(dbl) :: zmesh_, xmin_, dx_
@@ -149,6 +150,7 @@ CONTAINS
       ltetra = .FALSE.
       tupf   = .TRUE.
       lgamma = .TRUE.
+      lda_plus_u = .FALSE.
       tfixed_occ_ = .FALSE.
       tefield_ = .FALSE.
       dipfield_ = .FALSE.
@@ -161,7 +163,7 @@ CONTAINS
         neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
         natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
-        title, crystal, tmp_dir, tupf, lgamma, &
+        title, crystal, tmp_dir, tupf, lgamma, lda_plus_u, &
         tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect )
 
 !     ==--------------------------------------------------------------==
@@ -418,7 +420,7 @@ CONTAINS
       integer :: strlen, ibrav_, kunit_
       character(len=80) :: filename
       LOGICAL :: tscal
-      LOGICAL :: tmill, tigl, lgamma_
+      LOGICAL :: tmill, tigl, lgamma_, lda_plus_u_
       LOGICAL :: teig, tupf_
       INTEGER, ALLOCATABLE :: ityp(:)
       REAL(dbl) :: wfc_scal, wfc_scal_cp90
@@ -471,7 +473,8 @@ CONTAINS
         rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
         alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
         lgauss_, ntetra_, ltetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, &
-        modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, &
+        modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, &
+        lgamma_, lda_plus_u_, &
         tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
 
       if( .not. lgamma_ ) &
