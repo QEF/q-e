@@ -148,7 +148,6 @@ pw_gemm.o \
 pwcom.o \
 q_points.o \
 qvan2.o \
-rbecmod.o \
 rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \

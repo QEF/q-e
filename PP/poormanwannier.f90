@@ -87,8 +87,7 @@ subroutine projection (first_band, last_band)
   use symme, only: nsym, irt 
   use wvfct 
   use uspp, only: nkb, vkb
-  use becmod,   only: becp 
-  use rbecmod,  only: rbecp => becp 
+  use becmod,   only: becp, rbecp
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
                       iunat, nwordatwfc
   use wavefunctions_module, only: evc 
@@ -129,7 +128,7 @@ subroutine projection (first_band, last_band)
   ! 
   allocate(proj (natomwfc, nbnd, nkstot) ) 
   allocate(wfcatom (npwx, natomwfc) ) 
-  ! Allocate the array rbecp=<beta|wfcatom>
+  ! Allocate the array containing <beta|wfcatom>
   if ( gamma_only ) then 
      allocate (rbecp (nkb,natomwfc)) 
   else

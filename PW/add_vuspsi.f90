@@ -67,7 +67,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
      SUBROUTINE add_vuspsi_gamma()
        !-----------------------------------------------------------------------
        !
-       USE rbecmod,    ONLY: becp
+       USE becmod,    ONLY: rbecp
        !
        IMPLICIT NONE
        REAL(KIND=DP), ALLOCATABLE :: ps (:,:)
@@ -97,7 +97,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
                          ikb = ijkb0 + ih
                          !
                          ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                                    deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                              deeq(ih,jh,na,current_spin) *rbecp(jkb,ibnd)
                          !
                       END DO
                       !
@@ -157,7 +157,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
                          ikb = ijkb0 + ih
                          !
                          ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                                    deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
+                              deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
                          !
                       END DO
                       !

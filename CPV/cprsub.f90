@@ -212,8 +212,8 @@
       use gvecs
       use cell_base, only: omega
       use constants, only: pi, fpi
-      use ions_base, only: rcmax, ipp, zv, nsp, na
-
+      use ions_base, only: rcmax,  zv, nsp, na
+      use cvan, only: ipp
       use pseu
       use reciprocal_vectors, only: gstart
       use atom, only: r, rab, mesh
@@ -1240,10 +1240,10 @@
       use io_global, only: stdout
       use gvec
       use gvecw, only: ngw
-      use cvan, only: nhsavb, ish, nvb
+      use cvan, only: nhsavb, ish, nvb, ipp
       use core
       use constants, only: pi, fpi
-      use ions_base, only: ipp, na, nsp
+      use ions_base, only: na, nsp
       use elct
       use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, nhsa => nkb
       use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &

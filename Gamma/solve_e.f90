@@ -14,7 +14,7 @@ subroutine solve_e
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  USE rbecmod, ONLY: becp
+  USE becmod, ONLY: rbecp
   use cgcom
   !
   implicit none
@@ -29,7 +29,7 @@ subroutine solve_e
   !
   call start_clock('solve_e')
   !
-  allocate ( becp( nkb,nbnd) )
+  allocate ( rbecp( nkb,nbnd) )
   allocate ( diag( npwx) )
   allocate ( overlap( nbnd, nbnd) )
   allocate ( work( npwx, nbnd) )
@@ -99,7 +99,7 @@ subroutine solve_e
   deallocate(overlap)
   deallocate(work)
   deallocate(diag)
-  deallocate(becp)
+  deallocate(rbecp)
   !
   call stop_clock('solve_e')
   !

@@ -56,7 +56,7 @@
       use mp, ONLY: mp_end
       use para_mod, ONLY: me, mygroup, nproc
       use io_files, only: psfile, pseudo_dir
-      use ions_base, only: ipp, nsp
+      use ions_base, only: nsp
       use control_flags, only: lneb
 !
       implicit none

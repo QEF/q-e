@@ -35,8 +35,6 @@
       REAL(dbl) :: amass(nsx) = 0.0d0
       REAL(dbl) :: rcmax(nsx) = 0.0d0
 
-      INTEGER :: ipp(nsx) = 0
-
       !     ityp( i ) = the type of i-th atom in stdin
       !     atm( j )  = name of the type of the j-th atomic specie
       !     tau( 1:3, i ) = position of the i-th atom

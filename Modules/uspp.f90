@@ -56,7 +56,7 @@ MODULE uspp
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, vkb, dvan, &
        deeq, qq, nhtoj, beta, becsum, deallocate_uspp
-  PUBLIC :: qq_so, dvan_so!!!, deeq_so, 
+  PUBLIC :: qq_so, dvan_so, deeq_nc 
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
        mx   = 2*lqmax-1      ! maximum magnetic angular momentum of Q
@@ -78,7 +78,7 @@ MODULE uspp
        vkb(:,:)                ! all beta functions in reciprocal space
   REAL(KIND=DP), ALLOCATABLE :: &
        dvan(:,:,:,:),         &! the D functions of the solid
-!!!       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
+       deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
        becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
@@ -86,7 +86,7 @@ MODULE uspp
   COMPLEX(KIND=DP), ALLOCATABLE :: & ! variables for spin-orbit/noncolinear case:
        qq_so(:,:,:,:),           &! Q_{nm}
        dvan_so(:,:,:,:),         &! D_{nm}
-       deeq(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
+       deeq_nc(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
   !
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
@@ -259,7 +259,7 @@ CONTAINS
     IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
     IF( ALLOCATED( qq_so ) ) DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) ) DEALLOCATE( dvan_so )
-!!    IF( ALLOCATED( deeq_so ) ) DEALLOCATE( deeq_so )
+    IF( ALLOCATED( deeq_nc ) ) DEALLOCATE( deeq_nc )
   end subroutine deallocate_uspp
 
 end module uspp

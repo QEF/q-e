@@ -33,10 +33,11 @@ subroutine allocate_nlpot
   USE klist,      ONLY : xk, wk, ngk, nks, nkstot, xqq
   USE lsda_mod,   ONLY : nspin
   USE ldaU,       ONLY : Hubbard_lmax, ns, nsnew
+  USE noncollin_module,  ONLY : noncolin
   USE wvfct,      ONLY : npwx, npw, igk, igk_l2g, g2kin
   USE us,         ONLY : qrad, tab, tab_at, dq, nqx, nqxq
   USE uspp,       ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
-                         nhtoj, becsum, qq_so, dvan_so
+                         nhtoj, becsum, qq_so, dvan_so, deeq_nc
   USE uspp_param, ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm
   USE spin_orb,   ONLY : lspinorb, fcoef
   !
@@ -86,7 +87,11 @@ subroutine allocate_nlpot
   allocate (nhtol(nhm, ntyp))    
   allocate (nhtolm(nhm, ntyp))    
   allocate (nhtoj(nhm, ntyp))    
-  allocate (deeq( nhm, nhm, nat, nspin))    
+  if (noncolin) then
+     allocate (deeq_nc( nhm, nhm, nat, nspin))    
+  else
+     allocate (deeq( nhm, nhm, nat, nspin))    
+  end if
   if (lspinorb) then
     allocate (qq_so(nhm, nhm, 4, ntyp))    
     allocate (dvan_so( nhm, nhm, nspin, ntyp))    

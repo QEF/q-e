@@ -34,8 +34,9 @@ module cvan
   use parameters, only: nsx
   implicit none
   save
-  integer nvb, nhsavb, ish(nsx)
+  integer nvb, nhsavb, ish(nsx), ipp(nsx)
   !     nvb    = number of species with Vanderbilt PPs
+  !     ipp(is)= pseudopotential type - to be removed
   !     ish(is)= used for indexing the nonlocal projectors betae
   !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
   !              where "is" is the species and iv=1,nh(is)

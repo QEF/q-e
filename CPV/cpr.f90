@@ -59,7 +59,8 @@
       use core, only: deallocate_core
       use uspp_param, only: nhm
       use cvan, only: nvb
-      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum
+      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, &
+           deeq
       use uspp, only: deallocate_uspp
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin
       use elct, only: nx, n, ispin, f, nspin, nel, iupdwn, nupdwn
@@ -70,7 +71,7 @@
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
+      use ions_base, only: na, nat, pmass, nas => nax, nsp, rcmax
       use ions_base, only: ind_srt
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
@@ -166,8 +167,6 @@
 !
       real(kind=8), allocatable:: bec(:,:), becdr(:,:,:)
       real(kind=8), allocatable:: bephi(:,:), becp(:,:)
-! TEMP: complex in module uspp
-      real(kind=8), allocatable:: deeq(:,:,:,:)
 !
 !  mass preconditioning
 !
@@ -500,7 +499,7 @@
          call formf(tfirst,eself)
          call calbec (1,nsp,eigr,cm,bec)
          if (tpre) call caldbec(1,nsp,eigr,cm)
-         call rhoofr (nfi,cm,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+         call rhoofr (nfi,cm,irb,eigrb,bec,rhor,rhog,rhos,enl,ekin)
          if(iprsta.gt.0) WRITE( stdout,*) ' out from rhoofr'
 !
 !     put core charge (if present) in rhoc(r)
@@ -526,7 +525,7 @@
 !
 !     newd calculates deeq and a contribution to fion
 !
-         call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+         call newd(rhor,irb,eigrb,fion)
          WRITE( stdout,*) ' out from newd'
          call prefor(eigr,betae)
 !
@@ -538,7 +537,7 @@
          emadt2 = ccc * ema0bg
 
          do i=1,n,2
-            call dforce(bec,deeq,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
+            call dforce(bec,betae,i,cm(1,i,1,1),cm(1,i+1,1,1),c2,c3,rhos)
             call wave_steepest( c0(:,i,1,1), cm(:,i,1,1), emadt2, c2 )
             call wave_steepest( c0(:,i+1,1,1), cm(:,i+1,1,1), emadt2, c3 )
          end do
@@ -552,7 +551,7 @@
 !
 !     nlfq needs deeq calculated in newd
 !
-         if ( tfor .or. tprnfor ) call nlfq(cm,deeq,eigr,bec,becdr,fion)
+         if ( tfor .or. tprnfor ) call nlfq(cm,eigr,bec,becdr,fion)
          WRITE( stdout,*) ' out from nlfq'
 ! 
 !     imposing the orthogonality
@@ -795,7 +794,7 @@
       nfi=nfi+1
       tlast=(nfi.eq.nomore)
 !
-      call rhoofr (nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+      call rhoofr (nfi,c0,irb,eigrb,bec,rhor,rhog,rhos,enl,ekin)
 !
 #ifdef __PARA     
       if(trhow .and. tlast) call write_rho(47,nspin,rhor)
@@ -828,7 +827,7 @@
 !
 !=======================================================================
 !
-      call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+      call newd(rhor,irb,eigrb,fion)
       call prefor(eigr,betae)
 !
 !==== set friction ====
@@ -852,7 +851,7 @@
       emaver = emadt2 * verl3
 
       do i=1,n,2
-         call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+         call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
          if(tsde) then
             CALL wave_steepest( cm(:, i  , 1, 1), c0(:, i  , 1, 1 ), emadt2, c2 )
             CALL wave_steepest( cm(:, i+1, 1, 1), c0(:, i+1, 1, 1 ), emadt2, c3 )
@@ -884,7 +883,7 @@
 !
 !     nlfq needs deeq bec
 !
-      if ( tfor .or. tprnfor ) call nlfq(c0,deeq,eigr,bec,becdr,fion)
+      if ( tfor .or. tprnfor ) call nlfq(c0,eigr,bec,becdr,fion)
 !
       if( tfor .or. thdyn ) then
 !

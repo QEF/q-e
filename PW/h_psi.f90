@@ -64,7 +64,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! 
        ! ... gamma version
        !
-       USE rbecmod,  ONLY : becp
+       USE becmod,  ONLY : rbecp
        !
        IMPLICIT NONE
        !
@@ -99,7 +99,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... Here the product with the non local potential V_NL psi
        !
        IF ( nkb > 0 ) &
-          CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, becp, nkb )
+          CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, rbecp, nkb )
        !
        IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
        !

@@ -58,8 +58,8 @@ SUBROUTINE wfcinit()
        ! 
        ! ... gamma version       
        !
-       USE gvect,   ONLY : gstart
-       USE rbecmod, ONLY : becp
+       USE gvect,  ONLY : gstart
+       USE becmod, ONLY : rbecp
        !
        IMPLICIT NONE
        !
@@ -119,9 +119,9 @@ SUBROUTINE wfcinit()
        !
        ! ... we start a loop on k points
        !
-       ! ... becp contains <beta|psi> - used in h_psi and s_psi
+       ! ... rbecp contains <beta|psi> - used in h_psi and s_psi
        !
-       ALLOCATE( becp( nkb, n_starting_wfc ) )
+       ALLOCATE( rbecp( nkb, n_starting_wfc ) )
        ALLOCATE( wfcatom( npwx, n_starting_wfc ) )
        !
        DO ik = 1, nks
@@ -199,7 +199,7 @@ SUBROUTINE wfcinit()
           !
        END DO
        !
-       DEALLOCATE( becp )
+       DEALLOCATE( rbecp )
        DEALLOCATE( wfcatom )
        !
        IF ( iprint == 1 ) THEN

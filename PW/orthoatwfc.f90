@@ -25,8 +25,7 @@ subroutine orthoatwfc
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk, gamma_only
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : becp
-  USE rbecmod,    ONLY : rbecp => becp 
+  USE becmod,     ONLY : becp, rbecp
 #ifdef __PARA
   USE para
 #endif

@@ -83,7 +83,7 @@ ptools.a : $(POBJS)
 	$(AR) $(ARFLAGS) $@ $?
 
 clean :
-	- /bin/rm -f ptools.a *.o *.mod *.i core* work.pc flib.a \
+	- /bin/rm -f ptools.a *.o *.mod *.i *.F90 core* work.pc flib.a \
 		blas_and_lapack blas lapack lapack_ibm lapack_t3e \
 		lapack_mkl eispack
 

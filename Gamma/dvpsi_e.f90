@@ -19,7 +19,7 @@ subroutine dvpsi_e(kpoint,ipol)
   use pwcom
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
-  USE rbecmod, ONLY: becp
+  USE becmod, ONLY: rbecp
   use cgcom
   !
   implicit none
@@ -38,7 +38,7 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   !   becp contains <beta|psi> - used in H_h
   !
-  allocate ( becp( nkb,nbnd) )
+  allocate ( rbecp( nkb,nbnd) )
   allocate ( gk   ( 3, npwx) )
   allocate ( dvkb ( npwx, nkb) )
   allocate ( dvkb1( npwx, nkb) )
@@ -79,7 +79,7 @@ subroutine dvpsi_e(kpoint,ipol)
      end do
   end do
   !
-  call pw_gemm ('Y', nkb, nbnd, npw,  vkb, npwx, evc, npwx, becp, nkb)
+  call pw_gemm ('Y', nkb, nbnd, npw,  vkb, npwx, evc, npwx,rbecp, nkb)
   call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, dbec, nkb)
   !
   jkb = 0
@@ -90,7 +90,7 @@ subroutine dvpsi_e(kpoint,ipol)
               jkb=jkb+1
               do ibnd = 1,nbnd
                  dbec_(jkb,ibnd) = dbec(jkb,ibnd)*dvan(ih,ih,1,nt)
-                 becp_(jkb,ibnd) = becp(jkb,ibnd)*dvan(ih,ih,1,nt)
+                 becp_(jkb,ibnd) =rbecp(jkb,ibnd)*dvan(ih,ih,1,nt)
               enddo
            end do
         end if
@@ -143,7 +143,7 @@ subroutine dvpsi_e(kpoint,ipol)
   deallocate(gr)
   deallocate(work)
   deallocate(overlap)
-  deallocate(becp)
+  deallocate(rbecp)
   !
   call stop_clock('dvpsi_e')
   !

@@ -135,8 +135,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   use symme, only: nsym, irt 
   use wvfct 
   use uspp, only: nkb, vkb
-  use becmod,   only: becp 
-  use rbecmod,  only: rbecp => becp 
+  use becmod,   only: becp, rbecp
   use io_files, only: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   use wavefunctions_module, only: evc 
 #ifdef __PARA 

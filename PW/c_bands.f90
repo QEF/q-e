@@ -131,14 +131,14 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... a) Davidson algorithm (all-band)
        ! ... c) DIIS algorithm (all-band) 
        !
-       USE rbecmod, ONLY: becp
+       USE becmod, ONLY: rbecp
        !
        IMPLICIT NONE
        !     
        !
-       ! ... becp contains <beta|psi> - used in h_psi and s_psi
+       ! ... rbecp contains <beta|psi> - used in h_psi and s_psi
        !
-       ALLOCATE( becp( nkb, nbnd ) )
+       ALLOCATE( rbecp( nkb, nbnd ) )
        !
        IF ( isolve == 0 ) THEN
           !
@@ -328,7 +328,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... deallocate work space
        !
-       DEALLOCATE( becp )
+       DEALLOCATE( rbecp )
        !
        RETURN
        !

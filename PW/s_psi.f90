@@ -64,7 +64,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! 
        ! ... gamma version
        !
-       USE rbecmod, ONLY : becp
+       USE becmod, ONLY : rbecp
        !
        IMPLICIT NONE  
        !
@@ -99,7 +99,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                          DO ih = 1, nh(nt)
                             ikb = ijkb0 + ih
                             ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                                           qq(ih,jh,nt) * becp(jkb,ibnd)
+                                           qq(ih,jh,nt) * rbecp(jkb,ibnd)
                          END DO
                       END DO
                    END DO

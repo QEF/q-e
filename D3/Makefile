@@ -313,7 +313,6 @@ PWOBJS = \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/qvan2.o \
-../PW/rbecmod.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
 ../PW/restart.o \

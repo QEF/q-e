@@ -15,7 +15,7 @@ subroutine solve_ph
   use io_files,              ONLY : iunres
   use pwcom
   USE wavefunctions_module,  ONLY : evc
-  USE rbecmod,               ONLY : becp
+  USE becmod,                ONLY : rbecp
   use cgcom
 #ifdef __PARA
   use para
@@ -32,7 +32,7 @@ subroutine solve_ph
   !
   call start_clock('solve_ph')
   !
-  allocate ( becp( nkb,nbnd) )
+  allocate ( rbecp( nkb,nbnd) )
   allocate ( diag( npwx) )
   allocate ( overlap( nbnd, nbnd) )
   allocate ( work( npwx, nbnd) )
@@ -127,7 +127,7 @@ subroutine solve_ph
   deallocate(overlap)
   deallocate(work)
   deallocate(diag)
-  deallocate(becp)
+  deallocate(rbecp)
   !
   call stop_clock('solve_ph')
   !

@@ -144,7 +144,7 @@ subroutine newd
      endif
   enddo
 #ifdef __PARA
-  call reduce (nhm * nhm * nat * nspin * 2, deeq)
+  call reduce (nhm * nhm * nat * nspin, deeq)
 #endif
   do na = 1, nat
      nt = ityp (na)
