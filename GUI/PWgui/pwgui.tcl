@@ -60,6 +60,10 @@ namespace eval ::pwscf::edit      {
 }
 namespace eval ::pwscf::menustate {}
 namespace eval ::pwscf::view      {}
+namespace eval ::pwscf::run       {
+    variable run
+    set run(mode) nonblocking ; # possibilities: nonblocking || background
+}
 
 # load settings file ...
 source $env(PWGUI)/pwgui.settings
