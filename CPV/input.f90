@@ -95,12 +95,11 @@ CONTAINS
            nstep, ecutwfc, ecutrho, ampre, ortho_eps, ortho_max, wmass, qcutz, q2sigma, &
            ecfixed, ekincw, fnosep, nat, tstress, disk_io, fnosee, ion_temperature, &
            cell_temperature, cell_dofree, cell_dynamics, cell_damping, electron_temperature, &
-           dt, emass, emass_cutoff, ion_radius, isave, verbosity, tprnfor, &
+           dt, emass, emass_cutoff, ion_radius, verbosity, tprnfor, &
            ekin_conv_thr, etot_conv_thr, max_seconds, na_inp, rd_pos, atom_label, rd_vel, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin, electron_velocities, ion_velocities, &
-           cell_velocities
+           num_of_images, smd_ene_ini, smd_ene_fin
 
       use read_namelists_module, only: read_namelists
       use read_cards_module, only: read_cards

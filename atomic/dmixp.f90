@@ -45,7 +45,7 @@
       real(kind=dp):: t1,t2, d11,d22,d12, aa2,det,dett,rd1m,rd2m, ddot
       real(kind=dp),allocatable:: c(:), d(:), a1(:), a2(:), b1(:), b2(:)
       integer:: i
-      external ddot, dscal, allocate_memory, free_memory, trns
+      external ddot, trns
       save c, d, a1, a2, b1, b2
 
 

@@ -1,4 +1,5 @@
-23 Sep 2004 "make tar" was not saving atomic_doc (PG)
+23 Sep 2004 "make tar" was not saving atomic_doc
+            Misc. Alpha compilation errors and warning (PG)
 
 22 Sep 2004 chdens: fix/modifications in dipole moment calculation
             and makov-payne correction (PC)

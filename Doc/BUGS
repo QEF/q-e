@@ -1,4 +1,8 @@
 
+  *  various Alpha compilation problems
+
+  *  calculation of Makov-Payne correction not perfect
+
 Fixed in version 2.1:
 
   *  various T3E compilation problems

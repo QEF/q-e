@@ -3538,7 +3538,7 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      INTEGER :: idum
+      INTEGER :: idum = 0
       CHARACTER(LEN=20) :: section_name = 'tetra'
       LOGICAL :: twrite = .FALSE.
 !

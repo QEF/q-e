@@ -18,12 +18,12 @@ subroutine write_cubefile (alat, at, nat, tau, atm, ityp,   &
   USE kinds,  only : DP
 
   implicit none
-  integer          :: nat, ityp (nat), ounit
+  integer          :: nat, ityp (nat), ounit, nrx1, nrx2, nrx3
   character(len=3) :: atm(*)
   real(kind=DP)    :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3)
 
   ! --
-  integer          :: i, nt, i1, i2, i3, nrx1, nrx2, nrx3, at_num
+  integer          :: i, nt, i1, i2, i3, at_num
   integer, external:: atomic_number
   real(kind=DP)    :: at_chrg
 
