@@ -88,6 +88,7 @@
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
       use psfiles, only: psfile, pseudo_dir
+      use input_cp, only: iosys2
 !
       implicit none
 !
@@ -191,8 +192,10 @@
       real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
 !
       integer ibrav, k, ii, l, m
-      real(kind=8) ekinh, alfar, temphc, alfap, twmass, frich, tolp,    &
+      real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
      &     factp, temp1, temp2, temph, greash, qnh, randy, amprp(nsx) 
+
+      logical :: twmass
 !
 !     program starts here
 !

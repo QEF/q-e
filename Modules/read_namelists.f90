@@ -6,76 +6,97 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni
-!  ----------------------------------------------
-!  BEGIN manual
+   MODULE read_namelists_module
 
-      MODULE read_namelists_module
-
-!  this module handles the reading of input data
-!  ----------------------------------------------
-!  list of routines in this module:
-!  SUBROUTINE iosys
-!  ----------------------------------------------
-!
-!  END manual
-! ----------------------------------------------------------------------
+!  this module handles the reading of input namelists
+!  written by: Carlo Cavazzoni
+!  --------------------------------------------------
 
         USE kinds
 
         USE parameters
         USE input_parameters
 
-        USE constants, ONLY: factem, kb_au, au_kb, K_BOLTZMAN_AU, angstrom_au, UMA_AU, pi
+        USE constants, ONLY: factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
+              uma_au, pi
 
         IMPLICIT NONE
         SAVE
+
+        PRIVATE
+
+        PUBLIC :: read_namelists
 
 !  end of module-scope declarations
 !  ----------------------------------------------
 
       CONTAINS
 
-!  subroutines
-!  ----------------------------------------------
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist CONTROL
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE control_defaults( prog )
-! ...   Variables initialization for CONTROL
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
-        title = 'MD Simulation' 
-        calculation = 'cp' 
-        ! ( 'scf' | 'nscf' | 'phonon' | 'relax' | 'md' | 'cp' | 'vc-relax' | 'vc-md' | 'vc-cp' )
+        IF( prog == 'PW' ) THEN
+          title = ' ' 
+          calculation = 'scf' 
+        ELSE
+          title = 'MD Simulation' 
+          calculation = 'cp' 
+        END IF
         verbosity = 'default'
-        restart_mode = 'restart' 
-        nstep  = 10
-        iprint = 10 
+        IF( prog == 'PW' ) restart_mode = 'from_scratch' 
+        IF( prog == 'CP' ) restart_mode = 'restart' 
+        IF( prog == 'FP' ) restart_mode = 'restart' 
+        nstep  = 50
+        IF( prog == 'PW' ) iprint = 100000
+        IF( prog == 'CP' ) iprint = 10
+        IF( prog == 'FP' ) iprint = 10
         isave  = 100
         tstress = .FALSE.
         tprnfor = .FALSE.
-        dt    = 1.0d0
+        dt  = 1.0d0
         ndr = 50
         ndw = 50
         outdir = './'      ! use the path specified as Outdir and the filename prefix to store the output
-        prefix = 'cp'  ! use the path specified as Outdir and the filename prefix to store the output
-        pseudo_dir = './'  ! directory containing the pseudopotentials
-        max_seconds  = 1.d+6
+        IF( prog == 'PW' ) prefix = 'pwscf'  
+        IF( prog == 'CP' ) prefix = 'cp'  
+        IF( prog == 'FP' ) prefix = 'cp'  
+        IF( prog /= 'PW' ) pseudo_dir = './'  ! directory containing the pseudopotentials
+        max_seconds   = 1.d+6
         ekin_conv_thr = 1.d-6
-        etot_conv_thr = 1.d-5
-        forc_conv_thr = 1.d-4
+        etot_conv_thr = 1.d-4
+        forc_conv_thr = 1.d-3
         disk_io = 'default'
-        electron_maxstep = 100
+        tefield = .FALSE.
+        dipfield = .FALSE.
+        lberry   = .FALSE.
+        gdir     = 0
+        nppstr   = 0
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist SYSTEM
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE system_defaults( prog )
-! ...   Variables initialization for SYSTEM
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         ibrav  = -1
         celldm = (/ 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0 /)
+        a = 0.0d0 
+        b = 0.0d0
+        c = 0.0d0
+        cosab = 0.0d0
+        cosac = 0.0d0
+        cosbc = 0.0d0
         nat    = 0
         ntyp   = 0
         nbnd   = 0
@@ -92,26 +113,38 @@
         nr2b = 0
         nr3b = 0
         occupations = 'fixed'
+        smearing = 'gaussan'
         degauss = 0.d0
         ngauss  = 0
         nelup = 0
         neldw = 0
         nspin = 1
-        nosym = .TRUE.
+        IF( prog == 'PW' ) nosym = .FALSE.
+        IF( prog == 'CP' ) nosym = .TRUE.
+        IF( prog == 'FP' ) nosym = .TRUE.
         ecfixed = 0.d0
         qcutz   = 0.d0
         q2sigma = 0.01d0
         xc_type = 'PZ'
-        nosym = .FALSE.
         starting_magnetization = 0.0d0
         lda_plus_U = .FALSE.
         Hubbard_U = 0.0d0
         Hubbard_alpha = 0.0d0
+        edir = 1
+        emaxpos = 0.5d0
+        eopreg = 0.1d0
+        eamp = 1.0d-3
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist ELECTRONS
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE electrons_defaults( prog )
-! ...   Variables initialization for ELECTRONS
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         emass = 400.d0
         emass_cutoff = 2.5d0
@@ -125,13 +158,18 @@
         electron_temperature = 'not_controlled' ! ( 'nose' | 'not_controlled' | 'rescaling')
         ekincw = 0.001d0
         fnosee = 1.0d0
-        startingwfc = 'random'
         ampre  = 0.0d0
         grease = 1.0d0
         IF( prog == 'FP' ) grease = 0.0d0
         twall  = .FALSE.
-        startingpot = ' '
-        conv_thr = 0.00001
+        IF( prog == 'PW' ) THEN
+          startingwfc = 'atomic'
+          startingpot = 'atomic'
+        ELSE
+          startingwfc = 'random'
+          startingpot = ' '
+        END IF
+        conv_thr = 1.d-6
         empty_states_nbnd = 0
         empty_states_maxstep = 100
         empty_states_delt = 0.0d0
@@ -167,13 +205,22 @@
         IF( prog == 'FP' ) diago_david_ndim = 0
         diago_diis_buff = 200
         IF( prog == 'FP' ) diago_diis_buff = 0
-        diago_diis_start = 0
+        diago_diis_ndim = 3
+        IF( prog == 'FP' ) diago_diis_ndim = 0
+        diago_diis_start = 2
+        IF( prog == 'FP' ) diago_diis_start = 2
         diago_diis_keep = .FALSE.
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist IONS
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE ions_defaults( prog )
-! ...   Variables initialization for IONS
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         ion_dynamics = 'none'  
         ! ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' )
@@ -193,12 +240,19 @@
         ion_nstepe = 1
         ion_maxstep = 100
         upscale = 0
+        IF( prog == 'PW' ) upscale = 10
         potential_extrapolation = 'default'
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist CELL
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE cell_defaults( prog )
-! ...   Variables initialization for CELL
+
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         cell_parameters = 'default' 
         cell_dynamics = 'none'      ! ( 'sd' | 'pr' | 'none' | 'w' | 'damp-pr' | 'damp-w' )
@@ -218,19 +272,28 @@
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Variables initialization for Namelist PHONON
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE phonon_defaults( prog )
-! ...   Variables initialization for PHONON
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         modenum = 0
         xqq = 0.0d0
         RETURN
       END SUBROUTINE
  
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist CONTROL
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE control_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
-! ...   CONTROL Variables Broadcast
         CALL mp_bcast( title, ionode_id )
         CALL mp_bcast( calculation, ionode_id )
         CALL mp_bcast( verbosity, ionode_id )
@@ -251,15 +314,31 @@
         CALL mp_bcast( forc_conv_thr, ionode_id )
         CALL mp_bcast( pseudo_dir, ionode_id )
         CALL mp_bcast( disk_io, ionode_id )
+        CALL mp_bcast( tefield, ionode_id )
+        CALL mp_bcast( dipfield, ionode_id )
+        CALL mp_bcast( lberry, ionode_id )
+        CALL mp_bcast( gdir, ionode_id )
+        CALL mp_bcast( nppstr, ionode_id )
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist SYSTEM
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE system_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
-! ...   SYSTEM Variables Broadcast
         CALL mp_bcast( ibrav, ionode_id  )
         CALL mp_bcast( celldm, ionode_id  )
+        CALL mp_bcast( a, ionode_id )
+        CALL mp_bcast( b, ionode_id )
+        CALL mp_bcast( c, ionode_id )
+        CALL mp_bcast( cosab, ionode_id )
+        CALL mp_bcast( cosac, ionode_id )
+        CALL mp_bcast( cosbc, ionode_id )
         CALL mp_bcast( nat, ionode_id  )
         CALL mp_bcast( ntyp, ionode_id  )
         CALL mp_bcast( nbnd, ionode_id  )
@@ -276,6 +355,7 @@
         CALL mp_bcast( nr2b, ionode_id  )        ! not used in fpmd
         CALL mp_bcast( nr3b, ionode_id  )        ! not used in fpmd
         CALL mp_bcast( occupations, ionode_id  )        ! not used in fpmd
+        CALL mp_bcast( smearing, ionode_id  )        ! not used in fpmd
         CALL mp_bcast( degauss, ionode_id  )        ! not used in fpmd
         CALL mp_bcast( ngauss, ionode_id )        ! not used in fpmd
         CALL mp_bcast( nelup, ionode_id )
@@ -291,13 +371,22 @@
         CALL mp_bcast( lda_plus_U, ionode_id ) 
         CALL mp_bcast( Hubbard_U, ionode_id ) 
         CALL mp_bcast( Hubbard_alpha, ionode_id ) 
+        CALL mp_bcast( edir, ionode_id )
+        CALL mp_bcast( emaxpos, ionode_id )
+        CALL mp_bcast( eopreg, ionode_id )
+        CALL mp_bcast( eamp, ionode_id )
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist ELECTRONS
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE electrons_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
-! ...   ELECTRONS Variables Broadcast
         CALL mp_bcast( emass, ionode_id )
         CALL mp_bcast( emass_cutoff, ionode_id )
         CALL mp_bcast( orthogonalization, ionode_id )
@@ -346,15 +435,21 @@
         CALL mp_bcast( diago_cg_maxiter, ionode_id )
         CALL mp_bcast( diago_david_ndim, ionode_id )
         CALL mp_bcast( diago_diis_buff, ionode_id )
+        CALL mp_bcast( diago_diis_ndim, ionode_id )
         CALL mp_bcast( diago_diis_start, ionode_id )
         CALL mp_bcast( diago_diis_keep, ionode_id )
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist IONS
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE ions_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
-! ...   IONS Variables Broadcast
         CALL mp_bcast( ion_dynamics, ionode_id )
         CALL mp_bcast( ion_radius, ionode_id )
         CALL mp_bcast( ion_damping, ionode_id )
@@ -374,10 +469,15 @@
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist CELL
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE cell_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
-! ...   CELL Variables Broadcast
         CALL mp_bcast( cell_parameters, ionode_id )
         CALL mp_bcast( cell_dynamics, ionode_id )
         CALL mp_bcast( cell_velocities, ionode_id )
@@ -393,6 +493,12 @@
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Broadcast variables values for Namelist PHONON
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE phonon_bcast()
         USE io_global, ONLY: ionode_id
         USE mp, ONLY: mp_bcast
@@ -400,6 +506,12 @@
         CALL mp_bcast( xqq, ionode_id )
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist CONTROL
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE control_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
@@ -442,35 +554,51 @@
           IF( disk_io /= 'default' ) &
             CALL errore( sub_name,' disk_io not implemented yet ',-1)
         END IF
-        IF( calculation /= 'cp' ) THEN
-          ! msg = ' could not execute '//TRIM(calculation)//' calculation'
-          ! CALL errore( sub_name, TRIM(msg), -1)
-        END IF
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist SYSTEM
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE system_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         CHARACTER(LEN=80) :: msg
         CHARACTER(LEN=20) :: sub_name = ' system_checkin '
-        IF( ibrav < -1 .OR. ibrav > 14 ) &
+
+        IF( ibrav < 0 .OR. ibrav > 14 ) &
           CALL errore( sub_name ,' ibrav out of range ', MAX( 1, ibrav) )
-        IF( celldm(1) == 0.0d0 ) &
-          CALL errore( sub_name ,' celldm invalid values ', 1)
-        IF( nat < 1 .OR. nat > natx ) &
-          CALL errore( sub_name ,' nat out of range ', MAX( nat, 1) )
+
+        IF( ( ibrav /= 0 ) .AND. ( celldm(1) == 0.d0 ) .AND. ( a == 0.d0 ) ) &
+           CALL errore(' iosys ',' invalid lattice parameters ( celldm or a )', 1 )
+
+        IF( nat < 1 ) &
+          CALL errore( sub_name ,' nat less than one ', MAX( nat, 1) )
+        IF( nat > natx ) &
+          CALL errore( sub_name ,' nat too large, increase NATX ', MAX( nat, 1) )
+
+        IF( ntyp < 1 ) &
+          CALL errore( sub_name ,' ntyp less than one ', MAX( ntyp, 1) )
         IF( ntyp < 1 .OR. ntyp > nsx ) &
-          CALL errore( sub_name ,' ntyp out of range ', MAX( ntyp, 1) )
-        IF( nbnd < 1 .OR. nbnd > nbndxx ) &
-          CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
-        IF( nelec < 1 .OR. nelec > 2*nbnd ) &
-          CALL errore( sub_name ,' nelec out of range ', MAX(nelec, 1) )
+          CALL errore( sub_name ,' ntyp too large, increase NSX ', MAX( ntyp, 1) )
+
+        IF( prog /= 'PW' ) THEN
+          IF( nbnd < 1 .OR. nbnd > nbndxx ) &
+            CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
+          IF( nelec < 1 .OR. nelec > 2*nbnd ) &
+            CALL errore( sub_name ,' nelec out of range ', MAX(nelec, 1) )
+        END IF
+
         IF( nspin < 1 .OR. nspin > nspinx ) &
           CALL errore( sub_name ,' nelec out of range ', MAX(nspin, 1 ) )
+
         IF( ecutwfc <= 0.0d0 ) &
-          CALL errore( sub_name ,' ecutwfc out of range ',-1)
+          CALL errore( sub_name ,' ecutwfc out of range ',1)
         IF( ecutrho < 0.0d0 ) &
-          CALL errore( sub_name ,' ecutrho out of range ',-1)
+          CALL errore( sub_name ,' ecutrho out of range ',1)
+
         IF( prog == 'FP' ) THEN
           IF( nr1 /= 0 ) &
             CALL errore( sub_name ,' nr1 is not used in FPMD ',-1)
@@ -519,6 +647,12 @@
         END IF
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist ELECTRONS
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE electrons_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
@@ -574,6 +708,8 @@
             CALL errore( sub_name, ' diago_david_ndim not used in FPMD ',-1)
           IF( diago_diis_buff /= 0 ) &
             CALL errore( sub_name, ' diago_diis_buff not used in FPMD ',-1)
+          IF( diago_diis_ndim /= 0 ) &
+            CALL errore( sub_name, ' diago_diis_buff not used in FPMD ',-1)
           IF( diago_diis_start /= 0 ) &
             CALL errore( sub_name, ' diago_diis_start not used in FPMD ',-1)
           IF( diago_diis_keep ) &
@@ -585,6 +721,12 @@
         END IF
         RETURN
       END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist IONS
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE ions_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
@@ -616,6 +758,12 @@
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist CELL
+!
+!=----------------------------------------------------------------------------=!
+
       SUBROUTINE cell_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         CHARACTER(LEN=80) :: msg
@@ -644,13 +792,22 @@
         RETURN
       END SUBROUTINE
 
-
+!=----------------------------------------------------------------------------=!
+!
+!  Check input values for Namelist PHONON
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE phonon_checkin( prog )
         CHARACTER(LEN=2) :: prog  !  specify the calling program
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Set values according to the "calculation" variable
+!
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE fixval( prog )
 
@@ -659,65 +816,78 @@
         CHARACTER(LEN=80) :: msg
         CHARACTER(LEN=20) :: sub_name = ' fixval '
 
-        IF( prog == 'FP' ) THEN
-          IF( electron_dynamics /= 'none' .OR. ion_dynamics /= 'none' .OR. cell_dynamics /= 'none' ) THEN
-            WRITE(6,*)
-            WRITE(6,fmt="(3X,'Dynamics parameters from input, ', /, 3X, &
-           &  'one or more of electron_dynamics, ion_dynamics OR cell_dynamics ', /, 3X, &
-           &  'parameters specified, calculation parameter ''',A,''' is ignored')") TRIM(calculation)
-            RETURN
-          END IF
-        END IF
+        IF( prog == 'PW' ) startingpot = 'atomic'
 
         SELECT CASE ( TRIM(calculation) )
           CASE ('scf')
-            IF( prog == 'FP' ) electron_dynamics = 'sd'
-            IF( prog == 'CP' ) electron_dynamics = 'damp'
+            IF( prog == 'FP' ) THEN
+              electron_dynamics = 'sd'
+              ion_dynamics = 'none'
+              cell_dynamics = 'none'
+            END IF
+            IF( prog == 'CP' ) THEN
+              electron_dynamics = 'damp'
+              ion_dynamics = 'none'
+              cell_dynamics = 'none'
+            END IF
           CASE ('nscf')
             IF( prog == 'FP' ) CALL errore( sub_name,' calculation '//calculation//' not implemented ',1)
             IF( prog == 'CP' ) occupations = 'bogus'
             IF( prog == 'CP' ) electron_dynamics = 'damp'
+            IF( prog == 'PW' ) startingpot = 'file'
           CASE ('phonon')
             IF( prog == 'FP' ) CALL errore( sub_name,' calculation '//calculation//' not implemented ',1)
+            IF( prog == 'CP' ) CALL errore( sub_name,' calculation '//calculation//' not implemented ',1)
+            IF( prog == 'PW' ) startingpot = 'file'
           CASE ('relax')
-            IF( prog == 'FP' ) electron_dynamics = 'sd'
-            IF( prog == 'CP' ) electron_dynamics = 'damp'
-            IF( prog == 'FP' ) ion_dynamics = 'damp'
-            IF( prog == 'CP' ) ion_dynamics = 'damp'
-          CASE ('md')
-            IF( prog == 'FP' ) electron_dynamics = 'verlet'
-            IF( prog == 'FP' ) ion_dynamics = 'verlet'
-          CASE ('cp')
-            IF( prog == 'FP' ) electron_dynamics = 'verlet'
-            IF( prog == 'FP' ) ion_dynamics = 'verlet'
-            IF( prog == 'CP' ) electron_dynamics = 'verlet'
-            IF( prog == 'CP' ) ion_dynamics = 'verlet'
+            IF( prog == 'FP' ) THEN
+              electron_dynamics = 'sd'
+              ion_dynamics = 'damp'
+            ELSE IF( prog == 'CP' ) THEN
+              electron_dynamics = 'damp'
+              ion_dynamics = 'damp'
+            ELSE IF( prog == 'PW' ) THEN
+              ion_dynamics = 'bfgs'
+            END IF
+          CASE ( 'md', 'cp' )
+            IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+              electron_dynamics = 'verlet'
+              ion_dynamics = 'verlet'
+            ELSE IF( prog == 'PW' ) THEN
+              ion_dynamics = 'verlet'
+            END IF
           CASE ('vc-relax')
-            IF( prog == 'FP' ) electron_dynamics = 'sd'
-            IF( prog == 'FP' ) ion_dynamics = 'damp'
-            IF( prog == 'FP' ) cell_dynamics = 'pr'
-            IF( prog == 'CP' ) electron_dynamics = 'damp'
-            IF( prog == 'CP' ) ion_dynamics = 'damp'
-            IF( prog == 'CP' ) cell_dynamics = 'damp-pr'
-          CASE ('vc-md')
-            IF( prog == 'FP' ) electron_dynamics = 'verlet'
-            IF( prog == 'FP' ) ion_dynamics = 'verlet'
-            IF( prog == 'FP' ) cell_dynamics = 'pr'
-          CASE ('vc-cp')
-            IF( prog == 'FP' ) electron_dynamics = 'verlet'
-            IF( prog == 'FP' ) ion_dynamics = 'verlet'
-            IF( prog == 'FP' ) cell_dynamics = 'pr'
-            IF( prog == 'CP' ) electron_dynamics = 'verlet'
-            IF( prog == 'CP' ) ion_dynamics = 'verlet'
-            IF( prog == 'CP' ) cell_dynamics = 'pr'
+            IF( prog == 'FP' ) THEN
+              electron_dynamics = 'sd'
+              ion_dynamics = 'damp'
+              cell_dynamics = 'pr'
+            ELSE IF( prog == 'CP' ) THEN
+              electron_dynamics = 'damp'
+              ion_dynamics = 'damp'
+              cell_dynamics = 'damp-pr'
+            ELSE IF( prog == 'PW' ) THEN
+              ion_dynamics = 'damp'
+            END IF
+          CASE ( 'vc-md', 'vc-cp' )
+            IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+              electron_dynamics = 'verlet'
+              ion_dynamics = 'verlet'
+              cell_dynamics = 'pr'
+            ELSE IF( prog == 'PW' ) THEN
+              ion_dynamics = 'beeman'
+            END IF
           CASE DEFAULT
             CALL errore( sub_name,' calculation '//calculation//' not implemented ',1)
         END SELECT
         RETURN
       END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!  Namelist parsing main routine
+!
+!=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
       SUBROUTINE read_namelists( prog )
 
 !  this routine reads data from standard input and puts them into
@@ -746,7 +916,11 @@
 ! ...   end of declarations
 !  ----------------------------------------------
 
+        IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'FP' ) &
+          CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
+
 ! ...   Here set default values for namelists
+
         CALL control_defaults( prog )
         CALL system_defaults( prog )
         CALL electrons_defaults( prog )
@@ -755,12 +929,13 @@
         CALL phonon_defaults( prog )
 !
 ! ...   Here start reading standard input file
+        ios = 0
         IF( ionode ) THEN
           READ (5, control, iostat = ios ) 
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist control ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist control ', ABS(ios) )
         END IF
 
         CALL control_bcast( )
@@ -769,56 +944,65 @@
         CALL fixval( prog )
 
 
+        ios = 0
         IF( ionode ) THEN
           READ (5, system, iostat = ios ) 
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist system ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist system ', ABS(ios) )
         END IF
 
         CALL system_bcast( )
         CALL system_checkin( prog )
 
 
+        ios = 0
         IF( ionode ) THEN
           READ (5, electrons, iostat = ios ) 
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist electrons ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist electrons ', ABS(ios) )
         END IF
 
         CALL electrons_bcast( )
         CALL electrons_checkin( prog )
 
 
+        ios = 0
         IF( ionode ) THEN
-          READ (5, ions, iostat = ios ) 
+          IF( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'   .or.&
+              TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md'.or.&
+              TRIM(calculation) == 'cp' .or. TRIM(calculation) == 'vc-cp' ) THEN
+            READ (5, ions, iostat = ios ) 
+          END IF
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist ions ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist ions ', ABS(ios) )
         END IF
 
         CALL ions_bcast( )
         CALL ions_checkin( prog )
 
-
+        ios = 0
         IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'vc-relax' .OR. TRIM( calculation ) == 'vc-cp' ) THEN
+          IF( TRIM( calculation ) == 'vc-relax' .OR. TRIM( calculation ) == 'vc-cp' .OR. &
+              TRIM(calculation) == 'vc-md' .OR. TRIM( calculation ) == 'vc-md' ) THEN
             READ (5, cell, iostat = ios ) 
           END IF
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist cell ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist cell ', ABS(ios) )
         END IF
 
         CALL cell_bcast()
         CALL cell_checkin( prog )
 
 
+        ios = 0
         IF( ionode ) THEN
           IF( TRIM( calculation ) == 'phonon' ) THEN
             READ (5, phonon, iostat = ios )
@@ -826,18 +1010,14 @@
         END IF
         CALL mp_bcast( ios, ionode_id )
         IF( ios /= 0 ) THEN
-          CALL errore( ' code_input ', ' reading namelist cell ', ABS(ios) )
+          CALL errore( ' read_namelists ', ' reading namelist cell ', ABS(ios) )
         END IF
 
         CALL phonon_bcast()
         CALL phonon_checkin( prog )
 
-
         RETURN
       END SUBROUTINE read_namelists
 
-! ----------------------------------------------------------------
-!  END manual
-! ----------------------------------------------------------------
 
-END MODULE read_namelists_module
+   END MODULE read_namelists_module

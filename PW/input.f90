@@ -12,102 +12,129 @@ subroutine iosys
   !-----------------------------------------------------------------------
   !   this subroutine reads input data from standard input (unit 5)
   !     ------------------------------------------------------------------
-  use bp
-  use brilz, only: celldm, at, alat, omega, ibrav
-  use basis, only: nat, ntyp, ityp, tau, atomic_positions, atm, &
-       startingwfc, startingpot, startingconfig
-  use char, only: title, crystal
-  use cellmd
-  use constants, only: pi, rytoev, uakbar, amconv, bohr_radius_angs
-  use dynam
-  use extfield, only : tefield, dipfield, edir, emaxpos, eopreg, eamp, &
-       forcefield
-  use filnam, only : input_drho, output_drho
-  use force_mod, only: lforce, lstres, force
-  use gvect, only: nr1,nr2,nr3,  dual, ecutwfc, ecfixed, qcutz, q2sigma
-  use gsmooth, only : nr1s,nr2s,nr3s
-  use klist, only: xk, wk, nks, xqq, ngauss, degauss, nelec
-  use ktetra, only : nk1, nk2, nk3, k1, k2, k3, ltetra
-  use ldaU, only: Hubbard_U, Hubbard_alpha, niter_with_fixed_ns, lda_plus_u
-  use lsda_mod, only: nspin, starting_magnetization, lsda
-  use io, only : tmp_dir, prefix, pseudo_dir, pseudop
-  use relax
-  use varie
-  use wvfct, only: nbnd
-#ifdef __PARA
-  use para, only: me
-  use mp
-#endif
+
   !
-  implicit none
-  !
-  !
-  ! local variables
-  !
-  integer :: unit = 5, ionode_id = 0, i, ia, ios, ierr, ilen, is
+  !    access the modules renaming the variables that have the same name 
+  !    as the input parameters, this is required in order to use a conde
+  !    independent input parser
+  ! 
+
+  use bp, only: &
+     nppstr_ => nppstr, &
+     gdir_   => gdir, &
+     lberry_ => lberry
+  use brilz, only: &
+     at, alat, omega, &
+     celldm_ => celldm, &
+     ibrav_  => ibrav
+  use basis, only: &
+     nat_  => nat, &
+     ntyp_ => ntyp, &
+     ityp, tau, atomic_positions, atm, &
+     startingwfc_ => startingwfc, &
+     startingpot_ => startingpot, &
+     startingconfig
+  use char, only: &
+     title_ => title, &
+     crystal
+  use cellmd, only: &
+     cmass, ttol, omega_old, at_old, ntcheck, &
+     cell_factor_ => cell_factor , &
+     press_ => press, &
+     calc, lmovecell
+  use constants, only: &
+     pi, rytoev, uakbar, amconv, bohr_radius_angs
+  use dynam, only: &
+     dt_ => dt, &
+     temperature, amass, delta_t, nraise
+  use extfield, only : &
+     tefield_ => tefield, &
+     dipfield_ => dipfield, &
+     edir_ => edir, &
+     emaxpos_ => emaxpos, &
+     eopreg_ => eopreg, &
+     eamp_ => eamp, &
+     forcefield
+  use filnam, only : &
+     input_drho, output_drho
+  use force_mod, only: &
+     lforce, lstres, force
+  use gvect, only: &
+     dual, &
+     nr1_ => nr1, &
+     nr2_ => nr2, &
+     nr3_ => nr3,  &
+     ecutwfc_ => ecutwfc, &
+     ecfixed_ => ecfixed, &
+     qcutz_ => qcutz, &
+     q2sigma_ => q2sigma
+  use gsmooth, only : &
+     nr1s_ => nr1s, &
+     nr2s_ => nr2s, &
+     nr3s_ => nr3s
+  use klist, only: &
+     xk, wk, nks, ngauss, &
+     xqq_ => xqq, &
+     degauss_ => degauss, &
+     nelec_ => nelec
+  use ktetra, only : &
+     nk1, nk2, nk3, k1, k2, k3, ltetra
+  use ldaU, only: &
+     Hubbard_U_ => hubbard_u, &
+     Hubbard_alpha_ => hubbard_alpha, &
+     niter_with_fixed_ns, &
+     lda_plus_u_ => lda_plus_u
+  use lsda_mod, only: &
+     nspin_ => nspin, &
+     starting_magnetization_ => starting_magnetization, &
+     lsda
+  use io, only : &
+     tmp_dir, &
+     prefix_ => prefix, &
+     pseudo_dir_ => pseudo_dir, &
+     pseudop
+  use relax, only: &
+     epsf, starting_scf_threshold, restart_bfgs, epse
+  use varie, only: &
+     diis_start_cg, diis_ndim, diis_wfc_keep, isolve, max_cg_iter, &
+     diis_buff, david, imix, nmix, iverbosity, tr2, niter, order, iswitch, &
+     ntypx, &
+     upscale_ => upscale, &
+     mixing_beta_ => mixing_beta, &
+     nstep_ => nstep, &
+     iprint_ => iprint, &
+     nosym_ => nosym, &
+     modenum_ => modenum, &
+     reduce_io, ethr, lscf, noinv, time_max, restart
+  use wvfct, only: &
+     nbnd_ => nbnd
+
   !
   ! CONTROL namelist
 
-  character(len=256) :: outdir
-  logical :: tstress, tprnfor
-  real (kind=8) :: max_seconds
-  real (kind=8) :: ekin_conv_thr, etot_conv_thr, forc_conv_thr
-  character(len=80) :: restart_mode, disk_io, calculation, verbosity
-  integer :: isave, ndr, ndw
-  NAMELIST / control / title, calculation, verbosity, &
-       restart_mode, nstep, iprint, isave, tstress, tprnfor, &
-       dt, ndr, ndw, outdir, prefix, max_seconds, ekin_conv_thr,&
+  use input_parameters, only: &
+       title, calculation, verbosity, &
+       restart_mode, nstep, iprint, tstress, tprnfor, &
+       dt, outdir, prefix, max_seconds, &
        etot_conv_thr, forc_conv_thr, pseudo_dir, disk_io, tefield, &
        dipfield, lberry, gdir, nppstr
 
   ! SYSTEM namelist
 
-  character(len=80) :: occupations, smearing, xc_type
-  integer :: nelup, neldw, nr1b, nr2b, nr3b
-  real (kind=8) :: a, b, c, cosab, cosac, cosbc
-  real (kind=8) :: ecutrho
-  NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
+  use input_parameters, only: &
+       ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
        nat, ntyp, nbnd, nelec, ecutwfc, ecutrho, &
        nr1, nr2, nr3, nr1s, nr2s, nr3s, &
-       nr1b, nr2b, nr3b, nosym, starting_magnetization, &
+       nosym, starting_magnetization, &
        occupations, degauss, smearing, &
-       nelup, neldw, nspin, ecfixed, qcutz, q2sigma, xc_type, &
+       nspin, ecfixed, qcutz, q2sigma, &
        lda_plus_U, Hubbard_U, Hubbard_alpha, &
        edir, emaxpos, eopreg, eamp
 
   ! ELECTRONS namelist
 
-  character(len=80) :: orthogonalization, &
-       electron_dynamics, electron_velocities, electron_temperature
-  integer :: electron_maxstep
-  real(kind=8) :: emass_cutoff, electron_damping, fnosee, &
-       ortho_eps, ortho_max, emass, ekincw, ampre, grease
-  integer :: empty_states_nbnd, empty_states_maxstep
-  real(kind=8) :: empty_states_delt, empty_states_emass, empty_states_ethr
-  integer :: diis_size, diis_nreset, diis_maxstep
-  logical :: diis_rot, diis_chguess, twall
-  real(kind=8) :: diis_hcut, diis_wthr, diis_delt
-  real(kind=8) :: diis_fthr, diis_temp, diis_achmix, diis_g0chmix
-  integer :: diis_nchmix, diis_nrot(3)
-  real(kind=8) :: diis_g1chmix, diis_rothr(3), diis_ethr
-  character(len=80) :: mixing_mode
-  integer :: mixing_ndim, mixing_fixed_ns
-  real (kind=8) :: conv_thr
-  character(len=80) :: diagonalization
-  integer :: diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
-       diago_diis_start, diago_diis_ndim
-  logical :: diago_diis_keep
-
-  NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
-       electron_maxstep, ortho_eps, ortho_max, electron_dynamics, &
-       electron_damping, electron_velocities, electron_temperature,&
-       ekincw, fnosee, ampre, grease, twall, &
-       empty_states_nbnd, empty_states_maxstep, empty_states_delt, &
-       empty_states_emass, empty_states_ethr, &
-       diis_size, diis_nreset, diis_hcut, diis_wthr, diis_delt, &
-       diis_maxstep, diis_rot, diis_fthr, diis_temp, diis_achmix, &
-       diis_g0chmix, diis_g1chmix, diis_nchmix, diis_nrot, diis_rothr, &
-       diis_ethr, diis_chguess, &
+  use input_parameters, only: &
+       electron_maxstep, electron_dynamics, &
        mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns, &
        diago_cg_maxiter, diago_david_ndim, diago_diis_buff, &
        diago_diis_start, diago_diis_ndim, diago_diis_keep, diagonalization, &
@@ -115,425 +142,43 @@ subroutine iosys
 
   ! IONS namelist
 
-  character(len=80) :: ion_dynamics, ion_positions, ion_velocities, &
-       ion_temperature, potential_extrapolation
-  integer :: ion_nstepe
-  integer :: ion_maxstep
-  real(kind=8) :: ion_radius(ntypx), ion_damping, fnosep, tempw, &
-       amprp(ntypx), greasp, tolp
-  logical :: tranp(ntypx)
-
-  NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions, &
-       ion_velocities, ion_temperature, &
-       tempw, fnosep, tranp, amprp, greasp, tolp, &
-       ion_nstepe, ion_maxstep, upscale, potential_extrapolation
+  use input_parameters, only: &
+       ion_dynamics, ion_positions, ion_temperature, &
+       tempw, tolp, upscale, potential_extrapolation
 
   ! CELL namelist
 
-  character(len=80) :: cell_parameters, cell_dynamics, cell_velocities, &
-       cell_temperature, cell_dofree
-  real(kind=8) :: cell_damping, fnoseh, wmass, temph, greash
-
-  NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, press, &
-       wmass, cell_temperature, temph, fnoseh, cell_dofree, greash, &
-       cell_factor
+  use input_parameters, only: &
+       cell_parameters, cell_dynamics, press, &
+       wmass, cell_temperature, cell_dofree, cell_factor
 
   ! PHONON namelist
 
-  NAMELIST / phonon / modenum, xqq
+  use input_parameters, only: phonon, &
+       modenum, xqq
 
-  ! ...   Variables initialization for CONTROL
+  use read_namelists_module, only: &
+       read_namelists
+
   !
-  title = ' '
-  calculation='scf'
-  verbosity = 'default'
-  max_seconds  = 1.d+6
-  restart_mode = 'from_scratch'
-  nstep  = 50
-  iprint = 100000
-  isave  = 100
-  tstress = .FALSE.
-  tprnfor = .FALSE.
-  dt    = 1.0d0
-  ndr = 50
-  ndw = 50
-  outdir = './'      ! use the path specified as Outdir and
-  prefix = 'pwscf'   ! the filename prefix to store the output
-  ekin_conv_thr = 1.d-6
-  etot_conv_thr = 1.d-4
-  forc_conv_thr = 1.d-3
-  disk_io = 'default'
-  tefield=.false.
-  dipfield=.false.
-  noinv = .false.    ! not actually used
-  lberry=.false.
-  gdir=0
-  nppstr=0
+  implicit none
+  !
+
+  !
+  ! local variables
+  !
+
+  integer :: unit = 5, i, ia, ios, ierr, ilen, is
+
   !
   call getenv('HOME',pseudo_dir)
   pseudo_dir=trim(pseudo_dir)//'/pw/pseudo/'
 
-  ! ...   Variables initialization for SYSTEM
+  CALL read_namelists( 'PW' )
 
-  ibrav  =-1
-  celldm = (/ 0.d0, 0.d0, 0.d0, 0.d0, 0.d0, 0.d0 /)
-  a = 0.d0
-  b = 0.d0
-  c = 0.d0
-  cosab = 0.d0
-  cosac = 0.d0
-  cosbc = 0.d0
-  nat    = 0
-  ntyp   = 0
-  nbnd   = 0
-  nelec  = 0
-  ecutwfc= 0.d0
-  ecutrho= 0.d0
-  nr1  = 0
-  nr2  = 0
-  nr3  = 0
-  nr1s = 0
-  nr2s = 0
-  nr3s = 0
-  nr1b = 0
-  nr2b = 0
-  nr3b = 0
-  occupations = 'fixed'
-  smearing = 'gaussian'
-  degauss = 0.d0
-  nelup = 0
-  neldw = 0
-  nspin = 1
-  nosym = .false.
-  ecfixed = 0.d0
-  qcutz   = 0.d0
-  q2sigma = 0.01d0
-  xc_type = 'PZ'
-  lda_plus_U = .false.
-  Hubbard_U(:) = 0.d0
-  Hubbard_alpha(:) = 0.d0
-  starting_magnetization(:) = 0.d0
-  edir=1
-  emaxpos=0.5d0
-  eopreg=0.1d0
-  eamp=1.d-3
-
-  ! ...   Variables initialization for ELECTRONS
-  !
-  electron_maxstep = 100
-  emass = 400.d0
-  emass_cutoff = 2.5d0
-  orthogonalization = 'ortho'
-  ortho_eps = 1.d-8
-  ortho_max = 20
-  electron_dynamics = 'none'
-  electron_damping = 0.1d0
-  electron_velocities = 'default' ! ( 'zero' | 'default' )
-  electron_temperature = 'not_controlled'
-  ! ( 'nose' | 'not_controlled' | 'rescaling')
-  ekincw = 0.001d0
-  fnosee = 1.0d0
-  ampre  = 0.0d0
-  grease = 1.0d0
-  twall  = .FALSE.
-  empty_states_nbnd = 0
-  empty_states_maxstep = 100
-  empty_states_delt = 0.0d0
-  empty_states_emass = 0.0d0
-  empty_states_ethr = 0.0d0
-  diis_size = 4
-  diis_nreset = 3
-  diis_hcut = 1.0d0
-  diis_wthr = 0.0d0
-  diis_delt = 0.0d0
-  diis_maxstep = 0
-  diis_rot = .FALSE.
-  diis_fthr = 0.0d0
-  diis_temp = 0.0d0
-  diis_achmix = 0.0d0
-  diis_g0chmix = 0.0d0
-  diis_g1chmix = 0.0d0
-  diis_nchmix = 3
-  diis_nrot = 3
-  diis_rothr  = 0.0d0
-  diis_ethr   = 0.0d0
-  diis_chguess = .FALSE.
-  mixing_mode ='plain'
-  mixing_fixed_ns = 0
-  mixing_beta = 0.7
-  mixing_ndim = 8
-
-  diago_cg_maxiter = 20
-  diago_david_ndim  =4
-  diago_diis_buff = 200
-  diago_diis_keep = .false.
-  diago_diis_start= 2
-  diago_diis_ndim = 3
-  startingwfc = 'atomic'
-  startingpot = 'atomic'
-  conv_thr = 1.d-6
-
-  ! ...   Variables initialization for IONS
-  !
-  ion_dynamics = 'none'  ! ( 'sd' | 'cg' | 'damp' | 'verlet' | 'beeman' |'bfgs' | 'none' )
-  ion_radius = 0.5d0
-  ion_damping = 0.1
-  ion_positions = 'default' ! ( 'default' | 'from_input' )
-  ion_velocities = 'default'
-  ! ( 'zero' | 'default' | 'random' | 'from_input' )
-  ion_temperature = 'not_controlled'
-  ! ( 'nose' | 'not_controlled' | 'rescaling' )
-  tempw = 300.0d0
-  fnosep = 1.0d0
-  tranp(:) = .FALSE.
-  amprp(:) = 0.0d0
-  greasp = 1.0d0
-  tolp = 100.d0
-  ion_nstepe = 1
-  ion_maxstep = 100
-  upscale = 10
-  potential_extrapolation='default'
-  !
-  ! ...   Variables initialization for CELL
-  !
-  cell_parameters = 'default'
-  cell_dynamics = 'none'      ! ( 'sd' | 'md' | 'damp' | 'md-w' | 'damp-w' | 'none' )
-  cell_velocities = 'default' ! ( 'zero' | 'default' )
-  press = 0.0d0
-  wmass = 0.0d0
-  cell_temperature = 'not_controlled' ! ( 'nose' | 'not_controlled' | 'rescaling' )
-  temph = 0.0d0
-  fnoseh = 0.0d0
-  greash = 1.0d0
-  cell_dofree = 'all'
-  ! ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
   nraise = 100
   delta_t = 1.d0
   !
-  ! ...   Variables initialization for PHONON
-  !
-  modenum = 0
-  xqq = 0.d0
-  !
-#ifdef __PARA
-  if (me == 1)  then
-#endif
-     ios = 0
-     READ (unit, control, iostat = ios )
-     if (ios /= 0) call errore ('reading','namelist &control',1)
-     !
-     ! reset default values for ion_dynamics according to definition
-     ! of calculation in &control
-     !
-     if (TRIM(calculation) == 'relax' ) then
-        ion_dynamics='bfgs'
-     end if
-     if (TRIM(calculation) == 'md' ) then
-        ion_dynamics='verlet'
-     end if
-     if (TRIM(calculation) == 'vc-relax' ) then
-        ion_dynamics ='damp'
-     end if
-     if (TRIM(calculation) == 'vc-md' ) then
-        ion_dynamics ='beeman'
-     end if
-     ! reset defaulf value of startingpot according to calculation value
-
-     if (TRIM(calculation) == 'nscf' .or. TRIM(calculation) == 'phonon' ) then
-        startingpot = 'file'
-     else
-        startingpot = 'atomic'
-     end if
-     !
-     READ (unit, system, iostat = ios )
-     if (ios /= 0) call errore ('reading','namelist &system',2)
-     READ (unit, electrons, iostat = ios )
-     if (ios /= 0) call errore ('reading','namelist &electrons',3)
-     if ( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'   .or.&
-          TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md'.or.&
-          TRIM(calculation) == 'cpmd' .or. TRIM(calculation) == 'vc-cpmd' )then
-        READ (unit, ions, iostat = ios )
-        if (ios /= 0) call errore ('reading','namelist &ions',4)
-     end if
-     if ( TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md'.or.&
-          TRIM(calculation) == 'vc-cpmd' ) then
-        READ (unit, cell, iostat = ios )
-        if (ios /= 0) call errore ('reading','namelist &cell',5)
-     end if
-     if (TRIM(calculation) == 'phonon' ) then
-        READ (unit, phonon, iostat = ios )
-        if (ios /= 0) call errore ('reading','namelist &phonon',5)
-     end if
-
-#ifdef __PARA
-  end if
-
-  !
-  ! ...   CONTROL Variables Broadcast
-  !
-  CALL mp_bcast( title, ionode_id )
-  CALL mp_bcast( calculation, ionode_id )
-  CALL mp_bcast( verbosity, ionode_id )
-  CALL mp_bcast( restart_mode, ionode_id )
-  CALL mp_bcast( nstep, ionode_id )
-  CALL mp_bcast( iprint, ionode_id )
-  CALL mp_bcast( isave, ionode_id )
-  CALL mp_bcast( tstress, ionode_id )
-  CALL mp_bcast( tprnfor, ionode_id )
-  CALL mp_bcast( dt, ionode_id )
-  CALL mp_bcast( ndr, ionode_id )
-  CALL mp_bcast( ndw, ionode_id )
-  CALL mp_bcast( outdir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
-  CALL mp_bcast( max_seconds, ionode_id )
-  CALL mp_bcast( ekin_conv_thr, ionode_id )
-  CALL mp_bcast( etot_conv_thr, ionode_id )
-  CALL mp_bcast( forc_conv_thr, ionode_id )
-  CALL mp_bcast( pseudo_dir, ionode_id )
-  CALL mp_bcast( disk_io, ionode_id )
-  CALL mp_bcast( tefield, ionode_id )
-  CALL mp_bcast( dipfield, ionode_id )
-  CALL mp_bcast( lberry, ionode_id )
-  CALL mp_bcast( gdir, ionode_id )
-  CALL mp_bcast( nppstr, ionode_id )
-  !
-  ! ...   SYSTEM Variables Broadcast
-  !
-  CALL mp_bcast( ibrav, ionode_id  )
-  CALL mp_bcast( celldm, ionode_id  )
-  CALL mp_bcast( a, ionode_id  )
-  CALL mp_bcast( b, ionode_id  )
-  CALL mp_bcast( c, ionode_id  )
-  CALL mp_bcast( cosab, ionode_id  )
-  CALL mp_bcast( cosac, ionode_id  )
-  CALL mp_bcast( cosbc, ionode_id  )
-  CALL mp_bcast( nat, ionode_id  )
-  CALL mp_bcast( ntyp, ionode_id  )
-  CALL mp_bcast( nbnd, ionode_id  )
-  CALL mp_bcast( nelec, ionode_id  )
-  CALL mp_bcast( ecutwfc, ionode_id  )
-  CALL mp_bcast( ecutrho, ionode_id  )
-  CALL mp_bcast( nr1, ionode_id  )
-  CALL mp_bcast( nr2, ionode_id  )
-  CALL mp_bcast( nr3, ionode_id  )
-  CALL mp_bcast( nr1s, ionode_id  )
-  CALL mp_bcast( nr2s, ionode_id  )
-  CALL mp_bcast( nr3s, ionode_id  )
-  CALL mp_bcast( nr1b, ionode_id  )
-  CALL mp_bcast( nr2b, ionode_id  )
-  CALL mp_bcast( nr3b, ionode_id  )
-  CALL mp_bcast( occupations, ionode_id  )
-  CALL mp_bcast( smearing, ionode_id  )
-  CALL mp_bcast( degauss, ionode_id  )
-  CALL mp_bcast( nelup, ionode_id )
-  CALL mp_bcast( neldw, ionode_id )
-  CALL mp_bcast( nspin, ionode_id )
-  CALL mp_bcast( nosym, ionode_id )
-  CALL mp_bcast( ecfixed, ionode_id )
-  CALL mp_bcast( qcutz, ionode_id )
-  CALL mp_bcast( q2sigma, ionode_id )
-  CALL mp_bcast( xc_type, ionode_id )
-  CALL mp_bcast( lda_plus_U, ionode_id )
-  CALL mp_bcast( Hubbard_U, ionode_id )
-  CALL mp_bcast( Hubbard_alpha, ionode_id )
-  CALL mp_bcast( starting_magnetization, ionode_id )
-  CALL mp_bcast( edir, ionode_id )
-  CALL mp_bcast( emaxpos, ionode_id )
-  CALL mp_bcast( eopreg, ionode_id )
-  CALL mp_bcast( eamp, ionode_id )
-  !
-  ! ...   ELECTRONS Variables Broadcast
-  !
-  CALL mp_bcast( emass, ionode_id )
-  CALL mp_bcast( emass_cutoff, ionode_id )
-  CALL mp_bcast( orthogonalization, ionode_id )
-  CALL mp_bcast( electron_maxstep, ionode_id )
-  CALL mp_bcast( ortho_eps, ionode_id )
-  CALL mp_bcast( ortho_max, ionode_id )
-  CALL mp_bcast( electron_dynamics, ionode_id )
-  CALL mp_bcast( electron_damping, ionode_id )
-  CALL mp_bcast( electron_velocities, ionode_id )
-  CALL mp_bcast( electron_temperature, ionode_id )
-  CALL mp_bcast( ekincw, ionode_id )
-  CALL mp_bcast( fnosee, ionode_id )
-  CALL mp_bcast( ampre, ionode_id )
-  CALL mp_bcast( grease, ionode_id )
-  CALL mp_bcast( twall, ionode_id )
-  CALL mp_bcast( empty_states_nbnd, ionode_id )
-  CALL mp_bcast( empty_states_maxstep, ionode_id )
-  CALL mp_bcast( empty_states_delt, ionode_id )
-  CALL mp_bcast( empty_states_emass, ionode_id )
-  CALL mp_bcast( empty_states_ethr, ionode_id )
-  CALL mp_bcast( diis_size, ionode_id )
-  CALL mp_bcast( diis_nreset, ionode_id )
-  CALL mp_bcast( diis_hcut, ionode_id )
-  CALL mp_bcast( diis_wthr, ionode_id )
-  CALL mp_bcast( diis_delt, ionode_id )
-  CALL mp_bcast( diis_maxstep, ionode_id )
-  CALL mp_bcast( diis_rot, ionode_id )
-  CALL mp_bcast( diis_fthr, ionode_id )
-  CALL mp_bcast( diis_temp, ionode_id )
-  CALL mp_bcast( diis_achmix, ionode_id )
-  CALL mp_bcast( diis_g0chmix, ionode_id )
-  CALL mp_bcast( diis_g1chmix, ionode_id )
-  CALL mp_bcast( diis_nchmix, ionode_id )
-  CALL mp_bcast( diis_nrot, ionode_id )
-  CALL mp_bcast( diis_rothr, ionode_id )
-  CALL mp_bcast( diis_ethr, ionode_id )
-  CALL mp_bcast( diis_chguess, ionode_id )
-  CALL mp_bcast( mixing_mode, ionode_id )
-  CALL mp_bcast( mixing_beta, ionode_id )
-  CALL mp_bcast( mixing_ndim, ionode_id )
-  CALL mp_bcast( mixing_fixed_ns, ionode_id )
-  CALL mp_bcast( diagonalization, ionode_id )
-  CALL mp_bcast( diago_cg_maxiter, ionode_id )
-  CALL mp_bcast( diago_david_ndim, ionode_id )
-  CALL mp_bcast( diago_diis_buff, ionode_id )
-  CALL mp_bcast( diago_diis_keep, ionode_id )
-  CALL mp_bcast( diago_diis_start,ionode_id )
-  CALL mp_bcast( startingwfc, ionode_id )
-  CALL mp_bcast( startingpot, ionode_id )
-  CALL mp_bcast( conv_thr, ionode_id )
-
-  ! ...   IONS Variables Broadcast
-  !
-  CALL mp_bcast( ion_dynamics, ionode_id )
-  CALL mp_bcast( ion_radius, ionode_id )
-  CALL mp_bcast( ion_damping, ionode_id )
-  CALL mp_bcast( ion_positions, ionode_id )
-  CALL mp_bcast( ion_velocities, ionode_id )
-  CALL mp_bcast( ion_temperature, ionode_id )
-  CALL mp_bcast( tempw, ionode_id )
-  CALL mp_bcast( fnosep, ionode_id )
-  CALL mp_bcast( tranp, ionode_id )
-  CALL mp_bcast( amprp, ionode_id )
-  CALL mp_bcast( greasp, ionode_id )
-  CALL mp_bcast( tolp, ionode_id )
-  CALL mp_bcast( ion_nstepe, ionode_id )
-  CALL mp_bcast( ion_maxstep, ionode_id )
-  CALL mp_bcast( upscale, ionode_id )
-  CALL mp_bcast( potential_extrapolation, ionode_id )
-
-  ! ...   CELL Variables Broadcast
-  !
-  CALL mp_bcast( cell_parameters, ionode_id )
-  CALL mp_bcast( cell_dynamics, ionode_id )
-  CALL mp_bcast( cell_velocities, ionode_id )
-  CALL mp_bcast( cell_dofree, ionode_id )
-  CALL mp_bcast( press, ionode_id )
-  CALL mp_bcast( wmass, ionode_id )
-  CALL mp_bcast( cell_temperature, ionode_id )
-  CALL mp_bcast( temph, ionode_id )
-  CALL mp_bcast( fnoseh, ionode_id )
-  CALL mp_bcast( cell_factor, ionode_id )
-
-  ! ...   PHONON Variables Broadcast
-  !
-  CALL mp_bcast( modenum, ionode_id )
-  CALL mp_bcast( xqq, ionode_id )
-  !
-#endif
-
   ! translate from input to internals of PWscf, various checks
   time_max = max_seconds
 
@@ -548,21 +193,6 @@ subroutine iosys
   if (tefield.and.(nspin.eq.2)) then
      call errore('input','LSDA not available with electric field',1)
   endif
-
-  ! ...   Set the number of species
-
-  IF( ntyp < 1 .OR. ntyp > ntypx ) THEN
-     CALL errore(' iosys ',' ntyp out of range ', ntyp )
-  END IF
-
-  ! ...   IBRAV and CELLDM
-
-  IF( ibrav /= 0 .and. celldm(1) == 0.d0 .and. a == 0.d0 ) THEN
-     CALL errore(' iosys ',' invalid value of lattice parameter ', 1 )
-  END IF
-  IF( ibrav < 0 .OR. ibrav > 14 ) THEN
-     CALL errore(' iosys ',' ibrav out of range ', 1 )
-  END IF
 
   ! ...   Set Values for electron and bands
 
@@ -605,16 +235,7 @@ subroutine iosys
   IF( nelec < 0 ) THEN
      CALL errore(' iosys ',' nelec less than 0 ', nelec )
   END IF
-  IF( nspin < 1 .OR. nspin > 2 ) THEN
-     CALL errore(' iosys ',' nspin out of range ', nspin )
-  END IF
   lsda = (nspin.eq.2)
-
-  ! ...   Set Values for the cutoff
-
-  IF( ecutwfc <= 0.d0 ) THEN
-     CALL errore(' iosys ',' invalid ecutwfc ', INT(ecutwfc) )
-  END IF
 
   if (ecutrho <= 0.d0) then
      dual = 4.d0
@@ -697,7 +318,7 @@ subroutine iosys
      nstep = 1
   CASE DEFAULT
      CALL errore(' iosys ',' calculation '//&
-          trim(electron_dynamics)//' not implemented',1)
+          trim(calculation)//' not implemented',1)
   END SELECT
 
   if (modenum /= 0) then
@@ -915,47 +536,100 @@ subroutine iosys
   tmp_dir = trim(outdir)
   lstres = tstress .AND. lscf
 
+  !  Copy values from input module to PW internals
+
+  nppstr_     = nppstr
+  gdir_       = gdir
+  lberry_     = lberry
+  title_      = title
+  dt_         = dt
+  tefield_    = tefield
+  dipfield_   = dipfield
+  prefix_     = TRIM(prefix)
+  pseudo_dir_ = TRIM(pseudo_dir)
+  nstep_      = nstep
+  iprint_     = iprint
+
+  celldm_ = celldm
+  ibrav_ = ibrav
+  nat_ = nat 
+  ntyp_ = ntyp
+  edir_ = edir
+  emaxpos_ = emaxpos
+  eopreg_ = eopreg
+  eamp_ = eamp
+  nr1_ = nr1
+  nr2_ = nr2
+  nr3_ = nr3
+  ecutwfc_ = ecutwfc
+  ecfixed_ = ecfixed
+  qcutz_ = qcutz
+  q2sigma_ = q2sigma
+  nr1s_ = nr1s
+  nr2s_ = nr2s
+  nr3s_ = nr3s
+  degauss_ = degauss
+  nelec_ = nelec
+  Hubbard_U_( 1 : ntyp ) = hubbard_u( 1 : ntyp )
+  Hubbard_alpha_ ( 1 : ntyp )= hubbard_alpha( 1 : ntyp )
+  lda_plus_u_ = lda_plus_u
+  nspin_ = nspin
+  starting_magnetization_ = starting_magnetization
+  nosym_ = nosym
+  nbnd_  = nbnd
+
+  startingwfc_ = startingwfc
+  startingpot_ = startingpot
+  mixing_beta_ = mixing_beta
+
+  upscale_ = upscale
+  press_ = press
+  cell_factor_ = cell_factor
+  modenum_ = modenum
+  xqq_ = xqq
+
   ! read following cards
 
-  allocate (tau(3,nat))
-  allocate (ityp(nat))
-  allocate (force(3,nat)) ! compatibility with old readin
-  if (tefield) allocate(forcefield(3,nat))
+  allocate ( tau( 3, nat_ ) )
+  allocate ( ityp( nat_ ) )
+  allocate ( force( 3, nat_ ) ) ! compatibility with old readin
+  if ( tefield ) allocate( forcefield( 3, nat_ ) )
   !
   CALL read_cards (pseudop, atomic_positions)
   !
   ! set up atomic positions and crystal lattice
   !
-  if (celldm (1) == 0.d0 .and. a /= 0.d0) then
-     if (ibrav == 0) ibrav = 14 
-     celldm (1) = a*bohr_radius_angs
-     celldm (2) = b/a
-     celldm (3) = c/a
-     celldm (4) = cosab
-     celldm (5) = cosac
-     celldm (6) = cosbc 
-  else if (celldm (1) /= 0.d0 .and. a /= 0.d0) then
+  if (celldm_ (1) == 0.d0 .and. a /= 0.d0) then
+     if (ibrav_ == 0) ibrav = 14 
+     celldm_ (1) = a*bohr_radius_angs
+     celldm_ (2) = b/a
+     celldm_ (3) = c/a
+     celldm_ (4) = cosab
+     celldm_ (5) = cosac
+     celldm_ (6) = cosbc 
+  else if (celldm_ (1) /= 0.d0 .and. a /= 0.d0) then
      call errore('input', ' do not specify both celldm and a,b,c!',1)
   end if
   !
-  if (ibrav == 0 .and. celldm (1) /= 0.d0) then
+  if (ibrav_ == 0 .and. celldm_ (1) /= 0.d0) then
      ! input at are in units of alat
-     alat = celldm(1)
-  else if (ibrav == 0 .and. celldm (1) == 0.d0) then
+     alat = celldm_(1)
+  else if (ibrav_ == 0 .and. celldm_ (1) == 0.d0) then
      ! input at are in atomic units: define alat
-     celldm (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
-     alat = celldm(1)
+     celldm_ (1) = sqrt(at(1,1)**2+at(1,2)**2+at(1,3)**2)
+     alat = celldm_(1)
      ! bring at to alat units
      at(:,:) = at(:,:) / alat
   else
      ! generate at (atomic units)
-     CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
-     alat = celldm(1) 
+     CALL latgen(ibrav,celldm_,at(1,1),at(1,2),at(1,3),omega)
+     alat = celldm_(1) 
      ! bring at to alat units
      at(:,:) = at(:,:) / alat
   end if
   !
   CALL volume(alat,at(1,1),at(1,2),at(1,3),omega)
+  !
   !
   SELECT CASE ( atomic_positions )
      !
@@ -975,7 +649,7 @@ subroutine iosys
      !
      !  input atomic positions are in crystal axis
      !
-     call cryst_to_cart (nat, tau, at, 1)
+     call cryst_to_cart ( nat_ , tau, at, 1)
   CASE ('angstrom')
      !
      !  atomic positions in A: convert to a.u. and divide by alat
@@ -989,7 +663,7 @@ subroutine iosys
   !
   ! set default value of wmass
   !
-  if (wmass.eq.0.d0) then
+  if ( wmass .eq. 0.d0 ) then
      if (calc.eq.'nd' .or. calc.eq.'nm') then
         do ia=1,nat
            wmass = wmass + amass(ityp(ia))
@@ -1007,8 +681,8 @@ subroutine iosys
   !
   ! unit conversion for cell mass and pressure
   !
-  cmass = wmass * amconv
-  press = press / uakbar
+  cmass  = wmass * amconv
+  press_ = press_ / uakbar
   !
   !    read pseudopotentials
   !
@@ -1028,11 +702,11 @@ subroutine iosys
      at_old = at
      omega_old = omega
      lstres = .true.
-     if (cell_factor.le.0.d0) cell_factor = 1.2d0
+     if ( cell_factor_ .le. 0.d0 ) cell_factor_ = 1.2d0
      if (cmass.le.0.d0) call errore('readin',&
           &      'vcsmd: a positive value for cell mass is required',1)
   else
-     cell_factor = 1.d0
+     cell_factor_ = 1.d0
   end if
   !
   call verify_tmpdir
@@ -1050,225 +724,136 @@ subroutine iosys
   output_drho= ' '
   crystal = ' '
   !
+
+  !
   return
 end subroutine iosys
+
+!-----------------------------------------------------------------------
+
 !
 !-----------------------------------------------------------------------
-subroutine read_cards (pseudop, atomic_positions)
+subroutine read_cards ( pseudop, atomic_positions_ )
   !-----------------------------------------------------------------------
   !
   use parser
-  use pwcom, only: at, ityp, tau, nat, ntyp, atm, amass, ibrav, &
-       nks, nk1, nk2, nk3, k1, k2, k3, xk, wk, lxkcry, symm_type, &
-       fixatom
+  use pwcom, only: at, ityp, tau, nat, ntyp, atm, amass, ibrav, nks, &
+       nk1_ => nk1,  &
+       nk2_ => nk2,  &
+       nk3_ => nk3, &
+       k1_  => k1,  &
+       k2_  => k2, &
+       k3_  => k3,  &
+       xk_  => xk, &
+       wk_  => wk, &
+       lxkcry, symm_type, fixatom
+ 
+  use input_parameters, only: &
+       atom_label, atom_pfile, atom_mass, atom_ptyp, taspc, &
+       tapos, rd_pos, atomic_positions, if_pos, sp_pos, &
+       k_points, xk, wk, nk1, nk2, nk3, k1, k2, k3, nkstot, &
+       cell_symmetry, rd_ht, trd_ht
+
+  use read_cards_module, only: read_cards_base => read_cards
+
   implicit none
   !
   character (len=80) :: pseudop (ntyp)
-  character (len=30) :: atomic_positions
+  character (len=30) :: atomic_positions_
   !
-  real(kind=8), allocatable :: tau_inp(:,:)
-  integer, allocatable :: ityp_inp(:), iforce_inp(:,:)
-  character(len=3) :: atom_label(ntyp), lb_pos
-  character(len=256) :: line, input_line
-  logical :: tcell=.false., tatms=.false., tatmp=.false., tend
-  integer :: unit = 5, i, is, ns, ia, ios, ik, nf
+  logical :: tcell=.false.
+  integer :: i, is, ns, ia, ik
 
   amass = 0
 
-100 CALL read_line (line, end_of_file = tend)
-  if (tend) go to 200
-  if (line(1:1).eq.'#') go to 100
-  do i=1,len_trim(line)
-     line(i:i) = capital(line(i:i))
+  call read_cards_base( 'PW' )
+
+  if (.not.taspc ) &
+       CALL errore(' cards ',' atomic species info missing', 1 )
+  if (.not.tapos ) &
+       CALL errore(' cards ',' atomic position info missing', 1 )
+
+  do is = 1, ntyp
+    amass( is ) = atom_mass( is )
+    pseudop( is ) = atom_pfile( is )
+    atm(is) = atom_label(is)
+    IF( amass(is) <= 0.d0 ) THEN
+      CALL errore(' iosys ',' invalid  mass ', is)
+    END IF
   end do
-  if (matches('ATOMIC_SPECIES',line)) then
 
-     do is = 1, ntyp
+  do ia = 1, nat
+    tau( : , ia ) = rd_pos( : , ia )
+    ityp( ia ) = sp_pos( ia )
+  end do
 
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
+  !
+  ! TEMP: calculate fixatom
+  !
+  fixatom = 0
+  fix1: DO ia = nat, 1, -1
+    if ( if_pos(1,ia) /= 0 .or. &
+         if_pos(2,ia) /= 0 .or. &
+         if_pos(3,ia) /= 0 ) EXIT fix1
+    fixatom = fixatom + 1
+  END DO fix1
 
-        read (input_line,*) atom_label(is), amass(is), pseudop(is)
+  atomic_positions_ = TRIM(atomic_positions)
 
-        IF( amass(is) <= 0.d0 ) THEN
-           CALL errore(' iosys ',' invalid  mass ', is)
-        END IF
-        atm(is) = atom_label(is)
-
-     end do
-     tatms =.true.
-
-  else if (matches('ATOMIC_POSITIONS',line)) then
-
-     allocate ( ityp_inp(nat) )
-     allocate ( tau_inp(3,nat) )
-     allocate ( iforce_inp(3,nat) )
-     tau_inp = 0.d0
-     ityp_inp= 0
-     do ia = 1, nat
-
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        CALL field_count(nf,input_line)
-
-        if (nf.eq.4) then
-           READ(input_line,*) lb_pos, &
-                tau_inp(1,ia), tau_inp(2,ia), tau_inp(3,ia)
-           iforce_inp(:,ia) = 1
-        else if (nf.eq.7) then
-           READ (input_line, * ) lb_pos, &
-                tau_inp(1,ia), tau_inp(2,ia), tau_inp(3,ia), &
-                iforce_inp(1,ia), iforce_inp(2,ia), iforce_inp(3,ia)
-        else
-           call errore (' cards','wrong number of tokens', ia)
-        end if
-
-        match_label: DO is = 1, ntyp
-           IF( lb_pos == atom_label(is) ) THEN
-              ityp_inp(ia) = is
-              EXIT match_label
-           END IF
-        END DO match_label
-
-        if (ityp_inp(ia) <= 0 .OR. ityp_inp(ia) > ntyp) &
-             call errore (' cards','wrong atomic positions', ia)
-
-     end do
-     !
-     ! TEMP: calculate fixatom
-     !
-     fixatom = 0
-     fix1: DO ia = nat, 1, -1
-        if ( iforce_inp(1,ia) /= 0 .or. &
-             iforce_inp(2,ia) /= 0 .or. &
-             iforce_inp(3,ia) /= 0 ) EXIT fix1
-        fixatom = fixatom + 1
-     END DO fix1
-     !
-     !  read option to card ATOMIC_POSITIONS
-     !
-     if ( matches('ALAT', line) ) then
-        atomic_positions = 'alat'
-     else if ( matches('BOHR', line) ) then
-        atomic_positions = 'bohr'
-     else if ( matches('CRYSTAL', line) ) then
-        atomic_positions = 'crystal'
-     else if ( matches('ANGSTROM', line) ) then
-        atomic_positions = 'angstrom'
-     else
-        atomic_positions = 'alat'
-     end if
-     !
-     tau = tau_inp
-     ityp= ityp_inp
-     !
-     deallocate (iforce_inp)
-     deallocate (tau_inp)
-     deallocate (ityp_inp)
-     tatmp =.true.
-
-  else if (matches('OCCUPATIONS',line)) then
-!!!         allocate (f(n))
-!!!         read (unit, *) (f(i), i=1,n)
-     call errore (' cards','card OCCUPATIONS not implemented', 1)
-
-  else if (matches('K_POINTS',line)) then
-     !
-     !  read option to card K_POINTS
-     !
-     if ( matches('AUTOMATIC',line) ) then
-        !
-        !  automatic generation of k-points
-        !
-        lxkcry = .false.
-        nks = 0
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        read (input_line, *) nk1, nk2, nk3, k1, k2 ,k3
-     else if ( matches('TPIBA',line) ) then
-        !
-        !  input k-points are in 2pi/a units
-        !
-        lxkcry = .false.
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        read (input_line, *) nks
-        do ik=1, nks
-           CALL read_line (input_line, end_of_file = tend)
-           if (tend) go to 300
-           read (input_line, *) xk(1,ik), xk(2,ik), xk(3,ik), wk(ik)
-        end do
-     else if ( matches('CRYSTAL',line) ) then
-        !
-        !  input k-points are in crystal (reciprocal lattice) axis
-        !
-        lxkcry = .true.
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        read (input_line, *) nks
-        do ik=1, nks
-           CALL read_line (input_line, end_of_file = tend)
-           if (tend) go to 300
-           read (input_line, *) xk(1,ik), xk(2,ik), xk(3,ik), wk(ik)
-        end do
-     else if ( matches('GAMMA',line) ) then
-        !
-        !  Only Gamma (k=0) is used
-        !
-        lxkcry = .false.
-        nks = 1
-        xk(:,1) = 0.0
-        wk(1)   = 1.0
-     else
-        !
-        !  default: input k-points are in 2pi/a units
-        !
-        lxkcry = .false.
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        read (input_line, *) nks
-        do ik=1, nks
-           CALL read_line (input_line, end_of_file = tend)
-           if (tend) go to 300
-           read (input_line, *) xk(1,ik), xk(2,ik), xk(3,ik), wk(ik)
-        end do
-     end if
-
-  else if (matches('CELL_PARAMETERS',line)) then
-
-     if (matches('HEXAGONAL',line)) then
-        symm_type = 'hexagonal'
-     else
-        symm_type = 'cubic'
-     end if
-
-     do i=1,3
-        CALL read_line (input_line, end_of_file = tend)
-        if (tend) go to 300
-        read(input_line,*) at(1,i),at(2,i),at(3,i)
-     enddo
-     tcell = .true.
-
+  if ( k_points == 'automatic' ) then
+    !  automatic generation of k-points
+    lxkcry = .false.
+    nks = 0
+    nk1_ = nk1
+    nk2_ = nk2
+    nk3_ = nk3
+    k1_  = k1
+    k2_  = k2
+    k3_  = k3
+  else if ( k_points == 'tpiba' ) then
+    !  input k-points are in 2pi/a units
+    lxkcry = .false.
+    nks  = nkstot
+    xk_( :, 1 : nks )  = xk( :, 1 : nks )
+    wk_( 1 : nks )  = wk( 1 : nks )
+  else if ( k_points == 'crystal' ) then
+    !  input k-points are in crystal (reciprocal lattice) axis
+    lxkcry = .true.
+    nks  = nkstot
+    xk_( :, 1 : nks )  = xk( :, 1 : nks )
+    wk_( 1 : nks )  = wk( 1 : nks )
+  else if ( k_points == 'gamma' ) then
+    !  Only Gamma (k=0) is used
+    lxkcry = .false.
+    nks = 1
+    xk_(:,1) = 0.0
+    wk_(1)   = 1.0
   else
+    !  default: input k-points are in 2pi/a units
+    lxkcry = .false.
+    nks  = nkstot
+    xk_( :, 1 : nks )  = xk( :, 1 : nks )
+    wk_( 1 : nks )  = wk( 1 : nks )
+  end if
 
-     write (6,'(a)') 'Warning: card '//trim(line)//' ignored'
+  
+  if ( trd_ht ) then
+
+    symm_type = cell_symmetry 
+    at = TRANSPOSE( rd_ht )
+    tcell = .true.
 
   end if
 
-  go to 100
 
-200 if (ibrav == 0 .and. .not.tcell ) &
+  if (ibrav == 0 .and. .not.tcell ) &
        CALL errore(' cards ',' ibrav=0: must read cell parameters', 1 )
   if (ibrav /= 0 .and. tcell ) &
        CALL errore(' cards ',' redundant data for cell parameters', 2 )
-  if (.not.tatms ) &
-       CALL errore(' cards ',' atomic species info missing', 1 )
-  if (.not.tatmp ) &
-       CALL errore(' cards ',' atomic position info missing', 1 )
 
   return
-300 CALL errore(' cards ',' unexpected end of file', 1 )
 end subroutine read_cards
+
 !
 !-----------------------------------------------------------------------
 subroutine verify_tmpdir

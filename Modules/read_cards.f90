@@ -25,6 +25,10 @@
         IMPLICIT NONE
         SAVE
 
+        PRIVATE
+
+        PUBLIC :: read_cards
+
 !  end of module-scope declarations
 !  ----------------------------------------------
 
@@ -69,7 +73,7 @@
 ! ... KPOINTS
        k_points = 'gamma'
        tk_inp = .FALSE.
-       nks = 1
+       nkstot = 1
        nk1 = 0
        nk2 = 0
        nk3 = 0
@@ -108,11 +112,14 @@
 
      SUBROUTINE read_cards( prog )
 
+       USE parser, ONLY: capital
+
        CHARACTER(LEN=2) :: prog   ! calling program ( FP, PW, CP )
 
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=80) :: card
        LOGICAL :: tend
+       INTEGER :: i
 
        CALL card_default_values( prog )
 
@@ -122,6 +129,11 @@
           IF( input_line == ' ' .OR. input_line(1:1) == '#' ) GO TO 100
 
           READ (input_line, *) card
+
+          DO i = 1, LEN_TRIM( input_line )
+            input_line( i : i ) = capital( input_line( i : i ) )
+          END DO
+
 
           IF ( TRIM(card) == 'ATOMIC_SPECIES' ) THEN
 
@@ -134,46 +146,62 @@
           ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
 
             CALL card_setnfi( input_line )
-
-          ELSE IF( TRIM(card) == '2DPROCMESH' ) THEN
-
-            CALL card_2dprocmesh( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'OPTICAL' ) THEN
 
             CALL card_optical( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'CONSTRAINTS' ) THEN
 
             CALL card_constraints( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'VHMEAN' ) THEN
 
             CALL card_vhmean( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'DIPOLE' ) THEN
 
             CALL card_dipole( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'ESR' ) THEN
 
             CALL card_esr( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'K_POINTS' ) THEN
 
             CALL card_kpoints( input_line )
+            IF( prog == 'CP' .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'NEIGHBOURS' ) THEN
 
             CALL card_neighbours( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'OCCUPATIONS' ) THEN
 
             CALL card_occupations( input_line )
+            IF( prog == 'PW' .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'PSTAB' ) THEN
 
             CALL card_pstab( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'CELL_PARAMETERS' ) THEN
 
@@ -182,22 +210,32 @@
           ELSE IF( TRIM(card) == 'TURBO' ) THEN
 
             CALL card_turbo( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'ION_VELOCITIES' ) THEN
 
             CALL card_ion_velocities( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'KSOUT' ) THEN
 
             CALL card_ksout( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'KSOUT_EMPTY' ) THEN
 
             CALL card_ksout_empty( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE IF( TRIM(card) == 'RHOOUT' ) THEN
 
             CALL card_rhoout( input_line )
+            IF( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+              write (6,'(a)') 'Warning: card '//trim(input_line)//' ignored'
 
           ELSE
 
@@ -354,20 +392,21 @@
         rd_pos = 0.d0
         na_inp = 0
 
-        IF( matches("crystal", input_line ) ) THEN
+        IF( matches("CRYSTAL", input_line ) ) THEN
           atomic_positions = 'crystal'
-        ELSE IF( matches("bohr", input_line ) ) THEN
+        ELSE IF( matches("BOHR", input_line ) ) THEN
           atomic_positions = 'bohr'
-        ELSE IF( matches("angstrom", input_line ) ) THEN
+        ELSE IF( matches("ANGSTROM", input_line ) ) THEN
           atomic_positions = 'angstrom'
-        ELSE IF( matches("alat", input_line ) ) THEN
+        ELSE IF( matches("ALAT", input_line ) ) THEN
           atomic_positions = 'alat'
         ELSE
           IF( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) &
             CALL errore( ' read_cards ', ' unknow unit option for ATOMIC_POSITION: '&
                         &//input_line, 1 )
-          IF ( prog == 'FP' ) atomic_positions = 'crystal'
+          IF ( prog == 'FP' ) atomic_positions = 'bohr'
           IF ( prog == 'CP' ) atomic_positions = 'bohr'
+          IF ( prog == 'PW' ) atomic_positions = 'alat'
         END IF
  
         DO ia = 1, nat
@@ -401,17 +440,19 @@
           na_inp( is ) = na_inp( is ) + 1
         END DO
 
-        tscal = .TRUE.
-        IF ( atomic_positions == 'bohr' ) THEN
-          tscal = .FALSE.
-        ELSE IF( atomic_positions == 'angstrom' ) THEN
-          rd_pos = rd_pos * angstrom_au
-          tscal = .FALSE.
-        ELSE IF( atomic_positions == 'alat' ) THEN
-          rd_pos = rd_pos * celldm(1)  ! Remember celldm(i) = alat
-          tscal = .FALSE.
-        ELSE
+        IF( prog /= 'PW' ) THEN
           tscal = .TRUE.
+          IF ( atomic_positions == 'bohr' ) THEN
+            tscal = .FALSE.
+          ELSE IF( atomic_positions == 'angstrom' ) THEN
+            rd_pos = rd_pos * angstrom_au
+            tscal = .FALSE.
+          ELSE IF( atomic_positions == 'alat' ) THEN
+            rd_pos = rd_pos * celldm(1)  ! Remember celldm(i) = alat
+            tscal = .FALSE.
+          ELSE
+            tscal = .TRUE.
+          END IF
         END IF
 
         tapos = .TRUE.
@@ -471,26 +512,60 @@
         CHARACTER(LEN=256) :: input_line
         INTEGER :: i
         LOGICAL, SAVE :: tread = .FALSE.
+
         IF( tread ) THEN
           CALL errore(' card_kpoints ', ' two occurrence ', 2 )
         END IF
-        IF( matches("automatic", input_line ) ) THEN
+
+        IF( matches("AUTOMATIC", input_line ) ) THEN
+          !  automatic generation of k-points
           k_points = 'automatic'
-        ELSE IF( matches("crystal", input_line ) ) THEN
+        ELSE IF( matches("CRYSTAL", input_line ) ) THEN
+          !  input k-points are in crystal (reciprocal lattice) axis
           k_points = 'crystal'
-        ELSE IF( matches("tpiba", input_line ) ) THEN
+        ELSE IF( matches("TPIBA", input_line ) ) THEN
+          !  input k-points are in 2pi/a units
           k_points = 'tpiba'
-        ELSE IF( matches("gamma", input_line ) ) THEN
+        ELSE IF( matches("GAMMA", input_line ) ) THEN
+          !  Only Gamma (k=0) is used
           k_points = 'gamma'
         ELSE
+          !  by default, input k-points are in 2pi/a units
           k_points = 'tpiba'
         END IF
-        CALL read_line( input_line )
-        READ(input_line,*) nks
-        DO i = 1, nks
-          CALL read_line( input_line )
-          READ(input_line,*) xk(1,i), xk(2,i), xk(3,i), wk(i)
-        END DO
+
+        IF( k_points == 'automatic' ) THEN
+
+           !
+           !  automatic generation of k-points
+           !
+
+           nkstot = 0
+           CALL read_line( input_line )
+           READ (input_line, *) nk1, nk2, nk3, k1, k2 ,k3
+
+        ELSE IF( ( k_points == 'tpiba' ) .OR. ( k_points == 'crystal' ) ) THEN
+
+           !
+           !  input k-points are in 2pi/a units
+           !
+
+           CALL read_line( input_line )
+           READ (input_line, *) nkstot
+ 
+           DO i = 1, nkstot
+             CALL read_line( input_line )
+             READ(input_line,*) xk(1,i), xk(2,i), xk(3,i), wk(i)
+           END DO
+
+        ELSE IF( k_points == 'gamma' ) THEN
+
+           nkstot = 1
+           xk( :, 1 ) = 0.0d0
+           wk( 1 ) = 1.0d0
+
+        END IF
+
         tread  = .TRUE.
         tk_inp = .TRUE.
         RETURN
@@ -555,17 +630,6 @@
 !    END manual
 ! ----------------------------------------------------------------
 
-     SUBROUTINE card_2dprocmesh( input_line )
-        IMPLICIT NONE
-        CHARACTER(LEN=256) :: input_line
-        LOGICAL, SAVE :: tread = .FALSE.
-        IF( tread ) THEN
-          CALL errore(' card_2dprocmesh ', ' two occurrence ', 2 )
-        END IF
-        t2dpegrid_inp = .TRUE.
-        tread = .TRUE.
-        RETURN
-     END SUBROUTINE
 
 ! ----------------------------------------------------------------
 !    BEGIN manual
@@ -903,19 +967,28 @@
 ! ----------------------------------------------------------------
 
      SUBROUTINE card_cell_parameters( input_line )
+        USE parser, ONLY: matches
         IMPLICIT NONE
         CHARACTER(LEN=256) :: input_line
         INTEGER :: i, j
         LOGICAL, SAVE :: tread = .FALSE.
+
         IF( tread ) THEN
           CALL errore(' card_cell_parameters ', ' two occurrence ', 2 )
         END IF
-        DO i=1,3
+
+        if ( matches('HEXAGONAL',input_line) ) then
+          cell_symmetry = 'hexagonal'
+        else
+          cell_symmetry = 'cubic'
+        end if
+
+        DO i = 1, 3
           CALL read_line( input_line )
-          READ (input_line,*) (rd_ht(i,j),j=1,3)
+          READ (input_line,*) ( rd_ht( i, j ), j = 1, 3 )
         END DO
         trd_ht = .TRUE.
-        tread = .TRUE.
+        tread  = .TRUE.
         RETURN
      END SUBROUTINE
 

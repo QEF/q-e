@@ -100,8 +100,9 @@
           ! 'vc-md'    = variable-cell Car-Parrinello (-Rahman) dynamics
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(7)
-        DATA calculation_allowed / 'scf', 'relax', 'md', 'cp', 'vc-relax', 'vc-md', 'vc-cp' /
+        CHARACTER(LEN=80) :: calculation_allowed(9)
+        DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon' /
           ! Allowed value for calculation parameters
 
 
@@ -199,10 +200,21 @@
           ! disk_io = 'high', 'default', 'low', 'minimal'
           ! Specify the amount of I/O activities ( not used in FPMD )
 
+        LOGICAL :: tefield  = .FALSE. 
+
+        LOGICAL :: dipfield = .FALSE. 
+
+        LOGICAL :: lberry = .FALSE. 
+
+        INTEGER :: gdir = 0
+
+        INTEGER :: nppstr = 0
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
-          pseudo_dir, disk_io
+          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr
+
 
 !
 !=----------------------------------------------------------------------------=!  
@@ -296,6 +308,8 @@
           ! 'from_input'  fixed occupations given in the input
           !               ( see card 'OCCUPATIONS' )
 
+        CHARACTER(LEN=80) :: smearing = 'gaussian'
+
         REAL(dbl) :: degauss = 0.0d0
           ! parameter for the smearing functions
           ! NOT used in FPMD-N
@@ -340,21 +354,41 @@
         REAL(dbl) :: starting_magnetization( nsx ) = 0.0d0
           ! ONLY PWSCF
 
-        LOGICAL :: lda_plus_U = .FALSE.
+        LOGICAL :: lda_plus_u = .FALSE.
           ! ONLY PWSCF
 
-        REAL(dbl) :: Hubbard_U(nsx) = 0.0d0
+        REAL(dbl) :: hubbard_u(nsx) = 0.0d0
           ! ONLY PWSCF
 
-        REAL(dbl) :: Hubbard_alpha(nsx) = 0.0d0
+        REAL(dbl) :: hubbard_alpha(nsx) = 0.0d0
           ! ONLY PWSCF
 
-        NAMELIST / system / ibrav, celldm, nat, ntyp, nbnd, nelec, &
+        REAL(dbl) :: a = 0.0d0
+
+        REAL(dbl) :: c = 0.0d0
+
+        REAL(dbl) :: b = 0.0d0
+
+        REAL(dbl) :: cosab = 0.0d0
+
+        REAL(dbl) :: cosac = 0.0d0
+
+        REAL(dbl) :: cosbc = 0.0d0
+
+        INTEGER   :: edir = 0
+ 
+        REAL(dbl) :: emaxpos = 0.0d0
+
+        REAL(dbl) :: eopreg = 0.0d0
+
+        REAL(dbl) :: eamp = 0.0d0 
+
+        NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, ntyp, nbnd, nelec, &
           ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, nr3s, nr1b, nr2b, nr3b, &
           nosym, starting_magnetization, occupations, degauss, ngauss, &
           nelup, neldw, nspin, ecfixed, qcutz, q2sigma, xc_type, &
-          lda_plus_U, Hubbard_U, Hubbard_alpha
-
+          lda_plus_U, Hubbard_U, Hubbard_alpha, &
+          edir, emaxpos, eopreg, eamp, smearing
 
 !=----------------------------------------------------------------------------=!  
 !  ELECTRONS Namelist Input Parameters
@@ -392,18 +426,20 @@
           ! This parameter apply only when using 'cg' electronic or
           ! ionic dynamics
 
-        CHARACTER(LEN=80) :: electron_dynamics = 'sd'
-          ! electron_dynamics = 'sd'* | 'cg' | 'damp' | 'md' | 'none' | 'diis' 
+        CHARACTER(LEN=80) :: electron_dynamics = 'none'
+          ! electron_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'md' | 'none' | 'diis' 
           ! set how electrons shold be moved
-          ! 'none'   electronic degrees of fredom (d.o.f.) are kept fixed 
-          ! 'sd'     steepest descent algorithm is used to minimize electronic d.o.f. 
-          ! 'cg'     conjugate gradient algorithm is used to minimize electronic d.o.f. 
-          ! 'diis'   DIIS algorithm is used to minimize electronic d.o.f. 
-          ! 'damp'   damped dynamics is used to propagate electronic d.o.f. 
-          ! 'verlet' standard Verlet algorithm is used to propagate electronic d.o.f. 
+          ! 'none'    electronic degrees of fredom (d.o.f.) are kept fixed 
+          ! 'sd'      steepest descent algorithm is used to minimize electronic d.o.f. 
+          ! 'cg'      conjugate gradient algorithm is used to minimize electronic d.o.f. 
+          ! 'diis'    DIIS algorithm is used to minimize electronic d.o.f. 
+          ! 'damp'    damped dynamics is used to propagate electronic d.o.f. 
+          ! 'verlet'  standard Verlet algorithm is used to propagate electronic d.o.f. 
+          ! 'default' the value depends on variable "calculation"
 
-        CHARACTER(LEN=80) :: electron_dynamics_allowed(6)
-        DATA electron_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none', 'diis' /
+        CHARACTER(LEN=80) :: electron_dynamics_allowed(7)
+        DATA electron_dynamics_allowed &
+          / 'default', 'sd', 'cg', 'damp', 'verlet', 'none', 'diis' /
 
         REAL(dbl) :: electron_damping = 0.0d0
           ! meaningful only if " electron_dynamics = 'damp' "
@@ -582,7 +618,7 @@
           ! define how to mix wave functions
           ! NOT used in FPMD
 
-        INTEGER :: mixing_beta = 0.0d0
+        REAL(dbl) :: mixing_beta = 0.0d0
           ! parameter for wave function mixing
           ! NOT used in FPMD
 
@@ -599,6 +635,9 @@
           ! NOT used in FPMD
 
         INTEGER :: diago_david_ndim = 10
+          ! NOT used in FPMD
+
+        INTEGER :: diago_diis_ndim = 10
           ! NOT used in FPMD
 
         INTEGER :: diago_diis_buff = 10
@@ -635,7 +674,7 @@
           diis_rothr, diis_ethr, diis_chguess, mixing_mode, &
           mixing_beta, mixing_ndim, mixing_fixed_ns, diago_cg_maxiter, diago_david_ndim, &
           diago_diis_buff, diago_diis_start, diago_diis_keep, diagonalization, &
-          startingpot, startingwfc , conv_thr
+          startingpot, startingwfc , conv_thr, diago_diis_ndim
 
 !
 !=----------------------------------------------------------------------------=!  
@@ -652,8 +691,9 @@
           ! 'damp'   damped dynamics is used to propagate ions
           ! 'verlet' standard Verlet algorithm is used to propagate ions
 
-        CHARACTER(LEN=80) :: ion_dynamics_allowed(5)
-        DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none' /
+        CHARACTER(LEN=80) :: ion_dynamics_allowed(9)
+        DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none', &
+          'bfgs', 'constrained-bfgs', 'constrained-verlet', 'beeman' /
 
         REAL(dbl) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species
@@ -724,7 +764,7 @@
         INTEGER   :: ion_maxstep = 1000
           ! maximum number of step in ionic minimization
 
-        INTEGER :: upscale = 0
+        REAL(dbl) :: upscale = 0.0d0
           ! This variable is NOT used in FPMD
 
         CHARACTER(LEN=80) :: potential_extrapolation = 'default'
@@ -755,8 +795,8 @@
           ! 'sd'     steepest descent algorithm is used to minimize the cell
           ! 'pr'     standard Verlet algorithm is used to propagate the cell
 
-        CHARACTER(LEN=80) :: cell_dynamics_allowed(3)
-        DATA cell_dynamics_allowed / 'sd', 'pr', 'none' /
+        CHARACTER(LEN=80) :: cell_dynamics_allowed(6)
+        DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', 'damp-w'  /
 
         CHARACTER(LEN=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*
@@ -890,7 +930,7 @@
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .FALSE.
         REAL(dbl) :: xk(3,npkx) = 0.0d0, wk(npkx) = 0.0d0
-        INTEGER :: nks = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
+        INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(LEN=80) :: k_points = 'gamma'
           ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*
           ! select the k points mesh
@@ -960,6 +1000,7 @@
 !    CELL_PARAMETERS
 !
        REAL(dbl) :: rd_ht(3,3) = 0.0d0
+       CHARACTER(len=80) :: cell_symmetry = 'none'
        LOGICAL   :: trd_ht = .FALSE.
 
 !
