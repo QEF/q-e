@@ -51,25 +51,25 @@
   ! ... The units where various variables are saved
   !
 
-     INTEGER :: rhounit = 17
-     INTEGER :: emptyunit = 19
-     INTEGER :: crashunit = 15
-     INTEGER :: stopunit = 7
-     INTEGER :: ksunit = 18
-     INTEGER :: sfacunit = 20
-     INTEGER :: pseudounit = 10
+     INTEGER :: rhounit     = 17
+     INTEGER :: emptyunit   = 19
+     INTEGER :: crashunit   = 15
+     INTEGER :: stopunit    = 7
+     INTEGER :: ksunit      = 18
+     INTEGER :: sfacunit    = 20
+     INTEGER :: pseudounit  = 10
 
-     INTEGER :: iunpun           ! unit for saving the final results
-     INTEGER :: iunwfc           ! unit with wavefunctions
-     INTEGER :: iunat            ! unit for saving orthogonal atomic wfcs
-     INTEGER :: iunocc           ! unit for saving the atomic n_{ij}
-     INTEGER :: iunoldwfc        ! unit with old wavefunctions (molecular dynamics)
-     INTEGER :: iunoldwfc2       ! as above at step -2
-     INTEGER :: iunigk           ! unit for saving indices
-     INTEGER :: iunres           ! unit for the restart of the run
-     INTEGER :: iunneb           ! unit for NEB output ( sdtout or what else )
-     INTEGER :: nwordwfc         ! lenght of record in wavefunction file
-     INTEGER :: nwordatwfc       ! lenght of record in atomic wfc file
+     INTEGER :: iunpun      =  4  ! unit for saving the final results
+     INTEGER :: iunwfc      = 10  ! unit with wavefunctions
+     INTEGER :: iunat       = 13 ! unit for saving orthogonal atomic wfcs
+     INTEGER :: iunocc      = 14 ! unit for saving the atomic n_{ij}
+     INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions (molecular dynamics)
+     INTEGER :: iunoldwfc2  = 12 ! as above at step -2
+     INTEGER :: iunigk      = 16 ! unit for saving indices
+     INTEGER :: iunres      =  1 ! unit for the restart of the run
+     INTEGER :: iunneb      = 20 ! unit for NEB output ( sdtout or what else )
+     INTEGER :: nwordwfc    =  2 ! lenght of record in wavefunction file
+     INTEGER :: nwordatwfc  =  2 ! lenght of record in atomic wfc file
 
 !=----------------------------------------------------------------------------=!
    END MODULE io_files
