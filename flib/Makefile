@@ -87,6 +87,7 @@ dlamch.o : dlamch.f
 
 ptools.a : $(POBJS)
 	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 
 clean :
 	- /bin/rm -f ptools.a *.o *.mod *.i *.F90 core* work.pc flib.a \
