@@ -19,7 +19,6 @@ compute_phi.o \
 compute_phipot.o \
 compute_phius.o \
 compute_solution.o \
-date_and_tim.o \
 descreening.o \
 dir_outward.o \
 dirsol.o \
@@ -28,7 +27,6 @@ do_mesh.o \
 el_config.o \
 elsd.o \
 elsdps.o \
-errore.o \
 esic.o \
 exc_t.o \
 find_qi.o \

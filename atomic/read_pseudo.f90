@@ -30,7 +30,7 @@ integer  ::    &
 
       character ::   &
             file_pseudo*20, &    ! input: the file with the pseudopotential
-            dft*50              ! output: the type of xc
+            dft*20              ! output: the type of xc
 
       integer :: &
               ios, i, l, k, ir, iunps, mesh1, &
@@ -56,6 +56,7 @@ integer  ::    &
 !     reads the starting lines
 !
       read( iunps, '(a)', end=300, err=300, iostat=ios ) dft
+
       if (dft(1:2).eq.'**') dft='LDA'
       if (dft(1:17).eq.'slater-pz-ggx-ggc') dft='PW'
  
@@ -68,6 +69,7 @@ integer  ::    &
            call errore( 'read_pseudo','nlc or nnl < 0 ? ', 1 )
       if ( zval.le.0d0 )  &
            call errore( 'read_pseudo','Wrong zval ', 1 )
+
 !
 !   In numeric pseudopotentials both nlc and nnl are zero.
 !

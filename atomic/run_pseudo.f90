@@ -169,7 +169,7 @@ integer, parameter :: itmax=200
       if (iswitch.eq.3) then
          phits=0.d0
          do nst=1,nwfts
-            if (octs(nst).gt.0.d0) then
+            if (octs(nst).ge.0.d0) then
                phits(:,nst)=phis(:,nst)  
             endif
          enddo

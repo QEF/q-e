@@ -1,7 +1,14 @@
+26/10/2004  Bug fix: the lenght of dft in readpseudo was 50. Problem 
+            introduced by merging ld1 with PWscf.  (ADC)
+
+25/10/2004  Added few additional checks for pseudopotential generation. (ADC)
+
+29/10/2004  clean-up. Some routines are in flib. (ADC)
+
 13/07/2004  Various cleanup, documentation (PG)
 
 09/07/2004  Troullier-Martins sort of working, more cleaning (PG)
-            Pt pseudopotential updated (AdC)
+            Pt pseudopotential updated (ADC)
 
 06/07/2004  indentation, spelling,Troullier-Martins implementation added
             (incomplete and untested), examples updated (PG)

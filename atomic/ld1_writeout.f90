@@ -24,13 +24,17 @@ subroutine ld1_writeout
 
   logical :: matches
 
+  
   if (file_pseudopw.eq.' ') return
 
   if (nconf.gt.1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
-  if (rel == 2.or.matches('UPF',file_pseudopw) &
-       .or.matches('upf',file_pseudopw)) goto 201
+  if (rel.eq.2.and..not.matches('UPF',file_pseudopw)) &
+       file_pseudopw=trim(file_pseudopw)//'.UPF'
+
+  if (matches('UPF',file_pseudopw).or.matches('upf',file_pseudopw)) goto 201
+
   iunps=28
   open(unit=iunps, file=file_pseudopw, status='unknown',  &
        form='formatted', err=50, iostat=ios)
@@ -112,8 +116,6 @@ subroutine ld1_writeout
 
 201 continue
 
-  if (rel.eq.2.and..not.matches('UPF',file_pseudopw)) &
-       file_pseudopw=trim(file_pseudopw)//'.UPF'
 
   if (matches('UPF',file_pseudopw).or.matches('upf',file_pseudopw)) then
      if (rel.eq.2.and.pseudotype.eq.1) then

@@ -20,6 +20,7 @@ subroutine ld1_readin
        n,i,   &          ! counter on wavefunctions
        nc,    &          ! counter on configuration
        ns,ns1,&          ! counter on pseudo wavefunctions
+       c1,    &          ! counter
        ios               ! I/O control
 
   real(kind=dp) :: &
@@ -262,7 +263,7 @@ subroutine ld1_readin
         call read_pseudoupf
      else
         if (pseudotype == 1) then
-           call read_pseudo &
+           call read_pseudo  &
                 (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,sqr, &
                 dft,lmax,lloc,zval,nlcc,rhoc,vnl,vnlo,vpsloc,rel)
         elseif (pseudotype == 2 .or. pseudotype == 3) then
@@ -276,6 +277,7 @@ subroutine ld1_readin
         endif
      endif
   endif
+
 
   if (iswitch == 3) then
      !
@@ -313,7 +315,25 @@ subroutine ld1_readin
                 call errore('ld1_readin','two wavefunctions for same l',1)
         enddo
         lmax=max(lmax,lls(ns))
+        if (enls(ns).ne.0.d0.and.ocs(ns).gt.0.d0) &
+                call errore('ld1_readin','unbound states must be empty',1)
+        if (rcut(ns).ne.rcutus(ns)) then
+!
+!         this channel is US. Check that there is at least another energy
+!
+          c1=0
+          do ns1=1,nwfs
+             if (els(ns).eq.els(ns1).and.jjs(ns).eq.jjs(ns1)) c1=c1+1 
+          enddo
+          if (c1.lt.2) call errore('ld1_readin', &
+                        'US requires at least two energies per channel',1)
+        endif
      enddo
+     if (nwfs.gt.1) then
+        if (els(nwfs)==els(nwfs-1).and.jjs(nwfs)==jjs(nwfs-1).and.lloc.gt.-1) &
+                call errore('ld1_readin','only one local channel',1)
+                
+     endif
      nlc=0
      nnl=0
   endif
