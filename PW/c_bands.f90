@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw
   USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
-                                   isolve, reduce_io, wg_setted
+                                   isolve, reduce_io, wg_set
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -237,7 +237,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( wg_setted ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_set ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 2 ) THEN
              !
@@ -474,7 +474,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( wg_setted ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_set ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !

@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2005 PWSCF-FPMD-CPV groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
+!
 !=----------------------------------------------------------------------------=!
   MODULE control_flags
 !=----------------------------------------------------------------------------=!
@@ -241,7 +240,7 @@
     noinv = .FALSE.,  &! if .TRUE. eliminates inversion symmetry
     restart,          &! if .TRUE. restart from results of a preceding run
     reduce_io,        &! if .TRUE. reduce the I/O to the strict minimum
-    wg_setted = .FALSE.
+    wg_set = .FALSE.
   !
 
    INTEGER   :: ortho_max = 0     ! maximum number of iterations in routine ortho

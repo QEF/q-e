@@ -39,7 +39,7 @@ SUBROUTINE sum_band()
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-  USE control_flags,        ONLY : wg_setted
+  USE control_flags,        ONLY : wg_set
   USE mp_global,            ONLY : intra_image_comm, me_image, &
                                    root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
@@ -118,7 +118,7 @@ SUBROUTINE sum_band()
      !
   END IF
   !
-  wg_setted = .TRUE.
+  wg_set = .TRUE.
   !
   ! ... Needed for LDA+U
   !
