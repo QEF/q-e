@@ -28,6 +28,8 @@ subroutine startup (nd_nmbr, version)
   !  mpirun -np 16 pw.x -npool 8 < input
   !  COMPAQ :
   !  prun -n 16 sh -c 'pw.x -npool 8 < input'
+  !  Some PC clusters:
+  !  mpiexec -n 16 pw.x -npool 8 < input  
   !  In this example you will use 16 processors divided into 8 pools
   !  of 2 processors each (in this case you must have at least 8 k-points)
   !-----------------------------------------------------------------------
@@ -89,8 +91,7 @@ subroutine startup (nd_nmbr, version)
      !
      do iiarg=1,nargs-1
         call getarg (iiarg, np)  
-        if (trim(np) == '-n' .or. trim(np) == '-np' .or. &
-            trim(np) == '-npool' .or. trim(np) == '-npools' ) then
+        if (trim(np) == '-npool' .or. trim(np) == '-npools' ) then
           call getarg (iiarg+1, np)  
           read (np,*) npool  
         end if

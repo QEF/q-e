@@ -1030,7 +1030,8 @@ subroutine read_cards (pseudop, atomic_positions)
        fixatom
   implicit none
   !
-  character (len=30) :: pseudop (ntyp), atomic_positions
+  character (len=80) :: pseudop (ntyp)
+  character (len=30) :: atomic_positions
   !
   real(kind=8), allocatable :: tau_inp(:,:)
   integer, allocatable :: ityp_inp(:), iforce_inp(:,:)

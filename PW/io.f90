@@ -10,6 +10,6 @@ module io
   character(len=80) :: tmp_dir  ! directory for temporary files
   character(len=80) :: prefix   ! prepended to file names
   character(len=3)  :: nd_nmbr  ! node number (used only in parallel case)
-  character(len=50) :: pseudo_dir
-  character(len=30) :: pseudop(ntypx)
+  character(len=80) :: pseudo_dir
+  character(len=80) :: pseudop(ntypx)
 end module io
