@@ -9,13 +9,22 @@
 program projwfc
   !-----------------------------------------------------------------------
   !
-  ! projects wavefunctions onto orthogonalized atomic wavefunctions
-  ! calculates Lowdin charges, spilling parameter
+  ! projects wavefunctions onto orthogonalized atomic wavefunctions,
+  ! calculates Lowdin charges, spilling parameter, projected DOS
   ! input: namelist "&inputpp", with variables
-  ! prefix      prefix of input files saved by program pwscf
-  ! outdir      temporary directory where files resides
+  !   prefix      prefix of input files saved by program pwscf
+  !   outdir      temporary directory where files resides
+  !   io_choice   'standard' : write projections to standard output
+  !               'file'     : write projected DOS, one file per atomic
+  !                            wavefunction (those that have been read
+  !                            from the pseudopotential file)
+  !               'both'     : do both of the above things
+  !   Emin        projected DOS is plotted starting at E=Emin 
+  !               (eV, default: lowest eigenvalue)...
+  !   Emax        ...up to E=Emax (eV, default: highest eigenvalue)...
+  !   DeltaE      ...in steps of DeltaE (eV, default: 0.01)
+  !   smoothing   gaussian broadening (eV, default: DeltaE)
   !
-  use pwcom
   use parameters, only : DP
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
@@ -63,11 +72,10 @@ program projwfc
   CALL mp_bcast( Emin, ionode_id )
   CALL mp_bcast( Emax, ionode_id )
 #endif
-  if ( smoothing .lt. DeltaE ) smoothing= DeltaE
+  smoothing = MAX ( smoothing, DeltaE )
   if (io_choice.ne.'standard' .and. io_choice.ne.'files' .and.  &
       io_choice.ne.'both') &
       call errore ('projwave','io_choice definition is invalid',1)
-
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -129,12 +137,11 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   !
   write (6, '(/5x,"Calling projwave .... ")')
   if (io_choice.eq.'standard' ) &
-     write (6, '(5x,"Projections are written on standard output")')
+     write (6, '(5x,"Projections are written to standard output")')
   if (io_choice.eq.'files' ) &
-     write (6, '(5x,"Projections are written on files")')
+     write (6, '(5x,"Projections are written to files")')
   if (io_choice.eq.'both' ) &
-     write (6, '(5x,"Projections are written on both standard output and file")')
-
+     write (6, '(5x,"Projections are written to both standard output and file")')
   !
   allocate(swfcatom (npwx , natomwfc ) )
   allocate(wfcatom (npwx, natomwfc) )
@@ -157,7 +164,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   do na = 1, nat
      nt = ityp (na)
      do n = 1, nchi (nt)
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+        if (oc (n, nt) > 0.d0 .OR..NOT.newpseudo (nt) ) then
            l = lchi (n, nt)
            lmax_wfc = max (lmax_wfc, l )
            do m = 1, 2 * l + 1
@@ -171,8 +178,8 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      enddo
   enddo
 
-  if (lmax_wfc.gt.3) call errore ('projwave', 'l > 3 not yet implemented', 1)
-  if (nwfc.ne.natomwfc) call errore ('projwave', 'wrong # of atomic wfcs?', 1)
+  if (lmax_wfc > 3) call errore ('projwave', 'l > 3 not yet implemented', 1)
+  if (nwfc /= natomwfc) call errore ('projwave', 'wrong # of atomic wfcs?', 1)
   !
   !    loop on k points
   !
@@ -212,7 +219,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
            do k = 1, natomwfc
               overlap (i, j) = overlap (i, j) + e (k) * work (j, k) * conjg (work (i, k) )
            enddo
-           if (j.ne.i) overlap (j, i) = conjg (overlap (i, j))
+           if (j /= i) overlap (j, i) = conjg (overlap (i, j))
         enddo
      enddo
      deallocate (work)
@@ -256,19 +263,19 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
            !
            !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
            !
-           if (l.eq.0) then
+           if (l == 0) then
               work1(:) = proj0 (nwfc1 + 1,:)
-           else if (l.eq.1) then 
+           else if (l == 1) then 
               work1(:) = 0.d0  
               do m1 = 1, 3  
                  work1(:) = work1(:) + d1 (m1, m, isym) * proj0 (nwfc1 + m1,:)
               enddo
-           else if (l.eq.2) then 
+           else if (l == 2) then 
               work1(:) = 0.d0  
               do m1 = 1, 5  
                  work1(:) = work1(:) + d2 (m1, m, isym) * proj0 (nwfc1 + m1,:)
               enddo
-           else if (l.eq.3) then 
+           else if (l == 3) then 
               work1(:) = 0.d0  
               do m1 = 1, 7  
                  work1(:) = work1(:) + d3 (m1, m, isym) * proj0 (nwfc1 + m1,:)
@@ -291,12 +298,12 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   call poolrecover (et, nbnd, nkstot, nks)
   call poolrecover (proj, nbnd * natomwfc, nkstot, nks)
   !
-  if (me.eq.1.and.mypool.eq.1) then
+  if (me == 1 .AND. mypool == 1) then
 #endif
      !
      ! write on the standard output file
      !
-     if (io_choice.eq.'standard' .or.io_choice.eq.'both' ) then 
+     if (io_choice.eq.'standard' .OR. io_choice.eq.'both' ) then 
         write(6,'(/"Projection on atomic states:"/)')
         do nwfc = 1, natomwfc
            write(6,'(5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
@@ -323,7 +330,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
               !
               do nwfc = 1, natomwfc
                  e (nwfc) = - e(nwfc)
-                 if ( abs (e(nwfc)).lt.0.001 ) go to 20
+                 if ( abs (e(nwfc)) < 0.001 ) go to 20
               end do
               nwfc = natomwfc + 1
 20            nwfc = nwfc -1
@@ -386,7 +393,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
      !
      deallocate (charges)
 
-     if (io_choice.eq.'files' .or. io_choice.eq.'both') then
+     if (io_choice.eq.'files' .OR. io_choice.eq.'both') then
         !
         ! find band extrema
         !
@@ -406,7 +413,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
         current_spin = 1
         ie_delta = 5 * smoothing / DeltaE+1
         do ik = 1,nkstot
-           if ( nspin.eq.2 ) current_spin = isk ( ik )
+           if ( nspin == 2 ) current_spin = isk ( ik )
            do ibnd = 1, nbnd
               etev = et(ibnd,ik) * rytoev
               ie_mid = nint( (etev-Emin)/DeltaE )
@@ -434,13 +441,13 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
         !                   12345678901
 
               c_tab = 11
-              if (nlmchi(nwfc)%na.lt.10) then
+              if (nlmchi(nwfc)%na < 10) then
                  write (filextension( c_tab : c_tab ),'(i1)') nlmchi(nwfc)%na
                  c_tab = c_tab + 1
-              else if (nlmchi(nwfc)%na.lt.100) then
+              else if (nlmchi(nwfc)%na < 100) then
                  write (filextension( c_tab : c_tab+1 ),'(i2)') nlmchi(nwfc)%na
                  c_tab = c_tab + 2
-              else if (nlmchi(nwfc)%na.lt.1000) then
+              else if (nlmchi(nwfc)%na < 1000) then
                  write (filextension( c_tab : c_tab+2 ),'(i3)') nlmchi(nwfc)%na
                  c_tab = c_tab + 3
               else
@@ -451,11 +458,11 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
               write (filextension(c_tab:c_tab+4),'(a1,a)') &
                     '(',trim(atm(ityp(nlmchi(nwfc)%na)))
               c_tab = c_tab + len_trim(atm(ityp(nlmchi(nwfc)%na))) + 1
-              if (nlmchi(nwfc)%n.ge.10) &
+              if (nlmchi(nwfc)%n >= 10) &
                  call errore('projwave',&
-                             'file extension not supporting so many atmic wfc',&
+                             'file extension not supporting so many atomic wfc',&
                               nwfc)
-              if (nlmchi(nwfc)%l.gt.3) &
+              if (nlmchi(nwfc)%l > 3) &
                  call errore('projwave',&
                              'file extension not supporting so many l', &
                               nwfc)
@@ -466,7 +473,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
 
               write (4,'("# E (eV) ",$)')
               do m=1,2 * nlmchi(nwfc)%l + 1
-                 if (nspin.eq.1) then
+                 if (nspin == 1) then
                     write(4,'(" dos(E)    ",$)') 
                  else
                     write(4,'(" dosup(E)  ",$)') 
@@ -486,7 +493,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
         end do
         open (4,file=trim(prefix)//".pdos_tot",form='formatted', &
                 status='unknown')
-        if (nspin.eq.1) then
+        if (nspin == 1) then
            write (4,'("# E (eV)  dos(E)    pdos(E)")') 
         else
            write (4,'("# E (eV)  dosup(E)   dosdw(E)  pdosup(E)  pdosdw(E)")') 
