@@ -80,7 +80,7 @@ program projwfc
   character(len=256) :: outdir 
   real (kind=DP)     :: Emin, Emax, DeltaE, degauss1, smoothing
   integer :: ngauss1, ios, ionode_id = 0  
-  namelist / inputpp / outdir, prefix, ngauss1, degauss1,&
+  namelist / inputpp / outdir, prefix, ngauss, degauss,&
              Emin, Emax, DeltaE, io_choice, smoothing
 
   CHARACTER (LEN=80)  :: input_file
