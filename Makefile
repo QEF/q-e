@@ -97,7 +97,7 @@ tar :
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# archive a few entire directories, but without CVS subdirs
-	find install *docs *_examples pseudo -type f -not -path \*/CVS/\* | \
-		xargs tar rvf pw.tar
+	find install *docs *_examples pseudo -type f \
+		| grep -v -e /CVS/ -e /results/ | xargs tar rvf pw.tar
 	gzip pw.tar
 
