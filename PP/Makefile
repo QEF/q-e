@@ -278,7 +278,8 @@ EXOBJS = \
  ../Modules/iotk_multitype.o \
  ../Modules/iotk_multitype_character.o \
  ../Modules/iotk_multitype_complex.o \
- ../Modules/iotk_multitype_integer.o \
+ ../Modules/iotk_multitype_integer1.o \
+ ../Modules/iotk_multitype_integer2.o \
  ../Modules/iotk_multitype_logical.o \
  ../Modules/iotk_multitype_real.o 
 
