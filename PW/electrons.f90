@@ -108,7 +108,7 @@ SUBROUTINE electrons()
      !
      CALL restart_in_electrons( iter, ik_, dr2 )
      !
-     IF ( ik_ == - 1000 ) THEN
+     IF ( ik_ == -1000 ) THEN
         !
         conv_elec = .TRUE.
         !
@@ -149,31 +149,33 @@ SUBROUTINE electrons()
   ! ... first) the threshold is fixed to a default value of 1.D-5
   !
   IF ( istep > 1 ) ethr = 1.D-5
+  IF ( imix >= 0 ) ngm0 = ngm
+  !
+  tcpu = get_clock( 'PWSCF' )
+  WRITE( stdout, 9002 ) tcpu
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  IF ( imix >= 0 ) ngm0 = ngm
+  IF ( lscf ) THEN
+     WRITE( stdout, 9000 )
+  ELSE
+     WRITE( stdout, 9009 )
+  END IF
+  !
+#if defined (FLUSH)
+     CALL flush( stdout )
+#endif
   !
   DO idum = 1, niter
-     !
-     tcpu = get_clock( 'PWSCF' )
-     !
-     WRITE( stdout, 9000 ) tcpu
      !
      IF ( imix >= 0 ) rho_save = rho
      !  
      iter = iter + 1
      !
      IF ( lscf ) THEN
-        !
         WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
-        !
-     ELSE
-        !
-        WRITE( stdout, 9009 )
-        !
      END IF
      !
 #if defined (FLUSH)
@@ -212,6 +214,11 @@ SUBROUTINE electrons()
         conv_elec = .TRUE.
         !
         CALL poolrecover( et, nbnd, nkstot, nks )
+        !
+        tcpu = get_clock( 'PWSCF' )
+        WRITE( stdout, 9002 ) tcpu
+        !
+        WRITE( stdout, 9102 )
         !
         DO ik = 1, nkstot
            !
@@ -402,6 +409,11 @@ SUBROUTINE electrons()
      !
      CALL save_in_electrons( iter, dr2 )
      !
+     tcpu = get_clock( 'PWSCF' )
+     WRITE( stdout, 9002 ) tcpu
+     !
+     IF ( conv_elec ) WRITE( stdout, 9101 )
+     !
      IF ( ( conv_elec .OR. MOD( iter, iprint )  == 0 ) .AND. &
           iswitch <= 2 ) THEN
         !
@@ -448,7 +460,6 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
      !
      IF ( lda_plus_u ) etot = etot + eth
-     !
      IF ( tefield ) etot = etot + etotefield
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
@@ -537,6 +548,8 @@ SUBROUTINE electrons()
      !
   END DO
   !
+  IF ( lscf ) WRITE( stdout, 9101 )
+  !
   WRITE( stdout, 9120 )
   !
   ! <------- jump here if not scf
@@ -549,7 +562,8 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
+9000 FORMAT(/'     Self-consistent Calculation')
+9002 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
 9009 FORMAT(/'     Band Structure Calculation')
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X, &
              'beta=',F4.2)
@@ -584,8 +598,10 @@ SUBROUTINE electrons()
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
 9090 FORMAT(/'     the final potential is written on file ',A14)
 9100 FORMAT(/'     this iteration took ',F9.2,' cpu secs')
+9101 FORMAT(/'     End of self-consistent calculation')
+9102 FORMAT(/'     End of band structure calculation')
 9110 FORMAT(/'     convergence has been achieved')
-9120 FORMAT(/'     convergence NOT achieved. stopping ...')
+9120 FORMAT(/'     convergence NOT achieved, stopping')
   !
   CONTAINS
      !

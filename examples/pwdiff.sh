@@ -1,5 +1,26 @@
 #!/bin/sh
 
+# pwdiff.sh -- script for checking outputs of PWscf examples
+# checking is done in three steps: preprocess, diff against reference
+# data, postprocess
+# this way "false positives" are eliminated, that is, differences that
+# don't mean that something went wrong
+
+# pre/postprocessing scripts must be in the same directory as this one
+dir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+prediff=$dir/prediff.awk
+postdiff=$dir/postdiff.awk
+if ! test -f "$prediff"
+then
+    echo error: file prediff.awk not found
+    exit -1
+fi
+if ! test -f "$postdiff"
+then
+    echo error: file postdiff.awk not found
+    exit -1
+fi
+
 # check that files exist
 if ! test -f "$1"
 then
@@ -13,8 +34,8 @@ then
 fi
 
 # preprocess
-awk -f prediff.awk $1 > pwdiff.sh.tmp1
-awk -f prediff.awk $2 > pwdiff.sh.tmp2
+awk -f $prediff $1 > pwdiff.sh.tmp1
+awk -f $prediff $2 > pwdiff.sh.tmp2
 
 # uncomment to debug
 # cp pwdiff.sh.tmp1 pwdiff.sh.tmp6
@@ -26,6 +47,7 @@ offset2=0
 check1=1
 check2=1
 
+# check preprocessed files
 while test $check1 -gt 0 || test $check2 -gt 0
 do
     # look for next checkpoints
@@ -47,9 +69,9 @@ do
     head -$check1 pwdiff.sh.tmp1 > pwdiff.sh.tmp3
     head -$check2 pwdiff.sh.tmp2 > pwdiff.sh.tmp4
 
-    # diff up to next checkpoint, then postprocess
+    # diff up to next checkpoints, then postprocess
     diff pwdiff.sh.tmp3 pwdiff.sh.tmp4 \
-	| awk -f postdiff.awk o1=$offset1 o2=$offset2 >> pwdiff.sh.tmp5
+	| awk -f $postdiff o1=$offset1 o2=$offset2 >> pwdiff.sh.tmp5
 
     # discard processed part
     sed "1,${check1}d" pwdiff.sh.tmp1 > pwdiff.sh.tmp3
@@ -60,7 +82,7 @@ do
     offset2=`expr $offset2 + $check2 + $eof2 - 1`
 done
 
-# return success if there's no output, failure otherwise (just like diff)
+# return success if there's no output, failure otherwise (as diff does)
 rvalue=`wc pwdiff.sh.tmp5 | awk '{print ($1 == 0) ? 0 : 1}'`
 cat pwdiff.sh.tmp5
 rm -f pwdiff.sh.tmp[1-5]

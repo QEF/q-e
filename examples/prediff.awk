@@ -1,10 +1,20 @@
 #!/usr/bin/awk -f
 
+# prediff.awk -- preprocessor for checking outputs of PWscf examples
+# checking is done in three steps: preprocess, diff against reference
+# data, postprocess
+# this way "false positives" are eliminated, that is, differences that
+# don't mean that something went wrong
+
 # for each (group of) line(s)
 { check_line(); }
 
 function check_line()
 {
+  # mark (groups of) lines that may be "false positives", by prepending
+  # a key of the form "@key@"
+  # postprocessor will check them based on key
+
   if (match($0, "Today is") || match($0, "cpu time") || match($0, "CPU"))
     {
       print_key("TIMING");
@@ -64,18 +74,19 @@ function check_line()
     {
       print_key("KWEIGHT");
     }
-  else if (match($0, "iteration #.*ecut=.*beta="))
+  else if (match($0, "Self-consistent Calculation"))
     {
       print_key("ITERATION");
-      while (getline && ! match($0, "!") && ! match($0, "bands") \
-	     && ! match($0, "the Fermi energy is"))
+      while (getline && ! match($0, "End of self-consistent calculation"))
 	print_key("ITERATION");
+      print_key("ITERATION");
       print "@CHECKPOINT@";
-      check_line();
     }
-  else if (match($0, "WARNING:.*eigenvalues not converged") \
-	   || match($0, "avg # of iterations"))
+  else if (match($0, "Band Structure Calculation"))
     {
+      print_key("ITERATION");
+      while (getline && ! match($0, "End of band structure calculation"))
+	print_key("ITERATION");
       print_key("ITERATION");
     }
   else if (match($0, "band energies") || match($0, "bands"))

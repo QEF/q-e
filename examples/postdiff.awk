@@ -1,5 +1,11 @@
 #!/usr/bin/awk -f
 
+# postdiff.awk -- postprocessor for checking outputs of PWscf examples
+# checking is done in three steps: preprocess, diff against reference
+# data, postprocess
+# this way "false positives" are eliminated, that is, differences that
+# don't mean that something went wrong
+
 # for each (group of) line(s)
 {
   # read block of lines from output of diff

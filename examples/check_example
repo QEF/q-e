@@ -3,6 +3,15 @@
 # check directories given as arguments, current directory if none
 if test $# = 0 ; then args="." ; else args="$@"; fi
 
+# pwdiff.sh must be in the same directory as this script
+dir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+pwdiff=$dir/pwdiff.sh
+if ! test -x "$pwdiff"
+then
+    echo error: file pwdiff.sh not found or not executable
+    exit -1
+fi
+
 n_wrong=0
 for dir in $args
 do
@@ -29,7 +38,7 @@ do
     for file in $output
     do
         echo "  "checking $file...
-	if ! ./pwdiff.sh $EXAMPLEDIR/reference/$file $EXAMPLEDIR/results/$file
+	if ! $pwdiff $EXAMPLEDIR/reference/$file $EXAMPLEDIR/results/$file
 	then
 	    wrong="$wrong $file"
 	    let n_wrong=n_wrong+1
