@@ -1,110 +1,141 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
+  !----------------------------------------------------------------------------
   !
-  ! sorts k+g in order of increasing magnitude, up to ecut
-  ! NB: this version will yield the same ordering for different ecut
-  !     and the same ordering in all machines
+  ! ... sorts k+g in order of increasing magnitude, up to ecut
+  ! ... NB: this version will yield the same ordering for different ecut
+  ! ...     and the same ordering in all machines
   !
-  use parameters
-  use constants, only: eps8
-  implicit none
+  USE parameters, ONLY : DP
+  USE constants,  ONLY : eps8
   !
-  !      Here the dummy variables
+  IMPLICIT NONE
   !
-  integer :: ngm, ngk, igk(ngk)
-  ! input: the number of g vectors
-  ! output: the number of k+G vectors inside
-  ! output: the correspondence k+G <-> G
-  real(kind=DP) :: k (3), g (3, ngm), ecut, gk (ngk)
-  ! input: the k point
-  ! input: the coordinates of G vectors
-  ! input: the cut-off energy
-  ! output: the moduli of k+G
+  ! ... Here the dummy variables
   !
-  !      here the local variables
+  INTEGER :: ngm, ngk, igk(ngk)
+    ! input        : the number of g vectors
+    ! input/output : the number of k+G vectors inside the "ecut sphere"
+    ! output       : the correspondence k+G <-> G
+  REAL(KIND=DP) :: k(3), g(3,ngm), ecut, gk(ngk)
+    ! input  : the k point
+    ! input  : the coordinates of G vectors
+    ! input  : the cut-off energy
+    ! output : the moduli of k+G
   !
-  integer :: ng, nk
-  ! counter on   G vectors
-  ! counter on k+G vectors
-
-  real(kind=DP) :: q, q2x
-  ! |k+G|^2
-  ! upper bound for |G|
+  ! ... here the local variables
   !
-  !    first we count the number of k+G vectors inside the cut-off sphere
+  INTEGER :: ng, nk, ngk_in
+    ! counter on   G vectors
+    ! counter on k+G vectors
+    ! the size of vector gk (ngk is overwritten)
+  REAL(KIND=DP) :: q, q2x
+    ! |k+G|^2
+    ! upper bound for |G|
   !
-  q2x = (sqrt (k (1) **2 + k (2) **2 + k (3) **2) + sqrt (ecut) ) ** 2
-  ngk = 0
-  do ng = 1, ngm
-     q = (k (1) + g (1, ng) ) **2 + &
-         (k (2) + g (2, ng) ) **2 + &
-         (k (3) + g (3, ng) ) **2
+  !
+  ! ... first we count the number of k+G vectors inside the cut-off sphere
+  !
+  q2x = ( SQRT( k(1)**2 + k(2)**2 + k(3)**2 ) + SQRT( ecut ) )**2
+  !
+  ngk_in = ngk
+  ngk    = 0
+  !
+  DO ng = 1, ngm
      !
-     ! here if |k+G|^2 <= Ecut
+     q = ( k(1) + g(1,ng) )**2 + ( k(2) + g(2,ng) )**2 + ( k(3) + g(3,ng) )**2
      !
-     if (q <= ecut) then
+     ! ... here if |k+G|^2 <= Ecut
+     !
+     IF ( q <= ecut ) THEN
+        !
         ngk = ngk + 1
         !
-        ! gk is a fake quantity giving the same ordering on all machines
+        ! ... gk is a fake quantity giving the same ordering on all machines
         !
-        if ( q > eps8 ) then
-           gk (ngk) = q 
-        else
-           gk (ngk) = 0.d0
-        endif
-        !   set the initial value of index array
+        IF ( ngk > ngk_in ) &
+           CALL errore( 'gk_sort', 'array gk out-of-bounds', 1 )
+        !
+        IF ( q > eps8 ) THEN 
+           !
+           gk(ngk) = q 
+           !
+        ELSE
+           !
+           gk(ngk) = 0.D0
+           !
+        END IF
+        !
+        ! ... set the initial value of index array
+        !
         igk (ngk) = ng
-     else
-        !  if |G| > |k| + sqrt(Ecut)  stop search and order vectors
-        if ( ( g(1, ng)**2 + g(2, ng)**2 + g(3, ng)**2 ) > (q2x + eps8) ) exit
-     endif
-  enddo
-  if( ng > ngm ) call errore ('gk_sort', 'unexpected exit from do-loop', - 1)
+        !
+     ELSE
+        !
+        ! ... if |G| > |k| + SQRT( Ecut )  stop search and order vectors
+        !
+        IF ( ( g(1,ng)**2 + g(2,ng)**2 + g(3,ng)**2 ) > ( q2x + eps8 ) ) EXIT
+        !
+     END IF
+     !
+  END DO
   !
-  ! order vector gk keeping initial position in index
+  IF( ng > ngm ) CALL errore( 'gk_sort', 'unexpected exit from do-loop', -1 )
   !
-  call hpsort_eps (ngk, gk, igk, eps8)
+  ! ... order vector gk keeping initial position in index
   !
-  !    now order true |k+G|
+  CALL hpsort_eps( ngk, gk, igk, eps8 )
   !
-  do nk = 1, ngk
-     gk (nk) = (k (1) + g (1, igk (nk) ) ) **2 + &
-               (k (2) + g (2, igk (nk) ) ) **2 + &
-               (k (3) + g (3, igk (nk) ) ) **2
-  enddo
-  return
-end subroutine gk_sort
-
-!-----------------------------------------------------------------------
-subroutine gk_l2gmap (ngm, ig_l2g, ngk, igk, igk_l2g)
-  !-----------------------------------------------------------------------
+  ! ... now order true |k+G|
   !
-  ! This subroutine maps local G+k index to the global G vector index
-  ! the mapping is used to collect wavefunctions subsets distributed
-  ! across processors.
-  ! Written by Carlo Cavazzoni
+  DO nk = 1, ngk
+     !
+     gk(nk) = ( k(1) + g(1,igk(nk) ) )**2 + &
+              ( k(2) + g(2,igk(nk) ) )**2 + &
+              ( k(3) + g(3,igk(nk) ) )**2
+     !         
+  END DO
   !
-  use parameters
-  implicit none
+  RETURN
   !
-  !      Here the dummy variables
+END SUBROUTINE gk_sort
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
+  !----------------------------------------------------------------------------
   !
-  integer :: ngm, ngk, igk(ngk), ig_l2g(ngm)   ! input
-  integer :: igk_l2g(ngk)                      ! output
-  integer :: nk
-
+  ! ... This subroutine maps local G+k index to the global G vector index
+  ! ... the mapping is used to collect wavefunctions subsets distributed
+  ! ... across processors.
+  ! ... Written by Carlo Cavazzoni
+  !
+  USE parameters, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  ! ... Here the dummy variables
+  !
+  INTEGER :: ngm, ngk, igk(ngk), ig_l2g(ngm)   ! input
+  INTEGER :: igk_l2g(ngk)                      ! output
+  INTEGER :: nk
+  !
   ! input: mapping between local and global G vector index
-  do nk = 1, ngk
+  !
+  !
+  DO nk = 1, ngk
+     !
      igk_l2g(nk) = ig_l2g( igk(nk) )
-  enddo
-  return
-end subroutine gk_l2gmap
+     !
+  END DO
+  !
+  RETURN
+  !
+END SUBROUTINE gk_l2gmap
