@@ -282,18 +282,19 @@ MODULE io_routines
      SUBROUTINE write_dat_files()
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : atom_label
-       USE brilz,            ONLY : alat, at
-       USE basis,            ONLY : ityp, nat
-       USE formats,          ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
-       USE miscellany,       ONLY : norm
-       USE supercell,        ONLY : pbc
-       USE neb_variables,    ONLY : dim, PES, PES_gradient, pos, tangent, &
-                                    num_of_images, error, grad
-       USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
-                                    dat_file, int_file, xyz_file, axsf_file
+       USE input_parameters,       ONLY : atom_label
+       USE brilz,                  ONLY : alat, at
+       USE basis,                  ONLY : ityp, nat
+       USE formats,                ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
+       USE basic_algebra_routines, ONLY : norm
+       USE supercell,              ONLY : pbc
+       USE neb_variables,          ONLY : dim, PES, PES_gradient, pos, &
+                                          tangent, num_of_images, error, grad
+       USE io_files,               ONLY : iundat, iunint, iunxyz, iunaxsf, &
+                                          dat_file, int_file, xyz_file,    &
+                                          axsf_file
 #if defined (__PARA)
-       USE para,             ONLY : me, mypool
+       USE para,                   ONLY : me, mypool
 #endif     
        !
        IMPLICIT NONE

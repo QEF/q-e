@@ -1209,7 +1209,7 @@ SUBROUTINE verify_tmpdir()
   USE mp,               ONLY : mp_barrier
 #endif  
   !
-  USE miscellany,       ONLY : int_to_char
+  USE parser,           ONLY : int_to_char
   !
   IMPLICIT NONE
   !

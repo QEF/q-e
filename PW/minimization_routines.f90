@@ -10,10 +10,10 @@
 MODULE minimization_routines
   !---------------------------------------------------------------------------
   !
-  USE kinds,     ONLY :  DP
-  USE constants,      ONLY :  AU, eV_to_kelvin, eps32  
-  USE neb_variables,  ONLY :  pos, ds, grad, norm_grad
-  USE miscellany
+  USE kinds,                  ONLY : DP
+  USE constants,              ONLY : AU, eV_to_kelvin, eps32  
+  USE neb_variables,          ONLY : pos, ds, grad, norm_grad
+  USE basic_algebra_routines, ONLY : norm
   !  
   IMPLICIT NONE
   !

@@ -44,7 +44,7 @@ MODULE neb_routines
                                    VEC_scheme, ds, neb_thr, lquick_min ,       &
                                    ldamped_dyn, lmol_dyn
       USE neb_variables,    ONLY : neb_dyn_allocation   
-      USE miscellany,       ONLY : int_to_char
+      USE parser,           ONLY : int_to_char
       USE io_routines,      ONLY : read_restart
       USE formats,          ONLY : stringfmt   
       !
@@ -240,7 +240,7 @@ MODULE neb_routines
       !
       ! ... local variables
       !
-      REAL (KIND=DP)      :: err, tcpu 
+      REAL (KIND=DP)      :: err, tcpu, langevin_action
       INTEGER             :: image
       LOGICAL             :: stat
       INTEGER             :: N_in, N_fin
@@ -410,11 +410,16 @@ MODULE neb_routines
          !
          CALL write_dat_files()
          !
+         CALL compute_action( langevin_action )
+         !
          istep = istep + 1
          !
          ! ... informations are written on the standard output
          !
          IF ( lmol_dyn ) THEN
+            !
+            WRITE( UNIT = iunneb, FMT = '(/,"langevin action = ",F16.8,/)' ) &
+                langevin_action
             !
             WRITE( UNIT = iunneb, FMT = run_output_T_const ) &
                 istep,                    &
@@ -423,6 +428,9 @@ MODULE neb_routines
             !
          ELSE
             !
+            WRITE( UNIT = iunneb, FMT = '(/,"langevin action = ",F16.8,/)' ) &
+                langevin_action
+            !            
             WRITE( UNIT = iunneb, FMT = run_output ) &
                 istep,                  &
                 ( Emax - PES(1) ) * AU, &
@@ -463,11 +471,45 @@ MODULE neb_routines
     !
     !
     !------------------------------------------------------------------------
+    SUBROUTINE compute_action( langevin_action )
+      !------------------------------------------------------------------------
+      !
+      USE neb_variables,          ONLY : num_of_images, pos, PES_gradient
+      USE basic_algebra_routines, ONLY : norm
+      !
+      IMPLICIT NONE
+      !
+      ! ... I/O variables
+      !
+      REAL (KIND=DP), INTENT(OUT) :: langevin_action
+      !
+      ! ... local variables
+      !
+      INTEGER          :: image
+      !
+      ! ... end of local variables
+      !       
+      !  
+      langevin_action = 0.D0
+      !
+      DO image = 1, ( num_of_images - 1 )  
+         !  
+	 langevin_action = langevin_action + &
+                           norm( pos(:,(image+1)) - pos(:,image) ) * &
+                           ( norm( PES_gradient(:,image+1) ) + &
+                             norm( PES_gradient(:,image) ) )
+         !
+      END DO
+      !
+    END SUBROUTINE compute_action
+    !
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE compute_tangent()
       !------------------------------------------------------------------------
       !
-      USE neb_variables, ONLY : num_of_images, tangent
-      USE miscellany,    ONLY : norm
+      USE neb_variables,          ONLY : num_of_images, tangent
+      USE basic_algebra_routines, ONLY : norm
       !
       IMPLICIT NONE
       !
@@ -500,11 +542,11 @@ MODULE neb_routines
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
-      USE constants,     ONLY : pi, eps32
-      USE neb_variables, ONLY : num_of_images, Emax, Emin, &
-                                k_max, k_min, k, PES, PES_gradient, &
-                                VEC_scheme
-      USE miscellany,    ONLY : norm
+      USE constants,              ONLY : pi, eps32
+      USE neb_variables,          ONLY : num_of_images, Emax, Emin, &
+                                         k_max, k_min, k, PES, PES_gradient, &
+                                         VEC_scheme
+      USE basic_algebra_routines, ONLY : norm
       !
       IMPLICIT NONE
       !
@@ -571,11 +613,12 @@ MODULE neb_routines
     SUBROUTINE gradient()
       !------------------------------------------------------------------------
       !
-      USE supercell,     ONLY : pbc
-      USE neb_variables, ONLY : pos, grad, norm_grad, elastic_gradient, &
-                                PES_gradient, k, num_of_images, &
-                                free_minimization, climbing, tangent, lmol_dyn
-      USE miscellany,    ONLY : norm   
+      USE supercell,              ONLY : pbc
+      USE neb_variables,          ONLY : pos, grad, norm_grad,              &
+                                         elastic_gradient, PES_gradient, k, &
+                                         num_of_images, free_minimization,  &
+                                         climbing, tangent, lmol_dyn
+      USE basic_algebra_routines, ONLY : norm   
       !
       IMPLICIT NONE
       !
@@ -694,14 +737,17 @@ MODULE neb_routines
     SUBROUTINE compute_error( err )
       !-----------------------------------------------------------------------
       !
-      USE neb_variables, ONLY :  num_of_images, optimization, &
-                                 error, norm_grad
+      USE neb_variables, ONLY : num_of_images, optimization, &
+                                error, norm_grad
       !
       IMPLICIT NONE
       !
-      ! ... local variables
+      ! ... I/O variables
       !
       REAL (KIND=DP), INTENT(OUT)  :: err
+      !
+      ! ... local variables
+      !
       INTEGER                      :: N_in, N_fin
       INTEGER                      :: i
       !
@@ -748,13 +794,16 @@ MODULE neb_routines
       !
       IMPLICIT NONE
       !
+      ! ... I/O variables
+      !
+      INTEGER, INTENT(IN) :: index  
+      REAL (KIND=DP)      :: path_tangent(dim)                
+      !
       ! ... local variables
       !
-      INTEGER, INTENT(IN)            :: index
-      REAL (KIND=DP), DIMENSION(dim) :: path_tangent
-      REAL (KIND=DP)                 :: V_previous, V_actual, V_next
-      REAL (KIND=DP)                 :: abs_next, abs_previous
-      REAL (KIND=DP)                 :: delta_V_max, delta_V_min
+      REAL (KIND=DP) :: V_previous, V_actual, V_next
+      REAL (KIND=DP) :: abs_next, abs_previous
+      REAL (KIND=DP) :: delta_V_max, delta_V_min
       !
       ! ... end of local variables
       !
@@ -815,10 +864,13 @@ MODULE neb_routines
       !
       IMPLICIT NONE
       !
-      ! ... local variables
+      ! ... I/O variables
       !
       LOGICAL, INTENT(IN)   :: flag
-      LOGICAL, INTENT(OUT)  :: stat
+      LOGICAL, INTENT(OUT)  :: stat            
+      !
+      ! ... local variables
+      !
       INTEGER               :: i, image
       INTEGER               :: N_in, N_fin
       ! 
@@ -885,7 +937,7 @@ MODULE neb_routines
       USE formats,          ONLY : scf_fmt
       USE neb_variables,    ONLY : pos, PES, PES_gradient, num_of_images, &
                                    dim, suspended_image
-      USE miscellany,       ONLY : int_to_char
+      USE parser,           ONLY : int_to_char
 #if defined (__PARA)
       USE para,             ONLY : me, mypool
       USE mp,               ONLY : mp_barrier
@@ -893,10 +945,13 @@ MODULE neb_routines
       !
       IMPLICIT NONE
       !
-      ! ... local variables definition
+      ! ... I/O variables
       !
       INTEGER, INTENT(IN)  :: N_in, N_fin
-      LOGICAL, INTENT(OUT) :: stat
+      LOGICAL, INTENT(OUT) :: stat      
+      !
+      ! ... local variables definition
+      !
       INTEGER              :: image, ia
       REAL (KIND=DP)       :: tcpu 
       CHARACTER (LEN=80)   :: tmp_dir_saved

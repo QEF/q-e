@@ -11,7 +11,7 @@ MODULE supercell
   !---------------------------------------------------------------------------
   !
   USE kinds,  ONLY : DP
-  USE brilz,       ONLY : alat, at
+  USE brilz,  ONLY : alat, at
   !
   IMPLICIT NONE
   !
@@ -21,17 +21,17 @@ MODULE supercell
        !
        IMPLICIT NONE    
        !
-       REAL (KIND=DP), DIMENSION(:), INTENT(IN) :: vect
-       REAL (KIND=DP), DIMENSION(SIZE( vect ))  :: pbc
+       REAL (KIND=DP), INTENT(IN) :: vect(:)
+       REAL (KIND=DP)             :: pbc(SIZE( vect ))
 #if defined __AIX
        !  with AIX compiler some combination of flags lead to 
        !  variables being defined as static, hence giving a conflict
        !  with PURE function. We then force the variable be AUTOMATIC
-       REAL (KIND=DP), AUTOMATIC, DIMENSION(3)             :: crystal
-       INTEGER, AUTOMATIC                                  :: i, j, index
+       REAL (KIND=DP), AUTOMATIC  :: crystal(3)
+       INTEGER,        AUTOMATIC  :: i, j, index
 #else
-       REAL (KIND=DP), DIMENSION(3)             :: crystal
-       INTEGER                                  :: i, j, index
+       REAL (KIND=DP)             :: crystal(3)
+       INTEGER                    :: i, j, index
 #endif
        !
        !
