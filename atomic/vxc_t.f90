@@ -2,7 +2,7 @@
 subroutine vxc_t(rho,rhoc,lsd,vxc)
   !---------------------------------------------------------------
   !
-  !  this fuction returns the XC potential in LDA or LSDA approximation
+  !  this function returns the XC potential in LDA or LSDA approximation
   !
 
   use kinds, only : DP

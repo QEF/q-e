@@ -2,28 +2,28 @@
 !---------------------------------------------------------------
 subroutine sic_correction(n,vhn1,vhn2,egc) 
   !---------------------------------------------------------------
-  !   set up the selfconsistent atomic potential for the charge of
-  !   the wavefunction n
+  !   set up the orbital-dependent selfconsistent potential generated
+  !   by the n-th wavefunction - for self-interaction correction
   !
-  use constants, only: e2
+  use constants, only: e2, fpi
   use ld1inc
   use funct
   implicit none
-  integer :: i, is, n
-  real(kind=dp):: vhn1(ndm),vhn2(ndm), rh(2), rhc, vxcpl(2), rhotot(ndm,2),&
-       fpi 
-  real(kind=dp):: vgc(ndm,2), egc(ndm), egc0(ndm)
-  real(kind=dp):: exc_t, vxcp(2)
+  integer :: n
+  real(kind=dp):: vhn1(ndm),vhn2(ndm), egc(ndm)
+  !
+  integer :: i, is
+  real(kind=dp):: rh(2), rhc, exc_t, vxcp(2)
+  real(kind=dp):: vgc(ndm,2),  egc0(ndm), rhotot(ndm,2)
   logical :: gga
 
   vhn1=0.0_dp
   vhn2=0.0_dp
-  fpi=16.0_dp*atan(1.0_dp)
   gga=igcx.ne.0.or.igcc.ne.0
   nspin=1
   if (lsd.eq.1) nspin=2
   !
-  !   compute hartree potential with the total charge
+  !   compute hartree potential with the charge of orbital n
   !
   rhotot=0.0_dp
   if (rel.eq.2) then
@@ -38,7 +38,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !call hartree(0,2*(ll(n)+1),mesh,r,r2,sqr,dx,rhotot,vhn1)
   call hartree(0,2,mesh,r,r2,sqr,dx,rhotot,vhn1)
   !
-  !    add exchange and correlation potential: LDA or LSDA only
+  !    add exchange and correlation potential: LDA or LSDA terms
   !
   rhc=0.0_dp
   rh=0.0_dp
@@ -53,7 +53,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
 
   if (.not.gga) return
   !
-  !   add exchange and correlation potential: GGA only
+  !   add gradient-correction terms to exchange-correlation potential
   !
   egc0=egc
   call vxcgc(ndm,mesh,nspin,r,r2,rhotot,rhoc,vgc,egc)

@@ -11,9 +11,8 @@ subroutine scf
 
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
-  real(kind=dp) ::  vnew(ndm,2), rhoc1(ndm), vhn1(ndm), egc(ndm), &
-       rab(ndm), ze2
-  real(kind=dp), allocatable ::  vsic(:,:), vsicnew(:)
+  real(kind=dp) ::  vnew(ndm,2), rhoc1(ndm), rab(ndm), ze2
+  real(kind=dp), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
   integer, parameter :: maxter=200
   real(kind=dp), parameter :: thresh=1.0e-10_dp
   !
@@ -25,18 +24,17 @@ subroutine scf
   rab=dx*r
   !
   if (isic /= 0) then
-     allocate(vsic(ndm,nwf))
-     allocate(vsicnew(ndm))
+     allocate(vsic(ndm,nwf), vsicnew(ndm), vhn1(ndm), egc(ndm))
      vsic=0.0_dp
-     id=1
+     ! id=1
   endif
   do iter=1,maxter
      nerr=0
-     vnew = vpot
+     vnew=vpot
      do n=1,nwf
         if (oc(n) >= 0.0_dp) then
            is=isw(n)
-           if (isic /= 0 .and. iter > 1) vnew(:,is)=vsic(:,n)
+           if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
            if (rel == 0) then
               call ascheq (nn(n),ll(n),enl(n),mesh,dx,r,r2, &
                    sqr,vnew(1,is),ze2,thresh,psi(1,n),nstop)
@@ -75,16 +73,19 @@ subroutine scf
            if (oc(n) >= 0.0_dp) then
               is=isw(n)
               call sic_correction(n,vhn1,vsicnew,egc)
-              vsicnew(:) = vnew(:,is)-vsicnew(:)
-              call dmixp(mesh,vsicnew,vsic(1,n),beta,tr2,iter,id,eps0,conv)
+              !
+              ! use simple mixing for SIC correction
+              !
+              vsic(:,n) = (1.0_dp-beta)*vsic(:,n)+beta*vsicnew(:)
            end if
         enddo
      endif
+     !
      call vpack(mesh,ndm,nspin,vnew,vpot,1)
      call dmixp(mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)
      call vpack(mesh,ndm,nspin,vnew,vpot,-1)
      !   write(6,*) iter, eps0
-
+     !
      if (conv) then
         if (nerr /= 0) call errore('scf','errors in KS equations',-1)
         goto 45
@@ -92,8 +93,7 @@ subroutine scf
   enddo
   call errore('scf','warning: convergence not achieved',-1)
 45 if (isic /= 0) then
-     deallocate(vsicnew)
-     deallocate(vsic)
+     deallocate(egc, vhn1, vsicnew, vsic)
   endif
 
   return
