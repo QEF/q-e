@@ -73,7 +73,8 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
                                    write_restart_gvec, write_restart_gkvec, &
                                    write_restart_charge, write_restart_wfc, &
                                    write_restart_symmetry, write_restart_xdim, &
-                                   write_restart_pseudo, write_restart_ldaU
+                                   write_restart_pseudo, write_restart_ldaU, &
+                                   write_restart_tetra
   USE parameters,           ONLY : nacx, nsx, npk
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                    Hubbard_U, Hubbard_alpha
@@ -248,7 +249,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
        nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
        kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       tetra, natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
+       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
 
@@ -464,6 +465,12 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    END DO
 
 !  ==--------------------------------------------------------------==
+!  ==  Tetrahedra                                                  ==
+!  ==--------------------------------------------------------------==
+
+   CALL write_restart_tetra( ndw, ltetra, ntetra, tetra )
+
+!  ==--------------------------------------------------------------==
 !  ==  CHARGE DENSITY AND POTENTIALS                               ==
 !  ==--------------------------------------------------------------==
 
@@ -587,7 +594,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
                                    read_restart_gvec, read_restart_gkvec, &
                                    read_restart_charge, read_restart_wfc, &
                                    read_restart_symmetry, read_restart_xdim, &
-                                   read_restart_pseudo, read_restart_ldaU
+                                   read_restart_pseudo, read_restart_ldaU, &
+                                   read_restart_tetra
   USE parameters,           ONLY : nacx, nsx
   USE spin_orb,             ONLY : lspinorb
   USE noncollin_module,     ONLY : noncolin, npol
@@ -724,7 +732,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
-       tetra, natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
+       natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
        title_, crystal_, tmp_dir_, tupf, lgamma, noncolin, lspinorb, &
        lda_plus_u,&
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
@@ -1009,6 +1017,11 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    IF( nspin == 2 ) lsda = .TRUE.
    CALL divide_et_impera (xk(1,1), wk(1), isk(1), lsda, nkstot, nks)
 
+!  ==--------------------------------------------------------------==
+!  ==  Tetrahedra                                                  ==
+!  ==--------------------------------------------------------------==
+
+   CALL read_restart_tetra( ndr, ltetra, ntetra, tetra )
 
 !  ==--------------------------------------------------------------==
 !  ==  CHARGE DENSITY AND POTENTIALS                               ==
@@ -1017,7 +1030,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    DO ispin = 1, nspin
      CALL read_restart_charge( ndr )
    END DO
-
 
 !  ==--------------------------------------------------------------==
 !  ==  WAVEFUNCTIONS                                               ==
@@ -1155,7 +1167,6 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   USE mp,         ONLY : mp_bcast
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                          Hubbard_U, Hubbard_alpha
-  USE ktetra,     ONLY : ntetra, ltetra
   USE io_base,    ONLY : read_restart_header, read_restart_ions, &
                          read_restart_cell, read_restart_electrons, &
                          read_restart_gvec, read_restart_gkvec, &
@@ -1197,7 +1208,6 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   real(kind=DP) :: celldm_(6)
   integer :: ibrav_
   integer :: ntau
-  integer, allocatable :: tetra_( :, : )
 
   logical :: tfixed_occ_, tefield_, dipfield_
   integer :: edir_
@@ -1230,12 +1240,6 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
     return
   end if
 
-  if( ltetra ) then
-    allocate( tetra_ ( 4, ntetra ) )
-  else
-    allocate( tetra_ ( 4, 1 ) )
-  end if
-
 !  ==--------------------------------------------------------------==
 !  ==  HEADER INFORMATION                                          ==
 !  ==--------------------------------------------------------------==
@@ -1244,13 +1248,11 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
      nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
      kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, &
-     ntetra_, ltetra_, tetra_ , &
+     ntetra_, ltetra_, &
      natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, &
      lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, noncolin_, lspinorb_, &
      lda_plus_u_, tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, &
      twfcollect_ )
-
-   deallocate( tetra_ )
 
 !  ==--------------------------------------------------------------==
 !  ==  MAX DIMENSIONS                                              ==

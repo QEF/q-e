@@ -25,7 +25,7 @@ CONTAINS
          write_restart_cell, write_restart_electrons, &
          write_restart_gvec, write_restart_gkvec, write_restart_charge, &
          write_restart_wfc, write_restart_symmetry, &
-         write_restart_xdim, write_restart_pseudo
+         write_restart_xdim, write_restart_pseudo, write_restart_tetra
     use mp, only: mp_sum
     use mp_global
     use io_global
@@ -105,7 +105,7 @@ CONTAINS
     LOGICAL :: ltetra
     LOGICAL :: lgamma
     INTEGER, ALLOCATABLE :: ityp(:)
-    INTEGER :: isk, tetra(4,1)
+    INTEGER :: isk
     REAL(dbl) :: zmesh_, xmin_, dx_
     REAL(dbl) :: ainv(3,3), deth
     INTEGER :: iswitch = 0
@@ -160,7 +160,6 @@ CONTAINS
     lgauss = .FALSE.
     ltetra = .FALSE.
     ntetra = 0
-    tetra = 0
     tupf   = .TRUE.
     lgamma = .TRUE.
     noncolin = .FALSE.
@@ -176,7 +175,7 @@ CONTAINS
     CALL write_restart_header(ndw, nfi, iswitch, trutime, nr1, nr2, nr3, &
          nr1s, nr2s, nr3s, ng_g, nk, ngwkg, nspin, nbnd, rnel, nelu, &
          neld, nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
-         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, tetra, &
+         kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
          natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, &
          title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u,&
          tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect )
@@ -308,6 +307,12 @@ CONTAINS
        CALL write_restart_gkvec(ndw, i, nk, ngwkg(i), xk, wk, isk)
     END DO
 
+!     ==--------------------------------------------------------------==
+!     ==  Tetrahedra                                                  ==
+!     ==--------------------------------------------------------------==
+
+      CALL write_restart_tetra(ndw)
+
     !     ==--------------------------------------------------------------==
     !     ==  CHARGE DENSITY AND POTENTIALS                               ==
     !     ==--------------------------------------------------------------==
@@ -368,7 +373,7 @@ CONTAINS
     use io_base, only: read_restart_header, read_restart_ions, &
          read_restart_cell, read_restart_electrons, &
          read_restart_gvec, read_restart_gkvec, read_restart_charge, &
-         read_restart_wfc, read_restart_xdim, &
+         read_restart_wfc, read_restart_xdim, read_restart_tetra, &
          read_restart_symmetry, read_restart_pseudo
     use mp, only: mp_sum
     use mp_global
@@ -439,7 +444,7 @@ CONTAINS
     real(kind=8) :: bi1_(3), bi2_(3), bi3_(3)
     !
     integer :: i, ia, is, j
-    integer :: nfi_, ik_, nk, nk_, ispin_, nspin_, isk_, tetra_(4,1)
+    integer :: nfi_, ik_, nk, nk_, ispin_, nspin_, isk_
     real(kind=8) :: acc_(10), celldm_(6)
     real(kind=8) :: vnhp_, xnhp0_, xnhpm_
     integer :: strlen, ibrav_, kunit_
@@ -498,7 +503,7 @@ CONTAINS
          nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, nk_, ngwkg_, nspin_, nbnd_, &
          rnel_, nelu_, neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, &
          alat_, ekincm_, kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, dgauss_, ngauss_, &
-         lgauss_, ntetra_, ltetra_, tetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, &
+         lgauss_, ntetra_, ltetra_, natomwfc_, gcutm_, gcuts_, dual_, doublegrid_, &
          modenum_, lstres_, lforce_, title_, crystal_, tmp_dir_, tupf_, lgamma_, &
          noncolin_ , lspinorb_ , lda_plus_u_ , &
          tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
@@ -647,6 +652,12 @@ CONTAINS
        CALL read_restart_gkvec(ndr, ik_, nk_, ngwkg_(i), &
             xk, wk, isk_)
     END DO
+
+!       ==--------------------------------------------------------------==
+!       ==  Tetrahedra                                                  ==
+!       ==--------------------------------------------------------------==
+
+        CALL read_restart_tetra( ndr )
 
     !       ==--------------------------------------------------------------==
     !       ==  CHARGE DENSITY AND POTENTIALS                               ==
