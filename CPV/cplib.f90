@@ -401,6 +401,11 @@
 !
       use elct, only: nspin
       use gvec, only: np, ng
+
+      ! this isn't really needed, but if I remove it, ifc 7.1
+      ! gives an "internal compiler error"
+      use reciprocal_vectors, only: ng0 => gstart
+
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       !use parm
@@ -5450,7 +5455,7 @@
 !     Output parameters in module "ncprm"
 !     info on DFT level in module "dft"
 !
-      use parameters, only: nsx, natx
+      use parameters, only: nsx, natx, lqx=>lqmax
       use ncprm
       use dft_mod
       use wfc_atomic
@@ -5713,6 +5718,7 @@
 !
 !
       use io_global, only: stdout
+      use parameters, only: nqfx=>nqfm, lqx=>lqmax
       use ncprm
       use dft_mod
       use wfc_atomic
