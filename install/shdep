@@ -11,7 +11,7 @@ ls *.f90 > tmp2
 ../$INSTALL/moduledep.x tmp1 tmp2 > .dependencies
 
 # directories that depend on Modules/
-DIRS="PW FPMD CPV flib"
+DIRS="PW FPMD CPV flib pwtools upftools atomic "
 for DIR in $DIRS ; do
   if test -d ../$DIR ; then
     cd ../$DIR
