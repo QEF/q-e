@@ -197,6 +197,8 @@ sgam_ph.o \
 sgama.o \
 show_memory.o \
 smallg_q.o \
+spinor.o \
+sph_ind.o \
 startup.o \
 stop_pw.o \
 stres_cc.o \

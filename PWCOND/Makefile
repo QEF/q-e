@@ -253,6 +253,8 @@ PWOBJS = \
 ../PW/sgama.o \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
+../PW/spinor.o \
+../PW/sph_ind.o \
 ../PW/startup.o \
 ../PW/struct_fact.o \
 ../PW/sum_band.o \

@@ -172,6 +172,8 @@ PWOBJS = \
 ../PW/sgam_ph.o \
 ../PW/show_memory.o \
 ../PW/smallg_q.o \
+../PW/spinor.o \
+../PW/sph_ind.o \
 ../PW/s_psi.o \
 ../PW/startup.o \
 ../PW/stop_pw.o \
