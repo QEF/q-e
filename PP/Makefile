@@ -106,6 +106,7 @@ PWOBJS = \
 ../PW/error_handler.o \
 ../PW/estimate.o \
 ../PW/ewald.o \
+../PW/ewald_dipole.o \
 ../PW/fft_scatter.o \
 ../PW/fftw.o \
 ../PW/force_cc.o \
@@ -134,6 +135,8 @@ PWOBJS = \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
 ../PW/init_ns.o \
+../PW/init_paw_1.o \
+../PW/init_paw_2.o \
 ../PW/init_pool.o \
 ../PW/init_run.o \
 ../PW/init_us_1.o \
@@ -225,6 +228,7 @@ PWOBJS = \
 ../PW/setqf.o \
 ../PW/setup.o \
 ../PW/setupkpt.o \
+../PW/setv.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
@@ -251,6 +255,7 @@ PWOBJS = \
 ../PW/symrho.o \
 ../PW/symtns.o \
 ../PW/symvect.o \
+../PW/symz.o \
 ../PW/tabd.o \
 ../PW/trntns.o \
 ../PW/trnvecc.o \
@@ -276,7 +281,7 @@ PWOBJS = \
 ../PW/ylmr2.o
 
 all : pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x \
-      bands.x plotband.x pw2wan.x pw2casino.x
+      bands.x plotband.x pw2wan.x pw2casino.x efg.x
 
 pp.x : $(PPOBJS) postproc.o
 	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
@@ -310,6 +315,10 @@ pw2wan.x : $(PPOBJS) pw2wan.o
 
 pw2casino.x : $(PPOBJS) pw2casino.o
 	$(LD) -o pw2casino.x pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+
+efg.x: $(PPOBJS) efg.o
+	$(LD) -o efg.x efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc

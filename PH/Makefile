@@ -91,7 +91,6 @@ set_irr_nosym.o \
 setlocq.o \
 setqmod.o \
 setup_dgc.o \
-setv.o \
 smallgq.o \
 solve_e.o \
 solve_linter.o \
@@ -103,7 +102,6 @@ symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
 syme.o \
-symz.o \
 tra_write_matrix.o \
 trntnsc.o \
 write_dyn_on_file.o \
@@ -314,6 +312,7 @@ PWOBJS = \
 ../PW/setqf.o \
 ../PW/setup.o \
 ../PW/setupkpt.o \
+../PW/setv.o \
 ../PW/sgam_at.o \
 ../PW/sgam_ph.o \
 ../PW/sgama.o \
@@ -340,6 +339,7 @@ PWOBJS = \
 ../PW/symrho.o \
 ../PW/symtns.o \
 ../PW/symvect.o \
+../PW/symz.o \
 ../PW/tabd.o \
 ../PW/trntns.o \
 ../PW/trnvecc.o \
