@@ -1,4 +1,4 @@
-TODO LIST - 28 May 2003
+TODO LIST -  3 June 2003
 
 INSTALLATION
 
@@ -68,10 +68,7 @@ PW
 
 - complete and verify memory estimator
 
-- CG, DIIS are so slooooooow
-
-- ultrasoft PP: newd and addusdens are too slow
-  import "small boxes" from CP
+- ultrasoft PP: import "small boxes" from CP ?
 
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)

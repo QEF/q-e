@@ -182,7 +182,7 @@ subroutine memory_estimate(lgamma)
   total_mem = scalable_mem + nonscalable_mem + &
               scalable_wspace + nonscalable_wspace
 #ifdef __PARA
-  print '(5x,"Number of processors/pools:")', nprocp, npool  
+  print '(5x,"Number of processors/pools:",2i4)', nprocp, npool  
 #endif
   if (lgamma) then
      print '(5x,"Estimated Max memory (Gamma-only code): ",f8.2,"Mb")', &
