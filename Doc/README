@@ -1,12 +1,12 @@
 This is the available documentation for the ESPRESSO package:
 
-MANUAL.FPMD-CP  User's Manual (sort of) for CP and FPMD
-manual.tex      User's Manual (sort of) for PWscf (applies in part to CP/FPMD
-                as well) - tex file, requires LaTeX and html.sty
-pwscf.png, pwscf.ps, democritos.png, democritos.ps
-                Pictures included in the manual
-refman.tex      Reference (technical) manual for PWscf: little more than
-                a template at present
+manual.tex      User's Guide for ESPRESSO
+                requires html.sty (from latex2html package): if not
+                available, comment "\usepackage{html}" and uncomment
+                "\def\htmladdnormallink#1#2{#1}"
+
+refman.tex      Reference (technical) manual for PWscf: little more
+                than a template at present
 
 INPUT_FPMD      Input parameters for FPMD
 INPUT_CP        As above for CP (possibly obsolete)
@@ -31,6 +31,9 @@ ChangeLog.cp    ChangeLog before aug 2004 for CP and FPMD
 BUGS            List of bugs fixed - only bugs that have been present
                 in some "official" release are listed
 CREDITS         Who did what
+
+pwscf.png, pwscf.eps, democritos.png, democritos.eps
+                PWscf and DEMOCRITOS logos -- included from manual.tex
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

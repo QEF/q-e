@@ -1,37 +1,39 @@
-\documentclass[12pt]{article}
-\pagestyle{empty}
-\textwidth = 15.5 cm
-\textheight = 23.5 cm
-\topmargin =-1.0 cm
-\oddsidemargin = 0.5 cm
-\listparindent=0pt
-\usepackage{graphicx}
-% \usepackage{html}
-\def\version{2.1}
-\itemsep=0pt
+\documentclass[12pt,a4paper]{article}
+ \def\version{2.1}
+
+ \usepackage{epsfig}
+ \usepackage{html}
+  %\def\htmladdnormallink#1#2{#1}
+
 \begin{document} 
-%
-% For use with pdflatex: if using plain latex, comment next two lines
-% \includegraphics[width=4cm]{pwscf.png}\hfill
-% includegraphics[width=8cm]{democritos.png}
-%
-%\centerline{\parbox{4cm}{\psfig{figure=pwscf.eps,width=4cm}}
-%\hfill \parbox{4cm}{\psfig{figure=democritos.eps,width=8cm}}}
-%
-\par\medskip
-\centerline {\Huge Developers' Guide and Reference Manual}
-\centerline {\Huge for PWscf v.\version -- (template)}
+
+\author{}
+\date{}
+\title{
+  % PWscf and Democritos logos, raise the latter to align
+  \epsfig{figure=pwscf,width=4cm}\hfill%
+  \raisebox{0.5cm}{\epsfig{figure=democritos,width=8cm}}
+  \vspace{1.5cm}
+  \\
+  % title
+  \huge Developer's Guide and Reference Manual for PWscf v.\version
+        -- (template)
+}
+\maketitle
+
 \tableofcontents
-\newpage
+
+\clearpage
 
 \section{Introduction}
 
 \subsection{Who should read this guide (and who should {\em write} it)}
-The intended audience of this guide is everybody who wants to
+
+The intended audience of this guide is everybody who wants to:
 \begin{itemize}
-\item know how PWscf works, including its internals (infernals?), or
-\item modify/customize/add/extend/improve/clean up PWscf, or
-\item know how to read data produced by PWscf.
+  \item know how PWscf works, including its internals (infernals?)
+  \item modify/customize/add/extend/improve/clean up PWscf
+  \item know how to read data produced by PWscf
 \end{itemize}
 The same category of people should also {\em write} this guide, of course.
 Who else?
@@ -40,65 +42,83 @@ Who else?
 profit from it}
 
 People who want to know about the capabilities of PWscf,
-or who want just to use PWscf, should read the Users' guide, 
+or who want just to use PWscf, should read the User's Guide, 
 coming with the PWscf distribution.
 
 People who want to know about the methods or the physics
 behind PWscf should read the relevant literature. The
 following references are chosen for their completeness.
+\medskip
 
-\par\medskip\noindent
+\noindent
 Density-functional Theory (DFT), general:
-\par
-{\em Density Functional Theory of Atoms and Molecules}, 
-R. G. Parr and W. Yang (Oxford University Press, New York, 1989).
-\par
-{\em Density Functional Theory}, R.M. Dreizler and E.K.U. Gross,
-Springer-Verlag, Berlin (1990) (more formal).
-
-\par\medskip\noindent
+\begin{enumerate}
+  \item
+    \emph{Density Functional Theory of Atoms and Molecules}, 
+    R.G. Parr and W. Yang,
+    Oxford University Press, New York (1989).
+  \item
+    \emph{Density Functional Theory},
+    R.M. Dreizler and E.K.U. Gross,
+    Springer-Verlag, Berlin (1990) (more formal).
+\end{enumerate}
 Density-Functional Perturbation Theory (DFPT), phonons:
-\par
-S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi,
-Rev. Mod. Phys. {\bf 73}, 515-562 (2001)
-
-\par\medskip\noindent
+\begin{enumerate}
+  \setcounter{enumi}{2}
+  \item
+    S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi,
+    Rev. Mod. Phys. \textbf{73}, 515--562 (2001).
+\end{enumerate}
 Plane-Wave (PW) pseudopotential (PP) method:
-\par
-W. E. Pickett, Computer Phys. Reports {\bf 9}, 115 (1989)
-(hard to find)
-\par
-M. C. Payne, M. P. Teter, D. C. Allen, T. A. Arias, and
-J. D. Joannopoulos, Rev. Mod. Phys. {\bf 64}, 1045 (1992)
-
-\par\medskip\noindent
-Car-Parrinello (CP), first-principle Molecular Dynamics (MD) method:
-\par
-D. Marx, J. Hutter, in {\em Modern Methods and Algorithms of
-Quantum Chemistry}, p.301-449 (John von Neumann Institute for Computing,
-FZ J\"ulich, 2000)
-\par
-C. Cavazzoni, G. L. Chiarotti, Computer Phys. Commun.
-{\bf 123}, 56 (1999).
-\par
-P. Giannozzi, F. de Angelis, R. Car, J. Chem. Phys. {\bf 120}, 5903
-(2004)\par
-({\tt http://www.nest.sns.it/\~{}giannozz/Papers/JCP\_57.pdf})
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item
+    W.E. Pickett,
+    Computer Phys. Reports \textbf{9}, 115 (1989)
+    (hard to find).
+  \item
+    M.C. Payne, M.P. Teter, D.C. Allen, T.A. Arias, and
+    J.D. Joannopoulos,
+    Rev. Mod. Phys. \textbf{64}, 1045 (1992).
+\end{enumerate}
+Car-Parrinello (CP), first-principles Molecular Dynamics (MD) method:
+\begin{enumerate}
+  \setcounter{enumi}{5}
+  \item
+    D. Marx, J. Hutter,
+    in \emph{Modern Methods and Algorithms of Quantum Chemistry},
+    p.301--449,
+    John von Neumann Institute for Computing, FZ J\"ulich (2000).
+  \item
+    C. Cavazzoni, G.L. Chiarotti,
+    Computer Phys. Commun. \textbf{123}, 56 (1999).
+  \item
+    P. Giannozzi, F. de Angelis, R. Car,
+    J. Chem. Phys. \textbf{120}, 5903 (2004)
+    (\htmladdnormallink%
+     {\texttt{http://www.nest.sns.it/\~{}giannozz/Papers/JCP\_57.pdf}}%
+     {http://www.nest.sns.it/~giannozz/Papers/JCP_57.pdf}).
+\end{enumerate}
 
 \section{Structure of the distribution}
 
 \subsection{Contents of the various directories}
+
 \subsubsection{Modules}
+
 \subsubsection{Sources}
+
 \subsubsection{Utilities}
+
 \subsubsection{Libraries}
+
 \subsection{Installation mechanism}
 
 The code contains C-style preprocessing directives. 
 There are two ways to do preprocessing of fortran files:
 \begin{itemize}
-\item[-] directly with the fortran compiler, if supported;
-\item[-] by first pre-compiling with the C preprocessor {\tt cpp}.
+  \item directly with the fortran compiler, if supported;
+  \item by first pre-compiling with the C preprocessor {\tt cpp}.
 \end{itemize}
 The file "make.rules" select what is done.
 In the first case,  the file install/Make.rules\_nocpp is copied
@@ -114,16 +134,25 @@ specify the C precompiler and options (if needed) in "make.sys".
 \subsection{Adding new directories or routines}
 
 \section{Algorithms}
+
 \subsection{Diagonalization}
+
 \subsection{Self-consistency}
+
 \subsection{Structural optimization}
+
 \subsection{Symmetrization}
+
 \subsection{...}
 
 \section{Structure of the code}
+
 \subsection{Modules and global variables}
+
 \subsection{Meaning of the most important variables}
+
 \subsection{Conventions for indices}
+
 \subsection{Preprocessing}
 
 The code contains C-style preprocessing directives. Most
@@ -131,30 +160,35 @@ fortran compilers directly support them; some don't, and
 preprocessing is "hand-made" by the makefile using the C
 preprocessor {\tt cpp}.
 
-The C preprocessor may
+The C preprocessor may:
 \begin{itemize}
-\item[-] assign a value to a given expression. For instance, command
-  "\#define THIS that", or the option in the command line:
-  -D"THIS=that", will replace all occurrence of THIS with that.
-  "Preprocessed" variables are usually, but not always nor 
-   necessarily,  written in uppercase.
-\item[-] execute conditional expressions such as
-\begin{quote}
-  \#ifdef "expression" 
-  (code A) 
-  \#else
-  (code B)
-  \#endif
-\end{quote}
-  If "expression" is defined (with a \#define command or from the 
-  command line with option -D"expression") code A is sent to
-  output, otherwise code B is sent to output.
-  "expression" can be set from the command line with option -D .
-\item[-] include file (command \#include)
-\item[-] expand macros (command \#define)
+  \item
+    assign a value to a given expression. For instance, command
+    \texttt{\#define THIS that}, or the option in the command line:
+    \texttt{-DTHIS=that}, will replace all occurrence of \texttt{THIS}
+    with \texttt{that}.
+    "Preprocessed" variables are usually, but not always nor 
+    necessarily,  written in uppercase.
+  \item
+    execute conditional expressions such as
+\begin{verbatim}
+  #ifdef expression
+    ...code A...
+  #else
+    ...code B...
+  #endif
+\end{verbatim}
+    If "expression" is defined (with a \texttt{\#define} command or
+    from the command line with option \texttt{-Dexpression}), then
+    \texttt{...code A...} is sent to output; otherwise
+    \texttt{...code B...} is sent to output.
+  \item
+    include file (command \texttt{\#include})
+  \item
+    expand macros (command \texttt{\#define})
 \end{itemize}
-A list of definitions that are used in the code is available 
-in {\tt include/defs.h.README} .
+The file \texttt{include/defs.h.README} contains a list of definitions
+that are used in the code.
 
 \subsection{Performance issues}
 \subsection{Portability issues}
@@ -225,33 +259,33 @@ see {\tt http://www.cvshome.org}. For a tutorial, see:\\
 
 \subsection{Anonymous CVS}
 
-Define environmental variables:
+Define environment variables:
 \begin{verbatim}
-   setenv CVS_RSH ssh
-   setenv CVSROOT :pserver:cvsanon@democritos.sissa.it:/home/cvs
+  setenv CVS_RSH ssh
+  setenv CVSROOT :pserver:cvsanon@democritos.sissa.it:/home/cvs
 \end{verbatim}
 (tcsh/csh) or
 \begin{verbatim}
-   export CVS_RSH=ssh
-   export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
+  export CVS_RSH=ssh
+  export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
 \end{verbatim}
-(sh/bash). Then:
+(sh/bash/ksh). Then do:
 \begin{verbatim}
    cvs login
 \end{verbatim}
-(password: cvsanon).
+and enter password: \texttt{cvsanon}
 
 \subsection{Read/Write CVS}
 
 Define environmental variables:
 \begin{verbatim}
-   setenv CVS_RSH ssh
-   setenv CVSROOT :ext:your-account@democritos.sissa.it:/home/cvs
+ setenv CVS_RSH ssh
+ setenv CVSROOT :ext:your-account@democritos.sissa.it:/home/cvs
 \end{verbatim}
 (tcsh/csh) or
 \begin{verbatim}
-   export CVS_RSH=ssh
-   export CVSROOT=:ext:your account@democritos.sissa.it:/home/cvs
+ export CVS_RSH=ssh
+ export CVSROOT=:ext:your account@democritos.sissa.it:/home/cvs
 \end{verbatim}
 (sh/bash). You need to have an account defined on democritos.sissa.it.
 You will be prompted for your password at each cvs operation.
@@ -262,7 +296,7 @@ For the first code download:
 \begin{verbatim}
    cvs co espresso
 \end{verbatim}
-The code appears in directory espresso/.
+The code appears in directory \texttt{espresso/}.
 To update the code to the current version:
 \begin{verbatim}
    cvs update -d
@@ -273,44 +307,35 @@ a given ``tag'' (set by the developers, usually just before
 extensive changes or at public releases).
 
 When updating, you should get lines looking like
-
 \begin{verbatim}
-> cvs server: Updating Modules
-> P Modules/Makefile
-> U Modules/control_flags.f90
+  cvs server: Updating Modules
+  P Modules/Makefile
+  U Modules/control_flags.f90
 \end{verbatim}
-
-where P means "patched", U means "Updated" (a new file is added); or
-
+where P means "patched", U means "updated" (a new file is added); or
 \begin{verbatim}
-> M PW/Makefile
+  M PW/Makefile
 \end{verbatim}
-
-where M means locally modified wrt the CVS repository version; or
-
+where M means "locally modified" (i.e., wrt the CVS repository
+version); or
 \begin{verbatim}
-> cvs server: FPMD/control_flags.f90 is no longer in the repository
+  cvs server: FPMD/control.f90 is no longer in the repository
 \end{verbatim}
-
 if a file has been meanwhile deleted, or moved, or renamed; but no lines like
- 
 \begin{verbatim}
-> C Somedir/SomeFile
-> cvs server: conflict while updating Somedir/SomeFile
+  C Somedir/SomeFile
+  cvs server: conflict while updating Somedir/SomeFile
 \end{verbatim}
-
 This means that somebody else has modified the same parts of the code 
 that you have locally modified; conflicting files will contain lines like
-
 \begin{verbatim}
-> >>>>>>>>>>>>>
->    something
-> ============
->    something else
-> <<<<<<<<<<<<<
+  >>>>>>>>>>>>>
+     something
+  ============
+     something else
+  <<<<<<<<<<<<<
 \end{verbatim}
-
-If this happen, simply edit the files to remove conflicts
+If this happen, you must edit the file manually to remove conflicts.
 
 READ-WRITE ACCESS ONLY:
 
