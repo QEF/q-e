@@ -19,13 +19,12 @@ subroutine readvan (is, iunps)
   !
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, nqfx, lqmax
-  use atom,  only: zmesh, mesh,dx, r, rab, vloc_at, chi, oc, nchi, lchi, &
-       rho_at, rho_atc
+  use atom,  only: zmesh, mesh,dx, r, rab, chi, oc, nchi, lchi, &
+       rho_at, rho_atc, nlcc
   use char,  only: psd
   use pseud, only: zp, lmax, lloc
-  use nl_c_c,only: nlcc
-  use us,    only: dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, rinner, &
-       nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt
+  use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
+       rinner, nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt
   use funct, only: dft, which_dft
   implicit none
 

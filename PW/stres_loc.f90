@@ -12,7 +12,7 @@ subroutine stres_loc (sigmaloc)
   !
 #include "machine.h"
   USE kinds, ONLY : DP
-  USE atom, ONLY : msh, mesh, r, rab, vloc_at, numeric
+  USE atom, ONLY : msh, mesh, r, rab, numeric
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba2
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
@@ -23,6 +23,7 @@ subroutine stres_loc (sigmaloc)
   USE vlocal, ONLY : strf, vloc
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
+  USE us, ONLY: vloc_at
   implicit none
   real(kind=DP) :: sigmaloc (3, 3)
   real(kind=DP) , allocatable :: dvloc(:)

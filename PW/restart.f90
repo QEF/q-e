@@ -42,13 +42,12 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
-       rho_atc, mesh, msh, nchi, lchi, numeric
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
-       bhstype
-  USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
-       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
-  USE nl_c_c, ONLY: a_nlcc, b_nlcc, alpha_nlcc, nlcc
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
+       rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
+       a_nlcc, b_nlcc, alpha_nlcc
+  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, &
+       nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
   USE fixed_occ, ONLY: tfixed_occ 
@@ -355,7 +354,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
            zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
-           zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &
+           zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
            betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
            rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
            lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &
@@ -513,13 +512,12 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   USE dynam, ONLY: amass
   USE symme, ONLY: s, irt, ftau, nsym, invsym
   USE ener, ONLY: ef
-  USE atom, ONLY: zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
-       rho_atc, mesh, msh, nchi, lchi, numeric
-  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc,&
-       bhstype
-  USE us, ONLY: dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
-       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
-  USE nl_c_c, ONLY: a_nlcc, b_nlcc, alpha_nlcc, nlcc
+  USE atom, ONLY: zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
+       rho_atc, mesh, msh, nchi, lchi, numeric, nlcc
+  USE pseud, ONLY: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
+       a_nlcc, b_nlcc, alpha_nlcc
+  USE us, ONLY: vloc_at, dion, betar, qqq, qfunc, qfcoef, rinner, nh, &
+       nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo
   USE extfield, ONLY:  tefield, dipfield, edir, emaxpos, eopreg, eamp
   USE wavefunctions_module,    ONLY : evc
   USE fixed_occ, ONLY: tfixed_occ 
@@ -829,7 +827,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
            upf%qqq, upf%qfunc, upf%qfcoef, upf%chi, upf%rho_at )
 
 ! ...    Here convert to internal scheme
-         CALL set_pseudo( i, upf, ierr)
+         if (ierr == 0) CALL set_pseudo_upf ( i, upf )
 
          ! UPF is always numeric
          numeric (i) = .true.
@@ -847,7 +845,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
            zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), chi(:,:,i), oc(:,i), &
            rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
            numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
-           zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &
+           zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
            betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
            rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
            lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &

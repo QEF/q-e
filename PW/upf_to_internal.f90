@@ -15,39 +15,35 @@
 
 !
 !---------------------------------------------------------------------
-subroutine set_pseudo (is, upf, ierr)
+subroutine set_pseudo_upf (is, upf)
   !---------------------------------------------------------------------
   !
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal PWscf variables
-  !   return error code in "ierr" (success: ierr=0)
   !
   ! PWSCF modules
   !
-    
+  USE atom,  ONLY: zmesh, mesh, msh, dx, r, rab, &
+       chi, oc, nchi, lchi, rho_at, rho_atc, nlcc
   USE pseud, ONLY: lloc, lmax, zp
-  USE char, ONLY: psd
-  USE nl_c_c, ONLY: nlcc
-  USE atom
-  USE us
-  USE funct, ONLY: which_dft, dft
+  USE char,  ONLY: psd
+  USE us,    ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
+       rinner, nh, nbeta, kkbeta, lll, tvanp
+  USE funct, ONLY: dft, which_dft
   !
   USE ions_base, ONLY: zv
   USE pseudo_types
-  USE read_pseudo_module
   !
   implicit none
   !
-  real(kind=DP), parameter :: rcut = 10.d0
-  integer :: is, ierr, ir
+  real(kind=dbl), parameter :: rcut = 10.d0
+  integer :: is, ir
   !
   !     Local variables
   !
   integer :: nb
   TYPE (pseudo_upf) :: upf
   !
-  !
-  if (ierr .ne. 0) return
   !
   zp(is)  = upf%zp
   psd (is)= upf%psd
@@ -109,7 +105,7 @@ subroutine set_pseudo (is, upf, ierr)
 
   zv(is) = zp(is)  !!! maybe not needed: it is done in setup
 
-end subroutine set_pseudo
+end subroutine set_pseudo_upf
 
 !=----------------------------------------------------------------------------=!
   END MODULE upf_to_internal

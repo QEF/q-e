@@ -31,8 +31,8 @@ subroutine summary
   USE lsda_mod, ONLY: lsda, starting_magnetization
   USE klist
   USE ktetra
-  USE nl_c_c, ONLY: nlcc, a_nlcc, b_nlcc, alpha_nlcc
-  USE pseud, ONLY: zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc
+  USE pseud, ONLY: zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
+       a_nlcc, b_nlcc, alpha_nlcc
   USE symme, ONLY: nsym, invsym, s, ftau
   USE control_flags
   USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll

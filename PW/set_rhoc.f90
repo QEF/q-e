@@ -16,13 +16,13 @@ subroutine set_rhoc
 #include "machine.h"
   USE io_global,  ONLY : stdout
   USE kinds, ONLY : DP
-  USE atom, ONLY: rho_atc, numeric, msh, r, rab
+  USE atom, ONLY: rho_atc, numeric, msh, r, rab, nlcc
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba2
   USE ener, ONLY: etxcc
   USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, nlm, ngl, gl, igtongl
-  USE nl_c_c, ONLY: nlcc, a_nlcc, b_nlcc, alpha_nlcc
+  USE pseud, ONLY: a_nlcc, b_nlcc, alpha_nlcc
   USE scf, ONLY: rho_core
   USE vlocal, ONLY : strf
   USE wvfct, ONLY: gamma_only

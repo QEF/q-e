@@ -24,7 +24,6 @@ subroutine saveall (iun, iflag)
   USE symme, ONLY: s, ftau, nsym, invsym
   USE atom
   USE pseud
-  USE nl_c_c, ONLY : a_nlcc, b_nlcc, alpha_nlcc, nlcc
   USE wvfct, ONLY: nbnd, npwx, nbndx, gamma_only
   USE ener, ONLY: ef
   USE force_mod, ONLY: lforce
@@ -58,7 +57,7 @@ subroutine saveall (iun, iflag)
      write (iun) s, ftau, nsym, invsym, noinv
      write (iun) zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
           rho_atc, mesh, msh, nchi, lchi, numeric
-     write (iun) cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc, bhstype
+     write (iun) cc, alpc, zp, aps, alps, zv, nlc, nnl, lmax, lloc
      write (iun) dion, betar, qqq, qfunc, qfcoef, rinner, nbeta, &
           kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan
      write (iun) newpseudo
@@ -89,7 +88,7 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) zmesh, xmin, dx, r, rab, &
           vloc_at, chi, oc, rho_at, rho_atc, mesh, msh, nchi, lchi, numeric
      read (iun, err = 100, iostat = ios) cc, alpc, zp, aps, alps, &
-          zv, nlc, nnl, lmax, lloc, bhstype
+          zv, nlc, nnl, lmax, lloc
      read (iun, err = 100, iostat = ios) dion, betar, qqq, qfunc, &
           qfcoef, rinner, nbeta, kkbeta, nqf, nqlc, ifqopt, lll, iver, &
           tvanp, okvan

@@ -263,8 +263,6 @@
 !     local potential given numerically on logarithmic mesh 
 !     ==================================================================
 !
-!     vscr(ir) = r*vscr(r)
-!
 !     ------------------------------------------------------------------
 !     g=0
 !     ------------------------------------------------------------------
@@ -279,7 +277,7 @@
             end do
 !
             do ir=1,irmax
-               vscr(ir)=0.5*vloc_at(ir,is) +                           &
+               vscr(ir)=0.5*r(ir,is)*vloc_at(ir,is) +                   &
      &                  zv(is)*erf(r(ir,is)/rcmax(is))
                f(ir)=vscr(ir)*r(ir,is)
             end do

@@ -1,4 +1,4 @@
-TODO LIST - 3 April 2004
+TODO LIST - 26 April 2004
 (does not include new developments!)
 
 INSTALLATION/PORTING
@@ -21,7 +21,8 @@ COMMON
 
 - file format unification must be finished
 
-- merge spherical harmonics, integration routines, etc
+- merge spherical harmonics between CP-PW and FPMD
+  merge integration routines, random number generators
   spherical bessel: add routine directly calculating dj_l(x)/dx,
   verify limits x=>0, fix special cases x=>0 into the codes
 
@@ -34,6 +35,11 @@ COMMON
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds   
 
+- replace calls to level-1 blas copy, scal, axpy, with f90 syntax
+
+- cleanup and merge of routines reading and processing PPs;
+  merge uspp-related stuff of CP and PW
+
 PW
 
 - cleanup of parallel stuff: removal of old-style variables
@@ -41,20 +47,13 @@ PW
 - remove iswitch, replace with existing (minus_q, lscf)
   or new logical variables
 
-- the assignment of correct weigths to k-points must be done
+- the assignment of correct weights to k-points must be done
   in a more general and less obscure way (needed for better
   support of noncolinear stuff)
 
 - maximize merge of colinear (PW) and with noncolinear (PWNC) code
 
-- replace "use pwcom" into more "use" statement
-
 - add traceback in error (error_handler module)
-
-- remove analytical PPs and related variables
-
-- replace calls to level-1 blas copy, scal, axpy, with f90 syntax
-  (same in CP)
 
 - remove potential mixing, save and start from rho instead of V,
   at least for scf calculations. Requires fixing the noncolinear
@@ -63,7 +62,7 @@ PW
   not a bogus rho as it may happen now
 
 - save rho and/or V in G-space instead of R-space
-  check that what is read is sensible
+  check that what is read makes sense
 
 - remove old punch, use new punch, add possibility to save
   wavefunctions either 'distributed' or 'collected' in
@@ -108,9 +107,12 @@ POSTPROCESSING
 
 - reconstruction of all-electron wavefunctions
 
-PH
+PH, D3, Gamma
 
 - better algorithm for electron-phonon (Malgorzata?)
+
+- replace "use pwcom" into more "use" statements
+
 
 DOCUMENTATION
 
@@ -129,9 +131,6 @@ FPMD:
 CPV: 
 
 - Documentation needs serious improvements
-
-- check on input ipp and pp type. Even better: remove ipp
-  (leave either UPF or old-format Vanderbilt)
 
 - check on small box size
 

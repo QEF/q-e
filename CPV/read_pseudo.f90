@@ -90,8 +90,7 @@ subroutine read_pseudo (is, iunps, ierr)
   ! lloc(is) = 1
 
   !
-  ! compatibility with Vanderbilt format: Vloc => r*Vloc
-  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh) * upf%r  (1:upf%mesh)
+  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
   !
 
   ! compatibility with old Vanderbilt formats

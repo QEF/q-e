@@ -14,13 +14,13 @@ subroutine addcore (mode, drhoc)
 #include "machine.h"
 
   USE kinds, only : DP
+  use atom, only: nlcc
   use basis, only: nat, ityp
   use cell_base, only: tpiba
   use gvect, only: ngm, nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   use modes, only: u
   use qpoint, only: eigqts, xq
-  use nl_c_c, only: nlcc
   use nlcc_ph, only: nlcc_any, drc
   implicit none
 

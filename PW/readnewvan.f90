@@ -17,13 +17,12 @@ subroutine readnewvan (is, iunps)
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, npsx, lqmax
   use constants, only: fpi
-  use atom,  only: zmesh, mesh, xmin, dx, r, rab, vloc_at, chi, oc, nchi, &
-       lchi, rho_at, rho_atc
+  use atom,  only: zmesh, mesh, xmin, dx, r, rab, chi, oc, nchi, &
+       lchi, rho_at, rho_atc, nlcc
   use char,  only: psd
   use pseud, only: zp, lmax, lloc
-  use nl_c_c,only: nlcc
-  use us,    only: dion, betar, qqq, qfcoef, qfunc, nqlc, rinner, &
-       nh, nbeta, kkbeta, lll, tvanp
+  use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
+       rinner, nh, nbeta, kkbeta, lll, tvanp
 
   use funct
   !

@@ -14,7 +14,8 @@ subroutine init_vloc
   !    potential vloc(ig,it) for each type of atom
   !
 #include"machine.h"
-  USE atom, ONLY: numeric, msh, mesh, r, rab, vloc_at
+  USE atom, ONLY: numeric, msh, mesh, r, rab
+  USE us, ONLY: vloc_at
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba2
   USE vlocal, ONLY: vloc

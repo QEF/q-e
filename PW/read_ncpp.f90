@@ -12,21 +12,23 @@ subroutine read_ncpp (np, iunps)
   !
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, ndmx
-  use atom,  only: zmesh, msh, mesh, xmin, dx, r, rab, vloc_at, chi, oc, nchi, &
-       lchi, rho_at, rho_atc, numeric
+  use atom,  only: zmesh, msh, mesh, xmin, dx, r, rab, chi, oc, &
+       nchi, lchi, rho_at, rho_atc, numeric, nlcc
   use char, only: psd
-  use nl_c_c,only: nlcc, a_nlcc, b_nlcc, alpha_nlcc
-  use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, bhstype
-  use us, only: betar, kkbeta, nbeta, lll, dion
+  use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
+       nlcc, a_nlcc, b_nlcc, alpha_nlcc
+  use us, only: vloc_at, betar, kkbeta, nbeta, lll, dion
   use funct, only: dft, which_dft
   implicit none
-
+  !
   integer :: iunps, np
+  !
   real(kind=DP) :: x, vll
   real(kind=DP), allocatable:: vnl(:,:)
   real(kind=DP), parameter :: rcut = 10.d0, e2 = 2.d0
   real(kind=DP), external :: erf
   integer :: nb, ios, i, l, ir
+  logical :: bhstype
   !
   !====================================================================
   ! read norm-conserving PPs
@@ -34,7 +36,7 @@ subroutine read_ncpp (np, iunps)
   read (iunps, '(a)', end=300, err=300, iostat=ios) dft
   if (dft (1:2) .eq.'**') dft = 'PZ'
   read (iunps, *, err=300, iostat=ios) psd(np), zp(np), lmax(np), nlc(np), &
-                                       nnl(np), nlcc(np), lloc(np), bhstype(np)
+                                       nnl(np), nlcc(np), lloc(np), bhstype
   if (nlc(np) > 2 .or. nnl(np) > 3) &
        call errore ('read_ncpp', 'Wrong nlc or nnl', np)
   if (nlc(np)*nnl(np) < 0) call errore ('read_ncpp', 'nlc*nnl < 0 ? ', np)
@@ -137,7 +139,7 @@ subroutine read_ncpp (np, iunps)
      !
      ! bring analytic potentials into numerical form
      !
-     IF ( nlc(np) == 2 .AND. nnl(np) == 3 .AND. bhstype(np) ) &
+     IF ( nlc(np) == 2 .AND. nnl(np) == 3 .AND. bhstype ) &
           CALL bachel( alps(1,0,np), aps(1,0,np), 1, lmax(np) )
      !
      do i = 1, nlc (np)

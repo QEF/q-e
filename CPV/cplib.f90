@@ -5204,12 +5204,6 @@
         rab(ir,is) = dx * r(ir,is)
       end do
 !
-!    For compatibility with Vandebilt format
-!
-      do ir = 1, mesh(is)
-         vloc_at (ir,is)= vloc_at(ir,is)*r(ir,is)
-      end do
-!
 !     set rscore(r)=rho_core(r) without factors
 !
       if ( nlcc ) then
@@ -5522,7 +5516,7 @@
      &        npf, dummy
       end if
 !
-!   read the local potential of the vanderbilt
+!   read the local potential 
 !
       read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc,           &
      &                       ( vloc_at(ir,is), ir=1,mesh(is) )
@@ -5604,6 +5598,13 @@
 !
          call fill_qrl(is)
       end if
+!
+!   vloc_at as read from Vanderbilt's format is r*v_loc(r)
+!
+      do ir = 2, mesh (is)
+         vloc_at (ir, is) = vloc_at (ir, is) / r (ir, is)
+      enddo
+      vloc_at (1, is) = vloc_at (2, is)
 !
 !    Here we write on output information on the pseudopotential 
 !

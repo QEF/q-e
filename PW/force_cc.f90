@@ -13,14 +13,14 @@ subroutine force_cc (forcecc)
 #include "machine.h"
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
-  USE atom, ONLY: rho_atc, numeric, mesh, r, rab
+  USE atom, ONLY: rho_atc, numeric, mesh, r, rab, nlcc
   USE basis, ONLY: nat, ntyp, ityp, tau
   USE cell_base, ONLY: alat, omega, tpiba, tpiba2
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
-  USE nl_c_c, ONLY: nlcc, a_nlcc, b_nlcc, alpha_nlcc
+  USE pseud, ONLY: a_nlcc, b_nlcc, alpha_nlcc
   USE scf, ONLY: rho, rho_core
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic

@@ -248,7 +248,6 @@ MODULE atom
        dx(npsx),                 &! linear interval for logaritmic mesh
        r(ndmx,npsx),             &! radial logaritmic mesh
        rab(ndmx,npsx),           &! derivative of the radial mesh
-       vloc_at(ndmx,npsx),       &! local potential
        chi(ndmx,nchix,npsx),     &! radial atomic orbitals
        oc(nchix,npsx),           &! atomic level occupation
        rho_at(ndmx,npsx),        &! radial atomic charge density
@@ -259,14 +258,15 @@ MODULE atom
        nchi(npsx),               &! number of atomic orbitals
        lchi(nchix,npsx)           ! angular momentum of atomic orbitals
   LOGICAL :: &
-       numeric(npsx)              ! if .TRUE. the potential is in numeric form
+       numeric(npsx),            &! if .TRUE. the potential is in numeric form
+       nlcc(npsx)                 ! if .TRUE. the atom has nlcc
   !
 END MODULE atom
 !
 !
 MODULE pseud
   !
-  ! ... The variables needed to compute the BHS pseudopotentials
+  ! ... The variables describing pseudopotentials in analytical form
   !  
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npsx, ntypx
@@ -279,34 +279,17 @@ MODULE pseud
        zp(npsx),              &! the charge of the pseudopotential
        aps(6,0:3,npsx),       &! the a_l coefficient
        alps(3,0:3,npsx)        ! the b_l coefficient
+  REAL(KIND=DP) :: &
+       a_nlcc(npsx),         &! nonlinear core correction coefficients:
+       b_nlcc(npsx),         &! rho_c(r) = (a_c + b_c*r^2) exp(-alpha_c*r^2)
+       alpha_nlcc(npsx)       ! 
   INTEGER :: &
        nlc(npsx),             &! number of erf functions
        nnl(npsx),             &! number of the gaussian functions
        lmax(npsx),            &! maximum angular momentum of the pseudopot
        lloc(npsx)              ! angular momentum of the part taken as local
-  LOGICAL :: &
-       bhstype(npsx)           ! if .TRUE. the parameter are from the BHS table
   !
 END MODULE pseud
-!
-!
-MODULE nl_c_c
-  !
-  ! ... The variable needed for the Non Linear Core Correction
-  !  
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx
-  !
-  SAVE
-  !
-  REAL(KIND=DP) :: &
-       a_nlcc(npsx),         &! the a_c coefficient of the gaussian
-       b_nlcc(npsx),         &! the b_c coefficient of the gaussian
-       alpha_nlcc(npsx)       ! the alpha coefficient of the gaussian
-  LOGICAL :: &
-       nlcc(npsx)             ! if .TRUE. the atom has nlcc
-  !
-END MODULE nl_c_c
 !
 !
 MODULE vlocal
@@ -508,6 +491,7 @@ MODULE us
                                            !  |r|> r_L
        qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
                                            !  |r|<r_L
+       vloc_at(ndmx,npsx),                &! local potential
        rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &
        nh(npsx),             &! number of beta functions per atomic type
@@ -673,7 +657,6 @@ MODULE pwcom
   USE symme
   USE atom
   USE pseud
-  USE nl_c_c
   USE vlocal
   USE wvfct
   USE ener

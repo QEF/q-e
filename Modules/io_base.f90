@@ -811,7 +811,7 @@
     SUBROUTINE write_restart_pseudo1(iuni, &
       zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
       rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
-      nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
+      nnl, lmax, lloc, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
       igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd)
 !
@@ -829,7 +829,6 @@
       LOGICAL, INTENT(IN) :: numeric
       REAL(dbl), INTENT(IN) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(IN) :: nlc, nnl, lmax, lloc
-      LOGICAL, INTENT(IN) :: bhstype
       REAL(dbl), INTENT(IN) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(IN) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(IN) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(3)
@@ -893,9 +892,10 @@
         IF( ionode ) THEN
 
           WRITE(iuni) twrite, file_version, section_name
-          WRITE(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, nlc, nnl, lmax, lloc, &
-            bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
-            iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
+          WRITE(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, &
+            nlc, nnl, lmax, lloc,  nh, nbeta, kkbeta, nqf, nqlc, ifqopt, &
+            tvanp, okvan, newpseudo, iexch, icorr, igcx, igcc, lsda,     &
+            a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
           WRITE(iuni) r( 1:mesh_ ), rab( 1:mesh_ ), &
             vloc_at( 1:mesh_ ), chi( 1:mesh_, 1:nchi_ ), &
             oc( 1:nchi_ ), rho_at( 1:mesh_ ), rho_atc( 1:mesh_ ), lchi( 1:nchi_ )
@@ -1070,7 +1070,7 @@
     SUBROUTINE read_restart_pseudo1(iuni, &
       zmesh, xmin, dx, r, rab, vloc_at, chi, oc, rho_at, &
       rho_atc, mesh, msh, nchi, lchi, numeric, cc, alpc, zp, aps, alps, zv, nlc, &
-      nnl, lmax, lloc, bhstype, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
+      nnl, lmax, lloc, dion, betar, qqq, qfunc, qfcoef, rinner, nh, nbeta, &
       kkbeta, nqf, nqlc, ifqopt, lll, iver, tvanp, okvan, newpseudo, iexch, icorr, &
       igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd )
 
@@ -1089,7 +1089,6 @@
       LOGICAL, INTENT(OUT) :: numeric
       REAL(dbl), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(OUT) :: nlc, nnl, lmax, lloc
-      LOGICAL, INTENT(OUT) :: bhstype
       REAL(dbl), INTENT(OUT) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
       REAL(dbl), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(:)
@@ -1121,7 +1120,7 @@
 
         IF( ionode ) THEN
           READ(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, nlc, nnl, lmax, &
-            lloc, bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
+            lloc, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
             iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
         END IF
 
@@ -1138,7 +1137,6 @@
         CALL mp_bcast( nnl, ionode_id )
         CALL mp_bcast( lmax, ionode_id )
         CALL mp_bcast( lloc, ionode_id )
-        CALL mp_bcast( bhstype, ionode_id )
         CALL mp_bcast( nh, ionode_id )
         CALL mp_bcast( nbeta, ionode_id )
         CALL mp_bcast( kkbeta, ionode_id )

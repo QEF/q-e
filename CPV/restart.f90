@@ -6,8 +6,8 @@ CONTAINS
 
 !-----------------------------------------------------------------------
       subroutine writefile_new                                         &
-     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,               &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !-----------------------------------------------------------------------
 !
@@ -233,7 +233,7 @@ CONTAINS
 !         zmesh_, xmin_, dx_, r(:,i), rab(:,i), vnl(:,:,i), chi(:,:,i), oc(:,i), &
 !         rho_at(:,i), rho_atc(:,i), mesh(i), msh(i), nchi(i), lchi(:,i), &
 !         numeric(i), cc(:,i), alpc(:,i), zp(i), aps(:,:,i), alps(:,:,i), &
-!         zv(i), nlc(i), nnl(i), lmax(i), lloc(i), bhstype(i), dion(:,:,i), &
+!         zv(i), nlc(i), nnl(i), lmax(i), lloc(i), dion(:,:,i), &
 !         betar(:,:,i), qqq(:,:,i), qfunc(:,:,:,i), qfcoef(:,:,:,:,i), &
 !         rinner(:,i), nh(i), nbeta(i), kkbeta(i), nqf(i), nqlc(i), ifqopt(i), &
 !         lll(:,i), iver(:,i), tvanp(i), okvan, newpseudo(i), iexch, icorr, &
