@@ -99,7 +99,7 @@ MODULE parser
              CLOSE( UNIT = iunit, STATUS = 'DELETE' )
              !
              IF ( warning ) &
-                WRITE( UNIT = stdout, FMT = '(/,5X"WARNING: ",A, &
+                WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
                      & " file was present; old file deleted")' ) filename
              !
              RETURN
