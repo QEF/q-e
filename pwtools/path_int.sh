@@ -175,14 +175,10 @@ EOF
   #
   ##############################################################################
   #
-  $GAWK -f from_restart_to_xyz.gawk ${new_restart_file} > \
-  ${new_restart_file}.xyz
-  #
   $GAWK -f from_restart_to_axsf.gawk ${new_restart_file} > \
   ${new_restart_file}.axsf
   #
-  rm -f from_restart_to_xyz.gawk \
-        from_restart_to_axsf.gawk
+  rm -f from_restart_to_axsf.gawk
   #
 fi
 #

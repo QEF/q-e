@@ -274,8 +274,8 @@ PROGRAM images_interpolator
      !
   END IF
   !
+  new_mesh = new_mesh / old_mesh(old_num_of_images)  
   old_mesh = old_mesh / old_mesh(old_num_of_images)
-  new_mesh = new_mesh / new_mesh(new_num_of_images)
   ! 
   CALL dosplineint( old_mesh , old_pos , new_mesh , new_pos )
   CALL dosplineint( old_mesh , old_PES_gradient , new_mesh , new_PES_gradient )
