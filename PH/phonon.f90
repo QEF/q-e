@@ -273,9 +273,9 @@ PROGRAM phonon
      !
      IF ( epsil .AND. irr0 <=  0 ) THEN
         !
-        WRITE( stdout, '(/,5X,"Computing electric fields")' )
-        !
+        WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
         CALL solve_e()
+        WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
         !
         IF ( convt ) THEN
            !

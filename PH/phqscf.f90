@@ -73,7 +73,9 @@ subroutine phqscf
         !
         !    then for this irreducible representation we solve the linear system
         !
+        WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
         call solve_linter (irr, imode0, npert (irr), drhoscf)
+        WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
         !
