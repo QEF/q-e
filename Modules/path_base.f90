@@ -189,7 +189,7 @@ MODULE path_base
          CALL read_restart()
          !
          ! ... consistency between the input value of nstep and the value
-         ! ... of nstep_neb read from the restart_file is checked
+         ! ... of nstep_path read from the restart_file is checked
          !
          IF ( nstep == 0 ) THEN
             !
@@ -1239,6 +1239,18 @@ MODULE path_base
       !
       CALL search_mep_init()
       !
+      IF ( istep_path == nstep_path ) THEN
+         !
+         CALL write_dat_files()
+         !
+         CALL write_output()
+         !
+         suspended_image = 0
+         !
+         RETURN
+         !
+      END IF
+      !
       ! ... path optimization loop
       !
       optimization: DO
@@ -1410,18 +1422,6 @@ MODULE path_base
             ft_grad_old(:,:) = ft_grad(:,:)
             !
          END IF
-         !
-      END IF
-      !
-      IF ( istep_path == nstep_path ) THEN
-         !
-         CALL write_dat_files()
-         !
-         CALL write_output()
-         !
-         suspended_image = 0
-         !
-         RETURN
          !
       END IF
       !
