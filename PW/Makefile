@@ -6,6 +6,7 @@ include ../make.sys
 #
 PWOBJS = pwcom.o  \
 para.o  \
+clean_pw.o \
 aainit.o  \
 add_efield.o \
 addusdens.o  \

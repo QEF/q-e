@@ -306,6 +306,13 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
           nr1, lot, sign)
 
   endif
+
+  !  array deallocation
+
+  IF ( ALLOCATED( trig1 ) )	DEALLOCATE( trig1 )
+  IF ( ALLOCATED( trig2 ) )	DEALLOCATE( trig2 )  
+  IF ( ALLOCATED( trig3 ) )	DEALLOCATE( trig3 ) 
+
 #endif
   return
 end subroutine cfts_3
@@ -315,3 +322,5 @@ subroutine sbidons ()
 end subroutine sbidons
 
 #endif
+
+

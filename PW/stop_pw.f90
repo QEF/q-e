@@ -60,6 +60,9 @@ subroutine stop_pw (flag)
 
   call set_d_stream (0)
 #endif
+
+  call clean_pw
+
   if (flag) then
      stop
   else
@@ -92,5 +95,7 @@ subroutine cpflush
   call stop_pw (.false.)
   return
 end subroutine cpflush
+
+
 
 
