@@ -2793,12 +2793,14 @@
       real(kind=8)  bec(nhsa,n)
       complex(kind=8)   cp(ngw,n), betae(ngw,nhsa)
 !
-      real(kind=8) anorm, cscnorm
-      real(kind=8) csc(nx) ! automatic array
-      integer i,k
-      external cscnorm
+      real(kind=8) :: anorm, cscnorm
+      real(kind=8), allocatable :: csc( : )
+      integer :: i,k
+      external :: cscnorm
 !
       call start_clock( 'graham' )
+
+      allocate( csc( nx ) )
 !
       do i=1,n
          call gracsc(bec,betae,cp,i,csc)
@@ -2816,6 +2818,8 @@
          call DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
       end do
 !
+      deallocate( csc )
+
       call stop_clock( 'graham' )
 !
       return
@@ -3248,7 +3252,13 @@
       use fft_scalar, only: cfft3d
       complex(kind=8) f(nr1bx*nr2bx*nr3bx)
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
+
+!     in a parallel execution, not all processors calls this routine
+!     then we should avoid clocks, otherwise the program hangs in print_clock 
+#if ! defined __PARA
       call start_clock( 'fftb' )
+#endif
+
 #ifdef __PARA
       call cfftpb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,1)
 #else
@@ -3258,7 +3268,10 @@
       call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
 # endif
 #endif
+
+#if ! defined __PARA
       call stop_clock( 'fftb' )
+#endif
 !
       return
       end

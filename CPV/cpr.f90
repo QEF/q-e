@@ -82,7 +82,7 @@
       use work_box, only: qv, deallocate_work_box
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
-      use mp, ONLY: mp_sum
+      use mp, ONLY: mp_sum, mp_barrier
       use para_mod
       use dener
       use derho
@@ -1515,7 +1515,6 @@
       WRITE( stdout,1950) (acc(i),i=1,nacc)
  1950 format(4f14.5,f10.1)
 !
-
       call print_clock( 'initialize' )
       call print_clock( 'total_time' )
       call print_clock( 'formf' )
