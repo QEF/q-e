@@ -1,28 +1,45 @@
+The most current development version of ESPRESSO is publicly
+accessible via anonymous CVS.
 
-The current (development) version is available using anonymous CVS. 
-Define environmental variables:
-   setenv CVS_RSH ssh
-   setenv CVSROOT :pserver:cvsanon@democritos.sissa.it:/home/cvs
-(tcsh/csh) or
-   export CVS_RSH=ssh
-   export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
-(sh/bash). Then:
-   cvs login
-(password: cvsanon). For the first code download:
-   cvs co espresso
-for the entire repository (the code appears in directory espresso/).
-Alternatively, "cvs co pwscf", or "cp", or "fpmd" will download only
-PWscf, CP, FPMD, respectively, in directories with the same name;
-"cvs co pseudo examples" will download tests and examples.
-In order to update the code to the current version:
+*** PLEASE NOTE ***
+the development version may not work properly, and sometimes not even
+compile properly. Use at your own risk.
+
+To download the CVS tree from scratch, follow this procedure:
+
+1) define the environment variables CVS_RSH and CVSROOT as follows:
+      export CVS_RSH=ssh
+      export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
+   if your shell is sh/bash, or
+      setenv CVS_RSH ssh
+      setenv CVSROOT :pserver:cvsanon@democritos.sissa.it:/home/cvs
+   if your shell is csh/tcsh.
+
+2) login anonymously to the CVS repository:
+      cvs login
+   The password is: cvsanon
+
+3) Download the complete ESPRESSO source tree:
+      cvs checkout espresso
+   (the code appears in directory espresso).
+
+   Alternatively, download PWscf only, or CP/FPMD only:
+      cvs checkout pwscf
+      cvs checkout cp
+   and optionally tests and examples (with the pseudopotentials needed
+   to run them):
+      cvs checkout pseudo examples
+
+To update your existing CVS tree to the current version, run this
+command:
    cvs update -d
-in the directory containing the distribution.
+from the directory containing the distribution.
 
-PLEASE NOTE: re-run "./configure" if files have been moved/added/removed
-since the last checkout, otherwise "make" may not work properly due to
-obsolete or missing dependencies. Do not blindly re-use a "make.sys" file
-from a preceding version: it may no longer work.
-
-PLEASE ALSO NOTE: the development version may not work properly, and
-sometimes not even compile properly. Use at your own risk.
-
+*** PLEASE NOTE ***
+after a "cvs update", dependencies (generated automatically by
+"configure") may be no longer up to date.  You are advised to
+recompute them by running the "makedeps.sh" script, otherwise the code
+may not compile properly (compiler complains about undefined or
+redefined symbols, missing modules and/or routines...).
+Sometimes you'll have to rerun "configure" too, but that should be a
+rare event.
