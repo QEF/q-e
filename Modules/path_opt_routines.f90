@@ -42,7 +42,7 @@ MODULE path_opt_routines
        !
        IF ( norm_grad(index) > eps32 ) THEN
           !
-          pos(:,index) = pos(:,index) - ds(index) * grad(:,index)
+          pos(:,index) = pos(:,index) - ds(1) * grad(:,index)
           !
        END IF
        !      
@@ -81,10 +81,9 @@ MODULE path_opt_routines
           !
        ELSE
           !
-          vel(:,index) = vel(:,index) - &
-                         0.5D0 * ds(index) * grad(:,index)
+          vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
           !
-          pos(:,index) = pos(:,index) + ds(index) * vel(:,index)
+          pos(:,index) = pos(:,index) + ds(1) * vel(:,index)
           !
        END IF
        !       
@@ -109,12 +108,11 @@ MODULE path_opt_routines
        IF ( ldamped_dyn ) THEN
           !
           vel(:,index) = damp * ( vel(:,index) - &
-                                  0.5D0 * ds(index) * grad(:,index) )
+                                  0.5D0 * ds(1) * grad(:,index) )
           !
        ELSE IF ( lmol_dyn ) THEN
           !       
-          vel(:,index) = vel(:,index) - &
-                         0.5D0 * ds(index) * grad(:,index)
+          vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
           !
        END IF
        !
@@ -140,8 +138,7 @@ MODULE path_opt_routines
        !
        IF ( frozen(index) ) RETURN
        !
-       vel(:,index) = vel(:,index) - &
-                      0.5D0 * ds(index) * grad(:,index)
+       vel(:,index) = vel(:,index) - 0.5D0 * ds(1) * grad(:,index)
        !
        IF ( norm_grad(index) > eps32 ) THEN
           !
@@ -173,7 +170,7 @@ MODULE path_opt_routines
                 ALLOCATE( y( dim ), s( dim ) )
                 !
                 y = grad(:,index) - grad_old(:,index)
-                s = pos(:,index)      -  pos_old(:,index)
+                s = pos(:,index)  -  pos_old(:,index)
                 !
 #  if defined (DEBUG_SMART_STEP)
                 PRINT '(5X,"projection = ",F7.4)', &
@@ -184,7 +181,7 @@ MODULE path_opt_routines
                 IF ( ABS( y .dot. s ) > eps8 ) THEN
                    !
                    grad(:,index) = 2.D0 * s * &
-                           ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
+                                ABS( ( s .dot. grad(:,index) ) / ( y .dot. s ) )
                    !
                 END IF
                 !

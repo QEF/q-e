@@ -1170,11 +1170,10 @@ MODULE path_io_routines
           !
           IF ( first_last_opt ) THEN
              !
-             DO image = 1, num_of_images
-                !
-                WRITE( UNIT = iunpath, FMT = neb_run_output ) &
-                    image, pes(image) * au, error(image)
-             END DO
+             WRITE( UNIT = iunpath, FMT = neb_run_output ) &
+                 1, pes(1) * au, error(1)
+             WRITE( UNIT = iunpath, FMT = neb_run_output ) &
+                 num_of_images, pes(num_of_images) * au, error(num_of_images)   
              !
              WRITE( UNIT = iunpath, FMT = * )
              !
