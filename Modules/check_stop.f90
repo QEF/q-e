@@ -34,7 +34,7 @@ MODULE check_stop
      SUBROUTINE check_stop_init( val )
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY : ionode, ionode_id, stdout
+       USE io_global, ONLY : meta_ionode, stdout
        USE io_files,  ONLY : exit_file, stopunit
        !
        IMPLICIT NONE
@@ -51,7 +51,7 @@ MODULE check_stop
        !
        IF ( val > 0.D0 ) max_seconds = val
        !
-       IF ( ionode ) THEN
+       IF ( meta_ionode ) THEN
           !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
@@ -71,14 +71,13 @@ MODULE check_stop
        !
      END SUBROUTINE
      !
-     !
      !-----------------------------------------------------------------------
      FUNCTION check_stop_now( inunit )
        !-----------------------------------------------------------------------
        !
        USE mp,        ONLY : mp_bcast
        USE mp_global, ONLY : intra_image_comm 
-       USE io_global, ONLY : ionode, ionode_id, stdout
+       USE io_global, ONLY : meta_ionode, meta_ionode_id, stdout
        USE io_files,  ONLY : exit_file, stopunit, iunexit
        !
        IMPLICIT NONE
@@ -102,7 +101,7 @@ MODULE check_stop
        !
        check_stop_now = .FALSE.
        !  
-       IF ( ionode ) THEN
+       IF ( meta_ionode ) THEN
           !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
@@ -135,12 +134,10 @@ MODULE check_stop
           !
        END IF
        !
-       CALL mp_bcast( check_stop_now, ionode_id, intra_image_comm )
+       CALL mp_bcast( check_stop_now, meta_ionode_id, intra_image_comm )
        !
        RETURN
        !
      END FUNCTION check_stop_now
      !
-!------------------------------------------------------------------------------!
 END MODULE check_stop
-!------------------------------------------------------------------------------!
