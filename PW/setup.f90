@@ -683,10 +683,12 @@ SUBROUTINE setup()
   !
   ! ... non scf calculation: do not change the number of k-points
   !
-  IF ( .NOT. lscf ) THEN
+  ltest = ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) )
+  !
+  IF ( ltest ) THEN
      !
-     WRITE( stdout, '(/,5X,"Only input k-points are used : ", &
-                         & "missing inequivalent points",/)' )
+     WRITE( stdout, '(/,5X,"Only input k-points are used ", &
+                         & "(inequivalent points not generated)",/)' )
      !
      nks = input_nks
      !
