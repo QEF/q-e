@@ -507,12 +507,12 @@ end module para_mod
 #endif
       write(40,*) ' ',nat00,' 1'
       do i = 1,nat00
-         write(40,'(2x,i2,2x,3(f12.6,x))')  mod(10*ityp(i),70)+ityp(i), &
+         write(40,'(2x,i2,2x,3(f12.6,1x))')  mod(10*ityp(i),70)+ityp(i), &
      &        (((tau00(j,i)+shift(j))*0.529177d0),j=1,3)
       end do
       write(40,*) ' ATOMS'
       do i = 1,nat00
-         write(40,'(2x,i2,2x,3(f12.6,x))')  mod(10*ityp(i),70)+ityp(i), &
+         write(40,'(2x,i2,2x,3(f12.6,1x))')  mod(10*ityp(i),70)+ityp(i), &
      &        (((tau00(j,i)+shift(j))*0.529177d0),j=1,3)
       end do
       write(40,*) ' BEGIN_BLOCK_DATAGRID3D'
