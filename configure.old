@@ -84,10 +84,8 @@ then
           ;;
         esac
 
-        cd install; make
-        ./sizeof.x
-        ./shdep
-	exit 0
+	# generate dependencies
+	./makedeps.sh
 else
         echo "Valid architectures are : "
         for i in $lista
