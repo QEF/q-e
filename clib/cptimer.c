@@ -12,6 +12,7 @@
 #include<sys/types.h>
 #include"cp.h"
 
+
 static struct tms {
         clock_t tms_utime;              /* user time */
         clock_t tms_stime;              /* system time */
@@ -46,16 +47,27 @@ double CCLOCK()
 
 #else
 
+# if ! defined __USER_TIME
+
+    struct timeval tmp;
+    double sec;
+    gettimeofday( &tmp, (struct timezone *)0 );
+    sec = tmp.tv_sec + ((double)tmp.tv_usec)/1000000.0;
+    return sec;
+
+# else
+
     double sec;
     static struct tms tmp;
     times(&tmp);
     sec = (double)(tmp.tms_utime) / (double)CLK_TCK;
     return sec;
 
+#  endif
+
 #endif
 
 }
-
 
 
 int CPTIMER ( double * user, double * system)
