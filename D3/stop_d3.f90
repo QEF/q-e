@@ -7,60 +7,60 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine stop_d3 (flag)
+SUBROUTINE stop_d3 (flag)
 !-----------------------------------------------------------------------
 !
 !    This routine closes all files before stopping
 !    flag is no longer used
 !
-  use pwcom
-  use phcom
-  use d3com
-  use control_flags, only: twfcollect
-  USE io_files,   ONLY : iunigk
-  use mp,         ONLY : mp_end, mp_barrier
-  use para
+  USE pwcom
+  USE phcom
+  USE d3com
+  USE control_flags, ONLY : twfcollect
+  USE io_files,      ONLY : iunigk
+  USE mp,            ONLY : mp_end, mp_barrier
+  USE mp_global,     ONLY : me_pool, root_pool
 
-  implicit none
+  IMPLICIT NONE
 
-  logical :: flag
+  LOGICAL :: flag
 
-  if (twfcollect ) then
-     close (unit = iuwfc, status = 'delete')
-  else
-     close (unit = iuwfc, status = 'keep')
-  end if
-  close (unit = iubar, status = 'keep')
-  close (unit = iudwf, status = 'keep')
-#ifdef __PARA
-  if (me.ne.1) goto 100
-#endif
-  close (unit = iudrho, status = 'keep')
-  if (.not.lgamma) close (unit = iud0rho, status = 'keep')
-#ifdef __PARA
-100 continue
-#endif
-  close (unit = iunigk, status = 'delete')
-  if (.not.lgamma) then
-     close (unit = iud0qwf, status = 'keep')
-     close (unit = iudqwf, status = 'keep')
-  endif
-  close (unit = iupdqvp, status = 'keep')
-  if (.not.lgamma) close (unit = iupd0vp, status = 'keep')
-  if (degauss.ne.0.d0) then
-     close (unit = iudpdvp_1, status = 'keep')
-     if (.not.lgamma) then
-        close (unit = iudpdvp_2, status = 'keep')
-        close (unit = iudpdvp_3, status = 'keep')
-     endif
-  endif
-  call print_clock_d3
-  call show_memory ()
+  IF (twfcollect ) THEN
+     CLOSE (unit = iuwfc, status = 'delete')
+  ELSE
+     CLOSE (unit = iuwfc, status = 'keep')
+  END IF
+  CLOSE (unit = iubar, status = 'keep')
+  CLOSE (unit = iudwf, status = 'keep')
 
-  call mp_barrier()
+  IF ( me_pool == root_pool ) THEN
+     !
+     CLOSE (unit = iudrho, status = 'keep')
+     IF (.NOT.lgamma) CLOSE (unit = iud0rho, status = 'keep')
+     !
+  END IF
 
-  call mp_end()
+  CLOSE (unit = iunigk, status = 'delete')
+  IF (.NOT.lgamma) THEN
+     CLOSE (unit = iud0qwf, status = 'keep')
+     CLOSE (unit = iudqwf, status = 'keep')
+  ENDIF
+  CLOSE (unit = iupdqvp, status = 'keep')
+  IF (.NOT.lgamma) CLOSE (unit = iupd0vp, status = 'keep')
+  IF (degauss.NE.0.d0) THEN
+     CLOSE (unit = iudpdvp_1, status = 'keep')
+     IF (.NOT.lgamma) THEN
+        CLOSE (unit = iudpdvp_2, status = 'keep')
+        CLOSE (unit = iudpdvp_3, status = 'keep')
+     ENDIF
+  ENDIF
+  CALL print_clock_d3
+  CALL show_memory ()
 
-  stop
-  return
-end subroutine stop_d3
+  CALL mp_barrier()
+
+  CALL mp_end()
+
+  STOP
+  RETURN
+END SUBROUTINE stop_d3

@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine d3_setup
+SUBROUTINE d3_setup()
   !-----------------------------------------------------------------------
   !
   !  This subroutine prepares several variables which are needed in the
@@ -43,20 +43,20 @@ subroutine d3_setup
   !  7) set the variables needed to distribute one loop between pools
   !  8) set the variables needed to calculate only selected q=0 modes
   !
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
-  use pwcom
-  use atom, only: nlcc
+  USE ions_base,     ONLY : nat, ityp, ntyp => nsp, tau
+  USE io_global,     ONLY : stdout
+  USE kinds,         ONLY : DP
+  USE pwcom
+  USE atom,          ONLY : nlcc
   USE control_flags, ONLY : iswitch, iverbosity, modenum
-  USE constants,  ONLY : degspin
-  use phcom
-  use d3com
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-  real (kind = dp) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
+  USE constants,     ONLY : degspin
+  USE phcom
+  USE d3com
+  USE mp_global,     ONLY : npool, me_pool
+  !
+  IMPLICIT NONE
+  !
+  REAL (kind = dp) :: rhotot, rhoup, rhodw, TARGET, small, fac, xmax, emin, &
        emax, dmxc, wrk
   ! total charge
   ! total up charge
@@ -68,44 +68,44 @@ subroutine d3_setup
   ! computes derivative of xc potential
   ! working array
 
-  integer :: table (48, 48)
+  INTEGER :: table (48, 48)
   ! the multiplication table of the point group
-  integer :: ir, isym, jsym, iinv, irot, jrot, ik, &
+  INTEGER :: ir, isym, jsym, iinv, irot, jrot, ik, &
        ibnd, ipol, mu, nu, imode0, irr, ipert, nt, ii, nu_i
   ! counters
-  logical :: sym (48)
+  LOGICAL :: sym (48)
   ! the symmetry operations
 
 #ifdef __PARA
-  integer :: nlength_w, nlength (npool), nresto
+  INTEGER :: nlength_w, nlength (npool), nresto
 #endif
-  call start_clock ('d3_setup')
+  CALL start_clock ('d3_setup')
   !
   ! 1) Computes the total local potential (external+scf) on the smoot grid
   !
-  call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
+  CALL set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   !
   ! 2) Computes the derivative of the xc potential
   !
   dmuxc (:,:,:) = 0.d0
-  if (lsda) then
-     do ir = 1, nrxx
+  IF (lsda) THEN
+     DO ir = 1, nrxx
         rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
         rhodw = rho (ir, 2) + 0.5d0 * rho_core (ir)
-        call dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), &
+        CALL dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), &
              dmuxc (ir, 2, 1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
-     enddo
-  else
-     do ir = 1, nrxx
+     ENDDO
+  ELSE
+     DO ir = 1, nrxx
         rhotot = rho (ir, nspin) + rho_core (ir)
-        if (rhotot > 1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        if (rhotot < - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
-     enddo
-  endif
+        IF (rhotot > 1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+        IF (rhotot < - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+     ENDDO
+  ENDIF
   !
   ! 3) Computes the number of occupated bands for each k point
   !
-  if (degauss /= 0.d0) then
+  IF (degauss /= 0.d0) THEN
      !
      ! discard conduction bands such that w0gauss(x,n) < small
      !
@@ -118,103 +118,103 @@ subroutine d3_setup
      !
      ! - limit appropriated for gaussian broadening (used for all ngauss)
      !
-     xmax = sqrt ( - log (sqrt (pi) * small) )
+     xmax = SQRT ( - LOG (SQRT (pi) * small) )
      !
      ! - limit appropriated for Fermi-Dirac
      !
-     if (ngauss == - 99) then
-        fac = 1.d0 / sqrt (small)
-        xmax = 2.d0 * log (0.5 * (fac + sqrt (fac * fac - 4.0) ) )
-     endif
-     target = ef + xmax * degauss
-     do ik = 1, nks
-        do ibnd = 1, nbnd
-           if (et (ibnd, ik) < target) nbnd_occ (ik) = ibnd
-        enddo
-        if (nbnd_occ (ik) == nbnd) &
+     IF (ngauss == - 99) THEN
+        fac = 1.d0 / SQRT (small)
+        xmax = 2.d0 * LOG (0.5 * (fac + SQRT (fac * fac - 4.0) ) )
+     ENDIF
+     TARGET = ef + xmax * degauss
+     DO ik = 1, nks
+        DO ibnd = 1, nbnd
+           IF (et (ibnd, ik) < TARGET) nbnd_occ (ik) = ibnd
+        ENDDO
+        IF (nbnd_occ (ik) == nbnd) &
              WRITE( stdout, '(5x,/,"Possibly too few bands at point ", &
              & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
-     enddo
-  else
-     if (lsda) call errore ('d3_setup', 'occupation numbers probably wrong',-1)
-     do ik = 1, nks
-        nbnd_occ (ik) = nint (nelec) / degspin
-     enddo
-  endif
+     ENDDO
+  ELSE
+     IF (lsda) CALL errore ('d3_setup', 'occupation numbers probably wrong',-1)
+     DO ik = 1, nks
+        nbnd_occ (ik) = NINT (nelec) / degspin
+     ENDDO
+  ENDIF
   !
   ! 4) Computes alpha_pv
   !
   emin = et (1, 1)
-  do ik = 1, nks
-     do ibnd = 1, nbnd
-        emin = min (emin, et (ibnd, ik) )
-     enddo
-  enddo
+  DO ik = 1, nks
+     DO ibnd = 1, nbnd
+        emin = MIN (emin, et (ibnd, ik) )
+     ENDDO
+  ENDDO
   ! find the minimum across pools
 
-  call poolextreme (emin, - 1)
+  CALL poolextreme (emin, - 1)
   emax = et (1, 1)
-  do ik = 1, nks
-     do ibnd = 1, nbnd
-        emax = max (emax, et (ibnd, ik) )
-     enddo
-  enddo
+  DO ik = 1, nks
+     DO ibnd = 1, nbnd
+        emax = MAX (emax, et (ibnd, ik) )
+     ENDDO
+  ENDDO
   ! find the maximum across pools
 
-  call poolextreme (emax, + 1)
+  CALL poolextreme (emax, + 1)
   alpha_pv = 2.d0 * (emax - emin)
   ! avoid zero value for alpha_pv
-  alpha_pv = max (alpha_pv, 1.0d-2)
+  alpha_pv = MAX (alpha_pv, 1.0d-2)
   !
   ! 5) set all the variables needed to use the pattern representation
   !
   !
   ! 5.0) Computes the inverse of each matrix
   !
-  call multable (nsym, s, table)
-  do isym = 1, nsym
-     do jsym = 1, nsym
-        if (table (isym, jsym) .eq.1) invs (isym) = jsym
-     enddo
-  enddo
+  CALL multable (nsym, s, table)
+  DO isym = 1, nsym
+     DO jsym = 1, nsym
+        IF (table (isym, jsym) .EQ.1) invs (isym) = jsym
+     ENDDO
+  ENDDO
   !
   ! 5.1) Finds the variables needeed for the pattern representation
   !      of the small group of q
   !
-  do isym = 1, nsym
-     sym (isym) = .true.
-  enddo
+  DO isym = 1, nsym
+     sym (isym) = .TRUE.
+  ENDDO
 
-  call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+  CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
   minus_q = (iswitch > - 3)
   ! Sq=-q+G symmetry. On output minus_q=.t.
   ! if such a symmetry has been found
-  if (iswitch ==  - 4) then
-     call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+  IF (iswitch ==  - 4) THEN
+     CALL set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
           npert, nirr, gi, gimq, iverbosity, modenum)
-  else
-     if (nsym > 1) then
-        call io_pattern(fildrho,nirr,npert,u,-1)
-        call set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+  ELSE
+     IF (nsym > 1) THEN
+        CALL io_pattern(fildrho,nirr,npert,u,-1)
+        CALL set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,   &
              npert, nirr, gi, gimq, iverbosity)
-     else
-        call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
+     ELSE
+        CALL set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
              irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, & 
              npert, nirr, gi, gimq, iverbosity)
-     endif
-  endif
+     ENDIF
+  ENDIF
   !
   ! 5.2) Finds the variables needeed for the pattern representation
   !      of the small group of the crystal
   !
-  if (lgamma) then
+  IF (lgamma) THEN
      nsymg0 = nsymq
      nirrg0 = nirr
-  else
+  ELSE
      !
      ! It finds which symmetries of the lattice are symmetries of the crystal
      ! it calculates the order of the crystal group:   nsymg0
@@ -222,39 +222,39 @@ subroutine d3_setup
      !  a) the first nsymg0 matrices are symmetries of the crystal
      !  b) the first nsymq matrices are symmetries for the small group of q
      !
-     call sgama_d3 (nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, irt, &
+     CALL sgama_d3 (nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, irt, &
           ftau, at, bg, tau)
      !
      ! Recalculates the inverse of each rotation
      !
-     call multable (nsymg0, s, table)
-     do irot = 1, nsymg0
-        do jrot = 1, nsymg0
-           if (table (irot, jrot) == 1) invs (irot) = jrot
-        enddo
-     enddo
+     CALL multable (nsymg0, s, table)
+     DO irot = 1, nsymg0
+        DO jrot = 1, nsymg0
+           IF (table (irot, jrot) == 1) invs (irot) = jrot
+        ENDDO
+     ENDDO
      !
      ! Calculates rtau
      !
-     do isym = 1, nsymg0
-        sym (isym) = .true.
-     enddo
-     call sgam_ph (at, bg, nsymg0, s, irt, tau, rtau, nat, sym)
+     DO isym = 1, nsymg0
+        sym (isym) = .TRUE.
+     ENDDO
+     CALL sgam_ph (at, bg, nsymg0, s, irt, tau, rtau, nat, sym)
      !
      ! Calculates the variables need for the pattern representation
      ! for the q=0 symmetries
      !
-     call set_d3irr
-  endif
+     CALL set_d3irr
+  ENDIF
   !
   ! 6) Set non linear core correction stuff
   !
-  nlcc_any = .false.
-  do nt = 1, ntyp
-     nlcc_any = nlcc_any.or.nlcc (nt)
-  enddo
+  nlcc_any = .FALSE.
+  DO nt = 1, ntyp
+     nlcc_any = nlcc_any.OR.nlcc (nt)
+  ENDDO
 
-  if (nlcc_any) allocate (drc( ngm, ntyp))    
+  IF (nlcc_any) ALLOCATE (drc( ngm, ntyp))    
   !
   ! 7) Sets up variables needed to distribute one loop between pools
   !
@@ -263,58 +263,58 @@ subroutine d3_setup
 #ifdef __PARA
   nlength_w = (3 * nat) / npool
   nresto = 3 * nat - nlength_w * npool
-  do ii = 1, npool
-     if (ii <= nresto) then
+  DO ii = 1, npool
+     IF (ii <= nresto) THEN
         nlength (ii) = nlength_w + 1
-     else
+     ELSE
         nlength (ii) = nlength_w
-     endif
-  enddo
+     ENDIF
+  ENDDO
   npert_i = 1
-  do ii = 1, mypool - 1
+  DO ii = 1, me_pool
      npert_i = npert_i + nlength (ii)
-  enddo
+  ENDDO
 
-  npert_f = npert_i - 1 + nlength (mypool)
+  npert_f = npert_i - 1 + nlength (me_pool+1)
 #endif
   !
   ! 8) Sets up variables needed to calculate only selected
   !    modes at q=0 --the first index of the third order matrix--
   !
-  if (q0mode_todo (1) <= 0) then
-     do ii = 1, 3 * nat
-        q0mode (ii) = .true.
-     enddo
-  else
-     do ii = 1, 3 * nat
-        q0mode (ii) = .false.
-     enddo
+  IF (q0mode_todo (1) <= 0) THEN
+     DO ii = 1, 3 * nat
+        q0mode (ii) = .TRUE.
+     ENDDO
+  ELSE
+     DO ii = 1, 3 * nat
+        q0mode (ii) = .FALSE.
+     ENDDO
      ii = 1
-     do while (q0mode_todo (ii) > 0)
-        q0mode (q0mode_todo (ii) ) = .true.
+     DO WHILE (q0mode_todo (ii) > 0)
+        q0mode (q0mode_todo (ii) ) = .TRUE.
         ii = ii + 1
-     enddo
-  endif
+     ENDDO
+  ENDIF
   !
   ! if you want to compute all the modes; and lgamma=.true.
   ! the calculation can be simplyfied, in this case allmodes
   ! is set .true.
   !
-  allmodes = lgamma.and.q0mode_todo (1) <= 0
+  allmodes = lgamma.AND.q0mode_todo (1) <= 0
   !
   ! Sets up variables needed to write only selected
   ! modes at q=0 --the first index of the third order matrix--
   !
-  do ii = 1, 3 * nat
+  DO ii = 1, 3 * nat
      wrk = 0.d0
-     do nu_i = 1, 3 * nat
-        if (q0mode (nu_i) ) then
-           wrk = wrk + ug0 (ii, nu_i) * conjg (ug0 (ii, nu_i) )
-        endif
-     enddo
-     wrmode (ii) = .false.
-     if (wrk > 1.d-8) wrmode (ii) = .true.
-  enddo
-  call stop_clock ('d3_setup')
-  return
-end subroutine d3_setup
+     DO nu_i = 1, 3 * nat
+        IF (q0mode (nu_i) ) THEN
+           wrk = wrk + ug0 (ii, nu_i) * CONJG (ug0 (ii, nu_i) )
+        ENDIF
+     ENDDO
+     wrmode (ii) = .FALSE.
+     IF (wrk > 1.d-8) wrmode (ii) = .TRUE.
+  ENDDO
+  CALL stop_clock ('d3_setup')
+  RETURN
+END SUBROUTINE d3_setup

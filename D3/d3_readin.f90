@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine d3_readin
+SUBROUTINE d3_readin()
   !-----------------------------------------------------------------------
   !
   !    This routine reads the control variables for the program phononq. T
@@ -16,21 +16,21 @@ subroutine d3_readin
   !    allows it. A second routine readfile reads the variables saved
   !    on the data file by the self-consistent program.
   !
-  USE ions_base,  ONLY : nat, ntyp => nsp
-  use pwcom
+  USE ions_base,     ONLY : nat, ntyp => nsp
+  USE pwcom
   USE control_flags, ONLY : iverbosity, iswitch
-  use phcom
-  use d3com
-  use io_files, only: tmp_dir, prefix
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-  integer :: ios, ipol, iter, na, it, ii
+  USE phcom
+  USE d3com
+  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_global,     ONLY : ionode
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ios, ipol, iter, na, it, ii
   ! counters
-  character(len=256) :: outdir
+  CHARACTER(len=256) :: outdir
 
-  namelist / inputph / ethr_ph, amass, iverbosity, outdir, prefix, &
+  NAMELIST / inputph / ethr_ph, amass, iverbosity, outdir, prefix, &
        fildyn, fildrho, fild0rho, q0mode_todo, wraux, recv, istop, &
        testflag, testint, testreal
   ! convergence threshold
@@ -46,112 +46,110 @@ subroutine d3_readin
   ! .true.==> this is a recover run
   ! to stop the program at a given point
   ! variables used for testing purposes
-#ifdef __PARA
 
-  if (me.ne.1) goto 400
-#endif
-  !
-  !    Read the first line of the input file
-  !
-  read (5, '(a)', err = 100, iostat = ios) title_ph
-100 call errore ('d3_readin', 'reading title ', abs (ios) )
-  !
-  !   set default values for variables in namelist
-  !
-  ethr_ph = 1.d-5
-  iverbosity = 0
-  outdir = './'
-  prefix = 'pwscf'
-  fildyn = 'd3dyn'
-  fildrho = ' '
-  fild0rho = ' '
-  do ii = 1, 300
-     q0mode_todo (ii) = 0
-  enddo
-  wraux = .false.
-  recv = .false.
-  istop = 0
-  do ii = 1, 50
-     testflag (ii) = .false.
-  enddo
-  !
-  !     reading the namelist inputph
-  !
+  IF ( ionode ) THEN
+     !
+     !    Read the first line of the input file
+     !
+     READ (5, '(a)', err = 100, iostat = ios) title_ph
+100  CALL errore ('d3_readin', 'reading title ', ABS (ios) )
+     !
+     !   set default values for variables in namelist
+     !
+     ethr_ph = 1.d-5
+     iverbosity = 0
+     outdir = './'
+     prefix = 'pwscf'
+     fildyn = 'd3dyn'
+     fildrho = ' '
+     fild0rho = ' '
+     DO ii = 1, 300
+        q0mode_todo (ii) = 0
+     ENDDO
+     wraux = .FALSE.
+     recv = .FALSE.
+     istop = 0
+     DO ii = 1, 50
+        testflag (ii) = .FALSE.
+     ENDDO
+     !
+     !     reading the namelist inputph
+     !
 #ifdef CRAYY
-  !   The Cray does not accept "err" and "iostat" together with a namelist
-  read (5, inputph)
-  ios = 0
+     !   The Cray does not accept "err" and "iostat" together with a namelist
+     READ (5, inputph)
+     ios = 0
 #else
-  !
-  !   Note: for AIX machine (xlf compiler version 3.0 or higher):
-  !   The variable XLFRTEOPTS must be set to "namelist=old"
-  !   in order to have "&end" to end the namelist
-  !
-  read (5, inputph, err = 200, iostat = ios)
+     !
+     !   Note: for AIX machine (xlf compiler version 3.0 or higher):
+     !   The variable XLFRTEOPTS must be set to "namelist=old"
+     !   in order to have "&end" to end the namelist
+     !
+     READ (5, inputph, err = 200, iostat = ios)
 #endif
 
-200 call errore ('d3_readin', 'reading inputph namelist', abs (ios) )
-  !
-  !     Check all namelist variables
-  !
-  if (ethr_ph.le.0.d0) call errore (' d3_readin', ' Wrong ethr_ph ', 1)
-  if (iverbosity.ne.0.and.iverbosity.ne.1) &
-       call errore ('d3_readin', ' Wrong iverbosity ', 1)
-  if (fildrho.eq.' ') call errore ('d3_readin', ' Wrong fildrho ', 1)
-  if (fild0rho.eq.' ') call errore ('d3_readin', ' Wrong fild0rho ', 1)
-  !
-  !    reads the q point
-  !
-  read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
-300 call errore ('d3_readin', 'reading xq', abs (ios) )
+200  CALL errore ('d3_readin', 'reading inputph namelist', ABS (ios) )
+     !
+     !     Check all namelist variables
+     !
+     IF (ethr_ph.LE.0.d0) CALL errore (' d3_readin', ' Wrong ethr_ph ', 1)
+     IF (iverbosity.NE.0.AND.iverbosity.NE.1) &
+          CALL errore ('d3_readin', ' Wrong iverbosity ', 1)
+     IF (fildrho.EQ.' ') CALL errore ('d3_readin', ' Wrong fildrho ', 1)
+     IF (fild0rho.EQ.' ') CALL errore ('d3_readin', ' Wrong fild0rho ', 1)
+     !
+     !    reads the q point
+     !
+     READ (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
+300  CALL errore ('d3_readin', 'reading xq', ABS (ios) )
 
-  lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
-  tmp_dir = trim(outdir)
-
-#ifdef __PARA
-400 continue
-  call bcast_d3_input
-#endif
+     lgamma = xq (1) .EQ.0.d0.AND.xq (2) .EQ.0.d0.AND.xq (3) .EQ.0.d0
+     tmp_dir = TRIM(outdir)
+     !
+  END IF
+  !
+  CALL bcast_d3_input()
+  !
   xqq (:) = xq(:)
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
-  call read_file
+  CALL read_file
   !
-  if (lgamma) then
+  IF (lgamma) THEN
      nksq = nks
-  else
+  ELSE
      nksq = nks / 2
-  endif
+  ENDIF
   !
-  if (lsda) call errore ('d3_readin', 'lsda not implemented', 1)
-  if (okvan) call errore ('d3_readin', 'US not implemented', 1)
+  IF (lsda) CALL errore ('d3_readin', 'lsda not implemented', 1)
+  IF (okvan) CALL errore ('d3_readin', 'US not implemented', 1)
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  call allocate_part
+  CALL allocate_part
 
-  if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
-       4.and..not.lgamma) call errore ('d3_readin', ' Wrong iswitch ', 1 + &
-       abs (iswitch) )
-  do it = 1, ntyp
-     if (amass (it) .le.0.d0) call errore ('d3_readin', 'Wrong masses', &
+  IF (iswitch.NE. - 2.AND.iswitch.NE. - 3.AND.iswitch.NE. - &
+       4.AND..NOT.lgamma) CALL errore ('d3_readin', ' Wrong iswitch ', 1 + &
+       ABS (iswitch) )
+  DO it = 1, ntyp
+     IF (amass (it) .LE.0.d0) CALL errore ('d3_readin', 'Wrong masses', &
           it)
-  enddo
-  if (mod (nks, 2) .ne.0.and..not.lgamma) call errore ('d3_readin', &
+  ENDDO
+  IF (MOD (nks, 2) .NE.0.AND..NOT.lgamma) CALL errore ('d3_readin', &
        'k-points are odd', nks)
   !
   ! q0mode, and q0mode_todo are not allocated dynamically. Their
   ! dimension is fixed to 300
   !
 
-  if (3 * nat.gt.300) call errore ('d3_readin', 'wrong dimension of &
+  IF (3 * nat.GT.300) CALL errore ('d3_readin', 'wrong dimension of &
        &q0mode variable', 1)
-  do ii = 1, 3 * nat
-     if (q0mode_todo (ii) .gt.3 * nat) call errore ('d3_readin', ' wrong &
+  DO ii = 1, 3 * nat
+     IF (q0mode_todo (ii) .GT.3 * nat) CALL errore ('d3_readin', ' wrong &
           & q0mode_todo ', 1)
-  enddo
-  return
-end subroutine d3_readin
+  ENDDO
+  RETURN
+END SUBROUTINE d3_readin

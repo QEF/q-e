@@ -5,9 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine gen_dwfc (isw_sl)
+SUBROUTINE gen_dwfc (isw_sl)
   !-----------------------------------------------------------------------
   !
   !    Calculates and writes  | d/du(0) psi(k+q) >
@@ -17,68 +18,64 @@ subroutine gen_dwfc (isw_sl)
   !  isw_sl = 2   : it calculates | d/du(0) psi_k+q >
   !  isw_sl = 3,4 : it calculates | d/du(0) psi_k >
   !
-#include "f_defs.h"
-  USE io_global,  ONLY : stdout
-  use pwcom
-  use phcom
-  use d3com
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-  integer isw_sl, nirr_x, irr, irr1, imode0
+  USE io_global,  ONLY : stdout, ionode
+  USE pwcom
+  USE phcom
+  USE d3com
+  !
+  IMPLICIT NONE
+  !
+  INTEGER isw_sl, nirr_x, irr, irr1, imode0
   ! switch
   ! the number of irreducible representation
   ! counter on the representations
   ! counter on the representations
   ! counter on the modes
-  integer, pointer ::  npert_x (:)
+  INTEGER, POINTER ::  npert_x (:)
   ! the number of perturbations per IR
 
-  if (isw_sl.eq.1) then
+  IF (isw_sl.EQ.1) THEN
      nirr_x = nirr
      npert_x => npert
-  else
+  ELSE
      nirr_x = nirrg0
      npert_x => npertg0
-  endif
+  ENDIF
   !
   !    For each irreducible representation we compute the change
   !    of the wavefunctions
   !
-  do irr = 1, nirr_x
+  DO irr = 1, nirr_x
      imode0 = 0
-     do irr1 = 1, irr - 1
+     DO irr1 = 1, irr - 1
         imode0 = imode0 + npert_x (irr1)
-     enddo
-     if (npert_x (irr) .eq.1) then
+     ENDDO
+     IF (npert_x (irr) .EQ.1) THEN
         WRITE( stdout, '(//,5x,"Representation #", i3, &
              &                        " mode # ",i3)') irr, imode0 + 1
-     else
+     ELSE
         WRITE( stdout, '(//,5x,"Representation #", i3, &
              &                 " modes # ",3i3)') irr,  (imode0 + irr1, irr1 = &
              & 1, npert_x (irr) )
 
-     endif
-     call solve_linter_d3 (irr, imode0, npert_x (irr), isw_sl)
-  enddo
+     ENDIF
+     CALL solve_linter_d3 (irr, imode0, npert_x (irr), isw_sl)
+  ENDDO
   !
   ! Writes FermiEnergy shift on a file
   !
-#ifdef __PARA
-  if (me.ne.1.or.mypool.ne.1) goto 210
-#endif
-  if (isw_sl.eq.3.and.degauss.ne.0.d0) then
-     rewind (unit = iuef)
-     write (iuef) ef_sh
-  endif
-#ifdef __PARA
-210 continue
-#endif
+  IF ( ionode ) THEN
+     !
+     IF (isw_sl.EQ.3.AND.degauss.NE.0.d0) THEN
+        REWIND (unit = iuef)
+        WRITE (iuef) ef_sh
+     ENDIF
+     !
+  END IF
   !
   ! closes and opens some units --useful in case of interrupted run--
   !
 
-  call close_open (isw_sl)
-  return
-end subroutine gen_dwfc
+  CALL close_open (isw_sl)
+  RETURN
+END SUBROUTINE gen_dwfc

@@ -7,73 +7,70 @@
 !
 !
 !-----------------------------------------------------------------------
-
-subroutine openfild3
+SUBROUTINE openfild3
   !-----------------------------------------------------------------------
   !
   !     This subroutine opens all the files necessary for the
   !     third derivative calculation.
   !
-  use pwcom
-  use phcom
-  use d3com
-  use control_flags, only: twfcollect
-  USE io_files,      ONLY : iunigk, prefix
-  USE restart_module,      ONLY : readfile_new
-#ifdef __PARA
-  use para
-#endif
-
-  implicit none
-  integer :: ios
+  USE pwcom
+  USE phcom
+  USE d3com
+  USE control_flags,   ONLY : twfcollect
+  USE io_files,        ONLY : iunigk, prefix
+  USE restart_module,  ONLY : readfile_new
+  USE io_global,       ONLY : ionode
+  USE mp_global,       ONLY : kunit, me_pool, root_pool
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ios
   ! integer variable for I/O control
-  character (len=256) :: filint
+  CHARACTER (len=256) :: filint
   ! the name of the file
-  logical :: exst
+  LOGICAL :: exst
   ! logical variable to check file existe
   INTEGER       :: ndr, kunittmp, ierr
   REAL(KIND=DP) :: edum(1,1), wdum(1,1)
 
-  twfcollect=.false.
+  twfcollect=.FALSE.
 
-  if (len_trim(prefix) == 0) call errore ('openfild3', 'wrong prefix', 1)
+  IF (LEN_TRIM(prefix) == 0) CALL errore ('openfild3', 'wrong prefix', 1)
   !
   !     The file with the wavefunctions
   !
   iuwfc = 20
 
   lrwfc = 2 * nbnd * npwx
-  filint = trim(prefix) //'.wfc'
-  call diropn (iuwfc, filint, lrwfc, exst)
-  if (.not.exst) then 
+  filint = TRIM(prefix) //'.wfc'
+  CALL diropn (iuwfc, filint, lrwfc, exst)
+  IF (.NOT.exst) THEN 
      ndr      = 4
      kunittmp = 1
-#  ifdef __PARA
      kunittmp = kunit
-#  endif
-     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
+     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
                         iuwfc, ierr )
-     if ( ierr > 0 ) &
-        call errore ('openfild3', 'file '//filint//' not found', 1)
-     twfcollect=.not.exst
-  end if
+     IF ( ierr > 0 ) &
+        CALL errore ('openfild3', 'file '//filint//' not found', 1)
+     twfcollect=.NOT.exst
+  END IF
   !
   !    The file with deltaV_{bare} * psi
   !
   iubar = 21
   lrbar = 2 * nbnd * npwx
-  filint = trim(prefix) //'.bar'
-  call diropn (iubar, filint, lrbar, exst)
-  if (recover.and..not.exst) call errore ('openfild3', 'file bar not &
+  filint = TRIM(prefix) //'.bar'
+  CALL diropn (iubar, filint, lrbar, exst)
+  IF (recover.AND..NOT.exst) CALL errore ('openfild3', 'file bar not &
        &found', 1)
   !
   !    The file with the solution delta psi
   !
   iudwf = 22
   lrdwf = 2 * nbnd * npwx
-  filint = trim(prefix) //'.dwf'
-  call diropn (iudwf, filint, lrdwf, exst)
-  if (recover.and..not.exst) call errore ('openfild3', 'file dwf not &
+  filint = TRIM(prefix) //'.dwf'
+  CALL diropn (iudwf, filint, lrdwf, exst)
+  IF (recover.AND..NOT.exst) CALL errore ('openfild3', 'file dwf not &
        &found', 1)
   !
   !   Here the sequential files
@@ -81,28 +78,27 @@ subroutine openfild3
   !   The igk at a given k (and k+q if q!=0)
   !
   iunigk = 24
-  filint = trim(prefix) //'.igk'
-  call seqopn (iunigk, filint, 'unformatted', exst)
+  filint = TRIM(prefix) //'.igk'
+  CALL seqopn (iunigk, filint, 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
-#ifdef __PARA
+  !
   ! ... by the first node only, other nodes write on unit 6 (i.e. /dev/null)
   !
-  if (me.ne.1.or.mypool.ne.1) then
+  IF ( ionode ) THEN
+     !
+     iudyn = 26
+     OPEN (unit = iudyn, file = fildyn, status = 'unknown', err = 110, &
+          iostat = ios)
+110  CALL errore ('openfild3', 'opening file'//fildyn, ABS (ios) )
+     REWIND (iudyn)
+     !
+  ELSE
+     !
      iudyn = 6
-     goto 100
-  endif
-#endif
-  iudyn = 26
-  open (unit = iudyn, file = fildyn, status = 'unknown', err = 110, &
-       iostat = ios)
-110 call errore ('openfild3', 'opening file'//fildyn, abs (ios) )
-  rewind (iudyn)
-#ifdef __PARA
-
-100 continue
-#endif
+     !
+  END IF
   !cccccccccccccccccccccccccccccccccccccccccccccccccccccc
   !
   ! Variation of the charge density with respect to a perturbation
@@ -110,103 +106,99 @@ subroutine openfild3
   !
   iudrho = 25
   iud0rho = 33
-  if (lgamma) iud0rho = iudrho
+  IF (lgamma) iud0rho = iudrho
   lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-#ifdef __PARA
   !
   !   is opened only by the first task of each pool
   !
-  if (me.ne.1) goto 120
-#endif
-  filint = trim(fildrho)//".u"
-  call diropn (iudrho, filint, lrdrho, exst)
-  !
-  ! Variation of the charge density with respect to a perturbation with q=
-  ! Not needed if q=0
-  !
-  if (.not.lgamma) then
-     filint = trim(fild0rho)//".u"
-     call diropn (iud0rho, filint, lrdrho, exst)
-  endif
-#ifdef __PARA
-120 continue
-#endif
+  IF ( me_pool == root_pool ) THEN
+     !
+     filint = TRIM(fildrho)//".u"
+     CALL diropn (iudrho, filint, lrdrho, exst)
+     !
+     ! Variation of the charge density with respect to a perturbation with q=
+     ! Not needed if q=0
+     !
+     IF (.NOT.lgamma) THEN
+        filint = TRIM(fild0rho)//".u"
+        CALL diropn (iud0rho, filint, lrdrho, exst)
+     ENDIF
+     !
+  END IF
   !
   ! If q=0, we need only one file with the variation of the wavefunctions
   !
   iud0qwf = iudwf
   iudqwf = iudwf
-  if (.not.lgamma) then
+  IF (.NOT.lgamma) THEN
      !
      !    Open the file with the solution q=0 delta psi
      !
      iud0qwf = 34
-     filint = trim(prefix) //'.d0wf'
-     call diropn (iud0qwf, filint, lrdwf, exst)
+     filint = TRIM(prefix) //'.d0wf'
+     CALL diropn (iud0qwf, filint, lrdwf, exst)
      !
      !    Open the file with the solution q=0 delta psi
      !
      iudqwf = 35
-     filint = trim(prefix) //'.dqwf'
-     call diropn (iudqwf, filint, lrdwf, exst)
-  endif
+     filint = TRIM(prefix) //'.dqwf'
+     CALL diropn (iudqwf, filint, lrdwf, exst)
+  ENDIF
   !
   !    The file with   <psi| dqV |psi>
   !
   iupdqvp = 36
   lrpdqvp = 2 * nbnd * nbnd
-  filint = trim(prefix) //'.pdp'
-  call diropn (iupdqvp, filint, lrpdqvp, exst)
+  filint = TRIM(prefix) //'.pdp'
+  CALL diropn (iupdqvp, filint, lrpdqvp, exst)
   !
   !    The file with   <psi| d0V |psi>
   !
   iupd0vp = iupdqvp
-  if (.not.lgamma) then
+  IF (.NOT.lgamma) THEN
      iupd0vp = 37
-     filint = trim(prefix) //'.p0p'
-     call diropn (iupd0vp, filint, lrpdqvp, exst)
+     filint = TRIM(prefix) //'.p0p'
+     CALL diropn (iupd0vp, filint, lrpdqvp, exst)
 
-  endif
-  if (degauss.ne.0.d0) then
+  ENDIF
+  IF (degauss.NE.0.d0) THEN
      !
      !    The file with   <dqpsi| dqV |psi> (only in the metallic case)
      !
      iudpdvp_1 = 38
      lrdpdvp = 2 * nbnd * nbnd
-     filint = trim(prefix) //'.pv1'
-     call diropn (iudpdvp_1, filint, lrdpdvp, exst)
+     filint = TRIM(prefix) //'.pv1'
+     CALL diropn (iudpdvp_1, filint, lrdpdvp, exst)
      !
      !    The file with   <dqpsi| d0V |psi>
      !
      iudpdvp_2 = iudpdvp_1
      iudpdvp_3 = iudpdvp_1
-     if (.not.lgamma) then
+     IF (.NOT.lgamma) THEN
         iudpdvp_2 = 39
-        filint = trim(prefix) //'.pv2'
-        call diropn (iudpdvp_2, filint, lrdpdvp, exst)
+        filint = TRIM(prefix) //'.pv2'
+        CALL diropn (iudpdvp_2, filint, lrdpdvp, exst)
         !
         !    The file with   <d0psi| dqV |psi>
         !
         iudpdvp_3 = 40
-        filint = trim(prefix) //'.pv3'
-        call diropn (iudpdvp_3, filint, lrdpdvp, exst)
-     endif
+        filint = TRIM(prefix) //'.pv3'
+        CALL diropn (iudpdvp_3, filint, lrdpdvp, exst)
+     ENDIF
      !
      ! The file containing the variation of the FermiEnergy ef_sh
-#ifdef __PARA
+     !
      ! opened only by the first task of the first pool
      !
 
-     if (me.ne.1.or.mypool.ne.1) goto 130
-#endif
-     iuef = 41
-     filint = trim(prefix) //'.efs'
-     call seqopn (iuef, filint, 'unformatted', exst)
-#ifdef __PARA
-
-130  continue
-#endif
-
-  endif
-  return
-end subroutine openfild3
+     IF ( ionode ) THEN
+        !
+        iuef = 41
+        filint = TRIM(prefix) //'.efs'
+        CALL seqopn (iuef, filint, 'unformatted', exst)
+        !
+     END IF
+     !
+  ENDIF
+  RETURN
+END SUBROUTINE openfild3

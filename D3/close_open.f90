@@ -7,94 +7,90 @@
 !
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine close_open (isw)
+SUBROUTINE close_open (isw)
   !-----------------------------------------------------------------------
   !
   ! Close and open some units. It is useful in case of interrupted run
   !
   !
-  use pwcom, only: degauss
-  use phcom, only: iudwf, lrdwf, lgamma
-  use io_files, only: prefix
-  use d3com
-#ifdef __PARA
-  use para
-#endif
-  implicit none
-  integer :: isw
-  character (len=256) :: filint
+  USE pwcom,     ONLY : degauss
+  USE phcom,     ONLY : iudwf, lrdwf, lgamma
+  USE io_files,  ONLY : prefix
+  USE d3com
+  USE io_global, ONLY : ionode
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: isw
+  CHARACTER (len=256) :: filint
   ! the name of the file
-  logical :: exst
+  LOGICAL :: exst
   ! logical variable to check file existence
 
-  if (len_trim(prefix) == 0) call errore ('close_open', 'wrong prefix', 1)
-  if (isw.eq.3) then
+  IF (LEN_TRIM(prefix) == 0) CALL errore ('close_open', 'wrong prefix', 1)
+  !
+  IF (isw.EQ.3) THEN
      !
      ! This is to be used after gen_dwf(3)
      !
-#ifdef __PARA
-     if (me.ne.1.or.mypool.ne.1) goto 210
-#endif
-     if (degauss.ne.0.d0) then
-        close (unit = iuef, status = 'keep')
-        filint = trim(prefix) //'.efs'
-        call seqopn (iuef, filint, 'unformatted', exst)
-     endif
-#ifdef __PARA
+     IF ( ionode ) THEN
+        !
+        IF (degauss.NE.0.d0) THEN
+           CLOSE (unit = iuef, status = 'keep')
+           filint = TRIM(prefix) //'.efs'
+           CALL seqopn (iuef, filint, 'unformatted', exst)
+        ENDIF
+        !
+     END IF
+     CLOSE (unit = iupd0vp, status = 'keep')
+     filint = TRIM(prefix) //'.p0p'
+     IF (lgamma) filint = TRIM(prefix) //'.pdp'
 
-210  continue
-#endif
-     close (unit = iupd0vp, status = 'keep')
-     filint = trim(prefix) //'.p0p'
-     if (lgamma) filint = trim(prefix) //'.pdp'
+     CALL diropn (iupd0vp, filint, lrpdqvp, exst)
+     CLOSE (unit = iudwf, status = 'keep')
+     filint = TRIM(prefix) //'.dwf'
 
-     call diropn (iupd0vp, filint, lrpdqvp, exst)
-     close (unit = iudwf, status = 'keep')
-     filint = trim(prefix) //'.dwf'
-
-     call diropn (iudwf, filint, lrdwf, exst)
-  elseif (isw.eq.1) then
+     CALL diropn (iudwf, filint, lrdwf, exst)
+     !
+  ELSE IF (isw.EQ.1) THEN
      !
      ! This is to be used after gen_dwf(1)
      !
+     IF (lgamma) CALL errore (' close_open ', ' isw=1 ; lgamma', 1)
+     CLOSE (unit = iupdqvp, status = 'keep')
+     filint = TRIM(prefix) //'.pdp'
 
-     if (lgamma) call errore (' close_open ', ' isw=1 ; lgamma', 1)
-     close (unit = iupdqvp, status = 'keep')
-     filint = trim(prefix) //'.pdp'
+     CALL diropn (iupdqvp, filint, lrpdqvp, exst)
+     CLOSE (unit = iudqwf, status = 'keep')
+     filint = TRIM(prefix) //'.dqwf'
 
-     call diropn (iupdqvp, filint, lrpdqvp, exst)
-     close (unit = iudqwf, status = 'keep')
-     filint = trim(prefix) //'.dqwf'
-
-     call diropn (iudqwf, filint, lrdwf, exst)
-  elseif (isw.eq.2) then
+     CALL diropn (iudqwf, filint, lrdwf, exst)
+  ELSEIF (isw.EQ.2) THEN
      !
      ! This is to be used after gen_dwf(2)
      !
-     if (lgamma) call errore (' close_open ', ' isw=2 ; lgamma', 1)
-     close (unit = iud0qwf, status = 'keep')
-     filint = trim(prefix) //'.d0wf'
-     call diropn (iud0qwf, filint, lrdwf, exst)
-  elseif (isw.eq.4) then
+     IF (lgamma) CALL errore (' close_open ', ' isw=2 ; lgamma', 1)
+     CLOSE (unit = iud0qwf, status = 'keep')
+     filint = TRIM(prefix) //'.d0wf'
+     CALL diropn (iud0qwf, filint, lrdwf, exst)
+  ELSEIF (isw.EQ.4) THEN
      !
      ! This is to be used after gen_dpdvp
      !
+     IF (degauss.EQ.0.d0) RETURN
+     CLOSE (unit = iudpdvp_1, status = 'keep')
+     filint = TRIM(prefix) //'.pv1'
 
-     if (degauss.eq.0.d0) return
-     close (unit = iudpdvp_1, status = 'keep')
-     filint = trim(prefix) //'.pv1'
+     CALL diropn (iudpdvp_1, filint, lrdpdvp, exst)
+     IF (.NOT.lgamma) THEN
+        CLOSE (unit = iudpdvp_2, status = 'keep')
+        filint = TRIM(prefix) //'.pv2'
 
-     call diropn (iudpdvp_1, filint, lrdpdvp, exst)
-     if (.not.lgamma) then
-        close (unit = iudpdvp_2, status = 'keep')
-        filint = trim(prefix) //'.pv2'
-
-        call diropn (iudpdvp_2, filint, lrdpdvp, exst)
-        close (unit = iudpdvp_3, status = 'keep')
-        filint = trim(prefix) //'.pv3'
-        call diropn (iudpdvp_3, filint, lrdpdvp, exst)
-     endif
-
-  endif
-  return
-end subroutine close_open
+        CALL diropn (iudpdvp_2, filint, lrdpdvp, exst)
+        CLOSE (unit = iudpdvp_3, status = 'keep')
+        filint = TRIM(prefix) //'.pv3'
+        CALL diropn (iudpdvp_3, filint, lrdpdvp, exst)
+     ENDIF
+  ENDIF
+  RETURN
+END SUBROUTINE close_open

@@ -5,8 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !---------------------------------------------------------------------
-subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,         &
      npert, nirr, gi, gimq, iverbosity)
 !---------------------------------------------------------------------
@@ -29,18 +31,17 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     Revised Oct. 1995 by Andrea Dal Corso.
 !     April 1997: parallel stuff added (SdG)
 !
-#include "f_defs.h"
-  USE kinds, only : DP
-#ifdef __PARA
-  use para, only: me
-  use mp, only: mp_bcast
-#endif
-  implicit none
+
+  USE kinds,     ONLY : DP
+  USE mp_global, ONLY : mpime, root
+  USE mp,        ONLY : mp_bcast
+  !
+  IMPLICIT NONE
 !
 !   first the dummy variables
 !
 
-  integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
+  INTEGER ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
        iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, max_irr_dim
 ! input: the number of atoms
 ! input: the number of symmetries
@@ -54,7 +55,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: the symmetry sending q -> -q+
 ! output: the number of irr. representa
 
-  real(kind=DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
+  REAL(kind=DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
        gi (3, 48), gimq (3)
 ! input: the q point
 ! input: the R associated to each tau
@@ -63,20 +64,20 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u (3 * nat, 3 * nat),         &
+  COMPLEX(kind=DP) :: u (3 * nat, 3 * nat),         &
        t (max_irr_dim, max_irr_dim, 48, 3 * nat),   &
        tmq (max_irr_dim, max_irr_dim, 3 * nat)
 ! output: the pattern vectors
 ! output: the symmetry matrices
 ! output: the matrice sending q -> -q+G
-  logical :: minus_q
+  LOGICAL :: minus_q
 ! output: if true one symmetry send q -
 !
 !   here the local variables
 !
-  real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
+  REAL(kind=DP), PARAMETER :: tpi = 2.0d0 * 3.14159265358979d0
 
-  integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
+  INTEGER :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
   ! counter on atoms
   ! counter on atoms
@@ -93,14 +94,12 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   ! counter on rotations
   ! the rotated atom
 
-  integer :: root = 0
-
-  real(kind=DP) :: eigen (3 * nat), modul, arg
+  REAL(kind=DP) :: eigen (3 * nat), modul, arg
 ! the eigenvalues of dynamical ma
 ! the modulus of the mode
 ! the argument of the phase
 
-  complex(kind=DP) :: wdyn (3, 3, nat, nat), phi (3 * nat, 3 * nat), &
+  COMPLEX(kind=DP) :: wdyn (3, 3, nat, nat), phi (3 * nat, 3 * nat), &
        wrk_u (3, nat), wrk_ru (3, nat), fase
 ! the dynamical matrix
 ! the bi-dimensional dynamical ma
@@ -108,135 +107,137 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! the rotated of one pattern
 ! the phase factor
 
-  logical :: lgamma
+  LOGICAL :: lgamma
 ! if true gamma point
-!
-!   Allocate the necessary quantities
-!
-  lgamma = (xq(1).eq.0.d0 .and. xq(2).eq.0.d0 .and. xq(3).eq.0.d0)
-!
-!   find the small group of q
-!
-  call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
-!
-!   And we compute the matrices which represent the symmetry transformat
-!   in the basis of the displacements
-!
-  t(:,:,:,:) = (0.d0, 0.d0) 
-  tmq(:,:,:) = (0.d0, 0.d0) 
-  if (minus_q) then
-     nsymtot = nsymq + 1
-  else
-     nsymtot = nsymq
 
-  endif
-  do isymq = 1, nsymtot
-     if (isymq.le.nsymq) then
-        irot = irgq (isymq)
-     else
-        irot = irotmq
-     endif
-     imode0 = 0
-     do irr = 1, nirr
-        do ipert = 1, npert (irr)
-           imode = imode0 + ipert
-           do na = 1, nat
-              do ipol = 1, 3
-                 jmode = 3 * (na - 1) + ipol
-                 wrk_u (ipol, na) = u (jmode, imode)
-              enddo
-           enddo
-!
-!     transform this pattern to crystal basis
-!
-           do na = 1, nat
-              call trnvecc (wrk_u (1, na), at, bg, - 1)
-           enddo
-!
-!     the patterns are rotated with this symmetry
-!
-           wrk_ru(:,:) = (0.d0, 0.d0)
-           do na = 1, nat
-              sna = irt (irot, na)
-              arg = 0.d0
-              do ipol = 1, 3
-                 arg = arg + xq (ipol) * rtau (ipol, irot, na)
-              enddo
-              arg = arg * tpi
-              if (isymq.eq.nsymtot.and.minus_q) then
-                 fase = DCMPLX (cos (arg), sin (arg) )
-              else
-                 fase = DCMPLX (cos (arg), - sin (arg) )
-              endif
-              do ipol = 1, 3
-                 do jpol = 1, 3
-                    wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + s (jpol, ipol, irot) &
-                         * wrk_u (jpol, na) * fase
-                 enddo
-              enddo
-           enddo
-!
-!    Transform back the rotated pattern
-!
-           do na = 1, nat
-              call trnvecc (wrk_ru (1, na), at, bg, 1)
-           enddo
-!
-!     Computes the symmetry matrices on the basis of the pattern
-!
-           do jpert = 1, npert (irr)
-              imode = imode0 + jpert
-              do na = 1, nat
-                 do ipol = 1, 3
-                    jmode = ipol + (na - 1) * 3
-                    if (isymq.eq.nsymtot.and.minus_q) then
-                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + conjg (u ( &
-                            jmode, imode) * wrk_ru (ipol, na) )
-                    else
-                       t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
-                            + conjg (u (jmode, imode) ) * wrk_ru (ipol, na)
-                    endif
-                 enddo
-              enddo
-           enddo
-        enddo
-        imode0 = imode0 + npert (irr)
-     enddo
+  IF ( mpime == root ) THEN
+     !
+     !   Allocate the necessary quantities
+     !
+     lgamma = (xq(1).EQ.0.d0 .AND. xq(2).EQ.0.d0 .AND. xq(3).EQ.0.d0)
+     !
+     !   find the small group of q
+     !
+     CALL smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
+     !
+     !   And we compute the matrices which represent the symmetry transformat
+     !   in the basis of the displacements
+     !
+     t(:,:,:,:) = (0.d0, 0.d0) 
+     tmq(:,:,:) = (0.d0, 0.d0) 
+     IF (minus_q) THEN
+        nsymtot = nsymq + 1
+     ELSE
+        nsymtot = nsymq
 
-  enddo
-!
-!    Note: the following lines are for testing purposes
-!
-!      nirr = 1
-!      npert(1)=1
-!      do na=1,3*nat/2
-!        u(na,1)=(0.d0,0.d0)
-!        u(na+3*nat/2,1)=(0.d0,0.d0)
-!      enddo
-!      u(1,1)=(-1.d0,0.d0)
-!      WRITE( stdout,'(" Setting mode for testing ")')
-!      do na=1,3*nat
-!         WRITE( stdout,*) u(na,1)
-!      enddo
-!      nsymq=1
-!      minus_q=.false.
+     ENDIF
+     DO isymq = 1, nsymtot
+        IF (isymq.LE.nsymq) THEN
+           irot = irgq (isymq)
+        ELSE
+           irot = irotmq
+        ENDIF
+        imode0 = 0
+        DO irr = 1, nirr
+           DO ipert = 1, npert (irr)
+              imode = imode0 + ipert
+              DO na = 1, nat
+                 DO ipol = 1, 3
+                    jmode = 3 * (na - 1) + ipol
+                    wrk_u (ipol, na) = u (jmode, imode)
+                 ENDDO
+              ENDDO
+              !
+              !     transform this pattern to crystal basis
+              !
+              DO na = 1, nat
+                 CALL trnvecc (wrk_u (1, na), at, bg, - 1)
+              ENDDO
+              !
+              !     the patterns are rotated with this symmetry
+              !
+              wrk_ru(:,:) = (0.d0, 0.d0)
+              DO na = 1, nat
+                 sna = irt (irot, na)
+                 arg = 0.d0
+                 DO ipol = 1, 3
+                    arg = arg + xq (ipol) * rtau (ipol, irot, na)
+                 ENDDO
+                 arg = arg * tpi
+                 IF (isymq.EQ.nsymtot.AND.minus_q) THEN
+                    fase = DCMPLX (COS (arg), SIN (arg) )
+                 ELSE
+                    fase = DCMPLX (COS (arg), - SIN (arg) )
+                 ENDIF
+                 DO ipol = 1, 3
+                    DO jpol = 1, 3
+                       wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + s (jpol, ipol, irot) &
+                            * wrk_u (jpol, na) * fase
+                    ENDDO
+                 ENDDO
+              ENDDO
+              !
+              !    Transform back the rotated pattern
+              !
+              DO na = 1, nat
+                 CALL trnvecc (wrk_ru (1, na), at, bg, 1)
+              ENDDO
+              !
+              !     Computes the symmetry matrices on the basis of the pattern
+              !
+              DO jpert = 1, npert (irr)
+                 imode = imode0 + jpert
+                 DO na = 1, nat
+                    DO ipol = 1, 3
+                       jmode = ipol + (na - 1) * 3
+                       IF (isymq.EQ.nsymtot.AND.minus_q) THEN
+                          tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + CONJG (u ( &
+                               jmode, imode) * wrk_ru (ipol, na) )
+                       ELSE
+                          t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
+                               + CONJG (u (jmode, imode) ) * wrk_ru (ipol, na)
+                       ENDIF
+                    ENDDO
+                 ENDDO
+              ENDDO
+           ENDDO
+           imode0 = imode0 + npert (irr)
+        ENDDO
 
-#ifdef __PARA
-!
-! parallel stuff: first node broadcasts everything to all nodes
-!
-400 continue
-  call mp_bcast (gi, root)
-  call mp_bcast (gimq, root)
-  call mp_bcast (t, root)
-  call mp_bcast (tmq, root)
-  call mp_bcast (u, root)
-  call mp_bcast (nsymq, root)
-  call mp_bcast (npert, root)
-  call mp_bcast (nirr, root)
-  call mp_bcast (irotmq, root)
-  call mp_bcast (irgq, root)
-  call mp_bcast (minus_q, root)
-#endif
-  return
-end subroutine set_sym_irr
+     ENDDO
+     !
+     !    Note: the following lines are for testing purposes
+     !
+     !      nirr = 1
+     !      npert(1)=1
+     !      do na=1,3*nat/2
+     !        u(na,1)=(0.d0,0.d0)
+     !        u(na+3*nat/2,1)=(0.d0,0.d0)
+     !      enddo
+     !      u(1,1)=(-1.d0,0.d0)
+     !      WRITE( stdout,'(" Setting mode for testing ")')
+     !      do na=1,3*nat
+     !         WRITE( stdout,*) u(na,1)
+     !      enddo
+     !      nsymq=1
+     !      minus_q=.false.
+
+     !
+     ! parallel stuff: first node broadcasts everything to all nodes
+     !
+  END IF
+
+  CALL mp_bcast (gi, root)
+  CALL mp_bcast (gimq, root)
+  CALL mp_bcast (t, root)
+  CALL mp_bcast (tmq, root)
+  CALL mp_bcast (u, root)
+  CALL mp_bcast (nsymq, root)
+  CALL mp_bcast (npert, root)
+  CALL mp_bcast (nirr, root)
+  CALL mp_bcast (irotmq, root)
+  CALL mp_bcast (irgq, root)
+  CALL mp_bcast (minus_q, root)
+
+  RETURN
+END SUBROUTINE set_sym_irr

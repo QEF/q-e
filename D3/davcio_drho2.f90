@@ -5,9 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
+SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   !-----------------------------------------------------------------------
   !
   ! reads/writes variation of the charge with respect to a perturbation
@@ -15,57 +16,56 @@ subroutine davcio_drho2 (drho, lrec, iunit, nrec, isw)
   ! isw = +1 : gathers data from the nodes and writes on a single file
   ! isw = -1 : reads data from a single file and distributes them
   !
-#include "f_defs.h"
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-  use para
-  USE io_global,     ONLY : ionode_id
-  USE mp_global,     ONLY : intra_pool_comm, my_image_id
-  USE mp,            ONLY : mp_bcast, mp_barrier
-
-  implicit none
-
-  integer :: iunit, lrec, nrec, isw
-  complex(kind=DP) :: drho (nrxx)
+  USE pwcom
+  USE kinds,     ONLY : DP
+  USE phcom
+  USE io_global, ONLY : ionode_id
+  USE mp_global, ONLY : intra_pool_comm, me_pool, root_pool
+  USE mp,        ONLY : mp_bcast, mp_barrier
+  USE pfft,      ONLY : ncplane, npp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunit, lrec, nrec, isw
+  COMPLEX(kind=DP) :: drho (nrxx)
 #ifdef __PARA
   !
   ! local variables
   !
-  integer :: root, errcode, itmp, proc
-  complex(kind=DP), allocatable :: ddrho (:)
+  INTEGER :: root, errcode, itmp, proc
+  COMPLEX(kind=DP), ALLOCATABLE :: ddrho (:)
 
-  allocate (ddrho( nrx1 * nrx2 * nrx3 ))    
+  ALLOCATE (ddrho( nrx1 * nrx2 * nrx3 ))    
 
-  if (isw == 1) then
+  IF (isw == 1) THEN
      !
      ! First task of the pool gathers and writes in the file
      !
-     call cgather_sym (drho, ddrho)
+     CALL cgather_sym (drho, ddrho)
      root = 0
-     call mp_barrier()
-     if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)
-  elseif (isw < 0) then
+     CALL mp_barrier()
+     IF ( me_pool == root_pool ) CALL davcio (ddrho, lrec, iunit, nrec, + 1)
+  ELSEIF (isw < 0) THEN
      !
      ! First task of the pool reads ddrho, and broadcasts to all the
      ! processors of the pool
      !
-     if (me == 1) call davcio (ddrho, lrec, iunit, nrec, - 1)
-     call mp_bcast( ddrho, ionode_id, intra_pool_comm )
+     IF ( me_pool == root_pool ) CALL davcio (ddrho, lrec, iunit, nrec, - 1)
+     CALL mp_bcast( ddrho, root_pool, intra_pool_comm )
      !
      ! Distributes ddrho between between the tasks of the pool
      !
      itmp = 1
-     do proc = 1, me-1
+     DO proc = 1, me_pool
         itmp = itmp + ncplane * npp (proc)
-     enddo
+     ENDDO
      drho (:) = (0.d0, 0.d0)
-     call ZCOPY (ncplane * npp (me), ddrho (itmp), 1, drho, 1)
-  endif
+     CALL ZCOPY (ncplane * npp (me_pool+1), ddrho (itmp), 1, drho, 1)
+  ENDIF
 
-  deallocate(ddrho)
+  DEALLOCATE(ddrho)
 #else
-  call davcio (drho, lrec, iunit, nrec, isw)
+  CALL davcio (drho, lrec, iunit, nrec, isw)
 #endif
-  return
-end subroutine davcio_drho2
+  RETURN
+END SUBROUTINE davcio_drho2
