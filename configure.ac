@@ -382,6 +382,9 @@ then
 		try_libdirs="/usr/local/lib
 			     /usr/local/pgi/linux86/lib
 			     /cineca/lib /cineca/prod/pgi/lib"
+	elif test $is_mips
+	then
+		try_libdirs="/usr/local/lib /cineca/lib"
 	fi
 
 	# prepend directories specified by the user
@@ -423,7 +426,7 @@ then
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
-		AC_SEARCH_LIBS(dcft, essl, have_fft=1 have_essl=1
+		AC_SEARCH_LIBS(dcft, essl, have_fft=1 have_essl=1 have_blas=1
 			       libs="$LIBS")
 	elif test $is_linux
 	then
@@ -614,13 +617,16 @@ then
 	done
 fi
 
+# if no valid FFT library was found, use our implementation
+if ! test $have_fft
+then
+	try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+fi
+
 if test $have_fftw && ! test $have_fftw_h
 then
 	try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-	if test $have_fft
-	then
-		AC_MSG_WARN([fftw library detected, but fftw.h not found])
-	fi
+	AC_MSG_WARN([fftw library detected, but fftw.h not found])
 fi
 
 AC_LANG_POP(C)
