@@ -96,10 +96,6 @@ MODULE bfgs_module
   ! ... trust_radius_end, w_1, w_2 have a default value, but can also be 
   ! ... assigned in input. These defaul values are overwritten by those set
   ! ... Modules/read_namelist.f90
-  !  
-  ! Workaround for IBM xlf compiler bug
-  !
-  INTEGER, PUBLIC :: bfgs_xlf_bug
   !
   CONTAINS
      !
@@ -206,8 +202,7 @@ MODULE bfgs_module
        WRITE( UNIT = stdout, &
             & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
        !
-       ! ... the bfgs algorithm starts here
-       !
+       ! ... the bfgs algorithm starts here       !
        IF ( ( energy > energy_old ) .AND. ( scf_iter > 1 ) ) THEN
           !
           ! ... the previous step is rejected, line search goes on
@@ -249,7 +244,7 @@ MODULE bfgs_module
           !
           pos      = pos_old(:,1)
           energy   = energy_old
-          gradient = gradient_old(:,1)          
+          gradient = gradient_old(:,1)       
           !
           IF ( trust_radius < trust_radius_min ) THEN
              !

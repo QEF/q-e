@@ -121,8 +121,7 @@ SUBROUTINE iosys()
                             lsmd, lphonon, ldamped, lraman, &
                             noinv, restart, loldbfgs, lconstrain
   !
-  USE wvfct,         ONLY : ibm_baco2, &
-                            nbnd_ => nbnd
+  USE wvfct,         ONLY : nbnd_ => nbnd
   !
   USE fixed_occ,     ONLY : tfixed_occ
   !
@@ -141,8 +140,7 @@ SUBROUTINE iosys()
                              path_thr_       => path_thr, &
                              nstep_path
   !
-  USE noncollin_module, ONLY : baco_ibm_xlf, &
-                               noncolin_  => noncolin, &
+  USE noncollin_module, ONLY : noncolin_  => noncolin, &
                                lambda_    => lambda, &
                                i_cons_    => i_cons, &
                                mcons_     => mcons, &
@@ -154,14 +152,14 @@ SUBROUTINE iosys()
   !
   USE constraints_module, ONLY : nconstr, constr_tol, constr, target
   !
-  USE bfgs_module,   ONLY : bfgs_xlf_bug, &
-                            lbfgs_ndim_       => lbfgs_ndim, &
+  USE bfgs_module,   ONLY : lbfgs_ndim_       => lbfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
                             trust_radius_end_ => trust_radius_end, &
                             w_1_              => w_1, & 
-                            w_2_              => w_2 
+                            w_2_              => w_2
+  !
   USE check_stop,    ONLY : check_stop_init
   !
   ! CONTROL namelist

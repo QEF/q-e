@@ -291,8 +291,6 @@ MODULE wvfct
   LOGICAL :: &
        gamma_only         ! if .TRUE. only half G vectors are used
   !
-  INTEGER :: ibm_baco2
-  !
 END MODULE wvfct
 !
 !

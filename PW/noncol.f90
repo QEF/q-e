@@ -14,7 +14,6 @@ MODULE noncollin_module
   SAVE
   !
   INTEGER :: &
-      baco_ibm_xlf,       & !  variable used to avoid a bug in mpxlf_r compiler
       npol,               & !  number of coordinates of wfc
       report,             & !  print the local quantities (magnet. and rho)
                             !  every #report iterations
@@ -44,13 +43,18 @@ MODULE noncollin_module
       m_loc(:,:)            ! local integrated magnetization
      ! mcons(:,:),           ! constrained values for local variables
   !
-CONTAINS
-  subroutine deallocate_noncol()
-    IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
-    IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )
-    IF ( ALLOCATED( pointnum ) )       DEALLOCATE( pointnum )
-    IF ( ALLOCATED( r_loc    ) )       DEALLOCATE( r_loc )
-    IF ( ALLOCATED( m_loc    ) )       DEALLOCATE( m_loc )
-  end subroutine deallocate_noncol
-  !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE deallocate_noncol()
+      !------------------------------------------------------------------------
+      !
+      IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
+      IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )
+      IF ( ALLOCATED( pointnum ) )       DEALLOCATE( pointnum )
+      IF ( ALLOCATED( r_loc    ) )       DEALLOCATE( r_loc )
+      IF ( ALLOCATED( m_loc    ) )       DEALLOCATE( m_loc )
+      !
+    END SUBROUTINE deallocate_noncol
+    !
 END MODULE noncollin_module
