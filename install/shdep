@@ -29,7 +29,7 @@ done
 #
 # Directories that contain dependencies on modules in  ./, Modules/, PW/
 #
-DIRS="PP PWCOND PWNC Gamma PH"
+DIRS="PP PWCOND PWNC Gamma PH NEB"
 for DIR in $DIRS ; do
   if test -d ../$DIR ; then
      cd ../$DIR
