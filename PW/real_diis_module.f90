@@ -348,7 +348,7 @@ MODULE real_diis_module
             !           
             ! ... trial step
             !
-            FORALL( ib = 1: nbnd, ( .NOT. conv(ib) ) )
+            FORALL( ib = 1: nbnd, .NOT. conv(ib) )
                !
                psi(:,ib) = psi(:,ib) - sweeps_lambda * aux(:,ib)
                !
@@ -691,7 +691,7 @@ MODULE real_diis_module
          ! ... here we compute the new eigenvectors for not converged
          ! ... bands only 
          !
-         FORALL( ib = 1: nbnd_diis, ( .NOT. conv(ib) ) )
+         FORALL( ib = 1: nbnd_diis, .NOT. conv(ib) )
             !
             psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
             !
