@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 #if defined (__PARA)
-#define NRXX ncplane*npp(me_image+1)
+#define NRXX ncplane*npp(me_pool+1)
   ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
 #else
 #define NRXX nrxx
@@ -30,7 +30,7 @@ SUBROUTINE electrons()
   !
   USE kinds,                ONLY : DP
   USE parameters,           ONLY : npk 
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, ntyp => nsp, ityp, tau
   USE basis,                ONLY : startingpot
@@ -58,7 +58,7 @@ SUBROUTINE electrons()
   USE extfield,             ONLY : tefield, etotefield  
   USE bp,                   ONLY : lberry  
   USE wavefunctions_module, ONLY : evc
-  USE mp_global,            ONLY : me_image, root_image
+  USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
   !
   IMPLICIT NONE
@@ -394,7 +394,7 @@ SUBROUTINE electrons()
         !
         IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) ns = nsnew
         !
-        IF ( me_image == root_image ) THEN
+        IF ( ionode ) THEN
            !
            CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'FORMATTED', exst )
            !
@@ -489,6 +489,7 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
      !
      IF ( lda_plus_u ) etot = etot + eth
+     !
      IF ( tefield ) etot = etot + etotefield
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
@@ -496,11 +497,15 @@ SUBROUTINE electrons()
         !  
         IF ( imix >= 0 ) THEN
            !
-           if (dr2 > 1.d-8) then
+           IF ( dr2 > 1.D-8 ) THEN
+              !
               WRITE( stdout, 9081 ) etot, dr2
-           else
+              !
+           ELSE
+              !
               WRITE( stdout, 9083 ) etot, dr2
-           endif
+              !
+           END IF
            !
         ELSE
            !
@@ -513,17 +518,17 @@ SUBROUTINE electrons()
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
-        IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
+        IF ( degauss /= 0.D0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !
         IF ( imix >= 0 ) THEN
            !   
-           if (dr2 > 1.d-8) then
+           IF ( dr2 > 1.D-8 ) THEN
               WRITE( stdout, 9081 ) etot, dr2
-           else
+           ELSE
               WRITE( stdout, 9083 ) etot, dr2
-           endif
+           END IF
            !   
         ELSE
            !   
@@ -535,11 +540,15 @@ SUBROUTINE electrons()
         !
         IF ( imix >=  0 ) THEN
            !   
-           if (dr2 > 1.d-8) then
+           IF ( dr2 > 1.D-8 ) THEN
+              !
               WRITE( stdout, 9080 ) etot, dr2
-           else
+              !
+           ELSE
+              !
               WRITE( stdout, 9082 ) etot, dr2
-           endif
+              !
+           END IF
            !   
         ELSE
            !   

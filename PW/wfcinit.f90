@@ -1,11 +1,11 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-!
+! 
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
   !----------------------------------------------------------------------------
@@ -16,30 +16,25 @@ SUBROUTINE wfcinit()
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
-  USE ener,                 ONLY : ef , demet  
-  USE constants,            ONLY : tpi, rytoev
+  USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
   USE gvect,                ONLY : g
-  USE klist,                ONLY : lgauss, degauss, ngauss, xk, nks, &
-                                   wk, nkstot, nelec
-  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE control_flags,        ONLY : isolve, iprint, reduce_io
+  USE klist,                ONLY : xk, nks
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE control_flags,        ONLY : isolve, reduce_io
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et, wg
   USE us,                   ONLY : okvan
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
-  USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE uspp,                 ONLY : nkb, vkb
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE io_files,             ONLY : iunat, nwordwfc, iunwfc, iunigk, &
                                    nwordatwfc
   USE wavefunctions_module, ONLY : evc
-  USE mp_global,            ONLY : intra_image_comm, me_image, root_image
   USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
-  INTEGER  :: ik, is, ibnd
+  INTEGER :: ik, is, ibnd
   !
   !
   CALL start_clock( 'wfcinit' )
@@ -53,72 +48,6 @@ SUBROUTINE wfcinit()
      CALL wfcinit_k()
      !
   END IF  
-  !
-  demet = 0.D0
-  !
-  CALL poolrecover( et, nbnd, nkstot, nks )
-  !
-  ! ... occupations are computed here
-  !
-  IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
-     !
-     ! ... calculate weights for the insulator case
-     !
-     CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
-     !
-  ELSE IF ( ltetra ) THEN
-     !
-     ! ... calculate weights for the metallic case
-     !
-     CALL poolrecover( et, nbnd, nkstot, nks )
-     !
-     IF ( me_image == root_image ) THEN
-        !
-        CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg )
-        !
-     END IF
-     !
-     CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-     !
-     CALL mp_bcast( ef, root_image, intra_image_comm )
-     !
-  ELSE IF ( lgauss ) THEN
-     !
-     CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg )
-     !
-  ELSE IF ( tfixed_occ ) THEN
-     !
-     ef = - 1.0D+20
-     !
-     wg = f_inp
-     !
-     DO is = 1, nspin
-        !
-        DO ibnd = 1, nbnd
-           !
-           IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
-           !
-        END DO
-        !
-     END DO
-     !
-  END IF  
-  !
-  IF ( iprint == 1 ) THEN
-     !
-     DO ik = 1, nkstot
-        !
-        WRITE( stdout, &
-               '(/,10X,"k =",3F7.4,5X,"band energies (ev):"/)' ) xk(:,ik)
-        WRITE( stdout, '(2X,8F9.4)') et(:,ik) * rytoev
-        !
-     END DO
-     !
-  END IF
-  !
-#if defined (FLUSH)
-  CALL flush( stdout )
-#endif
   !
   CALL stop_clock( 'wfcinit' )  
   !
@@ -136,8 +65,7 @@ SUBROUTINE wfcinit()
        USE becmod, ONLY : rbecp
        !
        IMPLICIT NONE
-       !
-       
+       !       
        INTEGER :: ibnd, ig, ipol, n_starting_wfc
          ! counter on  bands
          !    "     "  plane waves
@@ -163,7 +91,7 @@ SUBROUTINE wfcinit()
           !
           IF ( nks == 1 .AND. reduce_io ) &
              CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
-          !   
+          !
           RETURN
           !
        END IF
@@ -312,8 +240,6 @@ SUBROUTINE wfcinit()
        USE becmod, ONLY : becp
        !
        IMPLICIT NONE
-       !
-       ! ... local variables
        !
        INTEGER :: ibnd, ig, ipol, n_starting_wfc
          ! counter on  bands

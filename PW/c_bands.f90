@@ -212,9 +212,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           btype(:) = 1
           !
           ! ... a band is considered empty when its occupation is less 
-          ! ... than 1.0 %
-          !   
-          WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          ! ... than 1.0 % ( the occupation is known after the first step )
+          !
+          IF ( istep > 1 ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 2 ) THEN
              !
@@ -429,9 +429,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           btype(:) = 1
           !
           ! ... a band is considered empty when its occupation is less 
-          ! ... than 1.0 %
-          !   
-          WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          ! ... than 1.0 %  ( the occupation is known after the first step )
+          !
+          IF ( istep > 1 ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !
