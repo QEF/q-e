@@ -16,9 +16,17 @@ subroutine adddvscf (ipert, ik)
   !
 #include "machine.h"
 
-  use pwcom
-  USE kinds, only : DP
-  use phcom
+  USE kinds,      ONLY : DP
+! modules from pwcom
+  USE us,         ONLY : okvan, tvanp, nh, vkb
+  USE lsda_mod,   ONLY : lsda, current_spin, isk
+  USE basis,      ONLY : ntyp, nat, ityp
+  USE wvfct,      ONLY : nbnd
+! modules from phcom
+  USE control_ph, ONLY : lgamma
+  USE qpoint,     ONLY : npwq
+  USE phus,       ONLY : int3, becp1
+  USE eqv,        ONLY : dvpsi
   implicit none
   !
   !   The dummy variables

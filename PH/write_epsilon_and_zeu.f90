@@ -27,27 +27,25 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   ! write dielectric tensor and Z(E,Us) effective charges on iudyn
   !
   write (iudyn, '(/,5x,"Dielectric Tensor:",/)')
-  write (iudyn, '(3e24.12)') ( (epsilon (icar, jcar) , jcar = 1, 3) &
-       , icar = 1, 3)
+  write (iudyn, '(3f24.12)') ((epsilon(icar,jcar), jcar=1,3), icar=1,3)
   write (iudyn, '(/5x, "Effective Charges E-U: Z_{alpha}{s,beta}",/)')
   do na = 1, nat
      write (iudyn, '(5x,"atom # ",i4)') na
-     write (iudyn, '(3e24.12)') ( (zstareu (icar, jcar, na) , jcar=1, 3), &
-          icar = 1, 3)
+     write (iudyn, '(3f24.12)') ((zstareu(icar,jcar,na), jcar=1,3), icar=1,3)
   enddo
   !
   ! write dielectric tensor and Z(E,Us) effective charges on standard output
   !
   WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
 
-  WRITE( stdout, '(10x,"(",3f15.5," )")') ( (epsilon (icar, jcar) , &
-       jcar = 1, 3) , icar = 1, 3)
+  WRITE( stdout, '(10x,"(",3f15.5," )")') &
+                                   ((epsilon(icar,jcar), jcar=1,3), icar=1,3)
   WRITE( stdout, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
   WRITE( stdout, '(10x,  "          Z_{alpha}{s,beta} ",/)')
   do na = 1, nat
      WRITE( stdout, '(10x," Atom ",i5)') na
-     WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstareu (icar, jcar, na) &
-          , jcar = 1, 3) , icar = 1, 3)
+     WRITE( stdout, '(10x,"(",3f15.5," )")') &
+                                ((zstareu(icar,jcar,na), jcar=1,3), icar=1,3)
   enddo
   return
 end subroutine write_epsilon_and_zeu

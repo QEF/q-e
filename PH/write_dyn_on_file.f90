@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,11 +28,10 @@ subroutine write_dyn_on_file (xq, phi, nat, iudyn)
      do nb = 1, nat
         write (iudyn, '(2i3)') na, nb
         do icar = 1, 3
-           write (iudyn, '(3e24.12)') (phi (icar, jcar, na, nb) , jcar = 1, &
-                3)
+!           write (iudyn, '(3e24.12)') (phi(icar,jcar,na,nb), jcar=1,3)
+           write (iudyn, '(3(2f12.8,2x))') (phi(icar,jcar,na,nb), jcar=1,3)
         enddo
      enddo
-
   enddo
 
   return

@@ -18,7 +18,7 @@ subroutine cg_psi (lda, n, m, psi, h_diag)
   implicit none
 
   integer :: lda, n, m
-  ! input: the leading dimension of the psi vecto
+  ! input: the leading dimension of the psi vector
   ! input: the real dimension of the vector
   ! input: the number of vectors
 

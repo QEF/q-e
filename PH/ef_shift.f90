@@ -13,11 +13,24 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !
 #include "machine.h"
 
-  USE io_global,      ONLY : stdout
-  use pwcom
-  USE wavefunctions_module,  ONLY: evc
-  USE kinds, only : DP
-  use phcom
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE wavefunctions_module, ONLY : evc
+  USE cell_base,            ONLY : omega
+! modules from pwcom
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gg, nl
+  USE gsmooth,              ONLY : nrxxs
+  USE lsda_mod,             ONLY : nspin
+  USE wvfct,                ONLY : npw, et
+  USE klist,                ONLY : degauss, ngauss, ngk
+  USE ener,                 ONLY : ef
+! modules from phcom
+  USE qpoint,               ONLY : nksq
+  USE control_ph,           ONLY : nbnd_occ
+  USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
+  USE eqv,                  ONLY : dpsi
+  USE modes,                ONLY : npert
+
   implicit none
   !
   ! input/output variables

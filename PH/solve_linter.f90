@@ -20,18 +20,30 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
 #include "machine.h"
-  USE io_global,             ONLY : stdout
-  USE io_files,              ONLY : iunigk
+  USE io_global,            ONLY: stdout
+  USE io_files,             ONLY: iunigk
+  USE check_stop,           ONLY: time_max => max_seconds
+  USE wavefunctions_module, ONLY: evc
+  USE constants,            ONLY: degspin
+  USE kinds,                ONLY: DP
+  USE control_flags,        ONLY: reduce_io
+  USE becmod,               ONLY: becp  
   use pwcom
-  USE check_stop,            ONLY : time_max => max_seconds
-  USE wavefunctions_module,  ONLY : evc
-  USE constants,             ONLY : degspin
-  USE kinds,                 ONLY : DP
-  use phcom
-  USE control_flags,         ONLY : reduce_io
-  USE becmod,                ONLY : becp  
+!  use phcom
+  USE control_ph,           ONLY: iter0, niter_ph, nmix_ph, tr2_ph, elph, &
+                                  alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
+  USE nlcc_ph,              ONLY: nlcc_any
+  USE units_ph,             ONLY: iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
+                                  iuwfc, lrwfc, iunrec, iudvscf
+  USE output,               ONLY: fildrho, fildvscf
+  USE phus,                 ONLY: int1, int2, int3
+  USE efield,               ONLY: epsilon, zstareu, zstarue, zstareu0, zstarue0
+  USE dynmat,               ONLY: dyn, dyn00
+  USE eqv,                  ONLY: dvpsi, dpsi, evq
+  USE qpoint,               ONLY: npwq, igkq, nksq
+  USE partial,              ONLY: comp_irr, done_irr, ifat
+  USE modes,                ONLY: npert, u
   implicit none
-
 
   integer :: irr, npe, imode0
   ! input: the irreducible representation
@@ -68,11 +80,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
        drhoscfh (:,:,:), dvscfout (:,:,:),  &
        dbecsum (:,:,:,:), spsi (:), auxg (:), aux1 (:), ps (:)
   ! local density of states af Ef
-  ! local density of states af Ef (not a
-  ! change of scf potential (input
-  ! change of scf potential (input
-  ! change of scf potential (output
-  ! change of scf potential (smooth
+  ! local density of states af Ef (without augmentation charges)
+  ! change of scf potential (input)
+  ! change of scf potential (input, only smooth part)
+  ! change of scf potential (output)
+  ! change of scf potential (output, only smooth part)
   ! the derivative of becsum
   ! the function spsi
   ! the function spsi
@@ -81,37 +93,29 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   complex(kind=DP) :: ZDOTC
   ! the scalar product function
 
-  logical :: conv_root, exst, lmetq0
-  ! true if linter is converged
-  ! used to open the recover file
-  ! true if xq=(0,0,0) in a metal
+  logical :: conv_root,  & ! true if linter is converged
+             exst,       & ! used to open the recover file
+             lmetq0        ! true if xq=(0,0,0) in a metal
 
-  integer :: kter, ipert, ibnd, jbnd, iter, lter, ltaver, &
-       lintercall, ik, ikk, ikq, ig, ir, is, nrec, nrec1, ios, mode
-  ! counter on iterations
-  ! counter on perturbations
-  ! counter on bands
-  ! counter on bands
-  ! counter on iterations
-  ! counter on iterations of linter
-  ! average counter
-  ! average number of call to linter
-  ! counter on k points
-  ! counter on k points
-  ! counter on k+q points
-  ! counter on G vectors
-  ! counter on mesh points
-  ! counter on spin polarizations
-  ! the record number
-  ! the record number for dpsi
-  ! integer variable for I/O control
-  ! mode index
+  integer :: kter,       & ! counter on iterations
+             ipert,      & ! counter on perturbations
+             ibnd, jbnd, & ! counter on bands
+             iter,       & ! counter on iterations
+             lter,       & ! counter on iterations of linter
+             ltaver,     & ! average counter
+             lintercall, & ! average number of call to linter
+             ik, ikk,    & !  ! counter on k points
+             ikq,        & ! counter on k+q points
+             ig,         & ! counter on G vectors
+             ir,         & ! counter on mesh points
+             is,         & ! counter on spin polarizations
+             nrec, nrec1,& ! the record number for dvpsi and dpsi
+             ios,        & ! integer variable for I/O control
+             mode          ! mode index
 
-  real(kind=DP) :: tcpu, get_clock
-  ! timing variables
+  real(kind=DP) :: tcpu, get_clock ! timing variables
 
-  character (len=42) :: flmixdpot
-  ! the name of the file with the mixing potential
+  character (len=42) :: flmixdpot ! name of the file with the mixing potential
 
   external ch_psi_all, cg_psi
   !
@@ -418,6 +422,20 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
 
      if (lmetq0) call ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .false.)
+     !
+     !   After the loop over the perturbations we have the linear change 
+     !   in the charge density for each mode of this representation. 
+     !   Here we symmetrize them ...
+     !
+#ifdef __PARA
+     call psymdvscf (npert (irr), irr, drhoscfh)
+#else
+     call symdvscf (npert (irr), irr, drhoscfh)
+#endif
+     ! 
+     !   ... save them on disk and 
+     !   compute the corresponding change in scf potential 
+     !
      do ipert = 1, npert (irr)
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
                                               iudrho, imode0+ipert, +1)
@@ -425,18 +443,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
      !
-     !   After the loop over the perturbations we have the change of the pote
-     !   for all the modes of this representation. We symmetrize this potenti
-     !
-#ifdef __PARA
-     call psymdvscf (npert (irr), irr, dvscfout)
-#else
-     call symdvscf (npert (irr), irr, dvscfout)
-#endif
-     !
      !   And we mix with the old potential
      !
-
      call mix_potential (2*npert(irr)*nrxx*nspin, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npert(irr)*tr2_ph, iter, &
                          nmix_ph, flmixdpot, convt)
