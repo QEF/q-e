@@ -35,10 +35,10 @@ PROGRAM phonon
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
                               elph, zue, recover, maxirr, irr0
   USE output,          ONLY : fildyn, fildrho
-  USE units_ph,        ONLY : iudrho, lrdrho
   USE parser,          ONLY : delete_if_present
   USE mp_global,       ONLY : me_pool, root_pool
   USE global_version,  ONLY : version_number
+  USE ramanm,          ONLY : lraman, elop
   !
   IMPLICIT NONE
   !
@@ -292,25 +292,6 @@ PROGRAM phonon
            !
            IF ( fildrho /= ' ' ) CALL punch_plot_e()
            !
-           ! close the file with drho_E
-           !
-           IF (fildrho.NE.' ') THEN
-              CLOSE (unit = iudrho, status = 'keep')
-              !
-              ! open the file with drho_u
-              !
-              iudrho = 23
-              lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-
-              IF ( me_pool == root_pool ) THEN
-
-                 filint = TRIM(fildrho)//".u"
-                 CALL diropn (iudrho, filint, lrdrho, exst)
-
-              END IF
-
-           END IF
-           !
         ELSE
            !
            CALL stop_ph( .FALSE. )
@@ -318,6 +299,8 @@ PROGRAM phonon
         END IF
         !
      END IF
+     !
+     IF ( lraman .OR. elop ) CALL raman()
      !
      IF ( trans ) THEN
         !

@@ -40,6 +40,7 @@ SUBROUTINE phq_readin()
   USE noncollin_module, ONLY : noncolin
   USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
+  USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   !
   IMPLICIT NONE
   !
@@ -57,7 +58,8 @@ SUBROUTINE phq_readin()
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
-                       lnscf, ldisp, nq1, nq2, nq3, modenum
+                       lnscf, ldisp, nq1, nq2, nq3, modenum,         &
+                       eth_rps, eth_ns, lraman, elop, dek
     ! tr2_ph       : convergence threshold
     ! amass        : atomic masses
     ! alpha_mix    : the mixing parameter
@@ -71,14 +73,19 @@ SUBROUTINE phq_readin()
     ! trans        : if true calculate phonon
     ! elph         : if true calculate electron-phonon coefficients
     ! zue          : if true calculate effective charges (alternate way)
+    ! lraman       : if true calculate raman tensor
+    ! elop         : if true calculate electro-optic tensor
     ! nrapp        : the representations to do
-    ! max_seconds     : maximum cputime for this run
+    ! max_seconds  : maximum cputime for this run
     ! reduce_io    : reduce I/O to the strict minimum
     ! prefix       : the prefix of files produced by pwscf
     ! fildyn       : output file for the dynamical matrix
     ! filelph      : output file for electron-phonon coefficients
     ! fildvscf     : output file containing deltavsc
     ! fildrho      : output file containing deltarho
+    ! eth_rps      : threshold for calculation of  Pc R |psi> (Raman)
+    ! eth_ns       : threshold for non-scf wavefunction calculation (Raman)
+    ! dek          : delta_xk used for wavefunctions derivation (Raman)
   !
   ! ... local variables
   !
@@ -121,6 +128,8 @@ SUBROUTINE phq_readin()
   ! ... set default values for variables in namelist
   !
   tr2_ph       = 1.D-10
+  eth_rps      = 1.D-9
+  eth_ns       = 1.D-12
   amass(:)     = 0.D0
   alpha_mix(:) = 0.D0
   alpha_mix(1) = 0.7D0
@@ -134,7 +143,9 @@ SUBROUTINE phq_readin()
   epsil        = .FALSE.
   zue          = .FALSE.
   elph         = .FALSE.
-  max_seconds     = 10000000.D0
+  lraman       = .FALSE.
+  elop         = .FALSE.
+  max_seconds  = 10000000.D0
   reduce_io    = .FALSE.
   outdir       = './'
   prefix       = 'pwscf'
@@ -148,28 +159,20 @@ SUBROUTINE phq_readin()
   nq2          = 0
   nq3          = 0
   modenum      = -1
+  dek          = 1.0d-3
   !
   ! ...  reading the namelist inputph
   !
-#if defined (CRAYY)
-  !
-  ! ... The Cray does not accept "err" and "iostat" together with a namelist
-  !
-  READ( 5, INPUTPH )
-  !
-  ios = 0
-  !
-#else
-  !
   READ( 5, INPUTPH, ERR = 200, IOSTAT = ios )
-  !
-#endif
   !
 200 CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   ! ... Check all namelist variables
   !
-  IF (tr2_ph.LE.0.D0) CALL errore (' phq_readin', ' Wrong tr2_ph ', 1)
+  IF (tr2_ph <= 0.D0) CALL errore (' phq_readin', ' Wrong tr2_ph ', 1)
+  IF (eth_rps<= 0.D0) CALL errore ( 'phq_readin', ' Wrong eth_rps', 1)
+  IF (eth_ns <= 0.D0) CALL errore ( 'phq_readin', ' Wrong eth_ns ', 1)
+
   DO iter = 1, maxter
      IF (alpha_mix (iter) .LT.0.D0.OR.alpha_mix (iter) .GT.1.D0) CALL &
           errore ('phq_readin', ' Wrong alpha_mix ', iter)
@@ -185,6 +188,8 @@ SUBROUTINE phq_readin()
 
   IF (nat_todo.NE.0.AND.nrapp.NE.0) CALL errore ('phq_readin', &
        &' incompatible flags', 1)
+  IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
+  IF ( (lraman.OR.elop) .AND. epsil .AND. fildrho == ' ') fildrho = 'drho'
   !
   !    reads the q point (just if ldisp = .false.)
   !

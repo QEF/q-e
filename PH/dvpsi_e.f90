@@ -25,6 +25,7 @@ subroutine dvpsi_e (kpoint, ipol)
   USE kinds, only : DP
   USE becmod, ONLY: becp
   USE uspp_param, ONLY: nh
+  USE ramanm, ONLY: eth_rps
   use phcom
   implicit none
   !
@@ -179,7 +180,7 @@ subroutine dvpsi_e (kpoint, ipol)
   !   polarizations
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
-  thresh = 1.d-5
+  thresh = eth_rps
   do ibnd = 1, nbnd_occ (kpoint)
      conv_root = .true.
      do ig = 1, npwq

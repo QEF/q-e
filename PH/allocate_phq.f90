@@ -23,6 +23,7 @@ subroutine allocate_phq
   use el_phon
   USE becmod, ONLY: becp
   USE uspp_param, ONLY: nhm
+  USE ramanm, ONLY: ramtns, lraman
   implicit none
   !
   !  allocate space for the quantities needed in the phonon program
@@ -77,5 +78,6 @@ subroutine allocate_phq
   allocate ( alphap ( nkb , nbnd , 3 , nksq))    
   allocate ( becp1 (nkb, nbnd, nksq), becp(nkb, nbnd) )
   if (elph) allocate (el_ph_mat( nbnd, nbnd, nks, 3*nat))    
+  if (lraman) allocate ( ramtns (3, 3, 3, nat) )
   return
 end subroutine allocate_phq

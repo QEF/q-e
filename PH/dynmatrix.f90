@@ -16,27 +16,21 @@ subroutine dynmatrix
   !
 #include "f_defs.h"
   !
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, atm
+  USE kinds,         ONLY : DP
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum, noinv
   use pwcom
-  USE kinds,         ONLY : DP
   use phcom
+  USE ramanm,        ONLY: lraman, ramtns
   implicit none
   ! local variables
 
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
        ipert, jpert, mu, nu, j
-  ! degeneracy of the star of q
-  ! index of q in the star of a given sym.op.
-  ! index of -q in the star of q (0 if not present)
-  ! counter on atoms
-  ! counter on atomic type
-  ! counter on modes
-  ! counter on representation
-  ! counter on perturbations
-  ! counter on modes
-  ! generic counter
+  ! nq :  degeneracy of the star of q
+  ! isq: index of q in the star of a given sym.op.
+  ! imq: index of -q in the star of q (0 if not present)
 
   real(kind=DP) :: sxq (3, 48)
   ! list of vectors in the star of q
@@ -114,6 +108,7 @@ subroutine dynmatrix
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   if (zue) call sym_and_write_zue
+  if (lraman) call write_ramtns (ramtns, nat, iudyn)
   !
   !   Diagonalizes the dynamical matrix at q
   !

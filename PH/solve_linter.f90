@@ -22,7 +22,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #include "f_defs.h"
   !
   USE ions_base,            ONLY : nat
-  USE io_global,            ONLY : stdout
+  USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunigk
   USE check_stop,           ONLY : time_max => max_seconds
   USE wavefunctions_module, ONLY : evc
@@ -165,13 +165,20 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      call localdos ( ldos , ldoss , dos_ef )
   endif
   !
-  !   The outside loop is over the iterations
-  !
   if (reduce_io) then
      flmixdpot = ' '
   else
      flmixdpot = 'flmixdpot'
   endif
+  !
+  IF (ionode .AND. fildrho /= ' ') THEN
+     INQUIRE (UNIT = iudrho, OPENED = exst)
+     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+     CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
+  end if
+  !
+  !   The outside loop is over the iterations
+  !
   do kter = 1, niter_ph
      iter = kter + iter0
 

@@ -18,7 +18,7 @@ SUBROUTINE openfilq()
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
   USE control_ph,     ONLY : epsil, zue, recover, trans, elph
-  USE output,         ONLY : fildrho, fildyn, fildvscf
+  USE output,         ONLY : fildyn, fildvscf
   USE us,             ONLY : okvan
   USE wvfct,          ONLY : nbnd, npwx
   USE gvect,          ONLY : nrx1, nrx2, nrx3, nrxx
@@ -29,6 +29,7 @@ SUBROUTINE openfilq()
   USE restart_module, ONLY : readfile_new
   USE mp_global,      ONLY : me_pool, kunit
   USE io_global,      ONLY : ionode
+  USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   !
   IMPLICIT NONE
   !
@@ -93,25 +94,12 @@ SUBROUTINE openfilq()
      IF (recover.AND..NOT.exst) CALL errore ('openfilq','file prod not found', 1)
   ENDIF
   !
-  !   An optional file for testing purposes containing the deltarho
+  !  Optional file(s) containing Delta\rho (opened and written in solve_e
+  !  and solve_linter). Used for third-order calculations.
   !
+  iudrho = 23
   lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
   !
-  IF (fildrho.NE.' ') THEN
-     iudrho = 23
-     IF ( me_pool == 0 ) THEN
-        !
-        IF(epsil) THEN
-           filint = TRIM(fildrho)//".E"
-        ELSE
-           filint = TRIM(fildrho)//".u"
-        END IF
-        !
-        CALL diropn (iudrho, filint, lrdrho, exst)
-        !
-     END IF
-
-  ENDIF
   !
   !   Here the sequential files
   !
@@ -165,7 +153,7 @@ SUBROUTINE openfilq()
          CALL errore ('openfilq', 'file com not found', 1)
   !
   !    In the USPP case we also need a file in  order to store derivatives 
-  !    ok kb projectors
+  !    of kb projectors
   !  
      iudvkb3 = 29
      lrdvkb3 = 2 * npwx * nkb * 3
@@ -183,6 +171,25 @@ SUBROUTINE openfilq()
         CALL errore ('openfilq','file ebar not found', 1)
   ENDIF
   !
+  !    files used by raman calculation
+  !
+  IF (lraman .OR.elop) THEN
+     iuchf = 31
+     lrchf = 2 * nbnd * npwx
+     filint= TRIM(prefix) //'.cwf'
+     CALL diropn (iuchf, filint, lrchf, exst)
+
+     iud2w = 32
+     lrd2w = 2 * nbnd * npwx
+     filint= TRIM(prefix) //'.d2w'
+     CALL diropn (iud2w, filint, lrd2w, exst)
+
+     iuba2 = 33
+     lrba2 = 2 * nbnd * npwx
+     filint= TRIM(prefix) //'.ba2' 
+     CALL diropn(iuba2, filint, lrba2, exst)
+  ENDIF
+
   RETURN
   !
 END SUBROUTINE openfilq

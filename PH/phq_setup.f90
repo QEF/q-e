@@ -17,9 +17,9 @@ subroutine phq_setup
   !     grid to be used in h_psi and similia
   !  3) computes dmuxc 3.1) with GC if needed
   !  4) set the inverse of every matrix invs
-  !  5) for metals sets the occupated bands
+  !  5) for metals sets the occupied bands
   !  6) computes alpha_pv
-  !  7) computes the variables needed to pass to the pattern representatio
+  !  7) computes the variables needed to pass to the pattern representation
   !     u      the patterns
   !     t      the matrices of the small group of q on the pattern basis
   !     tmq    the matrix of the symmetry which sends q -> -q + G
@@ -32,7 +32,7 @@ subroutine phq_setup
   !     npert  the dimension of each irreducible representation
   !     nmodes the number of modes
   !     minus_q true if there is a symmetry sending q -> -q+G
-  !  8) for testing purpouses it sets ubar
+  !  8) for testing purposes it sets ubar
   !  9) set the variables needed to deal with nlcc
   !  10) set the variables needed for the partial computation
   !       of the dynamical matrix

@@ -35,6 +35,8 @@ subroutine bcast_ph_input
   call mp_bcast (elph, root)
   call mp_bcast (lnscf, root)
   call mp_bcast (ldisp, root)
+  call mp_bcast (lraman, root)
+  call mp_bcast (elop, root)
   !
   ! integers
   !
@@ -46,9 +48,13 @@ subroutine bcast_ph_input
   ! real*8
   !
   call mp_bcast (tr2_ph, root)
+  call mp_bcast (eth_rps, root)
+  call mp_bcast (eth_ns, root)
   call mp_bcast (amass, root)
   call mp_bcast (alpha_mix, root)
   call mp_bcast (xq, root)
+  call mp_bcast (time_max, root)
+  call mp_bcast (dek, root)
   !
   ! characters
   !

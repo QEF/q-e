@@ -412,10 +412,33 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
+RAMAN =    \
+cft_wave.o \
+psyme2.o   \
+sym_elop.o \
+trntnsr_3.o \
+chi_test.o \
+dielec_test.o \
+dvpsi_e2.o \
+el_opt.o   \
+hdiag.o    \
+pcgreen.o  \
+ramanm.o   \
+syme2.o    \
+solve_e2.o \
+solve_e_nscf.o \
+write_ramtns.o \
+symram.o   \
+d2mxc.o    \
+raman_mat.o\
+raman.o    \
+dhdrhopsi.o\
+set_dvscf.o
+
 all : ph.x
 
-ph.x : $(PHOBJS)
-	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+ph.x : $(PHOBJS) $(RAMAN)
+	$(LD) -o ph.x $(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 
 clean :

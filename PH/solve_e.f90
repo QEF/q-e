@@ -22,7 +22,7 @@ subroutine solve_e
 #include "f_defs.h"
   !
   USE ions_base,             ONLY : nat
-  USE io_global,             ONLY : stdout
+  USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : iunigk
   use pwcom
   USE check_stop,            ONLY : time_max => max_seconds
@@ -121,14 +121,20 @@ subroutine solve_e
   if (degauss.ne.0.d0.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
   !
-  !   The outside loop is over the iterations
-  !
   if (reduce_io) then
      flmixdpot = ' '
   else
      flmixdpot = 'flmixdpot'
   endif
-
+  !
+  IF (ionode .AND. fildrho /= ' ') THEN
+     INQUIRE (UNIT = iudrho, OPENED = exst)
+     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+  end if
+  !
+  !   The outside loop is over the iterations
+  !
   do kter = 1, niter_ph
 
      iter = kter + iter0
@@ -291,8 +297,9 @@ subroutine solve_e
      call addusddense (dvscfout, dbecsum)
 
      !
-     !   After the loop over the perturbations we have the change of the pote
-     !   for all the modes of this representation. We symmetrize this potenti
+     !   After the loop over the perturbations we have the change of the 
+     !   potential for all the modes of this representation. 
+     !   We symmetrize this potential
      !
 #ifdef __PARA
      call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
