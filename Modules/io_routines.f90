@@ -366,6 +366,7 @@ MODULE io_routines
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) istep_neb
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) nstep_neb
              WRITE( UNIT = iunrestart, FMT = '(I4)' ) suspended_image
+             WRITE( UNIT = iunrestart, FMT = '(L1)' ) conv_elec
              !
              WRITE( UNIT = iunrestart, FMT = '("ELASTIC CONSTANTS")' )
              !
@@ -373,7 +374,7 @@ MODULE io_routines
              WRITE( UNIT = iunrestart, FMT = '(F12.8)' ) k_min             
              !
              WRITE( UNIT = iunrestart, &
-                    FMT = '("ENERGY, POSITIONS AND GRADIENTS")' )
+                    FMT = '("ENERGIES, POSITIONS AND GRADIENTS")' )
              !
              DO i = 1, num_of_images
                 !
