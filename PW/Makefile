@@ -146,6 +146,7 @@ psymrho.o \
 punch.o \
 pw_gemm.o \
 pwcom.o \
+q_points.o \
 qvan2.o \
 rbecmod.o \
 rdiaghg.o \

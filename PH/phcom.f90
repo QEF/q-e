@@ -245,8 +245,7 @@ MODULE control_ph
   ! starting representation
   ! starting iteration
   ! maximum number of representation
-  REAL (KIND=DP) :: tr2_ph, alpha_mix(maxter), time_now, alpha_pv
-  ! convergence threshold
+  REAL (KIND=DP) :: alpha_mix(maxter), time_now, alpha_pv
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands

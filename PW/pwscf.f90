@@ -16,7 +16,7 @@ PROGRAM pwscf
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb
+  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, lneb, ldisp
   USE io_files,         ONLY : nd_nmbr, iunneb, tmp_dir
   USE neb_variables,    ONLY : conv_neb
   USE neb_base,         ONLY : initialize_neb, search_mep
@@ -77,6 +77,14 @@ PROGRAM pwscf
      stdout = 6 
      !  
      CALL stop_pw( conv_neb )
+     !
+  ELSE IF (ldisp) THEN
+     !
+     call setup()
+     !
+     call q_points
+     !
+!     call phonon_driver
      !
   ELSE
      !

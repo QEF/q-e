@@ -72,6 +72,11 @@ SUBROUTINE iosys()
                             nelec_   => nelec, &
                             b_length_ => b_length, &
                             lcart_   => lcart
+  use disp,          ONLY : nq1_     => nq1,  &
+                            nq2_     => nq2,  &
+                            nq3_     => nq3,  &
+                            tr2_ph_  => tr2_ph
+
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
@@ -97,7 +102,7 @@ SUBROUTINE iosys()
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lneb, lphonon, &
                             noinv, restart, loldbfgs, lconstrain,   &
-                            ldamped, lraman
+                            ldamped, lraman, ldisp
   USE wvfct,         ONLY : ibm_baco2, &
                             nbnd_ => nbnd
   USE fixed_occ,     ONLY : tfixed_occ
@@ -186,7 +191,8 @@ SUBROUTINE iosys()
   !
   ! PHONON namelist
   !
-  USE input_parameters, ONLY : phonon, modenum, xqq
+  USE input_parameters, ONLY : phonon, modenum, xqq, nq1, nq2, nq3, &
+                               tr2_ph
   !
   ! RAMAN namelist
   !
@@ -403,6 +409,11 @@ SUBROUTINE iosys()
      iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lphonon   = .TRUE.
      nstep     = 1
+  CASE ( 'dispersion' )
+     iswitch   = -2
+     lphonon   = .TRUE.
+     ldisp = .TRUE.
+     nstep = 1
   CASE ( 'raman' )
      lraman    = .TRUE.
      nstep     = 1
@@ -796,6 +807,11 @@ SUBROUTINE iosys()
   cell_factor_ = cell_factor
   modenum_     = modenum
   xqq_         = xqq
+  !
+  nq1_ = nq1
+  nq2_ = nq2
+  nq3_ = nq3
+  tr2_ph_ = tr2_ph
   !
   b_length_    = b_length
   lcart_       = lcart

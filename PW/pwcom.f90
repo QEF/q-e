@@ -583,6 +583,26 @@ MODULE spin_orb
                          ! (ADC 26/3/04)
 END MODULE spin_orb
 !
+
+MODULE disp
+
+  USE kinds, ONLY: DP
+
+  save
+
+  integer, parameter :: nqx = 1000
+
+  integer :: nq1, nq2, nq3
+  ! number of q-points in each direction
+  integer :: nqs
+  ! number of q points to be calculated 
+  real(kind = dp) :: tr2_ph
+  ! threshold for phonon calculation
+  real (kind = dp), allocatable, dimension(:,:) :: x_q
+  ! coordinates of the q points
+
+END MODULE disp
+
 !
 MODULE pwcom
   !
@@ -616,5 +636,6 @@ MODULE pwcom
   USE bp
   USE fixed_occ
   USE spin_orb
+  use disp
   !
 END MODULE pwcom

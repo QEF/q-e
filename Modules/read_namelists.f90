@@ -412,6 +412,10 @@ MODULE read_namelists_module
        !
        modenum = 0
        xqq = 0.0D0
+       nq1 = 0
+       nq2 = 0
+       nq3 = 0
+       tr2_ph = 1.0d-10
        ! 
        RETURN
        !
@@ -752,6 +756,10 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( modenum, ionode_id )
        CALL mp_bcast( xqq, ionode_id )
+       CALL mp_bcast( nq1, ionode_id )
+       CALL mp_bcast( nq2, ionode_id )
+       CALL mp_bcast( nq3, ionode_id )
+       CALL mp_bcast( tr2_ph, ionode_id )
        !
        RETURN
        !
@@ -1259,6 +1267,14 @@ MODULE read_namelists_module
                 CALL errore( sub_name,' calculation '//calculation// &
                              & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
+          CASE('dispersion')
+             IF( prog == 'FP' ) &
+                  CALL errore( sub_name,' calculation '//calculation// &
+                  & ' not implemented ',1)
+             IF( prog == 'CP' ) &
+                  CALL errore( sub_name,' calculation '//calculation// &
+                  & ' not implemented ',1)
+             IF( prog == 'PW' ) startingpot = 'file'
           CASE ('raman')
              IF( prog == 'FP' ) &
                   CALL errore( sub_name,' calculation '//calculation// &
@@ -1505,7 +1521,8 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'phonon' ) THEN
+          IF( TRIM( calculation ) == 'phonon' .or.  &
+               TRIM( calculation ) == 'dispersion' ) THEN
              READ( 5, phonon, iostat = ios )
           END IF
        END IF
