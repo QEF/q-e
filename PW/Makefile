@@ -254,7 +254,43 @@ write_ns.o \
 wsweight.o \
 ylmr2.o
 
-MODULES = ../Modules/*.o
+MODULES = \
+../Modules/basic_algebra_routines.o \
+../Modules/berry_phase.o \
+../Modules/bfgs_module.o \
+../Modules/cell_base.o \
+../Modules/check_stop.o \
+../Modules/clocks.o \
+../Modules/constants.o \
+../Modules/control_flags.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/formats.o \
+../Modules/input_parameters.o \
+../Modules/io_base.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/ions_base.o \
+../Modules/io_routines.o \
+../Modules/kind.o \
+../Modules/minimization_routines.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/neb_base.o \
+../Modules/neb_variables.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/pseudo_types.o \
+../Modules/read_cards.o \
+../Modules/read_namelists.o \
+../Modules/readpseudo.o \
+../Modules/recvec.o \
+../Modules/stick_base.o \
+../Modules/supercell.o \
+../Modules/version.o \
+../Modules/wavefunctions.o
 
 all : memory.x pw.x
 
