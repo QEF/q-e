@@ -62,9 +62,9 @@ wavefunctions.o
 
 IOTK=iotk_module.o
 
-$(IOTK): ../include/iotk_config.h
-
 all : $(MODULES)
+
+$(IOTK): ../include/iotk_config.h
 
 iotk : $(IOTK)
 
