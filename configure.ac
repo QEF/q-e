@@ -390,7 +390,7 @@ then
 	# prepend directories specified by the user
 	if test "$libdirs" != ""
 	then
-		$try_libdirs="$libdirs $try_libdirs"
+		try_libdirs="$libdirs $try_libdirs"
 	fi
 
 	if test "$LD_LIBRARY_PATH" != ""
