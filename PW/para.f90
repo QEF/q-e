@@ -149,7 +149,7 @@ SUBROUTINE reduce( dim, ps )
 #  endif
   !
   !
-  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
+  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
   !
   CALL start_clock( 'reduce' )
   !
@@ -235,7 +235,7 @@ SUBROUTINE ireduce( dim, is )
   INTEGER            :: buff(maxi)
   !
   !
-  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
+  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
   !
   ! ... syncronize processes
   !
