@@ -275,7 +275,8 @@ smearing       CHARACTER
 
 nelup, neldw   REAL
                number of spin-up and spin-down electrons, respectively
-               The sum must yield nelec !!! NOT YET USED !!!
+               The sum must yield nelec that must also be specified
+               explicitely in this case.
 
 nspin          INTEGER
                nspin = 1 :   non-polarized calculation (default)

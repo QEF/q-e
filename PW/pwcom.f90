@@ -148,6 +148,8 @@ MODULE klist
        xqq(3),         &! coordinates of q point (used with iswitch=-2)
        degauss,        &! smearing parameter
        nelec,          &! number of electrons
+       nelup,          &! number of spin-up electrons (if two_fermi_energies=t)
+       neldw,          &! number of spin-dw electrons (if two_fermi_energies=t)
        b_length         ! length of the b vectors
   INTEGER :: &
        ngk(npk),       &! number of plane waves for each k point
@@ -157,7 +159,9 @@ MODULE klist
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
        lxkcry,         &! if .TRUE.:k-pnts in cryst. basis accepted in input
-       lcart            ! if .TRUE.: b vectors in cartesian coordinates
+       lcart,          &! if .TRUE.: b vectors in cartesian coordinates
+       two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw 
+                          ! separately
   !
 END MODULE klist
 !
@@ -312,7 +316,7 @@ MODULE ener
        etxcc,          &! the nlcc exchange and correlation
        ewld,           &! the ewald energy
        demet,          &! correction for metals
-       ef               ! the fermi energy
+       ef, ef_up, ef_dw ! the fermi energy (up and dw if two_fermi_energies=.T.)
   !
 END MODULE ener
 !

@@ -7,8 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
-     tetra, ef)
+subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   !--------------------------------------------------------------------
   !
   !     Finds the Fermi energy - tetrahedron method (Bloechl)
@@ -16,16 +15,18 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
   USE io_global, ONLY : stdout
   USE kinds
   implicit none
-  integer :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
+  integer, intent(in)  :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
   ! input: the number of k points
   ! input: the number of bands
   ! input: the number of spin components
   ! input: the number of tetrahedra
   ! input: the vertices of a tetrahedron
-  real(kind=DP) :: et (nbnd, nks), nelec, ef
+  real(kind=DP), intent(in) :: et (nbnd, nks), nelec
   ! input: the eigenvalues
   ! input: the number of electrons
+  real(kind=DP), intent(out) :: ef
   ! output: the fermi energy
+  integer, intent(in) :: is, isk(nks)
   !
   !     two parameters
   !
@@ -67,42 +68,44 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
   !
   !      Bisection method
   !
-  sumkup = sumkt (et, nbnd, nks, nspin, ntetra, tetra, eup)
-  sumklw = sumkt (et, nbnd, nks, nspin, ntetra, tetra, elw)
+  sumkup = sumkt (et, nbnd, nks, nspin, ntetra, tetra, eup, is, isk)
+  sumklw = sumkt (et, nbnd, nks, nspin, ntetra, tetra, elw, is, isk)
   if ( (sumkup - nelec) .lt. - eps.or. (sumklw - nelec) .gt.eps) &
        call errore ('efermit', 'unexpected error', 1)
   better = 1.0e+10
   do iter = 1, maxiter
      ef = (eup + elw) / 2.0
-     sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef)
+     sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef, is, isk)
      if (abs (sumkmid-nelec) .lt.better) then
         better = abs (sumkmid-nelec)
         efbetter = ef
      endif
      ! converged
-     if (abs (sumkmid-nelec) .lt.eps) then
+     if (abs (sumkmid-nelec) .lt. eps) then
         goto 100
-     elseif ( (sumkmid-nelec) .lt. - eps) then
+     elseif ( (sumkmid-nelec) .lt. -eps) then
         elw = ef
      else
         eup = ef
      endif
 
-
   enddo
   !     unconverged exit:
   !     the best available ef is used . Needed in some difficult cases
   ef = efbetter
-  sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef)
+  sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef, is, isk )
 
+  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3') is
   WRITE( stdout, 9010) ef * rydtoev, sumkmid
   !     converged exit:
 100 continue
   !     Check if Fermi level is above any of the highest eigenvalues
   do ik = 1, nks
+     if (is /= 0) then
+        if (isk(ik) .ne. is ) cycle
+     end if
      if (ef.gt.et (nbnd, ik) + 1.d-4) WRITE( stdout, 9020) ef * rydtoev, ik, &
           et (nbnd, ik) * rydtoev
-
   enddo
 
   return

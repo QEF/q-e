@@ -7,30 +7,38 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine tweights (nks, nspin, nbnd, nelec, ntetra, &
-     tetra, et, ef, wg)
+subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg, &
+                     is, isk )
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
   USE kinds
   implicit none
-  !
-  integer :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)
-  real(kind=DP) :: et (nbnd, nks), nelec
-
-  real(kind=DP) :: wg (nbnd, nks), ef
+  ! I/O variables
+  integer, intent(in) :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)
+  real(kind=DP), intent(in) :: et (nbnd, nks), nelec
+  real(kind=DP), intent(out) :: wg (nbnd, nks), ef
+  integer, intent(in) :: is, isk
+  ! local variables
   real(kind=DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
   integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
 
   ! Calculate the Fermi energy ef
 
-  call efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef)
+  call efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, &
+                is, isk)
   do ik = 1, nks
+     if (is /= 0) then
+        if (isk(ik) .ne. is) cycle
+     end if
      do ibnd = 1, nbnd
         wg (ibnd, ik) = 0.d0
      enddo
   enddo
 
   do ns = 1, nspin
+     if (is /= 0) then
+        if (ns .ne. is) cycle
+     end if
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !

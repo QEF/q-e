@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
+subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
   !--------------------------------------------------------------------
   !
   !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
@@ -14,10 +14,14 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
   USE io_global, ONLY : stdout
   USE kinds
   implicit none
-  integer :: nks, nbnd, i, kpoint, Ngauss
-  real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, Ef, Eup, Elw, &
-       sumkup, sumklw, sumkmid, nelec
+  !  I/O variables
+  integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
+  real(kind=DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
+  real(kind=DP), intent(out) :: Ef
+  ! internal variables
+  real(kind=DP) :: Eup, Elw, sumkup, sumklw, sumkmid
   real(kind=DP), external::  sumkg
+  integer :: i, kpoint
   !
   !      find bounds for the Fermi energy. Very safe choice!
   !
@@ -39,13 +43,14 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
   !
   !      Bisection method
   !
-  sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup)
-  sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw)
-  if ( (sumkup - nelec) .lt. - 1.0e-10.or. (sumklw - nelec) &
-       .gt.1.0e-10) call errore ('Efermi', 'unexpected error', 1)
+  sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
+  sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
+  if ( (sumkup - nelec) .lt. - 1.0e-10 .or. &
+       (sumklw - nelec) .gt.1.0e-10)  &
+       call errore ('Efermi', 'unexpected error', 1)
   do i = 1, 50
      Ef = (Eup + Elw) / 2.0
-     sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef)
+     sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
      if (abs (sumkmid-nelec) .lt.1.0e-10) then
         return
      elseif ( (sumkmid-nelec) .lt. - 1.0e-10) then
@@ -54,6 +59,7 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
         Eup = Ef
      endif
   enddo
+  if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
        Ef * 13.6058, sumkmid

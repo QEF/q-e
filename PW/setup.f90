@@ -50,7 +50,8 @@ SUBROUTINE setup()
   USE gvect,            ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,          ONLY : doublegrid, gcutms
   USE klist,            ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
-                               lxkcry, nkstot, b_length, lcart
+                               lxkcry, nkstot, b_length, lcart, &
+                               nelup, neldw, two_fermi_energies
   USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk, &
                                starting_magnetization
   USE ktetra,           ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
@@ -291,20 +292,23 @@ SUBROUTINE setup()
   !            implemented right now (it will yield an unpolarized system)
   !
   IF ( lscf .AND. lsda &
-            .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
+            .AND. .NOT. lgauss .AND. .NOT. ltetra &
+            .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
   !
   ! ... Set the number of occupied bands if not given in input
   !
   IF ( nbnd == 0 ) THEN
      !
-     nbnd = NINT( nelec / degspin )
+     nbnd = MAX ( NINT( nelec / degspin ), NINT(nelup), NINT(neldw) )
      !
      IF ( lgauss .OR. ltetra ) THEN
         !
         ! ... metallic case: add 20% more bands, with a minimum of 4
         !
-        nbnd = MAX( NINT( 1.2D0 * nelec / degspin ), ( nbnd + 4 ) )
+        nbnd = MAX( NINT( 1.2D0 * nelec / degspin ), &
+                    NINT( 1.2D0 * nelup), NINT( 1.2d0 * neldw ), &
+                    ( nbnd + 4 ) )
         !
      END IF
      !
@@ -317,6 +321,11 @@ SUBROUTINE setup()
      !
      IF ( nbnd < NINT( nelec / degspin ) .AND. lscf ) &
         CALL errore( 'setup', 'too few bands', 1 )
+     !
+     IF ( nbnd < NINT( nelup ) .AND. lscf ) &
+        CALL errore( 'setup', 'too few spin up bands', 1 )
+     IF ( nbnd < NINT( neldw ) .AND. lscf ) &
+        CALL errore( 'setup', 'too few spin dw bands', 1 )
      !
      IF ( nbnd < NINT( nelec ) .AND. lscf .AND. noncolin ) &
         CALL errore( 'setup', 'too few bands', 1 )

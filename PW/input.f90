@@ -84,10 +84,12 @@ SUBROUTINE iosys()
                             nr2s_ => nr2s, &
                             nr3s_ => nr3s
   !
-  USE klist,         ONLY : xk, wk, nks, ngauss,&
+  USE klist,         ONLY : xk, wk, nks, ngauss, two_fermi_energies, &
                             xqq_     => xqq, &
                             degauss_ => degauss, &
                             nelec_   => nelec, &
+                            nelup_   => nelup, &
+                            neldw_   => neldw, &
                             b_length_ => b_length, &
                             lcart_   => lcart
   !
@@ -183,7 +185,8 @@ SUBROUTINE iosys()
   ! SYSTEM namelist
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                               nat, ntyp, nbnd, nelec, ecutwfc, ecutrho, &
+                               nat, ntyp, nbnd, nelec, nelup, neldw, &
+                               ecutwfc, ecutrho, &
                                nr1, nr2, nr3, nr1s, nr2s, nr3s, &
                                nosym, starting_magnetization, &
                                occupations, degauss, smearing, &
@@ -345,10 +348,28 @@ SUBROUTINE iosys()
      CALL errore( ' iosys ', ' nbnd less than 1 ', nbnd )
   END IF
   IF( nelec < 0 ) THEN
-     CALL errore( ' iosys ', ' nelec less than 0 ', nelec )
+     CALL errore( ' iosys ', ' nelec less than 0 ', 1 )
+  END IF
+  IF ( nelup < 0 ) THEN
+     CALL errore( ' iosys ', ' nelup less than 0 ', 1 )
+  END IF
+  IF ( neldw < 0 ) THEN
+     CALL errore( ' iosys ', ' neldw less than 0 ', 1 )
   END IF
   !
   lsda = ( nspin == 2 )
+
+  IF ( (nelup ==0) .and. (neldw ==  0) ) THEN
+     two_fermi_energies = .false.
+  ELSE
+     two_fermi_energies = .true.
+     IF ( .not. lsda ) THEN
+        CALL errore( ' iosys ', ' fixed nelup/neldw requires npsin=2 ', 1 )
+     END IF
+     IF ( abs (nelup + neldw - nelec) > 1.d-10 ) THEN
+        CALL errore( ' iosys ', ' nelup + neldw must be equal to nelec ', 1 )
+     END IF
+  END IF
   !
   ! ... starting_magnetization(ia) = -2.D0 means "not set" -- set it to 0
   !
@@ -643,8 +664,17 @@ SUBROUTINE iosys()
   END IF
   !
   IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
-     CALL errore( ' iosys ', &
-                & ' fixed occupations and lsda not implemented ', 1 )
+     IF (two_fermi_energies) then
+        if (abs (nint(nelup)-nelup) > 1.d-10) &
+           CALL errore( ' iosys ', &
+                      & ' fixed occupations requires integer nelup ', 1 )
+        if (abs (nint(neldw)-neldw) > 1.d-10) &
+           CALL errore( ' iosys ', &
+                      & ' fixed occupations requires integer neldw ', 1 )
+     ELSE
+        CALL errore( ' iosys ', &
+                   & ' fixed occupations and lsda need nelup and neldw ', 1 )
+     END IF
   END IF
   !
   ! ... "path" specific initialization of control variables
@@ -826,6 +856,8 @@ SUBROUTINE iosys()
   nr3s_    = nr3s
   degauss_ = degauss
   nelec_   = nelec
+  nelup_   = nelup
+  neldw_   = neldw
   !
   lspinorb_ = lspinorb
   noncolin_ = noncolin

@@ -39,13 +39,13 @@ SUBROUTINE electrons()
                                    nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
-                                   lgauss, ngauss
+                                   lgauss, ngauss, two_fermi_energies
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only, wg  
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
-                                   etxcc, ewld, demet, ef  
+                                   etxcc, ewld, demet, ef, ef_up, ef_dw 
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, imix, iprint, istep, &
@@ -571,7 +571,13 @@ SUBROUTINE electrons()
            !
         END DO
         !
-        IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040 ) ef * rytoev
+        IF ( lgauss .OR. ltetra ) then
+           IF (two_fermi_energies) then
+              WRITE( stdout, 9041 ) ef_up * rytoev, ef_dw * rytoev
+           ELSE
+              WRITE( stdout, 9040 ) ef * rytoev
+           END IF
+        END IF
         !
      END IF
      !
@@ -723,6 +729,7 @@ SUBROUTINE electrons()
 9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
 9030 FORMAT( '  ',8F9.4)
 9032 FORMAT(/'     occupation numbers ')
+9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev')
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
 9050 FORMAT(/'     integrated charge         =',F15.8)
 9051 FORMAT(/'     integrated charge_new     =',F15.8)
@@ -746,8 +753,8 @@ SUBROUTINE electrons()
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
 9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
-9090 FORMAT(/'     the final potential is written on file ',A14)
-9100 FORMAT(/'     this iteration took ',F9.2,' cpu secs')
+! 9090 FORMAT(/'     the final potential is written on file ',A14)
+! 9100 FORMAT(/'     this iteration took ',F9.2,' cpu secs')
 9101 FORMAT(/'     End of self-consistent calculation')
 9102 FORMAT(/'     End of band structure calculation')
 9110 FORMAT(/'     convergence has been achieved')

@@ -7,20 +7,27 @@
 !
 !
 !--------------------------------------------------------------------
-function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e)
+function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, &
+                is, isk)
   !--------------------------------------------------------------------
   !
   USE kinds
   implicit none
+  ! output variable
   real(kind=DP) :: sumkt
-  integer :: nbnd, nks, nspin, ntetra, tetra (4, ntetra)
-  real(kind=DP) :: et (nbnd, nks), e
-  !
+  ! input variable
+  integer, intent(in) :: nbnd, nks, nspin, ntetra, tetra (4, ntetra)
+  real(kind=DP), intent(in) :: et (nbnd, nks), e
+  integer, intent(in) :: is, isk
+  ! local variables
   real(kind=DP) :: etetra (4), e1, e2, e3, e4
   integer :: nt, nk, ns, ibnd, i
 
   sumkt = 0.0
   do ns = 1, nspin
+     if (is /= 0) then
+        if ( ns .ne. is) cycle
+     end if
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !

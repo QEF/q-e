@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg)
+subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
   !--------------------------------------------------------------------
   !     calculates weights for semiconductors and insulators
   !     (bands are either empty or filled)
@@ -16,16 +16,20 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg)
   USE noncollin_module, ONLY: noncolin
   implicit none
   !
-  integer :: nks, nbnd
-  real(kind=DP), intent(IN ) :: wk (nks), et(nbnd, nks), nelec
-  real(kind=DP), intent(OUT) :: wg (nbnd, nks), Ef
+  integer, intent(in) :: nks, nbnd, is, isk(nks)
+  real(kind=DP), intent(in) :: wk (nks), et(nbnd, nks), nelec
+  real(kind=DP), intent(out) :: wg (nbnd, nks), Ef
   real(kind=DP) :: degspin 
   integer :: kpoint, ibnd
 
   degspin=2.d0
   if (noncolin) degspin=1.d0
+  if (is /= 0) degspin = 1.d0
   Ef = - 1.0e+20
   do kpoint = 1, nks
+     if (is /= 0) then
+        if (isk(kpoint) .ne.  is ) cycle
+     end if
      do ibnd = 1, nbnd
         if (ibnd <= nint (nelec) / degspin) then
            wg (ibnd, kpoint) = wk (kpoint)

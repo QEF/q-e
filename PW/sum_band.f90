@@ -19,13 +19,14 @@ SUBROUTINE sum_band()
   USE wvfct,                ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE ener,                 ONLY : eband, demet, ef
+  USE ener,                 ONLY : eband, demet, ef, ef_up, ef_dw
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
-                                   nkstot, wk, xk, nelec
+                                   nkstot, wk, xk, nelec, nelup, neldw, &
+                                   two_fermi_energies
   USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -56,6 +57,7 @@ SUBROUTINE sum_band()
     ! counter on g vectors
     ! counter on bands
     ! counter on k points  
+  real (kind=DP) demet_up, demet_dw
   !
   !
   CALL start_clock( 'sum_band' )
@@ -69,7 +71,12 @@ SUBROUTINE sum_band()
      !
      ! ... calculate weights for the insulator case
      !
-     CALL iweights( nks, wk, nbnd, nelec, et, ef, wg )
+     if (two_fermi_energies) then
+        CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
+        CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
+     else
+        CALL iweights( nks, wk, nbnd, nelec, et, ef,    wg, 0, isk )
+     end if
      !
   ELSE IF ( ltetra ) THEN
      !
@@ -89,7 +96,16 @@ SUBROUTINE sum_band()
      !
   ELSE IF ( lgauss ) THEN
      !
-     CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, demet, wg )
+     if (two_fermi_energies) then
+        CALL gweights( nks, wk, nbnd, nelup, degauss, ngauss, et, ef_up, &
+                       demet_up, wg, 1, isk)
+        CALL gweights( nks, wk, nbnd, neldw, degauss, ngauss, et, ef_dw, &
+                       demet_dw, wg, 2, isk)
+        demet = demet_up + demet_dw
+     else
+        CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, &
+                       demet,    wg, 0, isk)
+     end if
      !
   ELSE IF ( tfixed_occ ) THEN
      !
