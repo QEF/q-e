@@ -10,7 +10,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use pwnc.x to calculate the total energy"
+$ECHO "This example shows how to use pw.x to calculate the total energy"
 $ECHO "and the band structure of fcc-Pt with a fully relativistic "
 $ECHO "pseudo-potential including spin-orbit coupling."
 $ECHO "pwcond.x is used to calculate the complex bands"
@@ -20,7 +20,7 @@ $ECHO "including spin-orbit coupling."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pwnc.x pwcond.x"
+BIN_LIST="pw.x pwcond.x"
 PSEUDO_LIST="Ptrel.RRKJ3.UPF"
 
 $ECHO
@@ -68,10 +68,10 @@ done
 $ECHO " done"
 
 # how to run executables
-PWNC_COMMAND="$PARA_PREFIX $BIN_DIR/pwnc.x $PARA_POSTFIX"
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PWCOND_COMMAND="$PARA_PREFIX $BIN_DIR/pwcond.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pwnc.x as: $PWNC_COMMAND"
+$ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
  
@@ -115,7 +115,7 @@ K_POINTS AUTOMATIC
 4 4 4 1 1 1 
 EOF
 $ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
-$PWNC_COMMAND < pt.scf.in > pt.scf.out
+$PW_COMMAND < pt.scf.in > pt.scf.out
 $ECHO " done"
 
 # a non self-consistent calculation
@@ -164,7 +164,7 @@ K_POINTS
 0.0 0.0 1.0 1.0
 EOF
 $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
-$PWNC_COMMAND < pt.nscf.in > pt.nscf.out
+$PW_COMMAND < pt.nscf.in > pt.nscf.out
 $ECHO " done"
 
 # a self-consistent calculation of Pt in a tetragonal cell
@@ -204,7 +204,7 @@ K_POINTS (automatic)
  4 4 3 1 1 1                
 EOF
 $ECHO "  running the scf calculation for Pt with tetragonal cell...\c"
-$PWNC_COMMAND < pt.tet.in > pt.tet.out
+$PW_COMMAND < pt.tet.in > pt.tet.out
 $ECHO " done"
 
 # Calculation of the complex bands of Pt 

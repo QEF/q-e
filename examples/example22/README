@@ -1,4 +1,4 @@
-This example shows how to use pwnc.x to calculate the total energy
+This example shows how to use pw.x to calculate the total energy
 and the band structure of fcc-Pt with a fully relativistic US-PP
 which includes spin-orbit effects.
 It tests also pwcond.x for the calculation of complex bands of a 

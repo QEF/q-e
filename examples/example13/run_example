@@ -18,7 +18,7 @@ $ECHO "Fe, Cu, Ni, O."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pwnc.x"
+BIN_LIST="pw.x"
 PSEUDO_LIST="Cu.pz-d-rrkjus.UPF Ni.pbe-nd-rrkjus.UPF Fe.pz-nd-rrkjus.UPF \
              O.pbe-rrkjus.UPF"
 
@@ -66,9 +66,9 @@ done
 $ECHO " done"
 
 # how to run executables
-PWNC_COMMAND="$PARA_PREFIX $BIN_DIR/pwnc.x $PARA_POSTFIX"
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running pwnc.x as: $PWNC_COMMAND"
+$ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
  
 # clean TMP_DIR
@@ -124,7 +124,7 @@ K_POINTS
    0.0625000  0.1875000  0.4375000   6.00
 EOF
 $ECHO "  running the scf calculation for Fe...\c"
-$PWNC_COMMAND < fe.scf.in > fe.scf.out
+$PW_COMMAND < fe.scf.in > fe.scf.out
 $ECHO " done"
 
 # band structure calculation 
@@ -188,7 +188,7 @@ K_POINTS
    0.5 0.5 0.5 1.0
 EOF
 $ECHO "  running band structure calculation for Fe...\c"
-$PWNC_COMMAND < fe.band.in > fe.band.out
+$PW_COMMAND < fe.band.in > fe.band.out
 $ECHO " done"
 
 # clean TMP_DIR
@@ -244,7 +244,7 @@ K_POINTS
    0.0625000  0.1875000  0.4375000   6.00
 EOF
 $ECHO "  running scf calculation for Fe with penalty functional...\c"
-$PWNC_COMMAND < fe.pen.in > fe.pen.out
+$PW_COMMAND < fe.pen.in > fe.pen.out
 $ECHO " done"
 
 # scf calculation with penalty functional (angle with z-axis constrained)
@@ -293,7 +293,7 @@ K_POINTS
    0.0625000  0.1875000  0.4375000   6.00
 EOF
 $ECHO "  running the scf calculation for Fe with constrained angle...\c"
-$PWNC_COMMAND < fe.angl.in > fe.angl.out
+$PW_COMMAND < fe.angl.in > fe.angl.out
 $ECHO " done"
 
 # clean TMP_DIR
@@ -331,7 +331,7 @@ K_POINTS (automatic)
  8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation for Cu...\c"
-$PWNC_COMMAND < cu.scf.in > cu.scf.out
+$PW_COMMAND < cu.scf.in > cu.scf.out
 $ECHO " done"
 
 # band structure calculation along delta, sigma and lambda lines
@@ -388,7 +388,7 @@ K_POINTS
    0.5 0.5 0.5 1.0
 EOF
 $ECHO "  running the band-structure calculation for Cu...\c"
-$PWNC_COMMAND < cu.band.in > cu.band.out
+$PW_COMMAND < cu.band.in > cu.band.out
 $ECHO " done"
 
 # clean TMP_DIR
@@ -427,7 +427,7 @@ K_POINTS (automatic)
  8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation for Cu with cg diagonalization...\c"
-$PWNC_COMMAND < cu.cg.in > cu.cg.out
+$PW_COMMAND < cu.cg.in > cu.cg.out
 $ECHO " done"
 
 # clean TMP_DIR
@@ -466,7 +466,7 @@ K_POINTS (automatic)
  8 8 8 0 0 0
 EOF
 # $ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
-# $PWNC_COMMAND < cu.diis.in > cu.diis.out
+# $PW_COMMAND < cu.diis.in > cu.diis.out
 # $ECHO " done"
 
 # clean TMP_DIR
@@ -565,7 +565,7 @@ K_POINTS
    0.4375000  0.4375000  0.5625000   3.00
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
-$PWNC_COMMAND < ni.scf.in > ni.scf.out
+$PW_COMMAND < ni.scf.in > ni.scf.out
 $ECHO " done"
 
 # band structure calculation along delta, sigma and lambda lines
@@ -624,7 +624,7 @@ K_POINTS
    0.5 0.5 0.5 1.0
 EOF
 $ECHO "  running the band-structure calculation for Ni...\c"
-$PWNC_COMMAND < ni.band.in > ni.band.out
+$PW_COMMAND < ni.band.in > ni.band.out
 $ECHO " done"
 
 # clean TMP_DIR
@@ -670,7 +670,7 @@ K_POINTS
    0.0 0.0 0.0 1.00
 EOF
 $ECHO "  running scf calculation with relax for oxygen molecule...\c"
-$PWNC_COMMAND < o2.relax.in > o2.relax.out
+$PW_COMMAND < o2.relax.in > o2.relax.out
 $ECHO " done"
 
 $ECHO
