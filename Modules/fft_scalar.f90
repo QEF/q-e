@@ -212,7 +212,7 @@
      IF (isign > 0) THEN
        tscale = 1.0d0 / nz
        CALL FFT_Z_STICK(fw_plan( 3, ip), c(1), ldc, nsl)
-       CALL zdscal(SIZE(c), tscale, c(1), 1)
+       CALL zdscal( ldc * nsl, tscale, c(1), 1)
      ELSE IF (isign < 0) THEN
        CALL FFT_Z_STICK(bw_plan( 3, ip), c(1), ldc, nsl)
      END IF
@@ -225,7 +225,7 @@
        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
        IF (isign > 0) THEN
          tscale = 1.0d0 / nz
-         CALL zdscal(SIZE(c), tscale, c(1), 1)
+         CALL zdscal( ldc * nsl, tscale, c(1), 1)
        END IF
      END IF
 
@@ -397,7 +397,7 @@
          end do
        end do
        tscale = 1.0d0 / ( nx * ny )
-       CALL zdscal(SIZE(r), tscale, r(1), 1)
+       CALL zdscal( ldx * ldy * nzl, tscale, r(1), 1)
 
      ELSE IF( isign < 0 ) THEN
 
@@ -464,7 +464,7 @@
          END IF
        end do
        tscale = 1.0d0 / ( nx * ny )
-       CALL zdscal(SIZE(r), tscale, r(1), 1)
+       CALL zdscal( ldx * ldy * nzl, tscale, r(1), 1)
      ELSE IF( isign < 0 ) THEN
        idir = 1
        do i = 1, nx
