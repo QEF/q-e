@@ -70,7 +70,8 @@ links :
 		     ../pwtools/q2r.x ../pwtools/dist.x ../pwtools/ev.x \
 		     ../pwtools/kpoints.x ../pwtools/path_int.x ; do \
 	    if test -f $$exe ; then ln -fs $$exe . ; fi \
-	  done \
+	  done ; \
+	  if test -f ../PWNC/pw.x ; then ln -fs ../PWNC/pw.x pwnc.x ; fi \
 	)
 
 # remove object files and executables
