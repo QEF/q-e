@@ -45,10 +45,12 @@ PWCOND/    Source files for conductance calculations (pwcond.x)
 PWNC/      Source files for scf calculations with noncolinear magnetism (pwnc.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
-pwdoc/     documentation for PWscf, ChangeLog, etc
-pw_examples/ contains sample input and output files
-GUI/       Source files for the Graphical User Interface "PWgui",
-           written by Anton Kokalj (http://www-k3.ijs.si/kokalj/tkpwscf/)
+pwdoc/     Documentation for PWscf, ChangeLog, etc
+pw_examples/ Contains sample input and output files
+GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
+                 PWgui-*/ for the tarball *.tar.gz).
+                 GUI = Graphical User Interface "PWgui", written by 
+		 Anton Kokalj (http://www-k3.ijs.si/kokalj/pwgui/)
 
 Directory structure of the CP code:
 
