@@ -107,9 +107,9 @@ subroutine memory_estimate(lgamma)
   !
   integer, parameter :: real_size = 8, int_size = 4
   integer, parameter :: comp_size = 2*real_size
-  integer :: total_mem, scalable_mem, nonscalable_mem
-  integer :: scalable_wspace, nonscalable_wspace
-  integer :: wspace_diago, wspace_mix, diis_steps
+  real(kind=DP) :: total_mem, scalable_mem, nonscalable_mem
+  real(kind=DP) :: scalable_wspace, nonscalable_wspace
+  real(kind=DP) :: wspace_diago, wspace_mix, diis_steps
   !
   ! fixed memory, or memory allocated in iosys, setup
   !
@@ -188,23 +188,23 @@ subroutine memory_estimate(lgamma)
 #endif
   if (lgamma) then
      print '(5x,"Estimated Max memory (Gamma-only code): ",f8.2,"Mb")', &
-          float(total_mem)/1024/1024
+          total_mem/1024/1024
   else
      print '(5x,"Estimated Max memory (k-point code): ",f8.2,"Mb")', &
-          float(total_mem)/1024/1024
+          total_mem/1024/1024
   end if
   !
   print '(5x,"nonscalable memory =",f8.2,"Mb")', &
-       float(nonscalable_mem)/1024/1024
+       nonscalable_mem/1024/1024
   print '(5x,"   scalable memory =",f8.2,"Mb")', &
-       float(scalable_mem)/1024/1024
+       scalable_mem/1024/1024
   print '(5x,"nonscalable wspace =",f8.2,"Mb")', &
-       float(nonscalable_wspace)/1024/1024
+       nonscalable_wspace/1024/1024
   print '(5x,"   scalable wspace =",f8.2,"Mb",   &
       & "   (diag:",f8.2,"Mb, mix:",f8.2,"Mb)")', &
-       float(scalable_wspace)/1024/1024, &
-       float(wspace_diago)/1024/1024,    &
-       float(wspace_mix)/1024/1024
+       scalable_wspace/1024/1024, &
+       wspace_diago/1024/1024,    &
+       wspace_mix/1024/1024
   !
   return
 end subroutine memory_estimate
