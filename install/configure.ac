@@ -759,8 +759,8 @@ then
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$libs"
 			AC_SEARCH_LIBS(vexp, massvp4 massv, , , -lmass)
-			if test "$ac_cv_search_vexp" = "massvp4" -or \
-			    "$ac_cv_search_vexp" = "massv"
+			if test "$ac_cv_search_vexp" = "-lmassvp4" -or \
+			    "$ac_cv_search_vexp" = "-lmassv"
 			then libs="$try_loption $ac_cv_search_vexp -lmass"
 			fi
 			if test "$ac_cv_search_vexp" != "no"
