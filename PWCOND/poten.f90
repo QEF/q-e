@@ -8,131 +8,131 @@
 !
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
+#include "f_defs.h"
 !
-subroutine poten 
+SUBROUTINE poten 
 !
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
 !
-#include "f_defs.h"
-  use pwcom
-  use noncollin_module, ONLY : noncolin, npol
-  use cond
-#ifdef __PARA
-  use para
-#endif
-  implicit none
+  USE pwcom
+  USE noncollin_module, ONLY : noncolin, npol
+  USE cond
+  USE mp_global,        ONLY : me_pool
+  USE pfft,             ONLY : npp
 
-  integer ::                                                & 
+  IMPLICIT NONE
+
+  INTEGER ::                                                & 
              i, j, ij, ijx, k, n, p, il, ik, kstart, klast, &
              ix, jx, kx, ir, ir1, ixy, info
-  integer :: iis, jjs, is(4), js(4), ispin, nspin_eff
-  integer :: ionode_id
-  integer, allocatable :: ipiv(:) 
+  INTEGER :: iis, jjs, is(4), js(4), ispin, nspin_eff
+  INTEGER :: ionode_id
+  INTEGER, ALLOCATABLE :: ipiv(:) 
 
-  real(kind=DP), parameter :: eps = 1.d-8
-  real(kind=DP) :: arg, bet
-  real(kind=DP), allocatable :: gz(:), auxr(:)
+  REAL(kind=DP), PARAMETER :: eps = 1.d-8
+  REAL(kind=DP) :: arg, bet
+  REAL(kind=DP), ALLOCATABLE :: gz(:), auxr(:)
 
-  complex(kind=DP), parameter :: cim = (0.d0,1.d0)
-  complex(kind=DP) :: caux
-  complex(kind=DP), allocatable :: aux(:), amat(:,:), amat0(:,:)
-  complex(kind=DP), allocatable :: vppot0(:,:,:,:)
+  COMPLEX(kind=DP), PARAMETER :: cim = (0.d0,1.d0)
+  COMPLEX(kind=DP) :: caux
+  COMPLEX(kind=DP), ALLOCATABLE :: aux(:), amat(:,:), amat0(:,:)
+  COMPLEX(kind=DP), ALLOCATABLE :: vppot0(:,:,:,:)
 
-  logical :: lg
+  LOGICAL :: lg
 
-  call start_clock('poten')
-  allocate( ipiv( nrz ) )
-  allocate( gz( nrz ) )
-  allocate( aux( nrx1*nrx2*nrx3 ) )
-  allocate( auxr( nrxx ) )
-  allocate( amat( nrz, nrz ) )
-  allocate( amat0( nrz, nrz ) )
+  CALL start_clock('poten')
+  ALLOCATE( ipiv( nrz ) )
+  ALLOCATE( gz( nrz ) )
+  ALLOCATE( aux( nrx1*nrx2*nrx3 ) )
+  ALLOCATE( auxr( nrxx ) )
+  ALLOCATE( amat( nrz, nrz ) )
+  ALLOCATE( amat0( nrz, nrz ) )
 
 !
 !  Compute the Gz vectors in the z direction
 !
-  do k = 1, nrz
+  DO k = 1, nrz
      il = k-1
-     if (il.gt.nrz/2) il = il-nrz
+     IF (il.GT.nrz/2) il = il-nrz
      gz(k) = il*bg(3,3)
-  enddo
+  ENDDO
 !
 ! set up the matrix for the linear system
 !
-do n=1,nrz
-   do p=1,nrz
+DO n=1,nrz
+   DO p=1,nrz
       arg=gz(n)*z(p)*tpi
       bet=gz(n)*(z(p+1)-z(p))*tpi
-      if (abs(gz(n)).gt.eps) then
-        caux=cim*(CMPLX(cos(bet),-sin(bet))-(1.d0,0.d0))  &
+      IF (ABS(gz(n)).GT.eps) THEN
+        caux=cim*(CMPLX(COS(bet),-SIN(bet))-(1.d0,0.d0))  &
                                     /zl/gz(n)/tpi
-      else
+      ELSE
         caux=(z(p+1)-z(p))/zl
-      endif
-      amat0(n,p)=CMPLX(cos(arg),-sin(arg))*caux
-   enddo
-enddo
-if (noncolin) then
+      ENDIF
+      amat0(n,p)=CMPLX(COS(arg),-SIN(arg))*caux
+   ENDDO
+ENDDO
+IF (noncolin) THEN
    nspin_eff=4
    ij=0
-   do iis=1,2
-      do jjs=1,2
+   DO iis=1,2
+      DO jjs=1,2
          ij=ij+1
          is(ij)=iis
          js(ij)=jjs
-      enddo
-   enddo
-else
+      ENDDO
+   ENDDO
+ELSE
    nspin_eff=1
    is(1)=1
    js(1)=1
-endif
+ENDIF
 !
 !     To form local potential on the real space mesh
 !
 vppot = 0.d0
-do ispin=1,nspin_eff
-   if (noncolin) then
-      if (ispin==1) then
+DO ispin=1,nspin_eff
+   IF (noncolin) THEN
+      IF (ispin==1) THEN
          auxr(:) = vltot(:)+vr(:,1)
-      else
+      ELSE
          auxr(:) = vr(:,ispin)
-      endif
-   else
+      ENDIF
+   ELSE
       auxr(:) = vltot(:) + vr(:,iofspin) 
-   endif
+   ENDIF
 !
 ! To collect the potential from different CPUs
 !
    aux(:) = (0.d0,0.d0)
 #ifdef __PARA
   kstart = 1
-  do i=1, me-1
+  DO i=1, me_pool
     kstart = kstart+npp(i)
-  enddo
-  klast = kstart+npp(me)-1 
+  ENDDO
+  klast = kstart+npp(me_pool+1)-1 
 #endif
-  do i = 1, nrx1*nrx2
-    do k = 1, nr3
-      lg = .true.
+  DO i = 1, nrx1*nrx2
+    DO k = 1, nr3
+      lg = .TRUE.
       ir = i+(k-1)*nrx2*nrx1
       ir1 = ir       
 #ifdef __PARA
-      if(k.ge.kstart.and.k.le.klast) then
-        lg = .true.
+      IF(k.GE.kstart.AND.k.LE.klast) THEN
+        lg = .TRUE.
         ir1 = i+(k-kstart)*nrx2*nrx1 
-      else
-        lg = .false.
-      endif
+      ELSE
+        lg = .FALSE.
+      ENDIF
 #endif                       
-      if (lg) then
+      IF (lg) THEN
         aux(ir) = auxr(ir1)
-      endif 
-    enddo
-  enddo
+      ENDIF 
+    ENDDO
+  ENDDO
 #ifdef __PARA
-  call reduce (2*nrx1*nrx2*nrx3,aux)
+  CALL reduce (2*nrx1*nrx2*nrx3,aux)
 #endif    
 
 
@@ -143,74 +143,74 @@ do ispin=1,nspin_eff
 !
 !  This FFT is needed to make a non-parallel FFT in the parallel case
 !
-  call cft3sp(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  CALL cft3sp(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 #else
-  call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+  CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 #endif
 
-  do i = 1, nrx
-    if(i.gt.nrx/2+1) then
+  DO i = 1, nrx
+    IF(i.GT.nrx/2+1) THEN
         ix = nr1-(nrx-i) 
-    else
+    ELSE
         ix = i
-    endif
-    do j = 1, nry
-      if(j.gt.nry/2+1) then
+    ENDIF
+    DO j = 1, nry
+      IF(j.GT.nry/2+1) THEN
          jx = nr2-(nry-j)
-      else
+      ELSE
          jx = j
-      endif 
+      ENDIF 
       ij = i+(j-1)*nrx
       ijx = ix+(jx-1)*nrx1 
 
-      do k = 1, nrz
+      DO k = 1, nrz
         il = k-1
-        if (il.gt.nrz/2) il = il-nrz
-        if(il.le.nr3/2.and.il.ge.-(nr3-1)/2) then
+        IF (il.GT.nrz/2) il = il-nrz
+        IF(il.LE.nr3/2.AND.il.GE.-(nr3-1)/2) THEN
 
-         if(k.gt.nrz/2+1) then 
+         IF(k.GT.nrz/2+1) THEN 
             kx = nr3-(nrz-k)  
-         else
+         ELSE
             kx = k
-         endif 
+         ENDIF 
          vppot(k, ij, is(ispin), js(ispin)) = aux(ijx+(kx-1)*nrx1*nrx2)
 
-        endif
-      enddo
-    enddo
-  enddo
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDDO
 !
 ! solve the linear system
 !
   amat=amat0
-  call ZGESV(nrz, nrx*nry, amat, nrz, ipiv, vppot(1,1,is(ispin),js(ispin)),&
+  CALL ZGESV(nrz, nrx*nry, amat, nrz, ipiv, vppot(1,1,is(ispin),js(ispin)),&
                                              nrz, info)
-  call errore ('poten','info different from zero',abs(info))
-enddo
+  CALL errore ('poten','info different from zero',ABS(info))
+ENDDO
 
-if (noncolin) then
-   allocate( vppot0(nrz, nrx * nry, npol, npol) )
+IF (noncolin) THEN
+   ALLOCATE( vppot0(nrz, nrx * nry, npol, npol) )
    vppot0=vppot
    vppot(:,:,1,1)=vppot0(:,:,1,1)+vppot0(:,:,2,2)
    vppot(:,:,1,2)=vppot0(:,:,1,2)-(0.d0,1.d0)*vppot0(:,:,2,1)
    vppot(:,:,2,1)=vppot0(:,:,1,2)+(0.d0,1.d0)*vppot0(:,:,2,1)
    vppot(:,:,2,2)=vppot0(:,:,1,1)-vppot0(:,:,2,2)
-   deallocate( vppot0 )
-endif
+   DEALLOCATE( vppot0 )
+ENDIF
 
 !  do p = 1, nrz
 !    write(6,'(i5,2f12.6)') p, real(vppot(p,105,2,2)), imag(vppot(p,105,2,2))
 !  enddo
 !  stop
 
-  deallocate(ipiv) 
-  deallocate(gz) 
-  deallocate(aux) 
-  deallocate(auxr) 
-  deallocate(amat) 
-  deallocate(amat0) 
+  DEALLOCATE(ipiv) 
+  DEALLOCATE(gz) 
+  DEALLOCATE(aux) 
+  DEALLOCATE(auxr) 
+  DEALLOCATE(amat) 
+  DEALLOCATE(amat0) 
 
-  call stop_clock('poten')
+  CALL stop_clock('poten')
 
-  return
-end subroutine poten
+  RETURN
+END SUBROUTINE poten
