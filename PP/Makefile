@@ -285,7 +285,7 @@ PWOBJS = ../PW/pwcom.o  \
 #
 include .dependencies
 
-all: pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x bands.x
+all: pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x bands.x pw2wan.x
 
 pp.x: $(PPOBJS) postproc.o
 	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
@@ -310,6 +310,10 @@ bands.x: $(PPOBJS) bands.o
 
 plotrho.x: $(PPOBJS) plotrho.o
 	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LDFLAGS)
+
+pw2wan.x: $(PPOBJS) pw2wan.o
+	$(LD) -o pw2wan.x pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+
 
 clean_:
 	-/bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
