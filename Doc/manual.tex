@@ -29,9 +29,9 @@
 This manual covers the installation and usage of ESPRESSO (opEn-Source
 Package for Research in Electronic Structure, Simulation, and
 Optimization), version \version. The ESPRESSO package contains the
-following codes for the calculation of electronic-structure 
-properties within Density-Functional Theory, using a 
-Plane-Wave basis set and pseudopotentials:
+following codes for the calculation of electronic-structure properties
+within Density-Functional Theory, using a Plane-Wave basis set and
+pseudopotentials:
 \begin{description}
   \item [PWscf] (Plane-Wave Self-Consistent Field).
   \item [FPMD] (First Principles Molecular Dynamics).
@@ -79,8 +79,8 @@ PWscf can currently perform the following kinds of calculations:
   \item atomic forces, stresses, and structural optimization
   \item molecular dynamics on the ground-state Born-Oppenheimer
         surface, also with variable-cell
-  \item Nudged Elastic Band (NEB) for energy barriers and reaction
-        paths
+  \item Nudged Elastic Band (NEB) and Fourier String Method Dynamics (SMD)
+        for energy barriers and reaction paths
   \item phonon frequencies and eigenvectors at a generic wave vector,
         using Density-Functional Perturbation Theory
   \item effective charges and dielectric tensors
@@ -94,10 +94,10 @@ All of the above work for both insulators and metals, in any crystal
 structure, for many exchange-correlation functionals (including spin
 polarization), for both norm-conserving (Hamann-Schl\"uter-Chiang)
 pseudopotentials in separable form, and --- with very few exceptions
---- for Ultrasoft (Vanderbilt) pseudopotentials.
-Non-colinear magnetism and spin-orbit interactions are also
-implemented, although at an experimental stage.
-Various postprocessing programs are available.
+--- for Ultrasoft (Vanderbilt) pseudopotentials.  Non-colinear
+magnetism and spin-orbit interactions are also implemented, although
+at an experimental stage.  Various postprocessing programs are
+available.
 
 FPMD and CP can currently perform the following kinds of calculations:
 
@@ -108,7 +108,7 @@ FPMD and CP can currently perform the following kinds of calculations:
   \item variable-cell (Parrinello-Rahman) dynamics
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
-  \item strings method (CP only)
+  \item String Method Dynamics (in real space) (CP only)
   \item dynamics with Wannier functions (CP only)
 \end{itemize}
 Spin-polarized calculations and (for FPMD only) calculations with
@@ -126,30 +126,22 @@ promoted by the DEMOCRITOS National Simulation Center of the Italian
 INFM
 (\htmladdnormallink{\texttt{http://www.democritos.it/}}%
                    {http://www.democritos.it/})
-under the coordination of
-Paolo Giannozzi
+under the coordination of Paolo Giannozzi
 (\htmladdnormallink{\texttt{giannozz@nest.sns.it}}%
                    {mailto:giannozz@nest.sns.it})
-(Scuola Normale Superiore, Pisa),
-with the strong support of
-the CINECA National Supercomputing Center in Bologna
+(Scuola Normale Superiore, Pisa), with the strong support of the
+CINECA National Supercomputing Center in Bologna
 (\htmladdnormallink{\texttt{http://www.cineca.it/}}%
                    {http://www.cineca.it/}),
-under the responsibility of
-Carlo Cavazzoni\\
+under the responsibility of Carlo Cavazzoni\\
 (\htmladdnormallink{\texttt{c.cavazzoni@cineca.it}}%
                    {mailto:c.cavazzoni@cineca.it}).
+Currently active developers include Gerardo Ballabio (CINECA), Gernot
+Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia (SISSA,
+Trieste), Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
-Currently active developers include
-Gerardo Ballabio (CINECA), 
-Gernot Deinzer, Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
-(SISSA, Trieste), 
-Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
-
-The PWscf package was originally developed by
-Stefano Baroni, Stefano de Gironcoli, Andrea Dal Corso (SISSA),
-Paolo Giannozzi,
-and others.
+The PWscf package was originally developed by Stefano Baroni, Stefano
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 The web site for PWscf and related codes is:
 \htmladdnormallink{\texttt{http://www.pwscf.org}}%
                   {http://www.pwscf.org}.
@@ -178,8 +170,8 @@ PWgui was written by Anton Kokalj and is based on his GUIB concept
                    {http://www-k3.ijs.si/kokalj/guib/}).
 
 The pseudopotential generation package ``atomic'' was written by
-Andrea Dal Corso and it is the result of many additions to
-the original code by Paolo Giannozzi.
+Andrea Dal Corso and it is the result of many additions to the
+original code by Paolo Giannozzi.
 
 A list of further contributors includes:
 Dario Alf\`e,
@@ -218,8 +210,9 @@ License
 (\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
                    {http://www.pwscf.org/License.txt},
 or the file \texttt{License} in the distribution).
-All trademarks mentioned in this manual 
-belong to their respective owners.
+
+All trademarks mentioned in this manual belong to their respective
+owners.
 
 We shall greatly appreciate if scientific work done using this code
 will contain an explicit acknowledgment and a reference to the
@@ -442,21 +435,19 @@ The provided Makefiles assumes that you have the Intel compiler with
 MKL libraries installed.
 
 Another possibility is to install Linux, either in dual-boot mode, or
-running from a CD-ROM. 
-You will need to create a partition for Linux and to install a
-boot loader (LILO, GRUB).
-The latter step is not necessary if you boot from CD-ROM.
-The former step could also be avoided in principle (distributions like
-Knoppix run directly from the CD-ROM) but for serious use you will
-need to have disk access.
+running from a CD-ROM.  You will need to create a partition for Linux
+and to install a boot loader (LILO, GRUB).  The latter step is not
+necessary if you boot from CD-ROM.  The former step could also be
+avoided in principle (distributions like Knoppix run directly from the
+CD-ROM) but for serious use you will need to have disk access.
 
 \subsection{Compile}
 
 There are a few adjustable parameters in
 \texttt{Modules/parameters.f90}.
-The present values will work for most cases.
-All other variables are dynamically allocated: you do not need to
-recompile your code for a different system.
+The present values will work for most cases.  All other variables are
+dynamically allocated: you do not need to recompile your code for a
+different system.
 
 \texttt{make} with no arguments yields a list of valid
 targets:
@@ -622,23 +613,22 @@ The utility programs in \texttt{pwtools/} are:
 \subsection{Installation issues}
 
 The main development platforms are IBM SP and Intel/AMD PC with Linux
-and Intel compiler.
-For other machines, we rely on user's feedback.
+and Intel compiler.  For other machines, we rely on user's feedback.
 
 \paragraph{All machines}
 
 If you get ``Compiler Internal Error'' or similar messages, try to
 lower the optimization level, or to remove optimization, just for the
-routine that has problems.
-If it doesn't work, or if you experience weird problems, try to
-install patches for your version of the compiler (most vendors release
-at least a few patches for free), or to upgrade to a more recent
-version.
+routine that has problems.  If it doesn't work, or if you experience
+weird problems, try to install patches for your version of the
+compiler (most vendors release at least a few patches for free), or to
+upgrade to a more recent version.
 
 If you get an error in the loading phase that looks like ``ld: file
 XYZ.o: unknown (unrecognized, invalid, wrong, missing, \dots) file
 type'', or ``While processing relocatable file XYZ.o, no relocatable
 objects were found'' (T3E), one of the following things have happened:
+
 \begin{enumerate}
   \item you have leftover object files from a compilation with another 
         compiler: run \texttt{make clean} and recompile.
@@ -649,8 +639,8 @@ objects were found'' (T3E), one of the following things have happened:
 
 If many symbols are missing in the loading phase, you did not specify
 the location of all needed libraries (LAPACK, BLAS, FFTW,
-machine-specific optimized libraries).
-If you did, but symbols are still missing, see below (for Linux PC).
+machine-specific optimized libraries).  If you did, but symbols are
+still missing, see below (for Linux PC).
 
 \paragraph{Linux Alphas with Compaq compiler}
 
@@ -699,12 +689,12 @@ You must either recompile your own libraries, or change the
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
 ESPRESSO does not work reliably, or not at all, with some versions of
-the Portland Group compiler.
-In particular, with some versions PWscf works only for small systems,
-but not for larger systems.
-We think that this is a compiler bug.
-Use the latest version of each release of the compiler, with patches
-if available: see the Portland Group web site,\\
+the Portland Group compiler.  In particular, with some versions PWscf
+works only for small systems, but not for larger systems.  We think
+that this is a compiler bug.  Use the latest version of each release
+of the compiler, with patches if available: see the Portland Group web
+site,\\
+
 \htmladdnormallink%
 {\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}}%
 {http://www.pgroup.com/faq/install.htm\#release\_info}.
@@ -1020,71 +1010,71 @@ We may distinguish the following typical cases for \texttt{pw.x}:
 \begin{description}
 
   \item [single-point (fixed-ion) SCF calculation.]
+
     Set \texttt{calculation='scf'}.
 
     Namelists \texttt{\&IONS} and \texttt{\&CELL} need not to be
-    present (this is the default).
-    See Example 01.
+    present (this is the default).  See Example 01.
 
   \item [band structure calculation.]
+
     First perform a SCF calculation as above; then do a non-SCF
     calculation specifying \texttt{calculation='nscf'}, with the
     desired k-point grid and number \texttt{nbnd} of bands.
 
     Specify \texttt{nosym=.true.} to avoid generation of additional
-    k-points in low symmetry cases.
-    Variables \texttt{prefix} and \texttt{outdir}, which determine the
-    names of input or output files, should be the same in the two
-    runs.
-    See Example~01.
+    k-points in low symmetry cases.  Variables \texttt{prefix} and
+    \texttt{outdir}, which determine the names of input or output
+    files, should be the same in the two runs.  See Example~01.
 
   \item [structural optimization.]
+    
     \hyphenation{name-list}
     Specify \texttt{calculation='relax'} and add namelist \texttt{\&IONS}.
 
     All options for a single SCF calculation apply, plus a few others.
-    You may follow a structural optimization with a non-SCF band-structure
-    calculation, but do not forget to update the input ionic coordinates.
-    See Example 03.
+    You may follow a structural optimization with a non-SCF
+    band-structure calculation, but do not forget to update the input
+    ionic coordinates.  See Example 03.
 
   \item [molecular dynamics.]
+
     Specify \texttt{calculation='md'} and time step \texttt{dt}.
 
-    Use variable \texttt{ion\_dynamics} in namelist \texttt{\&IONS} for a
-    fine-grained control of the kind of dynamics.
-    Other options for setting the initial temperature and for
-    thermalization using velocity rescaling are available.
-    Remember: this is MD on the electronic ground state, not
-    Car-Parrinello MD.
-    See Example 04.
+    Use variable \texttt{ion\_dynamics} in namelist \texttt{\&IONS}
+    for a fine-grained control of the kind of dynamics.  Other options
+    for setting the initial temperature and for thermalization using
+    velocity rescaling are available.  Remember: this is MD on the
+    electronic ground state, not Car-Parrinello MD.  See Example 04.
 
   \item [polarization via Berry Phase.]
+
     See Example 10, its \texttt{README}, and the documentation in the
     header of \texttt{PW/bp\_c\_phase.f90}.
 
   \item [Nudged Elastic Band calculation.]
+    
     \hfill Specify \texttt{calculation='neb'} and add namelist
     \texttt{\&IONS}.
 
     All options for a single SCF calculation apply, plus a few others.
     In the namelist \texttt{\&IONS} the number of images used to
-    discretize the elastic band must be specified.
-    All other variables have a default value.
-    Coordinates of the initial and final image of the elastic band have to
-    be specified in the \texttt{ATOMIC\_POSITIONS} card.
-    A detailed description of all input variables is contained in the file
-    \texttt{Doc/INPUT\_PW}.
+    discretize the elastic band must be specified.  All other
+    variables have a default value.  Coordinates of the initial and
+    final image of the elastic band have to be specified in the
+    \texttt{ATOMIC\_POSITIONS} card.  A detailed description of all
+    input variables is contained in the file \texttt{Doc/INPUT\_PW}.
     See also Example 17.
 
 \end{description}
 
-The output data files are written in the directory specified
-by variable \texttt{outdir}, with names specified by variable 
+The output data files are written in the directory specified by
+variable \texttt{outdir}, with names specified by variable
 \texttt{prefix} (a string that is prepended to all file names,
 whose default value is: \texttt{prefix='pwscf'}).
 
 The execution stops if you create a file \texttt{prefix.EXIT} in the
-working directory. Note that just killing the process may leave the 
+working directory. Note that just killing the process may leave the
 output files in an unusable state.
 
 \subsection{Phonon calculations}
