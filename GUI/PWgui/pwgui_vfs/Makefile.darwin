@@ -6,31 +6,30 @@
 
 # see the main.tcl.sh script for meaning of ITCL_EXACT
 TK_VERSION = 8.4
-ITCL_EXACT = -exact
+ITCL_EXACT =
 
-ITCL_VERSION     = 3.2
-ITK_VERSION      = 3.2
-IWIDGETS_VERSION = 4.0.1
+ITCL_VERSION     = 3.3
+ITK_VERSION      = 3.3
+IWIDGETS_VERSION = 4.0.2
 
 # define the library-directories to be copied
-prefix=/usr/lib
-ITCL_LIBDIR     = $(prefix)/itcl$(ITCL_VERSION)
+prefix=/Library/Tcl
+ITCL_LIBDIR     = 
 ITK_LIBDIR      = $(prefix)/itk$(ITK_VERSION)
 IWIDGETS_LIBDIR = $(prefix)/iwidgets$(IWIDGETS_VERSION)
 
 # define these two vars if libitcl.so and libitk.so needs to be copied
 # separately
-LIBITCL_SO = /usr/lib/libitcl$(ITCL_VERSION).so.1
-LIBITK_SO  = /usr/lib/libitk$(ITCL_VERSION).so.1
+LIBITCL_SO = 
+LIBITK_SO  = 
 
-# if we have some dangling links or some files that are not really
-# needed we should delete them ...
+# if we have some dangling links we should delete them ...
 xdir = pwgui.vfs/lib
 DELETE_LINKS = \
 	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos
 
-SDX    = $(HOME)/local/bin/sdx
-TCLKIT = $(HOME)/local/bin/tclkit
+SDX    = $(HOME)/src/Tclkit/sdx
+TCLKIT = $(HOME)/src/Tclkit/tclkit-darwin-ppc
 
 # -Don't-touch-below------------------------------------------------------
 
@@ -48,12 +47,12 @@ main.tcl:
 	ITCL_VERSION=$(ITCL_VERSION) $(SHELL) main.tcl.sh
 
 copylib:
-	if test "$(ITCL_LIBDIR)" != "" ; then cp -r $(ITCL_LIBDIR) $(LIBDIR)/; fi
-	cp -r $(ITK_LIBDIR) $(LIBDIR)/
-	cp -r $(IWIDGETS_LIBDIR) $(LIBDIR)/
+	if test "$(ITCL_LIBDIR)" != "" ; then cp -fr $(ITCL_LIBDIR) $(LIBDIR)/; fi
+	cp -fr $(ITK_LIBDIR) $(LIBDIR)/
+	cp -fr $(IWIDGETS_LIBDIR) $(LIBDIR)/
 	if test "$(LIBITCL_SO)" != "" ; then cp $(LIBITCL_SO) $(LIBDIR)/; fi
 	if test "$(LIBITK_SO)"  != "" ; then cp $(LIBITK_SO)  $(LIBDIR)/; fi
-	-rm -f $(DELETE_LINKS)
+	-rm -rf $(DELETE_LINKS)
 
 starkit:
 	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime

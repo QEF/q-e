@@ -10,27 +10,27 @@ ITCL_EXACT = -exact
 
 ITCL_VERSION     = 3.2
 ITK_VERSION      = 3.2
-IWIDGETS_VERSION = 4.0.1
+IWIDGETS_VERSION = 4.0.2
 
 # define the library-directories to be copied
-prefix=/usr/lib
+prefix=/cygdrive/c/Tcl/lib
 ITCL_LIBDIR     = $(prefix)/itcl$(ITCL_VERSION)
 ITK_LIBDIR      = $(prefix)/itk$(ITK_VERSION)
 IWIDGETS_LIBDIR = $(prefix)/iwidgets$(IWIDGETS_VERSION)
 
 # define these two vars if libitcl.so and libitk.so needs to be copied
 # separately
-LIBITCL_SO = /usr/lib/libitcl$(ITCL_VERSION).so.1
-LIBITK_SO  = /usr/lib/libitk$(ITCL_VERSION).so.1
+LIBITCL_SO = 
+LIBITK_SO  = 
 
-# if we have some dangling links or some files that are not really
-# needed we should delete them ...
+# if we have some dangling links we should delete them ...
 xdir = pwgui.vfs/lib
 DELETE_LINKS = \
-	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos
+	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos/images
 
-SDX    = $(HOME)/local/bin/sdx
-TCLKIT = $(HOME)/local/bin/tclkit
+TCLKIT   = $(HOME)/local/bin/tclkit.exe
+SDX      = $(HOME)/local/bin/sdx.bat
+SDXKIT   = $(HOME)/local/bin/sdx.kit
 
 # -Don't-touch-below------------------------------------------------------
 
@@ -38,9 +38,11 @@ LIBDIR=pwgui.vfs/lib
 
 all: tclkit-runtime main.tcl copylib starkit
 
-
 tclkit-runtime:
-	if test -x $(TCLKIT) ; then cp $(TCLKIT) tclkit-runtime ; fi
+	if test -x $(TCLKIT) ; then \
+		cp $(TCLKIT) tclkit-runtime.exe ; \
+		cp $(SDXKIT) . ; \
+	fi
 
 main.tcl:
 	TK_VERSION=$(TK_VERSION) \
@@ -48,17 +50,17 @@ main.tcl:
 	ITCL_VERSION=$(ITCL_VERSION) $(SHELL) main.tcl.sh
 
 copylib:
-	if test "$(ITCL_LIBDIR)" != "" ; then cp -r $(ITCL_LIBDIR) $(LIBDIR)/; fi
-	cp -r $(ITK_LIBDIR) $(LIBDIR)/
-	cp -r $(IWIDGETS_LIBDIR) $(LIBDIR)/
+	if test "$(ITCL_LIBDIR)" != "" ; then cp -rf $(ITCL_LIBDIR) $(LIBDIR)/; fi
+	cp -rf $(ITK_LIBDIR) $(LIBDIR)/
+	cp -rf $(IWIDGETS_LIBDIR) $(LIBDIR)/
 	if test "$(LIBITCL_SO)" != "" ; then cp $(LIBITCL_SO) $(LIBDIR)/; fi
 	if test "$(LIBITK_SO)"  != "" ; then cp $(LIBITK_SO)  $(LIBDIR)/; fi
-	-rm -f $(DELETE_LINKS)
+	-rm -rf $(DELETE_LINKS)
 
 starkit:
-	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime
+	$(SDX) wrap pwgui.exe -interp $(TCLKIT) -runtime tclkit-runtime.exe
 
 
 
 clean:
-	-rm -rf main.tcl.sh pwgui.vfs/ *~
+	-rm -rf main.tcl.sh pwgui.vfs/ *~ *.exe *.kit *.bat
