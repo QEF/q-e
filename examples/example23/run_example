@@ -1,0 +1,242 @@
+#!/bin/sh
+                                                                                
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+                                                                                
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use cp.x to calculate Wannier functions and"
+$ECHO "to perform dynamics with an external electric field."
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="cp.x"
+PSEUDO_LIST="H_US.van O_US.van"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+ 
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO
+ 
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# calculation of Wannier functions
+cat > WANNIER << EOF
+  .false. .false.                       EFIELD SWITCH
+  100                                   SW_LEN
+  0.d0 0.d0 0.0d0                       EFX0 EFY0 EFZ0
+  0.d0 0.d0 0.5d-2                      EFX1 EFY1 EFZ1
+  .false.                               WFSD
+  0.1 0.3 10 10                         WFDT MAXWFDT NIT NSD
+  1500. 5. .3 10                        Q DT FRIC NSTEPS
+  1.d-9                                 TOLW
+  .true.                                ADAPT
+  3 1 40                                CALWF NWF WFFORT
+  21                                    IPLOT
+  .false.                               WRITEV
+EOF
+cat > h2o.wannier.in << EOF
+ &control
+    title = ' Water Molecule ',
+    calculation = 'cp-wf',
+    restart_mode = 'from_scratch',
+    ndr = 51,
+    ndw = 52,
+    nstep  = 100,
+    iprint = 100, 
+    isave  = 100,
+    tstress = .TRUE.,
+    tprnfor = .FALSE.,
+    dt    = 4.0d0,
+    etot_conv_thr = 1.d-9,
+    ekin_conv_thr = 1.d-4,
+    prefix = 'h2o_mol'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 1, 
+    celldm(1) = 20.0, 
+    nat  = 3,
+    ntyp = 2,
+    nbnd = 4,
+    nelec = 8,
+    ecutwfc = 25.0,
+    nr1b= 10, nr2b = 10, nr3b = 10,
+    xc_type = 'PBE'
+ /
+ &electrons
+    emass = 350.d0,
+    emass_cutoff = 3.0d0,
+    orthogonalization = 'ortho',
+    ortho_eps = 5.d-8,
+    ortho_max = 250,
+    electron_dynamics = 'damp',
+    electron_damping = 0.15,
+    electron_velocities = 'zero',
+    electron_temperature = 'not_controlled',
+ /
+ &ions
+    ion_dynamics = 'none',
+    ion_damping = 0.00,
+    ion_radius(1) = 0.8d0,
+    ion_radius(2) = 0.8d0,
+    ion_velocities = 'zero',
+    ion_temperature = 'not_controlled',
+    ! ion_nstepe = 10
+ /
+ &cell
+    cell_dynamics = 'none',
+    cell_velocities = 'zero',
+    press = 0.0d0,
+ /
+ATOMIC_SPECIES
+    O 16.0d0 O_US.van 1
+    H 1.00d0 H_US.van 1
+ATOMIC_POSITIONS (bohr)
+    O     0.0099    0.0099    0.0000  1 1 1
+    H     1.8325   -0.2243   -0.0001  1 1 1
+    H    -0.2243    1.8325    0.0002  1 1 1
+EOF
+$ECHO "  running the Wannier functions calculation...\c"
+$CP_COMMAND < h2o.wannier.in > h2o.wannier.out
+$ECHO " done"
+
+# calculation with an electric field
+cat > WANNIER << EOF
+  .true. .true.                         EFIELD SWITCH
+  100                                   SW_LEN
+  0.d0 0.d0 0.0d0                       EFX0 EFY0 EFZ0
+  0.d0 0.d0 0.5d-2                      EFX1 EFY1 EFZ1
+  .false.                               WFSD
+  0.1 0.3 10 10                         WFDT MAXWFDT NIT NSD
+  1500. 5. .3 10                        Q DT FRIC NSTEPS
+  1.d-9                                 TOLW
+  .true.                                ADAPT
+  3 1 40                                CALWF NWF WFFORT
+  21                                    IPLOT
+  .false.                               WRITEV
+EOF
+cat > h2o.efield.in << EOF
+ &control
+    title = ' Water Molecule ',
+    calculation = 'cp-wf',
+    restart_mode = 'restart',
+    ndr = 52,
+    ndw = 51,
+    nstep  = 100,
+    iprint = 100, 
+    isave  = 100,
+    tstress = .TRUE.,
+    tprnfor = .FALSE.,
+    dt    = 7.0d0,
+    etot_conv_thr = 1.d-9,
+    ekin_conv_thr = 1.d-4,
+    prefix = 'h2o_mol'
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav = 1, 
+    celldm(1) = 20.0, 
+    nat  = 3,
+    ntyp = 2,
+    nbnd = 4,
+    nelec = 8,
+    ecutwfc = 25.0,
+    nr1b= 10, nr2b = 10, nr3b = 10,
+    xc_type = 'PBE'
+ /
+ &electrons
+    emass = 350.d0,
+    emass_cutoff = 3.0d0,
+    orthogonalization = 'ortho',
+    ortho_eps = 5.d-8,
+    ortho_max = 250,
+    electron_dynamics = 'verlet',
+    electron_damping = 0.00,
+    electron_velocities = 'zero',
+    electron_temperature = 'not_controlled',
+ /
+ &ions
+    ion_dynamics = 'verlet',
+    ion_damping = 0.00,
+    ion_radius(1) = 0.8d0,
+    ion_radius(2) = 0.8d0,
+    ion_velocities = 'zero',
+    ion_temperature = 'not_controlled',
+    ! ion_nstepe = 10
+ /
+ &cell
+    cell_dynamics = 'none',
+    cell_velocities = 'zero',
+    press = 0.0d0,
+ /
+ATOMIC_SPECIES
+    O 16.0d0 O_US.van 1
+    H 1.00d0 H_US.van 1
+ATOMIC_POSITIONS (bohr)
+    O     0.0099    0.0099    0.0000  1 1 1
+    H     1.8325   -0.2243   -0.0001  1 1 1
+    H    -0.2243    1.8325    0.0002  1 1 1
+EOF
+$ECHO "  running the calculation with electric field...\c"
+$CP_COMMAND < h2o.efield.in > h2o.efield.out
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

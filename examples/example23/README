@@ -1,0 +1,10 @@
+This example shows how to use cp.x to calculate Wannier functions and
+to perform dynamics with an external electric field.
+(contributed by Manu Sharma)
+
+The first calculation runs a cp with Wannier functions and generates
+from scratch the Wannier orbitals for a water molecule.
+
+The second calculation then applies an electric field in the
+z-direction to this water molecule. The molecule should oscillate
+about the applied electric field.
