@@ -1046,7 +1046,7 @@
  606  format(' cell parameters are not allowed to move'//)
  608  format(' frozen off-diagonal cell parameters'//)
  650  format(' modified kinetic energy functional, with parameters:'/   &
-           & ' agg = ',f7.4,'  sgg = ', f7.4,'  e0gg = ',f6.2)
+           & ' agg = ',f8.4,'  sgg = ', f7.4,'  e0gg = ',f6.2)
  700  format(' iprsta = ',i2/)
       return
       end

@@ -24,7 +24,7 @@ subroutine do_postproc (nodenumber)
 #endif
   implicit none
   character(len=3)  :: nodenumber
-  character(len=80) :: filband, filplot
+  character(len=80) :: filplot
 
   integer :: n_atom_wfc, plot_num, kpoint, kband, spin_component, ios
   logical :: stm_wfc_matching, lsign
@@ -36,7 +36,7 @@ subroutine do_postproc (nodenumber)
 
   namelist / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
-       filplot, filband, lsign
+       filplot, lsign
   !
   nd_nmbr = nodenumber
   !
@@ -44,8 +44,7 @@ subroutine do_postproc (nodenumber)
   !
   prefix = 'pwscf'
   outdir = './'
-  filplot = ' '
-  filband = ' '
+  filplot = 'pp.out' 
   plot_num = 0
   spin_component = 0
   sample_bias = 0.01d0
@@ -83,28 +82,22 @@ subroutine do_postproc (nodenumber)
   CALL mp_bcast( kband, ionode_id )
   CALL mp_bcast( kpoint, ionode_id )
   CALL mp_bcast( filplot, ionode_id )
-  CALL mp_bcast( filband, ionode_id )
   CALL mp_bcast( lsign, ionode_id )
 #endif
   !     Check of namelist variables
   !
-  if (filplot.ne.' ') then
-
-     if (plot_num.lt.0.or.plot_num.gt.11) call errore ('postproc', &
+  if (plot_num < 0 .or. plot_num > 11) call errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
-     if ( (plot_num.eq.0.or.plot_num.eq.1) .and. ( &
-          spin_component.lt.0.or.spin_component.gt.2) ) call errore ( &
-          'postproc', 'wrong value of spin_component', 1)
+  if ( (plot_num == 0 .or. plot_num == 1) .and.  &
+       (spin_component < 0 .or. spin_component > 2) ) call errore &
+         ('postproc', 'wrong value of spin_component', 1)
 
-     if (plot_num.eq.10) then
-        emin = emin / 13.6058d0
-        emax = emax / 13.6058d0
-     end if
-  endif
+  if (plot_num == 10) then
+     emin = emin / 13.6058d0
+     emax = emax / 13.6058d0
+  end if
 
-  if (filplot.eq.' '.and.filband.eq.' ') call &
-       errore ('postproc', 'nothing to do?', 1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -118,7 +111,6 @@ subroutine do_postproc (nodenumber)
   !
   call punch_plot (filplot, plot_num, sample_bias, z, dz, &
        stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
-  call punch_band (filband)
 
   return
 end subroutine do_postproc

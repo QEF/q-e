@@ -22,6 +22,8 @@ COMMON
 - start merge of input routines
 
 - merge spherical harmonics, integration routines, etc
+  spherical bessel: add routine directly calculating dj_l(x)/dx,
+  verify limits x=>0, fix special cases x=>0 into the codes
 
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
@@ -115,6 +117,8 @@ FPMD:
 - version number
 
 CPV: 
+
+- spherical bessel not working for variable-cell case !!!!
 
 - Documentation needs serious improvements
 

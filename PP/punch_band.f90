@@ -11,9 +11,13 @@ subroutine do_bands (nodenumber)
   use pwcom
   use becmod
   use io
-
+#ifdef __PARA
+  use para, only: me
+  use mp
+#endif
   implicit none
   character (len=3)  :: nodenumber
+  !
   character (len=80) :: filband
   character(len=256) :: outdir
   integer :: ios
@@ -23,14 +27,27 @@ subroutine do_bands (nodenumber)
   !
   !   set default values for variables in namelist
   !
-  prefix = ' '
+  prefix = 'pwscf'
   outdir = './'
-  filband = ' '
+  filband = 'bands.out'
   !
+#ifdef __PARA
+  if (me == 1)  then
+#endif
   read (5, inputpp, err = 200, iostat = ios)
-200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
+200 call errore ('do_bands', 'reading inputpp namelist', abs (ios) )
   !
   tmp_dir = trim(outdir)
+  !
+#ifdef __PARA
+  end if
+  !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( tmp_dir, ionode_id )
+  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( filband, ionode_id )
+#endif
   !
   !   Now allocate space for pwscf variables, read and check them.
   !

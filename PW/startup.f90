@@ -51,7 +51,7 @@ subroutine startup (nd_nmbr, version)
   integer :: me, nproc
 #endif
 
-  character :: np * 2, cdate * 9, ctime * 9
+  character :: np*80, cdate * 9, ctime * 9
   external date_and_tim
 
 #ifdef __PARA
@@ -89,9 +89,10 @@ subroutine startup (nd_nmbr, version)
      !
      do iiarg=1,nargs-1
         call getarg (iiarg, np)  
-        if (np == '-npool') then
+        if (trim(np) == '-n' .or. trim(np) == '-np' .or. &
+            trim(np) == '-npool' .or. trim(np) == '-npools' ) then
           call getarg (iiarg+1, np)  
-          read (np, '(i2)') npool  
+          read (np,*) npool  
         end if
      end do
      npool = max (npool, 1)
