@@ -7,24 +7,25 @@
 !
 !
 !----------------------------------------------------------------------------
-PROGRAM pwscf_neb
+PROGRAM pwscf
   !----------------------------------------------------------------------------
   !
-  ! ... NEB method is implemented in the Plane Wave Self-Consistent Field code
+  ! ... Plane Wave Self-Consistent Field code 
   !
-  USE io_global,        ONLY :  stdout
-  USE parameters,       ONLY :  ntypx, npk, lmaxx, nchix, ndm, nqfm, nbrx
-  USE global_version,   ONLY :  version_number
-  USE wvfct,            ONLY :  gamma_only
-  USE varie,            ONLY :  nstep, istep, conv_elec, conv_ions, lneb
-  USE io_files,         ONLY :  nd_nmbr, iunneb
-  USE neb_variables,    ONLY :  conv_neb
-  USE neb_variables,    ONLY :  neb_deallocation
-  USE input_parameters, ONLY :  deallocate_input_parameters
-  USE neb_routines,     ONLY :  initialize_neb, search_mep
-  USE io_routines,      ONLY :  write_output
+  USE io_global,        ONLY : stdout
+  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, ndm, nqfm, nbrx
+  USE global_version,   ONLY : version_number
+  USE wvfct,            ONLY : gamma_only
+  USE noncollin_module, ONLY : noncolin
+  USE varie,            ONLY : nstep, istep, conv_elec, conv_ions, lneb
+  USE io_files,         ONLY : nd_nmbr, iunneb
+  USE neb_variables,    ONLY : conv_neb
+  USE neb_variables,    ONLY : neb_deallocation
+  USE input_parameters, ONLY : deallocate_input_parameters
+  USE neb_routines,     ONLY : initialize_neb, search_mep
+  USE io_routines,      ONLY : write_output
 #ifdef __PARA
-  USE para,             ONLY :  me, mypool
+  USE para,             ONLY : me, mypool
 #endif
   !
   IMPLICIT NONE
@@ -47,7 +48,12 @@ PROGRAM pwscf_neb
   !
   CALL iosys()
   !
-  WRITE( unit = stdout, FMT = '(/,5X,"gamma_only = ",L1,/)' ) gamma_only
+  IF ( noncolin ) &
+    WRITE( UNIT = stdout, &
+         & FMT = '(/,5X,"non-colinear magnetization allowed",/)' )
+  IF ( gamma_only ) &
+    WRITE( UNIT = stdout, &
+         & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
   !
   CALL show_memory()
   !
@@ -122,4 +128,4 @@ PROGRAM pwscf_neb
              /5X,'ntypx =',I2,'   npk =',I5,'  lmax =',I2   &
              /5X,'nchix =',I2,'  ndim =',I5,'  nbrx =',I2,' nqfm =',I2 )
   !
-END PROGRAM pwscf_neb
+END PROGRAM pwscf

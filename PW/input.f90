@@ -288,15 +288,11 @@ SUBROUTINE iosys()
   IF( nbnd < 1 ) THEN
      CALL errore( ' iosys ', ' nbnd less than 1 ', nbnd )
   END IF
-  IF ( tfixed_occ .AND. nbnd == 0 ) &
-     CALL errore( 'iosys', 'set the number of bands', 1 )
   IF( nelec < 0 ) THEN
      CALL errore( ' iosys ', ' nelec less than 0 ', nelec )
   END IF
   !
   lsda = ( nspin == 2 )
-  !
-  WRITE( stdout, '(/,5X,"noncolin = ",L1)' ) noncolin
   !
   ! ... starting_magnetization(ia) = -2.D0 means "not set" -- set it to 0
   !
@@ -990,7 +986,7 @@ SUBROUTINE iosys()
      lstres    = .TRUE.
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      IF ( cmass <= 0.D0 ) &
-        CALL errore( 'iosys', &
+        CALL errore( 'readin', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
   ELSE
      cell_factor_ = 1.D0
