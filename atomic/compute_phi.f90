@@ -95,6 +95,10 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      enddo
   endif
   !
+  !   save the all-electron function for the PAW setup
+  !
+  if (lpaw) psipaw(1:mesh,ns) = chir(1:mesh,ns)
+  !
   !   compute the first and second derivative of all-electron function
   !
   fae=chir(ik,ns)

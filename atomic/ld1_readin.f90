@@ -14,6 +14,7 @@ subroutine ld1_readin
   !
   use ld1inc
   use funct
+  use atomic_paw, only : paw_io, paw2us
   implicit none
 
   integer ::  &
@@ -66,6 +67,7 @@ subroutine ld1_readin
        nlcc,  &    ! if true nlcc is set
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
+       lpaw,  &    ! if true create a PAW dataset
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
@@ -108,6 +110,8 @@ subroutine ld1_readin
   latt  = 0
   title = ' '
   config=' '
+
+  lpaw = .false.
 
   ! read the namelist input
 
@@ -361,6 +365,7 @@ subroutine ld1_readin
   !    PP testing: reading the pseudopotential
   !
   if (iswitch ==2) then
+     lpaw=.false.
      !
      if (file_pseudo == ' ') &
        call errore('ld1_readin','file_pseudo is needed',1)
@@ -369,6 +374,19 @@ subroutine ld1_readin
         !    UPF format
         !
         call read_pseudoupf
+        !
+     else if (matches('PAW',file_pseudo) .or. matches('PAW',file_pseudo)) then
+        !
+        !    PAW dataset
+        !
+        lpaw=.true.
+        open(unit=111, file=trim(file_pseudo), status='unknown',  &
+             form='formatted', err=50, iostat=ios)
+50      call errore('ld1_readin','open error on file '//file_pseudo,abs(ios))
+        call paw_io(pawsetup,111,"INP")
+        close(111)
+        call paw2us ( pawsetup, zval, mesh, r, r2, sqr, dx, nbeta, lls, &
+             ikk, betas, qq, qvan, pseudotype )
         !
      else if ( matches('rrkj3', file_pseudo) .or. &
                matches('RRKJ3', file_pseudo)) then
@@ -402,6 +420,17 @@ subroutine ld1_readin
         pseudotype = 1
      endif
      !
+  end if
+
+  if (lpaw) then
+     if (pseudotype /= 3) call errore('ld1_readin', &
+          'please start from a US for generating a PAW dataset' ,pseudotype)
+     if (rel /= 0) call errore('ld1_readin', &
+          'relativistic PAW not implemented' ,rel)
+     if (latt /= 0) call errore('ld1_readin', &
+          'Latter correction not implemented in PAW' ,latt)
+     call errore('ld1_readin', &
+          'PAW dataset generation and test is experimental' ,-1)
   end if
 
   return

@@ -15,7 +15,11 @@ subroutine set_rho_core
   real(kind=dp), external :: int_0_inf_dr
   integer :: i, ik, n, ns, ios
 
-  write(6,'(/,5x,'' Computing core charge for nlcc: '')')
+  if (nlcc) then
+     write(6,'(/,5x,'' Computing core charge for nlcc: '')')
+  else
+     if (lpaw) write(6,'(/,5x,'' Computing core charge for PAW: '')')
+  end if
   pi = 4.0_dp*atan(1.0_dp)
   allocate (rhov(mesh), rhoco(mesh))
   !
@@ -33,6 +37,7 @@ subroutine set_rho_core
      enddo
   enddo
   rhoco(:) = rhoc(1:mesh)
+  if (lpaw) aeccharge(1:mesh) = rhoc(1:mesh)
   !
   if (rcore > 0.0_dp) then
      !      rcore read on input
@@ -86,6 +91,7 @@ subroutine set_rho_core
   do n=1,ik
      rhoc(n) = a*sin(b*r(n))/r(n) * r2(n)
   end do
+  if (lpaw) psccharge(1:mesh) = rhoc(1:mesh)
   write(6,'(/,5x,''  r > '',f4.2,'' : true rho core'')') r(ik)
   write(6,110) r(ik), a, b
 110 format (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
@@ -104,5 +110,6 @@ subroutine set_rho_core
   deallocate (rhoco, rhov)
   totrho = int_0_inf_dr(rhoc,r,r2,dx,mesh,2)
   write(6,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
+  if (.not.nlcc) rhoc(1:mesh) = 0.0_dp
   return
 end subroutine set_rho_core

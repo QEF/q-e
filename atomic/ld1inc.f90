@@ -1,6 +1,7 @@
 module ld1inc
   use kinds, only : dp
   use ld1_parameters
+  use atomic_paw, only : paw_t
   !
   !    variables for the all-electron calculation
   !
@@ -202,6 +203,17 @@ module ld1inc
        vh(ndm),      & ! the hartree potential
        vpstot(ndm,2),& ! the total local pseudopotential
        vpsloc(ndm)     ! the local pseudopotential
+  !
+  !  variables needed for PAW dataset generation and test
+  !
+  logical :: &
+       lpaw        ! if true generate or test a PAW dataset
+  type(paw_t) :: &
+       pawsetup    ! the PAW dataset
+  real(kind=dp) ::       &
+       psipaw(ndm,nwfsx),& ! the all-electron wavefunctions for any beta
+       aeccharge(ndm),   & ! true, not smoothened, AE core charge for PAW
+       psccharge(ndm)      ! smoothened core charge for PAW
   !
   !  file names
   !

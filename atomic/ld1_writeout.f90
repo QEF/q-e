@@ -9,6 +9,7 @@ subroutine ld1_writeout
   !
   use ld1inc
   use funct
+  use atomic_paw, only : paw_io
   implicit none
 
   integer :: &
@@ -23,20 +24,35 @@ subroutine ld1_writeout
   if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
-  if (rel == 2 .and. .not. matches('UPF',file_pseudopw) &
-               .and. .not. matches('upf',file_pseudopw) ) then
-     file_pseudopw=trim(file_pseudopw)//'.UPF'
-  end if
+  if (.not. lpaw) then
 
-  oldformat = .not. matches('UPF',file_pseudopw) .and. &
-              .not. matches('upf',file_pseudopw)
+     if (rel == 2 .and. .not. matches('UPF',file_pseudopw) &
+                  .and. .not. matches('upf',file_pseudopw) ) then
+        file_pseudopw=trim(file_pseudopw)//'.UPF'
+     end if
+
+     oldformat = .not. matches('UPF',file_pseudopw) .and. &
+                 .not. matches('upf',file_pseudopw)
+
+  else
+     if ( .not. matches('PAW',file_pseudopw) .and. &
+          .not. matches('paw',file_pseudopw) ) then
+        file_pseudopw=trim(file_pseudopw)//'.PAW'
+     end if
+  end if
 
   iunps=28
   open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
        form='formatted', err=50, iostat=ios)
 50 call errore('ld1_writeout','opening file_pseudopw',abs(ios))
 
-  if (oldformat) then
+  if (lpaw) then
+     !
+     ! write experimental PAW setup
+     !
+     call paw_io(pawsetup,iunps,"OUT")
+     !
+  else if (oldformat) then
      !
      if (pseudotype == 1) then
        !

@@ -60,6 +60,7 @@ sic_correction.o \
 starting_potential.o \
 start_potps.o \
 trou.o \
+vdpack.o \
 vext.o \
 vpack.o \
 vxcgc.o \
@@ -74,6 +75,7 @@ write_upf.o
 # funct.o which_dft.o capital.o matches.o functionals.o lsda_functionals.o 
 
 LD1MODS = \
+atomic_paw.o \
 ld1inc.o \
 parameters.o 
 

@@ -20,8 +20,10 @@ subroutine gener_pseudo
   !     chis:   auxiliary functions
   !
   !
+  !     The construction of a PAW dataset can also be done (experimental)
   !      
   use ld1inc
+  use atomic_paw, only : us2paw, paw2us
   implicit none
 
   integer ::   &
@@ -41,6 +43,11 @@ subroutine gener_pseudo
 
   real(kind=dp), allocatable :: &
        b(:,:), binv(:,:) ! the B matrix and its inverse
+
+  real(kind=dp) ::    &
+       aekin(nwfsx,nwfsx),  & ! AE kinetic energies
+       pskin(nwfsx,nwfsx),  & ! PS kinetic energies
+       kindiff(nwfsx,nwfsx)   ! AE-PS k.e.
 
   real(kind=dp), external ::    &
        int_0_inf_dr    ! the function calculating the integral 
@@ -68,14 +75,17 @@ subroutine gener_pseudo
        'not programmed' ,2)
   if (pseudotype == 3.and. tm) call errore('gener_pseudo', &
        'not programmed' ,3)
+  if (pseudotype /= 3.and. lpaw) call errore('gener_pseudo', &
+       'please start from a US for generating a PAW dataset' ,pseudotype)
   !
   !   compute the local potential from the all-electron potential
   !
   call pseudovloc
   !
   !   if nlcc is true compute here the core charge
+  !   the core charge is needed also for the PAW dataset
   !
-  if (nlcc) call set_rho_core
+  if (nlcc .or. lpaw) call set_rho_core
   !
   !   set the appropriate energies and the correspondence all-electron
   !   pseudo
@@ -306,6 +316,47 @@ subroutine gener_pseudo
         ddd(ib,jb,1)=bmat(ib,jb)
      enddo
   enddo
+  !
+  !    generate a PAW dataset if required
+  !
+  if (lpaw) then
+     !
+     ! compute kinetic energy differences, using:
+     ! AE:   T |psi> = (e - Vae) |psi>
+     ! PS:   T |phi> = (e - Vps) |phi> - |chi>
+     do ns=1,nbeta
+        do ns1=1,ns
+           if (lls(ns)==lls(ns1)) then
+              ikl=max(ikk(ns),ikk(ns1))
+              nst=2*(lls(ns)+1)
+              do n=1,ikl
+                 gi(n,1)=psipaw(n,ns)*(enls(ns1)-vpot(n,1))*psipaw(n,ns1)
+              end do
+              aekin(ns,ns1)=int_0_inf_dr(gi(1:mesh,1),r,r2,dx,ikl,nst)
+              do n=1,ikl
+                 gi(n,1)=phis(n,ns)*( (enls(ns1)-vpsloc(n))*phis(n,ns1) - chis(n,ns1) )
+              end do
+              pskin(ns,ns1)=int_0_inf_dr(gi(1:mesh,1),r,r2,dx,ikl,nst)
+           else
+              aekin(ns,ns1)=0._dp
+              pskin(ns,ns1)=0._dp
+           end if
+           kindiff(ns,ns1)=aekin(ns,ns1)-pskin(ns,ns1)
+           kindiff(ns1,ns)=aekin(ns,ns1)-pskin(ns,ns1)
+        end do
+     end do
+     !
+     ! create the 'pawsetup' object containing the atomic setup for PAW
+     call us2paw ( pawsetup,                                         &
+          zval, mesh, r, r2, sqr, dx, maxval(ikk(1:nbeta)), ikk,     &
+          nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
+          nlcc, aeccharge, psccharge, vpot, vpsloc )
+     !
+     ! the augmentation functions are changed in 'pawsetup': read from it
+     call paw2us ( pawsetup, zval, mesh, r, r2, sqr, dx, nbeta, lls, &
+          ikk, betas, qq, qvan, pseudotype )
+     !
+  endif
   !
   !    descreening the local potential and the D coefficients
   !
