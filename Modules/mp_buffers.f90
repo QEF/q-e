@@ -38,7 +38,7 @@
 
       PRIVATE
       PUBLIC :: mp_sendrecv_buffers, mp_allocate_buffers, mp_deallocate_buffers, &
-        mp_barrier_buffers, mp_alltoall_buffers,mp_excng, mp_sum_buffers, mp_report_buffers
+        mp_barrier_buffers, mp_alltoall_buffers,mp_sum_buffers, mp_report_buffers
 
       SAVE
 
