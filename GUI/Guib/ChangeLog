@@ -1,3 +1,12 @@
+Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: adding "getSelected saveFile" query. Making "save" and
+		"saveAs" methods public
+	* help.itcl: setting the width of help console to 
+		700 pixels (temporarily)
+	* widgets.itcl: making $nev(PWD) as default dir for Entrydirselect
+	* lib/tclUtils.tcl: improving nonblocking mechanism (adding "stdout"
+		and "save" subcommands of nonblocking command)
+
 Mon Sep 13 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* table.itcl: table's checkbutton didn't display updated text upon
 		variable's value change. Fixed by using -textvariable
