@@ -39,19 +39,21 @@ including, in addition to PWscf, the Car-Parrinello codes CP and FPMD.
 
 Other sources of documentation can be found in:
 \begin{itemize}
-  \item the \texttt{Doc/} directory of the PWscf distribution;
-  \item the various \texttt{README} files found in the distribution;
+  \item the \texttt{Doc/} directory of the PWscf distribution
+  \item the various \texttt{README} files found in the distribution
   \item the PWscf web site
         (\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                           {http://www.pwscf.org/});
+                           {http://www.pwscf.org/})
   \item the Pw\_forum mailing list
         (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
-                           {mailto:pw_forum@pwscf.org}):
-        see the PWscf web site for instructions on how to register and
+                           {mailto:pw_forum@pwscf.org})
+
+        See the PWscf web site for instructions on how to register and
         how to search the archives of the mailing list.
-  \item the ``Scientific Software'' page of the Democritos web site:\\
-        (\htmladdnormallink{\texttt{http://www.democritos.it/scientific.php}}%
-                           {http://www.democritos.it/scientific.php});
+  \item the ``Scientific Software'' page of the Democritos web site\\
+        (\htmladdnormallink%
+         {\texttt{http://www.democritos.it/scientific.php}}%
+         {http://www.democritos.it/scientific.php})
 \end{itemize}
 
 PWscf can currently perform the following kind of calculations:
@@ -188,13 +190,13 @@ To install it, you must follow these steps:
 
 \subsection{Download and unpack PWscf}
 
-The latest stable release of the PWscf source package can be downloaded 
-from the PWscf web site at this URL:
-\smallskip
+The latest stable release of the PWscf source package can be
+downloaded from the PWscf web site at this URL:
+\medskip
 
 \htmladdnormallink{\texttt{http://www.pwscf.org/download.htm}}%
                   {http://www.pwscf.org/download.htm}
-\smallskip
+\medskip
 
 \noindent
 The release corresponding to this manual is version \version. The
@@ -204,15 +206,15 @@ see file \texttt{README.cvs} contained in the distribution.
 To uncompress and unpack the source package, move it to an empty
 directory of your choice, \texttt{cd} to that directory, and run the
 command:
-\smallskip
+\medskip
 
 \texttt{tar zxvf pw.\version.tgz}
-\smallskip
+\medskip
 
 \noindent
 If your version of \texttt{tar} doesn't recognize the \texttt{z} flag,
 use this instead:
-\smallskip
+\medskip
 
 \texttt{gunzip -c pw.\version.tgz | tar xvf -}
 
@@ -221,12 +223,9 @@ use this instead:
 An automatic configuration procedure, generated with the GNU Autoconf
 package, is available since version 2.0.
 From the top directory of the PWscf source tree, just type:
-\smallskip
-
-\texttt{./configure}
-\smallskip
-
-\noindent 
+\begin{verbatim}
+  ./configure
+\end{verbatim}
 The script will examine your hardware and software, generate
 dependencies needed by the Makefile's, produce suitable configuration
 files \texttt{make.sys} and \texttt{make.rules}.
@@ -246,33 +245,33 @@ you may want to try the manual configuration, described in the next section.
 \subsection{Manual configuration}
 
 From the top directory, type:
-\smallskip
+\medskip
 
 \texttt{./configure.old} \emph{your-system}
-\smallskip
+\medskip
 
 \noindent
 where \emph{your-system} is one of the following:
 \begin{quote}
-  \texttt{t3e}:       Cray T3E, Cray compiler\\
-  \texttt{sunmpi}:    Sun parallel machines, Sun compiler (+)\\
-  \texttt{alphaMPI}:  \hfill HP-Compaq alpha parallel machines,
-                      HP-Compaq compiler\\
-  \texttt{hpMPI}:     HP PA-RISC parallel machines, HP compiler\\
   \texttt{alpha}:     HP-Compaq alpha workstations, HP-Compaq
                       compiler\\
-  \texttt{irix}:      SGI workstations, SGI compiler\\
+  \texttt{alphaMPI}:  HP-Compaq alpha parallel machines, HP-Compaq\\
+                      \strut\qquad compiler\\
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
-  \texttt{pc\_abs}:   Linux PCs, Absoft compiler (+)\\
-  \texttt{pc\_pgi}:   Linux PCs, Portland compiler (+)\\
-  \texttt{pc\_lahey}: Linux PCs, Lahey compiler (+)\\
   \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
-  \texttt{hp}:        HP PA-RISC workstations, HP compiler\\
-  \texttt{ia64}:      HP Itanium workstations, HP compiler\\
-  \texttt{sun}:       Sun workstations, Sun compiler (+)\\
   \texttt{fujitsu}:   Fujitsu vector machines, Fujitsu compiler (+)\\
   \texttt{hitachi}:   Hitachi SR8000 \\
-  \texttt{sxcross}:   NEC SX-6 (+)
+  \texttt{hp}:        HP PA-RISC workstations, HP compiler\\
+  \texttt{hpMPI}:     HP PA-RISC parallel machines, HP compiler\\
+  \texttt{ia64}:      HP Itanium workstations, HP compiler\\
+  \texttt{irix}:      SGI workstations, SGI compiler\\
+  \texttt{pc\_abs}:   Linux PCs, Absoft compiler (+)\\
+  \texttt{pc\_lahey}: Linux PCs, Lahey compiler (+)\\
+  \texttt{pc\_pgi}:   Linux PCs, Portland compiler (+)\\
+  \texttt{sun}:       Sun workstations, Sun compiler (+)\\
+  \texttt{sunmpi}:    Sun parallel machines, Sun compiler (+)\\
+  \texttt{sxcross}:   NEC SX-6 (+)\\
+  \texttt{t3e}:       Cray T3E, Cray compiler
 \end{quote}
 and has a corresponding file \texttt{Make.}\emph{your-system}
 in the \texttt{install/} directory. Note that systems marked with (+) 
@@ -348,13 +347,13 @@ of plain BLAS/LAPACK.
 If these are not installed or not satisfactory on your system,
 download the appropriate binaries from
 \htmladdnormallink{\texttt{http://www.netlib.org/}}%
-{http://www.netlib.org/}
+                  {http://www.netlib.org/}
 or download and compile the sources.
 This may take some time and effort.
 
 PWscf uses FFT's from the FFTW library
 (\htmladdnormallink{\texttt{http://www.fftw.org/}}%
-{http://www.fftw.org/})
+                   {http://www.fftw.org/})
 or from vendor-specific mathematical libraries.
 If you use FFTW, you can either compile the copy that comes with the
 distribution (this is the default configuration) or link to a
@@ -406,7 +405,9 @@ If you did, but symbols are still missing, see below (for Linux PC).
 If at linking stage you get error messages like: ``undefined reference
 to `for\_check\_mult\_overflow64' '' with Compaq/HP fortran compiler
 on Linux Alphas, check the following page:\\ 
-\texttt{http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}.
+\htmladdnormallink%
+{\texttt{http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}}%
+{http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html}.
 
 \paragraph{Linux PC}
 
@@ -452,7 +453,9 @@ but not for larger systems.
 We think that this is a compiler bug.
 Use the latest version of each release of the compiler, with patches
 if available: see the Portland Group web site,\\
-\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}.
+\htmladdnormallink%
+{\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}}%
+{http://www.pgroup.com/faq/install.htm\#release\_info}.
 
 \paragraph{Linux PCs (Pentium) with Intel compiler (ifort, formerly
 ifc)}
@@ -477,7 +480,9 @@ Error''.
 Update to the very latest versions (presently 7.1.41 and 8.0.046, 
 respectively), available via Intel Premier support (registration free
 of charge for Linux): 
-\texttt{http://developer.intel.com/software/products/support/\#premier}.\\
+\htmladdnormallink%
+{\texttt{http://developer.intel.com/software/products/support/\#premier}}%
+{http://developer.intel.com/software/products/support/\#premier}.\\
 Also note that \texttt{pwcond.x} does not work with some (but not all)
 releases of Intel compiler v.~7 and 8, for no apparent good reason.
 
@@ -523,7 +528,9 @@ may be incompatible with ifc 7.0 and 7.1.
 The incompatibility shows up in the form of messages ``undefined
 reference to `errno' '' at linking stage.
 A workaround is available: see
-\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}.
+\htmladdnormallink%
+{\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}}%
+{http://newweb.ices.utexas.edu/misc/ctype.c}.
 
 \paragraph{AMD CPUs, Intel Itanium}
 
@@ -582,7 +589,7 @@ targets:
     \texttt{pw.x} calculates electronic structure, structural
     optimization, molecular dynamics, barriers with NEB.
     \texttt{memory.x} is an auxiliary program that checks the input of
-    \texttt{pw.x} for correctness and yields a rough (under-)estimate
+    \texttt{pw.x} for correctness and yields a rough (under-) estimate
     of the required memory.
   \item
     \texttt{make ph} produces \texttt{PH/ph.x}.
@@ -616,8 +623,8 @@ targets:
     \texttt{make pp} produces several codes for data postprocessing, in
     \texttt{PP/} (see list below).
   \item
-    \texttt{make tools} produces several utility programs, mostly for phonon
-    calculations, in \texttt{pwtools/} (see list below).
+    \texttt{make tools} produces several utility programs, mostly for
+    phonon calculations, in \texttt{pwtools/} (see list below).
   \item
     \texttt{make nc} produces \texttt{PWNC/pw.x}, the version of
     \texttt{pw.x} that works with noncolinear magnetism
@@ -675,9 +682,10 @@ The codes for data postprocessing in \texttt{PP/} are:
         \htmladdnormallink{\texttt{http://www.wannier-transport.org/}}%
                        {http://www.wannier-transport.org/}.
   \item \texttt{pw2casino.x}: interface with \texttt{CASINO} code
-        for Quantum Monte Carlo calculation (
-\htmladdnormallink{\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
-                          {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
+        for Quantum Monte Carlo calculation
+        (\htmladdnormallink%
+         {\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}}%
+         {http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html}).
 \end{itemize}
 
 The utility programs in \texttt{pwtools/} are:
@@ -712,15 +720,17 @@ The utility programs in \texttt{pwtools/} are:
   \item \texttt{band\_plot.x}: undocumented and possibly obsolete
   \item \texttt{bs.awk}, \texttt{mv.awk} are scripts that process
         the output of \texttt{pw.x} (not data files!).
-        Usage: \\
-        \texttt{awk -f bs.awk < my-pw-file > myfile.bs } (basic
-        file)\\
-        \texttt{awk -f mv.awk < my-pw-file > myfile.mv } (movie
-        file)\\
+        Usage:
+\begin{verbatim}
+  awk -f bs.awk < my-pw-file > myfile.bs
+  awk -f mv.awk < my-pw-file > myfile.mv
+\end{verbatim}
         The files so produced are suitable for use with
         \texttt{xbs}, a very simple X-windows utility to display
         molecules, available at:\\
-        \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}.
+        \htmladdnormallink%
+        {\texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}}%
+        {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
 \end{itemize}
 
 \clearpage
@@ -733,11 +743,12 @@ Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
 implemented with US PPs.
 
-PWSCF uses a
-\htmladdnormallink{\textbf{unified pseudopotential format}}%
-{http://www.pwscf.org/format.htm}
-(UPF) for all types of PPs, but still accepts a number of
-\htmladdnormallink{other formats}{http://www.pwscf.org/oldformat.htm}:
+PWSCF uses a unified pseudopotential format (UPF)\\
+(\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
+                   {http://www.pwscf.org/format.htm})
+for all types of PPs, but still accepts a number of other formats
+(\htmladdnormallink{\texttt{http://www.pwscf.org/oldformat.htm}}%
+                   {http://www.pwscf.org/oldformat.htm}):
 \begin{enumerate}
   \item the ``old PWSCF'' format for NC PPs
   \item the ``Vanderbilt'' format (formatted, not binary) for NC and
@@ -745,8 +756,9 @@ PWSCF uses a
   \item the ``new PWSCF'' format for NC and US PPs.
 \end{enumerate}
 
-PPs for selected elements can be downloaded from the PWSCF 
-\htmladdnormallink{PP page}{http://www.pwscf.org/pseudo.html}.
+PPs for selected elements can be downloaded from the PWSCF PP page
+(\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.html}}%
+                   {http://www.pwscf.org/pseudo.html}).
 If you do not find there the PP you need (because there is no PP for
 the atom you need or you need a different exchange-correlation
 functional or a different core-valence partition or for whatever
@@ -775,20 +787,20 @@ Other PP generation packages are available on-line:
 
 \begin{itemize}
   \item
-    \htmladdnormallink{David Vanderbilt's code}%
+    David Vanderbilt's code (UltraSoft PPs):\\
+    \htmladdnormallink%
+    {\texttt{http://www.physics.rutgers.edu/\~{}dhv/uspp/index.html}}%
     {http://www.physics.rutgers.edu/~dhv/uspp/index.html}
-    (UltraSoft PPs):\\
-    \texttt{http://www.physics.rutgers.edu/\~{}dhv/uspp/index.html}
   \item
-    \htmladdnormallink{The Fritz Haber code}%
+    Fritz Haber's code (Norm-Conserving PPs):\\
+    \htmladdnormallink%
+    {\texttt{http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}}%
     {http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}
-    (Norm-Conserving PPs):\\
-    \texttt{http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP}
   \item
-    \htmladdnormallink{Jos\'e-Lu{\'\i}s Martins' code}%
+    Jos\'e-Lu\'\i{}s Martins' code (Norm-Conserving PPs):\\
+    \htmladdnormallink%
+    {\texttt{http://bohr.inesc-mn.pt/\~{}jlm/pseudo.html}}%
     {http://bohr.inesc-mn.pt/~jlm/pseudo.html}
-    (Norm-Conserving PPs):\\
-    \texttt{http://bohr.inesc-mn.pt/\~{}jlm/pseudo.html}
 \end{itemize}
 
 The first three codes produce PPs in UPF format, or in a format that
@@ -808,10 +820,10 @@ with the PWscf package.
 See \texttt{PWgui-X.Y.Z/INSTALL} for more info on this subject (or
 \texttt{GUI/README} if you are using CVS sources).
 
-Tests and examples, together with the pseudopotentials used, can be
-downloaded from the
-\htmladdnormallink{Tests and Examples Page}%
-{http://www.pwscf.org/tests.htm}.
+Tests and examples can be downloaded from the Test and Examples Page\\
+(\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
+                   {http://www.pwscf.org/tests.htm}).
+The necessary pseudopotentials are included.
 See the documentation contained there.
 The examples assume that all executables reside in a subdirectory
 \texttt{bin/}: use command \texttt{make links} in the top directory
@@ -822,8 +834,7 @@ in the calculation is read from PP files.
 All PP's must have been generated using the same exchange-correlation. 
 
 In the following, ``Example N'' refers to the contents of directory\\
-\texttt{examples/example0N} if N$<10$; \texttt{examples/exampleN}
-otherwise.
+\texttt{examples/exampleN}.
 
 \subsection{Electronic and ionic structure calculations}
 
