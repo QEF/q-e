@@ -49,7 +49,7 @@ cp.lnx.alpha  : Linux Alphas, Compaq compiler
 cp.qsw        : Linux Alpha QSW cluster, Compaq compiler
 cp.lnx.absoft : Linux PCs (also beowulf), Absoft compiler
 cp.lnx.pgi    : Linux PCs (also beowulf), Portland compiler
-cp.lnx.inteli : Linux PCs (also beowulf), Intel compiler
+cp.lnx.intel  : Linux PCs (also beowulf), Intel compiler
 cp.sx5        : NEC SX-5
 
 For FPMD: as above, with "cp" replaced by "fpmd"
@@ -81,7 +81,7 @@ make gamma  produces Gamma/pwg.x and Gamma/phcg.x
 make upf    produces utilities for pseudopotential conversion in upftools/
 make tools  produces miscellaneous tools for data analysis, in pwtools/
 make fpmd   produces FPMD/par2.x code for Car-Parrinello MD
-make cpv    produces CP/cp.x code for Car-Parrinello MD
+make cp     produces CPV/cp.x code for Car-Parrinello MD
             (works with ultrasoft pseudopotentials)
 
 make links  creates links to all executables in bin/
