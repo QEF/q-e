@@ -205,17 +205,17 @@ subroutine projwave (filproj)
            else if (l.eq.1) then 
               work1(:) = 0.d0  
               do m1 = 1, 3  
-                 work1(:) = work1(:) + d1 (m, m1, isym) * proj0 (nwfc1 + m1,:)
+                 work1(:) = work1(:) + d1 (m1, m, isym) * proj0 (nwfc1 + m1,:)
               enddo
            else if (l.eq.2) then 
               work1(:) = 0.d0  
               do m1 = 1, 5  
-                 work1(:) = work1(:) + d2 (m, m1, isym) * proj0 (nwfc1 + m1,:)
+                 work1(:) = work1(:) + d2 (m1, m, isym) * proj0 (nwfc1 + m1,:)
               enddo
            else if (l.eq.3) then 
               work1(:) = 0.d0  
               do m1 = 1, 7  
-                 work1(:) = work1(:) + d3 (m, m1, isym) * proj0 (nwfc1 + m1,:)
+                 work1(:) = work1(:) + d3 (m1, m, isym) * proj0 (nwfc1 + m1,:)
               enddo
            endif
            do ibnd = 1, nbnd
@@ -315,7 +315,7 @@ subroutine projwave (filproj)
         end do
         psum = psum + totcharge
         write (4, '(5x,"Atom # ",i3,": total charge = ",f8.4, &
-      &                ", s, p, d = ",4f8.4    )') &
+      &                ", s, p, d, f = ",4f8.4    )') &
              na, totcharge, ( charges(na,l), l= 0,lmax_wfc)
      end do
      psum = psum / nelec

@@ -9,6 +9,7 @@
 subroutine d_matrix (dy1, dy2, dy3)  
   !---------------------------------------------------------------
   !
+#include "machine.h"
   use pwcom
   implicit none
   real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
@@ -21,8 +22,9 @@ subroutine d_matrix (dy1, dy2, dy3)
   integer :: m, n, ipol, isym
   real(kind=DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
-       rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3)
-  real(kind=DP), external :: rndm
+       rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
+  real(kind=DP), parameter :: eps = 1.0d-9
+  real(kind=DP), external :: rndm, DDOT
   !
   !  randomly distributed points on a sphere
   !
@@ -105,6 +107,54 @@ subroutine d_matrix (dy1, dy2, dy3)
      dy3 (:, :, isym) = matmul (yl3(:,:), yl3_inv(:,:))
      !
   enddo
+  !
+  ! check that D_S matrices are orthogonal as they should if Ylm are
+  ! correctly defined.
+  !
+  delta(:,:) = 0.d0
+  do m= 1, 7
+     delta(m,m) = 1.d0
+  end do
+  do isym =1,nsym
+     !
+     !  l = 1 block
+     !
+     capel = 0.d0
+     do m = 1, 3
+        do n = 1, 3
+           capel = capel +  &
+                   ( DDOT(3,dy1(1,m,isym),1,dy1(1,n,isym),1) - delta(m,n) )**2
+        end do
+     end do
+     if (capel.gt.eps) call errore ('d_matrix', &
+        'D_S (l=1) for this symmetry operation is not orthogonal',isym)
+     !
+     !  l = 2 block
+     !
+     capel = 0.d0
+     do m = 1, 5
+        do n = 1, 5
+           capel = capel +  &
+                   ( DDOT(5,dy2(1,m,isym),1,dy2(1,n,isym),1) - delta(m,n) )**2
+        end do
+     end do
+     if (capel.gt.eps) call errore ('d_matrix', &
+        'D_S (l=2) for this symmetry operation is not orthogonal',isym)
+     !
+     !  l = 3 block
+     !
+     capel = 0.d0
+     do m = 1, 7
+        do n = 1, 7
+           capel = capel +  &
+                   ( DDOT(7,dy3(1,m,isym),1,dy3(1,n,isym),1) - delta(m,n) )**2
+        end do
+     end do
+     if (capel.gt.eps) call errore ('d_matrix', &
+        'D_S (l=3) for this symmetry operation is not orthogonal',isym)
+     !
+  end do
+
   return
 
 end subroutine d_matrix

@@ -138,16 +138,16 @@ subroutine new_ns
                                    nr(nb,is,m0,m00) / nsym
                           else if (Hubbard_l(nt).eq.1) then
                              nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d1(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
-                                   d1(m2,m00,isym) / nsym
+                                   d1(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                                   d1(m00,m2,isym) / nsym
                           else if (Hubbard_l(nt).eq.2) then
                              nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d2(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
-                                   d2(m2,m00,isym) / nsym
+                                   d2(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                                   d2(m00,m2,isym) / nsym
                           else if (Hubbard_l(nt).eq.3) then
                              nsnew(na,is,m1,m2) = nsnew(na,is,m1,m2) +  &
-                                   d3(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
-                                   d3(m2,m00,isym) / nsym
+                                   d3(m0 ,m1,isym) * nr(nb,is,m0,m00) * &
+                                   d3(m00,m2,isym) / nsym
                           else
                              call errore ('new_ns', &
                                          'angular momentum not implemented', &
