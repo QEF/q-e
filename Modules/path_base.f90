@@ -12,7 +12,7 @@ MODULE path_base
   !-----------------------------------------------------------------------
   !
   ! ... This module contains all subroutines and functions needed for
-  ! ... the implementation of "NEB" and "STRING" methods into the 
+  ! ... the implementation of "NEB" and "SMD" methods into the 
   ! ... PWSCF-FPMD-CPV codes
   !
   ! ... Written by Carlo Sbraccia ( 2003-2004 )
@@ -636,7 +636,7 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : dim, path_length, pos, ft_pos, &
-                                 num_of_images, Nft, Nft_smooth
+                                 num_of_images, num_of_modes, Nft_smooth
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -665,7 +665,7 @@ MODULE path_base
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
-            DO n = 1, ( Nft - 1 )
+            DO n = 1, num_of_modes
                !
                r_n(:) = r_n(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x )
                !
@@ -695,7 +695,7 @@ MODULE path_base
     SUBROUTINE to_real_space()
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, Nft, path_length, &
+      USE path_variables, ONLY : num_of_images, num_of_modes, path_length, &
                                  dim, pos, ft_pos, pos_star, Nft_smooth
       USE basic_algebra_routines
       !
@@ -727,7 +727,7 @@ MODULE path_base
             !
             r_n(:) = pos(:,1) + x * delta_pos(:)
             !
-            DO n = 1, ( Nft - 1 )
+            DO n = 1, num_of_modes
                !
                r_n(:) = r_n(:) + ft_pos(:,n) * SIN( REAL( n ) * pi * x )
                !
@@ -761,8 +761,8 @@ MODULE path_base
     SUBROUTINE to_reciprocal_space()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, num_of_images, Nft, pos, pes, &
-                                 ft_pos, ft_pes, ft_sin, ft_coeff, &
+      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, pos, &
+                                 pes, ft_pos, ft_pes, ft_sin, ft_coeff, &
                                  pos_star, pes_star
       !
       IMPLICIT NONE
@@ -805,7 +805,7 @@ MODULE path_base
       !
       ! ... fourier components of pos_star and pes_star are computed
       !
-      DO n = 1, ( Nft - 1 )
+      DO n = 1, num_of_modes
          !
          DO j = 0, ( Nft - 1 )
             !
@@ -830,9 +830,10 @@ MODULE path_base
     SUBROUTINE smd_gradient()
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, num_of_images, Nft, grad_pes, &
-                                 grad_proj, tangent, ft_grad, norm_ft_grad, &
-                                 ft_sin, ft_coeff, grad_proj_star
+      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, &
+                                 grad_pes, grad_proj, tangent, ft_grad, &
+                                 norm_ft_grad,  ft_sin, ft_coeff,       &
+                                 grad_proj_star
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -875,7 +876,7 @@ MODULE path_base
       !
       ! ... here we compute fourier components for grad_proj_star
       !
-      DO n = 1, ( Nft - 1 )
+      DO n = 1, num_of_modes
          !
          DO j = 0, ( Nft - 1 )
             !
@@ -968,8 +969,6 @@ MODULE path_base
          !
          err_max = MAXVAL( ft_error, 1 )
          !
-        ! ft_frozen(:) = ( ft_error(:) < MAX( 0.5D0 * err_max, path_thr ) )
-         !
          IF ( first_last_opt ) THEN
             !
             error(1) = MAXVAL( ABS( grad(:,1) ) )
@@ -979,6 +978,8 @@ MODULE path_base
             error = error / bohr_radius_angs * au
             !
             frozen(:) = ( error(:) < path_thr )
+            !
+            err_max = MAX( error(1), error(num_of_images), err_max )
             !
          END IF
          !
@@ -996,7 +997,7 @@ MODULE path_base
       !
       USE supercell,      ONLY : pbc
       USE control_flags,  ONLY : lneb, lsmd
-      USE path_variables, ONLY : pos, dim, Nft, num_of_images, &
+      USE path_variables, ONLY : pos, dim, num_of_modes, num_of_images, &
                                  pes, path_length, ft_pos, ft_cos
       !
       IMPLICIT NONE
@@ -1071,7 +1072,7 @@ MODULE path_base
          path_tangent(:) = path_length_inv * &
                            ( pos(:,num_of_images) - pos(:,1) )
          !
-         DO n = 1, ( Nft - 1 )
+         DO n = 1, num_of_modes
             !
             path_tangent(:) = path_tangent(:) + &
                               path_length_inv * ft_pos(:,n) * ft_cos(n,index)
@@ -1147,20 +1148,16 @@ MODULE path_base
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE io_files,         ONLY : iunpath
       USE control_flags,    ONLY : lneb, lsmd
-      USE path_variables,   ONLY : conv_path, istep_path, nstep_path, temp, &
-                                   activation_energy, first_last_opt, pos,  &
-                                   lsteep_des, lquick_min, ldamped_dyn,     &
-                                   lmol_dyn, suspended_image, path_thr,     &
-                                   num_of_images, grad_pes
-      USE path_variables,   ONLY : climbing, CI_scheme, Emax_index, Emax
-      USE path_variables,   ONLY : ft_pos, ft_grad, ft_pos_old, ft_grad_old, &
-                                   num_of_modes                   
+      USE path_variables,   ONLY : conv_path, istep_path, nstep_path,        &
+                                   activation_energy, first_last_opt,        &
+                                   lquick_min, ldamped_dyn, lmol_dyn,        &
+                                   suspended_image, path_thr, num_of_images, &
+                                   grad_pes
+      USE path_variables,   ONLY : grad, climbing, CI_scheme, Emax_index
+      USE path_variables,   ONLY : num_of_modes
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
       USE check_stop,       ONLY : check_stop_now
-      USE io_global,        ONLY : ionode
-      USE path_opt_routines
       !
       IMPLICIT NONE
       !
@@ -1176,6 +1173,135 @@ MODULE path_base
       !
       !
       conv_path = .FALSE.
+      !
+      CALL search_mep_init()
+      !
+      ! ... path optimization loop
+      !
+      optimization: DO
+         !
+         ! ... the restart file is written (in real space)
+         !
+         CALL write_restart()
+         !
+         IF ( suspended_image == 0 ) THEN
+            !
+            ! ... minimization step is done only in case of no suspended images
+            ! ... when the simulation is started from scratch all gradients are
+            ! ... zero and fourier components are not optimized.
+            !
+            CALL first_opt_step()
+            !
+         END IF
+         !
+         IF ( check_stop_now() ) THEN
+            !
+            ! ... the programs checks if the user has required a soft
+            ! ... exit or if if maximum CPU time has been exceeded
+            !
+            CALL write_restart()
+            !
+            CALL stop_pw( .FALSE. )
+            !
+         END IF
+         !
+         ! ... energies and gradients acting on each image of the path (in real
+         ! ... space) are computed calling a driver for the scf calculations
+         !
+         CALL born_oppenheimer_PES( stat )
+         !
+         IF ( .NOT. stat ) THEN
+            !
+            conv_path = .FALSE.
+            !
+            EXIT optimization
+            !
+         END IF         
+         !
+         ! ... istep_path is updated after a self-consistency step
+         !
+         istep_path = istep_path + 1
+         !
+         IF ( lneb ) THEN
+            !
+            IF ( CI_scheme == "highest-TS" ) THEN
+               !
+               climbing = .FALSE.
+               !
+               climbing(Emax_index) = .TRUE.
+               !
+            END IF
+            !
+            CALL neb_gradient()
+            !
+         ELSE IF ( lsmd ) THEN
+            !
+            ! ... the fourier components of pos, pes are computed here
+            !
+            CALL to_reciprocal_space()
+            !
+            ! ... the fourier components of the projected gradient
+            ! ... are computed here
+            !
+            CALL compute_path_length()
+            !
+            CALL smd_gradient()
+            !
+            IF ( first_last_opt ) grad(:,:) = grad_pes(:,:)
+            !
+         END IF
+         !
+         ! ... the error is computed here
+         !
+         CALL compute_error( err_max )
+         !
+         IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+            !
+            ! ... a second minimization step is needed for those algorithms
+            ! ... based on a velocity Verlet scheme 
+            !
+            CALL second_opt_step()
+            !
+         END IF
+         !
+         ! ... information is written on the files ( activation energy is
+         ! ... computed in this routine )
+         !
+         CALL write_dat_files()
+         !
+         ! ... information is written on the standard output
+         !
+         CALL write_output()
+         !
+         ! ... exit conditions
+         !
+         IF ( check_exit( err_max ) ) EXIT optimization
+         !
+         suspended_image = 0
+         !
+      END DO optimization
+      !
+      ! ... the restart file is written before exit (again in real space)
+      !
+      CALL write_restart()
+      !
+      RETURN
+      !
+    END SUBROUTINE search_mep
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE search_mep_init()
+      !------------------------------------------------------------------------
+      !
+      USE control_flags,    ONLY : lneb, lsmd
+      USE path_variables,   ONLY : istep_path, nstep_path, first_last_opt, &
+                                   grad_pes, suspended_image
+      USE path_variables,   ONLY : grad
+      USE path_variables,   ONLY : ft_pos, ft_grad, ft_pos_old, ft_grad_old
+      USE path_io_routines, ONLY : write_dat_files, write_output
+      !
+      IMPLICIT NONE
+      !
       !
       IF ( suspended_image == 0 ) THEN
          !
@@ -1231,254 +1357,217 @@ MODULE path_base
          !
       END IF
       !
-      minimization: DO
+      RETURN
+      !
+    END SUBROUTINE search_mep_init
+    !
+    !------------------------------------------------------------------------
+    FUNCTION check_exit( err_max )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags,  ONLY : lneb, lsmd
+      USE io_files,       ONLY : iunpath
+      USE io_global,      ONLY : ionode
+      USE path_variables, ONLY : path_thr, istep_path, nstep_path, &
+                                 conv_path, suspended_image
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL                    :: check_exit
+      REAL (KIND=DP), INTENT(IN) :: err_max
+      !
+      !
+      ! ... the program checks if the convergence has been achieved
+      !
+      IF ( err_max <= path_thr )  THEN
          !
-         ! ... the restart file is written (in real space)
-         !
-         CALL write_restart()
-         !
-         ! ... minimization step is done only in case of no suspended images
-         ! ... when the simulation is started from scratch all gradients are
-         ! ... zero and fourier components are not optimized.
-         !
-         IF ( suspended_image == 0 ) THEN
-            !
-            IF ( first_last_opt ) THEN
-               !
-               IF ( lsteep_des ) THEN
-                  !
-                  CALL r_steepest_descent( 1 )
-                  CALL r_steepest_descent( num_of_images )
-                  !
-               ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-                  !
-                  CALL r_velocity_Verlet_first_step( 1 )
-                  CALL r_velocity_Verlet_first_step( num_of_images )
-                  !
-               END IF
-               !
-            END IF
-            !
-            IF ( lneb ) THEN
-               !
-               first_r_opt_loop: DO image = 2, ( num_of_images - 1 )
-                  !
-                  IF ( lsteep_des ) THEN
-                     !
-                     CALL r_steepest_descent( image )
-                     !
-                  ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-                     !
-                     CALL r_velocity_Verlet_first_step( image )
-                     !
-                  END IF
-                  !
-               END DO first_r_opt_loop
-               !
-            ELSE IF ( lsmd ) THEN
-               !
-               first_ft_opt_loop: DO mode = 1, num_of_modes
-                  !
-                  IF ( lsteep_des ) THEN
-                     !
-                     CALL ft_steepest_descent( mode )
-                     !
-                  ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-                     !
-                     CALL ft_velocity_Verlet_first_step( mode )
-                     !
-                  END IF
-                  !
-               END DO first_ft_opt_loop
-               !
-               ! ... the length of the new path is computed here
-               !
-               CALL compute_path_length()
-               !
-               ! ... back to real space
-               !
-               CALL to_real_space()
-               !
-            END IF
-            !
-         END IF
-         !
-         ! ... the programs checks if the user has required a soft
-         ! ... exit or if if maximum CPU time has been exceeded
-         !
-         IF ( check_stop_now() ) THEN
-            !
-            CALL write_restart()
-            !
-            CALL stop_pw( .FALSE. )
-            !
-         END IF
-         !
-         ! ... energies and gradients acting on each image of the path (in real
-         ! ... space) are computed calling a driver for the scf calculations
-         !
-         CALL born_oppenheimer_PES( stat )
-         !
-         IF ( .NOT. stat ) THEN
-            !
-            conv_path = .FALSE.
-            !
-            EXIT minimization
-            !
-         END IF         
-         !
-         ! ... istep_path is updated after a self-consistency step
-         !
-         istep_path = istep_path + 1
-         !
-         IF ( lneb ) THEN
-            !
-            IF ( CI_scheme == "highest-TS" ) THEN
-               !
-               climbing = .FALSE.
-               !
-               climbing(Emax_index) = .TRUE.
-               !
-            END IF
-            !
-            CALL neb_gradient()
-            !
-         ELSE IF ( lsmd ) THEN
-            !
-            ! ... the fourier components of pos, pes are computed here
-            !
-            CALL to_reciprocal_space()
-            !
-            ! ... the fourier components of the projected gradient
-            ! ... are computed here
-            !
-            CALL compute_path_length()
-            !
-            CALL smd_gradient()
-            !
-            IF ( first_last_opt ) grad(:,:) = grad_pes(:,:)
-            !
-         END IF
-         !
-         ! ... the error is computed here
-         !
-         CALL compute_error( err_max )
-         !
-         ! ... a second minimization step is needed for those algorithms
-         ! ... based on a velocity Verlet scheme
-         !
-         IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
-            !
-            IF ( first_last_opt ) THEN
-               !
-               IF ( lquick_min ) THEN
-                  !
-                  CALL r_quick_min_second_step( 1 )
-                  CALL r_quick_min_second_step( num_of_images )
-                  !
-               ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
-                  !
-                  CALL r_velocity_Verlet_second_step( 1 )
-                  CALL r_velocity_Verlet_second_step( num_of_images )
-                  !
-               END IF
-               !
-            END IF
-            !
-            IF ( lneb ) THEN
-               !
-               second_r_opt_loop: DO image = 2, ( num_of_images - 1 )
-                  !
-                  IF ( lquick_min ) THEN
-                     !
-                     CALL r_quick_min_second_step( image )
-                     !
-                  ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
-                     !
-                     CALL r_velocity_Verlet_second_step( image )
-                     !
-                  END IF
-                  !
-               END DO second_r_opt_loop
-               !
-            ELSE IF ( lsmd ) THEN
-               !
-               second_ft_opt_loop: DO mode = 1, num_of_modes
-                  !
-                  IF ( lquick_min ) THEN
-                     !
-                     CALL ft_quick_min_second_step( mode )
-                     !
-                  ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
-                     !
-                     CALL ft_velocity_Verlet_second_step( mode )
-                     !
-                  END IF
-                  !
-               END DO second_ft_opt_loop
-               !
-            END IF
-            !
-         END IF
-         !
-         ! ... information is written on the files ( activation energy is
-         ! ... computed in this routine )
-         !
-         CALL write_dat_files()
-         !
-         ! ... information is written on the standard output
-         !
-         CALL write_output()
-         !   
-         ! ... the program checks if the convergence has been achieved
-         !
-         IF ( err_max <= path_thr )  THEN
-            !
-            IF ( ionode .AND. lneb ) &
-               WRITE( UNIT = iunpath, &
-                      FMT = '(/,5X,"neb: convergence achieved in ",I3, &
-                             &     " iterations" )' ) istep_path
-            IF ( ionode .AND. lsmd ) &
-               WRITE( UNIT = iunpath, &
-                      FMT = '(/,5X,"smd: convergence achieved in ",I3, &
-                             &     " iterations" )' ) istep_path
-            !
-            conv_path = .TRUE.
-            !
-            EXIT minimization
-            !
-         END IF
-         !
-         ! ... the programs checks if the maximum number of iterations has
-         ! ... been reached
-         !
-         IF ( istep_path >= nstep_path ) THEN
-            !
-            IF ( ionode .AND. lneb ) &
-               WRITE( UNIT = iunpath, &
-                      FMT = '(/,5X,"neb: reached the maximum number of ", &
-                             &     "steps")' )
-            IF ( ionode .AND. lsmd ) &
-               WRITE( UNIT = iunpath, &
-                      FMT = '(/,5X,"smd: reached the maximum number of ", &
-                             &     "steps")' )
-            !
-            suspended_image = 0
-            !
-            EXIT minimization
-            !
-         END IF
+         IF ( ionode .AND. lneb ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(/,5X,"neb: convergence achieved in ",I3, &
+                          &     " iterations" )' ) istep_path
+         IF ( ionode .AND. lsmd ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(/,5X,"smd: convergence achieved in ",I3, &
+                          &     " iterations" )' ) istep_path
          !
          suspended_image = 0
          !
-      END DO minimization
+         conv_path = .TRUE.
+         !
+         check_exit = .TRUE.
+         !
+         RETURN
+         !
+      END IF
       !
-      ! ... the restart file is written before exit (again in real space)
+      ! ... the programs checks if the maximum number of iterations has
+      ! ... been reached
       !
-      CALL write_restart()
+      IF ( istep_path >= nstep_path ) THEN
+         !
+         IF ( ionode .AND. lneb ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(/,5X,"neb: reached the maximum number of ", &
+                          &     "steps")' )
+         IF ( ionode .AND. lsmd ) &
+            WRITE( UNIT = iunpath, &
+                   FMT = '(/,5X,"smd: reached the maximum number of ", &
+                          &     "steps")' )
+         !
+         suspended_image = 0
+         !
+         check_exit = .TRUE.
+         !
+         RETURN
+         !
+      END IF
       !
       RETURN
       !
-    END SUBROUTINE search_mep
+    END FUNCTION check_exit
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE first_opt_step()
+      !------------------------------------------------------------------------
+      !
+      USE control_flags,  ONLY : lneb, lsmd
+      USE path_variables, ONLY : first_last_opt, num_of_images, num_of_modes, &
+                                 lsteep_des, lquick_min, ldamped_dyn, lmol_dyn
+      USE path_opt_routines
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: image, mode
+      !
+      !
+      IF ( first_last_opt ) THEN
+         !
+         IF ( lsteep_des ) THEN
+            !
+            CALL r_steepest_descent( 1 )
+            CALL r_steepest_descent( num_of_images )
+            !
+         ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+            !
+            CALL r_velocity_Verlet_first_step( 1 )
+            CALL r_velocity_Verlet_first_step( num_of_images )
+            !
+         END IF
+         !
+      END IF
+      !
+      IF ( lneb ) THEN
+         !
+         first_r_opt_loop: DO image = 2, ( num_of_images - 1 )
+            !
+            IF ( lsteep_des ) THEN
+               !
+               CALL r_steepest_descent( image )
+               !
+            ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+               !
+               CALL r_velocity_Verlet_first_step( image )
+               !
+            END IF
+            !
+         END DO first_r_opt_loop
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         first_ft_opt_loop: DO mode = 1, num_of_modes
+            !
+            IF ( lsteep_des ) THEN
+               !
+               CALL ft_steepest_descent( mode )
+               !
+            ELSE IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+               !
+               CALL ft_velocity_Verlet_first_step( mode )
+               !
+            END IF
+            !
+         END DO first_ft_opt_loop
+         !
+         ! ... the length of the new path is computed here
+         !
+         CALL compute_path_length()
+         !
+         ! ... back to real space
+         !
+         CALL to_real_space()
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE first_opt_step
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE second_opt_step()
+      !------------------------------------------------------------------------
+      !
+      USE control_flags,  ONLY : lneb, lsmd
+      USE path_variables, ONLY : first_last_opt, num_of_images, num_of_modes, &
+                                 lquick_min, ldamped_dyn, lmol_dyn
+      USE path_opt_routines
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: image, mode
+      !
+      !
+      IF ( first_last_opt ) THEN
+         !
+         IF ( lquick_min ) THEN
+            !
+            CALL r_quick_min_second_step( 1 )
+            CALL r_quick_min_second_step( num_of_images )
+            !
+         ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
+            !
+            CALL r_velocity_Verlet_second_step( 1 )
+            CALL r_velocity_Verlet_second_step( num_of_images )
+            !
+         END IF
+         !
+      END IF
+      !
+      IF ( lneb ) THEN
+         !
+         second_r_opt_loop: DO image = 2, ( num_of_images - 1 )
+            !
+            IF ( lquick_min ) THEN
+               !
+               CALL r_quick_min_second_step( image )
+               !
+            ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
+               !
+               CALL r_velocity_Verlet_second_step( image )
+               !
+            END IF
+            !
+         END DO second_r_opt_loop
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         second_ft_opt_loop: DO mode = 1, num_of_modes
+            !
+            IF ( lquick_min ) THEN
+               !
+               CALL ft_quick_min_second_step( mode )
+               !
+            ELSE IF ( ldamped_dyn .OR. lmol_dyn ) THEN
+               !
+               CALL ft_velocity_Verlet_second_step( mode )
+               !
+            END IF
+            !
+         END DO second_ft_opt_loop
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE second_opt_step    
     !
 END MODULE path_base

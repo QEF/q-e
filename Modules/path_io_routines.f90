@@ -961,8 +961,7 @@ MODULE path_io_routines
              !
              WRITE( UNIT = iundat, FMT = dat_fmt ) &
                  ( react_coord(image) / react_coord(num_of_images) ), &
-                 ( pes(image) - pes(1) ) * au, &
-                 error(image) * ( au / bohr_radius_angs )
+                 ( pes(image) - pes(1) ) * au, error(image)
              !
           END DO
           !
