@@ -1,12 +1,12 @@
-TODO LIST -  2 February 2004
+TODO LIST -  5 February 2004
 
 INSTALLATION/PORTING
+
+- expand new configure to cover as many configurations as possible
 
 - Linux Alpha ?
 
 - Make.irix ?
-
-- opteron, itanium
 
 COMMON
 
@@ -29,8 +29,6 @@ COMMON
 - variable declarations : real(kind=DP), or real(dbl), everywhere
 
 - real vs dreal, cmplx vs dcmplx, dfloat etc
-
-- Add interface for CASINO
 
 - calculation of <psi|exp(iGr)|psi'>
 
@@ -108,6 +106,8 @@ PW
   uniform way with respect to what they print and how the parallel
   case is treated. Always write at the end the lattice parameters.
 
+- write explicitly and unambiguosly the units of output quantities
+
 POSTPROCESSING
 
 - postprocessing/pwtools in the parallel case
@@ -121,21 +121,18 @@ POSTPROCESSING
   the information on lattice basis vectors if ibrav=0.
   As a consequence most postprocessing codes will not work 
 
+- reconstruction of all-electron wavefunctions
+
 PH
 
 - Tone: ntyp in input needed for phonon GUI ?
 
 - better algorithm for electron-phonon (Malgorzata)
 
-D3 
-
-- does it work? no example available !
-
 DOCUMENTATION
 
-- examples for many features are missing
-  examples should be quicker and easier to verify  
-  present examples are not very practical for testing
+- examples for some features are still missing
+  automated testing procedure: how to deal with numerical differences?
 
 - expand and update the manual; add a list of FAQ, or of already
   answered questions
