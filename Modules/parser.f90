@@ -163,7 +163,7 @@ MODULE parser
     !
     CHARACTER(LEN=1), INTENT(IN) :: in_char
     CHARACTER(LEN=1)             :: capital
-    CHARACTER(LEN=26)            :: lower = 'abcdefghijklmnopqrstuvwxyz', &
+    CHARACTER(LEN=26), PARAMETER :: lower = 'abcdefghijklmnopqrstuvwxyz', &
                                     upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     INTEGER                      :: i
     !
@@ -293,7 +293,7 @@ MODULE parser
     ELSE IF( tend ) THEN
        CALL errore(' read_line ', ' end of file ', 0 )
     ELSE
-       IF( PRESENT(field) ) CALL field_compare(line, nfield, field)
+       IF( PRESENT(field) ) CALL field_compare( line, nfield, field )
     END IF
     !
     RETURN
@@ -302,15 +302,15 @@ MODULE parser
   !
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE field_compare(str, nf, var)
+  SUBROUTINE field_compare( str, nf, var )
     !--------------------------------------------------------------------------
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=*), INTENT(IN)  :: var
-    INTEGER,          INTENT(IN)  :: nf
-    CHARACTER(LEN=*), INTENT(OUT) :: str
-    INTEGER                       :: nc
+    CHARACTER(LEN=*), INTENT(IN) :: var
+    INTEGER,          INTENT(IN) :: nf
+    CHARACTER(LEN=*), INTENT(IN) :: str
+    INTEGER                      :: nc
     !
     CALL field_count( nc, str )
     !
