@@ -84,6 +84,7 @@
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use cell_base, only: h, hold, deth, wmass
+      use cell_base, only: s_to_r, r_to_s
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
@@ -116,7 +117,10 @@
       USE control_flags, ONLY : conv_elec, tconvthrs
       USE check_stop, ONLY : check_stop_now
       use efcalc, ONLY: clear_nbeg, ef_force    !Electric Field (M.S)
-      use ions_base, only: zv           !
+      use ions_base, only: zv, ions_vel           !
+      use cp_electronic_mass, only: emass, emaec => emass_cutoff
+      use cp_electronic_mass, only: emass_precond
+      use cpr_subroutines
 
 ! wavefunctions
 !
@@ -186,8 +190,6 @@
       real(kind=8), allocatable:: ema0bg(:)
       real(kind=8), allocatable:: emadt2(:)
       real(kind=8), allocatable:: emaver(:)
-      real(kind=8), allocatable:: emainv(:)
-      real(kind=8)  emaec
 !
 !  constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
 !
@@ -223,8 +225,8 @@
      &       fccc, xnhem, vnhe, savee, saveh, savep, press,             &
      &       enthal, epot, xnhpp, xnhep, epre, enow, tps, econs, econt, &
      &       fricp, greasp, eps, qnp, tempw, qne,                       &
-     &       frice,  grease, emass, delt, ccc, bigr, dt2,               &
-     &       dt2by2, twodel, gausp, dt2bye, gkbt, dt2hbe
+     &       frice,  grease, delt, ccc, bigr, dt2,               &
+     &       dt2by2, twodel, dt2bye, gkbt, dt2hbe
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc, ekincw
       integer nnn, is, nacc, ia, j, iter, nfi, i, isa, ipos
 !
@@ -234,11 +236,10 @@
       real(kind=8) vels(3,natx,nsx),velsm(3,natx,nsx),velsp(3,natx,nsx)
       real(kind=8) hnew(3,3),velh(3,3),hgamma(3,3)
       real(kind=8) cdm(3)
-      real(kind=8) qr(3)
       real(kind=8) xnhh0(3,3),xnhhm(3,3),xnhhp(3,3),vnhh(3,3),temphh(3,3)
 !
       integer ibrav, k, ii, l, m
-      real(kind=8) ekinh, alfar, temphc, alfap, frich, tolp,    &
+      real(kind=8) ekinh, temphc, frich, tolp,    &
      &     factp, temp1, temp2, temph, greash, qnh, randy
       real(kind=8) ftmp
 
@@ -304,7 +305,6 @@
       tlast  = .false.
       nacc = 5
 !
-      gausp = delt * sqrt(tempw/factem)
       twodel = 2.d0 * delt
       dt2 = delt * delt
       dt2by2 = .5d0 * dt2
@@ -362,8 +362,7 @@
 !
       nas = MAXVAL( na( 1 : nsp ) )
       if( iprsta > 1 ) then
-         WRITE( stdout,*) ' tau0 '
-         WRITE( stdout,'(3f14.8)') (((tau0(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+         call print_atomic_var( tau0, na, nsp, ' tau0 ' )
       endif
 
 !
@@ -454,13 +453,7 @@
       cm(:,:,1,1) = (0.d0, 0.d0)
       c0(:,:,1,1) = (0.d0, 0.d0)
 !
-!     mass preconditioning: ema0bg(i) = ratio of emass(g=0) to emass(g)
-!     for g**2>emaec the electron mass ema0bg(g) rises quadratically
-!
-      do i=1,ngw
-         ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec)
-         if(iprsta.ge.10)print *,i,' ema0bg(i) ',ema0bg(i)
-      end do
+      CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
 
       if( lwf ) then
         call wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
@@ -484,17 +477,6 @@
          call initbox ( tau0, taub, irb )
 !
          call phbox( taub, eigrb )
-!
-         if( iprsta > 2 ) then
-            do is=1,nvb
-               WRITE( stdout,'(/,2x,''species= '',i2)') is 
-               do ia=1,na(is)
-                  WRITE( stdout,2000) ia, (irb(i,ia,is),i=1,3)
- 2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,      &
-     &                 ' irb3= ',i3) 
-               end do
-            end do
-         endif
 !
          if(trane) then
 !       
@@ -532,18 +514,11 @@
 !
          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
      &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-         do i=1,3
-            do j=1,3
-               stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+              &
-     &                      detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
-            enddo
-         enddo
+
+         call compute_stress( stress, detot, h, omega )
+
          if(iprsta.gt.0) WRITE( stdout,*) ' out from vofrho'
-         if(iprsta.gt.2) then
-            WRITE( stdout,*) ' fion '
-            WRITE( stdout,'(3f14.8)')                                         &
-     &                   (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-         end if
+         if(iprsta.gt.2) call print_atomic_var( fion, na, nsp, ' fion ' )
 ! 
 !     forces for eigenfunctions
 !
@@ -610,13 +585,8 @@
          if(tpre) then
             call nlfh(bec,dbec,lambda)
             WRITE( stdout,*) ' out from nlfh'
-            WRITE( stdout,*) 
-            WRITE( stdout,*) ' internal stress tensor:'
-            WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
-         endif
- 5555    format(1x,f12.5,1x,f12.5,1x,f12.5/                             &
-     &          1x,f12.5,1x,f12.5,1x,f12.5/                             &
-     &          1x,f12.5,1x,f12.5,1x,f12.5//)
+            call print_cell_var( stress, ' internal stress tensor:' )
+         end if
 !
          if(tortho) then
             call updatc(ccc,lambda,phi,bephi,becp,bec,c0)
@@ -631,13 +601,7 @@
          if(iprsta.ge.3) call dotcsc(eigr,c0)
 !     
          if(thdyn) then
-            do i=1,3
-               do j=1,3
-                  h(i,j)=hold(i,j)+dt2by2/wmass*omega*iforceh(i,j)*     &
-     &                  (stress(i,1)*ainv(j,1)+stress(i,2)*ainv(j,2)+   &
-     &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
-               end do
-            end do
+            call cell_hmove( h, hold, delt, omega, press, iforceh, stress, ainv )
             call invmat( 3, h, ainv, deth )
          endif
 !
@@ -645,26 +609,8 @@
             if( lwf ) then
               call ef_force( fion, na, nsp, zv )
             end if
-            do is=1,nsp
-               do ia=1,na(is)
-                  do i=1,3
-                     taus(i,ia,is)=tausm(i,ia,is) +                     &
-     &                    iforce(i,ia,is)*dt2by2/pmass(is) *            &
-     &                    (fion(1,ia,is)*ainv(i,1) +                    &
-     &                     fion(2,ia,is)*ainv(i,2) +                    &
-     &                     fion(3,ia,is)*ainv(i,3) )
-                  end do
-               end do
-            end do
-            do is=1,nsp
-               do ia=1,na(is)
-                  do i=1,3
-                     tau0(i,ia,is)=h(i,1)*taus(1,ia,is)                 &
-     &                           +h(i,2)*taus(2,ia,is)                  &
-     &                           +h(i,3)*taus(3,ia,is)
-                  end do
-               end do
-            end do
+            call ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
+            CALL s_to_r( taus, tau0, na, nsp, h )
             call phfac(tau0,ei1,ei2,ei3,eigr)
             call calbec (1,nsp,eigr,c0,bec)
             if (tpre) call caldbec(1,nsp,eigr,c0)
@@ -674,13 +620,7 @@
          xnhpm=0.
          vnhp =0.
          fionm(:,:,:)=0.
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  vels (i,ia,is)=(taus(i,ia,is)-tausm(i,ia,is))/delt
-               end do
-            end do
-         end do
+         CALL ions_vel( vels, taus, tausm, na, nsp, delt )
          xnhh0(:,:)=0.
          xnhhm(:,:)=0.
          vnhh (:,:) =0.
@@ -689,22 +629,8 @@
 !     ======================================================
 !     kinetic energy of the electrons
 !     ======================================================
-         ALLOCATE( emainv( ngw ) )
 
-         emainv = 1.0d0 / ema0bg
-         ftmp = 1.0d0
-         if( gstart == 2 ) ftmp = 0.5d0
-         
-         ekincm=0.0
-         do i=1,n
-           ekincm = ekincm + 2.0d0 * &
-                    wave_speed2( c0(:,i,1,1), cm(:,i,1,1), emainv, ftmp )
-         end do
-         ekincm = ekincm * emass / dt2
-         
-         CALL mp_sum( ekincm )
-
-         DEALLOCATE( emainv )
+         call elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
 
          xnhe0=0.
          xnhem=0.
@@ -723,15 +649,7 @@
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion)
 !
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  tau0(i,ia,is)=h(i,1)*taus(1,ia,is)                    &
-     &                         +h(i,2)*taus(2,ia,is)                    &
-     &                         +h(i,3)*taus(3,ia,is)
-               end do
-            end do
-         end do
+         CALL s_to_r( taus, tau0, na, nsp, h )
 !
          if(trane.and.trhor) then
             call prefor(eigr,betae)
@@ -740,8 +658,7 @@
          endif
 !
          if(iprsta.gt.2) then
-            WRITE( stdout,*) ' read: taus '
-            WRITE( stdout,'(3f14.8)')  (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
+            call print_atomic_var( taus, na, nsp, ' read: taus ' )
             WRITE( stdout,*) ' read: cell parameters h '
             WRITE( stdout,*)  (h(1,j),j=1,3)
             WRITE( stdout,*)  (h(2,j),j=1,3)
@@ -801,15 +718,13 @@
 !
       if(.not.tsde) fccc=1./(1.+frice)
       if(tnosep)then
-         vnhp=2.*(xnhp0-xnhpm)/delt-vnhp
+         call ions_nosevel( vnhp, xnhp0, xnhpm, delt )
       endif
       if(tnosee)then
-         vnhe=2.*(xnhe0-xnhem)/delt-vnhe
-         fccc=1./(1.+0.5*delt*vnhe)
+         call elec_nosevel( vnhe,xnhe0,xnhem,delt, fccc )
       endif
       if(tnoseh) then
-         vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
-         velh(:,:)=2.*(h(:,:)-hold(:,:))/delt-velh(:,:)
+         call cell_nosevel( vnhh, xnhh0, xnhhm, delt, velh, h, hold )
       endif
 ! 
       if ( tfor .or. thdyn .or. tfirst ) then 
@@ -856,12 +771,7 @@
              ibrav, b1, b2, b3, rhor, rhog, rhos, enl, ekin  )
       end if
 
-      do i=1,3
-         do j=1,3
-            stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+                 &
-     &              detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
-         enddo
-      enddo
+      call compute_stress( stress, detot, h, omega )
 !
       enthal=etot+press*omega
 !
@@ -960,37 +870,20 @@
          if(iprsta.ge.4) then
             if((nfi.eq.0).or.tfirst.or.tlast                            &
      &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               WRITE( stdout,*) 
-               WRITE( stdout,*) ' internal stress tensor (before nlfh):'
-               WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
+               call print_cell_var( stress, ' internal stress tensor (before nlfh):' )
             endif
          endif
          call nlfh(bec,dbec,lambda)
          if(iprsta.ge.4) then
             if((nfi.eq.0).or.tfirst.or.tlast                            &
      &                   .or.(mod(nfi-1,iprint).eq.0)) then
-               WRITE( stdout,*) 
-               WRITE( stdout,*) ' internal stress tensor (after nlfh):'
-               WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
+               call print_cell_var( stress, ' internal stress tensor (after nlfh):' )
             endif
          endif
-         do i=1,3
-            do j=1,3
-               do is=1,nsp
-                  do ia=1,na(is)
-                     stress(i,j)=stress(i,j)+pmass(is)/omega*           &
-     &                  ((h(i,1)*vels(1,ia,is)+h(i,2)*vels(2,ia,is)+    &
-     &                    h(i,3)*vels(3,ia,is))*(h(j,1)*vels(1,ia,is)+  &
-     &                    h(j,2)*vels(2,ia,is)+h(j,3)*vels(3,ia,is)))
-                  enddo
-               enddo
-            enddo
-         enddo
+         call add_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
          if((nfi.eq.0).or.tfirst.or.tlast.or.(mod(nfi-1,iprint).eq.0))  &
      &        then
-            WRITE( stdout,*) 
-            WRITE( stdout,*) ' internal stress tensor:'
-            WRITE( stdout,5555) ((stress(i,j),j=1,3),i=1,3)
+            call print_cell_var( stress, ' internal stress tensor:' )
          endif
       endif
 !
@@ -1007,47 +900,14 @@
 !
       hgamma(:,:) = 0.d0
       if(thdyn) then
-         verl1=2./(1.+frich)
-         verl2=1.-verl1
-         verl3=dt2/(1.+frich)
-!     
-         if (tnoseh) then
-            do j=1,3
-               do i=1,3
-                  hnew(i,j) = h(i,j) +                                  &
-     &                 (h(i,j) - hold(i,j) + dt2/wmass*omega*           &
-     &           (ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) +       &
-     &            ainv(j,3)*stress(i,3) - ainv(j,i)*press) -            &
-     &            dt2*vnhh(i,j)*velh(i,j))*iforceh(i,j)
-               enddo
-            enddo
-         else
-            do j=1,3
-               do i=1,3
-                  hnew(i,j) = h(i,j) + ((verl1-1.)*h(i,j)               &
-     &                + verl2*hold(i,j)                                 &
-     &                + verl3/wmass*omega                               &
-     &                *(ainv(j,1)*stress(i,1)+ainv(j,2)*stress(i,2)     &
-     &                + ainv(j,3)*stress(i,3)-ainv(j,i)*press))         &
-     &                * iforceh(i,j)
-               enddo
-            enddo
-         endif
+
+         call cell_move( hnew, h, hold, delt, omega, press, iforceh, stress, ainv, &
+                        frich, tnoseh, vnhh, velh )
          !
          velh(:,:) = (hnew(:,:)-hold(:,:))/twodel
          !
-         do i=1,3
-            do j=1,3
-               do k=1,3
-                  do l=1,3
-                     do m=1,3
-                        hgamma(i,j)=hgamma(i,j)+ainv(i,l)*ainv(k,l)*    &
-     &                       (velh(m,k)*h(m,j)+h(m,k)*velh(m,j))
-                     enddo
-                  enddo
-               enddo
-            enddo
-         enddo
+         call cell_gamma( hgamma, ainv, h, velh )
+
       endif
 !
 !======================================================================
@@ -1056,82 +916,19 @@
         if( lwf ) then
           call ef_force( fion, na, nsp, zv )
         end if
-!
-!==== set friction ====
-!
-         verl1=2./(1.+fricp)
-         verl2=1.-verl1
-         verl3=dt2/(1.+fricp)
-!
-         if(tsdp) then
-            do is=1,nsp
-               do ia=1,na(is)
-                  do i=1,3
-                     tausp(i,ia,is) = taus(i,ia,is) +                   &
-     &                    iforce(i,ia,is)*dt2by2/pmass(is)*             &
-     &        (ainv(i,1)*fion(1,ia,is)+ainv(i,2)*fion(2,ia,is)+         &
-     &         ainv(i,3)*fion(3,ia,is) ) -                              &
-     &                    pmass(is)*(hgamma(i,1)*vels(1,ia,is)+         &
-     &         hgamma(i,2)*vels(2,ia,is)+hgamma(i,3)*vels(3,ia,is))
-                  end do
-               end do
-            end do
-         else if (tnosep) then
-            do is=1,nsp
-               do ia=1,na(is)
-                  do i=1,3
-                     fionm(i,ia,is) = (ainv(i,1)*fion(1,ia,is)          &
-     &                                +ainv(i,2)*fion(2,ia,is)          &
-     &                                +ainv(i,3)*fion(3,ia,is))         &
-     &                              - vnhp*vels(i,ia,is)*pmass(is)      &
-     &                    - pmass(is)*(hgamma(i,1)*vels(1,ia,is)        &
-     &                                +hgamma(i,2)*vels(2,ia,is)        &
-     &                                +hgamma(i,3)*vels(3,ia,is))
-                     tausp(i,ia,is)=-tausm(i,ia,is)+2.*taus(i,ia,is)+   &
-     &                   iforce(i,ia,is)*dt2*fionm(i,ia,is)/pmass(is)
-                     velsp(i,ia,is) = velsm(i,ia,is) +                  &
-     &                    twodel*fionm(i,ia,is)/pmass(is)
-                  end do
-               end do
-            end do
-         else 
-            do is=1,nsp
-               do ia=1,na(is)
-                  do i=1,3
-                     tausp(i,ia,is) = verl1*taus(i,ia,is)               &
-     &                    + verl2*tausm(i,ia,is)                        &
-     &        + verl3/pmass(is)*iforce(i,ia,is) * (ainv(i,1)*fion(1,ia,is)&
-     &        + ainv(i,2)*fion(2,ia,is) + ainv(i,3)*fion(3,ia,is))      &
-     &        - verl3*iforce(i,ia,is) * (hgamma(i,1)*vels(1,ia,is)      &
-     &        + hgamma(i,2)*vels(2,ia,is) + hgamma(i,3)*vels(3,ia,is))
-                     velsp(i,ia,is)=velsm(i,ia,is)                      &
-     &        - 4.*fricp*vels(i,ia,is)                                  &
-     &        + twodel/pmass(is)*iforce(i,ia,is)*(ainv(i,1)*fion(1,ia,is) &
-     &        + ainv(i,2)*fion(2,ia,is) + ainv(i,3)*fion(3,ia,is))      &
-     &        - twodel*iforce(i,ia,is) * (hgamma(i,1)*vels(1,ia,is)     &
-     &        + hgamma(i,2)*vels(2,ia,is) + hgamma(i,3)*vels(3,ia,is))
-                  end do
-               end do
-            end do
-         endif
+
+        call ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp, &
+                        fricp, hgamma, vels, tsdp, tnosep, fionm, vnhp, velsp, velsm )
+
 !cc   call cofmass(velsp,cdmvel)
-         call cofmass(tausp,cdm)
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
 !cc   velsp(i,ia,is)=velsp(i,ia,is)-cdmvel(i)
-                  tausp(i,ia,is)=tausp(i,ia,is)+cdm0(i)-cdm(i)
-               enddo
-            enddo
-         enddo
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  taup(i,ia,is) = hnew(i,1)*tausp(1,ia,is)+             &
-     &                 hnew(i,2)*tausp(2,ia,is)+hnew(i,3)*tausp(3,ia,is)
-               enddo
-            enddo
-         enddo
+
+         call cofmass(tausp,cdm)
+
+         call ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
+
+         CALL s_to_r( tausp, taup, na, nsp, hnew )
+
       endif
 !     
 !---------------------------------------------------------------------------
@@ -1196,82 +993,35 @@
 !
       ekinp=0.0
       ekinpr=0.0
+      tempp=0.0
 !
 !     ionic kinetic energy 
 !
       if( tfor ) then
-         do is=1,nsp
-            do ia=1,na(is)
-               do i=1,3
-                  vels(i,ia,is)=(tausp(i,ia,is)-tausm(i,ia,is))/twodel
-               enddo
-               do i=1,3
-                  do j=1,3
-                     do ii=1,3
-                        ekinp=ekinp+pmass(is)*                          &
-     &                       hold(j,i)*vels(i,ia,is)*                   &
-     &                       hold(j,ii)*vels(ii,ia,is)
-                     end do
-                  end do
-               end do
-            end do
-         end do
+         CALL ions_vel( vels, tausp, tausm, na, nsp, delt )
+         CALL ions_kinene( ekinp, vels, na, nsp, hold, pmass )
       endif
-      ekinp=0.5*ekinp
 !
 !     ionic temperature
 !
       call cofmass(vels,cdmvel)
+
       if( tfor ) then
-         do i=1,3
-            do j=1,3
-               do ii=1,3
-                  do is=1,nsp
-                     do ia=1,na(is)
-                        ekinpr=ekinpr+pmass(is)*hold(j,i)*              &
-     &                       (vels(i,ia,is)-cdmvel(i))*                 &
-     &                       hold(j,ii)*(vels(ii,ia,is)-cdmvel(ii))
-                     end do
-                  end do
-               end do
-            end do
-         end do
+         CALL ions_temp( tempp, ekinpr, vels, na, nsp, hold, pmass, cdmvel )
       endif
-      ekinpr=0.5*ekinpr
-      tempp=ekinpr*factem/(1.5d0*nat)
 !
 !     fake electronic kinetic energy
 !
-      ekinc0 = 0.0d0
+      call elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, n, delt )
 
-      ALLOCATE( emainv( ngw ) )
-
-      emainv = 1.0d0 / ema0bg
-      ftmp = 1.0d0
-      if( gstart == 2 ) ftmp = 0.5d0
-
-      do i=1,n
-         ekinc0 = ekinc0 + 2.0d0 * &
-                  wave_speed2( cm(:,i,1,1), c0(:,i,1,1), emainv, ftmp )
-      end do
-
-      CALL mp_sum( ekinc0 )
-
-      ekinc0 = ekinc0 * emass / dt2
       ekinc = 0.5 * ( ekinc0 + ekincm )
 
-      DEALLOCATE( emainv )
 !
 !     fake cell-parameters kinetic energy
 !
       ekinh=0.
       if(thdyn) then
-         do j=1,3 
-            do i=1,3
-               ekinh=ekinh+0.5*wmass*velh(i,j)*velh(i,j)
-               temphh(i,j)=factem*wmass*velh(i,j)*velh(i,j)
-            end do
-         end do
+         call cell_kinene( ekinh, temphh, velh )
       endif
       if(thdiag) then
          temphc=2.*factem*ekinh/3.
@@ -1282,61 +1032,21 @@
 !     udating nose-hoover friction variables
 !
       if(tnosep)then
-         xnhpp=2.*xnhp0-xnhpm+2.*(dt2/qnp)*(ekinpr-gkbt/2.)
-         vnhp =(xnhpp-xnhpm)/twodel
+        call ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp )
       endif
       if(tnosee)then
-         xnhep=2.*xnhe0-xnhem+2.*(dt2/qne)*(ekinc-ekincw)
-         vnhe =(xnhep-xnhem)/twodel
+        call elec_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
       endif
       if(tnoseh)then
-         do j=1,3
-            do i=1,3
-               xnhhp(i,j)=2.*xnhh0(i,j)-xnhhm(i,j)+                     &
-     &              (dt2/qnh)/factem*(temphh(i,j)-temph)
-               vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/twodel
-            end do
-         end do
+        call cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
       endif
 !
 ! warning! thdyn and tcp/tcap are not compatible yet!!!
 !
       if(tcp.or.tcap.and.tfor.and.(.not.thdyn)) then
          if(tempp.gt.temp1.or.tempp.lt.temp2.and.tempp.ne.0.d0) then
-            if(.not.tcap) then
-               alfap=.5d0*sqrt(tempw/tempp)
-               do is=1,nsp
-                  do ia=1,na(is)
-                     do i=1,3
-                        taup(i,ia,is) = tau0(i,ia,is) +                 &
-     &                       alfap*(taup(i,ia,is)-taum(i,ia,is)) +      &
-     &                      dt2by2/pmass(is)*fion(i,ia,is)*iforce(i,ia,is)
-                     end do
-                  end do
-               end do
-            else
-               do i=1,3
-                  qr(i)=0.d0
-                  do is=1,nsp
-                     do ia=1,na(is)
-                        alfar=gausp/sqrt(pmass(is))*cos(2.d0*pi*randy())&
-     &                       *sqrt(-2.d0*log(randy()))
-                        taup(i,ia,is)=alfar
-                        qr(i)=qr(i)+alfar
-                     end do
-                  end do
-                  qr(i)=qr(i)/nat
-               end do
-               do is=1,nsp
-                  do ia=1,na(is)
-                     do i=1,3
-                        alfar=taup(i,ia,is)-qr(i)
-                        taup(i,ia,is)=tau0(i,ia,is)+iforce(i,ia,is)*     &
-     &                             (alfar+dt2by2/pmass(is)*fion(i,ia,is))
-                     end do
-                  end do
-               end do
-            end if
+            call  ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
+                           pmass, delt )
          end if
       end if
 !
@@ -1402,15 +1112,17 @@
 !
       if( tfor ) then
         if ( ionode ) then
-          write(77,3340) ((h(i,j),i=1,3),j=1,3)
-          write(77,'(3f12.8)') (((taus(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-          write(78,'(3f12.8)') (((fion(i,ia,is),i=1,3),ia=1,na(is)),is=1,nsp)
-          write(79,3340) ((stress(i,j),i=1,3),j=1,3)
+          call  print_cell_var( h, iunit = 77)
+          call  print_atomic_var( taus, na, nsp, iunit = 77 )
+          call  print_atomic_var( fion, na, nsp, iunit = 78 )
+          call  print_cell_var( stress, iunit = 79)
+
 #if defined (__AIX) || defined (__ABSOFT) || defined (__ORIGIN) || defined (__T3E)
           call flush(77)
           call flush(78)
+          call flush(79)
 #endif
- 3340     format(9(1x,f9.5))
+
         endif
 !
 !     new variables for next step
@@ -1442,9 +1154,7 @@
       end if
 !
       if(thdyn)then
-         do i=1,ngw
-            ema0bg(i)=1./max(1.d0,tpiba2*ggp(i)/emaec) 
-         enddo
+         CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
       endif
 !
       ekincm=ekinc0

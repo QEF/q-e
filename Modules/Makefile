@@ -12,6 +12,7 @@ check_stop.o  \
 clocks.o \
 constants.o \
 control_flags.o \
+cp_emass.o \
 descriptors.o \
 electrons_base.o \
 energies.o \

@@ -3168,6 +3168,10 @@
       use grid_dimensions, only: nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
+      use control_flags, only: iprsta
+      use cvan, only: nvb
+      use io_global, only: stdout
+
       implicit none
 ! input
       real(kind=8), intent(in):: tau0(3,natx,nsx)
@@ -3237,6 +3241,17 @@
             end do
          end do
       end do
+
+      if( iprsta > 2 ) then
+           do is=1,nvb
+              WRITE( stdout,'(/,2x,''species= '',i2)') is
+              do ia=1,na(is)
+                 WRITE( stdout,2000) ia, (irb(i,ia,is),i=1,3)
+2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,' irb3= ',i3)
+               end do
+            end do
+      endif
+
 !
       return
       end

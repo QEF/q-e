@@ -65,6 +65,9 @@
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
       
+      INTERFACE ions_vel
+         MODULE PROCEDURE ions_vel3, ions_vel2
+      END INTERFACE
 !
 
 !------------------------------------------------------------------------------!
@@ -310,6 +313,43 @@
       tions_base_init = .FALSE.
       RETURN
     END SUBROUTINE
+
+
+    SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
+      IMPLICIT NONE
+      REAL(dbl) :: vel(:,:,:), taup(:,:,:), taum(:,:,:)
+      INTEGER :: na(:), nsp
+      REAL(dbl) :: dt
+      INTEGER :: ia, is, i
+      REAL(dbl) :: fac
+      fac  = 1.0d0 / ( dt * 2.0d0 )
+      DO is = 1, nsp
+        DO ia = 1, na(is)
+          DO i = 1, 3
+            vel(i,ia,is) = ( taup(i,ia,is) - taum(i,ia,is) ) * fac
+          END DO
+        END DO
+      END DO
+      RETURN
+    END SUBROUTINE
+
+
+    SUBROUTINE ions_vel2( vel, taup, taum, nat, dt )
+      IMPLICIT NONE
+      REAL(dbl) :: vel(:,:), taup(:,:), taum(:,:)
+      INTEGER :: nat
+      REAL(dbl) :: dt
+      INTEGER :: ia, i
+      REAL(dbl) :: fac
+      fac  = 1.0d0 / ( dt * 2.0d0 )
+      DO ia = 1, nat
+        DO i = 1, 3
+          vel(i,ia) = ( taup(i,ia) - taum(i,ia) ) * fac
+        END DO
+      END DO
+      RETURN
+    END SUBROUTINE
+ 
 
 !------------------------------------------------------------------------------!
   END MODULE ions_base

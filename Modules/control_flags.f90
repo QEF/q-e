@@ -216,7 +216,7 @@
        lmd,              &! if .TRUE. the calculation is a dynamics
        lneb,             &! if .TRUE. the calculation is neb
        lsmd,             &! if .TRUE. the calculation is string dynamics
-       lwf,              &! if .TRUE. the calculation is string dynamics
+       lwf,              &! if .TRUE. the calculation is with wannier functions
        lphonon,          &! if .TRUE. the calculation is phonon
        lraman,           &! if .TRUE. the calculation is raman
        lconstrain,       &! if .TRUE. the calculation is constraint
