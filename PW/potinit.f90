@@ -103,10 +103,8 @@ SUBROUTINE potinit()
         IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
            !
            WRITE( stdout, &
-                  '(/,5X,"starting charge =",F10.5)') charge
-           !
-           WRITE( stdout, &
-                  '(/,5X,"starting charge renormalised to ",F10.5,/)') nelec
+              '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+               charge, nelec
            !
            rho = rho / charge * nelec
            !
@@ -151,8 +149,7 @@ SUBROUTINE potinit()
   ELSE
      !   
      ! ... Second case, the potential is built from a superposition 
-     ! ... of atomic charges contained in the array rho_at and already 
-     ! ... set in readin-readva
+     ! ... of atomic charges contained in the array rho_at
      !     
      IF ( startingpot == 'file' .AND. .NOT. exst ) &
         WRITE( stdout, '(5X,"Cannot read pot/rho file: not found")' )
@@ -205,10 +202,8 @@ SUBROUTINE potinit()
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         !
         WRITE( stdout, &
-               '(/,5X,"starting charge =",F10.5)') charge
-        !
-        WRITE( stdout, &
-               '(/,5X,"starting charge renormalised to ",F10.5,/)') nelec
+           '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+            charge, nelec
         !
         rho = rho / charge * nelec
         !

@@ -182,6 +182,12 @@
 !  ----------------------------------------------
 !  END manual
 
+#if defined __SHMEM
+
+      USE shmem_include
+
+#endif
+
       USE mp_global, ONLY: nproc, mpime
       USE wave_types, ONLY: wave_descriptor
       USE control_flags, ONLY: ortho_eps, ortho_max
@@ -199,7 +205,19 @@
   
 ! ... Locals
 
+#if defined __SHMEM
+      INTEGER         :: err
+      REAL(dbl)       :: s(SIZE(c0,2), SIZE(c0,2)),                     &
+     &                   sig(SIZE(c0,2), SIZE(c0,2)),                   &
+     &                   rho(SIZE(c0,2), SIZE(c0,2)),                   &
+     &                   tmass(SIZE(c0,2), SIZE(c0,2)),                 &
+     &                   temp(SIZE(c0,2), SIZE(c0,2))
+      POINTER            (p_source,s), (p_sig,sig), (p_rho,rho),        &
+     &                   (p_tmass,tmass), (p_target,TEMP)
+      COMMON /sym_heap3/ p_source, p_sig, p_rho, p_tmass, p_target
+#else
       REAL(dbl),   ALLOCATABLE :: s(:,:), sig(:,:), rho(:,:), tmass(:,:), temp(:,:)
+#endif
       REAL(dbl),   ALLOCATABLE :: x0(:,:), temp1(:,:)
       REAL(dbl),   ALLOCATABLE :: x1(:,:), rhoa(:,:)
       REAL(dbl),   ALLOCATABLE :: sigd(:), rhod(:), aux(:)
@@ -224,7 +242,30 @@
         RETURN
       END IF
 
+#if defined __SHMEM
+      CALL shpalloc(p_source, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' allocation of source failed ', 0)
+      END IF
+      CALL shpalloc(p_sig, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' allocation of sig failed ', 0)
+      END IF
+      CALL shpalloc(p_rho, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' allocation of rho failed ', 0)
+      END IF
+      CALL shpalloc(p_tmass, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' allocation of tmass failed ', 0)
+      END IF
+      CALL shpalloc(p_target, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' allocation of target failed ', 0)
+      END IF
+#else
       ALLOCATE( s(n,n), sig(n,n), rho(n,n), tmass(n,n), temp(n,n), STAT = info )
+#endif
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
       ALLOCATE( x0(n,n), x1(n,n), rhoa(n,n), temp1(n,n), sigd(n), rhod(n), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 2 )
@@ -373,7 +414,30 @@
       DEALLOCATE( aux )
 
       DEALLOCATE(x0, x1, rhoa, temp1, sigd, rhod)
+#if defined __SHMEM
+      CALL shpdeallc(p_source, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' deallocation of source failed ', 0)
+      END IF
+      CALL shpdeallc(p_sig, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' deallocation of sig failed ', 0)
+      END IF
+      CALL shpdeallc(p_rho, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' deallocation of rho failed ', 0)
+      END IF
+      CALL shpdeallc(p_tmass, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN
+         CALL errore( ' ortho ', ' deallocation of tmass failed ', 0)
+      END IF
+      CALL shpdeallc(p_target, 2*n*n, err, -1)
+      IF (err .NE. 0) THEN 
+         CALL errore( ' ortho ', ' deallocation of target failed ', 0)
+      END IF
+#else
       DEALLOCATE(s, sig, rho, tmass, temp )
+#endif
 
       IF(timing) THEN
         S7 = cclock()
@@ -709,6 +773,7 @@
          CALL errore(' ORTHO ',' ALLOC OF TMASS FAILED ' ,0)
       END IF
       CALL SHPALLOC(p_rho, 2*nx*nx , err, 0)
+      WRITE(*,*)'SHPALLOC RHO done.', 2*nx*nx
       IF(ERR.NE.0) THEN
          CALL errore(' ORTHO ',' ALLOC OF RHO FAILED ' ,0)
       END IF

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#undef __SHMEM
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
@@ -79,6 +78,9 @@ SUBROUTINE reduce( dim, ps )
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
   USE parallel_include  
+#  if defined (__SHMEM)
+  USE para,      ONLY : nprocp
+#  endif
   !
   IMPLICIT NONE
   !
@@ -89,13 +91,28 @@ SUBROUTINE reduce( dim, ps )
   !
   INTEGER            :: info, n, nbuf
   INTEGER, PARAMETER :: maxb = 10000
-  REAL (KIND=DP)     :: buff(maxb)  
   !
-#  if defined __SHMEM
+# if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
+  INTEGER            :: sym_len
+  LOGICAL            :: first
+  REAL (KIND=DP)     :: buff(*), snd_buff(*)
+  POINTER               (buff_p, buff), (snd_buff_p, snd_buff)
+  COMMON /sym_heap1/    buff_p, snd_buff_p, sym_len, first
+# else
+  REAL (KIND=DP)     :: buff(maxb)  
+# endif
+  !
+# if defined (__SHMEM)
   !
   ! ... SHMEM specific 
   !
   INCLUDE 'mpp/shmem.fh'
+# if defined (__ALTIX) || defined (__ORIGIN)
+      INTEGER    :: pWrkSync(SHMEM_REDUCE_SYNC_SIZE),                    &
+     &              pWrkData(1024*1024), start
+      DATA pWrkSync /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
+      DATA pWrkData / 1048576 * 0 /
+# else
   INTEGER :: pWrkSync, pWrkData, start
   COMMON / SH_SYNC / pWrkSync(SHMEM_BARRIER_SYNC_dim)
   COMMON / SH_DATA / pWrkData(1024*1024)
@@ -103,6 +120,7 @@ SUBROUTINE reduce( dim, ps )
   DATA pWrkSync / SHMEM_BARRIER_SYNC_dim * SHMEM_SYNC_VALUE /
 !DIR$ CACHE_ALIGN /SH_SYNC/
 !DIR$ CACHE_ALIGN /SH_DATA/
+#  endif
   !
 #  endif
   !
@@ -117,7 +135,21 @@ SUBROUTINE reduce( dim, ps )
   !
   nbuf = dim / maxb
   !
-#  if defined __SHMEM
+#  if defined (__SHMEM)
+# if defined (__ALTIX) || defined (__ORIGIN)
+  IF (dim .GT. sym_len) THEN
+     IF (sym_len .NE. 0) THEN
+        CALL shpdeallc( snd_buff_p, info, -1 )
+     END IF
+     sym_len = dim
+     CALL shpalloc( snd_buff_p, 2*sym_len, info, -1 )
+  END IF
+  IF (first .NE. .TRUE.) THEN
+     CALL shpalloc( buff_p, 2*maxb, info, -1 )
+     first = .TRUE.
+  END IF
+  snd_buff(1:dim) = ps(1:dim)
+# endif
   !
   start = my_pool_id * nproc_pool
   !
@@ -125,10 +157,15 @@ SUBROUTINE reduce( dim, ps )
   !
   DO n = 1, nbuf
      !
-#  if defined __SHMEM
+#  if defined (__SHMEM)
      !
+# if defined (__ALTIX) || defined (__ORIGIN)
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+(n-1)*maxb), &
+                                  maxb, start, 0, nprocp, pWrkData, pWrkSync )
+# else
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+(n-1)*maxb), &
                                   maxb, start, 0, nprocp, pWrkData, pWrkSync )
+#endif
      !                             
 #  else
      !
@@ -147,10 +184,16 @@ SUBROUTINE reduce( dim, ps )
   !
   IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
-#  if defined __SHMEM
+#  if defined (__SHMEM)
      !
+# if defined (__ALTIX) || defined (__ORIGIN)
+     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+nbuf*maxb),          &
+     &                            (dim-nbuf*maxb), start, 0, nprocp,    &
+     &                            pWrkData, pWrkSync )
+# else
      CALL SHMEM_REAL8_SUM_TO_ALL( buff, ps(1+nbuf*maxb), (dim-nbuf*maxb), &
                                   start, 0, nprocp, pWrkData, pWrkSync )
+# endif
      !                             
 #  else
      !

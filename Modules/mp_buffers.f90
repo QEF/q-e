@@ -41,12 +41,26 @@
         mp_barrier_buffers, mp_alltoall_buffers,mp_sum_buffers, mp_report_buffers
 
       SAVE
+#if defined COMPLEX_MESSAGE_MAX_SIZE
+          INTEGER, PARAMETER :: mp_bufsize_msgmax = COMPLEX_MESSAGE_MAX_SIZE
+#else
+          INTEGER, PARAMETER :: mp_bufsize_msgmax = 2**20  ! 1Mb 2^20
+#endif
+
 
 #if defined __SHMEM
+#if defined __ALTIX || defined __ORIGIN
+          COMPLEX (dbl)     :: mp_snd_buffer(mp_bufsize_msgmax),        &
+     &                         mp_rcv_buffer(mp_bufsize_msgmax)
+          POINTER              (mp_p_snd_buffer,mp_snd_buffer),         &
+     &                         (mp_p_rcv_buffer,mp_rcv_buffer)
+          LOGICAL, SAVE     :: first
+#else
           pointer (mp_p_snd_buffer,mp_snd_buffer)
           pointer (mp_p_rcv_buffer,mp_rcv_buffer)
           complex (dbl) :: mp_snd_buffer(1)
           complex (dbl) :: mp_rcv_buffer(1)
+#endif
 #else
           integer :: mp_p_snd_buffer = 0
           integer :: mp_p_rcv_buffer = 0
@@ -58,12 +72,6 @@
 
           integer :: mp_bufsize
           integer :: mp_high_watermark = 0
-
-#if defined COMPLEX_MESSAGE_MAX_SIZE
-          INTEGER, PARAMETER :: mp_bufsize_msgmax = COMPLEX_MESSAGE_MAX_SIZE
-#else
-          INTEGER, PARAMETER :: mp_bufsize_msgmax = 2**20  ! 1Mb 2^20
-#endif
 
           PUBLIC :: mp_bufsize_msgmax
 
@@ -79,8 +87,26 @@
           INTEGER, INTENT(IN) :: bufsize
           INTEGER :: ERR
 
+#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
+         IF (bufsize .GT. mp_bufsize_msgmax) THEN
+            CALL errore(' mp_allocate_buffers ',                        &
+                        ' mp_bufsize_msgmax too small, need ', bufsize)
+         END IF
+         IF (first .NE. .TRUE.) THEN
+            CALL shpalloc(mp_p_snd_buffer, 2 * mp_bufsize_msgmax, err,  &
+     &                    -1)
+            IF (err .NE. 0) CALL errore(' mp_allocate_buffers ',        &
+     &                                  ' allocating mp_snd_buffer ',err)
+            CALL shpalloc(mp_p_rcv_buffer, 2 * mp_bufsize_msgmax, err,  &
+     &                    -1)
+            IF (err .NE. 0) CALL errore(' mp_allocate_buffers ',        &
+     &                                  ' allocating mp_rcv_buffer ',err)
+            first = .TRUE.
+         END IF
+#else
 #if defined __SHMEM
           CALL SHPALLOC(mp_p_snd_buffer,2*bufsize, err, 0)
+          IF(ERR /= 0) CALL errore(' mp_allocate_buffers ', ' allocating mp_rcv_buffer ',err)
 #else
           ALLOCATE(mp_snd_buffer(bufsize), STAT = err)
 #endif
@@ -92,6 +118,7 @@
           ALLOCATE(mp_rcv_buffer(bufsize), STAT = err)
 #endif
           IF(ERR /= 0) CALL errore(' mp_allocate_buffers ', ' allocating mp_rcv_buffer ',err)
+#endif /* (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN) */
 
           mp_bufsize = bufsize
 
@@ -105,6 +132,11 @@
       SUBROUTINE mp_deallocate_buffers
         IMPLICIT NONE
           integer err
+#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
+!
+! nothing
+!
+#else
 #if defined __SHMEM
           CALL shmem_barrier_all
           CALL SHPDEALLC(mp_p_rcv_buffer, err, 0)
@@ -114,11 +146,11 @@
           IF(ERR /= 0) CALL errore(' mp_deallocate_buffers ', ' deallocating mp_rcv_buffer ',err)
 
 #if defined __SHMEM
-          CALL SHPDEALLC(mp_p_snd_buffer, err, 0)
 #else
           DEALLOCATE(mp_rcv_buffer, STAT = err)
 #endif
           IF(ERR /= 0) CALL errore(' mp_deallocate_buffers ', ' deallocating mp_snd_buffer ',err)
+#endif /* (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN) */
 
         RETURN
       END SUBROUTINE mp_deallocate_buffers
@@ -203,6 +235,7 @@
 
       COMPLEX(dbl) :: mp_snd_buffer(:)
       COMPLEX(dbl) :: mp_rcv_buffer(:)
+
       INTEGER :: ierr, nproc, i
       INTEGER :: msg_size
 
@@ -213,7 +246,7 @@
 
 #  if defined __SHMEM
 
-      integer ip, isour, mpime, nproc
+      integer ip, isour, mpime
       integer my_pe, num_pes
       call shmem_barrier_all
       mpime = my_pe()

@@ -6,7 +6,7 @@
          USE kinds
          LOGICAL tparallel
 
-#if defined __MPI
+#if defined __MPI || defined SHMEM
 !
 !     Include file for MPI
 !

@@ -629,6 +629,9 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !  The output is overwritten on f_in ; f_aux is used as work space
   !
 #include "f_defs.h"
+#ifdef __PARA
+  USE parallel_include
+#endif
   use mp_global, ONLY: nproc_pool, me_pool, intra_pool_comm, nproc, my_image_id
   USE kinds, only : DP
   implicit none

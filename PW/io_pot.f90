@@ -37,7 +37,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   ! ... parallel case
   !
-  IF ( me_pool == root_pool ) ALLOCATE( allv( nrx1*nrx2*nrx3, nc ) )
+  ALLOCATE( allv( nrx1*nrx2*nrx3, nc ) )
   !
   ! ... On writing: gather the potential on the first node of each pool
   !
@@ -87,7 +87,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
      !
   END IF
   !
-  IF ( me_pool == root_pool ) DEALLOCATE( allv )
+  DEALLOCATE( allv )
   !
 #else
   !

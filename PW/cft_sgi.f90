@@ -13,7 +13,8 @@ subroutine bidon_sgi
   stop 'cft_sgi'
 end subroutine bidon_sgi
 #else
-#ifdef __ORIGIN
+#if defined  (__ORIGIN) || defined (__ALTIX)
+#if defined (__COMPLIB)
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)
@@ -127,6 +128,145 @@ USE kinds, only : DP
        (n1 * n2), f, 1)
   return
 end subroutine cft_2
+#endif
+#if defined (__SCSL)
+! ----------------------------------------------------------------------
+     SUBROUTINE cft_1 (f, m, n, nx, sgn, fout)
+! ----------------------------------------------------------------------
+! Silicon Graphics driver routine for m 1d complex ffts of length n
+! nx is the actual dimension of f (may differ from n)
+! NOTA BENE: not in-place! output in fout
+!
+! This version uses the SCSL scienfic library which is both supported
+! on Origin/IRIX and Altix/Linux machines. 
+!
+! Contributed by Martin Hilgeman <hilgeman@sgi.com>, October 2004
+! ----------------------------------------------------------------------
+!
+#include "f_defs.h"
+      USE kinds, ONLY : DP
+      IMPLICIT NONE
+!
+      INTEGER                :: m, n, nx, sgn
+      COMPLEX(kind=DP)       :: f(nx * m), fout(nx * m)
+!
+! Local parameters
+!
+      INTEGER                :: isign, itype, isys(0:1), i
+      INTEGER, PARAMETER     :: naux1=20000, nwork=20000
+      INTEGER, SAVE          :: on(2)
+      REAL(kind=DP), SAVE    :: aux1(naux1, 2)
+      REAL(kind=DP)          :: dummy, scale, work(nwork)
+      DATA                      on / 0, 0 / 
+!
+      isys(0) = 1
+      isign = sign(1, sgn)
+      itype = ABS(sgn)
+      IF (itype .LE. 0 .OR. itype .GT. 2) THEN 
+         CALL errore('cft_1', 'wrong call', 1)
+      END IF
+!
+      IF ( n .NE. on(itype) ) THEN
+         CALL ZZFFTM(0, n, 0, 0.0D0, dummy, 1, dummy, 1,                &
+    &               aux1(1, itype), dummy, isys)
+         on(itype) = n
+      END IF
+
+      IF (isign .GT. 0) THEN
+         scale = 1.0D0
+      ELSE
+         scale = 1.0d0 / n
+      END IF
+!
+      CALL ZZFFTM(isign, n, m, scale, f, nx, fout, nx, aux1(1, itype),  &
+     &            work, isys)
+!
+      RETURN
+      END SUBROUTINE cft_1
+!
+! ----------------------------------------------------------------------
+     SUBROUTINE cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
+! ----------------------------------------------------------------------
+! Silicon Graphics driver routine for mplane 2d complex ffts of 
+! lengths n1 and n2
+! nx1=n1+1 is allowed (in order to avoid memory conflicts)
+! for compatibility: nx2=n2, nx2 is not used
+! NOTA BENE: not in-place! output in fout
+!
+! This version uses the SCSL scienfic library which is both supported
+! on Origin/IRIX and Altix/Linux machines. 
+!
+! Contributed by Martin Hilgeman <hilgeman@sgi.com>, October 2004
+! ----------------------------------------------------------------------
+!
+#include "f_defs.h"
+      USE kinds, ONLY : DP
+      IMPLICIT NONE
+! 
+      INTEGER                :: n1, n2, mplane, nx1, nx2, sgn
+      COMPLEX(kind=DP)       :: f(nx1 * nx2 * mplane),                  &
+     &                          fout(nx1 * nx2 * mplane)
+! 
+! Local parameters
+!
+      INTEGER                :: isign, itype, i, k, istrt, isys(0:1)
+      INTEGER, PARAMETER     :: naux1 = 20000, nwork=20000
+      INTEGER, SAVE          :: on1(2), on2(2)
+      REAL(kind=DP), SAVE    :: aux1(naux1, 2, 2)
+      REAL(kind=DP)          :: dummy, scale, work(nwork)
+      DATA                      on1 / 0, 0 /, on2 / 0, 0 /
+!
+! Statements
+!
+      isys(0) = 1
+      isign = sign(1, sgn)
+      IF (isign .NE. -1 .AND. isign .NE. 1)                             &
+     &    CALL errore('cft_2', 'wrong call', 1)
+      itype = ABS(sgn)
+      IF (itype .LE. 0 .OR. itype .GT. 2)                               &
+     &    CALL errore('cft_2', 'wrong call', 2)
+      IF (n2 .NE. nx2) CALL errore('cft_2', 'no longer implemented', 1)
+!
+      IF ( n1 .NE. on1(itype) ) THEN
+         CALL ZZFFTM(0, n1, 0, 0.0D0, dummy, 1, dummy, 1,               &
+     &               aux1(1, 1, itype), dummy, isys)
+         on1(itype) = n1
+      END IF
+      IF (n2 .NE. on2(itype)) THEN
+         CALL ZZFFTMR(0, n2, 0, 0.0D0, dummy, 1, dummy, 1,              &
+     &               aux1(1, 2, itype), dummy, isys)
+         on2(itype) = n2
+      END IF
+!
+      IF (isign .GT. 0) THEN
+         scale = 1.0D0
+      ELSE 
+         scale = 1.0D0 / n1
+      END IF
+!
+! i - direction
+!
+      CALL ZZFFTM(isign, n1, n2 * mplane, scale, f, nx1, f, nx1,        &
+     &            aux1(1, 1, itype), work, isys)
+!
+! j - direction
+!
+
+      IF (isign .GT. 0) THEN
+         scale = 1.0D0
+      ELSE 
+         scale = 1.0D0 / n2
+      END IF
+!
+      DO k = 1, mplane
+         istrt = 1 + (k - 1) * nx1 * n2
+         CALL ZZFFTMR(isign, n2, nx1, scale, f(istrt), nx1, f(istrt),   &
+     &                nx1, aux1(1, 2, itype), work, isys)
+      END DO
+!
+      RETURN
+      END SUBROUTINE cft_2
+#endif
 #else
 subroutine bidon_sgi
   stop 'cft_sgi'

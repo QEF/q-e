@@ -88,6 +88,9 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                  enddo
                  arg = arg * tpi
                  fase = DCMPLX (cos (arg), sin (arg) )
+#if defined __ALTIX
+!DIR$ unroll (0)
+#endif
                  do kpol = 1, 3
                     do lpol = 1, 3
                        work (ipol, jpol) = work (ipol, jpol) + &

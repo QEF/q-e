@@ -106,6 +106,52 @@ END SUBROUTINE cft_3
 !
 ! ... Silicon Graphics case
 !
+#if defined (__SCSL)
+      SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
+! ----------------------------------------------------------------------
+! Silicon Graphics driver routine for 3d complex fft (SCSL)
+! This works both on Origin/IRIX and Altix/Linux machines
+!
+! Contributed by Martin Hilgeman <hilgeman@sgi.com>, October 2004
+! ----------------------------------------------------------------------
+!
+      USE kinds, ONLY : DP
+      IMPLICIT NONE
+!
+      INTEGER                :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
+      COMPLEX(kind=DP)       :: f(nm1, nm2, nm3)
+!
+! Local parameters
+!
+      INTEGER                    :: isys(0:1)
+      INTEGER, PARAMETER         :: ngrid = 2, nmax=1000, nwork=1000
+      INTEGER, SAVE              :: first(ngrid)
+      REAL(kind=DP), SAVE        :: aux(nmax, ngrid)
+      REAL(kind=DP)              :: dummy, scale, work(nwork)
+      DATA                          first / ngrid * .TRUE. /
+!
+! Statements
+!
+      isys(0) = 1
+      IF ( first(igrid) ) THEN
+         CALL ZZFFT3D(0, n1, n2, n3, 0.0D0, dummy, 1, 1, dummy, 1,      &
+     &                1, aux(1, igrid), dummy, isys)
+         first(igrid) = .FALSE.
+      END IF
+! 
+      IF (sign .GT. 0) THEN
+         scale = 1.0D0
+      ELSE
+         scale = 1.0d0 / (n1 * n2 * n3)
+      END IF
+!
+      CALL ZZFFT3D(sign, n1, n2, n3, scale, f, nm1, nm2, f, nm1, nm2,   &
+     &             aux(1, igrid), work, isys)
+!
+      RETURN
+      END SUBROUTINE cft_3
+#else
+!
 !----------------------------------------------------------------------------
 SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   !----------------------------------------------------------------------------
@@ -150,6 +196,7 @@ SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   RETURN
   !
 END SUBROUTINE cft_3
+#endif
 !
 #elif defined (EXEMPLAR)
 !

@@ -303,6 +303,7 @@ MODULES = \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
+../Modules/shmem_include.o \
 ../Modules/stick_base.o \
 ../Modules/supercell.o \
 ../Modules/uspp.o \

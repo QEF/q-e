@@ -620,6 +620,9 @@
       REAL(dbl) :: one_over_scale
       REAL(dbl) :: ul(PTRED_WORK_SIZE)
       REAL(dbl) :: pl(PTRED_WORK_SIZE)
+#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
+      REAL(dbl), SAVE :: d_tmp(PTRED_WORK_SIZE)
+#endif
       integer :: l, i, j, k, t, tl, ierr
       integer :: kl, jl, ks, lloc
       integer :: is(PTRED_WORK_SIZE)
@@ -699,7 +702,11 @@
              call shmem_barrier_all
              CALL SHMEM_REAL8_SUM_TO_ALL(SIGMA, SIGMA, 1, 0, 0, nproc, pWrk, pSync_sta)
              call shmem_barrier_all
+#    if defined __ALTIX || defined __ORIGIN
+             CALL SHMEM_BROADCAST8(F,F,1,RI(L),0,0,nproc,pSync_bc)
+#    else
              CALL SHMEM_BROADCAST(F,F,1,RI(L),0,0,nproc,pSync_bc)
+#    endif
 #  elif defined __MPI
              CALL MPI_ALLREDUCE(SIGMA, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, IERR)
              SIGMA = TMP
@@ -826,7 +833,11 @@
 #if defined __PARA
 #  if defined __SHMEM
            call shmem_barrier_all
+#    if defined __ALTIX || defined __ORIGIN
+           CALL SHMEM_BROADCAST8(G,G,1,RI(L),0,0,nproc,pSync_bc)
+#    else
            CALL SHMEM_BROADCAST(G,G,1,RI(L),0,0,nproc,pSync_bc)
+#    endif
 #  elif defined __MPI
            CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,RI(L),MPI_COMM_WORLD,IERR)
 #  endif
@@ -907,8 +918,15 @@
 
 #if defined __PARA
 #  if defined __SHMEM
+#if defined __ALTIX || defined __ORIGIN
+      d_tmp(1:n) = d(1:n)
+      call shmem_barrier_all
+      CALL SHMEM_REAL8_SUM_TO_ALL(U, d_tmp, N, 0, 0, nproc, pWrk,       &
+     &                            pSync_sta)
+#else
       call shmem_barrier_all
       CALL SHMEM_REAL8_SUM_TO_ALL(U, D, N, 0, 0, nproc, pWrk, pSync_sta)
+#endif
       call shmem_barrier_all
 #  elif defined __MPI
       CALL MPI_ALLREDUCE(U,D,N,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)

@@ -326,7 +326,6 @@
      LOGICAL :: dofft( nfftx )
      INTEGER, PARAMETER  :: stdout = 6
 #if defined __SCSL
-     INTEGER                :: index(nx), ndoX
      COMPLEX(dbl)           :: XY(nx+nx*ny)
 #endif
 
@@ -526,75 +525,64 @@
 
 #elif defined __SCSL
 
-      ndoX = 0
-      DO i = 1, nx
-         IF ( dofft(i) ) THEN
-            ndoX = ndoX + 1
-            index(ndoX) = i
-         END IF
-      END DO
-!
       IF( isign > 0 ) THEN
-!
+
        idir = -1
-       tscale = 1.0d0 / ( nx * ny )
-       DO k = 1, nzl
-          kk = 1 + ( k - 1 ) * ldx * ldy
-! FORWARD: first the X direction
-          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk), ldx, r(kk), ldx,   &
+       tscale = 1.0d0 / (nx * ny)
+       DO k = 0, nzl-1
+          kk = k * ldx * ldy
+! FORWARD: ny FFTs in the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
                         tablex(1, ip), work(1), isys )
-! FORWARD: then the Y direction
-! Gather R -> XY
-          DO j = 1, ny
-             DO i = 1, ndoX
-                XY( i + ( j - 1 ) * nx ) = r( index( i ) + ( j - 1 ) *  &
-                   ldx + ( k - 1 ) * ldx * ldy )
-             END DO
-          END DO
-! ndoX FFTs in the Y direction
-          CALL ZZFFTMR ( idir, ny, ndoX, 1.0D0, XY, ldx, XY, ldx,       &
-                         tabley(1, ip), work(1), isys )
-! Scatter back XY -> R
-          DO j = 1, ny
-             DO i = 1, ndoX
-                r( index( i ) + ( j - 1 ) * ldx + ( k - 1 ) * ldx *     &
-                  ldy ) = XY( i + ( j - 1 ) * nx )
-             END DO
+! FORWARD: nx FFTs in the Y direction
+          DO i = 1, nx
+             IF ( dofft(i) ) THEN
+!DIR$IVDEP
+!DIR$LOOP COUNT (50)
+                DO j = 0, ny-1
+                   XY(j+1) = r(i + (j) * ldx + kk)
+                END DO
+                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley(1, ip),      &
+                           work(1), isys)
+!DIR$IVDEP
+!DIR$LOOP COUNT (50)
+                DO j = 0, ny-1
+                   r(i + (j) * ldx + kk) = XY(j+1)
+                END DO 
+             END IF
           END DO
        END DO
-!
+
      END IF
-!
+
      IF ( isign < 0 ) THEN
-!
+
        idir = 1
        tscale = 1.0d0
-       DO k = 1, nzl
-          kk = 1 + ( k - 1 ) * ldx * ldy
-! BACKWARD: first the Y direction
-! Gather R -> XY
-          DO j = 1, ny
-             DO i = 1, ndoX
-                XY( i + ( j - 1 ) * nx ) = r( index( i ) + ( j - 1 ) *  &
-                   ldx + ( k - 1 ) * ldx * ldy )
-             END DO
+       DO k = 0, nzl-1
+! BACKWARD: nx FFTs in the Y direction
+          kk = (k) * ldx * ldy
+          DO i = 1, nx
+             IF ( dofft(i) ) THEN
+!DIR$IVDEP
+!DIR$LOOP COUNT (50)
+                DO j = 0, ny-1
+                   XY(j+1) = r(i + (j) * ldx + kk)
+                END DO
+                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley(1, ip),      &
+                           work(1), isys)
+!DIR$IVDEP
+!DIR$LOOP COUNT (50)
+                DO j = 0, ny-1
+                   r(i + (j) * ldx + kk) = XY(j+1)
+                END DO 
+             END IF
           END DO
-!
-! ndoX FFTs in the Y direction
-          CALL ZZFFTMR ( idir, ny, ndoX, 1.0D0, XY, ldx, XY, ldx,       &
-                         tabley(1, ip), work(1), isys )
-! Scatter back XY -> R
-          DO j = 1, ny
-             DO i = 1, ndoX
-                r( index( i ) + ( j - 1 ) * ldx + ( k - 1 ) * ldx *     &
-                  ldy ) = XY( i + ( j - 1 ) * nx )
-             END DO
-          END DO
-! BACKWARD: then the X direction
-          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk), ldx, r(kk), ldx,   &
+! BACKWARD: ny FFTs in the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
                         tablex(1, ip), work(1), isys )
        END DO
-!
+
      END IF
 
 #else
@@ -1225,45 +1213,14 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
 #elif defined __SCSL
 
-! Gather f -> fz
-      DO j = 1, n1x*n2x
-         DO i = 1, n3
-            fz( i + ( j - 1 ) * n3 ) = f( (( i - 1 ) * ( n1x *n2x ))    &
-               + j )
-         END DO
-      END DO
-! z-direction
-      CALL ZZFFTM (1, n3, n1x*n2x, tscale, fz(1), n3, fz(1), n3,        &
-                   bw_coeffz(1, ip), work(1), isys)
-! Scatter back fz -> f
-      DO j = 1, n1x*n2x
-         DO i = 1, n3
-            f( (( i - 1 ) * ( n1x *n2x )) + j ) = fz( i + ( j - 1 ) *   &
-              n3 )
-         END DO
-      END DO
-! x-direction
+      CALL ZZFFTMR (1, n3, n1x*n2x, tscale, f(1), n1x*n2x, f(1),        &
+                     n1x*n2x, bw_coeffz(1, ip), work(1), isys)
       CALL ZZFFTM (1, n1, n2x*nplanes, tscale, f(nstart), n1x,          &
-                   f(nstart), n1x, bw_coeffx(1, ip), work(1), isys)
-! y-direction
+                    f(nstart), n1x, bw_coeffx(1, ip), work(1), isys)
       DO k = imin3, imax3
         nstart = ( k - 1 ) * n1x * n2x + 1
-! Gather f -> fy
-         DO j = 1, n1x
-            DO i = 1, n2
-                fy( i + ( j - 1 ) * n2 ) = f( (( i - 1 ) * n1x ) + j +  &
-                   ( k - 1 ) * n1x * n2x )
-            END DO
-         END DO
-         CALL ZZFFTM (1, n2, n1x, tscale, fy, n2, fy,                   &
-                      n2, bw_coeffy(1, ip), work(1), isys)
-! Scatter back fy -> f
-         DO j = 1, n1x
-            DO i = 1, n2
-               f( (( i - 1 ) * n1x ) + j + ( k - 1 ) * n1x * n2x ) =    &
-                 fy( i + ( j - 1 ) * n2 )
-            END DO
-         END DO
+        CALL ZZFFTMR (1, n2, n1x, tscale, f(nstart), n1x, f(nstart),    &
+                      n1x, bw_coeffy(1, ip), work(1), isys)
       END DO
 
 #endif

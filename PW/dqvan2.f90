@@ -118,11 +118,46 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
 
      sig = (0.d0, -1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)
-     do ig = 1, ngy
+     !
+     ! need to explicitly do qmod(1) outside of the loop to avoid
+     ! out of bounds array access
+     !
+     qm = qmod (1) * dqi
+     px = qm - int (qm)
+     ux = 1.d0 - px
+     vx = 2.d0 - px
+     wx = 3.d0 - px
+     i0 = qm + 1 
+     i1 = i0 + 1
+     i2 = i0 + 2
+     i3 = i0 + 3
+     uvx = ux * vx * sixth
+           
+     pwx = px * wx * 0.5d0
+           
+     work = qrad (i0, nmb, l, np) * uvx * wx +                          &
+            qrad (i1, nmb, l, np) * pwx * vx -                          &
+            qrad (i2, nmb, l, np) * pwx * ux +                          &
+            qrad (i3, nmb, l, np) * px * uvx 
+     work1 = - qrad(i0, nmb, l, np) * (ux*vx + vx*wx + ux*wx) * sixth   &
+             + qrad(i1, nmb, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0   &
+             - qrad(i2, nmb, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0   &
+             + qrad(i3, nmb, l, np) * (ux*vx - px*ux - px*vx) * sixth 
+                   
+     work1 = work1 * dqi
+
+     dqg (1) = dqg (1) + sig * dylmk0 (1, lp) * work    
+     if (qmod (1) .gt.1.d-9) dqg (1) = dqg (1) +                      &
+            sig * ylmk0 (1, lp) * work1 * g (ipol, 1) / qmod (1)
+
+     !
+     ! and now the rest starting at ig=2
+     !
+     do ig = 2, ngy
         !
         ! calculate quantites depending on the module of G only when needed
         !
-        if (ig.eq.1.or.abs (qmod (ig) - qmod (ig - 1) ) .gt.1.0d-6) then
+        if (abs (qmod (ig) - qmod (ig - 1) ) .gt.1.0d-6) then
            qm = qmod (ig) * dqi
            px = qm - int (qm)
            ux = 1.d0 - px

@@ -215,7 +215,7 @@
         ierr = 0
         taskid = 0
 
-#if defined(__MPI)
+#if defined(__MPI) || defined (__SHMEM)
         CALL MPI_INIT(ierr)
         IF (ierr/=0) CALL mp_stop(8000)
 #endif
@@ -224,7 +224,7 @@
 
         !   initialize the IBM Harware performance monitor
       
-#  if defined(__MPI)
+#  if defined(__MPI) || defined (__SHMEM)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
 #  endif
         CALL f_hpminit( taskid, 'profiling' )

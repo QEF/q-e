@@ -148,6 +148,7 @@ MODULES = \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/stick_base.o \
+../Modules/shmem_include.o \
 ../Modules/supercell.o \
 ../Modules/uspp.o \
 ../Modules/version.o \

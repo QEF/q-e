@@ -154,7 +154,7 @@ subroutine init_paw_1
               enddo
               call step_f(aux, &
                    paw_betar(1:msh(nt),n1,nt),r(:,nt),nrs,nrc,pow,msh(nt))
-              paw_betar(:,n1,nt)=aux
+              paw_betar(1:ndm,n1,nt)=aux(1:ndm)
            enddo
            deallocate (sinv)
            deallocate (s)
