@@ -95,15 +95,15 @@ subroutine add_for_charges (ik, uact)
      do na = 1, nat
         if (ityp (na) .eq.nt) then
            mu = 3 * (na - 1)
-           do ih = 1, nh (nt)
-              ikb = ijkb0 + ih
-              do jh = 1, nh (nt)
-                 jkb = ijkb0 + jh
-                 do ipol = 1, 3
-                    do ibnd = 1, nbnd
-                       if ( abs (uact (mu + 1) ) + &
-                            abs (uact (mu + 2) ) + &
-                            abs (uact (mu + 3) ) > eps) then
+           if ( abs (uact (mu + 1) ) + &
+                abs (uact (mu + 2) ) + &
+                abs (uact (mu + 3) ) > eps) then
+              do ih = 1, nh (nt)
+                 ikb = ijkb0 + ih
+                 do jh = 1, nh (nt)
+                    jkb = ijkb0 + jh
+                    do ipol = 1, 3
+                       do ibnd = 1, nbnd
                           ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +     &
                                qq (ih, jh, nt) *                  &
                                alphapp(jkb, ibnd, ipol) *         &
@@ -113,11 +113,11 @@ subroutine add_for_charges (ik, uact)
                                 (0.d0, -1.d0) *                           &
                                 bedp (jkb, ibnd) *                        &
                                 uact (mu + ipol) * tpiba
-                       endif
+                       enddo
                     enddo
                  enddo
               enddo
-           enddo
+           endif
            ijkb0 = ijkb0 + nh (nt)
         endif
      enddo
@@ -159,10 +159,4 @@ subroutine add_for_charges (ik, uact)
 
   return
 end subroutine add_for_charges
-
-
-
-
-
-
 

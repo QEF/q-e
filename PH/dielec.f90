@@ -27,6 +27,8 @@ integer :: ibnd, ipol, jpol, nrec, ik
 real(kind=DP) :: w, weight
 
 complex(kind=DP) :: ZDOTC
+
+call start_clock ('dielec')
 call setv (9, 0.0d0, epsilon, 1)
 if (nksq.gt.1) rewind (unit = iunigk)
 do ik = 1, nksq
@@ -35,7 +37,7 @@ do ik = 1, nksq
    w = fpi * weight / omega
    do ipol = 1, 3
       nrec = (ipol - 1) * nksq + ik
-      call davcio (dvpsi, lrbar, iubar, nrec, - 1)
+      call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
       do jpol = 1, 3
          nrec = (jpol - 1) * nksq + ik
          call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
@@ -82,5 +84,7 @@ enddo
 write (6, '(/,10x,"Dielectric constant in cartesian axis ",/)')
 
 write (6, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
+call stop_clock ('dielec')
+
 return
 end subroutine dielec

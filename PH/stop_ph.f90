@@ -32,6 +32,7 @@ subroutine stop_ph (flag)
   close (unit = iuwfc, status = 'keep')
   close (unit = iudwf, status = 'keep')
   close (unit = iubar, status = 'keep')
+  if(epsil.or.zue) close (unit = iuebar, status = 'keep')
 #ifdef __PARA
   if (me.ne.1) goto 100
 #endif

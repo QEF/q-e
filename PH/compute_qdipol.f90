@@ -15,6 +15,7 @@ real(kind=dp) :: fact
 
 integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp
 
+call start_clock('cmpt_qdipol')
 allocate (qrad2( nbrx , nbrx, ntyp))    
 allocate (aux( ndm))    
 allocate (qtot( ndm, nbrx, nbrx))    
@@ -98,6 +99,7 @@ enddo
 deallocate(qtot)
 deallocate(aux)
 deallocate(qrad2)
+call stop_clock('cmpt_qdipol')
 
 return
 end

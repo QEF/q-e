@@ -109,6 +109,7 @@ add_zstar_ue_us.o \
 zstar_eu_us.o \
 add_for_charges.o \
 add_dkmds.o \
+dvkb3.o \
 addnlcc_zstar_eu_us.o
 
 MODULES = ../Modules/*.o

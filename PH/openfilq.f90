@@ -85,8 +85,7 @@ subroutine openfilq
   lrbar = 2 * nbnd * npwx
   filint = trim(prefix) //'.bar'
   call diropn (iubar, filint, lrbar, exst)
-  if (recover.and..not.exst) call errore ('openfilq', 'file bar not f &
-       &ound', 1)
+  if (recover.and..not.exst) call errore ('openfilq','file bar not found', 1)
   !
   !    The file with the solution delta psi
   !
@@ -94,8 +93,7 @@ subroutine openfilq
   lrdwf = 2 * nbnd * npwx
   filint = trim(prefix) //'.dwf'
   call diropn (iudwf, filint, lrdwf, exst)
-  if (recover.and..not.exst) call errore ('openfilq', 'file dwf not f &
-       &ound', 1)
+  if (recover.and..not.exst) call errore ('openfilq','file dwf not found', 1)
   !
   !   open a file with the static change of the charge
   !
@@ -104,8 +102,7 @@ subroutine openfilq
      lrdrhous = 2 * nrxx * nspin
      filint = trim(prefix) //'.prd'
      call diropn (iudrhous, filint, lrdrhous, exst)
-     if (recover.and..not.exst) call errore ('openfilq', 'file prod not &
-          &found', 1)
+     if (recover.and..not.exst) call errore ('openfilq','file prod not found', 1)
   endif
   !
   !   An optional file for testing purposes containing the deltarho
@@ -168,8 +165,26 @@ subroutine openfilq
      lrcom = 2 * nbnd * npwx
      filint = trim(prefix) //'.com'
      call diropn (iucom, filint, lrcom, exst)
-     if (recover.and..not.exst) call errore ('openfilq', 'file com not f &
-          &ound', 1)
+     if (recover.and..not.exst) &
+         call errore ('openfilq', 'file com not found', 1)
+  !
+  !    In the USPP case we also need a file in  order to store derivatives 
+  !    ok kb projectors
+  !  
+     iudvkb3 = 29
+     lrdvkb3 = 2 * npwx * nkb * 3
+     filint = trim(prefix) //'.dvkb3'
+     call diropn (iudvkb3, filint, lrdvkb3, exst)
+     if (recover.and..not.exst) &
+         call errore ('openfilq', 'file dvkb3 not found', 1)
+  endif
+  if (epsil .or. zue) then
+     iuebar = 30
+     lrebar = 2 * nbnd * npwx
+     filint = trim(prefix) //'.ebar'
+     call diropn (iuebar, filint, lrebar, exst)
+     if (recover.and..not.exst) &
+        call errore ('openfilq','file ebar not found', 1)
   endif
   
   return

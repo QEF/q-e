@@ -24,17 +24,18 @@ subroutine add_zstar_ue_us(imode0,npe)
   real(kind = dp) :: weight
 
   complex(kind=DP), allocatable :: pdsp(:,:)
+  complex(kind=DP), allocatable :: dvkb(:,:,:)
   !  auxiliary space for <psi|ds/du|psi>
 
   ! 
   !  Here we calculate the dipole of q
   !  (Just to be sure, this has already beeen done in phq_setup)
   !
+  call start_clock('add_zstar_us')
   call compute_qdipol
-
   
   allocate (pdsp(nbnd,nbnd))
-
+  allocate (dvkb(npwx,nkb,3))
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
@@ -42,20 +43,14 @@ subroutine add_zstar_ue_us(imode0,npe)
      weight = wk (ik)
      if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call dvkb3(ik,dvkb)
      do ipert = 1, npe
         mode = imode0 + ipert
         do jpol = 1, 3
            dvpsi = (0.d0,0.d0)
            !
-           ! calculates the Commutator with the additional term
-!                      call dvpsi_e(ik,jpol)
-           !
-           ! To save time:
-           ! Reads the commutator with the additional term
-           ! dvpis(G,ibnd) = <k+G | (P_c^+ S x - S x + K(x) x) | psi_ibnd >
-           !
-           nrec = (jpol - 1) * nksq + ik
-           call davcio (dvpsi, lrbar, iubar, nrec, -1)
+           ! read/compute the Commutator with the additional term
+           call dvpsi_e(ik,jpol)
            !
            ! Calculate the matrix elements <psi_v'k|dS/du|psi_vk>
            ! Note: we need becp1 
@@ -63,7 +58,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp,npw)
 #ifdef __PARA
-          call reduce(2*nbnd*nbnd,pdsp)
+           call reduce(2*nbnd*nbnd,pdsp)
 #endif
            !
            ! add the term of the double summation
@@ -95,7 +90,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            ! Add  (dK(r)/du - dS/du) r | psi>
            !
-           call add_dkmds(ik, u(1,mode),jpol)
+           call add_dkmds(ik, u(1,mode),jpol, dvkb)
            !
            ! And calculate finally the scalar product 
            !
@@ -107,12 +102,10 @@ subroutine add_zstar_ue_us(imode0,npe)
      enddo
   enddo
   
+  deallocate(dvkb)
   deallocate(pdsp)
+  call stop_clock('add_zstar_us')
 
   return
 end subroutine add_zstar_ue_us
-
-
-
-
 

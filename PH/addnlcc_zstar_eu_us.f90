@@ -8,6 +8,9 @@ subroutine addnlcc_zstar_eu_us (drhoscf)
   use pwcom
   use parameters, only : DP
   use phcom
+#ifdef __PARA
+  use para
+#endif
   implicit none
   
   complex(kind=DP) :: drhoscf (nrxx,nspin,3)
@@ -22,6 +25,9 @@ subroutine addnlcc_zstar_eu_us (drhoscf)
   complex(kind=DP), dimension(nrxx,nspin) :: dvaux
 
   if (.not.nlcc_any) return
+#ifdef __PARA
+  if (mypool.ne.1) return
+#endif
   
   do ipol = 1, 3
      imode0 = 0

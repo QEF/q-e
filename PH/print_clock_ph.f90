@@ -16,34 +16,71 @@ use phcom
 implicit none
 write (6, * )
 call print_clock ('PHONON')
+write (6,  * ) '    INITIALIZATION: '
 call print_clock ('phq_setup')
 call print_clock ('phq_init')
-call print_clock ('dynmat0')
-
-call print_clock ('phqscf')
 write (6, * )
 call print_clock ('phq_init')
+if (nlcc_any) call print_clock ('set_drhoc')
 call print_clock ('init_vloc')
 call print_clock ('init_us_1')
-call print_clock ('init_us_2')
+!call print_clock ('init_us_2')
 call print_clock ('newd')
 call print_clock ('dvanqq')
-
 call print_clock ('drho')
+if ((epsil.or.zue).and.okvan) call print_clock ('cmpt_qdipol')
+
+if(epsil) then 
+  write (6, * )
+  write (6,  * ) '    DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:'
+  call print_clock ('solve_e')
+  call print_clock ('dielec')
+  call print_clock ('zstar_eu')
+#ifdef TIMING_ZSTAR_US
+  write (6, * )
+  call print_clock ('zstar_eu_us')
+  call print_clock ('zstar_us_1')
+  call print_clock ('zstar_us_2')
+  call print_clock ('zstar_us_3')
+  call print_clock ('zstar_us_4')
+  call print_clock ('zstar_us_5')
+#endif
+#ifdef TIMING_ADD_DKMDS
+  write (6, * )
+  call print_clock ('add_dkmds')
+  call print_clock ('add_dkmds1')
+  call print_clock ('add_dkmds2')
+  call print_clock ('add_dkmds3')
+  call print_clock ('add_dkmds4')
+  call print_clock ('add_dkmds5')
+  call print_clock ('add_dkmds6')
+#endif
+endif
+if(trans) then 
+  write (6, * )
+  write (6,  * ) '    DYNAMICAL MATRIX:'
+  call print_clock ('dynmat0')
+  call print_clock ('phqscf')
+  call print_clock ('dynmatrix')
+  write (6, * )
+  call print_clock ('phqscf')
+  call print_clock ('solve_linter')
+  call print_clock ('drhodv')
+  if (zue) call print_clock('add_zstar_ue')
+  if (zue) call print_clock('add_zstar_1')
+  if (zue.and.okvan) call print_clock('add_zstar_us')
+endif
 write (6, * )
 call print_clock ('dynmat0')
 call print_clock ('dynmat_us')
 call print_clock ('addusdynmat1')
 call print_clock ('d2ionq')
-
 if (nlcc_any) call print_clock ('dynmatcc')
 write (6, * )
 call print_clock ('dynmat_us')
-
 call print_clock ('addusdynmat')
 write (6, * )
 call print_clock ('phqscf')
-
 call print_clock ('solve_linter')
 write (6, * )
 call print_clock ('solve_linter')

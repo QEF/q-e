@@ -158,27 +158,20 @@ subroutine solve_e
         do ipol = 1, 3
            nrec = (ipol - 1) * nksq + ik
            !
-           !  and now adds the contribution of the self consistent term
-           !
+           ! computes/reads P_c^+ x psi_kpoint into dvpsi array
+           call dvpsi_e (ik, ipol)
            if (iter.eq.1) then
               !
               !  At the first iteration dpsi and dvscfin are set to zero,
-              !  [H,x]*psi_kpoint is calculated and written to file
               !
               dpsi(:,:)=(0.d0,0.d0)
               dvscfin(:,:,:)=(0.d0,0.d0)
-              call dvpsi_e (ik, ipol)
-              call davcio (dvpsi, lrbar, iubar, nrec, 1)
               !
               ! starting threshold for the iterative solution of the linear
               ! system
               !
               thresh = 1.d-2
            else
-              !
-              !  After the first iteration [H,x]*psi_kpoint is read from file
-              !
-              call davcio (dvpsi, lrbar, iubar, nrec, - 1)
               !
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
@@ -325,8 +318,10 @@ subroutine solve_e
      call newdq(dvscfin,3)
 
      averlt = dfloat (ltaver) / dfloat (lintercall)
-     write (6, "(//,5x,' iter # ',i3, &
-          &      '   av.it.: ',f5.1)") iter, averlt
+  
+     tcpu = get_clock ('PHONON')
+     write (6, '(//,5x," iter # ",i3," total cpu time : ",f7.1, &
+          &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / 3
      write (6, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',e10.3 )") thresh, alpha_mix (kter), dr2

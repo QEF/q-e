@@ -40,6 +40,7 @@ subroutine dynmatrix
   !
   !     Puts all noncomputed elements to zero
   !
+  call start_clock('dynmatrix')
   imode0 = 0
   do irr = 1, nirr
      jmode0 = 0
@@ -114,5 +115,6 @@ subroutine dynmatrix
   !
 
   if (all_comp) call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
+  call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix

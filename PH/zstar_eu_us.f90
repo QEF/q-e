@@ -32,10 +32,15 @@ subroutine zstar_eu_us
 
   complex(kind = dp), allocatable :: pdsp(:,:)
 
-
   complex(kind =dp), allocatable :: drhoscfh (:,:,:)
   complex(kind =dp), allocatable :: dbecsum2 (:,:,:,:)
+  complex(kind =dp), allocatable :: dvkb (:,:,:)
   integer :: npe, irr1, imode1
+
+#ifdef TIMINIG_ZSTAR_US
+  call start_clock('zstar_eu_us')
+  call start_clock('zstar_us_1')
+#endif
 
   !  auxiliary space for <psi|ds/du|psi>
 
@@ -78,6 +83,10 @@ subroutine zstar_eu_us
 #ifdef __PARA
      call reduce (nhm * (nhm + 1) * nat * 3* nspin, dbecsum)
 #endif
+#ifdef TIMINIG_ZSTAR_US
+  call stop_clock('zstar_us_1')
+  call start_clock('zstar_us_2')
+#endif
   
   if (doublegrid) then
      do is = 1, nspin
@@ -93,12 +102,17 @@ subroutine zstar_eu_us
   call poolreduce (2 * 3 * nrxx *nspin, dvscf)
 #endif
 
+#ifdef TIMINIG_ZSTAR_US
+  call stop_clock('zstar_us_2')
+  call start_clock('zstar_us_3')
+#endif
+
   if (nlcc_any) call addnlcc_zstar_eu_us (dvscf) 
 
   do ipol = 1, 3
      !
      ! Instead of recalculating the perturbed charge density, 
-     ! it can be also be read from file
+     ! it can also be read from file
      ! NB: Then the variable fildrho must be set
      !
      ! call davcio_drho(dvscf(1,1,ipol),lrdrho,iudrho,ipol,-1)
@@ -118,11 +132,14 @@ subroutine zstar_eu_us
         enddo
      enddo
   endif
+#ifdef TIMINIG_ZSTAR_US
+  call stop_clock('zstar_us_3')
+  call start_clock('zstar_us_4')
+#endif
 !
 ! Calculate the parts with the perturbed Hartree and exchange and correlation 
 ! potenial  
 !
-  call drho
   imode1 = 0
   do irr = 1, nirr
      npe = npert(irr)
@@ -137,7 +154,6 @@ subroutine zstar_eu_us
      drhoscfh = (0.0_dp,0.0_dp)
      dbecsum2 = (0.0_dp,0.0_dp)  
      call addusddens (drhoscfh, dbecsum2, irr, imode0, npe, 0)
-
      do imode = 1, npert (irr)
         mode = imode+imode1
         do jpol = 1, 3
@@ -152,9 +168,14 @@ subroutine zstar_eu_us
      deallocate (dbecsum2)
 
   end do
+#ifdef TIMINIG_ZSTAR_US
+  call stop_clock('zstar_us_4')
+  call start_clock('zstar_us_5')
+#endif
   !
   !  Calculate the part with the position operator
   !
+  allocate (dvkb(npwx,nkb,3))
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
@@ -162,6 +183,7 @@ subroutine zstar_eu_us
      weight = wk (ik)
      if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
+     call dvkb3(ik, dvkb)
      imode0 = 0
      do irr = 1, nirr
         do imode = 1, npert (irr)
@@ -172,11 +194,10 @@ subroutine zstar_eu_us
               ! read the Commutator+add. terms
               !
               nrec = (jpol - 1) * nksq + ik
-              call davcio (dvpsi, lrbar, iubar, nrec, - 1)
+              call davcio (dvpsi, lrebar, iuebar, nrec, - 1)
               !
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp,npw)
-
 #ifdef __PARA
           call reduce(2*nbnd*nbnd,pdsp)
 #endif
@@ -209,7 +230,7 @@ subroutine zstar_eu_us
               !
               ! Add  (dK(r)/du - dS/du) r | psi>
               !
-              call add_dkmds(ik, u(1,mode), jpol)
+              call add_dkmds(ik, u(1,mode), jpol, dvkb)
               !
               ! And calculate finally the scalar product 
               !
@@ -222,6 +243,7 @@ subroutine zstar_eu_us
         imode0 = imode0 + npert (irr)
      enddo
   enddo
+  deallocate (dvkb)
 
   imode0 = 0
   deallocate (pdsp)
@@ -230,6 +252,10 @@ subroutine zstar_eu_us
   deallocate (aux1)
   if (doublegrid) deallocate (dvscfins)
 
+#ifdef TIMINIG_ZSTAR_US
+  call stop_clock('zstar_us_5')
+  call stop_clock('zstar_eu_us')
+#endif
 
   return
 end subroutine zstar_eu_us

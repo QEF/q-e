@@ -280,9 +280,9 @@ MODULE units_ph
   SAVE
   !
   INTEGER :: &
-       iuwfc, lrwfc, iuvkb, iubar, lrbar, iudwf, iupsir, &
+       iuwfc, lrwfc, iuvkb, iubar, lrbar, iuebar, lrebar, iudwf, iupsir, &
        lrdwf, iudrhous, lrdrhous, iudyn, iupdyn, iunrec, iudvscf, iudrho, &
-       lrdrho, iucom, lrcom
+       lrdrho, iucom, lrcom, iudvkb3, lrdvkb3
   ! iunit with the wavefunctions
   ! the length of wavefunction record
   ! unit with vkb
@@ -301,6 +301,8 @@ MODULE units_ph
   ! the length of the deltarho files
   ! the unit of the bare commutator in US case
   ! the length  of the bare commutator in US case
+  logical, ALLOCATABLE :: this_dvkb3_is_on_file(:), &
+                          this_pcxpsi_is_on_file(:,:)
   !
 END MODULE units_ph
 !

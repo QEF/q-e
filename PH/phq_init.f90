@@ -171,10 +171,8 @@ subroutine phq_init
   deallocate (aux1)
 
   call newd
-!  if (trans) then
-     call dvanqq
-     call drho
-!  endif
+  call dvanqq
+  call drho
   if ((epsil.or.zue).and.okvan) then
      call compute_qdipol
   endif

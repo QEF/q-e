@@ -39,6 +39,8 @@ subroutine zstar_eu
 
   complex(kind=DP) :: ZDOTC
   !  scalar product
+  call start_clock ('zstar_eu')
+
   call setv (2 * 9 * nat, 0.d0, zstareu0, 1)
   call setv (9 * nat, 0.d0, zstareu, 1)
 
@@ -132,8 +134,8 @@ subroutine zstar_eu
      do na = 1, nat
         zstareu (ipol, ipol, na) = zstareu (ipol, ipol, na) + zv (ityp ( na) )
      enddo
-
   enddo
+
   write (6, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
   do na = 1, nat
      write (6, '(10x," atom ",i6)') na
@@ -141,5 +143,6 @@ subroutine zstar_eu
           , ipol = 1, 3) , jpol = 1, 3)
 
   enddo
+  call stop_clock ('zstar_eu')
   return
 end subroutine zstar_eu

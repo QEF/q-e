@@ -163,6 +163,7 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/zstar_eu_us.o \
 ../PH/add_for_charges.o \
 ../PH/add_dkmds.o \
+../PH/dvkb3.o \
 ../PH/addnlcc_zstar_eu_us.o
 
 MODULES = ../Modules/*.o

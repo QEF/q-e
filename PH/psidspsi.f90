@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -63,7 +63,6 @@ subroutine psidspsi (ik, uact, pdsp)
   logical :: ok
   ! used to save time
 
-
   allocate (ps1 ( nkb , nbnd ))    
   allocate (ps2 ( nkb , 3, nbnd))
   allocate (dspsi (npwx,nbnd))
@@ -104,30 +103,29 @@ subroutine psidspsi (ik, uact, pdsp)
      do na = 1, nat
         if (ityp (na) .eq.nt) then
            mu = 3 * (na - 1)
-           do ih = 1, nh (nt)
-              ikb = ijkb0 + ih
-              do jh = 1, nh (nt)
-                 jkb = ijkb0 + jh
-                 do ipol = 1, 3
-                    do ibnd = 1, nbnd
-                       if ( abs (uact (mu + 1) ) + &
-                            abs (uact (mu + 2) ) + &
-                            abs (uact (mu + 3) ) > eps) then
+           if ( abs (uact (mu + 1) ) + &
+                abs (uact (mu + 2) ) + &
+                abs (uact (mu + 3) ) > eps) then
+              do ih = 1, nh (nt)
+                 ikb = ijkb0 + ih
+                 do jh = 1, nh (nt)
+                    jkb = ijkb0 + jh
+                    do ipol = 1, 3
+                       do ibnd = 1, nbnd
                           ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +    &
                                qq (ih, jh, nt) *                 &
                                alphap(jkb, ibnd, ipol, ik) *     &
                                uact (mu + ipol)
-
                           ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                qq (ih, jh, nt) *                          &
                                (0.d0, - 1.d0) *                           &
                                becp1 (jkb, ibnd, ik) *                    &
                                uact (mu + ipol) * tpiba
-                       endif
+                       enddo
                     enddo
                  enddo
               enddo
-           enddo
+           endif
            ijkb0= ijkb0 + nh (nt)
         endif
      enddo
@@ -150,7 +148,6 @@ subroutine psidspsi (ik, uact, pdsp)
               igg = igk (ig)
               aux (ig) =  vkb(ig, ikb) *    &
                    (xk(ipol, ik) + g(ipol, igg) )
-
            enddo
            do ibnd = 1, nbnd
               dspsi(1:npw,ibnd) = ps2(ikb,ipol,ibnd) * aux(1:npw) &

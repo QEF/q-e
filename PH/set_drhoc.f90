@@ -31,6 +31,8 @@ subroutine set_drhoc (q)
   logical :: some_numeric
   ! in this case an auxiliary vector is needed
   real(kind=DP), allocatable :: aux (:)
+
+  call start_clock('set_drhoc')
   !
   ! check if some nlcc-pseudo is numeric and allocate memory if needed
   !
@@ -78,5 +80,6 @@ subroutine set_drhoc (q)
   enddo
 
   if (some_numeric) deallocate(aux)
+  call stop_clock('set_drhoc')
   return
 end subroutine set_drhoc

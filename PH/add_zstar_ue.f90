@@ -34,6 +34,7 @@ subroutine add_zstar_ue (imode0, npe)
 
   complex(kind=DP) :: ZDOTC
 
+  call start_clock('add_zstar_ue')
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
@@ -43,17 +44,9 @@ subroutine add_zstar_ue (imode0, npe)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      do jpol = 1, 3
         !
-        ! recalculate DeltaV*psi(bare) for electric field
+        ! read/compute DeltaV*psi(bare) for electric field
         !
         call dvpsi_e (ik, jpol)
-        !
-        ! In the case of USPP we save dvpsi on disc
-        ! We need this later for the aditional term.
-        !
-        if (okvan) then
-           nrec = (jpol-1) * nksq + ik
-           call davcio (dvpsi, lrbar, iubar, nrec, 1)
-        end if
         !
         do ipert = 1, npe
            mode = imode0 + ipert
@@ -71,5 +64,6 @@ subroutine add_zstar_ue (imode0, npe)
      enddo
 
   enddo
+  call stop_clock('add_zstar_ue')
   return
 end subroutine add_zstar_ue

@@ -66,7 +66,11 @@ subroutine allocate_phq
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))    
      allocate (dpqq( nhm, nhm, 3, ntyp))    
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin))    
+     allocate (this_dvkb3_is_on_file(nksq))    
+     this_dvkb3_is_on_file(:)=.false.
   endif
+  allocate (this_pcxpsi_is_on_file(nksq,3))
+  this_pcxpsi_is_on_file(:,:)=.false.
   allocate (alphap ( nkb , nbnd , 3 , nksq))    
   allocate (becp1 ( nkb , nbnd , nksq))    
 
