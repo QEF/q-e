@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine local_dos (iflag, kpoint, kband, emin, emax, dos)
+subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !--------------------------------------------------------------------
   !
   !     iflag=0: calculates |psi|^2 for band kband at point kpoint
@@ -21,6 +21,7 @@ subroutine local_dos (iflag, kpoint, kband, emin, emax, dos)
   use parameters, only: DP
   use pwcom
   use becmod
+  implicit none
   !
   ! input variables
   !
@@ -29,15 +30,22 @@ subroutine local_dos (iflag, kpoint, kband, emin, emax, dos)
   real(kind=DP) :: emin, emax
   ! output as determined by iflag
   real(kind=DP) :: dos (nrxx)
+
+  logical :: lsign    ! if true and k=gamma and iflag=0 
+                      ! write |psi|^2 * sign(psi)
+                      
   !
   !    local variables
   !
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, np
   ! counters for US PPs
-  integer :: ir, is, ig, ibnd, ik
+  integer :: ir, is, ig, ibnd, ik, irm
   ! counters
   real(kind=DP) :: w0gauss, w1gauss, w, w1
+  real(kind=DP) :: seno, coseno, modulus, maxmod
   ! weights
+  complex(kind=DP), allocatable :: segno(:)
+  logical :: lgamma
   external w0gauss, w1gauss
   !
   call setv (nrxx * nspin, 0.d0, rho, 1)
@@ -73,78 +81,116 @@ subroutine local_dos (iflag, kpoint, kband, emin, emax, dos)
 
   enddo
 
-  if (iflag.eq.0) wg (kband, kpoint) = 1.0
+  if (iflag.eq.0) wg (kband, kpoint) = 1.d0
   !
   !     here we sum for each k point the contribution
   !     of the wavefunctions to the density of states
   !
+  lgamma=.false.
+  if (iflag.eq.0) &
+     lgamma=(sqrt(xk(1,kpoint)**2+xk(2,kpoint)**2+xk(3,kpoint)**2).lt.1d-9)
   do ik = 1, nks
-     if (lsda) current_spin = isk (ik)
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     call init_us_2 (npw, igk, xk (1, ik), vkb)
+     if (ik.eq.kpoint.or.iflag.ne.0) then
+        if (lsda) current_spin = isk (ik)
+        call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        call init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      !
      !     here we compute the density of states
      !
-     do ibnd = 1, nbnd
-        !
+        do ibnd = 1, nbnd
+           if (ibnd.eq.kband.or.iflag.ne.0) then
+              call setv (2 * nrxxs, 0.d0, psic, 1)
+              do ig = 1, npw
+                 psic (nls (igk (ig) ) ) = evc (ig, ibnd)
+              enddo
+              call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+              w1 = wg (ibnd, ik) / omega
+!
+!  Compute and save the sign of the wavefunction at the gamma point
+!  after multiplication for a phase factor that makes it real.
+!
+              if (iflag.eq.0.and.lgamma.and.lsign) then
+                 if (ik.eq.kpoint.and.ibnd.eq.kband) then
+                    allocate(segno(nrxx))
+                    if (doublegrid) then
+                       call cinterpolate (segno, psic, 1)
+                    else
+                       call ZCOPY(nrxx,psic,1,segno,1)
+                    endif   
+                    maxmod=0.d0
+                    do ir = 1, nrxx
+                       modulus=abs(segno(ir))
+                       if (modulus.gt.maxmod) then
+                          irm=ir
+                          maxmod=modulus
+                       endif
+                    enddo
+                    if (maxmod.gt.1.d-10) then
+                       coseno=real(segno(irm))/maxmod
+                       seno= DIMAG(segno(irm))/maxmod
+                    else   
+                       call error('local_dos','zero wavefuntion',1)
+                    endif
+#ifdef PARA
+                    call mp_bcast(coseno,0)
+                    call mp_bcast(seno,0)
+#endif
+                    do ir=1,nrxx
+                       segno(ir)=segno(ir)*cmplx(coseno,-seno)
+                       segno(ir)=cmplx(sign(1.d0,real(segno(ir))),0.d0)
+                    enddo
+                 endif
+              endif
 
-        call setv (2 * nrxxs, 0.d0, psic, 1)
-        do ig = 1, npw
-           psic (nls (igk (ig) ) ) = evc (ig, ibnd)
-
-        enddo
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-
-        w1 = wg (ibnd, ik) / omega
-        do ir = 1, nrxxs
-           rho (ir, current_spin) = rho (ir, current_spin) + w1 * (real ( &
-                psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
-
-        enddo
+              do ir=1,nrxxs
+                 rho (ir, current_spin) = rho (ir, current_spin) + &
+                   w1 * (real ( psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
+              enddo
         !
         !    If we have a US pseudopotential we compute here the sumbec term
         !
 
-        w1 = wg (ibnd, ik)
-        ijkb0 = 0
-        do np = 1, ntyp
-           if (tvanp (np) ) then
-              do na = 1, nat
-                 if (ityp (na) .eq.np) then
-                    ijh = 1
-                    do ih = 1, nh (np)
-                       ikb = ijkb0 + ih
-                       becsum (ijh, na, current_spin) = becsum (ijh, na, &
-                            current_spin) + w1 * real (conjg (becp (ikb, ibnd) ) &
-                            * becp (ikb, ibnd) )
-                       ijh = ijh + 1
-                       do jh = ih + 1, nh (np)
-                          jkb = ijkb0 + jh
-                          becsum (ijh, na, current_spin) = becsum (ijh, na, &
-                               current_spin) + w1 * 2.d0 * real (conjg (becp (ikb, ibnd) ) &
+              w1 = wg (ibnd, ik)
+              ijkb0 = 0
+              do np = 1, ntyp
+                 if (tvanp (np) ) then
+                    do na = 1, nat
+                       if (ityp (na) .eq.np) then
+                          ijh = 1
+                          do ih = 1, nh (np)
+                             ikb = ijkb0 + ih
+                             becsum(ijh,na,current_spin)=becsum(ijh,na, &
+                               current_spin)+w1*real(conjg(becp(ikb,ibnd)) &
+                                            * becp (ikb, ibnd) )
+                             ijh = ijh + 1
+                             do jh = ih + 1, nh (np)
+                                jkb = ijkb0 + jh
+                                becsum(ijh,na,current_spin)=becsum(ijh,na, &
+                                current_spin)+w1*2.d0*real(conjg(becp(ikb,ibnd)) &
                                * becp (jkb, ibnd) )
-                          ijh = ijh + 1
-                       enddo
+                                ijh = ijh + 1
+                             enddo
+                          enddo
+                          ijkb0 = ijkb0 + nh (np)
+                       endif
                     enddo
-                    ijkb0 = ijkb0 + nh (np)
+                 else
+                    do na = 1, nat
+                       if (ityp (na) .eq.np) ijkb0 = ijkb0 + nh (np)
+                    enddo
                  endif
-              enddo
-           else
-              do na = 1, nat
-                 if (ityp (na) .eq.np) ijkb0 = ijkb0 + nh (np)
               enddo
            endif
         enddo
-     enddo
+     endif
   enddo
   if (doublegrid) then
      do is = 1, nspin
         call interpolate (rho (1, is), rho (1, is), 1)
      enddo
-
   endif
   !
   !    Here we add the US contribution to the charge
@@ -154,8 +200,13 @@ subroutine local_dos (iflag, kpoint, kband, emin, emax, dos)
   call DCOPY (nrxx, rho (1, 1), 1, dos, 1)
   do is = 2, nspin
      call DAXPY (nrxx, 1.d0, rho (1, is), 1, dos, 1)
-
   enddo
+  if (iflag.eq.0.and.lgamma.and.lsign) then
+     do ir=1,nrxx
+        dos(ir)=dos(ir)*segno(ir)
+     enddo
+     deallocate(segno)
+  endif
   if (iflag.eq.0) return
   !
   !    symmetrization of the local dos

@@ -273,6 +273,9 @@ PWOBJS = ../PW/pwcom.o  \
 ../PW/write_config_to_file.o  \
 ../PW/write_ns.o  \
 ../PW/ylmr2.o
+
+PHOBJS= ../PH/cinterpolate.o
+
 #
 # targets
 #
@@ -281,7 +284,7 @@ include .dependencies
 all: pp.x projwfc.x chdens.x average.x plotrho.x voronoy.x dos.x bands.x
 
 pp.x: $(PPOBJS) postproc.o
-	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	$(LD) -o pp.x postproc.o $(PPOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(LDFLAGS)
 
 projwfc.x:  $(PPOBJS) projwfc.o
 	$(LD) -o projwfc.x projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)

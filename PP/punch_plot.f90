@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 
 subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
-     stm_wfc_matching, emin, emax, kpoint, kband, spin_component)
+     stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output several three dimensional quantit
@@ -43,7 +43,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   implicit none
   character :: filplot * 14
   integer :: kpoint, kband, spin_component, plot_num
-  logical :: stm_wfc_matching
+  logical :: stm_wfc_matching, lsign
   real(kind=DP) :: sample_bias, z, dz
 
   real(kind=DP) :: emin, emax, wf
@@ -114,13 +114,13 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The local density of states at e_fermi on output
      !
 
-     call local_dos (1, kpoint, kband, emin, emax, raux)
+     call local_dos (1, lsign, kpoint, kband, emin, emax, raux)
   elseif (plot_num.eq.4) then
      !
      !       The local density of electronic entropy on output
      !
 
-     call local_dos (2, kpoint, kband, emin, emax, raux)
+     call local_dos (2, lsign, kpoint, kband, emin, emax, raux)
   elseif (plot_num.eq.5) then
 #ifdef PARA
      call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
@@ -149,7 +149,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   elseif (plot_num.eq.7) then
 
-     call local_dos (0, kpoint, kband, emin, emax, raux)
+     call local_dos (0, lsign, kpoint, kband, emin, emax, raux)
 
   elseif (plot_num.eq.8) then
 
@@ -161,7 +161,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   elseif (plot_num.eq.10) then
 
-     call local_dos (3, kpoint, kband, emin, emax, raux)
+     call local_dos (3, lsign, kpoint, kband, emin, emax, raux)
   elseif (plot_num.eq.11) then
      call subtract_vxc (raux, spin_component)
      call DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)

@@ -56,6 +56,7 @@ subroutine do_postproc (nodenumber)
   !
   ! kpoint      which k-point
   ! kband       which band
+  ! lsign       if true and k point is Gamma, save |psi|^2 sign(psi)
   !
   use pwcom
   use io
@@ -64,14 +65,14 @@ subroutine do_postproc (nodenumber)
   character :: nodenumber * 3, filband * 14, filplot * 14
 
   integer :: n_atom_wfc, plot_num, kpoint, kband, spin_component, ios
-  logical :: stm_wfc_matching
+  logical :: stm_wfc_matching, lsign
 
   real(kind=DP) :: emin, emax, sample_bias, z, dz
   ! directory for temporary files
 
   namelist / inputpp / tmp_dir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
-       filplot, filband
+       filplot, filband, lsign
   !
   nd_nmbr = nodenumber
   !
@@ -87,6 +88,7 @@ subroutine do_postproc (nodenumber)
   z = 1.d0
   dz = 0.05d0
   stm_wfc_matching = .true.
+  lsign=.false.
   emin = - 999.0d0
   emax = ef*13.6058d0
   !
@@ -126,7 +128,7 @@ subroutine do_postproc (nodenumber)
   !   Now do whatever you want
   !
   call punch_plot (filplot, plot_num, sample_bias, z, dz, &
-       stm_wfc_matching, emin, emax, kpoint, kband, spin_component)
+       stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
   call punch_band (filband)
 
   return
