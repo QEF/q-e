@@ -1,6 +1,0 @@
- &inputpp
-    outdir='/home/giannozz/tmp//'
-    prefix='ni'
-    io_choice='both'
-    Emax=25.0, DeltaE=0.1, smoothing=0.3
- /
