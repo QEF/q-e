@@ -249,6 +249,7 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/neb_variables.o \
+../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/pseudo_types.o \
