@@ -1444,6 +1444,8 @@ MODULE path_base
       REAL (KIND=DP), INTENT(IN) :: err_max
       !
       !
+      check_exit = .FALSE.
+      !
       ! ... the program checks if the convergence has been achieved
       !
       IF ( err_max <= path_thr )  THEN
