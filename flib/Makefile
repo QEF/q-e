@@ -80,6 +80,10 @@ lapack_mkl : lapack_mkl.o
 	$(AR) $(ARFLAGS) flib.a $?
 	touch $@
 
+lapack_atlas : lapack_atlas.o dlamch.o
+	$(AR) $(ARFLAGS) flib.a $?
+	touch $@
+
 eispack : eispack.o 
 	touch $@
 
@@ -93,6 +97,6 @@ ptools.a : $(POBJS)
 clean :
 	- /bin/rm -f ptools.a *.o *.mod *.i *.F90 core* work.pc flib.a \
 		blas_and_lapack blas lapack lapack_ibm lapack_t3e \
-		lapack_mkl eispack
+		lapack_mkl eispack lapack_atlas
 
 include .dependencies
