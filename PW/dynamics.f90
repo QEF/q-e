@@ -125,9 +125,7 @@ SUBROUTINE dynamics()
      !
      ! ... initial thermalization. N.B. tau is in units of alat
      !
-     ! work around an ifort bug
-     !CALL start_therm()
-     CALL start_therm_(mass, vel)
+     CALL start_therm()
      !
      elapsed_time = 0.D0
      !
@@ -154,18 +152,14 @@ SUBROUTINE dynamics()
      WRITE( stdout, '(/,5X,"Thermalization: delta_T = ",F6.3, &
                          & ", T = ",F6.1)' )  - delta_T, ( temp_new - delta_T )
      !
-     ! work around an ifort bug
-     !CALL thermalize( temp_new, ( temp_new - delta_T ) )
-     CALL thermalize_( temp_new, ( temp_new - delta_T ), vel )
+     CALL thermalize( temp_new, ( temp_new - delta_T ) )
      !
   ELSE IF ( delta_T /= 1.D0 .AND. delta_T >= 0 ) THEN
      !
      WRITE( stdout, '(/,5X,"Thermalization: delta_T = ",F6.3, &
                          & ", T = ",F6.1)' ) delta_T, temp_new * delta_T
      !
-     ! work around an ifort bug
-     !CALL thermalize( temp_new, temp_new * delta_T )
-     CALL thermalize_( temp_new, temp_new * delta_T, vel )
+     CALL thermalize( temp_new, temp_new * delta_T )
      !
   END IF
   !
@@ -336,305 +330,147 @@ SUBROUTINE dynamics()
      END SUBROUTINE project_velocity 
      !
      !
-!     !-----------------------------------------------------------------------
-!     SUBROUTINE start_therm()
-!       !-----------------------------------------------------------------------
-!       !
-!       ! ... Starting thermalization of the system
-!       !
-!       USE symme, ONLY : invsym, nsym, irt
-!       !
-!       IMPLICIT NONE
-!       !
-!       ! ... local variables
-!       !
-!       INTEGER                :: na, nb
-!       REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
-!                                 ml(3), dir_x, dir_y, dir_z, module
-!         ! ek = kinetic energy
-!       !  
-!       REAL(KIND=DP),EXTERNAL :: rndm
-!       !
-!       !    
-!       aux = temperature / convert_E_to_temp
-!       !
-!       ! ... velocity in random direction, with modulus accordingly to mass 
-!       ! ... and temperature: 3/2KT = 1/2mv^2
-!       !
-!       DO na = 1, nat
-!          !
-!          ! ... N.B. velox is in a.u. units /alat
-!          !
-!          velox = SQRT( 3.D0 * aux / mass(na) ) / alat
-!          !
-!          dir_x = rndm() - 0.5D0
-!          dir_y = rndm() - 0.5D0
-!          dir_z = rndm() - 0.5D0
-!          !
-!          module = 1.D0 / SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
-!          !
-!          vel(1,na) = velox * dir_x * module
-!          vel(2,na) = velox * dir_y * module
-!          vel(3,na) = velox * dir_z * module
-!          !
-!       END DO
-!       !
-!       ! ... if there is inversion symmetry, equivalent atoms have 
-!       ! ... opposite velocities
-!       !
-!       ml(:) = 0.D0
-!       !
-!       IF ( invsym ) THEN
-!          !
-!          DO na = 1, nat
-!             !
-!             nb = irt( ( nsym / 2 + 1 ), na )
-!             !
-!             IF ( nb > na ) vel(:,nb) = - vel(:,na)
-!             !
-!             ! ... the atom on the inversion center is kept fixed
-!             !
-!             IF ( na == nb ) vel(:,na) = 0.D0
-!             !
-!          END DO
-!          !
-!       ELSE
-!          !
-!          ! ... put total linear momentum equal zero if all atoms move
-!          !
-!          IF ( .NOT. lfixatom ) THEN
-!             !
-!             total_mass = 0.D0
-!             !
-!             DO na = 1, nat
-!                !
-!                total_mass = total_mass + mass(na)
-!                !
-!                ml(:) = ml(:) + mass(na) * vel(:,na)
-!                !
-!             END DO
-!             !
-!             ml(:) = ml(:) / total_mass
-!             !
-!          END IF
-!          !
-!       END IF
-!       !
-!       ek = 0.D0
-!       !
-!       DO na = 1, nat
-!          !
-!          vel(:,na) = vel(:,na) - ml(:)
-!          !
-!          ek = ek + 0.5D0 * mass(na) * ( ( vel(1,na) - ml(1) )**2 + &
-!                                         ( vel(2,na) - ml(2) )**2 + &
-!                                         ( vel(3,na) - ml(3) )**2 )
-!          !
-!       END DO   
-!       !
-!       ! ... after the velocity of the center of mass has been subtracted the
-!       ! ... temperature is usually changed. Set again the temperature to the
-!       ! ... right value.
-!       !
-!       temp_new = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * convert_E_to_temp
-!       !
-!       CALL thermalize( temp_new, temperature )
-!       !
-!       RETURN
-!       !
-!     END SUBROUTINE start_therm 
-!     !
-!     !
-!     !-----------------------------------------------------------------------
-!     SUBROUTINE thermalize( temp_old, temp_new )
-!       !-----------------------------------------------------------------------
-!       !
-!       IMPLICIT NONE
-!       !
-!       ! ... INPUT variables
-!       !
-!       REAL(KIND=DP) :: temp_new, temp_old
-!       !
-!       ! ... local variables
-!       !
-!       INTEGER       :: na
-!       REAL(KIND=DP) :: aux
-!       !
-!       !
-!       ! ... rescale the velocities by a factor 3 / 2KT / Ek
-!       !
-!       IF ( temp_new > 0.D0 .AND. temp_old > 0.D0 ) THEN
-!          !
-!          aux = SQRT( temp_new / temp_old )
-!          !
-!       ELSE
-!          !
-!          aux = 0.D0
-!          !
-!       END IF
-!       !
-!       vel = vel * aux * REAL( if_pos )
-!       !
-!       RETURN
-!       !
-!     END SUBROUTINE thermalize         
+     !-----------------------------------------------------------------------
+     SUBROUTINE start_therm()
+       !-----------------------------------------------------------------------
+       !
+       ! ... Starting thermalization of the system
+       !
+       USE symme, ONLY : invsym, nsym, irt
+       !
+       IMPLICIT NONE
+       !
+       ! ... local variables
+       !
+       INTEGER                :: na, nb
+       REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
+                                 ml(3), dir_x, dir_y, dir_z, module
+         ! ek = kinetic energy
+       !  
+       REAL(KIND=DP),EXTERNAL :: rndm
+       !
+       !    
+       aux = temperature / convert_E_to_temp
+       !
+       ! ... velocity in random direction, with modulus accordingly to mass 
+       ! ... and temperature: 3/2KT = 1/2mv^2
+       !
+       DO na = 1, nat
+          !
+          ! ... N.B. velox is in a.u. units /alat
+          !
+          velox = SQRT( 3.D0 * aux / mass(na) ) / alat
+          !
+          dir_x = rndm() - 0.5D0
+          dir_y = rndm() - 0.5D0
+          dir_z = rndm() - 0.5D0
+          !
+          module = 1.D0 / SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
+          !
+          vel(1,na) = velox * dir_x * module
+          vel(2,na) = velox * dir_y * module
+          vel(3,na) = velox * dir_z * module
+          !
+       END DO
+       !
+       ! ... if there is inversion symmetry, equivalent atoms have 
+       ! ... opposite velocities
+       !
+       ml(:) = 0.D0
+       !
+       IF ( invsym ) THEN
+          !
+          DO na = 1, nat
+             !
+             nb = irt( ( nsym / 2 + 1 ), na )
+             !
+             IF ( nb > na ) vel(:,nb) = - vel(:,na)
+             !
+             ! ... the atom on the inversion center is kept fixed
+             !
+             IF ( na == nb ) vel(:,na) = 0.D0
+             !
+          END DO
+          !
+       ELSE
+          !
+          ! ... put total linear momentum equal zero if all atoms move
+          !
+          IF ( .NOT. lfixatom ) THEN
+             !
+             total_mass = 0.D0
+             !
+             DO na = 1, nat
+                !
+                total_mass = total_mass + mass(na)
+                !
+                ml(:) = ml(:) + mass(na) * vel(:,na)
+                !
+             END DO
+             !
+             ml(:) = ml(:) / total_mass
+             !
+          END IF
+          !
+       END IF
+       !
+       ek = 0.D0
+       !
+       DO na = 1, nat
+          !
+          vel(:,na) = vel(:,na) - ml(:)
+          !
+          ek = ek + 0.5D0 * mass(na) * ( ( vel(1,na) - ml(1) )**2 + &
+                                         ( vel(2,na) - ml(2) )**2 + &
+                                         ( vel(3,na) - ml(3) )**2 )
+          !
+       END DO   
+       !
+       ! ... after the velocity of the center of mass has been subtracted the
+       ! ... temperature is usually changed. Set again the temperature to the
+       ! ... right value.
+       !
+       temp_new = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * convert_E_to_temp
+       !
+       CALL thermalize( temp_new, temperature )
+       !
+       RETURN
+       !
+     END SUBROUTINE start_therm 
+     !
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE thermalize( temp_old, temp_new )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       ! ... INPUT variables
+       !
+       REAL(KIND=DP) :: temp_new, temp_old
+       !
+       ! ... local variables
+       !
+       INTEGER       :: na
+       REAL(KIND=DP) :: aux
+       !
+       !
+       ! ... rescale the velocities by a factor 3 / 2KT / Ek
+       !
+       IF ( temp_new > 0.D0 .AND. temp_old > 0.D0 ) THEN
+          !
+          aux = SQRT( temp_new / temp_old )
+          !
+       ELSE
+          !
+          aux = 0.D0
+          !
+       END IF
+       !
+       vel = vel * aux * REAL( if_pos )
+       !
+       RETURN
+       !
+     END SUBROUTINE thermalize         
      !  
 END SUBROUTINE dynamics
-
-
-!-----------------------------------------------------------------------
-SUBROUTINE start_therm_(mass, vel)
-  !-----------------------------------------------------------------------
-  !
-  ! ... Starting thermalization of the system
-  !
-  USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat
-  USE dynam,         ONLY : temperature
-  USE cell_base,     ONLY : alat
-  USE symme, ONLY : invsym, nsym, irt
-  USE control_flags, ONLY : lfixatom
-  !
-  IMPLICIT NONE
-  !
-  REAL(KIND=DP) :: mass(nat), vel(3, nat)
-  !
-  ! ... local variables
-  !
-  REAL(KIND=DP), PARAMETER :: convert_E_to_temp = 315642.28D0 * 0.5D0
-  !
-  INTEGER                :: na, nb
-  REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
-                            ml(3), dir_x, dir_y, dir_z, module, temp_new
-    ! ek = kinetic energy
-  !  
-  REAL(KIND=DP),EXTERNAL :: rndm
-  !
-  !    
-  aux = temperature / convert_E_to_temp
-  !
-  ! ... velocity in random direction, with modulus accordingly to mass 
-  ! ... and temperature: 3/2KT = 1/2mv^2
-  !
-  DO na = 1, nat
-     !
-     ! ... N.B. velox is in a.u. units /alat
-     !
-     velox = SQRT( 3.D0 * aux / mass(na) ) / alat
-     !
-     dir_x = rndm() - 0.5D0
-     dir_y = rndm() - 0.5D0
-     dir_z = rndm() - 0.5D0
-     !
-     module = 1.D0 / SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
-     !
-     vel(1,na) = velox * dir_x * module
-     vel(2,na) = velox * dir_y * module
-     vel(3,na) = velox * dir_z * module
-     !
-  END DO
-  !
-  ! ... if there is inversion symmetry, equivalent atoms have 
-  ! ... opposite velocities
-  !
-  ml(:) = 0.D0
-  !
-  IF ( invsym ) THEN
-     !
-     DO na = 1, nat
-        !
-        nb = irt( ( nsym / 2 + 1 ), na )
-        !
-        IF ( nb > na ) vel(:,nb) = - vel(:,na)
-        !
-        ! ... the atom on the inversion center is kept fixed
-        !
-        IF ( na == nb ) vel(:,na) = 0.D0
-        !
-     END DO
-     !
-  ELSE
-     !
-     ! ... put total linear momentum equal zero if all atoms move
-     !
-     IF ( .NOT. lfixatom ) THEN
-        !
-        total_mass = 0.D0
-        !
-        DO na = 1, nat
-           !
-           total_mass = total_mass + mass(na)
-           !
-           ml(:) = ml(:) + mass(na) * vel(:,na)
-           !
-        END DO
-        !
-        ml(:) = ml(:) / total_mass
-        !
-     END IF
-     !
-  END IF
-  !
-  ek = 0.D0
-  !
-  DO na = 1, nat
-     !
-     vel(:,na) = vel(:,na) - ml(:)
-     !
-     ek = ek + 0.5D0 * mass(na) * ( ( vel(1,na) - ml(1) )**2 + &
-                                    ( vel(2,na) - ml(2) )**2 + &
-                                    ( vel(3,na) - ml(3) )**2 )
-     !
-  END DO   
-  !
-  ! ... after the velocity of the center of mass has been subtracted the
-  ! ... temperature is usually changed. Set again the temperature to the
-  ! ... right value.
-  !
-  temp_new = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * convert_E_to_temp
-  !
-  ! work around an ifort bug
-  !CALL thermalize( temp_new, temperature )
-  CALL thermalize_( temp_new, temperature, vel )
-  !
-  RETURN
-  !
-END SUBROUTINE start_therm_
-!
-!-----------------------------------------------------------------------
-SUBROUTINE thermalize_( temp_old, temp_new, vel )
-  !-----------------------------------------------------------------------
-  !
-  USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat, if_pos
-  !
-  IMPLICIT NONE
-  !
-  ! ... INPUT variables
-  !
-  REAL(KIND=DP) :: temp_new, temp_old
-  REAL(KIND=DP) :: vel(3, nat)
-  !
-  ! ... local variables
-  !
-  INTEGER       :: na
-  REAL(KIND=DP) :: aux
-  !
-  !
-  ! ... rescale the velocities by a factor 3 / 2KT / Ek
-  !
-  IF ( temp_new > 0.D0 .AND. temp_old > 0.D0 ) THEN
-     !
-     aux = SQRT( temp_new / temp_old )
-     !
-  ELSE
-     !
-     aux = 0.D0
-     !
-  END IF
-  !
-  vel = vel * aux * REAL( if_pos )
-  !
-  RETURN
-  !
-END SUBROUTINE thermalize_
