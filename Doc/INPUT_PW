@@ -624,7 +624,7 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
    crystal : atomic positions are in crystal coordinates (see below)
    angstrom: atomic positions are in A
 
-if calculation = 'neb'
+if calculation = 'neb' .OR. 'smd'
 
   There are many cards like the following
   
@@ -675,7 +675,8 @@ where :
   x, y, z     Real: atomic positions 
   if_pos:     Integer: component i of the force for this atom is multiplied
               by if_pos(i), which must be 0 or 1. Used to keep selected atoms
-              and/or selected components fixed in a NEB, MD or optimization run
+              and/or selected components fixed in neb, smd, MD dynamics or 
+              structural optimization run
               
 -------------------------------------------------------------------------------
 K_POINTS { tpiba | automatic | crystal | gamma }
