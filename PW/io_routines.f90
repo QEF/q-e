@@ -161,7 +161,11 @@ MODULE io_routines
        CALL mp_bcast( PES_gradient, ionode_id )
        !
        IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) &
-          CALL mp_bcast( vel, ionode_id )  
+          CALL mp_bcast( vel, ionode_id )
+       !   
+       CALL mp_bcast( Emax, ionode_id )  
+       CALL mp_bcast( Emin, ionode_id )
+       CALL mp_bcast( Emax_index, ionode_id )
 #endif       
        !
      END SUBROUTINE read_restart
