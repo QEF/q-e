@@ -119,54 +119,12 @@ $ROOT_DIR/bin/path_int.x < input
 if [[ "${list_of_atoms}" != "" ]]; then
   #
   ##############################################################################
-  ##      dynamical generation of the "from_restart_to_xyz.gawk" script       ##
-  ##############################################################################
-  file="from_restart_to_xyz.gawk"
-cat > ${file} << EOF
-BEGIN { a_zero = 0.529177 }   
-{
-if ( \$1 == "Image:" ) {
-  count = -1 ;
-  printf "${nat}" ;
-  printf "     \n" ;
-  printf "     \n" ;
-  }
-else {
-  count++;
-EOF
-  #
-  ref1=0
-  ref2=0 
-  #
-  index=0
-  #
-  for atom in ${list_of_atoms}; do
-    #
-    index=$(( ${index} + 1 ))
-    #
-    ref1=$(( ${ref2} + 1 ))
-    ref2=$(( ${ref2} + ${N[${index}]} ))
-    #
-    echo "  if ( count >= ${ref1} && count <= ${ref2} ) { " >> ${file}
-    echo "    printf \"${atom}  \";                       " >> ${file}
-    echo "    printf \" %8.4f   \", \$1 * a_zero ;        " >> ${file}
-    echo "    printf \" %8.4f   \", \$2 * a_zero ;        " >> ${file}
-    echo "    printf \" %8.4f   \", \$3 * a_zero ;        " >> ${file}
-    echo "    printf \" \\n\";                            " >> ${file}
-    echo "    }                                           " >> ${file}
-    #
-  done
-  #
-  echo "  }                                               " >> ${file}
-  echo "}                                                 " >> ${file}
-  #
-  ##############################################################################
   ##      dynamical generation of the "from_restart_to_axfs.gawk" script      ##
   ##############################################################################
   file="from_restart_to_axsf.gawk"
 cat > ${file} << EOF
 BEGIN{ 
-  a_0  = 0.529177 ;
+  a_0  = 0.529177 ; count = -10000;
   printf " ANIMSTEPS %3i \n", ${new_num_of_images} ;
   printf " CRYSTAL       \n" ;
   printf " PRIMVEC       \n" ;
@@ -175,12 +133,15 @@ BEGIN{
   printf "  %16.10f  %16.10f  %16.10f \n", ${a31}*a_0, ${a32}*a_0, ${a33}*a_0;
 }
 {
-  if ( \$1 == "Image:" ) {
-    count = -1 ;
-    printf " PRIMCOORD %3i \n", \$2 ;
-    printf "%4i  1 \n", ${nat} ;
-    }
-  else {
+if ( \$0 == "RESTART INFORMATIONS" ) { next; next; next }
+if ( \$0 == "ENERGY, POSITIONS AND GRADIENTS" ) { next }
+if ( \$0 == "VELOCITIES" ) { exit }
+if ( \$1 == "Image:" ) {
+  count = -1 ;
+  printf " PRIMCOORD %3i \n", \$2 ;
+  printf "%4i  1 \n", ${nat} ;
+  }
+else {
     count++;
 EOF
   #
