@@ -18,42 +18,79 @@ default :
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  pwall        same as "make pw ph pp gamma nc pwcond d3 raman tools"'
 	@echo '  all          same as "make pwall fpmd cp ld1 upf"'
-	@echo '  links        creates links to executables in bin/'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : mods libs
+pw : bindir mods libs
 	if test -d PW   ; then ( cd PW   ; make all ) ; fi
-fpmd : mods libs
+	( cd bin/ ; ln -fs ../PW/pw.x . ;  ln -fs ../PW/memory.x )
+
+fpmd : bindir mods libs
 	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
-cp : mods libs
+	( cd bin/ ; ln -fs ../FPMD/par2.x . ; ln -fs ../FPMD/fpmdpp.x . )
+
+cp : bindir mods libs
 	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
+	( cd bin/ ; ln -fs ../CPV/cp.x . )
 
-ph : mods libs pw
+ph : pw
 	if test -d PH ; then ( cd PH ; make all ) ; fi
-pp : mods libs pw
+	( cd bin/ ; ln -fs ../PH/ph.x . )
+
+pp : pw
 	if test -d PP ; then ( cd PP ; make all ) ; fi
-gamma : mods libs pw
+	( cd bin/ ; \
+	  for exe in \
+	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
+	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
+	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
+	      ../PP/pw2wan.x ../PP/voronoy.x \
+	  ; do \
+	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	  done \
+	)
+
+gamma : pw
 	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
-nc : mods libs pw
+	( cd bin/ ; ln -fs ../Gamma/phcg.x . )
+
+nc : pw
 	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
-pwcond : mods libs pw pp
+	( cd bin/ ; ln -fs ../PWNC/pwnc.x . )
+
+pwcond : pp
 	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
-d3 : mods libs pw ph
+	( cd bin/ ; ln -fs ../PWCOND/pwcond.x . )
+
+d3 : ph
 	if test -d D3 ; then ( cd D3 ; make all ) ; fi
-raman : mods libs pw ph
+	( cd bin/ ; ln -fs ../D3/d3.x . )
+
+raman : ph
 	if test -d Raman ; then ( cd Raman ; make all ) ; fi
+	( cd bin/ ; ln -fs ../Raman/ram.x . )
 
-tools : mods libs pw
+tools : pw
 	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
-upf : mods libs
-	if test -d upftools ; then ( cd upftools ; make all ) ; fi
-ld1 : mods libs pw
-	if test -d atomic ; then ( cd atomic ; make all ) ; fi
+	( cd bin/ ; \
+	  for exe in \
+	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
+	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
+	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \
+	  ; do \
+	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	  done \
+	)
 
-pwall : pw ph pp gamma nc pwcond d3 raman tools
+upf : bindir mods libs
+	if test -d upftools ; then ( cd upftools ; make all ) ; fi
+ld1 : pw
+	if test -d atomic ; then ( cd atomic ; make all ) ; fi
+	( cd bin/ ; ln -fs ../atomic/ld1.x . )
+
+pwall : pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
@@ -61,28 +98,8 @@ mods :
 libs : mods
 	( cd clib ; make all )
 	( cd flib ; make all )
-
-# create link only if file exists
-links :
+bindir :
 	test -d bin || mkdir bin
-	( cd bin/ ; \
-	  for exe in \
-	      ../PW/pw.x ../PW/memory.x ../PH/ph.x ../D3/d3.x \
-	      ../Gamma/phcg.x ../Raman/ram.x \
-	      ../CPV/cp.x ../FPMD/par2.x ../FPMD/fpmdpp.x \
-	      ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
-	      ../PP/efg.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x \
-	      ../PP/plotband.x ../PP/pmw.x ../PP/pw2casino.x \
-	      ../PP/pw2wan.x ../PP/voronoy.x \
-	      ../PWNC/pwnc.x ../PWCOND/pwcond.x \
-	      ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x \
-	      ../pwtools/matdyn.x ../pwtools/q2r.x ../pwtools/dist.x \
-	      ../pwtools/ev.x ../pwtools/kpoints.x ../pwtools/path_int.x \
-	      ../atomic/ld1.x ../PP/efg.x \
-	  ; do \
-	      if test -f $$exe ; then ln -fs $$exe . ; fi \
-	  done \
-	)
 
 # remove object files and executables
 clean :
