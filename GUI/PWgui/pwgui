@@ -39,17 +39,17 @@ fi
 
 echo "
  ==================================================
-  This is PWGUI version: `cat $PWGUI/VERSION`
+  This is PWgui version: `cat $PWGUI/VERSION`
  --------------------------------------------------
 "
 if [ -d $PWGUI/bin ]; then
     echo "
- PWGUI: using the \"$PWGUI/bin/itkwish\" interpreter
+ PWgui: using the \"$PWGUI/bin/itkwish\" interpreter
 "
     $PWGUI/bin/itkwish $PWGUI/pwgui.tcl
 else
     echo "
- PWGUI: using the system default \"wish\" interpreter
+ PWgui: using the system default \"wish\" interpreter
 "
     wish $PWGUI/pwgui.tcl
 fi

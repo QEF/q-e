@@ -82,11 +82,11 @@ PWGUI_SRC_FILES = \
 # nothing by default
 
 default: 
-	cat make.usage
+	@cat make.usage
 
 
 clean:
-	-rm *~
+	-rm *~ */*~
 	-rm *.tgz 
 	-rm *.tar
 
@@ -210,23 +210,3 @@ _lib-links:
 
 _clean_lib-links:
 	cd lib; for link in $(EXTERNAL_LIB_DIRS); do rm -f $$link ; done
-
-
-#	@if test ! -d lib/ ; then \
-#		echo ""; echo "WARNING: cannot create pwgui-source-notcl package ..."; echo "         lib/ directory is missing ..."; exit 1; fi
-#	@for dir in $(LIB_DIRS); do \
-#		if test ! -d $$dir/ ; then \
-#			echo ""; \
-#			echo "WARNING: cannot create pwgui-source-all package ..."; \
-#			echo "         bin/ directory is missing ..."; \
-#			exit 1; \
-#		fi; \
-#	done
-#	@for dir in $(LIB_DIRS); do \
-#		if test ! -d $$dir/ ; then \
-#			echo ""; \
-#			echo "WARNING: cannot create pwgui-linux-i386-bin package ..."; \
-#			echo "         bin/ directory is missing ..."; \
-#			exit 1; \
-#		fi; \
-#	done

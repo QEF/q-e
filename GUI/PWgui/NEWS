@@ -1,3 +1,7 @@
+Version: 0.6.1 
+* adding internal EDITOR and PAGER to PWgui (better porting to
+non-unix systems)
+
 Version: 0.6.0
 * PWgui compatible with PWscf 2.0
 * D3.X module added

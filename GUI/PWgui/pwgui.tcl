@@ -26,14 +26,14 @@
 #
 
 if { [info exists env(PWGUI)] } {
-    puts " PWgui GUI: $env(PWGUI)"
+    puts " PWGUI       : $env(PWGUI)"
     set guib_dir [glob -nocomplain -directory [file join $env(PWGUI) lib] Guib-*]
     if { $guib_dir != "" } {
 	set env(GUIB) $guib_dir
     }
     if { [info exists env(GUIB)] } {
 	lappend auto_path $env(GUIB)
-        puts " GUIB engine: $env(GUIB)\n"
+        puts " GUIB engine : $env(GUIB)\n"
     }
 } else {
     puts stderr "   "
@@ -55,7 +55,9 @@ namespace eval ::pwscf {
 }
 
 # define here all pwscf's namespaces ...
-namespace eval ::pwscf::edit      {}
+namespace eval ::pwscf::edit      {
+    variable edit
+}
 namespace eval ::pwscf::menustate {}
 namespace eval ::pwscf::view      {}
 

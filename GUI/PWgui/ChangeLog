@@ -1,3 +1,11 @@
+Mon Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding the defaultPager and defaultEditor. i.e., internal editor
+	and pager (better porting to non-unix systems)
+
+Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* package was renamed from TkPWscf to PWgui * porting the package
+	to MS-Windows
+
 Wed Feb 18 2004 Anton Kokalj (tone.kokalj@ijs.si)	
 	* src-tcl/ directory renamed to src/
 	* CVS: moving the PWgui and GUIB repositories to O-sesame
