@@ -13,8 +13,12 @@ subroutine cg_readin
   use pwcom
   use cgcom
   use io
+#ifdef __PARA
+  use para, only: me
+  use mp, only: mp_bcast
+#endif
   implicit none
-  integer :: iunit
+  integer :: iunit =5, ionode_id = 0
   namelist /inputph/ prefix, fildyn, trans, epsil, raman, nmodes,     &
             tr2_ph, niter_ph, amass, tmp_dir, asr, deltatau, nderiv, &
             first, last
@@ -34,14 +38,31 @@ subroutine cg_readin
   nderiv = 2
   first  = 1
   last   = 0
-#if defined(__T3E) || defined(__ORIGIN)
-  iunit=9
-#else
-  iunit=5
+#ifdef __PARA
+  if (me == 1) then
 #endif
   read(iunit,'(a)') title_ph
   read(iunit,inputph)
 #ifdef __PARA
+  endif
+  !
+  call mp_bcast(prefix,ionode_id)
+  call mp_bcast(fildyn,ionode_id)
+  call mp_bcast(trans,ionode_id)
+  call mp_bcast(epsil,ionode_id)
+  call mp_bcast(raman,ionode_id)
+  call mp_bcast(nmodes,ionode_id)
+  call mp_bcast(tr2_ph,ionode_id)
+  call mp_bcast(niter_ph,ionode_id)
+  call mp_bcast(amass,ionode_id)
+  call mp_bcast(tr2_ph,ionode_id)
+  call mp_bcast(tmp_dir,ionode_id)
+  call mp_bcast(asr,ionode_id)
+  call mp_bcast(deltatau,ionode_id)
+  call mp_bcast(nderiv,ionode_id)
+  call mp_bcast(first,ionode_id)
+  call mp_bcast(last,ionode_id)
+  !
   call init_pool
 #endif
   !
@@ -81,11 +102,15 @@ subroutine cg_readmodes(iunit)
   use parameters, only: DP
   use pwcom
   use cgcom
+#ifdef __PARA
+  use para, only: me
+  use mp, only: mp_bcast
+#endif
   !
   implicit none
   integer :: iunit
   !
-  integer :: na, nu, mu
+  integer :: ionode_id = 0, na, nu, mu
   real(kind=DP) utest, unorm, DDOT
   !
   ! allocate space for modes, dynamical matrix, auxiliary stuff
@@ -107,7 +132,7 @@ subroutine cg_readmodes(iunit)
      ! these are all modes, but only independent modes are calculated
      !
      nmodes = 3*nat
-     call setv(3*nat*nmodes,0.d0,u,1)
+     u(:,:) = 0.d0
      do nu = 1,nmodes
         u(nu,nu) = 1.0
      end do
@@ -132,8 +157,17 @@ subroutine cg_readmodes(iunit)
      do na = 1,nat
         has_equivalent(na) = 0
      end do
+#ifdef __PARA
+     if (me == 0) then
+#endif
      do nu = 1,nmodes
         read (iunit,*,end=10,err=10) (u(mu,nu), mu=1,3*nat)
+     end do
+#ifdef __PARA
+     endif
+     call mp_bcast(u,ionode_id)
+#endif
+     do nu = 1,nmodes
         do mu = 1, nu-1
            utest = DDOT(3*nat,u(1,nu),1,u(1,mu),1)
            if (abs(utest).gt.1.0e-10) then

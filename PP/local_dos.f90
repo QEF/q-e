@@ -21,6 +21,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   use parameters, only: DP
   use pwcom
   use becmod
+#ifdef __PARA
+  use mp, only: mp_bcast
+#endif
   implicit none
   !
   ! input variables

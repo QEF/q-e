@@ -32,12 +32,10 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 #include "machine.h"
   use parameters, only : DP
 #ifdef __PARA
-  use para
+  use para, only: me
+  use mp, only: mp_bcast
 #endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
 !
 !   first the dummy variables
 !
@@ -75,9 +73,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   here the local variables
 !
-  real(kind=DP) :: tpi
-
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)
+  real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
 
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
@@ -96,7 +92,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   ! counter on rotations
   ! the rotated atom
 
-  integer :: info
+  integer :: root = 0
 
   real(kind=DP) :: eigen (3 * nat), modul, arg
 ! the eigenvalues of dynamical ma
@@ -125,8 +121,8 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   And we compute the matrices which represent the symmetry transformat
 !   in the basis of the displacements
 !
-  call setv (2 * 3 * 3 * 48 * 3 * nat, 0.d0, t, 1)
-  call setv (2 * 3 * 3 * 3 * nat, 0.d0, tmq, 1)
+  t(:,:,:,:) = (0.d0, 0.d0) 
+  tmq(:,:,:) = (0.d0, 0.d0) 
   if (minus_q) then
      nsymtot = nsymq + 1
   else
@@ -158,7 +154,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !     the patterns are rotated with this symmetry
 !
-           call setv (2 * 3 * nat, 0.d0, wrk_ru, 1)
+           wrk_ru(:,:) = (0.d0, 0.d0)
            do na = 1, nat
               sna = irt (irot, na)
               arg = 0.d0
@@ -229,25 +225,17 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! parallel stuff: first node broadcasts everything to all nodes
 !
 400 continue
-!-waits for all nodes to be ready
-  call mpi_barrier (MPI_COMM_WORLD, info)
-!-real*8
-  call mpi_bcast (gi, 144, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (gimq, 3, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-!-complex*16
-  call mpi_bcast (t, 2592 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (tmq, 54 * nat, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (u, 18 * nat * nat, MPI_REAL8, 0, MPI_COMM_WORLD, &
-       info)
-!-integer
-  call mpi_bcast (nsymq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (npert, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (nirr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (irotmq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (irgq, 48, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-!-logical
-
-  call mpi_bcast (minus_q, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, info)
+  call mp_bcast (gi, root)
+  call mp_bcast (gimq, root)
+  call mp_bcast (t, root)
+  call mp_bcast (tmq, root)
+  call mp_bcast (u, root)
+  call mp_bcast (nsymq, root)
+  call mp_bcast (npert, root)
+  call mp_bcast (nirr, root)
+  call mp_bcast (irotmq, root)
+  call mp_bcast (irgq, root)
+  call mp_bcast (minus_q, root)
 #endif
   return
 end subroutine set_sym_irr

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -31,14 +31,11 @@ subroutine elphon
   rewind (iudvscf)
   imode0 = 0
   do irr = 1, nirr
-   allocate (dvscf( nrxxs , nspin , npert(irr)))    
-     !
-     ! dvscf cannot be read here because its size is unknown to the
-     ! very stupid fortran-77 language - must call a subroutine
-     !
-     call read_dvscf (iudvscf, nrxxs, nspin, npert (irr), dvscf)
+     allocate (dvscf( nrxxs , nspin , npert(irr)))    
+     read (iudvscf) dvscf
      !
      call elphel (npert (irr), imode0, dvscf)
+     !
      imode0 = imode0 + npert (irr)
      deallocate (dvscf)
   enddo
@@ -52,19 +49,6 @@ subroutine elphon
   call stop_clock ('elphon')
   return
 end subroutine elphon
-!
-!-----------------------------------------------------------------------
-subroutine read_dvscf (iudvscf, nrxxs, nspin, npe, dvscf)
-  !-----------------------------------------------------------------------
-  !
-  use parameters, only : DP
-  integer :: iudvscf, nrxxs, nspin, npe
-  complex(kind=DP) :: dvscf (nrxxs, nspin, npe)
-  !
-  read (iudvscf) dvscf
-  return
-  !
-end subroutine read_dvscf
 !
 !-----------------------------------------------------------------------
 subroutine readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
@@ -235,13 +219,14 @@ subroutine elphel (npe, imode0, dvscfins)
            call davcio (dvpsi, lrbar, iubar, nrec, - 1)
         else
            mode = imode0 + ipert
-           call dvqpsi_us (ik, mode, u (1, mode) )
+           ! TODO : .false. or .true. ???
+           call dvqpsi_us (ik, mode, u (1, mode), .false. )
         endif
         !
         ! calculate dvscf_q*psi_k
         !
         do ibnd = 1, nbnd
-           call setv (2 * nrxxs, 0.d0, aux1, 1)
+           aux1(:) = (0.d0, 0.d0)
            do ig = 1, npw
               aux1 (nls (igk (ig) ) ) = evc (ig, ibnd)
            enddo
@@ -337,7 +322,7 @@ subroutine elphsum
   !
   do isig = 1, nsig
      degauss1 = 0.01 * isig
-     call setv (2 * 3 * nat * 3 * nat, 0.d0, el_ph_sum, 1)
+     el_ph_sum(:,:) = (0.d0, 0.d0)
      phase_space = 0.d0
      !
      ! Recalculate the Fermi energy Ef=ef1 and the DOS at Ef, dosef = N(Ef)

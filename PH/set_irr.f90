@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,8 +7,8 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-     irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, nirr, gi, gimq, &
-     iverbosity)
+     irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+     nirr, gi, gimq, iverbosity)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -32,12 +32,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 #include "machine.h"
   use parameters, only : DP
 #ifdef __PARA
-  use para
+  use mp, only: mp_bcast
 #endif
   implicit none
-#ifdef __PARA
-  include 'mpif.h'
-#endif
 !
 !   first the dummy variables
 !
@@ -75,9 +72,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   here the local variables
 !
-  real(kind=DP) :: tpi
-
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)
+  real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
 
   integer :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
@@ -222,8 +217,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   And we compute the matrices which represent the symmetry transformat
 !   in the basis of the displacements
 !
-  call setv (2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, 0.d0, t, 1)
-  call setv (2 * max_irr_dim * max_irr_dim * 3 * nat, 0.d0, tmq, 1)
+  t(:,:,:,:) = (0.d0, 0.d0)
+  tmq(:,:,:) = (0.d0, 0.d0)
   if (minus_q) then
      nsymtot = nsymq + 1
   else
@@ -255,7 +250,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !     the patterns are rotated with this symmetry
 !
-           call setv (2 * 3 * nat, 0.d0, wrk_ru, 1)
+           wrk_ru(:,:) = (0.d0, 0.d0)
            do na = 1, nat
               sna = irt (irot, na)
               arg = 0.d0
@@ -326,27 +321,17 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! parallel stuff: first node broadcasts everything to all nodes
 !
 400 continue
-!-waits for all nodes to be ready
-  call mpi_barrier (MPI_COMM_WORLD, info)
-!-real*8
-  call mpi_bcast (gi, 144, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (gimq, 3, MPI_REAL8, 0, MPI_COMM_WORLD, info)
-!-complex*16
-  call mpi_bcast (t, 2 * max_irr_dim * max_irr_dim * 48 * 3 * nat, MPI_REAL8, &
-                                                0, MPI_COMM_WORLD, info)
-  call mpi_bcast (tmq, 2 * max_irr_dim * max_irr_dim * 3 * nat, MPI_REAL8, &
-                                                0, MPI_COMM_WORLD, info)
-  call mpi_bcast (u, 18 * nat * nat, MPI_REAL8, 0, MPI_COMM_WORLD, &
-       info)
-!-integer
-  call mpi_bcast (nsymq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (npert, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (nirr, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (irotmq, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-  call mpi_bcast (irgq, 48, MPI_INTEGER, 0, MPI_COMM_WORLD, info)
-!-logical
-
-  call mpi_bcast (minus_q, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, info)
+  call mp_bcast (gi, 0)
+  call mp_bcast (gimq, 0)
+  call mp_bcast (t, 0)
+  call mp_bcast (tmq, 0)
+  call mp_bcast (u, 0)
+  call mp_bcast (nsymq, 0)
+  call mp_bcast (npert, 0)
+  call mp_bcast (nirr, 0)
+  call mp_bcast (irotmq, 0)
+  call mp_bcast (irgq, 0)
+  call mp_bcast (minus_q, 0)
 #endif
   return
 end subroutine set_irr

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -81,8 +81,8 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   else
      ikk = 2 * ik - 1
   endif
-  call setv (2 * npwx * nbnd, 0.d0, dvpsi, 1)
-  call setv (2 * nrxxs, 0.d0, aux1, 1)
+  dvpsi(:,:) = (0.d0, 0.d0)
+  aux1(:) = (0.d0, 0.d0)
   do na = 1, nat
      fact = tpiba * (0.d0, - 1.d0) * eigqts (na)
      mu = 3 * (na - 1)
@@ -106,7 +106,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! add NLCC when present
   !
    if (nlcc_any.and.addnlcc) then
-      call setv(2*nrxx,0.d0,aux,1)
+      aux(:) = (0.d0, 0.d0)
       do na = 1,nat
          fact = tpiba*(0.d0,-1.d0)*eigqts(na)
          mu = 3*(na-1)
@@ -142,19 +142,19 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
       endif
       call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
       if (doublegrid) then
-         call setv(2*nrxxs,0.d0,auxs,1)
+         auxs(:) = (0.d0, 0.d0)
          do ig=1,ngms
             auxs(nls(ig)) = aux(nl(ig))
          enddo
       endif
-      call DAXPY(2*nrxxs,1.d0,auxs,1,aux1,1)
+      aux1(:) = aux1(:) + auxs(:)
    endif
   !
   ! Now we compute dV_loc/dtau in real space
   !
   call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
   do ibnd = 1, nbnd
-     call setv (2 * nrxxs, 0.d0, aux2, 1)
+     aux2(:) = (0.d0, 0.d0)
      do ig = 1, npw
         aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)
      enddo

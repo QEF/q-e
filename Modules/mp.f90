@@ -28,7 +28,7 @@
           mp_bcast_i4b, &
 #endif
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d
+          mp_bcast_lm, mp_bcast_r4d, mp_bcast_ct,  mp_bcast_c4d
       END INTERFACE
 
       INTERFACE mp_sum
@@ -566,9 +566,50 @@
         IF( PRESENT( gid ) ) group = gid
         CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
         IF (ierr/=0) CALL mp_stop(8123)
-        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
+        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
 #endif
       END SUBROUTINE mp_bcast_cm
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_ct(msg,source,gid)
+        IMPLICIT NONE
+        COMPLEX (dbl) :: msg(:,:,:)
+        INTEGER :: source
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
+        ierr = 0
+        msglen = size(msg)
+        IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8915)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        IF (ierr/=0) CALL mp_stop(8123)
+        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
+#endif
+      END SUBROUTINE mp_bcast_ct
+
+!
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_bcast_c4d(msg,source,gid)
+        IMPLICIT NONE
+        COMPLEX (dbl) :: msg(:,:,:,:)
+        INTEGER :: source
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
+        ierr = 0
+        msglen = size(msg)
+        IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8915)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        IF (ierr/=0) CALL mp_stop(8123)
+        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
+#endif
+      END SUBROUTINE mp_bcast_c4d
 
 !
 !------------------------------------------------------------------------------!
