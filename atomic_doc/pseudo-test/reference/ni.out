@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 12-Feb-04
-     today is 22Feb2004 at 19:27:47 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:29:28 
 
      -------------------- All-electron run ------------------------------
 
@@ -21,12 +21,12 @@
      4 0     4S 1( 1.00)        -0.3302        -0.1651        -4.4925
      4 1     4P 1( 0.00)        -0.0553        -0.0277        -0.7526
 
-     eps = 5.2E-15  iter = 30
+     eps = 5.0E-15  iter = 30
  
      Etot =   -3041.191707 Ry,   -1520.595853 Ha,  -41377.846126 eV
 
-     Ekin =    3083.382568 Ry,    1541.691284 Ha,   41951.886542 eV
-     Encl =   -7308.442617 Ry,   -3654.221309 Ha,  -99437.208559 eV
+     Ekin =    3083.382568 Ry,    1541.691284 Ha,   41951.886541 eV
+     Encl =   -7308.442617 Ry,   -3654.221309 Ha,  -99437.208558 eV
      Eh   =    1310.777723 Ry,     655.388861 Ha,   17834.179537 eV
      Exc  =    -126.909380 Ry,     -63.454690 Ha,   -1726.703646 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -55,7 +55,7 @@
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.38647
+     Computing logarithmic derivative in   2.38647
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -80,13 +80,13 @@
      dEtot_ae =       0.000000 Ry
      dEtot_ps =     -72.878277 Ry,   Delta E=      72.878277
 
-     Ekin =    -102.338764 Ry,     -51.169382 Ha,   -1392.400758 eV
+     Ekin =       6.377360 Ry,       3.188680 Ha,      86.769080 eV
      Encl =    -167.180393 Ry,     -83.590197 Ha,   -2274.622995 eV
      Ehrt =      71.472169 Ry,      35.736085 Ha,     972.436044 eV
      Ecxc =     -17.387227 Ry,      -8.693614 Ha,    -236.567138 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=     142.555939 Ry,      71.277969 Ha,    1939.587591 eV
+     Epseu=      33.839815 Ry,      16.919907 Ha,     460.417753 eV
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.38647
+     Computing logarithmic derivative in   2.38647

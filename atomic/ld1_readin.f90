@@ -59,13 +59,14 @@ subroutine ld1_readin
        pseudotype,    & ! the pseudopotential type
        file_wavefunctionsps,& ! the file with pseudowfc
        file_pseudopw, & ! the file where to write pseudopotential
-       file_logderps, & ! file with logaritmic derivatives
+       file_logderps, & ! file with logarithmic derivatives
        file_pseudo,   & ! filename of the pseudopotential
        file_tests,    & ! file with transferability test
        file_recon       ! file needed for the paw reconstruction
 
   namelist /inputp/ &
-       rho0,  &    ! charge value at the origin
+       tm,    &    ! use Troullier-Martins instead of RRKJ
+       rho0,  &    ! value of the charge at the origin
        zval,  &    ! the pseudo valence
        lloc,  &    ! l component considered as local 
        nlcc,  &    ! if true nlcc is set
@@ -364,6 +365,7 @@ subroutine ld1_readin
      nlcc=.false.
      rcore=0.d0
      rho0=0.d0
+     tm  = .false.
 
      read(5,inputp,err=500,iostat=ios)
 500  call errore('ld1_readin','reading inputp',abs(ios))

@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 24-Sep-02
-     today is 23Dec2003 at 10:46:18 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:28: 1 
 
      -------------------- All-electron run ------------------------------
 
@@ -9,7 +9,7 @@
 
      atomic number is 92.00
      dft =PBE   lsd =0 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh =1339 r(mesh) = 494.33401 ibound = 0 xmin = -6.00 dx = 0.01250
+     mesh =1339 r(mesh) = 494.33401 xmin = -6.00 dx = 0.01250
 
      n l j   nl                  e(Ryd)         e(Ha)          e(eV)
      Spin orbit splitted results
@@ -62,7 +62,7 @@
      6 2     6D 1( 1.00)        -0.3795        -0.1898        -5.1636
      7 0     7S 1( 2.00)        -0.4653        -0.2327        -6.3311
 
-     eps = 6.7E-15  iter =117
+     eps = 6.8E-15  iter =117
  
      Etot =  -56166.238657 Ry,  -28083.119329 Ha, -764186.609922 eV
 

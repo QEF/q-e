@@ -15,7 +15,7 @@
       integer, parameter :: dp=kind(1.d0)
       integer :: &
               nn, &       ! main quantum number for node number
-              lam,&       ! angualar momentum
+              lam,&       ! angular momentum
               mesh,&      ! size of radial mesh
               ndm, &      ! maximum radial mesh 
               nbeta,&     ! number of beta function

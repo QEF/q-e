@@ -4,8 +4,8 @@
 !--------------------------------------------------------------------------
 !
 !      This routine finds three values of q such that the
-!      functions f_l have a logaritmic derivative equal to
-!      loderae at the point ik
+!      functions f_l have a logarithmic derivative equal to
+!      logderae at the point ik
 !
 !      if flag=0 f_l=j_l(r)
 !      if flag=1 f_l=r*j_l(r)
@@ -21,11 +21,11 @@ implicit none
                ncn,   & ! input: the number of qi to compute
                flag,  & ! input: the type of function
                iok,   & ! output: if 0 the calculation in this routine is ok
-               lam      ! input: the angualar momentum
+               lam      ! input: the angular momentum
 
       real(kind=dp) :: &
-               xc(ncn), & ! output: the values of qi
-               logderae  ! input: the logaritmic derivative
+               xc(ncn),& ! output: the values of qi
+               logderae  ! input: the logarithmic derivative
 
 
       real(kind=dp) ::   &

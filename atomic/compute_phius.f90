@@ -3,9 +3,9 @@
       subroutine compute_phius(lam,ik,ns,xc,iflag)
 !--------------------------------------------------------------------------
 !
-!     This routine computes the phi functions by pseusizing the
+!     This routine computes the phi functions by pseudizing the
 !     all_electron chi functions. In input it receives, the point
-!     ik where the cut is done, the angualar momentum lam,
+!     ik where the cut is done, the angular momentum lam,
 !     and the correspondence with the all eletron wavefunction
 !
 !
@@ -24,7 +24,7 @@ use ld1inc
                ns, &     ! the function to pseudize
                iflag,&   ! if 1 print
                iok,  &   ! if 0 there are no problem
-               lam      ! the angualar momentum
+               lam       ! the angular momentum
 
 
       real(kind=dp) :: &

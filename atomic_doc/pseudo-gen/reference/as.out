@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 22-Feb-04
-     today is 21May2004 at 18:18:47 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 19:19:13 
 
      -------------------- All-electron run ------------------------------
 
@@ -40,7 +40,7 @@
 
      eps = 8.4E-15  iter = 26
  
-     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498022 eV
+     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498023 eV
 
      Ekin =    4615.989019 Ry,    2307.994510 Ha,   62804.223396 eV
      Encl =  -10907.173884 Ry,   -5453.586942 Ha, -148400.826435 eV
@@ -93,8 +93,6 @@
      s(4D/4D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.8324
      s(4D/4D) =  0.000000
      s(4D/4D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.8324
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
@@ -106,15 +104,15 @@
 
 
       Wfc   4S  rcut= 2.200  Estimated cut-off energy=       26.95 Ry
-      This function has    0 nodes between 0 and r=   2.178
+      This function has    0 nodes for 0 < r <    2.178
 
 
       Wfc   4P  rcut= 2.200  Estimated cut-off energy=       36.87 Ry
-      This function has    0 nodes between 0 and r=   2.178
+      This function has    0 nodes for 0 < r <    2.178
 
 
       Wfc   4P  rcut= 2.200  Estimated cut-off energy=       36.82 Ry
-      This function has    0 nodes between 0 and r=   2.178
+      This function has    0 nodes for 0 < r <    2.178
 
      ------------ End of pseudopotential generation --------------------
 
@@ -156,7 +154,7 @@
 
      eps = 8.4E-15  iter = 26
  
-     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498022 eV
+     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498023 eV
 
      Ekin =    4615.989019 Ry,    2307.994510 Ha,   62804.223396 eV
      Encl =  -10907.173884 Ry,   -5453.586942 Ha, -148400.826435 eV
@@ -209,12 +207,10 @@
      s(4D/4D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.8324
      s(4D/4D) =  0.000000
      s(4D/4D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.8324
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.51497
+     Computing logarithmic derivative in   2.51497
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -232,7 +228,7 @@
 
      eps = 6.1E-16  iter =  6
  
-     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498022 eV
+     Etot =   -4515.757840 Ry,   -2257.878920 Ha,  -61440.498023 eV
      Etotps =   -12.387023 Ry,      -6.193511 Ha,    -168.535354 eV
      dEtot_ae =       0.000000 Ry
      dEtot_ps =     -12.387023 Ry,   Delta E=      12.387023
@@ -246,4 +242,4 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.51497
+     Computing logarithmic derivative in   2.51497

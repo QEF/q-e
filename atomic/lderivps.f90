@@ -4,7 +4,7 @@
 !---------------------------------------------------------------
 !
 !  numerical integration of the radial schroedinger equation 
-!  computing logaritmic derivatives
+!  computing logarithmic derivatives
 !  thresh dermines the absolute accuracy for the eigenvalue
 ! 
 !  nonlocal projectors are allowed
@@ -24,7 +24,7 @@ real(kind=dp) ::  &
 
 integer ::      &
          ikrld, &       ! index of matching radius
-         nc,    &       ! counter on logaritmic derivatives
+         nc,    &       ! counter on logarithmic derivatives
          nbf,   &       ! number of b functions
          n,ie          ! generic counter 
 
@@ -66,7 +66,7 @@ ikrld= 1
 do n=1,mesh
    if (r(n).lt.rlderiv) ikrld=n
 enddo
-write(6,'(5x,''Computing logaritmic derivative in'',f10.5)') &
+write(6,'(5x,''Computing logarithmic derivative in'',f10.5)') &
              (r(ikrld)+r(ikrld+1))*0.5d0
 if (ikrld.gt.mesh-1) &
     call errore('lderiv','ikrld is wrong',1)
@@ -143,7 +143,7 @@ do is=1,nspin
                      b,aux,betas,ddd,qq,nbf,nwfsx,lls,jjs,ikrld+5)
 
 !
-!    compute the logaritmic derivative and save in dlchi
+!    compute the logarithmic derivative and save in dlchi
 !            
          do n=-3,3
             aux(ikrld+n)= aux(ikrld+n)*sqr(ikrld+n)

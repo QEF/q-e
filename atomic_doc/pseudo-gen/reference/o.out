@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 22-Feb-04
-     today is 21May2004 at 18:18:46 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 19:19:13 
 
      -------------------- All-electron run ------------------------------
 
@@ -16,9 +16,9 @@
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 3.5E-15  iter = 15
+     eps = 2.4E-15  iter = 15
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386925 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
 
      Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640595 eV
      Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835275 eV
@@ -35,8 +35,6 @@
      s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
      s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
      s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.0434
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
@@ -48,22 +46,22 @@
 
 
       Wfc   2S  rcut= 1.400  Estimated cut-off energy=       64.20 Ry
-      This function has    0 nodes between 0 and r=   1.413
+      This function has    0 nodes for 0 < r <    1.413
       Wfc-us  2S rcutus= 1.700  Estimated cut-off energy=    17.92 Ry
 
 
       Wfc   2S  rcut= 1.400  Estimated cut-off energy=       79.41 Ry
-      This function has    0 nodes between 0 and r=   1.413
+      This function has    0 nodes for 0 < r <    1.413
       Wfc-us  2S rcutus= 1.700  Estimated cut-off energy=    33.87 Ry
 
 
       Wfc   2P  rcut= 1.400  Estimated cut-off energy=       88.65 Ry
-      This function has    0 nodes between 0 and r=   1.413
+      This function has    0 nodes for 0 < r <    1.413
       Wfc-us  2P rcutus= 1.700  Estimated cut-off energy=    28.04 Ry
 
 
       Wfc   2P  rcut= 1.400  Estimated cut-off energy=       92.81 Ry
-      This function has    0 nodes between 0 and r=   1.413
+      This function has    0 nodes for 0 < r <    1.413
       Wfc-us  2P rcutus= 1.700  Estimated cut-off energy=    35.27 Ry
 
       The bmat matrix
@@ -100,9 +98,9 @@
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 3.5E-15  iter = 15
+     eps = 2.4E-15  iter = 15
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386925 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
 
      Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640595 eV
      Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835275 eV
@@ -119,12 +117,10 @@
      s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
      s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
      s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.0434
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   1.49455
+     Computing logarithmic derivative in   1.49455
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -140,7 +136,7 @@
 
      eps = 2.2E-17  iter =  6
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386925 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386924 eV
      Etotps =   -31.376651 Ry,     -15.688326 Ha,    -426.904443 eV
      dEtot_ae =       0.000000 Ry
      dEtot_ps =     -31.376651 Ry,   Delta E=      31.376651
@@ -150,8 +146,8 @@
      Ehrt =      27.107741 Ry,      13.553870 Ha,     368.822499 eV
      Ecxc =      -6.463014 Ry,      -3.231507 Ha,     -87.934482 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       8.088732 Ry,       4.044366 Ha,     110.053672 eV
+     Epseu=       8.088732 Ry,       4.044366 Ha,     110.053671 eV
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   1.49455
+     Computing logarithmic derivative in   1.49455

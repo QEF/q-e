@@ -31,7 +31,7 @@ module ld1inc
   logical :: &
        core_state(nwfx)   ! if true the state is in the core
   !
-  !    the parameters of the logaritmic mesh
+  !    the parameters of the logarithmic mesh
   !
   integer :: &
        mesh     ! the number of mesh points
@@ -45,14 +45,14 @@ module ld1inc
        zmesh,      & ! the ionic charge used for the mesh
        dx            ! the deltax of the linear mesh
   !
-  !    the variables for computing logaritmic derivatives
+  !    the variables for computing logarithmic derivatives
   !
   integer :: &
        nld,  &  ! computes the log der of the last nld wavefunctions
        npte     ! number of energy points
 
   real(kind=dp) :: &
-       rlderiv,    & ! the radius of logaritmic derivatives
+       rlderiv,    & ! the radius of logarithmic derivatives
        eminld,     & ! the minimum energy
        emaxld,     & ! the maximum energy
        deld          ! the deltae of energy
@@ -91,13 +91,14 @@ module ld1inc
        vnlo(ndm,0:3,2),  & ! the nonlocal pseudopotential (spin-orbit)
        betas(ndm,nwfsx), & ! the projector functions
        chis(ndm,nwfsx),  & ! auxiliary functions
-       rho0,             & ! charge value at the origin
+       rho0,             & ! value of the charge at the origin
        bmat(nwfsx,nwfsx), &! the pseudo coefficients (unscreened D)
        ddd(nwfsx,nwfsx,2),&! the screened D
        qq(nwfsx,nwfsx),   &! the integrals of the qvan
        qvan(ndm,nwfsx,nwfsx) ! the augmentation functions
 
   logical :: &
+       tm,            &!  if true use Troullier-Martins for norm-conserving PP
        new(nwfsx)      !  if true the fit is on arbitrary energy
   !
   !    the variable for multiconfigurations

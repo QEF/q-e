@@ -187,7 +187,7 @@ integer, parameter :: itmax=200
 120   format (/,5x,14('-'), &
               ' End of pseudopotential test ',24('-'),/)
 !
-!    compute logaritmic derivatives
+!    compute logarithmic derivatives
 !
       if (deld.gt.0.d0) call lderivps
 

@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 24-Sep-02
-     today is 23Dec2003 at 10:46: 6 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:27:50 
 
      -------------------- All-electron run ------------------------------
 
@@ -9,7 +9,7 @@
 
      atomic number is  9.00
      dft =LDA   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh =1025 r(mesh) =  99.76081 ibound = 0 xmin = -6.00 dx = 0.01250
+     mesh =1025 r(mesh) =  99.76081 xmin = -6.00 dx = 0.01250
 
      n l     nl                  e(Ryd)         e(Ha)          e(eV)
      1 0     1S 1( 1.00)       -52.7206       -26.3603      -717.3063

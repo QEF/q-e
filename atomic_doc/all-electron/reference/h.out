@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 24-Sep-02
-     today is 23Dec2003 at 10:46:14 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:27:58 
 
      -------------------- All-electron run ------------------------------
 
@@ -8,10 +8,11 @@
 
      atomic number is  1.00
      dft =PW91   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh = 849 r(mesh) =  99.48432 ibound = 0 xmin = -6.00 dx = 0.01250
+     mesh = 849 r(mesh) =  99.48432 xmin = -6.00 dx = 0.01250
 
      n l     nl                  e(Ryd)         e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.0000        -0.5000       -13.6058
+     1 0     1S 2( 0.00)        -0.4211        -0.2105        -5.7294
 
      eps = 8.4E-15  iter = 87
  
@@ -37,6 +38,8 @@
      normalization and overlap integrals
 
      s(1S/1S) =  1.000000  <r> =   1.5000  <r2> =    3.0000  r(max) =   1.0000
+     s(1S/1S) =  0.925104
+     s(1S/1S) =  1.000000  <r> =   2.3824  <r2> =    7.6380  r(max) =   1.5296
 
      -------------------- End of All-electron run ----------------------
 

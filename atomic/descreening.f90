@@ -16,7 +16,7 @@ integer ::    &
         ns,  &     ! counter on pseudo functions
         ns1, &    ! counter on pseudo functions
         ib,jb, &  ! counter on beta functions
-        lam      ! the angualar momentum
+        lam      ! the angular momentum
 
 real(kind=dp) :: &
         xc(8),  &    ! parameters of bessel functions

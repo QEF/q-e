@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 12-Feb-04
-     today is 22Feb2004 at 18:47:47 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 19:19:13 
 
      -------------------- All-electron run ------------------------------
 
@@ -53,11 +53,11 @@
 
 
       Wfc   3S  rcut= 2.600  Estimated cut-off energy=       18.52 Ry
-      This function has    0 nodes between 0 and r=   2.612
+      This function has    0 nodes for 0 < r <    2.612
 
 
       Wfc   3P  rcut= 2.900  Estimated cut-off energy=       20.94 Ry
-      This function has    0 nodes between 0 and r=   2.887
+      This function has    0 nodes for 0 < r <    2.887
 
      ------------ End of pseudopotential generation --------------------
 
@@ -104,7 +104,7 @@
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.40806
+     Computing logarithmic derivative in   2.40806
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -118,7 +118,7 @@
      1 0     3S   1( 2.00)       -0.57419       -0.57419        0.00000
      2 1     3P   1( 1.00)       -0.20554       -0.20554        0.00000
 
-     eps = 1.4E-24  iter =  1
+     eps = 2.1E-25  iter =  1
  
      Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
      Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858649 eV
@@ -134,4 +134,4 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.40806
+     Computing logarithmic derivative in   2.40806

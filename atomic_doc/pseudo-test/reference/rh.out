@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 12-Feb-04
-     today is 22Feb2004 at 19:30:24 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:29:29 
 
      -------------------- All-electron run ------------------------------
 
@@ -24,7 +24,7 @@
      5 0     5S 1( 2.00)        -0.3909        -0.1954        -5.3183
      5 1     5P 1( 0.00)        -0.0969        -0.0484        -1.3179
 
-     eps = 5.2E-15  iter = 30
+     eps = 5.3E-15  iter = 30
  
      Etot =   -9568.051888 Ry,   -4784.025944 Ha, -130181.000380 eV
 
@@ -69,7 +69,7 @@
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.50515
+     Computing logarithmic derivative in   2.50515
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -93,13 +93,13 @@
      dEtot_ae =       0.000000 Ry
      dEtot_ps =     -43.854645 Ry,   Delta E=      43.854645
 
-     Ekin =      29.843421 Ry,      14.921711 Ha,     406.043622 eV
+     Ekin =      12.331960 Ry,       6.165980 Ha,     167.786176 eV
      Encl =     -66.422877 Ry,     -33.211439 Ha,    -903.736386 eV
      Ehrt =      39.877426 Ry,      19.938713 Ha,     542.564277 eV
      Ecxc =     -10.277885 Ry,      -5.138943 Ha,    -139.838853 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=     -36.874729 Ry,     -18.437364 Ha,    -501.710184 eV
+     Epseu=     -19.363267 Ry,      -9.681633 Ha,    -263.452738 eV
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.50515
+     Computing logarithmic derivative in   2.50515

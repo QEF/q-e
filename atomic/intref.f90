@@ -5,7 +5,7 @@
 !---------------------------------------------------------------
 !
 !  numerical integration of the radial schroedinger equation 
-!  computing logaritmic derivatives
+!  computing logarithmic derivatives
 !  thresh dermines the absolute accuracy for the eigenvalue
 !
 !
@@ -80,7 +80,7 @@
                    -al(n-1)*chi(n-1))/al(n+1)
       enddo
 !
-!    compute the logaritmic derivative and save in dlchi
+!    compute the logarithmic derivative and save in dlchi
 !            
       do n=1,mesh
          chi(n)= chi(n)*sqr(n)

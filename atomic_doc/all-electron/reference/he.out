@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 24-Sep-02
-     today is 23Dec2003 at 10:46: 8 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:27:53 
 
      -------------------- All-electron run ------------------------------
 
@@ -8,13 +8,13 @@
 
      atomic number is  2.00
      dft =PBE   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh = 905 r(mesh) = 100.16840 ibound = 0 xmin = -6.00 dx = 0.01250
+     mesh = 905 r(mesh) = 100.16840 xmin = -6.00 dx = 0.01250
 
      n l     nl                  e(Ryd)         e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.8372        -0.9186       -24.9969
      1 0     1S 2( 1.00)        -1.8372        -0.9186       -24.9969
 
-     eps = 7.2E-15  iter =100
+     eps = 8.3E-15  iter =122
  
      Etot =      -5.698716 Ry,      -2.849358 Ha,     -77.535585 eV
 

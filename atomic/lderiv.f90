@@ -4,7 +4,7 @@
 !---------------------------------------------------------------
 !
 !  numerical integration of the radial schroedinger equation 
-!  computing logaritmic derivatives
+!  computing logarithmic derivatives
 !  thresh dermines the absolute accuracy for the eigenvalue
 !
 !
@@ -22,7 +22,7 @@ real(kind=dp) ::  &
 
 integer ::       &
          ikrld,  &   ! index of matching radius
-         nc,     &   ! counter on logaritmic derivatives
+         nc,     &   ! counter on logarithmic derivatives
          idum,   &   ! integer variable for lschps
          is,     &   ! counter on spin
          ierr,   &   ! used for allocation control
@@ -51,7 +51,7 @@ ikrld= 1
 do n=1,mesh
    if (r(n).lt.rlderiv) ikrld=n
 enddo
-write(6,'(5x,''Computing logaritmic derivative in'',f10.5)') &
+write(6,'(5x,''Computing logarithmic derivative in'',f10.5)') &
          (r(ikrld)+r(ikrld+1))*0.5d0
 
 if (ikrld.gt.mesh-1) &
@@ -89,7 +89,7 @@ do is=1,nspin
                     vpot(1,is),ze2,aux)
          endif
 !
-!    compute the logaritmic derivative and save in dlchi
+!    compute the logarithmic derivative and save in dlchi
 !            
          dlchi(ie,nc)=compute_log(aux(ikrld-3),r(ikrld),dx)
       enddo

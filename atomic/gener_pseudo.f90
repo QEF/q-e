@@ -55,17 +55,19 @@ subroutine gener_pseudo
        lbes4     ! use 4 Bessel functions expansion
 
 
-  if (pseudotype.eq.1.or.pseudotype.eq.2) then
+  if (pseudotype == 1.or.pseudotype == 2) then
      write(6, &
           '(/,5x,15(''-''),'' Generating NC pseudopotential '',15(''-''),/)')
-  elseif (pseudotype.eq.3) then
+  elseif (pseudotype == 3) then
      write(6, &
           '(/,5x,15(''-''),'' Generating US pseudopotential '',21(''-''),/)')
   else
      call errore('gener_pseudo','pseudotype not programmed',1)
   endif
-  if (pseudotype.eq.1.and.rel.eq.2) call errore('gener_pseudo', &
+  if (pseudotype == 1.and.rel == 2) call errore('gener_pseudo', &
        'not programmed' ,2)
+  if (pseudotype == 3.and. tm) call errore('gener_pseudo', &
+       'not programmed' ,3)
   !
   !   compute the local potential from the all-electron potential
   !
@@ -79,7 +81,7 @@ subroutine gener_pseudo
   !   pseudo
   !
   do n=1,nwfs
-     if (enls(n).eq.0.d0) enls(n)=enl(nstoae(n))
+     if (enls(n) == 0.d0) enls(n)=enl(nstoae(n))
   enddo
   !
   !   compute the pseudowavefunctions by expansion in spherical
@@ -101,11 +103,11 @@ subroutine gener_pseudo
         if (r(n).lt.rcutus(ns)) ikus=n
         if (r(n).lt.rcloc) ikloc=n
      enddo
-     if (mod(ik,2).eq.0) ik=ik+1
-     if (mod(ikus,2).eq.0) ikus=ikus+1
-     if (mod(ikloc,2).eq.0) ikloc=ikloc+1
+     if (mod(ik,2) == 0) ik=ik+1
+     if (mod(ikus,2) == 0) ikus=ikus+1
+     if (mod(ikloc,2) == 0) ikloc=ikloc+1
      if (ikus.gt.mesh) call errore('gener_pseudo','ik is wrong ',1)
-     if (pseudotype.eq.3) then
+     if (pseudotype == 3) then
         ikk(ns)=max(ikus+10,ikloc+5)
      else
         ikk(ns)=max(ik+10,ikloc+5)
@@ -164,7 +166,7 @@ subroutine gener_pseudo
   !
   do ns=1,nbeta
      do ns1=1,nbeta
-        if (lls(ns).eq.lls(ns1).and.ikk(ns1).gt.ikk(ns)) &
+        if (lls(ns) == lls(ns1).and.ikk(ns1).gt.ikk(ns)) &
              ikk(ns)=ikk(ns1)
      enddo
   enddo
@@ -172,7 +174,7 @@ subroutine gener_pseudo
   !     NC potential with one projector per angular momentum:
   !     construct the potential 
   !
-  if (pseudotype.eq.1) then
+  if (pseudotype == 1) then
      vnl=0.d0
      do ns=1,nbeta
         lam=lls(ns)
@@ -187,7 +189,7 @@ subroutine gener_pseudo
   bmat=0.d0
   do ns=1,nbeta
      do ns1=1,nbeta
-        if (lls(ns).eq.lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-7) then
+        if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-7) then
            nst=(lls(ns)+1)*2
            ikl=ikk(ns1)
            do n=1,mesh
@@ -200,7 +202,7 @@ subroutine gener_pseudo
 
   allocate ( b(nbeta, nbeta), binv(nbeta, nbeta) )
 
-  if (pseudotype.eq.2) then
+  if (pseudotype == 2) then
      !
      !     symmetrize the B matrix
      !
@@ -215,14 +217,14 @@ subroutine gener_pseudo
            bmat(ns,ns1)=b(ns,ns1)
         enddo
      enddo
-  elseif (pseudotype.eq.3) then
+  elseif (pseudotype == 3) then
      !
      do ns=1,nbeta
         do ns1=1,nbeta
            b(ns,ns1)=bmat(ns,ns1)
         enddo
      enddo
-  elseif (pseudotype.eq.1) then
+  elseif (pseudotype == 1) then
      goto 500
   endif
   !
@@ -244,7 +246,7 @@ subroutine gener_pseudo
   deallocate (b, binv)
 
   qq=0.d0
-  if (pseudotype.eq.3) then
+  if (pseudotype == 3) then
      !
      !    compute the Q functions
      !
@@ -262,7 +264,7 @@ subroutine gener_pseudo
            !
            !     and puts its integral in qq
            !
-           if (lls(ns).eq.lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-8) then
+           if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.d-8) then
               nst=(lls(ns)+1)*2
               qq(ns,ns1)=int_0_inf_dr(gi,r,r2,dx,ikk(ns),nst)
            endif
@@ -306,7 +308,7 @@ subroutine gener_pseudo
   !
   !    In pseudotype 1 the local potential is added to all channel
   !
-  if (pseudotype.eq.1) then
+  if (pseudotype == 1) then
      do l=0,3
         do n=1,mesh
            vnl(n,l)=vnl(n,l)+vpsloc(n)

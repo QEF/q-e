@@ -36,7 +36,7 @@ if(isic.ne.0) call esic
 !
 call write_results 
 !
-!  compute logaritmic derivative
+!  compute logarithmic derivative
 !
 if (deld.gt.0.d0.and.ild) call lderiv
 return

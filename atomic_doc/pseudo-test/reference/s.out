@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 12-Feb-04
-     today is 22Feb2004 at 19:27:19 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 18:29:28 
 
      -------------------- All-electron run ------------------------------
 
@@ -44,7 +44,7 @@
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.49675
+     Computing logarithmic derivative in   2.49675
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -76,4 +76,4 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.49675
+     Computing logarithmic derivative in   2.49675

@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 22-Feb-04
-     today is 21May2004 at 18:18:49 
+     program ld1 starts. version 20-May-04
+     today is  6Jul2004 at 19:19:16 
 
  state nlj           5           2   1.50000000000000       not converged
  state nlj           5           2   2.50000000000000       not converged
@@ -62,10 +62,10 @@
 
      eps = 4.4E-15  iter = 32
  
-     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620434 eV
+     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620435 eV
 
      Ekin =   42190.145755 Ry,   21095.072877 Ha,  574030.685108 eV
-     Encl =  -92745.180786 Ry,  -46372.590393 Ha,-1261872.380738 eV
+     Encl =  -92745.180786 Ry,  -46372.590393 Ha,-1261872.380739 eV
      Eh   =   14376.075308 Ry,    7188.037654 Ha,  195598.005424 eV
      Exc  =    -693.596130 Ry,    -346.798065 Ha,   -9436.930227 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -174,8 +174,6 @@
      s(6P/6P) =  0.999976  <r> =   4.2572  <r2> =   21.6876  r(max) =   3.2165
      s(6P/6P) =  0.981437
      s(6P/6P) =  0.999983  <r> =   4.9935  <r2> =   30.1160  r(max) =   3.7370
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
@@ -190,38 +188,37 @@
        r > 1.21 : true rho core
        r < 1.21 : rho core = a sin(br)/r    a=  13.07  b=   2.13
 
- ***
-                                                                                
-  ***
+ ***                                                                            
+     ***
              integrated charge :  10.50
 
 
       Wfc   5D  rcut= 2.100  Estimated cut-off energy=       53.26 Ry
-      This function has    0 nodes between 0 and r=   2.103
+      This function has    0 nodes for 0 < r <    2.103
       Wfc-us  5D rcutus= 2.400  Estimated cut-off energy=    20.82 Ry
 
 
       Wfc   5D  rcut= 2.100  Estimated cut-off energy=       55.38 Ry
-      This function has    0 nodes between 0 and r=   2.103
+      This function has    0 nodes for 0 < r <    2.103
       Wfc-us  5D rcutus= 2.400  Estimated cut-off energy=    24.46 Ry
 
 
       Wfc   5D  rcut= 2.100  Estimated cut-off energy=       53.13 Ry
-      This function has    0 nodes between 0 and r=   2.103
+      This function has    0 nodes for 0 < r <    2.103
       Wfc-us  5D rcutus= 2.400  Estimated cut-off energy=    20.70 Ry
 
 
       Wfc   5D  rcut= 2.100  Estimated cut-off energy=       54.29 Ry
-      This function has    0 nodes between 0 and r=   2.103
+      This function has    0 nodes for 0 < r <    2.103
       Wfc-us  5D rcutus= 2.400  Estimated cut-off energy=    22.54 Ry
 
 
       Wfc   6P  rcut= 3.300  Estimated cut-off energy=       15.99 Ry
-      This function has    0 nodes between 0 and r=   3.298
+      This function has    0 nodes for 0 < r <    3.298
 
 
       Wfc   6P  rcut= 3.400  Estimated cut-off energy=       15.09 Ry
-      This function has    0 nodes between 0 and r=   3.381
+      This function has    0 nodes for 0 < r <    3.381
 
       The bmat matrix
     -2.23451    -2.91026     0.00000     0.00000     0.00000     0.00000
@@ -309,10 +306,10 @@
 
      eps = 4.4E-15  iter = 32
  
-     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620434 eV
+     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620435 eV
 
      Ekin =   42190.145755 Ry,   21095.072877 Ha,  574030.685108 eV
-     Encl =  -92745.180786 Ry,  -46372.590393 Ha,-1261872.380738 eV
+     Encl =  -92745.180786 Ry,  -46372.590393 Ha,-1261872.380739 eV
      Eh   =   14376.075308 Ry,    7188.037654 Ha,  195598.005424 eV
      Exc  =    -693.596130 Ry,    -346.798065 Ha,   -9436.930227 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
@@ -421,12 +418,10 @@
      s(6P/6P) =  0.999976  <r> =   4.2572  <r2> =   21.6876  r(max) =   3.2165
      s(6P/6P) =  0.981437
      s(6P/6P) =  0.999983  <r> =   4.9935  <r2> =   30.1160  r(max) =   3.7370
-                                                                                
-  
 
      -------------------- End of All-electron run ----------------------
 
-     Computing logaritmic derivative in   2.48945
+     Computing logarithmic derivative in   2.48945
 
      -------------- Testing the pseudopotential ------------------------
 
@@ -447,7 +442,7 @@
 
      eps = 9.8E-15  iter = 14
  
-     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620434 eV
+     Etot =  -36872.555854 Ry,  -18436.277927 Ha, -501680.620435 eV
      Etotps =   -53.297186 Ry,     -26.648593 Ha,    -725.150854 eV
      dEtot_ae =       0.000000 Ry
      dEtot_ps =     -53.297186 Ry,   Delta E=      53.297186
@@ -461,4 +456,4 @@
 
      -------------- End of pseudopotential test ------------------------
 
-     Computing logaritmic derivative in   2.48945
+     Computing logarithmic derivative in   2.48945
