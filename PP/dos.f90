@@ -9,29 +9,47 @@
 program dos
   !--------------------------------------------------------------------
   !
-  ! Input (namelist &inputpp ... &end):                Default value
+  ! Calculates the Density of States (DOS),
+  ! separated into up and down components for LSDA
   !
-  !    prefix        prefix of input file produced by pw.x  'pwscf'
+  ! Input (namelist &inputpp ... &end):                   Default value
+  !
+  !    prefix        prefix of input file produced by pw.x    'pwscf'
   !                    (wavefunctions are not needed)
-  !    outdir        directory containing the input file    ./
-  !    ngauss1       gaussian broadening parameters         0
-  !            =  0  Simple Gaussian broadening (default)
+  !    outdir        directory containing the input file       ./
+  !    ngauss        Type pf gaussian broadening (optional)    0
+  !            =  0  Simple Gaussian (default)
   !            =  1  Methfessel-Paxton of order 1
   !            = -1  Marzari-Vanderbilt "cold smearing"
   !            = 99  Fermi-Dirac function
-  !    degauss1      if absent, read from file              0.d0
-  !    Emin, Emax    min, max energy (eV) for DOS plot      band extrema
-  !    DeltaE        energy grid step (eV)                  none
-  !    fildos        output file containing DOS(E)          dos.out
+  !    degauss       gaussian broadening, Ry (not eV!)          see below
+  !    Emin, Emax    min, max energy (eV) for DOS plot          band extrema
+  !    DeltaE        energy grid step (eV)                      none
+  !    fildos        output file containing DOS(E)              "prefix".dos
   !
-  ! In order to use tetrahedron method, the input file must
-  ! contain information on tetrahedra (option ltetra=.true.)
-  ! if degauss1, ngauss1 are specified they override what is
-  ! specified in the input file wrt summation method
+  ! Output:
+  !
+  !   The total DOS (states/eV plotted vs E in eV) is written to file "fildos"
+  !
+  ! Important notice:
+  !    The tetrahedron method is used if
+  !    - the input data file has been produced by pw.x using the option
+  !      occupations='tetrahedra', AND
+  !    - a value for degauss is not given as input to namelist &inputpp
+  !    Gaussian broadening is used in all other cases:
+  !    - if degauss is set to some value in namelist &inputpp, that value
+  !      (and the optional value for ngauss) is used
+  !    - if degauss is NOT set to any value in namelist &inputpp, the 
+  !      value of degauss and of ngauss are read from the input data
+  !      file (they will be the same used in the pw.x calculations)
+  !    - if degauss is NOT set to any value in namelist &inputpp, AND
+  !      there is no value of degauss and of ngauss in the input data
+  !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
   !
 #include "f_defs.h"
   USE io_global,  ONLY : stdout, ionode_id
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+  USE constants,  ONLY : rytoev
   USE kinds, ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
   USE ktetra,     ONLY : ntetra, tetra, ltetra
@@ -47,14 +65,13 @@ program dos
   real(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
        degauss1
   integer :: nrot, ik, n, ndos, ngauss1, ios
-  namelist /inputpp/ outdir, prefix, fildos, degauss1,ngauss1,&
+  namelist /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
   logical :: minus_q
-                                                                                
+                                                    
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
-                                                                                
   !
   call start_postproc (nd_nmbr)
 #ifdef __PARA
@@ -69,8 +86,8 @@ program dos
   Emin   =-1000000.
   Emax   = 1000000.
   DeltaE = 0.01
-  ngauss1= 0
-  degauss1=0.d0
+  ngauss = 0
+  degauss= 0.d0
   !
   !
   ! ... Input from file ?
@@ -98,6 +115,9 @@ program dos
 200 call errore('dos','reading inputpp namelist',abs(ios))
   !
   tmp_dir = trim(outdir)
+  ! save the value of degauss and ngauss: they are read from file
+  degauss1 = degauss
+  ngauss1  = ngauss
 #ifdef __PARA
   end if
   !
@@ -107,7 +127,7 @@ program dos
   CALL mp_bcast( prefix, ionode_id )
 #endif
   !
-  call read_file
+  call read_file( )
   !
 #ifdef __PARA
   if (me == 1) then
@@ -127,7 +147,12 @@ program dos
      WRITE( stdout,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
   else
-     if (degauss1.eq.0.d0) call errore('dos','I need a gaussian broadening!',1)
+     degauss=DeltaE/rytoev
+     ngauss =0
+     WRITE( stdout,'(/5x,"Gaussian broadening (default values): ",&
+          &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
+     ltetra=.false.
+     lgauss=.true.
   end if
   !
   ! find band extrema
@@ -143,12 +168,13 @@ program dos
      Elw = Elw - 3d0 * degauss
   endif
   !
-  Emin=max(Emin/13.6058,Elw)
-  Emax=min(Emax/13.6058,Eup)
-  DeltaE = DeltaE / 13.6058
+  Emin=max(Emin/rytoev,Elw)
+  Emax=min(Emax/rytoev,Eup)
+  DeltaE = DeltaE / rytoev
   ndos = nint ( (Emax - Emin) / DeltaE+0.500001)
   DOSint = 0.0
   !
+  if ( fildos == ' ' ) fildos = trim(prefix)//'.dos'
   open (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
   if (nspin.eq.1) then
      write(4,'("#  E (eV)   dos(E)     Int dos(E)")')
@@ -164,10 +190,10 @@ program dos
      endif
      if (nspin.eq.1) then
         DOSint = DOSint + DOSofE (1) * DeltaE
-        write (4, '(f7.3,2e12.4)') E * 13.6058, DOSofE(1)/13.6058, DOSint
+        write (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
      else
         DOSint = DOSint + (DOSofE (1) + DOSofE (2) ) * DeltaE
-        write (4, '(f7.3,3e12.4)') E * 13.6058, DOSofE/13.6058, DOSint
+        write (4, '(f7.3,3e12.4)') E * rytoev, DOSofE/rytoev, DOSint
      endif
   enddo
 
