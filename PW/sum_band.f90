@@ -37,6 +37,8 @@ SUBROUTINE sum_band()
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
 #if defined (__PARA)
   USE para,                 ONLY : me, mypool
+  USE io_global,            ONLY : ionode_id
+  USE mp,                   ONLY : mp_bcast
 #endif
   !
   IMPLICIT NONE
@@ -85,7 +87,7 @@ SUBROUTINE sum_band()
      !
      IF ( me == 1 ) CALL poolbcast( 1, ef )
      !
-     CALL broadcast( 1, ef )
+     CALL mp_bcast( ef, ionode_id )
      !
 #endif
   ELSE IF ( lgauss ) THEN
@@ -273,7 +275,7 @@ SUBROUTINE sum_band()
                 !
                 rho(ir,current_spin) = rho(ir,current_spin) + &
                                                    w1 * REAL( psic(ir) )**2 + &
-                                                   w2 *DIMAG( psic(ir) )**2
+                                                   w2 * AIMAG( psic(ir) )**2
                 !
              END DO
              !
@@ -419,7 +421,7 @@ SUBROUTINE sum_band()
                 !
                 rho(ir,current_spin) = rho(ir,current_spin) + &
                                                  w1 * ( REAL( psic(ir) )**2 + &
-                                                        IMAG( psic(ir) )**2 )
+                                                        AIMAG( psic(ir) )**2 )
                 !
              END DO
              !

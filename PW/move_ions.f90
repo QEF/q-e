@@ -46,7 +46,7 @@ SUBROUTINE move_ions()
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE control_flags, ONLY : upscale, iswitch, lbfgs, loldbfgs, lconstrain, &
+  USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
                             lmd, conv_ions, alpha0, beta0, tr2
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE cellmd,        ONLY : lmovecell, calc
@@ -75,57 +75,58 @@ SUBROUTINE move_ions()
   REAL(KIND=DP), ALLOCATABLE :: pos(:), gradient(:)
   !
   !
-  conv_ions = .FALSE.
-  !
-  ALLOCATE( tauold( 3, nat, 3 ) )   
-  !
-  ! ... constrains are imposed here
-  !  
-  IF ( lconstrain ) &
-     CALL impose_constrains()
-  !
-  ! ... the file containing old positions is opened ( needed for extrapolation )
-  !
-  CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
-  !
-  IF ( exst ) THEN
-     !
-     READ( UNIT = 4, FMT = * ) tauold
-     !
-  ELSE
-     !
-     tauold = 0.D0
-     !
-  END IF
-  !
-  CLOSE( UNIT = 4, STATUS = 'KEEP' )
-  !
-  ! ... save the previous two steps ( a total of three steps is saved )
-  !
-  tauold(:,:,3) = tauold(:,:,2)
-  tauold(:,:,2) = tauold(:,:,1)
-  tauold(:,:,1) = tau(:,:)
-  !
-  ! ... do the minimization / dynamics step
-  !
-  IF ( lmovecell .AND. ( iswitch == 2 .OR. iswitch == 4 ) ) &
-     CALL errore( 'move_ions', &
-                & 'variable cell and constrain not implemented', 1 )
-  !
-  ! ... BFGS algorithm is used to minimize ionic configuration
-  !
-  IF ( lbfgs ) THEN
-     !
-     ! ... the new bfgs procedure is used
-     !
 #if defined (__PARA)
+  !
+  ! ... only one node does the calculation in the parallel case
+  !
+  IF ( me == 1 .AND. mypool == 1 ) THEN 
      !
-     ! ... only one node does the calculation in the parallel case
-     !
-     IF ( me == 1 .AND. mypool == 1 ) THEN 
-        !
 #endif     
+     !
+     conv_ions = .FALSE.
+     !
+     ALLOCATE( tauold( 3, nat, 3 ) )   
+     !
+     ! ... constrains are imposed here
+     !  
+     IF ( lconstrain ) &
+        CALL impose_constrains()
+     !
+     ! ... the file containing old positions is opened 
+     ! ... ( needed for extrapolation )
+     !
+     CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     !
+     IF ( exst ) THEN
         !
+        READ( UNIT = 4, FMT = * ) tauold
+        !
+     ELSE
+        !
+        tauold = 0.D0
+        !
+     END IF
+     !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     !
+     ! ... save the previous two steps ( a total of three steps is saved )
+     !
+     tauold(:,:,3) = tauold(:,:,2)
+     tauold(:,:,2) = tauold(:,:,1)
+     tauold(:,:,1) = tau(:,:)
+     !
+     ! ... do the minimization / dynamics step
+     !
+     IF ( lmovecell .AND. lconstrain ) &
+        CALL errore( 'move_ions', &
+                   & 'variable cell and constrain not implemented', 1 )
+     !
+     ! ... BFGS algorithm is used to minimize ionic configuration
+     !
+     IF ( lbfgs ) THEN
+        !
+        ! ... the new bfgs procedure is used
+        !  
         ALLOCATE( pos( 3 * nat ) )
         ALLOCATE( gradient( 3 * nat ) )
         !
@@ -171,66 +172,66 @@ SUBROUTINE move_ions()
         DEALLOCATE( pos )
         DEALLOCATE( gradient ) 
         !
-#if defined (__PARA)
+     ELSE IF ( loldbfgs ) THEN
+        !
+        ! ... the old bfgs scheme is used
+        !
+        CALL bfgs()
+        !   
+     END IF
+     !
+     ! ... molecular dynamics schemes are used
+     !
+     IF ( lmd ) THEN
+        !
+        IF ( calc == ' ' ) CALL dynamics()  ! verlet dynamics
+        IF ( calc /= ' ' ) CALL vcsmd()     ! variable cell shape md
         !
      END IF
+     !
+     ! ... check if the new positions satisfy the constrain equation
+     !
+     IF ( lconstrain ) CALL check_constrain()
+     !
+     ! ... before leaving check that the new positions still transform
+     ! ... according to the symmetry of the system.
+     !
+     CALL checkallsym( nsym, s, nat, tau, ityp, &
+                       at, bg, nr1, nr2, nr3, irt, ftau )
+     !
+     ! ... find the best coefficients for the extrapolation of the potential
+     !
+     CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+     !
+     CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     !
+     WRITE( UNIT = 4, FMT = * ) tauold
+     !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !  
-     ! ... broadcast calculated quantities to all nodes
+     DEALLOCATE( tauold )
      !
-     CALL mp_bcast( tau,       ionode_id )
-     CALL mp_bcast( force,     ionode_id )
-     CALL mp_bcast( tr2,       ionode_id )
-     CALL mp_bcast( conv_ions, ionode_id )
-#endif 
-     !
-  ELSE IF ( loldbfgs ) THEN
-    !
-    ! ... the old bfgs scheme is used
-    !
-    CALL bfgs()
-    !   
-  END IF
-  !
-  ! ... molecular dynamics schemes are used
-  !
-  IF ( lmd ) THEN
-     !
-     IF ( calc == ' ' ) CALL dynamics()  ! verlet dynamics
-     IF ( calc /= ' ' ) CALL vcsmd()     ! variable cell shape md
-     !
-  END IF
-  !
-  ! ... check if the new positions satisfy the constrain equation
-  !
-  IF ( lconstrain ) CALL check_constrain()
-  !
-  ! ... before leaving check that the new positions still transform
-  ! ... according to the symmetry of the system.
-  !
-  CALL checkallsym( nsym, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, irt, ftau )
-  !
-  ! ... find the best coefficients for the extrapolation of the potential
-  !
-  CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-  !
 #if defined (__PARA)
+     !
+  END IF
+  !  
+  ! ... broadcast calculated quantities to all nodes
+  !
+  CALL mp_bcast( conv_ions, ionode_id )
+  CALL mp_bcast( tau,       ionode_id )
+  CALL mp_bcast( force,     ionode_id )
+  CALL mp_bcast( tr2,       ionode_id )
+  CALL mp_bcast( conv_ions, ionode_id )
   !
   IF ( me == 1 ) CALL poolbcast( 1, alpha0 )
   IF ( me == 1 ) CALL poolbcast( 1, beta0 )
   !
   CALL mp_bcast( alpha0, ionode_id )
   CALL mp_bcast( beta0,  ionode_id )
-  !
-#endif
-  !
-  CALL seqopn( 4, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
-  !
-  WRITE( UNIT = 4, FMT = * ) tauold
-  !
-  CLOSE( UNIT = 4, STATUS = 'KEEP' )
   !  
-  DEALLOCATE( tauold )
-  !  
+  ! 
+#endif     
+  !
   RETURN
   !
   CONTAINS

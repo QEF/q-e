@@ -42,9 +42,6 @@ SUBROUTINE vcsmd()
   USE ener,          ONLY : etot
   USE io_files,      ONLY : prefix
   USE parser,        ONLY : delete_if_present
-#if defined (__PARA)
-  USE para,          ONLY : me, mypool
-#endif
   !
   IMPLICIT NONE
   !
@@ -321,72 +318,61 @@ SUBROUTINE vcsmd()
      !
      ! ... write on output files several control quantities
      !
-#if defined (__PARA)
+     ! ... NB: at the first iteration files should not be present,
+     ! ...     for subsequent iterations they should.
      !
-     ! ... only the first processor does this I/O
-     !
-     IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
+     IF ( istep == 1 ) THEN
         !
-        ! ... NB: at the first iteration files should not be present,
-        ! ...     for subsequent iterations they should.
+        CALL delete_if_present( 'e' )
+        CALL delete_if_present( 'eal' )
+        CALL delete_if_present( 'ave' )
+        CALL delete_if_present( 'p' )
+        CALL delete_if_present( 'avec' )
+        CALL delete_if_present( 'tv' )
         !
-        IF ( istep == 1 ) THEN
-           !
-           CALL delete_if_present( 'e' )
-           CALL delete_if_present( 'eal' )
-           CALL delete_if_present( 'ave' )
-           CALL delete_if_present( 'p' )
-           CALL delete_if_present( 'avec' )
-           CALL delete_if_present( 'tv' )
-           !
-           ios  = 'NEW'
-           ipos = 'ASIS'
-           !
-        ELSE
-           !
-           ios  = 'OLD'
-           ipos = 'APPEND'
-           !
-        END IF
+        ios  = 'NEW'
+        ipos = 'ASIS'
         !
-        OPEN( UNIT = iun_e,    FILE = 'e',    STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
-        OPEN( UNIT = iun_eal,  FILE = 'eal',  STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
-        OPEN( UNIT = iun_ave,  FILE = 'ave',  STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
-        OPEN( UNIT = iun_p,    FILE = 'p',    STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
-        OPEN( UNIT = iun_avec, FILE = 'avec', STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
-        OPEN( UNIT = iun_tv,   FILE = 'tv',   STATUS = ios, &
-              FORM = 'FORMATTED', POSITION = ipos )
+     ELSE
         !
-        nst = istep - 1
+        ios  = 'OLD'
+        ipos = 'APPEND'
         !
-        WRITE( iun_e,   101 ) ut, ekint, edyn, pv, nst
-        WRITE( iun_eal, 103 ) uta, eka, eta, utl, ekla, etl, nst
-        WRITE( iun_ave, 104 ) avu, avk, nst
-        WRITE( iun_p,   105 ) press, p, avp, nst
-        !
-        IF ( calc(1:1) /= 'm' ) &
-           WRITE( iun_avec, 103 ) &
-               avmod(:), theta(1,2), theta(2,3), theta(3,1), nst
-        !
-        WRITE( iun_tv, 104 ) vcell, tnew, nst
-        !
-        CLOSE( UNIT = iun_e,    STATUS = 'KEEP' )
-        CLOSE( UNIT = iun_eal,  STATUS = 'KEEP' )
-        CLOSE( UNIT = iun_ave,  STATUS = 'KEEP' )
-        CLOSE( UNIT = iun_p,    STATUS = 'KEEP' )
-        CLOSE( UNIT = iun_avec, STATUS = 'KEEP' )
-        CLOSE( UNIT = iun_tv,   STATUS = 'KEEP' )
-        !
-#if defined (__PARA)
      END IF
-#endif
-  !
+     !
+     OPEN( UNIT = iun_e,    FILE = 'e',    STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     OPEN( UNIT = iun_eal,  FILE = 'eal',  STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     OPEN( UNIT = iun_ave,  FILE = 'ave',  STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     OPEN( UNIT = iun_p,    FILE = 'p',    STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     OPEN( UNIT = iun_avec, FILE = 'avec', STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     OPEN( UNIT = iun_tv,   FILE = 'tv',   STATUS = ios, &
+           FORM = 'FORMATTED', POSITION = ipos )
+     !
+     nst = istep - 1
+     !
+     WRITE( iun_e,   101 ) ut, ekint, edyn, pv, nst
+     WRITE( iun_eal, 103 ) uta, eka, eta, utl, ekla, etl, nst
+     WRITE( iun_ave, 104 ) avu, avk, nst
+     WRITE( iun_p,   105 ) press, p, avp, nst
+     !
+     IF ( calc(1:1) /= 'm' ) &
+        WRITE( iun_avec, 103 ) &
+            avmod(:), theta(1,2), theta(2,3), theta(3,1), nst
+     !
+     WRITE( iun_tv, 104 ) vcell, tnew, nst
+     !
+     CLOSE( UNIT = iun_e,    STATUS = 'KEEP' )
+     CLOSE( UNIT = iun_eal,  STATUS = 'KEEP' )
+     CLOSE( UNIT = iun_ave,  STATUS = 'KEEP' )
+     CLOSE( UNIT = iun_p,    STATUS = 'KEEP' )
+     CLOSE( UNIT = iun_avec, STATUS = 'KEEP' )
+     CLOSE( UNIT = iun_tv,   STATUS = 'KEEP' )
+     !
   END IF
   !
   ! ... update configuration in PWSCF variables

@@ -14,9 +14,11 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   ! ... calculates all the eigenvalues and eigenvectors of a complex
   ! ... hermitean matrix H . On output, the matrix is unchanged
   !
-  USE kinds, ONLY : DP
+  USE kinds,     ONLY : DP
 #if defined (__PARA)
-  USE para,       ONLY : me, mypool, npool
+  USE para,      ONLY : me, mypool, npool
+  USE io_global, ONLY : ionode_id
+  USE mp,        ONLY : mp_bcast  
 #endif
   !
   IMPLICIT NONE
@@ -59,6 +61,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   !
   CONTAINS  
     !
+    ! ... internal procedures
+    !
 #if defined (__AIX)
     ! 
     !-----------------------------------------------------------------------
@@ -93,15 +97,18 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       ! ... only the first processor diagonalize the matrix
       !
       IF ( me == 1 ) THEN
+         !
 # endif
          !
          CALL ZHPEV( 21, hp, e, v, ldh, n, aux, naux )
          !
 # if defined (__PARA)
+         !
       END IF
       !
-      CALL broadcast( n, e )
-      CALL broadcast( 2 * ldh * n, v )
+      CALL mp_bcast( e, ionode_id )
+      CALL mp_bcast( v, ionode_id )
+      !
 # endif
       !
       DEALLOCATE( aux )
@@ -129,8 +136,8 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       REAL(KIND=DP) :: rwork(2,ldh), work(ldh)
       !
       !
-      ar = DREAL( h )
-      ai = DIMAG( h )
+      ar = REAL( h )
+      ai = AIMAG( h )
       !
       CALL ch( ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info )
       !
@@ -157,7 +164,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       INTEGER :: ILAENV
       EXTERNAL   ILAENV
         ! ILAENV returns optimal block size "nb"
-      REAL(KIND=DP), ALLOCATABLE    :: rwork(:)
+      REAL(KIND=DP),    ALLOCATABLE :: rwork(:)
       COMPLEX(KIND=DP), ALLOCATABLE :: work(:)
       !
       !
@@ -176,6 +183,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          lwork = ( nb + 1 ) * n
          !
       END IF
+      !
 #  if defined (__PARA)
       !
       ! ... if scalapack library is present and we have just one pool
@@ -200,7 +208,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
          ! ... allocate workspace
          !
-         CALL ZCOPY( n * ldh, h, 1, v, 1 )
+         v = h
          !
          ALLOCATE( work( lwork ) )    
          ALLOCATE( rwork( 3 * n - 2 ) )    
@@ -215,10 +223,12 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          DEALLOCATE( work )
          !
 #  if defined (__PARA)
+         !
       END IF
       !
-      CALL broadcast( n, e )
-      CALL broadcast( 2 * ldh * n, v )
+      CALL mp_bcast( e, ionode_id )
+      CALL mp_bcast( v, ionode_id )      
+      !
 #  endif
       !
       RETURN

@@ -31,7 +31,7 @@ SUBROUTINE dynamics()
   ! ... delta_T < 0 :                  every 'nraise' step the temperature
   ! ...                                reduced by -delta_T
   !
-  ! ... Dario Alfe 1997 and Carlo Sbraccia 2004
+  ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
@@ -46,9 +46,6 @@ SUBROUTINE dynamics()
   USE control_flags, ONLY : ethr, upscale, tr2, imix, alpha0, beta0, istep, &
                             lconstrain, ldamped, conv_ions
   USE io_files,      ONLY : prefix
-#if defined (__PARA)
-  USE para,          ONLY : me, mypool
-#endif
   !
   IMPLICIT NONE
   !
@@ -325,40 +322,23 @@ SUBROUTINE dynamics()
        ! ... velocity in random direction, with modulus accordingly to mass 
        ! ... and temperature: 3/2KT = 1/2mv^2
        !
-#if defined (__PARA)
-       !  
-       ! ... only the first processor calculates ...
-       !
-       IF ( me == 1 .AND. mypool == 1 ) THEN
-#endif
+       DO na = 1, nat
           !
-          DO na = 1, nat
-            !
-            ! ... N.B. velox is in a.u. units /alat
-            !
-            velox = SQRT( 3.D0 * aux / mass(na) ) / alat
-            !
-            dir_x = rndm() - 0.5D0
-            dir_y = rndm() - 0.5D0
-            dir_z = rndm() - 0.5D0
-            !
-            module = SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
-            !
-            vel(1,na) = velox * dir_x / module
-            vel(2,na) = velox * dir_y / module
-            vel(3,na) = velox * dir_z / module
-            !
-          END DO
-#ifdef __PARA
+          ! ... N.B. velox is in a.u. units /alat
           !
-          ! ... and distributes the velocities
+          velox = SQRT( 3.D0 * aux / mass(na) ) / alat
           !
-       END IF
-       !
-       IF ( me == 1 ) CALL poolbcast( 3 * nat, vel )
-       !
-       CALL broadcast( 3 * nat, vel )
-#endif
+          dir_x = rndm() - 0.5D0
+          dir_y = rndm() - 0.5D0
+          dir_z = rndm() - 0.5D0
+          !
+          module = SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
+          !
+          vel(1,na) = velox * dir_x / module
+          vel(2,na) = velox * dir_y / module
+          vel(3,na) = velox * dir_z / module
+          !
+       END DO
        !
        ! ... if there is inversion symmetry equivalent atoms have 
        ! ... opposite velocities

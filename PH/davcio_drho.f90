@@ -22,6 +22,8 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
   use phcom
 #ifdef __PARA
   use para
+  USE io_global,     ONLY : ionode_id
+  USE mp,            ONLY : mp_bcast  
 #endif
   implicit none
   integer :: iunit, lrec, nrec, isw
@@ -56,7 +58,7 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
      ! processors of the pool
      !
      if (me == 1) call davcio (ddrho, lrec, iunit, nrec, - 1)
-     call broadcast (2 * nrx1 * nrx2 * nrx3 * nspin, ddrho)
+     call mp_bcast( ddrho, ionode_id )
      !
      ! Distributes ddrho between between the tasks of the pool
      !

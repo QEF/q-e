@@ -16,9 +16,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !   On output both matrix are unchanged
   !   Uses LAPACK routines
   !
-  USE kinds
+  USE kinds,     ONLY : DP
 #ifdef __PARA
-  USE para
+  USE para,      ONLY : me
+  USE mp,        ONLY : mp_bcast
+  USE io_global, ONLY : ionode_id
 #endif
   !
   IMPLICIT NONE
@@ -26,26 +28,26 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   ! ... on INPUT
   !
   INTEGER :: n, m, ldh
-  ! dimension of the matrix to be diagonalized
-  ! number of eigenstates to be calculated
-  ! leading dimension of h, as declared in the calling pgm unit
+    ! dimension of the matrix to be diagonalized
+    ! number of eigenstates to be calculated
+    ! leading dimension of h, as declared in the calling pgm unit
   REAL(KIND=DP) :: h(ldh,n)
-  ! matrix to be diagonalized
+    ! matrix to be diagonalized
   REAL(KIND=DP) :: s(ldh,n)
-  ! overlap matrix
+    ! overlap matrix
   !
   ! ... on OUTPUT
   !
   REAL(KIND=DP) :: e(n)
-  ! eigenvalues
+    ! eigenvalues
   REAL(KIND=DP) :: v(ldh,m)
-  ! eigenvectors (column-wise)
+    ! eigenvectors (column-wise)
   !
   ! ... LOCAL variables
   !
   INTEGER                    :: lwork, nb, ILAENV, mm, info
-  ! ILAENV returns optimal block size "nb"
-  ! mm = number of calculated eigenvectors
+    ! ILAENV returns optimal block size "nb"
+    ! mm = number of calculated eigenvectors
   EXTERNAL                      ILAENV
   INTEGER, ALLOCATABLE       :: iwork(:), ifail(:)
   REAL(KIND=DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
@@ -69,23 +71,26 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   ! ... allocate workspace
   !
   ALLOCATE( work( lwork ) )    
-  ALLOCATE( sdum( ldh, n) )
+  ALLOCATE( sdum( ldh, n ) )
   !    
   IF ( .NOT. all_eigenvalues ) THEN
+     !
      ALLOCATE( hdum( ldh, n ) )    
-     ALLOCATE( iwork(  5 * n ) )    
-     ALLOCATE( ifail(  n ) )    
+     ALLOCATE( iwork( 5 * n ) )    
+     ALLOCATE( ifail( n ) )    
+     !
   END IF
   !
   ! ... input s and (see below) h are copied so that they are not destroyed
   !
-  CALL DCOPY( ldh * n, s, 1, sdum, 1 )
+  sdum = s
   !
 #ifdef __PARA
   !
   ! ... only the first processor diagonalize the matrix
   !
   IF ( me == 1 ) THEN
+     !
 #endif
 #ifdef HAS_DSYGVX
      IF ( all_eigenvalues ) THEN
@@ -93,13 +98,16 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         ! ... calculate all eigenvalues
         !
-        CALL DCOPY( ldh * n, h, 1, v, 1 )
+        v(:,1:n) = h(:,:)
+        !
 #ifdef __AIX
         !
         ! ... there is a name conflict between essl and lapack ...
         !
         CALL DSYGV( 1, v, ldh, sdum, ldh, e, v, ldh, n, work, lwork )
+        !
         info = 0
+        !
 #else
         CALL DSYGV( 1, 'V', 'U', n, v, ldh, sdum, ldh, e, work, &
                     lwork, info )
@@ -109,29 +117,37 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         ! ... calculate only m lowest eigenvalues
         !
-        CALL DCOPY( ldh * n, h, 1, hdum, 1 )
+        hdum = h
+        !
         CALL DSYGVX( 1, 'V', 'I', 'U', n, hdum, ldh, sdum, ldh, &
                      0.D0, 0.D0, 1, m, 0.D0, mm, e, v, ldh, work, lwork, &
                      iwork, ifail, info )
+        !             
      END IF
 #endif
+     !
      CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
+     !
 #ifdef __PARA
   END IF
   !
   ! ... broadcast eigenvectors and eigenvalues to all other processors
   !
-  CALL broadcast( n, e )
-  CALL broadcast( ldh * m, v )
+  CALL mp_bcast( e, ionode_id )
+  CALL mp_bcast( v, ionode_id )
+  !
 #endif
   !
   ! ... deallocate workspace
   !
   IF ( .NOT. all_eigenvalues ) THEN
+     !
      DEALLOCATE( ifail )
      DEALLOCATE( iwork )
      DEALLOCATE( hdum )
+     !
   END IF
+  !
   DEALLOCATE( sdum )
   DEALLOCATE( work )
   !
