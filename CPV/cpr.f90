@@ -61,13 +61,13 @@
       use gvecb
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_base, only: na, nat, pmass, nas => nax, nsp
+      use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
-      use cell_base, only: ainv
+      use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use cell_base, only: h, hold, deth, wmass
-      use smooth_grid_dimensions, only: nnrsx
-      use smallbox_grid_dimensions, only: nnrb => nnrbx
+      use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
+      use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu
       use timex_mod
       use work1
@@ -85,8 +85,9 @@
       use stre
       use pres_mod
       use restart
-      use parameters, only: nacx, natx
+      use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
+      use psfiles, only: psfile, pseudo_dir
 !
       implicit none
 !
@@ -158,6 +159,7 @@
 ! for variable cell dynamics: scaled tau
 !
       real(kind=8) taus(3,natx,nsx)
+      real(kind=8) f_(nbndxx)
       integer iforceh(3,3)
 !
       integer ndr, ndw, nbeg, maxit, nomore
@@ -219,6 +221,7 @@
 !     ==================================================================
 !     read input from standard input (unit 5)
 !     ==================================================================
+      if( .false. ) then
       call iosys      (nbeg,ndr,ndw,nomore,iprint                       &
      &                ,delt,emass,emaec                                 &
      &                ,tsde,frice,grease,twall                          &
@@ -232,6 +235,22 @@
      &                ,frich,greash,press                               &
      &                ,tnoseh,qnh,temph                                 &
      &                ,celldm, ibrav, tau0, ecutw, ecut, iforce)
+      else
+      call iosys2( nbeg , ndr , ndw , nomore , iprint                       &
+     & , delt , emass , emaec  , tsde , frice , grease , twall              &
+     & , tortho , eps , maxit , trane , ampre , tranp , amprp                &
+     & , tfor , tsdp , fricp , greasp , tcp , tcap , tolp , trhor , trhow , tvlocw &
+     & , tnosep , qnp , tempw , tnosee , qne , ekincw                 &
+     & , tpre , thdyn , thdiag , twmass , wmass , frich , greash , press   &
+     & , tnoseh , qnh , temph , celldm , ibrav , tau0 , ecutw , ecut , iforce &
+     & , nat , nsp , na , pmass , rcmax , ipp , f_ , nel , nspin , nupdwn  &
+     & , iupdwn , n , nx , nr1 , nr2 , nr3 , omega , alat , a1 , a2 , a3  &
+     & , nr1b , nr2b , nr3b , nr1s , nr2s , nr3s , agg , sgg , e0gg &
+     & , psfile , pseudo_dir, iprsta )
+      allocate( f( nx ) )
+      f( :   ) = 0.0d0
+      f( 1:n ) = f_( 1:n )
+      endif
 !     ==================================================================
 !
 !     general variables

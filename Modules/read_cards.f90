@@ -129,7 +129,7 @@
 
           ELSE IF( TRIM(card) == 'ATOMIC_POSITIONS' ) THEN
 
-              CALL card_atomic_positions( input_line )
+              CALL card_atomic_positions( input_line, prog )
 
           ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
 
@@ -328,10 +328,11 @@
 ! ----------------------------------------------------------------
 
 
-      SUBROUTINE card_atomic_positions( input_line )
+      SUBROUTINE card_atomic_positions( input_line, prog )
         USE parser, ONLY: matches
         IMPLICIT NONE
         CHARACTER(LEN=256) :: input_line
+        CHARACTER(LEN=2)   :: prog
         CHARACTER(LEN=4)   :: lb_pos
         INTEGER :: ia, ip, i, k, is, nfield
         LOGICAL, SAVE :: tread = .FALSE.
@@ -362,9 +363,11 @@
         ELSE IF( matches("alat", input_line ) ) THEN
           atomic_positions = 'alat'
         ELSE
-          IF( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITION' ) &
-            CALL errore( ' read_cards ', ' unknow unit option for ATOMIC_POSITION ', 1 )
-          atomic_positions = 'crystal'
+          IF( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) &
+            CALL errore( ' read_cards ', ' unknow unit option for ATOMIC_POSITION: '&
+                        &//input_line, 1 )
+          IF ( prog == 'FP' ) atomic_positions = 'crystal'
+          IF ( prog == 'CP' ) atomic_positions = 'bohr'
         END IF
  
         DO ia = 1, nat

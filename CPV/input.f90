@@ -1237,7 +1237,7 @@
      & , tpre_ , thdyn_ , thdiag_ , twmass_ , wmass_ , frich_ , greash_ , press_           &
      & , tnoseh_ , qnh_ , temph_ , celldm_ , ibrav_ , tau0_ , ecutw_ , ecut_ , iforce_ &
      & , nat_ , nsp_ , na_ , pmass_ , rcmax_ , ipp_ , f_ , nel_ , nspin_ , nupdwn_  &
-     & , iupdwn_ , n_ , nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
+     & , iupdwn_ , n_ , nx_, nr1_ , nr2_ , nr3_ , omega_ , alat_ , a1_ , a2_ , a3_  & 
      & , nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , agg_ , sgg_ , e0gg_ &
      & , psfile_ , pseudo_dir_, iprsta_ )
 
@@ -1270,7 +1270,7 @@
            twmass_ , tnoseh_ , tranp_ ( nsx )
 
       integer :: nat_ , nsp_ , na_ ( nsx ), ipp_ ( nsx ), nel_ ( 2 ), nspin_ , &
-     &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nr1_ , nr2_ , nr3_ , &
+     &     nupdwn_ ( 2 ), iupdwn_ ( 2 ), n_ , nx_ , nr1_ , nr2_ , nr3_ , &
      &     nr1b_ , nr2b_ , nr3b_ , nr1s_ , nr2s_ , nr3s_ , ibrav_, iprsta_
 
       real(kind=8) :: pmass_ ( nsx ), rcmax_ ( nsx ), f_ ( nbndxx ), &
@@ -1284,8 +1284,8 @@
       !
 
       real(kind=8), parameter:: terahertz = 2.418D-5
-      real(kind=8) :: taus( 3, natx, nsx )
-      integer :: unit = 5, ionode_id = 0, i, ia, ios, is
+      real(kind=8) :: taus( 3, natx, nsx ), ocp, fsum
+      integer :: unit = 5, ionode_id = 0, i, ia, ios, is, iss, in
 
 
       CALL read_namelists( 'CP' )
@@ -1692,6 +1692,20 @@
       !
       !  set occupancies
       !
+      
+      IF( nelec < 1 ) THEN
+         CALL errore(' iosys ',' nelec less than 1 ', nelec )
+      END IF
+
+      if( mod( n_ , 2 ) .ne. 0 ) then
+         nx_ = n_ + 1
+      else
+         nx_= n_
+      end if
+
+      iupdwn_ ( 1 ) = 1
+      nel_ = 0
+
       SELECT CASE ( TRIM(occupations) ) 
       CASE ('bogus')
          !
@@ -1700,12 +1714,17 @@
          ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
          !
          f_ ( : ) = dfloat( nelec ) / n_         
+         nel_ (1) = nelec
+         nupdwn_ (1) = n_
          if ( nspin_ == 2 ) then
             !
             ! bogus to ensure Nelec = Nup + Ndw
             !
-            nelup = ( nelec + 1 ) / 2 
-            neldw =   nelec       / 2 
+            nel_ (1) = ( nelec + 1 ) / 2
+            nel_ (2) =   nelec       / 2
+            nupdwn_ (1)=nbnd
+            nupdwn_ (2)=nbnd
+            iupdwn_ (2)=nbnd+1
          end if
       CASE ('from_input')
          !
@@ -1716,30 +1735,57 @@
          if( nelec == 0 ) nelec = SUM ( f_ ( 1:n_ ) )
          if( nspin_ == 2 .and. nelup == 0) nelup = SUM ( f_ ( 1:nbnd ) )
          if( nspin_ == 2 .and. neldw == 0) neldw = SUM ( f_ ( nbnd+1 : 2*nbnd ) )
+
+         if( nspin_ == 1 ) then 
+           nel_ (1) = nelec
+           nupdwn_ (1) = n_
+         else
+           IF ( nelup + neldw /= nelec  ) THEN
+              CALL errore(' iosys ',' wrong # of up and down spin', 1 )
+           END IF
+           nel_ (1) = nelup
+           nel_ (2) = neldw
+           nupdwn_ (1)=nbnd
+           nupdwn_ (2)=nbnd
+           iupdwn_ (2)=nbnd+1
+         end if
+
       CASE ('fixed')
+
+         if( nspin_ == 1 ) then
+            nel_ (1) = nelec
+            nupdwn_ (1) = n_
+         else
+            IF ( nelup + neldw /= nelec  ) THEN
+               CALL errore(' iosys ',' wrong # of up and down spin', 1 )
+            END IF
+            nel_ (1) = nelup
+            nel_ (2) = neldw
+            nupdwn_ (1)=nbnd
+            nupdwn_ (2)=nbnd
+            iupdwn_ (2)=nbnd+1
+         end if
+
+         ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
+         ocp = 2.d0 / nspin_
+         ! default filling: attribute ocp electrons to each states
+         !                  until the good number of electrons is reached
+         do iss = 1, nspin_
+            fsum = 0.0d0
+            do in = iupdwn_ ( iss ), iupdwn_ ( iss ) - 1 + nupdwn_ ( iss )
+               if ( fsum + ocp < nel_ ( iss ) + 0.0001 ) then
+                  f_ (in) = ocp
+               else
+                  f_ (in) = max( nel_ ( iss ) - fsum, 0.d0 )
+               end if
+                fsum=fsum + f_(in)
+            end do
+         end do
+
+
       CASE DEFAULT
          CALL errore(' iosys ',' occupation method not implemented', 1 )
       END SELECT
-      !
-      IF( nelec < 1 ) THEN
-         CALL errore(' iosys ',' nelec less than 1 ', nelec )
-      END IF
-
-      iupdwn_ ( 1 ) = 1
-      if(nspin_ == 1) then
-         nel_ (1) = nelec
-         nel_ (2) = 0
-         nupdwn_ (1) = n_
-      else
-         IF ( nelup + neldw .ne. nelec  ) THEN
-            CALL errore(' iosys ',' wrong # of up and down spin', 1 )
-         END IF
-         nel_ (1) = nelup
-         nel_ (2) = neldw
-         nupdwn_ (1)=nbnd
-         nupdwn_ (2)=nbnd
-         iupdwn_ (2)=nbnd+1
-      end if
 
 !
 !     --------------------------------------------------------
