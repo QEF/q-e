@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 CP90 group
+! Copyright (C) 2002-2003 CP group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -86,7 +86,7 @@
       call system_clock(count, count_rate, count_max) 
       telaps=float(count)/count_rate
 #endif
-#ifdef __NEC 
+#ifdef __SX4 
 #define __USE_SYSTEM_TIMER
       call clock(tcpu)
       call system_clock(count, count_rate, count_max)
@@ -187,7 +187,7 @@
 #define __USE_SYSTEM_RAND
       randy = ranf()
 #endif
-#ifdef __NEC
+#ifdef __SX4
 #define __USE_SYSTEM_RAND
       randy=random(0)
 #endif
@@ -243,7 +243,7 @@
       if ( n.eq. 8 .or. n.eq.16  .or. n.eq.32 .or.                      &
      &     n.eq.64 .or. n.eq.128 .or. n.eq.256       )  nx=n+1
 #endif
-#if defined(__CRAYY) || defined(__NEC) 
+#if defined(__CRAYY) || defined(__SX4) 
       if ( mod(n,2).eq.0)  nx=n+1
 #endif
       good_fft_dimension=nx
@@ -307,7 +307,7 @@
      &            (pwr(2).ne.0 .and. pwr(3)+pwr(4)+pwr(5).le.1)     )
 #endif
 !
-#if defined(__CRAYY) || defined(__NEC)
+#if defined(__CRAYY) || defined(__SX4)
 !
 ! Cray and t3d machines with scilib libraries
 !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,8 +22,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, &
-     isign)
+subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, isign)
   !-----------------------------------------------------------------------
   ! driver routine for 3d fft using fftw libraries (PG)
   !
@@ -293,7 +292,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
 
 end subroutine cft_3
 #endif
-#ifdef NEC
+#ifdef __SX4
 #define PRESENT
 !----------------------------------------------------------------------
 subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
@@ -396,6 +395,158 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
 
 end subroutine cft_3
 #endif
+
+#ifdef __SX6
+#define PRESENT
+#define ASL
+
+module afftnec
+
+  use parameters
+  implicit none
+
+  integer, parameter :: ngrid=2
+  integer, parameter :: dim_iw=60
+  integer:: nrz1(ngrid),nrz2(ngrid),nrz3(ngrid)
+  logical :: first(ngrid)        ! is true at the first iteration
+  data first/ngrid*.true./
+  real(kind=DP), dimension(ngrid) :: fact
+  real(kind=DP), allocatable, target, dimension(:,:) :: auxp
+  integer, target, dimension(dim_iw,ngrid) :: iw0
+
+end module afftnec
+!
+!----------------------------------------------------------------------
+subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
+  !----------------------------------------------------------------------
+  !
+  !      3d fft for NEC SX6 - uses ASL library routines
+  !      contributed by Guido Roma
+  !
+  use afftnec
+  implicit none
+
+  integer :: &
+       &       nr1,&       !
+       &       nr2,&       ! input: the logical dimension of the FFT
+       &       nr3,&       !
+       &       nrx1,&      !
+       &       nrx2,&      ! input: the physical dimension of the FFT
+       &       nrx3,&      !
+       &       igrid,&     ! input: grid used (1=thick, 2=smooth)
+       &       sign,&      ! input: the sign of the transformation
+       &       ierr,&      ! 
+       isw 
+  complex(kind=DP) :: &       
+       &       f(nrx1,nrx2,nrx3)    ! inp/out: the function to transform
+  complex(kind=DP), allocatable, dimension(:,:,:) :: f1 ! for ASL Library FFT routines 
+#ifdef ASL
+  integer, pointer, dimension(:) :: iw
+#if defined MICRO
+  common/NEC_ASL_PARA/nbtasks
+  integer :: nbtasks
+#endif
+#endif
+  real(kind=DP), pointer, dimension(:) :: cw1
+  complex(kind=DP), dimension(:), allocatable :: cw2   
+
+  !     allocate auxp at the first call (independently of the grid)
+  if (.not.allocated(auxp)) allocate(auxp(2*(nr1+nr2+nr3),ngrid))
+
+  !
+  !    test the sign and put the correct normalization on f
+  !
+  if (first(igrid)) then
+     nrz1(igrid)=nrx1
+     nrz2(igrid)=nrx2
+     nrz3(igrid)=nrx3
+     if (mod(nrx1,2)==0) nrz1(igrid)=nrx1+1
+     if (mod(nrx2,2)==0) nrz2(igrid)=nrx2+1
+     if (mod(nrx3,2)==0) nrz3(igrid)=nrx3+1
+  end if
+#ifdef ASL
+  allocate(cw2(nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
+#else
+  allocate(cw2(3*nrz1(igrid)*nrz2(igrid)*nrz3(igrid)))
+#endif
+  allocate(f1(nrz1(igrid),nrz2(igrid),nrz3(igrid)))
+
+  if ( sign.eq.-1 ) then
+     fact(igrid)=1.0_8/dble(nr1*nr2*nr3)
+     call DSCAL(2*nrx1*nrx2*nrx3,fact(igrid),f,1)
+  else if ( sign.ne.1) then
+     call error('cft_3', 'wrong isign',1)
+  endif
+  if (igrid.le.0.or.igrid.gt.ngrid)&
+       &  call error('cft_3','which grid ?',1)
+
+  !     copy f in the auxiliary f1 with odd dimensions
+  !      call ZCOPY(nrx1*nrx2*nrx3,f,1,f1(1:nrx1,1:nrx2,1:nrx3),1)
+  f1(1:nrx1,1:nrx2,1:nrx3)=f
+
+#ifdef ASL
+  call zfc3cl(f1,nr1,nr2,nr3,nrz1(igrid),nrz2(igrid),nrz3(igrid),ierr)
+  call error('cft_3', 'initialisation problem',ierr)
+  iw=>iw0(:,igrid)
+#endif
+  cw1=>auxp(:,igrid)
+
+  if (first(igrid)) then
+     isw=0
+     first(igrid)=.false.
+     !         write(6,*)'________________________________________________________'
+     !         write(6,*) 'igrid = ',igrid
+     !         write(6,*) '  nrxs => ',nrx1,nrx2,nrx3
+     !         write(6,*) '  nrzs => ',nrz1(igrid),nrz2(igrid),nrz3(igrid)
+     !         write(6,*) '  nrs => ',nr1,nr2,nr3
+     !      write(6,*)'size(auxp)',size(auxp,1),size(auxp,2)
+     !      write(6,*)'size(cw1)',size(cw1)
+     !      write(6,*)'size(iw)',size(iw)
+     !         write(6,*)'________________________________________________________'
+#ifdef ASL
+#if defined MICRO
+     call hfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+          &            isw,iw,cw1,cw2,nbtasks,ierr)
+#else
+     call zfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+          &            isw,iw,cw1,cw2,ierr)
+#endif
+     if (ierr.ne.0) call error('cft_3','ierr=',ierr)
+#else
+     call ZZFFT3D(0,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
+          &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
+#endif
+  endif
+
+  isw=sign
+#ifdef ASL
+#if defined MICRO
+  call hfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+       &            isw,iw,cw1,cw2,nbtasks,ierr)
+#else
+  call zfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
+       &            isw,iw,cw1,cw2,ierr)     
+#endif
+  if (ierr.ne.0) call error('cft_3','ierr=',ierr)
+#else
+  call ZZFFT3D(isw,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
+       &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
+#endif
+
+
+  !     copy f1 back in f with odd dimensions
+  !      call zcopy(nrx1*nrx2*nrx3,f1(1:nrx1,1:nrx2,1:nrx3),1,f,1)
+  f(:,:,:)=f1(1:nrx1,1:nrx2,1:nrx3)
+  deallocate(f1)
+  deallocate(cw2)
+  nullify(cw1)
+#ifdef ASL
+  nullify(iw)
+#endif
+  !
+  return
+#endif
+
 #ifdef AIX
 #define PRESENT
 !----------------------------------------------------------------------

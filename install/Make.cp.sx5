@@ -1,5 +1,5 @@
 ######################################################################
-# NEC SX-5
+# NEC SX-5 (Manno)
 #
   ARCH=sx5
 #
@@ -8,8 +8,8 @@
 # --- Change Variables according to your system --- #
 
 #  ** Preprocessor Macro **
-  CPMACRO=-D__SX5 -D__MPI -D__PARA
-  CPMACRO=-D__SX5 -D__MPI -D__PARA -D__LIBMASS -D__ESSL -DSWAP=dswap -DAXPY=daxpy -DSCAL=dscal -DCOPY=dcopy -DGEMM=dgemm
+  CPMACRO=-D__SX4 \
+          -DSWAP=sswap -DAXPY=saxpy -DSCAL=sscal -DCOPY=scopy -DGEMM=sgemm
 #
 ######################################################################
 # ***  Usually you don't need to edit variables below this line **** #
@@ -18,23 +18,29 @@
 # General Flags
   FARCHFLAG= -sx5 
   CARCHFLAG= -sx5 
-  FOPTIM= -C ssafe
+#  FOPTIM= -C ssafe
+# NOTA BENE: in order to use -C hopt (the highest optimization level)
+#            a modified version of nlsm1, nlsm2, newd is needed, or
+#            they must be separately compiled with -C vsafe (as of Feb.2001)
+  FOPTIM= -C hopt
+  FMISC= -float0 -ew -Wf"-pvctl noassume nodivloop"
   COPTIM= -O2
   FREEFORM= -f4
   PRECOMP= -EP
   ARFLAGS   = rv
 #
 # Flag for the compilation of the fortran source files
-  FFLAG=    $(FARCHFLAG)  $(FOPTIM)
-  MAINFLAG= $(FARCHFLAG)  $(FREEFORM) $(PRECOMP) $(CPMACRO)
-  F90FLAG=  $(FARCHFLAG)  $(FREEFORM) $(PRECOMP) $(CPMACRO) $(FOPTIM)
+  FFLAG=    $(FARCHFLAG) $(FMISC) $(FOPTIM)
+  MAINFLAG= $(FARCHFLAG) $(FMISC) $(FREEFORM) $(PRECOMP) $(CPMACRO)
+  F90FLAG=  $(FARCHFLAG) $(FMISC) $(FREEFORM) $(PRECOMP) $(CPMACRO) $(FOPTIM)
   LNKFLAG=  $(FARCHFLAG)  
 #
 # Flag for the compilation of the c source files
   CFLAG=    $(CARCHFLAG) $(CPMACRO) $(COPTIM)
 #
 # Libraries
-  LIB= -llapack -lblas -lmpi
+  LIB= -leispack_64 -llinpack_64 -lfft_64 -lblas_64
+#  LIB= -llapack -lblas -lmpi
   MODULEFLAG=-I $(OSHOME)/CPV -I$(OSHOME)/Modules
 #
 # Name of the fortran compiler

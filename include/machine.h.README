@@ -8,10 +8,11 @@
       PC        intel pc's
       ORIGIN    sgi origin 2k or 3k machines
       DEC       compaq (formerly dec) alphas
-      NEC       nec sx-4 and (maybe) sx-5 vector machines (obsolete)
+      __SX4     nec sx-4/5 vector machines (obsolete)
+      __SX6     nec sx-6 vector machines
       CRAYY     cray vector machines (obsolete)
       SGI       sgi workstations: iris, o2
-      EXEMPLAR  convex exemplar
+      EXEMPLAR  convex exemplar (obsolete)
       FUJ64     Fujitsu VPP5000 vector machines
    Other Input definitions:
       ABSOFT       for intel pc's with absoft compiler

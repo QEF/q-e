@@ -164,7 +164,7 @@ end subroutine cft3s
 #endif
 
 #ifndef NOPENCILS
-#if defined(AIX) || defined(NEC) || defined(DEC)
+#if defined(AIX) || defined(__SX4) || defined(DEC)
 #define CFT_WITH_PENCILS cfts_3
 #endif
 #endif

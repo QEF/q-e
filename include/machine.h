@@ -1,19 +1,19 @@
 
-#if defined (NEC) || defined (ORIGIN) || defined (T3D) || defined (FUJ64) || defined (HITACHI)
+#if defined (__SX4) || defined (ORIGIN) || defined (T3D) || defined (FUJ64) || defined (HITACHI)
 #define FLUSH
 #endif
 
 #if defined(CRAYY) || defined(SGI) || defined(PC) || defined(AIX) || defined(T3D) ||defined(HITACHI) || defined(SUN)
 #define C_POINTER  integer
 #endif
-#if defined(ORIGIN) || defined (FUJ64)|| defined (DEC)
+#if defined(ORIGIN) || defined (FUJ64)|| defined (DEC) || defined (__SX6)
 #define C_POINTER  integer*8
 #endif
-#if defined(NEC)
+#if defined(__SX4)
 #define C_POINTER  real*8
 #endif
 
-#if defined(NEC)
+#if defined(__SX4)
 #define DIRECT_IO_FACTOR 1
 #else
 #if defined(DEC)
@@ -23,7 +23,7 @@
 #endif
 #endif
 
-#if defined(CRAYY) || defined (NEC) || defined (T3D)
+#if defined(CRAYY) || defined (__SX4) || defined (T3D)
 
 #define DREAL       real
 #define DIMAG       aimag

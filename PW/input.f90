@@ -1225,7 +1225,7 @@ subroutine verify_tmpdir
      end if
   end if
   ios = 0
-  open (unit=4,file=tmp_dir//'pwscf'// nd_nmbr,status='unknown',&
+  open (unit=4,file=trim(tmp_dir)//'pwscf'// nd_nmbr,status='unknown',&
         form='unformatted', iostat=ios)
   if (ios /= 0 ) call error('reading', &
                     trim(tmp_dir)//' non existent or non writable',1)

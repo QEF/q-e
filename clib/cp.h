@@ -46,7 +46,7 @@
 
 #endif
 
-#if defined __SGI | defined __FUJITSU | defined __SX5 | defined __INTEL
+#if defined __SGI | defined __FUJITSU | defined __SX4 | defined __INTEL
 
 #  define CREATE_PLAN create_plan_
 #  define CREATE_PLANX create_planx_

@@ -91,7 +91,7 @@ then
           cp.origin | cp.qsw | cp.sx5 | cp.t3e )
             cp install/Make.rules_nocpp make.rules
           ;;
-          pc_pgi | pc_abs | beowulf | fujitsu | sun   | sunmpi | \
+          pc_pgi | pc_abs | beowulf | fujitsu | sun   | sunmpi | sxcross | \
           fpmd.lnx.pgi | fpmd.lnx.absoft | cp.lnx.pgi | cp.lnx.absoft )
             cp install/Make.rules_cpp make.rules
           ;;
