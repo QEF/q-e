@@ -21,6 +21,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   !
 #include "machine.h"
   use parameters, only : DP
+  use g_psi_mod
   implicit none
   ! on INPUT
   integer :: ndim, ndmx, nvec, nvecx, gstart
@@ -64,7 +65,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   ! the product of H and psi
   ! the product of S and psi
   logical, allocatable  :: conv (:)
-  ! if .true. the root is converged
+  ! true if the root is converged
   !
   ! Called routines:
   external h_psi, g_psi
@@ -77,6 +78,8 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   !
   ! allocate the work arrays
   !
+
+  test_new_preconditioning = .true.
 
   call start_clock ('cegterg')
   allocate ( psi( ndmx, nvecx))    
@@ -132,37 +135,33 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   do kter = 1, maxter
      iter = kter
      call start_clock ('update')
-     if (notcnv < nvec) then
-        np = nbase
-        do n = 1, nvec
-           if ( .not.conv (n) ) then
-              !
-              !     this root not yet converged ... set a new basis vector
-              !     (position np) to (h-es)psi ...
-              !
-              np = np + 1
-              ! for use in g_psi
-              ew(np) = e (n)
-              call DGEMV ('n', 2*ndim, nbase, 1.d0, hpsi, 2*ndmx, &
-                   vr (1, n) , 1, 0.d0, psi (1, np) , 1)
-              call DGEMV ('n', 2*ndim, nbase, -e(n),spsi, 2*ndmx, &
-                   vr (1, n) , 1, 1.d0, psi (1, np) , 1)
-           endif
-        enddo
-     else
-        !
-        !     expand the basis set with new basis vectors (h-es)psi ...
-        !
-        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, spsi, &
-             2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
-        do n = 1, nvec
-              ! for use in g_psi
-           ew (nbase+n) = e (n)
-           psi (:,nbase+n) = - e(n) * psi(:,nbase+n)
-        end do
-        call DGEMM ('n', 'n', 2*ndim, nvec, nbase, 1.d0, hpsi, &
-             2*ndmx, vr, nvecx, 1.d0, psi (1, nbase+1), 2*ndmx)
-     end if
+     np = 0
+     do n = 1, nvec
+        if ( .not.conv (n) ) then
+           !
+           !     this root not yet converged ... 
+           !
+           np = np + 1
+           !
+           ! reorder eigenvectors so that coefficients for unconverged
+           ! roots come first. This allows to use quick matrix-matrix 
+           ! multiplications to set a new basis vector (see below)
+           !
+           if (np .ne. n) vr(:,np) = vr(:,n)
+           ! for use in g_psi
+           ew(nbase+np) = e (n)
+        endif
+     enddo
+     !
+     !     expand the basis set with new basis vectors (h-es)psi ...
+     !
+     call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, spsi, &
+          2*ndmx, vr, nvecx, 0.d0, psi (1, nbase+1), 2*ndmx)
+     do np = 1, notcnv
+        psi (:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
+     end do
+     call DGEMM ('n', 'n', 2*ndim, notcnv, nbase, 1.d0, hpsi, &
+          2*ndmx, vr, nvecx, 1.d0, psi (1, nbase+1), 2*ndmx)
 
      call stop_clock ('update')
      !
@@ -233,12 +232,6 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
         if ( .not. conv(n) ) notcnv = notcnv + 1
         e (n) = ew (n)
      enddo
-!!! TEST : update all eigenvectors if more than 1/4 are converged
-     if (notcnv > nvec/4) then
-        notcnv = nvec
-        conv(:) = .false.
-     end if
-!!! END OF TEST
      !
      !     if overall convergence has been achieved, OR
      !     the dimension of the reduced basis set is becoming too large, OR

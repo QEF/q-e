@@ -49,8 +49,6 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
   ! LOCAL variables
   !
-  !  one parameter
-  !
   integer, parameter :: maxter=20
   ! maximum number of iterations
   !
@@ -107,7 +105,6 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !
   notcnv = nvec
   nbase = nvec
-  psi(:,:) = (0.d0,0.d0)
   psi(:, 1:nvec) = evc(:, 1:nvec)
   !
   !     hpsi contains h times the basis vectors
@@ -149,11 +146,16 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      np = 0
      do n = 1, nvec
         if ( .not.conv (n) ) then
-           ! this root not yet converged ... 
+           !
+           !     this root not yet converged ... 
+           !
            np = np + 1
-           ! move its approximate eigenvector in position np in order to 
-           ! set a new basis vector with the (h-es)psi operation below
-           vc(:,np) = vc(:,n)
+           !
+           ! reorder eigenvectors so that coefficients for unconverged
+           ! roots come first. This allows to use quick matrix-matrix 
+           ! multiplications to set a new basis vector (see below)
+           !
+           if (np .ne. n) vc(:,np) = vc(:,n)
            ! for use in g_psi
            ew (nbase+np) = e (n)
         end if
@@ -270,12 +272,6 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         if ( .not. conv(n) ) notcnv = notcnv + 1
         e (n) = ew (n)
      enddo
-!!! TEST : update all eigenvectors if more than 1/4 are not converged
-!     if (notcnv > nvec/4) then
-!        notcnv = nvec
-!        conv(:) = .false.
-!     end if
-!!! END OF TEST
      !
      !     if overall convergence has been achieved, OR
      !     the dimension of the reduced basis set is becoming too large, OR
@@ -344,14 +340,14 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   enddo
 
 10 continue
+  deallocate (conv)
+  deallocate (ew)
+  deallocate (vc)
+  deallocate (hc)
+  if (overlap) deallocate (sc)
   deallocate (spsi)
   deallocate (hpsi)
   deallocate ( psi)
-  if (overlap) deallocate (sc)
-  deallocate (hc)
-  deallocate (vc)
-  deallocate (ew)
-  deallocate (conv)
 
   call stop_clock ('cegterg')
   return
