@@ -14,6 +14,7 @@
 ! XDIM                     !  write_restart_xdim        read_restart_xdim      !
 ! CELL                     !  write_restart_cell        read_restart_cell      !
 ! IONS                     !  write_restart_ions        read_restart_ions      !
+! LDA+U                    !  write_restart_ldaU        read_restart_ldaU
 ! SYMMETRIES               !  write_restart_symmetry    read_restart_symmetry  !
 ! do i = 1, ntyp           !                                                   !
 !   PSEUDOPOTENTIALS( i )  !  write_restart_pseudo      read_restart_pseudo    !
@@ -85,6 +86,13 @@
   END INTERFACE
   INTERFACE read_restart_electrons
     MODULE PROCEDURE read_restart_electrons1, read_restart_electrons2
+  END INTERFACE
+
+  INTERFACE write_restart_ldaU
+    MODULE PROCEDURE write_restart_ldaU1, write_restart_ldaU2
+  END INTERFACE
+  INTERFACE read_restart_ldaU
+    MODULE PROCEDURE read_restart_ldaU1, read_restart_ldaU2
   END INTERFACE
 
   INTERFACE write_restart_symmetry
@@ -170,6 +178,7 @@
       ecutwfc, ecutrho, alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, &
       ngauss, lgauss, ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, &
       modenum, lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
+      lda_plus_u, &
       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 !
       USE io_global, ONLY: ionode
@@ -217,6 +226,7 @@
 
       !  gamma_only is .TRUE. if calculation is at gamma (G-vecs span only half space)
       LOGICAL, INTENT(IN) :: gamma_only  
+      LOGICAL, INTENT(IN) :: lda_plus_u
 
       LOGICAL, INTENT(IN) :: tfixed_occ
       LOGICAL, INTENT(IN) :: tefield
@@ -249,7 +259,8 @@
         WRITE(iuni) nfi, iswitch, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_g, nk_g, &
           nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
           kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
-          natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, gamma_only, & 
+          natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, &
+          gamma_only, lda_plus_u, & 
           tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         WRITE(iuni) (na(i),i=1,ntyp), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
         WRITE(iuni) t_, c_, tmp_dir_
@@ -291,7 +302,7 @@
       nat, ntyp, na, acc, nacc, ecutwfc, ecutrho, alat, ekinc, kunit, &
       k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra, &
       natomwfc, gcutm, gcuts, dual, doublegrid, modenum, &
-      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, &
+      lforce, lstres, title, crystal, tmp_dir, tupf, gamma_only, lda_plus_u,&
       tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
 !
@@ -335,6 +346,7 @@
       CHARACTER(LEN=*), INTENT(OUT) :: tmp_dir
       LOGICAL, INTENT(OUT) :: tupf
       LOGICAL, INTENT(OUT) :: gamma_only
+      LOGICAL, INTENT(OUT) :: lda_plus_u
 
       LOGICAL, INTENT(OUT) :: tfixed_occ
       LOGICAL, INTENT(OUT) :: tefield
@@ -366,7 +378,7 @@
             nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, &
             alat, ekinc, kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, &
             ntetra, ltetra, natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, &
-            lforce, tupf, gamma_only, &
+            lforce, tupf, gamma_only, lda_plus_u,&
             tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect
         END IF
 !
@@ -415,6 +427,7 @@
         CALL mp_bcast( lforce, ionode_id )
         CALL mp_bcast( tupf, ionode_id )
         CALL mp_bcast( gamma_only, ionode_id )
+        CALL mp_bcast( lda_plus_u, ionode_id )
 
         CALL mp_bcast( tfixed_occ, ionode_id ) 
         CALL mp_bcast( tefield, ionode_id ) 
@@ -625,6 +638,167 @@
       RETURN
     END SUBROUTINE
 
+
+!=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
+
+! ..  This subroutine write to disk variable related to the lda+U calculation
+! .. Where:
+! iuni    = Restart file I/O fortran unit
+!
+    SUBROUTINE write_restart_ldaU1(iuni, &
+         ntyp, Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha)
+!
+      USE io_global, ONLY: ionode
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: iuni
+      INTEGER, INTENT(IN) :: ntyp
+      INTEGER, INTENT(IN) :: Hubbard_lmax
+      INTEGER, INTENT(IN) :: Hubbard_l(:)
+      REAL(dbl), INTENT(IN) :: Hubbard_U(:)
+      REAL(dbl), INTENT(IN) :: Hubbard_alpha(:)
+
+      INTEGER :: i
+      CHARACTER(LEN=30) :: sub_name = ' write_restart_ldaU '
+      CHARACTER(LEN=20) :: section_name = 'ldaU'
+
+      LOGICAL :: twrite = .TRUE.
+
+        IF( ionode ) THEN
+          WRITE(iuni) twrite, file_version, section_name
+          WRITE(iuni) ntyp
+          WRITE(iuni) Hubbard_lmax
+          WRITE(iuni) (Hubbard_l(i),i=1,ntyp)
+          WRITE(iuni) (Hubbard_U(i),i=1,ntyp)
+          WRITE(iuni) (Hubbard_alpha(i),i=1,ntyp)
+       ENDIF
+
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE write_restart_ldaU2(iuni)
+      USE io_global, ONLY: ionode, ionode_id
+      USE mp_global, ONLY: group
+      USE mp, ONLY: mp_bcast
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: iuni
+      LOGICAL :: twrite = .FALSE.
+      INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'ldaU'
+      IF( ionode ) THEN
+        WRITE(iuni) twrite, file_version, section_name
+        WRITE(iuni) idum
+        WRITE(iuni) idum
+        WRITE(iuni) idum
+        WRITE(iuni) idum
+        WRITE(iuni) idum
+      END IF
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE read_restart_ldaU1(iuni, &
+         ntyp, Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha)
+!
+      USE io_global, ONLY: ionode, ionode_id
+      USE mp_global, ONLY: group
+      USE mp, ONLY: mp_bcast
+!
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: iuni
+      INTEGER, INTENT(OUT) :: ntyp
+      INTEGER, INTENT(OUT) :: Hubbard_lmax
+      INTEGER, INTENT(OUT) :: Hubbard_l(:)
+      REAL(dbl), INTENT(OUT) :: Hubbard_U(:)
+      REAL(dbl), INTENT(OUT) :: Hubbard_alpha(:)
+
+      INTEGER :: i
+      LOGICAL :: twrite_
+      INTEGER :: ierr
+      INTEGER :: idum
+      CHARACTER(LEN=30) :: sub_name = ' read_restart_ldaU '
+      CHARACTER(LEN=20) :: section_name = 'ldaU'
+      CHARACTER(LEN=20) :: section_name_
+!
+! ... Subroutine Body
+!
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
+      IF( .NOT. twrite_ ) &
+        CALL errore(' read_restart_ldaU ',' Data Section not present in restart file ', 1)
+
+! aggiungere qualche check
+
+!
+
+        IF( ionode ) THEN
+          READ(iuni) ntyp
+        END IF
+        CALL mp_bcast(ntyp, ionode_id)
+
+        IF( ionode ) THEN
+          READ(iuni) Hubbard_lmax
+          READ(iuni) (Hubbard_l(i),i=1,ntyp)
+          READ(iuni) (Hubbard_U(i),i=1,ntyp)
+          READ(iuni) (Hubbard_alpha(i),i=1,ntyp)
+       ENDIF
+        CALL mp_bcast(Hubbard_lmax, ionode_id)
+        CALL mp_bcast(Hubbard_l, ionode_id)
+        CALL mp_bcast(Hubbard_U, ionode_id)
+        CALL mp_bcast(Hubbard_alpha, ionode_id)
+
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE read_restart_ldaU2(iuni)
+
+      USE io_global, ONLY: ionode, ionode_id
+      USE mp_global, ONLY: group
+      USE mp, ONLY: mp_bcast
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: iuni
+      LOGICAL :: twrite_
+      INTEGER :: ierr
+      INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'ldaU'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
+      IF( ionode ) THEN
+        READ(iuni) idum
+        READ(iuni) idum
+        READ(iuni) idum
+        READ(iuni) idum
+        READ(iuni) idum
+      END IF
+      IF( restart_module_verbosity > 1000 ) &
+        WRITE( stdout,fmt="(3X,'W: read_restart_ldaU, Data Section not read from restart ' )")
+      RETURN
+    END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
 !

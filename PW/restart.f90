@@ -66,11 +66,13 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
             write_restart_cell, write_restart_electrons, &
             write_restart_gvec, write_restart_gkvec, write_restart_charge, &
             write_restart_wfc, write_restart_symmetry, &
-            write_restart_xdim, write_restart_pseudo
+            write_restart_xdim, write_restart_pseudo, write_restart_ldaU
 
   USE parameters, only: nacx, nsx, npk
   use read_pseudo_module
   use pseudo_types
+  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                     Hubbard_U, Hubbard_alpha
 
   implicit none
   !
@@ -237,8 +239,9 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
        nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
        kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
        natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
-       title, crystal, tmp_dir, tupf, lgamma, &
+       title, crystal, tmp_dir, tupf, lgamma, lda_plus_u, &
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect)
+
    else
      CALL write_restart_header(ndw)
    end if
@@ -308,6 +311,16 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    DEALLOCATE( stau0, svel0, staum, svelm, tautmp )
 
+!  ==--------------------------------------------------------------==
+!  ==  LDA+U                                                       ==
+!  ==--------------------------------------------------------------==
+     if (lda_plus_u) then
+        CALL write_restart_ldaU(ndw, ntyp, Hubbard_lmax, &
+             Hubbard_l(1:ntyp), Hubbard_U(1:ntyp), Hubbard_alpha(1:ntyp))
+     else
+        CALL write_restart_ldaU(ndw)
+     endif
+  
 !  ==--------------------------------------------------------------==
 !  ==  SYMMETRIES                                                  ==
 !  ==--------------------------------------------------------------==
@@ -536,10 +549,12 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
             read_restart_cell, read_restart_electrons, &
             read_restart_gvec, read_restart_gkvec, read_restart_charge, &
             read_restart_wfc, read_restart_symmetry, &
-            read_restart_xdim, read_restart_pseudo
+            read_restart_xdim, read_restart_pseudo, read_restart_ldaU
 
   USE parameters, only: nacx, nsx
   use upf_to_internal
+  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                     Hubbard_U, Hubbard_alpha
 
   implicit none
   !
@@ -670,7 +685,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
        neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
        kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
        natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lstres, lforce, &
-       title_, crystal_, tmp_dir_, tupf, lgamma, &
+       title_, crystal_, tmp_dir_, tupf, lgamma, lda_plus_u,&
        tfixed_occ, tefield, dipfield, edir, emaxpos, eopreg, eamp, twfcollect )
 
      gamma_only = lgamma
@@ -715,7 +730,8 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
      nks = nkl
 
-   ELSE
+
+  ELSE
 
      CALL read_restart_header(ndr)
 
@@ -794,6 +810,20 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      CALL read_restart_ions(ndr)
 
    END IF
+
+!  ==--------------------------------------------------------------==
+!  ==  LDA+U                                                       ==
+!  ==--------------------------------------------------------------==
+     IF( lda_plus_u) THEN
+        
+        CALL read_restart_ldaU(ndr, ntyp, Hubbard_lmax, &
+             Hubbard_l(1:ntyp), Hubbard_U(1:ntyp), Hubbard_alpha(1:ntyp))
+
+     ELSE
+        
+        CALL read_restart_ldaU(ndr)
+
+     ENDIF
 
 !  ==--------------------------------------------------------------==
 !  ==  SYMMETRIES                                                  ==
@@ -1050,12 +1080,14 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   use io_global, only: ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
   use mp, only: mp_bcast
+  USE ldaU,      ONLY: lda_plus_u, Hubbard_lmax, Hubbard_l, &
+                     Hubbard_U, Hubbard_alpha
 
   USE io_base, only: read_restart_header, read_restart_ions, &
             read_restart_cell, read_restart_electrons, &
             read_restart_gvec, read_restart_gkvec, read_restart_charge, &
             read_restart_wfc, read_restart_symmetry, &
-            read_restart_xdim, read_restart_pseudo
+            read_restart_xdim, read_restart_pseudo, read_restart_ldaU
 
   implicit none
   !
@@ -1079,11 +1111,12 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   integer :: k1_, k2_, k3_, nk1_, nk2_, nk3_, ngauss_
   integer :: na_(nsx), ngk_l(npk), ngk_g(npk)
   integer :: ntetra_, natomwfc_, modenum_
+  integer :: Hubbard_lmax_
   integer :: npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
   real(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
   real(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
   real(kind=DP) :: acc_(nacx)
-  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, lgamma_
+  logical :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, lgamma_, lda_plus_u_
   character(len=80) :: title_, crystal_, tmp_dir_
 
   real(kind=DP) :: celldm_(6)
@@ -1130,7 +1163,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
      neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
      kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, ntetra_, ltetra_, &
      natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, lforce_, &
-     title_, crystal_, tmp_dir_, tupf_, lgamma_, &
+     title_, crystal_, tmp_dir_, tupf_, lgamma_, lda_plus_u_, &
      tfixed_occ_, tefield_, dipfield_, edir_, emaxpos_, eopreg_, eamp_, twfcollect_ )
 
 !  ==--------------------------------------------------------------==
@@ -1178,6 +1211,14 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
    !
 
    DEALLOCATE( stau0, svel0, staum, svelm, tautmp, ityp_, force_, amass_ )
+
+!  ==--------------------------------------------------------------==
+!  ==  LDA+U                                                       ==
+!  ==--------------------------------------------------------------==
+     IF( lda_plus_u) THEN
+        CALL read_restart_ldaU(ndr, ntyp_, Hubbard_lmax_, &
+             Hubbard_l(1:ntyp_), Hubbard_U(1:ntyp_), Hubbard_alpha(1:ntyp_))
+     ENDIF
 
    !
    if( ionode ) then
