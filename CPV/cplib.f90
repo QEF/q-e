@@ -452,7 +452,7 @@
       use ncprm
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module, only: nsp, na, nas
+      use ions_base, only: nsp, na, nas => nax
       use gvec
       use wfc_atomic
 !
@@ -705,7 +705,7 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use ions_module
+      use ions_base, only: na, nas => nax
       use elct
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
@@ -750,11 +750,10 @@
 !       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
 !     where s'=s(r(t))  
 !
-      use ions_module
+      use ions_base, only: na, nsp
       use cvan
       use elct
       use gvecw, only: ngw
-      !use parm
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
 !
@@ -833,7 +832,8 @@
       subroutine cofmass(tau,cdm)
 !-----------------------------------------------------------------------
 !
-      use ions_module
+      use ions_base, only: na, nsp, pmass
+      use parameters, only: natx
 !
       implicit none
       real(kind=8) tau(3,natx,nsp), cdm(3)
@@ -863,7 +863,7 @@
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(i)
 !
-      use ions_module
+      use ions_base, only: na
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use elct
@@ -920,7 +920,6 @@
       use reciprocal_vectors, only: ng0 => gstart
       use cell_base, only: ainv
       use gvec
-      !use parm
       use pres_mod
 !
       implicit none
@@ -978,7 +977,7 @@
 !
       use constants, only: pi, fpi
       use elct
-      use ions_module
+      use ions_base, only: nsp
       use gvec
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
@@ -1043,7 +1042,7 @@
       use cdvan
       use elct
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module
+      use ions_base, only: nsp, na
       implicit none
 ! input
       real(kind=8) bec(nhsa,n)
@@ -1110,13 +1109,12 @@
 ! wtemp work space
 !
       use elct
-      use ions_module
+      use ions_base, only: nsp
       use gvec
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
       use cell_base, only: omega
       use cell_base, only: ainv
-      !use parm
       use pseu
       use dpseu
       implicit none
@@ -1174,12 +1172,11 @@
       use gvecs
       use gvecw, only: ngw
       use cvan
-      !use parm
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
       use elct
       use constants, only: pi, fpi
-      use ions_module
+      use ions_base, only: nsp, na, nat
       use work1
 !
       implicit none
@@ -1342,7 +1339,7 @@
       subroutine dotcsc(eigr,cp)
 !-----------------------------------------------------------------------
 !
-      use ions_module
+      use ions_base, only: nas => nax, na, nsp
       use elct
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
@@ -1415,10 +1412,10 @@
 !     Output in module derho (drhor, drhog)
 !
       use control_flags, only: iprint
-      use ions_module
+      use parameters, only: natx, nsx
+      use ions_base, only: na, nsp, nat, nas => nax
       use gvec
       use cvan
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use elct
@@ -1736,7 +1733,7 @@
 !
       use cvan
       use elct
-      use ions_module
+      use ions_base, only: nsp, nat, na
       implicit none
 ! input
       real(kind=8) bec(nhsa,n), rhovan(nat,nhx*(nhx+1)/2,nspin)
@@ -1933,8 +1930,8 @@
             nnr => nnrx
       use reciprocal_vectors, only: ng0 => gstart
       use cell_base, only: omega
-      use ions_module
-      !use parm
+      use ions_base, only: nsp, nas => nax, na
+      use parameters, only: natx, nsx
       use small_box, only: tpibab
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -2028,8 +2025,7 @@
       use control_flags, only: iprint, tpre
       use constants, only: pi, fpi
       use cell_base, only: ainv, a1, a2, a3
-      use ions_module
-      !use parm
+      use ions_base, only: nsp, na, rcmax, zv
       implicit none
 ! input
       real(kind=8) tau0(3,natx,nsx)
@@ -2101,9 +2097,9 @@
       use gvecs
       use reciprocal_vectors, only: ng0 => gstart
       use cell_base, only: omega
-      use ions_module
-      !use parm
+      use ions_base, only: nsp, na, nas => nax
       use grid_dimensions, only: nr1, nr2, nr3
+      use parameters, only: nsx, natx
       use pseu
 !
       implicit none
@@ -2242,7 +2238,7 @@
 !
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
-      use ions_module
+      use ions_base, only: nas => nax, na, nsp
       use elct, only: n
       use gvecw, only: ngw
       use gvec
@@ -3152,7 +3148,7 @@
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
-      use ions_module
+      use ions_base, only: na
       use cvan
       use elct
       use gvecw, only: ngw
@@ -3351,8 +3347,8 @@
 !     initialize G-vectors and related quantities
 !
       use gvec
-      use ions_module
-      !use parm
+      use parameters, only: natx, nsx
+      use ions_base, only: pmass, rcmax, nsp, na
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base, only: ainv, a1, a2, a3
@@ -3638,8 +3634,8 @@
 !     sets the indexes irb and positions taub for the small boxes 
 !     around atoms
 !
-      use ions_module
-      !use parm
+      use parameters, only: natx, nsx
+      use ions_base, only: nsp, na
       use grid_dimensions, only: nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
@@ -3827,9 +3823,9 @@
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
       use cvan, only:nh, nhx, nvb
-      use ions_module
+      use ions_base, only: nas => nax, nat, nsp, na
+      use parameters, only: natx, nsx
       use constants, only: pi, fpi
-      !use parm
       use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb
       use small_box, only: omegab, tpibab
@@ -4067,12 +4063,12 @@
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
-      use ions_module
+      use ions_base, only: na, nsp
+      use parameters, only: natx
       use gvec
       use cvan
       use elct
       use constants, only: pi, fpi
-      !use parm
 !
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
@@ -4142,7 +4138,8 @@
 !
       use gvec
       use cvan
-      use ions_module
+      use ions_base, only: nas => nax, nat, nsp, na
+      use parameters, only: natx, nsx
       use elct
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -4224,7 +4221,7 @@
 !     input : beta(ig,l,is), eigr, c
 !     output: becp as parameter
 !
-      use ions_module, only: na, nas
+      use ions_base, only: na, nas => nax
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use constants, only: pi, fpi
@@ -4300,7 +4297,7 @@
 !     input : eigr, c
 !     output: becdr
 !
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
       use elct
       use gvec
       use gvecw, only: ngw
@@ -4391,7 +4388,7 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     for vanderbilt pseudo pot - kl & ap
 !
-      use ions_module
+      use ions_base, only: na, nsp, nas => nax
       use cvan
       use elct
       use gvecw, only: ngw
@@ -4637,7 +4634,8 @@
 !     eigrt=exp(-i*g*tau) .
 !     Uses the same logic for fast calculation as in phfac (see below)
 !
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
+      use parameters, only: natx, nsx
       use gvecb
       use cell_base, only: ainv
       use small_box, only: ainvb
@@ -4764,10 +4762,10 @@
 !  The value of n1,n2,n3 for a vector g is supplied by arrays in1p,in2p,in3p
 !  calculated in ggen .
 !
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
+      use parameters, only: natx, nsx
       use gvecw, only: ngw
       use cell_base, only: ainv
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3
       use constants, only: pi, fpi
       use gvec
@@ -4885,7 +4883,7 @@
 !     input :        eigr =  e^-ig.r_i
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
       use gvecw, only: ngw
       use cvan 
       use elct
@@ -4945,7 +4943,7 @@
       use elct, only: n, nx
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module, only: nsp, na, nas
+      use ions_base, only: nsp, na, nas => nax
       use cvan, only: nhsa
       use wfc_atomic
 !
@@ -5171,8 +5169,8 @@
       use elct, only: n, nx
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module, only: nsp, na, natx
-      use parameters, only: nacx
+      use ions_base, only: nsp, na
+      use parameters, only: nacx, natx
 !
       implicit none
       integer flag, ndr, nfi
@@ -5243,7 +5241,7 @@
 !
       use ncprm
       use cvan
-      use ions_module
+      use ions_base, only: ipp, nsp
       use psfiles
 !
       implicit none
@@ -5322,7 +5320,7 @@
       use ncprm
       use bhs
       use dft_mod
-      use ions_module, only: zv
+      use ions_base, only: zv
 !
       implicit none
 !
@@ -5502,7 +5500,7 @@
       use ncprm
       use dft_mod
       use wfc_atomic
-      use ions_module, only: zv
+      use ions_base, only: zv
 !
       implicit none
 !
@@ -5779,7 +5777,7 @@
       use ncprm
       use dft_mod
       use wfc_atomic
-      use ions_module, only: zv
+      use ions_base, only: zv
 !
       implicit none
 !
@@ -6229,7 +6227,8 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
-      use ions_module
+      use ions_base, only: nat, nas => nax, nsp
+      use parameters, only: natx, nsx
       use gvec
       use gvecs
       use gvecb, only: ngb
@@ -6599,10 +6598,10 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use ions_module
+      use ions_base, only: nas => nax, nat, na, nsp
+      use parameters, only: natx, nsx
       use gvec
       use cvan
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use elct
@@ -6873,7 +6872,8 @@
 !     Calculate core charge contribution in real space, rhoc(r)
 !     Same logic as for rhov: use box grid for core charges
 !
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
+      use parameters, only: natx, nsx
       use gvec
       use ncprm, only: ifpcor
       !use parm
@@ -6959,7 +6959,7 @@
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
 !     output: swfc=S|wfc>
 !
-      use ions_module
+      use ions_base, only: na
       use cvan
       use elct
       use gvecw, only: ngw
@@ -7190,8 +7190,7 @@
             nnr => nnrx
       use cell_base, only: omega
       use cvan
-      use ions_module, only: na
-      !use parm
+      use ions_base, only: na
 !
       implicit none
 ! input
@@ -7316,7 +7315,7 @@
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3
       use constants, only: pi, fpi
-      use ions_module
+      use ions_base, only: nas => nax, nsp, na
 !
       implicit none
       complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),          &
@@ -7415,7 +7414,7 @@
 !     output cp : orthonormal cp=cp+lambda*phi
 !     output bec: bec=becp+lambda*bephi
 !
-      use ions_module
+      use ions_base, only: nsp, na
       use cvan
       use gvecw, only: ngw
       use elct
@@ -7506,7 +7505,8 @@
 !     rhos output: total potential on smooth real space grid
 !
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
-      use ions_module
+      use parameters, only: natx, nsx
+      use ions_base, only: nas => nax, nsp, na
       use gvec
       use gvecs
       use cell_base, only: omega
@@ -7879,8 +7879,8 @@
 !-----------------------------------------------------------------------
       use elct, only: n, nx
       use gvecw, only: ngw
-      use ions_module, only: nsp, na, natx
-      use parameters, only: nacx
+      use ions_base, only: nsp, na
+      use parameters, only: nacx, natx
 !
       implicit none
       integer ndw, nfi

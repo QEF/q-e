@@ -61,10 +61,11 @@
       use gvecb
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module
+      use ions_base, only: na, nat, pmass, nas => nax, nsp
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv
       use cell_base, only: omega, alat
+      use cell_base, only: h, hold, deth, wmass
       use smooth_grid_dimensions, only: nnrsx
       use smallbox_grid_dimensions, only: nnrb => nnrbx
       use pseu
@@ -81,11 +82,10 @@
       use derho
       use dpseu
       use cdvan
-      use cell_module
       use stre
       use pres_mod
       use restart
-      use parameters, only: nacx
+      use parameters, only: nacx, natx
       use constants, only: pi, factem
 !
       implicit none
@@ -528,7 +528,7 @@
      &                   stress(i,3)*ainv(j,3)-press*ainv(j,i))
                end do
             end do
-            call invmat3(h,ainv,deth)
+            call invmat3( h, ainv, deth )
          endif
 !
          if(tfor) then

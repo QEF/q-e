@@ -16,7 +16,8 @@ CONTAINS
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module, only: nsp, na, natx
+      use ions_base, only: nsp, na
+      use parameters, only: natx
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: write_restart_header, write_restart_ions, &
@@ -27,7 +28,7 @@ CONTAINS
       use mp, only: mp_sum
       use mp_global
       use io_global
-      use cell_module, only: boxdimensions, s_to_r, cell_init
+      use cell_base, only: boxdimensions, s_to_r, cell_init
       USE ncprm, ONLY: r, rab
 !
       implicit none
@@ -336,7 +337,8 @@ CONTAINS
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
       use reciprocal_vectors, only: ng0 => gstart
-      use ions_module, only: nsp, na, natx
+      use ions_base, only: nsp, na
+      use parameters, only: natx
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &
@@ -347,7 +349,7 @@ CONTAINS
       use mp, only: mp_sum
       use mp_global
       use io_global
-      use cell_module, only: boxdimensions, s_to_r, cell_init, r_to_s
+      use cell_base, only: boxdimensions, s_to_r, cell_init, r_to_s
 !
       implicit none
       integer :: ndr, nfi, flag

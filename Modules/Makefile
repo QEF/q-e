@@ -30,6 +30,10 @@ recvec.o \
 smallbox.o \
 griddim.o \
 ions_base.o \
+electrons_base.o \
+input_parameters.o \
+read_namelists.o \
+read_cards.o \
 energies.o
 #
 include ../make.rules

@@ -17,7 +17,7 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use ions_module, only: na, nas
+      use ions_base, only: na, nas => nax
       use elct, only: n
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
@@ -96,7 +96,7 @@
 !     l is combined index for lm  (l=1,2...9)
 !     order:  s, p_x, p_z, p_y, d_xy, d_xz, d_z^2, d_yz, d_x^2-y^2
 !
-      use cell_module
+      !use cell_base
       use gvec
       use constants, only: pi, fpi
       use cell_base, only: ainv
@@ -160,7 +160,7 @@
       use gvec, only: ng
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base, only: ainv
-      use cell_module
+      !use cell_module
       use cell_base, only: omega
       use control_flags, only: tpre
       use derho
@@ -259,8 +259,8 @@
       use gvecs
       use cell_base, only: omega
       use constants, only: pi, fpi
-      !use parm
-      use ions_module
+      use ions_base, only: rcmax, ipp, zv, nsp, na
+
       use pseu
       use reciprocal_vectors, only: ng0 => gstart
       use ncprm
@@ -574,7 +574,7 @@
             nr1x, nr2x, nr3x
       use cell_base, only: ainv
       use work1
-      use cell_module
+      !use cell_module
       use cell_base, only: omega
       use derho
 !
@@ -684,16 +684,15 @@
       use control_flags, only: iprint, thdyn
       use gvec
       use gvecw, only: ngw
-      use ions_module
-      !use parm
+      use ions_base, only: na, pmass, nsp
       use cell_base, only: ainv, a1, a2, a3
       use elct
       use constants, only: pi, fpi
-      use cell_module
+      use cell_base, only: wmass, hold, h
       use pres_mod
       use betax, only: mmx, refg
       use restart
-      use parameters, only: nacx
+      use parameters, only: nacx, nsx, natx
 
       implicit none
 ! input/output
@@ -836,14 +835,13 @@
 !
       use control_flags, only: iprint, iprsta
       use gvec
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
       use constants, only: pi, fpi
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
-      use cell_module
+      use cell_base, only: h, deth
       use pres_mod
 !
       implicit none
@@ -936,8 +934,7 @@
       use cvan
       use core
       use constants, only: pi, fpi
-      use ions_module
-      !use parm
+      use ions_base, only: nsp
       use elct
       use ncprm
       use qradb_mod
@@ -947,7 +944,6 @@
       use cdvan
       use dqrad_mod
       use dqgb_mod
-      use cell_module
       use betax
 !
       implicit none
@@ -1138,13 +1134,11 @@
 !
       use gvec
       use cvan
-      use ions_module
+      use ions_base, only: na
       use elct
-      use cell_base, only: omega
+      use cell_base, only: omega, h
       use constants, only: pi, fpi
-      !use parm
       use stre
-      use cell_module
 !
       implicit none
       real(kind=8) bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
@@ -1237,14 +1231,12 @@
       use cvan
       use core
       use constants, only: pi, fpi
-      use ions_module
-      !use parm
+      use ions_base, only: ipp, na, nsp
       use elct
       use ncprm
       use qradb_mod
       use qgb_mod
       use gvecb
-      use cell_module
       use cdvan
       use dqrad_mod
       use dqgb_mod

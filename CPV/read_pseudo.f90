@@ -12,7 +12,7 @@ subroutine read_pseudo (is, iunps, ierr)
   use ncprm
   use dft_mod
   use wfc_atomic
-  use ions_module, only: zv
+  use ions_base, only: zv
   !
   use pseudo_types
   use read_pseudo_module

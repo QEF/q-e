@@ -70,6 +70,11 @@
         INTEGER          :: ibrav      ! index of the bravais lattice
         CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
 
+        REAL(dbl) :: h(3,3) = 0.0d0
+        REAL(dbl) :: hold(3,3) = 0.0d0
+        REAL(dbl) :: deth = 0.0d0
+
+        REAL(dbl) :: wmass = 0.0d0
 
         INTERFACE cell_init
           MODULE PROCEDURE cell_init_ht, cell_init_a

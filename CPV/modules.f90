@@ -64,6 +64,8 @@ module dft_mod
 end module dft_mod
 
 module elct
+  use electrons_base, only: nspin, nel, nupdwn, iupdwn
+  use electrons_base, only: n => nbnd, nx => nbndx
   implicit none
   save
   !     f    = occupation numbers
@@ -77,7 +79,6 @@ module elct
   !     n     = total number of electronic states
   !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
   !            nx is used only to dimension arrays
-  integer nel(2), nspin, nupdwn(2), iupdwn(2), n, nx
   !     ispin = spin of each state
   integer, allocatable:: ispin(:)
   !
@@ -119,19 +120,18 @@ module gvec
 end module gvec
 
 
-module ions_module
-  use parameters, only: nsx, natx
-  use ions_base, only: nsp, na, nat, nas => nax, zv, pmass, rcmax
-  !     nsp       = number of species
-  !     na(is)    = number of atoms of species is
-  !     nas       = max number of atoms of a given species
-  !     nat       = total number of atoms of all species
-  !     ipp(is)   = PP type for species is (see INPUT)
-  integer ipp(nsx)
-  !     zv(is)    = (pseudo-)atomic charge
-  !     pmass(is) = mass (converted to a.u.) of ions
-  !     rcmax(is) = Ewald radius (for ion-ion interactions)
-end module ions_module
+!module ions_module
+!  use parameters, only: nsx, natx
+!  use ions_base, only: nsp, na, nat, nas => nax, zv, pmass, rcmax, ipp
+!  !     nsp       = number of species
+!  !     na(is)    = number of atoms of species is
+!  !     nas       = max number of atoms of a given species
+!  !     nat       = total number of atoms of all species
+!  !     ipp(is)   = PP type for species is (see INPUT)
+!  !     zv(is)    = (pseudo-)atomic charge
+!  !     pmass(is) = mass (converted to a.u.) of ions
+!  !     rcmax(is) = Ewald radius (for ion-ion interactions)
+!end module ions_module
 
 module ncprm
 

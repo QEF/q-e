@@ -54,6 +54,7 @@
 
   USE kinds
   USE parameters
+
   IMPLICIT NONE
   SAVE
 
@@ -222,9 +223,9 @@
       LOGICAL, INTENT(IN) :: gamma_only  
 
       INTEGER :: i
-      CHARACTER(LEN=80) :: t_, c_, tmp_dir_
+      CHARACTER(LEN=80) :: t_ , c_ , tmp_dir_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_header '
-      CHARACTER(LEN=80) :: section_name = 'header'
+      CHARACTER(LEN=20) :: section_name = 'header'
 
       t_ = title
       c_ = crystal
@@ -243,8 +244,7 @@
         IF( twrite ) THEN
           WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) nfi, nbeg, nr1, nr2, nr3, nr1s, nr2s, nr3s, ng_l, ng_g, nk_l, nk_g, &
-            nspin, nbnd, &
-            nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
+            nspin, nbnd, nel, nelu, neld, nat, ntyp, nacc, trutim, ecutwfc, ecutrho, alat, ekinc,   &
             kunit, k1, k2, k3, nk1, nk2, nk3, dgauss, ngauss, lgauss, ntetra, ltetra,  &
             natomwfc, gcutm, gcuts, dual, doublegrid, modenum, lstres, lforce, tupf, gamma_only 
           WRITE(iuni) (na(i),i=1,ntyp), (ngwk_l(i),i=1,nk_g), (ngwk_g(i),i=1,nk_g), (acc(i),i=1,nacc)
@@ -253,9 +253,6 @@
           CALL write_restart_header2(iuni)
         END IF
       END IF
-
-      ! CALL mp_bcast(ios, root, group)
-      ! IF( ios /= 0 ) CALL errore(' writefile ',' writing integral_time ', ios)
 
       RETURN
     END SUBROUTINE
@@ -269,7 +266,7 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
-      CHARACTER(LEN=80) :: section_name = 'header'
+      CHARACTER(LEN=20) :: section_name = 'header'
       IF( ionode ) THEN
         WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
@@ -280,6 +277,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine read from disk dimensions, and status variables
@@ -341,7 +342,6 @@
       INTEGER :: nfi_, nbeg_, nr1_, nr2_, nr3_, ngl_, ngg_, nkl_, nkg_, nspin_
       INTEGER :: nr1s_, nr2s_, nr3s_
       INTEGER :: nbnd_, nelu_, neld_, nat_, ntyp_, nacc_
-      INTEGER :: file_version_
       INTEGER :: na_(nsx)
       INTEGER :: ngwkl_(npk)
       INTEGER :: ngwkg_(npk)
@@ -365,26 +365,12 @@
       INTEGER :: idum = 0
       LOGICAL :: twrite_
       CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
-      CHARACTER(LEN=80) :: section_name = 'header'
-      CHARACTER(LEN=80) :: section_name_
+      CHARACTER(LEN=20) :: section_name = 'header'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_, section_name_
-        ierr = 0
-        IF( section_name_ /= section_name ) ierr = 1
-        IF( file_version_ /= file_version ) ierr = 2
-      END IF
-
-      CALL mp_bcast( ierr, ionode_id )
-      IF( ierr == 1 ) &
-        CALL errore(sub_name,' Wrong Data Section, '//section_name_//' instead of '//section_name, 1)
-      IF( ierr == 2 ) &
-        CALL errore(sub_name,' Restart file versions do not match ', 1)
-
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version_, ionode_id )
+      CALL data_section_head( iuni, section_name_, twrite_, ierr )
 !
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(sub_name,' Data Section not present in restart file ', 1)
@@ -558,6 +544,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_header2(iuni)
 !
@@ -568,27 +558,20 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
       INTEGER :: idum, ierr
       CHARACTER(LEN=30) :: sub_name = ' read_restart_header '
-      CHARACTER(LEN=80) :: section_name = 'header'
-      CHARACTER(LEN=80) :: section_name_
+      CHARACTER(LEN=20) :: section_name = 'header'
+      CHARACTER(LEN=20) :: section_name_
 !
-      IF( ionode ) THEN
-        READ(iuni) twrite_ , file_version_ , section_name_
-        READ(iuni) idum
-        READ(iuni) idum
-        READ(iuni) idum
-        ierr = 0
-        IF( section_name_ /= section_name ) ierr = 1
-        IF( file_version_ /= file_version ) ierr = 2
-      END IF
-!
-      CALL mp_bcast( ierr, ionode_id )
+      CALL data_section_head( iuni, section_name_, twrite_, ierr )
       IF( ierr == 1 ) &
         CALL errore( sub_name, ' Wrong Data Section, '//section_name_//' instead of '//section_name, 1)
-      IF( ierr == 2 ) &
-        CALL errore( sub_name, ' Restart file versions do not match ', 1)
+
+      IF( ionode ) THEN
+        READ(iuni) idum
+        READ(iuni) idum
+        READ(iuni) idum
+      END IF
 
       IF( restart_module_verbosity > 1000 ) &
         WRITE( 6, fmt = " (3X,'W: read_restart_header, header not read from restart ' ) " )
@@ -597,6 +580,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_xdim1(iuni, twrite, &
@@ -612,10 +599,11 @@
       LOGICAL, INTENT(IN) :: twrite
       INTEGER, INTENT(IN) :: npwx, nbndx
       INTEGER, INTENT(IN) :: nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs
+      CHARACTER(LEN=20) :: section_name = 'xdim'
 !
       IF( twrite ) THEN
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) npwx, nbndx, nrx1, nrx2, nrx3, nrxx, nrx1s, nrx2s, nrx3s, nrxxs
         END IF
       ELSE
@@ -625,6 +613,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_xdim2(iuni)
@@ -637,15 +629,20 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'xdim'
 !
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
       END IF 
 !
       RETURN 
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_xdim1(iuni, tovrw, tread, &
@@ -669,16 +666,14 @@
       INTEGER :: npwx_, nbndx_
       INTEGER :: nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
       LOGICAL :: twrite_ 
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'xdim'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_xdim ',' Data Section not present in restart file ', 1)
@@ -726,6 +721,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_xdim2(iuni)
 
@@ -736,11 +735,13 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
-      INTEGER :: idum
+      INTEGER :: idum, ierr
+      CHARACTER(LEN=20) :: section_name = 'xdim'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
       END IF
 
@@ -751,6 +752,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_symmetry1(iuni, twrite, &
@@ -775,6 +780,7 @@
       LOGICAL, INTENT(IN) :: noinv
       INTEGER :: i,j
       CHARACTER(LEN=30) :: sub_name = ' write_restart_symmetry '
+      CHARACTER(LEN=20) :: section_name = 'symmetry'
 !
 ! ... Subroutine Body
 !
@@ -791,7 +797,7 @@
           CALL errore( sub_name, ' wrong size ', 4 )
 
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) symm_type, nsym, invsym, noinv, nat
           WRITE(iuni) (s(:,:,i),i=1,nsym), ((irt(i,j),i=1,nsym),j=1,nat),  &
             (ftau(:,i),i=1,nsym), (sname(i),i=1,nsym)
@@ -807,8 +813,12 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
-    SUBROUTINE write_restart_symmetry2(iuni)
+    SUBROUTINE write_restart_symmetry2( iuni )
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
@@ -816,8 +826,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'symmetry'
       IF( ionode ) THEN
-        WRITE(iuni) twrite
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
       END IF
@@ -826,13 +837,17 @@
 
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_symmetry1(iuni, tovrw, tread, &
       symm_type, sname, s, irt, nat, ftau, nsym, invsym, noinv )
 !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
-      USE mp, ONLY: mp_bcast, mp_end
+      USE mp, ONLY: mp_bcast
 
 ! .. Subroutine output:
 !    if tread is true then variables are read from file but the values are
@@ -858,18 +873,17 @@
       INTEGER :: nsym_, nat_, s_(3,3,48), ftau_(3,48)
       CHARACTER(LEN=9) :: symm_type_
       CHARACTER(LEN=45) :: sname_(48)
-      INTEGER :: i, j, file_version_
-      INTEGER :: idum
+      INTEGER :: i, j
+      INTEGER :: idum, ierr
       INTEGER, ALLOCATABLE :: irt_(:,:)
       CHARACTER(LEN=30) :: sub_name = ' read_restart_symmetry '
+      CHARACTER(LEN=20) :: section_name = 'symmetry'
+      CHARACTER(LEN=20) :: section_name_ 
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_symmetry ',' symmetries not present in restart file ', 1)
@@ -943,6 +957,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_symmetry2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -951,9 +969,11 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: idum
+      INTEGER :: idum, ierr
+      CHARACTER(LEN=20) :: section_name = 'symmetry'
+      CHARACTER(LEN=20) :: section_name_ 
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
       IF( ionode ) THEN
-        READ(iuni) twrite_
         READ(iuni) idum
         READ(iuni) idum
       END IF
@@ -963,6 +983,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_pseudo1(iuni, twrite, &
@@ -1000,6 +1024,7 @@
 !
       INTEGER :: mesh_, lloc_, nchi_, nbeta_, nqf_, nqlc_
       CHARACTER(LEN=30) :: sub_name = ' write_restart_pseudo '
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
 !
 ! ... Subroutine Body
 !
@@ -1048,7 +1073,7 @@
 
         IF( ionode ) THEN
 
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) zmesh, xmin, dx, mesh, msh, nchi, numeric, zp, zv, nlc, nnl, lmax, lloc, &
             bhstype, nh, nbeta, kkbeta, nqf, nqlc, ifqopt, tvanp, okvan, newpseudo, &
             iexch, icorr, igcx, igcc, lsda, a_nlcc, b_nlcc, alpha_nlcc, nlcc, psd
@@ -1072,6 +1097,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_pseudo3(iuni, twrite, &
@@ -1129,6 +1158,7 @@
 !
       INTEGER :: idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_pseudo '
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
 !
 ! ... Subroutine Body
 !
@@ -1174,7 +1204,7 @@
 
         IF( ionode ) THEN
 
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
 !
           WRITE(iuni) generated, date_author, comment, psd, typ, tvanp, nlcc, dft, &
            zp, etotps, ecutwfc, ecutrho, nv, lmax, mesh, nwfc, nbeta, nd, nqf, nqlc
@@ -1200,6 +1230,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_pseudo2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -1209,8 +1243,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -1219,6 +1254,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_pseudo1(iuni, tovrw, tread, &
@@ -1283,18 +1322,16 @@
       CHARACTER(LEN=2) :: psd_
       LOGICAL :: twrite_
 !
-      LOGICAL :: file_version_
-      INTEGER :: idum
+      INTEGER :: idum, ierr
       CHARACTER(LEN=30) :: sub_name = ' read_restart_pseudo '
       INTEGER :: mesh__, lloc__, nchi__, nbeta__, nqf__, nqlc__
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_pseudo ',' pseudo not present in restart file ', 1)
@@ -1513,6 +1550,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_pseudo3(iuni, tovrw, tread, &
       generated, date_author, comment, psd, typ, tvanp, nlcc, dft, zp, etotps, &
@@ -1607,17 +1648,16 @@
       REAL(dbl), ALLOCATABLE :: rho_at_(:) !  rho_at(mesh)
 !
 !
-      LOGICAL :: file_version_, twrite_
-      INTEGER :: idum
+      LOGICAL :: twrite_
+      INTEGER :: idum, ierr
       CHARACTER(LEN=30) :: sub_name = ' read_restart_pseudo '
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(sub_name, ' pseudo not present in restart file ', 1)
@@ -1803,18 +1843,29 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_pseudo2(iuni)
+    SUBROUTINE read_restart_pseudo2( iuni )
+
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
+
       IMPLICIT NONE
+
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'pseudo'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -1826,6 +1877,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 ! ..  This subroutine write to disk variables related to the reciprocal 
 ! ..  space mesh
@@ -1856,6 +1911,7 @@
       INTEGER :: idum = 0
       INTEGER :: i, j
       CHARACTER(LEN=30) :: sub_name = ' write_restart_gvec '
+      CHARACTER(LEN=20) :: section_name = 'gvec'
 !
 ! ... Subroutine Body
 !
@@ -1867,7 +1923,7 @@
         END IF
 
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) ng, tmill
           WRITE(iuni) bi1, bi2, bi3, b1, b2, b3
           IF( tmill ) THEN
@@ -1884,28 +1940,43 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
-    SUBROUTINE write_restart_gvec2(iuni)
+    SUBROUTINE write_restart_gvec2( iuni )
+ 
       USE io_global, ONLY: ionode
+
       IMPLICIT NONE
+
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'gvec'
+
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum 
       END IF
+
       RETURN
     END SUBROUTINE
 
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
 
     SUBROUTINE read_restart_gvec1(iuni, tovrw, tread, &
       ng, bi1, bi2, bi3, b1, b2, b3, tmill, mill )
+
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
@@ -1932,19 +2003,16 @@
       REAL(dbl) :: bi1_(3), bi2_(3), bi3_(3)
       INTEGER, ALLOCATABLE :: mill_(:,:)
       LOGICAL :: twrite_, tmill_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
       CHARACTER(LEN=30) :: sub_name = ' read_restart_gvec '
+      CHARACTER(LEN=20) :: section_name = 'gvec'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(sub_name, ' Data Section not present in restart file ', 1)
@@ -2002,6 +2070,7 @@
           READ(iuni) idum
           READ(iuni) idum
         END IF
+
         IF( restart_module_verbosity > 1000 ) &
           WRITE(6,fmt="(3X,'W: read_restart_gvec, data not read from restart ' )")
 
@@ -2010,20 +2079,30 @@
       RETURN
     END SUBROUTINE
 
-
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_restart_gvec2(iuni)
+    SUBROUTINE read_restart_gvec2( iuni )
+
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
+
       IMPLICIT NONE
+
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'gvec'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -2033,6 +2112,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write to disk variables related to a single k point
@@ -2057,10 +2140,11 @@
       REAL(dbl), INTENT(IN) :: xk(3)
       REAL(dbl), INTENT(IN) :: wk
       INTEGER :: i, idum = 0
+      CHARACTER(LEN=20) :: section_name = 'gkvec'
 
       IF( twrite ) THEN
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) ik, nk, ngwk, tetra(1:4), isk
           WRITE(iuni) (xk(i),i=1,3), wk
           WRITE(iuni) idum ! (igk(i),i=1,ngwk)
@@ -2073,6 +2157,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_gkvec2(iuni)
       USE io_global, ONLY: ionode
@@ -2080,9 +2168,10 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'gkvec'
       IF( twrite ) THEN
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) idum
           WRITE(iuni) idum
           WRITE(iuni) idum
@@ -2091,6 +2180,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_gkvec1(iuni, tovrw, tread, &
@@ -2121,16 +2214,14 @@
 
       INTEGER :: idum, nigk
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
+      CHARACTER(LEN=20) :: section_name = 'gkvec'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version_, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_gkvec ',' Data Section not present in restart file ', 1)
@@ -2186,28 +2277,45 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_gkvec2(iuni)
+
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
+
       IMPLICIT NONE
+
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'gkvec'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
       END IF
+
       IF( restart_module_verbosity > 1000 ) &
         WRITE(6,fmt="(3X,'W: read_restart_gkvec, xdim not read from restart ' )")
+
       RETURN
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write to disk variable related to the simulation cell 
@@ -2240,12 +2348,13 @@
       REAL(dbl), INTENT(IN) :: xnosm(3,3)
       REAL(dbl), INTENT(IN) :: xnosm2(3,3)
       INTEGER :: i
+      CHARACTER(LEN=20) :: section_name = 'cell'
 !
 ! ... Subroutine Body
 !
       IF( twrite ) THEN
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) ibrav, (celldm(i), i=1,6)
           WRITE(iuni) ht0, htm, htm2, htvel
           WRITE(iuni) xnosp, xnos0, xnosm, xnosm2
@@ -2257,6 +2366,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_cell2(iuni) 
       USE io_global, ONLY: ionode, ionode_id
@@ -2266,8 +2379,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'cell'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -2275,6 +2389,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_cell1( iuni, tovrw, tread, &
@@ -2309,17 +2427,16 @@
       REAL(dbl) :: xnosp_(3,3), xnos0_(3,3), xnosm_(3,3), xnosm2_(3,3)
       REAL(dbl) :: celldm_(6)
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'cell'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_cell ', ' Section not present in restart file ', 1)
 
@@ -2371,6 +2488,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_cell2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -2379,10 +2500,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'cell'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -2395,6 +2520,10 @@
 
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write to disk variable related to the ion types 
@@ -2434,6 +2563,7 @@
       INTEGER :: i,j
       CHARACTER(LEN=4) :: label_(ntyp)
       CHARACTER(LEN=30) :: sub_name = ' write_restart_ions '
+      CHARACTER(LEN=20) :: section_name = 'ions'
 !
 ! ... Subroutine Body
 !
@@ -2466,7 +2596,7 @@
         label_ = label(1:ntyp)
 
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) nat, ntyp, tscal
           WRITE(iuni) (ityp(i),i=1,nat), (na(i),i=1,ntyp), (label_(i),i=1,ntyp)
           WRITE(iuni) (mass(i),i=1,ntyp)
@@ -2490,6 +2620,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_ions2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -2499,8 +2633,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'ions'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -2516,6 +2651,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_ions1(iuni, tovrw, tread, &
@@ -2566,18 +2705,16 @@
 
       REAL(dbl), ALLOCATABLE :: stmp_(:,:)
       LOGICAL :: twrite_, tscal_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
       CHARACTER(LEN=30) :: sub_name = ' read_restart_ions '
+      CHARACTER(LEN=20) :: section_name = 'ions'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_ions ',' Data Section not present in restart file ', 1)
@@ -2702,6 +2839,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_ions2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -2710,10 +2851,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'ions'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -2732,6 +2877,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write to disk variable related to electronic band
@@ -2772,13 +2921,14 @@
 
       INTEGER :: i, l, idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_electrons '
+      CHARACTER(LEN=20) :: section_name = 'electrons'
 !
 ! ... Subroutine Body
 !
 
       IF( twrite ) THEN
 
-        IF( ionode ) WRITE(iuni) twrite, file_version
+        IF( ionode ) WRITE(iuni) twrite, file_version, section_name
         IF( ionode ) WRITE(iuni) nbnd, ispin, nspin, ik, nk, nel, nelu, neld, ldim
 
         IF( ionode ) WRITE(iuni) tocc
@@ -2851,6 +3001,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
    SUBROUTINE write_restart_electrons2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -2860,8 +3014,9 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'electrons'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -2879,6 +3034,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_electrons1( iuni, tovrw, tread, &
@@ -2935,17 +3094,14 @@
       INTEGER :: idum
 
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       CHARACTER(LEN=30) :: sub_name = ' read_restart_electrons '
+      CHARACTER(LEN=20) :: section_name = 'electrons'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_electrons ',' Data Section not present in restart file ', 1)
@@ -3114,6 +3270,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_electrons2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -3122,10 +3282,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
       INTEGER :: idum
+      CHARACTER(LEN=20) :: section_name = 'electrons'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -3145,6 +3309,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write wavefunctions to the disk
@@ -3179,14 +3347,15 @@
       INTEGER :: npool, ipmask( nproc ), ipsour
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
+
+      CHARACTER(LEN=20) :: section_name = 'wfc'
 !
 ! ... Subroutine Body
 !
 
       IF( twrite ) THEN
 
-        IF( ionode ) WRITE(iuni) twrite, file_version
-
+        IF( ionode ) WRITE(iuni) twrite, file_version, section_name
 
         ! set working variables for k point index (ikt) and k points number (nkt)
         ikt = ik
@@ -3315,6 +3484,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_wfc2(iuni, nbnd)
       USE io_global, ONLY: ionode, ionode_id
@@ -3324,9 +3497,10 @@
       INTEGER, INTENT(IN) :: iuni, nbnd
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum, i
+      CHARACTER(LEN=20) :: section_name = 'wfc'
       idum = nbnd
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum, idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -3341,6 +3515,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_wfc1(iuni, tovrw, tread, &
@@ -3367,23 +3545,23 @@
 
 ! ... If tigl is true then use the global to local mapping stored in the file
 
-      INTEGER :: i, j, idum, ierr
+      INTEGER :: i, j, idum
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
       LOGICAL :: t0_, tm_
       INTEGER :: ngw_, nbnd_, ik_, nk_, ispin_, nspin_, kunit_
       LOGICAL :: twrite_
-      INTEGER :: file_version_
+      INTEGER :: ierr
 
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx, igwx_
       INTEGER :: npool, ipmask( nproc ), ipdest
       REAL(dbl) :: scal_
+      CHARACTER(LEN=20) :: section_name = 'wfc'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
-      IF( ionode ) READ(iuni) twrite_, file_version_
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
 
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_wfc ',' Data Section not present in restart file ', 1)
@@ -3628,6 +3806,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_wfc2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -3636,10 +3818,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
       INTEGER :: idum, i, nbnd_
+      INTEGER :: ierr
+      CHARACTER(LEN=20) :: section_name = 'wfc'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum, nbnd_
         READ(iuni) idum
         READ(iuni) idum   ! t0
@@ -3657,6 +3843,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
 ! ..  This subroutine write potential and charge density to the disk
@@ -3680,6 +3870,7 @@
       INTEGER :: i, is
       COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'charge'
 !
 ! ... Subroutine Body
 !
@@ -3687,7 +3878,7 @@
       IF ( twrite ) THEN
 
         ALLOCATE( vtmp (ng) )
-        IF( ionode ) WRITE(iuni) twrite, file_version
+        IF( ionode ) WRITE(iuni) twrite, file_version, section_name
         IF( ionode ) WRITE(iuni) ng, ispin, nspin
         IF( ionode ) WRITE(iuni) tr
         IF( tr ) THEN
@@ -3715,6 +3906,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_charge2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -3724,9 +3919,10 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
       INTEGER :: idum = 0
+      CHARACTER(LEN=20) :: section_name = 'charge'
       idum    = 0
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
         WRITE(iuni) idum
         WRITE(iuni) idum
         WRITE(iuni) idum
@@ -3737,6 +3933,10 @@
     END SUBROUTINE
 
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_charge1(iuni, tovrw, tread, &
@@ -3760,17 +3960,15 @@
       COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
 
       LOGICAL :: twrite_
-      INTEGER :: file_version_
-      INTEGER :: idum
+      INTEGER :: idum, ierr
+      CHARACTER(LEN=20) :: section_name = 'charge'
+      CHARACTER(LEN=20) :: section_name_
 !
 ! ... Subroutine Body
 !
 
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_charge ',' Data Section not present in restart file ', 1)
 
@@ -3851,6 +4049,10 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_charge2(iuni)
       USE io_global, ONLY: ionode, ionode_id
@@ -3859,10 +4061,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
       INTEGER :: idum, i, nspin_
+      INTEGER :: ierr
+      CHARACTER(LEN=20) :: section_name = 'charge'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
         READ(iuni) idum
         READ(iuni) idum
         READ(iuni) idum
@@ -3875,6 +4081,46 @@
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE data_section_head( iuni, section_name, twrite, ierr )
+
+      USE io_global, ONLY: ionode, ionode_id
+      USE mp_global, ONLY: group
+      USE mp, ONLY: mp_bcast
+!
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: iuni
+      INTEGER, INTENT(OUT) :: ierr
+      CHARACTER(LEN=20), INTENT(OUT) :: section_name
+      LOGICAL, INTENT(OUT) :: twrite
+
+      INTEGER :: file_version_
+!
+      ierr = 0
+      IF( ionode ) THEN
+        READ(iuni) twrite, file_version_ , section_name
+        IF( file_version_ /= file_version ) ierr = 2
+      END IF
+!
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr == 2 ) &
+        CALL errore( ' data_section_head ', ' Restart file versions do not match ', 1)
+
+      CALL mp_bcast( twrite, ionode_id )
+      CALL mp_bcast( section_name, ionode_id )
+
+      RETURN
+    END SUBROUTINE       
+
+!=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_template1(iuni, twrite)
       USE io_global, ONLY: ionode, ionode_id
@@ -3883,9 +4129,10 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: twrite
+      CHARACTER(LEN=20) :: section_name = 'template'
       IF( twrite ) THEN
         IF( ionode ) THEN
-          WRITE(iuni) twrite, file_version
+          WRITE(iuni) twrite, file_version, section_name
         END IF
       ELSE
         CALL write_restart_template2(iuni)
@@ -3893,6 +4140,10 @@
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE write_restart_template2(iuni)
@@ -3902,31 +4153,41 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite = .FALSE.
+      CHARACTER(LEN=20) :: section_name = 'template'
       IF( ionode ) THEN
-        WRITE(iuni) twrite, file_version
+        WRITE(iuni) twrite, file_version, section_name
       END IF
       RETURN
     END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
+!
+!
+!
+!=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_template1(iuni, tovrw, tread)
+
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
+
       IMPLICIT NONE
+
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: tovrw
       LOGICAL, INTENT(IN) :: tread
+
       LOGICAL :: twrite_
-      INTEGER :: file_version_
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
-      CALL mp_bcast( twrite_, ionode_id )
-      CALL mp_bcast( file_version, ionode_id )
+      INTEGER :: ierr
+      CHARACTER(LEN=20) :: section_name = 'template'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       IF( tread .AND. .NOT. twrite_ ) &
         CALL errore(' read_restart_template ',' Data Section not present in restart file ', 1)
+
       IF( tread ) THEN
         IF( ionode ) THEN
         END IF
@@ -3937,9 +4198,14 @@
         END IF
         WRITE(6,fmt="(3X,'W: read_restart_template, Data Section not read from restart ' )")
       ENDIF
+
       RETURN
     END SUBROUTINE
 
+!=----------------------------------------------------------------------------=!
+!
+!
+!
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_restart_template2(iuni)
@@ -3949,11 +4215,14 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       LOGICAL :: twrite_
-      INTEGER :: file_version_
-      IF( ionode ) THEN
-        READ(iuni) twrite_, file_version_
-      END IF
+      INTEGER :: ierr
+      CHARACTER(LEN=20) :: section_name = 'template'
+      CHARACTER(LEN=20) :: section_name_
+
+      CALL data_section_head( iuni, section_name_ , twrite_ , ierr )
+
       WRITE(6,fmt="(3X,'W: read_restart_template, Data Section not read from restart ' )")
+
       RETURN
     END SUBROUTINE
 
