@@ -8,6 +8,8 @@ PPOBJS = addusdens1d.o  \
 average.o  \
 cgracsc.o  \
 chdens.o  \
+xsf.o \
+plot_whole_cell.o \
 dosg.o  \
 dost.o  \
 elf.o  \
