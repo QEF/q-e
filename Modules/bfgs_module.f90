@@ -1196,7 +1196,7 @@ MODULE bfgs_module
       WRITE( UNIT = stdout, &
            & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
       WRITE( UNIT = stdout, &
-           & FMT = '(/,5X,"Final energy",T30,"= ",F18.10," ryd")' ) energy
+           & FMT = '(/,5X,"Final energy = ",F18.10," ryd")' ) energy
       !
       IF ( lbfgs_ndim == 1 ) THEN
          !

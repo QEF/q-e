@@ -183,7 +183,7 @@ SUBROUTINE dynamics()
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"End of damped dynamics calculation")' )
         WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Efinal = ",F15.8,/)' ) etot                 
+               FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot                 
         !
         CALL output_tau( .TRUE. )
         !
