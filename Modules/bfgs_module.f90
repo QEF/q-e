@@ -199,7 +199,7 @@ MODULE bfgs_module
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !	  
+          !  
           lin_iter = lin_iter + 1
           !
           WRITE( UNIT = stdout, &
@@ -454,7 +454,7 @@ MODULE bfgs_module
           ! ... the previous step is rejected, line search goes on
           !
           step_accepted = .FALSE.          
-          !	  
+          !  
           lin_iter = lin_iter + 1
           !
           WRITE( UNIT = stdout, &
@@ -764,7 +764,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
        WRITE( iunbfgs, * ) inverse_hessian
-       ! 	     
+       ! 
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_bfgs_file  
@@ -795,7 +795,7 @@ MODULE bfgs_module
        WRITE( iunbfgs, * ) gradient_old(:,2:lbfgs_ndim), gradient
        WRITE( iunbfgs, * ) bfgs_step
        WRITE( iunbfgs, * ) trust_radius
-       ! 	     
+       !      
        CLOSE( UNIT = iunbfgs )
        !
      END SUBROUTINE write_lbfgs_file          
@@ -1050,7 +1050,7 @@ MODULE bfgs_module
           !
           WRITE( iunbfgs, * ) SHAPE( inverse_hessian )
           WRITE( iunbfgs, * ) inverse_hessian
-          ! 	     
+          !      
           CLOSE( UNIT = iunbfgs )       
           !
           DEALLOCATE( pos_old )   
