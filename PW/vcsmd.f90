@@ -75,13 +75,13 @@ subroutine vcsmd
            sigmamet (3, 3),         & ! sigma = avec^-1 * vcell = bg/alat*omega
            vx2 (ntypx), vy2 (ntypx), vz2 (ntypx),     & ! work vectors
            vmean (ntypx), rms (ntypx), ekin (ntypx),  & ! work vectors
-           tempo, time_au
+           tempo, time_au, epsp
 
   character(len=3) :: iost  ! status (old or new) for I/O files
   character(len=6) :: ipos  ! status ('append' or 'asis') for I/O files
 
   logical :: exst  
-  integer :: idone, na, nst, ipol, i, k  
+  integer :: idone, na, nst, ipol, i, j, k  
   ! last completed time step
   ! counter on atoms
   ! counter on completed moves
@@ -161,6 +161,42 @@ subroutine vcsmd
         return
      end if
   end if
+  if (calc.eq.'nm' .or. calc.eq.'cm') then
+     epsp = 1.0  ! kbar 
+     conv_ions = eold - etot .lt. epse
+     do i = 1, 3
+        do na = 1, nat
+           conv_ions = conv_ions.and.abs (force (i, na) ) .lt. epsf
+        enddo
+     enddo
+     do i =1,3
+        conv_ions = conv_ions .and. abs (sigma(i,i) - press)*uakbar.lt. epsp
+        do j =i+1,3
+           conv_ions = conv_ions .and. abs ( sigma(i,j) )*uakbar.lt. epsp
+        end do
+     end do
+     if (conv_ions) then
+        if (calc.eq.'cm') write (6,'(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, Efinal=",&
+              &     f15.8)') etot
+        if (calc.eq.'nm') write (6,'(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, Efinal=",&
+              &     f15.8)') etot
+        write (6,'(/72("-")//5x,"Final estimate of positions")')  
+        if (ltaucry) write (6, '(/5x,"Cartesian coordinates")')
+        do na = 1, nat
+           write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
+        enddo
+        if (ltaucry) then
+           write (6, '(/5x,"In crystal coordinates")')
+           call cryst_to_cart (nat, tau, bg, - 1)
+           do na = 1, nat
+              write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
+           enddo
+           call cryst_to_cart (nat, tau, at, 1)
+        endif
+        write (6, '(/)')
+        return
+     end if
+  end if
 
   call DCOPY (3 * nat, tau, 1, tauold (1, 1, 1), 1)  
   time_au = 0.0000242 * e2  
@@ -170,6 +206,14 @@ subroutine vcsmd
      write(6,'(/5x,"Damped Dynamics Minimization", /5x, &
              & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2)') &
                epse, epsf
+  if (istep.eq.1 .and. calc.eq.'cm')  &
+     write(6,'(/5x,"PArrinella Rahman Damped Cell-Dynamics Minimization", /5x, &
+             & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2,&
+             & "    EPSP = ",epsp ') epse, epsf, epsp
+  if (istep.eq.1 .and. calc.eq.'nm')  &
+     write(6,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
+             & "convergence thresholds: EPSE = ", e9.2,"    EPSF = ",e9.2,&
+             & "    EPSP = ",epsp ') epse, epsf, epsp
 
   write (6, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
        &                          f8.5," pico-seconds"/)') istep, tempo

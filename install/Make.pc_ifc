@@ -35,7 +35,7 @@ F90FLAGS= $(FFLAGS) -fpp $(CPPFLAGS)
 # use this for version < 7
 # MODULEFLAG= -cl,./intel.pcl
 # use this for version = 7
-MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW I $(OSHOME)/PH
+MODULEFLAG= -nomodule -I $(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
 #
 # Loader:
 #
