@@ -11,6 +11,7 @@ subroutine solve_e
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   USE rbecmod, ONLY: becp, becp_
@@ -55,7 +56,7 @@ subroutine solve_e
      if (info.ne.0) call errore('solve_e','cannot factorize',info)
   end if
   !
-  write (6,'(/" ***  Starting Conjugate Gradient minimization",   &
+  WRITE( stdout,'(/" ***  Starting Conjugate Gradient minimization",   &
        &            9x,"***")')
   nrec=0
   !
@@ -89,7 +90,7 @@ subroutine solve_e
      write (iudwf) dpsi
      close(unit=iudwf)
      !
-     write (6,'(" ***  pol. # ",i3," : ",i3," iterations")')  &
+     WRITE( stdout,'(" ***  pol. # ",i3," : ",i3," iterations")')  &
           &              ipol, iter
   end do
   !

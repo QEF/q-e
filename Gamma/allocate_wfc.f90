@@ -13,13 +13,14 @@ subroutine allocate_wfc
   ! dynamical allocation of arrays: wavefunctions and eigenvectors
   !
 #include "machine.h"
-  USE wvfct, ONLY: npwx, nbnd, nbndx, et, wg
-  USE klist, ONLY: nkstot, nelec
-  USE basis, ONLY: natomwfc
-  USE ldaU,  ONLY: swfcatom, lda_plus_u
-  USE gvect, ONLY: ngl
-  USE us,    ONLY: nkb
-  USE wavefunctions,  ONLY: evc
+  USE io_global,      ONLY : stdout
+  USE wvfct,          ONLY : npwx, nbnd, nbndx, et, wg
+  USE klist,          ONLY : nkstot, nelec
+  USE basis,          ONLY : natomwfc
+  USE ldaU,           ONLY : swfcatom, lda_plus_u
+  USE gvect,          ONLY : ngl
+  USE us,             ONLY : nkb
+  USE wavefunctions,  ONLY : evc
   implicit none
   !
   ! Allocate memory
@@ -33,7 +34,7 @@ subroutine allocate_wfc
   if (lda_plus_u) allocate (swfcatom( npwx, natomwfc))    
 
   et(:,:) = 0.d0
-  write (6, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
+  WRITE( stdout, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
 
 100 format (/5x,'nbndx  = ',i5,'  nbnd   = ',i5,'  natomwfc = ',i5, &
        &     '  npwx   = ',i7, &

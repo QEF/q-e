@@ -18,6 +18,8 @@ SUBROUTINE iosys
   !    independent input parser
   !
   !
+  USE io_global,     ONLY : stdout
+  USE constants,     ONLY : AU, eV_to_kelvin
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
                             lberry_ => lberry
@@ -170,11 +172,11 @@ SUBROUTINE iosys
   !
   IF ( tefield .AND. ( .NOT. nosym ) ) THEN
      nosym = .TRUE.
-     WRITE(6,'(5x,"Presently no symmetry can be used with electric field",/)')
+     WRITE( stdout,'(5x,"Presently no symmetry can be used with electric field",/)')
   END IF
   IF ( tefield .AND. ( tstress ) ) THEN
      tstress = .FALSE.
-     WRITE(6,'(5x,"Presently stress not available with electric field",/)')
+     WRITE( stdout,'(5x,"Presently stress not available with electric field",/)')
   END IF
   IF ( tefield .AND. ( nspin == 2 ) ) THEN
      CALL errore('input','LSDA not available with electric field',1)
@@ -232,9 +234,9 @@ SUBROUTINE iosys
   lsda = ( nspin == 2 )
   !noncolin = ( nspin == 4 )
   IF (noncolin) THEN
-    write(*,*) 'noncolin = true'
+    WRITE( stdout,*) 'noncolin = true'
   ELSE
-    write(*,*) 'noncolin = false'
+    WRITE( stdout,*) 'noncolin = false'
   ENDIF
 
   !
@@ -726,8 +728,8 @@ SUBROUTINE iosys
   !
   CALL verify_tmpdir
   !
-!  WRITE (6,'(/5x,"current restart_mode = ",a)') TRIM( restart_mode )
-!  WRITE (6,'( 5x,"current disk_io mode = ",a)') TRIM( disk_io )
+!  WRITE( stdout,'(/5x,"current restart_mode = ",a)') TRIM( restart_mode )
+!  WRITE( stdout,'( 5x,"current disk_io mode = ",a)') TRIM( disk_io )
   CALL restart_from_file
   !
   IF ( startingconfig == 'file' ) CALL read_config_from_file

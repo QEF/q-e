@@ -92,7 +92,7 @@ subroutine stres_us (ik, gk, sigmanlc)
      sigmanlc (l, l) = sigmanlc (l, l) - evps
 
   enddo
-  !      write (6,*) ' non local energy ', evps, evps*uakbar/omega
+  !      WRITE( stdout,*) ' non local energy ', evps, evps*uakbar/omega
 100 continue
   !
   !     non diagonal contribution - derivative of the bessel function

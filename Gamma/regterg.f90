@@ -20,6 +20,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
   !     (real wavefunctions with only half plane waves stored)
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   use g_psi_mod
   implicit none
@@ -287,11 +288,11 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, gstart, &
         !
 #ifdef DEBUG_DAVIDSON
            do n = 1, nvec
-              if ( .not.conv (n) ) write (6, '("   WARNING: e(",i3,") =",&
+              if ( .not.conv (n) ) WRITE( stdout, '("   WARNING: e(",i3,") =",&
                    f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
            enddo
 #else
-           write (6, '("   WARNING: ",i5," eigenvalues not converged")') &
+           WRITE( stdout, '("   WARNING: ",i5," eigenvalues not converged")') &
                 notcnv
 #endif
            call stop_clock ('last')

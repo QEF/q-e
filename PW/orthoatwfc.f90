@@ -15,6 +15,7 @@ subroutine orthoatwfc
   ! in order to make lda+U calculations
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use becmod
 #ifdef __PARA
@@ -50,9 +51,9 @@ subroutine orthoatwfc
 
   orthogonalize_wfc = .false.
   if (orthogonalize_wfc) then
-     write (6,*) 'Atomic wfc used in LDA+U are orthogonalized'
+     WRITE( stdout,*) 'Atomic wfc used in LDA+U are orthogonalized'
   else
-     write (6,*) 'Atomic wfc used in LDA+U are NOT orthogonalized'
+     WRITE( stdout,*) 'Atomic wfc used in LDA+U are NOT orthogonalized'
   end if
 
   if (nks.gt.1) rewind (iunigk)

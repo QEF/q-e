@@ -9,7 +9,7 @@
 subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
 #include "machine.h"
-
+  USE io_global,  ONLY : stdout
   use pwcom
   implicit none
   integer :: ir
@@ -26,7 +26,7 @@ subroutine remove_atomic_rho
   !
   if (lsda) call errore ('rmv_at_rho', 'lsda not allowed', 1)
 
-  write (6, '(/5x,"remove atomic charge density from scf rho")')
+  WRITE( stdout, '(/5x,"remove atomic charge density from scf rho")')
   !
   !     subtract the old atomic charge density
   !

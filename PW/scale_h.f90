@@ -14,6 +14,7 @@ subroutine scale_h
 !
 #include "machine.h"
 !
+  USE io_global,  ONLY :  stdout
 use pwcom
 implicit none
 
@@ -26,9 +27,9 @@ integer :: ik, ipol
 !
 call cryst_to_cart (nkstot, xk, at_old, - 1)
 call cryst_to_cart (nkstot, xk, bg, + 1)
-write (6, * ) ' NEW K-POINTS'
+WRITE( stdout, * ) ' NEW K-POINTS'
 do ik = 1, nkstot
-write (6, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
+WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
 
 enddo
 !

@@ -17,7 +17,8 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !  x = solution, u = gradient, h = conjugate gradient, Ah = operator*h
   !
 #include "machine.h"
-  use parameters, only: DP
+  USE io_global,  ONLY : stdout
+  use parameters, only : DP
   implicit none
   integer npw, npwx, nbnd, nbndx, niter, iter
   real(kind=DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)
@@ -126,7 +127,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      !
      if( u_u .le. eps) go to 10
      if (iter.eq.niter) then
-        write(6,'("   *** Conjugate Gradient minimization",   &
+        WRITE( stdout,'("   *** Conjugate Gradient minimization",   &
              &    " not converged after ",i3," iterations"/ &
              &    " residual norm |Ax-b|^2 : ",e10.4)') iter,u_u
         go to 10

@@ -238,7 +238,7 @@ subroutine scala_cdiag (n, a, ilda, w, z, ildz)
        rwork, lrwork, iwork, liwork, ifail, iclustr, gap, info)
   !
   if (abs (info) .gt.2) then
-     write (6, * ) 'info ', info, m, nz
+     WRITE( stdout, * ) 'info ', info, m, nz
      call errore ('scala_cdiag', 'wrong info', 1)
   endif
   !

@@ -20,6 +20,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   !     S is an overlap matrix, evc is a complex vector.
   !     The band-by-band RMM-DIIS method is used. 
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   use g_psi_mod
   use pwcom, only : nelec, lgauss, ltetra, okvan
@@ -251,13 +252,13 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         enddo
      enddo
      if (verb) then
-        write(6,*) 'overlap' 
-        write(6,*) ((m,n,sc(n,m), n=1,nbase), m=1,nbase)
-        write(6,*)  
-        write(6,*) 'rc' 
-        write(6,*) ((m,n,rc(n,m), n=1,nbase), m=1,nbase)
-        write(6,*)  
-        write(6,*) 'eigval'
+        WRITE( stdout,*) 'overlap' 
+        WRITE( stdout,*) ((m,n,sc(n,m), n=1,nbase), m=1,nbase)
+        WRITE( stdout,*)  
+        WRITE( stdout,*) 'rc' 
+        WRITE( stdout,*) ((m,n,rc(n,m), n=1,nbase), m=1,nbase)
+        WRITE( stdout,*)  
+        WRITE( stdout,*) 'eigval'
      endif
      
 
@@ -269,14 +270,14 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
 
      if (verb) then
         do n=1, nbase
-           write(6,*) n,ew(n)
+           WRITE( stdout,*) n,ew(n)
         enddo
-        write(6,*)  
+        WRITE( stdout,*)  
         do n=1,nbase
         enddo
-        write(6,*) 'eigvec' 
+        WRITE( stdout,*) 'eigvec' 
         do n=1, nbase
-           write(6,*) n, vc(n)
+           WRITE( stdout,*) n, vc(n)
         enddo
      endif
 
@@ -292,7 +293,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
           nvecx, vc , nvecx, (0.d0, 0.d0), vcn (1, 1), nvecx)
      ec = ec / DREAL( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
 
-     if (verb) write(6,*) 'NORM RES=',snorm,'DELTA EIG=',ec-e(ib)
+     if (verb) WRITE( stdout,*) 'NORM RES=',snorm,'DELTA EIG=',ec-e(ib)
 
      !
      ! Convergence?
@@ -320,7 +321,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), psi, &
              ndmx, vc , nvecx, (0.d0, 0.d0), evc (1, ib), ndmx)
 
-        if (verb) write(6,*) 'rotate band ',ib
+        if (verb) WRITE( stdout,*) 'rotate band ',ib
         minter = kter + 1
         goto 10
      endif
@@ -332,14 +333,14 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      diis_iter = diis_iter + kter
 
      if (kter .gt. maxter) then
-        write (6, '("   WARNING: eigenvalue ",i5," not converged")') &
+        WRITE( stdout, '("   WARNING: eigenvalue ",i5," not converged")') &
              ib
      else
         notcnv = notcnv - 1
         minter = 1
         if (verb) then
-           write(6,*) 'BAND ',ib, ' CONVERGED'
-           write(6,*)
+           WRITE( stdout,*) 'BAND ',ib, ' CONVERGED'
+           WRITE( stdout,*)
         endif
      endif
      !

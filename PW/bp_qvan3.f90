@@ -59,7 +59,7 @@
 
 !odl                  Write(*,*) 'QVAN3  --  sig = ',sig
 
-!        write(*,*) 'qvan3',ng1,LP,L,ivs,jvs
+!        WRITE( stdout,*) 'qvan3',ng1,LP,L,ivs,jvs
 
           qg = qg + sig * ylm_k(lp) * qr(ivs,jvs,l,is)
 

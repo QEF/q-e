@@ -63,7 +63,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    end do
 
    dproj(:,:) = (0.d0,0.d0)
-   !      write(6,*) 'dprojde: ik =',ik,' ipol =',ipol,' jpol =',jpol
+   !      WRITE( stdout,*) 'dprojde: ik =',ik,' ipol =',ipol,' jpol =',jpol
    !
    ! At first the derivatives of the atomic wfcs: we compute the term
    ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>

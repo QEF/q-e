@@ -144,7 +144,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
 #endif
         ! Here one can test on the norm of the gradient
         !            if (sqrt(gg).lt. eps.or. iter.eq.maxter) go to 10
-        !            write(6,*) iter, gg
+        !            WRITE( stdout,*) iter, gg
         if (iter.eq.1) then
            !
            ! starting iteration, the conjugate gradient |cg> = |g>
@@ -233,7 +233,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
         call DAXPY (2 * n, sin (theta) / cg0, ppsi, 1, hpsi, 1)
      enddo
 #ifdef DEBUG
-     write ( * , '("   WARNING: e(",i3,") =",f10.5, &
+     WRITE( stdout , '("   WARNING: e(",i3,") =",f10.5, &
           &    "eV, is not converged to within ",1pe8.1)') m,e(m)*13.6058,eps
 #endif
      notconv = notconv + 1

@@ -9,6 +9,8 @@
 #include "machine.h"
 module restart_module
 
+  USE io_global,  ONLY : stdout
+
   implicit none
   save
 
@@ -107,7 +109,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   !
   !
   filename = trim(prefix)//'.save'
-  ! write (6, '(/,5x,"Writing file ",a14)') filename
+  ! WRITE( stdout, '(/,5x,"Writing file ",a14)') filename
   !
   if( ionode ) THEN
     call seqopn (ndw, filename, 'unformatted', exst)
@@ -444,7 +446,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          call davcio (evc, nwordwfc, iunwfc, (ik-iks+1), - 1)
        END IF
        ispin = isk( ik )
-       ! write(6,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
+       ! WRITE( stdout,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool ! DEBUG
        CALL write_restart_wfc(ndw, ik, nkstot, kunit, ispin, nspin, &
          wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, igk_l2g(:,ik-iks+1), ngk(ik-iks+1) )
 
@@ -458,7 +460,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
 
    END IF
 
-  ! write (6, '(5x,"file written")')
+  ! WRITE( stdout, '(5x,"file written")')
 
   if( ionode ) then
     close (unit = ndw)
@@ -567,7 +569,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
   ierr = 0
   filename = trim(prefix)//'.save'
   flen = index(filename,' ')-1
-  write (6, '(/,5x,"Reading file ",a," ... ")') filename(1:flen)
+  WRITE( stdout, '(/,5x,"Reading file ",a," ... ")') filename(1:flen)
   !
   if( ionode ) THEN
     call seqopn (ndr, filename(1:flen), 'unformatted', exst)
@@ -998,7 +1000,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
    if( ionode ) then
      close (unit = ndr)
    end if
-   write (6, '(5x,"read complete")')
+   WRITE( stdout, '(5x,"read complete")')
    !
    return
 end subroutine
@@ -1072,7 +1074,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
   !
   ierr = 0
   filename = trim( prefix )//'.save'
-  write (6, '(/,5x,"Reading file ",a14)') filename
+  WRITE( stdout, '(/,5x,"Reading file ",a14)') filename
   !
   if( ionode ) THEN
     call seqopn (ndr, filename, 'unformatted', exst)

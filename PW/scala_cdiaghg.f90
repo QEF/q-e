@@ -266,35 +266,35 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
      if (iam_blacs.eq.0) then
         if (info.lt.0) then
            if (info> - 100) then
-              write (6,  * ) 'scala_cdiaghg: Argument',  - info, &
+              WRITE( stdout,  * ) 'scala_cdiaghg: Argument',  - info, &
                    'to PCHEGVX had an illegal value'
 
            endif
            if (info< - 100) then
               i = - info / 100
               j = mod ( - info, 100)
-              write (6,  * ) 'scala_cdiagh: Element', j, 'of argument', i, &
+              WRITE( stdout,  * ) 'scala_cdiagh: Element', j, 'of argument', i, &
                    'to PCHEGVX had an illegal value'
            endif
         endif
-        write (6, * ) 'given and requested lwork', lwork, work (1)
-        write (6, * ) 'given and requested lrwork', lrwork, rwork (1)
+        WRITE( stdout, * ) 'given and requested lwork', lwork, work (1)
+        WRITE( stdout, * ) 'given and requested lrwork', lrwork, rwork (1)
 
 
-        write (6, * ) 'given and requested liwork', liwork, iwork (1)
+        WRITE( stdout, * ) 'given and requested liwork', liwork, iwork (1)
         if (info.gt.0) then
            if (mod (info, 2) .ne.0) then
-              write (6,  * ) 'scala_cdiaghg: PCHEGVX: Calculation failed', &
+              WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Calculation failed', &
                    ' to converge'
 
            endif
            if (mod (info / 2, 2) .ne.0) then
-              write (6,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
+              WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
                    ' to orthogonalize eigenvectors'
 
            endif
            if (mod (info / 4, 2) .ne.0) then
-              write (6,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
+              WRITE( stdout,  * ) 'scala_cdiaghg: PCHEGVX: Insufficient workspace', &
                    ' to compute all eigenvectors'
            endif
         endif

@@ -14,6 +14,7 @@ subroutine wfcinit
   ! from superposition of atomic wavefunctions.
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   USE rbecmod, only: becp, becp_
@@ -34,7 +35,7 @@ subroutine wfcinit
   ! state what is going to happen
   !
   if (startingwfc == 'file') then
-     write (6, '(5x,a)') 'Starting wfc from file'
+     WRITE( stdout, '(5x,a)') 'Starting wfc from file'
      !
      ! read the wavefunction into memory (if it is not done in c_bands)
      !
@@ -45,14 +46,14 @@ subroutine wfcinit
   call start_clock ('wfcinit')
   if (startingwfc == 'atomic') then
      if (natomwfc >= nbnd) then
-        write (6, '(5x,a)') 'Starting wfc are atomic'
+        WRITE( stdout, '(5x,a)') 'Starting wfc are atomic'
      else
-        write (6, '(5x,a,i3,a)') 'Starting wfc are atomic + ',&
+        WRITE( stdout, '(5x,a,i3,a)') 'Starting wfc are atomic + ',&
              nbnd-natomwfc, ' random wfc'
      endif
      n_starting_wfc = max (natomwfc, nbnd)
   else
-     write (6, '(5x,a)') 'Starting wfc are random'
+     WRITE( stdout, '(5x,a)') 'Starting wfc are random'
      n_starting_wfc = nbnd
   endif
   !
@@ -144,8 +145,8 @@ subroutine wfcinit
      call poolrecover (et, nbnd, nkstot, nks)
 #endif
      do ik = 1, nkstot
-        write (6, 9010) (xk (ipol, ik), ipol = 1, 3)
-        write (6, '(2x,8f9.4)') (et (ibnd, ik) * rytoev, ibnd = 1, nbnd)
+        WRITE( stdout, 9010) (xk (ipol, ik), ipol = 1, 3)
+        WRITE( stdout, '(2x,8f9.4)') (et (ibnd, ik) * rytoev, ibnd = 1, nbnd)
      enddo
   endif
 #ifdef FLUSH

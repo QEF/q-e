@@ -1,101 +1,117 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------
-subroutine stop_pw (flag)
-  !--------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE stop_pw( flag )
+  !----------------------------------------------------------------------------
   !
-  ! Close all files and synchronize processes before stopping.
-  ! Called at the end of the run with flag=.true. (removes 'restart')
-  ! or during execution with flag=.false. (does not remove 'restart')
+  ! ... Close all files and synchronize processes before stopping.
+  ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
+  ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  use pwcom
-  use io_files, only : prefix
-  use mp, only : mp_end
-  logical :: flag
+  USE varie,             ONLY :  order
+  USE units,             ONLY :  iunwfc, iunoldwfc, iunoldwfc2, iunigk, iunres
+  USE io_files,          ONLY :  prefix
 #ifdef __PARA
-  include 'mpif.h'
-  integer :: info
-#endif
-  logical exst
+  USE mp,                ONLY :  mp_barrier, mp_end
+#endif  
   !
-  !  iunwfc contains wavefunctions and is kept open during
-  !  the execution - close and save the file
+  IMPLICIT NONE
   !
-  close (unit = iunwfc, status = 'keep')
-  if (flag) then
+  LOGICAL, INTENT(IN) :: flag
+  LOGICAL             :: exst
+  !
+  !  ... iunwfc contains wavefunctions and is kept open during
+  !  ... the execution - close and save the file
+  !
+  CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+  !
+  IF ( order > 1 ) &
+     CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' ) 
+  !
+  IF ( order > 2 ) &
+     CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' ) 
+  !      
+  IF ( flag ) THEN
      !
-     !  all other files must be reopened and removed
+     ! ... all other files must be reopened and removed
      !
-     call seqopn (iunres, 'restart','unformatted',exst)
-     close (unit=iunres,status='delete')
-     call seqopn (4, trim(prefix)//'.bfgs','unformatted',exst)
-     close (unit=4,status='delete')
-     call seqopn (4, trim(prefix)//'.md','formatted',exst)
-     close (unit=4,status='delete')
-  endif
+     CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst )
+     CLOSE( UNIT = iunres, STATUS = 'DELETE' )
+     !
+     CALL seqopn( 4, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     !
+     CALL seqopn( 4, TRIM( prefix )//'.md', 'FORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     !
+  END IF
   !
-  !  iunigk is kept open during the execution - close and remove
+  ! ... iunigk is kept open during the execution - close and remove
   !
-  close (unit = iunigk, status = 'delete')
-  call print_clock_pw
-
-  call show_memory ()
+  CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  CALL print_clock_pw
+  !
+  CALL show_memory ()
+  !
 #ifdef __PARA
-  call mpi_barrier (MPI_COMM_WORLD, info)
-
-  ! call mpi_finalize (info)
-#endif
- 
-  call mp_end()
-
+  CALL mp_barrier()
+  CALL mp_end()
+#endif  
+  !
 #ifdef __T3E
   !
-  ! set streambuffers off
+  ! ... set streambuffers off
   !
-
-  call set_d_stream (0)
+  CALL set_d_stream( 0 )
 #endif
-
-  call clean_pw
-
-  if (flag) then
-     stop
-  else
-     stop 1
-  endif
-end subroutine stop_pw
+  !
+  CALL clean_pw
+  !
+  IF ( flag ) THEN
+     STOP
+  ELSE
+     STOP 1
+  END IF
+  !
+END SUBROUTINE stop_pw
 !
-!--------------------------------------------------------------------
-
-subroutine closefile
-  !--------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE closefile
+  !----------------------------------------------------------------------------
   !
-  ! Close all files and synchronize processes before stopping
-  ! Called by "sigcatch" when it receives a signal
+  USE io_global,         ONLY :  stdout
   !
-  write (6, '(5x,"Signal Received, stopping ... ")')
-
-  call stop_pw (.false.)
-  return
-end subroutine closefile
-
-!--------------------------------------------------------------------
-
-subroutine cpflush
-  !--------------------------------------------------------------------
+  ! ... Close all files and synchronize processes before stopping
+  ! ... Called by "sigcatch" when it receives a signal
   !
+  WRITE( stdout,'(5X,"Signal Received, stopping ... ")')
+  !
+  CALL stop_pw( .FALSE. )
+  !
+  RETURN
+  !
+END SUBROUTINE closefile
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cpflush
+  !----------------------------------------------------------------------------
+  !
+  USE io_global,         ONLY :  stdout
+  !  
   ! TEMP: compatibility with Car-Parrinello code
   !
-  print *, "what am i doing in cpflush ?"
-  call stop_pw (.false.)
-  return
-end subroutine cpflush
-
-
-
-
+  WRITE( stdout, '("what am i doing in cpflush ?")' )
+  !
+  CALL stop_pw( .FALSE. )
+  !
+  RETURN
+  !
+END SUBROUTINE cpflush

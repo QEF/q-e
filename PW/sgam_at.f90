@@ -21,6 +21,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     total point group
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters
   implicit none
   !
@@ -94,7 +95,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
              2) ) .lt.1.d-8) call errore ('sgam_at', 'overlapping atoms', na)
         if (sym (irot) ) then
            fractional_translations = .false.
-           write (6, '(5x,"Found additional translation:",3f10.4)') ft
+           WRITE( stdout, '(5x,"Found additional translation:",3f10.4)') ft
         endif
      endif
 
@@ -110,9 +111,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
           mod (s (1, 3, irot) * nr3, nr1) .ne.0 .or. &
           mod (s (2, 3, irot) * nr3, nr2) .ne.0 ) then
         sym (irot) = .false.
-        write (6, '(5x,"warning: symmetry operation # ",i2, &
+        WRITE( stdout, '(5x,"warning: symmetry operation # ",i2, &
              &         " not compatible with FFT grid. ")') irot
-        write (6, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
+        WRITE( stdout, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
         goto 100
 
      endif
@@ -157,7 +158,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                  if (abs (ft1 - nint (ft1) ) / nr1.gt.1.0d-5 .or. &
                      abs (ft2 - nint (ft2) ) / nr2.gt.1.0d-5 .or. &
                      abs (ft3 - nint (ft3) ) / nr3.gt.1.0d-5) then
-                    write (6, '(5x,"warning: symmetry operation", &
+                    WRITE( stdout, '(5x,"warning: symmetry operation", &
                          &     " # ",i2," not allowed.   fractional ", &
                          &     "translation:"/5x,3f11.7,"  in crystal", &
                          &     " coordinates")') irot, ft

@@ -17,6 +17,7 @@ subroutine punch
   !     the information needed to the phonon program.
   !
   !
+  USE io_global, ONLY : stdout
   use pwcom, only: nks, filpun, reduce_io, nwordwfc, iunwfc, lscf, &
     rho, nspin, iunpun, et, wg, nbnd, nkstot
   USE wavefunctions,    ONLY : evc
@@ -32,7 +33,7 @@ subroutine punch
   logical :: exst
   !
   filpun = trim(prefix)//'.save'
-  write (6, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
+  WRITE( stdout, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
   !
   kunittmp = 1
   !
@@ -89,6 +90,7 @@ subroutine punch
   !     the information needed to the phonon program.
   !
   !
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : evc
   use io_files, only: prefix
@@ -103,7 +105,7 @@ subroutine punch
   logical :: exst
   !
   filpun = trim(prefix)//'.pun'
-  write (6, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
+  WRITE( stdout, '(/,5x,"Writing file ",a14,"for program phonon")') filpun
   !
   kunittmp = 1
   !

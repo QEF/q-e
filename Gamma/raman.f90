@@ -114,6 +114,7 @@ subroutine cg_deps(deps_dtau)
   !  calculate d eps0/d tau with finite differences
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use cgcom
 #ifdef __PARA
@@ -139,10 +140,10 @@ subroutine cg_deps(deps_dtau)
   read(iunres,*,err=1,end=1) deps_dtau
   close(unit=iunres)
   if (na_.le.na) then
-     write(6,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
+     WRITE( stdout,'(5x,"Restarting from atom ",i2,",  pol ",i1,      &
           &        ", nd=",i1)') na_,ipol_,nd_
   else
-     write(6,'(5x,"Reading saved data")')
+     WRITE( stdout,'(5x,"Reading saved data")')
   end if
   go to 2
 1 close(unit=iunres)
@@ -150,7 +151,7 @@ subroutine cg_deps(deps_dtau)
   ipol_=1
   nd_  =1
   deps_dtau(:,:,:,:) = 0.d0
-  write(6,'(5x,"Starting over from the beginning")')
+  WRITE( stdout,'(5x,"Starting over from the beginning")')
 2 continue
   !
   do na=na_,nat
@@ -217,11 +218,11 @@ subroutine cg_deps(deps_dtau)
   !
   iudyn = 20
   open(unit=iudyn,file=fildyn,form='formatted',status='old',position='append')
-  write (6,'(/5x, "Raman tensors (atomic)"/)')
+  WRITE( stdout,'(/5x, "Raman tensors (atomic)"/)')
   write (iudyn,'(/5x,"Raman: D eps_{alpha,beta}/D tau_{s,gamma}"/)')
   do na=1,nat
      do ipol=1,3
-        write(6,'(/5x,"D eps(i,j)",5x,3e14.6     &
+        WRITE( stdout,'(/5x,"D eps(i,j)",5x,3e14.6     &
              &    /5x,"----------  =  ",3e14.6   &
              &    /5x,"D tau(",i2,")_",i1,4x,3e14.6)')             &
              &  (( deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,2),&
@@ -231,7 +232,7 @@ subroutine cg_deps(deps_dtau)
              ( (deps_dtau(kpol,jpol,ipol,na), jpol=1,3), kpol=1,3)
      end do
   end do
-  write(6,*)
+  WRITE( stdout,*)
   close (unit=iudyn)
   !
   return
@@ -242,6 +243,7 @@ subroutine cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use cgcom
 #ifdef __PARA
@@ -287,9 +289,9 @@ subroutine cg_eps0dyn(w2,dynout)
      end if
 #endif
      !
-     write (6,'(/5x,"estimated dielectric constants =",3f10.3,  &
+     WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.3,  &
        &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
-     write (6,'(/5x,"z*(",i2,")",3f10.3,/11x,3f10.3/11x,3f10.3)') &
+     WRITE( stdout,'(/5x,"z*(",i2,")",3f10.3,/11x,3f10.3/11x,3f10.3)') &
              (na, ((zstar(i,j,na),j=1,3),i=1,3), na=1,nat)
   end if
   !
@@ -350,6 +352,7 @@ subroutine cg_neweps
   !-----------------------------------------------------------------------
   !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   use cgcom
   !
@@ -381,12 +384,12 @@ subroutine cg_neweps
   !
   call dielec(.false.)
   !
-  write (6,'(/5x,"displaced atomic positions :")')
-  write (6,'(5x,3f12.6)') ((tau(i,j),i=1,3),j=1,nat)
+  WRITE( stdout,'(/5x,"displaced atomic positions :")')
+  WRITE( stdout,'(5x,3f12.6)') ((tau(i,j),i=1,3),j=1,nat)
   !
-  write (6,'(/5x,"estimated dielectric constants =",3f10.3,       &
+  WRITE( stdout,'(/5x,"estimated dielectric constants =",3f10.3,       &
        &        /37x,3f10.3/37x,3f10.3)') ((epsilon0(i,j),j=1,3),i=1,3)
-  write (6,*)
+  WRITE( stdout,*)
   !
 end subroutine cg_neweps
 !
@@ -453,6 +456,7 @@ subroutine raman_cs(dynout,deps_dtau)
   !  calculate Raman cross section
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use cgcom
   !
@@ -463,7 +467,7 @@ subroutine raman_cs(dynout,deps_dtau)
   !
   !
   allocate  ( raman_activity( 3, 3, nmodes))    
-  write (6,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
+  WRITE( stdout,'(/5x, "Raman tensor for mode nu : dX_{alpha,beta}/d nu"/)')
   do nu=1,nmodes
      !
      do jpol=1,3
@@ -477,7 +481,7 @@ subroutine raman_cs(dynout,deps_dtau)
            end do
         end do
      end do
-     write (6,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
+     WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
              nu,( ( raman_activity(ipol,jpol,nu),jpol=1,3), ipol=1,3)
   end do
   deallocate(raman_activity)
@@ -492,6 +496,7 @@ subroutine raman_cs2(w2,dynout)
   !  calculate d eps0/d u  (u=phonon mode) with finite differences
   !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   use cgcom
 #ifdef __PARA
@@ -521,17 +526,17 @@ subroutine raman_cs2(w2,dynout)
   read(iunres,*,err=1,end=1) raman_activity
   close(unit=iunres)
   if (nu_.le.nu) then
-     write(6,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
+     WRITE( stdout,'(5x,"Restarting from mode ",i3,", nd=",i1)') &
           nu_,nd_
   else
-     write(6,'(5x,"Reading saved data")')
+     WRITE( stdout,'(5x,"Reading saved data")')
   end if
   go to 2
 1 close(unit=iunres)
   nu_=1
   nd_=1
   raman_activity(:,:,:) = 0.d0
-  write(6,'(5x,"Starting over from the beginning")')
+  WRITE( stdout,'(5x,"Starting over from the beginning")')
 2 continue
   !
   do nu=first,last
@@ -619,7 +624,7 @@ subroutine raman_cs2(w2,dynout)
   end do
   !
   do nu=first,last
-     write (6,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
+     WRITE( stdout,'(i5,3x,3e14.6,2(/8x,3e14.6))') &
           nu,( ( raman_activity(ipol,jpol,nu-first+1),jpol=1,3), ipol=1,3)
   end do
   !
@@ -669,10 +674,10 @@ subroutine raman_cs2(w2,dynout)
      !
   end do
   !
-  write (6,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
-  write (6,'(/5x,"(multiplied by 1000)")')
-  write (6,'(5x,"Raman cross sections are in A^4/amu units")')
-  write (6,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
+  WRITE( stdout,'(/5x,"IR cross sections are in (D/A)^2/amu units")')
+  WRITE( stdout,'(/5x,"(multiplied by 1000)")')
+  WRITE( stdout,'(5x,"Raman cross sections are in A^4/amu units")')
+  WRITE( stdout,'(/"#  mode   [cm-1]     [THz]       IR      Raman")')
   !
   do nu = 1,3*nat
      !
@@ -696,7 +701,7 @@ subroutine raman_cs2(w2,dynout)
         alpha = 0
         beta2 = 0
      end if
-     write (6,'(i5,f10.2,f12.4,2f10.4)') &
+     WRITE( stdout,'(i5,f10.2,f12.4,2f10.4)') &
           nu, freq, freq*cm1thz, infrared(nu)*irfac*1000, &
           (45.d0*alpha**2 + 7.0d0*beta2)*r1fac*r2fac
   end do

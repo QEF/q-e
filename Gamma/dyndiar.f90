@@ -14,7 +14,8 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !   and mode displacements in "dynout". dyn is unchanged on output.
   !
 #include "machine.h"
-  use parameters, only: DP
+  use parameters, only : DP
+  USE io_global,  ONLY : stdout
   implicit none
   integer :: nmodes, nat3, nat,ityp(nat), iudyn
   real(kind=DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
@@ -39,7 +40,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
         dynout(nu_i,nu_j) = dynout(nu_j,nu_i)
      end do
   end do
-  write (6,9000) dif
+  WRITE( stdout,9000) dif
   !
   !  Impose Acoustic Sum Rule
   !
@@ -56,7 +57,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
         end do
      end do
   end do
-  write (6,9005) dif
+  WRITE( stdout,9005) dif
   !
   !  fill the mass matrix
   !
@@ -84,14 +85,14 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   !  write frequencies
   !
-  write (6,'(5x,"diagonalizing the dynamical matrix ..."//)')
-  write (6,'(1x,74("*"))')
+  WRITE( stdout,'(5x,"diagonalizing the dynamical matrix ..."//)')
+  WRITE( stdout,'(1x,74("*"))')
   !
   dynout (:,:) = 0.0
   do nu_i = 1,nmodes
      w1 = sqrt(abs(w2(nu_i)))
      if (w2(nu_i).lt.0.0) w1 = -w1
-     write (6,9010) nu_i, w1*rydthz, w1*rydcm1
+     WRITE( stdout,9010) nu_i, w1*rydthz, w1*rydcm1
      !  bring eigendisplacements in cartesian axis
      do mu = 1,3*nat
         do i = 1,nmodes
@@ -99,7 +100,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
         end do
      end do
   end do
-  write(6,'(1x,74("*"))')
+  WRITE( stdout,'(1x,74("*"))')
   !
   deallocate(z)
   deallocate(m)

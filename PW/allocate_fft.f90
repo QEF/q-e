@@ -14,6 +14,7 @@ subroutine allocate_fft
   !     these dimensions
   !
 #include "machine.h"
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : psic
   implicit none
@@ -23,13 +24,13 @@ subroutine allocate_fft
   call data_structure( gamma_only )
   !
   if (nrxx.lt.ngm) then
-     write (6, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
+     WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
           &" nrxx = ",i8," ngm=",i8)') nr1, nr2, nr3, nrxx, ngm
      call errore ('allocate_fft', 'the nr"s are too small!', 1)
 
   endif
   if (nrxxs.lt.ngms) then
-     write (6, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
+     WRITE( stdout, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
           &" nrxxs = ",i8," ngms=",i8)') nr1s, nr2s, nr3s, nrxxs, ngms
      call errore ('allocate_fft', 'the nrs"s are too small!', 1)
 

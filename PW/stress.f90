@@ -12,6 +12,7 @@ subroutine stress
   !
 #include "machine.h"
   !
+  USE io_global,  ONLY : stdout
   use pwcom
   implicit none
   !
@@ -21,7 +22,7 @@ subroutine stress
 
   integer :: l, m
   call start_clock ('stress')
-  write (6, '(//5x,"entering subroutine stress ..."/)')
+  WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 
   !
   !   contribution from local  potential
@@ -75,11 +76,11 @@ subroutine stress
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
 
-  write (6, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0,  &
+  WRITE( stdout, 9000) (sigma(1,1) + sigma(2,2) + sigma(3,3)) * uakbar / 3d0,  &
                   (sigma(l,1), sigma(l,2), sigma(l,3),                    &
             sigma(l,1)*uakbar, sigma(l,2)*uakbar, sigma(l,3)*uakbar, l=1,3)
 
-  if (iverbosity.ge.1) write (6, 9005) &
+  if (iverbosity.ge.1) WRITE( stdout, 9005) &
      (sigmakin(l,1)*uakbar,sigmakin(l,2)*uakbar,sigmakin(l,3)*uakbar, l=1,3),&
      (sigmaloc(l,1)*uakbar,sigmaloc(l,2)*uakbar,sigmaloc(l,3)*uakbar, l=1,3),&
      (sigmanlc(l,1)*uakbar,sigmanlc(l,2)*uakbar,sigmanlc(l,3)*uakbar, l=1,3),&

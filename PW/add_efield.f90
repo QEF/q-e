@@ -36,6 +36,7 @@
 !
 #include "machine.h"
     use pwcom
+    USE io_global,  ONLY : stdout
 #ifdef __PARA
     use para
     use mp
@@ -134,16 +135,16 @@
   vamp=2.0d0*(eamp-dip)*length*real(npoints-ndesc,dp)&
                                                /real(npoints,dp)
   if (first) then
-     write(6,*)
-     write(6,'(5x,"Adding an external electric field")')
-     write(6,'(5x,"Intensity [a.u.]: ",f15.8)') eamp
+     WRITE( stdout,*)
+     WRITE( stdout,'(5x,"Adding an external electric field")')
+     WRITE( stdout,'(5x,"Intensity [a.u.]: ",f15.8)') eamp
   endif
-  if (dipfield) write(6,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
+  if (dipfield) WRITE( stdout,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
   if (first) then
-     write(6,'(5x,"Potential amplitude [Ry]: ", f15.8)') vamp
-     write(6,'(5x,"Total length [points]: ", i5)') npoints
-     write(6,'(5x,"Total length [bohr rad]: ", f15.8)') length
-     write(6,'(5x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
+     WRITE( stdout,'(5x,"Potential amplitude [Ry]: ", f15.8)') vamp
+     WRITE( stdout,'(5x,"Total length [points]: ", i5)') npoints
+     WRITE( stdout,'(5x,"Total length [bohr rad]: ", f15.8)') length
+     WRITE( stdout,'(5x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
   endif
 !
 ! in this case x direction

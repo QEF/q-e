@@ -293,37 +293,37 @@ subroutine readvan (is, iunps)
   if (exfact.eq. - 3.) xctit = ' gunnarson-lundqvist'
 
   if (exfact.gt.0.) xctit = '      slater x-alpha'
-  !      write (6,200) is
+  !      WRITE( stdout,200) is
 200 format (/4x,60('=')/4x,'|  pseudopotential report', &
        &        ' for atomic species:',i3,11x,'|')
-  !      write(6,300) 'pseudo potential version', iver(1,is),
+  !      WRITE( stdout,300) 'pseudo potential version', iver(1,is),
   !     +     iver(2,is), iver(3,is)
 300 format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
-  !      write (6,400) line, xctit
+  !      WRITE( stdout,400) line, xctit
 400 format (4x,'|  ',2a20,' exchange-corr  |')
-  !      write (6,500) zmesh(is), is, zp(is), exfact
+  !      WRITE( stdout,500) zmesh(is), is, zp(is), exfact
 500 format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =', &
        &     f10.5, 9x,'|')
-  !      write (6,600) ifpcor, etotpseu
+  !      WRITE( stdout,600) ifpcor, etotpseu
 600 format (4x,'|  ifpcor = ',i2,10x,' atomic energy =',f10.5, &
        &       ' Ry',6x,'|')
-  !      write (6,700)
+  !      WRITE( stdout,700)
 700 format(4x,'|  index    orbital      occupation    energy',14x,'|')
-  !      write (6,800) ( nb, nnlz(nb), wwnl(nb), ee(nb), nb=1,nchi(is) )
+  !      WRITE( stdout,800) ( nb, nnlz(nb), wwnl(nb), ee(nb), nb=1,nchi(is) )
 800 format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
 900 format('(4x,"|  rinner =",',i1,'f8.4,',i2,'x,"|")')
-  !      write (6,1000)
+  !      WRITE( stdout,1000)
 1000 format(4x,'|    new generation scheme:',32x,'|')
-  !      write (6,1100) nbeta(is),kkbeta(is),rcloc
+  !      WRITE( stdout,1100) nbeta(is),kkbeta(is),rcloc
 1100 format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x, &
        &     'rcloc =',f10.4,4x,'|'/ &
        &     4x,'|    ibeta    l     epsilon   rcut',25x,'|')
   do nb = 1, nbeta (is)
      lp = lll (nb, is) + 1
-     !         write (6,1200) nb,lll(nb,is),eee(nb),rc(lp)
+     !         WRITE( stdout,1200) nb,lll(nb,is),eee(nb),rc(lp)
 1200 format    (4x,'|',5x,i2,6x,i2,4x,2f7.2,25x,'|')
   enddo
-  !      write (6,1300)
+  !      WRITE( stdout,1300)
 
 1300 format (4x,60('='))
   return

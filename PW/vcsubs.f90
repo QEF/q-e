@@ -263,7 +263,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      enddo
   endif
   !
-  !      write(6,*) avec2d(2,1),avec2d(3,1), avec2d(3,2)
+  !      WRITE( stdout,*) avec2d(2,1),avec2d(3,1), avec2d(3,2)
   !
   ! compute atomic energies
   !
@@ -281,7 +281,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   uta = enew
   eta = eka + uta
   !
-  !      write (*,*) 'eka,ekint', eka, ekint
+  !      WRITE( stdout,*) 'eka,ekint', eka, ekint
   !
   !      lattice contribution
   !
@@ -338,7 +338,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
 
   pv = p * vcell
   !
-  !       write(6,1001) ekint,ut,etot
+  !       WRITE( stdout,1001) ekint,ut,etot
   !
   ! now make the initial move
   !
@@ -772,16 +772,16 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   else
      ts = dabs (tnew / temp - um)
   endif
-  !      write (6,*) ts
+  !      WRITE( stdout,*) ts
   !
   !       rescale velocities
   !
-  !      write (*,*) ' ekla', ekla, ttol,ts, nst, ntcheck, ntimes
+  !      WRITE( stdout,*) ' ekla', ekla, ttol,ts, nst, ntcheck, ntimes
   if (mod (nst, ntcheck) .eq.0) then
      if ( (ts.gt.ttol) .and. (ntimes.gt.0) ) then
-        !           write (*,*) ' ekkkeka ! non dovrei essere qui !'
-        !           write(6,*) 'nst,ntcheck, ts, ttol,ntimes'
-        !           write(6,*) nst,ntcheck, ts, ttol,ntimes
+        !           WRITE( stdout,*) ' ekkkeka ! non dovrei essere qui !'
+        !           WRITE( stdout,*) 'nst,ntcheck, ts, ttol,ntimes'
+        !           WRITE( stdout,*) nst,ntcheck, ts, ttol,ntimes
         !
         if (tnew.le.0.1d-12) then
            alpha = zero
@@ -813,7 +813,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
 
   endif
   if (calc (2:2) .eq.'m') then
-     !         write(6,109) alpha,nst
+     !         WRITE( stdout,109) alpha,nst
      if (.false.) then
         do na = 1, natot
            do k = 1, 3
@@ -851,7 +851,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
            do l = 1, 3
               xx = avec2d (l, k) * avec2di (l, k)
               if (xx.lt.zero) then
-  !              write ( *, * ) l, k, avec2d (l, k), avec2di (l, k)
+  !              WRITE( stdout, * ) l, k, avec2d (l, k), avec2di (l, k)
                  avecd (l, k) = zero
               endif
            enddo
@@ -919,6 +919,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   !     v(i,na) = initial velocity of atom na of type nt
   !     vmean(nt), rms(nt),vx2(nt),vy2(nt),vz2(nt)
   !
+  USE io_global,   ONLY : stdout
   use parameters , only : DP
   implicit none
   !
@@ -973,8 +974,8 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      do nt = 1, ntype
         natom = 0
         vfac = dsqrt (boltz * t / atmass (nt) )
-        !            write(6,901)
-        !            write(6,*) 'vfac = ',vfac
+        !            WRITE( stdout,901)
+        !            WRITE( stdout,*) 'vfac = ',vfac
         iseed = iseed+382
         do na = 1, natot
            if (ityp (na) .eq.nt) then
@@ -1000,7 +1001,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
         p (3) = zero
         ekin (nt) = zero
         if (natom.eq.0) then
-           write (6,*) 'natom=0 for type',nt,'in sub ranv (1) !!!! '
+           WRITE( stdout,*) 'natom=0 for type',nt,'in sub ranv (1) !!!! '
            go to 111
         end if
         !
@@ -1032,7 +1033,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
                                       v(3,na)*v(3,na) ) / dois
            endif
         enddo
-        !            write(6,*) 'ekin(nt)',ekin(nt)
+        !            WRITE( stdout,*) 'ekin(nt)',ekin(nt)
         ekin (nt) = atmass (nt) * ekin (nt)
         ekint = ekint + ekin (nt)
  111    continue
@@ -1043,8 +1044,8 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      atemp = dois * ekint / tres / dfloat (natot - 1) / boltz
      tfac = dsqrt (t / atemp)
      if (temp.lt.1d-14) tfac = zero
-     !         write(6,*) 'atemp = ',atemp,' k'
-     !         write(6,*) 'tfac = ',tfac
+     !         WRITE( stdout,*) 'atemp = ',atemp,' k'
+     !         WRITE( stdout,*) 'tfac = ',tfac
      do nt = 1, ntype
         vmean (nt) = zero
         rms (nt) = zero

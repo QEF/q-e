@@ -14,6 +14,7 @@ subroutine allocate_wfc
   !
 #include "machine.h"
   use pwcom
+  USE io_global,        ONLY : stdout
   USE wavefunctions,    ONLY : evc
   use becmod
   implicit none
@@ -30,7 +31,7 @@ subroutine allocate_wfc
   if (lda_plus_u) allocate (swfcatom( npwx, natomwfc))    
 
   et(:,:) = 0.d0
-  write (6, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
+  WRITE( stdout, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
 
 100 format (/5x,'nbndx  = ',i5,'  nbnd   = ',i5,'  natomwfc = ',i5, &
        &     '  npwx   = ',i7, &

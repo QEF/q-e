@@ -22,6 +22,7 @@ SUBROUTINE forces
   !
   !
   USE parameters, ONLY : DP
+  USE io_global,  ONLY : stdout
   USE brilz,      ONLY : at, bg, alat, omega  
   USE basis,      ONLY : nat, ntyp, ityp, tau
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
@@ -62,7 +63,7 @@ SUBROUTINE forces
   forcescc(:,:) = 0.D0
   forceh(:,:)   = 0.D0
   !
-  WRITE(6, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
+  WRITE( stdout, '(/,5x,"Forces acting on atoms (Ry/au):", / )')
   !
   ! ... The  nonlocal contribution is computed here
   !
@@ -106,7 +107,7 @@ SUBROUTINE forces
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         sum = sum + force(ipol, na)
      END DO
-     ! WRITE(6,*) 'sum = ', sum
+     ! WRITE( stdout,*) 'sum = ', sum
      !
      ! ... impose total force = 0
      !
@@ -134,16 +135,16 @@ SUBROUTINE forces
   ! ... write on output the forces
   !
   DO na = 1, nat
-     WRITE(6, 9035) na, ityp(na), ( force(ipol,na), ipol = 1, 3 )
+     WRITE( stdout, 9035) na, ityp(na), ( force(ipol,na), ipol = 1, 3 )
   enddo
 #ifdef DEBUG
-  WRITE(6, '(5x,"The SCF correction term to forces")')
+  WRITE( stdout, '(5x,"The SCF correction term to forces")')
   DO na = 1, nat
-     WRITE(6, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
+     WRITE( stdout, 9035) na, ityp(na), ( forcescc(ipol,na), ipol = 1, 3 )
   END DO
-  WRITE(6, '(5x,"The Hubbard contribution to forces")')
+  WRITE( stdout, '(5x,"The Hubbard contribution to forces")')
   DO na = 1, nat
-     WRITE(6, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
+     WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
   END DO
 #endif
   !
@@ -157,7 +158,7 @@ SUBROUTINE forces
      END DO
   END DO
   !
-  WRITE(6, '(/5x,"Total force = ",F12.6,5X, &
+  WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
               &  "Total SCF correction = ",F12.6)') SQRT(sum), SQRT(sumscf)
 #ifdef __PARA
   CALL check( ( 3 * nat ), force )

@@ -12,6 +12,7 @@ subroutine compute_dip(dip, dipion, z0)
   ! the electric field. (This routine is called only if tefield is true)
   ! The direction is the reciprocal lattice vector bg(.,edir)
   !
+  USE io_global,  ONLY : stdout
   use pwcom
 #ifdef __PARA
   use para
@@ -88,9 +89,9 @@ subroutine compute_dip(dip, dipion, z0)
      enddo
 
      dipol=dipol*alat*omega/nr1/nr2/nr3
-     write(6,'(5x,"electron", 3f15.5)') dipol(1), dipol(2), dipol(3)
-     write(6,'(5x,"ion     ", 3f15.5)') dipol_ion(1), dipol_ion(2), dipol_ion(3)
-     write(6,'(5x,"total   ", 3f15.5)') dipol_ion(1)-dipol(1), &
+     WRITE( stdout,'(5x,"electron", 3f15.5)') dipol(1), dipol(2), dipol(3)
+     WRITE( stdout,'(5x,"ion     ", 3f15.5)') dipol_ion(1), dipol_ion(2), dipol_ion(3)
+     WRITE( stdout,'(5x,"total   ", 3f15.5)') dipol_ion(1)-dipol(1), &
           dipol_ion(2)-dipol(2), &
           dipol_ion(3)-dipol(3)
 

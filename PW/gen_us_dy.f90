@@ -13,6 +13,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   !  derivative of the spherical harmonics projected on vector u
   !
 #include "machine.h"
+  USE io_global,  ONLY :  stdout
   use pwcom
   implicit none
   !
@@ -108,7 +109,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   enddo
 
   if (ikb.ne.nkb) then
-     write ( *, * ) ikb, nkb
+     WRITE( stdout, * ) ikb, nkb
      call errore ('gen_us_dy', 'unexpected error', 1)
   endif
 

@@ -16,6 +16,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
 #include "machine.h"
   use parameters, only : DP
+  USE io_global,  ONLY : stdout
   implicit none
   integer :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
   real(kind=DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
@@ -40,7 +41,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
   alpha=0.5
   ! appropriate for c60
-  write(6,'("     d2ion: alpha = ",f6.2)') alpha
+  WRITE( stdout,'("     d2ion: alpha = ",f6.2)') alpha
   !
   dyn (:,:) = 0.d0
   !

@@ -23,6 +23,7 @@ subroutine errore (routin, messag, ierr)
   !    For ibm sp machines, we write to the standard error, unit 0
   !    (this will appear in the error files produced by loadleveler).
   !
+  USE io_global,  ONLY : stdout
   use parameters
   implicit none
 #ifdef __PARA
@@ -35,11 +36,11 @@ subroutine errore (routin, messag, ierr)
   integer :: ierr
   ! the error flag
   if (ierr.eq.0) return
-  write (6, * ) ' '
-  write (6, '(1x,78("%"))')
-  write ( * , '(5x,"from ",a," : error #",i10)') routin, ierr
-  write ( * , '(5x,a)') messag
-  write (6, '(1x,78("%"))')
+  WRITE( stdout, * ) ' '
+  WRITE( stdout, '(1x,78("%"))')
+  WRITE( stdout , '(5x,"from ",a," : error #",i10)') routin, ierr
+  WRITE( stdout , '(5x,a)') messag
+  WRITE( stdout, '(1x,78("%"))')
 #ifdef __PARA
 #ifdef __AIX
   write (0, * ) ' '
@@ -50,7 +51,7 @@ subroutine errore (routin, messag, ierr)
 #endif
 #endif
   if (ierr.gt.0) then
-     write ( * , '("     stopping ...")')
+     WRITE( stdout , '("     stopping ...")')
 #ifdef FLUSH
      call flush (6)
 #endif
@@ -59,7 +60,7 @@ subroutine errore (routin, messag, ierr)
 #endif
      stop 2
   else
-     write (6, * ) ' '
+     WRITE( stdout, * ) ' '
      return
   endif
 end subroutine errore

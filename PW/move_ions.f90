@@ -105,6 +105,7 @@ subroutine new_force (dg, dg2)
   !
   !     where dg is the gradient of the constraint function
   !
+  USE io_global,  ONLY : stdout
   use pwcom
   integer :: na, i, ipol
 
@@ -142,9 +143,9 @@ subroutine new_force (dg, dg2)
            call trnvect (force (1, na), at, bg, 1)
         enddo
      endif
-     write (6, '(/5x,"Constrained forces")')
+     WRITE( stdout, '(/5x,"Constrained forces")')
      do na = 1, nat
-        write (6, '(3f14.8)') (force (i, na) , i = 1, 3)
+        WRITE( stdout, '(3f14.8)') (force (i, na) , i = 1, 3)
      enddo
 
   endif
@@ -166,6 +167,7 @@ subroutine check_constrain (alat, tau, atm, ityp, theta0, nat)
   !     in normal cases the constraint equation should be always satisfied
   !     the very first iteration.
   !
+  USE io_global,  ONLY : stdout
   use parameters
   implicit none
   integer :: ityp ( * ), nat, na, i, maxiter
@@ -178,7 +180,7 @@ subroutine check_constrain (alat, tau, atm, ityp, theta0, nat)
   parameter (eps = 1.d-15, maxiter = 250)
   allocate ( dg(3,nat) )
   call constrain (dummy, g, dg, dg2, theta0, nat, tau, alat)
-  write (6, '(5x,"G = ",1pe9.2," iteration # ",i3)') g, 0
+  WRITE( stdout, '(5x,"G = ",1pe9.2," iteration # ",i3)') g, 0
   do i = 1, maxiter
      !
      ! check if g=0
@@ -189,19 +191,19 @@ subroutine check_constrain (alat, tau, atm, ityp, theta0, nat)
      !
      call DAXPY (3 * nat, - g / dg2, dg, 1, tau, 1)
      call constrain (dummy, g, dg, dg2, theta0, nat, tau, alat)
-     write (6, '(5x,"G = ",1pe9.2," iteration # ",i3)') g, i
+     WRITE( stdout, '(5x,"G = ",1pe9.2," iteration # ",i3)') g, i
   enddo
   call errore ('new_dtau', 'g=0 is not satisfied g=', - 1)
 14 continue
-  !     write(6,'(5x,"G = ",1pe9.2)')g
-  write (6, '(5x,"Number of step(s): ",i3)') i - 1
+  !     WRITE( stdout,'(5x,"G = ",1pe9.2)')g
+  WRITE( stdout, '(5x,"Number of step(s): ",i3)') i - 1
   !
   !     if the atomic positions have been corrected write them on output
   !
   if (i.gt.1) then
-     write (6, '(/5x,"Corrected atomic positions:",/)')
+     WRITE( stdout, '(/5x,"Corrected atomic positions:",/)')
      do na = 1, nat
-        write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
+        WRITE( stdout,'(a3,3x,3f14.9)') atm(ityp(na)), (tau(i,na), i=1,3)
      enddo
 
   endif

@@ -22,7 +22,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   !
 #include "machine.h"
-
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : psic
   implicit none
@@ -121,7 +121,7 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoima)
 #endif
      if ( rhoneg < -1.0d-4 .or. rhoima > 1.0d-4 ) &
-          write (6,'(/"  Warning: negative or imaginary starting charge ",&
+          WRITE( stdout,'(/"  Warning: negative or imaginary starting charge ",&
           &2f12.6,i3)') rhoneg, rhoima, is
   enddo
 

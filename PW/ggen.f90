@@ -145,7 +145,7 @@ subroutine ggen
 
   deallocate( igsrt )
 
-  ! write(6, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
+  ! WRITE( stdout, fmt="(//,' --- Executing new GGEN Loop ---',//)" )
 
   allocate(esort(ngm) )
   esort(:) = 1.0d20

@@ -136,9 +136,9 @@ subroutine newd
   do na = 1, nat
      nt = ityp (na)
      do is = 1, nspin
-        !           write(6,'( "dmatrix atom ",i4, " spin",i4)') na,is
+        !           WRITE( stdout,'( "dmatrix atom ",i4, " spin",i4)') na,is
         !           do ih = 1, nh(nt)
-        !              write(6,'(8f9.4)') (deeq(ih,jh,na,is),jh=1,nh(nt))
+        !              WRITE( stdout,'(8f9.4)') (deeq(ih,jh,na,is),jh=1,nh(nt))
         !           end do
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)
@@ -147,9 +147,9 @@ subroutine newd
            enddo
         enddo
      enddo
-     !        write(6,'( "dion pseudo ",i4)') nt
+     !        WRITE( stdout,'( "dion pseudo ",i4)') nt
      !        do ih = 1, nh(nt)
-     !           write(6,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
+     !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
      !        end do
 
   enddo

@@ -13,6 +13,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
   !
   !     Finds the Fermi energy - tetrahedron method (Bloechl)
   !
+  USE io_global, ONLY : stdout
   use parameters
   implicit none
   integer :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
@@ -94,12 +95,12 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, &
   ef = efbetter
   sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef)
 
-  write (6, 9010) ef * rydtoev, sumkmid
+  WRITE( stdout, 9010) ef * rydtoev, sumkmid
   !     converged exit:
 100 continue
   !     Check if Fermi level is above any of the highest eigenvalues
   do ik = 1, nks
-     if (ef.gt.et (nbnd, ik) + 1.d-4) write (6, 9020) ef * rydtoev, ik, &
+     if (ef.gt.et (nbnd, ik) + 1.d-4) WRITE( stdout, 9020) ef * rydtoev, ik, &
           et (nbnd, ik) * rydtoev
 
   enddo

@@ -13,6 +13,7 @@ subroutine data_structure( lgamma )
   ! This version computes also the smooth and hard mesh
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use sticks, only: dfftp, dffts
   use pwcom, only: dp, bg, xk, nks, tpiba, ecutwfc, ngm, ngms, ngm_l, ngm_g, &
     ngms_l, ngms_g, nrxx, nrxxs, gcutm, gcutms, &
@@ -123,7 +124,7 @@ subroutine data_structure( lgamma )
 
   !
 #ifdef DEBUG
-  write (6, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
+  WRITE( stdout, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
        tpiba2 * gkcut
 #endif
   !
@@ -232,24 +233,24 @@ subroutine data_structure( lgamma )
   npp ( 1 : nproc_pool ) = dfftp%npp ( 1 : nproc_pool )
   npps( 1 : nproc_pool ) = dffts%npp ( 1 : nproc_pool )
 
-  write (6, '(/5x,"Planes per process (thick) : nr3 =", &
+  WRITE( stdout, '(/5x,"Planes per process (thick) : nr3 =", &
        &        i3," npp = ",i3," ncplane =",i5)') nr3, npp (me_pool + 1) , ncplane
 
-  if ( nr3s /= nr3 ) write (6, '(/5x,"Planes per process (smooth): nr3s=",&
+  if ( nr3s /= nr3 ) WRITE( stdout, '(/5x,"Planes per process (smooth): nr3s=",&
        &i3," npps= ",i3," ncplanes=",i5)') nr3s, npps (me_pool + 1) , ncplanes
 
-  write(6,*)
-  write(6,'(                                                        &
+  WRITE( stdout,*)
+  WRITE( stdout,'(                                                        &
     & '' Proc/  planes cols    G   planes cols    G    columns  G''/    &
     & '' Pool       (dense grid)      (smooth grid)   (wavefct grid)'')')
   do i=1,nproc_pool
-    write(6,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
+    WRITE( stdout,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
       &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do
-  write(6,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), &
+  WRITE( stdout,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), &
     &   SUM(ngp(1:nproc_pool)), SUM(npps(1:nproc_pool)), SUM(ncps(1:nproc_pool)), &
     &   SUM(ngps(1:nproc_pool)), SUM(nkcp(1:nproc_pool)), SUM(ngkp(1:nproc_pool))
-  write(6,*)
+  WRITE( stdout,*)
 
 
   DEALLOCATE( stw, st, sts, in1, in2, index, ngc, ngcs, ngkc )

@@ -117,11 +117,11 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   conv = (dr2 < tr2)
   dehar = fn_dehar(rhocout)
 #ifdef DEBUG
-!  if (lda_plus_u) write (6,*) ' ns_dr2 =', ns_dot_product(nsout,nsout)
+!  if (lda_plus_u) WRITE( stdout,*) ' ns_dr2 =', ns_dot_product(nsout,nsout)
   if (conv) then
-     write (6,100) dr2, rho_dot_product(rhocout,rhocout) + &
+     WRITE( stdout,100) dr2, rho_dot_product(rhocout,rhocout) + &
                         ns_dot_product(nsout,nsout)
-     write (6,'(" dehar =",f15.8)') dehar
+     WRITE( stdout,'(" dehar =",f15.8)') dehar
   end if
 #endif
 
@@ -306,9 +306,9 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   end do
   !
 #ifdef DEBUG
-  write (6,100) dr2, rho_dot_product(rhocout,rhocout) + &
+  WRITE( stdout,100) dr2, rho_dot_product(rhocout,rhocout) + &
                      ns_dot_product(nsout,nsout)
-  write (6,'(" dehar =",f15.8)') dehar
+  WRITE( stdout,'(" dehar =",f15.8)') dehar
 #endif
 100  format (' dr2 =',1pe15.1, ' internal_best_dr2= ', 1pe15.1)
 
@@ -543,7 +543,7 @@ subroutine approx_screening (drho)
   agg0 = (12.d0/pi)**(2.d0/3.d0)/tpiba2/rs
 
 #ifdef DEBUG
-  write (6,'(a,f12.6,a,f12.6)') ' avg rs  =', rs, ' avg rho =', nelec/omega
+  WRITE( stdout,'(a,f12.6,a,f12.6)') ' avg rs  =', rs, ' avg rho =', nelec/omega
 #endif
 
   if (nspin == 1) then
@@ -613,7 +613,7 @@ end subroutine approx_screening
   is = 1
   target = 0.d0
 
-!  write (6,*) ' eccoci qua '
+!  WRITE( stdout,*) ' eccoci qua '
 
   if (gg(1) < 1.d-8) drho(1,is) = (0.d0,0.d0)
 
@@ -679,7 +679,7 @@ end subroutine approx_screening
   rs = (3.d0*omega/fpi/nelec)**(1.d0/3.d0)
   agg0 = (12.d0/pi)**(2.d0/3.d0)/tpiba2/avg_rsm1
 #ifdef DEBUG
-  write (6,'(a,5f12.6)') ' min/avgm1/max rs  =', min_rs,avg_rsm1,max_rs,rs
+  WRITE( stdout,'(a,5f12.6)') ' min/avgm1/max rs  =', min_rs,avg_rsm1,max_rs,rs
 #endif
 
   !
@@ -778,10 +778,10 @@ end subroutine approx_screening
 
   dr2_best= rho_dot_product(wbest,wbest)
   if (target == 0.d0) target = 1.d-6 * dr2_best
-!  write (6,*) m, dr2_best, cbest
+!  WRITE( stdout,*) m, dr2_best, cbest
 
   if (dr2_best < target) then
-!     write(6,*) ' last', dr2_best/target * 1.d-6
+!     WRITE( stdout,*) ' last', dr2_best/target * 1.d-6
      psic(:) = (0.d0,0.d0)
      do ig=1,ngm0
         psic(nl(ig)) = vbest(ig)
@@ -811,7 +811,7 @@ end subroutine approx_screening
      deallocate (alpha, v, w, dv, vbest, wbest)
      return
   else if (m >= mmx) then
-!     write (6,*) m, dr2_best, cbest
+!     WRITE( stdout,*) m, dr2_best, cbest
      m=1
      do ig=1,ngm0
         v(ig,m)=vbest(ig)

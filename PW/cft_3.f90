@@ -388,15 +388,15 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   if (first(igrid)) then
      isw=0
      first(igrid)=.false.
-     !         write(6,*)'________________________________________________________'
-     !         write(6,*) 'igrid = ',igrid
-     !         write(6,*) '  nrxs => ',nrx1,nrx2,nrx3
-     !         write(6,*) '  nrzs => ',nrz1(igrid),nrz2(igrid),nrz3(igrid)
-     !         write(6,*) '  nrs => ',nr1,nr2,nr3
-     !      write(6,*)'size(auxp)',size(auxp,1),size(auxp,2)
-     !      write(6,*)'size(cw1)',size(cw1)
-     !      write(6,*)'size(iw)',size(iw)
-     !         write(6,*)'________________________________________________________'
+     !         WRITE( stdout,*)'________________________________________________________'
+     !         WRITE( stdout,*) 'igrid = ',igrid
+     !         WRITE( stdout,*) '  nrxs => ',nrx1,nrx2,nrx3
+     !         WRITE( stdout,*) '  nrzs => ',nrz1(igrid),nrz2(igrid),nrz3(igrid)
+     !         WRITE( stdout,*) '  nrs => ',nr1,nr2,nr3
+     !      WRITE( stdout,*)'size(auxp)',size(auxp,1),size(auxp,2)
+     !      WRITE( stdout,*)'size(cw1)',size(cw1)
+     !      WRITE( stdout,*)'size(iw)',size(iw)
+     !         WRITE( stdout,*)'________________________________________________________'
 #ifdef ASL
 #if defined MICRO
      call hfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&

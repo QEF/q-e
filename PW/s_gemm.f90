@@ -135,7 +135,7 @@ subroutine r_transpose (A, LDA, B, LDB, N, M, ITYPE, INFO)
      S3 = IRTC ()
 
   else
-     write (6,  * ) ' *** r_traspose : PARAMETER ITYPE ', 'OUT OF RANGE'
+     WRITE( stdout,  * ) ' *** r_traspose : PARAMETER ITYPE ', 'OUT OF RANGE'
 
      stop
 

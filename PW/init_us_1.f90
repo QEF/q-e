@@ -234,7 +234,7 @@ subroutine init_us_1
               call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
               qq (ih, jh, nt) = omega * DREAL (qgm (1) )
               qq (jh, ih, nt) = qq (ih, jh, nt)
-              !                  write(6,*) ih,jh,nt,qq(ih,jh,nt)
+              !                  WRITE( stdout,*) ih,jh,nt,qq(ih,jh,nt)
            enddo
         enddo
      endif

@@ -148,6 +148,7 @@ SUBROUTINE c_phase
 #include "machine.h"
 
 !  --- Make use of the module with common information ---
+   USE io_global,        ONLY : stdout
    USE pwcom
    USE wavefunctions,    ONLY : evc
 
@@ -263,9 +264,9 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 
 !  --- Write header ---
-   WRITE(6,"(/,/,/,15X,50('='))")
-   WRITE(6,"(28X,'POLARIZATION CALCULATION')")
-   WRITE(6,"(15X,50('-'),/)")
+   WRITE( stdout,"(/,/,/,15X,50('='))")
+   WRITE( stdout,"(28X,'POLARIZATION CALCULATION')")
+   WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---
    IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
@@ -479,23 +480,23 @@ SUBROUTINE c_phase
                               IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
                                   (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
                                   (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-                                 WRITE(6,*) ' error: translated G=', &
+                                 WRITE( stdout,*) ' error: translated G=', &
                                       gtr(1),gtr(2),gtr(3), &
                                       ' with crystal coordinates',n1,n2,n3, &
                                       ' corresponds to ng=',ng,' but G(ng)=', &
                                       g(1,ng),g(2,ng),g(3,ng)
-                                 WRITE(6,*) ' probably because G_par is NOT', &
+                                 WRITE( stdout,*) ' probably because G_par is NOT', &
                                             ' a reciprocal lattice vector '
-                                 WRITE(6,*) ' Possible choices as smallest ', &
+                                 WRITE( stdout,*) ' Possible choices as smallest ', &
                                             ' G_par:'
                                  DO i=1,50
-                                    WRITE(6,*) ' i=',i,'   G=', &
+                                    WRITE( stdout,*) ' i=',i,'   G=', &
                                          g(1,i),g(2,i),g(3,i)
                                  ENDDO
                                  STOP
                               ENDIF
                            ELSE 
-                              WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
+                              WRITE( stdout,*) ' |gtr| > gcutm  for gtr=', &
                                    gtr(1),gtr(2),gtr(3) 
                               STOP
                            END IF
@@ -686,59 +687,59 @@ SUBROUTINE c_phase
 !  -------------------------------------------------------------------------   !
 
 !  --- Information about the k-points string used ---
-   WRITE(6,"(/,21X,'K-POINTS STRINGS USED IN CALCULATIONS')")
-   WRITE(6,"(21X,37('~'),/)")
-   WRITE(6,"(7X,'G-vector along string (2 pi/a):',3F9.5)") &
+   WRITE( stdout,"(/,21X,'K-POINTS STRINGS USED IN CALCULATIONS')")
+   WRITE( stdout,"(21X,37('~'),/)")
+   WRITE( stdout,"(7X,'G-vector along string (2 pi/a):',3F9.5)") &
            gpar(1),gpar(2),gpar(3)
-   WRITE(6,"(7X,'Modulus of the vector (1/bohr):',F9.5)") &
+   WRITE( stdout,"(7X,'Modulus of the vector (1/bohr):',F9.5)") &
            gvec
-   WRITE(6,"(7X,'Number of k-points per string:',I4)") nppstr
-   WRITE(6,"(7X,'Number of different strings  :',I4)") nkort
+   WRITE( stdout,"(7X,'Number of k-points per string:',I4)") nppstr
+   WRITE( stdout,"(7X,'Number of different strings  :',I4)") nkort
 
 !  --- Information about ionic polarization phases ---
-   WRITE(6,"(2/,31X,'IONIC POLARIZATION')")
-   WRITE(6,"(31X,18('~'),/)")
-   WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
+   WRITE( stdout,"(2/,31X,'IONIC POLARIZATION')")
+   WRITE( stdout,"(31X,18('~'),/)")
+   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
            & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
            & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
            & /)")
-   WRITE(6,"(2X,76('='))")
-   WRITE(6,"(4X,'Ion',4X,'Species',4X,'Charge',14X, &
+   WRITE( stdout,"(2X,76('='))")
+   WRITE( stdout,"(4X,'Ion',4X,'Species',4X,'Charge',14X, &
            & 'Position',16X,'Phase')")
-   WRITE(6,"(2X,76('-'))")
+   WRITE( stdout,"(2X,76('-'))")
    DO na=1,nat
-      WRITE(6,"(3X,I3,8X,A2,F12.3,5X,3F8.4,F12.5,' (mod ',I1,')')") &
+      WRITE( stdout,"(3X,I3,8X,A2,F12.3,5X,3F8.4,F12.5,' (mod ',I1,')')") &
            & na,atm(ityp(na)),zv(ityp(na)), &
            & tau(1,na),tau(2,na),tau(3,na),pdl_ion(na),mod_ion(na)
    END DO
-   WRITE(6,"(2X,76('-'))")
-   WRITE(6,"(47X,'IONIC PHASE: ',F9.5,' (mod ',I1,')')") pdl_ion_tot,mod_ion_tot
-   WRITE(6,"(2X,76('='))")
+   WRITE( stdout,"(2X,76('-'))")
+   WRITE( stdout,"(47X,'IONIC PHASE: ',F9.5,' (mod ',I1,')')") pdl_ion_tot,mod_ion_tot
+   WRITE( stdout,"(2X,76('='))")
 
 !  --- Information about electronic polarization phases ---
-   WRITE(6,"(2/,28X,'ELECTRONIC POLARIZATION')")
-   WRITE(6,"(28X,23('~'),/)")
-   WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
+   WRITE( stdout,"(2/,28X,'ELECTRONIC POLARIZATION')")
+   WRITE( stdout,"(28X,23('~'),/)")
+   WRITE( stdout,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
            & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
            & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
            & /)")
-   WRITE(6,"(2X,76('='))")
-   WRITE(6,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
+   WRITE( stdout,"(2X,76('='))")
+   WRITE( stdout,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
             &  'First k-point in string',9X,'Phase')")
-   WRITE(6,"(2X,76('-'))")
+   WRITE( stdout,"(2X,76('-'))")
    DO istring=1,nstring/nspin
       ind1=1+(istring-1)*nppstr
-      WRITE(6,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
+      WRITE( stdout,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
           &  istring,wstring(istring), &
           &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
    END DO
-   WRITE(6,"(2X,76('-'))")
+   WRITE( stdout,"(2X,76('-'))")
 !  --- Treat unpolarized/polarized spin cases ---
    IF (nspin == 1) THEN
 !     --- In unpolarized spin, just copy again the same data ---
       DO istring=1,nstring
          ind1=1+(istring-1)*nppstr
-         WRITE(6,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
+         WRITE( stdout,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
               istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
               pdl_elec(istring),mod_elec(istring)
       END DO
@@ -746,34 +747,34 @@ SUBROUTINE c_phase
 !     --- If there is spin polarization, write information for new strings ---
       DO istring=nstring/2+1,nstring
          ind1=1+(istring-1)*nppstr
-         WRITE(6,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
+         WRITE( stdout,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
            &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
            &    pdl_elec(istring),mod_elec(istring)
       END DO
    END IF
-   WRITE(6,"(2X,76('-'))")
-   WRITE(6,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
+   WRITE( stdout,"(2X,76('-'))")
+   WRITE( stdout,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
         pdl_elec_up,mod_elec_up
-   WRITE(6,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
+   WRITE( stdout,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
         pdl_elec_dw,mod_elec_dw
-   WRITE(6,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
+   WRITE( stdout,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
         pdl_elec_tot,mod_elec_tot
-   WRITE(6,"(2X,76('='))")
+   WRITE( stdout,"(2X,76('='))")
 
 !  --- Information about total phase ---
-   WRITE(6,"(2/,31X,'SUMMARY OF PHASES')")
-   WRITE(6,"(31X,17('~'),/)")
-   WRITE(6,"(26X,'Ionic Phase:',F9.5,' (mod ',I1,')')") &
+   WRITE( stdout,"(2/,31X,'SUMMARY OF PHASES')")
+   WRITE( stdout,"(31X,17('~'),/)")
+   WRITE( stdout,"(26X,'Ionic Phase:',F9.5,' (mod ',I1,')')") &
         pdl_ion_tot,mod_ion_tot
-   WRITE(6,"(21X,'Electronic Phase:',F9.5,' (mod ',I1,')')") &
+   WRITE( stdout,"(21X,'Electronic Phase:',F9.5,' (mod ',I1,')')") &
         pdl_elec_tot,mod_elec_tot
-   WRITE(6,"(26X,'TOTAL PHASE:',F9.5,' (mod ',I1,')')") &
+   WRITE( stdout,"(26X,'TOTAL PHASE:',F9.5,' (mod ',I1,')')") &
         pdl_tot,mod_tot
 
 !  --- Information about the value of polarization ---
-   WRITE(6,"(2/,29X,'VALUES OF POLARIZATION')")
-   WRITE(6,"(29X,22('~'),/)")
-   WRITE(6,"( &
+   WRITE( stdout,"(2/,29X,'VALUES OF POLARIZATION')")
+   WRITE( stdout,"(29X,22('~'),/)")
+   WRITE( stdout,"( &
       &   8X,'The calculation of phases done along the direction of vector ',I1, &
       &   /,8X,'of the reciprocal lattice gives the following contribution to', &
       &   /,8X,'the polarization vector (in different units, and being Omega', &
@@ -786,22 +787,22 @@ SUBROUTINE c_phase
    rmod=alat*rmod
 !  --- Give polarization in units of (e/Omega).bohr ---
    fac=rmod
-   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
+   WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
         fac*pdl_tot,fac*float(mod_tot)
 !  --- Give polarization in units of e.bohr ---
    fac=rmod/omega
-   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
+   WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
         fac*pdl_tot,fac*float(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
    fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
-   WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
+   WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
         fac*pdl_tot,fac*float(mod_tot)
 !  --- Write polarization direction ---
-   WRITE(6,"(/,8X,'The polarization direction is:  ( ', &
+   WRITE( stdout,"(/,8X,'The polarization direction is:  ( ', &
        &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
 
 !  --- End of information relative to polarization calculation ---
-   WRITE(6,"(/,/,15X,50('=')/,/)")
+   WRITE( stdout,"(/,/,15X,50('=')/,/)")
 
 
 !  -------------------------------------------------------------------------   !

@@ -14,6 +14,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    ! is needed in computing the internal stress tensor.
    !
 #include "machine.h"
+   USE io_global,  ONLY : stdout
    use pwcom
    implicit none
    !
@@ -127,7 +128,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    enddo
 
    if (iatw.ne.natw) then
-      write(6,*) 'iatw =',iatw,'natw =',natw
+      WRITE( stdout,*) 'iatw =',iatw,'natw =',natw
       call errore('gen_at_dj','unexpected error',1)
    end if
 

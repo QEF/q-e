@@ -9,9 +9,10 @@
 subroutine read_config_from_file
   !-----------------------------------------------------------------------
 
+  USE io_global,      ONLY : stdout
   use pwcom
-  use io_files, only: prefix
-  use restart_module, only: readfile_config
+  use io_files,       only: prefix
+  use restart_module, only : readfile_config
 
   implicit none
 
@@ -23,15 +24,15 @@ subroutine read_config_from_file
 
   if (trim(startingconfig).ne.'file') return
 
-  write (6, '(/5x,"Starting configuration read from file ", a14 )') &
+  WRITE( stdout, '(/5x,"Starting configuration read from file ", a14 )') &
         trim(prefix)//".save"
   !
   !     check if restart file is present, if yes read config parameters
   !
   call readfile_config( iunres, ibrav_, nat_, alat_, at_, tau_, ierr )
   if ( ierr == 1 ) then
-     write (6, '(/5x,"Failed to open file", a14 )') trim(prefix)//".save"
-     write (6, '(/5x,"Use input configuration")')
+     WRITE( stdout, '(/5x,"Failed to open file", a14 )') trim(prefix)//".save"
+     WRITE( stdout, '(/5x,"Use input configuration")')
      return
   else if( ierr > 1 ) then
      call errore ('read_config_from_file', 'problems in reading file', 1)
@@ -40,7 +41,7 @@ subroutine read_config_from_file
   !  check if atomic positions from restart file if present
   !
   if (nat_.ne.nat.or.ibrav_.ne.ibrav) then
-     write(*,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
+     WRITE( stdout,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
      call errore('read_config_from_file','wrong nat or ibrav',1)
   endif
   alat = alat_
@@ -69,8 +70,9 @@ end subroutine read_config_from_file
 subroutine read_config_from_file_old
   !-----------------------------------------------------------------------
 
+  USE io_global,  ONLY : stdout
   use pwcom
-  use io_files, only: prefix
+  use io_files,   only : prefix
 
   implicit none
 
@@ -80,7 +82,7 @@ subroutine read_config_from_file_old
 
   if (trim(startingconfig).ne.'file') return
 
-  write (6, '(/5x,"Starting configuration read from file ", a14 )') &
+  WRITE( stdout, '(/5x,"Starting configuration read from file ", a14 )') &
         trim(prefix)//".config"
   !
   !     check if restart file is present
@@ -89,8 +91,8 @@ subroutine read_config_from_file_old
   call seqopn (iunit, trim(prefix)//".config", 'unformatted', exst)
   if (.not.exst) then
      close (unit = iunit, status = 'delete')
-     write (6, '(/5x,"Failed to open file", a14 )') trim(prefix)//".config"
-     write (6, '(/5x,"Use input configuration")')
+     WRITE( stdout, '(/5x,"Failed to open file", a14 )') trim(prefix)//".config"
+     WRITE( stdout, '(/5x,"Use input configuration")')
      return
   endif
   !
@@ -99,7 +101,7 @@ subroutine read_config_from_file_old
   read (iunit, err = 10, end = 10) ibrav_, nat_
 
   if (nat_.ne.nat.or.ibrav_.ne.ibrav) then
-     write(*,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
+     WRITE( stdout,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
      call errore('read_config_from_file','wrong nat or ibrav',1)
   endif
 

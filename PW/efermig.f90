@@ -11,6 +11,7 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
   !
   !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
   !
+  USE io_global, ONLY : stdout
   use parameters
   implicit none
   integer :: nks, nbnd, i, kpoint, Ngauss
@@ -53,7 +54,7 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef)
         Eup = Ef
      endif
   enddo
-  write (6, '(5x,"Warning: too many iterations in bisection"/ &
+  WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
        Ef * 13.6058, sumkmid
   !

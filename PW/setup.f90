@@ -40,6 +40,7 @@ SUBROUTINE setup
   !
   !
   USE parameters,  ONLY :  DP, npsx, nchix, npk
+  USE io_global,   ONLY :  stdout
   USE constants,   ONLY :  pi
   USE brilz,       ONLY :  at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE basis,       ONLY :  nat, tau, ntyp, ityp, startingwfc, startingpot, &
@@ -420,10 +421,10 @@ SUBROUTINE setup
         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0) THEN
            Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
            Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
-           WRITE( 6, * ) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
+           WRITE( stdout, * ) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
         END IF
      END DO
-     WRITE( 6, * ) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
+     WRITE( stdout, * ) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
      IF ( Hubbard_lmax == -1 ) &
         CALL errore( 'setup', &
                    & 'lda_plus_u calculation but Hubbard_l not set', 1 )

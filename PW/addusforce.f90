@@ -100,13 +100,13 @@ subroutine addusforce (forcenl)
 #ifdef __PARA
   call reduce (3 * nhm * (nhm + 1) * nat * nspin / 2, ddeeq)
 #endif
-  !            write(6,'( "dmatrix atom ",i4)') na
+  !            WRITE( stdout,'( "dmatrix atom ",i4)') na
   !            do ih = 1, nh(nt)
-  !               write(6,'(8f9.4)') (ddeeq(ipol,ih,jh,na),jh=1,nh(nt))
+  !               WRITE( stdout,'(8f9.4)') (ddeeq(ipol,ih,jh,na),jh=1,nh(nt))
   !            end do
-  !            write(6,'( "dion pseudo ",i4)') nt
+  !            WRITE( stdout,'( "dion pseudo ",i4)') nt
   !            do ih = 1, nh(nt)
-  !               write(6,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
+  !               WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
   !            end do
   do is = 1, nspin
      do na = 1, nat

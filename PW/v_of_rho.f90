@@ -18,6 +18,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   !     Hartree potential is computed in reciprocal space.
   !
   !
+  USE io_global,  ONLY : stdout
   use parameters, only: DP
   implicit none
   !
@@ -75,6 +76,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   !     Exchange-Correlation potential Vxc(r) from n(r)
   !
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   implicit none
   !
@@ -175,13 +177,13 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
 #ifdef __PARA
      call ireduce (3, neg)
 #endif
-     if (neg(3).gt.0) write (6,'(/,4x," npt with |zeta| > 1: ",i8, &
+     if (neg(3).gt.0) WRITE( stdout,'(/,4x," npt with |zeta| > 1: ",i8, &
           &  ", npt tot ",i8, ",",f10.2, " %" )') neg(3), &
           &  nr1*nr2*nr3, float(neg(3)*100) / real(nr1*nr2*nr3)
-     if (neg(1).gt.0) write (6,'(/,4x," npt with rhoup < 0: ",i8, &
+     if (neg(1).gt.0) WRITE( stdout,'(/,4x," npt with rhoup < 0: ",i8, &
           &  ", npt tot ",i8, ",",f10.2, " %" )') neg(1), &
           &  nr1*nr2*nr3, float(neg(1)*100) / real(nr1*nr2*nr3)
-     if (neg(2).gt.0) write (6,'(/,4x," npt with rhodw < 0: ",i8, &
+     if (neg(2).gt.0) WRITE( stdout,'(/,4x," npt with rhodw < 0: ",i8, &
           &  ", npt tot ",i8, ",",f10.2, " %" )') neg(2), &
           &  nr1*nr2*nr3, float(neg(2)*100) / real(nr1 * nr2 * nr3)
   endif

@@ -51,9 +51,9 @@ subroutine stres_hub ( sigmah )
       do is=1,nspin
          nt = ityp(na)
          if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
-            write (*,'(a,2i3)') 'NS(NA,IS) ', na,is
+            WRITE( stdout,'(a,2i3)') 'NS(NA,IS) ', na,is
             do m1=1,ldim
-               write (*,'(7f10.4)') (ns(m1,m2,is,na),m2=1,ldim)
+               WRITE( stdout,'(7f10.4)') (ns(m1,m2,is,na),m2=1,ldim)
             end do
          end if
       end do
@@ -68,8 +68,8 @@ subroutine stres_hub ( sigmah )
             if (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) then
                do is = 1,nspin
 #ifdef DEBUG
-                  write (*,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
-                  write (*,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
+                  WRITE( stdout,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
+                  WRITE( stdout,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
 #endif
                   do m2 = 1, 2 * Hubbard_l(nt) + 1
                      sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &

@@ -11,6 +11,7 @@
 subroutine check (size, ps)
   !-----------------------------------------------------------------------
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
 #ifdef __PARA
   use para
@@ -45,8 +46,8 @@ subroutine check (size, ps)
   if (chisq.ne.0.d0) then
      !        call errore('check','WARNING, using first proc. data',-1)
 
-     write (6, * ) '*** WARNING, using first proc. data ***'
-     write (6, '(5x,"chisq = ",1pe9.2)') chisq
+     WRITE( stdout, * ) '*** WARNING, using first proc. data ***'
+     WRITE( stdout, '(5x,"chisq = ",1pe9.2)') chisq
      call mpi_bcast (ps, size, MPI_REAL8, 0, MPI_COMM_WORLD, info)
      call errore ('check', 'at the first broadcast', info)
 

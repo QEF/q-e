@@ -17,6 +17,7 @@ subroutine c_bands (iter, ik_, dr2)
   !   iterative diagonalization.
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions,  ONLY: evc
   USE rbecmod, ONLY: becp, becp_
@@ -65,7 +66,7 @@ subroutine c_bands (iter, ik_, dr2)
   allocate (becp( nkb,nbnd), becp_(nkb,nbnd))
 
   if (isolve == 0) then
-     write (6, '("     Davidson diagonalization with overlap")')
+     WRITE( stdout, '("     Davidson diagonalization with overlap")')
   else
      call errore ('c_bands', 'CG and DIIS diagonalization not implemented', 1)
   endif
@@ -146,7 +147,7 @@ subroutine c_bands (iter, ik_, dr2)
      if (ntry.le.5.and. ( &
           .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 15
 
-     if (notconv.ne.0) write (6, '(" warning : ",i3," eigenvectors not",&
+     if (notconv.ne.0) WRITE( stdout, '(" warning : ",i3," eigenvectors not",&
           &" converged after ",i3," attemps")') notconv, ntry
      if (notconv.gt.max (5, nbnd / 4) ) stop
 20   continue
@@ -161,7 +162,7 @@ subroutine c_bands (iter, ik_, dr2)
   call poolreduce (1, avg_iter)
 #endif
   avg_iter = avg_iter / nkstot
-  write (6, 9000) ethr, avg_iter
+  WRITE( stdout, 9000) ethr, avg_iter
   !
   ! deallocate work space
   !

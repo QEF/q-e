@@ -21,12 +21,13 @@ subroutine c_bands (iter, ik_, dr2)
   !   c) DIIS algorithm
   !
 #include "machine.h"
+  USE io_global,      ONLY : stdout 
   use pwcom, ONLY: g, g2kin, tpiba2, ecfixed, qcutz, lda_plus_u, &
  iunwfc, swfcatom, iunat, nwordatwfc, q2sigma, diis_ndim, wg, nbndx, nkstot, &
  okvan, et, istep, ethr, lscf, max_cg_iter, vltot, nrxx, nr1, nr3, nr2, nbnd, &
  nks, npwx, diis_ethr_cg, isolve, iunigk, vkb, xk, reduce_io, nwordwfc, &
  current_spin, lsda, isk, igk, npw
-  USE wavefunctions,  ONLY: evc
+  USE wavefunctions,  ONLY : evc
   use g_psi_mod
   implicit none
   !
@@ -74,13 +75,13 @@ subroutine c_bands (iter, ik_, dr2)
   allocate (s_diag( npwx))    
 
   if (isolve == 0) then
-     write (6, '("     Davidson diagonalization (with overlap)")')
+     WRITE( stdout, '("     Davidson diagonalization (with overlap)")')
   elseif (isolve == 1) then
-     write (6, '("     Conjugate-gradient style diagonalization")')
+     WRITE( stdout, '("     Conjugate-gradient style diagonalization")')
   elseif (isolve == 2) then
-     write (6, '("     DIIS style diagonalization")')
+     WRITE( stdout, '("     DIIS style diagonalization")')
      if (ethr > diis_ethr_cg) &
-          write (6,5) diis_ethr_cg
+          WRITE( stdout,5) diis_ethr_cg
 5    format(6x,"use conjugate-gradient method until ethr <",1pe9.2)
   else
      call errore ('c_bands', 'isolve not implemented', 1)
@@ -181,8 +182,8 @@ subroutine c_bands (iter, ik_, dr2)
            do ibnd = 1, nbnd
               if ( wg(ibnd, ik) < 1.0d-4 ) btype (ibnd) = 1
            end do
-           !             write(*,'(5f12.6)')(et(ibnd,ik),ibnd=1,nbnd)
-           !             write(*,'(20i3)')(btype(ibnd),ibnd=1,nbnd)
+           !             WRITE( stdout,'(5f12.6)')(et(ibnd,ik),ibnd=1,nbnd)
+           !             WRITE( stdout,'(20i3)')(btype(ibnd),ibnd=1,nbnd)
            !
         end if
 12      continue
@@ -225,7 +226,7 @@ subroutine c_bands (iter, ik_, dr2)
         if (ntry.le.5.and. ( &
              .not.lscf.and.notconv.gt.0.or.lscf.and.notconv.gt.5) ) goto 15
      endif
-     if (notconv.ne.0) write (6, '(" warning : ",i3," eigenvectors not",&
+     if (notconv.ne.0) WRITE( stdout, '(" warning : ",i3," eigenvectors not",&
           &" converged after ",i3," attemps")') notconv, ntry
      if (notconv.gt.max (5, nbnd / 4) ) stop
 20   continue
@@ -241,7 +242,7 @@ subroutine c_bands (iter, ik_, dr2)
   call poolreduce (1, avg_iter)
 #endif
   avg_iter = avg_iter / nkstot
-  write (6, 9000) ethr, avg_iter
+  WRITE( stdout, 9000) ethr, avg_iter
   !
   ! deallocate work space
   !

@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine restart_in_electrons (iter, ik_, dr2)
   !-----------------------------------------------------------------------
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : evc
   implicit none
@@ -45,15 +46,15 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   close (unit = iunres, status = 'keep')
   if (ik_.eq.0) then
      iter = iter_
-     write (6, '(5x,"Calculation restarted from first kpoint ", &
+     WRITE( stdout, '(5x,"Calculation restarted from first kpoint ", &
           &" of iteration #",i3)') iter + 1
   elseif (ik_.ne.nks) then
      iter = iter_ - 1
-     write (6, '(5x,"Calculation restarted from kpoint #",i4, &
+     WRITE( stdout, '(5x,"Calculation restarted from kpoint #",i4, &
           &" of iteration #",i3)') ik_ + 1, iter + 1
   else
      iter = iter_ - 1
-     write (6, '(5x,"Calculation restarted from charge/pot", &
+     WRITE( stdout, '(5x,"Calculation restarted from charge/pot", &
           &" of iteration #",i3)') iter + 1
      !
      ! with only one k-point wavefunctions are not read in sum_band
@@ -61,7 +62,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
      if (nks.eq.1) call davcio (evc, nwordwfc, iunwfc, 1, - 1)
   endif
 
-  write (6, '(5x,"tr2 = ",1pe8.2," ethr = ",1pe8.2)') tr2, ethr
+  WRITE( stdout, '(5x,"tr2 = ",1pe8.2," ethr = ",1pe8.2)') tr2, ethr
   !
   !  restart procedure completed
   !

@@ -16,6 +16,7 @@ subroutine new_ns
   ! f_{kv} <\fi^{at}_{I,m1}|\psi_{k,v,s}><\psi_{k,v,s}|\fi^{at}_{I,m2}>
   !
 #include "machine.h"
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : evc
   use io_files
@@ -174,9 +175,9 @@ subroutine new_ns
               do m2 = m1, 2 * Hubbard_l(nt) + 1  
                  psum = abs ( nsnew(m1,m2,is,na) - nsnew(m1,m2,is,na) )  
                  if (psum.gt.1.d-10) then  
-                    write (6, * ) na, is, m1, m2  
-                    write (6, * ) nsnew (m1, m2, is, na)  
-                    write (6, * ) nsnew (m2, m1, is, na)  
+                    WRITE( stdout, * ) na, is, m1, m2  
+                    WRITE( stdout, * ) nsnew (m1, m2, is, na)  
+                    WRITE( stdout, * ) nsnew (m2, m1, is, na)  
                     call errore ('new_ns', 'non hermitean matrix', 1)  
                  else  
                     nsnew(m1,m2,is,na) = 0.5d0 * (nsnew(m1,m2,is,na) + &

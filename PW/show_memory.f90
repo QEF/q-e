@@ -11,9 +11,9 @@
 subroutine show_memory ()
 #include "machine.h"
   implicit none
-  !      write(6,'(5x,"Current number of allocated pointers:",i8)') nptr
+  !      WRITE( stdout,'(5x,"Current number of allocated pointers:",i8)') nptr
 
-  !write (6, '(5x,"Dynamical memory: ",f6.2,"Mb current, ", &
+  !WRITE( stdout, '(5x,"Dynamical memory: ",f6.2,"Mb current, ", &
   !     &            f6.2,"Mb maximum")') real (totsize)  / 1000000, &
   !     &     real (maxsize)  / 1000000
   return

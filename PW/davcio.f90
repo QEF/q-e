@@ -13,6 +13,7 @@ subroutine davcio (vect, nword, unit, nrec, io)
   !   direct-access vector input/output
   !   read/write nword words starting from the address specified by vect
   !
+  USE io_global, ONLY : stdout
   use parameters
 implicit none
   integer :: nword, unit, nrec, io
@@ -42,7 +43,7 @@ implicit none
      call errore ('davcio', 'nothing to do?', - 1)
   endif
   if (ios.ne.0) then
-     write (6, * ) ' IOS = ', ios
+     WRITE( stdout, * ) ' IOS = ', ios
      call errore ('davcio', 'i/o error in davcio', unit)
   endif
   call stop_clock ('davcio')

@@ -91,7 +91,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
 
 
   scale = 1.d0
-  !      write(6,*)'in cft_2  ',n1,n2,nx1,nx2
+  !      WRITE( stdout,*)'in cft_2  ',n1,n2,nx1,nx2
 
 
   if (isign.gt.0) then

@@ -13,6 +13,7 @@ subroutine openfil
   !    This routine opens all files needed to the self consistent run,
   !    sets various file names, units, record lengths
   !
+  USE io_global,  ONLY : stdout
   use pwcom
   use io_files, only: prefix
   use restart_module, only: readfile_new
@@ -55,7 +56,7 @@ subroutine openfil
 
 #else
 
-       write (6, '(5x,"Cannot read wfc file: not found")')
+       WRITE( stdout, '(5x,"Cannot read wfc file: not found")')
        startingwfc='atomic'
 
 #endif

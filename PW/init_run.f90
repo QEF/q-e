@@ -9,6 +9,7 @@
 SUBROUTINE init_run
   !-----------------------------------------------------------------------
   !
+  USE io_global,   ONLY : stdout
   USE parameters,  ONLY : ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
   USE wvfct,       ONLY : gamma_only
   !
@@ -18,13 +19,13 @@ SUBROUTINE init_run
   CALL start_clock( 'init_run' )
   !
   IF ( gamma_only ) THEN
-     WRITE(6, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials, ", &
+     WRITE( stdout, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials, ", &
                  &  "Gamma point")')
   ELSE
-     WRITE(6, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+     WRITE( stdout, '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
   END IF
   !
-  WRITE(6, 9010) ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
+  WRITE( stdout, 9010) ntypx, npk, lmaxx, nchix, ndm, nbrx, nqfm
   !
   CALL iosys
   CALL setup
@@ -51,7 +52,7 @@ SUBROUTINE init_run
   CALL wfcinit
   !
   CALL stop_clock ( 'init_run' )
-  WRITE(6, * )
+  WRITE( stdout, * )
   !
   CALL show_memory()
   !

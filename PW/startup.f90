@@ -40,7 +40,7 @@ subroutine startup (nd_nmbr, code, version)
 
   ! The following two modules hold global information about processors
   ! number, IDs and communicators
-  use io_global, only: io_global_start
+  use io_global, only: stdout, io_global_start
   use mp_global, only: mp_global_start
   use mp, only: mp_start, mp_env, mp_barrier, mp_bcast
 
@@ -149,20 +149,20 @@ subroutine startup (nd_nmbr, code, version)
 #  endif
   if (me == 1) then
      call date_and_tim (cdate, ctime)
-     write (6, 9000) code, version, cdate, ctime
-     write (6, '(/5x,"Parallel version (MPI)")')
-     write (6, '(5x,"Number of processors in use:   ",i4)') nproc
+     WRITE( stdout, 9000) code, version, cdate, ctime
+     WRITE( stdout, '(/5x,"Parallel version (MPI)")')
+     WRITE( stdout, '(5x,"Number of processors in use:   ",i4)') nproc
      if (npool /= 1) &
-          write (6, '(5x,"K-points division:    npool  = ",i4)') npool
+          WRITE( stdout, '(5x,"K-points division:    npool  = ",i4)') npool
      if (nprocp /= 1)&
-          write (6, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
+          WRITE( stdout, '(5x,"R & G space division: nprocp = ",i4/)') nprocp
   endif
 
 #else
 
   nd_nmbr = '   '
   call date_and_tim (cdate, ctime)
-  write (6, 9000) code, version, cdate, ctime
+  WRITE( stdout, 9000) code, version, cdate, ctime
 
 #endif
 

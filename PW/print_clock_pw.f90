@@ -12,25 +12,26 @@ subroutine print_clock_pw
    ! this routine prints out the clocks at the end of the run
    ! it tries to construct the calling tree of the program.
 
+   USE io_global,  ONLY : stdout
    use pwcom
    implicit none
 
-   write (6, * )
+   WRITE( stdout, * )
    call print_clock ('PWSCF')
    call print_clock ('init_run')
    call print_clock ('electrons')
    if (lforce) call print_clock ('forces')
    if (lstres) call print_clock ('stress')
 
-   write (6, * )
+   WRITE( stdout, * )
    call print_clock ('electrons')
    call print_clock ('c_bands')
    call print_clock ('sum_band')
    call print_clock ('v_of_rho')
    call print_clock ('newd')
 #ifdef DEBUG_NEWD
-   write (*,*) "nhm*(nhm+1)/2       = ", nhm*(nhm+1)/2, nhm
-   write (*,*) "nbrx*(nbrx+1)/2*lqx = ", nbrx*(nbrx+1)/2*lqx, nbrx,lqx
+   WRITE( stdout,*) "nhm*(nhm+1)/2       = ", nhm*(nhm+1)/2, nhm
+   WRITE( stdout,*) "nbrx*(nbrx+1)/2*lqx = ", nbrx*(nbrx+1)/2*lqx, nbrx,lqx
    call print_clock ('newd:fftvg')
    call print_clock ('newd:qvan2')
    call print_clock ('newd:int1')
@@ -41,13 +42,13 @@ subroutine print_clock_pw
    else
       call print_clock ('mix_pot')
    endif
-   write (6, * )
+   WRITE( stdout, * )
    call print_clock ('c_bands')
    call print_clock ('init_us_2')
    call print_clock ('cegterg')
    call print_clock ('ccgdiagg')
    call print_clock ('diis')
-   write (6, * )
+   WRITE( stdout, * )
    call print_clock ('sum_band')
    call print_clock ('sumbec')
 
@@ -58,7 +59,7 @@ subroutine print_clock_pw
    call print_clock ('addus:aux2')
    call print_clock ('addus:aux')
 #endif
-   write (6, * )
+   WRITE( stdout, * )
    call print_clock ('wfcrot')
    call print_clock ('wfcrot1')
    call print_clock ('cegterg')
@@ -71,7 +72,7 @@ subroutine print_clock_pw
       call print_clock ('cdiaghg')
       call print_clock ('update')
       call print_clock ('last')
-      write (6, * )
+      WRITE( stdout, * )
       call print_clock ('h_psi')
       call print_clock ('init')
       call print_clock ('firstfft')
@@ -82,23 +83,23 @@ subroutine print_clock_pw
       call print_clock ('h_1psi')
       call print_clock ('s_1psi')
       call print_clock ('cdiaghg')
-      write (6, * )
+      WRITE( stdout, * )
       call print_clock ('h_1psi')
       call print_clock ('init')
       call print_clock ('firstfft')
       call print_clock ('secondfft')
       call print_clock ('add_vuspsi')
    endif
-   write (6, * )
-   write (6, * ) '     General routines'
+   WRITE( stdout, * )
+   WRITE( stdout, * ) '     General routines'
    call print_clock ('ccalbec')
    call print_clock ('cft3')
    call print_clock ('cft3s')
    call print_clock ('interpolate')
    call print_clock ('davcio')
-   write (6, * )
+   WRITE( stdout, * )
 #ifdef __PARA
-   write (6,  * ) '     Parallel routines'
+   WRITE( stdout,  * ) '     Parallel routines'
    call print_clock ('reduce')
    call print_clock ('fft_scatter')
 !   call print_clock('poolreduce')

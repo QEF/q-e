@@ -13,6 +13,7 @@ subroutine rho2zeta (rho, rho_core, nrxx, nspin, iop)
   !                     rho(*,2) = ( rho_up - rho_dw ) / rho_tot = zeta
   ! if (iopi.eq.-1) do the opposit transformation
   !
+  USE io_global,  ONLY : stdout
   use parameters
   implicit none
   integer :: iop, nspin, nrxx, ir
@@ -61,7 +62,7 @@ subroutine rho2zeta (rho, rho_core, nrxx, nspin, iop)
         endif
      enddo
   else
-     write ( * , * ) ' iop =', iop
+     WRITE( stdout , * ) ' iop =', iop
      call errore ('mag2zeta', 'wrong iop', 1)
 
   endif

@@ -19,6 +19,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   !     S is an overlap matrix, evc is a complex vector
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use parameters, only : DP
   use g_psi_mod
 
@@ -99,7 +100,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
   allocate(ew (nvecx))
   allocate(conv (nvec))
 
-  !      write(6,*) 'eneter cegter',hc,vc,hpsi
+  !      WRITE( stdout,*) 'eneter cegter',hc,vc,hpsi
   if (nvec > nvecx / 2) call errore ('cegter', 'nvecx is too small',1)
   !
   !     prepare the hamiltonian for the first iteration
@@ -202,7 +203,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
 #ifdef __PARA
      call reduce (nvec, ew)
 #endif
-     write (6,'(a,18f10.6)') 'NRM=',(ew(n),n=1,nvec)
+     WRITE( stdout,'(a,18f10.6)') 'NRM=',(ew(n),n=1,nvec)
 #endif
      !
      ! "normalize" correction vectors psi(*,nbase+1:nbase+notcnv) in order
@@ -268,9 +269,9 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
      enddo
      call cdiaghg (nbase, nvec, hc, sc, nvecx, ew, vc)
 #ifdef DEBUG_DAVIDSON
-     write (6,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
-     write (6,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
-     write (6,*) 
+     WRITE( stdout,'(a,18f10.6)') 'EIG=',(e(n),n=1,nvec)
+     WRITE( stdout,'(a,18f10.6)') 'EIG=',(ew(n),n=1,nvec)
+     WRITE( stdout,*) 
 #endif
      !
      !     test for convergence
@@ -306,11 +307,11 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, evc, ethr, overlap, &
         !
 #ifdef DEBUG_DAVIDSON
            do n = 1, nvec
-              if ( .not.conv (n) ) write (6, '("   WARNING: e(",i3,") =",&
+              if ( .not.conv (n) ) WRITE( stdout, '("   WARNING: e(",i3,") =",&
                    f10.5," is not converged to within ",1pe8.1)') n, e(n), ethr
            enddo
 #else
-           write (6, '("   WARNING: ",i5," eigenvalues not converged")') &
+           WRITE( stdout, '("   WARNING: ",i5," eigenvalues not converged")') &
                 notcnv
 #endif
            call stop_clock ('last')

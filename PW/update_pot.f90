@@ -38,6 +38,7 @@ subroutine update_pot
   !
   !
 
+  USE io_global,  ONLY : stdout
   use pwcom
   implicit none
 
@@ -62,7 +63,7 @@ subroutine extrapolate_charge
   !
 #include "machine.h"
   !
-
+  USE io_global, ONLY : stdout
   use pwcom
   use io_files, only: prefix
   implicit none
@@ -80,7 +81,7 @@ subroutine extrapolate_charge
   !     if order = 1 update the potential subtracting to the charge density
   !     the "old" atomic charge and summing the new one
   !
-  write (6,'(/5x,"NEW-OLD atomic charge density approx. for the potential")')
+  WRITE( stdout,'(/5x,"NEW-OLD atomic charge density approx. for the potential")')
   !
   ! in the lsda case the magnetization will follow rigidly the density kee
   ! fixed the value of zeta=mag/rho_tot. zeta is set here and put in rho(*
@@ -167,6 +168,7 @@ subroutine extrapolate_wfcs
   !
   !
 #include "machine.h"
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : evc
   implicit none
@@ -212,9 +214,9 @@ subroutine extrapolate_wfcs
      enddo
   else
      if (order.eq.2) then
-        write (6, '(5x,"Extrapolating wave-functions (first order) ...")')
+        WRITE( stdout, '(5x,"Extrapolating wave-functions (first order) ...")')
      else
-        write (6, '(5x,"Extrapolating wave-functions (second order) ...")')
+        WRITE( stdout, '(5x,"Extrapolating wave-functions (second order) ...")')
      endif
 
      allocate ( u_m(nbnd,nbnd), s_m(nbnd,nbnd), sp_m(nbnd,nbnd), &

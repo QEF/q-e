@@ -26,7 +26,8 @@ subroutine vcsmd
 
   !
 #include "machine.h"
-  use constants, only: e2, uakbar
+  USE io_global, ONLY : stdout
+  use constants, only : e2, uakbar
   use brilz
   use basis
   use cellmd
@@ -35,7 +36,7 @@ subroutine vcsmd
   use force_mod
   use varie
   use ener, only: etot
-  use io_files, only : prefix
+  use io_files,  only : prefix
 #ifdef __PARA
   use para
 #endif
@@ -151,7 +152,7 @@ subroutine vcsmd
         enddo
      enddo
      if (conv_ions) then
-        write (6,'(/5x,"Damped Dynamics: convergence achieved, Efinal=",&
+        WRITE( stdout,'(/5x,"Damped Dynamics: convergence achieved, Efinal=",&
               &     f15.8)') etot
         call output_tau
         return
@@ -172,17 +173,17 @@ subroutine vcsmd
         end do
      end do
      if (conv_ions) then
-        if (calc.eq.'cm') write (6, &
+        if (calc.eq.'cm') WRITE( stdout, &
          '(/5x,"Parrinello-Rahman Damped Dynamics: convergence achieved, ", &
          &     "Efinal=", f15.8)') etot
-        if (calc.eq.'nm') write (6, &
+        if (calc.eq.'nm') WRITE( stdout, &
          '(/5x,"Wentzcovitch Damped Dynamics: convergence achieved, ", &
          &     "Efinal=", f15.8)') etot
-        write (6,'(/72("-")//5x,"Final estimate of lattice vectors ", &
+        WRITE( stdout,'(/72("-")//5x,"Final estimate of lattice vectors ", &
          &       "(input alat units)")')
-        write (6, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-        write (6,'("  final unit-cell volume =",f12.4," (a.u.)^3")') omega
-        write (6,'("  input alat = ",f12.4," (a.u.)")') alat
+        WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
+        WRITE( stdout,'("  final unit-cell volume =",f12.4," (a.u.)^3")') omega
+        WRITE( stdout,'("  input alat = ",f12.4," (a.u.)")') alat
         !
         call output_tau
         !
@@ -195,21 +196,21 @@ subroutine vcsmd
   tempo = (istep - 1) * dt * time_au
 
   if (istep.eq.1 .and. calc.eq.'mm')  &
-     write(6,'(/5x,"Damped Dynamics Minimization", /5x, &
+     WRITE( stdout,'(/5x,"Damped Dynamics Minimization", /5x, &
              & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2)') &
                epse, epsf
   if (istep.eq.1 .and. calc.eq.'cm')  &
-     write(6,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
+     WRITE( stdout,'(/5x,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
              & /5x, "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",  &
              & e8.2,"  EPSP = ",e8.2 )') epse, epsf, epsp
   if (istep.eq.1 .and. calc.eq.'nm')  &
-     write(6,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
+     WRITE( stdout,'(/5x,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
              & "convergence thresholds: EPSE = ", e8.2,"  EPSF = ",e8.2,&
              & "  EPSP = ",e8.2 )') epse, epsf, epsp
 
-  write (6, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
+  WRITE( stdout, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
        &                          f8.5," pico-seconds"/)') istep, tempo
-  !       write (*,*) ' enter vcsmd ', istep,idone,exst
+  !       WRITE( stdout,*) ' enter vcsmd ', istep,idone,exst
   !
   ! save cell shape of previous step
   !
@@ -345,7 +346,7 @@ subroutine vcsmd
      write (46,*) 'edyn=',edyn
 #endif
   else
-     !         write (*,'(3f12.6)') ((ratd(ipol,na),ipol=1,3),na=1,nat)
+     !         WRITE( stdout,'(3f12.6)') ((ratd(ipol,na),ipol=1,3),na=1,nat)
 
      enew = etot - e_start
 
@@ -537,16 +538,16 @@ subroutine vcsmd
   call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2) , bg(1,3) )
   call DCOPY (3 * nat, rat, 1, tau, 1)
   if (lmovecell) then
-     write (6, * ) ' new lattice vectors (alat unit) :'
-     write (6, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
-     write (6,'(a,f12.4,a)') '  new unit-cell volume =', omega, ' (a.u.)^3'
+     WRITE( stdout, * ) ' new lattice vectors (alat unit) :'
+     WRITE( stdout, '(3f14.9)') ( (at (i, k) , i = 1, 3) , k = 1, 3)
+     WRITE( stdout,'(a,f12.4,a)') '  new unit-cell volume =', omega, ' (a.u.)^3'
   endif
-  write (6, * ) ' new positions in cryst coord'
-  write (6,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
-  write (6, * ) ' new positions in cart coord (alat unit)'
+  WRITE( stdout, * ) ' new positions in cryst coord'
+  WRITE( stdout,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
+  WRITE( stdout, * ) ' new positions in cart coord (alat unit)'
   call cryst_to_cart (nat, tau, at, + 1)
-  write (6,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
-  write (6, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
+  WRITE( stdout,'(a3,3x,3f14.9)') (atm(ityp(na)), (tau(i,na), i=1,3),na=1,nat)
+  WRITE( stdout, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
        &       " Etot = ",f14.8)') ekint, tnew, edyn + e_start
   !
   ! save MD history on file
@@ -578,6 +579,8 @@ end subroutine vcsmd
 
 subroutine delete_if_present(filename)
 
+   USE io_global,  ONLY :  stdout
+
    character (len=*) :: filename
    logical           :: exst, opnd
    integer           :: iunit
@@ -593,7 +596,7 @@ subroutine delete_if_present(filename)
 10    continue
       open  (unit=iunit, file= filename , status='old')
       close (unit=iunit, status = 'delete')
-      write (6,*) 'WARNING: ',filename,' file was present; old file deleted '
+      WRITE( stdout,*) 'WARNING: ',filename,' file was present; old file deleted '
    end if
 
 end subroutine

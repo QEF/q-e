@@ -22,6 +22,7 @@ SUBROUTINE electrons
   !    the separate contributions.
   !
   USE parameters,    ONLY : DP, npk 
+  USE io_global,     ONLY : stdout
   USE brilz,         ONLY : at, bg, alat, omega, tpiba2
   USE basis,         ONLY : nat, ntyp, ityp, tau   
   USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
@@ -152,15 +153,15 @@ SUBROUTINE electrons
   DO idum = 1, niter
      !
      tcpu = get_clock( 'PWSCF' )
-     WRITE(6, 9000) tcpu
+     WRITE( stdout, 9000) tcpu
      IF ( imix >= 0 ) CALL DCOPY( ( nspin * nrxx), rho, 1, rho_save, 1 )
      !
      iter = iter + 1
      !
      IF ( lscf ) THEN
-        WRITE(6, 9010) iter, ecutwfc, mixing_beta
+        WRITE( stdout, 9010) iter, ecutwfc, mixing_beta
      ELSE
-        WRITE(6, 9009)
+        WRITE( stdout, 9009)
      END IF
 #ifdef FLUSH
      CALL flush( 6 )
@@ -195,11 +196,11 @@ SUBROUTINE electrons
 #endif
         DO ik = 1, nkstot
            IF ( lsda ) THEN
-              IF ( ik == 1 ) WRITE(6, 9015)
-              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE(6, 9016)
+              IF ( ik == 1 ) WRITE( stdout, 9015)
+              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016)
            END IF
-           WRITE(6, 9020) ( xk(i,ik), i = 1, 3 )
-           WRITE(6, 9030) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
+           WRITE( stdout, 9020) ( xk(i,ik), i = 1, 3 )
+           WRITE( stdout, 9030) ( et(ibnd,ik) * 13.6058, ibnd = 1, nbnd )
         END DO
         !
         ! ... do a Berry phase polarization calculation if required
@@ -217,7 +218,7 @@ SUBROUTINE electrons
      tcpu = get_clock( 'PWSCF' )
      !
      IF ( tcpu > time_max ) THEN
-        WRITE(6, '(5x,"Maximum CPU time exceeded",2f15.2)') tcpu, time_max
+        WRITE( stdout, '(5x,"Maximum CPU time exceeded",2f15.2)') tcpu, time_max
         CALL stop_pw ( .FALSE. )
      END IF
      !
@@ -337,26 +338,26 @@ SUBROUTINE electrons
         !
         DO ik = 1, nkstot
            IF ( lsda ) THEN
-              IF ( ik == 1 ) WRITE(6, 9015)
-              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE(6, 9016)
+              IF ( ik == 1 ) WRITE( stdout, 9015)
+              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016)
            END IF
            IF ( conv_elec ) THEN
 #ifdef __PARA
-              WRITE(6, 9021) (xk(i,ik), i = 1, 3), ngkp(ik)
+              WRITE( stdout, 9021) (xk(i,ik), i = 1, 3), ngkp(ik)
 #else
-              WRITE(6, 9021) (xk(i,ik), i = 1, 3), ngk(ik)
+              WRITE( stdout, 9021) (xk(i,ik), i = 1, 3), ngk(ik)
 #endif
            ELSE
-              WRITE(6, 9020) (xk(i,ik), i = 1, 3)
+              WRITE( stdout, 9020) (xk(i,ik), i = 1, 3)
            END IF
-           WRITE(6, 9030) (et(ibnd,ik) * 13.6058, ibnd = 1, nbnd)
+           WRITE( stdout, 9030) (et(ibnd,ik) * 13.6058, ibnd = 1, nbnd)
         END DO
         !
-        IF ( lgauss .OR. ltetra ) WRITE(6, 9040) ef * 13.6058
+        IF ( lgauss .OR. ltetra ) WRITE( stdout, 9040) ef * 13.6058
         !
      END IF
      !
-     IF ( ( ABS( charge - nelec ) / charge ) > 1.0E-7 ) WRITE(6, 9050) charge
+     IF ( ( ABS( charge - nelec ) / charge ) > 1.0E-7 ) WRITE( stdout, 9050) charge
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + eth
      !
@@ -366,42 +367,42 @@ SUBROUTINE electrons
           iswitch <= 2 ) THEN
         !  
         IF ( imix >= 0 ) THEN
-           WRITE(6, 9081) etot, dr2
+           WRITE( stdout, 9081) etot, dr2
         ELSE
-           WRITE(6, 9086) etot, dr2
+           WRITE( stdout, 9086) etot, dr2
         END IF
         !
-        WRITE(6, 9060) eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+        WRITE( stdout, 9060) eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
         !
-        IF ( tefield ) WRITE(6, 9061) etotefield
-        IF ( lda_plus_u ) WRITE(6, 9065) eth
-        IF ( degauss /= 0.0 ) WRITE(6, 9070) demet
+        IF ( tefield ) WRITE( stdout, 9061) etotefield
+        IF ( lda_plus_u ) WRITE( stdout, 9065) eth
+        IF ( degauss /= 0.0 ) WRITE( stdout, 9070) demet
         !
      ELSE IF ( conv_elec .AND. iswitch > 2 ) THEN
         !
         IF ( imix >= 0 ) THEN
-           WRITE(6, 9081) etot, dr2
+           WRITE( stdout, 9081) etot, dr2
         ELSE
-           WRITE(6, 9086) etot, dr2
+           WRITE( stdout, 9086) etot, dr2
         END IF
         !
      ELSE
         !
         IF ( imix >=  0 ) THEN
-           WRITE(6, 9080) etot, dr2
+           WRITE( stdout, 9080) etot, dr2
         ELSE
-           WRITE(6, 9085) etot, dr2
+           WRITE( stdout, 9085) etot, dr2
         END IF
         !
      END IF
      !
-     IF ( lsda ) WRITE(6, 9017) magtot, absmag
+     IF ( lsda ) WRITE( stdout, 9017) magtot, absmag
      !
 #ifdef FLUSH
      CALL flush( 6 )
 #endif
      IF ( conv_elec ) THEN
-        WRITE(6, 9110)
+        WRITE( stdout, 9110)
         ! jump to the end
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho
         CALL stop_clock( 'electrons' )
@@ -417,7 +418,7 @@ SUBROUTINE electrons
      !
   END DO
   !
-  WRITE(6, 9120)
+  WRITE( stdout, 9120)
   !
   ! <------- jump here if not scf
   !

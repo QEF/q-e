@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine restart_in_ions (iter, ik_, dr2)
   !-----------------------------------------------------------------------
+  USE io_global,        ONLY : stdout
   use pwcom
   USE wavefunctions,    ONLY : evc, psic
   implicit none
@@ -31,7 +32,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   if (where.ne.'IONS') then
      close (unit = iunres, status = 'keep')
-     write (*,*) where, '.......?'
+     WRITE( stdout,*) where, '.......?'
      call errore ('restart_i', ' we should not be here ...!', 1)
   endif
   !
@@ -42,7 +43,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! vnew = V(in)-V(out) is needed in the scf correction term to forces
   read (iunres, err=10, end=10) vnew
   close (unit = iunres, status = 'keep')
-  write (6, '(5x,"Calculation restarted from IONS ",i3)')
+  WRITE( stdout, '(5x,"Calculation restarted from IONS ",i3)')
   !
   ! store wavefunctions in memory here if there is just one k-point
   ! (otherwise it is never done)

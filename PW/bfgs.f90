@@ -22,6 +22,7 @@ SUBROUTINE bfgs
                           starting_scf_threshold, dtau_ref
   USE ener,        ONLY : etot
   USE klist,       ONLY : nelec
+  USE io_global,   ONLY : stdout
   USE io_files,    ONLY : prefix
 #ifdef __PARA
   USE para,        ONLY : me, mypool
@@ -87,7 +88,7 @@ SUBROUTINE bfgs
         CLOSE( UNIT = iunit, STATUS = 'DELETE' )
         minimum_ok = .FALSE.
         CALL estimate( hessm1, nax3, nat, nat3 )
-        WRITE(6, '(/5X,"EPSE = ",E9.2,"    EPSF = ",E9.2, &
+        WRITE( stdout, '(/5X,"EPSE = ",E9.2,"    EPSF = ",E9.2, &
        &               "    UPSCALE = ",F6.2)') epse, epsf, upscale
      ELSE
         !
@@ -168,8 +169,8 @@ SUBROUTINE bfgs
         detot = - DDOT( nat3, force, 1, dtau, 1 )
         !
         IF ( detot > 0.D0 ) THEN
-           WRITE(6, '("uphill direction! de/dx =",E10.4)') detot
-           WRITE(6, '("try steepest descent direction instead!")')
+           WRITE( stdout, '("uphill direction! de/dx =",E10.4)') detot
+           WRITE( stdout, '("try steepest descent direction instead!")')
            !
            CALL DCOPY( nat3, force, 1, dtau, 1 )
            xnew = SQRT( DDOT( nat3, dtau, 1, dtau, 1 ) )
@@ -207,10 +208,10 @@ SUBROUTINE bfgs
      ! ... report
      !
      IF ( conv_ions ) THEN
-        WRITE(6, '(/5X,"BFGS: convergence achieved, Efinal=",F15.8)') etot
-        WRITE(6, '(/72("-")//5X,"Final estimate of positions")')
+        WRITE( stdout, '(/5X,"BFGS: convergence achieved, Efinal=",F15.8)') etot
+        WRITE( stdout, '(/72("-")//5X,"Final estimate of positions")')
      ELSE
-        WRITE(6, '(/72("-")//5X, &
+        WRITE( stdout, '(/72("-")//5X, &
              &"Search of equilibrium positions: iteration # ",I4, &
              &", scf threshold ",1PE8.2/)') istep, tr2
      END IF

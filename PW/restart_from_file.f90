@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine restart_from_file
   !-----------------------------------------------------------------------
-
+  USE io_global,  ONLY : stdout
   use pwcom
   implicit none
 
@@ -19,25 +19,25 @@ subroutine restart_from_file
   !
   iunres = 1
   if (.not.restart) then
-     ! write (6, '(/5x,"RECOVER from restart file has been switched off on input")')
+     ! WRITE( stdout, '(/5x,"RECOVER from restart file has been switched off on input")')
      call seqopn (iunres, 'restart', 'unformatted', exst)
-     ! if (exst) write (6,'(/5x,"Existing restart file has been removed")')
+     ! if (exst) WRITE( stdout,'(/5x,"Existing restart file has been removed")')
      close (unit = iunres, status = 'delete')
      return
   endif
 
   call seqopn (iunres, 'restart', 'unformatted', restart)
   if (.not.restart) then
-     write (6, '(/5x,"RECOVER from restart file failed: file not found")')
+     WRITE( stdout, '(/5x,"RECOVER from restart file failed: file not found")')
      close (unit = iunres, status = 'delete')
      return
   endif
   !
-  write (6, '(/5x,"read information from restart file")')
+  WRITE( stdout, '(/5x,"read information from restart file")')
   read (iunres, err = 10, end = 10) where
-  write (6, '(5x,"Restarting in ",a)') where
+  WRITE( stdout, '(5x,"Restarting in ",a)') where
   if (where.ne.'ELECTRONS'.and.where.ne.'IONS') then
-     write (*,*) where, '......?'
+     WRITE( stdout,*) where, '......?'
      call errore ('readin', ' wrong recover file ', 1)
   endif
   !

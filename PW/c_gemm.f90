@@ -130,7 +130,7 @@ subroutine c_transpose (a, lda, b, ldb, n, m, itype, info)
      s3 = irtc ()
 
   else
-     write (6, * ) '*** c_transpose : parameter itype out of range'
+     WRITE( stdout, * ) '*** c_transpose : parameter itype out of range'
 
      stop
 

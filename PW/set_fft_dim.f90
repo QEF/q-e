@@ -14,6 +14,7 @@ subroutine set_fft_dim
   !     NB: The values of nr1, nr2, nr3 are computed only if they are not
   !     given as input parameters. Input values are kept otherwise.
   !
+  USE io_global,  ONLY : stdout
   use pwcom
   use fft_scalar, only: allowed
   implicit none
@@ -142,7 +143,7 @@ subroutine set_fft_dim
 36 continue
   !
   if (nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3) then
-     write (6, * ) nr1s, nr2s, nr3s, nr1, nr2, nr3
+     WRITE( stdout, * ) nr1s, nr2s, nr3s, nr1, nr2, nr3
      call errore ('set_fft_dim', 'smooth grid larger than big grid', 1)
   endif
   !

@@ -74,7 +74,7 @@
                         qr_k(iv,jv,l+1,np) = sum*fpi/omega
                         qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)
                    
-!c                       write(6,*) 'qr_k=',qr_k(iv,jv,l+1,np)
+!c                       WRITE( stdout,*) 'qr_k=',qr_k(iv,jv,l+1,np)
 
                   end do
                end do

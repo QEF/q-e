@@ -92,7 +92,7 @@ subroutine sum_band
      !
      do ibnd = 1, nbnd
         eband = eband+et (ibnd, ik) * wg (ibnd, ik)
-        !            write(6,'(4x, " ibnd = ", i5, " ik= ",i5,
+        !            WRITE( stdout,'(4x, " ibnd = ", i5, " ik= ",i5,
         !     +                       f15.5)') ibnd, ik,
         !     +                           wg(ibnd,ik)
         !

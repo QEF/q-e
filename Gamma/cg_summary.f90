@@ -14,46 +14,47 @@ subroutine cg_summary
   !%%%%%%%%%%           summarize input data          %%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
+  USE io_global,  ONLY : stdout
   use pwcom
   use cgcom
   !
   implicit none
   integer :: nu, mu, i,l, na, nt
   !
-  write (6,'(/5x,a75)') title
-  write (6,9010) crystal,alat,omega,nat,ecutwfc,gcutm,tr2_ph
+  WRITE( stdout,'(/5x,a75)') title
+  WRITE( stdout,9010) crystal,alat,omega,nat,ecutwfc,gcutm,tr2_ph
   !
-  write (6,9020) (i,celldm(i),i=1,6)
-  write (6,9030) ngm,nr1,nr2,nr3,nks
-  write (6,9040)
-  write (6,9050) (na,atm(ityp(na)),amass(ityp(na))/amconv,          &
+  WRITE( stdout,9020) (i,celldm(i),i=1,6)
+  WRITE( stdout,9030) ngm,nr1,nr2,nr3,nks
+  WRITE( stdout,9040)
+  WRITE( stdout,9050) (na,atm(ityp(na)),amass(ityp(na))/amconv,          &
        & (tau(i,na),i=1,3),na=1,nat)
   do nt = 1,ntyp
-     write (6,9060) nlc(nt), nnl(nt)
-     write (6,9070) nt,psd(nt),zp(nt),lmax(nt),lloc(nt)
-     write (6,9080)
-     write (6,'(/5x,"core")')
-     write (6,9090) (alpc(i,nt),i=1,2)
-     write (6,9100) (cc(i,nt),i=1,2)
+     WRITE( stdout,9060) nlc(nt), nnl(nt)
+     WRITE( stdout,9070) nt,psd(nt),zp(nt),lmax(nt),lloc(nt)
+     WRITE( stdout,9080)
+     WRITE( stdout,'(/5x,"core")')
+     WRITE( stdout,9090) (alpc(i,nt),i=1,2)
+     WRITE( stdout,9100) (cc(i,nt),i=1,2)
      do l = 0,lmax(nt)
-        write (6,'(/5x,"l = ",i2)') l
-        write (6,9090) (alps(i,l,nt),i=1,3)
-        write (6,9100) (aps(i,l,nt),i=1,3)
-        write (6,9110) (aps(i,l,nt),i=4,6)
+        WRITE( stdout,'(/5x,"l = ",i2)') l
+        WRITE( stdout,9090) (alps(i,l,nt),i=1,3)
+        WRITE( stdout,9100) (aps(i,l,nt),i=1,3)
+        WRITE( stdout,9110) (aps(i,l,nt),i=4,6)
      end do
   end do
-  write (6,9115)
+  WRITE( stdout,9115)
   do nt = 1,ntyp
-     write (6,9116) atm(nt),zv(nt),psd(nt)
+     WRITE( stdout,9116) atm(nt),zv(nt),psd(nt)
   end do
-  write (6,                                                         &
+  WRITE( stdout,                                                         &
        &'(//5x,"atomic displacements are normalized to unity"/)')
   if (nmodes.lt.3*nat) then
-     write (6,                                                     &
+     WRITE( stdout,                                                     &
           &    '(5x,"phonon polarizations are as follows:"/)')
      do nu = 1,nmodes
-        write (6,'(" mode # ",i3)') nu
-        write (6,'(3(" (",f6.3,2f7.3,") "))')                   &
+        WRITE( stdout,'(" mode # ",i3)') nu
+        WRITE( stdout,'(3(" (",f6.3,2f7.3,") "))')                   &
              &     ( u(mu,nu), mu = 1,3*nat)
      end do
   end if

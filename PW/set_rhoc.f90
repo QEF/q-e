@@ -14,6 +14,7 @@ subroutine set_rhoc
   !
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   implicit none
   !
@@ -108,7 +109,7 @@ subroutine set_rhoc
   call reduce (1, rhoima)
 #endif
   if (rhoneg.lt. - 1.0d-6.or.rhoima.gt.1.0d-6) &
-       write (6, '("  warning: negative or imaginary core charge ",2f12.6)')&
+       WRITE( stdout, '("  warning: negative or imaginary core charge ",2f12.6)')&
        rhoneg, rhoima
   !
   ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
@@ -120,8 +121,8 @@ subroutine set_rhoc
   !        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
   !        ehart, etxcc, vtxcc, aux)
   !   deallocate(dum)
-  !   write (6, 9000) etxcc
-  !   write (6,  * ) 'BEWARE it will be subtracted from total energy !'
+  !   WRITE( stdout, 9000) etxcc
+  !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
   !
   deallocate (rhocg)
   deallocate (aux)

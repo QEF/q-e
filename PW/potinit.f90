@@ -21,6 +21,7 @@ subroutine potinit
   !        is saved in vr
   !
 #include "machine.h"
+  USE io_global,  ONLY : stdout
   use pwcom
   use io_files, only: prefix
 #ifdef __PARA
@@ -54,7 +55,7 @@ subroutine potinit
   call mp_bcast( exst, ionode_id )
 #endif
   if (startingpot=='file' .and. .not.exst) then
-     write (6, '(5x,"Cannot read pot/rho file: not found")')
+     WRITE( stdout, '(5x,"Cannot read pot/rho file: not found")')
      startingpot='atomic'
   end if
 
@@ -65,7 +66,7 @@ subroutine potinit
   if (startingpot=='file') then
      if (imix.ge.0.and.lscf) then
         call io_pot ( -1, trim(prefix)//'.rho', rho, nspin)
-        write (6, '(/5x,"The initial density is read from file ", &
+        WRITE( stdout, '(/5x,"The initial density is read from file ", &
                    &    a14)') trim(prefix)//'.rho'
         !
         ! here we compute the potential which correspond to the initial charge
@@ -75,10 +76,10 @@ subroutine potinit
              ehart, etxc, vtxc, charge, vr)
         !
         if (abs (charge-nelec)  / charge.gt.1.0d-4) &
-             write (6, '(/5x,"starting charge =",f10.5)') charge
+             WRITE( stdout, '(/5x,"starting charge =",f10.5)') charge
      else
         call io_pot ( - 1,  trim(prefix)//'.pot', vr, nspin)
-        write (6, '(/5x,"The initial potential is read from file ", &
+        WRITE( stdout, '(/5x,"The initial potential is read from file ", &
                    &     a14)') trim(prefix)//'.pot'
      end if
      !
@@ -106,7 +107,7 @@ subroutine potinit
      ! Second case, the potential is built from a superposition of atomic
      ! charges contained in the array rho_at and already set in readin-readva
      !
-     write (6, '(/5x,"Initial potential from superposition", &
+     WRITE( stdout, '(/5x,"Initial potential from superposition", &
           &                " of free atoms")')
      !
      ! in the lda+U case set the initial value of ns
@@ -122,7 +123,7 @@ subroutine potinit
      if (input_drho.ne.' ') then
         if (lsda) call errore ('potinit', ' lsda not allowed in drho', 1)
         call io_pot ( - 1, input_drho, vr, nspin)
-        write (6, '(/5x,"a scf correction to at. rho is read from", &
+        WRITE( stdout, '(/5x,"a scf correction to at. rho is read from", &
              &          a14)') input_drho
         call DAXPY (nrxx, 1.d0, vr, 1, rho, 1)
      endif
@@ -134,7 +135,7 @@ subroutine potinit
           ehart, etxc, vtxc, charge, vr)
      !
      if (abs (charge-nelec)  / charge.gt.1.0d-4) &
-          write (6, '(/5x,"starting charge =",f10.5)') charge
+          WRITE( stdout, '(/5x,"starting charge =",f10.5)') charge
 
   endif
   !
@@ -146,10 +147,10 @@ subroutine potinit
   ! write on output the parameters used in the lda+U calculation
   !
   if (lda_plus_u) then
-     write (6, '(/5x,"Parameters of the lda+U calculation:")')
-     write (6, '(5x,"Number of iteration with fixed ns =",i3)') &
+     WRITE( stdout, '(/5x,"Parameters of the lda+U calculation:")')
+     WRITE( stdout, '(5x,"Number of iteration with fixed ns =",i3)') &
           niter_with_fixed_ns
-     write (6, '(5x,"Starting ns and Hubbard U :")')
+     WRITE( stdout, '(5x,"Starting ns and Hubbard U :")')
      call write_ns
 
   endif

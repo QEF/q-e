@@ -29,6 +29,7 @@ subroutine dynamics
   !     DA 1997
   !
 #include "machine.h"
+  USE io_global, ONLY : stdout
   use pwcom
   use io_files, only : prefix
 #ifdef __PARA
@@ -61,13 +62,13 @@ subroutine dynamics
   call seqopn (4, trim(prefix)//'.md', 'formatted', exst)
   if (.not.exst) then
      close (unit = 4, status = 'delete')
-     write (6, '(/5x,"Starting temperature = ",f8.2," K")') &
+     WRITE( stdout, '(/5x,"Starting temperature = ",f8.2," K")') &
           temperature
      do na = 1, ntyp
-        write (6, '(5x,"amass(",i1,") = ",f6.2)') na, amass (na)
+        WRITE( stdout, '(5x,"amass(",i1,") = ",f6.2)') na, amass (na)
      enddo
 
-     write (6, '(5x,"Time step = ",f6.2," a.u.,   ",f6.4, &
+     WRITE( stdout, '(5x,"Time step = ",f6.2," a.u.,   ",f6.4, &
           &       " femto-seconds")') dt, dt * 0.0484
      !
      ! masses in atomic rydberg units
@@ -93,18 +94,18 @@ subroutine dynamics
 
   it = it + 1
   if (mod (it, nraise) .eq.0.and.delta_T.lt.0) then
-     write (6, '(/5x,"Thermalization: delta_T = ",f6.3, &
+     WRITE( stdout, '(/5x,"Thermalization: delta_T = ",f6.3, &
           &  ", T = ",f6.1)')  - delta_T, temp_new - delta_T
      call thermalize (temp_new, temp_new - delta_T, tauold)
 
   endif
   if (delta_T.ne.1.d0.and.delta_T.ge.0) then
-     write (6, '(/5x,"Thermalization: delta_T = ",f6.3, &
+     WRITE( stdout, '(/5x,"Thermalization: delta_T = ",f6.3, &
           &  ", T = ",f6.1)') delta_T, temp_new * delta_T
      call thermalize (temp_new, temp_new * delta_T, tauold)
 
   endif
-  write (6, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
+  WRITE( stdout, '(/5x,"Entering Dynamics;  it = ",i5,"   time = ", &
        &                          f8.5," pico-seconds"/)') it, tempo
   !
   ! calculate accelerations in a.u. units / alat
@@ -161,10 +162,10 @@ subroutine dynamics
   write (4, * ) temp_new, mass, total_mass, tauold, tempo, it
   close (unit = 4, status = 'keep')
   do na = 1, nat
-     write (6, '(a3,3f12.7)') atm(ityp(na)),&
+     WRITE( stdout, '(a3,3f12.7)') atm(ityp(na)),&
         (tau (ipol, na) , ipol = 1, 3)
   enddo
-  write (6, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
+  WRITE( stdout, '(/5x,"Ekin = ",f14.8," Ryd   T = ",f6.1," K ", &
        &       " Etot = ",f14.8)') ekin*alat**2, temp_new, ekin*alat**2+etot
   !
   !  total linear momentum must be zero if all atoms move
@@ -174,7 +175,7 @@ subroutine dynamics
      if (mlt.gt.eps) call errore ('dynamics', 'Total linear momentum <> 0', - 1)
   endif
 
-  write (6, '(5x,"Linear momentum: ",3f18.14)') ml
+  WRITE( stdout, '(5x,"Linear momentum: ",3f18.14)') ml
 
   deallocate (tauold)
   deallocate (a)
@@ -441,7 +442,7 @@ subroutine find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
      enddo
   enddo
 
-!  write ( *, * ) chi, alpha0, beta0
+!  WRITE( stdout, * ) chi, alpha0, beta0
   return
 
 end subroutine find_alpha_and_beta

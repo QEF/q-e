@@ -9,6 +9,7 @@
 subroutine output_tau
   !-----------------------------------------------------------------------
   !
+  USE io_global,  ONLY : stdout
   use parameters, only: DP
   use constants, only: bohr_radius_angs
   use brilz, only: alat, at, bg
@@ -26,27 +27,27 @@ subroutine output_tau
      !
   CASE ('alat')
      !
-     write (6, '("ATOMIC_POSITIONS (alat)")')
+     WRITE( stdout, '("ATOMIC_POSITIONS (alat)")')
   CASE ('bohr')
      !
-     write (6, '("ATOMIC_POSITIONS (bohr)")')
+     WRITE( stdout, '("ATOMIC_POSITIONS (bohr)")')
      tau_out(:,:) = tau_out(:,:)*alat
   CASE ('crystal')
      !
-     write (6, '("ATOMIC_POSITIONS (crystal)")')
+     WRITE( stdout, '("ATOMIC_POSITIONS (crystal)")')
      call cryst_to_cart (nat, tau_out, bg,-1)
   CASE ('angstrom')
      !
-     write (6, '("ATOMIC_POSITIONS (angstrom)")')
+     WRITE( stdout, '("ATOMIC_POSITIONS (angstrom)")')
      !
      tau_out(:,:) = tau_out(:,:)*alat*bohr_radius_angs
   CASE DEFAULT
-     write (6, '("ATOMIC_POSITIONS")')
+     WRITE( stdout, '("ATOMIC_POSITIONS")')
   END SELECT
   do na = 1, nat
-     write (6,'(a3,3x,3f14.9)') atm(ityp(na)), (tau_out(i,na), i=1,3)
+     WRITE( stdout,'(a3,3x,3f14.9)') atm(ityp(na)), (tau_out(i,na), i=1,3)
   enddo
-  write (6, '(/)')
+  WRITE( stdout, '(/)')
   deallocate(tau_out)
   return
 end subroutine output_tau
