@@ -17,15 +17,15 @@ subroutine dvpsi_e(kpoint,ipol)
   use parameters, only: DP
   use pwcom
   USE wavefunctions,  ONLY: evc
-  use rbecmod
+  USE rbecmod, ONLY: becp, becp_
   use cgcom
   !
   implicit none
   integer :: kpoint, ipol
   integer :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
   real(kind=DP) :: upol(3,3)
-  real(kind=DP), allocatable :: gk(:,:), q(:), ps(:,:,:), overlap(:,:), &
-       bec1(:,:)
+  real(kind=DP), allocatable :: gk(:,:), q(:), overlap(:,:), &
+       dbec(:,:), dbec_(:,:)
   complex(kind=DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
   logical:: precondition, orthonormal,startwith0
@@ -34,11 +34,13 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   call start_clock('dvpsi_e')
   !
-  allocate  ( gk   ( 3, npwx))    
-  allocate  ( dvkb ( npwx, nkb))    
-  allocate  ( dvkb1( npwx, nkb))    
-  allocate  ( bec1 ( nkb, nbnd))    
-  allocate  ( ps   ( nkb, nbnd, 2))    
+  !   becp, becp_ contain <beta|psi> - used in H_h
+  !
+  allocate ( becp( nkb,nbnd), becp_(nkb,nbnd) )
+  allocate ( gk   ( 3, npwx) )
+  allocate ( dvkb ( npwx, nkb) )
+  allocate ( dvkb1( npwx, nkb) )
+  allocate ( dbec ( nkb, nbnd), dbec_(nkb, nbnd) )
   !
   do i = 1,npw
      gk(1,i) = (xk(1,kpoint)+g(1,igk(i)))*tpiba
@@ -76,7 +78,7 @@ subroutine dvpsi_e(kpoint,ipol)
   end do
   !
   call pw_gemm ('Y', nkb, nbnd, npw,  vkb, npwx, evc, npwx, becp, nkb)
-  call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, bec1, nkb)
+  call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, dbec, nkb)
   !
   jkb = 0
   do nt=1, ntyp
@@ -85,8 +87,8 @@ subroutine dvpsi_e(kpoint,ipol)
            do ih=1,nh(nt)
               jkb=jkb+1
               do ibnd = 1,nbnd
-                 ps(jkb,ibnd,1) = bec1(jkb,ibnd)*dvan(ih,ih,nt)
-                 ps(jkb,ibnd,2) = becp(jkb,ibnd)*dvan(ih,ih,nt)
+                 dbec_(jkb,ibnd) = dbec(jkb,ibnd)*dvan(ih,ih,nt)
+                 becp_(jkb,ibnd) = becp(jkb,ibnd)*dvan(ih,ih,nt)
               enddo
            end do
         end if
@@ -96,12 +98,11 @@ subroutine dvpsi_e(kpoint,ipol)
   if (jkb.ne.nkb) call errore('dvpsi_e','unexpected error',1)
   !
   call DGEMM ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
-       2*npwx, ps(1,1,1), nkb, 1.d0, dpsi, 2*npwx)
+       2*npwx, dbec_, nkb, 1.d0, dpsi, 2*npwx)
   call DGEMM ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
-       2*npwx, ps(1,1,2), nkb, 1.d0, dpsi, 2*npwx)
+       2*npwx, becp_, nkb, 1.d0, dpsi, 2*npwx)
   !
-  deallocate(ps)
-  deallocate(bec1)
+  deallocate(dbec, dbec_)
   deallocate(dvkb1)
   deallocate(dvkb)
   deallocate(gk)
@@ -140,6 +141,7 @@ subroutine dvpsi_e(kpoint,ipol)
   deallocate(gr)
   deallocate(work)
   deallocate(overlap)
+  deallocate(becp, becp_)
   !
   call stop_clock('dvpsi_e')
   !

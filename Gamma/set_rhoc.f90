@@ -15,7 +15,6 @@ subroutine set_rhoc
   !
 #include "machine.h"
   use pwcom
-  use gamma
   implicit none
   !
   real(kind=DP), parameter :: eps = 1.d-10

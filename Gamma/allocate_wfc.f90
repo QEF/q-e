@@ -13,9 +13,13 @@ subroutine allocate_wfc
   ! dynamical allocation of arrays: wavefunctions and eigenvectors
   !
 #include "machine.h"
-  use pwcom
+  USE wvfct, ONLY: npwx, nbnd, nbndx, et, wg
+  USE klist, ONLY: nkstot, nelec
+  USE basis, ONLY: natomwfc
+  USE ldaU,  ONLY: swfcatom, lda_plus_u
+  USE gvect, ONLY: ngl
+  USE us,    ONLY: nkb
   USE wavefunctions,  ONLY: evc
-  use rbecmod
   implicit none
   !
   ! Allocate memory
@@ -23,7 +27,6 @@ subroutine allocate_wfc
   allocate (et( nbnd, nkstot))    
   allocate (wg( nbnd, nkstot))    
   allocate (evc(npwx, nbnd))    
-  allocate(becp(nkb, nbndx))
   !
   ! Needed for LDA+U
   !

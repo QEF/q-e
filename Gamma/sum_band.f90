@@ -14,10 +14,24 @@ subroutine sum_band
   !     eigenvalues.
   !
 #include "machine.h"
-  use pwcom
-  USE wavefunctions,  ONLY: evc, psic
-  use gamma
-  use rbecmod
+  USE parameters, ONLY: DP
+  USE brilz,  ONLY: omega
+  USE basis,  ONLY: nat, ntyp, ityp
+  USE ener,   ONLY: eband, demet, ef
+  USE fixed_occ,ONLY: f_inp, tfixed_occ
+  USE gvect,  ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gsmooth,ONLY: nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+       doublegrid
+  USE klist,  ONLY: lgauss, degauss, ngauss, nks, nkstot, wk, xk, nelec
+  USE ktetra, ONLY: ltetra, ntetra, tetra
+  USE ldaU,   ONLY: lda_plus_U
+  USE lsda_mod,ONLY: lsda, nspin, current_spin, isk
+  USE scf,    ONLY: rho
+  USE symme,  ONLY: nsym, s, ftau
+  USE units,  ONLY: iunwfc, nwordwfc, iunigk
+  USE us,     ONLY: okvan, tvanp, becsum, nh, nkb, vkb
+  USE wavefunctions, ONLY: evc, psic
+  USE wvfct, ONLY: nbnd, npwx, npw, igk, wg, et
 #ifdef __PARA
   use para
 #endif
@@ -35,8 +49,11 @@ subroutine sum_band
   ! counter on k points
   real(kind=DP) :: w1, w2
   ! weight
+  real(kind=DP), allocatable :: becp(:,:)
+  ! contain <beta|psi>
   !
   call start_clock ('sum_band')
+  allocate (becp(nkb,nbnd))
   becsum(:,:,:) = 0.d0
   rho(:,:) = 0.d0
   eband = 0.d0
@@ -173,6 +190,7 @@ subroutine sum_band
      call stop_clock ('sumbec')
 10   continue
   enddo
+  deallocate (becp)
   !
   ! If a double grid is used, interpolate onto the fine grid
   !

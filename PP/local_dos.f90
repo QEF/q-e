@@ -21,7 +21,6 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   use parameters, only: DP
   use pwcom
   USE wavefunctions,  ONLY: evc, psic
-  use becmod
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif
@@ -47,11 +46,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   ! counters
   real(kind=DP) :: w0gauss, w1gauss, w, w1
   real(kind=DP) :: seno, coseno, modulus, maxmod
-  ! weights
-  complex(kind=DP), allocatable :: segno(:)
+  complex(kind=DP), allocatable :: segno(:), becp(:,:)
   logical :: lgamma
   external w0gauss, w1gauss
   !
+  allocate (becp(nkb,nbnd))
   rho(:,:) = 0.d0
   dos(:) = 0.d0
   becsum(:,:,:) = 0.d0
@@ -191,6 +190,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
         enddo
      endif
   enddo
+  deallocate(becp)
   if (doublegrid) then
      do is = 1, nspin
         call interpolate (rho (1, is), rho (1, is), 1)

@@ -13,7 +13,7 @@ subroutine H_h(e,h,Ah)
   !
   use parameters, only: DP
   use pwcom
-  use rbecmod
+  use rbecmod, only: becp
   use cgcom
   !
   implicit none

@@ -25,7 +25,6 @@ subroutine atomic_rho (rhoa, nspina)
 
   use pwcom
   USE wavefunctions,  ONLY: psic
-  use gamma
   implicit none
   integer :: nspina
   ! the number of spin polarizations

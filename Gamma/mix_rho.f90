@@ -19,7 +19,6 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   use parameters, only : DP
   use pwcom
-  use gamma
   !
   !   First the I/O variable
   !
@@ -506,7 +505,6 @@ end subroutine approx_screening
   !
   use parameters, only : DP
   use pwcom
-  use gamma
   !
   ! I/O
   !

@@ -79,7 +79,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
 #include "machine.h"
   use parameters, only : DP
-  use gamma, only: nlm
+  use gvect, only: nlm
   implicit none
   !
   ! input
@@ -217,7 +217,7 @@ subroutine v_h (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !     Hartree potential VH(r) from n(r)
   !
   use parameters, only: DP
-  use gamma, only: nlm
+  use gvect, only: nlm
   implicit none
   !
   !    input

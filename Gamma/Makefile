@@ -206,7 +206,6 @@ MODULES = ../Modules/*.o ../PW/error_handler.o \
           ../PW/restart.o ../PW/upf_to_internal.o
 
 GAMMA=rbecmod.o \
-gamma.o \
 fake.o \
 add_vuspsi.o \
 addusdens.o \

@@ -13,6 +13,7 @@ subroutine solve_ph
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: evc
+  USE rbecmod, ONLY: becp, becp_
   use cgcom
 #ifdef __PARA
   use para
@@ -26,11 +27,12 @@ subroutine solve_ph
   !
   call start_clock('solve_ph')
   !
-  allocate  ( diag( npwx))    
-  allocate  ( overlap( nbnd, nbnd))    
-  allocate  ( work( npwx, nbnd))    
-  allocate  ( gr  ( npwx, nbnd))    
-  allocate  ( h   ( npwx, nbnd))    
+  allocate ( becp( nkb,nbnd), becp_(nkb,nbnd) )
+  allocate ( diag( npwx) )
+  allocate ( overlap( nbnd, nbnd) )
+  allocate ( work( npwx, nbnd) )
+  allocate ( gr  ( npwx, nbnd) )
+  allocate ( h   ( npwx, nbnd) )
   !
   kpoint = 1
   do i = 1,npw
@@ -120,6 +122,7 @@ subroutine solve_ph
   deallocate(overlap)
   deallocate(work)
   deallocate(diag)
+  deallocate(becp, becp_)
   !
   call stop_clock('solve_ph')
   !

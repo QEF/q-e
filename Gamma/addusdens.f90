@@ -15,7 +15,6 @@ subroutine addusdens
   !
 #include "machine.h"
   use pwcom
-  use gamma
   implicit none
   !
   !     here the local variables

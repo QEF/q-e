@@ -16,15 +16,13 @@ subroutine force_us (forcenl)
 
   use pwcom
   USE wavefunctions,  ONLY: evc
-  use gamma
-  use rbecmod
   implicit none
   !
   real(kind=DP) :: forcenl (3, nat)
   ! output: the nonlocal contribution
 
-  real(kind=DP), allocatable :: dbecp (:,:,:)
-  ! auxiliary variable contains <dbeta|psi>
+  real(kind=DP), allocatable :: becp(:,:), dbecp (:,:,:)
+  ! auxiliary variables contain <beta|psi> and <dbeta|psi>
   complex(kind=DP), allocatable :: vkb1 (:,:)
   ! auxiliary variable contains g*|beta>
   real(kind=DP) :: ps
@@ -32,7 +30,7 @@ subroutine force_us (forcenl)
   ! counters
   !
   forcenl(:,:) = 0.d0
-  allocate (dbecp( nkb, nbnd, 3))    
+  allocate (becp(nkb, nbnd), dbecp(nkb, nbnd, 3))    
   allocate (vkb1(  npwx, nkb))    
   if (nks.gt.1) rewind iunigk
   !
@@ -131,7 +129,7 @@ subroutine force_us (forcenl)
      call trnvect (forcenl (1, na), at, bg, 1)
   enddo
   deallocate (vkb1)
-  deallocate (dbecp)
+  deallocate (becp, dbecp)
   return
 end subroutine force_us
 

@@ -19,7 +19,8 @@ subroutine c_bands (iter, ik_, dr2)
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: evc
-  use g_psi_mod
+  USE rbecmod, ONLY: becp, becp_
+  USE g_psi_mod
   implicit none
   !
   !     First the I/O variables
@@ -58,8 +59,10 @@ subroutine c_bands (iter, ik_, dr2)
   !   allocate arrays
   !
   allocate (h_diag( npwx))    
-
   allocate (s_diag( npwx))    
+  !   becp, becp_ contain <beta|psi> - used in h_psi and s_psi
+  !   they are allocate once here in order to reduce overhead
+  allocate (becp( nkb,nbnd), becp_(nkb,nbnd))
 
   if (isolve == 0) then
      write (6, '("     Davidson diagonalization with overlap")')
@@ -162,6 +165,7 @@ subroutine c_bands (iter, ik_, dr2)
   !
   ! deallocate work space
   !
+  deallocate (becp, becp_)
   deallocate (s_diag)
   deallocate (h_diag)
 

@@ -10,9 +10,11 @@
 subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
-  use pwcom
+  USE parameters, only : DP
+  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE wvfct,   ONLY : igk
   USE wavefunctions,  ONLY: psic
-  use gamma
+  !
   implicit none
   !
   integer :: lda, n, m

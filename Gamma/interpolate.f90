@@ -17,7 +17,6 @@ subroutine interpolate (v, vs, iflag)
   !
 #include"machine.h"
   use pwcom
-  use gamma
   implicit none
   real(kind=DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh

@@ -24,7 +24,7 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   !
 #include "machine.h"
   use pwcom
-  use rbecmod
+  USE rbecmod, ONLY: becp, becp_
   implicit none
   !
   !     First the dummy variables
@@ -36,12 +36,9 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   !
   integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
   ! counters
-  real(kind=DP), allocatable :: ps (:,:)
-  ! the product vkb and psi
   !
-  if (nkb.eq.0) return
-  allocate(ps(nkb,m))
-  ps(:,:) = 0.d0
+  if (nkb == 0) return
+  becp_(:,:) = 0.d0
   call start_clock ('add_vuspsi')
   ijkb0 = 0
   do nt = 1, ntyp
@@ -52,7 +49,7 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
                  jkb = ijkb0 + jh
                  do ih = 1, nh (nt)
                     ikb = ijkb0 + ih
-                    ps (ikb, ibnd) = ps (ikb, ibnd) + &
+                    becp_(ikb, ibnd) = becp_(ikb, ibnd) + &
                          deeq(ih,jh,na,current_spin) * becp(jkb,ibnd)
                  enddo
               enddo
@@ -63,8 +60,7 @@ subroutine add_vuspsi (lda, n, m, psi, hpsi )
   enddo
 
   call DGEMM ('N', 'N', 2*n, m, nkb, 1.d0, vkb, &
-       2*lda, ps, nkb, 1.d0, hpsi, 2*lda)
-  deallocate (ps)
+       2*lda, becp_, nkb, 1.d0, hpsi, 2*lda)
 
   call stop_clock ('add_vuspsi')
   return

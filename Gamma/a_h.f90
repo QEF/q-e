@@ -14,8 +14,7 @@ subroutine A_h(e,h,ah)
   use pwcom
   USE wavefunctions,  ONLY: evc, psic
   USE constants,  ONLY: degspin
-  use gamma
-  use rbecmod
+  use rbecmod, only: becp
   use cgcom
   use funct
   !

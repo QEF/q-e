@@ -16,7 +16,6 @@ subroutine allocate_fft
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: psic
-  use gamma
   implicit none
   !
   !     determines the data structure for fft arrays

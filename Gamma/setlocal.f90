@@ -14,7 +14,6 @@ subroutine setlocal
   !
 #include "machine.h"
   use pwcom
-  use gamma
   implicit none
   complex(kind=DP), allocatable :: aux (:)
   ! auxiliary variable used to contain the potential

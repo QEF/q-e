@@ -15,7 +15,6 @@ subroutine rhod2vkb(dyn0)
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: evc, psic
-  use rbecmod
   use cgcom
   !
   implicit none
@@ -26,7 +25,7 @@ subroutine rhod2vkb(dyn0)
   real(kind=DP) :: weight, fac, gtau
   real(kind=DP), allocatable :: dynloc(:,:), dynkb(:,:)
   complex(kind=DP), allocatable :: dvkb(:,:)
-  real (kind=DP), allocatable ::becp1(:,:,:), becp2(:,:,:)
+  real (kind=DP), allocatable :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
   !
   call start_clock('rhod2vkb')
   !
@@ -72,7 +71,7 @@ subroutine rhod2vkb(dyn0)
   end do
 #define GAMMA
 #ifdef GAMMA
-  call DSCAL(3*nat*nmodes,2.d0,dynloc,1)
+  dynloc(:,:) = 2.d0 * dynloc(:,:)
 #endif
 #ifdef __PARA
   call reduce(3*nat*nmodes,dynloc)
@@ -83,6 +82,7 @@ subroutine rhod2vkb(dyn0)
   allocate  (dynkb(3*nat,3*nat))    
   dynkb=0.d0
   allocate  ( dvkb( npwx, nkb))    
+  allocate  ( becp ( nkb, nbnd))    
   allocate  ( becp1( nkb, nbnd, 3))    
   allocate  ( becp2( nkb, nbnd, 6))    
   !
@@ -165,6 +165,7 @@ subroutine rhod2vkb(dyn0)
   !
   deallocate ( becp2)
   deallocate ( becp1)
+  deallocate ( becp )
   deallocate ( dvkb)
   !
   dyn0 (:,:) = 0.d0

@@ -16,6 +16,7 @@ subroutine wfcinit
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: evc
+  USE rbecmod, only: becp, becp_
   implicit none
   !
   integer :: ik, ibnd, ig, ipol, n_starting_wfc
@@ -62,6 +63,9 @@ subroutine wfcinit
   !
   !    we start a loop on k points
   !
+  !   becp, becp_ contain <beta|psi> - used in h_psi and s_psi
+  !   they are allocate once here in order to reduce overhead
+  allocate (becp( nkb,n_starting_wfc), becp_(nkb,n_starting_wfc))
   allocate (wfcatom( npwx, n_starting_wfc))
   !
   do ik = 1, nks
@@ -133,6 +137,7 @@ subroutine wfcinit
      if (nks.gt.1.or..not.reduce_io) call davcio (evc, nwordwfc, iunwfc, ik, 1)
 
   enddo
+  deallocate (becp, becp_)
   deallocate (wfcatom)
   if (iprint.eq.1) then
 #ifdef __PARA

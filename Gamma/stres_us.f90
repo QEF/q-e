@@ -14,7 +14,6 @@ subroutine stres_us (ik, gk, sigmanlc)
 #include "machine.h"
   use pwcom
   USE wavefunctions,  ONLY: evc
-  use rbecmod
 #ifdef __PARA
   use para
 #endif
@@ -29,6 +28,7 @@ subroutine stres_us (ik, gk, sigmanlc)
        ijkb0
   real(kind=DP) :: fac, xyz (3, 3), q, evps, DDOT
   real(kind=DP) , allocatable :: qm1(:)
+  real(kind=DP) , allocatable :: becp(:,:)
   complex(kind=DP) , allocatable :: work1 (:), work2 (:), dvkb (:,:)
   ! dvkb contains the derivatives of the kb potential
   complex(kind=DP) :: ps
@@ -39,6 +39,8 @@ subroutine stres_us (ik, gk, sigmanlc)
   !
   if (lsda) current_spin = isk (ik)
   if (nks.gt.1) call init_us_2 (npw, igk, xk (1, ik), vkb)
+  !
+  allocate(becp(nkb,nbnd))
   !
   call pw_gemm ('Y', nkb, nbnd, npw, vkb, npwx, evc, npwx,becp, nkb)
   !
@@ -192,6 +194,7 @@ subroutine stres_us (ik, gk, sigmanlc)
   enddo
 
 10 continue
+  deallocate (becp)
   deallocate (dvkb)
   deallocate (qm1, work2, work1)
   return

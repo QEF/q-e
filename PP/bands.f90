@@ -8,8 +8,6 @@
 !-----------------------------------------------------------------------
 program bands
   !-----------------------------------------------------------------------
-  use pwcom
-  use becmod
   use io_files, only: nd_nmbr, prefix, tmp_dir
 #ifdef __PARA
   use para, only: me
@@ -84,7 +82,6 @@ subroutine punch_band (filband)
   use units
   use wvfct
   use us
-  use becmod
   use wavefunctions, only: evc
 
   implicit none
@@ -94,10 +91,11 @@ subroutine punch_band (filband)
   complex(kind=DP) :: pro
   ! the product of wavefunctions
 
-  complex(kind=DP), allocatable :: psiold (:,:), old (:), new (:), &
-       becpold (:,:)
+  complex(kind=DP), allocatable :: psiold (:,:), old (:), new (:)
   ! psiold: eigenfunctions at previous k-point, ordered
   ! old, new: contain one band resp. at previous and current k-point
+  complex(kind=DP), allocatable :: becp(:,:), becpold (:,:)
+  ! becp   : <psi|beta> at current  k-point
   ! becpold: <psi|beta> at previous k-point
 
   integer :: ibnd, jbnd, ik, ikb, ig, npwold, ios
@@ -133,7 +131,7 @@ subroutine punch_band (filband)
   !
   allocate (psiold( npwx, nbnd))    
   allocate (old(ngm), new(ngm))    
-  allocate (becpold(nkb, nbnd))    
+  allocate (becp(nkb, nbnd), becpold(nkb, nbnd))    
   allocate (igkold (npwx))    
   allocate (ok (nbnd), il (nbnd))    
   allocate (degeneracy(nbnd), edeg(nbnd))
@@ -276,7 +274,7 @@ subroutine punch_band (filband)
   deallocate (edeg, degeneracy)
   deallocate (il, ok)
   deallocate (igkold)
-  deallocate (becpold)
+  deallocate (becpold, becp)
   deallocate (new, old)
   deallocate (psiold)
 
