@@ -61,7 +61,7 @@ uspp.o \
 wave_base.o \
 wavefunctions.o
 
-IOTK=iotk_module.o
+IOTK=iotk_module.o iotk_base.o iotk_external.o
 
 all : $(MODULES)
 

@@ -249,7 +249,9 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-EXOBJS=../Modules/iotk_module.o
+EXOBJS=../Modules/iotk_base.o \
+../Modules/iotk_module.o \
+../Modules/iotk_external.o
 
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x initial_state.x

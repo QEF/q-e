@@ -89,6 +89,8 @@ ions_base.o : io_base.o
 ions_base.o : io_global.o
 ions_base.o : kind.o
 ions_base.o : parameters.o
+iotk_external.o : iotk_base.o
+iotk_module.o : iotk_base.o
 kind.o : io_global.o
 mp_buffers.o : io_global.o
 mp_buffers.o : kind.o

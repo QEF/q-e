@@ -262,20 +262,19 @@ program pp_punch
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files
   use iotk_module
-
-  use mp_global, ONLY : kunit
-  use mp,        ONLY : mp_bcast
-
+  use mp_global, ONLY : mpime, kunit
+  use mp, ONLY: mp_bcast
 
   !
   implicit none
   integer :: ik, i, kunittmp, ios
 
-  character(len=256) :: pp_file
+  character(len=200) :: pp_file
   character(len=iotk_attlenx) :: attr
-  logical :: found, uspp_spsi, ascii
+  logical :: found, uspp_spsi, ascii, single_file, raw
+  INTEGER, EXTERNAL :: C_MKDIR
 
-  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii
+  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw
 
   !
   call start_postproc (nd_nmbr)
@@ -287,15 +286,18 @@ program pp_punch
   pp_file= ' '
   uspp_spsi = .FALSE.
   ascii = .FALSE.
+  single_file = .FALSE.
+  raw = .FALSE.
   !
   !    Reading input file
   !
   IF ( ionode ) THEN
-     !
-     READ(5,inputpp,IOSTAT=ios)
-     IF ( ios /= 0 ) &
-        CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
-     !
+  READ(5,inputpp,IOSTAT=ios)
+  IF (ios /= 0) CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
+  if( pp_file == ' ' ) then
+    pp_file = TRIM(prefix)//".export/index.xml"
+    if(ionode) ios = C_MKDIR( TRIM(prefix)//".export" , len(TRIM(prefix)//".export") )
+  endif
   ENDIF
   !
   ! ... Broadcasting variables
@@ -305,12 +307,11 @@ program pp_punch
   CALL mp_bcast( pp_file, ionode_id )
   CALL mp_bcast( uspp_spsi, ionode_id )
   CALL mp_bcast( ascii, ionode_id )
+  CALL mp_bcast( single_file, ionode_id )
+  CALL mp_bcast( raw, ionode_id )
 
   tmp_dir = outdir
 
-  if( pp_file == ' ' ) then
-    pp_file = TRIM(prefix)//".XMLpun"
-  endif
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -318,16 +319,20 @@ program pp_punch
   call openfil_pp
   !
 
+#if defined __PARA
   kunittmp = kunit
+#else
+  kunittmp = 1
+#endif
 
-  call write_export (pp_file, kunittmp, uspp_spsi, ascii)
+  call write_export (pp_file, kunittmp, uspp_spsi, ascii, single_file, raw)
 
   call stop_pp
   stop
 end program pp_punch
 !
 !-----------------------------------------------------------------------
-subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
+subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
 #include "f_defs.h"
@@ -351,7 +356,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
 
   integer, intent(in) :: kunit
   character(80), intent(in) :: pp_file
-  logical, intent(in) :: uspp_spsi, ascii
+  logical, intent(in) :: uspp_spsi, ascii, single_file, raw
 
   integer :: i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
   integer, allocatable :: kisort(:)
@@ -410,11 +415,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
 
   if( ionode ) then
     write(0,*) "Opening file "//trim(pp_file)
-    if( ascii ) then
-      call iotk_open_write(50,file=TRIM(outdir)//'/'//TRIM(pp_file),binary=.false.)
-    else
-      call iotk_open_write(50,file=TRIM(outdir)//'/'//TRIM(pp_file),binary=.true.)
-    endif
+    call iotk_open_write(50,file=TRIM(outdir)//'/'//TRIM(pp_file))
     write(0,*) "Reconstructing the main grid"
   end if
 
@@ -532,6 +533,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
     write(0,*) "Writing main grid"
     call iotk_write_attr(attr,"npw",   ngm_g,first=.true.)
     call iotk_write_attr(attr,"cutoff","NOT AVAILABLE")
+    if(.not.single_file) &
+      call iotk_link(50,"Main_grid","mgrid",create=.true.,binary=.not.ascii,raw=raw)
     call iotk_write_begin(50,"Main_grid",attr=attr)
     call iotk_write_dat(50,"g",itmp(1:3,1:ngm_g),fmt="(3i5)")
     call iotk_write_end(50,"Main_grid")
@@ -568,6 +571,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
       call iotk_write_attr (attr,"npw",ngk_g(ik),first=.true.)
 ! Controlla le unita' di k
       call iotk_write_attr (attr,"kcry",xk(1:3,ik))
+      if(.not.single_file) &
+        call iotk_link(50,"Kpoint"//iotk_index(ik),"grid"//iotk_index(ik),create=.true.,binary=.not.ascii,raw=raw)
       call iotk_write_begin(50,"Kpoint"//iotk_index(ik),attr)
       call iotk_write_dat  (50,"index",igwk(1:ngk_g(ik),ik))
       call iotk_write_dat  (50,"grid",itmp(1:3,igwk(1:ngk_g(ik),ik)),fmt="(3i5)")
@@ -606,6 +611,9 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii)
   if( ionode ) call iotk_write_begin(50, "Eigenvectors")
 
   do ik = 1, nkstot
+    if(.not.single_file .and. ionode) &
+       call iotk_link(50,"Kpoint"//iotk_index(ik),"wfc"//iotk_index(ik), &
+                         create=.true.,binary=.not.ascii,raw=raw)
 
      local_pw = 0
      IF( (ik >= iks) .AND. (ik <= ike) ) THEN
