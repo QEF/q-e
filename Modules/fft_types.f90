@@ -165,17 +165,24 @@ CONTAINS
 
     desc%ngl( 1:nproc )  = ngp( 1:nproc )
 
-    !  Set for each stick the processor that owns it
-
     IF( SIZE( desc%isind ) < ( nr1x * nr2x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )
 
     IF( SIZE( desc%iplp ) < ( nr1x ) .OR. SIZE( desc%iplw ) < ( nr1x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, ipl ', 5 )
 
+    !
+    !  1. Temporarily store in the array "desc%isind" the index of the processor
+    !     that own the corresponding stick (index of proc starting from 1)
+    !  2. Set the array elements of  "desc%iplw" and "desc%iplp" to one 
+    !     for that index corresponding to YZ planes containing at least one stick
+    !     this are used in the FFT transform along Y
+    !
+
     desc%isind = 0
     desc%iplp   = 0
     desc%iplw   = 0
+
     DO iss = 1, nst
       is = index( iss )
       i1 = in1( is )
@@ -204,6 +211,11 @@ CONTAINS
       END IF
     END DO
 
+    !
+    !  Compute for each proc the global index ( starting from 0 ) of the first
+    !  local stick ( desc%iss )
+    !
+
     DO i = 1, nproc
       IF( i == 1 ) THEN
         desc%iss( i ) = 0
@@ -214,6 +226,13 @@ CONTAINS
 
     IF( SIZE( desc%ismap ) < ( nst ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions ', 6 )
+
+    !
+    !  1. Set the array desc%ismap which maps stick indexes to 
+    !     position in the palne  ( iss )
+    !  2. Re-set the array "desc%isind",  that maps position 
+    !     in the plane with stick indexes (it is the inverse of desc%ismap )
+    !
 
     desc%ismap = 0
     nsp        = 0
