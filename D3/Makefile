@@ -413,8 +413,6 @@ include .dependencies
 
 all: $(D3OBJS)
 	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
-clean:
+clean_:
 	-/bin/rm -f d3.x *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies intel.pcl work.pc
 #

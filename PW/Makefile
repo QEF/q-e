@@ -4,8 +4,6 @@
 include ../make.rules
 include ../make.sys
 #
-# TEMP: il cercadipendenze non funziona per pwcom para ..
-#
 PWOBJS = pwcom.o  \
 para.o  \
 aainit.o  \
@@ -261,9 +259,6 @@ include .dependencies
 
 all: $(PWOBJS)
 	$(LD) -o pw.x $(PWOBJS) $(MODULES) $(LFLAGS)
-clean:
+clean_:
 	-/bin/rm -f pw.x *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies intel.pcl work.pc
-
 #

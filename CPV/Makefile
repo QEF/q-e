@@ -29,7 +29,7 @@ cp90 : $(FOBJS)
 	chmod a+x $(PROGNAME)
 
 
-clean :
+clean_:
 	- rm -f *.o *.i core* fort* *.mod *.s *.d work.pc
 
 include .dependencies

@@ -14,7 +14,7 @@ clib.a : $(OBJS)
 source:
 	co -l $(OBJS:.o=.c)
 
-clean:
+clean_:
 	- rm -f clib.a *.o *.mod *.i core*
 
 include ../make.rules

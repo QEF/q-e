@@ -12,7 +12,7 @@ what:
 	@echo '   upf       (utilities for pseudopotential conversion)'
 	@echo '   tools     (misc tools for data analysis)'
 	@echo '   tar       (create a tar file containing the distribution)'
-	@echo '   clean     (remove executables and object)'
+	@echo '   clean     (remove executables and objects)'
 	@echo '   veryclean (revert distribution to the original status)'
 	@echo '   fpmd      (FPMD code for Car-Parrinello MD)'
 	@echo '   cpv       (CPV code: CP MD with ultrasoft pseudopotentials)'
@@ -56,32 +56,27 @@ cpv: modules libs
 links:
 	( cd bin/ ; ln -fs ../PW/pw.x ../PH/ph.x ../D3/d3.x ../Gamma/pwg.x ../Gamma/phcg.x ../CPV/cp.x ../FPMD/par2.x ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x ../PP/plotrho.x ../PP/pp.x ../PP/projwfc.x ../PP/voronoy.x ../pwtools/band_plot.x ../pwtools/dynmat.x ../pwtools/fqha.x ../pwtools/matdyn.x ../pwtools/q2r.x . )
 
-clean :
-	( cd PW ; make clean ) ; \
-	( cd PH ; make clean ) ; \
-	( cd PP ; make clean ) ; \
-	( cd D3 ; make clean ) ; \
-	( cd Gamma ; make clean ) ; \
-	( cd pwtools ; make clean ) ; \
-	( cd upftools ; make clean ) ; \
-        ( cd Modules ; make clean ) ; \
-        ( cd install ; make clean ) ; \
-	( cd clib ; make clean ) ; \
-	( cd flib ; make clean ) ; \
-	( cd FPMD ; make clean ) ; \
-	( cd CPV ; make clean ) ;
+clean:
+	( cd PW ; make clean_ ) ; \
+	( cd PH ; make clean_ ) ; \
+	( cd PP ; make clean_ ) ; \
+	( cd D3 ; make clean_ ) ; \
+	( cd Gamma ; make clean_ ) ; \
+	( cd pwtools ; make clean_ ) ; \
+	( cd upftools ; make clean_ ) ; \
+        ( cd Modules ; make clean_ ) ; \
+        ( cd install ; make clean_ ) ; \
+	( cd clib ; make clean_ ) ; \
+	( cd flib ; make clean_ ) ; \
+	( cd FPMD ; make clean_ ) ; \
+	( cd CPV ; make clean_ ) ;
+# this avoids an infinite loop if one of the directories is missing
+clean_:
 
 veryclean: clean
 	/bin/rm make.rules make.sys */.dependencies */dum1 */dum2 bin/*
 
 tar:
-	tar -cf - License Makefile README include/machine.h* \
-                  install/* \
-                  PW/Makefile PW/*.f90 \
-                  PH/Makefile PH/*.f90 \
-                  PP/Makefile PP/*.f90 \
-                  D3/Makefile D3/*.f90 \
-                  Modules/Makefile Modules/*.f90 \
-                  pwtools/Makefile pwtools/*.f90 \
-                  upftools/Makefile upftools/*.f90 upftools/UPF \
-	          pwdocs pw_examples/ pseudo/ | gzip > pw.tar.gz
+	tar -cf - License Makefile README */*.f90 \
+                  include/machine.h* install/* */Makefile \
+                  upftools/UPF *docs/ *_examples/ pseudo/ | gzip > pw.tar.gz

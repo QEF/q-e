@@ -308,8 +308,6 @@ bands.x: $(PPOBJS) bands.o
 plotrho.x: $(PPOBJS) plotrho.o
 	$(LD) -o plotrho.x plotrho.o ../Modules/parameters.o $(LFLAGS)
 
-clean:
+clean_:
 	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies intel.pcl work.pc
 #

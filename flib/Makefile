@@ -44,5 +44,5 @@ ptools.a : $(POBJS)
 include .dependencies
 include ../make.rules
 
-clean:
+clean_:
 	- rm -f ptools.a *.o *.mod *.i core* work.pc flib.a

@@ -36,5 +36,5 @@ dos.x:  dos.o
 fqha.x:  fqha.o
 	$(LD) -o fqha.x fqha.o  $(LFLAGS)
 
-clean:
+clean_:
 	rm -f *.x *.o  *.mod *.d *.F90

@@ -4,8 +4,6 @@
 include ../make.rules
 include ../make.sys
 #
-# TEMP: solito problema
-#
 PHOBJS = phcom.o  \
 addcore.o  \
 adddvscf.o  \
@@ -361,8 +359,6 @@ include .dependencies
 
 all: $(PHOBJS)
 	$(LD) -o ph.x $(PHOBJS) $(PWOBJS) $(MODULES) $(LFLAGS)
-clean:
+clean_:
 	-/bin/rm -f ph.x *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies intel.pcl work.pc
 #

@@ -23,10 +23,8 @@ include ../make.sys
 #
 all: $(MODULES)
 #
-clean:
+clean_:
 	-/bin/rm -f *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies
 #
 include .dependencies
 

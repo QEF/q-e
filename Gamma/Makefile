@@ -251,8 +251,6 @@ pwg.x:  $(GAMMA) $(PWOBJS) pwscf.o
 phcg.x: $(GAMMA) $(PWOBJS) $(CGOBJS)
 	$(LD) -o phcg.x $(FFLAGS) $(CGOBJS) $(GAMMA) $(PWOBJS) $(MODULES) $(LFLAGS)
 
-clean:
+clean_:
 	-/bin/rm -f *.x *.o *.d *~ *.F90 *.mod
-veryclean: clean
-	-/bin/rm .dependencies
 
