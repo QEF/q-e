@@ -214,19 +214,18 @@ and let us apologize to everybody we have forgotten.
 
 This manual was (mostly) written by Paolo Giannozzi.
 
-\subsection{Terms of Use}
+\subsection{Terms of use}
 
 ESPRESSO is free software, released under the GNU General Public
 License
 (\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
                    {http://www.pwscf.org/License.txt},
-or the file \texttt{License} in the top directory of the ESPRESSO
-distribution).
+or the file \texttt{License} in the distribution).
 All trademarks belong to their respective owners.
 
 We shall greatly appreciate if scientific work done using this code
-will contain an explicit acknowledgment and a reference to the PWscf
-web page.
+will contain an explicit acknowledgment and a reference to the
+ESPRESSO web page.
 Our preferred form for the acknowledgment is the following:
 
 \begin{quote}
@@ -237,8 +236,12 @@ Calculations in this work have been done using the ESPRESSO package
 \par\noindent
 \emph{Bibliography:}
 \par\noindent
-[\emph{ref}] S.~Baroni, A.~Dal Corso, S.~de Gironcoli, and
-P.~Giannozzi, \texttt{http://www.pwscf.org/}.
+[\emph{ref}]
+S.~Baroni, A.~Dal Corso, S.~de Gironcoli, P.~Giannozzi, % PWscf
+C.~Cavazzoni, G.~Ballabio, S.~Scandolo, G.~Chiarotti, P.~Focher, % FPMD
+A.~Pasquarello, K.~Laasonen, A.~Trave, R.~Car, N.~Marzari, % CP
+A.~Kokalj, % PWgui
+\texttt{http://www.pwscf.org/}.
 \end{quote}
 
 \clearpage
@@ -1090,7 +1093,7 @@ This must be the same \textbf{q}-vector given in the input of
 
 A sample phonon calculation is performed in Example 02.
 
-\subsubsection{Calculation of Interatomic Force Constants in real
+\subsubsection{Calculation of interatomic force constants in real
 space}
 
 First, dynamical matrices are calculated and saved for a suitable
@@ -1138,7 +1141,7 @@ and the final result is summed over all \textbf{q}-vectors, using
 \texttt{pwtools/lambda.x}. The input data for the latter is
 described in the header of \texttt{pwtools/lambda.f90}.
 
-\subsection{Post Processing}
+\subsection{Post-processing}
 
 There are a number of auxiliary codes performing postprocessing tasks
 such as plotting, averaging, and so on, on the various quantities
@@ -1701,9 +1704,9 @@ one processor.
 
 \clearpage
 
-\section{Performance Issues}
+\section{Performance issues}
 
-\subsection{CPU time requirement}
+\subsection{CPU time requirements}
 
 The following holds for code {\tt pw.x} and for non-US PPs. 
 For US PPs there are additional terms to be calculated.
@@ -1791,7 +1794,7 @@ T_{scf} = d_2 \cdot Nr_1 \cdot Nr_2 \cdot Nr_3 + d_3 \cdot
 $$
 where $d_1$, $d_2$ are prefactors.
 
-\subsection{Memory requirement}
+\subsection{Memory requirements}
 
 A typical \texttt{pw.x} run will require a maximum memory in the order
 of $O$ double precision complex numbers, where
@@ -1811,7 +1814,7 @@ Use it exactly as \texttt{pw.x}.
 The memory required by the phonon code follows the same patterns,
 with somewhat larger factors $m$, $p$, $q$.
 
-\subsection{File space requirement}
+\subsection{File space requirements}
 
 A typical \texttt{pw.x} run will require an amount of temporary disk
 space in the order of $O$ double precision complex numbers:
