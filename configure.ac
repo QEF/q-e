@@ -45,6 +45,7 @@ then
 		*-ibm-aix* )                            arch=aix     ;;
 		mips-sgi-* )                            arch=mips    ;;
 		alphaev*-dec-osf* )                     arch=alpha   ;;
+		alphaev*-*-linux* )                     arch=alinux  ;;
 		sparc-sun-* )                           arch=sparc   ;;
 		*cray-unicosmp* )                       arch=crayx1  ;;
 		powerpc-apple-darwin* )                 arch=mac     ;;
@@ -86,6 +87,17 @@ alpha )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
+	;;
+alinux )
+	try_f90_parallel="mpif77 mpif90"
+	try_f77_parallel="mpif77"
+	try_f90="fort g95 f90"
+	try_f77="fort g77 f77"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__LINUX64"
+	# use static libraries unless explicitly asked
+	if test ! $yes_shared ; then no_shared=1 ; fi
 	;;
 sparc )
 	try_f90_parallel="mpf90"
@@ -185,6 +197,10 @@ mips:* )
 alpha:* )
 	try_cc="cc gcc"
 	try_f77="f77 $f90"
+	;;
+alinux:* )
+	try_cc="ccc gcc"
+	try_f77="fort g77 f77 $f90"
 	;;
 sparc:* )
 	try_cc="cc gcc"
@@ -291,6 +307,7 @@ linux*:gcc:g95 )                    ;;
 aix:mpcc*:mpxlf* )                  ;;
 aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
 mips:cc:f90 )                       ;;
+alinux:ccc:fort | alinux:gcc:fort ) ;;
 alpha:cc:f90 )                      ;;
 mac:mpcc:mpf90 )                    ;;
 mac:gcc:xlf90 )                     ;;
@@ -418,6 +435,15 @@ mips:f90 )
 	try_dflags="-D__SGI -D__SGI64 -D__ORIGIN"
 	pre_fdflags="-cpp "
 	have_cpp=1
+	;;
+alinux:fort )
+	have_cpp=1
+	try_dflags="-D__ALPHA -D__LINUX64"
+	pre_fdflags="-cpp "
+	try_fflags="-O -r8 -align dcommons -align records"
+	try_f77flags="\$(FFLAGS)"
+	try_f90flags="\$(FFLAGS) -free"
+        try_ldflags_static="-non_shared"
 	;;
 alpha:f90 )
 	have_cpp=1
@@ -614,6 +640,7 @@ then
 			;;
 		esac
 		;;
+	alinux )  try_libdirs="/usr/lib /usr/local/lib " ;;
 	aix )  try_libdirs="/usr/local/lib /cineca/lib /cineca/lib/mass" ;;
 	mips ) try_libdirs="/usr/local/lib /cineca/lib"                  ;;
 	mac )  try_libdirs="/usr/local/lib /sw/lib"                      ;;
@@ -721,6 +748,16 @@ $ac_cv_search_zggev -lmkl_ia32 -lguide -lpthread $libs", ,
 		AC_SEARCH_LIBS(dgemm, complib.sgimath, have_blas=1
 			       libs="$LIBS")
 		;;
+	alinux )
+		# check for cxml on linux alpha
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$libs"
+		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
+			       libs="$LIBS")
+               ;;
+
 	alpha )
 		# check for cxml (old dxml)
 		unset ac_cv_search_dgemm # clear cached value
