@@ -47,7 +47,7 @@ sum1 = sum1 + wgauss ( (e-et (ibnd, ik) ) / degauss, ngauss)
 enddo
 sumkg = sumkg + wk (ik) * sum1
 enddo
-#ifdef PARA
+#ifdef __PARA
 call poolreduce (1, sumkg)
 #endif
 return

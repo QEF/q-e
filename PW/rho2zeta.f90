@@ -62,7 +62,7 @@ subroutine rho2zeta (rho, rho_core, nrxx, nspin, iop)
      enddo
   else
      write ( * , * ) ' iop =', iop
-     call error ('mag2zeta', 'wrong iop', 1)
+     call errore ('mag2zeta', 'wrong iop', 1)
 
   endif
   return

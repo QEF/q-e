@@ -48,7 +48,7 @@ subroutine do_elf (elf)
   allocate (tbos( nrxx))    
   allocate (aux ( nrxx))    
   allocate (aux2( nrxx))    
-  call error ('do_elf', 'elf + US not fully implemented', - 1)
+  call errore ('do_elf', 'elf + US not fully implemented', - 1)
   !
   ! put the total (up+down) charge density in rho(*,1)
   !
@@ -98,7 +98,7 @@ subroutine do_elf (elf)
      ! ik
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   ! reduce local kinetic energy across pools
   !

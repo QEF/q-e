@@ -159,7 +159,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
         sname (jrot) = sname (irot)
      endif
   enddo
-  if (jrot.ne.nsym) call error ('sgama', 'unexpected', 1)
+  if (jrot.ne.nsym) call errore ('sgama', 'unexpected', 1)
   !
   ! Sets to zero the first matrix that is not a symmetry of the crystal.
   ! This will be used by d3toten program.

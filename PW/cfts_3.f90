@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifndef PARA
+#ifndef __PARA
 !
 !----------------------------------------------------------------------
 
@@ -71,8 +71,8 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   data first / 6 * .true. /
 
 
-  if (igrid.ne.2) call error ('cft_3', 'wrong grid ?', 1)
-  if (sign.ne. - 1.and.sign.ne.1) call error ('cft_3', 'which fft ?' &
+  if (igrid.ne.2) call errore ('cft_3', 'wrong grid ?', 1)
+  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?' &
        &, 1)
   scale = 1.d0
   !
@@ -194,7 +194,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   real(kind=DP) :: norm, f (2, nr1, nr2, nr3)
   ! normalization factor
   ! the function is divided into real and im
-  if (nr1.ne.nrx1.or.nr2.ne.nrx2) call error ('cft_3', 'no longer im &
+  if (nr1.ne.nrx1.or.nr2.ne.nrx2) call errore ('cft_3', 'no longer im &
        &plemented', 1)
   !     +    call mcpack(f,nrx1,nrx2,nrx3,f,nr1,nr2,nr3,1)
   !
@@ -204,7 +204,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   if (sign.eq. - 1) then
      call dscal (2 * nrx1 * nrx2 * nrx3, 1.d0 / norm, f, 1)
   elseif (sign.ne.1) then
-     call error ('cfts_3', 'wrong sign', 1)
+     call errore ('cfts_3', 'wrong sign', 1)
   endif
   !
   !   This part goes from reciprocal to real space
@@ -283,7 +283,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   ! is true at the first iteration
 
   save first, nr1s, nr2s, nr3s, p_trig1, p_trig2, p_trig3
-  if (igrid.ne.2) call error ('cft_3', 'wrong grid ?', 1)
+  if (igrid.ne.2) call errore ('cft_3', 'wrong grid ?', 1)
   !
   !    test the sign and put the correct normalization on f
   !
@@ -291,7 +291,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
      fact = 1.d0 / float (nr1 * nr2 * nr3)
      call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
   elseif (sign.ne.1) then
-     call error ('cft_3', 'wrong sign', 1)
+     call errore ('cft_3', 'wrong sign', 1)
   endif
   !
   !   At the first iteration initialize
@@ -311,7 +311,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   !
   !    test that the initialization value coincide with actual value
   !
-  if (nr1.ne.nr1s.or.nr2.ne.nr2s.or.nr3.ne.nr3s) call error ('cft3', &
+  if (nr1.ne.nr1s.or.nr2.ne.nr2s.or.nr3.ne.nr3s) call errore ('cft3', &
        'nr1,nr2,nr3 .ne. from their initializing values', 1)
   !
   !    Transformation from reciprocal to real space

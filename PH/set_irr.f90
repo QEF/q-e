@@ -31,11 +31,11 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 #include "machine.h"
   use parameters, only : DP
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
 !
@@ -161,7 +161,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   Diagonalize
 !
   call cdiagh (3 * nat, phi, 3 * nat, eigen, u)
-#ifdef PARA
+#ifdef __PARA
 !
 !  Make sure all nodes have the same patterns
 !
@@ -180,7 +180,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
            goto 110
         endif
      enddo
-     call error ('set_irr', 'one mode is zero', imode)
+     call errore ('set_irr', 'one mode is zero', imode)
 110  do na = 1, 3 * nat
         u (na, imode) = - u (na, imode) * conjg (fase)
      enddo
@@ -210,7 +210,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
           + abs (eigen (imode-1) ) ) .lt.1.d-4) then
         npert (nirr) = npert (nirr) + 1
-        if (npert (nirr) .gt. max_irr_dim) call error &
+        if (npert (nirr) .gt. max_irr_dim) call errore &
                          ('set_irr', 'npert > max_irr_dim ', nirr)
      else
         nirr = nirr + 1
@@ -321,7 +321,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !      nsymq=1
 !      minus_q=.false.
 
-#ifdef PARA
+#ifdef __PARA
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !

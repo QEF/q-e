@@ -129,7 +129,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
 11 alpha = alpha - 0.1d0
 
-  if (alpha.eq.0.d0) call error ('d3ion', 'optimal alpha not found', &
+  if (alpha.eq.0.d0) call errore ('d3ion', 'optimal alpha not found', &
        1)
 
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
@@ -247,7 +247,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !      if (.true.) goto 100
   !
   !  Then there is also a part in real space which is computed here.
-#ifdef PARA
+#ifdef __PARA
   !   ... only by the node that contains  G=0
   !
   if (gg (1) .gt.1.d-8) goto 100
@@ -368,7 +368,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 100 continue
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * 27 * nat * nat * nat, d3dy1)
   call poolreduce (2 * 27 * nat * nat * nat, d3dy1)
 #endif
@@ -395,7 +395,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dy2)
 #endif
 

@@ -122,14 +122,14 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 
   do ik = 1, nksq
      read (iunigk, err = 100, iostat = ios) npw, igk
-100  call error ('solve_linter_d3', 'reading igk', abs (ios) )
+100  call errore ('solve_linter_d3', 'reading igk', abs (ios) )
      if (lgamma) then
         ikk = ik
         ikq = ik
         npwq = npw
      else
         read (iunigk, err = 200, iostat = ios) npwq, igkq
-200     call error ('solve_linter_d3', 'reading igkq', abs (ios) )
+200     call errore ('solve_linter_d3', 'reading igkq', abs (ios) )
         if (isw_sl.eq.1) then
            ikk = 2 * ik - 1
            ikq = 2 * ik
@@ -189,7 +189,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            if (isw_sl.ne.2) then
               do jbnd = 1, nbnd
                  psidvpsi = ZDOTC(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
-#ifdef PARA
+#ifdef __PARA
                  call reduce (2, psidvpsi)
 #endif
                  psidqvpsi (jbnd, ibnd) = psidvpsi
@@ -303,7 +303,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      enddo
 
   endif
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * npe * nrxx, drhoscf)
 #endif
 

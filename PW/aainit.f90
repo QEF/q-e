@@ -50,13 +50,13 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
 
   real(kind=DP) :: compute_ap ! a function computing ap
 
-  if (lli < 0) call error('aainit','lli not allowed',lli)
+  if (lli < 0) call errore('aainit','lli not allowed',lli)
 
-  if (lli*lli .gt. nlx) call error('aainit','nlx is too small ',lli*lli)
+  if (lli*lli .gt. nlx) call errore('aainit','nlx is too small ',lli*lli)
 
   llx = (2*lli-1)**2
   if (2*lli-1 > lqmax) &
-      call error('aainit','ap leading dimension is too small',llx)
+      call errore('aainit','ap leading dimension is too small',llx)
 
   allocate (r( 3, llx ))    
   allocate (rr( llx ))    
@@ -83,7 +83,7 @@ subroutine aainit(lli,lqmax,mx,nlx,ap,lpx,lpl)
            if (abs(ap(l,li,lj)).gt.1.d-3) then
               lpx(li,lj) = lpx(li,lj) + 1
               if (lpx(li,lj).gt.mx) &
-                   call error('aainit','mx dimension too small', lpx(li,lj))
+                   call errore('aainit','mx dimension too small', lpx(li,lj))
               lpl(li,lj,lpx(li,lj)) = l
            end if
         end do

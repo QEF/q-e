@@ -36,20 +36,20 @@ program q2r
   !
   namelist / input / nr1,nr2,nr3,fild, zasr
   !
-  read (5,input)
-  !
   nr1=0
   nr2=0
   nr3=0
   !
+  read (5,input)
+  !
   ! check input
   !
-  if (nr1 > nrx1) call error ('q2r',' nr1 too big, increase nrx1',nrx1)
-  if (nr2 > nrx2) call error ('q2r',' nr2 too big, increase nrx2',nrx2)
-  if (nr3 > nrx3) call error ('q2r',' nr3 too big, increase nrx3',nrx3)
-  if (nr1 < 1) call error ('q2r',' nr1 wrong or missing',1)
-  if (nr2 < 1) call error ('q2r',' nr2 wrong or missing',1)
-  if (nr3 < 1) call error ('q2r',' nr3 wrong or missing',1)
+  if (nr1 > nrx1) call errore ('q2r',' nr1 too big, increase nrx1',nrx1)
+  if (nr2 > nrx2) call errore ('q2r',' nr2 too big, increase nrx2',nrx2)
+  if (nr3 > nrx3) call errore ('q2r',' nr3 too big, increase nrx3',nrx3)
+  if (nr1 < 1) call errore ('q2r',' nr1 wrong or missing',1)
+  if (nr2 < 1) call errore ('q2r',' nr2 wrong or missing',1)
+  if (nr3 < 1) call errore ('q2r',' nr3 wrong or missing',1)
   !
   !
   ! copy nrX -> nr(X)
@@ -99,7 +99,7 @@ program q2r
            end do
         end if
      end if
-     if (lrigid.and..not.lrigid_save) call error('main',            &
+     if (lrigid.and..not.lrigid_save) call errore('main',            &
           &          'in this case Gamma must be the first file ',1)
      !
      write (6,*) ' nqs= ',nqs
@@ -118,7 +118,7 @@ program q2r
            m(ipol)= mod(iq,nr(ipol)) + 1
            if (m(ipol) .lt. 1) m(ipol) = m(ipol) + nr(ipol) 
         end do
-        if (.not.lq) call error('init','q not allowed',1)
+        if (.not.lq) call errore('init','q not allowed',1)
         if(nc(m(1),m(2),m(3)).eq.0) then
            nc(m(1),m(2),m(3))=1
            if (lrigid) call rgd_blk (nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
@@ -127,7 +127,7 @@ program q2r
            nqtot=nqtot+1
         else
            write (*,'(3i4)') (m(i),i=1,3)
-           call error('init',' nc already filled: wrong q grid or wrong nr',1)
+           call errore('init',' nc already filled: wrong q grid or wrong nr',1)
         end if
      end do
   end do
@@ -137,7 +137,7 @@ program q2r
   if (nqtot .eq. nr1*nr2*nr3) then
      write (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nqtot
   else
-     call error('init',' missing q-point(s)!',1)
+     call errore('init',' missing q-point(s)!',1)
   end if
   !
   ! dyn.mat. FFT
@@ -232,15 +232,15 @@ subroutine read_file(nqs,xq,phi,nax,epsil,zeu,lrigid,             &
      ! read cell information from file
      !
      read(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-     if (nat.gt.nax) call error('read_f','nax too small',nat)
-     if (ntyp.gt.nat) call error('read_f','ntyp.gt.nat!!',ntyp)
+     if (nat.gt.nax) call errore('read_f','nax too small',nat)
+     if (ntyp.gt.nat) call errore('read_f','ntyp.gt.nat!!',ntyp)
      do nt = 1,ntyp
         read(1,*) i,atm(nt),amass(nt)
-        if (i.ne.nt) call error('read_f','wrong data read',nt)
+        if (i.ne.nt) call errore('read_f','wrong data read',nt)
      end do
      do na=1,nat
         read(1,*) i,ityp(na),(tau(j,na),j=1,3)
-        if (i.ne.na) call error('read_f','wrong data read',na)
+        if (i.ne.na) call errore('read_f','wrong data read',na)
      end do
      !
      first=.false.
@@ -251,25 +251,25 @@ subroutine read_file(nqs,xq,phi,nax,epsil,zeu,lrigid,             &
      ! check cell information with previous one
      !
      read(1,*) ntyp1,nat1,ibrav1,(celldm1(i),i=1,6)
-     if (ntyp1.ne.ntyp) call error('read_f','wrong ntyp',1)
-     if (nat1.ne.nat) call error('read_f','wrong nat',1)
-     if (ibrav1.ne.ibrav) call error('read_f','wrong ibrav',1)
+     if (ntyp1.ne.ntyp) call errore('read_f','wrong ntyp',1)
+     if (nat1.ne.nat) call errore('read_f','wrong nat',1)
+     if (ibrav1.ne.ibrav) call errore('read_f','wrong ibrav',1)
      do i=1,6
-        if(celldm1(i).ne.celldm(i)) call error('read_f','wrong celldm',i)
+        if(celldm1(i).ne.celldm(i)) call errore('read_f','wrong celldm',i)
      end do
      do nt = 1,ntyp
         read(1,*) i,atm1,amass1
-        if (i.ne.nt) call error('read_f','wrong data read',nt)
-        if (atm1.ne.atm(nt)) call error('read_f','wrong atm',nt)
-        if (amass1.ne.amass(nt)) call error('read_f','wrong amass',nt)
+        if (i.ne.nt) call errore('read_f','wrong data read',nt)
+        if (atm1.ne.atm(nt)) call errore('read_f','wrong atm',nt)
+        if (amass1.ne.amass(nt)) call errore('read_f','wrong amass',nt)
      end do
      do na=1,nat
         read(1,*) i,ityp1,(tau1(j),j=1,3)
-        if (i.ne.na) call error('read_f','wrong data read',na)
-        if (ityp1.ne.ityp(na)) call error('read_f','wrong ityp',na)
-        if (tau1(1).ne.tau(1,na)) call error('read_f','wrong tau1',na)
-        if (tau1(2).ne.tau(2,na)) call error('read_f','wrong tau2',na)
-        if (tau1(3).ne.tau(3,na)) call error('read_f','wrong tau3',na)
+        if (i.ne.na) call errore('read_f','wrong data read',na)
+        if (ityp1.ne.ityp(na)) call errore('read_f','wrong ityp',na)
+        if (tau1(1).ne.tau(1,na)) call errore('read_f','wrong tau1',na)
+        if (tau1(2).ne.tau(2,na)) call errore('read_f','wrong tau2',na)
+        if (tau1(3).ne.tau(3,na)) call errore('read_f','wrong tau3',na)
      end do
   end if
   !
@@ -279,7 +279,7 @@ subroutine read_file(nqs,xq,phi,nax,epsil,zeu,lrigid,             &
   read(1,*)
   read(1,'(a)') line
   if (line(6:14).ne.'Dynamical') then
-     if (nqs.eq.0) call error('read',' stop with nqs=0 !!',1)
+     if (nqs.eq.0) call errore('read',' stop with nqs=0 !!',1)
      q2 = xq(1,nqs)**2 + xq(2,nqs)**2 + xq(3,nqs)**2
      if (q2.ne.0.d0) return
      do while (line(6:15).ne.'Dielectric') 
@@ -313,8 +313,8 @@ subroutine read_file(nqs,xq,phi,nax,epsil,zeu,lrigid,             &
   do na=1,nat
      do nb=1,nat
         read(1,*) i,j
-        if (i.ne.na) call error('read_f','wrong na read',na)
-        if (j.ne.nb) call error('read_f','wrong nb read',nb)
+        if (i.ne.na) call errore('read_f','wrong na read',na)
+        if (j.ne.nb) call errore('read_f','wrong nb read',nb)
         do i=1,3
            read (1,*) (phir(j),phii(j),j=1,3)
            do j = 1,3

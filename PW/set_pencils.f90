@@ -45,11 +45,11 @@ subroutine set_pencils (nks, xk, ngm, gg, nl, gcut, nrx1, nr1, &
      if (sqrt (gg (ng) ) .gt.sqrt (gcut) + sqrt (qmax) ) return
      n321 = nl (ng) - 1
      n3 = n321 / (nrx1 * nr2) + 1
-     if (n3.le.0.or.n3.gt.nr3) call error ('set_pencils', 'something wrong', 3)
+     if (n3.le.0.or.n3.gt.nr3) call errore ('set_pencils', 'something wrong', 3)
      n21 = mod (n321, nrx1 * nr2)
      n2 = n21 / nrx1 + 1
 
-     if (n2.le.0.or.n2.gt.nr2) call error ('set_pencils', 'something wrong', 2)
+     if (n2.le.0.or.n2.gt.nr2) call errore ('set_pencils', 'something wrong', 2)
      do_fft_x (n2, n3) = 1
 
      do_fft_y (n3) = 1

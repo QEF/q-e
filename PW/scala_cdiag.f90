@@ -92,13 +92,13 @@ subroutine scala_cdiag (n, a, ilda, w, z, ildz)
 
   integer :: iws
 
-  if (n.gt.maxn) call error ('scala_cdiag', 'n is too large', n)
+  if (n.gt.maxn) call errore ('scala_cdiag', 'n is too large', n)
   !
   !   Ask for the number of processors
   !
   call blacs_pinfo (iam_blacs, nprocs_blacs)
 
-  if (nprocs_blacs.gt.32) call error ('scala_cdiag', &
+  if (nprocs_blacs.gt.32) call errore ('scala_cdiag', &
        'work space not  optimized ',  - nprocs_blacs)
   !
   !     Set the dimension of the 2D processors grid
@@ -132,11 +132,11 @@ subroutine scala_cdiag (n, a, ilda, w, z, ildz)
   !
   call descinit (desca, n, n, nb, nb, 0, 0, context, lda, info)
 
-  if (info.ne.0) call error ('scala_cdiag', &
+  if (info.ne.0) call errore ('scala_cdiag', &
        'something wrong with descinit1', info)
   call descinit (descz, n, n, nb, nb, 0, 0, context, lda, info)
 
-  if (info.ne.0) call error ('scala_cdiag', &
+  if (info.ne.0) call errore ('scala_cdiag', &
        'something wrong with descinit2', info)
   !
   !   Now try to determine the size of the workspace
@@ -239,7 +239,7 @@ subroutine scala_cdiag (n, a, ilda, w, z, ildz)
   !
   if (abs (info) .gt.2) then
      write (6, * ) 'info ', info, m, nz
-     call error ('scala_cdiag', 'wrong info', 1)
+     call errore ('scala_cdiag', 'wrong info', 1)
   endif
   !
   !

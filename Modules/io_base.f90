@@ -231,13 +231,13 @@
       tmp_dir_ = tmp_dir
 
       IF( ntyp > SIZE( na ) ) &
-        CALL error(sub_name, ' wrong size ', 1 )
+        CALL errore(sub_name, ' wrong size ', 1 )
       IF( nk_g > SIZE( ngwk_l ) ) &
-        CALL error(sub_name, ' wrong size ', 2 )
+        CALL errore(sub_name, ' wrong size ', 2 )
       IF( nk_g > SIZE( ngwk_g ) ) &
-        CALL error(sub_name, ' wrong size ', 3 )
+        CALL errore(sub_name, ' wrong size ', 3 )
       IF( nacc > SIZE( acc ) ) &
-        CALL error(sub_name, ' wrong size ', 4 )
+        CALL errore(sub_name, ' wrong size ', 4 )
 
       IF( ionode ) THEN
         IF( twrite ) THEN
@@ -255,7 +255,7 @@
       END IF
 
       ! CALL mp_bcast(ios, root, group)
-      ! IF( ios /= 0 ) CALL error(' writefile ',' writing integral_time ', ios)
+      ! IF( ios /= 0 ) CALL errore(' writefile ',' writing integral_time ', ios)
 
       RETURN
     END SUBROUTINE
@@ -374,7 +374,7 @@
       CALL mp_bcast( file_version_, ionode_id )
 !
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(sub_name,' Data Section not present in restart file ', 1)
+        CALL errore(sub_name,' Data Section not present in restart file ', 1)
 !
       IF( tread ) THEN
 
@@ -435,30 +435,30 @@
         CALL mp_bcast( gamma_only_, ionode_id )
 !
         IF( ntyp_ > SIZE( na_ ) ) &
-          CALL error(sub_name,' too many types ', ntyp_ )
+          CALL errore(sub_name,' too many types ', ntyp_ )
         IF( ( nkg_ > SIZE( ngwkl_ ) ) .OR. ( nkg_ > SIZE( ngwkg_ ) ) ) &
-          CALL error(sub_name,' too many k points ', nkg_ )
+          CALL errore(sub_name,' too many k points ', nkg_ )
         IF( nacc_ > SIZE( acc_ ) ) &
-          CALL error(sub_name,' too many accumulators ', nacc_ )
+          CALL errore(sub_name,' too many accumulators ', nacc_ )
 !
         IF( ntyp_ > SIZE( na ) ) &
-          CALL error(sub_name,' wrong size for na ', ntyp_ )
+          CALL errore(sub_name,' wrong size for na ', ntyp_ )
         IF( ( nkg_ > SIZE( ngwk_l ) ) .OR. ( nkg_ > SIZE( ngwk_g ) ) ) &
-          CALL error(sub_name,' wrong size for ngwk_l or ngwk_g ', nkg_ )
+          CALL errore(sub_name,' wrong size for ngwk_l or ngwk_g ', nkg_ )
         IF( nacc_ > SIZE( acc ) ) &
-          CALL error(sub_name,' wrong size for acc ', nacc_ )
+          CALL errore(sub_name,' wrong size for acc ', nacc_ )
 !
         IF( .NOT. tovrw ) THEN
           IF( nat_ /= nat ) &
-            CALL error(sub_name,' atoms numbers differ ',nat_)
+            CALL errore(sub_name,' atoms numbers differ ',nat_)
           IF( ntyp_ /= ntyp ) &
-            CALL error(sub_name,' types numbers differ ',ntyp_)
+            CALL errore(sub_name,' types numbers differ ',ntyp_)
           IF( nkg_ /= nk_g ) &
-            CALL error(sub_name,' k points numbers differ ',nkg_)
+            CALL errore(sub_name,' k points numbers differ ',nkg_)
           IF( nspin_ /= nspin ) &
-            CALL error(sub_name,' nspin differs ',nspin_)
+            CALL errore(sub_name,' nspin differs ',nspin_)
           IF( nacc_ > nacc ) &
-            CALL error(sub_name,' too many accumulators ',nacc_)
+            CALL errore(sub_name,' too many accumulators ',nacc_)
         END IF
 
         IF( ionode ) THEN
@@ -473,7 +473,7 @@
         IF( .NOT. tovrw ) THEN
           DO i = 1, MIN( ntyp, ntyp_ )
             IF( na_(i) /= na(i) ) &
-              CALL error(' read_restart_header ',' inconsistent number of atoms ',na_(i))
+              CALL errore(' read_restart_header ',' inconsistent number of atoms ',na_(i))
           END DO
         END IF
 
@@ -676,7 +676,7 @@
       CALL mp_bcast( file_version_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_xdim ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_xdim ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -778,13 +778,13 @@
       IF( twrite ) THEN
 
         IF( SIZE(s,3) < nsym ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( ( SIZE(irt,1) < nsym ) .OR. ( SIZE(irt,2) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(ftau,2) < nsym ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( SIZE(sname) < nsym ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
 
         IF( ionode ) THEN
           WRITE(iuni) twrite, file_version
@@ -868,7 +868,7 @@
       CALL mp_bcast( twrite_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_symmetry ',' symmetries not present in restart file ', 1)
+        CALL errore(' read_restart_symmetry ',' symmetries not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -883,21 +883,21 @@
 !
 ! ...   Check temporary local variables
         IF( SIZE(s_,3) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE(ftau_,2) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(sname_) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
 !
 ! ...   Check dummy variables
         IF( SIZE(s,3) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( ( SIZE(irt,1) < nsym_ ) .OR. ( SIZE(irt,2) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( SIZE(ftau,2) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF( SIZE(sname) < nsym_ ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
 !
         ALLOCATE( irt_(nsym_, nat_) )
 !
@@ -1011,37 +1011,37 @@
         nqlc_  = MAX( nqlc, 1 )
 
         IF( SIZE(r) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE(rab) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( ( SIZE(vnl,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc_ + 1 ) ) ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nchi_ ) ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(oc) < nchi_ ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lchi) < nchi_ ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE(betar,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(qqq,1) < nbeta_  ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
             ( SIZE(qfunc,3) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
         IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
             ( SIZE(qfcoef,3) < nbeta_ ) .OR. ( SIZE(qfcoef,4) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 12 )
+          CALL errore( sub_name, ' wrong size ', 12 )
         IF( SIZE(rinner) < nqlc_ ) &
-          CALL error( sub_name, ' wrong size ', 13 )
+          CALL errore( sub_name, ' wrong size ', 13 )
         IF( SIZE(lll) < nbeta_ ) &
-          CALL error( sub_name, ' wrong size ', 14 )
+          CALL errore( sub_name, ' wrong size ', 14 )
 
         IF( ionode ) THEN
 
@@ -1133,41 +1133,41 @@
 
 ! ...   Check dummy variables
         IF( SIZE(els) < nwfc ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE(lchi) < nwfc ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(oc) < nwfc ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( SIZE(r) < ( mesh + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(rab) < ( mesh + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( SIZE(rho_atc) < ( mesh + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF(  SIZE(vloc) < ( mesh + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lll) < nbeta ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( SIZE(kkbeta) < nbeta ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE(beta,1) < ( mesh + 1 ) ) .OR. ( SIZE(beta,2) < nbeta ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(dion,1) < nbeta ) .OR. ( SIZE(dion,2) < nbeta ) ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
         IF( SIZE(rinner) < nqlc ) &
-          CALL error( sub_name, ' wrong size ', 12 )
+          CALL errore( sub_name, ' wrong size ', 12 )
         IF( ( SIZE(qqq,1) < nbeta ) .OR. ( SIZE(qqq,2) < nbeta ) ) &
-          CALL error( sub_name, ' wrong size ', 13 )
+          CALL errore( sub_name, ' wrong size ', 13 )
         IF( ( SIZE(qfunc,1) < ( mesh + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta ) .OR. &
             ( SIZE(qfunc,3) < nbeta ) ) &
-          CALL error( sub_name, ' wrong size ', 14 )
+          CALL errore( sub_name, ' wrong size ', 14 )
         IF( ( SIZE(qfcoef,1) < nqf ) .OR. ( SIZE(qfcoef,2) < nqlc ) .OR. &
             ( SIZE(qfcoef,3) < nbeta ) .OR. ( SIZE(qfcoef,4) < nbeta ) ) &
-          CALL error( sub_name, ' wrong size ', 15 )
+          CALL errore( sub_name, ' wrong size ', 15 )
         IF( ( SIZE(chi,1) < ( mesh + 1 ) ) .OR. ( SIZE(chi,2) < nwfc ) ) &
-          CALL error( sub_name, ' wrong size ', 16 )
+          CALL errore( sub_name, ' wrong size ', 16 )
         IF( SIZE(rho_at) < ( mesh + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 17 )
+          CALL errore( sub_name, ' wrong size ', 17 )
 
         IF( ionode ) THEN
 
@@ -1294,7 +1294,7 @@
       CALL mp_bcast( twrite_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_pseudo ',' pseudo not present in restart file ', 1)
+        CALL errore(' read_restart_pseudo ',' pseudo not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -1347,50 +1347,50 @@
 
 ! ...   Check dummy variables
         IF( SIZE(r) < ( mesh__ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE(rab) < ( mesh__ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( ( SIZE(vnl,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(vnl,2) < ( lloc__ + 1 ) ) ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( ( SIZE(chi,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(chi,2) < nchi__ ) ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(oc) < nchi__ ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( SIZE(rho_at) < ( mesh__ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF( SIZE(rho_atc) < ( mesh__ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lchi) < nchi__ ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE(dion,1) < nbeta__ ) .OR. ( SIZE(dion,2) < nbeta__ ) ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE(betar,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(betar,2) < nbeta__ ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(qqq,1) < nbeta__ ) .OR. ( SIZE(qqq,2) < nbeta__ ) ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( ( SIZE(qfunc,1) < ( mesh__ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta__ ) .OR. &
             ( SIZE(qfunc,3) < nbeta__ ) ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
         IF( ( SIZE(qfcoef,1) < nqf__ ) .OR. ( SIZE(qfcoef,2) < nqlc__ ) .OR. &
             ( SIZE(qfcoef,3) < nbeta__ ) .OR. ( SIZE(qfcoef,4) < nbeta__ ) ) &
-          CALL error( sub_name, ' wrong size ', 12 )
+          CALL errore( sub_name, ' wrong size ', 12 )
         IF( SIZE(rinner) < nqlc__ ) &
-          CALL error( sub_name, ' wrong size ', 13 )
+          CALL errore( sub_name, ' wrong size ', 13 )
         IF( SIZE(lll) < nbeta__ ) &
-          CALL error( sub_name, ' wrong size ', 14 )
+          CALL errore( sub_name, ' wrong size ', 14 )
 
         IF( mesh__ < 0 ) &
-          CALL error( sub_name, ' wrong value ', 1 )
+          CALL errore( sub_name, ' wrong value ', 1 )
         IF( lloc__ < 0 ) &
-          CALL error( sub_name, ' wrong value ', 2 )
+          CALL errore( sub_name, ' wrong value ', 2 )
         IF( nchi__ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 3 )
+          CALL errore( sub_name, ' wrong value ', 3 )
         IF( nbeta__ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 4 )
+          CALL errore( sub_name, ' wrong value ', 4 )
         IF( nqf__ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 5 )
+          CALL errore( sub_name, ' wrong value ', 5 )
         IF( nqlc__ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 6 )
+          CALL errore( sub_name, ' wrong value ', 6 )
 
         ALLOCATE ( r_(0:mesh__), rab_(0:mesh__), vnl_(0:mesh__,0:lloc__), chi_(0:mesh__,nchi__) )
         ALLOCATE ( oc_(nchi__), rho_at_(0:mesh__), rho_atc_(0:mesh__) )
@@ -1617,7 +1617,7 @@
       CALL mp_bcast( twrite_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(sub_name, ' pseudo not present in restart file ', 1)
+        CALL errore(sub_name, ' pseudo not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -1647,54 +1647,54 @@
         CALL mp_bcast( nqlc_, ionode_id )
 
         IF( mesh_ < 0 ) &
-          CALL error( sub_name, ' wrong value ', 1 )
+          CALL errore( sub_name, ' wrong value ', 1 )
         IF( nwfc_ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 2 )
+          CALL errore( sub_name, ' wrong value ', 2 )
         IF( nbeta_ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 3 )
+          CALL errore( sub_name, ' wrong value ', 3 )
         IF( nqf_ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 4 )
+          CALL errore( sub_name, ' wrong value ', 4 )
         IF( nqlc_ < 1 ) &
-          CALL error( sub_name, ' wrong value ', 5 )
+          CALL errore( sub_name, ' wrong value ', 5 )
 
 
 ! ...   Check dummy variables
         IF( SIZE(els) < nwfc_ ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE(lchi) < nwfc_ ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE(oc) < nwfc_ ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( SIZE(r) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( SIZE(rab) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( SIZE(rho_atc) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF(  SIZE(vloc) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( SIZE(lll) < nbeta_ ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( SIZE(kkbeta) < nbeta_ ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE(beta,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(beta,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( ( SIZE(dion,1) < nbeta_ ) .OR. ( SIZE(dion,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
         IF( SIZE(rinner) < nqlc_ ) &
-          CALL error( sub_name, ' wrong size ', 12 )
+          CALL errore( sub_name, ' wrong size ', 12 )
         IF( ( SIZE(qqq,1) < nbeta_ ) .OR. ( SIZE(qqq,2) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 13 )
+          CALL errore( sub_name, ' wrong size ', 13 )
         IF( ( SIZE(qfunc,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(qfunc,2) < nbeta_ ) .OR. &
             ( SIZE(qfunc,3) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 14 )
+          CALL errore( sub_name, ' wrong size ', 14 )
         IF( ( SIZE(qfcoef,1) < nqf_ ) .OR. ( SIZE(qfcoef,2) < nqlc_ ) .OR. &
             ( SIZE(qfcoef,3) < nbeta_ ) .OR. ( SIZE(qfcoef,4) < nbeta_ ) ) &
-          CALL error( sub_name, ' wrong size ', 15 )
+          CALL errore( sub_name, ' wrong size ', 15 )
         IF( ( SIZE(chi,1) < ( mesh_ + 1 ) ) .OR. ( SIZE(chi,2) < nwfc_ ) ) &
-          CALL error( sub_name, ' wrong size ', 16 )
+          CALL errore( sub_name, ' wrong size ', 16 )
         IF( SIZE(rho_at) < ( mesh_ + 1 ) ) &
-          CALL error( sub_name, ' wrong size ', 17 )
+          CALL errore( sub_name, ' wrong size ', 17 )
 
         ALLOCATE( els_( nwfc_ ),  lchi_(nwfc_), oc_(nwfc_), r_(0:mesh_), rab_(0:mesh_), &
             rho_atc_(0:mesh_), vloc_(0:mesh_), lll_(1:nbeta_), kkbeta_(1:nbeta_), &
@@ -1860,7 +1860,7 @@
 
         IF( tmill ) THEN
           IF( ( SIZE(mill,1) < 3 ) .OR. ( SIZE(mill,2) < ng) ) &
-            CALL error( sub_name, ' wrong size ', 1 )
+            CALL errore( sub_name, ' wrong size ', 1 )
         END IF
 
         IF( ionode ) THEN
@@ -1944,7 +1944,7 @@
       CALL mp_bcast( file_version_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(sub_name, ' Data Section not present in restart file ', 1)
+        CALL errore(sub_name, ' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -1962,12 +1962,12 @@
         CALL mp_bcast( b3_, ionode_id )
 
         IF( tmill .AND. .NOT. tmill_ ) &
-          CALL error(sub_name, ' mill indexes not present in restart file ', 1)
+          CALL errore(sub_name, ' mill indexes not present in restart file ', 1)
 
         IF( tmill ) THEN
 
           IF( ( SIZE( mill, 2) < ng_ ) .OR. ( SIZE( mill, 1 ) < 3 ) ) &
-            CALL error(sub_name, ' mill array too small ', 1)
+            CALL errore(sub_name, ' mill array too small ', 1)
 
           IF( ionode ) THEN
             READ(iuni) ((mill(i,j),i=1,3),j=1,ng_)
@@ -2162,7 +2162,7 @@
       CALL mp_bcast( file_version_, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_gkvec ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_gkvec ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -2278,11 +2278,11 @@
       REAL(dbl), INTENT(IN) :: ht0(3,3)
       REAL(dbl), INTENT(IN) :: htm(3,3)
       REAL(dbl), INTENT(IN) :: htm2(3,3)
-      REAL(dbl), INTENT(OUT) :: htvel(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosp(3,3)
-      REAL(dbl), INTENT(OUT) :: xnos0(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosm(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosm2(3,3)
+      REAL(dbl), INTENT(IN) :: htvel(3,3)
+      REAL(dbl), INTENT(IN) :: xnosp(3,3)
+      REAL(dbl), INTENT(IN) :: xnos0(3,3)
+      REAL(dbl), INTENT(IN) :: xnosm(3,3)
+      REAL(dbl), INTENT(IN) :: xnosm2(3,3)
       INTEGER :: i
 !
 ! ... Subroutine Body
@@ -2365,7 +2365,7 @@
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version, ionode_id )
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_cell ', ' Section not present in restart file ', 1)
+        CALL errore(' read_restart_cell ', ' Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -2498,27 +2498,27 @@
       IF( twrite ) THEN
 
         IF( SIZE( label ) < ntyp ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE( ityp ) < nat ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE( na ) < ntyp ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( SIZE( mass ) < ntyp ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( ( SIZE( stau0, 1 ) < 3 ) .OR. ( SIZE( stau0, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( ( SIZE( svel0, 1 ) < 3 ) .OR. ( SIZE( svel0, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF( ( SIZE( staum, 1 ) < 3 ) .OR. ( SIZE( staum, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( ( SIZE( svelm, 1 ) < 3 ) .OR. ( SIZE( svelm, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE( taui, 1 ) < 3 ) .OR. ( SIZE( taui, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE( fion, 1 ) < 3 ) .OR. ( SIZE( fion, 2 ) < nat ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( SIZE( cdmi ) < 3 ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
 
         label_ = label(1:ntyp)
 
@@ -2637,7 +2637,7 @@
       CALL mp_bcast( file_version, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_ions ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_ions ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -2650,15 +2650,15 @@
         tscal = tscal_
 
         IF( ntyp_ > SIZE(na_) ) &
-            CALL error(' read_restart_ions ',' too many types ',ntyp_)
+            CALL errore(' read_restart_ions ',' too many types ',ntyp_)
         IF( nat_ > SIZE(ityp_) ) &
-          CALL error(' read_restart_ions ',' too many atoms ',nat_)
+          CALL errore(' read_restart_ions ',' too many atoms ',nat_)
 
         IF( .NOT. tovrw ) THEN
           IF( nat_ /= nat ) &
-            CALL error(' read_restart_ions ',' atoms numbers differ ',nat_)
+            CALL errore(' read_restart_ions ',' atoms numbers differ ',nat_)
           IF( ntyp_ /= ntyp ) &
-            CALL error(' read_restart_ions ',' types numbers differ ',ntyp_)
+            CALL errore(' read_restart_ions ',' types numbers differ ',ntyp_)
         END IF
        
         IF( ionode ) THEN
@@ -2684,27 +2684,27 @@
         END IF
 
         IF( SIZE( label ) < ntyp_ ) &
-          CALL error( sub_name, ' wrong size ', 1 )
+          CALL errore( sub_name, ' wrong size ', 1 )
         IF( SIZE( ityp ) < nat_ ) &
-          CALL error( sub_name, ' wrong size ', 2 )
+          CALL errore( sub_name, ' wrong size ', 2 )
         IF( SIZE( na ) < ntyp_ ) &
-          CALL error( sub_name, ' wrong size ', 3 )
+          CALL errore( sub_name, ' wrong size ', 3 )
         IF( SIZE( mass ) < ntyp_ ) &
-          CALL error( sub_name, ' wrong size ', 4 )
+          CALL errore( sub_name, ' wrong size ', 4 )
         IF( ( SIZE( stau0, 1 ) < 3 ) .OR. ( SIZE( stau0, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 5 )
+          CALL errore( sub_name, ' wrong size ', 5 )
         IF( ( SIZE( svel0, 1 ) < 3 ) .OR. ( SIZE( svel0, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 6 )
+          CALL errore( sub_name, ' wrong size ', 6 )
         IF( ( SIZE( staum, 1 ) < 3 ) .OR. ( SIZE( staum, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 7 )
+          CALL errore( sub_name, ' wrong size ', 7 )
         IF( ( SIZE( svelm, 1 ) < 3 ) .OR. ( SIZE( svelm, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 8 )
+          CALL errore( sub_name, ' wrong size ', 8 )
         IF( ( SIZE( taui, 1 ) < 3 ) .OR. ( SIZE( taui, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 9 )
+          CALL errore( sub_name, ' wrong size ', 9 )
         IF( ( SIZE( fion, 1 ) < 3 ) .OR. ( SIZE( fion, 2 ) < nat_ ) ) &
-          CALL error( sub_name, ' wrong size ', 10 )
+          CALL errore( sub_name, ' wrong size ', 10 )
         IF( SIZE( cdmi ) < 3 ) &
-          CALL error( sub_name, ' wrong size ', 11 )
+          CALL errore( sub_name, ' wrong size ', 11 )
 
         ALLOCATE( stmp_( 3, nat_ ) )
         IF( ionode ) THEN
@@ -2862,9 +2862,9 @@
         IF( tocc ) THEN
          
           IF( SIZE( occ ) < nbnd ) &
-            CALL error(sub_name, ' wrong size ', 1 )
+            CALL errore(sub_name, ' wrong size ', 1 )
           IF( SIZE( occm ) < nbnd ) &
-            CALL error(sub_name, ' wrong size ', 2 )
+            CALL errore(sub_name, ' wrong size ', 2 )
           
           IF( ionode ) WRITE(iuni) (occ(i),i=1,nbnd)
           IF( ionode ) WRITE(iuni) (occm(i),i=1,nbnd)
@@ -2881,9 +2881,9 @@
         IF( tlam ) THEN
 
           IF( ( SIZE( lambda, 1 ) < ldim ) .OR. ( SIZE( lambda, 2 ) < ldim ) ) &
-            CALL error(sub_name, ' wrong size ', 3 )
+            CALL errore(sub_name, ' wrong size ', 3 )
           IF( ( SIZE( lambdam, 1 ) < ldim ) .OR. ( SIZE( lambdam, 2 ) < ldim ) ) &
-            CALL error(sub_name, ' wrong size ', 4 )
+            CALL errore(sub_name, ' wrong size ', 4 )
 
           IF( ionode ) WRITE(iuni) ((lambda(l,i),l=1,ldim),i=1,ldim)
           IF( ionode ) WRITE(iuni) ((lambdam(l,i),l=1,ldim),i=1,ldim)
@@ -2903,9 +2903,9 @@
         IF( teig ) THEN
 
           IF( SIZE( eig ) < nbnd ) &
-            CALL error(sub_name, ' wrong size ', 5 )
+            CALL errore(sub_name, ' wrong size ', 5 )
           IF( SIZE( weig ) < nbnd ) &
-            CALL error(sub_name, ' wrong size ', 6 )
+            CALL errore(sub_name, ' wrong size ', 6 )
 
           IF( ionode ) WRITE(iuni) (eig(i),i=1,nbnd)
           IF( ionode ) WRITE(iuni) (weig(i),i=1,nbnd)
@@ -3022,7 +3022,7 @@
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version, ionode_id )
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_electrons ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_electrons ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
         IF( ionode ) READ(iuni) nbnd_, ispin_, nspin_, ik_, nk_, nel_, nelu_, neld_, ldim_
@@ -3038,11 +3038,11 @@
 
         IF( .NOT. tovrw ) THEN
           IF( nbnd_ /= nbnd ) &
-            CALL error( ' read_restart_electrons ',' number of bands differ ', 1)
+            CALL errore( ' read_restart_electrons ',' number of bands differ ', 1)
           IF( nspin_ /= nspin ) &
-            CALL error( ' read_restart_electrons ',' number of spin differ ', 1)
+            CALL errore( ' read_restart_electrons ',' number of spin differ ', 1)
           IF( nk_ /= nk ) &
-            CALL error( ' read_restart_electrons ',' number of k points differ ', 1)
+            CALL errore( ' read_restart_electrons ',' number of k points differ ', 1)
         END IF
 !
 ! ..    Manage occ and occm
@@ -3051,7 +3051,7 @@
         CALL mp_bcast( tocc_, ionode_id)
 
         IF( tocc .AND. .NOT. tocc_ ) &
-          CALL error( ' read_restart_electrons ',' occupation number not present in restart ', 1)
+          CALL errore( ' read_restart_electrons ',' occupation number not present in restart ', 1)
 
         IF( tocc ) THEN
 
@@ -3083,7 +3083,7 @@
         CALL mp_bcast( tlam_, ionode_id)
 
         IF( tlam .AND. .NOT. tlam_ ) &
-          CALL error( ' read_restart_electrons ',' lambda matrix not present in restart ', 1)
+          CALL errore( ' read_restart_electrons ',' lambda matrix not present in restart ', 1)
 
         IF( tlam ) THEN
 
@@ -3128,7 +3128,7 @@
         CALL mp_bcast( teig_, ionode_id)
 
         IF( teig .AND. .NOT. teig_ ) &
-          CALL error( ' read_restart_electrons ',' occupation number not present in restart ', 1)
+          CALL errore( ' read_restart_electrons ',' occupation number not present in restart ', 1)
 
         IF( teig ) THEN
 
@@ -3325,7 +3325,7 @@
         CALL mp_max( ierr ) 
 
         IF( ierr > 0 ) &
-          CALL error(' write_restart_wfc ',' wrong size ngl ', ierr )
+          CALL errore(' write_restart_wfc ',' wrong size ngl ', ierr )
 
         IF( ipsour /= ionode_id ) THEN
           CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
@@ -3464,7 +3464,7 @@
       CALL mp_bcast( file_version, ionode_id )
 
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_wfc ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_wfc ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -3575,7 +3575,7 @@
         CALL mp_max( ierr ) 
 
         IF( ierr > 0 ) &
-          CALL error(' read_restart_wfc ',' wrong size ngl ', ierr )
+          CALL errore(' read_restart_wfc ',' wrong size ngl ', ierr )
 
         IF( ipdest /= ionode_id ) THEN
           CALL mp_get( igwx, igwx, mpime, ionode_id, ipdest, 1 )
@@ -3850,7 +3850,7 @@
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version, ionode_id )
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_charge ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_charge ',' Data Section not present in restart file ', 1)
 
       IF( tread ) THEN
 
@@ -3861,7 +3861,7 @@
 
         IF( .NOT. tovrw ) THEN
           IF( nspin /= nspin_ ) &
-            CALL error(' read_restart_charge ',' wrong spin ', 1)  
+            CALL errore(' read_restart_charge ',' wrong spin ', 1)  
           IF( ng_ /= ng ) THEN
             WRITE(6,fmt="(3X,'W: read_restart_charge, number of G-vecs changed ' )")
           END IF
@@ -3871,7 +3871,7 @@
         CALL mp_bcast( tr_, ionode_id )
 
         IF( tr .AND. .NOT. tr_ ) &
-          CALL error(' read_restart_charge ',' rho not present in restart ', 1)  
+          CALL errore(' read_restart_charge ',' rho not present in restart ', 1)  
 
         IF( tr_ ) THEN
           ALLOCATE( vtmp( MAX(ng_, ng) ) )
@@ -3889,7 +3889,7 @@
         CALL mp_bcast( tv_, ionode_id )
 
         IF( tv .AND. .NOT. tv_ ) &
-          CALL error(' read_restart_charge ',' V not present in restart ', 1)  
+          CALL errore(' read_restart_charge ',' V not present in restart ', 1)  
 
         IF( tv_ ) THEN
           ALLOCATE( vtmp( MAX(ng_, ng) ) )
@@ -4007,7 +4007,7 @@
       CALL mp_bcast( twrite_, ionode_id )
       CALL mp_bcast( file_version, ionode_id )
       IF( tread .AND. .NOT. twrite_ ) &
-        CALL error(' read_restart_template ',' Data Section not present in restart file ', 1)
+        CALL errore(' read_restart_template ',' Data Section not present in restart file ', 1)
       IF( tread ) THEN
         IF( ionode ) THEN
         END IF

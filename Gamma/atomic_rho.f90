@@ -137,7 +137,7 @@ subroutine atomic_rho (rhoa, nspina)
      enddo
      rhoneg = rhoneg / (nr1 * nr2 * nr3)
      rhoima = rhoima / (nr1 * nr2 * nr3)
-#ifdef PARA
+#ifdef __PARA
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif

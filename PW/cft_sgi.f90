@@ -38,7 +38,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   isign = sign (1, sgn)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_1', 'wrong call', 1)
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_1', 'wrong call', 1)
   if (n.ne.on (itype) ) then
      call zfft1di (n, aux1 (1, itype) )
      on (itype) = n
@@ -86,13 +86,13 @@ use parameters, only : DP
   !
   !
   isign = sign (1, sgn)
-  if (isign.ne. - 1.and.isign.ne.1) call error ('cft_2', 'wrong call', 1)
+  if (isign.ne. - 1.and.isign.ne.1) call errore ('cft_2', 'wrong call', 1)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_2', 'wrong call', &
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_2', 'wrong call', &
        2)
 
-  if (n2.ne.nx2) call error ('cft_2', 'no longer implemented', 1)
+  if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
   if (n1.ne.on1 (itype) ) then
      call zfft1di (n1, aux1 (1, 1, itype) )
      on1 (itype) = n1

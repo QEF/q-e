@@ -27,7 +27,7 @@
 !
 !
       if (sign.ne.-1 .and. sign.ne.1)                                   &
-     &  call error('cfft3','which fft ?', 1)
+     &  call errore('cfft3','which fft ?', 1)
 !
 ! IBM uses a different sign convention from the "traditional" one
 !
@@ -59,7 +59,7 @@
 !
 !
       if (sign.ne.-1 .and. sign.ne.1)                                   &
-     &  call error('cfft3s','which fft ?', 1)
+     &  call errore('cfft3s','which fft ?', 1)
 !
 ! IBM uses a different sign convention from the "traditional" one
 !
@@ -91,7 +91,7 @@
 !
 !
       if (sign.ne.-1 .and. sign.ne.1)                                   &
-     &  call error('cfft3b','which fft ?', 1)
+     &  call errore('cfft3b','which fft ?', 1)
 !
 ! IBM uses a different sign convention from the "traditional" one
 !
@@ -149,7 +149,7 @@
          ibid =2
          scale=1.d0
       else
-         call error('cft_1','wrong call',isign)
+         call errore('cft_1','wrong call',isign)
       end if
 !
       if (first(ibid)) then
@@ -196,14 +196,14 @@
       isign = -sign(1,sgn)
 !
       if(n2.ne.nx2)                                                     &
-     &  call error('cft_2','no longer implemented',1)
+     &  call errore('cft_2','no longer implemented',1)
 !
       if (isign.eq.1) then
          ibid=1
       else if (isign.eq.-1) then
          ibid=2
       else
-         call error('cft_2','wrong call',ibid)
+         call errore('cft_2','wrong call',ibid)
       end if
 !
       scale=1.d0
@@ -279,7 +279,7 @@
       isign = -sign(1,sgn)
       itype = abs(sgn) 
       if (itype.le.0.or.itype.gt.2)                                     &
-     &     call error('cft_1s','wrong call',sgn)
+     &     call errore('cft_1s','wrong call',sgn)
 !
       if (isign.eq.1) then
          ibid =1
@@ -337,10 +337,10 @@
 !
       isign = -sign(1,sgn)
       itype = abs(sgn) 
-      if (itype.le.0.or.itype.gt.2) call error('cft_2','wrong call',1)
+      if (itype.le.0.or.itype.gt.2) call errore('cft_2','wrong call',1)
 !
       if(n2.ne.nx2)                                                     &
-     &  call error('cft_2','no longer implemented',1)
+     &  call errore('cft_2','no longer implemented',1)
 !
       scale=1.d0
 !
@@ -351,7 +351,7 @@
          m=m+planes(i)
       end do
       if (m.gt.n1.or.m.le.0)                                            &
-     &     call error('cft_2s','something wrong with planes',1)
+     &     call errore('cft_2s','something wrong with planes',1)
 !
       if (isign.eq.1) then
 !
@@ -467,7 +467,7 @@
          ibid =1
          scale=1.d0
       else if (isign.eq.1) then
-         call error('cft_b','not implemented',isign)
+         call errore('cft_b','not implemented',isign)
       end if
 !
       if (first(ibid)) then

@@ -27,7 +27,7 @@ subroutine vpack (ndim, ndimx, nspin, vin, vout, iflag)
         vout (n) = 0.d0
      enddo
   else
-     call error ('vpack', ' wrong flag ', 1)
+     call errore ('vpack', ' wrong flag ', 1)
 
   endif
   return

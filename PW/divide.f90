@@ -11,7 +11,7 @@ subroutine divide (ntodiv, startn, lastn)
   !-----------------------------------------------------------------------
   ! Divide the bands among processors in the phonon code
   !
-#ifdef PARA
+#ifdef __PARA
   use para
   implicit none
 

@@ -19,11 +19,11 @@ subroutine set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
 #include "machine.h"
 use parameters, only : DP
-#ifdef PARA
+#ifdef __PARA
 use para
 #endif
 implicit none
-#ifdef PARA
+#ifdef __PARA
 include 'mpif.h'
 #endif
   !

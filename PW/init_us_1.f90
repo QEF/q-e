@@ -212,7 +212,7 @@ subroutine init_us_1
         enddo
         call DSCAL (nqxq * nbrx * (nbrx + 1) / 2 * lqx, prefr, &
                     qrad (1, 1, 1, nt), 1)
-#ifdef PARA
+#ifdef __PARA
         call reduce (nqxq * nbrx * (nbrx + 1) / 2 * lqx, qrad (1, 1, 1, nt) )
 #endif
      endif
@@ -223,7 +223,7 @@ subroutine init_us_1
   !   and finally we compute the qq coefficients by integrating the Q.
   !   q are the g=0 components of Q.
   !
-#ifdef PARA
+#ifdef __PARA
   if (gg (1) .gt.1.0d-8) goto 100
 #endif
   call ylmr2 (lqx * lqx, 1, g, gg, ylmk0)
@@ -239,7 +239,7 @@ subroutine init_us_1
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
 100 continue
   call reduce (nhm * nhm * ntyp, qq)
 #endif
@@ -263,7 +263,7 @@ subroutine init_us_1
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (nqx * nbrx * ntyp, tab)
 #endif
   deallocate (ylmk0)

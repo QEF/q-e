@@ -77,7 +77,6 @@ PHOBJS = ../PH/phcom.o  \
 ../PH/cg_psi.o  \
 ../PH/cgsolve_all.o  \
 ../PH/ch_psi_all.o  \
-../PH/cinterpolate.o  \
 ../PH/compute_alphasum.o  \
 ../PH/compute_becalp.o  \
 ../PH/compute_becsum.o  \

@@ -14,7 +14,7 @@ subroutine data_structure
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use mp, only: mp_sum
@@ -29,7 +29,7 @@ subroutine data_structure
 
   real(kind=DP) :: amod
   ! modulus of G vectors
-#ifdef PARA
+#ifdef __PARA
   ! counters on planes
 
   integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
@@ -90,10 +90,10 @@ subroutine data_structure
   !
   ! set the number of plane per process
   !
-  if (nr3.lt.nprocp) call error ('data_structure', &
+  if (nr3.lt.nprocp) call errore ('data_structure', &
        'some processors have no planes ',  - 1)
 
-  if (nr3s.lt.nprocp) call error ('data_structure', &
+  if (nr3s.lt.nprocp) call errore ('data_structure', &
        'some processors have no smooth planes ',  - 1)
   if (nprocp.eq.1) then
      npp (1) = nr3
@@ -167,7 +167,7 @@ subroutine data_structure
         m2 = mod (i2, nr2) + 1
         if (m2.lt.1) m2 = m2 + nr2
         mc = m1 + (m2 - 1) * nrx1
-        if (mc.lt.1.or.mc.gt.ncplane) call error ('data_structure', &
+        if (mc.lt.1.or.mc.gt.ncplane) call errore ('data_structure', &
              'mc is wrong', 1)
         do i3 = - n3, n3
            amod = (bg (1, 1) * i1 + bg (1, 2) * i2 + bg (1, 3) * i3) **2 + &
@@ -201,8 +201,8 @@ subroutine data_structure
      ngkc (mc) = 0
 
   enddo
-  if (nct.eq.0) call error ('data_structure', 'number of column 0', 1)
-  if (ncts.eq.0) call error ('data_structure', 'number smooth column 0', 1)
+  if (nct.eq.0) call errore ('data_structure', 'number of column 0', 1)
+  if (ncts.eq.0) call errore ('data_structure', 'number smooth column 0', 1)
   !
   !   Now sort the columns. First the column with the largest number of G
   !   vectors on the wavefunction sphere, then on the smooth sphere,
@@ -266,20 +266,20 @@ subroutine data_structure
         elseif (i1.ge.min1) then
            n1 = nr1s - (nr1 - i1)
         else
-           call error ('data_structure', 'something wrong with n1', 1)
+           call errore ('data_structure', 'something wrong with n1', 1)
         endif
         if (i2.le.max2) then
            n2 = i2
         elseif (i2.ge.min2) then
            n2 = nr2s - (nr2 - i2)
         else
-           call error ('data_structure', 'something wrong with n2', 1)
+           call errore ('data_structure', 'something wrong with n2', 1)
         endif
         !
         !   check that the indices are within bounds
         !
         if (n1.lt.1.or.n1.gt.nr1s.or.n2.lt.1.or.n2.gt.nr2s) &
-             call error ('data_structure', 'something wrong with n1,n2', 1)
+             call errore ('data_structure', 'something wrong with n1,n2', 1)
         ics (i) = n1 + (n2 - 1) * nrx1s
      else
         ics (i) = 0
@@ -336,7 +336,7 @@ subroutine data_structure
   ngms = ngps (me)
   do i = 1, nprocp
      !        write(6,*) i, ncp(i), ngp(i), nkcp(i), ngkp(i)
-     if (ngkp (i) .eq.0) call error ('data_structure', &
+     if (ngkp (i) .eq.0) call errore ('data_structure', &
           'some processors have no pencils, not yet implemented', 1)
      if (i.eq.1) then
         ncp0 (i) = 0

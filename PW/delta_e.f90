@@ -50,7 +50,7 @@ endif
 de = omega * de / (nr1 * nr2 * nr3)
 deband = omega * deband / (nr1 * nr2 * nr3)
 
-#ifdef PARA
+#ifdef __PARA
 call reduce (1, de)
 call reduce (1, deband)
 #endif

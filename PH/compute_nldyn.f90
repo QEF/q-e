@@ -191,7 +191,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
 
   call reduce (2 * 3 * nat * 3 * nat, dynwrk)
 #endif

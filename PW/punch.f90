@@ -20,7 +20,7 @@ subroutine punch
   use pwcom, only: nks, filpun, reduce_io, evc, nwordwfc, iunwfc, lscf, &
     rho, nspin, iunpun, et, wg, nbnd, nkstot, nbndx
   use io, only: prefix
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use restart_module, only: writefile_new
@@ -50,7 +50,7 @@ subroutine punch
   !  Write: general variables (including dimensions of the arrays),
   !  atomic positions, forces, k-points, eigenvalues
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! xk, wk, isk, et, wg are distributed across pools
   ! the first node has a complete copy of xk, wk, isk,
@@ -90,7 +90,7 @@ subroutine punch
   !
   use pwcom
   use io, only: prefix
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use restart_module, only: writefile_new
@@ -120,7 +120,7 @@ subroutine punch
   !  Write: general variables (including dimensions of the arrays),
   !  atomic positions, forces, k-points, eigenvalues
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! xk, wk, isk, et, wg are distributed across pools
   ! the first node has a complete copy of xk, wk, isk,
@@ -146,14 +146,14 @@ subroutine punch
   write (iunpun) ( (xk (i, ik), i = 1, 3), ik = 1, nkstot)
   write (iunpun) (  wk (ik), ik = 1, nkstot)
   write (iunpun) ( isk (ik), ik = 1, nkstot)
-#ifdef PARA
+#ifdef __PARA
   write (iunpun) kunit
   kunittmp = kunit
 #endif
   write (iunpun) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nkstot)
   write (iunpun) ( (wg (ibnd, ik), ibnd = 1, nbnd), ik = 1, nkstot)
   close (unit = iunpun)
-#ifdef PARA
+#ifdef __PARA
   end if
 #endif
   !

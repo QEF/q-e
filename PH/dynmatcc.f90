@@ -85,7 +85,7 @@ subroutine dynmatcc
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (18 * nat * nat, dynwrk)
 #endif
   !

@@ -302,7 +302,7 @@ subroutine convert_uspp
   else if (exfact.eq. 5) then
      iexch=1; icorr=4; igcx=3; igcc=4 ! Perdew-Becke-Erkerhof
   else
-     call error('convert','Wrong xc in pseudopotential',1)
+     call errore('convert','Wrong xc in pseudopotential',1)
   end if
 
   allocate (r(mesh), rab(mesh))

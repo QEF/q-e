@@ -50,12 +50,12 @@ subroutine rotate_wfc (ndim, ndmx, nvec, nbnd, en, psi)
   sc(:,:) = (0.d0, 0.d0)
   call ZGEMM ('c', 'n', nvec, nvec, ndim, (1.d0, 0.d0) , psi, ndmx, &
        psip, ndmx, (0.d0, 0.d0) , hc, nvec)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nvec * nvec, hc)
 #endif
   call ZGEMM ('c', 'n', nvec, nvec, ndim, (1.d0, 0.d0) , psi, ndmx, &
        psis, ndmx, (0.d0, 0.d0) , sc, nvec)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nvec * nvec, sc)
 #endif
 

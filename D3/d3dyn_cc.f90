@@ -93,7 +93,7 @@ subroutine d3dyn_cc
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
 
@@ -128,7 +128,7 @@ subroutine d3dyn_cc
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iud0rho, nu_i, - 1)
 
@@ -145,7 +145,7 @@ subroutine d3dyn_cc
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   do nu_i = 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
 
@@ -180,7 +180,7 @@ subroutine d3dyn_cc
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
 
@@ -246,7 +246,7 @@ subroutine d3dyn_cc
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn4)
 #endif
   call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dyn4, 1, d3dyn, 1)

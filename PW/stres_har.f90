@@ -38,7 +38,7 @@ subroutine stres_har (sigmahar)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigmahar)
 #endif
   if (gamma_only) then

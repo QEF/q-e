@@ -128,7 +128,7 @@ subroutine wfcinit
 
   enddo
   if (iprint.eq.1) then
-#ifdef PARA
+#ifdef __PARA
      call poolrecover (et, nbndx, nkstot, nks)
 #endif
      do ik = 1, nkstot

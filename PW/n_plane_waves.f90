@@ -48,6 +48,6 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, &
 100  npwx = max (npwx, ngk (nk) )
   enddo
 
-  if (npwx.eq.0) call error ('n_plane_waves', 'No PWs !', 1)
+  if (npwx.eq.0) call errore ('n_plane_waves', 'No PWs !', 1)
   return
 end subroutine n_plane_waves

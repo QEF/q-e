@@ -60,7 +60,7 @@ subroutine subtract_vxc (raux, spin_component)
      !
      ! LSDA case
      !
-     if (spin_component.ne.1.and.spin_component.ne.2) call error ( &
+     if (spin_component.ne.1.and.spin_component.ne.2) call errore ( &
           'subtract vxc', 'spin_component not allowed', 1)
      is = spin_component
      negz = 0

@@ -31,7 +31,7 @@ subroutine pw_gemm (sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc)
   call start_clock ('pw_gemm')
   call DGEMM ('C', 'N', na, nb, 2*n, 2.d0, a, 2*lda, b, 2*ldb, 0.d0, c, ldc)
   if (gstart==2) call DGER ( na, nb, -1.d0, a, 2*lda, b, 2*ldb, c, ldc)
-#ifdef PARA
+#ifdef __PARA
   if (sum_over_nodes.eq.'y'.or.sum_over_nodes.eq.'Y') call reduce (ldc * nb, c)
 #endif
   call stop_clock ('pw_gemm')

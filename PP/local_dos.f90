@@ -54,9 +54,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   !   calculate the correct weights
   !
-  if (iflag.ne.0.and..not.lgauss) call error ('local_dos', &
+  if (iflag.ne.0.and..not.lgauss) call errore ('local_dos', &
        'gaussian broadening needed', 1)
-  if (iflag.eq.2.and.ngauss.ne. - 99) call error ('local_dos', &
+  if (iflag.eq.2.and.ngauss.ne. - 99) call errore ('local_dos', &
        ' beware: not using Fermi-Dirac function ',  - ngauss)
   do ik = 1, nks
      do ibnd = 1, nbnd
@@ -75,7 +75,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
               wg (ibnd, ik) = 0.d0
            endif
         else
-           call error ('local_dos', ' iflag not allowed', abs (iflag) )
+           call errore ('local_dos', ' iflag not allowed', abs (iflag) )
         endif
      enddo
 
@@ -132,9 +132,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                        coseno=real(segno(irm))/maxmod
                        seno= DIMAG(segno(irm))/maxmod
                     else   
-                       call error('local_dos','zero wavefuntion',1)
+                       call errore('local_dos','zero wavefuntion',1)
                     endif
-#ifdef PARA
+#ifdef __PARA
                     call mp_bcast(coseno,0)
                     call mp_bcast(seno,0)
 #endif
@@ -211,7 +211,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   !    symmetrization of the local dos
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! reduce charge density across pools
   !

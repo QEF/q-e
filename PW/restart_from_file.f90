@@ -38,7 +38,7 @@ subroutine restart_from_file
   write (6, '(5x,"Restarting in ",a)') where
   if (where.ne.'ELECTRONS'.and.where.ne.'IONS') then
      write (*,*) where, '......?'
-     call error ('readin', ' wrong recover file ', 1)
+     call errore ('readin', ' wrong recover file ', 1)
   endif
   !
   !  close the file for later use
@@ -47,5 +47,5 @@ subroutine restart_from_file
 
   return
 
-10 call error ('readin', 'problems in reading recover file', 1)
+10 call errore ('readin', 'problems in reading recover file', 1)
 end subroutine restart_from_file

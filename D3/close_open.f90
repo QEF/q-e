@@ -17,7 +17,7 @@ subroutine close_open (isw)
   use pwcom, only: filpun, degauss
   use phcom, only: iudwf, lrdwf, lgamma
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -27,12 +27,12 @@ subroutine close_open (isw)
   logical :: exst
   ! logical variable to check file existenc
 
-  if (len_trim(filpun).eq.0) call error ('recv', 'wrong filpun name', 1)
+  if (len_trim(filpun).eq.0) call errore ('recv', 'wrong filpun name', 1)
   if (isw.eq.3) then
      !
      ! This is to be used after gen_dwf(3)
      !
-#ifdef PARA
+#ifdef __PARA
      if (me.ne.1.or.mypool.ne.1) goto 210
 #endif
      if (degauss.ne.0.d0) then
@@ -40,7 +40,7 @@ subroutine close_open (isw)
         filint = trim(filpun) //'.efs'
         call seqopn (iuef, filint, 'unformatted', exst)
      endif
-#ifdef PARA
+#ifdef __PARA
 
 210  continue
 #endif
@@ -58,7 +58,7 @@ subroutine close_open (isw)
      ! This is to be used after gen_dwf(1)
      !
 
-     if (lgamma) call error (' close_open ', ' isw=1 ; lgamma', 1)
+     if (lgamma) call errore (' close_open ', ' isw=1 ; lgamma', 1)
      close (unit = iupdqvp, status = 'keep')
      filint = trim(filpun) //'.pdp'
 
@@ -71,7 +71,7 @@ subroutine close_open (isw)
      !
      ! This is to be used after gen_dwf(2)
      !
-     if (lgamma) call error (' close_open ', ' isw=2 ; lgamma', 1)
+     if (lgamma) call errore (' close_open ', ' isw=2 ; lgamma', 1)
      close (unit = iud0qwf, status = 'keep')
      filint = trim(filpun) //'.d0wf'
      call diropn (iud0qwf, filint, lrdwf, exst)

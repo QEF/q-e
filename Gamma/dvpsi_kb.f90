@@ -129,7 +129,7 @@ subroutine dvpsi_kb(kpoint,nu)
      deallocate(bec2)
      deallocate(bec1)
   end do
-  if (jkb.ne.nkb) call error('dvpsi_kb','unexpected error',1)
+  if (jkb.ne.nkb) call errore('dvpsi_kb','unexpected error',1)
   !
   deallocate(work)
   !

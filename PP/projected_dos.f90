@@ -56,7 +56,7 @@ program doss
   read (4, * ) npseu, nat
   do np = 1, npseu
      read (4, * ) npdummy, nchi (np), (lchi (n, np), n = 1, nchi (np) )
-     if (npdummy.ne.np) call error ('projected_dos', &
+     if (npdummy.ne.np) call errore ('projected_dos', &
           'wrong pseudopotential order', np)
   enddo
   read (4, * ) (ityp (na), na = 1, nat)

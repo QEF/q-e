@@ -15,12 +15,12 @@ subroutine d3_recover (ilab, isw)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
 
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
   integer :: ilab, isw, root, iaux, errcode
@@ -28,9 +28,9 @@ subroutine d3_recover (ilab, isw)
 
   iunrec = 98
   if (isw.eq.1) then
-#ifdef PARA
+#ifdef __PARA
      call MPI_barrier (MPI_COMM_WORLD, errcode)
-     call error ('d3_recover', 'at barrier', errcode)
+     call errore ('d3_recover', 'at barrier', errcode)
      if (me.ne.1.or.mypool.ne.1) return
 #endif
 
@@ -44,9 +44,9 @@ subroutine d3_recover (ilab, isw)
 
      close (unit = iunrec, status = 'keep')
   elseif (isw.eq. - 1) then
-#ifdef PARA
+#ifdef __PARA
      call MPI_barrier (MPI_COMM_WORLD, errcode)
-     call error ('d3_recover', 'at barrier', errcode)
+     call errore ('d3_recover', 'at barrier', errcode)
      if (me.ne.1.or.mypool.ne.1) goto 100
 #endif
 
@@ -59,21 +59,21 @@ subroutine d3_recover (ilab, isw)
      endif
 
      close (unit = iunrec, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
 
 100  continue
      root = 0
      call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-     call error ('d3_recover', 'at barrier2', errcode)
+     call errore ('d3_recover', 'at barrier2', errcode)
      iaux = 2 * 27 * nat * nat * nat
      call MPI_bcast (d3dyn, iaux, MPI_REAL8, root, MPI_COMM_WORLD, &
           errcode)
-     call error ('d3_recover', 'at bcast1', errcode)
+     call errore ('d3_recover', 'at bcast1', errcode)
      call MPI_bcast (ilab, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
           errcode)
 
-     call error ('d3_recover', 'at bcast2', errcode)
+     call errore ('d3_recover', 'at bcast2', errcode)
 #endif
 
   endif

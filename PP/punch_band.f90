@@ -27,7 +27,7 @@ subroutine do_bands (nodenumber)
   filband = ' '
   !
   read (5, inputpp, err = 200, iostat = ios)
-200 call error ('projwave', 'reading inputpp namelist', abs (ios) )
+200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -91,7 +91,7 @@ subroutine punch_band (filband)
   iunpun = 18
   open (unit = iunpun, file = filband, status = 'unknown', form = &
        'formatted', err = 100, iostat = ios)
-100 call error ('punch_band', 'Opening filband file', abs (ios) )
+100 call errore ('punch_band', 'Opening filband file', abs (ios) )
   rewind (iunpun)
   allocate (psiold( npwx, nbnd))    
   allocate (old(   ngm))    

@@ -9,7 +9,7 @@
 subroutine divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
   !-----------------------------------------------------------------------
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use parameters, only : DP
   use para
   implicit none
@@ -33,12 +33,12 @@ subroutine divide_et_impera (xk, wk, isk, lsda, nkstot, nks)
   ! k-points
   ! k-point weights
   !
-  if (mod (nks, kunit) .ne.0) call error ('d_&_i', &
+  if (mod (nks, kunit) .ne.0) call errore ('d_&_i', &
        ' nks/kunit is not an integer', nks)
   !
   nkstot = nks
   nks = kunit * (nkstot / kunit / npool)
-  if (nks.eq.0) call error ('d_&_i', ' nks = 0 for some nodes', 1)
+  if (nks.eq.0) call errore ('d_&_i', ' nks = 0 for some nodes', 1)
   rest = (nkstot - nks * npool) / kunit
   if (mypool.le.rest) nks = nks + kunit
   !

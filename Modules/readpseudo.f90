@@ -124,7 +124,7 @@ subroutine scan_begin (iunps, string, rew)
      if (matches ("<PP_"//string//">", rstring) ) return  
   enddo
   return
-300 call error ('scan_begin', 'No '//string//' block', abs (ios) )  
+300 call errore ('scan_begin', 'No '//string//' block', abs (ios) )  
 end subroutine scan_begin
 !---------------------------------------------------------------------
 
@@ -143,7 +143,7 @@ subroutine scan_end (iunps, string)
   read (iunps, '(a)', iostat = ios, err = 300) rstring  
   if (matches ("</PP_"//string//">", rstring) ) return  
   return
-300 call error ('scan_end', &
+300 call errore ('scan_end', &
        'No '//string//' block end statement, possibly corrupted file',  - 1)
 end subroutine scan_end
 !
@@ -176,7 +176,7 @@ subroutine read_pseudo_header (upf, iunps)
   else if (matches (upf%typ, "NC") ) then
      upf%tvanp = .false.  
   else
-     call error ('read_pseudo_header', 'unknown pseudo type', 1)
+     call errore ('read_pseudo_header', 'unknown pseudo type', 1)
   endif
 
   read (iunps, *, err = 100, iostat = ios) upf%nlcc , dummy  
@@ -197,7 +197,7 @@ subroutine read_pseudo_header (upf, iunps)
 
   return  
 
-100  call error ('read_pseudo_header', 'Reading pseudo file', abs (ios))
+100  call errore ('read_pseudo_header', 'Reading pseudo file', abs (ios))
 end subroutine read_pseudo_header
 
 !---------------------------------------------------------------------
@@ -229,7 +229,7 @@ subroutine read_pseudo_mesh (upf, iunps)
 
   return  
 
-100 call error ('read_pseudo_mesh', 'Reading pseudo file', abs (ios) )  
+100 call errore ('read_pseudo_mesh', 'Reading pseudo file', abs (ios) )  
 end subroutine read_pseudo_mesh
 
 
@@ -254,7 +254,7 @@ subroutine read_pseudo_nlcc (upf, iunps)
   !
   return
 
-100 call error ('read_pseudo_nlcc', 'Reading pseudo file', abs (ios) )
+100 call errore ('read_pseudo_nlcc', 'Reading pseudo file', abs (ios) )
   return
 end subroutine read_pseudo_nlcc
 
@@ -280,7 +280,7 @@ subroutine read_pseudo_local (upf, iunps)
 
   return
 
-100 call error ('read_pseudo_local','Reading pseudo file', abs(ios) )
+100 call errore ('read_pseudo_local','Reading pseudo file', abs(ios) )
   return
 end subroutine read_pseudo_local
 
@@ -350,7 +350,7 @@ subroutine read_pseudo_nl (upf, iunps)
            read (iunps,*,err=100,iostat=ios) idum, idum, ldum, dummy
            !"  i    j   (l)"
            if (ldum /= upf%lll(mb) ) then
-             call error ('read_pseudo_nl','inconsistent angular momentum for Q_ij', 1)
+             call errore ('read_pseudo_nl','inconsistent angular momentum for Q_ij', 1)
            end if
 
            read (iunps,*,err=100,iostat=ios) upf%qqq(nb,mb), dummy
@@ -387,7 +387,7 @@ subroutine read_pseudo_nl (upf, iunps)
 
   return  
 
-100 call error ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )  
+100 call errore ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )  
 end subroutine read_pseudo_nl
 
 
@@ -415,7 +415,7 @@ subroutine read_pseudo_pswfc (upf, iunps)
 
   return  
 
-100 call error ('read_pseudo_pswfc', 'Reading pseudo file', abs(ios))
+100 call errore ('read_pseudo_pswfc', 'Reading pseudo file', abs(ios))
 end subroutine read_pseudo_pswfc
 
 !---------------------------------------------------------------------
@@ -438,7 +438,7 @@ subroutine read_pseudo_rhoatom (upf, iunps)
   !
   return  
 
-100 call error ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
+100 call errore ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
 end subroutine read_pseudo_rhoatom
 
 !=----------------------------------------------------------------------------=!

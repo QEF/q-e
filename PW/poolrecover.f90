@@ -12,7 +12,7 @@ subroutine poolrecover (vec, length, nkstot, nks)
   !
   ! recovers on the first processor of the first pool a distributed vector
   !
-#ifdef PARA
+#ifdef __PARA
   use para
   use parameters, only : DP
   implicit none
@@ -26,7 +26,7 @@ subroutine poolrecover (vec, length, nkstot, nks)
 
   if (npool.le.1) return
 
-  if (mod (nkstot, kunit) .ne.0) call error ('poolrecover', &
+  if (mod (nkstot, kunit) .ne.0) call errore ('poolrecover', &
        'nkstot/kunit is not an integer', nkstot)
   nks1 = kunit * (nkstot / kunit / npool)
 
@@ -36,7 +36,7 @@ subroutine poolrecover (vec, length, nkstot, nks)
   if (me.eq.1.and.mypool.ne.1) then
      call mpi_send (vec, length * nks, MPI_REAL8, 0, 17, &
           MPI_COMM_ROW, info)
-     call error ('poolrecover', 'info<>0 in send', info)
+     call errore ('poolrecover', 'info<>0 in send', info)
 
   endif
   do i = 2, npool
@@ -50,7 +50,7 @@ subroutine poolrecover (vec, length, nkstot, nks)
      if (me.eq.1.and.mypool.eq.1) then
         call mpi_recv (vec (1, nbase+1), length * fine, MPI_REAL8, i - &
              1, 17, MPI_COMM_ROW, status, info)
-        call error ('poolrecover', 'info<>0 in recv', info)
+        call errore ('poolrecover', 'info<>0 in recv', info)
      endif
   enddo
 #endif
@@ -62,7 +62,7 @@ subroutine ipoolrecover (ivec, length, nkstot, nks)
   !
   ! as abov, for an integer vector
   !
-#ifdef PARA
+#ifdef __PARA
   use para
   implicit none
 
@@ -75,7 +75,7 @@ subroutine ipoolrecover (ivec, length, nkstot, nks)
 
   if (npool.le.1) return
 
-  if (mod (nkstot, kunit) .ne.0) call error ('poolrecover', &
+  if (mod (nkstot, kunit) .ne.0) call errore ('poolrecover', &
        'nkstot/kunit is not an integer', nkstot)
   nks1 = kunit * (nkstot / kunit / npool)
 
@@ -85,7 +85,7 @@ subroutine ipoolrecover (ivec, length, nkstot, nks)
   if (me.eq.1.and.mypool.ne.1) then
      call mpi_send (ivec, length * nks, MPI_INTEGER, 0, 17, &
           MPI_COMM_ROW, info)
-     call error ('ipoolrecover', 'info<>0 in send', info)
+     call errore ('ipoolrecover', 'info<>0 in send', info)
 
   endif
   do i = 2, npool
@@ -99,7 +99,7 @@ subroutine ipoolrecover (ivec, length, nkstot, nks)
      if (me.eq.1.and.mypool.eq.1) then
         call mpi_recv (ivec (1, nbase+1), length * fine, MPI_INTEGER, &
              i - 1, 17, MPI_COMM_ROW, status, info)
-        call error ('ipoolrecover', 'info<>0 in recv', info)
+        call errore ('ipoolrecover', 'info<>0 in recv', info)
      endif
   enddo
 #endif

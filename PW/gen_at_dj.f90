@@ -128,7 +128,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
 
    if (iatw.ne.natw) then
       write(6,*) 'iatw =',iatw,'natw =',natw
-      call error('gen_at_dj','unexpected error',1)
+      call errore('gen_at_dj','unexpected error',1)
    end if
 
    deallocate ( sk )

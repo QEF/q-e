@@ -17,7 +17,7 @@ subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -39,7 +39,7 @@ subroutine writed3dyn_5 (d3dyn_x, filename, isw)
   character (len=*) :: filename
   ! input: the name of the file
 
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1.or.mypool.ne.1) return
 #endif
 

@@ -87,7 +87,7 @@ subroutine stres_cc (sigmaxcc)
   do l = 1, 3
      sigmaxcc (l, l) = sigmaxcc (l, l) + sigmadiag
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigmaxcc)
 #endif
   deallocate (rhocg)

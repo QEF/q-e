@@ -54,7 +54,7 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
 
   if (.not.lgamma) then
 
-     if (2 * nks.gt.npk) call error ('set_kplusq', 'too many k points', &
+     if (2 * nks.gt.npk) call errore ('set_kplusq', 'too many k points', &
           & nks)
      do ik = nks, 1, - 1
         do j = 1, 3

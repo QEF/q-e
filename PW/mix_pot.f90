@@ -62,9 +62,9 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !
   call start_clock ('mix_pot')
-  if (iter.lt.1) call error ('mix_potential', 'iter is wrong', 1)
-  if (n_iter.gt.maxter) call error ('mix_potential', 'n_iter too big', 1)
-  if (ndim.le.0) call error ('mix_potential', 'ndim .le. 0', 3)
+  if (iter.lt.1) call errore ('mix_potential', 'iter is wrong', 1)
+  if (n_iter.gt.maxter) call errore ('mix_potential', 'n_iter too big', 1)
+  if (ndim.le.0) call errore ('mix_potential', 'ndim .le. 0', 3)
   !
   saveonfile = filename.ne.' '
   !
@@ -73,7 +73,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   enddo
   dr2 = DNRM2 (ndim, vout, 1) **2
   ndimtot = ndim
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, dr2)
   call ireduce (1, ndimtot)
 #endif
@@ -86,7 +86,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         iunmix = iunit
         if (.not.opnd) goto 10
      enddo
-     call error ('mix_potential', 'free unit not found?!?', 1)
+     call errore ('mix_potential', 'free unit not found?!?', 1)
 10   continue
      if (conv) then
         ! remove temporary file (open and close it)
@@ -97,7 +97,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      endif
      call diropn (iunmix, filename, ndim, exst)
      if (iter.gt.1.and..not.exst) then
-        call error ('mix_potential', 'file not found, restarting', -1)
+        call errore ('mix_potential', 'file not found, restarting', -1)
         iter = 1
      endif
      allocate (df( ndim , n_iter))    
@@ -136,7 +136,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         dv (n, ipos) = vin (n) - dv (n, ipos)
      enddo
      norm = (DNRM2 (ndim, df (1, ipos), 1) ) **2
-#ifdef PARA
+#ifdef __PARA
      call reduce (1, norm)
 #endif
      norm = sqrt (norm)
@@ -164,7 +164,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      do j = i + 1, iter_used
         beta (i, j) = w (i) * w (j) * DDOT (ndim, df (1, j), 1, df (1, i), 1)
-#ifdef PARA
+#ifdef __PARA
         call reduce (1, beta (i, j) )
 #endif
      enddo
@@ -172,9 +172,9 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   enddo
   !
   call DSYTRF ('u', iter_used, beta, maxter, iwork, work, maxter, info)
-  call error ('broyden', 'factorization', info)
+  call errore ('broyden', 'factorization', info)
   call DSYTRI ('u', iter_used, beta, maxter, iwork, work, info)
-  call error ('broyden', 'DSYTRI', info)
+  call errore ('broyden', 'DSYTRI', info)
   !
   do i = 1, iter_used
      do j = i + 1, iter_used
@@ -185,7 +185,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do i = 1, iter_used
      work (i) = DDOT (ndim, df (1, i), 1, vout, 1)
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (iter_used, work)
 #endif
   !

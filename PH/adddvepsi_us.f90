@@ -45,7 +45,7 @@ do nt = 1, ntyp
       endif
    enddo
 enddo
-if (jkb.ne.nkb) call error ('adddvepsi_us', 'unexpected error', 1)
+if (jkb.ne.nkb) call errore ('adddvepsi_us', 'unexpected error', 1)
 
 deallocate(ps)
 

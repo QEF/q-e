@@ -48,7 +48,7 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
         !    a vector of the 1D grid has been found
         !
         ig1d = ig1d+1
-        if (ig1d.gt.nr3) call error ('ggen1d', 'too many G', 1)
+        if (ig1d.gt.nr3) call errore ('ggen1d', 'too many G', 1)
         g1d (3, ig1d) = g (3, ig)
         gg1d (ig1d) = gg (ig)
         ig1dto3d (ig1d) = ig

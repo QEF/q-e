@@ -30,7 +30,7 @@ subroutine dynamics
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -129,7 +129,7 @@ subroutine dynamics
   !     find the best coefficients for the extrapolation of the potential
   !
   call find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
-#ifdef PARA
+#ifdef __PARA
   if (me.eq.1) call poolbcast (1, alpha0)
   call broadcast (1, alpha0)
   if (me.eq.1) call poolbcast (1, beta0)
@@ -174,7 +174,7 @@ subroutine dynamics
   !
   mlt = abs (ml (1) ) + abs (ml (2) ) + abs (ml (3) )
   if (fixatom.eq.0) then
-     if (mlt.gt.eps) call error ('dynamics', 'Total linear momentum <> 0', - 1)
+     if (mlt.gt.eps) call errore ('dynamics', 'Total linear momentum <> 0', - 1)
   endif
 
   write (6, '(5x,"Linear momentum: ",3f18.14)') ml
@@ -232,7 +232,7 @@ subroutine start_therm (mass, tauold)
   !     Starting thermalization of the system
   !
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -254,7 +254,7 @@ subroutine start_therm (mass, tauold)
   ! velocity in random direction, with modulus accordingly to mass and
   ! temperature: 3/2KT = 1/2mv^2
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! only the first processor calculates ...
   !
@@ -273,7 +273,7 @@ subroutine start_therm (mass, tauold)
         step (2, na) = velox / modulo * direzione_y
         step (3, na) = velox / modulo * direzione_z
      enddo
-#ifdef PARA
+#ifdef __PARA
      !
      ! ... and distributes the velocities
      !
@@ -419,7 +419,7 @@ subroutine find_alpha_and_beta (nat, tau, tauold, alpha0, beta0)
   a21 = a12
   !
   det = a11 * a22 - a12 * a21
-  if (det.lt.0d0) call error ('find_alpha_and_beta', ' det.le.0', 1)
+  if (det.lt.0d0) call errore ('find_alpha_and_beta', ' det.le.0', 1)
   !
   ! det > 0 case:  a well defined minimum exists
   !

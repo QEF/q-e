@@ -15,7 +15,7 @@ subroutine cdiagh (n, h, ldh, e, v)
 !
 #include "machine.h"
   use parameters
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -48,7 +48,7 @@ subroutine cdiagh (n, h, ldh, e, v)
         hp (ij) = h (i, j)
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
 !cc        call pcdiagh( n, h, ldh, e, v, ij )
 !cc        goto 10
 !
@@ -57,7 +57,7 @@ subroutine cdiagh (n, h, ldh, e, v)
   if (me.eq.1) then
 #endif
      call ZHPEV (21, hp, e, v, ldh, n, aux, naux)
-#ifdef PARA
+#ifdef __PARA
   endif
   call broadcast (n, e)
   call broadcast (2 * ldh * n, v)
@@ -83,7 +83,7 @@ subroutine cdiagh (n, h, ldh, e, v)
      enddo
   enddo
   call ch (ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info)
-  call error ('cdiagh', 'info =/= 0', abs (info) )
+  call errore ('cdiagh', 'info =/= 0', abs (info) )
   do i = 1, n
      do j = 1, ldh
         v (j, i) = DCMPLX (zr (j, i), zi (j, i) )
@@ -108,7 +108,7 @@ subroutine cdiagh (n, h, ldh, e, v)
      lwork = (nb + 1) * n
 
   endif
-#ifdef PARA
+#ifdef __PARA
 !
 !  if scalapack library is present and we have just one pool
 !  and the matrix is larger than 130 we use the scalapack driver
@@ -133,11 +133,11 @@ subroutine cdiagh (n, h, ldh, e, v)
      allocate (work( lwork))    
      allocate (rwork( (3 * n - 2) ))    
      call ZHEEV ('V', 'U', n, v, ldh, e, work, lwork, rwork, info)
-     call error ('cdiagh', 'info =/= 0', abs (info) )
+     call errore ('cdiagh', 'info =/= 0', abs (info) )
 ! deallocate workspace
      deallocate (rwork)
      deallocate (work)
-#ifdef PARA
+#ifdef __PARA
   endif
   call broadcast (n, e)
   call broadcast (2 * ldh * n, v)

@@ -38,7 +38,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   ! counter on k
   ! counter
 
-  if (2*nks.gt.npk) call error ('set_kup&kdw','too many k points',nks)
+  if (2*nks.gt.npk) call errore ('set_kup&kdw','too many k points',nks)
   do ik = 1, nks
      do j = 1, 3
         xk(j,ik+nks) = xk(j,ik)

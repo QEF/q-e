@@ -17,11 +17,11 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
 
@@ -43,7 +43,7 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
   allocate  (drhoc( nrxx))    
   allocate  (drhov( nrxx))    
   allocate  (uact( 3 * nat))    
-#ifdef PARA
+#ifdef __PARA
 !  if (mypool.ne.1) goto 100
 #endif
 
@@ -78,11 +78,11 @@ subroutine drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
      call davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   enddo
-#ifdef PARA
+#ifdef __PARA
 100 continue
   call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-  call error ('drho_drc', 'at barrier', errcode)
+  call errore ('drho_drc', 'at barrier', errcode)
 #endif
   deallocate (drhoc)
   deallocate (drhov)

@@ -72,14 +72,14 @@ subroutine multable (nsym, s, table)
               enddo
            enddo
            if (smn) then
-              if (found) call error ('Multable', 'Not a group', 1)
+              if (found) call errore ('Multable', 'Not a group', 1)
               found = .true.
               table (jrot, irot) = krot
            endif
         enddo
 
      enddo
-     if (.not.found) call error ('Multable', ' Not a group', 2)
+     if (.not.found) call errore ('Multable', ' Not a group', 2)
 
   enddo
   return

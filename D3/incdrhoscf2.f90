@@ -83,7 +83,7 @@ subroutine incdrhoscf2 (drhoscf, weight, ik, dbecsum, mode, flag)
      !     +              evq, npwx, prodval(1,1,mode),nbnd,
      !     +             (1.d0,0.d0),dvpsi,npwx)
      if (okvan) then
-        call error ('incdrhoscf2', 'US not allowed', 1)
+        call errore ('incdrhoscf2', 'US not allowed', 1)
         !            do jbnd=1,nbnd
         !               call ZAXPY(npwq,prodval(jbnd,ibnd,mode),
         !     +           evq(1,jbnd),1,dvpsi(1,ibnd),1)

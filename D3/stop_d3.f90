@@ -16,11 +16,11 @@ subroutine stop_d3 (flag)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info
 #endif
@@ -29,12 +29,12 @@ subroutine stop_d3 (flag)
   close (unit = iuwfc, status = 'keep')
   close (unit = iubar, status = 'keep')
   close (unit = iudwf, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1) goto 100
 #endif
   close (unit = iudrho, status = 'keep')
   if (.not.lgamma) close (unit = iud0rho, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
 100 continue
 #endif
   close (unit = iunigk, status = 'delete')
@@ -54,7 +54,7 @@ subroutine stop_d3 (flag)
   call print_clock_d3
   call show_memory ()
 
-#ifdef PARA
+#ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
   call mpi_finalize (info)
 #endif

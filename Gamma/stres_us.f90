@@ -14,7 +14,7 @@ subroutine stres_us (ik, gk, sigmanlc)
 #include "machine.h"
   use pwcom
   use rbecmod
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -51,7 +51,7 @@ subroutine stres_us (ik, gk, sigmanlc)
         qm1 (i) = 0.d0
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1) goto 100
 #endif
   !

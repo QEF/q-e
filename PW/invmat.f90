@@ -25,13 +25,13 @@ subroutine invmat (a, a_inv, n)
   ! ipiv  : work space for pivoting
   real(kind=DP) :: work (lwork)
 
-  if (n.gt.lwork) call error ('invmat', 'work space is too small ', n)
+  if (n.gt.lwork) call errore ('invmat', 'work space is too small ', n)
   lda = n
   call DCOPY (n * n, a, 1, a_inv, 1)
   call DGETRF (n, n, a_inv, lda, ipiv, info)
-  call error ('invmat', 'error in DGETRF', abs (info) )
+  call errore ('invmat', 'error in DGETRF', abs (info) )
   call DGETRI (n, a_inv, lda, ipiv, work, lwork, info)
-  call error ('invmat', 'error in DGETRI', abs (info) )
+  call errore ('invmat', 'error in DGETRI', abs (info) )
 
   return
 

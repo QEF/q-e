@@ -29,7 +29,7 @@ subroutine iosys
        atm, nk1, nk2, nk3, k1, k2, k3
   use io, only : tmp_dir, prefix, pseudo_dir, pseudop
   use constants, only: pi
-#ifdef PARA
+#ifdef __PARA
   use para, only: me
   use mp
 #endif
@@ -295,12 +295,12 @@ subroutine iosys
   modenum = 0
   xqq = 0.d0
   !
-#ifdef PARA
+#ifdef __PARA
   if (me == 1)  then
 #endif
      ios = 0
      READ (unit, control, iostat = ios )
-     if (ios /= 0) call error ('reading','namelist &control',1)
+     if (ios /= 0) call errore ('reading','namelist &control',1)
      !
      ! reset default values for ion_dynamics according to definition
      ! of calculation in &control
@@ -326,25 +326,25 @@ subroutine iosys
      end if
 
      READ (unit, system, iostat = ios )
-     if (ios /= 0) call error ('reading','namelist &system',2)
+     if (ios /= 0) call errore ('reading','namelist &system',2)
      READ (unit, electrons, iostat = ios )
-     if (ios /= 0) call error ('reading','namelist &electrons',3)
+     if (ios /= 0) call errore ('reading','namelist &electrons',3)
      if ( TRIM(calculation) == 'relax'   .or. TRIM(calculation) == 'md'    .or.&
           TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
           TRIM(calculation) == 'cpmd' .or. TRIM(calculation) == 'vc-cpmd' ) then
         READ (unit, ions, iostat = ios )
-        if (ios /= 0) call error ('reading','namelist &ions',4)
+        if (ios /= 0) call errore ('reading','namelist &ions',4)
      end if
      if ( TRIM(calculation) == 'vc-relax'.or. TRIM(calculation) == 'vc-md' .or.&
           TRIM(calculation) == 'vc-cpmd' ) then
         READ (unit, cell, iostat = ios )
-        if (ios /= 0) call error ('reading','namelist &cell',5)
+        if (ios /= 0) call errore ('reading','namelist &cell',5)
      end if
      if (TRIM(calculation) == 'phonon' ) then
         READ (unit, phonon, iostat = ios )
-        if (ios /= 0) call error ('reading','namelist &phonon',5)
+        if (ios /= 0) call errore ('reading','namelist &phonon',5)
      end if
-#ifdef PARA
+#ifdef __PARA
   end if
 
   !
@@ -504,16 +504,16 @@ subroutine iosys
   ! ...   Set the number of species
 
   IF( ntyp < 1 .OR. ntyp > ntypx ) THEN
-     CALL error(' iosys ',' ntyp out of range ', ntyp )
+     CALL errore(' iosys ',' ntyp out of range ', ntyp )
   END IF
 
   ! ...   IBRAV and CELLDM
 
   IF( ibrav /= 0 .and. celldm(1) == 0.d0 ) THEN
-     CALL error(' iosys ',' invalid value in celldm ', 1 )
+     CALL errore(' iosys ',' invalid value in celldm ', 1 )
   END IF
   IF( ibrav < 0 .OR. ibrav > 14 ) THEN
-     CALL error(' iosys ',' ibrav out of range ', 1 )
+     CALL errore(' iosys ',' ibrav out of range ', 1 )
   END IF
 
   ! ...   Set Values for electron and bands
@@ -523,14 +523,14 @@ subroutine iosys
         ngauss = 0
         ltetra = .false.
         IF (degauss /= 0.d0) THEN
-           CALL error(' iosys ',&
+           CALL errore(' iosys ',&
                 ' fixed occupations, gauss. broadening ignored',-1 )
            degauss= 0.d0
         END IF
      CASE ('smearing')
         ltetra = .false.
         IF (degauss == 0.d0) THEN
-           CALL error(' iosys ',&
+           CALL errore(' iosys ',&
                 ' smearing requires gaussian broadening', 1 )
         END IF
         SELECT CASE ( TRIM(smearing) )
@@ -547,25 +547,25 @@ subroutine iosys
         ngauss = 0
         ltetra = .true.
      CASE DEFAULT
-        CALL error(' iosys ',' occupations '//trim(occupations)// &
+        CALL errore(' iosys ',' occupations '//trim(occupations)// &
              & 'not implemented', 1 )
   END SELECT
 
   IF( nbnd < 1 ) THEN
-     CALL error(' iosys ',' nbnd less than 1 ', nbnd )
+     CALL errore(' iosys ',' nbnd less than 1 ', nbnd )
   END IF
   IF( nelec < 0 ) THEN
-     CALL error(' iosys ',' nelec less than 0 ', nelec )
+     CALL errore(' iosys ',' nelec less than 0 ', nelec )
   END IF
   IF( nspin < 1 .OR. nspin > 2 ) THEN
-     CALL error(' iosys ',' nspin out of range ', nspin )
+     CALL errore(' iosys ',' nspin out of range ', nspin )
   END IF
   lsda = (nspin.eq.2)
 
   ! ...   Set Values for the cutoff
 
   IF( ecutwfc <= 0.d0 ) THEN
-     CALL error(' iosys ',' invalid ecutwfc ', INT(ecutwfc) )
+     CALL errore(' iosys ',' invalid ecutwfc ', INT(ecutwfc) )
   END IF
 
   if (ecutrho <= 0.d0) then
@@ -573,7 +573,7 @@ subroutine iosys
   else
      dual = ecutrho/ecutwfc
      IF( dual <= 1.d0 ) THEN
-        CALL error(' iosys ',' invalid dual? ', 1)
+        CALL errore(' iosys ',' invalid dual? ', 1)
      end if
   end if
 
@@ -591,7 +591,7 @@ subroutine iosys
         startingconfig = 'file'
      end if
   CASE DEFAULT
-     CALL error(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
+     CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
   END SELECT
 
   SELECT CASE ( TRIM(disk_io) )
@@ -640,7 +640,7 @@ subroutine iosys
      lmovecell=.false.
      nstep = 1
   CASE DEFAULT
-     CALL error(' iosys ',' calculation '//&
+     CALL errore(' iosys ',' calculation '//&
           trim(electron_dynamics)//' not implemented',1)
   END SELECT
 
@@ -649,19 +649,19 @@ subroutine iosys
   end if
 
   if ( startingpot.ne.'atomic' .and. startingpot.ne.'file' ) then
-     call error(' iosys','wrong startingpot: use default',-1)
+     call errore(' iosys','wrong startingpot: use default',-1)
      if (      lscf ) startingpot = 'atomic'
      if ( .not.lscf ) startingpot = 'file'
   end if
 
   if ( .not.lscf .and. startingpot.ne.'file' ) then
-     call error(' iosys','wrong startingpot: use default',-1)
+     call errore(' iosys','wrong startingpot: use default',-1)
      startingpot = 'file'
   end if
 
   if ( startingwfc.ne.'atomic' .and. startingwfc.ne.'random' .and. &
       startingwfc.ne.'file' ) then
-     call error(' iosys','wrong startingwfc: use default',-1)
+     call errore(' iosys','wrong startingwfc: use default',-1)
      startingwfc='atomic'
   end if
 
@@ -669,7 +669,7 @@ subroutine iosys
   CASE ('none' )
      continue
   CASE DEFAULT
-     CALL error(' iosys ',' unknown electron_dynamics '//&
+     CALL errore(' iosys ',' unknown electron_dynamics '//&
           trim(electron_dynamics),1)
   END SELECT
 
@@ -716,7 +716,7 @@ subroutine iosys
   END SELECT
 
   IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
-     CALL error(' iosys ',&
+     CALL errore(' iosys ',&
                 ' fixed occupations and lsda not implemented ', 1 )
   END IF
 
@@ -738,7 +738,7 @@ subroutine iosys
         epsf = forc_conv_thr
         ntcheck=nstep+1
      CASE DEFAULT
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
   endif
@@ -753,7 +753,7 @@ subroutine iosys
         calc = 'md'
         ntcheck=nstep+1
      CASE DEFAULT
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
   endif
@@ -778,11 +778,11 @@ subroutine iosys
         calc = 'nm'
         ntcheck=nstep+1
      CASE DEFAULT
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': cell_dymanics='//trim(cell_dynamics)//' not supported', 1 )
      END SELECT
      if ( TRIM(ion_dynamics) .ne. 'damp' ) then
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      end if
   endif
@@ -801,11 +801,11 @@ subroutine iosys
         calc = 'nd'
         ntcheck=nstep+1
      CASE DEFAULT
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      END SELECT
      if ( TRIM(ion_dynamics) .ne. 'beeman' ) then
-        CALL error(' iosys ','calculation='//trim(calculation)// &
+        CALL errore(' iosys ','calculation='//trim(calculation)// &
 &             ': ion_dymanics='//trim(ion_dynamics)//' not supported', 1 )
      end if
   endif
@@ -819,7 +819,7 @@ subroutine iosys
      temperature = tempw
      ttol = tolp
   CASE DEFAULT
-     CALL error(' iosys ',' unknown ion_temperature '//&
+     CALL errore(' iosys ',' unknown ion_temperature '//&
           trim(ion_temperature), 1 )
   END SELECT
 
@@ -827,7 +827,7 @@ subroutine iosys
   CASE ('not_controlled')
      continue
   CASE DEFAULT
-     CALL error(' iosys ',' unknown cell_temperature '//&
+     CALL errore(' iosys ',' unknown cell_temperature '//&
           trim(cell_temperature), 1 )
   END SELECT
 
@@ -835,7 +835,7 @@ subroutine iosys
   CASE ('all')
      continue
   CASE DEFAULT
-     CALL error(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
+     CALL errore(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
   END SELECT
 
   SELECT CASE ( TRIM(mixing_mode) )
@@ -852,7 +852,7 @@ subroutine iosys
      imix = -1
      starting_scf_threshold = sqrt(tr2)
   CASE DEFAULT
-     CALL error(' iosys ',' unknown mixing '//trim(mixing_mode), 1)
+     CALL errore(' iosys ',' unknown mixing '//trim(mixing_mode), 1)
   END SELECT
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
@@ -915,7 +915,7 @@ subroutine iosys
      tau = tau/0.529177/alat
      ltaucry = .false.
   CASE DEFAULT
-     CALL error(' iosys ',' atomic_positions='//trim(atomic_positions)// &
+     CALL errore(' iosys ',' atomic_positions='//trim(atomic_positions)// &
           ' not implemented ', 1 )
   END SELECT
 
@@ -966,7 +966,7 @@ subroutine iosys
      omega_old = omega
      lstres = .true.
      if (cell_factor.le.0.d0) cell_factor = 1.2d0
-     if (cmass.le.0.d0) call error('readin',&
+     if (cmass.le.0.d0) call errore('readin',&
           &      'vcsmd: a positive value for cell mass is required',1)
   else
      cell_factor = 1.d0
@@ -1027,7 +1027,7 @@ subroutine read_cards (pseudop, atomic_positions)
         read (input_line,*) atom_label(is), amass(is), pseudop(is)
 
         IF( amass(is) <= 0.d0 ) THEN
-           CALL error(' iosys ',' invalid  mass ', is)
+           CALL errore(' iosys ',' invalid  mass ', is)
         END IF
         atm(is) = atom_label(is)
 
@@ -1056,7 +1056,7 @@ subroutine read_cards (pseudop, atomic_positions)
                 tau_inp(1,ia), tau_inp(2,ia), tau_inp(3,ia), &
                 iforce_inp(1,ia), iforce_inp(2,ia), iforce_inp(3,ia)
         else
-           call error (' cards','wrong number of tokens', ia)
+           call errore (' cards','wrong number of tokens', ia)
         end if
 
         match_label: DO is = 1, ntyp
@@ -1067,7 +1067,7 @@ subroutine read_cards (pseudop, atomic_positions)
         END DO match_label
 
         if (ityp_inp(ia) <= 0 .OR. ityp_inp(ia) > ntyp) &
-             call error (' cards','wrong atomic positions', ia)
+             call errore (' cards','wrong atomic positions', ia)
 
      end do
      !
@@ -1106,7 +1106,7 @@ subroutine read_cards (pseudop, atomic_positions)
   else if (matches('OCCUPATIONS',line)) then
 !!!         allocate (f(n))
 !!!         read (unit, *) (f(i), i=1,n)
-     call error (' cards','card OCCUPATIONS not implemented', 1)
+     call errore (' cards','card OCCUPATIONS not implemented', 1)
 
   else if (matches('K_POINTS',line)) then
      !
@@ -1194,16 +1194,16 @@ subroutine read_cards (pseudop, atomic_positions)
   go to 100
 
 200 if (ibrav == 0 .and. .not.tcell ) &
-       CALL error(' cards ',' ibrav=0: must read cell parameters', 1 )
+       CALL errore(' cards ',' ibrav=0: must read cell parameters', 1 )
   if (ibrav /= 0 .and. tcell ) &
-       CALL error(' cards ',' redundant data for cell parameters', 2 )
+       CALL errore(' cards ',' redundant data for cell parameters', 2 )
   if (.not.tatms ) &
-       CALL error(' cards ',' atomic species info missing', 1 )
+       CALL errore(' cards ',' atomic species info missing', 1 )
   if (.not.tatmp ) &
-       CALL error(' cards ',' atomic position info missing', 1 )
+       CALL errore(' cards ',' atomic position info missing', 1 )
 
   return
-300 CALL error(' cards ',' unexpected end of file', 1 )
+300 CALL errore(' cards ',' unexpected end of file', 1 )
 end subroutine read_cards
 !
 !-----------------------------------------------------------------------
@@ -1221,13 +1221,13 @@ subroutine verify_tmpdir
      if (l > 0 .and. l < len(tmp_dir)) then
         tmp_dir(l+1:l+1)='/'
      else
-        call error('reading',tmp_dir//' truncated or empty',1)
+        call errore('reading',tmp_dir//' truncated or empty',1)
      end if
   end if
   ios = 0
   open (unit=4,file=trim(tmp_dir)//'pwscf'// nd_nmbr,status='unknown',&
         form='unformatted', iostat=ios)
-  if (ios /= 0 ) call error('reading', &
+  if (ios /= 0 ) call errore('reading', &
                     trim(tmp_dir)//' non existent or non writable',1)
   close (unit=4,status='delete')
   !

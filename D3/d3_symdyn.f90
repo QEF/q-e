@@ -87,7 +87,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, phi)
 #endif
   !

@@ -77,7 +77,7 @@ subroutine c_bands (iter, ik_, dr2)
   elseif (isolve.eq.1) then
      write (6, '("     Conjugate-gradient style diagonalization")')
   elseif (isolve.eq.2) then
-     if (.not.loverlap) call error ('c_bands', &
+     if (.not.loverlap) call errore ('c_bands', &
           'diis not implemented without overlap', 1)
      if (.not.diis_wfc_keep) then
         write (6, '("     DIIS style diagonalization")')
@@ -85,7 +85,7 @@ subroutine c_bands (iter, ik_, dr2)
         write (6, '("     DIIS style diagonalization (keeping old wfc)")')
      endif
   else
-     call error ('c_bands', 'isolve not implemented', 1)
+     call errore ('c_bands', 'isolve not implemented', 1)
 
   endif
   avg_iter = 0.d0
@@ -93,7 +93,7 @@ subroutine c_bands (iter, ik_, dr2)
   ! v_of_0 is (Vloc)(G=0)
   !
   v_of_0 = dsum (nrxx, vltot, 1) / float (nr1 * nr2 * nr3)
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, v_of_0)
 #endif
   !
@@ -236,7 +236,7 @@ subroutine c_bands (iter, ik_, dr2)
 
   enddo
   ik_ = 0
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (1, avg_iter)
 #endif
   avg_iter = avg_iter / nkstot

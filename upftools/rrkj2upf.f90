@@ -60,7 +60,7 @@ program rrkj2upf
   close (unit=2)
 
 stop
-20 call error ('rrkj2upf', 'Reading pseudo file name ', 1)
+20 call errore ('rrkj2upf', 'Reading pseudo file name ', 1)
 
 end program rrkj2upf
 
@@ -172,7 +172,7 @@ subroutine read_rrkj(iunps)
   !     ----------------------------------------------------------
   !
   return
-100 call error ('read_rrkj', 'Reading pseudo file', 100 )  
+100 call errore ('read_rrkj', 'Reading pseudo file', 100 )  
 
 end subroutine read_rrkj
 

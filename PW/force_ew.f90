@@ -93,7 +93,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   alpha = 1.1d0
 10 alpha = alpha - 0.1d0
-  if (alpha.eq.0.d0) call error ('force_ew', 'optimal alpha not foun &
+  if (alpha.eq.0.d0) call errore ('force_ew', 'optimal alpha not foun &
        &d', 1)
   upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
@@ -164,7 +164,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
 100 continue
-#ifdef PARA
+#ifdef __PARA
 
   call reduce (3 * nat, forceion)
 #endif

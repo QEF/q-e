@@ -22,7 +22,6 @@ bcast_ph_input.o  \
 cg_psi.o  \
 cgsolve_all.o  \
 ch_psi_all.o  \
-cinterpolate.o  \
 compute_alphasum.o  \
 compute_becalp.o  \
 compute_becsum.o  \

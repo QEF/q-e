@@ -307,7 +307,7 @@ subroutine summary
      enddo
   endif
   ngmtot = ngm
-#ifdef PARA
+#ifdef __PARA
   call ireduce (1, ngmtot)
 #endif
   write (6, '(/5x,"G cutoff =",f10.4,"  (", &
@@ -315,7 +315,7 @@ subroutine summary
        &       ",",i3,",",i3,")")') gcutm, ngmtot, nr1, nr2, nr3
   if (doublegrid) then
      ngmtot = ngms
-#ifdef PARA
+#ifdef __PARA
      call ireduce (1, ngmtot)
 #endif
      write (6, '(5x,"G cutoff =",f10.4,"  (", &

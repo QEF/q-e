@@ -164,7 +164,7 @@ subroutine phq_setup
              &"Possibly too few bands at point ", i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
   else
-     if (lsda) call error ('phq_setup', 'occupation numbers probably wrong',  - 1)
+     if (lsda) call errore ('phq_setup', 'occupation numbers probably wrong',  - 1)
      do ik = 1, nks
         nbnd_occ (ik) = nint (nelec) / degspin
      enddo
@@ -178,7 +178,7 @@ subroutine phq_setup
         emin = min (emin, et (ibnd, ik) )
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   ! find the minimum across pools
   call poolextreme (emin, - 1)
 #endif
@@ -192,7 +192,7 @@ subroutine phq_setup
            emax = max (emax, et (ibnd, ik) )
         enddo
      enddo
-#ifdef PARA
+#ifdef __PARA
      ! find the maximum across pools
      call poolextreme (emax, + 1)
 #endif
@@ -314,7 +314,7 @@ subroutine phq_setup
         imode0 = imode0 + npert (irr)
      enddo
   else
-     if (nrapp.gt.nirr) call error ('phq_setup', 'too many representati &
+     if (nrapp.gt.nirr) call errore ('phq_setup', 'too many representati &
           &on', 1)
      do irr = 1, nirr
         comp_irr (irr) = 0

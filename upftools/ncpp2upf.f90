@@ -58,7 +58,7 @@ program ncpp2upf
   call write_upf(2)
   close (unit=2)
   stop
-20 call error ('ncpp2upf', 'Reading pseudo file name ', 1)
+20 call errore ('ncpp2upf', 'Reading pseudo file name ', 1)
 
 end program ncpp2upf
 
@@ -106,13 +106,13 @@ subroutine read_ncpp(iunps)
   read (iunps, *, err=300) psd_, zp_, lmax_, nlc, nnl, nlcc_, &
        lloc, bhstype
   if ( nlc.gt.2 .or. nnl.gt.3) &
-       call error( 'read_ncpp','Wrong nlc or nnl',1 )
+       call errore( 'read_ncpp','Wrong nlc or nnl',1 )
   if ( nlc* nnl .lt. 0 ) &
-       call error( 'read_ncpp','nlc*nnl < 0 ? ',1 )
+       call errore( 'read_ncpp','nlc*nnl < 0 ? ',1 )
   if ( zp_.le.0d0 ) &
-      call error( 'read_ncpp','Wrong zp ',1 )
+      call errore( 'read_ncpp','Wrong zp ',1 )
   if ( lmax_.gt.3.or.lmax_.lt.0 ) &
-      call error( 'read_ncpp','Wrong lmax ',1 )
+      call errore( 'read_ncpp','Wrong lmax ',1 )
 
   if (lloc.eq.-1000) lloc=lmax_
   !
@@ -127,7 +127,7 @@ subroutine read_ncpp(iunps)
      read(iunps, *, err=300) &
           ( alpc(i), i=1, 2 ), ( cc(i), i=1,2 )
      if ( abs(cc(1)+cc(2)-1.d0).gt.1.0d-6) &
-          call error ('read_ncpp','wrong pseudopotential coefficients',1)
+          call errore ('read_ncpp','wrong pseudopotential coefficients',1)
      do l = 0, lmax_
         read (iunps, *, err=300) &
              ( alps(i,l),i=1,3 ), (aps(i,l),i=1,6)
@@ -137,7 +137,7 @@ subroutine read_ncpp(iunps)
         read(iunps, *, err=300) &
              a_nlcc, b_nlcc, alpha_nlcc
         if (alpha_nlcc.le.0.d0) &
-             call error('read_ncpp','nlcc but alpha=0',1)
+             call errore('read_ncpp','nlcc but alpha=0',1)
      end if
 
      if (bhstype) call bachel(alps,aps,1,lmax_)
@@ -145,10 +145,10 @@ subroutine read_ncpp(iunps)
 
   read(iunps, *, err=300) zmesh, xmin, dx, mesh_, nchi
 
-  if ( mesh_.le.0) call error( 'read_ncpp', 'mesh too small', 1)
+  if ( mesh_.le.0) call errore( 'read_ncpp', 'mesh too small', 1)
   if ( (nchi.lt.lmax_   .and. lloc.eq.lmax_).or.          &
        (nchi.lt.lmax_+1 .and. lloc.ne.lmax_)     )        &
-       call error( 'read_ncpp', 'wrong no. of wfcts', 1 )
+       call errore( 'read_ncpp', 'wrong no. of wfcts', 1 )
   !
   !    compute the radial mesh
   !
@@ -226,12 +226,12 @@ subroutine read_ncpp(iunps)
      !     Test lchi and occupation numbers
      !
      if ( nb.le.lmax_.and.lchi_(nb)+1.ne.nb) &
-          call error('read_ncpp','order of wavefunctions',nb)
+          call errore('read_ncpp','order of wavefunctions',nb)
      if (lchi_(nb).gt.lmax_ .or. lchi_(nb).lt.0) &
-          call error('read_ncpp','wrong lchi',nb)
+          call errore('read_ncpp','wrong lchi',nb)
      if ( oc_(nb).lt.0.d0 .or.            &
           oc_(nb).gt.2.d0*(2*lchi_(nb)+1)) &
-             call error('read_ncpp','wrong oc',nb)
+             call errore('read_ncpp','wrong oc',nb)
      read(iunps, *, err=300) (chi_(ir,nb),ir=1,mesh_)
   enddo
   !
@@ -248,7 +248,7 @@ subroutine read_ncpp(iunps)
   !     ----------------------------------------------------------
   return
 
-300 call error('read_ncpp','pseudo file is empty or wrong',1)
+300 call errore('read_ncpp','pseudo file is empty or wrong',1)
 
 end subroutine read_ncpp
 

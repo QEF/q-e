@@ -20,7 +20,7 @@ subroutine allocate_fft
   !
   !     determines the data structure for fft arrays
   !
-#ifdef PARA
+#ifdef __PARA
   call data_structure_para
 #else
   call data_structure_scal
@@ -29,20 +29,20 @@ subroutine allocate_fft
   if (nrxx.lt.ngm) then
      write (6, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
           &" nrxx = ",i8," ngm=",i8)') nr1, nr2, nr3, nrxx, ngm
-     call error ('allocate_fft', 'the nr"s are too small!', 1)
+     call errore ('allocate_fft', 'the nr"s are too small!', 1)
 
   endif
   if (nrxxs.lt.ngms) then
      write (6, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
           &" nrxxs = ",i8," ngms=",i8)') nr1s, nr2s, nr3s, nrxxs, ngms
-     call error ('allocate_fft', 'the nrs"s are too small!', 1)
+     call errore ('allocate_fft', 'the nrs"s are too small!', 1)
 
   endif
-  if (ngm.le.0) call error ('allocate_fft', 'wrong ngm', 1)
-  if (ngms.le.0) call error ('allocate_fft', 'wrong ngms', 1)
-  if (nrxx.le.0) call error ('allocate_fft', 'wrong nrxx', 1)
-  if (nrxxs.le.0) call error ('allocate_fft', 'wrong nrxxs', 1)
-  if (nspin.le.0) call error ('allocate_fft', 'wrong nspin', 1)
+  if (ngm.le.0) call errore ('allocate_fft', 'wrong ngm', 1)
+  if (ngms.le.0) call errore ('allocate_fft', 'wrong ngms', 1)
+  if (nrxx.le.0) call errore ('allocate_fft', 'wrong nrxx', 1)
+  if (nrxxs.le.0) call errore ('allocate_fft', 'wrong nrxxs', 1)
+  if (nspin.le.0) call errore ('allocate_fft', 'wrong nspin', 1)
   !
   !     Allocate memory for all kind of stuff.
   !

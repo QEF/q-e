@@ -63,11 +63,11 @@ subroutine dos (nodenumber)
   degauss1=0.d0
   !
   read (5, inputpp, err=200, iostat=ios )
-200 call error('dos','reading inputpp namelist',abs(ios))
+200 call errore('dos','reading inputpp namelist',abs(ios))
   !
   call read_file
   !
-  if (nks.ne.nkstot) call error ('dos', 'not implemented', 1)
+  if (nks.ne.nkstot) call errore ('dos', 'not implemented', 1)
   !
   if (degauss1.ne.0.d0) then
      degauss=degauss1
@@ -82,7 +82,7 @@ subroutine dos (nodenumber)
      write(6,'(/5x,"Gaussian broadening (read from file): ",&
           &        "ngauss,degauss=",i4,f12.6/)') ngauss,degauss
   else
-     if (degauss1.eq.0.d0) call error('dos','I need a gaussian broadening!',1)
+     if (degauss1.eq.0.d0) call errore('dos','I need a gaussian broadening!',1)
   end if
   !
   ! find band extrema

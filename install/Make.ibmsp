@@ -2,7 +2,7 @@
 # System-dependent definitions for IBM AIX (RISC6000) parallel machines
 # Edit according to your needs
 #
-CPPFLAGS = -DAIX,-DPARA,-D__MPI,-DHAS_ZHEGVX
+CPPFLAGS = -DAIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
 
 #
 # Fortran compiler:

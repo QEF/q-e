@@ -20,7 +20,7 @@ subroutine phq_readin
   use parameters, only : DP
   use phcom
   use io
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -54,7 +54,7 @@ subroutine phq_readin
   ! filelph  : output file for electron-phonon coefficients
   ! fildvscf : output file containing deltavsc
   ! fildrho  : output file containing deltarho
-#ifdef PARA
+#ifdef __PARA
 
   if (me.ne.1) goto 400
 #endif
@@ -63,7 +63,7 @@ subroutine phq_readin
   !
   read (5, '(a)', err = 100, iostat = ios) title_ph
   !print*, 'Title -->', title_ph
-100 call error ('phq_readin', 'reading title ', abs (ios) )
+100 call errore ('phq_readin', 'reading title ', abs (ios) )
   !
   !   set default values for variables in namelist
   !
@@ -108,40 +108,40 @@ subroutine phq_readin
   read (5, inputph, err = 200, iostat = ios)
 #endif
 
-200 call error ('phq_readin', 'reading inputph namelist', abs (ios) )
+200 call errore ('phq_readin', 'reading inputph namelist', abs (ios) )
   !
   !     Check all namelist variables
   !
-  if (tr2_ph.le.0.d0) call error (' phq_readin', ' Wrong tr2_ph ', &
+  if (tr2_ph.le.0.d0) call errore (' phq_readin', ' Wrong tr2_ph ', &
        1)
   do iter = 1, maxter
      if (alpha_mix (iter) .lt.0.d0.or.alpha_mix (iter) .gt.1.d0) call &
-          error ('phq_readin', ' Wrong alpha_mix ', iter)
+          errore ('phq_readin', ' Wrong alpha_mix ', iter)
   enddo
-  if (niter_ph.lt.1.or.niter_ph.gt.maxter) call error ('phq_readin', &
+  if (niter_ph.lt.1.or.niter_ph.gt.maxter) call errore ('phq_readin', &
        ' Wrong niter_ph ', 1)
-  if (nmix_ph.lt.1.or.nmix_ph.gt.5) call error ('phq_readin', ' Wron &
+  if (nmix_ph.lt.1.or.nmix_ph.gt.5) call errore ('phq_readin', ' Wron &
        &g nmix_ph ', 1)
-  if (iverbosity.ne.0.and.iverbosity.ne.1) call error ('phq_readin', ' Wrong &
+  if (iverbosity.ne.0.and.iverbosity.ne.1) call errore ('phq_readin', ' Wrong &
        & iverbosity ', 1)
-  if (fildyn.eq.' ') call error ('phq_readin', ' Wrong fildyn ', 1)
-  if (time_max.lt.1.d0) call error ('phq_readin', ' Wrong time_max', 1)
+  if (fildyn.eq.' ') call errore ('phq_readin', ' Wrong fildyn ', 1)
+  if (time_max.lt.1.d0) call errore ('phq_readin', ' Wrong time_max', 1)
 
-  if (nat_todo.ne.0.and.nrapp.ne.0) call error ('phq_readin', ' inco &
+  if (nat_todo.ne.0.and.nrapp.ne.0) call errore ('phq_readin', ' inco &
        &mpatible flags', 1)
   !
   !    reads the q point
   !
   read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
-300 call error ('phq_readin', 'reading xq', abs (ios) )
+300 call errore ('phq_readin', 'reading xq', abs (ios) )
 
 
   lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
-  if ( (epsil.or.zue) .and..not.lgamma) call error ('phq_readin', &
+  if ( (epsil.or.zue) .and..not.lgamma) call errore ('phq_readin', &
        'gamma is needed for elec.field', 1)
-  if (zue.and..not.trans) call error ('phq_readin', 'trans must be . &
+  if (zue.and..not.trans) call errore ('phq_readin', 'trans must be . &
        &t. for Zue calc.', 1)
-#ifdef PARA
+#ifdef __PARA
 400 continue
 
   call bcast_ph_input
@@ -161,63 +161,63 @@ subroutine phq_readin
   endif
   !
   if ( (zue) .and.okvan) then
-     call error ('phq_readin', 'No electric field in US case', &
+     call errore ('phq_readin', 'No electric field in US case', &
           - 1)
      epsil = .false.
      zue = .false.
   endif
   !
-  if (elph.and.degauss.eq.0.0) call error ('phq_readin', 'Electron-p &
+  if (elph.and.degauss.eq.0.0) call errore ('phq_readin', 'Electron-p &
        &honon only for metals', 1)
-  if (elph.and.okvan) call error ('phq_readin', 'El-ph not implement &
+  if (elph.and.okvan) call errore ('phq_readin', 'El-ph not implement &
        &ed in US case', 1)
-  if (elph.and.lsda) call error ('phq_readin', 'El-ph and spin not i &
+  if (elph.and.lsda) call errore ('phq_readin', 'El-ph and spin not i &
        &mplemented', 1)
-  if (elph.and.fildvscf.eq.' ') call error ('phq_readin', 'El-ph nee &
+  if (elph.and.fildvscf.eq.' ') call errore ('phq_readin', 'El-ph nee &
        &ds a DeltaVscf file', 1)
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
   call allocate_part
-#ifdef PARA
+#ifdef __PARA
 
   if (me.ne.1.or.mypool.ne.1) goto 800
 #endif
-  if (nat_todo.lt.0.or.nat_todo.gt.nat) call error ('phq_readin', &
+  if (nat_todo.lt.0.or.nat_todo.gt.nat) call errore ('phq_readin', &
        'nat_todo is wrong', 1)
   if (nat_todo.ne.0) then
      read (5, *, err = 600, iostat = ios) (atomo (na), na = 1, &
           nat_todo)
-600  call error ('phq_readin', 'reading atoms', abs (ios) )
+600  call errore ('phq_readin', 'reading atoms', abs (ios) )
   endif
-  if (nrapp.lt.0.or.nrapp.gt.3 * nat) call error ('phq_readin', &
+  if (nrapp.lt.0.or.nrapp.gt.3 * nat) call errore ('phq_readin', &
        'nrapp is wrong', 1)
   if (nrapp.ne.0) then
      read (5, *, err = 700, iostat = ios) (list (na), na = 1, nrapp)
-700  call error ('phq_readin', 'reading list', abs (ios) )
+700  call errore ('phq_readin', 'reading list', abs (ios) )
 
   endif
-#ifdef PARA
+#ifdef __PARA
 800 continue
   call bcast_ph_input1
 #endif
 
-  if (epsil.and.degauss.ne.0.d0) call error ('phq_readin', 'no elec. &
+  if (epsil.and.degauss.ne.0.d0) call errore ('phq_readin', 'no elec. &
        &field with metals', 1)
 
   if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
-       4.and..not.lgamma) call error ('phq_readin', ' Wrong iswitch ', 1 &
+       4.and..not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', 1 &
        + abs (iswitch) )
   do it = 1, ntyp
-     if (amass (it) .le.0.d0) call error ('phq_readin', 'Wrong masses', &
+     if (amass (it) .le.0.d0) call errore ('phq_readin', 'Wrong masses', &
           it)
 
   enddo
 
-  if (maxirr.lt.0.or.maxirr.gt.3 * nat) call error ('phq_readin', ' &
+  if (maxirr.lt.0.or.maxirr.gt.3 * nat) call errore ('phq_readin', ' &
        &Wrong maxirr ', abs (maxirr) )
-  if (mod (nks, 2) .ne.0.and..not.lgamma) call error ('phq_readin', &
+  if (mod (nks, 2) .ne.0.and..not.lgamma) call errore ('phq_readin', &
        'k-points are odd', nks)
   if (iswitch.eq. - 4) then
      nrapp = 1

@@ -7,7 +7,7 @@
 # Add -DNOPENCILS if you do not want to use the FFT with pencils
 # (in some cases it is slower than the full 3d FFT)
 #
-CPPFLAGS = -DDEC -D__FFTW -DPARA -D__MPI -I$(OSHOME)/include
+CPPFLAGS = -DDEC -D__FFTW -D__PARA -D__MPI -I$(OSHOME)/include
 
 #
 # Fortran compiler:

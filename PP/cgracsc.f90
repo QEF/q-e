@@ -61,7 +61,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   complex(kind=DP) :: scal, ZDOTC
   !
   scal = ZDOTC (npw, psi1, 1, psi2, 1)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2, scal)
 #endif
   ijkb0 = 0

@@ -46,7 +46,7 @@ subroutine readnewvan (is, iunps)
   character (len=75) :: titleps
   ! the title of the pseudo
 
-  if (is.lt.0.or.is.gt.npsx) call error ('readvan', 'Wrong is number', 1)
+  if (is.lt.0.or.is.gt.npsx) call errore ('readvan', 'Wrong is number', 1)
   read (iunps, '(a75)', err = 100, iostat = ios) titleps
 
   psd (is) = titleps (7:8)
@@ -68,12 +68,12 @@ subroutine readnewvan (is, iunps)
        rdum, zmesh (is) , dx (is) , mesh (is)
 
 
-  if (mesh (is) .gt.ndm) call error ('readnewvan', 'mesh is too big', 1)
+  if (mesh (is) .gt.ndm) call errore ('readnewvan', 'mesh is too big', 1)
 
   read (iunps, '(2i5)', err = 100, iostat = ios) nwfs, nbeta (is)
-  if (nbeta (is) .gt.nbrx) call error ('readnewvan', 'nbeta is too large', 1)
+  if (nbeta (is) .gt.nbrx) call errore ('readnewvan', 'nbeta is too large', 1)
 
-  if (nwfs.gt.nchix) call error ('readnewvan', 'nwfs is too large', 1)
+  if (nwfs.gt.nchix) call errore ('readnewvan', 'nwfs is too large', 1)
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rdum, nb = 1, nwfs)
 
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rdum, nb = 1, nwfs)
@@ -143,7 +143,7 @@ subroutine readnewvan (is, iunps)
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) ( (chi (ir, &
        nb, is) , ir = 1, mesh (is) ) , nb = 1, nwfs)
 
-100 call error ('read_newvan', 'Reading pseudo file', abs (ios) )
+100 call errore ('read_newvan', 'Reading pseudo file', abs (ios) )
   do nb = 1, nwfs
      chi (0, nb, is) = 0.d0
   enddo
@@ -155,7 +155,7 @@ subroutine readnewvan (is, iunps)
 
   nqlc (is) = 2 * lmax (is) + 1
 
-  if (nqlc (is) .gt.lqmax.or.nqlc (is) .lt.0) call error (' readnewvan ',&
+  if (nqlc (is) .gt.lqmax.or.nqlc (is) .lt.0) call errore (' readnewvan ',&
        'Wrong  nqlc', nqlc (is) )
   do l = 1, nqlc (is)
      rinner (l, is) = 0.d0

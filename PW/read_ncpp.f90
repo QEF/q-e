@@ -24,11 +24,11 @@ subroutine read_ncpp (np, iunps)
   !
   read (iunps, *, err = 300, iostat = ios) psd (np), zp (np), &
        lmax (np), nlc (np), nnl (np), nlcc (np), lloc (np), bhstype (np)
-  if (nlc (np) .gt.2.or.nnl (np) .gt.3) call error ('readin', &
+  if (nlc (np) .gt.2.or.nnl (np) .gt.3) call errore ('readin', &
        'Wrong nlc or nnl', np)
   if (nlc (np)  * nnl (np) .lt.0) &
-       call error ('readin', 'nlc*nnl < 0 ? ', np)
-  if (zp (np) .le.0d0) call error ('readin', 'Wrong zp ', np)
+       call errore ('readin', 'nlc*nnl < 0 ? ', np)
+  if (zp (np) .le.0d0) call errore ('readin', 'Wrong zp ', np)
   !
   !   In numeric pseudopotentials both nlc and nnl are zero.
   !
@@ -38,7 +38,7 @@ subroutine read_ncpp (np, iunps)
   if (lloc (np) .lt.0.or.lmax (np) .lt.0.or..not.numeric (np) .and. &
        (lloc (np) .gt.min (lmax (np) + 1, lmaxx + 1) .or.lmax (np) &
        .gt.max (lmaxx, lloc (np) ) ) .or.numeric (np) .and. (lloc (np) &
-       .gt.lmax (np) .or.lmax (np) .gt.lmaxx) ) call error ('readin', &
+       .gt.lmax (np) .or.lmax (np) .gt.lmaxx) ) call errore ('readin', &
        'wrong lmax and/or lloc', np)
   if (.not.numeric (np) ) then
      !
@@ -47,7 +47,7 @@ subroutine read_ncpp (np, iunps)
      read (iunps, *, err = 300, iostat = ios) (alpc (i, np), &
           i = 1, 2), (cc (i, np), i = 1, 2)
      if (abs (cc (1, np) + cc (2, np) - 1.d0) .gt.1.0d-6) &
-          call error ('readin', 'wrong pseudopotential coefficients', 1)
+          call errore ('readin', 'wrong pseudopotential coefficients', 1)
      do l = 0, lmax (np)
         read (iunps, *, err = 300, iostat = ios) (alps (i, l, np), &
              i = 1, 3), (aps (i, l, np), i = 1, 6)
@@ -55,18 +55,18 @@ subroutine read_ncpp (np, iunps)
      if (nlcc (np) ) then
         read (iunps, *, err = 300, iostat = ios) a_nlcc (np), &
              b_nlcc (np), alpha_nlcc (np)
-        if (alpha_nlcc (np) .le.0.d0) call error ('readin', 'nlcc but alph &
+        if (alpha_nlcc (np) .le.0.d0) call errore ('readin', 'nlcc but alph &
              &a=0', np)
      endif
   endif
   read (iunps, *, err = 300, iostat = ios) zmesh (np), xmin (np), &
        dx (np), mesh (np), nchi (np)
 
-  if (mesh (np) .gt.ndm.or.mesh (np) .le.0) call error ('readin', &
+  if (mesh (np) .gt.ndm.or.mesh (np) .le.0) call errore ('readin', &
        'mesh too big', np)
   if (nchi (np) .gt.nchix.or. (nchi (np) .lt.lmax (np) .and.lloc ( &
        np) .eq.lmax (np) ) .or. (nchi (np) .lt.lmax (np) + 1.and.lloc ( &
-       np) .ne.lmax (np) ) ) call error ('readin', 'wrong no. of wfcts', &
+       np) .ne.lmax (np) ) ) call errore ('readin', 'wrong no. of wfcts', &
        np)
   !
   !  Here pseudopotentials in numeric form are read
@@ -104,12 +104,12 @@ subroutine read_ncpp (np, iunps)
      !
      !     Test lchi and occupation numbers
      !
-     if (nb.le.lmax (np) .and.lchi (nb, np) + 1.ne.nb) call error ( &
+     if (nb.le.lmax (np) .and.lchi (nb, np) + 1.ne.nb) call errore ( &
           'readin', 'order of wavefunctions', 1)
-     if (lchi (nb, np) .gt.lmaxx.or.lchi (nb, np) .lt.0) call error ( &
+     if (lchi (nb, np) .gt.lmaxx.or.lchi (nb, np) .lt.0) call errore ( &
           'readin', 'wrong lchi', np)
      if (oc (nb, np) .lt.0.d0.or.oc (nb, np) .gt.2.d0 * (2 * lchi (nb, &
-          np) + 1) ) call error ('readin', 'wrong oc', np)
+          np) + 1) ) call errore ('readin', 'wrong oc', np)
      read (iunps, *, err = 300, iostat = ios) (chi (ir, nb, np), &
           ir = 1, mesh (np) )
   enddo
@@ -138,6 +138,6 @@ subroutine read_ncpp (np, iunps)
 
   return
 
-300 call error ('read_ncpp', 'pseudo file is empty or wrong', abs (np) )
+300 call errore ('read_ncpp', 'pseudo file is empty or wrong', abs (np) )
 end subroutine read_ncpp
 

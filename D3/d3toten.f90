@@ -16,7 +16,7 @@ program d3toten
   use d3com
   use io
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
   character :: cdate * 9, ctime * 9, version * 12
@@ -32,7 +32,7 @@ program d3toten
   call init_clocks (.true.)
   call start_clock ('D3TOTEN')
   version = 'D3TOTEN1.2.0'
-#ifdef PARA
+#ifdef __PARA
   call startup (nd_nmbr, version)
 #else
   nd_nmbr = '   '

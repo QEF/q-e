@@ -88,7 +88,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
      if (lsda) current_spin = isk (ik)
      if (nksq.gt.1) then
         read (iunigk, err = 100, iostat = ios) npw, igk
-100     call error ('solve_linter', 'reading igk', abs (ios) )
+100     call errore ('solve_linter', 'reading igk', abs (ios) )
      endif
      weight = wk (ik)
      !
@@ -167,7 +167,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   endif
 
   call addusldos (ldos, becsum1)
-#ifdef PARA
+#ifdef __PARA
   !
   !    Collects partial sums on k-points from all pools
   !

@@ -31,7 +31,7 @@ subroutine startup (nd_nmbr, version)
   !  of 2 processors each (in this case you must have at least 8 k-points)
   !-----------------------------------------------------------------------
   !
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
 
@@ -42,7 +42,7 @@ subroutine startup (nd_nmbr, version)
 
   implicit none
   character :: nd_nmbr * 3, version * 12
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   character :: np * 2, cdate * 9, ctime * 9
   external date_and_tim
@@ -56,12 +56,12 @@ subroutine startup (nd_nmbr, version)
   call set_d_stream (1)
 #endif
   call mpi_init (ierr)
-  call error ('startup', 'mpi_init', ierr)
+  call errore ('startup', 'mpi_init', ierr)
   call mpi_comm_size (MPI_COMM_WORLD, nproc, ierr)
-  call error ('startup', 'mpi_comm_size', ierr)
+  call errore ('startup', 'mpi_comm_size', ierr)
   call mpi_comm_rank (MPI_COMM_WORLD, me, ierr)
 
-  call error ('startup', 'mpi_comm_rank', ierr)
+  call errore ('startup', 'mpi_comm_rank', ierr)
   !
   ! This is added for compatibility with PVM notations
   ! parent process (source) will have me=1 - child process me=2,...,NPROC
@@ -97,23 +97,23 @@ subroutine startup (nd_nmbr, version)
      !
      nprocp = nproc / npool
      if (nproc.ne.nprocp * npool) &
-          &call error ('startup','nproc.ne.nprocp*npool', 1)
+          &call errore ('startup','nproc.ne.nprocp*npool', 1)
 
   endif
   call mpi_barrier (MPI_COMM_WORLD, ierr)
 
-  call error ('startup', 'mpi_barrier', ierr)
+  call errore ('startup', 'mpi_barrier', ierr)
   !
   ! transmit  nprocp and npool
   !
   call mpi_bcast (nprocp, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  call error ('startup', 'mpi_bcast 1', ierr)
+  call errore ('startup', 'mpi_bcast 1', ierr)
   call mpi_bcast (npool, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierr)
-  call error ('startup', 'mpi_bcast 2', ierr)
+  call errore ('startup', 'mpi_bcast 2', ierr)
   !
   ! set the processor label for files
   !
-  if (nproc.gt.maxproc) call error ('startup', ' too many processors', nproc)
+  if (nproc.gt.maxproc) call errore ('startup', ' too many processors', nproc)
   nd_nmbr = '   '
   if (nproc.lt.10) then
      write (nd_nmbr (1:1) , '(i1)') me

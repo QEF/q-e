@@ -65,7 +65,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
 
   allocate(u(3, nat), work_u(3, nat), work_ru (3, nat))
 
-  if (modenum.gt.3 * nat.or.modenum.lt.1) call error ('mode_group', &
+  if (modenum.gt.3 * nat.or.modenum.lt.1) call errore ('mode_group', &
        'wrong modenum', 1)
   nas = (modenum - 1) / 3 + 1
   ipols = mod (modenum - 1, 3) + 1

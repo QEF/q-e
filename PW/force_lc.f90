@@ -87,7 +87,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
         forcelc (ipol, na) = fact * forcelc (ipol, na) * omega * tpi / alat
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (3 * nat, forcelc)
 #endif
   deallocate (aux)

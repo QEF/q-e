@@ -18,7 +18,7 @@ subroutine openfilq
   use io, only: prefix
   use parameters, only : DP
   use phcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use restart_module, only: readfile_new
@@ -36,7 +36,7 @@ subroutine openfilq
   !
   !     There are six direct access files to be opened in the tmp area
   !
-  if (len_trim(filpun).eq.0) call error ('openfilq', 'wrong filpun name', 1)
+  if (len_trim(filpun).eq.0) call errore ('openfilq', 'wrong filpun name', 1)
   !
   !     The file with the wavefunctions
   !
@@ -53,14 +53,14 @@ subroutine openfilq
     ndr      = 4
     kunittmp = 1
 
-#ifdef PARA
+#ifdef __PARA
     kunittmp = kunit
 #endif
     call readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
 
 #else
 
-    call error ('openfilq', 'file '//filint//' not found', 1)
+    call errore ('openfilq', 'file '//filint//' not found', 1)
 
 #endif
 
@@ -74,7 +74,7 @@ subroutine openfilq
   lrbar = 2 * nbnd * npwx
   filint = trim(prefix) //'.bar'
   call diropn (iubar, filint, lrbar, exst)
-  if (recover.and..not.exst) call error ('openfilq', 'file bar not f &
+  if (recover.and..not.exst) call errore ('openfilq', 'file bar not f &
        &ound', 1)
   !
   !    The file with the solution delta psi
@@ -83,7 +83,7 @@ subroutine openfilq
   lrdwf = 2 * nbnd * npwx
   filint = trim(prefix) //'.dwf'
   call diropn (iudwf, filint, lrdwf, exst)
-  if (recover.and..not.exst) call error ('openfilq', 'file dwf not f &
+  if (recover.and..not.exst) call errore ('openfilq', 'file dwf not f &
        &ound', 1)
   !
   !   open a file with the static change of the charge
@@ -93,7 +93,7 @@ subroutine openfilq
      lrdrhous = 2 * nrxx * nspin
      filint = trim(prefix) //'.prd'
      call diropn (iudrhous, filint, lrdrhous, exst)
-     if (recover.and..not.exst) call error ('openfilq', 'file prod not &
+     if (recover.and..not.exst) call errore ('openfilq', 'file prod not &
           &found', 1)
   endif
   !
@@ -102,12 +102,12 @@ subroutine openfilq
   if (fildrho.ne.' ') then
      iudrho = 23
      lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-#ifdef PARA
+#ifdef __PARA
      if (me.ne.1) goto 300
 #endif
      filint = trim(fildrho)
      call diropn (iudrho, filint, lrdrho, exst)
-#ifdef PARA
+#ifdef __PARA
 300  continue
 #endif
   endif
@@ -122,7 +122,7 @@ subroutine openfilq
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
-#ifdef PARA
+#ifdef __PARA
   !   ... by the first node only, other nodes write on unit 6 (i.e./dev/nu
   !   exception: electron-phonon calculation from saved data
   !  (iudyn is read, not written, by all nodes)
@@ -136,7 +136,7 @@ subroutine openfilq
      iudyn = 26
      open (unit = iudyn, file = fildyn, status = 'unknown', err = &
           100, iostat = ios)
-100  call error ('openfilq', 'opening file'//fildyn, abs (ios) )
+100  call errore ('openfilq', 'opening file'//fildyn, abs (ios) )
      rewind (iudyn)
   endif
   !

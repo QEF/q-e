@@ -132,7 +132,7 @@ subroutine forces
 
   write (6, '(/5x,"Total force = ",f12.6,5x, &
        &                "Total SCF correction = ",f12.6)') sum, sumscf
-#ifdef PARA
+#ifdef __PARA
 
   call check (3 * nat, force)
 #endif

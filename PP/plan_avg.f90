@@ -144,7 +144,7 @@ subroutine plan_avg (averag, plan, ninter)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolrecover (plan, nr3 * nbnd, nkstot, nks)
   call poolrecover (averag, nat * nbnd, nkstot, nks)
 

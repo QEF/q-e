@@ -15,7 +15,7 @@ subroutine poolreduce (size, ps)
   !
   !-----------------------------------------------------------------------
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use parameters, only : DP
@@ -23,7 +23,7 @@ subroutine poolreduce (size, ps)
   integer :: size
 
   real (kind=DP) :: ps (size)
-#ifdef PARA
+#ifdef __PARA
 
   include 'mpif.h'
   integer :: MAXB
@@ -39,18 +39,18 @@ subroutine poolreduce (size, ps)
 
   call mpi_barrier (MPI_COMM_WORLD, info)
 
-  call error ('poolreduce', 'info<>0 at barrier', info)
+  call errore ('poolreduce', 'info<>0 at barrier', info)
   nbuf = size / MAXB
   do n = 1, nbuf
      call mpi_allreduce (ps (1 + (n - 1) * MAXB), buff, MAXB, &
           MPI_REAL8, MPI_SUM, MPI_COMM_ROW, info)
-     call error ('poolreduce', 'info<>0 at allreduce1', info)
+     call errore ('poolreduce', 'info<>0 at allreduce1', info)
      call DCOPY (MAXB, buff, 1, ps (1 + (n - 1) * MAXB), 1)
   enddo
   if (size-nbuf * MAXB.gt.0) then
      call mpi_allreduce (ps (1 + nbuf * MAXB), buff, size-nbuf * &
           MAXB, MPI_REAL8, MPI_SUM, MPI_COMM_ROW, info)
-     call error ('poolreduce', 'info<>0 at allreduce2', info)
+     call errore ('poolreduce', 'info<>0 at allreduce2', info)
      call DCOPY (size-nbuf * MAXB, buff, 1, ps (1 + nbuf * MAXB), &
           1)
 

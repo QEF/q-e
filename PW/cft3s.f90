@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef PARA
+#ifdef __PARA
 !
 !----------------------------------------------------------------------
 subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -195,7 +195,7 @@ subroutine cft3s (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call CFT_WITH_PENCILS (f, n1, n2, n3, nx1, nx2, nx3, 2, &
           - 1)
   else
-     call error ('cft3', 'what should i do?', 1)
+     call errore ('cft3', 'what should i do?', 1)
   endif
 
   call stop_clock ('cft3s')

@@ -114,7 +114,7 @@ subroutine drho
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   ! collect contributions from all pools (sum over k-points)
   !
@@ -143,7 +143,7 @@ subroutine drho
   allocate (drhoust( nrxx , nspin , 3))    
   call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, &
        dbecsum, 1)
-#ifdef PARA
+#ifdef __PARA
   call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
 #endif
   mode = 0

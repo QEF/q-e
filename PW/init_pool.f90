@@ -13,7 +13,7 @@ subroutine init_pool
   !
   !    This routine initialize the pool
   !
-#ifdef PARA
+#ifdef __PARA
   !
   use para
   use mp_global , only: mp_global_group_start
@@ -34,17 +34,17 @@ subroutine init_pool
 
   me = me- (mypool - 1) * nprocp
   call mpi_barrier (MPI_COMM_WORLD, ierr)
-  call error ('init_pool', 'at the input barrier', ierr)
+  call errore ('init_pool', 'at the input barrier', ierr)
   call mpi_comm_split (MPI_COMM_WORLD, mypool, rank, MPI_COMM_POOL, ierr)
 
-  call error ('init_pool', 'MPI_COMM_POOL is wrong', ierr)
+  call errore ('init_pool', 'MPI_COMM_POOL is wrong', ierr)
 
   if (npool.le.1) return
   call mpi_barrier (MPI_COMM_WORLD, ierr)
-  call error ('init_pool', 'at the second barrier', ierr)
+  call errore ('init_pool', 'at the second barrier', ierr)
   call mpi_comm_split (MPI_COMM_WORLD, me, rank, MPI_COMM_ROW, ierr)
 
-  call error ('init_pool', 'MPI_COMM_ROW is wrong', ierr)
+  call errore ('init_pool', 'MPI_COMM_ROW is wrong', ierr)
   !
   ! Initialize globally accessible pool variables
   !

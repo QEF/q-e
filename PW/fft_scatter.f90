@@ -35,7 +35,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !  The output is overwritten on f_in ; f_aux is used as work space
   !
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
   use parameters, only : DP
   implicit none
@@ -100,7 +100,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      call mpi_barrier (MPI_COMM_POOL, ierr)
      call mpi_alltoallv (f_aux, sendcount, sdispls, MPI_REAL8, f_in, &
           recvcount, rdispls, MPI_REAL8, MPI_COMM_POOL, ierr)
-     call error ('fft_scatter', 'info<>0', ierr)
+     call errore ('fft_scatter', 'info<>0', ierr)
      !
   else
      !
@@ -111,7 +111,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      call mpi_barrier (MPI_COMM_POOL, ierr)
      call mpi_alltoallv (f_in, recvcount, rdispls, MPI_REAL8, f_aux, &
           sendcount, sdispls, MPI_REAL8, MPI_COMM_POOL, ierr)
-     call error ('fft_scatter', 'info<>0', ierr)
+     call errore ('fft_scatter', 'info<>0', ierr)
      !
      !  step one: store contiguously the columns
      !

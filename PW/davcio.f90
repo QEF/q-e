@@ -30,20 +30,20 @@ implicit none
   integer :: ios
   ! integer variable for I/O control
   call start_clock ('davcio')
-  if (unit.le.0) call error ('davcio', 'wrong unit', 1)
-  if (nrec.le.0) call error ('davcio', 'wrong record number', 2)
-  if (nword.le.0) call error ('davcio', 'wrong record length', 3)
+  if (unit.le.0) call errore ('davcio', 'wrong unit', 1)
+  if (nrec.le.0) call errore ('davcio', 'wrong record number', 2)
+  if (nword.le.0) call errore ('davcio', 'wrong record length', 3)
   ios = 0
   if (io.lt.0) then
      read (unit, rec = nrec, iostat = ios) vect
   elseif (io.gt.0) then
      write (unit, rec = nrec, iostat = ios) vect
   else
-     call error ('davcio', 'nothing to do?', - 1)
+     call errore ('davcio', 'nothing to do?', - 1)
   endif
   if (ios.ne.0) then
      write (6, * ) ' IOS = ', ios
-     call error ('davcio', 'i/o error in davcio', unit)
+     call errore ('davcio', 'i/o error in davcio', unit)
   endif
   call stop_clock ('davcio')
   return

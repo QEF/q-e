@@ -18,7 +18,7 @@ subroutine dqrhod2v (ipert, drhoscf)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -71,7 +71,7 @@ subroutine dqrhod2v (ipert, drhoscf)
   call setv (2 * 9 * nat * nat, 0.0d0, d3dywrk, 1)
   !
   ! Here the contribution deriving from the local part of the potential
-#ifdef PARA
+#ifdef __PARA
   !   ... computed only by the first pool (no sum over k needed)
   !
   if (mypool.ne.1) goto 100
@@ -97,7 +97,7 @@ subroutine dqrhod2v (ipert, drhoscf)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * 9 * nat * nat, d3dywrk)
   !
   ! each pool contributes to next term
@@ -111,7 +111,7 @@ subroutine dqrhod2v (ipert, drhoscf)
 
   do ik = 1, nksq
      read (iunigk, err = 200, iostat = ios) npw, igk
-200  call error ('dqrhod2v', 'reading igk', abs (ios) )
+200  call errore ('dqrhod2v', 'reading igk', abs (ios) )
      if (lgamma) then
         ikk = ik
         ikq = ik
@@ -120,7 +120,7 @@ subroutine dqrhod2v (ipert, drhoscf)
         ikk = 2 * ik - 1
         ikq = 2 * ik
         read (iunigk, err = 300, iostat = ios) npwq, igkq
-300     call error ('dqrhod2v', 'reading igkq', abs (ios) )
+300     call errore ('dqrhod2v', 'reading igkq', abs (ios) )
      endif
      wgg = wk (ikk)
      call davcio (evc, lrwfc, iuwfc, ikk, - 1)
@@ -175,7 +175,7 @@ subroutine dqrhod2v (ipert, drhoscf)
                           alpha(6) = ZDOTC(npwq,vkb(1,jkb),1,dpsi(1,ibnd),1)
                           alpha(7) = ZDOTC(npw, evc(1,ibnd),1,vkb0(1,jkb),1)
                           alpha(8) = ZDOTC(npwq,vkb(1,jkb),1,work6, 1)
-#ifdef PARA
+#ifdef __PARA
                           call reduce(16, alpha)
 #endif
                           d3dywrk(na_icart,na_jcart) = d3dywrk(na_icart,na_jcart) &
@@ -190,7 +190,7 @@ subroutine dqrhod2v (ipert, drhoscf)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 9 * nat * nat, d3dywrk)
 #endif
   !

@@ -68,7 +68,7 @@
 #endif
 
       IF( igwx > SIZE( pwt ) ) &
-        CALL error(' mergewf ',' wrong size for pwt ',SIZE(pwt) )
+        CALL errore(' mergewf ',' wrong size for pwt ',SIZE(pwt) )
 
 #if defined __MPI
 
@@ -118,7 +118,7 @@
 
 #else
 
-      CALL error(' MERGEWF ',' no communication protocol ',0)
+      CALL errore(' MERGEWF ',' no communication protocol ',0)
 
 #endif
 
@@ -172,7 +172,7 @@
 #endif
 
       IF( igwx > SIZE( pwt ) ) &
-        CALL error(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
+        CALL errore(' splitwf ',' wrong size for pwt ',SIZE(pwt) )
 
 #if defined __MPI
 
@@ -214,7 +214,7 @@
 
 #else
 
-      CALL error(' SPLITWF ',' no communication protocol ',0)
+      CALL errore(' SPLITWF ',' no communication protocol ',0)
 
 #endif
 
@@ -303,7 +303,7 @@
 
 #else
 
-      CALL error(' mergerho ',' no communication protocol ',0)
+      CALL errore(' mergerho ',' no communication protocol ',0)
 
 #endif
 
@@ -342,7 +342,7 @@
       CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ierr)
       CALL MPI_ALLREDUCE(ngl, ng_g   , 1, MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
       IF( ng_g > SIZE( rhot ) ) THEN
-        CALL error(' splitrho ',' wrong size for rhot ', 1 )
+        CALL errore(' splitrho ',' wrong size for rhot ', 1 )
       END IF
 
       DO ip = 1, nproc
@@ -383,7 +383,7 @@
 
 #else
 
-      CALL error(' splitrho ',' no communication protocol ',0)
+      CALL errore(' splitrho ',' no communication protocol ',0)
 
 #endif
 
@@ -478,7 +478,7 @@
 
 #else
 
-      CALL error(' mergeig ',' no communication protocol ',0)
+      CALL errore(' mergeig ',' no communication protocol ',0)
 
 #endif
 
@@ -569,7 +569,7 @@
 
 #else
 
-      CALL error(' splitig ',' no communication protocol ',0)
+      CALL errore(' splitig ',' no communication protocol ',0)
 
 #endif
 

@@ -147,7 +147,7 @@ subroutine dvpsi_e (kpoint, ipol)
         end if
      end do
   end do
-  if (jkb.ne.nkb) call error ('dvpsi_e', 'unexpected error', 1)
+  if (jkb.ne.nkb) call errore ('dvpsi_e', 'unexpected error', 1)
   !
   !    orthogonalize dpsi to the valence subspace
   !
@@ -156,7 +156,7 @@ subroutine dvpsi_e (kpoint, ipol)
      do jbnd = 1, nbnd_occ (kpoint)
         ps (1, jbnd) = - ZDOTC(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (4 * nbnd, ps)
 #endif
      do jbnd = 1, nbnd_occ (kpoint)
@@ -179,7 +179,7 @@ subroutine dvpsi_e (kpoint, ipol)
      enddo
      eprec (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (nbnd_occ (kpoint), eprec)
 #endif
   do ibnd = 1, nbnd_occ (kpoint)

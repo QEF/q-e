@@ -11,7 +11,7 @@ subroutine stop_pp
   !
   ! Synchronize processes before stopping.
   !
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info
   call mpi_barrier (MPI_COMM_WORLD, info)

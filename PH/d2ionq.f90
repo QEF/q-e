@@ -132,7 +132,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
 11 alpha = alpha - 0.1d0
 
-  if (alpha.eq.0.d0) call error ('d2ion', 'optimal alpha not found', &
+  if (alpha.eq.0.d0) call errore ('d2ion', 'optimal alpha not found', &
        1)
 
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
@@ -222,7 +222,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   enddo
   !
   !  Then there is also a part in real space which is computed here.
-#ifdef PARA
+#ifdef __PARA
   !   ... only by the node that contains  G=0
   !
   if (gg (1) .gt.1.d-8) goto 100
@@ -274,7 +274,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
 100 continue
 
   call reduce (18 * nat * nat, dy3)

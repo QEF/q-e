@@ -60,7 +60,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
            dos_ef = dos_ef + weight * wdelta
         enddo
      enddo
-#ifdef PARA
+#ifdef __PARA
      call poolreduce (1, dos_ef)
 #endif
   endif
@@ -71,7 +71,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   do ipert = 1, npe
      call cft3 (drhoscf (1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, &
           - 1)
-#ifdef PARA
+#ifdef __PARA
      delta_n = (0.d0, 0.d0)
      if (gg (1) .lt.1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)
      call reduce (2, delta_n)

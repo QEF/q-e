@@ -40,7 +40,7 @@
           LOGICAL, INTENT(OUT) :: ionode_out
           INTEGER, INTENT(OUT) :: ionode_id_out
           IF( first ) &
-            CALL error( ' get_ionode ', ' ionode not yet defined ', 1 )
+            CALL errore( ' get_ionode ', ' ionode not yet defined ', 1 )
           ionode_out = ionode
           ionode_id_out = ionode_id
           RETURN

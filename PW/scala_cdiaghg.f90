@@ -107,12 +107,12 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   integer :: iws, first
 
   real (kind=DP) :: time1, time2, tt
-  if (n.gt.maxn) call error ('scala_cdiaghg', 'n is too large', n)
+  if (n.gt.maxn) call errore ('scala_cdiaghg', 'n is too large', n)
   !
   !   Ask for the number of processors
   !
   call blacs_pinfo (iam_blacs, nprocs_blacs)
-  if (nprocs_blacs.gt.32) call error ('scala_cdiaghg', &
+  if (nprocs_blacs.gt.32) call errore ('scala_cdiaghg', &
        'work space not optimized ',  - nprocs_blacs)
   !
   !     Set the dimension of the 2D processors grid
@@ -144,13 +144,13 @@ subroutine scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   !     initialize the data structure of description of the matrix partiti
   !
   call descinit (desca, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call error ('scala_cdiaghg', &
+  if (info.ne.0) call errore ('scala_cdiaghg', &
        'something wrong with descinit1', info)
   call descinit (descb, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call error ('scala_cdiaghg', &
+  if (info.ne.0) call errore ('scala_cdiaghg', &
        'something wrong with descinit2', info)
   call descinit (descz, n, n, nb, nb, 0, 0, context, lda, info)
-  if (info.ne.0) call error ('scala_cdiaghg', &
+  if (info.ne.0) call errore ('scala_cdiaghg', &
        'something wrong with descinit3', info)
   !
   !   allocate  workspace needed

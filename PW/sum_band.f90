@@ -18,7 +18,7 @@ subroutine sum_band
 #include "machine.h"
   use pwcom
   use becmod
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -50,13 +50,13 @@ subroutine sum_band
      !    calculate weights for the metallic case
      !
   elseif (ltetra) then
-#ifdef PARA
+#ifdef __PARA
      call poolrecover (et, nbndx, nkstot, nks)
      if (me.eq.1.and.mypool.eq.1) then
 #endif
         call tweights (nkstot, nspin, nbndx, nbnd, nelec, ntetra, &
              tetra, et, ef, wg)
-#ifdef PARA
+#ifdef __PARA
      endif
      call poolscatter (nbnd, nkstot, wg, nks, wg)
      if (me.eq.1) call poolbcast (1, ef)
@@ -164,14 +164,14 @@ subroutine sum_band
   !    Here we add the Ultrasoft contribution to the charge
   !
   if (okvan) call addusdens
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (1, eband)
   call poolreduce (1, demet)
 #endif
   !
   !    symmetrization of the charge density (and local magnetization)
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! reduce charge density across pools
   !

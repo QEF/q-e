@@ -20,7 +20,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
   !-----------------------------------------------------------------------
 #include "machine.h"
   use parameters
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -54,7 +54,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
 
 
   call start_clock ('cdiaghg')
-#ifdef PARA
+#ifdef __PARA
 #ifdef T3D
   !
   !   NB: 150 has been determined empirically on the T3E as the point
@@ -99,7 +99,7 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
   ! input s and (see below) h are copied so that they are not destroyed
   !
   call ZCOPY (ldh * n, s, 1, sdum, 1)
-#ifdef PARA
+#ifdef __PARA
   !
   ! only the first processor diagonalize the matrix
   !
@@ -123,8 +123,8 @@ subroutine cdiaghg (n, m, h, s, ldh, e, v)
              iwork, ifail, info)
 #endif
      endif
-     call error ('cdiaghg', 'info =/= 0', abs (info) )
-#ifdef PARA
+     call errore ('cdiaghg', 'info =/= 0', abs (info) )
+#ifdef __PARA
   endif
   !
   ! broadcast the eigenvectors and the eigenvalues

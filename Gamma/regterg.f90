@@ -88,7 +88,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
   allocate (ew( nvecx))    
   allocate (conv( nvec))    
 
-  if (nvec.gt.nvecx / 2) call error ('regter', 'nvecx is too small',1)
+  if (nvec.gt.nvecx / 2) call errore ('regter', 'nvecx is too small',1)
   !
   !     prepare the hamiltonian for the first iteration
   !
@@ -109,7 +109,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
        2*ndmx, hpsi, 2*ndmx, 0.d0, hr, nvecx)
   if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
        hpsi, 2*ndmx, hr, nvecx)
-#ifdef PARA
+#ifdef __PARA
   call reduce (nbase * nvecx, hr)
 #endif
   call setv (nvecx * nvecx, 0.d0, sr, 1)
@@ -117,7 +117,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
        2*ndmx, spsi, 2*ndmx, 0.d0, sr, nvecx)
   if (gstart.eq.2) call DGER (nbase, nbase, -1.d0, psi, 2*ndmx, &
        spsi, 2*ndmx, sr, nvecx)
-#ifdef PARA
+#ifdef __PARA
   call reduce (nbase * nvecx, sr)
 #endif
 
@@ -162,7 +162,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
         ew (n) = 2.d0*DDOT(2*ndim, psi (1, nbase+n), 1, psi (1, nbase+n), 1)
         if (gstart.eq.2) ew (n) = ew(n) - psi (1, nbase+n)*psi (1, nbase+n)
      end do
-#ifdef PARA
+#ifdef __PARA
      call reduce (notcnv, ew)
 #endif
      do n = 1, notcnv
@@ -184,7 +184,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
      if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
           hpsi(1,nbase+1), 2*ndmx, hr (1, nbase+1), nvecx)
      !
-#ifdef PARA
+#ifdef __PARA
      call reduce (nvecx * notcnv, hr (1, nbase+1) )
 #endif
      call DGEMM ('t', 'n', nbase+notcnv, notcnv, 2*ndim, 2.d0, &
@@ -192,7 +192,7 @@ subroutine regterg (ndim, ndmx, nvec, nvecx, evc, ethr, gstart, &
           sr (1, nbase+1) , nvecx)
      if (gstart.eq.2) call DGER (nbase+notcnv, notcnv, -1.d0, psi, 2*ndmx, &
           spsi(1,nbase+1), 2*ndmx, sr (1, nbase+1), nvecx)
-#ifdef PARA
+#ifdef __PARA
      call reduce (nvecx * notcnv, sr (1, nbase+1) )
 #endif
      call stop_clock ('overlap')

@@ -145,7 +145,7 @@ do ic = 2, ncos
 irot = (ic - 1) * nsym + 1
 if (w (ic) .ne.0.d0) then
    nks = nks + 1
-   if (nks.gt.npk) call error ('irrek', 'too many k-points', nks)
+   if (nks.gt.npk) call errore ('irrek', 'too many k-points', nks)
    wk (nks) = sw * w (ic)
    do kpol = 1, 3
    xk (kpol, nks) = bg (kpol, 1) * xks (1, irot) + bg (kpol, 2) &

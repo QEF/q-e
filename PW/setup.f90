@@ -43,7 +43,7 @@ subroutine setup
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -100,7 +100,7 @@ subroutine setup
   ! Check: if there is an odd number of electrons, the crystal is a metal
   !
   if (lscf.and.abs (nint (nelec / 2.d0) - nelec / 2.d0) &
-       .gt.1.0d-8.and..not.lgauss.and..not.ltetra) call error ('setup', &
+       .gt.1.0d-8.and..not.lgauss.and..not.ltetra) call errore ('setup', &
        'the crystal is a metal', 1)
   !
   !     Set the number of occupied bands if not given in input
@@ -114,7 +114,7 @@ subroutine setup
         nbnd = max (nint (1.20d0 * nelec / 2.d0), nbnd+4)
      endif
   else
-     if (nbnd.lt.nint (nelec) / 2.d0.and.lscf) call error ('setup', &
+     if (nbnd.lt.nint (nelec) / 2.d0.and.lscf) call errore ('setup', &
           'too few bands', 1)
   endif
   !
@@ -186,7 +186,7 @@ subroutine setup
   !
   !     Test that atomic coordinates are different
   !
-  if (.not. (lchk_tauxk (nat, tau, bg) ) ) call error ('setup', &
+  if (.not. (lchk_tauxk (nat, tau, bg) ) ) call errore ('setup', &
        'Wrong atomic coordinates ', 1)
   !
   ! set dtau_ref for relaxation and dynamics
@@ -223,7 +223,7 @@ subroutine setup
         call hexsym (at, s, sname, nrot)
      endif
   else
-     call error ('setup', 'wrong ibrav', 1)
+     call errore ('setup', 'wrong ibrav', 1)
   endif
   !
   !   if noinv is true eliminate all symmetries which exchange z with -z
@@ -290,7 +290,7 @@ subroutine setup
 
   if (iswitch.gt.2.and. (nsym.eq.2.and..not.invsym.or.nsym.gt.2) &
      .and. .not. ( calc.eq.'mm' .or. calc.eq.'nm' ) ) &
-     call error ('setup', 'Dynamics, you should have no symmetries', -1)
+     call errore ('setup', 'Dynamics, you should have no symmetries', -1)
   !
   !     Automatic generation of k-points
   !
@@ -324,8 +324,8 @@ subroutine setup
      nspin = 1
      current_spin = 1
   endif
-  if (nks.gt.npk) call error ('setup', 'too many k points', nks)
-#ifdef PARA
+  if (nks.gt.npk) call errore ('setup', 'too many k points', nks)
+#ifdef __PARA
   call init_pool
   !
   ! set the granularity for k-point distribution
@@ -357,7 +357,7 @@ subroutine setup
   !
 
   call ggen
-#ifndef PARA
+#ifndef __PARA
   !
   !   generates pencils for 3d-fft of psi and related quantities
   !
@@ -402,7 +402,7 @@ subroutine setup
      end do
      write (6,*) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
      if (Hubbard_lmax.eq.-1) &
-        call error ('setup','lda_plus_u calculation but Hubbard_l not set',1)
+        call errore ('setup','lda_plus_u calculation but Hubbard_l not set',1)
      call d_matrix (d1, d2, d3)  
   end if
   !

@@ -174,7 +174,7 @@ subroutine print_this_clock (n)
      elapsed_cpu_time = myclock (n) + scnds () - t0 (n)
 
   endif
-#ifdef PARA
+#ifdef __PARA
   !
   ! In the parallel case it is far from clear which value to print
   ! The following is the maximum over all nodes and pools. NOTA BENE:
@@ -249,7 +249,7 @@ real(kind=8) function get_clock (label)
         else
            get_clock = myclock (n) + scnds () - t0 (n)
         endif
-#ifdef PARA
+#ifdef __PARA
         !
         ! In the parallel case, use the maximum over all nodes and pools
         !

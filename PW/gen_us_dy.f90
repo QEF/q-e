@@ -109,7 +109,7 @@ subroutine gen_us_dy (ik, u, dvkb)
 
   if (ikb.ne.nkb) then
      write ( *, * ) ikb, nkb
-     call error ('gen_us_dy', 'unexpected error', 1)
+     call errore ('gen_us_dy', 'unexpected error', 1)
   endif
 
   deallocate ( sk )

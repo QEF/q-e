@@ -68,11 +68,11 @@ end module para_mod
 !
 #if defined __MPI
       call mpi_init(ierr)
-      if (ierr.ne.0) call error('startup','mpi_init',ierr)
+      if (ierr.ne.0) call errore('startup','mpi_init',ierr)
       call mpi_comm_size(MPI_COMM_WORLD,nproc,ierr)
-      if (ierr.ne.0) call error('startup','mpi_comm_size',ierr)
+      if (ierr.ne.0) call errore('startup','mpi_comm_size',ierr)
       call mpi_comm_rank(MPI_COMM_WORLD,   me,ierr)
-      if (ierr.ne.0) call error('startup','mpi_comm_rank',ierr)
+      if (ierr.ne.0) call errore('startup','mpi_comm_rank',ierr)
       mygroup = MPI_COMM_WORLD
       me=me+1
 #else
@@ -86,7 +86,7 @@ end module para_mod
 ! (for historical reasons: MPI uses 0,...,NPROC-1 instead )
 !
       if (nproc.gt.maxproc)                                             &
-     &   call error('startup',' too many processors ',nproc)
+     &   call errore('startup',' too many processors ',nproc)
 !
       if (me.lt.10) then
          write(node,'(i1,2x)') me
@@ -95,7 +95,7 @@ end module para_mod
       else if (me.lt.1000) then
          write(node,'(i3)') me
       else
-         call error('startup','wow, >1000 nodes !!',nproc)
+         call errore('startup','wow, >1000 nodes !!',nproc)
       end if
 !
 ! only the first processor writes
@@ -156,7 +156,7 @@ end module para_mod
          call mpi_scatterv(rhodist, sendcount, displs, MPI_REAL8,       &
      &                     rhor(1,is),sendcount(me),   MPI_REAL8,       &
      &                     root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('mpi_scatterv','ierr<>0',ierr)
+         if (ierr.ne.0) call errore('mpi_scatterv','ierr<>0',ierr)
 !
 ! just in case: set to zero unread elements (if any)
 !
@@ -207,7 +207,7 @@ end module para_mod
          call mpi_gatherv (rhor(1,is), recvcount(me), MPI_REAL8,        &
      &                     rhodist,recvcount, displs, MPI_REAL8,        &
      &                     root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('mpi_gatherv','ierr<>0',ierr)
+         if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
 !
 ! write the charge density to unit "unit" from first node only
 !
@@ -284,13 +284,13 @@ end module para_mod
       ncplane = nr1x*nr2x
       ncplanes= nr1sx*nr2sx
       if (ncplane.gt.ncplanex .or. ncplanes.gt.ncplanex)                &
-     &     call error('set_fft_para','ncplanex too small',ncplane)
+     &     call errore('set_fft_para','ncplanex too small',ncplane)
 !
 ! set the number of plane per process
 !
-      if (nr3.lt.nproc) call error('set_fft_para',                      &
+      if (nr3.lt.nproc) call errore('set_fft_para',                      &
      &                'some processors have no planes ',-1)      
-      if (nr3s.lt.nproc) call error('set_fft_para',                     &
+      if (nr3s.lt.nproc) call errore('set_fft_para',                     &
      &                'some processors have no smooth planes ',-1)      
 !
       if (nproc.eq.1) then
@@ -343,7 +343,7 @@ end module para_mod
 !
             nct=nct+1
             if (nct.gt.ncplane)                                         &
-     &           call error('set_fft_para','too many columns',1)
+     &           call errore('set_fft_para','too many columns',1)
             ngc (nct) = 0
             ngcs(nct) = 0
             ngcw(nct) = 0
@@ -371,7 +371,7 @@ end module para_mod
 !
                   ncts=ncts+1
                   if (ncts.gt.ncplanes)                                 &
-     &                 call error('set_fft_para','too many columns',2)
+     &                 call errore('set_fft_para','too many columns',2)
                end if
             else
 !
@@ -382,8 +382,8 @@ end module para_mod
          enddo
       end do
 !
-      if(nct .eq.0) call error('set_fft_para','number of column 0', 1)
-      if(ncts.eq.0) call error('set_fft_para',                          &
+      if(nct .eq.0) call errore('set_fft_para','number of column 0', 1)
+      if(ncts.eq.0) call errore('set_fft_para',                          &
      &                                     'number smooth column 0', 1)
 !
 !   Sort the columns. First the column with the largest number of G
@@ -536,7 +536,7 @@ end module para_mod
 !
       do i=1,nproc
          if(ngpw(i).eq.0)                                               &
-     &        call error('set_fft_para',                                &
+     &        call errore('set_fft_para',                                &
      &        'some processors have no pencils, not yet implemented',1)
          if (i.eq.1) then 
             ncp0(i) = 0
@@ -575,7 +575,7 @@ end module para_mod
 !
       do j=1,nproc
          if (ncp_(j).ne.ncpw(j))                                        &
-     &        call error('set_fft_para','ncp_(j).ne.ncpw(j)',j)
+     &        call errore('set_fft_para','ncp_(j).ne.ncpw(j)',j)
       end do
 !
 !- ........then the remaining columns
@@ -598,11 +598,11 @@ end module para_mod
       nct_ = 0
       do j=1,nproc
          if (ncp_(j).ne.ncp(j))                                         &
-     &        call error('set_fft_para','ncp_(j).ne.ncp(j)',j)
+     &        call errore('set_fft_para','ncp_(j).ne.ncp(j)',j)
          nct_ = nct_ + ncp_(j)
       end do
       if (nct_.ne.nct)                                                  &
-     &     call error('set_fft_para','nct_.ne.nct',1)
+     &     call errore('set_fft_para','nct_.ne.nct',1)
 !
 !   now compute the arrays ipcs and icpls 
 !   (as ipc and icpls, for the smooth grid)
@@ -629,7 +629,7 @@ end module para_mod
 !
       do j=1,nproc
          if (ncp_(j).ne.ncpw(j))                                        &
-     &        call error('set_fft_para','ncp_(j).ne.ncpw(j)',j)
+     &        call errore('set_fft_para','ncp_(j).ne.ncpw(j)',j)
       end do
 !
 !    and then all the others
@@ -652,11 +652,11 @@ end module para_mod
       nct_ = 0
       do j=1,nproc
          if (ncp_(j).ne.ncps(j))                                        &
-     &        call error('set_fft_para','ncp_(j).ne.ncps(j)',j)
+     &        call errore('set_fft_para','ncp_(j).ne.ncps(j)',j)
          nct_ = nct_ + ncp_(j)
       end do
       if (nct_.ne.ncts)                                                 &
-     &     call error('set_fft_para','nct_.ne.ncts',1)
+     &     call errore('set_fft_para','nct_.ne.ncts',1)
       call tictac(27,1)
 !
       return
@@ -725,7 +725,7 @@ end module para_mod
          call fft_scatter(nproc,me,aux,nr3x,nnr_,f,ncp,npp,sign)
          call cft_1(aux,ncp(me),nr3,nr3x,sign,f)
       else
-          call error('cftp','not allowed',abs(sign))
+          call errore('cftp','not allowed',abs(sign))
       end if
 !
       return
@@ -913,7 +913,7 @@ end module para_mod
       do ir3=1,nr3b
          ibig3=1+mod(irb3+ir3-2,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call error('cfftpb','ibig3 wrong',ibig3)
+     &        call errore('cfftpb','ibig3 wrong',ibig3)
          ibig3=ibig3-n3(me)
          if (ibig3.gt.0.and.ibig3.le.npp(me)) then
             imin3=min(imin3,ir3)
@@ -1018,7 +1018,7 @@ end module para_mod
          call mpi_alltoallv(f_aux,sendcount,sdispls,MPI_REAL8,          &
      &                      f_in ,recvcount,rdispls,MPI_REAL8,          &
      &                      MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('fft_scatter','ierr<>0',ierr)
+         if (ierr.ne.0) call errore('fft_scatter','ierr<>0',ierr)
 !
       else
 !
@@ -1028,7 +1028,7 @@ end module para_mod
          call mpi_alltoallv(f_in ,recvcount,rdispls,MPI_REAL8,          &
      &                      f_aux,sendcount,sdispls,MPI_REAL8,          &
      &                      MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('fft_scatter','ierr<>0',ierr)
+         if (ierr.ne.0) call errore('fft_scatter','ierr<>0',ierr)
 !
 !  step one: store contiguously the columns
 !
@@ -1075,7 +1075,7 @@ end module para_mod
 !  syncronize processes
 !
       call mpi_barrier(MPI_COMM_WORLD,ierr)
-      if (ierr.ne.0) call error('reduce','error in barrier',ierr)
+      if (ierr.ne.0) call errore('reduce','error in barrier',ierr)
 !
       nbuf=size/MAXB
 !
@@ -1083,7 +1083,7 @@ end module para_mod
          call mpi_allreduce (ps(1+(n-1)*MAXB), buff, MAXB,              &
      &        MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
          if (ierr.ne.0)                                                 &
-     &        call error('reduce','error in allreduce1',ierr)
+     &        call errore('reduce','error in allreduce1',ierr)
          call DCOPY(MAXB,buff,1,ps(1+(n-1)*MAXB),1)
       end do
 !
@@ -1093,7 +1093,7 @@ end module para_mod
           call mpi_allreduce (ps(1+nbuf*MAXB), buff, size-nbuf*MAXB,    &
      &          MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
           if (ierr.ne.0)                                                &
-     &         call error('reduce','error in allreduce2',ierr)
+     &         call errore('reduce','error in allreduce2',ierr)
           call DCOPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
       endif
       call tictac(29,1)
@@ -1117,16 +1117,16 @@ end module para_mod
 !
       call mpi_barrier(MPI_COMM_WORLD,ierr)
       if (ierr.ne.0)                                                    &
-     &     call error('print_all_times','error in barrier',ierr)
+     &     call errore('print_all_times','error in barrier',ierr)
 !
       call mpi_allreduce (cputime, mincpu, maxclock,                    &
      &     MPI_REAL8, MPI_MIN, MPI_COMM_WORLD, ierr)
       if (ierr.ne.0)                                                    &
-     &     call error('print_para_times','error in minimum',ierr)
+     &     call errore('print_para_times','error in minimum',ierr)
       call mpi_allreduce (cputime, maxcpu, maxclock,                    &
      &     MPI_REAL8, MPI_MAX, MPI_COMM_WORLD, ierr)
       if (ierr.ne.0)                                                    &
-     &     call error('print_para_times','error in maximum',ierr)
+     &     call errore('print_para_times','error in maximum',ierr)
 !
       write(6,*)
       write(6,*) ' routine     calls       cpu time        elapsed'
@@ -1232,11 +1232,11 @@ end module para_mod
 ! gather all psis arrays on the first node, in psitot
 !
          call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('write_wfc','mpi_barrier 2',ierr)
+         if (ierr.ne.0) call errore('write_wfc','mpi_barrier 2',ierr)
          call mpi_gatherv (psis, recvcount(me),     MPI_DOUBLE_COMPLEX, &
     &                      psitot,recvcount, displs,MPI_DOUBLE_COMPLEX, &
     &                 root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('write_wfc','mpi_gatherv',ierr)
+         if (ierr.ne.0) call errore('write_wfc','mpi_gatherv',ierr)
 !
 ! now order the columns with a node-number-independent ordering
 ! We use n1,n2,nz for ordering, where G=n1*g(1)+n2*g(2)+nz*g(3)
@@ -1446,9 +1446,9 @@ end module para_mod
      &       nmax(2).ne.nmax0(2) .or. nmax(3).ne.nmax0(3) ) then
             write(6,*) 'read  nmin, nmax =',nmin, nmax
             write(6,*) 'found nmin, nmax =',nmin0, nmax0
-            call error('read_wfc','wavefunction mismatch',1)
+            call errore('read_wfc','wavefunction mismatch',1)
          end if
-         if (nr.lt.n) call error('read_wfc','not enough wavefcts',nr)
+         if (nr.lt.n) call errore('read_wfc','not enough wavefcts',nr)
          allocate(psird(nmin(3):nmax(3),nmin(1):nmax(1),nmin(2):nmax(2)))
       end if
 !
@@ -1482,11 +1482,11 @@ end module para_mod
 ! distribute the array psitot on all nodes (in psis)
 !
          call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('write_wfc','mpi_barrier 2',ierr)
+         if (ierr.ne.0) call errore('write_wfc','mpi_barrier 2',ierr)
          call mpi_scatterv(psitot,sendcount,displs,MPI_DOUBLE_COMPLEX,  &
     &                      psis  ,sendcount(me),   MPI_DOUBLE_COMPLEX,  &
     &                 root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call error('write_wfc','mpi_scatter',ierr)
+         if (ierr.ne.0) call errore('write_wfc','mpi_scatter',ierr)
 !
 ! fill c_i(G) (see write_wfc for the logic-or lack thereof-of ordering)
 !
@@ -1505,8 +1505,8 @@ end module para_mod
       end if
 !
       return
- 10   call error('read_wfc','file missing or wrong',ierr)
- 20   call error('read_wfc','wavefunction missing or wrong',ierr)
+ 10   call errore('read_wfc','file missing or wrong',ierr)
+ 20   call errore('read_wfc','wavefunction missing or wrong',ierr)
 !
       end subroutine read_wfc
 !
@@ -1630,7 +1630,7 @@ end module para_mod
       call mp_bcast(velh , root)
 !
       return
- 10   call error('readpfile','end of file detected',1)
+ 10   call errore('readpfile','end of file detected',1)
       end
 !-----------------------------------------------------------------------
       subroutine writepfile                                             &
@@ -1732,13 +1732,13 @@ end module para_mod
 ! find minima and maxima for the FFT box across all nodes
 !
       call mpi_barrier( MPI_COMM_WORLD, ierr )
-      if (ierr.ne.0) call error('nrbounds','mpi_barrier 1',ierr)
+      if (ierr.ne.0) call errore('nrbounds','mpi_barrier 1',ierr)
       call mpi_allreduce (nmin0, nmin, 3, MPI_INTEGER, MPI_MIN,         &
      &           MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0) call error('nrbounds','mpi_allreduce min',ierr)
+      if (ierr.ne.0) call errore('nrbounds','mpi_allreduce min',ierr)
       call mpi_allreduce (nmax0, nmax, 3, MPI_INTEGER, MPI_MAX,         &
      &           MPI_COMM_WORLD, ierr)
-      if (ierr.ne.0) call error('nrbounds','mpi_allreduce max',ierr)
+      if (ierr.ne.0) call errore('nrbounds','mpi_allreduce max',ierr)
 
       return
       end subroutine nrbounds

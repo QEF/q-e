@@ -46,14 +46,14 @@ subroutine rotate_wfc (ndim, ndmx, nvec, gstart, nbnd, en, psi)
        hpsi, 2*ndmx, 0.d0, hr, nvec)
   if (gstart==2) call DGER (nvec, nvec,-1.d0, psi, 2*ndmx, &
        hpsi, 2*ndmx, hr, nvec)
-#ifdef PARA
+#ifdef __PARA
   call reduce (nvec * nvec, hr)
 #endif
   call DGEMM ('t', 'n', nvec, nvec, 2*ndim, 2.d0 , psi, 2*ndmx, &
        spsi, 2*ndmx, 0.d0, sr, nvec)
   if (gstart==2) call DGER (nvec, nvec,-1.d0, psi, 2*ndmx, &
        spsi, 2*ndmx, sr, nvec)
-#ifdef PARA
+#ifdef __PARA
   call reduce (nvec * nvec, sr)
 #endif
   !

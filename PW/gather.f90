@@ -14,7 +14,7 @@ subroutine gather (f_in, f_out)
   ! REAL*8 f_in = distributed variable (nxx)
   ! REAL*8 f_out= gathered variable (nrx1*nrx2*nrx3)
   !
-#ifdef PARA
+#ifdef __PARA
 #include "machine.h"
   use para
   use parameters, only : DP
@@ -40,7 +40,7 @@ subroutine gather (f_in, f_out)
 
   call mpi_gatherv (f_in, recvcount (me), MPI_REAL8, f_out, &
        recvcount, displs, MPI_REAL8, root, MPI_COMM_POOL, info)
-  call error ('gather', 'info<>0', info)
+  call errore ('gather', 'info<>0', info)
   call stop_clock ('gather')
 #endif
   return

@@ -19,7 +19,7 @@ subroutine force_hub(forceh)
    use pwcom
    use becmod
    use io, only : prefix
-#ifdef PARA
+#ifdef __PARA
    use para
 #endif
    implicit none
@@ -37,13 +37,13 @@ subroutine force_hub(forceh)
    forceh(:,:) = 0.d0
    dns(:,:,:,:) = 0.d0
 
-#ifdef PARA
+#ifdef __PARA
    if (me.eq.1.and.mypool.eq.1) then
 #endif
       call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
       read(iunocc,*) ns
       close(unit=iunocc,status='keep')
-#ifdef PARA
+#ifdef __PARA
    end if
 #endif
 

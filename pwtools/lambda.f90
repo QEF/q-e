@@ -49,7 +49,7 @@ program elph
   read(5,*) emax, degaussq, ngaussq
   deltae=emax/(nex-1)
   read(5,*) nks
-  if (nks.gt.npk) call error('lambda','too many q-points',npk)
+  if (nks.gt.npk) call errore('lambda','too many q-points',npk)
   sum=0.d0
   do ik=1,nks
      read(5,*) q(1,ik), q(2,ik), q(3,ik), wk(ik)
@@ -67,11 +67,11 @@ program elph
      if ( (qread(1)-q(1,ik))**2 + &
           (qread(2)-q(2,ik))**2 + &
           (qread(3)-q(3,ik))**2 .gt. 1.d-6) &
-          call error('lambda','inconsistent q read',ik)
+          call errore('lambda','inconsistent q read',ik)
      if (nsig.le.0.or.nsig.gt.nsigx) &
-          call error('lambda','wrong/too many gauss.broad.',nsigx)
+          call errore('lambda','wrong/too many gauss.broad.',nsigx)
      if (nmodes.le.0.or.nmodes.gt.nmodex) &
-          call error('lambda','wrong # or too many modes',nmodex)
+          call errore('lambda','wrong # or too many modes',nmodex)
      if (ik.eq.1) then
         do ng=1,nsig
            lambda(ng)=0.d0
@@ -90,7 +90,7 @@ program elph
            ngauss =ngauss1
         else
            if (degauss(ng).ne.degauss1.or.ngauss.ne.ngauss1) &
-              call error('lambda','inconsistent gauss.broad. read',ik)
+              call errore('lambda','inconsistent gauss.broad. read',ik)
         end if
         read (iuelph,9005) dosef1, ef1
         if (ik.eq.1) then
@@ -98,11 +98,11 @@ program elph
            ef(ng)=ef1
         else
            if (dosef(ng).ne.dosef1.or.ef(ng).ne.ef1) &
-              call error('lambda','inconsistent DOS(Ef) read',ik)
+              call errore('lambda','inconsistent DOS(Ef) read',ik)
         end if
         do mu=1,nmodes
            read (iuelph,9010) nu, lambdaq(mu,ng), gammaq
-           if (nu.ne.mu) call error('lambda','wrong mode read',mu)
+           if (nu.ne.mu) call errore('lambda','wrong mode read',mu)
            ! sum over k-points
            lambda(ng) = lambda(ng) + wk(ik)*lambdaq(mu,ng)
            do i=1,nex

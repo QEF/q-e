@@ -100,7 +100,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
                     ps(2,ibnd) = dvan(ikb,ikb,nt) * &
                          ZDOTC(npw,vkb_(1,jkb),1,psi_(1,ibnd),1)
                  enddo
-#ifdef PARA
+#ifdef __PARA
                  call reduce (4 * nbnd, ps)
 #endif
                  do ig = 1, npwq

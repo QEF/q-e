@@ -40,7 +40,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   isign = sign (1, sgn)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_1', 'wrong call', &
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_1', 'wrong call', &
        1)
 
   scale = 1.d0
@@ -87,7 +87,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
 
   save o1p, o2p, o1m, o2m, aux1p, aux1m
   isign = - sign (1, sgn)
-  if (n2.ne.nx2) call error ('cft_2', 'no longer implemented', 1)
+  if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
 
 
   scale = 1.d0

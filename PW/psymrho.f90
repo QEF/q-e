@@ -13,7 +13,7 @@ subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   !  p-symmetrize the charge density.
   !
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
   use parameters, only : DP
   implicit none

@@ -17,7 +17,7 @@ subroutine d3_exc
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -32,7 +32,7 @@ subroutine d3_exc
   allocate (work2 ( nrxx))    
   allocate (work3 ( nrxx))    
   allocate (d3dyn1( 3*nat, 3*nat, 3*nat))    
-#ifdef PARA
+#ifdef __PARA
   if (mypool.ne.1) goto 100
 #endif
   !
@@ -60,7 +60,7 @@ subroutine d3_exc
                  aux = aux + d2muxc (ir) * work1 (ir) * conjg (work2 (ir) ) &
                       * work3 (ir)
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2, aux)
 #endif
               d3dyn1 (ipert, jpert, kpert) = omega * aux / (nr1 * nr2 * nr3)
@@ -69,7 +69,7 @@ subroutine d3_exc
      endif
 
   enddo
-#ifdef PARA
+#ifdef __PARA
 100 continue
   call poolbcast (2 * 27 * nat * nat * nat, d3dyn1)
 #endif

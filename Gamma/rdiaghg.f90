@@ -17,7 +17,7 @@ subroutine rdiaghg (n, m, h, s, ldh, e, v)
   !-----------------------------------------------------------------------
 #include "machine.h"
   use parameters
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -74,7 +74,7 @@ subroutine rdiaghg (n, m, h, s, ldh, e, v)
   ! input s and (see below) h are copied so that they are not destroyed
   !
   call DCOPY (ldh * n, s, 1, sdum, 1)
-#ifdef PARA
+#ifdef __PARA
   !
   ! only the first processor diagonalize the matrix
   !
@@ -108,8 +108,8 @@ subroutine rdiaghg (n, m, h, s, ldh, e, v)
              iwork, ifail, info)
      endif
 #endif
-     call error ('rdiaghg', 'info =/= 0', abs (info) )
-#ifdef PARA
+     call errore ('rdiaghg', 'info =/= 0', abs (info) )
+#ifdef __PARA
   endif
   !
   ! broadcast eigenvectors and eigenvalues to all other processors

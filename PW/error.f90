@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine error (routin, messag, ierr)
+subroutine errore (routin, messag, ierr)
   !----------------------------------------------------------------------
   !
   !    This is a simple routine which writes an error message to
@@ -25,7 +25,7 @@ subroutine error (routin, messag, ierr)
   !
   use parameters
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
   character (len=*) :: routin, messag
@@ -40,7 +40,7 @@ subroutine error (routin, messag, ierr)
   write ( * , '(5x,"from ",a," : error #",i10)') routin, ierr
   write ( * , '(5x,a)') messag
   write (6, '(1x,78("%"))')
-#ifdef PARA
+#ifdef __PARA
 #ifdef AIX
   write (0, * ) ' '
   write (0, '(1x,78("%"))')
@@ -54,7 +54,7 @@ subroutine error (routin, messag, ierr)
 #ifdef FLUSH
      call flush (6)
 #endif
-#ifdef PARA
+#ifdef __PARA
      call mpi_abort (MPI_COMM_WORLD, ierr, ierr)
 #endif
      stop 2
@@ -62,5 +62,5 @@ subroutine error (routin, messag, ierr)
      write (6, * ) ' '
      return
   endif
-end subroutine error
+end subroutine errore
 

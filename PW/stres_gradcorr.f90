@@ -113,7 +113,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigma_gradcorr)
 #endif
 

@@ -41,7 +41,7 @@ subroutine cg_readin
 #endif
   read(iunit,'(a)') title_ph
   read(iunit,inputph)
-#ifdef PARA
+#ifdef __PARA
   call init_pool
 #endif
   !
@@ -53,17 +53,17 @@ subroutine cg_readin
   !  various checks
   !
   if (.not.trans .and. .not.epsil)                                  &
-       &     call error('data','nothing to do',1)
-  if (nks.ne.1) call error('data','too many k-points',1)
+       &     call errore('data','nothing to do',1)
+  if (nks.ne.1) call errore('data','too many k-points',1)
   !      if (xk(1,1).ne.0.0 .or. xk(2,1).ne.0.0 .or. xk(3,1).ne.0.0)
-  !     &    call error('data','only k=0 allowed',1)
+  !     &    call errore('data','only k=0 allowed',1)
   if (nmodes.gt.3*nat .or. nmodes.lt.0)                             &
-       &     call error('data','wrong number of normal modes',1)
-  if (epsil .and. nmodes.ne.0) call error('data','not allowed',1)
+       &     call errore('data','wrong number of normal modes',1)
+  if (epsil .and. nmodes.ne.0) call errore('data','not allowed',1)
   if (raman .and. deltatau.le.0.d0)                                 &
-       &     call error('data','deltatau > 0 needed for raman CS',1)
+       &     call errore('data','deltatau > 0 needed for raman CS',1)
   if (nderiv.ne.2 .and. nderiv.ne.4) &
-       call error('data','nderiv not allowed',1)
+       call errore('data','nderiv not allowed',1)
   !
   if (last.eq.0) last=3*nat
   !
@@ -102,7 +102,7 @@ subroutine cg_readmodes(iunit)
      call find_equiv_sites (nat,nat,nsym,irt,has_equivalent,        &
           &      n_diff_sites,n_equiv_atoms,equiv_atoms)
      if (n_diff_sites .le. 0 .or. n_diff_sites .gt. nat)            &
-          &      call error('equiv.sites','boh!',1)
+          &      call errore('equiv.sites','boh!',1)
      !
      ! these are all modes, but only independent modes are calculated
      !
@@ -124,7 +124,7 @@ subroutine cg_readmodes(iunit)
  1      continue
      end if
   else
-     if (asr) call error('readin','warning: asr disabled',-1)
+     if (asr) call errore('readin','warning: asr disabled',-1)
      nasr=0
      !
      ! ... otherwise read normal modes from input
@@ -146,7 +146,7 @@ subroutine cg_readmodes(iunit)
         call DSCAL(3*nat,1.0/unorm,u(1,nu),1)
      end do
      go to 20
-10   call error('phonon','wrong data read',1)
+10   call errore('phonon','wrong data read',1)
   endif
 20 continue
   !

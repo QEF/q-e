@@ -47,7 +47,7 @@ subroutine d3_setup
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -83,7 +83,7 @@ subroutine d3_setup
   logical :: sym (48)
   ! the symmetry operations
 
-#ifdef PARA
+#ifdef __PARA
   integer :: nlength_w, nlength (npool), nresto
 #endif
   call start_clock ('d3_setup')
@@ -144,7 +144,7 @@ subroutine d3_setup
              & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
      enddo
   else
-     if (lsda) call error ('d3_setup', 'occupation numbers probably wro &
+     if (lsda) call errore ('d3_setup', 'occupation numbers probably wro &
           &ng',  - 1)
      do ik = 1, nks
         nbnd_occ (ik) = nint (nelec) / degspin
@@ -270,7 +270,7 @@ subroutine d3_setup
   !
   npert_i = 1
   npert_f = 3 * nat
-#ifdef PARA
+#ifdef __PARA
   nlength_w = (3 * nat) / npool
   nresto = 3 * nat - nlength_w * npool
   do ii = 1, npool

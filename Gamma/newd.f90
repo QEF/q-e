@@ -111,7 +111,7 @@ subroutine newd
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (nhm * nhm * nat * nspin, deeq)
 #endif
   do na = 1, nat

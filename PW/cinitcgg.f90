@@ -59,7 +59,7 @@ subroutine cinitcgg (npwx, npw, nstart, nbnd, psi, e)
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nstart * nstart, haux (1, 1, 1) )
   call reduce (2 * nstart * nstart, saux)
 #endif

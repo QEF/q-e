@@ -59,7 +59,7 @@ program oldcp2upf
   close (unit=2)
 
 stop
-20 call error ('oldcp2upf', 'Reading pseudo file name ', 1)
+20 call errore ('oldcp2upf', 'Reading pseudo file name ', 1)
 
 end program oldcp2upf
 
@@ -89,7 +89,7 @@ subroutine read_oldcp(iunps)
   !
   read(iunps,*, end=10, err=10) z, zv, nbeta_, lloc, exfact
   if (z < 1 .or. z > 100 .or. zv < 1 .or. zv > 25 ) &
-       call error ('read_oldcp','wrong potential read',1)
+       call errore ('read_oldcp','wrong potential read',1)
   read(iunps,*, end=10, err=10) wrc1, rc1, wrc2, rc2
   read(iunps,*, end=10, err=10) ( ( rcl(i,l), al(i,l), &
                      bl(i,l), i = 1, 3), l = 1, 3)
@@ -122,7 +122,7 @@ subroutine read_oldcp(iunps)
   end do
 
   return
-10 call error('read_oldcp','error in reading file',1)
+10 call errore('read_oldcp','error in reading file',1)
 
 end subroutine read_oldcp
 
@@ -195,7 +195,7 @@ subroutine convert_oldcp
   else if (exfact.eq. 5) then
      iexch=1; icorr=4; igcx=3; igcc=4 ! Perdew-Becke-Erkerhof
   else
-     call error('convert','Wrong xc in pseudopotential',1)
+     call errore('convert','Wrong xc in pseudopotential',1)
   end if
 
   allocate(rab(mesh))

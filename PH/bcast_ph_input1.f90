@@ -10,7 +10,7 @@
 subroutine bcast_ph_input1
 !-----------------------------------------------------------------------
 !
-#ifdef PARA
+#ifdef __PARA
 #include "machine.h"
 
 use pwcom
@@ -23,30 +23,30 @@ include 'mpif.h'
 integer :: root, errcode
 root = 0
 call MPI_barrier (MPI_COMM_WORLD, errcode)
-call error ('bcast_ph_input1', 'at barrier ', errcode)
+call errore ('bcast_ph_input1', 'at barrier ', errcode)
 !
 ! integers
 !
 call MPI_bcast (nat_todo, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
  errcode)
-call error ('bcast_ph_input1', 'bcasting nat_todo ', errcode)
+call errore ('bcast_ph_input1', 'bcasting nat_todo ', errcode)
 
 call MPI_barrier (MPI_COMM_WORLD, errcode)
 if (nat_todo.gt.0) then
    call MPI_bcast (atomo, nat_todo, MPI_INTEGER, root, &
     MPI_COMM_WORLD, errcode)
-   call error ('bcast_ph_input1', 'bcasting atomo ', errcode)
+   call errore ('bcast_ph_input1', 'bcasting atomo ', errcode)
 
 endif
 call MPI_bcast (nrapp, 1, MPI_INTEGER, root, MPI_COMM_WORLD, &
  errcode)
-call error ('bcast_ph_input1', 'bcasting nrapp ', errcode)
+call errore ('bcast_ph_input1', 'bcasting nrapp ', errcode)
 
 call MPI_barrier (MPI_COMM_WORLD, errcode)
 if (nrapp.gt.0) then
    call MPI_bcast (list, nrapp, MPI_INTEGER, root, MPI_COMM_WORLD, &
     errcode)
-   call error ('bcast_ph_input1', 'bcasting list ', errcode)
+   call errore ('bcast_ph_input1', 'bcasting list ', errcode)
 endif
 #endif
 return

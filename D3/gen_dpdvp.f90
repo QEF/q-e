@@ -49,7 +49,7 @@ subroutine gen_dpdvp
         ikq = 2 * ik
         read (iunigk, err = 100, iostat = ios) npwq, igkq
      endif
-100  call error ('gen_dpdvp', 'reading iunigk-iunigkq', abs (ios) )
+100  call errore ('gen_dpdvp', 'reading iunigk-iunigkq', abs (ios) )
      call init_us_2 (npw, igk, xk (1, ikk), vkb0)
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
 
@@ -69,7 +69,7 @@ subroutine gen_dpdvp
                       ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi (1,jbnd), 1)
               enddo
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
            nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
@@ -86,7 +86,7 @@ subroutine gen_dpdvp
                          ZDOTC (npwq, dpsi (1, ibnd), 1, dvpsi (1, jbnd), 1)
                  enddo
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
               nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat
@@ -114,7 +114,7 @@ subroutine gen_dpdvp
                          ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi(1,jbnd), 1)
                  enddo
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2 * nbnd * nbnd, dpsidvpsi)
 #endif
               nrec = nu_i + (nu_j - 1) * 3 * nat + (ik - 1) * 9 * nat * nat

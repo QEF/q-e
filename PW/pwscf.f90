@@ -25,7 +25,7 @@ program pwscf
   call init_clocks (.true.)
   call start_clock ('PWSCF')
   version = 'PWSCF 1.2.0'
-#ifdef PARA
+#ifdef __PARA
   call startup (nd_nmbr, version)
 #else
   nd_nmbr = '   '

@@ -95,12 +95,12 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      !
      nbnd_ocp = nint (nelec) / degspin
 
-     if (nbnd.le.nbnd_ocp + 1) call error ('stm', 'not enough bands', 1)
+     if (nbnd.le.nbnd_ocp + 1) call errore ('stm', 'not enough bands', 1)
      emin = et (nbnd_ocp + 1, 1)
      do ik = 2, nks
         emin = min (emin, et (nbnd_ocp + 1, ik) )
      enddo
-#ifdef PARA
+#ifdef __PARA
      ! find the minimum across pools
      call poolextreme (emin, - 1)
 #endif
@@ -108,7 +108,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      do ik = 2, nks
         emax = max (emax, et (nbnd_ocp, ik) )
      enddo
-#ifdef PARA
+#ifdef __PARA
      ! find the maximum across pools
      call poolextreme (emax, 1)
 #endif
@@ -252,7 +252,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
                     enddo
                  enddo
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2 * nrx1 * nrx2, psi)
 #endif
               !
@@ -289,7 +289,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
   !     symmetrization of the stm dos
   !
-#ifdef PARA
+#ifdef __PARA
   if (stm_wfc_matching) then
      call poolreduce (nrx1 * nrx2 * nrx3, stmdos)
      call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
@@ -312,7 +312,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     use wf to store istates
   !
   wf = istates
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (1, wf)
 #endif
   z = z / alat

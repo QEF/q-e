@@ -42,9 +42,9 @@ subroutine compute_becalp (becq, alpq)
      if (nksq.gt.1) then
         read (iunigk, err = 100, iostat = ios) npw, igk
 
-100     call error ('compute_becalp', 'reading igk', abs (ios) )
+100     call errore ('compute_becalp', 'reading igk', abs (ios) )
         read (iunigk, err = 200, iostat = ios) npwq, igkq
-200     call error ('compute_becalp', 'reading igkq', abs (ios) )
+200     call errore ('compute_becalp', 'reading igkq', abs (ios) )
 
      endif
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)

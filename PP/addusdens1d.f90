@@ -98,11 +98,11 @@ subroutine addusdens1d (plan, prho)
   else
      call setv (2 * nrx3, 0.d0, qg, 1)
   endif
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nrx3, qg)
 #endif
   dimz = alat * celldm (3)
-#ifdef PARA
+#ifdef __PARA
   !
   ! NB1: cft_1 is present only in the parallel case
   ! NB2: cft_1 is no longer in-place

@@ -49,7 +49,7 @@ subroutine solve_e
      call zvscal(npw,npwx,nbnd,diag,evc,work)
      call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
      call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call error('solve_e','cannot factorize',info)
+     if (info.ne.0) call errore('solve_e','cannot factorize',info)
   end if
   !
   write (6,'(/" ***  Starting Conjugate Gradient minimization",   &
@@ -61,7 +61,7 @@ subroutine solve_e
      iubar=ipol
      write(filbar,'("filbar",i1)') ipol
      call seqopn (iubar,filbar,'unformatted',here)
-     if (.not.here) call error('solve_e','file '//filbar//          &
+     if (.not.here) call errore('solve_e','file '//filbar//          &
           &        'mysteriously vanished',ipol)
      read (iubar) dvpsi
      close(unit=iubar,status='keep')

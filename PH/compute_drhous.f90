@@ -67,7 +67,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   do ik = 1, nksq
      if (nksq.gt.1) then
         read (iunigk, err = 110, iostat = ios) npw, igk
-110     call error ('compute_drhous', 'reading igk', abs (ios) )
+110     call errore ('compute_drhous', 'reading igk', abs (ios) )
      endif
      if (lgamma) then
         ikk = ik
@@ -82,7 +82,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
      if (lsda) current_spin = isk (ikk)
      if (.not.lgamma.and.nksq.gt.1) then
         read (iunigk, err = 210, iostat = ios) npwq, igkq
-210     call error ('compute_drhous', 'reading igkq', abs (ios) )
+210     call errore ('compute_drhous', 'reading igkq', abs (ios) )
      endif
      !
      !   For each k point we construct the beta functions

@@ -24,7 +24,7 @@ subroutine punch_plot_ph
   use pwcom
   use parameters, only : DP
   use phcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -52,7 +52,7 @@ subroutine punch_plot_ph
   ! scalar product function
   ! auxiliary space to rotate the
   ! induced charge
-#ifdef PARA
+#ifdef __PARA
   ! auxiliary vector
   real(kind=DP), allocatable :: raux1 (:)
 #endif
@@ -78,7 +78,7 @@ subroutine punch_plot_ph
            call davcio_drho (aux (1, 1, ipert), lrdrho, iudrho, imode0 + &
                 ipert, - 1)
         enddo
-#ifdef PARA
+#ifdef __PARA
         call psymdvscf (npert (irr), irr, aux)
 #else
         call symdvscf (npert (irr), irr, aux)
@@ -95,13 +95,13 @@ subroutine punch_plot_ph
   !
   iunplot = 4
   filin = trim(fildrho)
-#ifdef PARA
+#ifdef __PARA
   if (me.eq.1.and.mypool.eq.1) then
 #endif
      open (unit = iunplot, file = filin, status = 'unknown', err = &
           100, iostat = ios)
 
-100  call error ('plotout', 'opening file'//filin, abs (ios) )
+100  call errore ('plotout', 'opening file'//filin, abs (ios) )
      rewind (iunplot)
      !
      !       Here we write some information quantity which are always necessa
@@ -115,7 +115,7 @@ subroutine punch_plot_ph
      write (iunplot, 200) (na, atm (ityp (na) ), zv (ityp (na) ), &
           (tau (jpol, na), jpol = 1, 3), na = 1, nat)
 200  format   (3x,i2,3x,a6,3x,f5.2,3x,3f14.10)
-#ifdef PARA
+#ifdef __PARA
   endif
 #endif
   !
@@ -124,7 +124,7 @@ subroutine punch_plot_ph
   call DCOPY (nrxx, aux1 (1, 1), 2, raux, 1)
 
   if (lsda) call DAXPY (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
-#ifdef PARA
+#ifdef __PARA
   allocate (raux1( nrx1 * nrx2 * nrx3))    
   call gather (raux, raux1)
   if (me.eq.1.and.mypool.eq.1) write (iunplot, * ) (raux1 (ir), &

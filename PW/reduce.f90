@@ -17,7 +17,7 @@ subroutine reduce (size, ps)
 #undef SHMEM
   !
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   use parameters, only : DP
@@ -25,7 +25,7 @@ subroutine reduce (size, ps)
   integer :: size
 
   real (kind=DP) :: ps (size)
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info, n, nbuf
 #define MAXB 10000
@@ -48,7 +48,7 @@ subroutine reduce (size, ps)
   !
   call mpi_barrier (MPI_COMM_POOL, info)
 
-  call error ('reduce', 'error in barrier', info)
+  call errore ('reduce', 'error in barrier', info)
 
   nbuf = size / MAXB
 #ifdef SHMEM
@@ -61,7 +61,7 @@ subroutine reduce (size, ps)
 #else
      call mpi_allreduce (ps (1 + (n - 1) * MAXB), buff, MAXB, &
           MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce1', info)
+     call errore ('reduce', 'error in allreduce1', info)
 #endif
      call DCOPY (MAXB, buff, 1, ps (1 + (n - 1) * MAXB), 1)
   enddo
@@ -75,7 +75,7 @@ subroutine reduce (size, ps)
 #else
      call mpi_allreduce (ps (1 + nbuf * MAXB), buff, size-nbuf * &
           MAXB, MPI_REAL8, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce2', info)
+     call errore ('reduce', 'error in allreduce2', info)
 #endif
      call DCOPY (size-nbuf * MAXB, buff, 1, ps (1 + nbuf * MAXB), &
           1)
@@ -93,13 +93,13 @@ subroutine ireduce (size, is)
   !     sums a distributed variable is(size) over the processors.
   !
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
 
   integer :: size, is (size)
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info, n, m, nbuf
 #define MAXI 500
@@ -112,13 +112,13 @@ subroutine ireduce (size, is)
   !
   call mpi_barrier (MPI_COMM_POOL, info)
 
-  call error ('reduce', 'error in barrier', info)
+  call errore ('reduce', 'error in barrier', info)
 
   nbuf = size / MAXI
   do n = 1, nbuf
      call mpi_allreduce (is (1 + (n - 1) * MAXI), buff, MAXI, &
           MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('ireduce', 'error in allreduce 1', info)
+     call errore ('ireduce', 'error in allreduce 1', info)
      do m = 1, MAXI
         is (m + (n - 1) * MAXI) = buff (m)
      enddo
@@ -129,7 +129,7 @@ subroutine ireduce (size, is)
   if (size-nbuf * MAXI.gt.0) then
      call mpi_allreduce (is (1 + nbuf * MAXI), buff, size-nbuf * &
           MAXI, MPI_INTEGER, MPI_SUM, MPI_COMM_POOL, info)
-     call error ('reduce', 'error in allreduce 2', info)
+     call errore ('reduce', 'error in allreduce 2', info)
      do m = 1, size-nbuf * MAXI
         is (m + nbuf * MAXI) = buff (m)
      enddo

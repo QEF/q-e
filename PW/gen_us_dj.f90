@@ -137,7 +137,7 @@ subroutine gen_us_dj (ik, dvkb)
 
   enddo
 
-  if (ikb.ne.nkb) call error ('gen_us_dj', 'unexpected error', 1)
+  if (ikb.ne.nkb) call errore ('gen_us_dj', 'unexpected error', 1)
   deallocate (sk)
   deallocate (ylm)
   deallocate (djl)

@@ -59,5 +59,5 @@ program vdb2upf
   close (unit=2)
 
   stop
-20 call error ('vdb2upf', 'Reading pseudo file name ', 1)
+20 call errore ('vdb2upf', 'Reading pseudo file name ', 1)
 end program vdb2upf

@@ -13,7 +13,7 @@ subroutine solve_ph
 #include "machine.h"
   use pwcom
   use cgcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   integer :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
@@ -48,7 +48,7 @@ subroutine solve_ph
      call zvscal(npw,npwx,nbnd,diag,evc,work)
      call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
      call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call error('solve_ph','cannot factorize',info)
+     if (info.ne.0) call errore('solve_ph','cannot factorize',info)
   end if
   !
   write (6,'(/" ***  Starting Conjugate Gradient minimization",   &
@@ -99,14 +99,14 @@ subroutine solve_ph
      ! < DeltaPsi | DeltaV | Psi > contribution to the dynamical matrix
      call drhodv(nu)
      ! save partial result
-#ifdef PARA
+#ifdef __PARA
      if (me.eq.1) then
 #endif
         open (unit=iunres,file='restartph',form='formatted',status='unknown')
         write(iunres,*) nu
         write(iunres,*) dyn
         close(unit=iunres)
-#ifdef PARA
+#ifdef __PARA
      end if
 #endif
      write (6,'(" ***  mode # ",i3," : ",i3," iterations")')  &

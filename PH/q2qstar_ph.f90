@@ -55,7 +55,7 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! Sets number of symmetry operations giving each q in the list
   !
   nsq = nsym / nq
-  if (nsq * nq.ne.nsym) call error ('q2star_ph', 'wrong degeneracy', &
+  if (nsq * nq.ne.nsym) call errore ('q2star_ph', 'wrong degeneracy', &
        1)
   !
   ! Writes dyn.mat. dyn(3*nat,3*nat) on the 4-index array phi(3,3,nat,nta)

@@ -13,11 +13,11 @@ subroutine d3_init
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
   integer :: nt, irr, irr1, ipert, imode0, errcode
@@ -68,7 +68,7 @@ subroutine d3_init
 !
 ! Reads the q=0 variation of the charge --d0rho-- and symmetrizes it
 !
-#ifdef PARA
+#ifdef __PARA
 !  if (mypool.ne.1) goto 100
 #endif
   do irr = 1, nirrg0
@@ -80,7 +80,7 @@ subroutine d3_init
         call davcio_drho2 (drhoscf(1,ipert), lrdrho, iud0rho, &
                            imode0+ipert, - 1)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call psymd0rho (npertg0(irr), irr, drhoscf)
 #else
      call symd0rho (npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
@@ -104,7 +104,7 @@ subroutine d3_init
            call davcio_drho2 (drhoscf(1,ipert), lrdrho, iudrho, &
                               imode0+ipert, -1)
         enddo
-#ifdef PARA
+#ifdef __PARA
         call psymdvscf (npert(irr), irr, drhoscf)
 #else
         call symdvscf (npert(irr), irr, drhoscf)
@@ -115,11 +115,11 @@ subroutine d3_init
         enddo
      enddo
   endif
-#ifdef PARA
+#ifdef __PARA
 100 continue
   call MPI_barrier (MPI_COMM_WORLD, errcode)
 
-  call error ('d3_init', 'at barrier', errcode)
+  call errore ('d3_init', 'at barrier', errcode)
 #endif
 
   deallocate(drhoscf)

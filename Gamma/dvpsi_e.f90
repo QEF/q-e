@@ -92,7 +92,7 @@ subroutine dvpsi_e(kpoint,ipol)
      end do
   end do
   !
-  if (jkb.ne.nkb) call error('dvpsi_e','unexpected error',1)
+  if (jkb.ne.nkb) call errore('dvpsi_e','unexpected error',1)
   !
   call DGEMM ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
        2*npwx, ps(1,1,1), nkb, 1.d0, dpsi, 2*npwx)
@@ -124,7 +124,7 @@ subroutine dvpsi_e(kpoint,ipol)
      call zvscal(npw,npwx,nbnd,q,evc,work)
      call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
      call DPOTRF('U',nbnd,overlap,nbnd,info)
-     if (info.ne.0) call error('solve_ph','cannot factorize',info)
+     if (info.ne.0) call errore('solve_ph','cannot factorize',info)
   end if
   !
   startwith0= .true.

@@ -5,7 +5,7 @@
 # Add -D__FFTW if you want to use fft routines from fftw library
 # instead of fft from complib library
 #
-CPPFLAGS = -DORIGIN -DPARA -D__MPI -I$(OSHOME)/include
+CPPFLAGS = -DORIGIN -D__PARA -D__MPI -I$(OSHOME)/include
 
 #
 # Fortran compiler:

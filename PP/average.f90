@@ -83,7 +83,7 @@ subroutine average
   !
   inunit = 5
   read (inunit, *, err = 1100, iostat = ios) nfile
-  if (nfile.le.0.or.nfile.gt.nfilemax) call error ('average ', &
+  if (nfile.le.0.or.nfile.gt.nfilemax) call errore ('average ', &
        'nfile is wrong ', 1)
   do ifile = 1, nfile
      read (inunit, '(a)', err = 1100, iostat = ios) filename (ifile)
@@ -91,16 +91,16 @@ subroutine average
   enddo
   read (inunit, *, err = 1100, iostat = ios) npt
 
-  if (npt.lt.0.or.npt.gt.npixmax) call error ('average', ' wrong npt', 1)
+  if (npt.lt.0.or.npt.gt.npixmax) call errore ('average', ' wrong npt', 1)
   read (inunit, *, err = 1100, iostat = ios) awin
   read (inunit, *, err = 1100, iostat = ios) ionflag
 
-1100 call error ('average', 'readin input', abs (ios) )
+1100 call errore ('average', 'readin input', abs (ios) )
 
   call plot_io (filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
        nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
        plot_num, atm, ityp, zv, tau, rhodum, 0)
-  if (npt.le.nr3) call error ('average', 'npt smaller than nr3', 1)
+  if (npt.le.nr3) call errore ('average', 'npt smaller than nr3', 1)
 
   allocate(tau (3, nat) )
   allocate(ityp(nat) )
@@ -155,16 +155,16 @@ subroutine average
      deallocate (ityps)
      deallocate (taus)
      !
-     if (nats.gt.nat) call error ('chdens', 'wrong file order? ', 1)
+     if (nats.gt.nat) call errore ('chdens', 'wrong file order? ', 1)
      if (nrx1.ne.nrx1sa.or.nrx2.ne.nrx2sa) call &
-          error ('average', 'incompatible nrx1 or nrx2', 1)
-     if (nr1.ne.nr1sa.or.nr2.ne.nr2sa.or.nr3.ne.nr3sa) call error ( &
+          errore ('average', 'incompatible nrx1 or nrx2', 1)
+     if (nr1.ne.nr1sa.or.nr2.ne.nr2sa.or.nr3.ne.nr3sa) call errore ( &
           'average', 'incompatible nr1 or nr2 or nr3', 1)
-     if (ibravs.ne.ibrav) call error ('average', 'incompatible ibrav', 1)
+     if (ibravs.ne.ibrav) call errore ('average', 'incompatible ibrav', 1)
      if (gcutmsa.ne.gcutm.or.duals.ne.dual.or.ecuts.ne.ecutwfc ) &
-          call error ('average', 'incompatible gcutm or dual or ecut', 1)
+          call errore ('average', 'incompatible gcutm or dual or ecut', 1)
      do i = 1, 6
-        if (abs( celldm (i)-celldms (i) ) .gt. 1.0e-7 ) call error &
+        if (abs( celldm (i)-celldms (i) ) .gt. 1.0e-7 ) call errore &
              ('chdens', 'incompatible celldm', 1)
      enddo
      do ir = 1, nrxx
@@ -229,7 +229,7 @@ subroutine average
   !     compute the macroscopic average
   !
   nmacro = npt * (awin / (alat * celldm (3) ) )
-  if (nmacro.le.0) call error ('average ', 'nmacro is too small ', &
+  if (nmacro.le.0) call errore ('average ', 'nmacro is too small ', &
        1)
   do i = 1, npt
      macros (i) = 0.d0

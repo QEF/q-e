@@ -61,8 +61,8 @@
 !
 !
       if (i.lt.1.or.i.gt.maxclock)                                      &
-     &     call error('tictac','wrong number of clocks',i)
-      if (j.ne.0.and.j.ne.1) call error('tictac','wrong call',j)
+     &     call errore('tictac','wrong number of clocks',i)
+      if (j.ne.0.and.j.ne.1) call errore('tictac','wrong call',j)
 !
 ! initialization
 !
@@ -217,7 +217,7 @@
         iy=idum
       endif
       j=1+(ntab*iy)/m
-      if(j.gt.ntab.or.j.lt.1) call error('randy','j out of range',j)
+      if(j.gt.ntab.or.j.lt.1) call errore('randy','j out of range',j)
       iy=ir(j)
       randy=iy*rm
       idum=mod(ia*idum+ic,m)
@@ -287,7 +287,7 @@
 !
  20   if (nr .ne. mr * 2**pwr(1) * 3**pwr(2) * 5**pwr(3) *              &
      &                 7**pwr(4) *11**pwr(5) )                          &
-     &   call error('good_fft_order','what ?!?',1)
+     &   call errore('good_fft_order','what ?!?',1)
       if (mr.ne.1) then
 ! fft dimension contains factors > 11 : no good in any case
          good=.false.
@@ -320,7 +320,7 @@
       if (.not.good) then
          nr=nr+1
          if (nr.gt.maxn)                                                &
-     &        call error('good_fft_order','too large',maxn)
+     &        call errore('good_fft_order','too large',maxn)
          go to 10
       else
          good_fft_order=nr

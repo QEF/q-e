@@ -10,11 +10,11 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
 !---------------------------------------------------------------------
   use pwcom
   use parameters, only : DP
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
 !
@@ -30,9 +30,9 @@ subroutine io_pattern (fildrho,nirr,npert,u,iflag)
   integer :: i,iunit
   logical :: exst
 
-  if (abs(iflag).ne.1) call error('io_pattern','wrong iflag',1+abs(iflag))
+  if (abs(iflag).ne.1) call errore('io_pattern','wrong iflag',1+abs(iflag))
 
-#ifdef PARA
+#ifdef __PARA
 !  if (iflag.eq.+1 .and. (me.ne.1.or.mypool.ne.1)) return
 #endif
 

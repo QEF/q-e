@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#ifdef PARA
+#ifdef __PARA
 !
 !----------------------------------------------------------------------
 subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
@@ -76,7 +76,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
      call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
      call cft_1 (aux, ncp (me), n3, nx3, sign, f)
   else
-     call error ('cft3', 'not allowed', abs (sign) )
+     call errore ('cft3', 'not allowed', abs (sign) )
 
   endif
   call stop_clock ('cft3')
@@ -102,7 +102,7 @@ subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
   elseif (sign.eq. - 1) then
      call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 1, - 1)
   else
-     call error ('cft3', 'what should i do?', 1)
+     call errore ('cft3', 'what should i do?', 1)
   endif
 
   call stop_clock ('cft3')

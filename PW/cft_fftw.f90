@@ -34,7 +34,7 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   elseif (isign.eq. - 1) then
      ibid = 2
   else
-     call error ('cft_1', 'wrong call', isign)
+     call errore ('cft_1', 'wrong call', isign)
   endif
   !
   if (plan (ibid) .eq.0) call FFTW_F77_CREATE_PLAN (plan (ibid), &
@@ -80,7 +80,7 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
      isign1 = - 1
      ibid = 2
   else
-     call error ('cft_1s', 'wrong call', isign)
+     call errore ('cft_1s', 'wrong call', isign)
   endif
   !
   if (plan (ibid) .eq.0) call FFTW_F77_CREATE_PLAN (plan (ibid), &
@@ -126,8 +126,8 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   data plan1 / 0, 0 /, plan2 / 0, 0 /
   !
   !
-  if (n1.gt.nmax.or.n2.gt.nmax) call error ('cft_2', 'increase nmax', max (n1, n2) )
-  if (n2.ne.nx2) call error ('cft_2', 'no longer implemented', 1)
+  if (n1.gt.nmax.or.n2.gt.nmax) call errore ('cft_2', 'increase nmax', max (n1, n2) )
+  if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
   if (isign.eq.1.or.isign.eq.2) then
      isign1 = 1
      ibid = 1
@@ -135,7 +135,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
      isign1 = - 1
      ibid = 2
   else
-     call error ('cft_2', 'wrong call', isign)
+     call errore ('cft_2', 'wrong call', isign)
   endif
   !
   if (isign1.eq.1) then
@@ -203,9 +203,9 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   data plan1 / 0, 0 /, plan2 / 0, 0 /
   !
   !
-  if (n1.gt.nmax.or.n2.gt.nmax) call error ('cft_2s', 'increase nmax &
+  if (n1.gt.nmax.or.n2.gt.nmax) call errore ('cft_2s', 'increase nmax &
        &', max (n1, n2) )
-  if (n2.ne.nx2) call error ('cft_2s', 'not implemented', 1)
+  if (n2.ne.nx2) call errore ('cft_2s', 'not implemented', 1)
   if (isign.eq.1.or.isign.eq.2) then
      isign1 = 1
      ibid = 1
@@ -213,14 +213,14 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
      isign1 = - 1
      ibid = 2
   else
-     call error ('cft_2s', 'wrong call', isign)
+     call errore ('cft_2s', 'wrong call', isign)
   endif
   ! check how many columns along x are nonzero
   m = 0
   do i = 1, n1
      m = m + planes (i)
   enddo
-  if (m.gt.n1.or.m.le.0) call error ('cft_2s', 'something wrong with planes', 1)
+  if (m.gt.n1.or.m.le.0) call errore ('cft_2s', 'something wrong with planes', 1)
   !
   if (isign1.eq.1) then
      ! j-direction

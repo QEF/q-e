@@ -14,7 +14,7 @@ program cg_raman
   use pwcom
   use io
   use cgcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -29,7 +29,7 @@ program cg_raman
   !
   call init_clocks(.true.)
   call start_clock('raman')
-#ifdef PARA
+#ifdef __PARA
   call startup( nd_nmbr, version )
 #else
   nd_nmbr='   '
@@ -90,7 +90,7 @@ program cg_raman
      call seqopn (iudwf,'fildwx3','unformatted',exst)
      close(unit=iudwf,status='delete')
   end if
-#ifdef PARA
+#ifdef __PARA
   !
   !  parallel case: delete only once !
   !
@@ -102,7 +102,7 @@ program cg_raman
 !!!      close(unit=iunres,status='delete')
 !!!      open (unit=iunres,file='restart_d',status='unknown')
 !!!      close(unit=iunres,status='delete')
-#ifdef PARA
+#ifdef __PARA
   end if
   call mpi_finalize(i)
 #endif
@@ -121,7 +121,7 @@ subroutine cg_deps(deps_dtau)
 #include "machine.h"
   use pwcom
   use cgcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -194,7 +194,7 @@ subroutine cg_deps(deps_dtau)
            !
            !  Save partial results
            !
-#ifdef PARA
+#ifdef __PARA
            !
            !  parallel case: write only once !
            !
@@ -211,7 +211,7 @@ subroutine cg_deps(deps_dtau)
               end if
               write(iunres,*) deps_dtau
               close(unit=iunres)
-#ifdef PARA
+#ifdef __PARA
            endif
 #endif
 12         continue
@@ -249,7 +249,7 @@ subroutine cg_eps0dyn(w2,dynout)
 #include "machine.h"
   use pwcom
   use cgcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -281,14 +281,14 @@ subroutine cg_eps0dyn(w2,dynout)
      !
      !   save on file results
      !
-#ifdef PARA
+#ifdef __PARA
      if (me.eq.1) then
 #endif
      open (unit=iunres,file='restart_e',form='formatted',status='unknown')
      write(iunres,*) epsilon0
      write(iunres,*) zstar
      close(unit=iunres)
-#ifdef PARA
+#ifdef __PARA
      end if
 #endif
      !
@@ -335,7 +335,7 @@ subroutine cg_eps0dyn(w2,dynout)
      !         if (lforce)
      !     &        call equilib(nat,tau,force,nmodes,w2,dyn,3*nat,dtau,alat)
   end if
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1) go to 20
 #endif
   if (trans) call writedyn
@@ -500,7 +500,7 @@ subroutine raman_cs2(w2,dynout)
 #include "machine.h"
   use pwcom
   use cgcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -601,7 +601,7 @@ subroutine raman_cs2(w2,dynout)
         !
         !  Save partial results
         !
-#ifdef PARA
+#ifdef __PARA
         !
         !  parallel case: write only once !
         !
@@ -616,7 +616,7 @@ subroutine raman_cs2(w2,dynout)
            end if
            write(iunres,*) raman_activity
            close(unit=iunres)
-#ifdef PARA
+#ifdef __PARA
         endif
 #endif
 12      continue

@@ -104,7 +104,7 @@ subroutine dielec(do_zstar)
      end do
   end do
   !     end do
-#ifdef PARA
+#ifdef __PARA
   if (do_zstar) call reduce(3*3*nat,zstar)
   call reduce(3*3,epsilon0)
 #endif

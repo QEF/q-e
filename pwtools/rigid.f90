@@ -38,7 +38,7 @@ subroutine rgd_blk (nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   save gmega
   !
   if (abs(sign).ne.1.0) &
-       call error ('rgd_blk',' wrong value for sign ',1)
+       call errore ('rgd_blk',' wrong value for sign ',1)
   !
   fac = sign*e2*fpi/omega
   !
@@ -443,7 +443,7 @@ subroutine cdiagh2 (n,h,ldh,e,v)
  allocate(work (lwork))
  allocate(rwork (3*n-2))
  call ZHEEV('V','U',n,v,ldh,e,work,lwork,rwork,info)
- call error('cdiagh2','info =/= 0',abs(info))
+ call errore ('cdiagh2','info =/= 0',abs(info))
  ! deallocate workspace
  deallocate(rwork)
  deallocate(work)

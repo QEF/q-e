@@ -98,7 +98,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   allocate(conv (nvec))
 
   !      write(6,*) 'eneter cegter',hc,vc,hpsi
-  if (nvec.gt.nvecx / 2) call error ('cegter', 'nvecx is too small',1)
+  if (nvec.gt.nvecx / 2) call errore ('cegter', 'nvecx is too small',1)
   !
   !     prepare the hamiltonian for the first iteration
   !
@@ -116,14 +116,14 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
   vc(:,:) = (0.d0, 0.d0)
   call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
        ndmx, hpsi, ndmx, (0.d0, 0.d0) , hc, nvecx)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nbase * nvecx, hc)
 #endif
   if (overlap) then
      smat(:,:) = (0.d0, 0.d0)
      call ZGEMM ('c', 'n', nbase, nbase, ndim, (1.d0, 0.d0) , psi, &
           ndmx, spsi, ndmx, (0.d0, 0.d0) , smat, nvecx)
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * nbase * nvecx, smat)
 #endif
   endif
@@ -170,7 +170,7 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      do n = 1, notcnv
         ew (n) = ZDOTC (ndim, psi (1, nbase+n), 1, psi (1, nbase+n), 1)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (notcnv, ew)
 #endif
      do n = 1, notcnv
@@ -193,14 +193,14 @@ subroutine cegterg (ndim, ndmx, nvec, nvecx, psi, ethr, overlap, &
      call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0) , &
           psi, ndmx, hpsi (1, nbase+1) , ndmx, (0.d0, 0.d0) , &
           hc (1, nbase+1) , nvecx)
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * nvecx * notcnv, hc (1, nbase+1) )
 #endif
      if (overlap) then
         call ZGEMM ('c', 'n', nbase+notcnv, notcnv, ndim, (1.d0, 0.d0) &
              , psi, ndmx, spsi (1, nbase+1) , ndmx, (0.d0, 0.d0) , smat (1, &
              nbase+1) , nvecx)
-#ifdef PARA
+#ifdef __PARA
         call reduce (2 * nvecx * notcnv, smat (1, nbase+1) )
 #endif
      endif

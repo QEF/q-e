@@ -229,7 +229,7 @@ subroutine dvanqq
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nhm * nhm * 3 * nat * nspin, int1)
   call reduce (2 * nhm * nhm * 3 * nat * nat, int2)
   call reduce (nhm * (nhm + 1) * 3 * 3 * nat * nspin, int4)

@@ -297,7 +297,7 @@ subroutine set_dft_value (m, i)
 
   parameter (notset = - 1)  
 
-  if (m.ne.notset.and.m.ne.i) call error ('set_dft_value', &
+  if (m.ne.notset.and.m.ne.i) call errore ('set_dft_value', &
        'two conflicting matching values', 1)
 
   m = i  
@@ -377,7 +377,7 @@ function atom_name(atomic_number)
                 'Fr','Ra','Ac','Th','Pa',' U','Np','Pu' /
   !
   if (atomic_number.lt.1.or.atomic_number.gt.94) then
-     call error('atom_name','invalid atomic number', &
+     call errore('atom_name','invalid atomic number', &
           1000+atomic_number)
   else
      atom_name=elements(atomic_number)

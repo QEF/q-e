@@ -62,7 +62,7 @@ subroutine coset (nrot, table, sym, nsym, irg)
   !     total group. ncos is the number of cosets
   !
   ncos = nrot / nsym
-  if (ncos * nsym.ne.nrot) call error ('coset', &
+  if (ncos * nsym.ne.nrot) call errore ('coset', &
   'The order'//' of the group is not a multiple of that of the subgroup', 1)
   !
   !     here we set the other elements of irg, by using the multiplication

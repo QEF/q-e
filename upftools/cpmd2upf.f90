@@ -60,7 +60,7 @@ program cpmd2upf
   close (unit=2)
 
 stop
-20 call error ('cpmd2upf', 'Reading pseudo file name ', 1)
+20 call errore ('cpmd2upf', 'Reading pseudo file name ', 1)
 
 end program cpmd2upf
 
@@ -128,7 +128,7 @@ subroutine read_cpmd(iunps)
      read (iunps,'(a)',end=200,err=200) line
      if (.not. matches("NORMCONSERVING",line) .or. &
          .not. matches("NUMERIC",line) ) &
-             call error('read_cpmd','unknown type: '//line,1)
+             call errore('read_cpmd','unknown type: '//line,1)
   else if (matches ("&INFO", trim(line)) ) then
      found = found + 1
      read (iunps,'(a)') title
@@ -162,7 +162,7 @@ subroutine read_cpmd(iunps)
      nlcc_ = .true.
      read (iunps, '(a)') line
      if (.not. matches ("NUMERIC", trim(line)) ) &
-          call error('read_cpmd','core-correction not allowed',1)
+          call errore('read_cpmd','core-correction not allowed',1)
      read(iunps, *) mesh_
      allocate (rho_atc_(mesh_))
      read(iunps, * ) (r_(i), rho_atc_(i), i=1,mesh_)
@@ -175,13 +175,13 @@ subroutine read_cpmd(iunps)
 
 20 continue
   if (nlcc_ .and. found /= 5 .or. .not.nlcc_ .and. found /= 4) &
-       call error('read_cpmd','some &FIELD card missing',found)
+       call errore('read_cpmd','some &FIELD card missing',found)
   if (closed /= found) &
-       call error('read_cpmd','some &END card missing',closed)
+       call errore('read_cpmd','some &END card missing',closed)
   if (unknown /= 0 ) print '("WARNING: ",i3," cards not read")', unknown
 
   return
-200 call error('read_cpmd','error in reading file',1)
+200 call errore('read_cpmd','error in reading file',1)
 
 end subroutine read_cpmd
 

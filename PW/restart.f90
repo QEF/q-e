@@ -178,10 +178,10 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
    IF( nkstot > 0 ) THEN
 
      IF( ( kunit < 1 ) .OR. ( MOD( nkstot, kunit ) /= 0 ) ) &
-       CALL error( ' writefile_new ',' wrong kunit ', 1 )
+       CALL errore( ' writefile_new ',' wrong kunit ', 1 )
 
      IF( ( nproc_pool > nproc ) .OR. ( MOD( nproc, nproc_pool ) /= 0 ) ) &
-       CALL error( ' writefile_new ',' nproc_pool ', 1 )
+       CALL errore( ' writefile_new ',' nproc_pool ', 1 )
 
      !  find out the number of pools
      npool = nproc / nproc_pool
@@ -309,7 +309,7 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
          endif
          inquire (unit = iunps, opened = opnd)
          IF( opnd ) &
-           CALL error( ' writefile_new ', ' fortran unit already opened ', 1 )
+           CALL errore( ' writefile_new ', ' fortran unit already opened ', 1 )
          open (unit = iunps, file = file_pseudo, status = 'old', form = &
            'formatted', iostat = ios)
 
@@ -643,7 +643,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      IF( kunit < 1 ) kunit = kunit_
 
      IF( MOD( nkstot, kunit ) /= 0 ) &
-       CALL error( ' readfile_new ',' inconsistent kunit ',1)
+       CALL errore( ' readfile_new ',' inconsistent kunit ',1)
 
      !  find out the number of pools
      npool = nproc / nproc_pool
@@ -947,7 +947,7 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
      IF ( trdwfc ) THEN
 
        IF( ( nsizwfc < 1 ) .OR. ( iunitwfc < 1 ) ) &
-         CALL error(' readfile_new ', ' cannot read wave function ', 1 )
+         CALL errore(' readfile_new ', ' cannot read wave function ', 1 )
 
        ipmask = 0
        ipdest = root_pool
@@ -1026,7 +1026,7 @@ subroutine readfile_config( ndr, ibrav, nat, alat, at, tau, ierr )
 
   use parameters, only: nacx, nsx
 
-#ifdef PARA
+#ifdef __PARA
   use para, only: nproc
 #endif
 

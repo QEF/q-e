@@ -106,7 +106,7 @@
       real(kind=8) gv(3),gt(3),dg(3,3,3),x,y,z,r
 !
 !
-      if (ig.gt.ng) call error(' ylmr ',' ig.gt.ng ',ig)
+      if (ig.gt.ng) call errore(' ylmr ',' ig.gt.ng ',ig)
       x = gx(ig,1)
       y = gx(ig,2)
       z = gx(ig,3)
@@ -142,7 +142,7 @@
       if (l.eq.7) dylmr=sqrt(5.0/fpi/4.0)*6.0*z*dg(3,i,j)
       if (l.eq.8) dylmr=sqrt(15.0/fpi)*(dg(2,i,j)*z+dg(3,i,j)*y)
       if (l.eq.9) dylmr=sqrt(15.0/fpi/4.0)*2.0*(x*dg(1,i,j)-y*dg(2,i,j))
-      if (l.ge.10) call error(' ylmr',' higher l not programmed  l=',l)
+      if (l.ge.10) call errore(' ylmr',' higher l not programmed  l=',l)
 !
       return
       end
@@ -192,7 +192,7 @@
       else if (dft.eq.pbe) then
          call ggapbe(nspin,rhog,gradr,rhor,exc)
       else
-         call error('exc-cor','no such exch-corr',dft)
+         call errore('exc-cor','no such exch-corr',dft)
       end if
       exc=exc*omega/dfloat(nr1*nr2*nr3)
 !
@@ -200,7 +200,7 @@
 !
       dxc(:,:) = 0.0
       if (tpre) then
-         if (nspin.ne.1) call error('exc-cor','spin not implemented',1)
+         if (nspin.ne.1) call errore('exc-cor','spin not implemented',1)
 !
          do j=1,3
             do i=1,3
@@ -586,7 +586,7 @@
       allocate(vtemp(ng))
       ci=(0.0,1.0)
       if (tpre .and. nspin.ne.1) &
-           call error('gradh','spin not implemented',1)
+           call errore('gradh','spin not implemented',1)
       do iss=1, nspin
 !     _________________________________________________________________
 !     second part xc-potential: 3 forward ffts  
@@ -1258,8 +1258,8 @@
          nlcc=nlcc+ifpcor(is)
       end do
       lmax=lmax+1
-      if (lmax.gt.3) call error('nlinit ',' l > 3 ,l= ',lmax)
-      if (nhsa.le.0) call error('nlinit ','not implemented ?',nhsa)
+      if (lmax.gt.3) call errore('nlinit ',' l > 3 ,l= ',lmax)
+      if (nhsa.le.0) call errore('nlinit ','not implemented ?',nhsa)
 !
 !     initialize array ap
 !
@@ -1554,8 +1554,8 @@
       jvs=indv(jv,is)
       ivl=indlm(iv,is)
       jvl=indlm(jv,is)
-      if(ivl.gt.nlx)  call error(' qvan ',' ivl.gt.nlx  ',ivl)
-      if(jvl.gt.nlx)  call error(' qvan ',' jvl.gt.nlx  ',jvl)
+      if(ivl.gt.nlx)  call errore(' qvan ',' ivl.gt.nlx  ',ivl)
+      if(jvl.gt.nlx)  call errore(' qvan ',' jvl.gt.nlx  ',jvl)
 !
       call zero(2*ngb,qg)
       allocate(ylm(ngb))
@@ -1583,7 +1583,7 @@
          else if ((lp.ge.17).and.(lp.le.25)) then
             l=5
          else if (lp.ge.26) then 
-            call error(' qvanb ',' lp.ge.26 ',lp)
+            call errore(' qvanb ',' lp.ge.26 ',lp)
          endif
 !     
 !       sig= (-i)^l
@@ -1630,7 +1630,7 @@
       real(kind=8) gsq1, gsq2, gsq3, c
 !
 !
-      if (ngy.gt.ngb) call error('dylmr2 ',' ngy.gt.ngb ',ngy)
+      if (ngy.gt.ngb) call errore('dylmr2 ',' ngy.gt.ngb ',ngy)
       allocate (gxt(ngb,3))
       allocate (dg(ngb,3,3,3))
 !
@@ -2027,7 +2027,7 @@
             enddo
          end do
       else if (l.ge.26) then
-         call error('dylmr2',' higher l not programmed  l=',l)
+         call errore('dylmr2',' higher l not programmed  l=',l)
       endif
 !
       deallocate (dg)

@@ -84,7 +84,7 @@ call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
 !    nsymq+1 <= irot <= nsymg0  are sym.ops. of the crystal
 !
 do irot = 1, nsymq
-if (.not.sym (irot) ) call error ('sgama_d3', 'unexpected', 1)
+if (.not.sym (irot) ) call errore ('sgama_d3', 'unexpected', 1)
 enddo
 jrot = nsymq
 do irot = nsymq + 1, nrot

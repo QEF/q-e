@@ -40,7 +40,7 @@ subroutine phq_recover
 
      read (iunrec) irr0, iter0, convt, done_irr, comp_irr0, ifat0
      if (iter0.eq.0.and.iswitch.eq. - 4) then
-        call error ('recover', 'recover not possible', 1)
+        call errore ('recover', 'recover not possible', 1)
         call ZCOPY (9 * nat * nat, dyn00, 1, dyn, 1)
         do irr = 1, nirr
            done_irr (irr) = 0
@@ -72,7 +72,7 @@ subroutine phq_recover
 
         close (unit = iunrec, status = 'keep')
      elseif (irr0.eq. - 2) then
-        call error ('phq_recover', 'recovering from wrong case', 1)
+        call errore ('phq_recover', 'recovering from wrong case', 1)
         write (6, '(/,4x," Restart from Iteration #",i5, &
              &                   " of Elect. Field")') iter0 + 1
      elseif (irr0.gt.0) then
@@ -97,7 +97,7 @@ subroutine phq_recover
            close (unit = iunrec, status = 'keep')
         endif
      else
-        call error ('phq_recover', 'wrong irr0', 1)
+        call errore ('phq_recover', 'wrong irr0', 1)
      endif
   else
      close (unit = iunrec, status = 'delete')

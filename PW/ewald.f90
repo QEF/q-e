@@ -89,7 +89,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error in the sum over G
   !
-  if (alpha.le.0.d0) call error ('ewald', 'optimal alpha not found', 1)
+  if (alpha.le.0.d0) call errore ('ewald', 'optimal alpha not found', 1)
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
   if (upperbound.gt.1.0d-7) goto 100
@@ -155,7 +155,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      enddo
   endif
   ewald = 0.5d0 * e2 * (ewaldg + ewaldr)
-#ifdef PARA
+#ifdef __PARA
 
 
   call reduce (1, ewald)

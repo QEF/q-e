@@ -137,7 +137,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
   allocate (buf2wfc(  buflen * diis_steps))    
   allocate (wfc2buf(  buflen , diis_steps))    
 
-  if (diis_steps.lt.cbnd_steps) call error ('cdiisg', 'wrong diis_steps', 1)
+  if (diis_steps.lt.cbnd_steps) call errore ('cdiisg', 'wrong diis_steps', 1)
   !
   do n = 1, nvec
      conv (n) = 0
@@ -211,7 +211,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
               nrm (ib) = 0.d0
               nrm (ib) = DREAL (ZDOTC (ndim, dwfc (1,ibuf),1,psis (1,ib),1) )
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (nopt, nrm)
 #endif
            ! rescale
@@ -223,7 +223,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
               call DSCAL (2 * ndmx, nrm (ib), psis (1, ib), 1)
               eau (ib) = - ZDOTC (ndim, dwfc (1, ibuf), 1, psip (1, ib),1)
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (2 * nopt, eau)
 #endif
            ! energies
@@ -243,7 +243,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
               do j = 1, ns
                  jbuf = wfc2buf (nb, j)
                  rmat (j, ns, nb) = ZDOTC (ndim,dres(1,jbuf),1,dres(1,ibuf),1)
-#ifdef PARA
+#ifdef __PARA
                  call reduce (2, rmat (j, ns, nb) )
 #endif
                  rmat (ns, j, nb) = conjg (rmat (j, ns, nb) )
@@ -251,7 +251,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                     smat (ns, ns, nb) = (1.d0, 0.d0)
                  else
                     smat (ns, j, nb) = ZDOTC(ndim,psis(1,ib),1,dwfc(1,jbuf),1)
-#ifdef PARA
+#ifdef __PARA
                     call reduce (2, smat (ns, j, nb) )
 #endif
                     smat (j, ns, nb) = conjg (smat (ns, j, nb) )
@@ -308,7 +308,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                     ss (1, 2) = ZDOTC (ndim, dwfc (1, ib), 1, psis (1, ib),1)
                     ss (2, 1) = conjg (ss (1, 2) )
                     ss (2, 2) = ZDOTC (ndim, pres (1, ib), 1, psis (1, ib),1)
-#ifdef PARA
+#ifdef __PARA
                     call reduce (8, hh)
                     call reduce (8, ss)
                     hh (1, 1) = DCMPLX (ew (ib), 0.d0)
@@ -379,7 +379,7 @@ subroutine cdiisg (ndim, ndmx, nvec, nvecx, buflen, btype, psi, &
                  if (ec (1) .lt.0.d0.and. (dabs (ec (1) ) .gt.small) ) then
                     write ( * , * ) ' *********** ec *********** '
                     write ( *, * ) (ec (i), i = 1, diis_steps)
-                    call error ('cdiisg', 'ec(1) < 0', 1)
+                    call errore ('cdiisg', 'ec(1) < 0', 1)
                  endif
                  do j = 1, ns
                     vcc (j, nb) = vc (j, 1)

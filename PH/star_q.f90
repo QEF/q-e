@@ -108,7 +108,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
      if (symm_type.eq.'cubic') call cubicsym (at, s, sname, nrot)
      if (symm_type.eq.'hexagonal') call hexsym (at, s, sname, nrot)
   else
-     call error ('setup', 'wrong ibrav', 1)
+     call errore ('setup', 'wrong ibrav', 1)
 
   endif
   if (noinv) then
@@ -199,7 +199,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   imq = 0
   do iq = 1, nq
      if (eqvect (raq, saq (1, iq), zero) ) imq = iq
-     if (nsq (iq)  * nq.ne.nsym) call error ('star_q', 'wrong degenerac &
+     if (nsq (iq)  * nq.ne.nsym) call errore ('star_q', 'wrong degenerac &
           &y', iq)
   enddo
   !

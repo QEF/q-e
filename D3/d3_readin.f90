@@ -19,7 +19,7 @@ subroutine d3_readin
   use phcom
   use d3com
   use io
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -50,7 +50,7 @@ subroutine d3_readin
   ! variables used for testing purp
   ! variables used for testing purp
   ! variables used for testing purp
-#ifdef PARA
+#ifdef __PARA
 
   if (me.ne.1) goto 400
 #endif
@@ -58,7 +58,7 @@ subroutine d3_readin
   !    Read the first line of the input file
   !
   read (5, '(a)', err = 100, iostat = ios) title_ph
-100 call error ('d3_readin', 'reading title ', abs (ios) )
+100 call errore ('d3_readin', 'reading title ', abs (ios) )
   !
   !   set default values for variables in namelist
   !
@@ -96,27 +96,27 @@ subroutine d3_readin
   read (5, inputph, err = 200, iostat = ios)
 #endif
 
-200 call error ('d3_readin', 'reading inputph namelist', abs (ios) )
+200 call errore ('d3_readin', 'reading inputph namelist', abs (ios) )
   !
   !     Check all namelist variables
   !
-  if (ethr_ph.le.0.d0) call error (' d3_readin', ' Wrong ethr_ph ', &
+  if (ethr_ph.le.0.d0) call errore (' d3_readin', ' Wrong ethr_ph ', &
        1)
-  if (iverbosity.ne.0.and.iverbosity.ne.1) call error ('d3_readin', ' Wrong &
+  if (iverbosity.ne.0.and.iverbosity.ne.1) call errore ('d3_readin', ' Wrong &
        &iverbosity ', 1)
-  if (fildyn.eq.' ') call error ('d3_readin', ' Wrong fildyn ', 1)
-  if (filpun.eq.' ') call error ('d3_readin', ' Wrong filpun ', 1)
-  if (fildrho.eq.' ') call error ('d3_readin', ' Wrong fildrho ', 1)
-  if (fild0rho.eq.' ') call error ('d3_readin', ' Wrong fild0rho ', &
+  if (fildyn.eq.' ') call errore ('d3_readin', ' Wrong fildyn ', 1)
+  if (filpun.eq.' ') call errore ('d3_readin', ' Wrong filpun ', 1)
+  if (fildrho.eq.' ') call errore ('d3_readin', ' Wrong fildrho ', 1)
+  if (fild0rho.eq.' ') call errore ('d3_readin', ' Wrong fild0rho ', &
        1)
   !
   !    reads the q point
   !
   read (5, *, err = 300, iostat = ios) (xq (ipol), ipol = 1, 3)
-300 call error ('d3_readin', 'reading xq', abs (ios) )
+300 call errore ('d3_readin', 'reading xq', abs (ios) )
 
   lgamma = xq (1) .eq.0.d0.and.xq (2) .eq.0.d0.and.xq (3) .eq.0.d0
-#ifdef PARA
+#ifdef __PARA
 400 continue
 
   call bcast_d3_input
@@ -135,41 +135,41 @@ subroutine d3_readin
      nksq = nks / 2
   endif
   !
-  if (lsda) call error ('d3_readin', 'lsda not implemented', 1)
-  if (okvan) call error ('d3_readin', 'US not implemented', 1)
+  if (lsda) call errore ('d3_readin', 'lsda not implemented', 1)
+  if (okvan) call errore ('d3_readin', 'US not implemented', 1)
   !
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
   call allocate_part
-#ifdef PARA
+#ifdef __PARA
 
   if (me.ne.1.or.mypool.ne.1) goto 800
 #endif
-#ifdef PARA
+#ifdef __PARA
 
 800 continue
 #endif
 
   if (iswitch.ne. - 2.and.iswitch.ne. - 3.and.iswitch.ne. - &
-       4.and..not.lgamma) call error ('d3_readin', ' Wrong iswitch ', 1 + &
+       4.and..not.lgamma) call errore ('d3_readin', ' Wrong iswitch ', 1 + &
        abs (iswitch) )
   do it = 1, ntyp
-     if (amass (it) .le.0.d0) call error ('d3_readin', 'Wrong masses', &
+     if (amass (it) .le.0.d0) call errore ('d3_readin', 'Wrong masses', &
           it)
 
   enddo
-  if (mod (nks, 2) .ne.0.and..not.lgamma) call error ('d3_readin', &
+  if (mod (nks, 2) .ne.0.and..not.lgamma) call errore ('d3_readin', &
        'k-points are odd', nks)
   !
   ! q0mode, and q0mode_todo are not allocated dynamically. Their
   ! dimension is fixed to 300
   !
 
-  if (3 * nat.gt.300) call error ('d3_readin', 'wrong dimension of q &
+  if (3 * nat.gt.300) call errore ('d3_readin', 'wrong dimension of q &
        &0mode variable', 1)
   do ii = 1, 3 * nat
-     if (q0mode_todo (ii) .gt.3 * nat) call error ('d3_readin', ' wrong &
+     if (q0mode_todo (ii) .gt.3 * nat) call errore ('d3_readin', ' wrong &
           & q0mode_todo ', 1)
 
   enddo

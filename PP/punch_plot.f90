@@ -37,7 +37,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #include "machine.h"
 
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -49,7 +49,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
   real(kind=DP) :: emin, emax, wf
 
   integer :: is, ik, ibnd, ir, ninter
-#ifdef PARA
+#ifdef __PARA
   ! auxiliary vector (parallel case)
   real(kind=DP), allocatable :: raux1 (:)
 
@@ -60,7 +60,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
 
   if (filplot.eq.' ') return
-#ifdef PARA
+#ifdef __PARA
   allocate (raux1( nrx1 * nrx2 * nrx3))    
 #endif
 
@@ -122,7 +122,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      call local_dos (2, lsign, kpoint, kband, emin, emax, raux)
   elseif (plot_num.eq.5) then
-#ifdef PARA
+#ifdef __PARA
      call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
 #else
      call stm (wf, sample_bias, z, dz, stm_wfc_matching, raux)
@@ -166,10 +166,10 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
      call subtract_vxc (raux, spin_component)
      call DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
   else
-     call error ('punch_plot', 'plot_num not implemented', - 1)
+     call errore ('punch_plot', 'plot_num not implemented', - 1)
 
   endif
-#ifdef PARA
+#ifdef __PARA
   if (.not. (plot_num.eq.5.or.plot_num.eq.9) ) call gather (raux, &
        raux1)
   if (me.eq.1.and.mypool.eq.1) call plot_io (filplot, title, nrx1, &
@@ -183,7 +183,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
        atm, ityp, zv, tau, raux, + 1)
 #endif
   if (plot_num.eq.9) then
-#ifdef PARA
+#ifdef __PARA
      if (me.eq.1.and.mypool.eq.1) then
 #endif
         write (4, '(3i8)') ninter, nkstot, nbnd
@@ -198,7 +198,7 @@ subroutine punch_plot (filplot, plot_num, sample_bias, z, dz, &
               enddo
            enddo
         enddo
-#ifdef PARA
+#ifdef __PARA
      endif
 #endif
      deallocate (plan)

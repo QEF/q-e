@@ -23,6 +23,6 @@ subroutine plot_whole_cell (alat, at, nat, tau, atm, ityp, &
      ! not yet implemented
      ! add code here ...
   else
-     call error('plot_whole_cell', 'wrong output_format', 1)
+     call errore('plot_whole_cell', 'wrong output_format', 1)
   endif
 end subroutine plot_whole_cell

@@ -30,7 +30,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !
   integer :: iunplot, ios, ipol, na, nt, ir, ndum
 
-  if (filplot.eq.' ') call error ('plot_io', 'filename missing', 1)
+  if (filplot.eq.' ') call errore ('plot_io', 'filename missing', 1)
   !
   iunplot = 4
   if (iflag.gt.0) then
@@ -47,7 +47,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
           status = 'old', err = 100, iostat = ios)
   endif
 
-100 call error ('plot_io', 'opening file '//filplot, abs (ios) )
+100 call errore ('plot_io', 'opening file '//filplot, abs (ios) )
 
   rewind (iunplot)
   if (iflag.gt.0) then

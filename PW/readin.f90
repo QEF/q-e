@@ -58,7 +58,7 @@ subroutine readpp (pseudo_dir, pseudop)
            open (unit = iunps, file = file_pseudo, status = 'old', &
                 form = 'formatted', iostat = ios)
 
-           call error ('readin', 'file '//file_pseudo (1:len_trim ( &
+           call errore ('readin', 'file '//file_pseudo (1:len_trim ( &
                 file_pseudo) ) //' not found', ios)
            !
            !    newpseudo distinguishes beteween US pseudopotentials
@@ -81,7 +81,7 @@ subroutine readpp (pseudo_dir, pseudop)
            newpseudo (nt) = .false.
            open (unit = iunps, file = file_pseudo, status = 'old', &
                 err = 350, iostat = ios)
-350        call error ('readin', &
+350        call errore ('readin', &
           'file '//file_pseudo (1:len_trim(file_pseudo) ) //' not found', ios)
            ! numeric is read inside read_ncpp
            call read_ncpp (nt, iunps)

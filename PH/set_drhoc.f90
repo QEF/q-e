@@ -37,7 +37,7 @@ subroutine set_drhoc (q)
   some_numeric = .false.
   do nt = 1, ntyp
      some_numeric = some_numeric.or. (nlcc (nt) .and.numeric (nt) )
-     if (nlcc (nt) .and.numeric (nt) .and.msh (nt) .gt.ndm) call error &
+     if (nlcc (nt) .and.numeric (nt) .and.msh (nt) .gt.ndm) call errore &
           ('set_drhoc', 'too many mesh points', msh (nt) )
   enddo
 

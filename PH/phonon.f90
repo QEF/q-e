@@ -34,7 +34,7 @@ program phonon
   call init_clocks (.true.)
   call start_clock ('PHONON')
   version = 'PHONON 1.2.0'
-#ifdef PARA
+#ifdef __PARA
   call startup (nd_nmbr, version)
 #else
   nd_nmbr = '   '

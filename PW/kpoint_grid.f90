@@ -103,7 +103,7 @@ subroutine kpoint_grid &
   do nk=1,nkr
      if (equiv(nk).eq.nk) then
         nks=nks+1
-        if (nks.gt.npk) call error('kpoint_grid','too many k-points',1)
+        if (nks.gt.npk) call errore('kpoint_grid','too many k-points',1)
         wk(nks) = wk(nk)
         fact    = fact+wk(nks)
         !  bring back into to the first BZ
@@ -203,7 +203,7 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
         end do
      end do
      !  equivalent irreducible k-point found - something wrong
-     call error('tetrahedra','cannot locate  k point',nk)
+     call errore('tetrahedra','cannot locate  k point',nk)
 15   continue
   end do
 
@@ -213,7 +213,7 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
      end do
      !  this failure of the algorithm may indicate that the displaced grid
      !  (with k1,k2,k3.ne.0) does not have the full symmetry of the lattice
-     call error('tetrahedra','cannot remap grid on k-point list',n)
+     call errore('tetrahedra','cannot remap grid on k-point list',n)
 20   continue
   end do
 
@@ -278,7 +278,7 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   do n=1,ntetra
      do i=1,4
         if ( tetra(i,n).lt.1 .or. tetra(i,n).gt.nks ) &
-             call error ('tetrahedra','something wrong',n)
+             call errore ('tetrahedra','something wrong',n)
      end do
   end do
 

@@ -17,7 +17,7 @@ subroutine orthoatwfc
 #include "machine.h"
   use pwcom
   use becmod
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -77,7 +77,7 @@ subroutine orthoatwfc
         !
         call ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
-#ifdef PARA
+#ifdef __PARA
         call reduce (2 * natomwfc * natomwfc, overlap)
 #endif
         !

@@ -57,7 +57,7 @@ call print_clock ('dv_of_drho')
 call print_clock ('mix_pot')
 call print_clock ('ef_shift')
 call print_clock ('localdos')
-#ifdef PARA
+#ifdef __PARA
 call print_clock ('psymdvscf')
 #else
 call print_clock ('symdvscf')
@@ -105,7 +105,7 @@ call print_clock ('cinterpolate')
 call print_clock ('davcio')
 call print_clock ('write_rec')
 write (6, * )
-#ifdef PARA
+#ifdef __PARA
 write (6,  * ) '     Parallel routines'
 call print_clock ('reduce')
 call print_clock ('poolreduce')

@@ -29,7 +29,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   !
   if (abs (q) < eps) then
      if (l == -1) then
-        call error ('sph_bes', 'j_{-1}(0) ?!?', 1)
+        call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
      elseif (l == 0) then
         jl(:) = 1.d0
      else
@@ -40,7 +40,7 @@ subroutine sph_bes (msh, r, q, l, jl)
         ir0 = 1
      else
         if (l == -1) then
-           call error ('sph_bes', 'j_{-1}(0) ?!?', 2)
+           call errore ('sph_bes', 'j_{-1}(0) ?!?', 2)
         elseif (l == 0) then
            jl (1) = 1.d0
         else
@@ -98,7 +98,7 @@ subroutine sph_bes (msh, r, q, l, jl)
                 (210.d0*sin(q*r(ir)))/(q*r(ir)) ** 2)/(q*r(ir))
         end do
      else
-        call error ('sph_bes', 'not implemented', l)
+        call errore ('sph_bes', 'not implemented', l)
      endif
   endif
   !

@@ -59,7 +59,7 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   elseif (icorr.eq.4) then
      call pw_spin (rs, zeta, ec, vcup, vcdw)
   else
-     call error ('lsda_functional', 'not implemented', icorr)
+     call errore ('lsda_functional', 'not implemented', icorr)
   endif
   !
   return
@@ -162,7 +162,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
      v2xup = 2.d0 * v2xup
      v2xdw = 2.d0 * v2xdw
   else
-     call error ('gcx_spin', 'not implemented', igcx)
+     call errore ('gcx_spin', 'not implemented', igcx)
   endif
   !
   return
@@ -210,7 +210,7 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
         v2c = 0.0d0
      endif
   elseif (igcc.eq.3) then
-     call error ('lsda_functionals', 'not implemented', igcc)
+     call errore ('lsda_functionals', 'not implemented', igcc)
   elseif (igcc.eq.4) then
      if (abs (zeta) .lt.1.d0) then
         call pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)

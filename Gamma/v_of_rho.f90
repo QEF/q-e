@@ -90,7 +90,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   charge = 0.d0
   if (gg (1) .lt.1.0d-8) charge = omega * aux (1, nl (1) )
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, charge)
 #endif
   !
@@ -105,7 +105,7 @@ subroutine v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
      aux1 (2, ig) = fac * aux (2, nl (ig) )
   enddo
   ehart = ehart * omega
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, ehart)
 #endif
   aux(:,:) = 0.d0
@@ -242,7 +242,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            vtxc = vtxc + v (ir, 1) * rho (ir, 1) + v (ir, 2) * rho (ir, 2)
         endif
      enddo
-#ifdef PARA
+#ifdef __PARA
      call ireduce (3, neg)
 #endif
      if (neg(3).gt.0) write (6,'(/,4x," npt with |zeta| > 1: ",i8, &
@@ -265,7 +265,7 @@ subroutine v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   call gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, vtxc)
   call reduce (1, etxc)
 #endif

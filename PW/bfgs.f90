@@ -16,7 +16,7 @@ subroutine bfgs
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -44,7 +44,7 @@ subroutine bfgs
   real(kind=DP) :: DDOT
 
 
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: root, errcode
   !
@@ -58,7 +58,7 @@ subroutine bfgs
      iunit = 4
      nat1 = nat - fixatom
      if (nat1.lt.1.or.nat.eq.1) then
-        call error ('bfgs', 'not enough atoms to move', - 1)
+        call errore ('bfgs', 'not enough atoms to move', - 1)
         conv_ions = .true.
         goto 100
      endif
@@ -230,7 +230,7 @@ subroutine bfgs
      deallocate (hessm1,dtau,oldforce)
 
 100  continue
-#ifdef PARA
+#ifdef __PARA
   endif
   !
   ! broadcast calculated quantities to all nodes

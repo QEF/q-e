@@ -16,7 +16,7 @@ subroutine data_structure_para
   ! Columns are "active" for a given (i1,i2) if they contain a nonzero
   ! number of wavevectors
   !
-#ifdef PARA
+#ifdef __PARA
   use para
   use pwcom
   use mp, only: mp_sum
@@ -85,9 +85,9 @@ subroutine data_structure_para
   !
   ! set the number of plane per process
   !
-  if (nr3.lt.nproc) call error('set_fft_para',                      &
+  if (nr3.lt.nproc) call errore('set_fft_para',                      &
        &                'some processors have no planes ',-1)
-  if (nr3s.lt.nproc) call error('set_fft_para',                     &
+  if (nr3s.lt.nproc) call errore('set_fft_para',                     &
        &                'some processors have no smooth planes ',-1)
   !
   if (nproc.eq.1) then
@@ -136,7 +136,7 @@ subroutine data_structure_para
         ! nct counts columns containing G-vectors for the dense grid
         !
         nct=nct+1
-        if (nct.gt.ncplane) call error('set_fft_para','too many columns',1)
+        if (nct.gt.ncplane) call errore('set_fft_para','too many columns',1)
         ngc (nct) = 0
         ngcs(nct) = 0
         ngcw(nct) = 0
@@ -161,7 +161,7 @@ subroutine data_structure_para
               !
               ncts=ncts+1
               if (ncts.gt.ncplanes) &
-                   call error('set_fft_para','too many columns',2)
+                   call errore('set_fft_para','too many columns',2)
            end if
         else
            !
@@ -172,8 +172,8 @@ subroutine data_structure_para
      enddo
   end do
   !
-  if(nct .eq.0) call error('set_fft_para','number of column 0', 1)
-  if(ncts.eq.0) call error('set_fft_para','number smooth column 0', 1)
+  if(nct .eq.0) call errore('set_fft_para','number of column 0', 1)
+  if(ncts.eq.0) call errore('set_fft_para','number smooth column 0', 1)
   !
   !   Sort the columns. First the column with the largest number of G
   !   vectors on the wavefunction sphere (active columns),
@@ -338,7 +338,7 @@ subroutine data_structure_para
   !   computing the starting column for each processor
   !
   do i=1,nproc
-     if(ngpw(i).eq.0) call error('set_fft_para', &
+     if(ngpw(i).eq.0) call errore('set_fft_para', &
           &        'some processors have no pencils, not yet implemented',1)
      if (i.eq.1) then
         ncp0(i) = 0
@@ -380,7 +380,7 @@ subroutine data_structure_para
   !
   do j=1,nproc
      if (ncp_(j).ne.nkcp(j))                                        &
-          &        call error('set_fft_para','ncp_(j).ne.nkcp(j)',j)
+          &        call errore('set_fft_para','ncp_(j).ne.nkcp(j)',j)
   end do
   !
   !- ........then the remaining columns
@@ -403,11 +403,11 @@ subroutine data_structure_para
   nct_ = 0
   do j=1,nproc
      if (ncp_(j).ne.ncp(j))                                         &
-          &        call error('set_fft_para','ncp_(j).ne.ncp(j)',j)
+          &        call errore('set_fft_para','ncp_(j).ne.ncp(j)',j)
      nct_ = nct_ + ncp_(j)
   end do
   if (nct_.ne.nct)                                                  &
-       &     call error('set_fft_para','nct_.ne.nct',1)
+       &     call errore('set_fft_para','nct_.ne.nct',1)
   !
   !   now compute the arrays ipcs and icpls
   !   (as ipc and icpls, for the smooth grid)
@@ -434,7 +434,7 @@ subroutine data_structure_para
   !
   do j=1,nproc
      if (ncp_(j).ne.nkcp(j))                                        &
-          &        call error('set_fft_para','ncp_(j).ne.nkcp(j)',j)
+          &        call errore('set_fft_para','ncp_(j).ne.nkcp(j)',j)
   end do
   !
   !    and then all the others
@@ -457,11 +457,11 @@ subroutine data_structure_para
   nct_ = 0
   do j=1,nproc
      if (ncp_(j).ne.ncps(j))                                        &
-          &        call error('set_fft_para','ncp_(j).ne.ncps(j)',j)
+          &        call errore('set_fft_para','ncp_(j).ne.ncps(j)',j)
      nct_ = nct_ + ncp_(j)
   end do
   if (nct_.ne.ncts)                                                 &
-       &     call error('set_fft_para','nct_.ne.ncts',1)
+       &     call errore('set_fft_para','nct_.ne.ncts',1)
   !
   deallocate (aux)
   deallocate (index)

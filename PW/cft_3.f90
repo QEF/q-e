@@ -43,14 +43,14 @@ subroutine cft_3 (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, igrid, isign)
   !plan = reshape((/ 0, 0, 0, 0 /),(/2,2/))
   !
   !
-  if (nr1.ne.nr1x.or.nr2.ne.nr2x) call error ('cft_3', 'not implemented', 1)
-  if (igrid.le.0.or.igrid.gt.2) call error ('cft_3', 'which grid ?',1)
+  if (nr1.ne.nr1x.or.nr2.ne.nr2x) call errore ('cft_3', 'not implemented', 1)
+  if (igrid.le.0.or.igrid.gt.2) call errore ('cft_3', 'which grid ?',1)
   if (isign.eq.1) then
      ibid = 1
   elseif (isign.eq. - 1) then
      ibid = 2
   else
-     call error ('cft_3', 'isign unexpected', isign)
+     call errore ('cft_3', 'isign unexpected', isign)
 
   endif
 
@@ -77,7 +77,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
   real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
   external DSCAL
   !
-  if (n1.ne.nm1.or.n2.ne.nm2) call error ('cft_3', 'no longer implemented', 1)
+  if (n1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
   !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,1)
   !
   call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n1, n1, 2 * iopt)
@@ -123,7 +123,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
 
   !save first, aux
   !first = (/(.true.,i=1,ngrid)/)
-  if (n1 + n2 + n3 + 45.gt.nmax) call error ('cft_3', 'nmax too small',&
+  if (n1 + n2 + n3 + 45.gt.nmax) call errore ('cft_3', 'nmax too small',&
        n1 + n2 + n3 + 45)
   if (first (igrid) ) then
      call zfft3di (n1, n2, n3, aux (1, igrid) )
@@ -159,7 +159,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   integer :: ier
   call z3dfft (f, n1, n2, n3, nm1, nm2, sign, ier)
 
-  if (ier.ne.0) call error ('cft_3', ' fft error ', abs (ier) )
+  if (ier.ne.0) call errore ('cft_3', ' fft error ', abs (ier) )
   return
 
 end subroutine cft_3
@@ -191,10 +191,10 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   !
   !first = (/(.true.,i=1,ngrid)/)
 
-  if (igrid.le.0.or.igrid.gt.ngrid) call error ('cft_3', 'which grid?', 1)
-  if (sign.ne. - 1.and.sign.ne.1) call error ('cft_3', 'which fft ?', 2)
+  if (igrid.le.0.or.igrid.gt.ngrid) call errore ('cft_3', 'which grid?', 1)
+  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?', 2)
 
-  if (n1.gt.nmax.or.n2.gt.nmax.or.n3.gt.nmax) call error ('cft_3', &
+  if (n1.gt.nmax.or.n2.gt.nmax.or.n3.gt.nmax) call errore ('cft_3', &
        'increase nmax', 3)
   !
   if (first (igrid) ) then
@@ -203,10 +203,10 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
      else
         np1 = n1
      endif
-     if (np1.gt.nm1) call error ('cft3', 'too large input dimension', np1)
-     if (n2.gt.nm2) call error ('cft3', 'too large input dimension', &
+     if (np1.gt.nm1) call errore ('cft3', 'too large input dimension', np1)
+     if (n2.gt.nm2) call errore ('cft3', 'too large input dimension', &
           n2)
-     if (n3.gt.nm3) call error ('cft3', 'too large input dimension', &
+     if (n3.gt.nm3) call errore ('cft3', 'too large input dimension', &
           n3)
      !
      call cftfax (n1, ifax (1, 1, igrid), trig (1, 1, igrid) )
@@ -216,7 +216,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign)
   endif
   !
 
-  if (np1.ne.nm1.or.n2.ne.nm2) call error ('cft_3', 'no longer implemented', 1)
+  if (np1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
   !     & call mcpack(ac,nm1,nm2,nm3,ac,np1,n2,n3,1)
   if (n1.ne.np1) then
      do k = 1, n3
@@ -277,7 +277,7 @@ subroutine cft_3 (ac, n1, n2, n3, nm1, nm2, nm3, igrid, iopt)
   real(kind=DP) :: ac (2, nm1 * nm2 * nm3), fac
   external DSCAL
   !
-  if (n1.ne.nm1.or.n2.ne.nm2) call error ('cft_3', 'no longer implemented', 1)
+  if (n1.ne.nm1.or.n2.ne.nm2) call errore ('cft_3', 'no longer implemented', 1)
   !     &    call mcpack(ac,nm1,nm2,nm3,ac,n1,n2,n3,1)
   !
   call cft (ac (1, 1), ac (2, 1), n1 * n2 * n3, n1, n1, 2 * iopt)
@@ -355,11 +355,11 @@ subroutine cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
      fact = 1.d0 / float (nr1 * nr2 * nr3)
      call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
   elseif (sign.ne.1) then
-     call error ('cft_3', 'wrong isign', 1)
+     call errore ('cft_3', 'wrong isign', 1)
   endif
-  if (igrid.le.0.or.igrid.gt.ngrid) call error ('cft_3', 'which grid?', 1)
+  if (igrid.le.0.or.igrid.gt.ngrid) call errore ('cft_3', 'which grid?', 1)
 
-  if (nr1.gt.nmax.or.nr2.gt.nmax.or.nr3.gt.nmax) call error ( &
+  if (nr1.gt.nmax.or.nr2.gt.nmax.or.nr3.gt.nmax) call errore ( &
        'cft_3', 'increase nmax', 3)
   !
   !   At the first iteration initialize
@@ -482,10 +482,10 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
      fact(igrid)=1.0_8/dble(nr1*nr2*nr3)
      call DSCAL(2*nrx1*nrx2*nrx3,fact(igrid),f,1)
   else if ( sign.ne.1) then
-     call error('cft_3', 'wrong isign',1)
+     call errore('cft_3', 'wrong isign',1)
   endif
   if (igrid.le.0.or.igrid.gt.ngrid)&
-       &  call error('cft_3','which grid ?',1)
+       &  call errore('cft_3','which grid ?',1)
 
   !     copy f in the auxiliary f1 with odd dimensions
   !      call ZCOPY(nrx1*nrx2*nrx3,f,1,f1(1:nrx1,1:nrx2,1:nrx3),1)
@@ -493,7 +493,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 
 #ifdef ASL
   call zfc3cl(f1,nr1,nr2,nr3,nrz1(igrid),nrz2(igrid),nrz3(igrid),ierr)
-  call error('cft_3', 'initialisation problem',ierr)
+  call errore('cft_3', 'initialisation problem',ierr)
   iw=>iw0(:,igrid)
 #endif
   cw1=>auxp(:,igrid)
@@ -518,7 +518,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
      call zfc3fb(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
           &            isw,iw,cw1,cw2,ierr)
 #endif
-     if (ierr.ne.0) call error('cft_3','ierr=',ierr)
+     if (ierr.ne.0) call errore('cft_3','ierr=',ierr)
 #else
      call ZZFFT3D(0,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
           &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
@@ -534,7 +534,7 @@ subroutine cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   call zfc3bf(nr1,nr2,nr3,f1,nrz1(igrid),nrz2(igrid),nrz3(igrid),&
        &            isw,iw,cw1,cw2,ierr)     
 #endif
-  if (ierr.ne.0) call error('cft_3','ierr=',ierr)
+  if (ierr.ne.0) call errore('cft_3','ierr=',ierr)
 #else
   call ZZFFT3D(isw,nr1,nr2,nr3,1.d0,f1,nrz1(igrid),nrz2(igrid),&
        &             f1,nrz1(igrid),nrz2(igrid),cw1,cw2,ierr)
@@ -575,7 +575,7 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   parameter (naux = 60000)
 
   real(kind=DP) :: aux (naux), scale
-  if (sign.ne. - 1.and.sign.ne.1) call error ('cft_3', 'which fft ?' &
+  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?' &
        &, 1)
   !
   !  ESSL sign convention for fft's is the opposite of the "usual" one
@@ -625,7 +625,7 @@ subroutine cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
 
   lwork = 4 * ( nx1 + nx2 + nx3 ) + 45
 
-  if (sign.ne. - 1.and.sign.ne.1) call error ('cft_3', 'which fft ?', 1)
+  if (sign.ne. - 1.and.sign.ne.1) call errore ('cft_3', 'which fft ?', 1)
 
   call zfft3i ( nx1, nx2, nx3, work )
 
@@ -697,7 +697,7 @@ subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
      call dscal (2 * nm1 * nm2 * nm3, 1.0d0 / norm, f, 1)
      direction = 'f'
   else
-     call error ('cft_3', 'sign unexpected',1)
+     call errore ('cft_3', 'sign unexpected',1)
   endif
 
   if (first (igrid) ) then
@@ -744,13 +744,13 @@ end subroutine cft_3
 !
   iopt=sign(1,isign)
   if(nm1/=n1)  &
-    call error('cft_3','not any more implemented',nm1)
+    call errore('cft_3','not any more implemented',nm1)
   if (igrid.le.0.or.igrid.gt.ngrid)  &
-    call error('cft_3','which grid ?',1)
+    call errore('cft_3','which grid ?',1)
   if (isign.ne.-1 .and. isign.ne.1)  &
-    call error('cft_3','which fft ?', 2)
+    call errore('cft_3','which fft ?', 2)
   if (n1.gt.nmax .or. n2.gt.nmax .or. n3.gt.nmax)  &
-    call error('cft_3','increase nmax',3)
+    call errore('cft_3','increase nmax',3)
 !
   init(2:2)=scale(iopt)
   if(first(igrid)) then
@@ -761,11 +761,11 @@ end subroutine cft_3
     norm(igrid)=sqrt(dfloat(nm1*nm2*nm3))
     trigdim(igrid)= &
       2*(idim(1,igrid)+idim(2,igrid)+idim(3,igrid))+120
-    if(n1.gt.nm1) call error  &
+    if(n1.gt.nm1) call errore  &
       ('cft3','too large input dimension',n1)
-    if( n2.gt.nm2) call error &
+    if( n2.gt.nm2) call errore &
       ('cft3','too large input dimension',n2)
-    if( n3.gt.nm3) call error &
+    if( n3.gt.nm3) call errore &
       ('cft3','too large input dimension',n3)
 !
 !   The FFTVP library stores idim in a common (a single one)
@@ -780,7 +780,7 @@ end subroutine cft_3
   end if
   call dftcbm(ac(1,:,:,:),ac(2,:,:,:),3,idim(:,igrid),workarray, &
     trig(:trigdim(igrid),igrid),mode(iopt),init,ierr)
-  call error('cft_3','problems in fft',ierr)
+  call errore('cft_3','problems in fft',ierr)
   if (iopt>0) then
     call DSCAL(2*nm1*nm2*nm3,norm(igrid),ac,1)
   else if(iopt<0) then
@@ -794,7 +794,7 @@ end subroutine cft_3
 #ifndef PRESENT
 subroutine cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   use parameters, only : DP
-  call error ('cft_3', 'machine-specific routine not available', 1)
+  call errore ('cft_3', 'machine-specific routine not available', 1)
   return
 
 end subroutine cft_3

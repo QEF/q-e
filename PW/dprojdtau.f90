@@ -17,7 +17,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
 #include "machine.h"
    use pwcom
    use becmod
-#ifdef PARA
+#ifdef __PARA
    use para
 #endif
    implicit none
@@ -77,7 +77,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
                   dproj(offset+1,1), natomwfc)
    end if
 
-#ifdef PARA
+#ifdef __PARA
    call reduce(2*natomwfc*nbnd,dproj)
 #endif
 
@@ -103,7 +103,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
                   end do
                end if
             end do
-#ifdef PARA
+#ifdef __PARA
             call reduce(2*nhm*nbnd,dbetapsi)
             call reduce(2*natomwfc*nhm,wfatbeta)
             call reduce(2*natomwfc*nhm,wfatdbeta)

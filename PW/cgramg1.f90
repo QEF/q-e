@@ -63,7 +63,7 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
      do vecp = 1, vec
         ps (vecp) = ZDOTC (n, psi (1, vecp), 1, spsi (1, vec), 1)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * vec, ps)
 #endif
      do vecp = 1, vec - 1
@@ -74,12 +74,12 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
      norm = ps (vec) - DDOT (2 * (vec - 1), ps, 1, ps, 1)
      !        print*,norm,vec
      !        norm = DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
-#ifdef PARA
+#ifdef __PARA
      !        call reduce (1,norm)
 #endif
      if (norm.lt.0.d0) then
         print * , 'norma = ', norm, vec
-        call error ('cgramg1', ' negative norm in S ', 1)
+        call errore ('cgramg1', ' negative norm in S ', 1)
      endif
      norm = 1.d0 / sqrt (norm)
      call DSCAL (2 * n, norm, psi (1, vec), 1)
@@ -88,7 +88,7 @@ subroutine cgramg1 (lda, nvecx, n, start, finish, psi, spsi, hpsi)
      if (1.d0 / norm.lt.eps) then
         ierr = ierr + 1
         if (ierr.le.ierrx) goto 1
-        call error ('cgramg1', ' absurd correction vector', vec)
+        call errore ('cgramg1', ' absurd correction vector', vec)
      endif
 
   enddo

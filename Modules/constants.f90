@@ -73,7 +73,7 @@
         SUBROUTINE constants_setup(CELLDM)
            REAL(dbl), INTENT(IN) :: celldm
            If(celldm.le.0.0d0) THEN
-             CALL error(' constants_setup ', ' zero or negative CELLDM ',0)
+             CALL errore(' constants_setup ', ' zero or negative CELLDM ',0)
            END IF
            alat   = celldm
            tpiba  = tpi / celldm       ! scaling constant: 2*pi/alat

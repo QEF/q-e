@@ -84,7 +84,7 @@ subroutine d3vrho
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * 27 * nat * nat * nat, d3dynwrk)
 #endif
   !
@@ -100,8 +100,8 @@ subroutine d3vrho
         read (iunigk, err = 200, iostat = ios) npwq, igkq
         ikk = 2 * ik - 1
      endif
-100  call error ('d3vrho', 'reading igk', abs (ios) )
-200  call error ('d3vrho', 'reading igkq', abs (ios) )
+100  call errore ('d3vrho', 'reading igk', abs (ios) )
+200  call errore ('d3vrho', 'reading igkq', abs (ios) )
      call davcio (evc, lrwfc, iuwfc, ikk, - 1)
      call init_us_2 (npw, igk, xk (1, ikk), vkb0)
 
@@ -140,7 +140,7 @@ subroutine d3vrho
                              alpha (6) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 2),1)
                              alpha (7) = ZDOTC (npw,work1(1, 3),1,vkb0(1,jkb),1)
                              alpha (8) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 3),1)
-#ifdef PARA
+#ifdef __PARA
                              call reduce (16, alpha)
 #endif
                              d3dynwrk (na_k, na_i, na_j) = d3dynwrk (na_k, na_i, na_j) - &
@@ -156,7 +156,7 @@ subroutine d3vrho
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dynwrk)
 #endif
   !
@@ -182,7 +182,7 @@ subroutine d3vrho
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dynwrk2)
 #endif
   call DAXPY (2 * 27 * nat * nat * nat, 1.d0, d3dynwrk2, 1, d3dyn, 1)

@@ -26,7 +26,7 @@ subroutine punch_plot_e
   use parameters, only : DP
   use phcom
 
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -51,7 +51,7 @@ subroutine punch_plot_e
   ! auxiliary space to rotate the
   ! induced charge
 
-#ifdef PARA
+#ifdef __PARA
   ! auxiliary vector
   real(kind=DP), allocatable :: raux1 (:)
 #endif
@@ -92,13 +92,13 @@ subroutine punch_plot_e
   do ipol = 1, 3
      write (caux, '(i1)') ipol
      filin = trim(fildrho) //caux
-#ifdef PARA
+#ifdef __PARA
      if (me.eq.1.and.mypool.eq.1) then
 #endif
         open (unit = iunplot, file = filin, status = 'unknown', err = &
              100, iostat = ios)
 
-100     call error ('plotout', 'opening file'//filin, abs (ios) )
+100     call errore ('plotout', 'opening file'//filin, abs (ios) )
         rewind (iunplot)
         !
         !       Here we write some information quantity which are always necessa
@@ -113,7 +113,7 @@ subroutine punch_plot_e
         write (iunplot, 200) (na, atm (ityp (na) ), zv (ityp (na) ), &
              (tau (jpol, na), jpol = 1, 3), na = 1, nat)
 200     format      (3x,i2,3x,a6,3x,f5.2,3x,3f14.10)
-#ifdef PARA
+#ifdef __PARA
      endif
 #endif
      !
@@ -121,7 +121,7 @@ subroutine punch_plot_e
      !
 
      call DCOPY (nrxx, aux1 (1, ipol), 2, raux, 1)
-#ifdef PARA
+#ifdef __PARA
      allocate (raux1( nrx1 * nrx2 * nrx3))    
      call gather (raux, raux1)
      if (me.eq.1.and.mypool.eq.1) write (iunplot, '(5(1pe16.9))') &

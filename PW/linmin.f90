@@ -59,7 +59,7 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
 
   real(kind=DP) :: b, c, c2, d, dbc2, dx, x, enew
   write (6, 100) eold, etot, deold, detot
-  if (deold.gt.0) call error ('linmin', 'search direction is up-hill &
+  if (deold.gt.0) call errore ('linmin', 'search direction is up-hill &
        &', 1)
 
 100 format (5x,'searching for next position (pslinmin)...', &
@@ -107,7 +107,7 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
      !
      ! (detot > 0) case: a nice minimum should exist with 0 < x < 1
      !
-     if (x.lt.0.d0.or.x.gt.1.d0) call error ('linmin', 'unexpected error', 1)
+     if (x.lt.0.d0.or.x.gt.1.d0) call errore ('linmin', 'unexpected error', 1)
   else
      !
      ! (detot < 0) cases:
@@ -116,7 +116,7 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
         !
         !   ...     (d > 0) case: a nice minimum should exist with x>1
         !
-        if (x.lt.1.d0) call error ('linmin', 'unexpected error', 2)
+        if (x.lt.1.d0) call errore ('linmin', 'unexpected error', 2)
      else
         !
         !   ...     (d < 0) cases:
@@ -139,7 +139,7 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
            !                             if (x< 1): something strange is happening:
            !                                        let's go there and check
            !
-           if (x.lt.0) call error ('linmin', 'unexpected error', 3)
+           if (x.lt.0) call errore ('linmin', 'unexpected error', 3)
            if (x.lt.1) then
               minimum_ok = .false.
               write (6, '(5x,"linmin: new pos. on the wrong side")')

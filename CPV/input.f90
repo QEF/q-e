@@ -319,7 +319,7 @@
 
      ios = 0
      READ (unit, control, iostat = ios ) 
-     if (ios /= 0) call error ('reading','namelist &control',1)
+     if (ios /= 0) call errore ('reading','namelist &control',1)
      !
      ! reset default values for *_dynamics according to definition 
      ! of calculation in &control
@@ -345,22 +345,22 @@
          electron_dynamics = 'damp'
          trhor =.true.
       CASE DEFAULT
-         CALL error(' iosys ',' calculation not implemented', 1 )
+         CALL errore(' iosys ',' calculation not implemented', 1 )
       END SELECT
      !
      READ (unit, system, iostat = ios ) 
-     if (ios /= 0) call error ('reading','namelist &system',2)
+     if (ios /= 0) call errore ('reading','namelist &system',2)
      READ (unit, electrons, iostat = ios ) 
-     if (ios /= 0) call error ('reading','namelist &electrons',3)
+     if (ios /= 0) call errore ('reading','namelist &electrons',3)
      if ( TRIM(calculation) == 'relax' .or. TRIM(calculation) == 'vc-relax' &
      .or. TRIM(calculation) == 'cp'    .or. TRIM(calculation) == 'vc-cp' ) then
         READ (unit, ions, iostat = ios ) 
-        if (ios /= 0) call error ('reading','namelist &ions',4)
+        if (ios /= 0) call errore ('reading','namelist &ions',4)
      end if
      if ( TRIM(calculation) == 'vc-cp' .or. &
           TRIM(calculation) == 'vc-relax'  ) then
         READ (unit, cell, iostat = ios ) 
-        if (ios /= 0) call error ('reading','namelist &cell',5)
+        if (ios /= 0) call errore ('reading','namelist &cell',5)
      end if
 
      end if
@@ -520,17 +520,17 @@
       ! ...   Set the number of species
 
       IF( ntyp < 1 .OR. ntyp > nsx ) THEN
-         CALL error(' iosys ',' ntyp out of range ', ntyp )
+         CALL errore(' iosys ',' ntyp out of range ', ntyp )
       END IF
       nsp = ntyp
 
       ! ...   IBRAV and CELLDM
 
       IF( ibrav /= 0 .and. celldm(1) == 0.d0 ) THEN
-         CALL error(' iosys ',' invalid value in celldm ', 1 )
+         CALL errore(' iosys ',' invalid value in celldm ', 1 )
       END IF
       IF( ibrav < 0 .OR. ibrav > 14 ) THEN
-         CALL error(' iosys ',' ibrav out of range ', 1 )
+         CALL errore(' iosys ',' ibrav out of range ', 1 )
       END IF
 
       ! ...   Set Values for electron and bands          
@@ -541,17 +541,17 @@
       CASE ('from_input')
          continue
       CASE DEFAULT
-         CALL error(' iosys ',' occupation method not implemented', 1 )
+         CALL errore(' iosys ',' occupation method not implemented', 1 )
       END SELECT
       !
       IF( nbnd < 1 ) THEN
-         CALL error(' iosys ',' nbnd less than 1 ', nbnd )
+         CALL errore(' iosys ',' nbnd less than 1 ', nbnd )
       END IF
       IF( nelec < 1 ) THEN
-         CALL error(' iosys ',' nelec less than 1 ', nelec )
+         CALL errore(' iosys ',' nelec less than 1 ', nelec )
       END IF
       IF( nspin < 1 .OR. nspin > 2 ) THEN
-         CALL error(' iosys ',' nspin out of range ', nspin )
+         CALL errore(' iosys ',' nspin out of range ', nspin )
       END IF
       n   = nbnd*nspin
       iupdwn(1)=1
@@ -561,9 +561,9 @@
          nupdwn(1)=n
       else
          if ( occupations == 'fixed' .and. nelup == 0 .and. neldw == 0 ) &
-              CALL error(' iosys ',' need # of spin up and down ', 1 )
+              CALL errore(' iosys ',' need # of spin up and down ', 1 )
          if ( occupations == 'fixed' .and. nelup+neldw .ne. nelec ) &
-              CALL error(' iosys ',' wrong # of spin up and down ', 1 )
+              CALL errore(' iosys ',' wrong # of spin up and down ', 1 )
          nel(1) = nelup
          nel(2) = neldw
          nupdwn(1)=nbnd
@@ -575,7 +575,7 @@
 
       ecutw = ecutwfc
       IF( ecutwfc <= 0.d0 ) THEN
-         CALL error(' iosys ',' invalid ecutwfc ', INT(ecutwfc) )
+         CALL errore(' iosys ',' invalid ecutwfc ', INT(ecutwfc) )
       END IF
 
       if (ecutrho <= 0.d0) ecutrho = 4.d0*ecutwfc
@@ -600,7 +600,7 @@
             nbeg = 1
             nomore = nstep
          CASE DEFAULT
-            CALL error(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
+            CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
       END SELECT
 
       ! ...   TORTHO
@@ -611,7 +611,7 @@
       CASE ('ortho')
          tortho = .TRUE.
       CASE DEFAULT
-         CALL error(' iosys ',' unknown orthogonalization '//&
+         CALL errore(' iosys ',' unknown orthogonalization '//&
               trim(orthogonalization), 1 )
       END SELECT
 
@@ -621,7 +621,7 @@
       CASE ('zero')
          print '("Warning: electron_velocities keyword has no effect")'
       CASE DEFAULT
-         CALL error(' iosys ',' electron_velocities='// &
+         CALL errore(' iosys ',' electron_velocities='// &
               trim(electron_velocities)//' not implemented', 1 )
       END SELECT
 
@@ -641,7 +641,7 @@
          tsde = .FALSE.
          frice= 0.d0
       CASE DEFAULT
-         CALL error(' iosys ',' unknown electron_dynamics '//&
+         CALL errore(' iosys ',' unknown electron_dynamics '//&
               trim(electron_dynamics),1)
       END SELECT
 
@@ -655,7 +655,7 @@
       CASE ('zero')
          print '("Warning: ion_velocities = zero not yet implemented")'
       CASE DEFAULT
-         CALL error(' iosys ',' unknown ion_velocities '//trim(ion_velocities),1)
+         CALL errore(' iosys ',' unknown ion_velocities '//trim(ion_velocities),1)
       END SELECT
 
       ! ...   TFOR TSDP
@@ -678,7 +678,7 @@
          tfor = .FALSE.
          fricp= 0.d0
       CASE DEFAULT
-         CALL error(' iosys ',' unknown ion_dynamics '//trim(ion_dynamics), 1 )
+         CALL errore(' iosys ',' unknown ion_dynamics '//trim(ion_dynamics), 1 )
       END SELECT
 
       !
@@ -689,7 +689,7 @@
       CASE ('zero')
          print '("Warning: cell_velocities = zero not yet implemented")'
       CASE DEFAULT
-         CALL error(' iosys ',' unknown cell_velocities '//trim(cell_velocities),1)
+         CALL errore(' iosys ',' unknown cell_velocities '//trim(cell_velocities),1)
       END SELECT
       
       !
@@ -712,7 +712,7 @@
          thdyn= .FALSE.
          frich= 0.d0
       CASE DEFAULT
-         CALL error(' iosys ',' unknown cell_dynamics '//trim(cell_dynamics), 1 )
+         CALL errore(' iosys ',' unknown cell_dynamics '//trim(cell_dynamics), 1 )
       END SELECT
 
       !
@@ -726,7 +726,7 @@
       CASE ('not_controlled')
          tnosee = .FALSE.
       CASE DEFAULT
-         CALL error(' iosys ',' unknown electron_temperature '//&
+         CALL errore(' iosys ',' unknown electron_temperature '//&
               trim(electron_temperature), 1 )
       END SELECT
 
@@ -746,7 +746,7 @@
          tnosep = .FALSE.
          tcp = .true.
       CASE DEFAULT
-         CALL error(' iosys ',' unknown ion_temperature '//&
+         CALL errore(' iosys ',' unknown ion_temperature '//&
               trim(ion_temperature), 1 )
       END SELECT
 
@@ -759,7 +759,7 @@
       CASE ('not_controlled')
          tnoseh = .FALSE.
       CASE DEFAULT
-         CALL error(' iosys ',' unknown cell_temperature '//&
+         CALL errore(' iosys ',' unknown cell_temperature '//&
               trim(cell_temperature), 1 )
       END SELECT
 
@@ -769,7 +769,7 @@
       CASE ('xyz')
          thdiag =.true.
       CASE DEFAULT
-         CALL error(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
+         CALL errore(' iosys ',' unknown cell_dofree '//trim(cell_dofree), 1 )
       END SELECT
 
       ! ...  radii, masses
@@ -777,7 +777,7 @@
       DO is = 1, nsp
          rcmax(is) = ion_radius(is)
          IF( ion_radius(is) <= 0.d0 ) THEN
-            CALL error(' iosys ',' invalid  ion_radius ', is) 
+            CALL errore(' iosys ',' invalid  ion_radius ', is) 
          END IF
       END DO
 
@@ -860,7 +860,7 @@
             !
             tau0 = tau0/0.529177
          CASE DEFAULT
-            CALL error(' iosys ',' atomic_positions='//trim(atomic_positions)// &
+            CALL errore(' iosys ',' atomic_positions='//trim(atomic_positions)// &
                  ' not implemented ', 1 )
       END SELECT
 
@@ -925,16 +925,16 @@
 !
       if(tfor) then
          if((tcp.or.tcap.or.tnosep).and.tsdp) then
-            call error(' main',' t contr. for ions when tsdp=.t.',0)
+            call errore(' main',' t contr. for ions when tsdp=.t.',0)
          endif
          if(.not.tcp.and..not.tcap.and..not.tnosep) then
             write(6,550)
          else if(tcp.and.tcap) then
-            call error(' main',' tcp and tcap both true',0)
+            call errore(' main',' tcp and tcap both true',0)
          else if(tcp.and.tnosep) then
-            call error(' main',' tcp and tnosep both true',0)
+            call errore(' main',' tcp and tnosep both true',0)
          else if(tcap.and.tnosep) then
-            call error(' main',' tcap and tnosep both true',0)
+            call errore(' main',' tcap and tnosep both true',0)
          else if(tcp) then
             write(6,555) tempw,tolp
          else if(tcap) then
@@ -1071,7 +1071,7 @@
 
             read(input_line,*) atom_label(is), pmass(is), psfile(is), ipp(is)
             IF( pmass(is) <= 0.d0 ) THEN
-               CALL error(' iosys ',' invalid  mass ', is) 
+               CALL errore(' iosys ',' invalid  mass ', is) 
             END IF
          end do
          tatms =.true.
@@ -1094,7 +1094,7 @@
                      tau_inp(1,ia), tau_inp(2,ia), tau_inp(3,ia), &
                      iforce_inp(1,ia), iforce_inp(2,ia), iforce_inp(3,ia)
             else
-               call error (' cards','wrong number of tokens', ia)
+               call errore (' cards','wrong number of tokens', ia)
             end if
 
             match_label: DO is = 1, nsp
@@ -1105,7 +1105,7 @@
             END DO match_label
 
             if (ityp_inp(ia) <= 0 .OR. ityp_inp(ia) > nsp) &
-                 call error (' cards','wrong atomic positions', ia)
+                 call errore (' cards','wrong atomic positions', ia)
 
          end do
          tatmp =.true.
@@ -1115,7 +1115,7 @@
             do ia = 1, nat
                if (ityp_inp(ia) == is) then
                   na(is) = na(is) + 1
-                  if(na(is).gt.nax) call error(' cards',' na > nax',na(is))
+                  if(na(is).gt.nax) call errore(' cards',' na > nax',na(is))
                   do i = 1, 3
                      tau0(i, na(is), is ) = tau_inp(i, ia)
                      iforce(i, na(is), is ) = iforce_inp(i, ia)
@@ -1139,7 +1139,7 @@
          end if
          !
          if ( sum ( na ) .ne. nat) &
-              call error (' cards','unexpected error', 1)
+              call errore (' cards','unexpected error', 1)
          deallocate (iforce_inp)
          deallocate (tau_inp)
          deallocate (ityp_inp)
@@ -1177,14 +1177,14 @@
       go to 100
 
 200   if (ibrav == 0 .and. .not.tcell ) &
-         CALL error(' cards ',' ibrav=0: must read cell parameters', 1 )
+         CALL errore(' cards ',' ibrav=0: must read cell parameters', 1 )
       if (ibrav /= 0 .and. tcell ) &
-         CALL error(' cards ',' redundant data for cell parameters', 2 )
+         CALL errore(' cards ',' redundant data for cell parameters', 2 )
       if (.not.tatms ) &
-         CALL error(' cards ',' atomic species info missing', 1 )
+         CALL errore(' cards ',' atomic species info missing', 1 )
       if (.not.tatmp ) &
-         CALL error(' cards ',' atomic position info missing', 1 )
+         CALL errore(' cards ',' atomic position info missing', 1 )
 
       return
-300   CALL error(' cards ',' unexpected end of file', 1 )
+300   CALL errore(' cards ',' unexpected end of file', 1 )
     end subroutine read_cards

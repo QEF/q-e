@@ -14,14 +14,14 @@ subroutine poolbcast (ndata, data)
   ! from each node of the first pool to each node of all other pools
   !
   use parameters,  only : DP
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
   ! on INPUT
   integer :: ndata
   real (8) :: data (ndata)
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: root, ierr
   if (npool.eq.1) return
@@ -32,7 +32,7 @@ subroutine poolbcast (ndata, data)
   root = 0
   call mpi_barrier (MPI_COMM_ROW, ierr)
   call mpi_bcast (data, ndata, MPI_REAL8, root, MPI_COMM_ROW, ierr)
-  call error ('poolbcast', 'info<>0', ierr)
+  call errore ('poolbcast', 'info<>0', ierr)
 #endif
   return
 end subroutine poolbcast

@@ -31,11 +31,11 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 #include "machine.h"
   use parameters, only : DP
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
 !
@@ -224,7 +224,7 @@ subroutine set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !      nsymq=1
 !      minus_q=.false.
 
-#ifdef PARA
+#ifdef __PARA
 !
 ! parallel stuff: first node broadcasts everything to all nodes
 !

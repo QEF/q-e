@@ -70,7 +70,7 @@ subroutine efermit (et, nbndx, nbnd, nks, nelec, nspin, ntetra, &
   sumkup = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, eup)
   sumklw = sumkt (et, nbndx, nbnd, nks, nspin, ntetra, tetra, elw)
   if ( (sumkup - nelec) .lt. - eps.or. (sumklw - nelec) .gt.eps) &
-       call error ('efermit', 'unexpected error', 1)
+       call errore ('efermit', 'unexpected error', 1)
   better = 1.0e+10
   do iter = 1, maxiter
      ef = (eup + elw) / 2.0

@@ -34,14 +34,14 @@ subroutine read_config_from_file
      write (6, '(/5x,"Use input configuration")')
      return
   else if( ierr > 1 ) then
-     call error ('read_config_from_file', 'problems in reading file', 1)
+     call errore ('read_config_from_file', 'problems in reading file', 1)
   endif
   !
   !  check if atomic positions from restart file if present
   !
   if (nat_.ne.nat.or.ibrav_.ne.ibrav) then
      write(*,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
-     call error('read_config_from_file','wrong nat or ibrav',1)
+     call errore('read_config_from_file','wrong nat or ibrav',1)
   endif
   alat = alat_
   at   = at_
@@ -100,7 +100,7 @@ subroutine read_config_from_file_old
 
   if (nat_.ne.nat.or.ibrav_.ne.ibrav) then
      write(*,*) 'wrong nat ', nat, nat_, ' or ibrav ', ibrav, ibrav_
-     call error('read_config_from_file','wrong nat or ibrav',1)
+     call errore('read_config_from_file','wrong nat or ibrav',1)
   endif
 
   read (iunit, err = 10, end = 10) alat, at, tau
@@ -124,6 +124,6 @@ subroutine read_config_from_file_old
   close (unit = iunit, status = 'keep')
   return
 
-10 call error ('read_config_from_file', 'problems in reading file', 1)
+10 call errore ('read_config_from_file', 'problems in reading file', 1)
 
 end subroutine read_config_from_file_old

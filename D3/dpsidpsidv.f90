@@ -109,7 +109,7 @@ subroutine dpsidpsidv
                        endif
                     enddo
                  enddo
-#ifdef PARA
+#ifdef __PARA
                  call reduce (2, wrk)
 #endif
                  wrk = wrk + wrk0
@@ -171,7 +171,7 @@ subroutine dpsidpsidv
                           endif
                        enddo
                     enddo
-#ifdef PARA
+#ifdef __PARA
                     call reduce (2, wrk)
 #endif
                     wrk = wrk + wrk0
@@ -188,7 +188,7 @@ subroutine dpsidpsidv
 
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
   if (.not.allmodes) then
      call poolreduce (2 * 27 * nat * nat * nat, d3dyn2)

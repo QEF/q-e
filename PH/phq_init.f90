@@ -132,7 +132,7 @@ subroutine phq_init
            write (6, * ) (xq (ipol), ipol = 1, 3)
            write (6, * ) (xk (ipol, ikq), ipol = 1, 3)
            write (6, * ) (xk (ipol, ikk), ipol = 1, 3)
-           call error ('phq_init', 'wrong order of k points', 1)
+           call errore ('phq_init', 'wrong order of k points', 1)
         endif
      endif
      !

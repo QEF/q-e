@@ -37,7 +37,7 @@ subroutine ccalbec (nkb, npwx, npw, nbnd, bec, vkb, psi)
   beta = (0.d0, 0.d0)
   call ZGEMM ('C', 'N', nkb, nbnd, npw, alpha, vkb, npwx, psi, &
        npwx, beta, bec, nkb)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nkb * nbnd, bec)
 #endif
   call stop_clock ('ccalbec')

@@ -91,7 +91,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
         call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
 
         if (sym (irot) .and. (abs (ft (1) **2 + ft (2) **2 + ft (3) ** &
-             2) ) .lt.1.d-8) call error ('sgam_at', 'overlapping atoms', na)
+             2) ) .lt.1.d-8) call errore ('sgam_at', 'overlapping atoms', na)
         if (sym (irot) ) then
            fractional_translations = .false.
            write (6, '(5x,"Found additional translation:",3f10.4)') ft

@@ -18,7 +18,7 @@ subroutine dynmat_us
   use pwcom
   use parameters, only : DP
   use phcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
 
@@ -74,7 +74,7 @@ subroutine dynmat_us
   !
   !   We first compute the part of the dynamical matrix due to the local
   !   potential
-#ifdef PARA
+#ifdef __PARA
   !   ... only the first pool does the calculation (no sum over k needed)
   if (mypool.ne.1) goto 100
 #endif
@@ -108,7 +108,7 @@ subroutine dynmat_us
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (18 * nat * nat, dynwrk)
   !
   ! each pool contributes to next term
@@ -200,7 +200,7 @@ subroutine dynmat_us
   !   when the atom moves. We compute these terms in an additional routine
   !
   call addusdynmat (dynwrk)
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (18 * nat * nat, dynwrk)
 #endif
   !      do na = 1,nat

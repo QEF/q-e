@@ -23,7 +23,7 @@ subroutine potinit
 #include "machine.h"
   use pwcom
   use io, only: prefix
-#ifdef PARA
+#ifdef __PARA
   use para
   use mp
 #endif
@@ -36,7 +36,7 @@ subroutine potinit
   ! integer variable for I/O control
   logical :: exst
   !
-#ifdef PARA
+#ifdef __PARA
   if (me.eq.1.and.mypool.eq.1) then
 #endif
      if (imix.ge.0) then
@@ -49,7 +49,7 @@ subroutine potinit
      else
         close (unit =4, status = 'delete')
      end if
-#ifdef PARA
+#ifdef __PARA
   endif
   call mp_bcast( exst, ionode_id )
 #endif
@@ -86,13 +86,13 @@ subroutine potinit
      !
      if (lda_plus_u) then  
         ldim = 2 * Hubbard_lmax + 1
-#ifdef PARA
+#ifdef __PARA
         if (me.eq.1.and.mypool.eq.1) then
 #endif
            call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
            read (iunocc, * ) ns
            close (unit = iunocc, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
         else  
            call setv (nat * nspin * ldim * ldim, 0.d0, ns, 1)  
         endif
@@ -120,7 +120,7 @@ subroutine potinit
 
      call atomic_rho (rho, nspin)
      if (input_drho.ne.' ') then
-        if (lsda) call error ('potinit', ' lsda not allowed in drho', 1)
+        if (lsda) call errore ('potinit', ' lsda not allowed in drho', 1)
         call io_pot ( - 1, input_drho, vr, nspin)
         write (6, '(/5x,"a scf correction to at. rho is read from", &
              &          a14)') input_drho
@@ -158,6 +158,6 @@ subroutine potinit
   call io_pot ( +1,  trim(prefix)//'.pot', vr, nspin)
 
   return
-20 call error ('potinit', 'error reading '//trim(prefix)//'.pot', abs(ios) )
+20 call errore ('potinit', 'error reading '//trim(prefix)//'.pot', abs(ios) )
 end subroutine potinit
 

@@ -66,10 +66,10 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
 
   logical :: fatto (npkk)
   ! if true this point has been found
-  if (npk.gt.npkk) call error ('setupkpoint', 'npkk too small', &
+  if (npk.gt.npkk) call errore ('setupkpoint', 'npkk too small', &
        npkk)
 
-  if ( (tipo.ne.1) .and. (tipo.ne.2) ) call error ('setupkpoint', &
+  if ( (tipo.ne.1) .and. (tipo.ne.2) ) call errore ('setupkpoint', &
        'wrong tipo', 1)
   call setv (npkk, 1.d20, esort, 1)
   !
@@ -102,7 +102,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
         do k = 1, nk3
            uk = (k3 + 2.d0 * k - nk3 - 1.d0) / (2.d0 * nk3)
            count = count + 1
-           if (count.gt.npkk) call error ('setupkpt', 'mpmesh too large', &
+           if (count.gt.npkk) call errore ('setupkpt', 'mpmesh too large', &
                 npkk)
            xknew (1, count) = ui
            xknew (2, count) = uj

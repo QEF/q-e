@@ -36,7 +36,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   isign = - sign (1, sgn)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_1', 'wrong call', &
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_1', 'wrong call', &
        1)
 
   scale = 1.d0
@@ -61,7 +61,7 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
      call dcft (0, f, 1, nx, fout, 1, nx, n, m, isign, scale, aux1m &
           (1, itype), naux1, aux2, naux2)
   else
-     call error ('cft_1', 'wrong sign', 1)
+     call errore ('cft_1', 'wrong sign', 1)
 
   endif
   return
@@ -94,9 +94,9 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   isign = - sign (1, sgn)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_1', 'wrong call', &
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_1', 'wrong call', &
        1)
-  if (n2.ne.nx2) call error ('cft_2', 'no longer implemented', 1)
+  if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
 
   scale = 1.d0
 
@@ -165,7 +165,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
 
      enddo
   else
-     call error ('cft_2', 'wrong sign', 1)
+     call errore ('cft_2', 'wrong sign', 1)
 
   endif
   return
@@ -199,9 +199,9 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, sgn, planes)
   isign = - sign (1, sgn)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call error ('cft_2', 'wrong call', &
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_2', 'wrong call', &
        1)
-  if (n2.ne.nx2) call error ('cft_2', 'no longer implemented', 1)
+  if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
 
 
   scale = 1.d0
@@ -210,7 +210,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, sgn, planes)
   do i = 1, n1
      m = m + planes (i)
   enddo
-  if (m.gt.n1.or.m.le.0) call error ('cft_2', 'something wrong with planes', 1)
+  if (m.gt.n1.or.m.le.0) call errore ('cft_2', 'something wrong with planes', 1)
   !
 
 
@@ -297,7 +297,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, sgn, planes)
      call dcft (0, f, incx1, incx2, f, incx1, incx2, n1, m, isign, &
           scale, aux1m (1, 1), naux1, aux2, naux2)
   else
-     call error ('cft_2', 'wrong sign', 1)
+     call errore ('cft_2', 'wrong sign', 1)
 
   endif
   return

@@ -60,7 +60,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
      do j = 1, m
         lagrange (j) = ZDOTC (n, psi (1, j), 1, spsi, 1)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * m, lagrange)
 #endif
      norma = DREAL (lagrange (m) )
@@ -80,7 +80,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
      ! NB: DDOT(2*n,a,1,b,1) = DREAL(ZDOTC(n,a,1,b,1))
      !
      e (m) = DDOT (2 * n, psi (1, m), 1, hpsi, 1)
-#ifdef PARA
+#ifdef __PARA
      call reduce (1, e (m) )
 #endif
      !
@@ -99,7 +99,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
         !
         es (1) = DDOT (2 * n, spsi, 1, g, 1)
         es (2) = DDOT (2 * n, spsi, 1, ppsi, 1)
-#ifdef PARA
+#ifdef __PARA
         call reduce (2, es)
 #endif
         es (1) = es (1) / es (2)
@@ -114,7 +114,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
         do j = 1, m - 1
            lagrange (j) = ZDOTC (n, psi (1, j), 1, scg, 1)
         enddo
-#ifdef PARA
+#ifdef __PARA
         call reduce (2 * m - 2, lagrange)
 #endif
         do j = 1, m - 1
@@ -126,7 +126,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
            ! gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
            gg1 = DDOT (2 * n, g, 1, g0, 1)
-#ifdef PARA
+#ifdef __PARA
            call reduce (1, gg1)
 #endif
         endif
@@ -138,7 +138,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
            g0 (i) = g0 (i) * precondition (i)
         enddo
         gg = DDOT (2 * n, g, 1, g0, 1)
-#ifdef PARA
+#ifdef __PARA
 
         call reduce (1, gg)
 #endif
@@ -178,7 +178,7 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
         !
         call h_1psi (nmax, n, cg, ppsi, scg)
         cg0 = DDOT (2 * n, cg, 1, scg, 1)
-#ifdef PARA
+#ifdef __PARA
         call reduce (1, cg0)
 #endif
         cg0 = sqrt (cg0)
@@ -189,11 +189,11 @@ subroutine ccgdiagg (nmax, n, nbnd, psi, e, precondition, eps, &
         ! so that the result is correctly normalized: <y(t)|P^2S|y(t)> = 1
         !
         a0 = 2.d0 * DDOT (2 * n, psi (1, m), 1, ppsi, 1) / cg0
-#ifdef PARA
+#ifdef __PARA
         call reduce (1, a0)
 #endif
         b0 = DDOT (2 * n, cg, 1, ppsi, 1) / cg0**2
-#ifdef PARA
+#ifdef __PARA
         call reduce (1, b0)
 #endif
         e0 = e (m)

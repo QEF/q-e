@@ -42,18 +42,18 @@ subroutine diropn (unit, filename, recl, exst)
   ! if true the file is already opened
 
 
-  if (unit.le.0) call error ('diropn', 'wrong unit', 1)
+  if (unit.le.0) call errore ('diropn', 'wrong unit', 1)
   !
   !    we first check that the file is not already openend
   !
   ios = 0
   inquire (unit = unit, opened = opnd)
-  if (opnd) call error ('diropn', 'can"t open a connected unit', abs(unit))
+  if (opnd) call errore ('diropn', 'can"t open a connected unit', abs(unit))
   !
   !      then we check the filename
   !
 
-  if (filename.eq.' ') call error ('diropn', 'filename not given', 2)
+  if (filename.eq.' ') call errore ('diropn', 'filename not given', 2)
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
   ! debug
   !write(200+mpime,*) trim(tmp_dir)
@@ -68,7 +68,7 @@ subroutine diropn (unit, filename, recl, exst)
   !      the unit for record length is unfortunately machine-dependent
   !
   unf_recl = DIRECT_IO_FACTOR * recl
-  if (unf_recl.le.0) call error ('diropn', 'wrong record length', 3)
+  if (unf_recl.le.0) call errore ('diropn', 'wrong record length', 3)
   !
   !     on T3E reduce the size of the buffer if it is too large
   !
@@ -79,7 +79,7 @@ subroutine diropn (unit, filename, recl, exst)
      else (unit.lt.100) then
         write (assstr, '("assign -b 1 u:",i2)') unit
      else
-        call error ('diropn', 'unit too large', 1)
+        call errore ('diropn', 'unit too large', 1)
      endif
      call assign (assstr, ierr)
   endif
@@ -88,7 +88,7 @@ subroutine diropn (unit, filename, recl, exst)
   open (unit, file = tempfile, iostat = ios, form = 'unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
 
-  if (ios.ne.0) call error ('diropn', 'error opening '//filename, unit)
+  if (ios.ne.0) call errore ('diropn', 'error opening '//filename, unit)
   return
 end subroutine diropn
 

@@ -130,7 +130,7 @@ subroutine force_us (forcenl)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (3 * nat, forcenl)
 #endif
   !
@@ -139,7 +139,7 @@ subroutine force_us (forcenl)
   ! is added in the routine addusforce
   !
   call addusforce (forcenl)
-#ifdef PARA
+#ifdef __PARA
   ! collect contributions across poo
   call poolreduce (3 * nat, forcenl)
 #endif

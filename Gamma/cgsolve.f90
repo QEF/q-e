@@ -50,7 +50,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
    end if
   if (.not. orthonormal) &
        call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-  if (info.ne.0) call error('cgsolve','error in potrs',info)
+  if (info.ne.0) call errore('cgsolve','error in potrs',info)
   !
   call DGEMM ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
        2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
@@ -107,7 +107,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      end if
      if (.not. orthonormal) &
           call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
-     if (info.ne.0) call error('cgsolve','error in potrs',info)
+     if (info.ne.0) call errore('cgsolve','error in potrs',info)
      call DGEMM ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
           2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
      if (precondition) then

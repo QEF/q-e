@@ -71,7 +71,7 @@ subroutine stres_loc (sigmaloc)
         sigmaloc (m, l) = sigmaloc (l, m)
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigmaloc)
 #endif
   deallocate(dvloc)

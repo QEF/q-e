@@ -139,7 +139,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
         endif
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * 3 * nat * 3 * nat, dynwrk)
 #endif
 

@@ -14,7 +14,7 @@ subroutine scatter (f_in, f_out)
   ! REAL*8 f_in = gathered variable (nrx1*nrx2*nrx3)
   ! REAL*8 f_out= distributed variable (nxx)
   !
-#ifdef PARA
+#ifdef __PARA
 #include "machine.h"
   use para
   implicit none
@@ -38,7 +38,7 @@ subroutine scatter (f_in, f_out)
   call mpi_barrier (MPI_COMM_POOL, info)
   call mpi_scatterv (f_in, sendcount, displs, MPI_REAL8, f_out, &
        sendcount (me), MPI_REAL8, root, MPI_COMM_POOL, info)
-  call error ('gather_pot', 'info<>0', info)
+  call errore ('gather_pot', 'info<>0', info)
 
   if (sendcount (me) .ne.nxx) call setv (nxx - sendcount (me), &
        0.d0, f_out (sendcount (me) + 1), 1)

@@ -16,7 +16,7 @@ subroutine stop_pw (flag)
   use pwcom
   implicit none
   logical :: flag
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info
 #endif
@@ -44,7 +44,7 @@ subroutine stop_pw (flag)
   call print_clock_pw
 
   call show_memory ()
-#ifdef PARA
+#ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
 
   call mpi_finalize (info)

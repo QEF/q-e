@@ -62,7 +62,7 @@ subroutine move_ions
   !     do the minimization / dynamics step
   !
 
-  if (lmovecell.and. (iswitch.eq.2.or.iswitch.eq.4) ) call error ( &
+  if (lmovecell.and. (iswitch.eq.2.or.iswitch.eq.4) ) call errore ( &
        'move_ions', 'variable cell and constrain not implemented', 1)
 
   if (iswitch.eq.1.or.iswitch.eq.2) call bfgs
@@ -71,7 +71,7 @@ subroutine move_ions
      if (calc.ne.' ') call vcsmd     ! variable cell shape md
   endif
   if (iswitch.gt.4 .or. iswitch.le.0) then
-     call error ('move_ions', 'iswitch value not implemented or wrong', 1)
+     call errore ('move_ions', 'iswitch value not implemented or wrong', 1)
   endif
   !
   !     check if the new positions satisfy the constrain equation, in
@@ -115,7 +115,7 @@ if (dg2.ne.0.d0) then
    lambda = - DDOT (3 * nat, force, 1, dg, 1) / dg2
    call DAXPY (3 * nat, lambda, dg, 1, force, 1)
    if (DDOT (3 * nat, force, 1, dg, 1) **2.gt.1.d-30) then
-call error ('new_force', 'force is not orthogonal to constrain', - 1)
+call errore ('new_force', 'force is not orthogonal to constrain', - 1)
       print *, DDOT (3 * nat, force, 1, dg, 1) **2
    endif
    do ipol = 1, 3
@@ -191,7 +191,7 @@ subroutine check_constrain (alat, tau, atm, ityp, theta0, nat)
      call constrain (dummy, g, dg, dg2, theta0, nat, tau, alat)
      write (6, '(5x,"G = ",1pe9.2," iteration # ",i3)') g, i
   enddo
-  call error ('new_dtau', 'g=0 is not satisfied g=', - 1)
+  call errore ('new_dtau', 'g=0 is not satisfied g=', - 1)
 14 continue
   !     write(6,'(5x,"G = ",1pe9.2)')g
   write (6, '(5x,"Number of step(s): ",i3)') i - 1

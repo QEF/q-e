@@ -73,7 +73,7 @@ subroutine rhod2vkb(dyn0)
 #ifdef GAMMA
   call DSCAL(3*nat*nmodes,2.d0,dynloc,1)
 #endif
-#ifdef PARA
+#ifdef __PARA
   call reduce(3*nat*nmodes,dynloc)
 #endif
   !

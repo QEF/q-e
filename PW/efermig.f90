@@ -29,7 +29,7 @@ subroutine efermig (et, nbndx, nbnd, nks, nelec, wk, Degauss, &
   enddo
   Eup = Eup + 2 * Degauss
   Elw = Elw - 2 * Degauss
-#ifdef PARA
+#ifdef __PARA
   !
   ! find min and max across pools
   !
@@ -42,7 +42,7 @@ subroutine efermig (et, nbndx, nbnd, nks, nelec, wk, Degauss, &
   sumkup = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Eup)
   sumklw = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Elw)
   if ( (sumkup - nelec) .lt. - 1.0e-10.or. (sumklw - nelec) &
-       .gt.1.0e-10) call error ('Efermi', 'unexpected error', 1)
+       .gt.1.0e-10) call errore ('Efermi', 'unexpected error', 1)
   do i = 1, 50
      Ef = (Eup + Elw) / 2.0
      sumkmid = sumkg (et, nbndx, nbnd, nks, wk, Degauss, Ngauss, Ef)

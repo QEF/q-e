@@ -103,7 +103,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   ! collect contributions from all pools (sum over k-points)
   !

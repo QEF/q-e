@@ -18,7 +18,7 @@ subroutine new_ns
 #include "machine.h"
   use pwcom
   use io
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -58,7 +58,7 @@ subroutine new_ns
 
   enddo
 
-  if (counter.ne.natomwfc) call error ('new_ns', 'nstart<>counter', 1)
+  if (counter.ne.natomwfc) call errore ('new_ns', 'nstart<>counter', 1)
   nr    (:,:,:,:) = 0.d0
   nsnew (:,:,:,:) = 0.d0
   !
@@ -80,7 +80,7 @@ subroutine new_ns
            proj (i, ibnd) = ZDOTC (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
         enddo
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * natomwfc * nbnd, proj)
 #endif
      !
@@ -105,7 +105,7 @@ subroutine new_ns
      ! on k-points
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (nat * nspin * ldim * ldim, nr)  
 #endif
   !
@@ -149,7 +149,7 @@ subroutine new_ns
                                    d3(m1,m0 ,isym) * nr(nb,is,m0,m00) * &
                                    d3(m2,m00,isym) / nsym
                           else
-                             call error ('new_ns', &
+                             call errore ('new_ns', &
                                          'angular momentum not implemented', &
                                           abs(Hubbard_l(nt)) )
                           end if
@@ -174,7 +174,7 @@ subroutine new_ns
                     write (6, * ) na, is, m1, m2  
                     write (6, * ) nsnew (na, is, m1, m2)  
                     write (6, * ) nsnew (na, is, m2, m1)  
-                    call error ('new_ns', 'non hermitean matrix', 1)  
+                    call errore ('new_ns', 'non hermitean matrix', 1)  
                  else  
                     nsnew(na,is,m1,m2) = 0.5d0 * (nsnew(na,is,m1,m2) + &
                                                   nsnew(na,is,m2,m1) )

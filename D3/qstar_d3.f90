@@ -66,7 +66,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! Sets number of symmetry operations giving each q in the list
   !
   nsq = nsym / nq
-  if (nsq * nq.ne.nsym) call error ('qstar_d3', 'wrong degeneracy', &
+  if (nsq * nq.ne.nsym) call errore ('qstar_d3', 'wrong degeneracy', &
        1)
   !
   ! Writes dyn.mat d3dyn(3*nat,3*nat,3*nat)

@@ -88,7 +88,7 @@ subroutine gk_sort (k, ngm, g, ecut, ngk, igk, gk)
              10
      endif
   enddo
-  call error ('gk_sort', 'unexpected exit from do-loop', - 1)
+  call errore ('gk_sort', 'unexpected exit from do-loop', - 1)
   !
   ! order vector gk keeping initial position in index
   !

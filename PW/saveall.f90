@@ -75,7 +75,7 @@ subroutine saveall (iun, iflag)
      read (iun, err = 100, iostat = ios) title, crystal, atm, psd, &
           sname, dummy_tmp_dir
      !
-100  call error ('saveall', 'reading file', abs (ios) )
+100  call errore ('saveall', 'reading file', abs (ios) )
   endif
   return
 end subroutine saveall

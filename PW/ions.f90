@@ -26,7 +26,7 @@ subroutine ions
 
   if (iswitch.gt.0) then
      call move_ions
-#ifdef PARA
+#ifdef __PARA
       call check (3 * nat, tau)
 #endif
       !

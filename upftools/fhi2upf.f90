@@ -63,7 +63,7 @@ program fhi2upf
   close (unit=2)
 
 stop
-20 call error ('fhi2upf', 'Reading pseudo file name ', 1)
+20 call errore ('fhi2upf', 'Reading pseudo file name ', 1)
 
 end program fhi2upf
 
@@ -110,7 +110,7 @@ subroutine read_fhi(iunps)
   lmax_ = lmax_ - 1
 
   if (lmax_+1 > Nl) then
-     call error('read_fhi','too many l-components',1)
+     call errore('read_fhi','too many l-components',1)
   end if
 
   do i=1,10
@@ -125,7 +125,7 @@ subroutine read_fhi(iunps)
      if ( l > 0) then
         if (comp(l)%nmesh /= comp(0)%nmesh .or.   &
             comp(l)%amesh /= comp(0)%amesh )      then
-           call error('read_fhi','different radial grids not allowed',i)
+           call errore('read_fhi','different radial grids not allowed',i)
         end if
      end if
      mesh = comp(l)%nmesh
@@ -145,7 +145,7 @@ subroutine read_fhi(iunps)
   !     ----------------------------------------------------------
   !
   return
-100 call error ('read_fhi', 'Reading pseudo file', 100 )  
+100 call errore ('read_fhi', 'Reading pseudo file', 100 )  
 
 end subroutine read_fhi
 

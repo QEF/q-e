@@ -16,7 +16,7 @@ subroutine extreme (ps, iflag)
   !
   !-----------------------------------------------------------------------
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
   use parameters, only : DP
   implicit none

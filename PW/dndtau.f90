@@ -17,7 +17,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    use pwcom
    use becmod
    use io
-#ifdef PARA
+#ifdef __PARA
    use para
 #endif
    implicit none
@@ -61,7 +61,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       end do
    end do
 
-   if(counter.ne.natomwfc)call error('new_ns','nstart<>counter',1)
+   if(counter.ne.natomwfc)call errore('new_ns','nstart<>counter',1)
 
    dns(:,:,:,:) = 0.d0
    !
@@ -95,7 +95,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
          enddo
       enddo
 
-#ifdef PARA
+#ifdef __PARA
       call reduce(2*natomwfc*nbnd,proj)
 #endif
       !
@@ -122,7 +122,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
 
    end do                 ! on k-points
 
-#ifdef PARA
+#ifdef __PARA
    call poolreduce(nat*nspin*ldim*ldim,dns)
 #endif
    !

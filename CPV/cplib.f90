@@ -37,7 +37,7 @@
       write(6,*)
       write(6,*) ' aainit:  lli ll ',lli,ll
       write(6,*)
-      if (lli.gt.lix) call error(' aainit ',' lli .gt. lix ',lli)
+      if (lli.gt.lix) call errore(' aainit ',' lli .gt. lix ',lli)
 !
       call zero(lix*lx*lix*lx*lx,cc)
 !
@@ -377,7 +377,7 @@
                            if(abs(aimag(sum)).gt.0.001) then
                               write(6,'(a,2f8.5,1x,3i3,2x,i3)')         &
      &                        'ap(ilp,il,ik) =  ', sum,ilp,il,ik
-                              call error('aainit','see above',1)
+                              call errore('aainit','see above',1)
                            endif
                            ap(ilp,il,ik)=real(sum)
                            lpx(il,ik)=lpx(il,ik)+1
@@ -511,7 +511,7 @@
       enddo
 !
       if (natwfc.ne.n_atomic_wfc)                                       &
-     &     call error('atomic_wfc','unexpected error',natwfc)
+     &     call errore('atomic_wfc','unexpected error',natwfc)
 !
       deallocate(chiq)
       deallocate(gxn)
@@ -662,13 +662,13 @@
 !
       integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 
-      if(nfft.le.0.or.nfft.gt.2) call error('box2grid','wrong data',nfft)
+      if(nfft.le.0.or.nfft.gt.2) call errore('box2grid','wrong data',nfft)
 
       do ir3=1,nr3b
          ibig3=irb(3)+ir3-1
          ibig3=1+mod(ibig3-1,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call error('box2grid','ibig3 wrong',ibig3)
+     &        call errore('box2grid','ibig3 wrong',ibig3)
 #ifdef __PARA
          ibig3=ibig3-n3(me)
          if (ibig3.gt.0.and.ibig3.le.npp(me)) then
@@ -677,12 +677,12 @@
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
                if(ibig2.lt.1.or.ibig2.gt.nr2)                           &
-     &              call error('box2grid','ibig2 wrong',ibig2)
+     &              call errore('box2grid','ibig2 wrong',ibig2)
                do ir1=1,nr1b
                   ibig1=irb(1)+ir1-1
                   ibig1=1+mod(ibig1-1,nr1)
                   if(ibig1.lt.1.or.ibig1.gt.nr1)                        &
-     &                 call error('box2grid','ibig1 wrong',ibig1)
+     &                 call errore('box2grid','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
                   ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
                   vr(ibig) = vr(ibig)+qv(nfft,ir)
@@ -720,7 +720,7 @@
          ibig3=irb(3)+ir3-1
          ibig3=1+mod(ibig3-1,nr3)
          if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call error('box2grid2','ibig3 wrong',ibig3)
+     &        call errore('box2grid2','ibig3 wrong',ibig3)
 #ifdef __PARA
          ibig3=ibig3-n3(me)
          if (ibig3.gt.0.and.ibig3.le.npp(me)) then
@@ -729,12 +729,12 @@
                ibig2=irb(2)+ir2-1
                ibig2=1+mod(ibig2-1,nr2)
                if(ibig2.lt.1.or.ibig2.gt.nr2)                           &
-     &              call error('box2grid2','ibig2 wrong',ibig2)
+     &              call errore('box2grid2','ibig2 wrong',ibig2)
                do ir1=1,nr1b
                   ibig1=irb(1)+ir1-1
                   ibig1=1+mod(ibig1-1,nr1)
                   if(ibig1.lt.1.or.ibig1.gt.nr1)                        &
-     &                 call error('box2grid2','ibig1 wrong',ibig1)
+     &                 call errore('box2grid2','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
                   ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
                   v(ibig) = v(ibig)+qv(ir)
@@ -771,7 +771,7 @@
       integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 !
 !
-      if(nfft.le.0.or.nfft.gt.2) call error('box2grid','wrong data',nfft)
+      if(nfft.le.0.or.nfft.gt.2) call errore('box2grid','wrong data',nfft)
 
       boxdotgrid=0.d0
 
@@ -1319,7 +1319,7 @@
 #else
          read(21,iostat=ios) psi
 #endif
-         if(ios.ne.0) call error                                        &
+         if(ios.ne.0) call errore                                        &
      &       (' dforce',' error in reading unit 21',ios)
 !
       endif
@@ -1861,7 +1861,7 @@
       return
       end
 !-------------------------------------------------------------------------
-      subroutine error(a,b,n)
+      subroutine errore(a,b,n)
 !-----------------------------------------------------------------------
       character(len=*) a,b
       integer n
@@ -2497,7 +2497,7 @@
       REAL(kind=8), PARAMETER :: eps = 1.d-8
 
 !
-      if(gcut.lt.gcuts) call error('ggen','gcut .lt. gcuts',1)
+      if(gcut.lt.gcuts) call errore('ggen','gcut .lt. gcuts',1)
       ng=0
       ngs=0
       ngw=0
@@ -3498,7 +3498,7 @@
       write(6,*) ' init1:  fsum = ',fsum
       if(nspin == 1 .and. abs(fsum-float(nel(1))) > 0.001 .or.     &
          nspin == 2 .and. abs(fsum-float(nel(1)+nel(2))) > 0.001 ) &
-         call error(' init1',' sum f(i) != number of electrons',   &
+         call errore(' init1',' sum f(i) != number of electrons',   &
          nel(1)+nel(2))
 !
 !     ==============================================================
@@ -3525,7 +3525,7 @@
       call set_fft_grid(a1,a2,a3,alat,gcuts,nr1s,nr2s,nr3s)
 
       if (nr1s.gt.nr1.or.nr2s.gt.nr2.or.nr3s.gt.nr3)                    &
-     &     call error('init1','smooth grid larger than dense grid?',1)
+     &     call errore('init1','smooth grid larger than dense grid?',1)
 
 #ifdef __PARA
       call set_fft_para ( b1, b2, b3, gcut, gcuts, gcutw,               &
@@ -3546,7 +3546,7 @@
       nr3bx=nr3b
 !
       if (nr1b.gt.nr1.or.nr2b.gt.nr2.or.nr3b.gt.nr3)                    &
-     &     call error('init1','box grid larger than dense grid ?',1)
+     &     call errore('init1','box grid larger than dense grid ?',1)
 !
       nnrb=nr1bx*nr2bx*nr3bx
 !
@@ -3990,7 +3990,7 @@
 !
       else
 !
-         call error('latgen',' bravais lattice not programmed',ibrav)
+         call errore('latgen',' bravais lattice not programmed',ibrav)
 !
       end if
 !
@@ -4685,7 +4685,7 @@
 ! that the program goes on forever doing nothing and writing nothing.
 !
                if (rhos(i,j).ne.rhos(i,j))                                &
-     &             call error('ortho','ortho went bananas',1)
+     &             call errore('ortho','ortho went bananas',1)
                rhor(i,j)=rho(i,j)-rhos(i,j)
             end do
          end do
@@ -4753,7 +4753,7 @@
             call MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
          end do
          write(6,*) ' diff= ',diff,' iter= ',iter
-         call error('ortho','max number of iterations exceeded',iter)
+         call errore('ortho','max number of iterations exceeded',iter)
 !
  20      continue
 !
@@ -4777,7 +4777,7 @@
             do j=1,nss
                x0(istart-1+i,istart-1+j)=xloc(i,j)/ccc
                if (xloc(i,j).ne.xloc(i,j))                                &
-     &             call error('ortho','ortho went bananas',2)
+     &             call errore('ortho','ortho went bananas',2)
             end do
          end do
 !
@@ -4846,9 +4846,9 @@
       complex(kind=8), allocatable:: ei1b(:,:,:), ei2b(:,:,:), ei3b(:,:,:)
       complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
 !
-      if(nr1b.lt.3) call error(' phbox ',' nr1b too small ',nr1b)
-      if(nr2b.lt.3) call error(' phbox ',' nr2b too small ',nr2b)
-      if(nr3b.lt.3) call error(' phbox ',' nr3b too small ',nr3b)
+      if(nr1b.lt.3) call errore(' phbox ',' nr1b too small ',nr1b)
+      if(nr2b.lt.3) call errore(' phbox ',' nr2b too small ',nr2b)
+      if(nr3b.lt.3) call errore(' phbox ',' nr3b too small ',nr3b)
 !
       allocate(ei1b(-nr1b:nr1b,nas,nsp))
       allocate(ei2b(-nr2b:nr2b,nas,nsp))
@@ -4973,9 +4973,9 @@
       real(kind=8) taup(3), sum, ar1,ar2,ar3
       complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
 !
-      if(nr1.lt.3) call error(' phfac ',' nr1 too small ',nr1)
-      if(nr2.lt.3) call error(' phfac ',' nr1 too small ',nr2)
-      if(nr3.lt.3) call error(' phfac ',' nr1 too small ',nr3)
+      if(nr1.lt.3) call errore(' phfac ',' nr1 too small ',nr1)
+      if(nr2.lt.3) call errore(' phfac ',' nr1 too small ',nr2)
+      if(nr3.lt.3) call errore(' phfac ',' nr1 too small ',nr3)
 !
       if(iprsta.gt.3) then
          write(6,*) ' phfac: tau0 '
@@ -5393,7 +5393,7 @@
       if(flag.eq.0) then
          if(ngwr.gt.ngw) write(6,*) ' ## warning ## ngwr.gt.ngw  ',ngwr,ngw
       else
-         if(ngwr.gt.ngw) call error('readfile','ngwr.ne.ngw',ngwr)
+         if(ngwr.gt.ngw) call errore('readfile','ngwr.ne.ngw',ngwr)
       endif
       if(ngwr.le.ngw) then
          read(ndr) ((c0(ig,i),ig=1,ngwr),i=1,min(nr,n))
@@ -5456,7 +5456,7 @@
 !
          if(is.ge.2)then
             if(ipp(is).lt.ipp(is-1))then
-               call error('readpp', 'first vdb, then nnc',10)
+               call errore('readpp', 'first vdb, then nnc',10)
             endif
          endif
 !
@@ -5492,7 +5492,7 @@
             case ( 4)
                call read_pseudo(is,iunit,ierr)
             case default
-               call error('readpp', 'wrong pseudo type',ipp(is))
+               call errore('readpp', 'wrong pseudo type',ipp(is))
          end select
          close (unit=iunit)
       end do
@@ -5523,19 +5523,19 @@
       ifpcor(is)=0
       read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
       if (zv(is) < 1 .or. zv(is) > 100 ) then
-         call error('readpp','wrong potential read',15)
+         call errore('readpp','wrong potential read',15)
       endif
       if (is.eq.1) then
          dft=exfact
       else if (dft.ne.exfact) then
-         call error('readpp','inconsistent DFT',is)
+         call errore('readpp','inconsistent DFT',is)
       end if
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
          lll(2,is)=1
       else if(lloc(is).ne.2) then
-         call error('readbhs','kb-ization for lloc=2 only',10)
+         call errore('readbhs','kb-ization for lloc=2 only',10)
       endif
 !     
 !     see eqs. (2.21) and (2.22) of bhs, prb 26, 4199 (1982).
@@ -5583,7 +5583,7 @@
       if(ifpcor(is).eq.1) then
          read(15,*) meshp,cmeshp
          if(meshp.ne.mesh(is).or.cmeshp.ne.cmesh(is))then
-            call error('readpp','core charge mesh mismatch',is)
+            call errore('readpp','core charge mesh mismatch',is)
          endif
          do ir=1,mesh(is)
             read(15,*) rdum,rscore(ir,is)
@@ -5730,7 +5730,7 @@
 !
 !
       if (is.lt.0 .or. is.gt.nsx)                                       &
-     &   call error('readAdC','Wrong is number', 1)
+     &   call errore('readAdC','Wrong is number', 1)
 !
       read( iunps, '(a75)', err=100, iostat=ios ) titleps
 !
@@ -5760,31 +5760,31 @@
       else if(mfxcx.eq.1.and.mfxcc.eq.3.and.mgcx.eq.1.and.mgcc.eq.3) then
          exfact=blyp
       else
-         call error('readAdC','which functional is this?',1)
+         call errore('readAdC','which functional is this?',1)
       end if
 !
       if (is.eq.1) then
          dft=exfact
       else if (dft.ne.exfact) then
-         call error('readAdC','inconsistent DFT',is)
+         call errore('readAdC','inconsistent DFT',is)
       end if
 !
       read( iunps, '(2e17.11,i5)') zv(is), etotps, lmax
       if ( zv(is) < 1 .or. zv(is) > 100 )                               &
-     &     call error('readAdC','wrong potential read',is)
+     &     call errore('readAdC','wrong potential read',is)
 !
       read( iunps, '(4e17.11,i5)',err=100, iostat=ios )                 &
      &                       xmin,rdum,zmesh,dx,mesh(is)
 !
       if (mesh(is).gt.mmaxx.or. mesh(is).lt.0)                          &
-     &   call error('readAdC', 'wrong mesh',is)
+     &   call errore('readAdC', 'wrong mesh',is)
 !
       read( iunps, '(2i5)', err=100, iostat=ios ) nchi(is), nbeta(is)
 !
       if (nbeta(is).gt.nbrx.or. nbeta(is).lt.0)                         &
-     &   call error('readAdC', 'wrong nbeta', is)
+     &   call errore('readAdC', 'wrong nbeta', is)
       if (nchi(is).gt.nchix.or.nchi(is).lt.1)                           &
-     &   call error('readAdC', 'wrong nchi', is)
+     &   call errore('readAdC', 'wrong nchi', is)
 !
       read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
      &                              ( rdum, nb=1,nchi(is) )
@@ -5857,7 +5857,7 @@
 !
       nqlc(is)=2*lmax+1
       if ( nqlc(is).gt.lqx .or. nqlc(is).lt.0 )                         &
-     &     call error(' readAdC', 'Wrong  nqlc', nqlc(is) )
+     &     call errore(' readAdC', 'Wrong  nqlc', nqlc(is) )
       do l=1,nqlc(is)
          rinner(l,is)=0.d0
       enddo
@@ -5899,7 +5899,7 @@
       end if
 !
       return
-100   call error('readAdC','Reading pseudo file',abs(ios))
+100   call errore('readAdC','Reading pseudo file',abs(ios))
       stop
       end
 !     
@@ -6022,28 +6022,28 @@
 !     We first check the input variables
 !
       if (is.lt.0 .or. is.gt.nsx)                                       &
-     &   call error('readvan','Wrong is number', 1)
+     &   call errore('readvan','Wrong is number', 1)
 !
       if (ipp.lt.0 .or. ipp.gt.2)                                       &
-     &   call error('readvan','Wrong pseudopotential type', 1)
+     &   call errore('readvan','Wrong pseudopotential type', 1)
 !
       read(iunps, *, err=100 )                                          &
      &     (iver(i),i=1,3), (idmy(i),i=1,3)
       if ( iver(1).gt.7 .or. iver(1).lt.1 .or.                          &
      &     iver(2).gt.9 .or. iver(2).lt.0 .or.                          &
      &     iver(3).gt.9 .or. iver(3).lt.0      )                        &
-     &   call error('readvan','wrong version numbers',1)
+     &   call errore('readvan','wrong version numbers',1)
       if ( iver(1).gt.1 .and. ipp.eq.0)                                 &
-     &   call error('readvan','use ipp=0 only for old US format',1)
+     &   call errore('readvan','use ipp=0 only for old US format',1)
 !
       read( iunps, '(a20,3f15.9)', err=100, iostat=ios )                &
      &     title, z(is), zv(is), exfact 
       if ( z(is) < 1 .or. z(is) > 100.d0)                               &
-     &     call error( 'readvan','wrong z', is )
+     &     call errore( 'readvan','wrong z', is )
       if ( zv(is) < 1 .or. zv(is) > 100.d0)                             &
-     &     call error('readvan','wrong zv',is)
+     &     call errore('readvan','wrong zv',is)
       if ( exfact.lt.-6.or.exfact.gt.5)                                 &
-     &     call error('readvan','Wrong xc in pseudopotential',1)
+     &     call errore('readvan','Wrong xc in pseudopotential',1)
 ! convert from "our" conventions to Vanderbilt conventions
       if (exfact.eq.-5) exfact=bp88
       if (exfact.eq.-6) exfact=pw91
@@ -6053,17 +6053,17 @@
       if (is.eq.1) then
          dft=exfact
       else if (dft.ne.exfact) then
-         call error('readvan','inconsistent DFT',is)
+         call errore('readvan','inconsistent DFT',is)
       end if
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
      &     nchi(is), mesh(is), etotpseu
       if ( nchi(is).gt.nchix )                                          &
-     &     call error( 'readvan', 'increase nchix', nchi(is) )
+     &     call errore( 'readvan', 'increase nchix', nchi(is) )
       if ( nchi(is).lt. 1 )                                             &
-     &     call error( 'readvan', 'wrong nchi ', is )
+     &     call errore( 'readvan', 'wrong nchi ', is )
       if ( mesh(is).gt.mmaxx .or. mesh(is).lt.0 )                       &
-     &     call error( 'readvan','wrong mesh', is )
+     &     call errore( 'readvan','wrong mesh', is )
 !
 !     nnlz, wwnl, ee  give info (not used) on pseudo eigenstates
 !
@@ -6081,13 +6081,13 @@
 !            3 --> new generalized eigenvalue pseudopotentials
 !            4 --> frozen core all-electron case
       if ( keyps .lt. 0 .or. keyps .gt. 4 ) then
-         call error('readvan','wrong keyps',keyps)
+         call errore('readvan','wrong keyps',keyps)
       else if (keyps.eq.4) then
-         call error('readvan','keyps not implemented',keyps)
+         call errore('readvan','keyps not implemented',keyps)
       else if (keyps.lt.3 .and. ipp.lt.2) then
-         call error('readvan','HSC read, ultrasoft expected',keyps)
+         call errore('readvan','HSC read, ultrasoft expected',keyps)
       else if (keyps.eq.3 .and. ipp.eq.2) then
-         call error('readvan','ultrasoft read, HSC expected',keyps)
+         call errore('readvan','ultrasoft read, HSC expected',keyps)
       end if
 !
 !     Read information on the angular momenta, and on Q pseudization
@@ -6101,14 +6101,14 @@
 !        from 1 to nang
 !
          if ( nang .gt. nchix + 1 .or. nang.lt.0 )                      &
-     &        call error(' readvan', 'Wrong nang', nang)
+     &        call errore(' readvan', 'Wrong nang', nang)
          if ( lloc .eq. -1 ) lloc = nang+1
          if ( lloc .gt. nang+1 .or. lloc .lt. 0 )                       &
-     &        call error( 'readvan', 'wrong lloc', is )
+     &        call errore( 'readvan', 'wrong lloc', is )
          if ( nqf(is).gt.nqfx .or. nqf(is).lt.0 )                       &
-     &        call error(' readvan', 'Wrong nqf', nqf(is))
+     &        call errore(' readvan', 'Wrong nqf', nqf(is))
          if ( ifqopt(is).lt.0 )                                         &
-     &        call error( 'readvan', 'wrong ifqopt', is )
+     &        call errore( 'readvan', 'wrong ifqopt', is )
       end if
 !
 !     Reads and test the values of rinner (version > 5.1)
@@ -6121,7 +6121,7 @@
 !
          do lp = 1, 2*nang-1
             if (rinner(lp,is).lt.0.d0)                                  &
-     &           call error('readvan','Wrong rinner', is )
+     &           call errore('readvan','Wrong rinner', is )
          enddo
       else if (iver(1).gt.3) then
          do lp = 2, 2*nang-1
@@ -6150,7 +6150,7 @@
       end if
 !
       if ( nqlc(is).gt.lqx )                                            &
-     &     call error(' readvan', 'Wrong  nqlc', nqlc(is) )
+     &     call errore(' readvan', 'Wrong  nqlc', nqlc(is) )
 !
       read( iunps, '(1p4e19.11)', err=100, iostat=ios )                 &
      &                              ( rc(l), l=1,nang )
@@ -6160,9 +6160,9 @@
       read( iunps, '(2i5)', err=100, iostat=ios ) nbeta(is), kkbeta(is)
 !
       if( nbeta(is).gt.nbrx .or. nbeta(is).lt.0 )                       &
-     &     call error( 'readvan','wrong nbeta', is )
+     &     call errore( 'readvan','wrong nbeta', is )
       if( kkbeta(is).gt.mesh(is) .or. kkbeta(is).lt.0 )                 &
-     &     call error( 'readvan','wrong kkbeta', is )
+     &     call errore( 'readvan','wrong kkbeta', is )
 !
 !    Now reads the main Vanderbilt parameters
 !
@@ -6171,7 +6171,7 @@
          read( iunps, '(1p4e19.11)',err=100, iostat=ios ) eee(iv),      &
      &                      ( betar(ir,iv,is), ir=1,kkbeta(is) )
          if ( lll(iv,is).gt.3 .or. lll(iv,is).lt.0 )                    &
-     &      call error( 'readvan', ' wrong lll ? ', is )
+     &      call errore( 'readvan', ' wrong lll ? ', is )
          do jv=iv,nbeta(is)
             read( iunps, '(1p4e19.11)', err=100, iostat=ios )           &
      &           dion(iv,jv,is),                                        &
@@ -6267,7 +6267,7 @@
       if (iver(1).ge.7) then
          read( iunps, *, err=100, iostat=ios ) i
          if (i.ne.nchi(is))                                             &
-     &        call error('readvan','unexpected or unimplemented case',1)
+     &        call errore('readvan','unexpected or unimplemented case',1)
       end if
 !
       if (iver(1).ge.6)                                                 &
@@ -6341,7 +6341,7 @@
 1300  format (4x,60('='))
 !
       return
-100   call error('readvan','error reading pseudo file', abs(ios) )
+100   call errore('readvan','error reading pseudo file', abs(ios) )
       end
 !
 !-----------------------------------------------------------------------
@@ -6600,7 +6600,7 @@
 #if defined(__CRAYY)
                ios=unit(21)
 #endif
-               if(ios.ne.0) call error                                  &
+               if(ios.ne.0) call errore                                  &
      &              (' rhoofr',' error in writing unit 21',ios)
             endif
 !
@@ -7299,11 +7299,11 @@
       nr2=good_fft_order(nr2)
       nr3=good_fft_order(nr3)
       if (minr1-nr1.gt.2)                                               &
-     &     call error('set_fft_grid','n1 too small ?',nr1)
+     &     call errore('set_fft_grid','n1 too small ?',nr1)
       if (minr2-nr2.gt.2)                                               &
-     &     call error('set_fft_grid','n2 too small ?',nr2)
+     &     call errore('set_fft_grid','n2 too small ?',nr2)
       if (minr3-nr3.gt.2)                                               &
-     &     call error('set_fft_grid','n3 too small ?',nr3)
+     &     call errore('set_fft_grid','n3 too small ?',nr3)
 !
       return
       end
@@ -7414,7 +7414,7 @@
      &       i
 !
       if ( mesh .lt. 8 )                                                &
-     &   call error('simpson','few mesh points',8)
+     &   call errore('simpson','few mesh points',8)
 !
       c(1) = 109.0 / 48.d0
       c(2) = -5.d0 / 48.d0
@@ -8186,7 +8186,7 @@
       integer l, ig
       real(kind=8) x,y,z,r
 !
-      if (ig.gt.ng) call error(' ylmr ',' ig.gt.ng ',ig)
+      if (ig.gt.ng) call errore(' ylmr ',' ig.gt.ng ',ig)
       x = gx(ig,1)
       y = gx(ig,2)
       z = gx(ig,3)
@@ -8209,7 +8209,7 @@
       if (l.eq.7) ylmr = sqrt(5.0/fpi/4.0)*(3.0*z*z-1.0)
       if (l.eq.8) ylmr = sqrt(15.0/fpi)*y*z
       if (l.eq.9) ylmr = sqrt(15.0/fpi/4.0)*(x*x-y*y)
-      if (l.ge.10) call error(' ylmr',' higher l not programmed  l=',l)
+      if (l.ge.10) call errore(' ylmr',' higher l not programmed  l=',l)
       return
       end
 !
@@ -8407,7 +8407,7 @@
      &           6./7.*(gsq3-0.5*(gsq1+gsq2)) )
          end do
       else if (l.ge.26) then
-         call error(' ylmr2',' higher l not programmed  l=',l)
+         call errore(' ylmr2',' higher l not programmed  l=',l)
       endif
       return
       end
@@ -9859,7 +9859,7 @@
      &     sysl, t, td, t2, t3, t4, xchge, ys, ysl, ysr
 !
 !
-      if (nspin.ne.1) call error('ggapw','spin not implemented',nspin)
+      if (nspin.ne.1) call errore('ggapw','spin not implemented',nspin)
 !
       x13=1.0/3.0
       x43=4.0/3.0

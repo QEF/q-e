@@ -163,7 +163,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   end do
   !
 30 continue
-#ifdef PARA
+#ifdef __PARA
   call reduce(3*nat*nmodes,dyn)
 #endif
   return

@@ -14,11 +14,11 @@ subroutine work_function (wf)
   ! Written for supercells with the main axis along z.
   !
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
 #endif
 
@@ -42,7 +42,7 @@ subroutine work_function (wf)
   call DCOPY (nrxx, rho, 1, aux, 1)
 
   call DAXPY (nrxx, 1.d0, rho_core, 1, aux, 1)
-#ifdef PARA
+#ifdef __PARA
   call gather (aux, raux1)
 #else
   call DCOPY (nrxx, aux, 1, raux1, 1)
@@ -50,12 +50,12 @@ subroutine work_function (wf)
   call DCOPY (nrxx, vltot, 1, aux, 1)
 
   call DAXPY (nrxx, 1.d0, vr, 1, aux, 1)
-#ifdef PARA
+#ifdef __PARA
   call gather (aux, vaux1)
 #else
   call DCOPY (nrxx, aux, 1, vaux1, 1)
 #endif
-#ifdef PARA
+#ifdef __PARA
   if (me.eq.1.and.mypool.eq.1) then
 #endif
      call seqopn (17, 'workf', 'formatted', exst)
@@ -100,7 +100,7 @@ subroutine work_function (wf)
                 rytoev * (wmean2 - ef), wx2 * rytoev
         endif
      enddo
-#ifdef PARA
+#ifdef __PARA
   endif
 
   call mpi_bcast (wf, 1, MPI_REAL8, 0, MPI_COMM_WORLD, ierr)

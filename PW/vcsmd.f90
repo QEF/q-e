@@ -27,7 +27,7 @@ subroutine vcsmd
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -102,7 +102,7 @@ subroutine vcsmd
   call seqopn (4, 'filemd', 'formatted', exst)
   if (.not.exst) then
      close (unit = 4, status = 'delete')
-     if (istep.ne.1) call error ('vcsmd', ' previous MD history got lost', 1)
+     if (istep.ne.1) call errore ('vcsmd', ' previous MD history got lost', 1)
      tnew = 0.d0
      acu = 0.d0
      ack = 0.d0
@@ -493,7 +493,7 @@ subroutine vcsmd
   !
   !  write on output files several control quantities
   !
-#ifdef PARA
+#ifdef __PARA
   !
   ! only the first processor does this I/O
   !
@@ -537,7 +537,7 @@ subroutine vcsmd
      close (unit = iun_p,    status = 'keep')
      close (unit = iun_avec, status = 'keep')
      close (unit = iun_tv,   status = 'keep')
-#ifdef PARA
+#ifdef __PARA
   endif
 #endif
   !
@@ -602,7 +602,7 @@ subroutine delete_if_present(filename)
          inquire (unit = iunit, opened = opnd)
          if (.not.opnd) goto 10
       enddo
-      call error ('delete_if_present', 'free unit not found?!?', 1)
+      call errore ('delete_if_present', 'free unit not found?!?', 1)
 10    continue
       open  (unit=iunit, file= filename , status='old')
       close (unit=iunit, status = 'delete')

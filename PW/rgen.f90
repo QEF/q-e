@@ -75,7 +75,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
            enddo
            if (tt.le.rmax**2.and.abs (tt) .gt.1.d-10) then
               nrm = nrm + 1
-              if (nrm.gt.mxr) call error ('rgen', 'too many r-vectors', nrm)
+              if (nrm.gt.mxr) call errore ('rgen', 'too many r-vectors', nrm)
               do ipol = 1, 3
                  r (ipol, nrm) = t (ipol)
               enddo

@@ -60,7 +60,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !

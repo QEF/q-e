@@ -229,7 +229,7 @@ subroutine d3_valence
         endif
      enddo
   endif
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, aux1)
   call poolreduce (2 * 27 * nat * nat * nat, aux2)
   if (lgamma) then

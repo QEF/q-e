@@ -462,7 +462,7 @@ CONTAINS
         title, crystal, tmp_dir, tupf, lgamma)
 
 !      if( .not. lgamma ) &
-!        call error(' readfile ',' restart contains a system not at gamma ',1)
+!        call errore(' readfile ',' restart contains a system not at gamma ',1)
 
       if (flag > -1) then
         nfi = nfi_

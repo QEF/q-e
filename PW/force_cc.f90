@@ -94,7 +94,7 @@ subroutine force_cc (forcecc)
         enddo
      endif
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (3 * nat, forcecc)
 #endif
   deallocate (rhocg)

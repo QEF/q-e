@@ -49,7 +49,7 @@ do ik = 1, nksq
       enddo
    enddo
 enddo
-#ifdef PARA
+#ifdef __PARA
 call reduce (9, epsilon)
 
 call poolreduce (9, epsilon)

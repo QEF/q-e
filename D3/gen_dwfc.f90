@@ -21,7 +21,7 @@ subroutine gen_dwfc (isw_sl)
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -64,14 +64,14 @@ subroutine gen_dwfc (isw_sl)
   !
   ! Writes FermiEnergy shift on a file
   !
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1.or.mypool.ne.1) goto 210
 #endif
   if (isw_sl.eq.3.and.degauss.ne.0.d0) then
      rewind (unit = iuef)
      write (iuef) ef_sh
   endif
-#ifdef PARA
+#ifdef __PARA
 210 continue
 #endif
   !

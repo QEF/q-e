@@ -99,7 +99,7 @@ subroutine cg_setup
   lrwfc=2*nbnd*npwx
   filint = trim(prefix) //'.wfc'
   call diropn(iunpun,filint,lrwfc,exst)
-  if(.not.exst) call error('main','file '//filpun//' not found',1)
+  if(.not.exst) call errore('main','file '//filpun//' not found',1)
   !
   !  read wave functions and calculate indices
   !

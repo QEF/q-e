@@ -36,7 +36,7 @@ subroutine start_postproc (nodenumber)
 #else
   nargs = iargc ()
 #endif
-  if (nargs.gt.3) call error ('postproc', 'wrong no. of arguments', &
+  if (nargs.gt.3) call errore ('postproc', 'wrong no. of arguments', &
        nargs)
   !
   if (nargs.eq.1.or.nargs.eq.3) then
@@ -50,13 +50,13 @@ subroutine start_postproc (nodenumber)
 #endif
      if (filin.ne.' ') then
         inquire (file = filin, exist = exst)
-        if (.not.exst) call error ('postproc', 'file '//filin//' not found', 1)
+        if (.not.exst) call errore ('postproc', 'file '//filin//' not found', 1)
         open (unit = 5, form = 'formatted', status = 'old', file = filin)
      endif
   endif
-#ifdef PARA
+#ifdef __PARA
 
-  if (filin.eq.' ') call error ('postproc','Usage: postproc [-npool N] filename',2)
+  if (filin.eq.' ') call errore ('postproc','Usage: postproc [-npool N] filename',2)
 
   call startup (nodenumber, version)
 

@@ -30,7 +30,7 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
      c(i) = 2.d0*DDOT(2*n,a(1,i),1,b(1,i),1)
      if (gstart==2) c(i) = c(i) - real(a(1,i))*real(b(1,i))
   end do
-#ifdef PARA
+#ifdef __PARA
   if (sum_over_nodes.eq.'y'.or.sum_over_nodes.eq.'Y') call reduce(m,c)
 #endif
   return

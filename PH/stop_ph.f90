@@ -18,11 +18,11 @@ subroutine stop_ph (flag)
   use pwcom
   use parameters, only : DP
   use phcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   integer :: info
 #endif
@@ -31,11 +31,11 @@ subroutine stop_ph (flag)
   close (unit = iuwfc, status = 'keep')
   close (unit = iudwf, status = 'keep')
   close (unit = iubar, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
   if (me.ne.1) goto 100
 #endif
   if (fildrho.ne.' ') close (unit = iudrho, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
 100 continue
 #endif
 
@@ -46,7 +46,7 @@ subroutine stop_ph (flag)
   close (unit = iunigk, status = 'delete')
   call print_clock_ph
   call show_memory ()
-#ifdef PARA
+#ifdef __PARA
   call mpi_barrier (MPI_COMM_WORLD, info)
 
   call mpi_finalize (info)

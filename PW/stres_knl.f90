@@ -69,7 +69,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !
 
   call addusstres (sigmanlc)
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigmakin)
   call poolreduce (9, sigmakin)
   call reduce (9, sigmanlc)

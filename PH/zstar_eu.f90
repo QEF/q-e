@@ -42,7 +42,7 @@ subroutine zstar_eu
   call setv (9 * nat, 0.d0, zstareu, 1)
 
   if (okvan) then
-     call error('zstar_eu', 'Effective charges not implemented',-1)
+     call errore('zstar_eu', 'Effective charges not implemented',-1)
      return
   endif
 
@@ -77,7 +77,7 @@ subroutine zstar_eu
         imode0 = imode0 + npert (irr)
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (18 * nat, zstareu0)
 
   call poolreduce (18 * nat, zstareu0)

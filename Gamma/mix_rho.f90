@@ -90,8 +90,8 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   call start_clock('mix_rho')
 
-  if (iter.lt.1) call error('mix_rho','iter is wrong',1)
-  if (n_iter.gt.maxmix) call error('mix_rho','n_iter too big',1)
+  if (iter.lt.1) call errore('mix_rho','iter is wrong',1)
+  if (n_iter.gt.maxmix) call errore('mix_rho','n_iter too big',1)
 
   saveonfile=filename.ne.' '
 
@@ -129,7 +129,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         iunmix=iunit
         if (.not.opnd) go to 10
      end do
-     call error('mix_rho','free unit not found?!?',1)
+     call errore('mix_rho','free unit not found?!?',1)
 10   continue
      if (lda_plus_u) then
         do iunit=iunmix-1,1,-1
@@ -137,7 +137,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
            iunmix2=iunit
            if (.not.opnd) go to 20
         end do
-        call error('mix_rho','second free unit not found?!?',1)
+        call errore('mix_rho','second free unit not found?!?',1)
 20      continue
      end if
      if (conv) then
@@ -156,7 +156,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*25, exst)
 
     if (iter.gt.1 .and. .not.exst) then
-        call error('mix_rho','file not found, restarting',-1)
+        call errore('mix_rho','file not found, restarting',-1)
         iter=1
      end if
      allocate (df(ngm0*nspin,n_iter), dv(ngm0*nspin,n_iter))
@@ -264,9 +264,9 @@ end if
   end do
   !
   call DSYTRF ('u',iter_used,betamix,maxmix,iwork,work,maxmix,info)
-  call error('broyden','factorization',info)
+  call errore('broyden','factorization',info)
   call DSYTRI ('u',iter_used,betamix,maxmix,iwork,work,info)
-  call error('broyden','DSYTRI',info)
+  call errore('broyden','DSYTRI',info)
   !
   do i=1,iter_used
      do j=i+1,iter_used
@@ -404,7 +404,7 @@ function rho_dot_product (rho1,rho2)
   end if
 
   rho_dot_product = rho_dot_product * omega / 2.d0
-#ifdef PARA
+#ifdef __PARA
   call reduce(1,rho_dot_product)
 #endif
 
@@ -449,7 +449,7 @@ function fn_dehar (drho)
 
   fn_dehar = fn_dehar * omega / 2.d0
 
-#ifdef PARA
+#ifdef __PARA
   call reduce(1,fn_dehar)
 #endif
 
@@ -599,7 +599,7 @@ end subroutine approx_screening
 
   end do
 
-#ifdef PARA
+#ifdef __PARA
   call reduce  (1, avg_rsm1)
   call extreme (min_rs, -1)
   call extreme (max_rs, +1)
@@ -667,9 +667,9 @@ end subroutine approx_screening
   !
   call DCOPY (mmx*mmx,aa,1,invaa,1)
   call DSYTRF ('u',m,invaa,mmx,iwork,work,mmx,info)
-  call error('BROYDEN','factorization',info)
+  call errore('BROYDEN','factorization',info)
   call DSYTRI ('u',m,invaa,mmx,iwork,work,info)
-  call error('broyden','DSYTRI',info)
+  call errore('broyden','DSYTRI',info)
   !
   do i=1,m
      do j=i+1,m

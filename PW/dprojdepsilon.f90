@@ -18,7 +18,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    use pwcom
    use becmod
    use io
-#ifdef PARA
+#ifdef __PARA
    use para
 #endif
    implicit none
@@ -120,7 +120,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    a1 = 0.d0
    a2 = 0.d0
 
-#ifdef PARA
+#ifdef __PARA
    call reduce(2*natomwfc*nbnd,dproj)
 #endif
 
@@ -172,7 +172,7 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
                   wfatdbeta(iwf,ih)= ZDOTC(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
                end do
             end do
-#ifdef PARA
+#ifdef __PARA
             call reduce(2*nhm*nbnd,dbetapsi)
             call reduce(2*natomwfc*nhm,wfatbeta)
             call reduce(2*natomwfc*nhm,wfatdbeta)

@@ -39,13 +39,13 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
      enddo
   enddo
   !
-  if (counter.ne.natomwfc) call error ('vhpsi', 'nstart<>counter', 1)
+  if (counter.ne.natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
   do ibnd = 1, mp
      do i = 1, natomwfc
         proj (i, ibnd) = ZDOTC (np, swfcatom (1, i), 1, psip (1, ibnd), 1)
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * natomwfc * mp, proj)
 #endif
   do ibnd = 1, mp  

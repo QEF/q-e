@@ -44,7 +44,7 @@ function allowed (nr)
 
   enddo
 10 if (nr.ne.mr * 2**pwr (1) * 3**pwr (2) * 5**pwr (3) * 7**pwr (4) &
-       * 11**pwr (5) ) call error ('allowed', 'what ?!?', 1)
+       * 11**pwr (5) ) call errore ('allowed', 'what ?!?', 1)
   if (mr.ne.1) then
      ! fft dimension contains factors > 11 : no good in any case
      allowed = .false.

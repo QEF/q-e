@@ -34,7 +34,7 @@ subroutine do_projwfc (nodenumber)
   filproj = ' '
   !
   read (5, inputpp, err = 200, iostat = ios)
-200 call error ('projwave', 'reading inputpp namelist', abs (ios) )
+200 call errore ('projwave', 'reading inputpp namelist', abs (ios) )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -54,7 +54,7 @@ subroutine projwave (filproj)
   use pwcom
   use becmod
   use io
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -115,8 +115,8 @@ subroutine projwave (filproj)
      enddo
   enddo
 
-  if (lmax_wfc.gt.2) call error ('projwave', 'l > 2 not yet implemented', 1)
-  if (nwfc.ne.natomwfc) call error ('projwave', 'wrong # of atomic wfcs?', 1)
+  if (lmax_wfc.gt.2) call errore ('projwave', 'l > 2 not yet implemented', 1)
+  if (nwfc.ne.natomwfc) call errore ('projwave', 'wrong # of atomic wfcs?', 1)
   !
   !    loop on k points
   !
@@ -139,7 +139,7 @@ subroutine projwave (filproj)
      !
      call ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
           wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * natomwfc * natomwfc, overlap)
 #endif
      !
@@ -171,7 +171,7 @@ subroutine projwave (filproj)
      allocate(proj0(natomwfc,nbnd) )
      call ZGEMM ('c', 'n', natomwfc, nbnd, npw, (1.d0, 0.d0) , &
           wfcatom, npwx, evc, npwx, (0.d0, 0.d0) , proj0, natomwfc)
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * natomwfc * nbnd, proj0)
 #endif
      !
@@ -195,7 +195,7 @@ subroutine projwave (filproj)
                    nlmchi(nwfc1)%l .eq. nlmchi(nwfc)%l .and. &
                    nlmchi(nwfc1)%m .eq. 1 ) go to 10
            end do
-           call error('projwave','cannot symmetrize',1)
+           call errore('projwave','cannot symmetrize',1)
 10         nwfc1=nwfc1-1
            !
            !  nwfc1 is the first rotated atomic wfc corresponding to nwfc
@@ -228,7 +228,7 @@ subroutine projwave (filproj)
      deallocate (proj0 )
      ! on k-points
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   !   recover the vector proj over the pools
   !
@@ -329,7 +329,7 @@ subroutine projwave (filproj)
      !
      close (unit=4)
      deallocate (charges)
-#ifdef PARA
+#ifdef __PARA
   endif
 #endif
   deallocate (nlmchi)

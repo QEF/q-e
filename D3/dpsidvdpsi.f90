@@ -49,7 +49,7 @@ subroutine dpsidvdpsi (nu_q0)
      if (.not.lgamma) read (iunigk, err = 100, iostat = ios) npwq, &
           igkq
      read (iunigk, err = 100, iostat = ios) npwq, igkq
-100  call error ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
+100  call errore ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
      npw = npwq
      do ig = 1, npwx
         igk (ig) = igkq (ig)
@@ -84,7 +84,7 @@ subroutine dpsidvdpsi (nu_q0)
               wrk = wrk + 2.d0 * wg1 * ZDOTC (npwq, dqpsi (1, ibnd), 1, dvpsi ( &
                    1, ibnd), 1)
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (2, wrk)
 #endif
            d3dyn1 (nu_z, nu_j, nu_i) = d3dyn1 (nu_z, nu_j, nu_i) + wrk
@@ -101,7 +101,7 @@ subroutine dpsidvdpsi (nu_q0)
         if (.not.lgamma) read (iunigk, err = 110, iostat = ios) npwq, &
              igkq
 
-110     call error ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
+110     call errore ('dpsidvdpsi', 'reading iunigk-iunigkq', abs (ios) )
         if (lgamma) then
            npwq = npw
            ikk = ik
@@ -139,7 +139,7 @@ subroutine dpsidvdpsi (nu_q0)
                  wrk = wrk + 2.d0 * wg1 * ZDOTC (npwq, dvpsi (1, ibnd), 1, &
                       dqpsi (1, ibnd), 1)
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2, wrk)
 #endif
               d3dyn2 (nu_i, nu_z, nu_j) = d3dyn2 (nu_i, nu_z, nu_j) + wrk
@@ -149,7 +149,7 @@ subroutine dpsidvdpsi (nu_q0)
      enddo
 
   endif
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
   if (.not.allmodes) then
      call poolreduce (2 * 27 * nat * nat * nat, d3dyn2)

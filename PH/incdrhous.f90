@@ -104,7 +104,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, &
         endif
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
 
   call reduce (2 * nbnd * nbnd, ps1)
 #endif

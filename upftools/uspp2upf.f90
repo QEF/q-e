@@ -59,6 +59,6 @@ program uspp2upf
   close (unit=2)
 
   stop
-20 call error ('uspp2upf', 'Reading pseudo file name ', 1)
+20 call errore ('uspp2upf', 'Reading pseudo file name ', 1)
 end program uspp2upf
 

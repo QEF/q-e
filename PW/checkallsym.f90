@@ -87,7 +87,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
                 sx (3, i) * sx (3, j)
            if (i.eq.j) ps = ps - 1.d0
            if (abs (ps) .gt.eps) &
-                call error ('checkallsym', 'not orthogonal operation', isym)
+                call errore ('checkallsym', 'not orthogonal operation', isym)
         enddo
 
      enddo
@@ -126,7 +126,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
      ft (3) = ftau (3, isym) / float (nr3)
 
      call checksym (isym, nat, ityp, xau, rau, ft, loksym, irt)
-     if (.not.loksym (isym) ) call error ('checkallsym', &
+     if (.not.loksym (isym) ) call errore ('checkallsym', &
           ' symmetry operation not satisfied  ', isym)
   enddo
   !

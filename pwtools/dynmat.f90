@@ -35,7 +35,6 @@
       real(kind=8) tau(3,nax), amass(nax), amass_(nax), zstar(3,3,nax),&
            eps0(3,3), a0, omega, amconv, q(3), q_(3), w2(3*nax)
       integer ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout
-      external latgen, recips, error, dyndiag, nonanal, readmat
       namelist /input/ amass,asr,flmat,flout,flmol,q
 !
 !

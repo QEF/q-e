@@ -96,16 +96,16 @@ subroutine readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   read (iudyn, '(a)') line
   read (iudyn, * ) ntyp_, nat_, ibrav_, celldm_
   if (ntyp.ne.ntyp_.or.nat.ne.nat_.or.ibrav_.ne.ibrav.or.abs ( &
-       celldm_ (1) - celldm (1) ) .gt.1.0d-5) call error ('readmat', &
+       celldm_ (1) - celldm (1) ) .gt.1.0d-5) call errore ('readmat', &
        'inconsistent data', 1)
   do nt = 1, ntyp
      read (iudyn, * ) i, atm, amass_
-     if (nt.ne.i.or.abs (amass_ - amass (nt) ) .gt.1.0d-5) call error ( &
+     if (nt.ne.i.or.abs (amass_ - amass (nt) ) .gt.1.0d-5) call errore ( &
           'readmat', 'inconsistent data', 1 + nt)
   enddo
   do na = 1, nat
      read (iudyn, * ) i, ityp_, tau_
-     if (na.ne.i.or.ityp_.ne.ityp (na) ) call error ('readmat', &
+     if (na.ne.i.or.ityp_.ne.ityp (na) ) call errore ('readmat', &
           'inconsistent data', 10 + na)
   enddo
   read (iudyn, '(a)') line
@@ -117,7 +117,7 @@ subroutine readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   do na = 1, nat
      do nb = 1, nat
         read (iudyn, * ) naa, nbb
-        if (na.ne.naa.or.nb.ne.nbb) call error ('readmat', 'error reading &
+        if (na.ne.naa.or.nb.ne.nbb) call errore ('readmat', 'error reading &
              &file', nb)
         read (iudyn, * ) ( (dynr (1, i, na, j, nb), dynr (2, i, na, j, nb) &
              , j = 1, 3), i = 1, 3)
@@ -191,7 +191,7 @@ subroutine elphel (npe, imode0, dvscfins)
   do ik = 1, nksq
      if (nksq.gt.1) then
         read (iunigk, err = 100, iostat = ios) npw, igk
-100     call error ('elphel', 'reading igk', abs (ios) )
+100     call errore ('elphel', 'reading igk', abs (ios) )
      endif
      !
      !  ik = counter of k-points with vector k
@@ -210,7 +210,7 @@ subroutine elphel (npe, imode0, dvscfins)
      if (lsda) current_spin = isk (ikk)
      if (.not.lgamma.and.nksq.gt.1) then
         read (iunigk, err = 200, iostat = ios) npwq, igkq
-200     call error ('elphel', 'reading igkq', abs (ios) )
+200     call errore ('elphel', 'reading igkq', abs (ios) )
      endif
      !
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
@@ -263,7 +263,7 @@ subroutine elphel (npe, imode0, dvscfins)
            !
         enddo
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (2 * nbnd * nbnd * npe, elphmat)
 #endif
      !
@@ -298,7 +298,7 @@ subroutine elphsum
   use parameters, only : DP
   use phcom
   use el_phon
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -320,13 +320,13 @@ subroutine elphsum
   nsig = 10
   if (filelph.ne.' ') then
      iuelph = 4
-#ifdef PARA
+#ifdef __PARA
      ! parallel case: only first node writes (unit 6=/dev/null)
      if (me.ne.1) iuelph = 6
 #endif
      open (unit = iuelph, file = filelph, status = 'unknown', err = &
           100, iostat = ios)
-100  call error ('elphon', 'opening file'//filelph, abs (ios) )
+100  call errore ('elphon', 'opening file'//filelph, abs (ios) )
      rewind (iuelph)
      write (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
      write (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
@@ -388,7 +388,7 @@ subroutine elphsum
      ! el_ph_sum(mu,nu)=\sum_k\sum_{i,j}[ <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}>
      !                                  x <psi_{k+q,j}|dvscf_q(nu)*psi_{k,i}>
      !                                  x \delta(e_{k,i}-Ef) \delta(e_{k+q,j}
-#ifdef PARA
+#ifdef __PARA
      !
      ! collect contributions from all pools (sum over k-points)
      !
@@ -479,7 +479,7 @@ function dos_ef (ngauss, degauss, ef, et, nbndx, wk, nks, &
              / degauss, ngauss) / degauss
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   !    Collects partial sums on k-points from all pools
   !

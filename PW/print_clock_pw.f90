@@ -93,7 +93,7 @@ subroutine print_clock_pw
    call print_clock ('interpolate')
    call print_clock ('davcio')
    write (6, * )
-#ifdef PARA
+#ifdef __PARA
    write (6,  * ) '     Parallel routines'
    call print_clock ('reduce')
    call print_clock ('fft_scatter')

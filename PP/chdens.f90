@@ -181,11 +181,11 @@ subroutine do_chdens
   ! reading the namelist input
   !
   read (5, input, err = 200, iostat = ios)
-200 call error ('chdens', 'reading input namelist', abs (ios) )
+200 call errore ('chdens', 'reading input namelist', abs (ios) )
 
   ! check for number of files
   if (nfile.le.0.or.nfile.gt.nfilemax) &
-       call error ('chdens ', 'nfile is wrong ', 1)
+       call errore ('chdens ', 'nfile is wrong ', 1)
 
   ! check for iflag
   if (iflag.eq.30) then
@@ -193,7 +193,7 @@ subroutine do_chdens
      fast3d = .true.
   end if
   if ((iflag.lt.1.or.iflag.gt.4) .and. iflag.ne.31) &
-       call error ('chdens', 'iflag not implemented', 1)
+       call errore ('chdens', 'iflag not implemented', 1)
 
 
   ! reading the rest of input (spanning vectors, origin, number-of points)
@@ -201,7 +201,7 @@ subroutine do_chdens
      read (inunit, *, err = 1100, iostat = ios) (e (ipol, 1), &
           ipol = 1, 3)
      if (e (1, 1) **2 + e (2, 1) **2 + e (3, 1) **2.lt.1d-3) call &
-          error ('chdens', 'zero vector', 1)
+          errore ('chdens', 'zero vector', 1)
   endif
   if (iflag.eq.1) then
      !
@@ -223,12 +223,12 @@ subroutine do_chdens
      if ( (abs (e (1, 1)  * e (2, 2)  - e (2, 1)  * e (1, 2) ) .lt.1e-7 ) &
           .and. (abs (e (3, 1)  * e (1, 2)  - e (1, 1)  * e (3, 2) ) .lt.1e-7) &
           .and. (abs (e (3, 1)  * e (2, 2)  - e (2, 1)  * e (3, 2) ) .lt.1e-7) ) &
-          call error ('chdens', 'vectors on the same line', 1)
+          call errore ('chdens', 'vectors on the same line', 1)
      !
      !    and here that they are orthogonal
      !
      if (abs (e (1, 1)  * e (1, 2)  + e (2, 1)  * e (2, 2)  + e (3, 1) &
-          & * e (3, 2) ) .gt.1e-4) call error ('chdens', &
+          & * e (3, 2) ) .gt.1e-4) call errore ('chdens', &
           'vectors are not orthogonal', 1)
      !
      if (iflag.eq.3) then
@@ -244,7 +244,7 @@ subroutine do_chdens
         if ( (abs (e (1, 1) * e (2, 3) - e (2, 1) * e (1, 3) ) &
              .lt.1e-7) .and. (abs (e (3, 1) * e (1, 3) - e (1, 1) &
              * e (3, 3) ) .lt.1e-7) .and. (abs (e (3, 1) * e (2, 3) &
-             - e (2, 1) * e (3, 3) ) .lt.1e-7) ) call error ('chdens', &
+             - e (2, 1) * e (3, 3) ) .lt.1e-7) ) call errore ('chdens', &
              'vectors on the same line', 2)
         !
         !    and here that they are orthogonal
@@ -252,7 +252,7 @@ subroutine do_chdens
         if (abs (e (1, 1) * e (1, 3) + e (2, 1) * e (2, 3) + e (3, &
              1) * e (3, 3) ) .gt.1e-4.or.abs (e (1, 2) * e (1, 3) &
              + e (2, 2) * e (2, 3) + e (3, 2) * e (3, 3) ) .gt.1e-4) &
-             call error ('chdens', 'vectors are not orthogonal', 2)
+             call errore ('chdens', 'vectors are not orthogonal', 2)
      endif
      read (inunit, *, err = 1100, iostat = ios) (x0 (ipol), ipol = &
           1, 3)
@@ -269,7 +269,7 @@ subroutine do_chdens
   endif
 
   ! check for plot_out
-  if (plot_out.lt.0.or.plot_out.gt.4) call error ('chdens', &
+  if (plot_out.lt.0.or.plot_out.gt.4) call errore ('chdens', &
        'plot_out wrong', 1)
 
   !
@@ -329,16 +329,16 @@ subroutine do_chdens
      deallocate (ityps)
      deallocate (taus)
      !
-     if (nats.gt.nat) call error ('chdens', 'wrong file order? ', 1)
+     if (nats.gt.nat) call errore ('chdens', 'wrong file order? ', 1)
      if (nrx1.ne.nrx1sa.or.nrx2.ne.nrx2sa) call &
-          error ('chdens', 'incompatible nrx1 or nrx2', 1)
+          errore ('chdens', 'incompatible nrx1 or nrx2', 1)
      if (nr1.ne.nr1sa.or.nr2.ne.nr2sa.or.nr3.ne.nr3sa) call &
-          error ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
-     if (ibravs.ne.ibrav) call error ('chdens', 'incompatible ibrav', 1)
+          errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
+     if (ibravs.ne.ibrav) call errore ('chdens', 'incompatible ibrav', 1)
      if (gcutmsa.ne.gcutm.or.duals.ne.dual.or.ecuts.ne.ecutwfc ) &
-          call error ('chdens', 'incompatible gcutm or dual or ecut', 1)
+          call errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
      do i = 1, 6
-        if (abs( celldm (i)-celldms (i) ) .gt. 1.0e-7 ) call error &
+        if (abs( celldm (i)-celldms (i) ) .gt. 1.0e-7 ) call errore &
              ('chdens', 'incompatible celldm', 1)
      enddo
      !
@@ -370,7 +370,7 @@ subroutine do_chdens
 
      if (output_format .ne. 3) then
         ! so far iflag.eq.31 works only for XCRYSDEN's XSF format
-        call error ('chdens', 'wrong output_format for iflag.eq.31; works only if output_format.eq.3', 1)
+        call errore ('chdens', 'wrong output_format for iflag.eq.31; works only if output_format.eq.3', 1)
      endif
 
      call plot_whole_cell (alat, at, nat, tau, atm, ityp, &
@@ -491,13 +491,13 @@ subroutine do_chdens
      call plot_2ds (nx, ny, radius, ngm, g, vgc, output_format, &
           ounit)
   else
-     call error ('chdens', 'wrong iflag', 1)
+     call errore ('chdens', 'wrong iflag', 1)
 
   endif
 
   deallocate(vgc)
   return
-1100 call error ('chdens', 'reading input data', abs (ios) )
+1100 call errore ('chdens', 'reading input data', abs (ios) )
 end subroutine do_chdens
 !
 !-----------------------------------------------------------------------
@@ -752,7 +752,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e, ngm, g, vgc, alat, &
      call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
      call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e, alat, ounit)
   else
-     call error('plot_2d', 'wrong output_format', 1)
+     call errore('plot_2d', 'wrong output_format', 1)
   endif
 
   deallocate (carica)
@@ -866,7 +866,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, vgc, output_format, &
      write (ounit, '(4e25.14)') ( (dreal (carica (i, j) ) , j = 1, &
           ny) , i = 1, nx)
   else
-     call error ('plot_2ds', 'not implemented plot', 1)
+     call errore ('plot_2ds', 'not implemented plot', 1)
 
   endif
   deallocate (carica)
@@ -1027,7 +1027,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp, &
   if ( e(2,1) .ne. 0.d0  .or.  e(3,1) .ne. 0.d0 .or. &
        e(1,2) .ne. 0.d0  .or.  e(3,2) .ne. 0.d0 .or. &
        e(1,3) .ne. 0.d0  .or.  e(2,3) .ne. 0.d0 )   &
-       call error ('plot_fast','need vectors along x,y,z',1)
+       call errore ('plot_fast','need vectors along x,y,z',1)
 
   ! find FFT grid points closer to X0 + e1, X0 + e2, X(0 + e3
   ! (the opposite vertex of the parallelepiped)

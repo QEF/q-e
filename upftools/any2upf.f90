@@ -65,16 +65,16 @@ program mypp2upf
   close (unit=2)
 
 stop
-20 call error ('mypp2upf', 'Reading pseudo file name ', 1)
+20 call errore ('mypp2upf', 'Reading pseudo file name ', 1)
 
 end program mypp2upf
 
-subroutine error(a,b,n)
+subroutine errore(a,b,n)
   character(len=*) :: a,b
   integer :: n
   write(6,'(//'' program '',a,'':'',a,''.'',8x,i8,8x,''stop'')') a,b,n
   stop
-end subroutine error
+end subroutine errore
 
 module mypp
   !
@@ -96,7 +96,7 @@ subroutine read_mypp(iunps)
   !     ----------------------------------------------------------
   !
   return
-100 call error ('read_mypp', 'Reading pseudo file', 100 )  
+100 call errore ('read_mypp', 'Reading pseudo file', 100 )  
 
 end subroutine read_mypp
 

@@ -99,7 +99,7 @@ subroutine dynmatcc(dyncc)
   !
   deallocate(gc)
   deallocate(drhocc)
-#ifdef PARA
+#ifdef __PARA
   call reduce(3*nat*3*nat,dyncc1)
 #endif
   call DSCAL(3*nat*3*nat,-omega,dyncc1,1)

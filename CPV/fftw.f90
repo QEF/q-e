@@ -64,13 +64,13 @@ end module fftw_mod
 !
 !
       if (nr1.ne.nr1x .or. nr2.ne.nr2x .or. nr3.ne.nr3x )               &
-     &     call error('cfft3','not implemented',1)
+     &     call errore('cfft3','not implemented',1)
       if (isign.eq.1) then
          ibid=1
       else if (isign.eq.-1) then
          ibid=2
       else 
-         call error('cfft3','isign unexpected',isign)
+         call errore('cfft3','isign unexpected',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -109,13 +109,13 @@ end module fftw_mod
 !
 !
       if (nr1.ne.nr1x .or. nr2.ne.nr2x .or. nr3.ne.nr3x )               &
-     &     call error('cfft3s','not implemented',1)
+     &     call errore('cfft3s','not implemented',1)
       if (isign.eq.1) then
          ibid=1
       else if (isign.eq.-1) then
          ibid=2
       else 
-         call error('cfft3s','isign unexpected',isign)
+         call errore('cfft3s','isign unexpected',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -154,13 +154,13 @@ end module fftw_mod
 !
 !
       if (nr1.ne.nr1x .or. nr2.ne.nr2x .or. nr3.ne.nr3x )               &
-     &     call error('cfft3b','not implemented',1)
+     &     call errore('cfft3b','not implemented',1)
       if (isign.eq.1) then
          ibid=1
       else if (isign.eq.-1) then
          ibid=2
       else 
-         call error('cfft3b','isign unexpected',isign)
+         call errore('cfft3b','isign unexpected',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -204,7 +204,7 @@ end module fftw_mod
       else if (isign.eq.-1) then
          ibid =2
       else
-         call error('cft_1','wrong call',isign)
+         call errore('cft_1','wrong call',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -245,13 +245,13 @@ end module fftw_mod
 !
 !
       if (n1.ne.nx1 .or. n2.ne.nx2)                                     &
-     &     call error('cft_2','not implemented',1)
+     &     call errore('cft_2','not implemented',1)
       if (isign.eq.1) then
          ibid =1
       else if (isign.eq.-1) then
          ibid =2
       else
-         call error('cft_2','wrong call',isign)
+         call errore('cft_2','wrong call',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -297,7 +297,7 @@ end module fftw_mod
          isign1=-1
          ibid  =2
       else
-         call error('cft_1s','wrong call',isign)
+         call errore('cft_1s','wrong call',isign)
       end if
 !
       if (plan(ibid).eq.0)                                              &
@@ -340,9 +340,9 @@ end module fftw_mod
 !
 !
       if (n1.gt.nmax.or.n2.gt.nmax)                                     &
-     &     call error('cft_2s','increase nmax',max(n1,n2))
+     &     call errore('cft_2s','increase nmax',max(n1,n2))
       if (n1.ne.nx1 .or. n2.ne.nx2)                                     &
-     &     call error('cft_2s','not implemented',1)
+     &     call errore('cft_2s','not implemented',1)
       if (isign.eq.1.or.isign.eq.2) then
          isign1=1
          ibid  =1
@@ -350,7 +350,7 @@ end module fftw_mod
          isign1=-1
          ibid  =2
       else
-         call error('cft_2s','wrong call',isign)
+         call errore('cft_2s','wrong call',isign)
       end if
 ! check how many columns along x are nonzero
       m=0
@@ -358,7 +358,7 @@ end module fftw_mod
          m=m+planes(i)
       end do
       if (m.gt.n1.or.m.le.0)                                            &
-     &     call error('cft_2s','something wrong with planes',1)
+     &     call errore('cft_2s','something wrong with planes',1)
 !
       if (isign1.eq.1) then
 ! j-direction
@@ -438,7 +438,7 @@ end module fftw_mod
       if (isign.eq.1) then
          ibid =1
       else if (isign.eq.-1) then
-         call error('cft_b','not implemented',isign)
+         call errore('cft_b','not implemented',isign)
       end if
 !
       if (planz(ibid).eq.0)                                             &

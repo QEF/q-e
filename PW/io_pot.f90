@@ -14,7 +14,7 @@ subroutine io_pot (iop, filename, pot, nc)
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -24,12 +24,12 @@ subroutine io_pot (iop, filename, pot, nc)
   character (len=*) :: filename
 
   real(kind=DP) :: pot (nrxx, nc)
-#ifdef PARA
+#ifdef __PARA
   real(kind=DP), allocatable :: allv (:,:)
 #endif
 
   logical :: exst
-#ifdef PARA
+#ifdef __PARA
   if (me.eq.1) allocate( allv(nrx1*nrx2*nrx3, nc) )
   !
   ! On writing: gather the potential on the first node of each pool
@@ -72,9 +72,9 @@ subroutine io_pot (iop, filename, pot, nc)
   close (unit = 4)
 #endif
   return
-10 call error ('io_pot', 'error writing '//filename, 1)
+10 call errore ('io_pot', 'error writing '//filename, 1)
   return
-20 call error ('io_pot', 'error reading '//filename, 2)
+20 call errore ('io_pot', 'error reading '//filename, 2)
   return
 end subroutine io_pot
 

@@ -45,7 +45,7 @@ subroutine update_pot
   if (order.eq.0) return
   if (order.gt.2.and.iswitch.le.2) then
      order = 2
-     call error ('update_pot', 'order > 2 not allowed in bfgs', - 1)
+     call errore ('update_pot', 'order > 2 not allowed in bfgs', - 1)
 
   endif
   call extrapolate_charge
@@ -234,7 +234,7 @@ subroutine extrapolate_wfcs
         !
         call ZGEMM ('c', 'n', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
              npwx, ZERO, s_m, nbnd)
-#ifdef PARA
+#ifdef __PARA
         call reduce (2 * nbnd * nbnd, s_m)
 #endif
         !

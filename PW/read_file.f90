@@ -26,7 +26,7 @@ subroutine read_file
   use parameters, only: dp
   use io, only: tmp_dir, prefix
   use restart_module, only: readfile_new
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -52,18 +52,18 @@ subroutine read_file
   !
   call readfile_new( 'dim', iunpun, rdum, rdum, kunittmp, 0, 0, ierr )
   IF( ierr /= 0 ) THEN
-    call error ('read_file', 'problem reading file '// &
+    call errore ('read_file', 'problem reading file '// &
       &      trim(tmp_dir)//trim(prefix)//'.save', ierr)
   END IF
   !
-#ifdef PARA
+#ifdef __PARA
   kunit = kunittmp
 #endif
   !
   !  allocate space for atomic positions, symmetries, forces, tetrahedra
   !
   if ( nat <= 0 .or. nat > nax ) &
-       call error ('read_file', 'wrong number of atoms', 1)
+       call errore ('read_file', 'wrong number of atoms', 1)
   !
   allocate( et_g(nbnd,  nkstot), wg_g(nbnd,  nkstot) )
 
@@ -79,12 +79,12 @@ subroutine read_file
   !
   call readfile_new( 'nowave', iunpun, et_g, wg_g, kunittmp, 0, 0, ierr )
   IF( ierr /= 0 ) THEN
-    call error ('read_file', 'problem reading file '// &
+    call errore ('read_file', 'problem reading file '// &
       &      trim(tmp_dir)//trim(prefix)//'.save', ierr)
   END IF
   !
   !
-#ifdef PARA
+#ifdef __PARA
   kunit = kunittmp
   ! parallel execution: distribute across pools k-points and
   ! related variables (not a smart implementation)
@@ -129,7 +129,7 @@ subroutine read_file
   !
   deallocate( et_g, wg_g )
   !
-#ifdef PARA
+#ifdef __PARA
   call poolscatter (nbndx, nkstot, et, nks, et)
   call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
@@ -168,7 +168,7 @@ subroutine read_file
 #include "machine.h"
   use pwcom
   use io
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -179,7 +179,7 @@ subroutine read_file
   iunpun = 4
   open (unit = iunpun, file = trim(tmp_dir)//trim(prefix)//'.pun', &
        form = 'unformatted', status = 'old', iostat = ios)
-  call error ('read_file', 'problem reading file '// &
+  call errore ('read_file', 'problem reading file '// &
        &      trim(tmp_dir)//trim(prefix)//'.pun', ios)
   !
   !     here we read all the variables describing the system
@@ -190,7 +190,7 @@ subroutine read_file
   !  allocate space for atomic positions, symmetries, forces, tetrahedra
   !
   if (nat.le.0.or.nat.gt.nax) &
-       call error ('read_file', 'wrong number of atoms', 1)
+       call errore ('read_file', 'wrong number of atoms', 1)
   allocate(tau (3, nat) )
   allocate(ityp (nat) )
   allocate(force (3, nat) )
@@ -207,7 +207,7 @@ subroutine read_file
        ik = 1, nkstot)
   read (iunpun, err = 105, iostat = ios) (  wk (ik), ik = 1, nkstot)
   read (iunpun, err = 105, iostat = ios) ( isk (ik), ik = 1, nkstot)
-#ifdef PARA
+#ifdef __PARA
   read (iunpun) kunit
   ! parallel execution: distribute across pools k-points and
   ! related variables (not a smart implementation)
@@ -253,7 +253,7 @@ subroutine read_file
        nbnd), ik = 1, nkstot)
   close (iunpun)
   !
-#ifdef PARA
+#ifdef __PARA
   call poolscatter (nbndx, nkstot, et, nks, et)
   call poolscatter (nbnd , nkstot, wg, nks, wg)
 #endif
@@ -277,13 +277,13 @@ subroutine read_file
   call set_rhoc
   !
   return
-100 call error ('read_file', 'reading tau', abs (ios) )
-101 call error ('read_file', 'reading ityp', abs (ios) )
-102 call error ('read_file', 'reading irt', abs (ios) )
-103 call error ('read_file', 'reading forces', abs (ios) )
-104 call error ('read_file', 'reading tetrahedra', abs (ios) )
-105 call error ('read_file', 'reading k-points', abs (ios) )
-106 call error ('read_file', 'reading eigenvalues', abs (ios) )
+100 call errore ('read_file', 'reading tau', abs (ios) )
+101 call errore ('read_file', 'reading ityp', abs (ios) )
+102 call errore ('read_file', 'reading irt', abs (ios) )
+103 call errore ('read_file', 'reading forces', abs (ios) )
+104 call errore ('read_file', 'reading tetrahedra', abs (ios) )
+105 call errore ('read_file', 'reading k-points', abs (ios) )
+106 call errore ('read_file', 'reading eigenvalues', abs (ios) )
 end subroutine read_file
 
 #endif

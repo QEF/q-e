@@ -144,7 +144,7 @@ program matdyn
   ! types of atoms
   ! 
   if (ntyp < 0) then
-     call error('matdyn','wrong ntyp ', abs(ntyp))
+     call errore ('matdyn','wrong ntyp ', abs(ntyp))
   else if (ntyp == 0) then
      ntyp=ntyp_blk
   end if
@@ -153,14 +153,14 @@ program matdyn
   ! 
   do it=1,ntyp
      if (amass(it) < 0.d0) then
-        call error('matdyn','wrong mass in the namelist',it)
+        call errore ('matdyn','wrong mass in the namelist',it)
      else if (amass(it) == 0.d0) then
         if (it.le.ntyp_blk) then
            write (*,'(a,i3,a,a)') ' mass for atomic type ',it,      &
                 &                     ' not given; uses mass from file ',flfrc
            amass(it) = amass_blk(it)
         else
-           call error('matdyn','missing mass in the namelist',it)
+           call errore ('matdyn','missing mass in the namelist',it)
         end if
      end if
   end do
@@ -169,7 +169,7 @@ program matdyn
   !
   if (SUM(abs(at(:,:))) == 0.d0) then
      if (l1.le.0 .or. l2.le.0 .or. l3.le.0) call                    &
-          &             error('matdyn',' wrong l1,l2 or l3',1)
+          &             errore ('matdyn',' wrong l1,l2 or l3',1)
      at(:,1) = at_blk(:,1)*dfloat(l1)
      at(:,2) = at_blk(:,2)*dfloat(l2)
      at(:,3) = at_blk(:,3)*dfloat(l3)
@@ -181,12 +181,12 @@ program matdyn
   !
   nsc = nint(omega/omega_blk)
   if (abs(omega/omega_blk-nsc) > eps) &
-       call error('matdyn', 'volume ratio not integer', 1)
+       call errore ('matdyn', 'volume ratio not integer', 1)
   !
   ! read/generate atomic positions of the (super)cell
   !
   nat = nat_blk * nsc
-  if (nat.gt.nax) call error('matdyn','nat.gt.nax',nat)
+  if (nat.gt.nax) call errore ('matdyn','nat.gt.nax',nat)
   !
   if (readtau) then
      call read_tau (nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
@@ -213,7 +213,7 @@ program matdyn
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   if (dos) then
      if (nk1 < 1 .or. nk2 < 1 .or. nk3 < 1) &
-          call error ('matdyn','specify correct q-point grid!',1)
+          call errore  ('matdyn','specify correct q-point grid!',1)
      ntetra = 6 * nk1 * nk2 * nk3
      allocate ( tetra(4,ntetra) )
      call gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
@@ -223,7 +223,7 @@ program matdyn
   ! read q-point list
   !
      read (5,*) nq
-     if (nq.gt.nqx) call error('matdyn','too many k-points',nq)
+     if (nq.gt.nqx) call errore ('matdyn','too many k-points',nq)
      do n = 1,nq
         read (5,*) (q(i,n),i=1,3)
      end do
@@ -262,7 +262,7 @@ program matdyn
         end if
         qh = sqrt(qhat(1)**2+qhat(2)**2+qhat(3)**2)
         if (qh /= 0.d0) qhat(:) = qhat(:) / qh
-        if (qh /= 0.d0 .and. .not. has_zstar) call error &
+        if (qh /= 0.d0 .and. .not. has_zstar) call errore  &
              ('matdyn','non-analytic term for q=0 missing !', -1)
         !
         call nonanal (nax,nat,dyn,qhat,itau_blk,nax_blk,epsil,zeu,omega)
@@ -344,7 +344,7 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   !  read cell data
   !
   read(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-  if (nat.gt.nax) call error('readfc','too many atoms',nat)
+  if (nat.gt.nax) call errore ('readfc','too many atoms',nat)
   call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3))
   alat = celldm(1)
   call volume(alat,at(1,1),at(1,2),at(1,3),omega)
@@ -353,7 +353,7 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   !
   do nt = 1,ntyp
      read(1,*) i,atm,amass_from_file
-     if (i.ne.nt) call error('readfc','wrong data read',nt)
+     if (i.ne.nt) call errore ('readfc','wrong data read',nt)
      if (amass(nt).eq.0.d0) then
         amass(nt) = amass_from_file
      else
@@ -362,7 +362,7 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   end do
   do na=1,nat
      read(1,*) i,ityp(na),(tau(j,na),j=1,3)
-     if (i.ne.na) call error('readfc','wrong data read',na)
+     if (i.ne.na) call errore ('readfc','wrong data read',na)
   end do
   !
   !  read macroscopic variable
@@ -382,11 +382,11 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
   !  read real space part
   !
   read (1,*) nr1,nr2,nr3
-  if (nr1.gt.nrx)  call error('readin','nr1 .gt. nrx ',+1)
-  if (nr2.gt.nrx)  call error('readin','nr2 .gt. nrx ',+1)
-  if (nr3.gt.nrx)  call error('readin','nr3 .gt. nrx ',+1)
+  if (nr1.gt.nrx)  call errore ('readin','nr1 .gt. nrx ',+1)
+  if (nr2.gt.nrx)  call errore ('readin','nr2 .gt. nrx ',+1)
+  if (nr3.gt.nrx)  call errore ('readin','nr3 .gt. nrx ',+1)
   !
-  if(nat.gt.nax) call error ('readfc','nax too small', nat)
+  if(nat.gt.nax) call errore  ('readfc','nax too small', nat)
   !
   !  read real-space interatomic force constants
   !
@@ -398,7 +398,7 @@ subroutine readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
               read (1,*) ibid, jbid, nabid, nbbid
               if(i .ne.ibid  .or. j .ne.jbid .or.                   &
                  na.ne.nabid .or. nb.ne.nbbid)                      &
-                 call error ('readfc','error in reading',1)
+                 call errore  ('readfc','error in reading',1)
               read (1,*) (((m1bid, m2bid, m3bid,                    &
                           frc(m1,m2,m3,i,j,na,nb),                  &
                            m1=1,nr1),m2=1,nr2),m3=1,nr3)
@@ -472,7 +472,7 @@ subroutine frc_blk(nax,dyn,q,tau,nat,                             &
         end do
         if (abs(total_weight-nr1*nr2*nr3).gt.1.0d-8) then
            write(*,*) total_weight
-           call error ('frc_blk','wrong total_weight',1)
+           call errore ('frc_blk','wrong total_weight',1)
         end if
      end do
   end do
@@ -733,7 +733,7 @@ subroutine q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
      end if
   end do ! i
   !
-  if (iq.ne.nsc) call error('q_gen',' probably nr1,nr2,nr3 too small ', iq)
+  if (iq.ne.nsc) call errore('q_gen',' probably nr1,nr2,nr3 too small ', iq)
   return
 end subroutine q_gen
 !
@@ -754,7 +754,7 @@ subroutine check_at(at,bg_blk,alat,omega)
      do i =1,3
         if ( abs(work(i,j)-nint(work(i,j))) > small) then
            write (*,'(3f9.4)') work(:,:)
-           call error ('check_at','at not multiple of at_blk',1)
+           call errore ('check_at','at not multiple of at_blk',1)
         end if
      end do
   end do
@@ -799,7 +799,7 @@ subroutine set_tau                                                &
               !
               do na_blk=1, nat_blk
                  na = na + 1
-                 if (na.gt.nat) call error('set_tau','too many atoms',na)
+                 if (na.gt.nat) call errore('set_tau','too many atoms',na)
                  tau(1,na)    = tau_blk(1,na_blk) + r(1)
                  tau(2,na)    = tau_blk(2,na_blk) + r(2)
                  tau(3,na)    = tau_blk(3,na_blk) + r(3)
@@ -813,7 +813,7 @@ subroutine set_tau                                                &
      end do
   end do
   !
-  if (na.ne.nat) call error('set_tau','too few atoms: increase NNs',na)
+  if (na.ne.nat) call errore('set_tau','too few atoms: increase NNs',na)
   !
   return
 end subroutine set_tau
@@ -834,7 +834,7 @@ subroutine read_tau(nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
   do na=1,nat
      read(*,*) (tau(i,na),i=1,3), ityp(na)
      if (ityp(na).le.0 .or. ityp(na) .gt. ntyp) &
-          call error('read_tau',' wrong atomic type', na)
+          call errore('read_tau',' wrong atomic type', na)
      do na_blk=1,nat_blk
         r(1) = tau(1,na) - tau_blk(1,na_blk)
         r(2) = tau(2,na) - tau_blk(2,na_blk)
@@ -847,7 +847,7 @@ subroutine read_tau(nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
            go to 999
         end if
      end do
-     call error ('read_tau',' wrong atomic position ', na)
+     call errore ('read_tau',' wrong atomic position ', na)
 999  continue
   end do
   !
@@ -903,10 +903,10 @@ subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
      !
      call cubicsym (at, s, sname, nrot)  
   elseif (ibrav == 0) then  
-     call error ('gen_qpoints', 'assuming cubic symmetry',-1)  
+     call errore ('gen_qpoints', 'assuming cubic symmetry',-1)  
      call cubicsym (at, s, sname, nrot)  
   else  
-     call error ('gen_qpoints', 'wrong ibrav', 1)  
+     call errore ('gen_qpoints', 'wrong ibrav', 1)  
   endif
   !
   call kpoint_grid ( nrot, s, bg, nqx, 0,0,0, nk1,nk2,nk3, nq, q, wk)
@@ -916,7 +916,7 @@ subroutine gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
        0, 0)
   
   if (ntetra /= 6 * nk1 * nk2 * nk3) &
-       call error('gen_qpoints','inconsistent ntetra',1)
+       call errore ('gen_qpoints','inconsistent ntetra',1)
 
   call tetrahedra (nsym, s, minus_q, at, bg, nqx, 0, 0, 0, &
        nk1, nk2, nk3, nq, q, wk, ntetra, tetra)

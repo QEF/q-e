@@ -25,11 +25,11 @@ subroutine electrons
   !
   !     a few local variables
   !
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
 implicit none
-#ifdef PARA
+#ifdef __PARA
   ! number of plane waves summed on all nodes
   integer :: ngkp (npk)
 #define NRXX ncplane*npp(me)
@@ -128,7 +128,7 @@ implicit none
      !! skip all the rest if not lscf
      if (.not.lscf) then
         conv_elec=.true.
-#ifdef PARA
+#ifdef __PARA
         call poolrecover (et, nbndx, nkstot, nks)
 #endif
 
@@ -171,7 +171,7 @@ implicit none
         enddo
         magtot = magtot * omega / (nr1 * nr2 * nr3)
         absmag = absmag * omega / (nr1 * nr2 * nr3)
-#ifdef PARA
+#ifdef __PARA
         call reduce (1, magtot)
         call reduce (1, absmag)
 #endif
@@ -217,13 +217,13 @@ implicit none
         ldim2 = ( 2 * Hubbard_lmax + 1 )**2
         if (iter.gt.niter_with_fixed_ns .and. imix.lt.0) &
             call DCOPY(nat*nspin*ldim2,nsnew,1,ns,1)
-#ifdef PARA
+#ifdef __PARA
         if (me.eq.1.and.mypool.eq.1) then
 #endif
            call seqopn (iunocc, trim(prefix)//'.occup', 'formatted', exst)
            write (iunocc, * ) ns
            close (unit = iunocc, status = 'keep')
-#ifdef PARA
+#ifdef __PARA
         endif
 #endif
      endif
@@ -253,7 +253,7 @@ implicit none
      if ( (conv_elec.or.mod(iter,iprint).eq.0).and.iswitch.le.2) then
 
      !  if (lda_plus_u) call write_ns
-#ifdef PARA
+#ifdef __PARA
         do ik = 1, nks
            ngkp (ik) = ngk (ik)
         enddo
@@ -269,7 +269,7 @@ implicit none
 
            endif
            if (conv_elec) then
-#ifdef PARA
+#ifdef __PARA
               write (6, 9021) (xk (i, ik), i = 1, 3), ngkp (ik)
 #else
               write (6, 9021) (xk (i, ik), i = 1, 3), ngk (ik)

@@ -141,7 +141,7 @@ subroutine newdq (dvscf, npe)
         endif
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nhm * nhm * 3 * nat * nspin, int3)
 #endif
   !      do ih = 1,nh(1)

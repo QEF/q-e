@@ -84,7 +84,7 @@ subroutine force_corr (forcescc)
         enddo
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (3 * nat, forcescc)
 #endif
   deallocate ( aux, rhocgnt )

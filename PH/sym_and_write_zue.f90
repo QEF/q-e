@@ -30,7 +30,7 @@ subroutine sym_and_write_zue
   real(kind=DP) :: work (3, 3, nat)
   ! auxiliary space (note the index order
   call setv (9 * nat, 0.d0, work, 1)
-#ifdef PARA
+#ifdef __PARA
   call reduce (18 * nat, zstarue0)
   call poolreduce (18 * nat, zstarue0)
 #endif

@@ -37,19 +37,19 @@ subroutine seqopn (unit, filename, formatt, exst)
   ! true if the file is already opened
 
 
-  if (unit.le.0) call error ('seqopn', 'wrong unit', 1)
+  if (unit.le.0) call errore ('seqopn', 'wrong unit', 1)
   !
   !    test if the file is already opened
   !
   ios = 0
   inquire (unit = unit, opened = opnd)
-  if (opnd) call error ('seqopn', 'can"t open a connected unit', &
+  if (opnd) call errore ('seqopn', 'can"t open a connected unit', &
        abs (unit) )
   !
   !      then we check the filename
   !
 
-  if (filename.eq.' ') call error ('seqopn', 'filename not given', 2)
+  if (filename.eq.' ') call errore ('seqopn', 'filename not given', 2)
   if ( trim(nd_nmbr).eq.'1' .or. trim(nd_nmbr).eq.'01'.or. &
        trim(nd_nmbr).eq.'001') then
      !
@@ -70,7 +70,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   open (unit = unit, file = tempfile, form = formatt, status = &
        'unknown', iostat = ios)
 
-  if (ios.ne.0) call error ('seqopn', 'error opening '//filename, &
+  if (ios.ne.0) call errore ('seqopn', 'error opening '//filename, &
        unit)
   return
 end subroutine seqopn

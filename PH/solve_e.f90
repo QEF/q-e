@@ -78,7 +78,7 @@ subroutine solve_e
 
   external ch_psi_all, cg_psi
 
-  if (lsda) call error ('solve_e', ' LSDA not implemented', 1)
+  if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
 
   call start_clock ('solve_e')
   allocate (dvscfin( nrxx, nspin, 3))    
@@ -111,7 +111,7 @@ subroutine solve_e
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-  if (degauss.ne.0.d0.or..not.lgamma) call error ('solve_e', &
+  if (degauss.ne.0.d0.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
   !
   !   The outside loop is over the iterations
@@ -137,7 +137,7 @@ subroutine solve_e
         if (lsda) current_spin = isk (ik)
         if (nksq.gt.1) then
            read (iunigk, err = 100, iostat = ios) npw, igk
-100        call error ('solve_e', 'reading igk', abs (ios) )
+100        call errore ('solve_e', 'reading igk', abs (ios) )
         endif
         !
         ! reads unperturbed wavefuctions psi_k in G_space, for all bands
@@ -215,7 +215,7 @@ subroutine solve_e
               do jbnd = 1, nbnd_occ (ik)
                  ps(jbnd)=-ZDOTC(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2 * nbnd, ps)
 #endif
               do jbnd = 1, nbnd_occ (ik)
@@ -239,7 +239,7 @@ subroutine solve_e
               enddo
               eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (nbnd_occ (ik), eprec)
 #endif
            do ibnd = 1, nbnd_occ (ik)
@@ -273,7 +273,7 @@ subroutine solve_e
         enddo   ! on perturbation
      enddo      ! on k points
 
-#ifdef PARA
+#ifdef __PARA
      call reduce (nhm * (nhm + 1) * nat * 3* nspin, dbecsum)
 #endif
      if (doublegrid) then
@@ -290,7 +290,7 @@ subroutine solve_e
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes of this representation. We symmetrize this potenti
      !
-#ifdef PARA
+#ifdef __PARA
      call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
 #endif
      do ipol=1,3
@@ -298,7 +298,7 @@ subroutine solve_e
              iudrho,ipol,+1)
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
      enddo
-#ifdef PARA
+#ifdef __PARA
      call psyme (dvscfout)
 #else
      call syme (dvscfout)

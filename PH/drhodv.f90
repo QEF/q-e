@@ -112,7 +112,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      enddo
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   !
   ! collect contributions from all pools (sum over k-points)
   !

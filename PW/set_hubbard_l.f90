@@ -23,7 +23,7 @@ elseif (psd .eq.'Ce') then
 !
 else  
    hubbard_l =  -1
-   call error ('set_hubbard_l','pseudopotential not yet inserted', 1)
+   call errore ('set_hubbard_l','pseudopotential not yet inserted', 1)
 endif  
 return  
 

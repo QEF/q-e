@@ -174,7 +174,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      do ik = 1, nksq
         if (nksq.gt.1) then
            read (iunigk, err = 100, iostat = ios) npw, igk
-100        call error ('solve_linter', 'reading igk', abs (ios) )
+100        call errore ('solve_linter', 'reading igk', abs (ios) )
         endif
         if (lgamma) then
            ikk = ik
@@ -187,7 +187,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         if (lsda) current_spin = isk (ikk)
         if (.not.lgamma.and.nksq.gt.1) then
            read (iunigk, err = 200, iostat = ios) npwq, igkq
-200        call error ('solve_linter', 'reading igkq', abs (ios) )
+200        call errore ('solve_linter', 'reading igkq', abs (ios) )
 
         endif
         call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
@@ -317,7 +317,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  ps (jbnd) = - wwg * ZDOTC (npwq, evq (1, jbnd), 1, dvpsi (1, ibnd) &
                       , 1)
               enddo
-#ifdef PARA
+#ifdef __PARA
               call reduce (2 * nbnd, ps)
 #endif
               do jbnd = 1, nbnd
@@ -349,7 +349,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               enddo
               eprec (ibnd) = 1.35d0 * ZDOTC (npwq, evq (1, ibnd), 1, auxg, 1)
            enddo
-#ifdef PARA
+#ifdef __PARA
            call reduce (nbnd_occ (ikk), eprec)
 #endif
            do ibnd = 1, nbnd_occ (ikk)
@@ -384,7 +384,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         enddo
         ! on k-points
      enddo
-#ifdef PARA
+#ifdef __PARA
      call reduce (nhm * (nhm + 1) * nat * nspin * npe, dbecsum)
 #endif
      if (doublegrid) then
@@ -402,7 +402,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
 
      call addusddens (drhoscfh, dbecsum, irr, imode0, npe, 0)
-#ifdef PARA
+#ifdef __PARA
      !
      !   Reduce the delta rho across pools
      !
@@ -428,7 +428,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   After the loop over the perturbations we have the change of the pote
      !   for all the modes of this representation. We symmetrize this potenti
      !
-#ifdef PARA
+#ifdef __PARA
      call psymdvscf (npert (irr), irr, dvscfout)
 #else
      call symdvscf (npert (irr), irr, dvscfout)
@@ -457,7 +457,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
 
      call newdq (dvscfin, npe)
-#ifdef PARA
+#ifdef __PARA
      aux_avg (1) = dfloat (ltaver)
      aux_avg (2) = dfloat (lintercall)
      call poolreduce (2, aux_avg)

@@ -1,0 +1,47 @@
+#
+# System-dependent Make definitions for Linux PCs, Lahey compiler
+# Contributed by Marcos Verissimo Alves
+# Edit according to your needs
+#
+# Precompiler
+# we assume that the GNU precompiler is used. The option -traditional
+# prevent string concatenation '//' from being interpreted as a comment
+#
+CPP = /usr/local/lf9560/lib/cpp
+#
+# Add -DADD_BLAS_ONE_UNDERSCORE if your blas/lapack library names contain 
+# two underscores at the end
+# Define FFTW library names with one underscore less than they have in
+# the library (one underscore is added by the compiler)
+#
+CPPFLAGS = -P -traditional -I$(OSHOME)/include -DPC -DLAHEY -D__FFTW \
+           -D"FFTWND_F77_ONE=fftwnd_f77_one_" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan_" \
+           -D"FFTW_F77=fftw_f77_" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan_"
+
+#
+# Fortran compilers:
+#
+F90 = lf95
+F90FLAGS = --staticlink --dbl -O -I$(OSHOME)
+F77 = lf95
+#
+# This is needed to tell the compiler where modules are
+#
+MODULEFLAG= -I$(OSHOME)/Modules -I$(OSHOME)/PW -I$(OSHOME)/PH
+
+#
+# Loader:
+# this below uses precompiled lahey libraries.
+# we assume that fftw is placed in /usr/lib
+# 
+LD=$(F90)
+LIBS = -llapackmt -lblasmt -L/usr/lib -ldfftw
+LFLAGS = $(LIBS) $(MODULEFLAG)
+
+#
+# ar:
+#
+AR = ar
+ARFLAGS = ruv

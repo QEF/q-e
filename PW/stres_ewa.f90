@@ -89,7 +89,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   alpha = 2.9
 12 alpha = alpha - 0.1
-  if (alpha.eq.0.0) call error ('stres_ew', 'optimal alpha not found &
+  if (alpha.eq.0.0) call errore ('stres_ew', 'optimal alpha not found &
        &', 1)
   upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * erfc (sqrt &
        (tpiba2 * gcutm / 4.0 / alpha) )
@@ -175,7 +175,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         sigmaewa (l, m) = - sigmaewa (l, m)
      enddo
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (9, sigmaewa)
 #endif
   return

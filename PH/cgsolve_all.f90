@@ -184,7 +184,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         if (conv (ibnd) .eq.0) then
            rho (ibnd) = ZDOTC (ndim, gp (1, ibnd), 1, g (1, ibnd), &
                 1)
-#ifdef PARA
+#ifdef __PARA
 
            call reduce (1, rho (ibnd) )
 #endif
@@ -243,7 +243,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         if (conv (ibnd) .eq.0) then
            a = ZDOTC (ndim, h (1, ibnd), 1, g (1, ibnd), 1)
            c = ZDOTC (ndim, h (1, ibnd), 1, t (1, ibnd), 1)
-#ifdef PARA
+#ifdef __PARA
            call reduce (1, a)
            call reduce (1, c)
 #endif

@@ -63,14 +63,14 @@ subroutine c_bands (iter, ik_, dr2)
   if (isolve.eq.0.and.loverlap) then
      write (6, '("     Davidson diagonalization with overlap")')
   else
-     call error ('c_bands', 'not implemented', 1)
+     call errore ('c_bands', 'not implemented', 1)
   endif
   avg_iter = 0.d0
   !
   ! v_of_0 is (Vloc)(G=0)
   !
   v_of_0 = dsum (nrxx, vltot, 1) / float (nr1 * nr2 * nr3)
-#ifdef PARA
+#ifdef __PARA
   call reduce (1, v_of_0)
 #endif
   !
@@ -159,7 +159,7 @@ subroutine c_bands (iter, ik_, dr2)
      call save_in_cbands (iter, ik, dr2)
   enddo
   ik_ = 0
-#ifdef PARA
+#ifdef __PARA
   call poolreduce (1, avg_iter)
 #endif
   avg_iter = avg_iter / nkstot

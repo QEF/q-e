@@ -95,17 +95,17 @@ subroutine do_postproc (nodenumber)
   !     reading the namelist inputpp
   !
   read (5, inputpp, err = 200, iostat = ios)
-200 call error ('postproc', 'reading inputpp namelist', abs (ios) )
+200 call errore ('postproc', 'reading inputpp namelist', abs (ios) )
   !
   !     Check of namelist variables
   !
   if (filplot.ne.' ') then
 
-     if (plot_num.lt.0.or.plot_num.gt.11) call error ('postproc', &
+     if (plot_num.lt.0.or.plot_num.gt.11) call errore ('postproc', &
           'Wrong plot_num', abs (plot_num) )
 
      if ( (plot_num.eq.0.or.plot_num.eq.1) .and. ( &
-          spin_component.lt.0.or.spin_component.gt.2) ) call error ( &
+          spin_component.lt.0.or.spin_component.gt.2) ) call errore ( &
           'postproc', 'wrong value of spin_component', 1)
 
      if (plot_num.eq.10) then
@@ -115,7 +115,7 @@ subroutine do_postproc (nodenumber)
   endif
 
   if (filplot.eq.' '.and.filband.eq.' ') call &
-       error ('postproc', 'nothing to do?', 1)
+       errore ('postproc', 'nothing to do?', 1)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !

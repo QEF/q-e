@@ -10,7 +10,7 @@
 subroutine poolscatter (nsize, nkstot, f_in, nks, f_out)
   !-----------------------------------------------------------------------
 #include "machine.h"
-#ifdef PARA
+#ifdef __PARA
   use para
   use parameters, only : DP
   implicit none

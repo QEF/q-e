@@ -56,7 +56,7 @@ subroutine read_pseudo (is, iunps, ierr)
   end if
   !
   mesh(is) = upf%mesh
-  if (mesh(is) > mmaxx) call error('read_pseudo','increase mmaxx',mesh(is))
+  if (mesh(is) > mmaxx) call errore('read_pseudo','increase mmaxx',mesh(is))
   !
   nchi(is) = upf%nwfc
   lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)

@@ -79,7 +79,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   call DSCAL (2 * nbnd * m, alpha_pv, ps, 1)
-#ifdef PARA
+#ifdef __PARA
   call reduce (2 * nbnd * m, ps)
 #endif
 

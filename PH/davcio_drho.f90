@@ -21,13 +21,13 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
   use pwcom
   use parameters, only : DP
   use phcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
   integer :: iunit, lrec, nrec, isw
   complex(kind=DP) :: drho (nrxx, nspin)
-#ifdef PARA
+#ifdef __PARA
   include 'mpif.h'
   !
   ! local variables
@@ -48,7 +48,7 @@ subroutine davcio_drho (drho, lrec, iunit, nrec, isw)
      enddo
      root = 0
      call MPI_barrier (MPI_COMM_WORLD, errcode)
-     call error ('davcio_drho', 'at barrier', errcode)
+     call errore ('davcio_drho', 'at barrier', errcode)
 
      if (me.eq.1) call davcio (ddrho, lrec, iunit, nrec, + 1)
   elseif (isw.lt.0) then

@@ -96,7 +96,7 @@ subroutine addusforce (forcenl)
      endif
 
   enddo
-#ifdef PARA
+#ifdef __PARA
   call reduce (3 * nhm * (nhm + 1) * nat * nspin / 2, ddeeq)
 #endif
   !            write(6,'( "dmatrix atom ",i4)') na

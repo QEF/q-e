@@ -317,7 +317,7 @@
           hmat(1,2)*(hmat(2,3)*hmat(3,1)-hmat(2,1)*hmat(3,3)) + &
           hmat(1,3)*(hmat(2,1)*hmat(3,2)-hmat(2,2)*hmat(3,1))
         IF (box%deth<1.E-10) & 
-          CALL error('gethinv', 'box determinant too small', 1)
+          CALL errore('gethinv', 'box determinant too small', 1)
         odet = 1._dbl/box%deth
         hmati(1,1) = (hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2))*odet
         hmati(2,2) = (hmat(1,1)*hmat(3,3)-hmat(1,3)*hmat(3,1))*odet
@@ -333,7 +333,7 @@
         CALL invmat3(box%a,box%m1,box%omega)
 
         IF(abs(box%omega-box%deth)/abs(box%omega+box%deth).gt.1.0d-12) THEN
-          CALL error('gethinv', 'box determinants are different',2)
+          CALL errore('gethinv', 'box determinants are different',2)
         END IF
 
       END SUBROUTINE gethinv

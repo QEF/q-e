@@ -17,7 +17,7 @@ subroutine ggen
   !
 #include "machine.h"
   use pwcom
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
   implicit none
@@ -37,7 +37,7 @@ subroutine ggen
   ! array containing all g vectors generators, on all processors: replicated data
   integer, allocatable :: igsrt(:)
   !
-#ifdef PARA
+#ifdef __PARA
   integer :: m1, m2, m3, mc
   !
 #endif
@@ -92,7 +92,7 @@ subroutine ggen
         if (tt <= gcutm) then
           ngm = ngm + 1
           if (tt <= gcutms) ngms = ngms + 1
-          if (ngm > ngm_g) call error ('ggen', 'too many g-vectors', ngm)
+          if (ngm > ngm_g) call errore ('ggen', 'too many g-vectors', ngm)
           mill_g( 1, ngm ) = i
           mill_g( 2, ngm ) = j
           mill_g( 3, ngm ) = k
@@ -107,8 +107,8 @@ subroutine ggen
     enddo
   enddo
 
-  if (ngm  /= ngm_g ) call error ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
-  if (ngms /= ngms_g) call error ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
+  if (ngm  /= ngm_g ) call errore ('ggen', 'g-vectors missing !', abs(ngm - ngm_g))
+  if (ngms /= ngms_g) call errore ('ggen', 'smooth g-vectors missing !', abs(ngms - ngms_g))
 
   igsrt(1) = 0
   call hpsort(ngm_g, g2sort_g, igsrt)
@@ -142,7 +142,7 @@ subroutine ggen
     j = mill_g(2, ng)
     k = mill_g(3, ng)
 
-#ifdef PARA
+#ifdef __PARA
     m1 = mod (i, nr1) + 1
     if (m1.lt.1) m1 = m1 + nr1
     m2 = mod (j, nr2) + 1
@@ -159,7 +159,7 @@ subroutine ggen
 
     ngm = ngm + 1
     if (tt.le.gcutms) ngms = ngms + 1
-    if (ngm > ngmx) call error ('ggen', 'too many g-vectors', ngm)
+    if (ngm > ngmx) call errore ('ggen', 'too many g-vectors', ngm)
     !
     !  Here map local and global g index !!!
     !
@@ -197,7 +197,7 @@ subroutine ggen
   ngms = 0
 
   do i = - n1, n1
-#ifdef PARA
+#ifdef __PARA
      m1 = mod (i, nr1) + 1
      if (m1.lt.1) m1 = m1 + nr1
      do j = - n2, n2
@@ -217,7 +217,7 @@ subroutine ggen
               if (tt.le.gcutm) then
                  ngm = ngm + 1
                  if (tt.le.gcutms) ngms = ngms + 1
-                 if (ngm.gt.ngmx) call error ('ggen', 'too many g-vectors', ngm)
+                 if (ngm.gt.ngmx) call errore ('ggen', 'too many g-vectors', ngm)
                  do ipol = 1, 3
                     g (ipol, ngm) = t (ipol)
                  enddo
@@ -237,7 +237,7 @@ subroutine ggen
 
 #endif
 
-     if (ngm.ne.ngmx) call error ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
+     if (ngm.ne.ngmx) call errore ('ggen', 'g-vectors missing !', abs(ngm - ngmx))
      !
      !   reorder the g's in order of increasing magnitude. On exit
      !   from hpsort esort is ordered, and nl contains the new order.
@@ -311,7 +311,7 @@ subroutine ggen
         if (n3.lt.1) n3 = n3 + nr3
         if (n3s.lt.1) n3s = n3s + nr3s
         if (n1.le.nr1.and.n2.le.nr2.and.n3.le.nr3) then
-#ifdef PARA
+#ifdef __PARA
            nl (ng) = n3 + (ipc (n1 + (n2 - 1) * nrx1) - 1) * nrx3
            if (ng.le.ngms) nls (ng) = n3s + (ipcs (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
@@ -321,7 +321,7 @@ subroutine ggen
                 * nrx1s * nr2s
 #endif
         else
-           call error('ggen','Mesh too small?',ng)
+           call errore('ggen','Mesh too small?',ng)
         endif
      enddo
      !
@@ -363,7 +363,7 @@ subroutine ggen
 
         enddo
 
-        if (igl.ne.ngl) call error ('setup', 'igl <> ngl', ngl)
+        if (igl.ne.ngl) call errore ('setup', 'igl <> ngl', ngl)
 
      endif
 

@@ -69,14 +69,14 @@ subroutine readvan (is, iunps)
   !
   !     We first check the input variables
   !
-  if (is.lt.0.or.is.gt.npsx) call error ('readvan', 'Wrong is number &', 1)
+  if (is.lt.0.or.is.gt.npsx) call errore ('readvan', 'Wrong is number &', 1)
 
   read (iunps, '(6i5)', err = 100, iostat = ios) (iver (i, is) , i = 1, 3) ,&
        (idmy (i) , i = 1, 3)
   if (iver (1, is) .lt.6) then
-     call error ('readvan', 'This version is too old', iver (1, is) )
+     call errore ('readvan', 'This version is too old', iver (1, is) )
   elseif (iver (1, is) .gt.7) then
-     call error ('readvan', 'This version is too new', iver (1, is) )
+     call errore ('readvan', 'This version is too new', iver (1, is) )
 
   endif
 
@@ -93,7 +93,7 @@ subroutine readvan (is, iunps)
   elseif (exfact.eq.5) then
      dft = 'PBE'
   else
-     call error ('readvan', 'Wrong xc in pseudopotential', 1)
+     call errore ('readvan', 'Wrong xc in pseudopotential', 1)
   endif
   call which_dft (dft, iexch, icorr, igcx, igcc)
   read (iunps, '(2i5,1pe19.11)', err = 100, iostat = ios) nchi (is) &
@@ -101,12 +101,12 @@ subroutine readvan (is, iunps)
   !
   !    Test the input values
   !
-  if (nchi (is) .gt.nchix) call error ('readvan', 'nchi> nchix', &
+  if (nchi (is) .gt.nchix) call errore ('readvan', 'nchi> nchix', &
        nchi (is) )
-  if (nchi (is) .lt.0) call error ('readvan', 'wrong nchi ', is)
-  if (mesh (is) .gt.ndm.or.mesh (is) .lt.0) call error ('readvan', &
+  if (nchi (is) .lt.0) call errore ('readvan', 'wrong nchi ', is)
+  if (mesh (is) .gt.ndm.or.mesh (is) .lt.0) call errore ('readvan', &
        'wrong mesh', is)
-  if (zp (is) .le.0.d0) call error ('readvan', 'wrong zp', is)
+  if (zp (is) .le.0.d0) call errore ('readvan', 'wrong zp', is)
   !
   !   Set the pseudopotential name
   !
@@ -119,7 +119,7 @@ subroutine readvan (is, iunps)
        wwnl (nb) , ee (nb) , nb = 1, nchi (is) )
   read (iunps, '(2i5,f15.9)', err = 100, iostat = ios) keyps, &
        ifpcor, dummy
-  if (keyps.ne.3) call error ('readvan', 'keyps .ne. 3', keyps)
+  if (keyps.ne.3) call errore ('readvan', 'keyps .ne. 3', keyps)
   !
   !   If this atom has nlcc set the appropriate variables
   !
@@ -139,21 +139,21 @@ subroutine readvan (is, iunps)
   !        we use the Vanderbilt convention up to the end. Then we change
   !        to interface with the rest of the code.
   !
-  if (lmax (is) .gt.lmaxx + 1.or.lmax (is) .le.0) call error (' read &
+  if (lmax (is) .gt.lmaxx + 1.or.lmax (is) .le.0) call errore (' read &
        &van', 'Wrong lmax', lmax (is) )
   if (lloc (is) .eq. - 1) lloc (is) = lmax (is) + 1
-  if (lloc (is) .gt.lmax (is) + 1.or.lloc (is) .lt.0) call error ( &
+  if (lloc (is) .gt.lmax (is) + 1.or.lloc (is) .lt.0) call errore ( &
        'readvan', 'wrong lloc', is)
-  if (nqf (is) .gt.nqfm.or.nqf (is) .lt.0) call error (' readvan', &
+  if (nqf (is) .gt.nqfm.or.nqf (is) .lt.0) call errore (' readvan', &
        'Wrong nqf', nqf (is) )
-  if (ifqopt (is) .lt.0) call error ('readvan', 'wrong ifqopt', is)
+  if (ifqopt (is) .lt.0) call errore ('readvan', 'wrong ifqopt', is)
   !
   !     Reads and test the values of rinner
   !
   read (iunps, *, err = 100, iostat = ios) (rinner (lp, is), &
        lp = 1, lmax (is) * 2 - 1)
   do lp = 1, lmax (is) * 2 - 1
-     if (rinner (lp, is) .lt.0.d0) call error ('readvan', 'Wrong rinner', is)
+     if (rinner (lp, is) .lt.0.d0) call errore ('readvan', 'Wrong rinner', is)
   enddo
   read (iunps, '(i5)', err = 100, iostat = ios) irel
   !
@@ -162,7 +162,7 @@ subroutine readvan (is, iunps)
 
   nqlc (is) = 2 * lmax (is) - 1
 
-  if (nqlc (is) .gt.lqmax.or.nqlc (is) .lt.0) call error (' readvan', &
+  if (nqlc (is) .gt.lqmax.or.nqlc (is) .lt.0) call errore (' readvan', &
        &'Wrong  nqlc', nqlc (is) )
   read (iunps, '(1p4e19.11)', err = 100, iostat = ios) (rc (l) , l = &
        1, lmax (is) )
@@ -172,9 +172,9 @@ subroutine readvan (is, iunps)
 
   read (iunps, '(2i5)', err = 100, iostat = ios) nbeta (is) , &
        kkbeta (is)
-  if (nbeta (is) .gt.nbrx.or.nbeta (is) .lt.0) call error ( &
+  if (nbeta (is) .gt.nbrx.or.nbeta (is) .lt.0) call errore ( &
        'readvan', 'wrong nbeta', is)
-  if (kkbeta (is) .gt.mesh (is) .or.kkbeta (is) .lt.0) call error ( &
+  if (kkbeta (is) .gt.mesh (is) .or.kkbeta (is) .lt.0) call errore ( &
        'readvan', 'wrong kkbeta', is)
   !
   !    Now reads the main Vanderbilt parameters
@@ -184,7 +184,7 @@ subroutine readvan (is, iunps)
      read (iunps, '(1p4e19.11)', err = 100, iostat = ios) eee (nb) , &
           (betar (ir, nb, is) , ir = 1, kkbeta (is) )
      if (lll (nb, is) .gt.lmaxx.or.lll (nb, is) .lt.0)&
-          call error ('readvan', ' wrong lll ', is)
+          call errore ('readvan', ' wrong lll ', is)
      do mb = nb, nbeta (is)
         read (iunps, '(1p4e19.11)', err = 100, iostat = ios) &
              dion (nb, mb, is) , ddd (nb, mb) , qqq (nb, mb, is), &
@@ -273,7 +273,7 @@ subroutine readvan (is, iunps)
   !
   if (iver (1, is) .ge.7) then
      read (iunps, *, err = 100, iostat = ios) i
-     if (i.ne.nchi (is) ) call error ('readvan', &
+     if (i.ne.nchi (is) ) call errore ('readvan', &
           & 'unexpected or unimplemented case', 1)
 
   endif
@@ -283,7 +283,7 @@ subroutine readvan (is, iunps)
      i = nnlz (nb) / 100
      lchi (nb, is) = nnlz (nb) / 10 - i * 10
   enddo
-100 call error ('readvan', 'error reading pseudo file', abs (ios) )
+100 call errore ('readvan', 'error reading pseudo file', abs (ios) )
   !
   !    Here we write on output informations on the read pseudopotential
   !

@@ -17,7 +17,7 @@ subroutine openfild3
   use pwcom
   use phcom
   use d3com
-#ifdef PARA
+#ifdef __PARA
   use para
 #endif
 
@@ -30,7 +30,7 @@ subroutine openfild3
   ! logical variable to check file existe
 
 
-  if (len_trim(filpun).eq.0) call error ('openfild3', 'wrong filpun name', 1)
+  if (len_trim(filpun).eq.0) call errore ('openfild3', 'wrong filpun name', 1)
   !
   !     The file with the wavefunctions
   !
@@ -39,7 +39,7 @@ subroutine openfild3
   lrwfc = 2 * nbnd * npwx
   filint = trim(filpun) //'.wfc'
   call diropn (iuwfc, filint, lrwfc, exst)
-  if (.not.exst) call error ('openfild3', 'file '//filint//' not found', 1)
+  if (.not.exst) call errore ('openfild3', 'file '//filint//' not found', 1)
   !
   !    The file with deltaV_{bare} * psi
   !
@@ -47,7 +47,7 @@ subroutine openfild3
   lrbar = 2 * nbnd * npwx
   filint = trim(filpun) //'.bar'
   call diropn (iubar, filint, lrbar, exst)
-  if (recover.and..not.exst) call error ('openfild3', 'file bar not &
+  if (recover.and..not.exst) call errore ('openfild3', 'file bar not &
        &found', 1)
   !
   !    The file with the solution delta psi
@@ -56,7 +56,7 @@ subroutine openfild3
   lrdwf = 2 * nbnd * npwx
   filint = trim(filpun) //'.dwf'
   call diropn (iudwf, filint, lrdwf, exst)
-  if (recover.and..not.exst) call error ('openfild3', 'file dwf not &
+  if (recover.and..not.exst) call errore ('openfild3', 'file dwf not &
        &found', 1)
   !
   !   Here the sequential files
@@ -69,7 +69,7 @@ subroutine openfild3
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
-#ifdef PARA
+#ifdef __PARA
   ! ... by the first node only, other nodes write on unit 6 (i.e. /dev/null)
   !
   if (me.ne.1.or.mypool.ne.1) then
@@ -81,9 +81,9 @@ subroutine openfild3
   iudyn = 26
   open (unit = iudyn, file = fildyn, status = 'unknown', err = 110, &
        iostat = ios)
-110 call error ('openfild3', 'opening file'//fildyn, abs (ios) )
+110 call errore ('openfild3', 'opening file'//fildyn, abs (ios) )
   rewind (iudyn)
-#ifdef PARA
+#ifdef __PARA
 
 
 
@@ -98,7 +98,7 @@ subroutine openfild3
   iud0rho = 33
   if (lgamma) iud0rho = iudrho
   lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
-#ifdef PARA
+#ifdef __PARA
   !
   !   is opened only by the first task of each pool
   !
@@ -114,7 +114,7 @@ subroutine openfild3
      filint = trim(fild0rho)
      call diropn (iud0rho, filint, lrdrho, exst)
   endif
-#ifdef PARA
+#ifdef __PARA
 120 continue
 #endif
   !
@@ -179,7 +179,7 @@ subroutine openfild3
      endif
      !
      ! The file containing the variation of the FermiEnergy ef_sh
-#ifdef PARA
+#ifdef __PARA
      ! opened only by the first task of the first pool
      !
 
@@ -188,7 +188,7 @@ subroutine openfild3
      iuef = 41
      filint = trim(filpun) //'.efs'
      call seqopn (iuef, filint, 'unformatted', exst)
-#ifdef PARA
+#ifdef __PARA
 
 130  continue
 #endif

@@ -116,7 +116,7 @@ subroutine set_dft_value (m, i)
 
   parameter (notset = - 1)
 
-  if (m.ne.notset.and.m.ne.i) call error ('decifra', 'two conflictin &
+  if (m.ne.notset.and.m.ne.i) call errore ('decifra', 'two conflictin &
        &g matching values', 1)
 
   m = i

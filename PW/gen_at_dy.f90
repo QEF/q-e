@@ -129,7 +129,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
 
    if (iatw.ne.natw) then
       write(6,*) 'iatw =',iatw,'natw =',natw
-      call error('gen_at_dy','unexpected error',1)
+      call errore('gen_at_dy','unexpected error',1)
    end if
 
    deallocate (sk)

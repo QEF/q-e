@@ -42,7 +42,7 @@ subroutine drhodv(nu_i)
         dynel(nu_j) = dynel(nu_j) + 2.0*wk(kpoint)*work(ibnd)
      end do
   end do
-#ifdef PARA
+#ifdef __PARA
   call reduce(nmodes,dynel)
 #endif
   !

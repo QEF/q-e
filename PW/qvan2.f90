@@ -76,10 +76,10 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   endif
   ivl = nhtol (ih, np) * nhtol (ih, np) + nhtom (ih, np)
   jvl = nhtol (jh, np) * nhtol (jh, np) + nhtom (jh, np)
-  if (nb.gt.nbrx) call error (' qvan2 ', ' nb.gt.nbrx ', nb)
-  if (mb.gt.nbrx) call error (' qvan2 ', ' mb.gt.nbrx ', mb)
-  if (ivl.gt.nlx) call error (' qvan2 ', ' ivl.gt.nlx  ', ivl)
-  if (jvl.gt.nlx) call error (' qvan2 ', ' jvl.gt.nlx  ', jvl)
+  if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
+  if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)
+  if (ivl.gt.nlx) call errore (' qvan2 ', ' ivl.gt.nlx  ', ivl)
+  if (jvl.gt.nlx) call errore (' qvan2 ', ' jvl.gt.nlx  ', jvl)
   qg(:) = (0.d0, 0.d0)
   !
   !    and make the sum over the non zero LM
@@ -104,7 +104,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
      elseif ( (lp.ge.37) .and. (lp.le.49) ) then
         l = 7
      else
-        call error (' qvan ', ' lp > 49 ', lp)
+        call errore (' qvan ', ' lp > 49 ', lp)
      endif
      sig = (0.d0, - 1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)

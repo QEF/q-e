@@ -41,7 +41,7 @@ elseif (psd (nt) .eq.'Ce') then
 !
 else  
    occ_loc = 0.d0  
-   call error ('tabd', 'pseudopotential not yet inserted', 1)
+   call errore ('tabd', 'pseudopotential not yet inserted', 1)
 endif  
 return  
 end subroutine tabd
