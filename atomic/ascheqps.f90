@@ -161,7 +161,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
                 nbeta,nwfx,lls,jjs,ikk,detup)
 
            if (count.gt.30) &
-                call errore('ascheqps','too many try ',1)
+                call errore('ascheqps','too many attempts ',1)
            goto 100
         else
            count=count+1
@@ -172,7 +172,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
                 r,r2,sqr,vpot,beta,ddd,qq, &
                 nbeta,nwfx,lls,jjs,ikk,detlw)
            if (count.gt.6) &
-                call errore('ascheqps','too many try ',1)
+                call errore('ascheqps','too many attempts ',1)
            goto 100
         endif
      endif

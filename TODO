@@ -1,16 +1,12 @@
-TODO LIST - 5 Jan 2005
+TODO LIST - 18 Jan 2005
 
-BUGS
+BUGS TO EXAMINE
 
-- fourfold degenerate phonons (Nicolas Mounet)
 - Zr hcp (Nathalie)
 
 NEW DEVELOPMENTS TO MERGE
 
-- porting/optimization for Altix by Martin Hilgeman
 - support for FFTW3 (partly working) by Pascal Thibadeau
-- porting/optimization for SX6 from CASPUR (hopefully coming)
-- META-GGA (when finished/tested)
 
 INSTALLATION/PORTING
 
@@ -53,7 +49,7 @@ COMMON
      cmplx, dcmplx
      conjg, dconjg
      imag, aimag, dimag
-  plus preprocessing!
+  plus preprocessing! See Carlo suggestions
 
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds 
@@ -115,8 +111,6 @@ POSTPROCESSING
 
 PH, D3, Gamma, Raman
 
-- Bug with 4-dimensional irreps is still there!
-
 - the factors in Raman coefficients are not what they should be 
   (I think) in order to have the stated units A^4/amu
 
@@ -125,12 +119,9 @@ PH, D3, Gamma, Raman
 
 - same input for Gamma and PH; Gamma output compatible with Raman
 
-- once Raman works for sure, remove all Raman-related stuff in Gamma
-
 - better algorithms for electron-phonon
 
 - replace "use pwcom" into more "use" statements
-
 
 DOCUMENTATION
 

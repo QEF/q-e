@@ -146,7 +146,7 @@ subroutine ld1_readin
 
   zmesh=zed
   if (rel == 5 ) then
-     if (zed >= 19.0_dp) then
+     if (zed < 19.0_dp) then
         rel=0
      else
         rel=1

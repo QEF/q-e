@@ -1,3 +1,8 @@
+---------------------------------------------------------------------------
+      Please use the "cvs2cl.pl" script in the root directory
+       of the distribution to produce a detailed ChangeLog
+---------------------------------------------------------------------------
+
 01/11/2004  p wavefunctions added to the Pt pseudopotential. (ACC)
 
 29/10/2004  clean-up. Some routines are in flib. (ADC)

@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
@@ -7,7 +8,7 @@
 !
       program ev
 !
-!      fit of E(v) to an equation of state
+!      fit of E(v) to an equation of state (EOS)
 !
 !      Input data file format for cubic systems:
 !         a0(1)  Etot(1)
@@ -20,6 +21,18 @@
 !      where V0(i)  = sqrt(3)/2 * a^2 * c   is the unit-cell volume
 !            Etot(i)= min Etot(c)   for the given volume V0(i)
 !      V0, a0, etot in atomic (Rydberg) units ; bulk modulus in kbar
+!
+!      Output data file format  for cubic systems:
+!         a0(1)  Etot(1) Efit(1)  Pfit(1)  Etot(1)-Efit(1)
+!         ...
+!         a0(n)  Etot(n) Efit(n)  Pfit(n)  Etot(n)-Efit(n)
+!      Output data file format  for hexagonal systems:
+!         V0(1)  Etot(1) Efit(1)  Pfit(1)  Etot(1)-Efit(1)
+!         ...
+!         V0(n)  Etot(n) Efit(n)  Pfit(n)  Etot(n)-Efit(n)
+!
+!      where Efit is the fitted value from the EOS
+!            Pfit is the corresponding pressure from the EOS
 !
       implicit none
       integer nmaxpar, nmaxpt, nseek, nmin, npar,npt,istat
@@ -204,16 +217,16 @@
       end if
 
       if(istat.eq.1) then
-         write(iun,'('' equation of state: '',
+         write(iun,'(''# equation of state: '',
      &        ''birch 1st order.  chisq = '',d10.4)') chisq
       else if(istat.eq.2) then
-         write(iun,'('' equation of state: '',
+         write(iun,'(''# equation of state: '',
      &        ''birch 2nd order.  chisq = '',d10.4)') chisq
       else if(istat.eq.3) then
-         write(iun,'('' equation of state: '',
+         write(iun,'(''# equation of state: '',
      &        ''keane.            chisq = '',d10.4)') chisq
       else if(istat.eq.4) then
-         write(iun,'('' equation of state: '',
+         write(iun,'(''# equation of state: '',
      &        ''murnaghan.        chisq = '',d10.4)') chisq
       end if
 
@@ -230,14 +243,14 @@
       end if
 
       if(bravais.ne.'hex'.and.bravais.ne.'HEX') then
-         write(iun,'('' a0 ='',f6.2,''  k0 ='',i5,'' kbar,  dk0 ='',
+         write(iun,'(''# a0 ='',f6.2,''  k0 ='',i5,'' kbar,  dk0 ='',
      &                f6.2,''  d2k0 ='',f7.3,''  emin ='',f11.5/)')
      &      (par(1)/fac)**(1d0/3d0), int(par(2)), par(3), par(4), emin
          write(iun,'(f7.3,2f12.5,3x,f8.2,3x,f12.5)') 
      &        ( (v0(i)/fac)**(1d0/3d0), etot(i), efit(i), p(i), 
      &        etot(i)-efit(i), i=1,npt ) 
       else
-         write(iun,'('' V0 ='',f8.2,''  k0 ='',i5,'' kbar,  dk0 ='',
+         write(iun,'(''# V0 ='',f8.2,''  k0 ='',i5,'' kbar,  dk0 ='',
      &                f6.2,''  d2k0 ='',f7.3,''  emin ='',f11.5/)')
      &               par(1), int(par(2)), par(3), par(4), emin
          write(iun,'(f8.2,2f12.5,3x,f8.2,3x,f12.5)') ( v0(i),

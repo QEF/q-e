@@ -112,6 +112,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       lloc = angular momentum of the local channel           (default -1)
            lloc=-1 pseudizes the all-electron potential
            lloc>-1 uses the corresponding channel as local PP
+      NB: if lloc>-1, the corresponding channel must be the last in the
+          list of wavefunctions that appears, after the namelist &inputp
       rcloc = matching radius for the local pseudo-potential      (no default)
               (only if lloc=-1)
       nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
@@ -138,6 +140,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              do not use 0.d0 for unbound states!
       rcut =  matching radius for norm conserving PP
       rcutus= matching radius for ultrasoft PP - used only if pseudotype=3 
+      NB: il lloc>-1 the state with lls=lloc must be the last
 
   3) namelist &test (needed only if iswitch=2, optional if iswitch=3)
 

@@ -44,14 +44,16 @@ end subroutine write_upf
     call date_and_tim(day,hour)
     generated='Generated using "atomic" code by A. Dal Corso &
              & (quantum-espresso distribution)'
-    date_author='Author field   Generation date: '// day 
+    date_author='Author: anonymous   Generation date: '// day 
     comment=title
 
     write (ounps, '(a9)', err = 100, iostat = ios) "<PP_INFO>"  
 
-    write (ounps, '(a)', err = 100, iostat = ios) generated
-    write (ounps, '(a)', err = 100, iostat = ios) date_author
-    write (ounps, '(a)', err = 100, iostat = ios) comment
+    write (ounps, '(a75)', err = 100, iostat = ios) generated
+    write (ounps, '(a75)', err = 100, iostat = ios) date_author
+    if (trim(comment) /= ' ') then
+	write (ounps, '(a75)', err = 100, iostat = ios) comment
+    end if
     if (rel==2) then  
        write (ounps, '(i5,t14,a)', err = 100, iostat = ios) rel,& 
             &"The Pseudo was generated with a Fully-Relativistic Calculation"

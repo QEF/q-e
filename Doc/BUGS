@@ -1,3 +1,7 @@
+
+  *  electron-phonon calculation was not working properly if called
+     after a restart
+
   *  When imposing hermiticity in matdyn.x and dynmat.x codes in pwtools
      routine dyndiag was actually computing the complex conjugate of
      the dynamical matrix. Eigenvectors were therefore wrong, while
