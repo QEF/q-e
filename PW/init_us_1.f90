@@ -83,7 +83,6 @@ subroutine init_us_1
 
   prefr = fpi / omega
   if (lspinorb) then
-    dvan_so = 0.d0
 !
 !  In the spin-orbit case we need the unitary matrix u which rotates the
 !  real spherical harmonics and yields the complex ones.
@@ -102,6 +101,7 @@ subroutine init_us_1
        rot_ylm(n,n1+1)=dcmplx(0.d0, sqrt2)
      enddo
      fcoef=(0.d0,0.d0)
+     dvan_so = (0.d0,0.d0)
      qq_so=(0.d0,0.d0)
   else
      qq (:,:,:)   = 0.d0
