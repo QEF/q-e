@@ -86,3 +86,5 @@
 
 *Scrolledhtml.fontname: 				helvetica
 *Scrolledhtml.fontsize: 				large
+*Scrolledhtml.width:                                    800
+*Scrolledhtml.height:                                   300

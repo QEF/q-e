@@ -25,10 +25,15 @@ CURRENT STATUS
 
 This version of PWgui is compatible with PWscf 2.1.
 
-The aim of the PWgui GUI is to facilitate the creation and
-manipulation (editing) of input files for PWscf set of programs. The
-GUI can also use the XCRYSDEN program (http://www.xcrysden.org/) for
-the visulazation of atomic structures from the pw.x input file.
+The main purpose of the PWgui GUI is to facilitate the creation and
+manipulation (editing) of input files for PWscf set of programs. It is
+possible to run the PWscf programs by using the GUI. This feature
+requires to set the path of the PWscf executables via
+"File-->Settings" menu (tab: PWscf settings). The GUI can also use the
+XCRYSDEN program (http://www.xcrysden.org/) for the visualization of
+atomic structures from the pw.x input/output files, or for the
+visualization of properties calculated via the sequence:
+pw.x-->pp.x-->chdens.x (when the property was saved into an XSF file).
 
 Currently, the following PWscf programs (modules) are supported: 
 
@@ -57,7 +62,7 @@ COPYING
 -------
 
 The PWgui is covered by the GNU General Public License. Note that the
-PWgui uses also some external Tcl software, which is covered by other
+PWgui uses also some external Tcl software, which is covered by
 modified BSD-like free software licenses.
 
 The material included in the directory external/ (self-contained
@@ -103,4 +108,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Sat Sep  4 10:35:52 CEST 2004
+Anton Kokalj (tone.kokalj@ijs.si), Mon Sep 20 08:46:19 CEST 2004
