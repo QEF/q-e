@@ -397,22 +397,28 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   !
-  ! ... initialization of logical variables
+  ! ... various initializations of control variables
   !
   lscf      = .FALSE.
   lmd       = .FALSE.
   lpath     = .FALSE.
   lneb      = .FALSE.
   lsmd      = .FALSE.
-  lforce    = tprnfor
   lmovecell = .FALSE.
   lphonon   = .FALSE.
   lraman    = .FALSE.
+  lbfgs     = .FALSE.
+  loldbfgs  = .FALSE.
+  ldamped   = .FALSE.
+  lconstrain= .FALSE.  
+  lforce    = tprnfor
+  calc      = ' '
   !
   SELECT CASE ( TRIM( calculation ) )
+     ! ... iswitch is obsolescent: do not use in new code ( 29/10/2003 C.S.)
   CASE ( 'scf' )
      lscf      = .TRUE.   
-     iswitch   = 0 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     iswitch   = 0
      nstep     = 1
   CASE ( 'nscf' )
      iswitch   = -1
@@ -420,21 +426,129 @@ SUBROUTINE iosys()
      nstep     = 1
   CASE ( 'relax' )
      lscf      = .TRUE.
-     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
+     epse     = etot_conv_thr
+     epsf     = forc_conv_thr
+     !
+     SELECT CASE ( TRIM( ion_dynamics ) )
+        !
+     CASE ( 'bfgs' )
+        iswitch   = 1
+        lbfgs    = .TRUE.
+        !
+        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
+           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
+                      & ' conv_thr must be reduced', 1 )   
+        !
+     CASE ( 'old-bfgs' )
+        iswitch   = 1
+        loldbfgs = .TRUE.
+        !
+        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
+           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
+                      & ' conv_thr must be reduced', 1 )   
+        !
+     CASE ( 'constrained-damp' )
+        iswitch = 4
+        lmd         = .TRUE.
+        ldamped     = .TRUE.
+        lconstrain  = .TRUE.
+     CASE ( 'damp' )
+        iswitch = 3
+        lmd     = .TRUE.
+        ldamped = .TRUE.
+        ntcheck = nstep + 1
+     CASE DEFAULT
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+     END SELECT
+
   CASE ( 'md' )
      lscf      = .TRUE.
      lmd       = .TRUE.          
-     iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lforce    = .TRUE.
-  CASE ( 'vc-relax' , 'vc-md' )
+     !
+     SELECT CASE ( TRIM( ion_dynamics ) )
+        !
+     CASE ( 'verlet' )
+        iswitch = 3
+     CASE ( 'constrained-verlet' )
+        lconstrain = .TRUE.
+        iswitch = 4
+     CASE ( 'beeman' )
+        iswitch = 3
+        calc = 'md'
+        ntcheck = nstep + 1
+     CASE DEFAULT
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+     END SELECT
+
+  CASE ( 'vc-relax' )
+     iswitch   = 3
      lscf      = .TRUE.
      lmd       = .TRUE.
-     iswitch   = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
      lmovecell = .TRUE.
      lforce    = .TRUE.
+     ldamped   = .TRUE.
+     !
+     epse    = etot_conv_thr
+     epsf    = forc_conv_thr
+     SELECT CASE ( TRIM( cell_dynamics ) )
+        !
+     CASE ( 'none' )
+        calc    = 'mm'
+        ntcheck = nstep + 1
+     CASE ( 'damp-pr' )
+        calc    = 'cm'
+        ntcheck = nstep + 1
+     CASE ( 'damp-w' )
+        calc    = 'nm'
+        ntcheck = nstep + 1
+     CASE DEFAULT
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': cell_dynamics=' // TRIM( cell_dynamics ) // &
+                   & ' not supported', 1 )
+     END SELECT
+     !
+     IF ( TRIM( ion_dynamics ) /= 'damp' ) THEN
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+     END IF
+
+  CASE ( 'vc-md' )
+     lscf      = .TRUE.
+     lmd       = .TRUE.
+     iswitch   = 3
+     lmovecell = .TRUE.
+     lforce    = .TRUE.
+     ntcheck = nstep + 1
+     !
+     SELECT CASE ( TRIM( cell_dynamics ) )
+        !
+     CASE ( 'none' )
+        calc    = 'md'
+     CASE ( 'pr' )
+        calc    = 'cd'
+     CASE ( 'w' )
+        calc    = 'nd'
+     CASE DEFAULT
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+     END SELECT
+     !
+     IF ( TRIM( ion_dynamics ) /= 'beeman' ) THEN
+        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+     END IF
+     !
   CASE ( 'phonon' )
-     iswitch   = -2 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
+     iswitch   = -2
      lphonon   = .TRUE.
      nstep     = 1
   CASE ( 'raman' )
@@ -444,17 +558,15 @@ SUBROUTINE iosys()
   ! ... "path" specific
   !   
   CASE ( 'neb' )
+     iswitch   = 1
      lscf      = .TRUE.
      lpath     = .TRUE.
      lneb      = .TRUE.
-     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     lforce    = tprnfor
   CASE ( 'smd' )
+     iswitch   = 1
      lscf      = .TRUE.
      lpath     = .TRUE.
      lsmd      = .TRUE.
-     iswitch   = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     lforce    = tprnfor   
   CASE DEFAULT
      CALL errore( ' iosys ', ' calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
@@ -526,143 +638,9 @@ SUBROUTINE iosys()
                 & ' fixed occupations and lsda not implemented ', 1 )
   END IF
   !
-  ! ... initialization of logical variables
+  ! ... "path" specific initialization of control variables
   !
-  calc        = ' '
-  lbfgs       = .FALSE.
-  loldbfgs    = .FALSE.
-  lmd         = .FALSE.
-  ldamped     = .FALSE.
-  lconstrain  = .FALSE.  
-  !
-  IF ( TRIM( calculation ) == 'relax' ) THEN
-     !
-     SELECT CASE ( TRIM( ion_dynamics ) )
-     CASE ( 'bfgs' )
-        iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lbfgs    = .TRUE.
-        epse     = etot_conv_thr
-        epsf     = forc_conv_thr
-        !
-        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
-           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
-                      & ' conv_thr must be reduced', 1 )   
-        !
-     CASE ( 'old-bfgs' )
-        iswitch = 1 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        loldbfgs = .TRUE.
-        epse     = etot_conv_thr
-        epsf     = forc_conv_thr
-        !
-        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
-           CALL errore( ' iosys ', ' required etot_conv_thr is too small:' // &
-                      & ' conv_thr must be reduced', 1 )   
-        !
-     CASE ( 'constrained-damp' )
-        iswitch = 4 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lmd         = .TRUE.
-        ldamped     = .TRUE.
-        lconstrain  = .TRUE.
-        epse        = etot_conv_thr
-        epsf        = forc_conv_thr
-     CASE ( 'damp' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        lmd     = .TRUE.
-        ldamped = .TRUE.
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
-        ntcheck = nstep + 1
-     CASE DEFAULT
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
-     END SELECT
-     !
-  ELSE IF ( TRIM( calculation ) == 'md' ) THEN
-     !
-     lmd = .TRUE.
-     !
-     SELECT CASE ( TRIM( ion_dynamics ) )
-     CASE ( 'verlet' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     CASE ( 'constrained-verlet' )
-        lconstrain = .TRUE.
-        iswitch = 4 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-     CASE ( 'beeman' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc = 'md'
-        ntcheck = nstep + 1
-     CASE DEFAULT
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
-     END SELECT
-     !
-  ELSE IF ( TRIM( calculation ) == 'vc-relax' ) THEN
-     !
-     lmd     = .TRUE.
-     ldamped = .TRUE.
-     !
-     SELECT CASE ( TRIM( cell_dynamics ) )
-     CASE ( 'none' )
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'mm'
-        ntcheck = nstep + 1
-     CASE ( 'damp-pr' )
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'cm'
-        ntcheck = nstep + 1
-     CASE ( 'damp-w' )
-        epse    = etot_conv_thr
-        epsf    = forc_conv_thr
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'nm'
-        ntcheck = nstep + 1
-     CASE DEFAULT
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': cell_dynamics=' // TRIM( cell_dynamics ) // &
-                   & ' not supported', 1 )
-     END SELECT
-     IF ( TRIM( ion_dynamics ) /= 'damp' ) THEN
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
-     END IF
-     !
-  ELSE IF ( TRIM( calculation ) == 'vc-md' ) THEN
-     !
-     SELECT CASE ( TRIM( cell_dynamics ) )
-     CASE ( 'none' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'md'
-        ntcheck = nstep + 1
-     CASE ( 'pr' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'cd'
-        ntcheck = nstep + 1
-     CASE ( 'w' )
-        iswitch = 3 ! ... obsolescent: do not use in new code ( 29/10/2003 C.S.)
-        calc    = 'nd'
-        ntcheck = nstep + 1
-     CASE DEFAULT
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
-     END SELECT
-     !
-     IF ( TRIM( ion_dynamics ) /= 'beeman' ) THEN
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
-     END IF
-     !
-  ELSE IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
-     !
-     ! ... "path" specific
+  IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
      !
      nstep_path = nstep
      !
