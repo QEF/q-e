@@ -301,7 +301,11 @@ subroutine read_pseudo_nl (upf, iunps)
   ! counters
   character (len=75) :: dummy  
   !
-  if ( upf%nbeta == 0) return
+  if ( upf%nbeta == 0) then
+     upf%nqf = 0
+     upf%nqlc= 0
+     return
+  end if
   ALLOCATE( upf%kkbeta( upf%nbeta ) )
   ALLOCATE( upf%lll( upf%nbeta ) )
   ALLOCATE( upf%beta( 0:upf%mesh, upf%nbeta ) )

@@ -1,56 +1,71 @@
 #
-# System-dependent Make definitions for Linux, Absoft compiler
+# System-dependent Make definitions for Linux, (old) Absoft compiler
 # Edit according to your needs
 #
 # Precompiler
+# we assume that the GNU precompiler is used. The option -traditional
+# prevent string concatenation '//' from being interpreted as a comment
 #
 CPP = /lib/cpp
 #
-# we use the GNU precompiler, which can handle the fortran
-# string concatenation '//' as not being a comment (-traditional)
-#
-# Add -DADD_BLAS_ONE_UNDERSCORE or -DADD_BLAS_TWO_UNDERSCORES if your blas/lapack
-# library names contain respectively one or two underscores at the end
+# Add -DADD_BLAS_ONE_UNDERSCORE or -DADD_BLAS_TWO_UNDERSCORES if your
+# blas/lapack library names contain resp. one or two underscores at the end
 # Define FFTW library names exactly as they appear in the library
 #
 CPPFLAGS = -P -traditional -I$(OSHOME)/include -D__LINUX -DABSOFT -D__FFTW \
-           -DADD_BLAS_ONE_UNDERSCORE \
-           -D"FFTWND_F77_ONE=fftwnd_f77_one" \
-           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan"
+           -D"FFTW_F77=fftw_f77__" \
+           -D"FFTW_F77_CREATE_PLAN=fftw_f77_create_plan__" \
+           -D"FFTWND_F77_ONE=fftwnd_f77_one__" \
+           -D"FFTW3D_F77_CREATE_PLAN=fftw3d_f77_create_plan__"
 
 #
-# Fortran compiler:
+# Fortran compiler
 #
-#F90 = /usr/absoft/bin/f90
-F90 = f90
-F77 = f90
+F90 = /usr/absoft/bin/f90
+F77 = /usr/absoft/bin/f77
 #
-# fortran options: -s    for static allocation
+# Fortran compiler flags
+#                  -s    for static allocation
 #                        (otherwise everything is allocated on the stack)
 #                  -YEXT_NAMES= LCS folds external symbols to lowercase
-#                        (Absoft is case-sensitive)
+#                        (Absoft is case-sensitive) - f90 only
+#                  -f    same as above - f77 only
 #                  -O    for optimization
 #                  -B100 for Pentium II optimization
 #                  -B101 for Pentium    optimization
-#                  -N113 Promote REAL and COMPLEX data types to DOUBLE
+#                  -N113 Promote REAL and COMPLEX data types to DOUBLE-f77 only
 #
-F90FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS
-F77FLAGS =-s -N113 -O -B100 -YEXT_NAMES=LCS
+#
+# Fortran90 compiler flags
+#
+F90FLAGS =-s -O -B100 -YEXT_NAMES=LCS
+#
+# Fortran77 compiler flags
+#
+F77FLAGS =-s -N113 -O -B100 -f
+F77FLAGS_NOOPT = -f
+#
+# C compiler flags
+#
+CCFLAGS  = $(CPPFLAGS) -O3 -fomit-frame-pointer
 #
 # This is needed to tell the compiler where modules are
 #
 MODULEFLAG= -p$(OSHOME)/Modules -p$(OSHOME)/PW -p$(OSHOME)/PH
-
 #
 # Loader:
 #
-# some precompiled blas/lapack libraries may need -lg2c
+# for precompiled blas/lapack, use the following
+# (some precompiled blas/lapack libraries may need -lg2c)
+#
+LIBS= -llapack -lblas -lfftw -lU77 -lm
+#
+# The following is to use blas and lapack from the source code
+# LIBS= -lfftw -lU77 -lm
+# MYLIB=blas_and_lapack
 #
 LD=$(F90)
-LIBS = -llapack -lblas -lfftw -lU77 -lm
-#
 LDFLAGS = $(OSHOME)/flib/flib.a $(LIBS)
-
 
 #
 # ar:
