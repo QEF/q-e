@@ -24,58 +24,58 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
 pw : bindir mods libs
-	if test -d PW   ; then ( cd PW   ; make all ) ; fi
+	if test -d PW   ; then ( cd PW   ; $(MAKE) $(MFLAGS) all ) ; fi
 
 fpmd : bindir mods libs
-	if test -d FPMD ; then ( cd FPMD ; make all ) ; fi
+	if test -d FPMD ; then ( cd FPMD ; $(MAKE) $(MFLAGS) all ) ; fi
 
 cp : bindir mods libs
-	if test -d CPV  ; then ( cd CPV  ; make all ) ; fi
+	if test -d CPV  ; then ( cd CPV  ; $(MAKE) $(MFLAGS) all ) ; fi
 
 ph : bindir mods libs pw
-	if test -d PH ; then ( cd PH ; make all ) ; fi
+	if test -d PH ; then ( cd PH ; $(MAKE) $(MFLAGS) all ) ; fi
 
 pp : bindir mods libs pw
-	if test -d PP ; then ( cd PP ; make all ) ; fi
+	if test -d PP ; then ( cd PP ; $(MAKE) $(MFLAGS) all ) ; fi
 
 gamma : bindir mods libs pw
-	if test -d Gamma  ; then ( cd Gamma  ; make all ) ; fi
+	if test -d Gamma  ; then ( cd Gamma  ; $(MAKE) $(MFLAGS) all ) ; fi
 
 nc : bindir mods libs pw
-	if test -d PWNC   ; then ( cd PWNC   ; make all ) ; fi
+	if test -d PWNC   ; then ( cd PWNC   ; $(MAKE) $(MFLAGS) all ) ; fi
 
 pwcond : bindir mods libs pw pp
-	if test -d PWCOND ; then ( cd PWCOND ; make all ) ; fi
+	if test -d PWCOND ; then ( cd PWCOND ; $(MAKE) $(MFLAGS) all ) ; fi
 
 d3 : bindir mods libs pw ph
-	if test -d D3 ; then ( cd D3 ; make all ) ; fi
+	if test -d D3 ; then ( cd D3 ; $(MAKE) $(MFLAGS) all ) ; fi
 
 raman : bindir mods libs pw ph
-	if test -d Raman ; then ( cd Raman ; make all ) ; fi
+	if test -d Raman ; then ( cd Raman ; $(MAKE) $(MFLAGS) all ) ; fi
 
 tools : bindir mods libs pw
-	if test -d pwtools  ; then ( cd pwtools  ; make all ) ; fi
+	if test -d pwtools  ; then ( cd pwtools  ; $(MAKE) $(MFLAGS) all ) ; fi
 
 ld1 : bindir mods libs pw
-	if test -d atomic ; then ( cd atomic ; make all ) ; fi
+	if test -d atomic ; then ( cd atomic ; $(MAKE) $(MFLAGS) all ) ; fi
 
 upf : mods libs
-	if test -d upftools ; then ( cd upftools ; make all ) ; fi
+	if test -d upftools ; then ( cd upftools ; $(MAKE) $(MFLAGS) all ) ; fi
 
 iotk :
-	if test -d Modules ; then ( cd Modules ; make iotk ) ; fi
+	if test -d Modules ; then ( cd Modules ; $(MAKE) $(MFLAGS) iotk ) ; fi
 
 pw_export : iotk bindir mods libs pw
-	if test -d PP ; then ( cd PP ; make pw_export.x ) ; fi
+	if test -d PP ; then ( cd PP ; $(MAKE) $(MFLAGS) pw_export.x ) ; fi
 
 pwall : pw ph pp gamma nc pwcond d3 raman tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
-	( cd Modules; make all )
+	( cd Modules; $(MAKE) $(MFLAGS) all )
 libs : mods
-	( cd clib ; make all )
-	( cd flib ; make all )
+	( cd clib ; $(MAKE) $(MFLAGS) all )
+	( cd flib ; $(MAKE) $(MFLAGS) all )
 bindir :
 	test -d bin || mkdir bin
 
@@ -88,7 +88,7 @@ clean :
 		atomic clib flib pwtools upftools \
 	; do \
 	    if test -d $$dir ; then \
-		( cd $$dir ; touch .dependencies ; make clean ) \
+		( cd $$dir ; touch .dependencies ; $(MAKE) $(MFLAGS) clean ) \
 	    fi \
 	done
 	- /bin/rm -rf bin/*.x
@@ -100,7 +100,7 @@ veryclean : clean
 		      pw.tar.gz FPMD/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
-	- if test -d GUI ; then ( cd GUI; make veryclean ) ; fi
+	- if test -d GUI ; then ( cd GUI; $(MAKE) $(MFLAGS) veryclean ) ; fi
 
 tar :
 	tar cvf pw.tar \
@@ -118,7 +118,7 @@ tar :
 tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
-	    make clean cvsinit pwgui-source-notcl ; \
+	    $(MAKE) $(MFLAGS) clean cvsinit pwgui-source-notcl ; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \

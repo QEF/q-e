@@ -1,3 +1,10 @@
+4 Nov 2004   Old parallel variables (such as me mypool) removed everywhere
+             Missing GPL headers added to Raman (CS)
+             nspin imported twice in force_hub.f90 (Axel)
+             Makefiles use now $(MAKE) and $(MFLAGS) as proposed
+             by Axel - should allow for the use of GNU make in
+             system having broken makefile - please test (PG)
+
 3 Nov 2004   path optimization: 
              1) cleanup of the output format (more informative)
              2) some cleanup of internal routines
