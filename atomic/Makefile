@@ -5,26 +5,12 @@
 include ../make.rules
 include ../make.sys
 
-PWMODS = \
-../Modules/kind.o \
-../Modules/constants.o \
-../Modules/io_global.o \
-../Modules/functionals.o \
-../Modules/parser.o ../Modules/mp.o ../Modules/mp_global.o \
-../PW/functionals.o \
-../PW/lsda_functionals.o \
-../PW/bachel.o
-
-LD1MOD = \
-parameters.o \
-ld1inc.o \
-pseudo_types.o \
-read_pseudo_module.o
-
-LD1OBJ = all_electron.o \
+LD1OBJS = \
+all_electron.o \
 ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
+capital.o \
 cfdsol.o \
 charge.o \
 chargeps.o \
@@ -60,6 +46,7 @@ ld1_writeout.o \
 lderiv.o \
 lderivps.o \
 lschps.o \
+matches.o \
 newd_at.o \
 new_potential.o \
 nodenum.o \
@@ -88,14 +75,33 @@ write_paw_recon.o \
 write_pseudo.o \
 write_results.o \
 write_resultsps.o \
-write_upf.o capital.o matches.o
+write_upf.o
 
 # sph_bes.o erf.o random.o bachel.o
 # funct.o which_dft.o capital.o matches.o functionals.o lsda_functionals.o 
 
+LD1MODS = \
+ld1inc.o \
+parameters.o \
+pseudo_types.o \
+read_pseudo_module.o
 
-all: $(LD1OBJ) ld1.o
-	$(LD) -o ld1.x ld1.o $(LD1OBJ) $(PWMODS) $(LD1MOD) $(LDFLAGS)
+MODULES = \
+../Modules/constants.o \
+../Modules/functionals.o \
+../Modules/io_global.o \
+../Modules/kind.o \
+../Modules/mp.o \
+../Modules/mp_global.o \
+../Modules/parser.o \
+../PW/bachel.o \
+../PW/functionals.o \
+../PW/lsda_functionals.o
+
+all: ld1.x
+
+ld1.x: $(LD1OBJS) ld1.o
+	$(LD) -o ld1.x ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LDFLAGS)
 
 clean:
 	-/bin/rm -f *.o *.x $(LIB) *~ *.tmp.* make.* work.pc
