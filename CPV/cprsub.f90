@@ -105,7 +105,7 @@
 ! of e(xc) with respect to to cell parameter h(i,j)
 !
       use funct, only: iexch, icorr, igcx, igcc
-      use gvec, only: ng
+      use gvecp, only: ng => ngm
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base, only: ainv
       !use cell_module
@@ -208,7 +208,8 @@
       use control_flags, only: iprint, tpre, iprsta
       use io_global, only: stdout
       use bhs
-      use gvec
+      use gvec, only: tpiba, tpiba2, g
+      use gvecp, only: ng => ngm ! , ngl => ngml, ng_g => ngmt
       use gvecs
       use cell_base, only: omega
       use constants, only: pi, fpi

@@ -1,8 +1,10 @@
 MODULE restart
+
   IMPLICIT NONE
   SAVE
 
 CONTAINS
+
 
 !-----------------------------------------------------------------------
       subroutine writefile_new                                         &
@@ -13,14 +15,19 @@ CONTAINS
 !
 ! read from file and distribute data calculated in preceding iterations
 !
+      use ions_base, only: nsp, na
+      use cell_base, only: boxdimensions, s_to_r, cell_init
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
 !      use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na
       use parameters, only: natx
       use grid_dimensions, ONLY: nr1, nr2, nr3
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s
-      use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
+      use gvecp, only: &
+        ng => ngm, &
+        ngl => ngml, &
+        ng_g => ngmt
+      use gvec, ONLY: mill_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: write_restart_header, write_restart_ions, &
           write_restart_cell, write_restart_electrons, &
           write_restart_gvec, write_restart_gkvec, write_restart_charge, &
@@ -29,7 +36,6 @@ CONTAINS
       use mp, only: mp_sum
       use mp_global
       use io_global
-      use cell_base, only: boxdimensions, s_to_r, cell_init
       USE atom, ONLY: r, rab
       use control_flags, only: twfcollect
       USE parser, ONLY: int_to_char
@@ -55,18 +61,18 @@ CONTAINS
       real(kind=8) :: trutime = 0.0d0
       real(kind=8) :: ecutwfc, ecutrho
 
-      REAL(dbl), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
-      REAL(dbl), ALLOCATABLE :: fiontmp(:,:)
+      REAL(kind=8), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
+      REAL(kind=8), ALLOCATABLE :: fiontmp(:,:)
       type (boxdimensions) :: box
-      real(dbl) :: ht(3,3), htvel(3,3), ht0(3,3), htm(3,3), htm2(3,3)
-      real(dbl) :: xdum
-      real(dbl) :: hdum(3,3)
-      real(dbl) :: cdmi(3)
-      real(dbl) :: mass(nsp)
-      real(dbl), allocatable :: occ(:), occm(:), lamtmp(:,:), lamtmpm(:,:), eigtmp(:)
+      real(kind=8) :: ht(3,3), htvel(3,3), ht0(3,3), htm(3,3), htm2(3,3)
+      real(kind=8) :: xdum
+      real(kind=8) :: hdum(3,3)
+      real(kind=8) :: cdmi(3)
+      real(kind=8) :: mass(nsp)
+      real(kind=8), allocatable :: occ(:), occm(:), lamtmp(:,:), lamtmpm(:,:), eigtmp(:)
       LOGICAL :: tocc, tlam, trho, tv, tw0, twm
       integer, allocatable :: mill(:,:), igk(:)
-      real(dbl) :: xk(3), wk
+      real(kind=8) :: xk(3), wk
       complex(kind=8), allocatable :: rhog(:), vg(:)
 
       LOGICAL :: lstres, lforce
@@ -77,15 +83,15 @@ CONTAINS
       character(len=80) :: filename
 
       INTEGER ::  k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl) :: dgauss
+      REAL(kind=8) :: dgauss
       INTEGER :: ngauss
       INTEGER :: ntetra
       INTEGER :: natomwfc
       LOGICAL :: doublegrid, tupf
-      REAL(dbl) :: gcutm, gcuts, dual
+      REAL(kind=8) :: gcutm, gcuts, dual
       INTEGER :: modenum, kunit
-      REAL(dbl) :: alat
-      REAL(dbl) :: ef, rnel, wfc_scal_cp90
+      REAL(kind=8) :: alat
+      REAL(kind=8) :: ef, rnel, wfc_scal_cp90
       character(len=4) :: atom_label(nsp)
 
       LOGICAL :: tscal
@@ -98,13 +104,12 @@ CONTAINS
       LOGICAL :: noncolin, lspinorb
       INTEGER, ALLOCATABLE :: ityp(:)
       INTEGER :: isk
-      REAL(dbl) :: zmesh_, xmin_, dx_
-      REAL(dbl) :: ainv(3,3), deth
+      REAL(kind=8) :: zmesh_, xmin_, dx_
+      REAL(kind=8) :: ainv(3,3), deth
       INTEGER :: iswitch = 0
       LOGICAL :: tfixed_occ_, tefield_, dipfield_
       INTEGER :: edir_
-      REAL(dbl) :: emaxpos_, eopreg_, eamp_
-
+      REAL(kind=8) :: emaxpos_, eopreg_, eamp_
 
 !
 ! Do not write restart file if the unit number 
@@ -352,6 +357,7 @@ CONTAINS
          close (unit=ndw)
       end if
 
+
       return
       end subroutine
 
@@ -364,13 +370,19 @@ CONTAINS
 !
 ! read from file and distribute data calculated in preceding iterations
 !
+
+
       use elct, only: n, nx, nspin, nel
       use gvecw, only: ngw, ngwt
 !      use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       use parameters, only: natx, nsx
       use grid_dimensions, ONLY: nr1, nr2, nr3
-      use gvec, ONLY: ng, ngl, mill_g, ng_g, mill_l, bi1, bi2, bi3, ig_l2g
+      use gvecp, only: &
+        ng => ngm, &
+        ngl => ngml, &
+        ng_g => ngmt
+      use gvec, ONLY: mill_g, mill_l, bi1, bi2, bi3, ig_l2g
       use io_base, only: read_restart_header, read_restart_ions, &
           read_restart_cell, read_restart_electrons, &
           read_restart_gvec, read_restart_gkvec, read_restart_charge, &
@@ -383,6 +395,7 @@ CONTAINS
       use control_flags, only: twfcollect
       USE parser, ONLY: int_to_char
       use input_parameters, only: scradir
+
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -403,31 +416,31 @@ CONTAINS
       real(kind=8) :: trutime_
       real(kind=8) :: ecutwfc, ecutrho
 
-      REAL(dbl), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
-      REAL(dbl), ALLOCATABLE :: fiontmp(:,:)
+      REAL(kind=8), ALLOCATABLE :: stau0(:,:), staum(:,:), svel0(:,:), svelm(:,:), tautmp(:,:)
+      REAL(kind=8), ALLOCATABLE :: fiontmp(:,:)
       type (boxdimensions) :: box, boxm
-      real(dbl) :: ht(3,3), htvel(3,3), ht0(3,3), htm(3,3), htm2(3,3)
-      real(dbl) :: xdum
-      real(dbl) :: hdum(3,3)
-      real(dbl) :: cdmi(3)
-      real(dbl) :: mass(nsp)
-      real(dbl), allocatable :: occ(:), eigtmp(:)
+      real(kind=8) :: ht(3,3), htvel(3,3), ht0(3,3), htm(3,3), htm2(3,3)
+      real(kind=8) :: xdum
+      real(kind=8) :: hdum(3,3)
+      real(kind=8) :: cdmi(3)
+      real(kind=8) :: mass(nsp)
+      real(kind=8), allocatable :: occ(:), eigtmp(:)
       LOGICAL :: tocc, tlam, trho, tv, tw0, twm
       integer, allocatable :: mill(:,:), igk(:)
-      real(dbl) :: xk(3), wk
+      real(kind=8) :: xk(3), wk
       complex(kind=8), allocatable :: rhog(:), vg(:)
 
       INTEGER ::  k1_, k2_, k3_, nk1_, nk2_, nk3_
-      REAL(dbl) :: dgauss_
+      REAL(kind=8) :: dgauss_
       INTEGER :: ngauss_
       LOGICAL :: lgauss_
       INTEGER :: ntetra_
       LOGICAL :: ltetra_
       INTEGER :: natomwfc_
       LOGICAL :: doublegrid_
-      REAL(dbl) :: gcutm_, gcuts_, dual_
+      REAL(kind=8) :: gcutm_, gcuts_, dual_
       INTEGER :: modenum_
-      REAL(dbl) :: ef, rnel
+      REAL(kind=8) :: ef, rnel
       LOGICAL :: lstres_, lforce_
       character(len=80) :: title_, crystal_, tmp_dir_
       character(len=4) :: atom_label(nsp)
@@ -444,22 +457,24 @@ CONTAINS
       LOGICAL :: noncolin_, lspinorb_
       LOGICAL :: teig, tupf_
       INTEGER, ALLOCATABLE :: ityp(:)
-      REAL(dbl) :: wfc_scal, wfc_scal_cp90
+      REAL(kind=8) :: wfc_scal, wfc_scal_cp90
 
       LOGICAL :: tfixed_occ_, tefield_, dipfield_
       INTEGER :: edir_
-      REAL(dbl) :: emaxpos_, eopreg_, eamp_
+      REAL(kind=8) :: emaxpos_, eopreg_, eamp_
       INTEGER :: nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ng_g_, ngwkg_(1)
       INTEGER :: ngwt_
-      REAL(dbl) :: rnel_
+      REAL(kind=8) :: rnel_
       INTEGER :: nelu_, neld_
       INTEGER :: nat_, ntyp_, na_( nsx )
       INTEGER :: nacx_
-      REAL(dbl) :: ecutwfc_, ecutrho_
-      REAL(dbl) :: alat_, ekincm_ 
+      REAL(kind=8) :: ecutwfc_, ecutrho_
+      REAL(kind=8) :: alat_, ekincm_ 
       LOGICAL :: twfcollect_
 
       INTEGER :: iswitch_ 
+
+
 !
 ! Only the first node read
 !
@@ -695,6 +710,8 @@ CONTAINS
       return
       end subroutine
 
+
+
 !=----------------------------------------------------------------------------=!
 
         LOGICAL FUNCTION check_restartfile( scradir, ndr )
@@ -711,12 +728,12 @@ CONTAINS
           LOGICAL :: lval
           INTEGER :: strlen
 
+          lval = .FALSE.
           IF ( ionode ) THEN
             filename = 'fort.' // int_to_char( ndr )
             strlen  = INDEX( scradir, ' ' ) - 1
             filename = scradir( 1 : strlen ) // '/' // filename
             INQUIRE( FILE = TRIM( filename ), EXIST = lval )
-            ! WRITE(6,*) '  checking file ', lval, ' ', TRIM( filename )
           END IF
           CALL mp_bcast( lval, ionode_id )
           check_restartfile = lval

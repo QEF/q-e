@@ -33,7 +33,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,tranp,amprp,ndr,nbeg,  &
   !
   use control_flags, only: iprint, thdyn
   use io_global, only: stdout
-  use gvec
+  !use gvec
   use gvecw, only: ngw
   use ions_base, only: na, pmass, nsp
   use cell_base, only: ainv, a1, a2, a3

@@ -9,7 +9,7 @@
   use constants
   use ions_base, only : nsp, na, nas=>nax
   use parameters, only : natx, nsx
-  use gvec
+  !use gvec
   use gvecs
   use cvan
   use cell_base, only : omega, a1, a2, a3, alat
@@ -1597,7 +1597,7 @@ end subroutine wf
  subroutine wfunc_init(clwf,b1,b2,b3,ibrav)
 !-----------------------------------------------------------------------
 
-   use gvec
+   use gvec, only: gx, in1p, in2p, in3p
    use gvecw, only : ngw, ng0
    use elct
    use wfparm
@@ -2921,10 +2921,16 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       subroutine write_rho_g(rhog)
 !-----------------------------------------------------------------------
 
-      use gvec
+      use gvecp, only: ng=>ngm
+      use gvec, only: gx, in1p, in2p, in3p
       use elct
 #ifdef __PARA 
       use para_mod
+#endif
+
+      implicit none
+
+#ifdef __PARA 
       include 'mpif.h'
 #endif
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
