@@ -44,6 +44,12 @@ MODULE parameters
   INTEGER, PARAMETER :: npkx    = npk        ! maximum number of K points
   INTEGER, PARAMETER :: ncnsx   = 101        ! maximum number of constraints
   INTEGER, PARAMETER :: nspinx  = 2          ! maximum number of spinors
+
+  INTEGER, PARAMETER :: nhclm   = 4          ! maximum number NH chain length, 
+                                             ! nhclm can be easily increased since the restart 
+                                             ! file should be able to handle it, perhaps better 
+                                             ! to align nhclm by 4
+
   
 
 END MODULE parameters

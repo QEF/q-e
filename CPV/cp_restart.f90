@@ -135,7 +135,7 @@
 
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
-        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, occ0, &
+        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ0, &
         occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, &
         ekincm, mat_z )
       !
@@ -182,11 +182,12 @@
       REAL(dbl), INTENT(IN) :: staum(:,:) ! 
       REAL(dbl), INTENT(IN) :: svelm(:,:) ! 
       REAL(dbl), INTENT(IN) :: force(:,:) ! 
-      REAL(dbl), INTENT(IN) :: xnhp0 ! 
-      REAL(dbl), INTENT(IN) :: xnhpp ! 
-      REAL(dbl), INTENT(IN) :: xnhpm ! 
-      REAL(dbl), INTENT(IN) :: xnhpm2 ! 
-      REAL(dbl), INTENT(IN) :: vnhp ! 
+      REAL(dbl), INTENT(IN) :: xnhp0(:)  ! 
+      REAL(dbl), INTENT(IN) :: xnhpp(:)  ! 
+      REAL(dbl), INTENT(IN) :: xnhpm(:)  ! 
+      REAL(dbl), INTENT(IN) :: xnhpm2(:) ! 
+      REAL(dbl), INTENT(IN) :: vnhp(:) ! 
+      INTEGER,   INTENT(IN) :: nhpcl ! 
       REAL(dbl), INTENT(IN) :: occ0(:,:,:) ! 
       REAL(dbl), INTENT(IN) :: occm(:,:,:) ! 
       REAL(dbl), INTENT(IN) :: lambda0(:,:) ! 
@@ -337,10 +338,11 @@
         call iotk_write_dat(iunpun, "svelm", svelm(1:3,1:nat) )
         call iotk_write_dat(iunpun, "force", force(1:3,1:nat) )
         call iotk_write_begin(iunpun,"NOSE")
-          call iotk_write_dat (iunpun, "xnhp0", xnhp0)
-          call iotk_write_dat (iunpun, "xnhpm", xnhpm)
-          call iotk_write_dat (iunpun, "xnhpm2", xnhpm2)
-          call iotk_write_dat (iunpun, "xnhpp", xnhpp)
+          call iotk_write_dat (iunpun, "nhpcl", nhpcl)
+          call iotk_write_dat (iunpun, "xnhp0", xnhp0 )
+          call iotk_write_dat (iunpun, "xnhpm", xnhpm )
+          call iotk_write_dat (iunpun, "xnhpm2", xnhpm2 )
+          call iotk_write_dat (iunpun, "xnhpp", xnhpp )
           call iotk_write_dat (iunpun, "vnhp", vnhp)
         call iotk_write_end(iunpun,"NOSE")
         call iotk_write_end(iunpun,"IONS")
@@ -505,7 +507,7 @@
 
     SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htm2, htvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, stau0, &
-        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, &
+        svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, &
         occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, xnhep, &
         xnhem2, vnhe, ekincm, mat_z, tens  )
       !
@@ -553,11 +555,12 @@
       REAL(dbl), INTENT(INOUT) :: staum(:,:) !
       REAL(dbl), INTENT(INOUT) :: svelm(:,:) !
       REAL(dbl), INTENT(INOUT) :: force(:,:) ! 
-      REAL(dbl), INTENT(INOUT) :: xnhp0 !     
-      REAL(dbl), INTENT(INOUT) :: xnhpp ! 
-      REAL(dbl), INTENT(INOUT) :: xnhpm ! 
-      REAL(dbl), INTENT(INOUT) :: xnhpm2 !
-      REAL(dbl), INTENT(INOUT) :: vnhp !  
+      REAL(dbl), INTENT(INOUT) :: xnhp0(:) !     
+      REAL(dbl), INTENT(INOUT) :: xnhpp(:) ! 
+      REAL(dbl), INTENT(INOUT) :: xnhpm(:) ! 
+      REAL(dbl), INTENT(INOUT) :: xnhpm2(:) !
+      REAL(dbl), INTENT(INOUT) :: vnhp(:) !  
+      INTEGER,   INTENT(INOUT) :: nhpcl !  
       REAL(dbl), INTENT(INOUT) :: occ0(:,:,:) !
       REAL(dbl), INTENT(INOUT) :: occm(:,:,:) !
       REAL(dbl), INTENT(INOUT) :: lambda0(:,:) !
@@ -596,6 +599,7 @@
       REAL(dbl) :: pmass_ , zv_
       REAL(dbl) :: celldm_ ( 6 )
       INTEGER :: ispin_ , nspin_ , ngwt_ , nbnd_ , nelt_
+      INTEGER :: nhpcl_ 
 
       dirname = restart_dir( scradir, ndr )
       filename = TRIM( dirname ) // '/' // 'restart.xml'
@@ -686,11 +690,13 @@
         call iotk_scan_dat(iunpun, "svelm", svelm(1:3,1:nat) )
         call iotk_scan_dat(iunpun, "force", force(1:3,1:nat) )
         call iotk_scan_begin(iunpun,"NOSE")
-          call iotk_scan_dat (iunpun, "xnhp0", xnhp0)
-          call iotk_scan_dat (iunpun, "xnhpm", xnhpm)
-          call iotk_scan_dat (iunpun, "xnhpm2", xnhpm2)
-          call iotk_scan_dat (iunpun, "xnhpp", xnhpp)
+          call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
+          call iotk_scan_dat (iunpun, "xnhp0", xnhp0 )
+          call iotk_scan_dat (iunpun, "xnhpm", xnhpm )
+          call iotk_scan_dat (iunpun, "xnhpm2", xnhpm2 )
+          call iotk_scan_dat (iunpun, "xnhpp", xnhpp )
           call iotk_scan_dat (iunpun, "vnhp", vnhp)
+          ! nhpcl = nhpcl_  ! maybe we would like to change lenght
         call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_end(iunpun,"IONS")
         ! 

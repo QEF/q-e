@@ -42,7 +42,6 @@
       use mp_global, only: nproc
       USE parameters, ONLY: nspinx
       USE phase_factors_module, ONLY: strucf
-      USE nose_ions, ONLY: nosepinit
       USE nose_electrons, ONLY: noseeinit
       USE cp_types
       USE atoms_type_module, ONLY: atoms_type
@@ -149,8 +148,6 @@
 ! ... initialize atomic configuration (should be called after metric_init)
       CALL atoms_init( atoms_m, atoms_0, atoms_p, tau_srt, ind_srt, if_pos, atm, tau_units, alat, ht )
 
-      CALL nosepinit( REAL(atoms_0%doft, dbl) )
-
 ! ... compute reciprocal lattice vectors
       CALL newg(gv, kp, ht%m1)
 
@@ -215,7 +212,6 @@
 ! ... declare modules
       USE phase_factors_module, ONLY: strucf
       USE wave_init, ONLY: pw_atomic_init
-      USE nose_ions, ONLY: nosepinit
       USE nose_electrons, ONLY: noseeinit
       USE cp_types
       USE atoms_type_module, ONLY: atoms_type

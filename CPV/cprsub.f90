@@ -359,7 +359,7 @@
       use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
       use betax, only: mmx, refg
       use restart_file, only: readfile
-      use parameters, only: nacx, nsx, natx
+      use parameters, only: nacx, nsx, natx, nhclm
       use electrons_base, only: f
 
       implicit none
@@ -377,10 +377,11 @@
       complex(kind=8) c0(1,1,1,1),cm(1,1,1,1)
       real(kind=8) taum(1,1),vel(1,1),velm(1,1),acc(nacx)
       real(kind=8) lambda(1,1),lambdam(1,1)
-      real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
+      real(kind=8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8) fion(1,1), tps
       real(kind=8) mat_z(1,1,1)
+      integer nhpcl
 !
 !
 ! taus = scaled, tau0 = alat units
@@ -396,7 +397,7 @@
 !
          call readfile                                              &
      &     (-1,ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),tau0,taum,vel,velm,acc,             &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion, tps, &
      &       mat_z, f )
 !

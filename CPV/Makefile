@@ -105,7 +105,6 @@ stick.o \
 stop_pw.o \
 stress.o \
 turbo.o \
-update.o \
 util.o \
 vanderwaals.o \
 cp_version.o \

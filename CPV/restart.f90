@@ -38,7 +38,7 @@
 !-----------------------------------------------------------------------
       subroutine writefile_cp                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,  &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,  &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
      &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
@@ -57,7 +57,9 @@
       real(kind=8), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
       real(kind=8), INTENT(IN) :: vels(:,:), velsm(:,:)
       real(kind=8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
-      real(kind=8), INTENT(IN) :: xnhe0, xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm
+      real(kind=8), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
+      real(kind=8), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
+      integer,      INTENT(in) :: nhpcl
       real(kind=8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8), INTENT(in) :: ecut, ecutw, delt
       real(kind=8), INTENT(in) :: pmass(:)
@@ -71,7 +73,7 @@
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:) 
-      real(kind=8) :: xnhpp_ , xnhpm2_
+      real(kind=8) :: xnhpp_ ( SIZE( xnhp0 ) ), xnhpm2_ ( SIZE( xnhp0 ) )
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
       real(kind=8) :: xnhep_ , xnhem2_
       real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
@@ -118,7 +120,7 @@
 
       CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , nhpcl, occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
         xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z  )
 
@@ -139,7 +141,7 @@
 !-----------------------------------------------------------------------
       subroutine readfile_cp                                        &
      &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm, &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm, &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
      &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
@@ -160,7 +162,10 @@
       real(kind=8) :: tausm(:,:),taus(:,:), fion(:,:)
       real(kind=8) :: vels(:,:), velsm(:,:)
       real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
-      real(kind=8) :: xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm
+      real(kind=8) :: xnhe0,xnhem,vnhe
+      real(kind=8) :: xnhp0(:), xnhpm(:), vnhp(:)
+      integer, INTENT(inout) :: nhpcl
+      real(kind=8) :: ekincm
       real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(kind=8), INTENT(in) :: ecut, ecutw, delt
       real(kind=8), INTENT(in) :: pmass(:)
@@ -174,10 +179,10 @@
       real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:)
-      real(kind=8) :: xnhpp_ , xnhpm2_
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
       real(kind=8) :: xnhep_ , xnhem2_
       real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+      real(kind=8) :: xnhpp_ ( SIZE( xnhp0 ) ), xnhpm2_ ( SIZE( xnhp0 ) )
 
 
       IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
@@ -201,7 +206,7 @@
 
       CALL cp_readfile( ndr, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htm2_ , htvel, xnhh0, xnhhm, xnhhp_ , vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , occ_ , &
+        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, xnhpp_ , xnhpm2_ , nhpcl , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
         xnhe0, xnhem, xnhep_ , xnhem2_ , vnhe, ekincm, mat_z, tens  )
 
@@ -249,7 +254,7 @@
         USE electrons_nose, ONLY: xnhe0, xnhem, xnhep, xnhem2, vnhe
         USE electrons_base, ONLY: nbsp
         USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl
         USE cp_restart, ONLY: cp_writefile, cp_write_wfc
                                                                         
         IMPLICIT NONE 
@@ -292,7 +297,7 @@
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_m2%a, ht_0%hvel, xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, xnhpp, xnhpm2, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
+          xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
           xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z )
 
         DEALLOCATE( lambda )
@@ -343,7 +348,7 @@
         USE grid_dimensions, ONLY: nr1, nr2, nr3
         USE electrons_nose, ONLY: xnhe0, xnhem, xnhep, xnhem2, vnhe
         USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl
         USE cp_restart, ONLY: cp_readfile, cp_read_wfc
  
         IMPLICIT NONE 
@@ -386,7 +391,7 @@
         CALL cp_readfile( ndr, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           hp0_ , hm1_ , hm2_ , hvel_ , xnhh0, xnhhm, xnhhp, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, xnhpp, xnhpm2, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
+          xnhp0, xnhpm, xnhpp, xnhpm2, nhpcl, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
           gv%b3, xnhe0, xnhem, xnhep, xnhem2, vnhe, ekincm, mat_z_ , tens )
 
         DEALLOCATE( lambda_ )

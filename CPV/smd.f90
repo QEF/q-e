@@ -34,7 +34,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use io_global, only: stdout
   !use gvec
   use gvecw, only: ngw
-  use ions_base, only: na, pmass, nsp, randpos
+  use ions_base, only: na, pmass, nsp, randpos, nat
   use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
   use elct
   use constants, only: pi, fpi
@@ -43,7 +43,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use betax, only: mmx, refg
   !use restartsm
   use restart_file
-  use parameters, only: nacx, nsx, natx
+  use parameters, only: nacx, nsx, natx, nhclm
   USE smd_rep, only: rep
   USE path_variables, only: &
         sm_p => smd_p
@@ -72,10 +72,11 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   complex(kind=8) c0(ngw,nx),cm(ngw,nx)
   real(kind=8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
   real(kind=8) lambda(nx,nx),lambdam(nx,nx)
-  real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
+  real(kind=8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
   real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
   real(kind=8) fion(3,natx),tps
   real(kind=8) mat_z(1,1,1)
+  integer      nhpcl
   !
 
 
@@ -112,7 +113,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
      !
      call readfile                                              &
           &     (-1,ndr+1,h,hold,nfi,c0,cm,rep(0)%tau0,taum,vel,velm,acc,   &
-          &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+          &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
           &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
           &       fion,tps, mat_z, f)
      !
@@ -165,7 +166,7 @@ end subroutine sminit
 SUBROUTINE TANGENT(state,tan)
 
 
-  use ions_base, ONLY: na, nsp
+  use ions_base, ONLY: na, nsp, nat
   use smd_ene, ONLY: etot_ar
   USE path_variables, only: &
         sm_p => smd_p, &
@@ -184,8 +185,8 @@ SUBROUTINE TANGENT(state,tan)
   ! ---------------------------- !
 
 
-  tan(0)%d3(:,:) = 0.d0
-  tan(sm_p)%d3(:,:) = 0.d0   
+  tan(0)%d3(:,1:nat) = 0.d0
+  tan(sm_p)%d3(:,1:nat) = 0.d0   
 
   smpm = sm_p -1
 

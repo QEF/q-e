@@ -31,12 +31,7 @@
 
 #ifdef __AIX
 #   define __IOTK_BINARY_FORMAT "IBM-SP/XLF"
-#   define __IOTK_LOGICAL1 1
-#   define __IOTK_LOGICAL2 2
-#   define __IOTK_LOGICAL3 4
-#   define __IOTK_LOGICAL4 8
 #   define __IOTK_INTEGER1 1
-#   define __IOTK_INTEGER2 2
 #   define __IOTK_INTEGER3 4
 #   define __IOTK_INTEGER4 8
 #   define __IOTK_REAL1    4

@@ -751,7 +751,7 @@
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
-           rotation_dynamics, degauss, smearing
+           rotation_dynamics, degauss, smearing, nhpcl, ndega
 
 
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
@@ -775,6 +775,7 @@
      USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY: cell_nose_init
      USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
+     USE sic_module,       ONLY: sic_initval
      USE ions_nose,        ONLY: ions_nose_init
      USE wave_base,        ONLY: grease_ => grease
      USE electrons_nose,   ONLY: electrons_nose_init
@@ -859,14 +860,8 @@
      ! ...  Set ions base module
 
      if( .not. lneb ) then
-        IF( program_name == 'CP90' ) THEN
-          CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
+        CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
              atom_label, if_pos, atomic_positions , alat_ , a1, a2, a3, ion_radius  )
-        ELSE
-          CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
-               atom_label, if_pos, atomic_positions, alat_ , a1 , a2 , a3 , ion_radius,   &
-               id_loc, sic, sic_epsilon, sic_rloc  )
-        END IF
      end if
 
      ! ...   Set units for Reciprocal vectors ( 2PI/alat by convention )
@@ -895,7 +890,7 @@
 
      CALL cell_nose_init( temph, fnoseh )
 
-     CALL ions_nose_init( tempw, fnosep, nat )
+     CALL ions_nose_init( tempw, fnosep, nhpcl, ndega, nat )
   
      CALL electrons_nose_init( ekincw , fnosee )
 
@@ -934,6 +929,9 @@
      CALL efield_init( epol, efield )
 
      CALL cg_init( tcg , maxiter , etresh , passop )
+
+     !
+     CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_rloc  )
 
      !
      !  empty states
@@ -1179,8 +1177,9 @@
            frice_ => frice, &
            grease_ => grease
       USE ions_nose, ONLY: &
-           qnp_ => qnp, &
-           tempw_ => tempw
+           ndega_ => ndega, &
+           tempw, &
+           ions_nose_info
       USE electrons_nose, ONLY: &
            qne_ => qne, &
            ekincw_ => ekincw
@@ -1241,7 +1240,7 @@
       IMPLICIT NONE
       !
 
-      INTEGER :: is
+      INTEGER :: is, i
 
       WRITE( stdout,500) nbeg , nomore_ , iprint_ , ndr_ , ndw_
       WRITE( stdout,505) delt_
@@ -1284,6 +1283,7 @@
       if(tfor_) then
          if(tnosep_) fricp_ = 0.
          WRITE( stdout,520)
+         WRITE( stdout,523) ndega_
          if(tsdp_)then
             WRITE( stdout,521)
          else
@@ -1306,11 +1306,11 @@
          else if(tcap_ .and. tnosep_ ) then
             call errore(' main',' tcap and tnosep both true',0)
          else if(tcp_ ) then
-            WRITE( stdout,555) tempw_ , tolp_
+            WRITE( stdout,555) tempw , tolp_
          else if(tcap_) then
-            WRITE( stdout,560) tempw_ , tolp_
+            WRITE( stdout,560) tempw , tolp_
          else if(tnosep_ ) then
-            WRITE( stdout,562) tempw_ , qnp_
+            CALL ions_nose_info()
          end if
          if(tnosee_) then
             WRITE( stdout,566) ekincw_ , qne_
@@ -1363,6 +1363,7 @@
  520  format(' ions are allowed to move')
  521  format(' ion dynamics with steepest descent')
  522  format(' ion dynamics with fricp = ',f7.4,' and greasp = ',f7.4)
+ 523  format(' the temperature is computed for ',i5,' degrees of freedom')
  550  format(' ion dynamics: the temperature is not controlled'//)
  555  format(' ion dynamics with rescaling of velocities:'/             &
      &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
@@ -1373,6 +1374,10 @@
  562  format(' ion dynamics with nose` temp. control:'/                 &
      &       ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
      &       f10.3//)
+563  format(' ion dynamics with nose` temp. control:'/                 &
+     &       ' temperature required=',f10.5,'(kelvin)'/                 &
+     &       ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
+     &       ' nose` mass(es) =',20(1X,f10.3)//)
  566  format(' electronic dynamics with nose` temp. control:'/          &
      &       ' elec. kin. en. required=',f10.5,'(hartree)',             &
      &       ' nose` mass = ',f10.3//)
@@ -1444,6 +1449,7 @@
     USE cell_module, ONLY: metric_print_info
     USE cutoffs, ONLY: cutoffs_print_info
     USE ions_module, ONLY: print_scaled_positions, ions_print_info
+    USE ions_nose, ONLY: ions_nose_info
     USE empty_states, ONLY: empty_print_info
     USE electrons_module, ONLY: electrons_print_info
     USE exchange_correlation, ONLY: exch_corr_print_info
@@ -1452,6 +1458,7 @@
     USE orthogonalize, ONLY: orthogonalize_info
     USE brillouin, ONLY: kpoint_info
     USE runcg_module, ONLY: runcg_info
+    USE sic_module, ONLY: sic_info
 
     IMPLICIT NONE
 
@@ -1482,9 +1489,10 @@
         CALL kpoint_info( stdout )
         CALL exch_corr_print_info( stdout )
         CALL ions_print_info( stdout )
+        CALL ions_nose_info()
         CALL potential_print_info( stdout )
         CALL metric_print_info( stdout )
-        CALL sic_info( stdout )
+        CALL sic_info( )
       END IF
 
 
@@ -1508,62 +1516,6 @@
     !
   END SUBROUTINE modules_info
 
-
-
-  SUBROUTINE sic_info( stdout )
-
-    USE ions_base, ONLY: self_interaction
-    IMPLICIT NONE
-    INTEGER, INTENT(IN) :: stdout
-    !
-    ! prints the type of USIC we will do :
-    !
-
-    IF( self_interaction == 0 ) THEN
-      RETURN
-    END IF
-
-        WRITE(stdout, 591)
-        WRITE(stdout, 592) self_interaction
-        WRITE(stdout, 593)
-        select case (self_interaction)
-        case (1)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_PZ = - U_hartree[rho_up-rhp_down] - E_excor[rho_up-rho_down,0] '
-        case (2)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_MAC = - U_hartree[rho_up-rhp_down] - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
-        case (3)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_basis = - U_hartree[rho_up-rhp_down] '
-        case (-1)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_nohartree_PZ =  - E_excor[rho_up-rho_down,0] '
-        case (-2)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_nohartree_MAC =  - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
-        case default
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  No unpaired-electron self-interaction correction '
-        end select
-  591 FORMAT(   3X,'')
-  592 FORMAT(   3X,'Introducing a Self_Interaction Correction case: ', I3)
-  593 FORMAT(   3X,'----------------------------------------')
-
-    RETURN
-  END SUBROUTINE
 
 ! ----------------------------------------------------------------
   END MODULE input

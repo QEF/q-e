@@ -142,8 +142,8 @@
       use cpr_subroutines
       use ions_positions, only: tau0, taum, taup, taus, tausm, tausp, vels, velsm, velsp
       use ions_positions, only: ions_hmove, ions_move
-      use ions_nose, only: gkbt, qnp, vnhp, xnhp0, xnhpm, xnhpp, ions_nosevel, &
-            ions_noseupd, tempw, ions_nose_nrg, ions_nose_shiftvar
+      use ions_nose, only: gkbt, kbt, ndega, nhpcl, qnp, vnhp, xnhp0, xnhpm, xnhpp, &
+            ions_nosevel, ions_noseupd, tempw, ions_nose_nrg, ions_nose_shiftvar
       use electrons_nose, only: qne, ekincw, xnhe0, xnhep, xnhem, vnhe, &
             electrons_nose_nrg, electrons_nose_shiftvar
       use from_scratch_module, only: from_scratch
@@ -351,7 +351,6 @@
       !
       temp1=tempw+tolp
       temp2=tempw-tolp
-      gkbt = 3.*nat*tempw/factem
 
 !     ==========================================================
 
@@ -408,7 +407,7 @@
 
          call readfile                                           &
      &     ( ibeg, ndr,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,         &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps, z0, f )
 !
 
@@ -467,7 +466,7 @@
       if( .not. tsde ) fccc = 1.0d0 / ( 1.0d0 + frice )
 
       if(tnosep)then
-         call ions_nosevel( vnhp, xnhp0, xnhpm, delt )
+         call ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl )
       endif
       if(tnosee)then
          call elec_nosevel( vnhe, xnhe0, xnhem, delt, fccc )
@@ -765,7 +764,7 @@
       !     ionic temperature
       !
       if( tfor ) then
-         CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, hold, pmass )
+         CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, hold, pmass, ndega )
       endif
       !
       !     fake electronic kinetic energy
@@ -791,7 +790,7 @@
       !     udating nose-hoover friction variables
       !
       if(tnosep)then
-        call ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp )
+        call ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
       endif
       if(tnosee)then
         call elec_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
@@ -852,7 +851,7 @@
       !
       !   add energies of thermostats
       !
-      if ( tnosep ) econt = econt + ions_nose_nrg( xnhp0, vnhp, qnp, gkbt )
+      if ( tnosep ) econt = econt + ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
       if ( tnosee ) econt = econt + electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
       if ( tnoseh ) econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
 !
@@ -863,7 +862,7 @@
 !
       tps = tps + delt * AU_PS
       WRITE( stdout,1948) nfi, ekinc, temphc, tempp, etot, enthal, econs,      &
-     &              econt, vnhh(3,3), xnhh0(3,3), vnhp,  xnhp0
+     &              econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
 
       if( tcg ) then
         if(mod(nfi-1,iprint).eq.0.or.tfirst)  then
@@ -913,7 +912,7 @@
         DEALLOCATE( tauw )
 
         WRITE( 33, 2948 ) tps, ekinc, temphc, tempp, etot, enthal, econs, econt
-        WRITE( 39, 2949 ) tps, vnhh(3,3),xnhh0(3,3),vnhp,xnhp0
+        WRITE( 39, 2949 ) tps, vnhh(3,3),xnhh0(3,3),vnhp(1),xnhp0(1)
 
         ! ...   Close and flush unit 30, ... 40
         CALL printout_base_close()
@@ -978,12 +977,12 @@
          if( tcg ) then
            call writefile                                         &
      &       ( ndw,h,hold,nfi,c0(:,:,1,1),c0old,taus,tausm,vels,velsm,acc,               &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps, z0, f )
          else
            call writefile                                         &
      &       ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,               &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps, z0, f )
          end if
 
@@ -1020,7 +1019,7 @@
       if( lwf ) then
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
              ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
-             xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
+             xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh, velh, &
              ecutp, ecutw, delt, celldm, fion, tps, z0, f )
       end if
 
@@ -1099,12 +1098,12 @@
     if( tcg ) then
       call writefile &
           ( ndw,h,hold,nfi,c0(:,:,1,1),c0old,taus,tausm,vels,velsm,acc, &
-            lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+            lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
             xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps, z0, f )
     else
       call writefile &
           ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc, &
-            lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+            lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
             xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,fion, tps, z0, f )
     end if
 

@@ -335,7 +335,10 @@ MODULE read_namelists_module
        !
        ion_temperature   = 'not_controlled'
        tempw             = 300.D0
-       fnosep            = 1.D0
+       fnosep            = -1.0D0
+       fnosep(1)         = 1.0D0
+       nhpcl             = 0
+       ndega             = 0
        tranp             = .FALSE.
        amprp             = 0.D0
        greasp            = 1.D0
@@ -741,6 +744,8 @@ MODULE read_namelists_module
        CALL mp_bcast( ion_temperature, ionode_id )
        CALL mp_bcast( tempw, ionode_id )
        CALL mp_bcast( fnosep, ionode_id )
+       CALL mp_bcast( nhpcl, ionode_id )
+       CALL mp_bcast( ndega, ionode_id )
        CALL mp_bcast( tranp, ionode_id )
        CALL mp_bcast( amprp, ionode_id )
        CALL mp_bcast( greasp, ionode_id )
@@ -1205,8 +1210,12 @@ MODULE read_namelists_module
                        & TRIM(ion_dynamics)//''' not allowed ',1)
        IF( tempw <= 0.D0 ) &
           CALL errore( sub_name,' tempw out of range ',1)
-       IF( fnosep <= 0.D0 ) &
+       IF( fnosep( 1 ) <= 0.D0 ) &
           CALL errore( sub_name,' fnosep out of range ',1)
+       IF( nhpcl > nhclm ) &
+          CALL errore( sub_name,' nhpcl should be less than nhclm',-1)
+       IF( nhpcl < 0 ) &
+          CALL errore( sub_name,' nhpcl out of range ',-1)
        IF( ion_nstepe <= 0 ) &
           CALL errore( sub_name,' ion_nstepe out of range ',1)
        IF( ion_maxstep < 0 ) &

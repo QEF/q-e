@@ -272,7 +272,7 @@
       USE io_global, ONLY: ionode
       USE cp_types, ONLY: recvecs, pseudo, phase_factors
       USE io_global, ONLY: stdout
-      USE ions_base, ONLY: self_interaction, si_epsilon
+      USE sic_module, ONLY: self_interaction, si_epsilon
 
       IMPLICIT NONE
 
@@ -1460,9 +1460,9 @@
       USE charge_types, ONLY: charge_descriptor
       USE atoms_type_module, ONLY: atoms_type
       USE fft, ONLY : pw_invfft, pfwfft, pinvfft
-      USE ions_base, ONLY: ind_localisation, nat_localisation, print_localisation
-      USE ions_base, ONLY: ind_srt, pos_localisation
-      USE ions_base, ONLY: rad_localisation
+      USE sic_module, ONLY: ind_localisation, nat_localisation, print_localisation
+      USE sic_module, ONLY: rad_localisation, pos_localisation
+      USE ions_base, ONLY: ind_srt
       USE stick, ONLY: dfftp
       USE cp_types, ONLY: recvecs
       USE cell_base, ONLY: tpiba2

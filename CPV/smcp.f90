@@ -99,7 +99,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use stre
   use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
   use restart_file
-  use parameters, only: nacx, natx, nsx, nbndxx
+  use parameters, only: nacx, natx, nsx, nbndxx, nhclm
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au
   use io_files, only: psfile, pseudo_dir, smwout
   use input, only: iosys
@@ -116,7 +116,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE cpr_subroutines
   use ions_positions, only: tau0, velsp
   use ions_positions, only: ions_hmove, ions_move
-  use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw
+  use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw, &
+                       ions_nose_nrg, kbt, nhpcl, ndega
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
   USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
         cell_nosevel, cell_noseupd, cell_nose_nrg, cell_nosezero
@@ -128,7 +129,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use cp_electronic_mass, only: emass, emaec => emass_cutoff
   use cp_electronic_mass, only: emass_precond
 
-  use electrons_nose, only: qne, ekincw
+  use electrons_nose, only: qne, ekincw, electrons_nose_nrg, electrons_nose_shiftvar
+
 
   USE path_variables, only: smx, &
         sm_p => smd_p, &
@@ -182,9 +184,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   complex(kind=8)  speed
   real(kind=8)                                                      &
-       &       tempp(smx), xnhe0(smx), vnhp(smx), xnhp0(smx), xnhpm(smx), &
-       &       fccc(smx), xnhem(smx), vnhe(smx),  &
-       &       epot(smx), xnhpp(smx), xnhep(smx), epre(smx), enow(smx),   &
+       &       vnhp(nhclm,smx), xnhp0(nhclm,smx), xnhpm(nhclm,smx), &
+       &       tempp(smx), xnhe0(smx), fccc(smx), xnhem(smx), vnhe(smx),  &
+       &       epot(smx), xnhpp(nhclm,smx), xnhep(smx), epre(smx), enow(smx),   &
        &       econs(smx), econt(smx), ccc(smx)
   real(kind=8) temps(nsx) 
   real(kind=8) verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
@@ -526,7 +528,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   temp1=tempw+tolp
   temp2=tempw-tolp
-  gkbt = 3.*nat*tempw/factem
+  gkbt = DBLE( ndega ) * tempw / factem
+  kbt = tempw / factem
 
   etot_ar(0   ) = ene_ini
   etot_ar(sm_p) = ene_fin
@@ -578,8 +581,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &     ( 0, sm_ndr,h,hold,nfi,rep_el(sm_k)%cm,rep_el(sm_k)%cm,rep(sm_k)%taus,  &
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
-                &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
-                &       ekincm(sm_k),                           &
+                &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
+                &       nhpcl, ekincm(sm_k),                           &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
                 &       tps, mat_z, f )
         endif
@@ -774,8 +777,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              &     ( 1, sm_ndr,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
              &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
-             &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),&
-             &       ekincm(sm_k),                                                         &
+             &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
+             &       nhpcl, ekincm(sm_k),                                                         &
              &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
              &       tps, mat_z, f )
 
@@ -864,9 +867,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         if (tpre) call caldbec(1,nsp,eigr,rep_el(sm_k)%c0)
      ENDIF
      !
-     xnhp0(sm_k)=0.
-     xnhpm(sm_k)=0.
-     vnhp(sm_k) =0.
+     xnhp0(:,sm_k)=0.
+     xnhpm(:,sm_k)=0.
+     vnhp(:,sm_k) =0.
      rep(sm_k)%fionm=0.d0
      CALL ions_vel(  rep(sm_k)%vels,  rep(sm_k)%taus,  rep(sm_k)%tausm, na, nsp, delt )
 
@@ -945,7 +948,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         if(.not.tsde) fccc(sm_k)=1./(1.+frice)
         if(tnosep)then
-           CALL ions_nosevel( vnhp(sm_k), xnhp0(sm_k), xnhpm(sm_k), delt )
+           CALL ions_nosevel( vnhp(:,sm_k), xnhp0(:,sm_k), xnhpm(:,sm_k), delt )
         endif
         if(tnosee)then
            CALL elec_nosevel( vnhe(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, fccc(sm_k) )
@@ -1184,7 +1187,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
            CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, &
              rep(sm_k)%fion, ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, &
-             tnosep, rep(sm_k)%fionm, vnhp(sm_k), velsp, rep(sm_k)%velsm )
+             tnosep, rep(sm_k)%fionm, vnhp(:,sm_k), velsp, rep(sm_k)%velsm )
            !
            !cc   call cofmass(velsp,rep(sm_k)%cdmvel)
            !         call cofmass(rep(sm_k)%tausp,cdm)
@@ -1308,7 +1311,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !     ionic temperature
         !
         if( tfor ) then
-          CALL ions_temp( tempp(sm_k), temps, ekinpr(sm_k), rep(sm_k)%vels, na, nsp, hold, pmass )
+          CALL ions_temp( tempp(sm_k), temps, ekinpr(sm_k), rep(sm_k)%vels, na, nsp, &
+            hold, pmass, ndega )
         endif
         !
         !     fake electronic kinetic energy
@@ -1336,7 +1340,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !     udating nose-hoover friction variables
         !
         if(tnosep)then
-           CALL ions_noseupd( xnhpp(sm_k), xnhp0(sm_k), xnhpm(sm_k), delt, qnp, ekinpr(sm_k), gkbt, vnhp(sm_k) )
+           CALL ions_noseupd( xnhpp( :, sm_k), xnhp0( :, sm_k), xnhpm( :, sm_k), delt, qnp, &
+             ekinpr(sm_k), gkbt, vnhp( :, sm_k), kbt, nhpcl )
         endif
         if(tnosee)then
            call elec_noseupd( xnhep(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, qne, ekinc(sm_k), ekincw, vnhe(sm_k) )
@@ -1380,10 +1385,10 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         econt(sm_k)=econs(sm_k)+ekinc(sm_k)
         !
         if(tnosep)then
-           econt(sm_k)=econt(sm_k)+0.5*qnp*vnhp(sm_k)*vnhp(sm_k)+     gkbt*xnhp0(sm_k)
+           econt(sm_k)=econt(sm_k)+ ions_nose_nrg( xnhp0(:,sm_k), vnhp(:,sm_k), qnp, gkbt, kbt, nhpcl )
         endif
         if(tnosee)then
-           econt(sm_k)=econt(sm_k)+0.5*qne*vnhe(sm_k)*vnhe(sm_k)+2.*ekincw*xnhe0(sm_k)
+           econt(sm_k)=econt(sm_k)+ electrons_nose_nrg( xnhe0(sm_k), vnhe(sm_k), qne, ekincw )
         endif
         if(tnoseh)then
            econt(sm_k) = econt(sm_k) + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
@@ -1451,15 +1456,15 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            !
            !     new variables for next step
            !
-           rep(sm_k)%tausm=rep(sm_k)%taus
-           rep(sm_k)%taus=rep(sm_k)%tausp
-           rep(sm_k)%taum=rep(sm_k)%tau0
-           rep(sm_k)%tau0=rep(sm_k)%taup
-           rep(sm_k)%velsm = rep(sm_k)%vels
-           rep(sm_k)%vels  = velsp
+           rep(sm_k)%tausm(:,1:nat)=rep(sm_k)%taus(:,1:nat)
+           rep(sm_k)%taus(:,1:nat)=rep(sm_k)%tausp(:,1:nat)
+           rep(sm_k)%taum(:,1:nat)=rep(sm_k)%tau0(:,1:nat)
+           rep(sm_k)%tau0(:,1:nat)=rep(sm_k)%taup(:,1:nat)
+           rep(sm_k)%velsm(:,1:nat) = rep(sm_k)%vels(:,1:nat)
+           rep(sm_k)%vels(:,1:nat)  = velsp(:,1:nat)
            if(tnosep) then
-              xnhpm(sm_k) = xnhp0(sm_k)
-              xnhp0(sm_k) = xnhpp(sm_k)
+              xnhpm(:,sm_k) = xnhp0(:,sm_k)
+              xnhp0(:,sm_k) = xnhpp(:,sm_k)
            endif
            if(tnosee) then
               xnhem(sm_k) = xnhe0(sm_k)
@@ -1498,7 +1503,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
-                &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
+                &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
                 &       rep(sm_k)%fion, tps, mat_z, f )
 
@@ -1665,7 +1670,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
           &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
           &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
-          &       vnhe(sm_k),xnhp0(sm_k),xnhpm(sm_k),vnhp(sm_k),ekincm(sm_k),       &
+          &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
           &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
           &       rep(sm_k)%fion, tps, mat_z, f )
 

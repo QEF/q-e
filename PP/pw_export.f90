@@ -526,7 +526,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 ! this line convert to crystal representation
 !      call cryst_to_cart(1,xyz,bg,-1)
 !
-      call iotk_write_attr (attr,"type",atm(ityp(i)),first=.true.)
+      call iotk_write_attr (attr,"type",TRIM(atm(ityp(i))),first=.true.)
       call iotk_write_attr (attr,"xyz",xyz)
       call iotk_write_empty(50,"atom"//trim(iotk_index(i)),attr=attr)
     ENDDO
@@ -568,6 +568,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
       call iotk_link(50,"Main_grid","mgrid",create=.true.,binary=.not.ascii,raw=raw)
     call iotk_write_begin(50,"Main_grid",attr=attr)
     call iotk_write_dat(50,"g",itmp(1:3,1:ngm_g),fmt="(3i5)")
+    call iotk_write_dat(50,"gg",gg(1:ngm_g))
     call iotk_write_end(50,"Main_grid")
   end if
 
@@ -624,7 +625,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   Write(0,*) "Writing band structure"
 
   if( ionode ) then
-    call iotk_write_attr (attr,"nk",nkstot,first=.true.)
+    call iotk_write_attr (attr,"nspin",nspin,first=.true.)
+    call iotk_write_attr (attr,"nk",nkstot)
     call iotk_write_attr (attr,"nbnd",nbnd)
     call iotk_write_attr (attr,"efermi",ef)
     call iotk_write_attr (attr,"units","Rydberg")
@@ -641,6 +643,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   twfm = .false.
 
 
+  Write(0,*) "Writing Eigenvectors"
   if( ionode ) call iotk_write_begin(50, "Eigenvectors")
 
   do ik = 1, nkstot
@@ -690,6 +693,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        ALLOCATE( sevc(npwx,nbnd), STAT=ierr )
        IF (ierr/=0) CALL errore( ' write_export ',' Unable to allocate SEVC ', ABS(ierr) )
 
+       Write(0,*) "Writing Eigenvectors_Spsi"
        if( ionode ) call iotk_write_begin(50, "Eigenvectors_Spsi")
 
        CALL init_us_1
@@ -702,6 +706,10 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        ENDIF
 
        do ik = 1, nkstot
+ 
+           IF(.NOT.single_file .AND. ionode) &
+                 call iotk_link(50,"Kpoint"//iotk_index(ik),"swfc"//iotk_index(ik), &
+                       create=.true.,binary=.not.ascii,raw=raw)
 
            local_pw = 0
            IF( (ik >= iks) .AND. (ik <= ike) ) THEN

@@ -682,7 +682,7 @@ END SUBROUTINE
 
 SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
            ibrav, b1, b2, b3, taus, tausm, vels, velsm, acc, lambda, lambdam, xnhe0, &
-           xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm, xnhh0, xnhhm, vnhh, velh, &
+           xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh, velh, &
            ecut, ecutw, delt, celldm, fion, tps, mat_z, occ_f )
 
   use efcalc, only: efield
@@ -712,7 +712,8 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   real(kind=8) :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
   real(kind=8) :: acc(:)
   real(kind=8) :: lambda(:,:), lambdam(:,:)
-  real(kind=8) :: xnhe0, xnhem, vnhe, xnhp0, xnhpm, vnhp, ekincm
+  real(kind=8) :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
+  integer      :: nhpcl
   real(kind=8) :: velh(:,:)
   real(kind=8) :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
   real(kind=8) :: ecut, ecutw, delt, celldm(:)
@@ -735,7 +736,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
 
     call writefile &
      &     ( ndw,h,hold,nfi,c0(:,:,1,1),cm(:,:,1,1),taus,tausm,vels,velsm,acc,   &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,ekincm,   &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,   &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,fion,tps, &
      &       mat_z, occ_f )
 

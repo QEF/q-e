@@ -95,7 +95,7 @@
       USE energies, ONLY: dft_energy_type, debug_energies
       USE recvecs_indexes, ONLY: deallocate_recvecs_indexes
       USE turbo, ONLY: tturbo, deallocate_turbo
-      USE nose_ions, ONLY: movenosep, nosep_velocity, update_nose_ions
+      USE nose_ions, ONLY: movenosep, nosep_velocity
       USE nose_electrons, ONLY: movenosee, nosee_velocity, update_nose_electrons
       USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
@@ -137,8 +137,9 @@
       USE electrons_module, ONLY: bmeshset
       USE mp_global, ONLY: nproc, mpime, group
       USE input_parameters, ONLY: nr1b, nr2b, nr3b
-      USE ions_base, ONLY: deallocate_ions_base, ind_localisation, pos_localisation
-      USE ions_base, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation
+      USE ions_base, ONLY: deallocate_ions_base
+      USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
+                            ind_localisation, pos_localisation, deallocate_sic
       USE ions_base, ONLY: ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
       USE electrons_base, ONLY: nupdwn, deallocate_elct
@@ -168,6 +169,8 @@
       !
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+      !
+      USE ions_nose, ONLY: ions_nose_shiftvar, xnhpp, xnhp0, xnhpm, xnhpm2
 
       IMPLICIT NONE
 
@@ -616,10 +619,10 @@
         END IF
  
 
-! ---------------------------------------------------------------------------- !
-! ...   printout and updating
+        ! ---------------------------------------------------------------------------- !
 
-! ...   report information
+        ! ...   printout 
+        !
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, prn, &
           avgs, avgs_this_run, edft)
 
@@ -651,9 +654,9 @@
         IF ( doions ) THEN
 
           IF ( tfor ) THEN
-            CALL update_ions(atoms_m, atoms_0, atoms_p)
+            CALL update_ions( atoms_m, atoms_0, atoms_p )
             IF ( tnosep ) THEN
-              CALL update_nose_ions
+              CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm, xnhpm2 )
             END IF
           END IF
 
@@ -782,6 +785,7 @@
       CALL deallocate_atoms_type( atoms_p )
       CALL deallocate_atoms_type( atoms_m )
       CALL deallocate_ions( )
+      CALL deallocate_sic( )
 
       CALL deallocate_projector( fnl )
       deallocate(fi)

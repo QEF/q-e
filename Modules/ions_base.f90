@@ -52,15 +52,8 @@
       INTEGER, ALLOCATABLE :: if_pos(:,:)     ! if if_pos( x, i ) = 0 then  x coordinate of 
                                               ! the i-th atom will be kept fixed
       INTEGER, ALLOCATABLE :: iforce(:,:)     ! if_pos sorted by specie 
-      INTEGER :: fixatom                      !!! to be removed
-
-      INTEGER :: ind_localisation(natx) = 0   ! true if we want to know the localization arount the atom
-      INTEGER :: nat_localisation = 0 
-      LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
-      INTEGER :: self_interaction = 0 
-      REAL(dbl) :: si_epsilon = 0.0d0
-      REAL(dbl) :: rad_localisation = 0.0d0
-      REAL(dbl), ALLOCATABLE :: pos_localisation(:,:)
+      INTEGER :: fixatom   = -1               !!! to be removed
+      INTEGER :: ndofp     = -1               ! ionic degree of freedom
 
       REAL(dbl) :: fricp   ! friction parameter for damped dynamics
       REAL(dbl) :: greasp  ! friction parameter for damped dynamics
@@ -175,8 +168,7 @@
 
 
     SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , vel_, amass_ , &
-        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , rcmax_ , id_loc_ , sic_ ,  &
-        sic_epsilon_, sic_rloc_ )
+        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , rcmax_ )
 
       USE constants, ONLY: scmass
       USE io_base, ONLY: stdout
@@ -191,10 +183,6 @@
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
       REAL(dbl), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
       REAL(dbl), INTENT(IN) :: rcmax_ (:)
-      INTEGER, OPTIONAL, INTENT(IN) :: id_loc_ (:)
-      CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: sic_
-      REAL(dbl), OPTIONAL, INTENT(IN) :: sic_epsilon_
-      REAL(dbl), OPTIONAL, INTENT(IN) :: sic_rloc_
       INTEGER :: i, ia, is
 
       nsp = nsp_
@@ -325,45 +313,13 @@
       if_pos(:,:) = if_pos_ (:,1:nat)
 
       iforce = 0
+      !
       DO ia = 1, nat
         iforce ( :, ia ) = if_pos ( :, ind_srt( ia ) )
       END DO
-
-
-
-      IF( PRESENT( sic_ ) ) THEN
-        select case ( TRIM( sic_ ) )
-        case ( 'sic_pz' ) 
-          self_interaction = 1
-        case ( 'sic_mac' )
-          self_interaction = 2
-        case ( 'only_sich' )
-          self_interaction = 3
-        case ( 'only_sicxc_pz' )
-          self_interaction = -1
-        case ( 'only_sicxc_mac' )
-          self_interaction = -2
-        case default
-          self_interaction = 0
-        end select
-      END IF
-      IF( PRESENT( sic_epsilon_ ) ) THEN
-        si_epsilon       = sic_epsilon_
-      END IF
-      IF( PRESENT( sic_rloc_ ) ) THEN
-        rad_localisation = sic_rloc_
-      END IF
-      IF( PRESENT( id_loc_ ) ) THEN
-        ind_localisation(1:nat) = id_loc_ ( 1:nat )
-        nat_localisation = COUNT( ind_localisation > 0 ) 
-        ALLOCATE( pos_localisation( 4, nat_localisation ) )
-      !counting the atoms around which i want to calculate the charge localization
-      ELSE
-        ind_localisation(1:nat) = 0
-        nat_localisation = 0
-      END IF
       !
-      IF( nat_localisation > 0 ) print_localisation = .TRUE.
+      ndofp = COUNT( iforce /= 0 )
+
       !
       ! ... TEMP: calculate fixatom (to be removed)
       !
@@ -397,7 +353,6 @@
       IF( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
       IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
       IF( ALLOCATED( iforce ) ) DEALLOCATE( iforce )
-      IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
       tions_base_init = .FALSE.
       RETURN
     END SUBROUTINE
@@ -586,7 +541,7 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass )
+  subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass, ndega )
     use constants, only: factem
     implicit none
     real( kind=8 ), intent(out) :: ekinpr, tempp
@@ -594,7 +549,7 @@
     real( kind=8 ), intent(in) :: vels(:,:)
     real( kind=8 ), intent(in) :: pmass(:)
     real( kind=8 ), intent(in) :: h(:,:)
-    integer, intent(in) :: na(:), nsp
+    integer, intent(in) :: na(:), nsp, ndega
     integer :: nat, i, j, is, ia, ii, isa
     real( kind=8 ) :: cdmvel(3), eks
     call ions_cofmass( vels, pmass, na, nsp, cdmvel )
@@ -622,7 +577,7 @@
       temps( is ) = temps( is ) * factem / ( 1.5d0 * na(is) )
     end do
     ekinpr = 0.5 * ekinpr
-    tempp  = ekinpr * factem / ( 1.5d0 * nat )
+    tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
     return
   end subroutine
 
@@ -787,7 +742,7 @@
     real(kind=8), intent(in) :: fricp, hgamma(3,3), vels(:,:)
     logical, intent(in) :: tsdp, tnosep
     real(kind=8), intent(inout) :: fionm(:,:)
-    real(kind=8), intent(in) :: vnhp
+    real(kind=8), intent(in) :: vnhp(:)
     real(kind=8), intent(out) :: velsp(:,:)
     real(kind=8), intent(in) :: velsm(:,:)
     integer :: is, ia, i, isa
@@ -826,7 +781,7 @@
                      fionm(i,isa) = (ainv(i,1)*fion(1,isa)          &
      &                                +ainv(i,2)*fion(2,isa)          &
      &                                +ainv(i,3)*fion(3,isa))         &
-     &                              - vnhp*vels(i,isa)*pmass(is)      &
+     &                              - vnhp(1)*vels(i,isa)*pmass(is)      &
      &                    - pmass(is)*(hgamma(i,1)*vels(1,isa)        &
      &                                +hgamma(i,2)*vels(2,isa)        &
      &                                +hgamma(i,3)*vels(3,isa))
@@ -874,39 +829,95 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: dbl
+      USE parameters, ONLY: nhclm
 !
       IMPLICIT NONE
 
-      REAL(dbl) :: vnhp = 0.0d0
-      REAL(dbl) :: xnhp0 = 0.0d0
-      REAL(dbl) :: xnhpm = 0.0d0
-      REAL(dbl) :: xnhpp = 0.0d0
-      REAL(dbl) :: xnhpm2 = 0.0d0
-      REAL(dbl) :: qnp = 0.0d0
+      INTEGER   :: nhpcl, ndega
+      REAL(dbl) :: vnhp( nhclm ) = 0.0d0
+      REAL(dbl) :: xnhp0( nhclm ) = 0.0d0
+      REAL(dbl) :: xnhpm( nhclm ) = 0.0d0
+      REAL(dbl) :: xnhpp( nhclm ) = 0.0d0
+      REAL(dbl) :: xnhpm2( nhclm ) = 0.0d0
+      REAL(dbl) :: qnp( nhclm ) = 0.0d0
       REAL(dbl) :: gkbt = 0.0d0
+      REAL(dbl) :: kbt = 0.0d0
       REAL(dbl) :: tempw = 0.0d0
-      REAL(dbl) :: fnosep = 0.0d0
+      REAL(dbl) :: fnosep( nhclm ) = 0.0d0
 
 !------------------------------------------------------------------------------!
   CONTAINS 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_nose_init( tempw_ , fnosep_ , nat )
-    use constants, only: factem, pi, terahertz
+  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , ndega_ , nat )
+    use constants,      only: factem, pi, terahertz
+    use control_flags,  only: tnosep
+    use ions_base,      only: ndofp, tions_base_init
     implicit none
-    real(kind=8), intent(in)  :: tempw_ , fnosep_
+    real(kind=8), intent(in)  :: tempw_ , fnosep_(:) 
+    integer, intent(in) :: nhpcl_ , ndega_
     integer, intent(in) :: nat
-    integer :: nsvar
+    integer :: nsvar, i
+
+    IF( .NOT. tions_base_init ) &
+      CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )
+
     vnhp  = 0.0d0
     xnhp0 = 0.0d0
     xnhpm = 0.0d0 
     xnhpm2 = 0.0d0 
     xnhpp = 0.0d0
-    tempw = tempw_
-    fnosep = fnosep_
-    qnp = 0.0d0
-    if( fnosep > 0.0d0 ) qnp = 2.d0*(3*nat)*tempw/factem/(fnosep*(2.d0*pi)*terahertz)**2
-    gkbt = 3.*nat*tempw/factem
+
+    tempw     = tempw_
+    fnosep    = 0.0d0
+
+    qnp   = 0.0d0
+    nhpcl = MAX( nhpcl_ , 1 )
+
+    IF( nhpcl > nhclm ) &
+      CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
+
+    !  Setup Nose-Hoover chain masses
+    !
+    if ( ndega_ > 0 ) then
+       ndega = ndega_
+    else if ( ndega_ < 0 ) then
+       ndega = ndofp - ( - ndega_ )
+    else
+       ndega = ndofp
+    endif
+
+    !  there is no need to initialize any Nose variables except for nhpcl
+    !  and ndega if the thermostat is not used
+    !
+
+    IF( tnosep ) THEN
+
+      IF( nhpcl > SIZE( fnosep_ ) ) &
+        CALL errore(' ions_nose_init ', ' fnosep size too small ', nhpcl )
+
+      gkbt = DBLE( ndega ) * tempw / factem
+      kbt  = tempw / factem
+
+      fnosep(1) = fnosep_ (1)
+      if( fnosep(1) > 0.0d0 ) then
+        qnp(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * terahertz )**2
+      end if
+
+      if ( nhpcl > 1 ) then
+        do i = 2, nhpcl
+          fnosep(i) = fnosep_ (i)
+          if( fnosep(i) > 0.0d0 ) then
+            qnp(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * terahertz )**2
+          else
+            qnp(i) = qnp(1) / dble(ndega)
+          endif
+        enddo
+      endif
+
+    END IF
+
+
     !    WRITE( stdout,100)
     !    WRITE( stdout,110) QNOSEP,TEMPW
     !    WRITE( stdout,120) GLIB
@@ -915,50 +926,124 @@
  110  FORMAT(3X,'nose mass:',F12.4,' temperature (K):',F12.4)
  120  FORMAT(3X,'ionic degrees of freedom:        ',F5.0)
  130  FORMAT(3X,'time steps per nose oscillation: ',I5,//)
+
     return
   end subroutine
+
+
+  SUBROUTINE ions_nose_info()
+
+      use constants,     only: factem, terahertz, pi
+      use time_step,     only: delt
+      USE io_global,     ONLY: stdout
+      USE control_flags, ONLY: tnosep
+
+      IMPLICIT NONE
+
+      INTEGER   :: nsvar, i
+      REAL(dbl) :: wnosep
+
+      IF( tnosep ) THEN
+        !
+        IF( fnosep(1) <= 0.D0) &
+          CALL errore(' ions_nose_info ', ' fnosep less than zero ', 1)
+        IF( delt <= 0.D0) &
+          CALL errore(' ions_nose_info ', ' delt less than zero ', 1)
+
+        wnosep = fnosep(1) * ( 2.d0 * pi ) * terahertz
+        nsvar  = ( 2.d0 * pi ) / ( wnosep * delt )
+
+        WRITE( stdout,563) tempw, nhpcl, ndega, (qnp(i),i=1,nhpcl), nsvar
+      END IF
+
+ 563  format( //, &
+            & 3X,'ion dynamics with nose` temperature control:', /, &
+            & 3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
+            & 3X,'NH chain length           = ', i3, /, &
+            & 3X,'active degrees of freedom = ', i3, /, &
+            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), /, & 
+            & 3X,'time steps per nose osc.  = ', i5, // )
+
+
+    RETURN
+  END SUBROUTINE ions_nose_info
+
   
 
-  subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt )
+  subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl )
     implicit none
-    real(kind=8), intent(inout) :: vnhp
-    real(kind=8), intent(in) :: xnhp0, xnhpm, delt
-    vnhp=2.*(xnhp0-xnhpm)/delt-vnhp
-    return 
-  end subroutine
-
-  subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp )
-    !  nose variables time advancment
-    implicit none
-    real(kind=8), intent(out) :: xnhpp, vnhp
-    real(kind=8), intent(in) :: xnhp0, xnhpm, delt, qnp, ekinpr, gkbt
-      !
-      xnhpp=2.*xnhp0-xnhpm+2.*( delt**2 / qnp )*(ekinpr-gkbt/2.)
-      vnhp =(xnhpp-xnhpm)/( 2.0d0 * delt )
-      !
+    real(kind=8), intent(inout) :: vnhp(:)
+    real(kind=8), intent(in) :: xnhp0(:), xnhpm(:), delt
+    integer, intent(in) :: nhpcl
+    integer :: i
+    do i=1,nhpcl
+       vnhp(i)=2.*(xnhp0(i)-xnhpm(i))/delt-vnhp(i)
+    enddo
     return
   end subroutine
+
+
+ subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
+    implicit none
+    real(kind=8), intent(out) :: xnhpp(:), vnhp(:)
+    real(kind=8), intent(in) :: xnhp0(:), xnhpm(:), delt, qnp(:), ekinpr, gkbt, kbt
+    integer, intent(in) :: nhpcl
+    integer :: i
+    real(kind=8) :: dt2, zetfrc
+
+    zetfrc = 2.0d0*ekinpr-gkbt
+    dt2 = delt**2
+    If (nhpcl.gt.1) then
+       do i=1,(nhpcl-1)
+          xnhpp(i)=(4.d0*xnhp0(i)-(2.d0-delt*vnhp(i+1))*xnhpm(i)+2.0d0*dt2*zetfrc/qnp(i))&
+               &   /(2.d0+delt*vnhp(i+1))
+          vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
+          zetfrc = (qnp(i)*vnhp(i)**2-kbt)
+       enddo
+    endif
+    ! Last variable
+    xnhpp(nhpcl)=2.d0*xnhp0(nhpcl)-xnhpm(nhpcl)+( delt**2 / qnp(nhpcl) )*zetfrc
+    i = nhpcl
+    vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
+    ! Update velocities
+!    do i=1,nhpcl
+!       vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
+!    end do
+    ! These are the original expressions from cpr.f90
+    !       xnhpp(1)=2.*xnhp0(1)-xnhpm(1)+2.*( delt**2 / qnp(1) )*(ekinpr-gkbt/2.)
+    !       vnhp(1) =(xnhpp(1)-xnhpm(1))/( 2.0d0 * delt )
+    return
+  end subroutine ions_noseupd
+
   
 
-  function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt )
-    !  compute energy term for nose thermostat
+  real(kind=8) function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
     implicit none
-    real(kind=8) :: ions_nose_nrg
-    real(kind=8), intent(in) :: xnhp0, vnhp, qnp, gkbt
-      !
-      ions_nose_nrg = 0.5d0 * qnp * vnhp * vnhp + gkbt * xnhp0
-      !
+    integer :: nhpcl
+    real(kind=8) :: gkbt,qnp(:),vnhp(:),xnhp0(:),kbt
+    integer :: i
+    real(kind=8) :: stmp
+    !
+    stmp = 0.5d0 * qnp(1) * vnhp(1) * vnhp(1) +     gkbt * xnhp0(1)
+    if (nhpcl > 1) then
+       do i=2,nhpcl
+          stmp=stmp+0.5*qnp(i)*vnhp(i)*vnhp(i) + kbt*xnhp0(i)
+       enddo
+    endif
+    ions_nose_nrg = stmp
     return
-  end function
+  end function ions_nose_nrg
 
 
-  subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
+
+  subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm, xnhpm2 )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhpm
-    real(kind=8), intent(inout) :: xnhp0
-    real(kind=8), intent(in) :: xnhpp
+    real(kind=8), optional, intent(out) :: xnhpm2(:)
+    real(kind=8), intent(inout) :: xnhpm(:), xnhp0(:)
+    real(kind=8), intent(in)  :: xnhpp(:)
       !
+      IF( PRESENT( xnhpm2 ) ) xnhpm2 = xnhpm
       xnhpm = xnhp0
       xnhp0 = xnhpp
       !

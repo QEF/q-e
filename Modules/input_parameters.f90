@@ -19,7 +19,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds
-  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx, lqmax
+  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx, lqmax, nhclm
   !
   IMPLICIT NONE
   !
@@ -873,9 +873,18 @@ MODULE input_parameters
           ! value of the ionic temperature (in Kelvin) forced
           ! by the temperature control
 
-        REAL(dbl) :: fnosep = 50.0d0
+        REAL(dbl) :: fnosep( nhclm )  = 50.0d0
           ! meaningful only with "ion_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz) 
+          ! nhclm is a max length for the chain
+
+        INTEGER   ::  nhpcl = 0
+          ! non-zero only with "ion_temperature = 'nose' "
+          ! this defines the length of the Nose-Hoover chain
+
+        INTEGER   ::  ndega = 0
+          ! this is the parameter to control active degrees of freedom
+          ! used for temperature control and the Nose-Hoover chains
 
         REAL(dbl) :: tolp = 50.0d0
           ! meaningful only with "ion_temperature = 'rescaling' "
@@ -1054,9 +1063,9 @@ MODULE input_parameters
 
 
         NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions,&
-          ion_velocities, ion_temperature, tempw, fnosep, tranp, amprp, greasp,&
-          tolp, ion_nstepe, ion_maxstep, upscale, pot_extrapolation,           &
-          wfc_extrapolation, delta_t, nraise,                                  &
+          ion_velocities, ion_temperature, tempw, fnosep, nhpcl, ndega, tranp, &
+          amprp, greasp, tolp, ion_nstepe, ion_maxstep, upscale,               &
+          pot_extrapolation, wfc_extrapolation, delta_t, nraise,               &
           num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
           reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,   &
           init_num_of_images, free_energy, fixed_tan, use_freezing,            &
