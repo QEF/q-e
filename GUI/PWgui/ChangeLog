@@ -1,0 +1,9 @@
+Wed Feb 18 2004 Anton Kokalj (tone.kokalj@ijs.si)	
+	* src-tcl/ directory renamed to src/
+	* CVS: moving the PWgui and GUIB repositories to O-sesame
+	repository. Some changes of Makefile etc. were required		
+	
+Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* ChangeLog: the beginning of the ChangeLog
+
+ChangeLog ends here

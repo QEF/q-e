@@ -1,0 +1,93 @@
+#
+# $RCSfile: view.itcl,v $ --
+#
+#      This file contains ...
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: view.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+#
+
+proc ::pwscf::view::inputByPager {guiObj} {
+    variable ::pwscf::settings
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]
+    
+    set tmpFile [::tclu::tempFile name pwscf.$moduleIdent]
+    namespace eval ::guib "$moduleObj save $tmpFile 1"
+    eval exec $::pwscf::settings(PAGER) $tmpFile &
+}
+ 
+
+proc ::pwscf::view::structByXcrysden {guiObj} {
+    variable ::pwscf::settings
+    global   env
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]    
+    set tabName     [$guiObj getSelected tabName]
+    
+    set tmpFile [::tclu::tempFile name pwscf.$moduleIdent]
+    namespace eval ::guib "$moduleObj save $tmpFile 1"
+
+    # check if XCRYSDEN version supports --use option
+    if { [file exists $env(XCRYSDEN_TOPDIR)/usage] } {
+	if { [string match *--use* [::tclu::readFile $env(XCRYSDEN_TOPDIR)/usage]] } {
+	    set allowEmbedding 1
+	} else {
+	    set allowEmbedding 0
+	} 
+    } else {
+	set allowEmbedding 0
+    }
+
+    if { $::pwscf::settings(XCRYSDEN.openAs) == "notebook-page" && $allowEmbedding } {
+	# create new notebook page for XCRYSDEN ...
+
+	::tclu::DEBUG structByXcrysden.1
+	set name     [::pwscf::_uniqueTabname "XCRYSDEN: [lindex $tabName end]"]
+	set w        [$guiObj page add $name]
+	set tabIndex [$guiObj getSelected tabIndex]
+	update
+	set winID    [winfo id $w]
+
+	# BEWARE: xcrysden should be executed in nonblocking (not
+	# background) mode, and upon exit, the page should be closed
+
+	::tclu::DEBUG structByXcrysden.2		
+	set execID [::tclu::nonblocking open]
+	eval ::tclu::nonblocking exec $execID xcrysden --use $winID --pwi $tmpFile 
+	::tclu::DEBUG structByXcrysden.3
+
+	::tclu::nonblocking unset $execID    
+	
+	# XCRYSDEN has exited; delete xcrysden page ...
+	
+	$guiObj page delete $tabIndex
+    } else {
+	# launch XCRYSDEN in background mode
+	exec xcrysden --pwi $tmpFile &
+    }
+}
+
+#proc ::pwscf::XCRYSDEN {obj} {
+#    set w [$obj page add XCRYSDEN]
+#    update
+#    set id [winfo id $w]
+#    exec xcrysden --use $id &
+#}

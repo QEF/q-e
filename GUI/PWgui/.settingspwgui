@@ -1,0 +1,56 @@
+# ------------------------------------------------------------------------
+#  DEBUGGING ...
+# ------------------------------------------------------------------------
+
+set ::tclu::DEBUG      0
+set ::tclu::DEBUG_FILE 0
+
+
+# ------------------------------------------------------------------------
+#  GUIB settings ...
+# ------------------------------------------------------------------------
+
+# regular expresion for the for the endlist-string
+set ::guib::settings(NAMELIST.end_regexp) {^ &end|^/|^ /}
+
+# string to write for the end-of-namelist
+set ::guib::settings(NAMELIST.end_string) { /}
+
+# case-sensitivity of namelists variable names (allowed-values: 0|1)
+set ::guib::settings(NAMELIST.varname_nocase) 1
+
+# format for printing namelist's variables names
+set ::guib::settings(NAMELIST.varname_format) {   %25s}
+
+# support for undefined namelist variables
+set ::guib::settings(NAMELIST.variable_support_undefined) 0
+
+# case-sensitivity of input (allowed-values: 0|1)
+set ::guib::settings(INPUT.nocase) 0
+
+# add a trailing slash to dinames (allowed-values: 0|1)
+set ::guib::settings(DIRNAME.trailing_slash) 1
+
+# whether to use only file-tail for filenames (allowed-values: 0|1)
+set ::guib::settings(FILENAME.only_tail)  0
+
+
+# ------------------------------------------------------------------------
+#  (Tk)PWscf settings ...
+# ------------------------------------------------------------------------
+
+set ::pwscf::settings(EDITOR)          emacs
+set ::pwscf::settings(PAGER)           {xterm -e less}
+set ::pwscf::settings(HTMLVIEWER)      TkPWscf
+
+set ::pwscf::settings(EDITOR.list)     {emacs gedit nedit {xterm -e vi}}
+set ::pwscf::settings(PAGER.list)      {{xterm -e less} {xterm -e more}}
+set ::pwscf::settings(HTMLVIEWER.list) {TkPWscf}
+
+
+# launch XCRYSDEN as (allowed-values: standalone|notebook-page)
+set ::pwscf::settings(XCRYSDEN.openAs) standalone
+
+# not yet used ...
+set ::pwscf::settings(TKPWSCF.geometry.remember) 0
+set ::pwscf::settings(TKPWSCF.geometry)          {}

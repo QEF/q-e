@@ -1,0 +1,6 @@
+Version: 0.6.0
+* PWgui compatible with PWscf 2.0
+* D3.X module added
+* PWgui is avaiable via anonymous CVS
+* There is now a `NEWS' file (this one), giving a history of
+  user-visible changes.

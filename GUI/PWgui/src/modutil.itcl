@@ -1,0 +1,175 @@
+#
+# $RCSfile: modutil.itcl,v $ --
+#
+#      This file contains utilities functions used/shared by 
+#      various modules, such as auxiliary functions for 
+#      readfilters, ...
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: modutil.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+#
+
+namespace eval ::pwscf::readFilter {}
+
+proc ::pwscf::readFilter::replaceFlag {line reference args} {
+    set _line $line
+    foreach flag $args {
+        if { [regexp \[\"'\]${flag}\[\"'\] $line] } {
+	    #if { [string match *\"${flag}\"* $line] || [string match *'${flag}'* $line] } 
+	    regsub $flag $line $reference _line
+	    break
+	}
+    }
+    return $_line
+}
+
+proc ::pwscf::readFilter::logicalFlag {line} {
+    # convert all variants of .TRUE. .true. .T. .t. ---> .true.
+    # and all variants of .FALSE. .false. .F. .f. ---> .false.
+    foreach true {true t} {
+	set regexp "= {0,}\[.\]${true}\[.\]"
+	if { [regexp -nocase -- $regexp $line] } {
+	    regsub -all -nocase -- $regexp $line {= .true.} line
+	}
+    }
+    foreach false {false f} {
+	set regexp "= {0,}\[.\]${false}\[.\]"
+	if { [regexp -nocase -- $regexp $line] } {
+	    regsub -all -nocase -- $regexp $line {= .false.} line
+	}
+    }
+    return $line
+}
+
+proc ::pwscf::readFilter::purifyCardLine {cardLine} {
+    # purify the card-line !!!
+    # The card-line can hold something like: "ATOMIC_POSITIONS { alat }",
+    # but we want: ""ATOMIC_POSITIONS alat"
+    set _part1 [lindex $cardLine 0]
+    set _part2 [string tolower [string trim [lrange $cardLine 1 end] "{}()"]]
+    return "${_part1} ${_part2}"
+}
+
+
+proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} { 
+    # search for the largest index of amass()-dimension in $line and
+    # return the largest index found; $line is a line of input
+    foreach field [split $line =] {
+	if { [regexp -nocase {amass\([0-9]+\)} $field matchVar] } {
+	    regexp {[0-9]+} $matchVar index
+	    if { $index > $maxIndex } { 
+		set maxIndex $index 
+	    }
+	}
+    }    
+    return $maxIndex
+}
+
+proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replList {}}} {
+
+    # Default readfilter, which can have several possible modes:
+    #
+    # Variable: filterMode
+    # Description:
+    # mode=amass   search for largest amass(*) index and assign the
+    #              ntyp variables
+    #
+    # mode=logical repleace all possible values of Fortran logical
+    #              variables with .true. or .false.
+    #
+    # The value of filterMode is cumulative, i.e., "amass logical" is
+    # allowed
+    #
+    #
+    # Variable: replList
+    # Description: replList are double list of the form
+    # { {replaceFromList1  replaceToItem1} {replaceFromList2  replaceToItem2} ... }
+    # 
+    set amass   0
+    set logical 0
+    if { [string match "*amass*"   $filterMode] } { set amass   1 }
+    if { [string match "*logical*" $filterMode] } { set logical 1 }
+
+    set maxIndex 0
+    set output   {}
+    while { ! [eof $channel] } {
+	gets $channel _line
+	if { $amass } {
+	    set maxIndex [amassIndex $_line $maxIndex]
+	}
+	if { $logical } {
+	    set _line    [logicalFlag $_line]       
+	}
+	if { $replList != "" } {
+	    foreach repl $replList {
+		set replFromList [lindex $repl 0]
+		set replToItem   [lindex $repl 1]
+		set _line [eval {replaceFlag $_line $replToItem} $replFromList]
+		#foreach replItem $replFromList {
+		#    set _line [replaceFlag $_line $replToItem $replItem]
+		#}
+	    }
+	}
+	append output $_line\n
+    }
+    if { $maxIndex > 0 && $amass } {
+	$moduleObj varset ntyp -value $maxIndex
+    }
+    # close the old channel
+    close $channel
+
+    # open a new channel (i.e. temporary file) and write the 
+    # $output to it
+    set tmpfile    [::tclu::tempFile name input]
+    set newChannel [open $tmpfile w+]
+    puts  $newChannel $output
+    flush $newChannel
+
+    # rewind the newChannel
+    seek $newChannel 0 start
+    return $newChannel
+}
+
+
+proc ::pwscf::selectFileRoot {moduleObj variable} {
+    # Purpose: select the root of a filename and quote it
+    # Example: file.ext --> 'file'
+    variable pwscf
+    global env
+
+    set _dir [string trim [$moduleObj varvalue outdir] "'"]
+    
+    if { [file isdirectory $_dir] } {
+	set dir $_dir
+    } elseif { [info exists pwscf($moduleObj,LASTDIR,punchfile)] } {
+	set dir $pwscf($moduleObj,LASTDIR,punchfile)
+    } else {
+	set dir $pwscf(PWD)
+    }        
+    
+    set file [tk_getOpenFile \
+		  -initialdir $dir \
+		  -title      "Select a Punch File"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,punchfile) [file dirname $file]
+    
+    set file '[file tail [file rootname $file]]'
+    $moduleObj varset $variable -value $file    
+}

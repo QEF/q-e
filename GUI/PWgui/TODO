@@ -1,0 +1,11 @@
+* NEB: button "read coordinates" should be adjusted to NEB specialties
+
+
+
+DONE ------------------------------------------------------------------- DONE
+DONE -----below this point are items that were already implemented------ DONE
+DONE ------------------------------------------------------------------- DONE
+
+* write fortranreal-to-real translation for cards-input DONE
+* check the modules definition. Instead of -infmt/-outfmt use -validate. DONE.
+* code for A,B,C,COSAB,... DONE.

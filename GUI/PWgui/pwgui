@@ -1,0 +1,55 @@
+#!/bin/sh
+# ----------------------------------------------------------------------
+#  PROGRAM: PWgui
+#  PURPOSE: tries to be a GUI for the PWscf
+# ----------------------------------------------------------------------
+#  Anton Kokalj
+#  Jozef Stefan Institute, Ljubljana, Slovenia
+#  INFM DEMOCRITOS National Simulation Center, Trieste, Italy
+#  Email: Tone.Kokalj@ijs.si
+# ======================================================================
+#  Copyright (c) 2003--2004 Anton Kokalj
+# ======================================================================
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.  IN NO EVENT SHALL ANTON KOKALJ BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+if [ -z "$PWGUI" ]; then
+    echo "
+
+   Please define the PWGUI enviromental variable !!!
+   PWGUI should point to the PWgui package root directory.
+
+"
+    exit 1
+fi
+
+
+echo "
+ ==================================================
+  This is PWGUI version: `cat $PWGUI/VERSION`
+ --------------------------------------------------
+"
+if [ -d $PWGUI/bin ]; then
+    echo "
+ PWGUI: using the \"$PWGUI/bin/itkwish\" interpreter
+"
+    $PWGUI/bin/itkwish $PWGUI/pwgui.tcl
+else
+    echo "
+ PWGUI: using the system default \"wish\" interpreter
+"
+    wish $PWGUI/pwgui.tcl
+fi

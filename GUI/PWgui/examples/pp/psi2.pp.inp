@@ -1,0 +1,9 @@
+ &INPUTPP
+                      prefix = 'pwscf' ,
+                      outdir = './' ,
+                     filplot = 'pwscf.plot' ,
+                    plot_num = 7,
+                      kpoint = 1,
+                       kband = 14,
+ /
+

@@ -1,0 +1,24 @@
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    pseudo_dir = '/home/giannozz/New-sesame/pseudo/',
+    outdir='/home/giannozz/tmp/'
+    prefix='cu'
+    tstress = .true.
+    tprnfor = .true.
+ /
+ &system
+    ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
+    ecutwfc = 25.0, ecutrho = 300.0
+    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Cu 63.55 CuUS.RRKJ3.UPF
+ATOMIC_POSITIONS
+ Cu 0.0 0.0 0.0
+K_POINTS (automatic)
+ 8 8 8 0 0 0

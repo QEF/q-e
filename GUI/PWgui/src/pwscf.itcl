@@ -1,0 +1,184 @@
+#
+# $RCSfile: pwscf.itcl,v $ --
+#
+#      This file is the main Tcl file for the PWSCF GUI.
+#
+# Copyright (c) 2003  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: pwscf.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+#
+
+tk_setPalette  #d9d9d9
+option add *Menu*borderWidth                 1         startupFile
+option add *Menubar*borderWidth              1         100
+option add *Menubar*activeBorderWidth        1         100
+option add *Menubar*activeBackground        \#007d8d   startupFile
+option add *Menubar*activeForeground        \#ffffff   startupFile
+
+option readfile [file join $::env(PWGUI) src pwscf.theme] startupFile
+option readfile [file join $::guib::library guib.theme]     startupFile
+
+
+
+# ------------------------------------------------------------------------
+# create IMAGES
+# ------------------------------------------------------------------------
+
+image create photo logo -format gif \
+    -file [file join $env(PWGUI) images pwgui-logo-small.gif]
+
+image create photo pwscf   -format gif \
+    -file [file join $env(PWGUI) images pwscf3.gif] 
+
+
+
+# ------------------------------------------------------------------------
+# create the PWgui's GUI object
+# ------------------------------------------------------------------------
+
+set gui [::guib::GUI \#auto -title "PWgui: A PWscf's GUI" -appname PWgui]
+
+
+
+# ------------------------------------------------------------------------
+# define the PWSCF's modules
+# ------------------------------------------------------------------------
+
+$gui addModule module pw "PW.X" [file join $env(PWGUI) modules pw pw.tcl] { 
+    {{PW.X Input File} {*.pw.inp}}
+}
+
+$gui addModule separator sep1
+
+$gui addModule module ph "PH.X" [file join $env(PWGUI) modules ph ph.tcl] {
+    {{PH.X Input File} {*.ph.inp}}
+}
+$gui addModule module pp "PP.X" [file join $env(PWGUI) modules pp pp.tcl] {
+    {{PP.X Input File} {*.pp.inp}}
+}
+$gui addModule module ch "ChDENS.X" [file join $env(PWGUI) modules chdens chdens.tcl] {
+    {{ChDENS.X Input File} {*.ch.inp}}
+}
+$gui addModule module pr "ProjWFC.X" [file join $env(PWGUI) modules projwfc projwfc.tcl] {
+    {{ChDENS.X Input File} {*.pr.inp}}
+}
+$gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
+    {{D3.X Input File} {*.d3.inp}}
+}
+
+#$gui addModule cascade pwscf "PWscf files ..." {
+#   $gui addModule command ...
+#   ...
+#}
+#$gui addModule cascade fpmd "FPMD files ... " {
+#   $gui addModule command ...
+#   ...
+#}
+
+
+# ------------------------------------------------------------------------
+# help Files
+# ------------------------------------------------------------------------
+$gui addHelp help usersguide "PWSCF User's guide" [file join $env(PWGUI) doc pwdocs manual manual.html]
+
+$gui addHelp separator
+
+$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html]
+$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PH.html]
+$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PP.html]
+$gui addHelp help chdens   "ChDENS.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_CHDENS.html]
+$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html]
+$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html]
+
+
+
+# ------------------------------------------------------------------------
+#  EXTRA GUI stuff ...
+# ------------------------------------------------------------------------
+
+$gui extra {
+    #
+    # add Settings menu-entry to FILE menu
+    #
+    set mb [component menubar]
+    $mb insert .file.closetab command .file.settings -label "Settings" -command [list ::pwscf::settings $this]
+    $mb insert .file.closetab separator .file.setsep
+
+    #
+    # EDIT menubutton
+    #
+    $mb add menubutton .edit -text "Edit" -menu {
+	options -tearoff false
+    }
+    $mb add command   .edit.editOrig -label "Input with editor" -command [list ::pwscf::edit::inputByEditor original $this]
+    $mb add command   .edit.editCopy -label "Input's copy with editor" -command [list ::pwscf::edit::inputByEditor copy $this]
+    $mb add separator .edit.sep1
+    $mb add command   .edit.settings -label "Settings" -command [list ::pwscf::settings $this]
+
+    #
+    # VIEW menubutton
+    #
+    $mb add menubutton .view -text "View" -menu {
+	options -tearoff false
+    }
+    $mb add command  .view.xcrysden -label "Structure with XCRYSDEN" -command [list ::pwscf::view::structByXcrysden $this]
+    $mb add command  .view.input    -label "Input file" -command [list ::pwscf::view::inputByPager $this]
+    # t.k.
+    #$mb add separator .view.sep1
+    #$mb add command  .view.xc -label "XCRYSDEN" -command [list ::pwscf::XCRYSDEN $this]
+    #/
+
+    #
+    # add a PWscf's logo to TOOLBAR
+    #
+    set tb [component toolbar]
+    set pwscf [$tb add label  pwscf  -borderwidth 1 -relief flat -image pwscf]
+    pack configure $pwscf -side right
+    
+
+    #
+    # put a big logo picture in logoframe
+    #
+    set con [component logoframe]
+    set imagelabel [label $con.l -image logo -anchor center -background White]
+    pack $imagelabel -expand 1 -ipadx 0 -ipady 0 -padx 0 -pady 0
+}
+
+
+
+# ------------------------------------------------------------------------
+#  STATE GUI stuff ...
+# ------------------------------------------------------------------------
+
+$gui state {
+    # syntax: menubar path command
+    menubar .edit.editOrig ::pwscf::menustate::editable
+    menubar .edit.editCopy ::pwscf::menustate::editable
+    menubar .view.input    ::pwscf::menustate::editable
+    menubar .view.xcrysden ::pwscf::menustate::xcrysden
+    
+    # syntax: toolbar label command
+    #...
+}
+
+
+
+# ------------------------------------------------------------------------
+#  now activate the GUI ...
+# ------------------------------------------------------------------------
+
+$gui activate

@@ -1,0 +1,43 @@
+#!/bin/sh
+
+
+#
+# create a $PWGUI/lib directory if it doesn't exist
+#
+here=$(pwd)
+if [ ! -d lib ]; then
+    mkdir lib
+fi
+
+if [ -d lib/Guib-* ]; then
+    rm -rf lib/Guib-*
+fi
+
+
+#
+# create a complete Guib archive out of CVS + plus add the TclTkLib 
+#
+cd ..
+if [ -d Guib ]; then
+    echo "
+ *** WARNING ***
+
+  the directory ../Guib exists, cannot proceed due to security reasons !!!
+
+ *** STOPPING ...
+
+"
+    exit 1
+fi
+
+cvs co Guib >& /dev/null
+cd Guib
+guib_root=$(pwd)
+version=$(cat VERSION)
+make clean
+make
+
+cd $here/lib
+tar zxvf $guib_root/guib-$version.tgz 
+rm -rf $guib_root
+exit 0

@@ -1,0 +1,8 @@
+#!/bin/sh
+#this line restarts xcrys \
+exec itclsh "$0" "$@"
+
+if { [glob -nocomplain -- *.itcl] != {} } {
+    auto_mkindex [pwd] *.itcl *.tcl
+}
+exit

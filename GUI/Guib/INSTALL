@@ -57,10 +57,10 @@ Troubleshooting
 ***************
 
 For some RedHat distributions the "itkwish" package used to be broken,
-while for some Debian distributions the tkpwscf used to crash if it
-was called with "wish" package. If you experience such kind of
-troubles then replace the call to "wish" ("itkwish") with "itkwish"
-("wish") in file "guib".
+while for some Debian distributions the "guib" used to crash if it was
+called with "wish" package. If you experience such kind of troubles
+then replace the call to "wish" ("itkwish") with "itkwish" ("wish") in
+file "guib".
 
 
 --

@@ -1,0 +1,37 @@
+Si
+Silicon
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='silicon',
+    tstress = .true.
+    tprnfor = .true.
+    pseudo_dir = '/home/giannozz/New-sesame/pseudo/',
+    outdir='/home/giannozz/tmp/'
+ /
+ &system    
+    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc =18.0, 
+ /
+ &electrons
+    mixing_mode = 'plain'
+    mixing_beta = 0.7 
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ Si  28.086  Si.vbc.UPF
+ATOMIC_POSITIONS
+ Si 0.00 0.00 0.00 
+ Si 0.25 0.25 0.25 
+K_POINTS
+  10
+   0.1250000  0.1250000  0.1250000   1.00
+   0.1250000  0.1250000  0.3750000   3.00
+   0.1250000  0.1250000  0.6250000   3.00
+   0.1250000  0.1250000  0.8750000   3.00
+   0.1250000  0.3750000  0.3750000   3.00
+   0.1250000  0.3750000  0.6250000   6.00
+   0.1250000  0.3750000  0.8750000   6.00
+   0.1250000  0.6250000  0.6250000   3.00
+   0.3750000  0.3750000  0.3750000   1.00
+   0.3750000  0.3750000  0.6250000   3.00

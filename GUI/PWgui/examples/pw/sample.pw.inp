@@ -1,0 +1,28 @@
+PWSCF 
+sample 
+ &CONTROL
+       calculation = 'scf',
+      restart_mode = 'from_scratch' ,
+         verbosity = 'default',
+ /
+ &SYSTEM
+             ibrav = 1,
+         celldm(1) =   10.0000000000,
+               nat = 2,
+              ntyp = 2,
+           ecutwfc =   30.0000000000,
+ /
+ &ELECTRONS
+ /
+
+ATOMIC_SPECIES
+  O    1.00000 OUSPBE.RRKJ3 
+ Ag    1.00000 AgUSPBE.RRKJ3 
+ATOMIC_POSITIONS alat 
+  O    0.000000000    0.000000000    0.000000000 0 0 0 
+ Ag    1.000000000    1.000000000    1.000000000 0 0 0 
+K_POINTS tpiba 
+2 
+   0.000000000    0.000000000    0.000000000    0.500000000 
+   0.500000000    0.500000000    0.500000000    0.500000000 
+

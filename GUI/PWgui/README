@@ -1,0 +1,80 @@
+
+ ==============================================================================
+                   * * * README file for PWgui * * *
+ ==============================================================================
+
+This is the PWgui---a GUI for the PWscf set of programs (see
+http://www.pwscf.org/). PWgui is written in [incr Tcl]---an
+extension of Tcl scripting language. Due to the use of scripting
+language no compilation is needed for the PWgui. However the package
+depends on the [incr Tcl] and related software. Therefore you have two
+possibilities:
+
+   (i)  to use source package if required Tcl software is installed
+   (ii) to use self-contained "binary" package (which contains
+        needed Tcl software)
+
+See the file "INSTALL" for installation instructions.
+
+
+CURRENT STATUS
+--------------
+
+This version of PWgui is compatible with PWscf v.2.0.
+
+The aim of the PWgui GUI is to facilitate the creation and
+manipulation (editing) of input files for PWscf set of programs. The
+GUI can also use the XCRYSDEN program (http://www.xcrysden.org/) for
+the visulazation of atomic structures from the pw.x input file.
+
+Currently, the following PWscf programs (modules) are supported: 
+
+ * pw.x
+ * ph.x
+ * pp.x
+ * chdens.x
+ * projwfc.x
+ * d3.x
+
+
+Directory structure of the PWgui package:
+
+src/		main source directory of the PWgui
+modules/	GUIB definition files for PWscf programs (modules)
+lib/		libraries used by the PWgui
+images/		icons and images
+examples/	PWscf example input files
+doc/		documentation
+bin/		contains the itkwish interpreter (self-contained packages only)
+external/	external Tcl-related software (self-contained packages only)
+
+
+COPYING
+-------
+
+The PWgui is covered by the GNU General Public License. Note that
+the PWgui uses also some external software, which is covered by other
+free software licenses.
+
+The material included in the directory external/ (self-contained
+packages only) is the Tcl-related software. For the corresponding
+license see the file external/lib/copyright.
+
+All the material included in this distribution is free software; you
+can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later
+version.
+
+These programs are distributed in the hope that they will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 07:51:31 CET 2004

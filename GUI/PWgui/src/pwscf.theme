@@ -1,0 +1,49 @@
+*Entry.width:					15
+*Entryfield.width:			        15
+*Spinint.width:					15
+*Spininthelp.width:				15
+*Entryhelp.width:                               15
+*Spinner.width:					15
+
+*Button.background:     #aaaaaa
+*menuBackground:        #aaaaaa
+
+*Scrolledframe.hscrollMode:                        dynamic
+*Scrolledframe.vscrollMode:                        dynamic
+*Scrolledframe.relief:                             sunken
+*Scrolledframe.borderWidth:                        1
+*Scrolledframe*Frame*background:                   White
+*Scrolledframe*Canvas*background:                  White
+*Scrolledframe.width:                              700
+*Scrolledframe.height:                             600
+
+*Tabset.padX:           0
+*Tabset.padY:           0
+
+*Tabnotebook.tabPos:                               n
+*Tabnotebook.auto:                                 1
+*Tabnotebook.angle:                                15
+*Tabnotebook.background:                           #d9d9d9
+*Tabnotebook.tabBackground:                        #999999
+*Tabnotebook.tabForeground:                        Black
+*Tabnotebook.foreground:                           Black
+*Tabnotebook.bevelAmount:                          0
+*Tabnotebook.gap:                                  overlap
+*Tabnotebook.margin:                               0
+*Tabnotebook.tabBorders:                           true
+*Tabnotebook.raiseSelect:                          true
+*Tabnotebook.borderWidth:                          2
+*Tabnotebook.backdrop:                             #d9d9d9
+*Tabnotebook.equalTabs:                            false
+
+*Actiondialog.Button.height:		   	   3
+*Actiondialog.Button.borderWidth:	   	   4
+*Actiondialog.Button.background:	   	   #ffffaa
+*Actiondialog.Button.activeBackground:	   	   #ffffff
+*Actiondialog.Button.highlightBackground:   	   #000000
+
+*Toolbar.padX: 0
+*Toolbar.padY: 0
+
+!!*font: fixed
+!!*labelFont: fixed

@@ -1,0 +1,62 @@
+#
+# $RCSfile: edit.itcl,v $ --
+#
+#      This file contains ...
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: edit.itcl,v 1.1 2004-02-20 15:12:02 kokalj Exp $ 
+#
+
+proc ::pwscf::edit::inputByEditor {what guiObj} {
+    variable ::pwscf::settings
+
+    set moduleObj   [$guiObj getSelected moduleObj]
+    set moduleIdent [$guiObj getSelected moduleIdent]    
+    set tmpFile [::tclu::tempFile name pwscf.$moduleIdent]
+    namespace eval ::guib "$moduleObj save $tmpFile 1"
+
+    switch -exact -- $what {
+	original {
+	    # edit original input with EDITOR
+
+	    # disable selected page ..
+	    set index [$guiObj getSelected tabIndex]
+	    $guiObj page disable $index
+
+	    # load file into editor ...
+	    set id [::tclu::nonblocking open]
+	    eval ::tclu::nonblocking exec $id $::pwscf::settings(EDITOR) $tmpFile
+	    ::tclu::nonblocking unset $id    
+
+	    # enable pack previously disabled page ...
+	    $guiObj page enable $index
+	    
+	    # load the edit file back into the GUI ...
+	    namespace eval ::guib "$moduleObj openFile $tmpFile"
+	}
+
+	copy {
+	    # edit copy of input with EDITOR
+	    eval exec $::pwscf::settings(EDITOR) $tmpFile &
+	}
+
+	default {
+	    ::tclu::ERROR "wrong mode $what, must be original or copy"
+	}
+    }
+}

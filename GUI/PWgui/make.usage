@@ -1,0 +1,28 @@
+	
+ ========================================================================
+   Here is the list of make targets:
+ ========================================================================
+	
+* General info:
+	
+	If you donwloaded any of the *.tgz package, you do not need to 
+	call "make". See INSTALL file instead.
+
+* CVS-related target:
+ 
+	cvsinit ...   initialize the PWgui after it was CVS-downloaded
+
+* Distribution-related targets:
+
+	pwgui-source-notcl   ... make PWgui-only source package
+	pwgui-source-all     ... make PWgui source package + Tcl libs
+	pwgui-linux-i386-bin ... make a binary PWgui package for Linux-i386
+	
+	alldist                ... pwgui-source-all + 
+                                   pwgui-linux-i386-bin + 
+                                   pwgui-source-notcl	
+
+* General target:
+
+	clean                  ... rm *tgz *tar *~
+	

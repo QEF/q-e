@@ -1,0 +1,15 @@
+ &INPUTPH
+                     fildrho = 'fildrho' ,
+                    fild0rho = 'fild0rho' ,
+                    amass(1) = 1.008,
+                    amass(2) = 12.011,
+                      prefix = 'pwscf' ,
+                      outdir = '/temp/tone/test/' ,
+                      fildyn = 'fildyn' ,
+                     ethr_ph = 1d-6 ,
+              q0mode_todo(1) = 0,
+                       wraux = .false. ,
+                        recv = .false. ,
+                       istop = 0 ,
+ /
+

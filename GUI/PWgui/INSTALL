@@ -1,0 +1,99 @@
+
+ ==============================================================================
+            * * * INSTALLATION instructions for PWgui * * *
+ ==============================================================================
+
+Because PWgui is written in [incr Tcl]---an extension of Tcl
+scripting language----no compilation is needed.
+
+*** HOWEVER *** the package depends on the [incr Tcl] and related
+software. Therefore you have two possibility: 
+
+   (i)  to use source package if required Tcl software is installed
+        (see SOFTWARE REQUIREMENTS section below)
+   (ii) to use self-contained "binary" package (which contains
+        needed Tcl software)
+
+
+VERY SHORT INSTALLATION INSTRUCTIONS:
+-------------------------------------
+
+ 1. untar the PWgui archive,
+ 2. define the PWGUI environmental variable,
+ 3. add $PWGUI to your path, and
+ 4. to launch the PWgui program, type: pwgui	
+
+
+A BIT LONGER INSTALLATION INSTRUCTIONS:
+---------------------------------------
+
+To install the PWgui package do the following:
+
+   1.) untar the *.tgz archive. use one of the following:
+
+	gunzip -c pwgui.tgz | tar xvf -
+     or
+	gunzip pwgui.tgz; tar xvf pwgui.tar
+     or 
+        tar zxvf pwgui.tgz (for GNU tar program only)
+
+   2.) define the PWGUI environmental variable to point to the package
+       root directory
+
+     *  for Bourne compatible shells: PWGUI=/pwgui/root/dir; export PWGUI
+     *  for Csh compatible shells:    setenv PWGUI /pwgui/root/dir
+
+   3.) add the PWGUI environmental variable to your path. Depending
+       on your shell edit one of ~/.bashrc, ~/.profile, or ~/.cshrc,
+       or alike:
+
+     *  for Bourne compatible shells: PATH="$PWGUI:$PATH"
+     *  for Csh compatible shells:    set path = ( $PWGUI $path )
+
+   4.) to launch the PWgui program type: pwgui
+
+
+SOFTWARE REQUIREMENTS FOR SOURCE PACKAGE
+----------------------------------------
+
+The PWgui source package depends on the following Tcl-related
+software:
+
+	Tcl+ Tk    >= 8.3
+	Itcl+ Itk  >= 3.1
+	Iwidgets   >= 3.0
+
+The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
+[incr Widgets]. All these packages are usually already present on
+modern Linux distributions, otherwise their RPMs (DEBs) can be easily
+found on the WEB. 
+
+See for example: http://incrtcl.sourceforge.net/
+
+
+Troubleshooting
+***************
+
+For some RedHat distributions the "itkwish" package used to be broken,
+while for some Debian distributions the "pwgui" used to crash if it
+was called with "wish" package. If you experience such kind of
+troubles then replace the call to "wish" ("itkwish") with "itkwish"
+("wish") in file pwgui.
+
+
+SELF-CONTAINED "BINARY" PACKAGES
+--------------------------------
+
+For a few operating systems also self-contained "binary" packages are
+available, which come with statically linked "itkwish" interpreter and
+necessary Tcl + Tk + Itcl + Itk + Iwidgets library files. Use this
+package if your computer does not have the necessary Tcl-related
+software installed.
+
+Current list of self-contained "binary" packages:
+
++ Linux-i386
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Tue Feb 17 06:45:59 CET 2004

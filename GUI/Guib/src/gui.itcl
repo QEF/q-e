@@ -31,7 +31,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.2 2004-02-19 11:18:20 kokalj Exp $ 
+# $Id: gui.itcl,v 1.3 2004-02-20 15:15:24 kokalj Exp $ 
 #
 
 
@@ -1063,7 +1063,7 @@ body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
     set module(OBJ.moduleName,$index)  $moduleName
     _mainwindowState
     cd $pwd
-    #option readfile [file join $::env(TKPWSCF) src-tcl pwscf.theme] startupFile
+    #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
 
     return $module(OBJ,$index)
 }
@@ -1238,12 +1238,12 @@ body ::guib::GUI::_help {helpName helpFile} {
 # ------------------------------------------------------------------------
 
 body ::guib::GUI::_toolbarNew {} {
-    #option readfile [file join $::env(TKPWSCF) src-tcl pwscf.theme] startupFile
+    #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
     
     __toolbarNewOpen new "Create new" _newInput
 }
 body ::guib::GUI::_toolbarOpen {} {
-    #option readfile [file join $::env(TKPWSCF) src-tcl pwscf.theme] startupFile
+    #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
     
     __toolbarNewOpen open "Open an existing" _openInput
 }

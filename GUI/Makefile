@@ -4,5 +4,5 @@ default:
 
 veryclean:
 	cd Guib; $(MAKE) veryclean
-	cd TkPWscf; $(MAKE) distclean
+	cd PWgui; $(MAKE) distclean
 
