@@ -13,7 +13,7 @@ program pw2casino
 
   ! #include "machine.h"
 
-  use io_files, only: nd_nmbr, prefix, outdir
+  use io_files, only: nd_nmbr, prefix, outdir, tmp_dir
 #ifdef __PARA 
   use para,       only : me 
   use mp, only: mp_bcast
@@ -34,12 +34,14 @@ program pw2casino
 #endif 
      read (5, inputpp, err=200, iostat=ios)
 200  call errore('pw2casino', 'reading inputpp namelist', abs(ios))
+  tmp_dir = trim(outdir)
 #ifdef __PARA 
   end if
   ! 
   ! ... Broadcast variables 
   ! 
   CALL mp_bcast( prefix, ionode_id ) 
+  CALL mp_bcast(tmp_dir, ionode_id ) 
 #endif 
   !
   call read_file
