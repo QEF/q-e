@@ -44,7 +44,6 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
   allocate( hmt( noins, noins ) )
   allocate( vecaux( ntot, ntot ) )
   allocate( ipiv( noins ) )
-     
 
 !
 ! To interchange inside and right crossing orbitals in a and b

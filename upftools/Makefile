@@ -6,7 +6,7 @@ include ../make.sys
 OBJS = write_upf.o errore.o
 MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
-       ../Modules/mp.o  
+       ../Modules/mp.o  ../Modules/parallel_include.o
 SPLINE = ../Modules/splinelib.o
 
 all : cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \

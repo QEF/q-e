@@ -1,4 +1,7 @@
 
+  *  dangerous calls to read_restart_tetra and write_restart_tetra
+     when restarting with no allocated tetrahedra
+
   *  vc-relax was not working 
 
   *  projwfc failed with lda+U

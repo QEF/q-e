@@ -1,9 +1,18 @@
+5 Nov 2004  Fixed a bug in the way tetrahedra variables were read/written
+            on the restart file: since tetra is not alway allocated, the
+            read_restart_tetra() and write_restart_tetra() can be called
+            with all the arguments IF AND ONLY IF ltetra is true. otherwise
+            read_restart_tetra() and write_restart_tetra() must be called
+            with only the I/O unit. For further comments on this see the 
+            documentation contained in Modules/io_base.f90 (C.S.)
+
 4 Nov 2004   Old parallel variables (such as me mypool) removed everywhere
              Missing GPL headers added to Raman (CS)
              nspin imported twice in force_hub.f90 (Axel)
              Makefiles use now $(MAKE) and $(MFLAGS) as proposed
              by Axel - should allow for the use of GNU make in
              system having broken makefile - please test (PG)
+             added autoconf check for make [Gerardo]
 
 3 Nov 2004   path optimization: 
              1) cleanup of the output format (more informative)

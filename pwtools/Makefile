@@ -38,6 +38,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
+../Modules/path_formats.o \
 ../Modules/supercell.o \
 ../Modules/splinelib.o
 
