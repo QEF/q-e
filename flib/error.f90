@@ -114,10 +114,9 @@ SUBROUTINE errore( calling_routine, message, ierr )
      !
      ! ... try to exit in a smooth way
      !
-     CALL MPI_FINALIZE( ierr )
+     CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
      !
-     IF ( ierr /= 0 ) &
-        CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
+     CALL MPI_FINALIZE( ierr )
      !
 #endif
      !
@@ -138,7 +137,6 @@ SUBROUTINE infomsg( routine, message, info )
   ! ... from a given routine to output. 
   !
   USE io_global,  ONLY : stdout, ionode
-  USE parallel_include
   !
   IMPLICIT NONE
   !
