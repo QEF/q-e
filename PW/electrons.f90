@@ -487,7 +487,7 @@ SUBROUTINE electrons()
      IF ( ( ABS( charge - nelec ) / charge ) > 1.D-7 ) &
         WRITE( stdout, 9050 ) charge
      !
-     IF ( ( ABS( charge_new - nelec ) / charge_new ) > 1.D-7 ) &
+     IF ( (imix>=0).AND.( ABS( charge_new - nelec ) / charge_new ) > 1.D-7 ) &
         WRITE( stdout, 9051 ) charge_new   
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet

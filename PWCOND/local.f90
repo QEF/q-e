@@ -16,11 +16,12 @@ SUBROUTINE local
 ! the plane wave basis set.
 !
 
-  USE io_global,        ONLY : stdout, ionode
+  USE io_global,        ONLY : stdout, ionode, ionode_id
   USE pwcom
   USE noncollin_module, ONLY : npol
   USE io_files
   USE cond
+  USE mp,         ONLY : mp_barrier, mp_bcast
   USE mp_global,        ONLY : nproc, me_pool, root_pool
   USE parallel_include
 
@@ -143,7 +144,7 @@ SUBROUTINE local
 !     stop
 
 #ifdef __PARA
-     IF ( me_pool == root_pool ) THEN
+     IF ( me_pool .NE. root_pool ) THEN
         CALL mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
       CALL errore ('n2d reduction','info<>0 in send',info)       
@@ -175,12 +176,9 @@ SUBROUTINE local
   ENDDO
 
 #ifdef __PARA
-  CALL mpi_barrier( )
-  CALL mpi_bcast(n2d,1,MPI_INTEGER,0,MPI_COMM_WORLD,info)
-  CALL errore ('reduction','mpi_bcast 1',info) 
-  CALL mpi_bcast(psibase,2*ngper*npol*ngper*npol,MPI_REAL8,0,  &
-                  MPI_COMM_WORLD,info)
-  CALL errore ('reduction','mpi_bcast 1',info)       
+  CALL mp_barrier()
+  CALL mp_bcast(n2d,ionode_id)
+  CALL mp_bcast(psibase,ionode_id)
 #endif
 
 !
@@ -251,10 +249,6 @@ SUBROUTINE local
 
     ENDIF
   ENDDO
-
-#ifdef __PARA
-  CALL mpi_barrier()
-#endif
 
 !
 ! saving the 2D data on the file if lwrite_loc=.t. 

@@ -85,7 +85,7 @@ SUBROUTINE make_pointlists
                     posi(ipol) = tau0(ipol,iat1) + REAL(i)*at(ipol,1) &
                          &                       +REAL(j)*at(ipol,2) + REAL(k)*at(ipol,3)
                     distance = distance + (posi(ipol)-tau0(ipol,iat)) &
-                         &                       **2.
+                         &                       **2
                  ENDDO
 
                  distance = SQRT(distance)
