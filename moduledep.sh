@@ -40,4 +40,4 @@ sed -f moduledep.tmp2 moduledep.tmp1 |
 awk '{if ($1 != $3) print}' |          # remove self dependencies
 sort | uniq                            # remove duplicates
 
-# rm -f moduledep.tmp1 moduledep.tmp2 # remove temporary files
+rm -f moduledep.tmp1 moduledep.tmp2 # remove temporary files
