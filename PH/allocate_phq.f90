@@ -64,7 +64,7 @@ subroutine allocate_phq
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    
-     allocate (int3 ( nhm , nhm , 3 , nat , nspin))    
+     allocate (int3 ( nhm , nhm , max_irr_dim , nat , nspin))    
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin))    
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))    
      allocate (dpqq( nhm, nhm, 3, ntyp))    

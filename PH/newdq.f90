@@ -132,7 +132,7 @@ subroutine newdq (dvscf, npe)
 
   enddo
 #ifdef __PARA
-  call reduce (2 * nhm * nhm * 3 * nat * nspin, int3)
+  call reduce (2 * nhm * nhm * max_irr_dim * nat * nspin, int3)
 #endif
   if (.not.lgamma) deallocate (qg)
   deallocate (qmod)

@@ -184,7 +184,7 @@ MODULE phus
   COMPLEX (KIND=DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
-       int3(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
+       int3(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:)       ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
   COMPLEX (KIND=DP), ALLOCATABLE, TARGET :: &
