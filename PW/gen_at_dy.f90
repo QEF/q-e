@@ -24,7 +24,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    USE klist, ONLY: xk
    USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
    USE wvfct, ONLY: npw, npwx, igk
-   USE us, ONLY: tab_at, dq, newpseudo
+   USE us, ONLY: tab_at, dq
    implicit none
    !
    !  I/O variables
@@ -79,7 +79,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !
    do nt = 1,ntyp
       do nb = 1,nchi(nt)
-         if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
+         if (oc(nb,nt) >= 0.d0) then
             l = lchi(nb,nt)
             do ig = 1, npw
                px = q (ig) / dq - int (q (ig) / dq)
@@ -113,7 +113,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
                   eigts3(ig3(iig),na) * phase
       end do
       do nb = 1,nchi(nt)
-         if (.not.newpseudo(nt).or.oc(nb,nt).gt.0.d0) then
+         if (oc(nb,nt) >= 0.d0) then
             l  = lchi(nb,nt)
             pref = (1.d0,0.d0)**l
             pref = (0.d0,1.d0)**l

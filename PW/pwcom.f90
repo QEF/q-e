@@ -434,42 +434,16 @@ MODULE us
   !
   ! ... These parameters are needed with the US pseudopotentials
   !  
+  USE parameters, ONLY :  npsx
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx, ndmx
   !
   SAVE
   !
-  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
-
-  REAL(KIND=DP) :: &
-       dion(nbrx,nbrx,npsx),              &! D_{mu,nu} parameters (in the 
-                                           !  atomic case)
-       betar(ndmx,nbrx,npsx),            &! radial beta_{mu} functions
-       jjj(nbrx,npsx),                   &! total angular momentum of 
-                                           ! the beta function
-       qqq(nbrx,nbrx,npsx),               &! q_{mu,nu} parameters (in the 
-                                           !  atomic case)
-       qfunc(ndmx,nbrx,nbrx,npsx),       &! Q_{mu,nu}(|r|) function for 
-                                           !  |r|> r_L
-       qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q in region 
-                                           !  |r|<r_L
-       vloc_at(ndmx,npsx),                &! local potential
-       rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &
-       nh(npsx),             &! number of beta functions per atomic type
-       nbeta(npsx),          &! number of beta functions
-       kkbeta(npsx),         &! point where the beta are zero
-       nqf(npsx),            &! number of coefficients for Q
-       nqlc(npsx),           &! number of angular momenta in Q
-       ifqopt(npsx),         &! level of q optimization
-       lll(nbrx,npsx),       &! angular momentum of the beta function
-       iver(3,npsx)           ! version of the atomic code
-  INTEGER :: &
+       nh(npsx),         &! number of beta functions per atomic type
        nhm,              &! max number of different beta functions per atom
        nkb,              &! total number of beta functions, with struct.fact.
        nqxq,             &! size of interpolation table
-       lmaxkb,           &! max angular momentum
-       lqx,              &! max angular momentum + 1 for Q functions
        nqx                ! number of interpolation points
   INTEGER, ALLOCATABLE ::&
        indv(:,:),        &! correspondence of betas atomic <-> soli
@@ -489,9 +463,9 @@ MODULE us
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
   LOGICAL :: &
-       tvanp(npsx),           &! if .TRUE. the atom is of Vanderbilt type
-       newpseudo(npsx),       &! if .TRUE. RRKJ3 US pseudopotentials
-       okvan                   ! if .TRUE. at least one pseudo is Vanderbilt
+       tvanp(npsx),          &! if .TRUE. the atom is of Vanderbilt type
+       newpseudo(npsx),      &! if .TRUE. multiple projectors are allowed
+       okvan                  ! if .TRUE. at least one pseudo is Vanderbilt
   !
 END MODULE us
 !

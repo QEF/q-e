@@ -6,7 +6,8 @@
 !     calculate qg = SUM_LM (-I)^L AP(LM,iv,jv) YR_LM QRAD(iv,jv,L,is)
       USE kinds, ONLY: DP
       USE basis, ONLY: ntyp
-      USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtol, nhtolm
+      USE us, ONLY: dq, indv, qrad, nhtol, nhtolm
+      USE uspp_param, ONLY: lqx, nbrx
       USE uspp, ONLY: nlx, lpl, lpx, ap
 
       implicit none

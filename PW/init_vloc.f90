@@ -15,7 +15,7 @@ subroutine init_vloc
   !
 #include"machine.h"
   USE atom, ONLY: numeric, msh, mesh, r, rab
-  USE us, ONLY: vloc_at
+  USE uspp_param, ONLY: vloc_at
   USE basis, ONLY: ntyp
   USE cell_base, ONLY: omega, tpiba2
   USE vlocal, ONLY: vloc

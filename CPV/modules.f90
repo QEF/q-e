@@ -136,11 +136,6 @@ contains
 end module gvec
 
 
-module ncprm
-
-  use parameters, only: nsx, ndmx, nqfx, nbrx, lqmax
-  implicit none
-  save
 !
 !  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
 !  nqfx :  maximum number of coefficients in Q smoothing
@@ -156,10 +151,6 @@ module ncprm
 !  lll      lll(j) is l quantum number of j'th beta function
 !  lqx      highest angular momentum that is present in Q functions
 !  lmaxkb   highest angular momentum that is present in beta functions
-
-  integer :: nbeta(nsx), kkbeta(nsx), &
-       nqf(nsx), nqlc(nsx), lll(nbrx,nsx), lqx, lmaxkb
-
 !  dion     bare pseudopotential D_{\mu,\nu} parameters
 !              (ionic and screening parts subtracted out)
 !  betar    the beta function on a r grid (actually, r*beta)
@@ -171,10 +162,11 @@ module ncprm
 !              angular momentum (for r<rinner)
 !  vloc_at  local potential for each atom
 
-  real(kind=8) :: dion(nbrx,nbrx,nsx), &
-       betar(ndmx,nbrx,nsx), qqq(nbrx,nbrx,nsx), &
-       qfunc(ndmx,nbrx,nbrx,nsx), vloc_at(ndmx,nsx), &
-       qfcoef(nqfx,lqmax,nbrx,nbrx,nsx), rinner(lqmax,nsx)
+module qrl_mod
+
+  use parameters, only: nsx, ndmx, nbrx, lqmax
+  implicit none
+  save
 !
 ! qrl       q(r) functions (old format)
 ! cmesh     used only for Herman-Skillman mesh (old format)
@@ -182,7 +174,7 @@ module ncprm
   real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
   real(kind=8) :: cmesh(nsx)
 
-end module ncprm
+end module qrl_mod
 
 module pseu
   implicit none

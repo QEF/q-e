@@ -23,7 +23,6 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE kinds, only : DP
   use phcom
   USE io_files, ONLY: iunigk
-
   implicit none
 
   complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)

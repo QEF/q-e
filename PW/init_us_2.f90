@@ -20,8 +20,8 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE constants, ONLY: tpi
   USE gvect, ONLY: eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: nhm, nkb, vkb, lmaxkb, dq, nh, nhtol, nhtolm, tab, &
-       indv, nbeta
+  USE us, ONLY: nhm, nkb, vkb, dq, nh, nhtol, nhtolm, tab, indv
+  USE uspp_param, ONLY: lmaxkb, nbeta
   implicit none
   !
   integer :: npw_, igk_ (npw_)

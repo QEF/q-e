@@ -11,6 +11,7 @@ subroutine init_cond
 !
   USE io_global,  ONLY : stdout
   use pwcom
+  USE uspp_param,    ONLY : dion, nbeta, lll
   use cond
   implicit none
   integer :: nt, ib, ir, is, na, iorb, iorb1, m, ih, ih1, ioins, &

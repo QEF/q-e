@@ -20,7 +20,6 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
        ns, nsnew, swfcatom
   USE lsda_mod, ONLY: nspin, current_spin
   USE basis, ONLY: nat, ntyp, ityp, natomwfc
-  USE us, ONLY: newpseudo
   USE wvfct, ONLY: gamma_only
   USE gvect,   ONLY : gstart
 
@@ -40,7 +39,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   do na = 1, nat  
      nt = ityp (na)  
      do n = 1, nchi (nt)  
-        if (oc (n, nt) > 0.d0 .or. .not.newpseudo (nt) ) then  
+        if (oc (n, nt) >= 0.d0) then  
            l = lchi (n, nt)  
            if (l.eq.Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  

@@ -12,6 +12,7 @@ subroutine d3_init
 !-----------------------------------------------------------------------
 
   use pwcom
+  USE uspp_param, ONLY : vloc_at
   use atom, only: numeric, mesh, msh, rab, r
   use phcom
   use d3com

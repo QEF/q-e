@@ -20,9 +20,9 @@ subroutine readnewvan (is, iunps)
   use atom,  only: zmesh, mesh, xmin, dx, r, rab, chi, oc, nchi, &
        lchi, rho_at, rho_atc, nlcc
   use pseud, only: zp, lmax, lloc
-  use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
-       rinner, nh, nbeta, kkbeta, lll, tvanp, psd
-
+  use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
+       rinner, nbeta, kkbeta, lll, psd
+  use us, only: tvanp
   use funct
   !
   implicit none
@@ -89,7 +89,10 @@ subroutine readnewvan (is, iunps)
      read (iunps, '(a2,2i3,f6.2)', err = 100, iostat = ios) &
           rdum, ndum, lchi (nb, is) , oc (nb, is)
      lll (nb, is) = lchi (nb, is)
-
+     !
+     ! workaround to distinguish bound states from unbound states
+     !
+     if (oc (nb, is) <= 0.d0) oc (nb, is) = -1.0
   enddo
   kkbeta (is) = 0
   do nb = 1, nbeta (is)

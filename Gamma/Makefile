@@ -150,7 +150,6 @@ PWOBJS = \
 ../PW/rotate_wfc.o \
 ../PW/ruotaijk.o \
 ../PW/s_1psi.o \
-../PW/saveall.o \
 ../PW/save_in_cbands.o \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \

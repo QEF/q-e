@@ -12,9 +12,9 @@
       USE parameters, only:  ndmx, nbrx
       USE kinds, only: DP
       use constants, only: fpi
-      use us, only: lqx, tvanp, qfunc, qfcoef, nqf, rinner, lll, nbeta, &
-           kkbeta
-!
+      USE uspp_param, only: lqx, qfunc, qfcoef, nqf, rinner, lll, &
+           nbeta, kkbeta
+      USE us, ONLY: tvanp
       implicit none
       integer :: ik,  msh_bp, i, np, m, k, l
       integer :: n,idbes,ilmin,ilmax,iv,jv

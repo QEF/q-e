@@ -157,7 +157,8 @@ SUBROUTINE c_phase
    USE constants, ONLY: pi, tpi
    USE gvect, ONLY: ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, ecutwfc, &
         g, gcutm
-   USE us, ONLY: lqx, nhm, nkb, vkb, nh
+   USE us, ONLY: nhm, nkb, vkb, nh
+   USE uspp_param, ONLY: lqx
    USE lsda_mod, ONLY: nspin
    USE klist, ONLY: nelec, degauss, nks, xk, wk
    USE wvfct, ONLY: npwx, npw, nbnd

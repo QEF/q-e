@@ -36,9 +36,10 @@ subroutine init_us_1
   USE gvect, ONLY: g, gg
   USE pseud, ONLY: lloc, lmax
   USE lsda_mod, ONLY : nspin
-  USE us, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nh, nbeta, &
-       kkbeta, nqf, nqlc, lll, jjj, tvanp, okvan, newpseudo, lmaxkb, &
-       nqxq, dq, nqx, tab, dvan, qq, nhtol, nhtoj, nhtolm, qrad, indv, nhm
+  USE us, ONLY: nh,tvanp, okvan, nqxq, dq, nqx, tab,nhtol, nhtoj, nhtolm, &
+       dvan, qq, qrad, indv, nhm
+  USE uspp_param, ONLY: lqx, dion, betar, qfunc, qfcoef, rinner, nbeta, &
+       kkbeta, nqf, nqlc, lll, jjj, lmaxkb
   USE uspp, ONLY : ap, aainit
   USE spin_orb, ONLY : lspinorb, rot_ylm, qq_spinorb, fcoef
   implicit none

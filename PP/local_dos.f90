@@ -30,7 +30,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
-  USE us,                   ONLY : tvanp, becsum, nh, nkb, vkb
+  USE us,                   ONLY : becsum, nh, nkb, vkb, tvanp
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
        gamma_only

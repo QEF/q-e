@@ -175,7 +175,6 @@ s_psi.o \
 save_in_cbands.o \
 save_in_electrons.o \
 save_in_ions.o \
-saveall.o \
 scala_cdiag.o \
 scala_cdiaghg.o \
 scala_utils.o \

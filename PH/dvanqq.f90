@@ -21,6 +21,7 @@ subroutine dvanqq
   use pwcom
   USE kinds, only : DP
   use phcom
+  USE uspp_param, ONLY: lqx
   implicit none
   !
   !   And the local variables

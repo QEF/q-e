@@ -21,7 +21,7 @@ subroutine init_at_1
   USE constants, ONLY: fpi
   USE cell_base, ONLY: omega
   USE basis, ONLY: ntyp
-  USE us, ONLY: tab_at, nqx, dq, newpseudo
+  USE us, ONLY: tab_at, nqx, dq
   implicit none
   !
   integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq, ndm
@@ -44,7 +44,7 @@ subroutine init_at_1
   tab_at(:,:,:) = 0.d0
   do nt = 1, ntyp
      do nb = 1, nchi (nt)
-        if (.not.newpseudo (nt) .or.oc (nb, nt) .gt.0.d0) then
+        if (oc (nb, nt) >= 0.d0) then
            l = lchi (nb, nt)
            do iq = startq, lastq
               q = dq * (iq - 1)

@@ -24,7 +24,7 @@ subroutine atomic_wfc (ik, wfcatom)
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE klist, ONLY: xk
   USE wvfct, ONLY: npwx, npw, nbnd, igk
-  USE us,    ONLY: tab_at, dq, newpseudo
+  USE us,    ONLY: tab_at, dq
   implicit none
   integer :: ik
   ! input: k-point
@@ -76,7 +76,7 @@ subroutine atomic_wfc (ik, wfcatom)
   !
   do nt = 1, ntyp
      do nb = 1, nchi (nt)
-        if (.not.newpseudo (nt) .or.oc (nb, nt) .gt.0.d0) then
+        if ( oc (nb, nt) >= 0.d0) then
            do ig = 1, npw
               px = qg (ig) / dq - int (qg (ig) / dq)
               ux = 1.d0 - px
@@ -110,7 +110,7 @@ subroutine atomic_wfc (ik, wfcatom)
      !
      nt = ityp (na)
      do nb = 1, nchi (nt)
-        if (.not.newpseudo (nt) .or.oc (nb, nt) .gt.0.d0) then
+        if (oc (nb, nt) >= 0.d0) then
            l = lchi (nb, nt)
            lphase = (0.d0,1.d0)**l
            !  the factor i^l MUST BE PRESENT in order to produce

@@ -35,7 +35,8 @@ subroutine summary
        a_nlcc, b_nlcc, alpha_nlcc
   USE symme, ONLY: nsym, invsym, s, ftau
   USE control_flags
-  USE us, only: tvanp, nqf, rinner, nqlc, nbeta, iver, lll, psd
+  USE us, ONLY: tvanp
+  USE uspp_param, ONLY: nqf, rinner, nqlc, nbeta, iver, lll, psd
   USE spin_orb, only: lspinorb
   USE funct
   implicit none

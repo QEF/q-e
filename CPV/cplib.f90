@@ -70,7 +70,6 @@
 !
 ! Compute atomic wavefunctions in G-space
 !
-      use ncprm
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na, nas => nax
@@ -82,13 +81,20 @@
       complex(kind=8), intent(in) ::  eigr(ngw,nas,nsp)
       complex(kind=8), intent(out):: wfc(ngw,n_atomic_wfc)
 !
-      integer natwfc, ndm, is, ia, ir, nb, l, m, lm, i
+      integer :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc
       real(kind=8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
      &     chiq(:)
 !
+! calculate max angular momentum required in wavefunctions
 !
-      allocate(ylm(ngw,(lmaxkb+1)**2))
-      call ylmr2 ((lmaxkb+1)**2, ngw, gx, g, ylm)
+      lmax_wfc=-1
+      do is = 1,nsp
+         do nb = 1, nchi(is)
+            lmax_wfc = max (lmax_wfc, lchi (nb, is) )
+         enddo
+      enddo
+      allocate(ylm(ngw,(lmax_wfc+1)**2))
+      call ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
       ndm = MAXVAL(mesh(1:nsp))
       allocate(jl(ndm), vchi(ndm))
       allocate(q(ngw), chiq(ngw))
@@ -4441,7 +4447,6 @@
 !
 ! Projection on atomic wavefunctions
 !
-      use ncprm
       use io_global, only: stdout
       use elct, only: n, nx
       use gvecw, only: ngw
@@ -4837,7 +4842,8 @@
 !---------------------------------------------------------------------
 !
       use atom, only: rab, r, mesh, nlcc, rho_atc
-      use ncprm, only: betar, dion, vloc_at, lll, nbeta, kkbeta, cmesh
+      use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
+      use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
       use ions_base, only: zv
@@ -5013,14 +5019,14 @@
 !     according to the Rabe Rappe Kaxiras Johannopoulos recipe.
 !     Ultrasoft PP's are subsequently generated from the hard PP's.
 !
-!     Output parameters in module "ncprm"
+!     Output parameters in module "uspp_param"
 !     info on DFT level in module "dft"
 !
       use parameters, only: nsx, natx, lqmax, ndmx
       use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
-      use ncprm, only: nqlc, qfunc, vloc_at, rinner,&
-                       qrl, qqq, nbeta, nbrx, betar,  &
-                       dion, lll, kkbeta
+      use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
+                       qqq, nbeta, nbrx, betar, dion, lll, kkbeta
+      use qrl_mod, only: qrl
       use funct, only: dft, iexch, icorr, igcx, igcc
       use ions_base, only: zv
       use io_global, only: stdout
@@ -5217,7 +5223,7 @@
 !
 !     Read Vanderbilt pseudopotential of type "ipp" for species "is" 
 !     from unit "iunps"
-!     Output parameters in module "ncprm"
+!     Output parameters in module "uspp_param"
 !     info on DFT level in module "funct"
 !
 !
@@ -5271,8 +5277,9 @@
 !
       use kinds, only: DP
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
-      use ncprm, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, cmesh,&
-                       qrl, rinner, kkbeta, lll, nbeta, nqf, nqlc
+      use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
+           rinner, kkbeta, lll, nbeta, nqf, nqlc
+      use qrl_mod, only: cmesh, qrl
       use funct, only: dft, which_dft
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use ions_base, only: zv
@@ -5648,8 +5655,9 @@
 ! 
 ! for compatibility with old Vanderbilt formats
 !
-      use ncprm, only: qfunc, qrl, nqf, qfcoef, rinner, lll, nbeta, &
+      use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
                        kkbeta
+      use qrl_mod, only: qrl
       use atom, only: r
       ! the above module variables has no dependency from iosys
 !
@@ -6969,7 +6977,6 @@
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use pseu
       use core
-      use ncprm
       use gvecb
       use work, only: wrk1
       use work_box

@@ -201,7 +201,6 @@ PWOBJS = \
 ../PW/save_in_cbands.o \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \
-../PW/saveall.o \
 ../PW/scala_cdiag.o \
 ../PW/scala_cdiaghg.o \
 ../PW/scala_utils.o \

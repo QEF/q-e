@@ -24,7 +24,7 @@ subroutine dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE us, ONLY: nkb, vkb, nhm, nh, qq, newpseudo
+   USE us, ONLY: nkb, vkb, nhm, nh, qq
    USE wavefunctions_module,    ONLY : evc
    use becmod
 #ifdef __PARA

@@ -22,8 +22,9 @@ subroutine readvan (is, iunps)
   use atom,  only: zmesh, mesh,dx, r, rab, chi, oc, nchi, lchi, &
        rho_at, rho_atc, nlcc
   use pseud, only: zp, lmax, lloc
-  use us,    only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nh, nbeta, kkbeta, lll, tvanp, iver, ifqopt, psd
+  use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
+       rinner, nbeta, kkbeta, lll, iver, ifqopt, psd
+  use us, only: tvanp
   use funct, only: dft, which_dft
   implicit none
 

@@ -23,7 +23,7 @@ subroutine stres_loc (sigmaloc)
   USE vlocal, ONLY : strf, vloc
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
-  USE us, ONLY: vloc_at
+  USE uspp_param, ONLY: vloc_at
   implicit none
   real(kind=DP) :: sigmaloc (3, 3)
   real(kind=DP) , allocatable :: dvloc(:)

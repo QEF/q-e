@@ -20,7 +20,8 @@ subroutine addusdens
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE us, ONLY : lqx, okvan, tvanp, nh, becsum
+  USE us, ONLY : okvan, nh, becsum, tvanp
+  USE uspp_param, ONLY : lqx
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none

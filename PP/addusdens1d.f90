@@ -21,7 +21,8 @@ subroutine addusdens1d (plan, prho)
   USE ions_base, ONLY: nat, ntyp => nsp, ityp
   USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
   USE lsda_mod, ONLY: current_spin
-  USE us, ONLY: lqx, becsum, nh, tvanp
+  USE us, ONLY: becsum, nh, tvanp
+  USE uspp_param, ONLY: lqx
   !
   !     here the local variables
   !

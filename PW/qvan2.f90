@@ -21,7 +21,8 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
 #include "machine.h"
   USE kinds, ONLY: DP
-  USE us, ONLY: lqx, dq, nbrx, indv, qrad, nhtolm
+  USE us, ONLY: dq, indv, qrad, nhtolm
+  USE uspp_param, ONLY: lqx, nbrx
   USE uspp, ONLY: nlx, lpl, lpx, ap
   implicit none
 

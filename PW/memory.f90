@@ -51,8 +51,8 @@ subroutine setup2()
   USE gvect, ONLY: ecutwfc, gcutm, ngl, ngm
   USE klist, ONLY: xqq
   USE pseud, ONLY: lmax, lloc
-  USE us, ONLY: lmaxkb, tvanp, nh, nbeta, lll, lqx, nqx, nqxq, nhm, nkb, &
-       dq, newpseudo
+  USE uspp_param, ONLY: lmaxkb, nbeta, lll, lqx
+  USE us, ONLY: tvanp, nh, nqx, nqxq, nhm, nkb, dq
   USE wvfct, ONLY: npwx
   implicit none
   !
@@ -63,20 +63,11 @@ subroutine setup2()
   !
   lmaxkb = - 1
   do nt = 1, ntyp
-     if (tvanp (nt) .or. newpseudo (nt)) then
-        nh (nt) = 0
-        do nb = 1, nbeta (nt)
-           nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
-           lmaxkb = max (lmaxkb, lll (nb, nt) )
-        enddo
-     else
-        nh (nt) = (lmax(nt) + 1) * (lmax(nt) + 1) - (2 * lloc(nt) + 1)
-        if (lloc (nt) == lmax (nt) ) then
-           lmaxkb = max (lmaxkb, lmax (nt) - 1)
-        else
-           lmaxkb = max (lmaxkb, lmax (nt) )
-        endif
-     endif
+     nh (nt) = 0
+     do nb = 1, nbeta (nt)
+        nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
+        lmaxkb = max (lmaxkb, lll (nb, nt) )
+     enddo
   enddo
   lqx = 2*lmaxkb+1
   !
@@ -122,7 +113,8 @@ subroutine memory_estimate ( )
   USE gsmooth,ONLY: ngms, doublegrid
   USE ldaU,  ONLY: Hubbard_lmax, lda_plus_u
   USE lsda_mod, ONLY: nspin
-  USE us,    ONLY: okvan, nkb, lqx, nqx, nqxq, nhm
+  USE us,    ONLY: okvan, nkb,  nqx, nqxq, nhm
+  USE uspp_param,    ONLY: lqx
   USE control_flags, ONLY: nmix, isolve, diis_ndim
   USE wvfct, ONLY: gamma_only, npwx, nbnd, nbndx
 #ifdef __PARA

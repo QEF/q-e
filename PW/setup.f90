@@ -59,7 +59,8 @@ SUBROUTINE setup()
                             restart, nosym, modenum, lraman
   USE relax,         ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,        ONLY : calc
-  USE us,            ONLY : tvanp,okvan,newpseudo,psd,betar,nbeta,dion,jjj,lll
+  USE uspp_param,    ONLY : psd, betar, nbeta, dion, jjj, lll
+  USE us,            ONLY : tvanp, okvan
   USE ldaU,          ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                             Hubbard_alpha, Hubbard_lmax
   USE bp,            ONLY : gdir, lberry, nppstr
@@ -304,7 +305,7 @@ SUBROUTINE setup()
   !
   ! ... set number of atomic wavefunctions
   !
-  natomwfc = n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
+  natomwfc = n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi )
   !
   ! ... set the max number of bands used in iterative diagonalization
   !
@@ -559,7 +560,7 @@ END SUBROUTINE setup
 !
 !
 !----------------------------------------------------------------------------
-FUNCTION n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
+FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi )
   !----------------------------------------------------------------------------
   !
   ! ... Find max number of bands needed
@@ -571,7 +572,6 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
   INTEGER       :: n_atom_wfc
   INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix, npsx)
   REAL(KIND=DP) :: oc(nchix, npsx)
-  LOGICAL       :: newpseudo(npsx)
   INTEGER       :: na, nt, n
   !
   !
@@ -579,7 +579,7 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, newpseudo, nchix, nchi, oc, lchi )
   DO na = 1, nat
      nt = ityp(na)
      DO n = 1, nchi(nt)
-        IF ( oc(n,nt) > 0.D0 .OR. .NOT. newpseudo(nt) ) &
+        IF ( oc(n,nt) >= 0.D0 ) &
            n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt) + 1
      END DO
   END DO

@@ -24,7 +24,8 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   USE kinds, ONLY: DP
   USE parameters, ONLY: nbrx
   USE gvect, ONLY: g
-  USE us, ONLY: lqx, dq, indv, nhtol, nhtolm, qrad
+  USE us, ONLY: dq, indv, nhtol, nhtolm, qrad
+  USE uspp_param, ONLY: lqx
   USE uspp, ONLY: nlx, lpl, lpx, ap
   implicit none
   integer :: ngy, ih, jh, np, ipol

@@ -9,7 +9,7 @@ subroutine read_pseudo (is, iunps, ierr)
   !
   ! CP90 modules
   !
-  use ncprm, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
+  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc
   use ions_base, only: zv

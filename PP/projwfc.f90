@@ -177,7 +177,7 @@ subroutine projwave (io_choice,Emin, Emax, DeltaE, smoothing)
   do na = 1, nat 
      nt = ityp (na) 
      do n = 1, nchi (nt) 
-        if (oc (n, nt) > 0.d0 .OR..NOT.newpseudo (nt) ) then 
+        if (oc (n, nt) >= 0.d0) then 
            l = lchi (n, nt) 
            lmax_wfc = max (lmax_wfc, l ) 
            do m = 1, 2 * l + 1 

@@ -20,7 +20,7 @@ subroutine dndtau(dns,ldim,alpha,ipol)
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE wavefunctions_module,    ONLY : evc
-   USE us, ONLY: nkb, vkb, newpseudo
+   USE us, ONLY: nkb, vkb
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
    use becmod
    use io_files
@@ -59,9 +59,9 @@ subroutine dndtau(dns,ldim,alpha,ipol)
       offset(na) = 0
       nt=ityp(na)
       do n=1,nchi(nt)
-         if (oc(n,nt).gt.0.d0.or..not.newpseudo(nt)) then
+         if (oc(n,nt) >= 0.d0) then
             l=lchi(n,nt)
-            if (l.eq.Hubbard_l(nt)) offset(na) = counter
+            if (l == Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
          end if
       end do

@@ -15,7 +15,7 @@ subroutine tabd (nt, occ_loc)
   ! (PPs usually are built on non physical configurations)
   !
   USE kinds, ONLY: DP
-  USE us, ONLY: psd
+  USE uspp_param, ONLY: psd
   implicit none
   real(kind=DP) :: occ_loc
   ! output: the total number of d electrons

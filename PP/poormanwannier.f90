@@ -147,7 +147,7 @@ subroutine projection (first_band, last_band)
   do na = 1, nat
      nt = ityp (na)
      do n = 1, nchi (nt)
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+        if (oc (n, nt) >= 0.d0) then
            l = lchi (n, nt)
            if ( (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) .and. &
                                             l.eq.Hubbard_l(nt) )then
@@ -181,7 +181,7 @@ subroutine projection (first_band, last_band)
   do na = 1, nat 
      nt = ityp (na) 
      do n = 1, nchi (nt) 
-        if (oc (n, nt) > 0.d0 .OR..NOT.newpseudo (nt) ) then 
+        if (oc (n, nt) >= 0.d0) then 
            l = lchi (n, nt) 
            lmax_wfc = max (lmax_wfc, l ) 
            do m = 1, 2 * l + 1 
@@ -240,7 +240,7 @@ subroutine projection (first_band, last_band)
      do na = 1, nat
         nt = ityp (na)
         do n = 1, nchi (nt)
-           if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+           if (oc (n, nt) >= 0.d0) then
               l = lchi (n, nt)
               if ( (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) .and. &
                                             l.eq.Hubbard_l(nt) )then
@@ -293,7 +293,7 @@ subroutine projection (first_band, last_band)
      do na = 1, nat
         nt = ityp (na)
         do n = 1, nchi (nt)
-           if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then
+           if (oc (n, nt) >= 0.d0) then
               l = lchi (n, nt)
               if ( (Hubbard_U(nt).ne.0.d0.or.Hubbard_alpha(nt).ne.0.d0) .and. &
                                             l.eq.Hubbard_l(nt) )then

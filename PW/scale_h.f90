@@ -20,7 +20,8 @@ subroutine scale_h
   USE cellmd, ONLY : at_old, omega_old
   USE gvect, ONLY: g, gg, ngm
   USE klist, ONLY: xk, wk, nkstot
-  USE us, ONLY: nqxq, lqx, nbrx, nqx, qrad, tab
+  USE uspp_param, ONLY: lqx, nbrx
+  USE us, ONLY: nqxq, nqx, qrad, tab
   implicit none
 
   integer :: ig

@@ -20,6 +20,7 @@ subroutine addusddense (drhoscf, dbecsum)
   use pwcom
   use phcom
   USE kinds, only : DP
+  USE uspp_param, ONLY: lqx
   implicit none
   !
   !   the dummy variables

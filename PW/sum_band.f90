@@ -32,7 +32,7 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
-  USE us,                   ONLY : okvan, tvanp, becsum, nh, nkb, vkb
+  USE us,                   ONLY : okvan, becsum, nh, nkb, vkb, tvanp
   USE wavefunctions_module, ONLY : evc, psic
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE mp_global,            ONLY : intra_image_comm, me_image, root_image

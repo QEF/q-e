@@ -19,6 +19,7 @@ subroutine newdq (dvscf, npe)
   use pwcom
   USE kinds, only : DP
   use phcom
+  USE uspp_param, ONLY: lqx
   implicit none
   !
   !   The dummy variables

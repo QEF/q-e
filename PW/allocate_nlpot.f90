@@ -34,8 +34,8 @@ subroutine allocate_nlpot
   USE ldaU,  ONLY: Hubbard_lmax, ns, nsnew
   USE wvfct, ONLY: npwx, npw, igk, igk_l2g, g2kin
   USE us, ONLY: nh, indv, nhtol, nhtolm, qq, dvan, deeq, qrad, vkb, tab, &
-       tab_at, dq, becsum, nhm, lqx, nqx, nqxq, nkb, lmaxkb, lll, nbeta, &
-       tvanp, newpseudo, nhtoj
+       tab_at, dq, becsum, nhm, nqx, nqxq, nkb, nhtoj
+  USE uspp_param, ONLY: lqx, lmaxkb, lll, nbeta
   USE spin_orb, ONLY: lspinorb, qq_spinorb, fcoef
   implicit none
   !
@@ -61,28 +61,16 @@ subroutine allocate_nlpot
   !
   lmaxkb = - 1
   do nt = 1, ntyp
-     if (tvanp (nt).or.newpseudo (nt)) then
-        nh (nt) = 0
-        do nb = 1, nbeta (nt)
-           nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
-           lmaxkb = max (lmaxkb, lll (nb, nt) )
-        enddo
-     else
-        nh (nt) = (lmax(nt) + 1) * (lmax(nt) + 1) - (2 * lloc(nt) + 1)
-        if (lloc (nt) .eq.lmax (nt) ) then
-           lmaxkb = max (lmaxkb, lmax (nt) - 1)
-        else
-           lmaxkb = max (lmaxkb, lmax (nt) )
-        endif
-     endif
+     nh (nt) = 0
+     do nb = 1, nbeta (nt)
+        nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
+        lmaxkb = max (lmaxkb, lll (nb, nt) )
+     enddo
   enddo
   !
   ! calculate the maximum number of beta functions
   !
-  nhm = 0
-  do nt = 1, ntyp
-     if (nh (nt) .gt.nhm) nhm = nh (nt)
-  enddo
+  nhm = MAXVAL (nh (1:ntyp))
   !
   ! calculate the number of beta functions of the solid
   !

@@ -27,8 +27,7 @@ subroutine new_ns
   USE symme,     ONLY: nsym, irt
   USE wvfct,     ONLY: nbnd, npw, npwx, igk, wg, gamma_only
   USE wavefunctions_module,    ONLY : evc
-  USE us,        ONLY: newpseudo
-  USE gvect,   ONLY : gstart
+  USE gvect,     ONLY : gstart
   use io_files
 #ifdef __PARA
   use para
@@ -62,9 +61,9 @@ subroutine new_ns
   do na = 1, nat  
      nt = ityp (na)  
      do n = 1, nchi (nt)  
-        if (oc (n, nt) .gt.0.d0.or..not.newpseudo (nt) ) then  
+        if (oc (n, nt) >= 0.d0) then  
            l = lchi (n, nt)  
-           if (l.eq.Hubbard_l(nt)) offset (na) = counter  
+           if (l == Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  
         endif
      enddo

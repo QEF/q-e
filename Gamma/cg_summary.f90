@@ -16,6 +16,7 @@ subroutine cg_summary
   !
   USE io_global,  ONLY : stdout
   use pwcom
+  USE uspp_param, ONLY: psd
   use cgcom
   !
   implicit none

@@ -5,6 +5,40 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE uspp_param
+  !
+  ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx, ndmx
+  !
+  SAVE
+  !
+  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
+
+  REAL(KIND=DP) :: &
+       dion(nbrx,nbrx,npsx),       &! D_{mu,nu} parameters (in the atomic case)
+       betar(ndmx,nbrx,npsx),      &! radial beta_{mu} functions
+       jjj(nbrx,npsx),             &! total angular momentum of the beta function
+       qqq(nbrx,nbrx,npsx),        &! q_{mu,nu} parameters (in the atomic case)
+       qfunc(ndmx,nbrx,nbrx,npsx), &! Q_{mu,nu}(|r|) function for |r|> r_L
+       qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q for |r|<r_L
+       vloc_at(ndmx,npsx),                &! local potential
+       rinner(lqmax,npsx)                  ! values of r_L
+  INTEGER :: &
+       nbeta(npsx),          &! number of beta functions
+       kkbeta(npsx),         &! point where the beta are zero
+       nqf(npsx),            &! number of coefficients for Q
+       nqlc(npsx),           &! number of angular momenta in Q
+       ifqopt(npsx),         &! level of q optimization
+       lll(nbrx,npsx),       &! angular momentum of the beta function
+       iver(3,npsx)           ! version of the atomic code
+  INTEGER :: &
+       lmaxkb,               &! max angular momentum
+       lqx                    ! max angular momentum + 1 for Q functions
+END MODULE uspp_param
+!
+!
 MODULE uspp
   !
   ! Ultrasoft PPs:

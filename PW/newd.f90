@@ -22,7 +22,8 @@ subroutine newd
        gstart, ig1, ig2, ig3, eigts1, eigts2, eigts3, nl
   USE lsda_mod, ONLY: nspin
   USE scf,   ONLY: vr, vltot
-  USE us,    ONLY: lqx, deeq, dvan, okvan, nh, nhm, tvanp
+  USE us,    ONLY: deeq, dvan, okvan, nh, nhm, tvanp
+  USE uspp_param,  ONLY: lqx
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none

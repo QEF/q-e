@@ -32,6 +32,8 @@ subroutine four(alpha, w0, k, dz)
 ! 
 #include "machine.h"
   use pwcom
+  USE parameters, ONLY: ndmx
+  USE uspp_param,    ONLY : betar
   use atom, only: msh, r, rab
   use cond
 implicit none

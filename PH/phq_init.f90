@@ -39,6 +39,7 @@ SUBROUTINE phq_init()
   USE atom,                 ONLY : numeric, mesh, msh, r , rab
   USE wavefunctions_module, ONLY : evc
   USE kinds,           ONLY : DP
+  USE uspp_param,      ONLY : vloc_at
   USE phcom
   !
   IMPLICIT NONE

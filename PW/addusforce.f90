@@ -22,7 +22,8 @@ subroutine addusforce (forcenl)
        nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: vr, vltot
-  USE us, ONLY : lqx, okvan, tvanp, nhm, nh, becsum
+  USE us, ONLY : okvan, nh, nhm, becsum, tvanp
+  USE uspp_param, ONLY : lqx
   USE wvfct, ONLY: gamma_only
   implicit none
   real(kind=DP) :: forcenl (3, nat)

@@ -215,7 +215,8 @@
       use pseu
       use reciprocal_vectors, only: gstart
       use atom, only: r, rab, mesh
-      use ncprm, only: vloc_at, cmesh
+      use uspp_param, only: vloc_at
+      use qrl_mod, only: cmesh
 !
       use dpseu
       use dener
@@ -876,7 +877,7 @@
       use constants, only: pi, fpi
       use ions_base, only: nsp
       use elct
-      use ncprm
+      use uspp_param, only: lqx, nqlc, lmaxkb, kkbeta, nbrx, nbeta
       use atom, only: nlcc, r, rab, mesh, rho_atc
       use qradb_mod
       use qgb_mod
@@ -1235,7 +1236,9 @@
       use constants, only: pi, fpi
       use ions_base, only: ipp, na, nsp
       use elct
-      use ncprm
+      use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lqx, dion, nbeta, &
+           lmaxkb, lll
+      use qrl_mod, only: qrl, cmesh
       use atom, only: mesh, r, rab, nlcc
       use qradb_mod
       use qgb_mod
@@ -1560,7 +1563,7 @@
       use uspp, only: nlx, lpx, lpl, ap
       use gvecb
       use cdvan
-      use ncprm, only: lqx
+      use uspp_param, only: lqx
 ! 
       implicit none
       integer ngy, iv, jv, is
@@ -1636,7 +1639,7 @@
       use gvecb
       use dqrad_mod
       use cdvan
-      use ncprm, only: lqx
+      use uspp_param, only: lqx
 ! 
       implicit none
       integer ngy, iv, jv, is

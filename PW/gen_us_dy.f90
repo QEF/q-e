@@ -22,7 +22,8 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE klist, ONLY: xk
   USE gvect, ONLY: ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct, ONLY: npw, npwx, igk
-  USE us, ONLY: nkb,  lmaxkb, dq, nbeta, nh, indv, nhtol, nhtolm, tab
+  USE us, ONLY: nkb,  dq, nh, indv, nhtol, nhtolm, tab
+  USE uspp_param, ONLY : lmaxkb, nbeta
   implicit none
   !
   integer :: ik

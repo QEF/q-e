@@ -21,7 +21,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
    USE ldaU, ONLY: swfcatom, Hubbard_l, Hubbard_U, Hubbard_alpha
    USE lsda_mod, ONLY: lsda, nspin, current_spin, isk
    USE wvfct, ONLY: nbnd, npwx, npw, igk, wg
-   USE us, ONLY: nkb, vkb, newpseudo
+   USE us, ONLY: nkb, vkb
    use becmod
    use io_files
 #ifdef __PARA
@@ -60,7 +60,7 @@ subroutine dndepsilon ( dns,ldim,ipol,jpol )
       offset(na) = 0
       nt=ityp(na)
       do n=1,nchi(nt)
-         if (oc(n,nt).gt.0.d0.or..not.newpseudo(nt)) then
+         if (oc(n,nt) >= 0.d0) then
             l=lchi(n,nt)
             if (l.eq.Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
