@@ -1,8 +1,9 @@
+!
 ! Copyright (C) 2004 PWSCF group 
-! This file is distributed under the terms of the 
-! GNU General Public License. See the file `License' 
-! in the root directory of the present distribution, 
-! or http://www.gnu.org/copyleft/gpl.txt . 
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
 ! 
 !----------------------------------------------------------------------- 
 program efg
@@ -48,6 +49,7 @@ program efg
   CALL mp_bcast(tmp_dir, ionode_id ) 
   CALL mp_bcast(filerec, ionode_id )
   CALL mp_bcast(      Q, ionode_id )   
+  CALL mp_bcast(     rc, ionode_id )   
 
   call read_file
 

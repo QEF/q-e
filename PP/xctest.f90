@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2005 Quantum-espresso group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 program xctest
   USE mp, ONLY: mp_start, mp_end
   use kinds, only: dbl

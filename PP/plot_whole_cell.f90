@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2004 Tone Kokalj
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 subroutine plot_whole_cell (alat, at, nat, tau, atm, ityp, &
      nr1, nr2, nr3, nrx1, nrx2, nrx3, rho, output_format, ounit)
   USE kinds, only : DP

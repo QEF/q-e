@@ -1,13 +1,14 @@
 !
-! This file holds gaussian cube generation subroutines.
-! Adapted by Axel Kohlmeyer from xsf.f90.
-! last update by Axel Kohlmeyer on Sep 27, 2004.
-!
+! Copyright (C) 2004 Axel Kohlmeyer
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 
+! This file holds gaussian cube generation subroutines.
+! Adapted by Axel Kohlmeyer from xsf.f90.
+! last update by Axel Kohlmeyer on Sep 27, 2004.
+!
 
 ! -------------------------------------------------------------------
 ! this routine writes a gaussian 98 like formatted cubefile.
