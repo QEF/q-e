@@ -44,6 +44,7 @@
 #  define ROUND2 ROUND2
 #  define MYUNITNAME MYUNITNAME
 #  define CP_ITOA CP_ITOA
+#  define C_MKDIR c_mkdir
 
 #endif
 
@@ -84,6 +85,7 @@
 #  define ROUND2 round2_
 #  define MYUNITNAME myunitname_
 #  define CP_ITOA cp_itoa_
+#  define C_MKDIR c_mkdir_
 
 #endif
 
@@ -126,6 +128,7 @@
 #  define ROUND2 round2__
 #  define MYUNITNAME myunitname__
 #  define CP_ITOA cp_itoa__
+#  define C_MKDIR c_mkdir_
 
 #  else
 
@@ -164,6 +167,7 @@
 #  define ROUND2 round2_
 #  define MYUNITNAME myunitname_
 #  define CP_ITOA cp_itoa_
+#  define C_MKDIR c_mkdir_
 
 #  endif
 
@@ -206,6 +210,7 @@
 #  define ROUND2 round2
 #  define MYUNITNAME myunitname
 #  define CP_ITOA cp_itoa
+#  define C_MKDIR c_mkdir
 
 #endif
 
@@ -247,6 +252,7 @@
 #  define ROUND2 round2_
 #  define MYUNITNAME myunitname_
 #  define CP_ITOA cp_itoa_
+#  define C_MKDIR c_mkdir_
 
 #endif
 
@@ -287,6 +293,7 @@
 #    define ROUND2 round2_
 #    define MYUNITNAME myunitname_
 #    define CP_ITOA cp_itoa_
+#    define C_MKDIR c_mkdir_
 
 #endif
 
@@ -327,6 +334,7 @@
 #  define ROUND2 round2
 #  define MYUNITNAME myunitname
 #  define CP_ITOA cp_itoa
+#  define C_MKDIR c_mkdir
 
 #endif
 
