@@ -155,6 +155,7 @@ ortho.o \
 orthoatwfc.o \
 output_tau.o \
 para.o \
+paw.o \
 poolbcast.o \
 poolextreme.o \
 poolrecover.o \

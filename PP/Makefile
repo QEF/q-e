@@ -168,6 +168,7 @@ PWOBJS = \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
 ../PW/para.o \
+../PW/paw.o \
 ../PW/poolbcast.o \
 ../PW/poolextreme.o \
 ../PW/poolrecover.o \
