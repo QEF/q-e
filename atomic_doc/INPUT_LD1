@@ -1,16 +1,16 @@
 Input data cards for ld1.x program
 
 Always present:
-  1)  namelist &input
-  2)  optional cards for all-electron calculations
-Needed for pseudo-potential (PP) test:
-  3)  namelist &test
-  4)  optional cards for PP test
+  1   namelist &input
+  1.1 optional cards for all-electron calculations
 Needed for PP generation:
-  5)  namelist &inputp
-  6)  additional cards for PP generation
+  2   namelist &inputp
+  2.1 additional cards for PP generation
+Needed for pseudo-potential (PP) test. optional for PP generation:
+  3  namelist &test
+  3.1  optional cards for PP test
 
-  1) namelist &input
+  1) namelist &input (always needed)
 
       title = a string with the title
       zed   = the nuclear charge (1 < zed < 100)
@@ -52,10 +52,10 @@ Needed for PP generation:
       latt= 1 (0) : (no) Latter correction           (default: no)
       isic= 1 (0) : (no) Self-interaction correction (default: no)
                     (only for all-electron calculation)
-      file_wavefunctions                             (default: ' ')
-             contains output all-electron wavefunctions
-      file_logderae                                  (default: ' ')
-             contains output all-electron logarithmic derivatives
+      prefix                                         (default: 'ld1')
+             prefix for file names - only for output file names
+             containing the orbitals, logarithmic derivatives, tests
+             See below for file names and the content of the file
 
       config = a string with the electronic configuration. Example:
                   '[Ar] 3d10 4s2 3p2.5'              (default: ' ')
@@ -70,7 +70,7 @@ Needed for PP generation:
       If config is empty the electronic configuration is read from
       the following cards:
 
-  2) optional cards for all-electron calculation
+  1.1) optional cards for all-electron calculation
 
       nwf            number of wavefunctions, followed by nwf cards:
    if rel <2
@@ -85,23 +85,76 @@ Needed for PP generation:
       jj = the total angular momentum (0.0 is allowed for complete shells:
            the codes fills 2l states with jj=l-1/2, 2l+2 with jj=l+1/2)
 
-  3) namelist &test (optional, read only if iswitch=2)
+
+  2) namelist &inputp  (needed only if iswitch=3)
+
+      zval = valence charge                                  (calculated)
+             zval will be automatically calculated from available data and
+             checked versus the input value, if one is provided
+      pseudotype =                                           (no default)
+           1    norm-conserving, single-projector PP (old format)
+           2    norm-conserving, multiple-projector PP in separable format
+           3    ultrasoft PP
+
+      file_pseudopw= file where the generated PP is written.
+                     If the file name ends with "upf" or "UPF",
+                     or in any case for spin-orbit PP (rel=2),
+                     the file is written in UPF format; otherwise,
+                     in the old "NC" format if pseudotype=1,
+                     in the old RRKJ format if pseudotype=2 or 3
+                     (no default, mist be specified)
+      file_recon =  file containing data needed for PAW reconstruction 
+                    of all-electron wavefunctions from PP results.
+                    If you want to use additional states to perform the
+                    reconstruction, add them at the end of the list
+                    of all-electron states (default: ' ')
+      ltest=.true. : test for ghosts states                  (default: .false.)
+      lloc = angular momentum of the local channel           (default -1)
+           lloc=-1 pseudizes the all-electron potential
+           lloc>-1 uses the corresponding channel as local PP
+      rcloc = matching radius for the local pseudo-potential      (no default)
+              (only if lloc=-1)
+      nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
+             correction of Froyen, Cohen, and Louie
+      rcore= matching radius for the smoothing of the core charge (no default)
+      rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
+             method with 3 Bessel functions fails, specifying rho0 /= 0
+             may allow to override the problem (using 4 Bessel functions)
+             (default rho0 = 0.0)
+      file_chi   =   file containing output PP chi functions       (' ')
+      file_beta  =   file containing output PP beta functions      (' ')
+      file_qvan  =   file containing output PP qvan functions      (' ')
+      file_screen=   file containing output screening potential    (' ')
+      file_core  =   file containing output total and core charge  (' ')
+
+  2.1) additional cards for PP generation
+
+      nwfs          number of pseudo wavefunctions, followed by nwf cards:
+      nls, nns, lls, ocs(nl), ener, rcut, rcutus      format(a2,2i3,4f6.2)
+   where:
+      nls, nns, lls, ocs = same as el, n, l, oc, for the reference configuration
+      ener = energy used to pseudize the corresponding state
+             if 0.d0, use the one-electron energy of the all-electron state
+             do not use 0.d0 for unbound states!
+      rcut =  matching radius for norm conserving PP
+      rcutus= matching radius for ultrasoft PP - used only if pseudotype=3 
+
+  3) namelist &test (needed only if iswitch=2, optional if iswitch=3)
 
       nconf =   the number of configurations to be tested    (default: 1)
       file_pseudo = file containing the PP                   (default: ' ')
+                    (ignored if iswitch=3)
                     If the file name contains "upf" or "UPF",
                     the file is assumed to be in UPF format; 
                     otherwise, if the file name contains "rrkj3" or "RRKJ3",
                     the old RRKJ format is first tried;
                     otherwise, the old NC format is read
-      file_tests =  file containing the results of transferability tests
-      file_wavefunctionps = file containing output PP wavefunctions
       configts(nc) = a string containing the test valence electronic
                      configuration nc, nc=1,nconf. Same syntax as for "config".
-                     If all configts(nc)=' ' the electron configuration is
-                     read from the following cards:
+                     If configts(nc) is not set, the electron configuration 
+                     is read from the following cards:
 
-  4) optional cards for PP test calculation
+  3.1) optional cards for PP test calculation
 
    for each missing configts(nc):
      nwfts            number of wavefunctions, followed by nwfts cards:
@@ -119,60 +172,23 @@ Needed for PP generation:
      rcutts  = not used
      rcutusts= not used
 
-  5) namelist &inputp  (optional, read only if iswitch=3)
+For PP generation you do not need to specify namelist &test, UNLESS:
+1) you want to use a different configuration for unscreening wrt the
+   one used to generate the PP. This is useful for PP with semicore
+   states: use semicore states ONLY to produce the PP, use semicore 
+   AND valence states (if occupied) to make the unscreening
+2) you want to specify some more states for PAW style reconstruction of 
+   all-electron orbitals from pseudo-orbitals
 
-      zval = valence charge
-      pseudotype =                                           (no default)
-           1    norm-conserving, single-projector PP (old format)
-           2    norm-conserving, multiple-projector PP in separable format
-           3    ultrasoft PP
-      file_pseudopw= file where the PP read from file_pseudo is 
-                     written in a format readable by PWscf.
-                     If the file name ends with "upf" or "UPF",
-                     or in any case for spin-orbit PP (rel=2),
-                     the file is written in UPF format; otherwise,
-                     in the old "NC" format if pseudotype=1,
-                     in the old RRKJ format if  pseudotype=2 or 3
-                     (default: ' ')
-      file_recon =  file containing data needed for PAW reconstruction 
-                    of all-electron wavefunctions from PP results.
-                    If you want to use addtional states to perform the
-                    reconstruction, add them at the end of the list
-                    of all-electron states
-      ltest=.true. : test for ghosts states                  (default: .false.)
-      lloc = angular momentum of the local channel           (default -1)
-           lloc=-1 pseudizes the all-electron potential
-           lloc>-1 uses the corresponding channel as local PP
-      rcloc = matching radius for the local pseudo-potential
-              (only if lloc=-1)
-      nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
-             correction of Froyen, Cohen, and Louie
-      rcore= matching radius for the smoothing of the core charge
-      rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
-             method with 3 Bessel functions fails, specifying rho0 /= 0
-             may allow to override the problem (using 4 Bessel functions)
-             Defaults is rho0 = 0.0
-
-      file_pseudopw= file containing output PP in UPF format
-      file_logderps= file containing output PP logarithmic derivatives
-      file_chi   =   file containing output PP chi functions
-      file_beta  =   file containing output PP beta functions
-      file_qvan  =   file containing output PP qvan functions
-      file_screen=   file containing output screening potential
-      file_core  =   file containing output total and core charge
-
-  6) additional cards for PP generation
-
-      nwfs          number of pseudo wavefunctions, followed by nwf cards:
-      nls, nns, lls, ocs(nl), ener, rcut, rcutus      format(a2,2i3,4f6.2)
-   where:
-      nls, nns, lls, ocs = same as el, n, l, oc, for the reference configuration
-      ener = energy used to pseudize the corresponding state
-             if 0.d0, use the one-electron energy of the all-electron state
-             do not use 0.d0 for unbound states!
-      rcut =  matching radius for norm conserving PP
-      rcutus= matching radius for ultrasoft PP - used only if pseudotype=3 
-
+Output files written:
+  file_tests            "prefix".test    results of transferability test
+and for each testing configuration N:
+  file_wavefunctions    "prefix"N.wfc     all-electron KS orbitals
+  file_wavefunctionsps  "prefix"Nps.wfc   pseudo KS orbitals
+if parameters for logarithmic derivatives are specified:
+  file_logder           "prefix"Nps.dlog  all-electron logarithmic derivatives
+  file_logderps         "prefix"Nps.dlog  pseudo logarithmic derivatives
+"N" is not present if there is just one testing configuration
 ========================================================================
 Here are some recipes to reproduce old all-electron atomic results
 with the ld1 program.
