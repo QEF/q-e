@@ -86,6 +86,7 @@ subroutine punch_band (filband)
   use wavefunctions
   use us
   use becmod
+  use wavefunctions, only: evc
 
   implicit none
   character (len=*) :: filband
