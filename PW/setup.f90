@@ -57,7 +57,7 @@ SUBROUTINE setup()
   USE ktetra,           ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
   USE symme,            ONLY : s, irt, ftau, nsym, invsym
   USE atom,             ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
-  USE pseud,            ONLY : zp, nlc, nnl, alps, aps, lmax
+  USE pseud,            ONLY : zp
   USE wvfct,            ONLY : nbnd, nbndx
   USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, lscf, &
                                lmd, lpath, lphonon, david, isolve, imix, &
@@ -65,7 +65,7 @@ SUBROUTINE setup()
   USE relax,            ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,           ONLY : calc
   USE uspp_param,       ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
-  USE us,               ONLY : okvan
+  USE uspp,             ONLY : okvan
   USE ldaU,             ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
                                Hubbard_alpha, Hubbard_lmax
   USE bp,               ONLY : gdir, lberry, nppstr

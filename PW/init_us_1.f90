@@ -34,11 +34,10 @@ subroutine init_us_1
   USE ions_base,  ONLY : ntyp => nsp
   USE cell_base,  ONLY : omega, tpiba
   USE gvect,      ONLY : g, gg
-  USE pseud,      ONLY : lloc, lmax
   USE lsda_mod,   ONLY : nspin
-  USE us,         ONLY : okvan, nqxq, dq, nqx, tab, qrad
+  USE us,         ONLY : nqxq, dq, nqx, tab, qrad
   USE uspp,       ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
-                         qq_so, dvan_so
+                         qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
                          kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
   USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef

@@ -18,7 +18,8 @@ subroutine ccgdiagg_nc (nmax, n, nbnd, psi, e, precondition, eps, &
   !
 #include "f_defs.h"
   USE kinds, only : DP
-  USE pwcom, ONLY : okvan, vkb, nkb, npwx
+  USE uspp, ONLY : okvan, vkb, nkb
+  USE wvfct, ONLY: npwx
   USE becmod, ONLY: becp_nc
   implicit none
   !

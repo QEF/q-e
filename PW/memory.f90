@@ -53,7 +53,6 @@ subroutine setup2()
   USE constants,  ONLY :tpi, fpi
   USE gvect,      ONLY : ecutwfc, gcutm, ngl, ngm
   USE klist,      ONLY : xqq
-  USE pseud,      ONLY : lmax, lloc
   USE uspp_param, ONLY : lmaxkb, nbeta, lll, lmaxq, nhm, tvanp, nh
   USE us,         ONLY : nqx, nqxq, dq
   USE uspp,       ONLY : nkb
@@ -121,8 +120,8 @@ subroutine memory_estimate ( )
   USE gsmooth,       ONLY : ngms, doublegrid
   USE ldaU,          ONLY : Hubbard_lmax, lda_plus_u
   USE lsda_mod,      ONLY : nspin
-  USE us,            ONLY : okvan,  nqx, nqxq
-  USE uspp,          ONLY : nkb
+  USE us,            ONLY : nqx, nqxq
+  USE uspp,          ONLY : nkb, okvan
   USE uspp_param,    ONLY : lmaxq, nhm
   USE control_flags, ONLY : nmix, isolve, diis_ndim
   USE wvfct,         ONLY : gamma_only, npwx, nbnd, nbndx

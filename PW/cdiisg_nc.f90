@@ -10,20 +10,19 @@
 subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
       btype, notcnv, diis_iter, iter, npol)
   !----------------------------------------------------------------------
-  !----------------------------------------------------------------------
   !
   !     iterative solution of the eigenvalue problem:
   !
   !     ( H - e S ) * evc = 0
   !
   !     where H is an hermitean operator, e is a real scalar,
-  !     S is an okvan matrix, evc is a complex vector.
+  !     S is an overlap matrix, evc is a complex vector.
   !     The band-by-band RMM-DIIS method is used. 
 #include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
-  use g_psi_mod
-  use pwcom, only : nelec, lgauss, ltetra, okvan
+  USE g_psi_mod
+  USE uspp, ONLY: okvan
 
   implicit none
   ! on INPUT
@@ -35,7 +34,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   !    (the basis set is refreshed when its dimension would exceed nvecx)
   ! band type (0=occupied, 1=empty)
   ! scf iteration
-  ! number of coordnates of wfc
+  ! number of coordinates of wfc
   real(kind=DP) :: ethr
   ! energy threshold for convergence
   !   root improvement is stopped, when two consecutive estimates of the root
@@ -148,7 +147,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
                   spsi(1,1,nbase))
      !  
      !     calculate the first element of the reduced hamiltonian 
-     !     and okvan matrices
+     !     and overlap matrices
      !     hc(1,1)=<psi_1|H|psi_1>    sc(1,1)=<psi_1|S|psi_1>
      !
      IF (npol == 1) THEN
@@ -245,7 +244,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
            call cgramg1_nc (ndmx, nvecx, ndim, 1, nbase, psi, spsi, hpsi, npol)
      !
      !     calculate the new elements of the reduced hamiltonian
-     !     and okvan matrices
+     !     and overlap matrices
      !     hc(i,j) =<psi_i|H|psi_j>  and sc(i,j)=<psi_i|S|psi_j>
      !
         IF (npol == 1) THEN
@@ -312,7 +311,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         enddo
      enddo
      if (verb) then
-        WRITE( stdout,*) 'okvan' 
+        WRITE( stdout,*) 'overlap' 
         WRITE( stdout,*) ((m,n,sc(n,m), n=1,nbase), m=1,nbase)
         WRITE( stdout,*)  
         WRITE( stdout,*) 'rc' 

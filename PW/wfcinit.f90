@@ -25,8 +25,7 @@ SUBROUTINE wfcinit()
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE control_flags,        ONLY : isolve, reduce_io
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et, wg
-  USE us,                   ONLY : okvan
-  USE uspp,                 ONLY : nkb, vkb
+  USE uspp,                 ONLY : nkb, vkb, okvan
   USE ldaU,                 ONLY : swfcatom, swfcatom_nc, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
   USE io_files,             ONLY : iunat, nwordwfc, iunwfc, iunigk, &

@@ -25,8 +25,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : gamma_only
-  USE us,         ONLY : okvan
-  USE uspp,       ONLY : vkb, nkb, qq
+  USE uspp,       ONLY : vkb, nkb, qq, okvan
   USE uspp_param, ONLY : nh, tvanp
   USE wvfct,      ONLY : igk, g2kin
   USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs

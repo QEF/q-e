@@ -51,7 +51,7 @@ CONTAINS
          numeric, nlcc
     USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
          lloc, a_nlcc, b_nlcc, alpha_nlcc
-    USE us,                   ONLY : okvan
+    USE uspp,                 ONLY : okvan
     USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
          rinner, psd, nbeta, kkbeta, nqf, nqlc, &
          ifqopt, lll, jjj, iver, nh, tvanp, newpseudo
@@ -582,7 +582,7 @@ CONTAINS
          nlcc
     USE pseud,                ONLY : cc, alpc, zp, aps, alps, nlc, nnl, lmax, &
          lloc, a_nlcc, b_nlcc, alpha_nlcc
-    USE us,                   ONLY : okvan
+    USE uspp,                 ONLY : okvan
     USE uspp_param,           ONLY : vloc_at, dion, betar, qqq, qfunc, qfcoef, &
          rinner, psd, nbeta, kkbeta, nqf, nqlc, &
          ifqopt, lll, jjj, iver, nh, tvanp, newpseudo

@@ -20,7 +20,6 @@ subroutine hinit0
                         g, eigts1, eigts2, eigts3
   USE vlocal,    ONLY : strf
   USE wvfct,     ONLY : npw, g2kin, igk, igk_l2g
-  USE pseud,     ONLY : lloc, lmax, nnl, aps, alps
   USE io_files,  ONLY : iunigk
   !
   implicit none

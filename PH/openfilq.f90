@@ -19,11 +19,10 @@ SUBROUTINE openfilq()
                              lrdrhous, lrebar, lrdrho
   USE control_ph,     ONLY : epsil, zue, recover, trans, elph
   USE output,         ONLY : fildyn, fildvscf
-  USE us,             ONLY : okvan
   USE wvfct,          ONLY : nbnd, npwx
   USE gvect,          ONLY : nrx1, nrx2, nrx3, nrxx
   USE lsda_mod,       ONLY : nspin
-  USE uspp,           ONLY : nkb
+  USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
   USE control_flags,  ONLY : twfcollect
   USE restart_module, ONLY : readfile_new

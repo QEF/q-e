@@ -21,8 +21,7 @@ subroutine addusdens
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
-  USE us,                   ONLY : okvan
-  USE uspp,                 ONLY : becsum
+  USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : lmaxq, tvanp, nh
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic

@@ -33,8 +33,7 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
-  USE us,                   ONLY : okvan
-  USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
+  USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, tvanp, nhm
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE noncollin_module,     ONLY : noncolin, bfield, npol

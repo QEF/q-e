@@ -10,7 +10,7 @@ subroutine print_clock_ph
   !-----------------------------------------------------------------------
 
   USE io_global,  ONLY : stdout
-  USE us, only: okvan
+  USE uspp, only: okvan
   USE control_ph
   USE nlcc_ph, ONLY: nlcc_any
   implicit none

@@ -23,8 +23,7 @@ SUBROUTINE newd()
                                    eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vr, vltot
-  USE us,                   ONLY : okvan
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so
+  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
   USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic

@@ -25,7 +25,6 @@ subroutine allocate_nlpot
   !
   !
   USE parameters, ONLY : nbrx, nchix
-  USE pseud,      ONLY : lmax, lloc
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE cell_base,  ONLY : tpiba2
   USE cellmd,     ONLY : cell_factor
