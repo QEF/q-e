@@ -48,6 +48,13 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   ! pencils on the plane
   ! the planes to transform
 
+#ifndef __SX4 
+#ifndef __AIX
+  complex(kind=DP) :: f (nrx1, nr2, nr3)
+  call errore('cfts_3','routine called by unsupported system', 1)
+#endif
+#endif
+
 #ifdef __AIX
   complex(kind=DP) :: f (nrx1, nr2, nr3)
   ! the fft array
