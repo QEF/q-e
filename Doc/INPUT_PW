@@ -116,7 +116,7 @@ dt             REAL
                 Hartree atomic units, half that much!!!)
 
 outdir         CHARACTER ( default = current directory ('./') )
-               input, temporary, output files are found
+               input, temporary, output files are found in this directory
             
 prefix         CHARACTER ( default = 'pwscf' )
                prepended to input/output filenames: 
@@ -451,8 +451,8 @@ potential_extrapolation
                CHARACTER
                used to extrapolate the potential and the wave-functions 
                from preceding ionic step(s)
-               'none' | 'atomic' | 'wfc' | 'wfc2'
-               'none': no extrapolation
+
+               'none':   no extrapolation
                'atomic': extrapolate the potential as if it was a sum of
                          atomic-like orbitals (default for calculation='relax')
                'wfc':    extrapolate the potential as above
@@ -467,34 +467,34 @@ lbfgs_ndim     INTEGER ( default = 1 )
 	       systems).
 	       On large systems (some hundreds of atoms) a good performance can 
 	       be achieved with only 4 or 6 old vectors 
-               (new-bfgs only)
+               (bfgs only)
 
 trust_radius_max
                REAL ( default = 0.5D0 BOHR ) 
                maximum ionic displacement in the structural relaxation 
-	       (new-bfgs only)
+	       (bfgs only)
 
 trust_radius_min
                REAL ( default = 1.D-5 BOHR )
 	       minimum ionic displacement in the structural relaxation
                BFGS is reset when trust_radius < trust_radius_min
-	       (new-bfgs only)
+	       (bfgs only)
 
 trust_radius_ini
                REAL ( default = 0.5D0 BOHR )
                initial ionic displacement in the structural relaxation
-               (new-bfgs only)
+               (bfgs only)
 
 trust_radius_end
                REAL ( default = 1.D-7 BOHR )
                BFGS is stopped when trust_radius < trust_radius_end
 	       trust_radius_end is not intended to be used as a criterium
-	       for convergence (new-bfgs only)
+	       for convergence (bfgs only)
 
 w_1, w_2
                REAL ( w_1 = 1.D-5, w_2 = 0.2D0 )
 	       parameters used in line search based on the Wolfe conditions
-	       (new-bfgs only)
+	       (bfgs only)
 	       
 num_of_images  INTEGER ( default = 0 )
                number of points used to discrtize the path
@@ -511,11 +511,11 @@ CI_scheme      CHARACTER. ( default = "no-CI" )
 first_last_opt LOGICAL ( default = .FALSE. )
                also the first and the last configurations are optimized
                "on the fly" 
-	       these images do not feel the effect of the springs
+	       (these images do not feel the effect of the springs)
 
 minimization_scheme     
                CHARACTER ( default = "quick-min" )
-               specify the type of minimization scheme      
+               specify the type of optimization scheme      
                "sd"         : steepest descent
 	       "quick-min"  : a minimization algorithm based on
 	                      molecular dynamics (suggested)
@@ -539,7 +539,7 @@ temp_req       REAL ( default = 0.D0 Kelvin )
                ignored when "minimization_scheme" is different from "mol-dyn"
 
 ds             REAL ( default = 1.5D0 )
-               minimization step ( Hartree atomic units )
+               optimization step length ( Hartree atomic units )
 	              
 k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
                set them to use a Variable Elastic Constants scheme 
@@ -548,7 +548,7 @@ k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
 
 path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
-	       orthogonal to the path in eV/A ) is less than neb_thr.
+	       orthogonal to the path in eV/A ) is less than path_thr.
                
 reset_vel      LOGICAL ( default = .FALSE. )
                used to reset quick-min velocities at restart time
@@ -583,7 +583,7 @@ press          REAL ( default = 0.D0 )
 wmass          REAL
                ficticious cell mass for variable-cell md simulations
 
-cell_factor    REAL ( default = 1.2 )
+cell_factor    REAL ( default = 1.2D0 )
                used in the construction of the pseudopotential tables. 
                It should exceed the maximum linear contraction of the
                cell during a simulation.
@@ -603,12 +603,20 @@ xqq(3)         REAL
 CARDS: { } = optional
 -------------------------------------------------------------------------------
 ATOMIC_SPECIES
-"ntyp" cards like the following
- X  Mass_X  PseudoPot_X
- X           Character: label of the atom
- Mass_X      Real     : mass of the atomic species
-                       not used if calculation='scf', 'nscf', 'phonon'
- PseudoPot_X Character: file containing PP for this species
+
+Syntax:
+
+ATOMIC_SPECIES
+ X(1)     Mass_X(1)     PseudoPot_X(ntyp)
+ X(2)     Mass_X(2)     PseudoPot_X(ntyp)
+ ...
+ X(ntyp)  Mass_X(ntyp)  PseudoPot_X(ntyp)
+
+Description:
+ X           CHARACTER : label of the atom
+ Mass_X      REAL      : mass of the atomic species
+                         not used if calculation='scf', 'nscf', 'phonon'
+ PseudoPot_X CHARACTER:  file containing PP for this species
 
  The pseudopotential file is assumed to be in the new UPF format.
  If it doesn't work, the pseudopotential format is determined by
