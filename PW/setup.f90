@@ -69,7 +69,7 @@ SUBROUTINE setup()
   USE para,          ONLY : kunit
   USE mp_global,     ONLY : nimage
   USE spin_orb,      ONLY : lspinorb
-  USE noncollin_module, ONLY : noncolin, m_loc
+  USE noncollin_module, ONLY : noncolin, npol, m_loc
   !
   IMPLICIT NONE
   !
@@ -245,6 +245,7 @@ SUBROUTINE setup()
   !
   lspinorb=.false.
   noncolin=.false.
+  npol = 1
   do nt=1,ntyp
      so(nt)=.true.
      do nb=1,nbeta(nt)
