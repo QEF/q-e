@@ -35,17 +35,19 @@ module funct
   !              "nogx"   none                           igcx =0 (default)
   !              "b88"    Becke88 (beta=0.0042)          igcx =1
   !              "ggx"    Perdew-Wang 91                 igcx =2
-  !              "pbe"    Perdew-Burke-Ernzenhof         igcx =3
+  !              "pbx"    Perdew-Burke-Ernzenhof exch    igcx =3
+  !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
   !              "p86"    Perdew86                       igcc =1
   !              "ggc"    Perdew-Wang 91 corr.           igcc =2
   !              "blyp"   Becke88 + Lee-Yang-Parr        igcc =3
-  !              "pbe"    Perdew-Burke-Ernzenhof corr    igcc =4
+  !              "pbx"    Perdew-Burke-Ernzenhof corr    igcc =4
   !
   ! Special cases: "bp" = "b88+p86"        = Becke-Perdew grad.corr
   !              "pw91" = "pw +ggx+ggc"    = PW91 (aka GGA)
-  !              "pbe"  = "sla+pw+ggx+ggc" = PBE
+  !              "pbe"  = "sla+pw+pbx+pbc" = PBE
+  !              "revpbe"="sla+pw+rpb+pbc" = revPBE (Zhang-Yang)
   !
   integer :: iexch, icorr, igcx, igcc
   !
@@ -72,7 +74,7 @@ CONTAINS
     character (len=*) :: dft_
     ! data
     integer :: nxc, ncc, ngcx, ngcc
-    parameter (nxc = 2, ncc = 9, ngcx = 3, ngcc = 4)
+    parameter (nxc = 2, ncc = 9, ngcx = 4, ngcc = 4)
     character (len=3) :: exc, corr
     character (len=4) :: gradx, gradc
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -83,8 +85,8 @@ CONTAINS
     data exc / 'NOX', 'SLA', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
          'OBW', 'GL' /
-    data gradx / 'NOGX', 'B88', 'GGX', 'PBE' /
-    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBE' /
+    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB' /
+    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC' /
     !
     ! convert to uppercase
     len = len_trim(dft)
@@ -120,10 +122,19 @@ CONTAINS
     ! special case : BLYP => B88 for gradient correction on exchange
     if (matches ('BLYP', dftout) ) call set_dft_value (igcx, 1)
 
+    ! special case : revPBE
+    if (matches ('REVPBE', dftout) ) then
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 4)
+       call set_dft_value (igcc, 4)
+    else if (matches('RPBE',dftout)) then
+         call errore('which_dft', &
+     &   'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)',1)
+   else if (matches ('PBE', dftout) ) then
     ! special case : PBE
-    if (matches ('PBE', dftout) ) then
-       call set_dft_value (iexch, 1)
-       call set_dft_value (icorr, 4)
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 3)
+       call set_dft_value (igcc, 4)
     endif
 
     ! special case : BP = B88 + P86
