@@ -28,7 +28,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if ! test -d $DIR ; then 
+    if test ! -d $DIR ; then 
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -36,7 +36,7 @@ for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
     fi
 done
 for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
-    if ! test -d $DIR ; then
+    if test ! -d $DIR ; then
         mkdir $DIR
     fi
 done
@@ -44,7 +44,7 @@ cd $EXAMPLE_DIR/results
 
 # check for executables
 for FILE in $BIN_LIST ; do
-    if ! test -x $BIN_DIR/$FILE ; then
+    if test ! -x $BIN_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
         $ECHO "Aborting"
@@ -54,7 +54,7 @@ done
 
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
-    if ! test -r $PSEUDO_DIR/$FILE ; then
+    if test ! -r $PSEUDO_DIR/$FILE ; then
         $ECHO
         $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
         $ECHO "Aborting"
