@@ -52,8 +52,8 @@
   real(kind=8), intent(inout) :: Uall(n,n)
   integer, allocatable :: tagz(:)
   !
-  integer :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, 			&
-  	ig, ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, ibig3,        	&
+  integer :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l,          &
+     ig, ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, ibig3,           &
         ir1, ir2, ir3, ir, b5(3), b6(3), clwf, m,ib,jb, total, nstat, jj
   integer :: ngpww, irb3
   real(kind=8) :: t1, t2, t3, taup(3), pi2
@@ -88,7 +88,7 @@
       integer , allocatable :: ns(:)
 #else 
 #endif
-	
+   
 
 
       integer igx,igy,igz
@@ -101,15 +101,15 @@
   alpha=(1.d0,0.d0)
   beta1=(0.d0,0.d0)
   pi2=2.d0*pi
-	if(iprsta.gt.4) then 
-	write(6,*) "Now Entering wf..."
-	end if
+   if(iprsta.gt.4) then 
+   write(6,*) "Now Entering wf..."
+   end if
 
 !
 !
 !set up the weights and the G vectors for wannie-function calculation
 
-	te=0.d0
+   te=0.d0
 !
   select case (ibrav)
 
@@ -340,11 +340,11 @@
      if (b1(3).eq.1) then
         nw=5
         allocate(wfg(5,3), weight(5))
-	allocate(tagz(nw))
+   allocate(tagz(nw))
      else
         nw=6
         allocate(wfg(6,3), weight(6))
-	allocate(tagz(nw))
+   allocate(tagz(nw))
      end if
      weight=0.25d0/(b1(3)**2)
      wfg=0
@@ -511,129 +511,129 @@
 
 #ifdef __PARA
 
-	allocate (ns(nproc))
-	do i=1,nproc
-	   ns(i)=0
-	end do
+   allocate (ns(nproc))
+   do i=1,nproc
+      ns(i)=0
+   end do
 
-	if(n.eq.nproc) then
-	  do i=1,n
-	     ns(i)=1
-	  end do
-	else
-	  i=0
-1	    do j=1,nproc	
-	       ns(j)=ns(j)+1
-	       i=i+1
-	       if(i.ge.n) go to 2
-	    end do
-	       if(i.lt.n) go to 1 
-	end if
+   if(n.eq.nproc) then
+     do i=1,n
+        ns(i)=1
+     end do
+   else
+     i=0
+1       do j=1,nproc   
+          ns(j)=ns(j)+1
+          i=i+1
+          if(i.ge.n) go to 2
+       end do
+          if(i.lt.n) go to 1 
+   end if
 2        if(iprsta.gt.4) then
-	  do j=1,nproc
-	     write(6,*) ns(j)
-	  end do
-	end if
+     do j=1,nproc
+        write(6,*) ns(j)
+     end do
+   end if
 
-       total = 0	
-	do proc=1,nproc
-		ngpwpp(proc)=(ngpw__(proc)+1)/2
-	        total=total+ngpwpp(proc)
-!	        nstat=ns(proc)
-	     if(iprsta.gt.4) then
-	        write(6,*) "I am proceessor", proc, "and i have ",ns(me)," states."
-	     end if
-	end do
-	nstat=ns(me)
+       total = 0   
+   do proc=1,nproc
+      ngpwpp(proc)=(ngpw__(proc)+1)/2
+           total=total+ngpwpp(proc)
+!           nstat=ns(proc)
+        if(iprsta.gt.4) then
+           write(6,*) "I am proceessor", proc, "and i have ",ns(me)," states."
+        end if
+   end do
+   nstat=ns(me)
 
-	allocate(psitot(total,nstat))
-	allocate(psitot1(total*nstat))
-	allocate(psitot_pl(total,nstat))
-	allocate(psitot_p(total*nstat))
-	allocate(psitot_mi(total,nstat))
-	allocate(psitot_m(total*nstat))
+   allocate(psitot(total,nstat))
+   allocate(psitot1(total*nstat))
+   allocate(psitot_pl(total,nstat))
+   allocate(psitot_p(total*nstat))
+   allocate(psitot_mi(total,nstat))
+   allocate(psitot_m(total*nstat))
 
-	allocate(c_p(ngw,nx))
-	allocate(c_m(ngw,nx))
-	if(iprsta.gt.4) then
-	  write(6,*) "All allocations done"
-	end if
-	
+   allocate(c_p(ngw,nx))
+   allocate(c_m(ngw,nx))
+   if(iprsta.gt.4) then
+     write(6,*) "All allocations done"
+   end if
+   
 
-	do proc=1,nproc
-	     sendcount(proc)=ngpwpp(me)*ns(proc)
-	     recvcount(proc)=ngpwpp(proc)*ns(me)
-	end do
-	sdispls(1)=0
-	rdispls(1)=0
-	
-	do proc=2,nproc
-	   sdispls(proc)=sdispls(proc-1)+sendcount(proc-1)
-	   rdispls(proc)=rdispls(proc-1)+recvcount(proc-1)
-	end do
+   do proc=1,nproc
+        sendcount(proc)=ngpwpp(me)*ns(proc)
+        recvcount(proc)=ngpwpp(proc)*ns(me)
+   end do
+   sdispls(1)=0
+   rdispls(1)=0
+   
+   do proc=2,nproc
+      sdispls(proc)=sdispls(proc-1)+sendcount(proc-1)
+      rdispls(proc)=rdispls(proc-1)+recvcount(proc-1)
+   end do
 !
-!	Step 1. Communicate to all Procs so that each proc has all
-!	G-vectors and some states instead of all states and some
-!	G-vectors. This information is stored in the 1-d array 
-!	psitot1.
+!   Step 1. Communicate to all Procs so that each proc has all
+!   G-vectors and some states instead of all states and some
+!   G-vectors. This information is stored in the 1-d array 
+!   psitot1.
 !
-	
-	call MPI_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
-	call MPI_alltoallv(c, sendcount, sdispls, MPI_DOUBLE_COMPLEX,             &
-   &	 		   psitot1, recvcount, rdispls, MPI_DOUBLE_COMPLEX,       &
-   &			   MPI_COMM_WORLD,ierr)
-	if (ierr.ne.0) call errore('WF','alltoallv 1',ierr)
-	if(iprsta.gt.4) then
-	  write(6,*) "Step 1. Communicate to all Procs ... Done, wf"
-	end if
-#endif	
-	if(clwf.eq.5) then
+   
+   call MPI_barrier(MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
+   call MPI_alltoallv(c, sendcount, sdispls, MPI_DOUBLE_COMPLEX,             &
+   &             psitot1, recvcount, rdispls, MPI_DOUBLE_COMPLEX,       &
+   &            MPI_COMM_WORLD,ierr)
+   if (ierr.ne.0) call errore('WF','alltoallv 1',ierr)
+   if(iprsta.gt.4) then
+     write(6,*) "Step 1. Communicate to all Procs ... Done, wf"
+   end if
+#endif   
+   if(clwf.eq.5) then
 #ifdef __PARA
         call write_psi(c,jw)
         call MPI_finalize(ierr)
-	write(6,*) "State written", jw
-	STOP
-	end if
+   write(6,*) "State written", jw
+   STOP
+   end if
 #else
-	do i=1,ngw
-	   write(22,*) c(i,jw)
-	end do
-	write(6,*) "State written", jw
-	STOP
-	end if
+   do i=1,ngw
+      write(22,*) c(i,jw)
+   end do
+   write(6,*) "State written", jw
+   STOP
+   end if
 #endif
-	
+   
 #ifdef __PARA
 !
-!	Step 2. Convert the 1-d array psitot1 into a 2-d array consistent with the
-!	original notation c(ngw,n). Psitot contains ntot = SUM_Procs(ngw) G-vecs
-!	and nstat states instead of all n states
+!   Step 2. Convert the 1-d array psitot1 into a 2-d array consistent with the
+!   original notation c(ngw,n). Psitot contains ntot = SUM_Procs(ngw) G-vecs
+!   and nstat states instead of all n states
 !
-	
-	ngpww=0
-	do proc=1,nproc
-	   do i=1,ns(me)
-		do j=1,ngpwpp(proc)
-		     psitot(j+ngpww,i)=psitot1(rdispls(proc)+j+(i-1)*ngpwpp(proc))
-	   	end do
-	   end do
-	 ngpww=ngpww+ngpwpp(proc)
-	end do
-	if(iprsta.gt.4) then
-	  write(6,*) "Step 2. Convert the 1-d array psitot1 into a 2-d array... Done, wf"
-	end if
+   
+   ngpww=0
+   do proc=1,nproc
+      do i=1,ns(me)
+      do j=1,ngpwpp(proc)
+           psitot(j+ngpww,i)=psitot1(rdispls(proc)+j+(i-1)*ngpwpp(proc))
+         end do
+      end do
+    ngpww=ngpww+ngpwpp(proc)
+   end do
+   if(iprsta.gt.4) then
+     write(6,*) "Step 2. Convert the 1-d array psitot1 into a 2-d array... Done, wf"
+   end if
 
 !
-!	Step 3. do the translation of the 2-d array to get the transtalted
-!	arrays psitot_pl and psittot_mi, corresponding to G+G' and -G+G'
-!	
+!   Step 3. do the translation of the 2-d array to get the transtalted
+!   arrays psitot_pl and psittot_mi, corresponding to G+G' and -G+G'
+!   
 
-  do inw=1,nw	
+  do inw=1,nw   
 !
-!	Intermediate Check. If the translation is only along the z-direction
-!	no interprocessor communication and data rearrangement is required 
-!	because each processor contains all the G- components in the z-dir.
+!   Intermediate Check. If the translation is only along the z-direction
+!   no interprocessor communication and data rearrangement is required 
+!   because each processor contains all the G- components in the z-dir.
 !
     if(tagz(inw).eq.0) then
         do i=1,n
@@ -652,36 +652,36 @@
         end do
     else
       do i=1,ns(me)
-	do ig=1,total
-		if(indexplus(ig,inw).eq.-1) then
-		   psitot_pl(ig,i)=(0.d0,0.d0)
-	  	else	
-		  if(tagp(ig,inw).eq.1) then
-		   psitot_pl(ig,i)=conjg(psitot(indexplus(ig,inw),i))
-		  else
-		   psitot_pl(ig,i)=psitot(indexplus(ig,inw),i)
-		  end if
-		end if
-		if(indexminus(ig,inw).eq.-1) then
-		   psitot_mi(ig,i)=(0.d0,0.d0)
-	  	else
+   do ig=1,total
+      if(indexplus(ig,inw).eq.-1) then
+         psitot_pl(ig,i)=(0.d0,0.d0)
+        else   
+        if(tagp(ig,inw).eq.1) then
+         psitot_pl(ig,i)=conjg(psitot(indexplus(ig,inw),i))
+        else
+         psitot_pl(ig,i)=psitot(indexplus(ig,inw),i)
+        end if
+      end if
+      if(indexminus(ig,inw).eq.-1) then
+         psitot_mi(ig,i)=(0.d0,0.d0)
+        else
                   if(tag(ig,inw).eq.1) then
-		     psitot_mi(ig,i)=conjg(psitot(indexminus(ig,inw),i))
-		  else
-		     psitot_mi(ig,i)=psitot(indexminus(ig,inw),i)
-		  end if
-		end if
-	   end do
-	end do
-	if(iprsta.gt.4) then
-	 write(6,*) "Step 3. do the translation of the 2-d array...Done, wf"
-	end if
+           psitot_mi(ig,i)=conjg(psitot(indexminus(ig,inw),i))
+        else
+           psitot_mi(ig,i)=psitot(indexminus(ig,inw),i)
+        end if
+      end if
+      end do
+   end do
+   if(iprsta.gt.4) then
+    write(6,*) "Step 3. do the translation of the 2-d array...Done, wf"
+   end if
 !
-!	Step 4. Convert the 2-d arrays psitot_p and psitot_m into 1-d
-!	arrays
+!   Step 4. Convert the 2-d arrays psitot_p and psitot_m into 1-d
+!   arrays
 !
-	ngpww=0
-	do proc=1,nproc
+   ngpww=0
+   do proc=1,nproc
           do i=1,ns(me)
                 do j=1,ngpwpp(proc)
                      psitot_p(rdispls(proc)+j+(i-1)*ngpwpp(proc))=psitot_pl(j+ngpww,i)
@@ -690,30 +690,30 @@
            end do
         ngpww=ngpww+ngpwpp(proc)
         end do
-	if(iprsta.gt.4) then
-	  write(6,*) "Convert the 2-d arrays psitot_p and psitot_m into 1-d arrays...Done, wf"
-	end if
+   if(iprsta.gt.4) then
+     write(6,*) "Convert the 2-d arrays psitot_p and psitot_m into 1-d arrays...Done, wf"
+   end if
 !
-!	Step 5. Redistribute among processors. The result is stored in 2-d
-!	arrays c_p and c_m consistent with the notation c(ngw,n), such that
-!	c_p(j,i) contains the coefficient for c(j,i) corresponding to G+G'
+!   Step 5. Redistribute among processors. The result is stored in 2-d
+!   arrays c_p and c_m consistent with the notation c(ngw,n), such that
+!   c_p(j,i) contains the coefficient for c(j,i) corresponding to G+G'
 !       and c_m(j,i) contains the coefficient for c(j,i) corresponding to -G+G'
 !
-	c_p = 0.0d0 ! call ZERO(2*ngw*nx,c_p)
+   c_p = 0.0d0 ! call ZERO(2*ngw*nx,c_p)
         call MPI_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
+   if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
         call MPI_alltoallv(psitot_p, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
    &                       c_p, sendcount , sdispls, MPI_DOUBLE_COMPLEX,              &
    &                       MPI_COMM_WORLD,ierr)
-	if (ierr.ne.0) call errore('WF','alltoallv 2',ierr)
+   if (ierr.ne.0) call errore('WF','alltoallv 2',ierr)
 
-	c_m = 0.0d0 ! call ZERO(2*ngw*nx,c_m)
+   c_m = 0.0d0 ! call ZERO(2*ngw*nx,c_m)
         call MPI_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
+   if (ierr.ne.0) call errore('WF','ierr<>0',ierr)
         call MPI_alltoallv(psitot_m, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
    &                       c_m, sendcount, sdispls, MPI_DOUBLE_COMPLEX,               &
    &                       MPI_COMM_WORLD,ierr)
-	if (ierr.ne.0) call errore('WF','alltoallv 3',ierr)
+   if (ierr.ne.0) call errore('WF','alltoallv 3',ierr)
         if(iprsta.gt.4) then
           write(6,*) "Step 5. Redistribute among processors...Done, wf"
         end if
@@ -764,9 +764,9 @@
 #endif
 
 !
-!	Step 6. Calculate Overlaps
+!   Step 6. Calculate Overlaps
 !
-!	Augmentation Part first
+!   Augmentation Part first
 
      X=(0.d0, 0.d0)
      !
@@ -876,42 +876,42 @@
         end do
      end do
      Oa(inw, :, :)=X(:, :)
-	if(iprsta.gt.4) then
-	  write(6,*) "Augmentation Part Done"
-	end if
+   if(iprsta.gt.4) then
+     write(6,*) "Augmentation Part Done"
+   end if
 
-!	Then Soft Part
-	if(nspin.eq.1) then
-!	Spin Unpolarized calculation
-               X=0.d0	
-	 if(ng0.eq.2) then
-	      c_m(1,:)=0.d0
-	 end if
+!   Then Soft Part
+   if(nspin.eq.1) then
+!   Spin Unpolarized calculation
+               X=0.d0   
+    if(ng0.eq.2) then
+         c_m(1,:)=0.d0
+    end if
 !           cwf(:,:)=beta1
 !           cwf(:,:)=c(:,:)
-	   call ZGEMM('c','N',n,n,ngw,alpha,c,ngw,c_p,ngw,alpha,X,n)
-	   call ZGEMM('T','N',n,n,ngw,alpha,c,ngw,c_m,ngw,alpha,X,n)
+      call ZGEMM('c','N',n,n,ngw,alpha,c,ngw,c_p,ngw,alpha,X,n)
+      call ZGEMM('T','N',n,n,ngw,alpha,c,ngw,c_m,ngw,alpha,X,n)
 #ifdef __PARA
-	      call reduce (2*n*n,X)
+         call reduce (2*n*n,X)
 #endif
               O(inw,:,:)=Oa(inw,:,:)+X(:,:)
-	if(iprsta.gt.4) then
-	  write(6,*) "Soft Part Done"
-	end if
-	  
-	else
-!	Spin Polarized case
-!	Up Spin First
-	  allocate(Xsp(n,nupdwn(1)))
-	  allocate(c_psp(ngw,nupdwn(1)))
-	  allocate(c_msp(ngw,nupdwn(1)))
+   if(iprsta.gt.4) then
+     write(6,*) "Soft Part Done"
+   end if
+     
+   else
+!   Spin Polarized case
+!   Up Spin First
+     allocate(Xsp(n,nupdwn(1)))
+     allocate(c_psp(ngw,nupdwn(1)))
+     allocate(c_msp(ngw,nupdwn(1)))
                Xsp=0.d0
-	       c_psp=0.d0 
-	       c_msp=0.d0
-	 do i=1,nupdwn(1)
-	    c_psp(:,i)=c_p(:,i)
-	    c_msp(:,i)=c_m(:,i)
-	 end do
+          c_psp=0.d0 
+          c_msp=0.d0
+    do i=1,nupdwn(1)
+       c_psp(:,i)=c_p(:,i)
+       c_msp(:,i)=c_m(:,i)
+    end do
            if(ng0.eq.2) then
               c_msp(1,:)=0.d0
            end if
@@ -923,13 +923,13 @@
               call reduce (2*n*nupdwn(1),Xsp)
 #endif
               do i=1,nupdwn(1)
-	         do j=1,n
+            do j=1,n
                    X(j,i)=Xsp(j,i)
-		 end do
+       end do
               end do
-	deallocate(Xsp,c_psp,c_msp)
-! 	Then Down Spin
-	allocate(Xsp(n,iupdwn(2):n))
+   deallocate(Xsp,c_psp,c_msp)
+!    Then Down Spin
+   allocate(Xsp(n,iupdwn(2):n))
         allocate(c_psp(ngw,iupdwn(2):n))
         allocate(c_msp(ngw,iupdwn(2):n))
                Xsp=0.d0
@@ -938,7 +938,7 @@
          do i=iupdwn(2),n
             c_psp(:,i)=c_p(:,i)
             c_msp(:,i)=c_m(:,i)
-	 end do
+    end do
            if(ng0.eq.2) then
               c_msp(1,:)=0.d0
            end if
@@ -954,9 +954,9 @@
                    X(j,i)=Xsp(j,i)
                 end do
               end do
-	deallocate(Xsp,c_psp,c_msp)
-	O(inw,:,:)=Oa(inw,:,:)+X(:,:)
-	end if
+   deallocate(Xsp,c_psp,c_msp)
+   O(inw,:,:)=Oa(inw,:,:)+X(:,:)
+   end if
      end do
 #ifdef __PARA
    deallocate(ns)
@@ -1002,19 +1002,19 @@
 #endif
   STOP
   end if
-	
+   
    if(clwf.eq.3.or.clwf.eq.4) then
    if(nspin.eq.1) then
    if(.not.what1) then
         if(wfsd) then
-	   call wfsteep(n,O,Uall,b1,b2,b3)
+      call wfsteep(n,O,Uall,b1,b2,b3)
         else
-	   call ddyn(n,O,Uall,b1,b2,b3)
+      call ddyn(n,O,Uall,b1,b2,b3)
         end if
    end if
-	if(iprsta.gt.4) then
-	  write(6,*) "Out from DDYN"
-	end if
+   if(iprsta.gt.4) then
+     write(6,*) "Out from DDYN"
+   end if
    else
      allocate(Uspin(nupdwn(1), nupdwn(1)), Ospin(nw, nupdwn(1), nupdwn(1)))
      do i=1, nupdwn(1)
@@ -1033,7 +1033,7 @@
      do i=1, nupdwn(1)
         do j=1, nupdwn(1)
            Uall(i, j)=Uspin(i, j)
- 	   O(:,i,j)  =Ospin(:,i,j)
+       O(:,i,j)  =Ospin(:,i,j)
         end do
      end do
      deallocate(Uspin, Ospin)
@@ -1054,25 +1054,25 @@
      do i=1, nupdwn(2)
         do j=1, nupdwn(2)
            Uall(i+nupdwn(1), j+nupdwn(1))=Uspin(i, j)
-	   O(:,i+nupdwn(1),j+nupdwn(1))=Ospin(:,i,j)
+      O(:,i+nupdwn(1),j+nupdwn(1))=Ospin(:,i,j)
         end do
      end do
      deallocate(Uspin, Ospin)
     end if
-   end if	
+   end if   
 
   !       Update C and bec
-	cwf=beta1
+   cwf=beta1
 !        cwf(:,:)=c(:,:,1,1)
-	becwf=0.0
+   becwf=0.0
         U2=Uall*alpha
            call ZGEMM('N','N',ngw,n,n,alpha,c,ngw,U2,n,beta1,cwf,ngw)
 !           call ZGEMM('N','N',ngw,n,n,alpha,cwf,ngw,U2,n,beta1,cwf,ngw)
            call DGEMM('N','N',nhsa,n,n,alpha,bec,nhsa,Uall,n,beta1,becwf,nhsa)
         U2=beta1
-	  if(iprsta.gt.4) then
-	   write(6,*) "Updating Wafefunctions and Bec"
-	  end if
+     if(iprsta.gt.4) then
+      write(6,*) "Updating Wafefunctions and Bec"
+     end if
 
 
 !          do inw=1, 3
@@ -1209,7 +1209,7 @@
    end if
    deallocate(wr, W,mt,f3,f4,gr)
      if(iprsta.gt.4) then
-	write(6,*) "deallocated wr, w, f3, f4, gr"
+   write(6,*) "deallocated wr, w, f3, f4, gr"
      end if
 #ifdef __PARA
         deallocate (psitot)
@@ -1311,8 +1311,8 @@ end subroutine wf
    do i=1,m
        Umat(i,i)=1.d0
    end do
-	
-	U2=Umat*alpha
+   
+   U2=Umat*alpha
 
 !
 ! update Oc using the initial guess of Uspin
@@ -1328,8 +1328,8 @@ end subroutine wf
     Oc(inw, :, :)=X1(:, :)
   end do
 
-	U2=beta1
-	U3=beta1
+   U2=beta1
+   U3=beta1
 
     oldt0=0.d0
     A=0.d0
@@ -1337,7 +1337,7 @@ end subroutine wf
     temp=Aminus
 
 
-!	START ITERATIONS HERE
+!   START ITERATIONS HERE
 
   do ini=1, nsteps
 
@@ -1350,25 +1350,25 @@ end subroutine wf
 
         if(ABS(t0-oldt0).lt.tolw) then
 #ifdef __PARA
-	if(me.eq.1) then
+   if(me.eq.1) then
 #endif
-	   write(27,*) "MLWF Generated at Step",ini
+      write(27,*) "MLWF Generated at Step",ini
 #ifdef __PARA
-	end if
+   end if
 #endif
-	if(iprsta.gt.4) then
-	   write(6,*) "MLWF Generated at Step",ini
-	end if
-	   go to 241
-	end if
+   if(iprsta.gt.4) then
+      write(6,*) "MLWF Generated at Step",ini
+   end if
+      go to 241
+   end if
 
         if(adapt) then
-	if(oldt0.lt.t0) then
-	    fric=fric/2.
-	    A=Aminus
-	    Aminus=temp
-	end if
-	end if
+   if(oldt0.lt.t0) then
+       fric=fric/2.
+       A=Aminus
+       Aminus=temp
+   end if
+   end if
 
 !   calculate d(omega)/dA and store result in W
 !   this is the force for the damped dynamics
@@ -1384,21 +1384,21 @@ end subroutine wf
           end do
        end do
     end do
-	
+   
 
 !   the verlet scheme to calculate A(t+dt)
-	
-	Aplus=0.d0
+   
+   Aplus=0.d0
 
    do i=1,m
      do j=i+1,m
- 	Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
+    Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
          -Aminus(i,j)+(dt*dt/q)*W(i,j)) + (fric/(2*dt+fric))*Aminus(i,j)
      enddo
    enddo
 
-	Aplus=Aplus-transpose(Aplus)
-	Aplus=(Aplus-A)
+   Aplus=Aplus-transpose(Aplus)
+   Aplus=(Aplus-A)
 
     do i=1, m
        do j=i,m 
@@ -1424,7 +1424,7 @@ end subroutine wf
     end do      !d=exp(d)
 
 !   U=z*exp(d)*z+
-!	
+!   
      U3=beta1
 !    call ZGEMUL(z, m, 'N', d, m, 'N', U3, m, m,m,m)
      call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)  
@@ -1464,17 +1464,17 @@ end subroutine wf
     U2=beta1
     U3=beta1
 
-	if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
+   if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
 #ifdef __PARA
-	if(me.eq.1) then
+   if(me.eq.1) then
 #endif 
-	   write(27,*) "MLWF Not generated after",ini,"Steps." 
+      write(27,*) "MLWF Not generated after",ini,"Steps." 
 #ifdef __PARA
-	end if
+   end if
 #endif
-	if(iprsta.gt.4) then
-	   write(6,*) "MLWF Not generated after",ini,"Steps." 
-	end if
+   if(iprsta.gt.4) then
+      write(6,*) "MLWF Not generated after",ini,"Steps." 
+   end if
            go to 241
         end if
 
@@ -1506,17 +1506,17 @@ end subroutine wf
     spread=spread/m
 
 #ifdef __PARA
-	if(me.eq.1) then
+   if(me.eq.1) then
 #endif
     write(24, '(f10.7)') spread
     write(27,*) "Average spread = ", spread
 #ifdef __PARA
-   	end if
+      end if
 #endif
     Omat=Oc
-	if(iprsta.gt.4) then
+   if(iprsta.gt.4) then
            write(6,*) "Average spread = ", spread
-	end if
+   end if
 
 !
 ! calculate wannier-function centers
@@ -1574,7 +1574,7 @@ end subroutine wf
 !     end do
 !  end if
 !#ifdef __PARA
-!	if(me.eq.1) then
+!   if(me.eq.1) then
 !#endif
 !  if(.not.what1) then
 !  do i=1, m
@@ -1582,101 +1582,101 @@ end subroutine wf
 !  end do
 !  end if
 !#ifdef __PARA
-!	end if
+!   end if
 !#endif
 !   deallocate(wr, W)
    deallocate (mt,X1,Oc)
-	if(iprsta.gt.4) then
-	write(6,*) "Leaving DDYN"
-	end if
+   if(iprsta.gt.4) then
+   write(6,*) "Leaving DDYN"
+   end if
     return
    end subroutine ddyn
 !-----------------------------------------------------------------------
  subroutine wfunc_init(clwf,b1,b2,b3,ibrav)
 !-----------------------------------------------------------------------
 
-	use gvec
-	use gvecw, only : ngw, ng0
-	use elct
-	use wfparm
-!	use cell_base
+   use gvec
+   use gvecw, only : ngw, ng0
+   use elct
+   use wfparm
+!   use cell_base
         use cvan
 #ifdef __PARA
-	use para_mod
-	include 'mpif.h'
+   use para_mod
+   include 'mpif.h'
 #endif
-	implicit none	
+   implicit none   
         real(kind=8), intent(in) :: b1(3),b2(3),b3(3)
 #ifdef __PARA
-	integer :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
-	integer :: ii,ig,recvcount(nproc), sendcount(nproc),displs(nproc)
+   integer :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
+   integer :: ii,ig,recvcount(nproc), sendcount(nproc),displs(nproc)
 #else
-	integer :: ierr, i,j,inw, ntot
-	integer :: ii,ig
+   integer :: ierr, i,j,inw, ntot
+   integer :: ii,ig
 #endif
         real (kind=8), allocatable:: bigg(:,:)
         integer, allocatable :: bign(:,:)
-	integer :: igcount,nw1,jj,nw2, in, kk, ibrav
-	integer, allocatable :: i_1(:), j_1(:), k_1(:)
-	real(kind=8) :: ti, tj, tk, t1, vt, err1, err2, err3
-	integer :: ti1,tj1,tk1, clwf
+   integer :: igcount,nw1,jj,nw2, in, kk, ibrav
+   integer, allocatable :: i_1(:), j_1(:), k_1(:)
+   real(kind=8) :: ti, tj, tk, t1, vt, err1, err2, err3
+   integer :: ti1,tj1,tk1, clwf
 
 # ifdef __PARA
-	if(n.lt.nproc) then
-	   write(6,*) "Number of Processors (",nproc,") is greater than the number of states (",n,")."
-	   write(6,*) "The Program will Stop."
+   if(n.lt.nproc) then
+      write(6,*) "Number of Processors (",nproc,") is greater than the number of states (",n,")."
+      write(6,*) "The Program will Stop."
 
-	call MPI_FINALIZE(ierr)
-	STOP
-	end if
+   call MPI_FINALIZE(ierr)
+   STOP
+   end if
 #endif
-	allocate(gnx(3,ngw))
-	allocate(gnn(3,ngw))
+   allocate(gnx(3,ngw))
+   allocate(gnn(3,ngw))
 #ifdef __PARA
-	root=0
+   root=0
 #endif
-	vt=1.0d-4
-	j=0
-	do i=1,ngw
+   vt=1.0d-4
+   j=0
+   do i=1,ngw
              gnx(1,i)=gx(i,1)
              gnx(2,i)=gx(i,2)
              gnx(3,i)=gx(i,3)
-	     gnn(1,i)=in1p(i)
-	     gnn(2,i)=in2p(i)
-	     gnn(3,i)=in3p(i)
-	end do
+        gnn(1,i)=in1p(i)
+        gnn(2,i)=in2p(i)
+        gnn(3,i)=in3p(i)
+   end do
 #ifdef __PARA
-	ntot=0
-	do i=1,nproc
-	      ngppp(i)=(ngpw__(i)+1)/2
-	end do
-	
-	do proc=1,nproc
-	   recvcount(proc)=ngppp(proc)*3
-	   if(proc.eq.1) then
-	      displs(proc)=0
-	   else
-	      displs(proc)=displs(proc-1)+recvcount(proc-1)
-	   end if
-	   ntot=ntot+recvcount(proc)/3
-	end do
-	
-	if(me.eq.1) then
-	   allocate(bigg(3,ntot))
-	   allocate(bign(3,ntot))
-	end if
+   ntot=0
+   do i=1,nproc
+         ngppp(i)=(ngpw__(i)+1)/2
+   end do
+   
+   do proc=1,nproc
+      recvcount(proc)=ngppp(proc)*3
+      if(proc.eq.1) then
+         displs(proc)=0
+      else
+         displs(proc)=displs(proc-1)+recvcount(proc-1)
+      end if
+      ntot=ntot+recvcount(proc)/3
+   end do
+   
+   if(me.eq.1) then
+      allocate(bigg(3,ntot))
+      allocate(bign(3,ntot))
+   end if
 #else
-	ntot=ngw
-	allocate(bigg(3,ntot))
-	allocate(bign(3,ntot))
-	bigg(1:3,1:ntot)=gnx(1:3,1:ntot)
-	bign(1:3,1:ntot)=gnn(1:3,1:ntot)
-!	  do j=1,ntot
-!		write(50,'(6(2x,i6))') gnn(:,j), bign(:,j)
-!	  end do
+   ntot=ngw
+   allocate(bigg(3,ntot))
+   allocate(bign(3,ntot))
+   bigg(1:3,1:ntot)=gnx(1:3,1:ntot)
+   bign(1:3,1:ntot)=gnn(1:3,1:ntot)
+!     do j=1,ntot
+!      write(50,'(6(2x,i6))') gnn(:,j), bign(:,j)
+!     end do
 #endif
-	
-	select case(ibrav)
+   
+   select case(ibrav)
         case(0)
 !       free cell for cpr
 
@@ -1723,42 +1723,42 @@ end subroutine wf
 
         go to 99
 
-	case(1)
-!	cubic P [sc]
+   case(1)
+!   cubic P [sc]
 
            nw1=3
            write(6,*) "Translations to be done", nw1
-	   allocate(indexplus(ntot,nw1))
-	   allocate(indexminus(ntot,nw1))
-	   allocate(tag(ntot,nw1))
-	   allocate(tagp(ntot,nw1))
+      allocate(indexplus(ntot,nw1))
+      allocate(indexminus(ntot,nw1))
+      allocate(tag(ntot,nw1))
+      allocate(tagp(ntot,nw1))
            allocate(indexplusz(ngw))
            allocate(indexminusz(ngw))
-	   allocate(i_1(nw1))
-	   allocate(j_1(nw1))
-	   allocate(k_1(nw1))
+      allocate(i_1(nw1))
+      allocate(j_1(nw1))
+      allocate(k_1(nw1))
 
-           i_1(1)=1	! 1
-           j_1(1)=0	! 0 
-           k_1(1)=0	! 0
+           i_1(1)=1   ! 1
+           j_1(1)=0   ! 0 
+           k_1(1)=0   ! 0
 
-           i_1(2)=0	! 0 
-           j_1(2)=1	! 1
-           k_1(2)=0	! 0
+           i_1(2)=0   ! 0 
+           j_1(2)=1   ! 1
+           k_1(2)=0   ! 0
 
-           i_1(3)=0	! 0
-           j_1(3)=0	! 0
-           k_1(3)=1	! 1
+           i_1(3)=0   ! 0
+           j_1(3)=0   ! 0
+           k_1(3)=1   ! 1
 
            indexplus(:,3)=0
            indexminus(:,3)=0
            tag(:,3)=0
            tagp(:,3)=0
 
-	go to 99
+   go to 99
 
-	case(2)
-!	cubic F [FCC]
+   case(2)
+!   cubic F [FCC]
            nw1=4
            write(6,*) "Translations to be done", nw1
            allocate(i_1(nw1))
@@ -1773,21 +1773,21 @@ end subroutine wf
 
 
 
-           i_1(1)=1	! 1
-           j_1(1)=0	! 0
-           k_1(1)=0	! 0
+           i_1(1)=1   ! 1
+           j_1(1)=0   ! 0
+           k_1(1)=0   ! 0
 
-           i_1(2)=0	! 0
-           j_1(2)=1	! 1
-           k_1(2)=0	! 0
+           i_1(2)=0   ! 0
+           j_1(2)=1   ! 1
+           k_1(2)=0   ! 0
 
-           i_1(3)=0	! 0
-           j_1(3)=0	! 0
-           k_1(3)=1	! 1 
-	
-	   i_1(4)=-1    ! -1
-	   j_1(4)=-1    ! -1
-	   k_1(4)=-1    ! -1
+           i_1(3)=0   ! 0
+           j_1(3)=0   ! 0
+           k_1(3)=1   ! 1 
+   
+      i_1(4)=-1    ! -1
+      j_1(4)=-1    ! -1
+      k_1(4)=-1    ! -1
 
            indexplus(:,3)=0
            indexminus(:,3)=0
@@ -1796,7 +1796,7 @@ end subroutine wf
 
         go to 99
 
-	case(3)
+   case(3)
 !       cubic I [bcc]
            nw1=6
            write(6,*) "Translations to be done", nw1
@@ -1820,31 +1820,31 @@ end subroutine wf
            j_1(2)=1     ! 1
            k_1(2)=0     ! 0
 
-	   i_1(3)=0	! 0
-	   j_1(3)=0	! 0
-	   k_1(3)=1	! 1
-	
-	   i_1(4)=1	! 1
-	   j_1(4)=1	! 1
-	   k_1(4)=0	! 0	
+      i_1(3)=0   ! 0
+      j_1(3)=0   ! 0
+      k_1(3)=1   ! 1
+   
+      i_1(4)=1   ! 1
+      j_1(4)=1   ! 1
+      k_1(4)=0   ! 0   
 
-	   i_1(5)=1	! 1
-	   j_1(5)=1	! 1
-	   k_1(5)=1	! 1
-	
-	   i_1(6)=-1	! -1
-	   j_1(6)=0	! 0
-	   k_1(6)=1	! 1
+      i_1(5)=1   ! 1
+      j_1(5)=1   ! 1
+      k_1(5)=1   ! 1
+   
+      i_1(6)=-1   ! -1
+      j_1(6)=0   ! 0
+      k_1(6)=1   ! 1
 
            indexplus(:,3)=0
            indexminus(:,3)=0
            tag(:,3)=0
            tagp(:,3)=0
 
-	go to 99
+   go to 99
 
-	case(4)
-!	hexagonal and trigonal P
+   case(4)
+!   hexagonal and trigonal P
 
            nw1=4
            write(6,*) "Translations to be done", nw1
@@ -1883,10 +1883,10 @@ end subroutine wf
 
         go to 99
 
-	case(5)
-!	trigonal R
+   case(5)
+!   trigonal R
 
-    	   nw1=6	
+          nw1=6   
            write(6,*) "Translations to be done", nw1
            allocate(i_1(nw1))
            allocate(j_1(nw1))
@@ -1907,22 +1907,22 @@ end subroutine wf
            i_1(2)=0     ! 0
            j_1(2)=1     ! 1
            k_1(2)=0     ! 0
-	
-	   i_1(3)=0	! 0
-	   j_1(3)=0	! 0
-	   k_1(3)=1	! 1
+   
+      i_1(3)=0   ! 0
+      j_1(3)=0   ! 0
+      k_1(3)=1   ! 1
 
-	   i_1(4)=1	! 1
-	   j_1(4)=0	! 0
-	   k_1(4)=1	! 1
-	
-	   i_1(5)=0	! 0
-	   j_1(5)=-1	! -1
-	   k_1(5)=1	! 1
+      i_1(4)=1   ! 1
+      j_1(4)=0   ! 0
+      k_1(4)=1   ! 1
+   
+      i_1(5)=0   ! 0
+      j_1(5)=-1   ! -1
+      k_1(5)=1   ! 1
 
-	   i_1(6)=1	! 1
-	   j_1(6)=-1	! -1
-	   k_1(6)=0	! 0
+      i_1(6)=1   ! 1
+      j_1(6)=-1   ! -1
+      k_1(6)=0   ! 0
 
            indexplus(:,3)=0
            indexminus(:,3)=0
@@ -1931,7 +1931,7 @@ end subroutine wf
 
         go to 99
 
-	case(6)
+   case(6)
 ! tetragonal P [st]
 
            nw1=3
@@ -1957,7 +1957,7 @@ end subroutine wf
 
            i_1(3)=0     ! 0
            j_1(3)=0     ! 0
-	   k_1(3)=1	! 1
+      k_1(3)=1   ! 1
 
            indexplus(:,3)=0
            indexminus(:,3)=0
@@ -1966,7 +1966,7 @@ end subroutine wf
 
         go to 99
 
-	case(7)
+   case(7)
 ! tetragonal I [bct]
 
            nw1=6
@@ -1993,17 +1993,17 @@ end subroutine wf
            j_1(3)=0     ! 0
            k_1(3)=1     ! 1
 
-	   i_1(4)=1	! 1
-	   j_1(4)=0	! 0
-	   k_1(4)=1	! 1
+      i_1(4)=1   ! 1
+      j_1(4)=0   ! 0
+      k_1(4)=1   ! 1
 
-	   i_1(5)=0	! 0
-	   j_1(5)=1	! 1
-	   k_1(5)=-1	! -1
+      i_1(5)=0   ! 0
+      j_1(5)=1   ! 1
+      k_1(5)=-1   ! -1
 
-	   i_1(6)=1	! 1
-	   j_1(6)=1	! 1
-	   k_1(6)=0	! 0
+      i_1(6)=1   ! 1
+      j_1(6)=1   ! 1
+      k_1(6)=0   ! 0
 
            indexplus(:,3)=0
            indexminus(:,3)=0
@@ -2012,7 +2012,7 @@ end subroutine wf
 
         go to 99
 
-	case(8)
+   case(8)
 ! Orthorhombic P
            nw1=3
            write(6,*) "Translations to be done", nw1
@@ -2025,12 +2025,12 @@ end subroutine wf
            allocate(i_1(nw1))
            allocate(j_1(nw1))
            allocate(k_1(nw1))
-	   indexplus=0
-	   indexminus=0
-	   tag=0
-	   tagp=0
-	   indexplusz=0
-	   indexminusz=0
+      indexplus=0
+      indexminus=0
+      tag=0
+      tagp=0
+      indexplusz=0
+      indexminusz=0
 
            i_1(1)=1     ! 1
            j_1(1)=0     ! 0
@@ -2051,11 +2051,11 @@ end subroutine wf
 
         go to 99
 
-	case(9)
+   case(9)
 ! One face centered Orthorhombic C
-	if(b1(2).eq.1) then 
+   if(b1(2).eq.1) then 
 
-	   nw1=3
+      nw1=3
            write(6,*) "Translations to be done", nw1
            allocate(indexplus(ntot,nw1))
            allocate(indexminus(ntot,nw1))
@@ -2066,15 +2066,15 @@ end subroutine wf
            allocate(i_1(nw1))
            allocate(j_1(nw1))
            allocate(k_1(nw1))
-	
-	else
-	  if(b1(2).gt.1) then
-	     write (6,*) "Please make celldm(2) not less than 1"
+   
+   else
+     if(b1(2).gt.1) then
+        write (6,*) "Please make celldm(2) not less than 1"
 #ifdef __PARA
-	call mpi_finalize(i)
+   call mpi_finalize(i)
 #endif
-	     STOP
-	  else
+        STOP
+     else
            nw1=4
            write(6,*) "Translations to be done", nw1
            allocate(indexplus(ntot,nw1))
@@ -2088,12 +2088,12 @@ end subroutine wf
            allocate(j_1(nw1))
            allocate(k_1(nw1))
 
-	   i_1(4)=1
-	   j_1(4)=1
-	   k_1(4)=0
-	  end if
-	end if
-	 
+      i_1(4)=1
+      j_1(4)=1
+      k_1(4)=0
+     end if
+   end if
+    
            i_1(1)=1     ! 1
            j_1(1)=0     ! 0
            k_1(1)=0     ! 0
@@ -2110,28 +2110,28 @@ end subroutine wf
            indexminus(:,3)=0
            tag(:,3)=0
            tagp(:,3)=0
-	
-	go to 99
-	
-	case(10)
+   
+   go to 99
+   
+   case(10)
 ! all face centered orthorhombic F
-	
-	if(b1(2).eq.-1.and.b1(3).eq.1) then
-	   write(6,*) "Please change ibrav to 2"
+   
+   if(b1(2).eq.-1.and.b1(3).eq.1) then
+      write(6,*) "Please change ibrav to 2"
 #ifdef __PARA
-	call mpi_finalize(i)
+   call mpi_finalize(i)
 #endif
-	   STOP
-	end if
-	if((b1(1).gt.b1(3)).or.(b1(1)+b1(2).lt.0)) then
-	   write(6,*) "Please make celldm(2)>=1>=celldm(3)"
+      STOP
+   end if
+   if((b1(1).gt.b1(3)).or.(b1(1)+b1(2).lt.0)) then
+      write(6,*) "Please make celldm(2)>=1>=celldm(3)"
 #ifdef __PARA
-	call mpi_finalize(i)
+   call mpi_finalize(i)
 #endif
-	   STOP
-	end if
-	if(b1(3).eq.1) then
-	   nw1=5
+      STOP
+   end if
+   if(b1(3).eq.1) then
+      nw1=5
            write(6,*) "Translations to be done", nw1
            allocate(indexplus(ntot,nw1))
            allocate(indexminus(ntot,nw1))
@@ -2143,8 +2143,8 @@ end subroutine wf
            allocate(i_1(nw1))
            allocate(j_1(nw1))
            allocate(k_1(nw1))
-	else
-	   nw1=6
+   else
+      nw1=6
            write(6,*) "Translations to be done", nw1
            allocate(indexplus(ntot,nw1))
            allocate(indexminus(ntot,nw1))
@@ -2156,12 +2156,12 @@ end subroutine wf
            allocate(i_1(nw1))
            allocate(j_1(nw1))
            allocate(k_1(nw1))
-	
-	   i_1(6)=1	! 1
-	   j_1(6)=1	! 1
-	   k_1(6)=0	! 0
-	
-	end if
+   
+      i_1(6)=1   ! 1
+      j_1(6)=1   ! 1
+      k_1(6)=0   ! 0
+   
+   end if
 
            i_1(1)=1     ! 1
            j_1(1)=0     ! 0
@@ -2174,39 +2174,39 @@ end subroutine wf
            i_1(3)=0     ! 0
            j_1(3)=0     ! 0
            k_1(3)=1     ! 1
-	
-	   i_1(4)=1	! 1
-	   j_1(4)=1 	! 1
-	   k_1(4)=1	! 1
+   
+      i_1(4)=1   ! 1
+      j_1(4)=1    ! 1
+      k_1(4)=1   ! 1
 
-	   i_1(5)=0	! 0
-	   j_1(5)=1	! 1
-	   k_1(5)=0	! 1
-	
+      i_1(5)=0   ! 0
+      j_1(5)=1   ! 1
+      k_1(5)=0   ! 1
+   
            indexplus(:,3)=0
            indexminus(:,3)=0
            tag(:,3)=0
            tagp(:,3)=0
 
-	go to 99
+   go to 99
 
-	case(11) 
+   case(11) 
 ! Body centered orthorhombic I
-	
-	if((b1(3).eq.1).and.(b2(2).eq.1)) then
-	   write(6,*) "Please change ibrav to 3"
+   
+   if((b1(3).eq.1).and.(b2(2).eq.1)) then
+      write(6,*) "Please change ibrav to 3"
 #ifdef __PARA
-	call mpi_finalize(i)
+   call mpi_finalize(i)
 #endif
-	STOP
-	end if
-	if((b1(3).eq.1).or.(b2(2).eq.1)) then
-	    write(6,*) "Please change ibrav to 7"
+   STOP
+   end if
+   if((b1(3).eq.1).or.(b2(2).eq.1)) then
+       write(6,*) "Please change ibrav to 7"
 #ifdef __PARA
-	call mpi_finalize(i)
+   call mpi_finalize(i)
 #endif
-	STOP
-	end if
+   STOP
+   end if
 
            nw1=6
            write(6,*) "Translations to be done", nw1
@@ -2252,7 +2252,7 @@ end subroutine wf
 
         go to 99
 
-	case(12)
+   case(12)
 ! monoclinic P
 
            nw1=4
@@ -2267,10 +2267,10 @@ end subroutine wf
            allocate(j_1(nw1))
            allocate(k_1(nw1))
 
-	   t1=-b1(2)/b2(2)
-	   kk=nint(t1)
-	   if((kk.eq.0).and.(t1.ge.0)) kk=1
-	   if((kk.eq.0).and.(t1.le.0)) kk=-1
+      t1=-b1(2)/b2(2)
+      kk=nint(t1)
+      if((kk.eq.0).and.(t1.ge.0)) kk=1
+      if((kk.eq.0).and.(t1.le.0)) kk=-1
 
            i_1(1)=1     ! 1
            j_1(1)=0     ! 0
@@ -2293,9 +2293,9 @@ end subroutine wf
            tag(:,3)=0
            tagp(:,3)=0
 
-	go to 99
+   go to 99
 
-	case(13)
+   case(13)
 ! one face centered monoclinic C
 
            nw1=6
@@ -2331,13 +2331,13 @@ end subroutine wf
            j_1(4)=-1    ! -1
            k_1(4)=0     ! 0
 
-	   i_1(5)=1	! 1
-	   j_1(5)=0	! 0
-	   k_1(5)=kk	! kk
+      i_1(5)=1   ! 1
+      j_1(5)=0   ! 0
+      k_1(5)=kk   ! kk
 
-	   i_1(6)=0	! 0
-	   j_1(6)=1	! 1
-	   k_1(6)=kk	! kk
+      i_1(6)=0   ! 0
+      j_1(6)=1   ! 1
+      k_1(6)=kk   ! kk
 
            indexplus(:,3)=0
            indexminus(:,3)=0
@@ -2346,7 +2346,7 @@ end subroutine wf
 
         go to 99
 
-	case default
+   case default
 !       free cell for cpr
 
            nw1=6
@@ -2392,22 +2392,22 @@ end subroutine wf
            go to 99
 
 ! ibrav 14 : Triclinic P
-!	write(6,*) "Hey!! I'm not superman... Implement triclinic yourself"
+!   write(6,*) "Hey!! I'm not superman... Implement triclinic yourself"
 !#ifdef __PARA
-!	call mpi_finalize(i)
+!   call mpi_finalize(i)
 !#endif
-!	STOP
-	end select
-	
-99	write(6,*) "ibrav selected:", ibrav
+!   STOP
+   end select
+   
+99   write(6,*) "ibrav selected:", ibrav
         if(nvb.gt.0) call small_box_wf(i_1, j_1, k_1, nw1)
 #ifdef __PARA
-	call mpi_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_barrier' , ierr)
-	call mpi_gatherv(gnx, recvcount(me), MPI_REAL8,              &
-	                 bigg, recvcount, displs, MPI_REAL8, 	     &
-			 root, MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_gatherv' , ierr)
+   call mpi_barrier(MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_barrier' , ierr)
+   call mpi_gatherv(gnx, recvcount(me), MPI_REAL8,              &
+                    bigg, recvcount, displs, MPI_REAL8,         &
+          root, MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_gatherv' , ierr)
 
 
         call mpi_barrier(MPI_COMM_WORLD, ierr)
@@ -2418,26 +2418,26 @@ end subroutine wf
         if (ierr.ne.0) call errore('wfunc_init','mpi_gatherv' , ierr)
 #endif
 #ifdef __PARA
-	if(me.eq.1) then
+   if(me.eq.1) then
 #endif
-	if(clwf.eq.5) then
+   if(clwf.eq.5) then
 #ifdef __PARA
-	  do ii=1,ntot
-	   write(21,*) bigg(:,ii)
-	  end do
+     do ii=1,ntot
+      write(21,*) bigg(:,ii)
+     end do
 #else
-	  do ii=1,ngw
-	    write(21,*) gx(ii,1), gx(ii,2), gx(ii,3)
-	  end do
+     do ii=1,ngw
+       write(21,*) gx(ii,1), gx(ii,2), gx(ii,3)
+     end do
 #endif
-	  close(21)
-	end if
+     close(21)
+   end if
 #ifdef __PARA 
-	end if
+   end if
 #endif
 
-	do inw=1,nw1
-	 if(i_1(inw).eq.0.and.j_1(inw).eq.0) then
+   do inw=1,nw1
+    if(i_1(inw).eq.0.and.j_1(inw).eq.0) then
           do ig=1,ngw
             if(ng0.eq.2) then
              indexminusz(1)=-1
@@ -2446,9 +2446,9 @@ end subroutine wf
            tj=(gnn(1,ig)+i_1(inw))*b1(2)+(gnn(2,ig)+j_1(inw))*b2(2)+(gnn(3,ig)+k_1(inw))*b3(2)
            tk=(gnn(1,ig)+i_1(inw))*b1(3)+(gnn(2,ig)+j_1(inw))*b2(3)+(gnn(3,ig)+k_1(inw))*b3(3)
            do ii=1,ngw
-	     err1=ABS(gnx(1,ii)-ti)
-	     err2=ABS(gnx(2,ii)-tj)
-	     err3=ABS(gnx(3,ii)-tk)
+        err1=ABS(gnx(1,ii)-ti)
+        err2=ABS(gnx(2,ii)-tj)
+        err3=ABS(gnx(3,ii)-tk)
 !             if(gnx(1,ii).eq.ti.and.gnx(2,ii).eq.tj.and.gnx(3,ii).eq.tk) then
              if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
                 indexplusz(ig)=ii
@@ -2462,9 +2462,9 @@ end subroutine wf
 224        ti=(-gnn(1,ig)+i_1(inw))*b1(1)+(-gnn(2,ig)+j_1(inw))*b2(1)+(-gnn(3,ig)+k_1(inw))*b3(1)
            tj=(-gnn(1,ig)+i_1(inw))*b1(2)+(-gnn(2,ig)+j_1(inw))*b2(2)+(-gnn(3,ig)+k_1(inw))*b3(2)
            tk=(-gnn(1,ig)+i_1(inw))*b1(3)+(-gnn(2,ig)+j_1(inw))*b2(3)+(-gnn(3,ig)+k_1(inw))*b3(3)
-     	   ti1=-gnn(1,ig)+i_1(inw)
-     	   tj1=-gnn(2,ig)+j_1(inw)
-     	   tk1=-gnn(3,ig)+k_1(inw)
+           ti1=-gnn(1,ig)+i_1(inw)
+           tj1=-gnn(2,ig)+j_1(inw)
+           tk1=-gnn(3,ig)+k_1(inw)
            if(ti1.lt.0.or.(ti1.eq.0.and.(tj1.lt.0.or.(tj1.eq.0.and.tk1.lt.0)))) then
                 do ii=1,ngw
                    err1=ABS(gnx(1,ii)+ti)
@@ -2501,22 +2501,22 @@ end subroutine wf
 !              write (6,*) "Not Found -", ig,-1,inw
           end if
 223     continue
-	end do
+   end do
         write(6,*) "Translation", inw, "for", ngw, "G vectors"
       else
 #ifdef __PARA
-	 if(me.eq.1) then	
+    if(me.eq.1) then   
 #endif
-	  do ig=1,ntot
-	    if(ng0.eq.2) then
+     do ig=1,ntot
+       if(ng0.eq.2) then
              indexminus(1,inw)=-1
            end if
            ti=(bign(1,ig)+i_1(inw))*b1(1)+(bign(2,ig)+j_1(inw))*b2(1)+(bign(3,ig)+k_1(inw))*b3(1)
            tj=(bign(1,ig)+i_1(inw))*b1(2)+(bign(2,ig)+j_1(inw))*b2(2)+(bign(3,ig)+k_1(inw))*b3(2)
            tk=(bign(1,ig)+i_1(inw))*b1(3)+(bign(2,ig)+j_1(inw))*b2(3)+(bign(3,ig)+k_1(inw))*b3(3)
-	   ti1=bign(1,ig)+i_1(inw)
-	   tj1=bign(2,ig)+j_1(inw)
-	   tk1=bign(3,ig)+k_1(inw)
+      ti1=bign(1,ig)+i_1(inw)
+      tj1=bign(2,ig)+j_1(inw)
+      tk1=bign(3,ig)+k_1(inw)
           if(ti1.lt.0.or.(ti1.eq.0.and.(tj1.lt.0.or.(tj1.eq.0.and.tk1.lt.0)))) then
            do ii=1,ntot
              err1=ABS(bigg(1,ii)+ti)
@@ -2525,16 +2525,16 @@ end subroutine wf
               if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
 !             if(bigg(1,ii).eq.-ti.and.bigg(2,ii).eq.-tj.and.bigg(3,ii).eq.-tk) then
                 indexplus(ig,inw)=ii
-		tagp(ig,inw)=1
+      tagp(ig,inw)=1
 !                write (6,*) "Found +", ig,ii,inw 
                 go to 214
              else
              end if
            end do
            indexplus(ig,inw)=-1
-	   tagp(ig,inw)=1
+      tagp(ig,inw)=1
 !          write (6,*) "Not Found +", ig,-1,inw 
-	  else
+     else
            do ii=1,ntot
              err1=ABS(bigg(1,ii)-ti)
              err2=ABS(bigg(2,ii)-tj)
@@ -2549,15 +2549,15 @@ end subroutine wf
              end if
            end do
            indexplus(ig,inw)=-1
-	   tagp(ig,inw)=-1
+      tagp(ig,inw)=-1
 !          write (6,*) "Not Found +", ig,-1,inw
-	  end if
+     end if
 214        ti=(-bign(1,ig)+i_1(inw))*b1(1)+(-bign(2,ig)+j_1(inw))*b2(1)+(-bign(3,ig)+k_1(inw))*b3(1)
            tj=(-bign(1,ig)+i_1(inw))*b1(2)+(-bign(2,ig)+j_1(inw))*b2(2)+(-bign(3,ig)+k_1(inw))*b3(2)
            tk=(-bign(1,ig)+i_1(inw))*b1(3)+(-bign(2,ig)+j_1(inw))*b2(3)+(-bign(3,ig)+k_1(inw))*b3(3)
-	   ti1=-bign(1,ig)+i_1(inw)
-	   tj1=-bign(2,ig)+j_1(inw)
-	   tk1=-bign(3,ig)+k_1(inw)
+      ti1=-bign(1,ig)+i_1(inw)
+      tj1=-bign(2,ig)+j_1(inw)
+      tk1=-bign(3,ig)+k_1(inw)
            if(ti1.lt.0.or.(ti1.eq.0.and.(tj1.lt.0.or.(tj1.eq.0.and.tk1.lt.0)))) then
                 do ii=1,ntot
                     err1=ABS(bigg(1,ii)+ti)
@@ -2566,14 +2566,14 @@ end subroutine wf
                     if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
 !                   if(bigg(1,ii).eq.-ti.and.bigg(2,ii).eq.-tj.and.bigg(3,ii).eq.-tk) then
                      indexminus(ig,inw)=ii
-	             tag(ig,inw)=1
+                tag(ig,inw)=1
 !                     write (6,*) "Found -", ig,ii,inw 
                      go to 213
                     else
                     end if
                 end do
                 indexminus(ig,inw)=-1
-	        tag(ig,inw)=1
+           tag(ig,inw)=1
 !                write (6,*) "Not Found -", ig,-1,inw 
            else 
               do ii=1,ntot
@@ -2583,54 +2583,54 @@ end subroutine wf
                  if(err1.lt.vt.and.err2.lt.vt.and.err3.lt.vt) then
 !                 if(bigg(1,ii).eq.ti.and.bigg(2,ii).eq.tj.and.bigg(3,ii).eq.tk) then
                    indexminus(ig,inw)=ii
-	           tag(ig,inw)=-1
+              tag(ig,inw)=-1
 !                   write (6,*) "Found -", ig,ii,inw 
                    go to 213
                  else
                  end if
               end do
               indexminus(ig,inw)=-1
-	      tag(ig,inw)=-1
+         tag(ig,inw)=-1
 !              write (6,*) "Not Found -", ig,-1,inw 
           end if
 213     continue
         end do
-	write(6,*) "Translation", inw, "for", ntot, "G vectors"
+   write(6,*) "Translation", inw, "for", ntot, "G vectors"
 #ifdef __PARA
        end if
 #endif
       end if
      end do
 
-!	do inw=1,nw1
-!	  do i=1,ntot
-!		write(36,222) indexplus(i,inw),  tagp(i,inw)
-!		write(37,222) indexminus(i,inw),  tag(i,inw)
-!	  end do
-!	end do
+!   do inw=1,nw1
+!     do i=1,ntot
+!      write(36,222) indexplus(i,inw),  tagp(i,inw)
+!      write(37,222) indexminus(i,inw),  tag(i,inw)
+!     end do
+!   end do
 !222 format (1x,i10,1x,i10)
 
 #ifdef __PARA
 
-	call mpi_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 2' , ierr)
+   call mpi_barrier(MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 2' , ierr)
 
-	call mpi_bcast(indexplus,nw1*ntot  , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_bcast +' , ierr)
-
-
-	call mpi_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 3' , ierr)
-
-	call mpi_bcast(indexminus,nw1*ntot , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_bcast -' , ierr)
+   call mpi_bcast(indexplus,nw1*ntot  , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_bcast +' , ierr)
 
 
-	call mpi_barrier(MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 4' , ierr)
+   call mpi_barrier(MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 3' , ierr)
 
-	call mpi_bcast(tag,nw1*ntot , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
-	if (ierr.ne.0) call errore('wfunc_init','mpi_bcast -' , ierr)
+   call mpi_bcast(indexminus,nw1*ntot , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_bcast -' , ierr)
+
+
+   call mpi_barrier(MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 4' , ierr)
+
+   call mpi_bcast(tag,nw1*ntot , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
+   if (ierr.ne.0) call errore('wfunc_init','mpi_bcast -' , ierr)
 
         call mpi_barrier(MPI_COMM_WORLD, ierr)
         if (ierr.ne.0) call errore('wfunc_init','mpi_barrier 4' , ierr)
@@ -2638,58 +2638,58 @@ end subroutine wf
         call mpi_bcast(tagp,nw1*ntot , MPI_INTEGER, root, MPI_COMM_WORLD, ierr)
         if (ierr.ne.0) call errore('wfunc_init','mpi_bcast -' , ierr)
 
-	if (me.eq.1) then
+   if (me.eq.1) then
 #endif
-	   deallocate(bigg)
-	   deallocate(bign)
+      deallocate(bigg)
+      deallocate(bign)
 #ifdef __PARA
-	end if
+   end if
 #endif
-	   deallocate(i_1,j_1,k_1)
-	
-	return
-	end subroutine wfunc_init	
+      deallocate(i_1,j_1,k_1)
+   
+   return
+   end subroutine wfunc_init   
 !--------------------------------------------------------------
-	subroutine grid_map
+   subroutine grid_map
 !--------------------------------------------------------------
-	use efcalc
-	use cell_base
-!	use parms
+   use efcalc
+   use cell_base
+!   use parms
         use smooth_grid_dimensions, nnrs=>nnrsx
 #ifdef __PARA
-	use para_mod
-	include 'mpif.h'
+   use para_mod
+   include 'mpif.h'
 #endif
-	implicit none
-	integer ir1, ir2, ir3, ibig3
-	allocate(xdist(nnrs))
-	allocate(ydist(nnrs))
-	allocate(zdist(nnrs))
+   implicit none
+   integer ir1, ir2, ir3, ibig3
+   allocate(xdist(nnrs))
+   allocate(ydist(nnrs))
+   allocate(zdist(nnrs))
 
-	do ir3=1,nr3s
+   do ir3=1,nr3s
 #ifdef __PARA
-	ibig3=ir3-n3s(me)
-	if(ibig3.gt.0.and.ibig3.le.npps(me)) then
+   ibig3=ir3-n3s(me)
+   if(ibig3.gt.0.and.ibig3.le.npps(me)) then
 #else
-	ibig3=ir3
+   ibig3=ir3
 #endif
-	   do ir2=1,nr2s
-	 	do ir1=1,nr1s
-		   xdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
+      do ir2=1,nr2s
+       do ir1=1,nr1s
+         xdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
       &                  ((ir1-1)/dfloat(nr1sx))
-		   ydist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =	                &
+         ydist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                   &
       &                  ((ir2-1)/dfloat(nr2sx))
-		   zdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
+         zdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
       &                  ((ir3-1)/dfloat(nr3sx))
-!		   
-		end do
-	   end do
+!         
+      end do
+      end do
 #ifdef __PARA
-	end if
+   end if
 #endif
-	end do
-	return
-	end subroutine grid_map
+   end do
+   return
+   end subroutine grid_map
 !-----------------------------------------------------------------------
       subroutine ivfftbold(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !-----------------------------------------------------------------------
@@ -2724,33 +2724,33 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !***** R.P. translations in the WF calculation in the case ****
 !***** of ibrav=0 or ibrav=14 *********************************
 
-	implicit none
-	real(kind=8),intent(in) :: rp1(3), rp2(3), rp3(3)
-	real(kind=8),intent(in) :: alat
-	real(kind=8),intent(out) :: wts(6) 
-	real(kind=8) :: pi, tpiba, tpiba2
-	real(kind=8) :: b1x, b2x, b3x, b1y, b2y, b3y, b1z, b2z, b3z
+   implicit none
+   real(kind=8),intent(in) :: rp1(3), rp2(3), rp3(3)
+   real(kind=8),intent(in) :: alat
+   real(kind=8),intent(out) :: wts(6) 
+   real(kind=8) :: pi, tpiba, tpiba2
+   real(kind=8) :: b1x, b2x, b3x, b1y, b2y, b3y, b1z, b2z, b3z
         integer :: i
 
 !        WRITE(6,*) 'ENTERED TRIC_WTS !'
 !        WRITE(6,*) 'b3(3) :',rp3(3)
 !        WRITE(6,*) 'alat  :',alat
-	pi = 2.0d0*asin(1.0)  
-	tpiba = 2.0d0*pi/alat
-	tpiba2 = tpiba**2
+   pi = 2.0d0*asin(1.0)  
+   tpiba = 2.0d0*pi/alat
+   tpiba2 = tpiba**2
 
-	b1x = rp1(1)*tpiba
-	b2x = rp2(1)*tpiba
-	b3x = rp3(1)*tpiba
-	b1y = rp1(2)*tpiba
-	b2y = rp2(2)*tpiba
-	b3y = rp3(2)*tpiba
-	b1z = rp1(3)*tpiba
-	b2z = rp2(3)*tpiba
-	b3z = rp3(3)*tpiba
+   b1x = rp1(1)*tpiba
+   b2x = rp2(1)*tpiba
+   b3x = rp3(1)*tpiba
+   b1y = rp1(2)*tpiba
+   b2y = rp2(2)*tpiba
+   b3y = rp3(2)*tpiba
+   b1z = rp1(3)*tpiba
+   b2z = rp2(3)*tpiba
+   b3z = rp3(3)*tpiba
 !        WRITE(6,*) 'COMPUTING WEIGHTS NOW ...'
 
-	wts(1) = tpiba2*(-b1z*b2x*b2z*b3x + b2y**2*b3x**2 + b1z*b2z*b3x**2 + & 
+   wts(1) = tpiba2*(-b1z*b2x*b2z*b3x + b2y**2*b3x**2 + b1z*b2z*b3x**2 + & 
               b2z**2*b3x**2 - b1z*b2y*b2z*b3y - 2.d0*b2x*b2y*b3x*b3y + & 
               b2x**2*b3y**2 + b1z*b2z*b3y**2 + b2z**2*b3y**2 + & 
               b1z*b2x**2*b3z + b1z*b2y**2*b3z - b1z*b2x*b3x*b3z - & 
@@ -2763,7 +2763,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
               ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y &
                + b1y*b2x*b3z - b1x*b2y*b3z)**2)
 
-	wts(2) = tpiba2*(b1z**2*(b2x*b3x + b3x**2 + b3y*(b2y + b3y)) + &
+   wts(2) = tpiba2*(b1z**2*(b2x*b3x + b3x**2 + b3y*(b2y + b3y)) + &
               b1y**2*(b2x*b3x + b3x**2 + b3z*(b2z + b3z)) - &
               b1z*(-b2z*(b3x**2 + b3y**2) + (b2x*b3x + b2y*b3y)*b3z + &
               b1x*(b2z*b3x + (b2x + 2.d0* b3x)*b3z)) - &
@@ -2775,7 +2775,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
               ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + &
               b1y*b2x*b3z - b1x*b2y*b3z)**2)
 
-	wts(3) = tpiba2*(b1z**2*(b2x**2 + b2x*b3x + b2y*(b2y + b3y)) - &
+   wts(3) = tpiba2*(b1z**2*(b2x**2 + b2x*b3x + b2y*(b2y + b3y)) - &
               b1y*(2.d0*b1z*b2y*b2z + b2x*b2y*b3x - b2x**2*b3y + &
               b1z*b2z*b3y - b2z**2*b3y + b1x*(2.d0*b2x*b2y + b2y*b3x + b2x*b3y) + &
               b1z*b2y*b3z + b2y*b2z*b3z) + b1y**2*(b2x**2 + b2x*b3x + b2z*(b2z + b3z)) - &
@@ -2786,19 +2786,19 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
               ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + b1y*b2x*b3z - &
               b1x*b2y*b3z)**2) 
 
-	wts(4) = tpiba2*(b1z*(-b2z*(b3x**2 + b3y**2) + (b2x*b3x + b2y*b3y)*b3z) + & 
+   wts(4) = tpiba2*(b1z*(-b2z*(b3x**2 + b3y**2) + (b2x*b3x + b2y*b3y)*b3z) + & 
               b1y*(b3y*(b2x*b3x + b2z*b3z) - b2y*(b3x**2 + b3z**2)) + &
               b1x*(b2y*b3x*b3y + b2z*b3x*b3z - b2x*(b3y**2 +  b3z**2)))/ &
               ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + &
               b1y*b2x*b3z - b1x*b2y*b3z)**2)
 
-	wts(5) =  -tpiba2*(b1z**2*(b2x*b3x + b2y*b3y) - b1x*b1z*(b2z*b3x + b2x*b3z) - &
+   wts(5) =  -tpiba2*(b1z**2*(b2x*b3x + b2y*b3y) - b1x*b1z*(b2z*b3x + b2x*b3z) - &
               b1y*(b1x*b2y*b3x + b1x*b2x*b3y + b1z*b2z*b3y + b1z*b2y*b3z) + &
               b1y**2*(b2x*b3x + b2z*b3z) + b1x**2*(b2y*b3y + b2z*b3z))/ &
               ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + &
               b1y*b2x*b3z - b1x*b2y*b3z)**2)
 
-	wts(6) = -tpiba2*(b1z*(-b2x*b2z*b3x - b2y*b2z*b3y + b2x**2*b3z + b2y**2*b3z) + &
+   wts(6) = -tpiba2*(b1z*(-b2x*b2z*b3x - b2y*b2z*b3y + b2x**2*b3z + b2y**2*b3z) + &
              b1x*(b2y**2*b3x + b2z**2*b3x - b2x*b2y*b3y -  b2x*b2z*b3z) + &
              b1y*(-b2x*b2y*b3x + b2x**2*b3y + b2z*(b2z*b3y -  b2y*b3z)))/ &
              ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + &
@@ -2807,7 +2807,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !        WRITE(6,*) 'WEIGHTS ARE :'
 !        WRITE(6,"(F10.6)") (wts(i),i=1,6)
 
-	end subroutine tric_wts
+   end subroutine tric_wts
 !-----------------------------------------------------------------
         subroutine small_box_wf(i_1,j_1,k_1,nw1)
 !-----------------------------------------------------------------
@@ -2842,7 +2842,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
            do ir2=1,nr2
                 do ir1=1,nr1
                    x =  (((ir1-1)/dfloat(nr1x))*i_1(inw) +                          &
-      &                  ((ir2-1)/dfloat(nr2x))*j_1(inw) +			    &
+      &                  ((ir2-1)/dfloat(nr2x))*j_1(inw) +             &
       &                  ((ir3-1)/dfloat(nr3x))*k_1(inw))*0.5d0*fpi
                    expo(ir1+(ir2-1)*nr1x+(ibig3-1)*nr1x*nr2x,inw) =  cmplx(cos(x), -sin(x))
                 end do
@@ -3575,13 +3575,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
           schd=W
        end if
 !
-!	calculate the new d(Lambda) for the new Search Direction
-!	added by Manu. September 19, 2001
+!   calculate the new d(Lambda) for the new Search Direction
+!   added by Manu. September 19, 2001
 !
 !   calculate slope=d(omiga)/d(lamda)
     slope=SUM(schd**2)
 !------------------------------------------------------------------------
-!	schd=schd*maxwfdt
+!   schd=schd*maxwfdt
     do i=1, m
        do j=i, m
         wp1(i + (j-1)*j/2) = cmplx(0.0, schd(i,j))
