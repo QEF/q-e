@@ -132,6 +132,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/pseudo_types.o \

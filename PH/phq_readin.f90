@@ -59,7 +59,7 @@ subroutine phq_readin
   ! fildrho  : output file containing deltarho
 
   CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr
+  INTEGER             :: nargs, iiarg, ierr, ilen
   INTEGER, EXTERNAL   :: iargc
 
 
