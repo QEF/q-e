@@ -29,10 +29,13 @@ PROGRAM pwscf
   !
   CALL start_clock('PWSCF')
   !
+  CALL startup( nd_nmbr, code, version_number )
+  !
+  CALL iosys()
+  !
   gamma_only = .TRUE.
   !
-  CALL startup( nd_nmbr, code, version_number )
-  CALL init_run
+  CALL init_run()
   !
   istep = 0
   main_loop : DO WHILE ( istep < nstep )

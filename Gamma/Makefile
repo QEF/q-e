@@ -86,6 +86,7 @@ PWOBJS = \
 ../PW/interpolate.o \
 ../PW/invmat.o \
 ../PW/io_pot.o \
+../PW/io_routines.o \
 ../PW/ions.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
@@ -100,6 +101,7 @@ PWOBJS = \
 ../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
+../PW/neb_variables.o \
 ../PW/new_ns.o \
 ../PW/newd.o \
 ../PW/openfil.o \
@@ -168,6 +170,7 @@ PWOBJS = \
 ../PW/sumkg.o \
 ../PW/sumkt.o \
 ../PW/summary.o \
+../PW/supercell.o \
 ../PW/swap.o \
 ../PW/symrho.o \
 ../PW/symtns.o \
