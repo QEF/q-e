@@ -2,10 +2,10 @@
      Program POST-PROC v.2.1    starts ...
      Today is 24Aug2004 at 16: 4:23 
 
-     Reading file si.save ... 
+     Reading file si.save ...      only dimensions
      read complete
 
-     Reading file si.save ... 
+     Reading file si.save ...      all except wavefuctions
      read complete
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350

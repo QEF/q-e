@@ -4,10 +4,10 @@
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
-     Reading file ni.save ... 
+     Reading file ni.save ...      only dimensions
      read complete
 
-     Reading file ni.save ... 
+     Reading file ni.save ...      all except wavefuctions
      read complete
 
      nbndx  =     9  nbnd   =     9  natomwfc =     6  npwx   =     179

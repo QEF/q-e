@@ -4,10 +4,10 @@
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
-     Reading file C.save ... 
+     Reading file C.save ...      only dimensions
      read complete
 
-     Reading file C.save ... 
+     Reading file C.save ...      all except wavefuctions
      read complete
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     186
