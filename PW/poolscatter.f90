@@ -40,7 +40,8 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   ! ... copy from the first node of the first pool
   ! ... to the first node of all the other pools
   !
-  IF ( me == 1 ) CALL mp_bcast( f_in, ionode_id, MPI_COMM_ROW )
+  IF ( me == 1 .AND. npool /=1 ) &
+	CALL mp_bcast( f_in, ionode_id, MPI_COMM_ROW )
   !
   ! ... distribute the vector on the first node of each pool
   !

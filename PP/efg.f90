@@ -30,6 +30,7 @@ program efg
   tmp_dir = trim(outdir)
 #ifdef __PARA 
   end if
+  
   ! 
   ! ... Broadcast variables 
   ! 
@@ -38,25 +39,13 @@ program efg
   CALL mp_bcast(filerec, ionode_id )
   CALL mp_bcast(      Q, ionode_id )   
 #endif 
-
+  
   call read_file
+
   call openfil
+  
 
-#ifdef __PARA 
-  if (me == 1)  then 
-#endif 
   call read_recon(filerec)
-#ifdef __PARA 
-  end if
-  ! 
-  ! ... Broadcast variables 
-  !
-  CALL mp_bcast( paw_nbeta, ionode_id )
-  CALL mp_bcast(     aephi, ionode_id )
-  CALL mp_bcast(     psphi, ionode_id )
-#endif 
-
-
 
   call do_efg(Q) 
 

@@ -17,7 +17,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   USE kinds,        ONLY : DP
   USE gvect,        ONLY : nrxx, nrx1, nrx2, nrx3
 #if defined (__PARA)
-  USE para,         ONLY : me, mypool, MPI_COMM_ROW
+  USE para,         ONLY : me, mypool, MPI_COMM_ROW,npool
   USE io_global,    ONLY : ionode_id
   USE mp,           ONLY : mp_bcast
 #endif
@@ -78,7 +78,8 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   IF ( iop == -1 ) THEN
      !
-     IF ( me == 1 ) CALL mp_bcast( allv, ionode_id, MPI_COMM_ROW )
+     IF ( me == 1 .AND. npool /=1 ) &
+	CALL mp_bcast( allv, ionode_id, MPI_COMM_ROW )
      !
      DO ic = 1, nc
         !

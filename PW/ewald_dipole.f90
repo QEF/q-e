@@ -85,6 +85,9 @@ subroutine ewald_dipole (tens,dipole)
   ewaldg = e2 / 2.d0 * fpi / omega * ewaldg !Temp to compare with paratec
 !  ewaldg = e2 * fpi / omega * ewaldg
 
+#ifdef __PARA
+  call reduce (2*3*3*nat, ewaldg) !2 because ewaldg is complex
+#endif
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
@@ -126,7 +129,7 @@ subroutine ewald_dipole (tens,dipole)
  endif
 ewaldr = e2 *  ewaldr
 #ifdef __PARA
-  call reduce (1, ewaldr)
+  call reduce (2*3*3*nat, ewaldr) !2 because ewaldr is complex
 #endif
 
  tens=ewaldg+ewaldr
