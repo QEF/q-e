@@ -16,7 +16,6 @@ subroutine dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !
 #include "machine.h"
    USE parameters, ONLY: DP
-   USE wavefunctions_module, ONLY: evc
    USE atom, ONLY: nchi, lchi, oc
    USE basis, ONLY: nat, natomwfc, ntyp, ityp
    USE brilz, ONLY: tpiba
