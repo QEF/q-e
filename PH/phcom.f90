@@ -257,6 +257,8 @@ MODULE control_ph
   ! if .TRUE. computes electron-phonon interact
   ! if .TRUE. computes eff.cha. with ph
   ! if .TRUE. the run restart
+  logical :: lnscf
+  ! if .TRUE. the run makes first a nscf calculation
   !
 END MODULE control_ph
 !

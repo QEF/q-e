@@ -90,7 +90,9 @@ subroutine phq_setup
   !
   ! 1) We start with the mass renormalization
   !
-  call DSCAL (ntyp, amconv, amass, 1)
+!  call DSCAL (ntyp, amconv, amass, 1)
+!     (now done in phq_readin.f90 to avoid to be done more than once)
+!
   !
   ! 2) Computes the total local potential (external+scf) on the smooth grid
   !

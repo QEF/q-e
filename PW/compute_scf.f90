@@ -140,7 +140,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF   
         !
-        CALL clean_pw()
+        CALL clean_pw(.true.)
         !
         CALL close_files()
         !

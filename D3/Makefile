@@ -89,6 +89,7 @@ PHOBJS = \
 ../PH/compute_nldyn.o \
 ../PH/compute_qdipol.o \
 ../PH/compute_weight.o \
+../PH/deallocate_part.o \
 ../PH/d2ionq.o \
 ../PH/davcio_drho.o \
 ../PH/dgcxc.o \

@@ -17,9 +17,8 @@ subroutine stop_ph (flag)
 
   use pwcom
   USE kinds, only : DP
-  USE io_files, ONLY: iunigk
   use phcom
-  use control_flags, ONLY : twfcollect
+!  use control_flags, ONLY : twfcollect
   use mp, only: mp_end, mp_barrier
   USE parallel_include
 #ifdef __PARA
@@ -31,27 +30,7 @@ subroutine stop_ph (flag)
 #endif
   logical :: flag, exst
 
-  if ( twfcollect ) then
-     close (unit = iuwfc, status = 'delete')
-  else
-     close (unit = iuwfc, status = 'keep')
-  end if
-  close (unit = iudwf, status = 'keep')
-  close (unit = iubar, status = 'keep')
-  if(epsil.or.zue) close (unit = iuebar, status = 'keep')
-#ifdef __PARA
-  if (me.ne.1) goto 100
-#endif
-  if (fildrho.ne.' ') close (unit = iudrho, status = 'keep')
-#ifdef __PARA
-100 continue
-#endif
 
-  if (flag) then
-     call seqopn (iunrec, 'recover','unformatted',exst)
-     close (unit=iunrec,status='delete')
-  end if
-  close (unit = iunigk, status = 'delete')
   call print_clock_ph
   call show_memory ()
 #ifdef __PARA
@@ -69,6 +48,9 @@ subroutine stop_ph (flag)
 
   call set_d_stream (0)
 #endif
+
+  call deallocate_part
+
   if (flag) then
      stop
   else

@@ -17,12 +17,14 @@ subroutine phq_readin
 #include "f_defs.h"
   !
   USE ions_base,     ONLY : nat, ntyp => nsp
+  USE io_global, ONLY: ionode_id
+  USE mp, ONLY: mp_bcast
   use pwcom
   USE check_stop,    ONLY : time_max => max_seconds
   USE kinds,         ONLY : DP
   use phcom
   use io_files,      ONLY : tmp_dir, prefix
-  use control_flags, ONLY : iverbosity, reduce_io, iswitch, modenum
+  use control_flags, ONLY : iverbosity, reduce_io, iswitch, modenum, ldisp
   use para
 
   implicit none
@@ -32,10 +34,13 @@ subroutine phq_readin
   ! counter on iterations
   ! counter on atoms
   ! counter on types
+  integer :: modenum_aux
+  ! auxilary variable for saving the modenum
   character(len=256) :: outdir
   namelist / inputph / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph, &
        maxirr, nat_todo, iverbosity, outdir, epsil, trans, elph, zue, nrapp, &
-       time_max, reduce_io, prefix, fildyn, filelph, fildvscf, fildrho
+       time_max, reduce_io, prefix, fildyn, filelph, fildvscf, fildrho, &
+       lnscf, ldisp, nq1, nq2, nq3, modenum
   ! tr2_ph   : convergence threshold
   ! amass    : atomic masses
   ! alpha_mix: the mixing parameter
@@ -118,6 +123,12 @@ subroutine phq_readin
   fildyn = 'matdyn'
   fildrho = ' '
   fildvscf = ' '
+  lnscf = .false.
+  ldisp = .false.
+  nq1 = 0
+  nq2 = 0
+  nq3 = 0
+  modenum = -1
   !
   !     reading the namelist inputph
   !
@@ -171,7 +182,30 @@ subroutine phq_readin
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
+  !   modenum will also be read from file, copy first in aux.variable
+  !
+  modenum_aux = modenum
+  !
   call read_file
+  !
+  !  workaround if modenum is set here
+  !  and set the right iswitch
+  !
+  if (modenum_aux .ne. -1) then
+     modenum = modenum_aux     
+     iswitch = -4
+  else if(modenum .eq. 0) then
+     iswitch = -2
+  else
+     iswitch = -4
+  end if
+  !
+  ! broadcast the two values
+  !
+  CALL mp_bcast( iswitch, ionode_id )
+  CALL mp_bcast( modenum, ionode_id )
+  
+  !
   !
   if (lgamma) then
      nksq = nks
@@ -219,9 +253,11 @@ subroutine phq_readin
   if (epsil.and.degauss.ne.0.d0) call errore ('phq_readin', 'no elec. &
        &field with metals', 1)
 
-  if (iswitch.ne. - 2 .and. iswitch.ne. - 3 .and. iswitch.ne. -4 &
-       .and. .not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', &
-       & 1 + abs (iswitch) )
+!  if (iswitch.ne. - 2 .and. iswitch.ne. - 3 .and. iswitch.ne. -4 &
+!       .and. .not.lgamma) call errore ('phq_readin', ' Wrong iswitch ', &
+!       & 1 + abs (iswitch) )
+
+
   do it = 1, ntyp
      if (amass (it) .le.0.d0) call errore ('phq_readin', 'Wrong masses', &
           it)
@@ -236,5 +272,23 @@ subroutine phq_readin
      nat_todo = 0
      list (1) = modenum
   endif
+  
+  if (iswitch == -4 .and. ldisp) &
+       call errore('phq_readin','Dispersion calculation and &
+       & single mode calculation nort possibile !',1)
+  !
+  !  broadcast the values of nq1, nq2, nq3
+  !
+  call mp_bcast( nq1, ionode_id )
+  call mp_bcast( nq2, ionode_id )
+  call mp_bcast( nq3, ionode_id )
+  !
+  if (ldisp .and. (nq1 .le. 0 .or. nq2 .le. 0 .or. nq3 .le. 0)) &
+       call errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
+  !
+  !  mass renormalization
+  !
+  amass = amconv * amass
+  !
   return
 end subroutine phq_readin

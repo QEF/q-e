@@ -51,10 +51,10 @@ subroutine q_points
   ! Write the q points in the output
   !
   write(stdout, '(//5x,"Calculation of the dynamical matrices for the following points:")')
-  write(stdout, '("Number of q points:",i4)') nqs
-  write(stdout, '(" Nr:      xq(1)       xq(2)       xq(3) " )')
+  write(stdout, '(5x"Number of q points:",i4)') nqs
+  write(stdout, '(5x" Nr:      xq(1)       xq(2)       xq(3) " )')
   do iq = 1, nqs
-     write(stdout, '(i3, 3f12.5)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
+     write(stdout, '(5x,i3, 3f12.5)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
   end do
 
   if(.not. exist_gamma) call errore('q_points','Gamma is not a q point',1)

@@ -90,7 +90,7 @@ SUBROUTINE stop_pw( flag )
   CALL set_d_stream( 0 )
 #endif
   !
-  CALL clean_pw()
+  CALL clean_pw(.true.)
   CALL deallocate_input_parameters()
   CALL neb_deallocation()
   !
