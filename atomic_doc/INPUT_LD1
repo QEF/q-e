@@ -12,7 +12,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
 
   1) namelist &input (always needed)
 
-      title = a string with the title
+      title = a string describing the job (optional)
       zed   = the nuclear charge (1 < zed < 100)
       atom  = atomic symbol: atom='H', 'He', 'Be', etc
               specify either atom OR zed, not both
@@ -34,7 +34,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       eminld, emaxld =
                range (min, max energy) for logarithmic derivatives
       deld   = delta e of energy for logarithmic derivatives
-     
+               If the above parameters are not specified, logarithmic
+               derivaties are not calculated
+
       rel =  0 non relativistic calculation     (default for Z <= 18)
              1 scalar relativistic calculation  (default for Z >  18)
              2 full relativistic calculation with spin-orbit
@@ -93,7 +95,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              checked versus the input value, if one is provided
       pseudotype =                                           (no default)
            1    norm-conserving, single-projector PP (old format)
-           2    norm-conserving, multiple-projector PP in separable format
+                IMPORTANT: if pseudotype=1 all calculations are done using
+                the SEMILOCAL form, not the separable nonlocal form
+           2    norm-conserving, multiple-projector PP in separable form
            3    ultrasoft PP
 
       file_pseudopw= file where the generated PP is written.
@@ -102,7 +106,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                      the file is written in UPF format; otherwise,
                      in the old "NC" format if pseudotype=1,
                      in the old RRKJ format if pseudotype=2 or 3
-                     (no default, mist be specified)
+                     (no default, must be specified)
       file_recon =  file containing data needed for PAW reconstruction 
                     of all-electron wavefunctions from PP results.
                     If you want to use additional states to perform the
@@ -113,16 +117,17 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
            lloc=-1 pseudizes the all-electron potential
            lloc>-1 uses the corresponding channel as local PP
       NB: if lloc>-1, the corresponding channel must be the last in the
-          list of wavefunctions that appears, after the namelist &inputp
+          list of wavefunctions appearing after the namelist &inputp
       rcloc = matching radius for the local pseudo-potential      (no default)
-              (only if lloc=-1)
+              Must be specified only if lloc=-1, otherwise the
+              corresponding value of rcut is used. 
       nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
              correction of Froyen, Cohen, and Louie
       rcore= matching radius for the smoothing of the core charge (no default)
       rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
-             method with 3 Bessel functions fails, specifying rho0 /= 0
+             method with 3 Bessel functions fails, specifying rho0 > 0
              may allow to override the problem (using 4 Bessel functions)
-             (default rho0 = 0.0)
+             Typical values are in the order of 0.01-0.02       (default 0.0)
       lpaw =.true. : produce a PAW dataset, experimental feature
              only for pseudotype=3 (default .false.)
       file_chi   =   file containing output PP chi functions       (' ')
@@ -153,7 +158,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                     the file is assumed to be in UPF format; 
                     otherwise, if the file name contains "rrkj3" or "RRKJ3",
                     the old RRKJ format is first tried;
-                    otherwise, the old NC format is read
+                    otherwise, the old NC format is read.
+                    IMPORTANT: in the latter case, all calculations are done
+                    using the SEMILOCAL form, not the separable nonlocal form.
+                    Use the UPF format if you want to test the separable form!
       configts(nc) = a string containing the test valence electronic
                      configuration nc, nc=1,nconf. Same syntax as for "config".
                      If configts(nc) is not set, the electron configuration 
