@@ -53,9 +53,6 @@ subroutine writefile_new( what, ndw, et_g, wg_g, kunit )
   use read_pseudo_module
   use pseudo_types
 
-#ifdef PARA
-  use para, only: nproc
-#endif
   implicit none
   !
   integer, intent(in) :: ndw
@@ -500,10 +497,6 @@ subroutine readfile_new( what, ndr, et_g, wg_g, kunit, nsizwfc, iunitwfc, ierr )
 
   use parameters, only: nacx, nsx
   use upf_to_internal
-
-#ifdef PARA
-  use para, only: nproc
-#endif
 
   implicit none
   !

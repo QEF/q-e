@@ -1,8 +1,10 @@
-This distribution includes all or part of the following:
+This is the distribution of codes for electronic structure calculations
+promoted by the DEMOCRITOS National Simulation Center of the Italian
+INFM (http://www.democritos.it). It includes all or part of the following:
 
 - the PWscf package, developed by Stefano Baroni, Stefano de Gironcoli, 
-  Andrea Dal Corso (SISSA, Trieste) and Paolo Giannozzi (Scuola Normale
-  Superiore, Pisa), and others: see http://www.pwscf.org for more information
+  Andrea Dal Corso (SISSA, Trieste) and Paolo Giannozzi (Scuola Normale,
+  Pisa), and others: see http://www.pwscf.org for more information
 
 - the CPV code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
   Andrea Trave (UCBerkeley), Roberto Car (Princeton), Paolo Giannozzi
@@ -10,8 +12,15 @@ This distribution includes all or part of the following:
   using UltraSoft (Vanderbilt) pseudopotentials
 
 - the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
-  Guido Chiarotti (SISSA, Trieste), Gerardo Ballabio (Univ. Milano)
-  and others, for Car-Parrinello variable-cell molecular dynamics
+  Sandr Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
+  Paolo Focher, Gerardo Ballabio and others, for Car-Parrinello 
+  variable-cell molecular dynamics
+
+This is the first step of a project aiming at a full integration
+and interoperability of these codes. This project is part of a
+cooperative effort involving DEMOCRITOS, CINECA, Princeton University, 
+University of Pennsylvania, New York University, IBM Corporation, 
+University of Illinois at Urbana-Champaign.
 
 Directory structure of the common part of the three packages:
 

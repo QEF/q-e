@@ -25,7 +25,7 @@ subroutine cg_readin
   fildyn = 'matdyn'
   epsil  = .true.
   trans  = .true.
-  raman  = .true.
+  raman  = .false.
   asr    = .false.
   tr2_ph = 1.0e-12
   niter_ph= 50
