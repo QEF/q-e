@@ -442,7 +442,7 @@ MODULE input_parameters
                                                !!rhounpaired==rhoup-rhodown 
         REAL(dbl) :: sic_epsilon   = 1.0d0
 
-LOGICAL   :: force_pairing= .FALSE.
+        LOGICAL   :: force_pairing = .FALSE.
           !  FORCEPAIRING 
           !      paires electrons forcedly in two spin channels calculation
           !      works for stuctures with at most one unpaired eletron
@@ -1072,7 +1072,6 @@ LOGICAL   :: force_pairing= .FALSE.
         INTEGER   :: id_loc(natx)   = 0
         INTEGER   :: na_inp(nsx)    = 0     ! number of atom for each specie
         LOGICAL   :: tapos = .FALSE.
-        LOGICAL   :: tscal = .TRUE.
         CHARACTER(LEN=80) :: atomic_positions = 'crystal'
           ! atomic_positions = 'bohr' | 'armstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin

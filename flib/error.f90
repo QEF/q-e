@@ -57,7 +57,9 @@ subroutine errore (routin, messag, ierr)
 #endif
 
   if (ierr.gt.0) then
+
      WRITE( stdout , '("     stopping ...")')
+
 #ifdef FLUSH
      call flush (6)
 #endif
@@ -92,9 +94,41 @@ subroutine errore (routin, messag, ierr)
      END IF
 #endif
 #endif
+
      stop 2
+
   else
+
      WRITE( stdout, * ) ' '
-     return
+
   endif
+
 end subroutine errore
+
+
+!----------------------------------------------------------------------
+subroutine infomsg (routin, messag, info)
+  !----------------------------------------------------------------------
+  !
+  !    This is a simple routine which writes an info message 
+  !    from a given routine to output. 
+  !
+  USE io_global,  ONLY : stdout, ionode
+  USE parallel_include
+  !
+  implicit none
+  !
+  character (len=*) :: routin, messag
+    ! the name of the calling routine
+    ! the output message
+  integer :: info
+    ! the info code
+  !
+  IF( ionode ) THEN
+    WRITE( stdout , '(5x,"from ",a," : info #",i10)' ) routin, info
+    WRITE( stdout , '(5x,a)' ) messag
+  END IF
+
+  return
+
+end subroutine infomsg

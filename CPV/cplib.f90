@@ -2429,7 +2429,6 @@
       integer mill(3)
       real(kind=8) t(3), g2
 !
-      REAL(kind=8), ALLOCATABLE :: g2sort_g(:)
 
 !
       if( gcut < gcuts ) call errore('ggen','gcut .lt. gcuts',1)
@@ -2472,14 +2471,11 @@
                if (n1p.lt.1) n1p = n1p + nr1
                n2p = j + 1
                if (n2p.lt.1) n2p = n2p + nr2
-               ! if (ipc(n1p+(n2p-1)*nr1x).eq.0) go to 20
                if ( dfftp%isind(n1p+(n2p-1)*dfftp%nr1x).eq.0) go to 20
 #endif
                g2=0.d0
                do ir=1,3
-                  t(ir) = dble(i)*b1(ir)                              &
-     &                   +dble(j)*b2(ir)                              &
-     &                   +dble(k)*b3(ir)
+                  t(ir) = dble(i)*b1(ir) + dble(j)*b2(ir) + dble(k)*b3(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcut) go to 20
@@ -2504,10 +2500,6 @@
 
       allocate(g2_g(ng_g))
       allocate(mill_g(3,ng_g))
-
-      allocate(g2sort_g(ng_g))
-      allocate(index(ng_g))
-      g2sort_g = 1.0d20
       ng_g = 0
 !
 !     exclude space with x<0
@@ -2530,39 +2522,12 @@
                  mill_g(1,ng_g)=i
                  mill_g(2,ng_g)=j
                  mill_g(3,ng_g)=k
-                 IF ( g2 > eps8 ) THEN
-                   g2sort_g(ng_g) = g2 
-                 ELSE
-                   g2sort_g(ng_g) = 0.d0
-                 END IF
                end if
             end do loopz
          end do loopy
       end do loopx
 
-      index(1) = 0
-      call hpsort_eps(ng_g, g2sort_g, index, eps8)
-
-      DO ig = 1, ng_g-1
-        icurr = ig
-   47   IF(index(icurr) /= ig) THEN
-! ...     swap indices
-          DO i = 1, 3
-            it = mill_g(i,icurr)
-            mill_g(i,icurr) = mill_g(i,index(icurr))
-            mill_g(i,index(icurr)) = it 
-          END DO
-! ...     swap modules
-          g2 = g2_g( icurr ); g2_g( icurr ) = g2_g( index(icurr) ); g2_g( index(icurr) ) = g2
-! ...     swap indices
-          it = icurr; icurr = index(icurr); index(it) = it
-          IF(index(icurr) == ig) THEN
-            index(icurr)=icurr
-          ELSE
-            GOTO 47
-          END IF
-        END IF
-      END DO
+      CALL sort_gvec( ng_g, g2_g, mill_g )
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
@@ -2572,10 +2537,6 @@
 !        END DO
 !        CLOSE( 201 )
 !      END IF
-
-      deallocate( index )
-      deallocate( g2sort_g )
-
 
 !
 !     third step: allocate space

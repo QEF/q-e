@@ -82,7 +82,6 @@ CONTAINS
       use constants, only: pi, scmass, factem, eps8
       use parameters, only: nsx, natx, nbndxx
       use io_global, only: ionode, stdout
-      use ions_base, only: isort_pos
       use control_flags, only: taurdr, tprnfor_ => tprnfor
       use mp, only: mp_bcast
       USE control_flags, ONLY: tconvthrs, lneb
@@ -431,7 +430,6 @@ CONTAINS
       ! cards parameters
 
       tau0_  = 0.0
-      isort_pos = 0
       iforce_= 0
       ipp_   = 0
       psfile_= ' '
@@ -455,7 +453,6 @@ CONTAINS
                    tau0_ (i, na_ (is), is ) = rd_pos(i, ia)
                    iforce_ (i, na_ (is), is ) = if_pos(i, ia)
                 end do
-                isort_pos( na_(is), is ) = isa
              end if
           end do
        end do

@@ -69,7 +69,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use ions_base, only: na, nat, pmass, nas => nax, nsp, ipp, rcmax
-      use ions_base, only: isort_pos
+      use ions_base, only: ind_srt
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
@@ -1486,9 +1486,11 @@
       !
 
       etot_out = etot
+      isa = 0
       do is = 1, nsp
         do ia = 1, na(is)
-          ipos = isort_pos( ia, is )
+          isa = isa + 1
+          ipos = ind_srt( isa )
           tau( 1, ipos ) = tau0( 1, ia, is )
           tau( 2, ipos ) = tau0( 2, ia, is )
           tau( 3, ipos ) = tau0( 3, ia, is )

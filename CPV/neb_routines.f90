@@ -58,7 +58,7 @@ MODULE neb_routines
       USE input_parameters, ONLY : rd_ht, trd_ht, cell_symmetry
       USE input_parameters, ONLY : nstep, max_seconds
       USE input_parameters, ONLY : ntyp , nat , na_inp , sp_pos , rd_pos , atom_mass, &
-             atom_label, if_pos
+             atom_label, if_pos, rd_vel, atomic_positions
       !
       USE io_global, ONLY: ionode, ionode_id
       USE mp_global, ONLY: mpime
@@ -139,8 +139,8 @@ MODULE neb_routines
       CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, &
              a, b, c, cosab, cosac, cosbc, alat_ )
 
-      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , atom_mass, &
-             atom_label, if_pos  )
+      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
+             atom_label, if_pos, atomic_positions  )
 
       CALL check_stop_init( max_seconds )
 

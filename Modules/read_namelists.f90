@@ -738,7 +738,7 @@ MODULE read_namelists_module
        END DO
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' calculation '''// &
-                       & TRIM(calculation)//''' not allowed ',-1)
+                       & TRIM(calculation)//''' not allowed ',1)
        IF( calculation == ' ' ) &
           CALL errore( sub_name,' calculation not specifyed ',1)
        IF( prog == 'FP' ) THEN
@@ -768,11 +768,11 @@ MODULE read_namelists_module
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'FP' .OR. prog == 'CP' ) THEN
           IF( tefield ) & 
-             CALL errore( sub_name,' tefield not implemented yet ',-1)
+             CALL infomsg( sub_name,' tefield not implemented yet ',-1)
           IF( dipfield ) & 
-             CALL errore( sub_name,' dipfield not implemented yet ',-1)
+             CALL infomsg( sub_name,' dipfield not implemented yet ',-1)
           IF( lberry ) & 
-             CALL errore( sub_name,' lberry not implemented yet ',-1)
+             CALL infomsg( sub_name,' lberry not implemented yet ',-1)
        END IF
        !
        RETURN
@@ -833,51 +833,51 @@ MODULE read_namelists_module
        !
        IF( prog == 'FP' ) THEN
           IF( nr1 /= 0 ) &
-             CALL errore( sub_name ,' nr1 is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr1 is not used in FPMD ', nr1)
           IF( nr2 /= 0 ) &
-             CALL errore( sub_name ,' nr2 is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr2 is not used in FPMD ', nr2)
           IF( nr3 /= 0 ) &
-             CALL errore( sub_name ,' nr3 is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr3 is not used in FPMD ', nr3)
           IF( nr1s /= 0 ) &
-             CALL errore( sub_name ,' nr1s is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr1s is not used in FPMD ', nr1s)
           IF( nr2s /= 0 ) &
-             CALL errore( sub_name ,' nr2s is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr2s is not used in FPMD ', nr2s)
           IF( nr3s /= 0 ) &
-             CALL errore( sub_name ,' nr3s is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr3s is not used in FPMD ', nr3s)
           IF( nr1b /= 0 ) &
-             CALL errore( sub_name ,' nr1b is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr1b is not used in FPMD ', nr1b)
           IF( nr2b /= 0 ) &
-             CALL errore( sub_name ,' nr2b is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr2b is not used in FPMD ', nr2b)
           IF( nr3b /= 0 ) &
-             CALL errore( sub_name ,' nr3b is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' nr3b is not used in FPMD ', nr3b)
           IF( degauss /= 0.0d0 ) &
-             CALL errore( sub_name ,' degauss is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' degauss is not used in FPMD ',-1)
           IF( ngauss /= 0 ) &
-             CALL errore( sub_name ,' ngauss is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' ngauss is not used in FPMD ',-1)
        END IF
        !
        IF( nelup < 0.d0 .OR. nelup > nelec ) &
-          CALL errore( sub_name ,' nelup out of range ',-1)
+          CALL errore( sub_name ,' nelup out of range ',1)
        IF( neldw < 0.d0 .OR. neldw > nelec ) &
-          CALL errore( sub_name ,' neldw out of range ',-1)
+          CALL errore( sub_name ,' neldw out of range ',1)
        IF( ecfixed < 0.0d0 ) &
-          CALL errore( sub_name ,' ecfixed out of range ',-1)
+          CALL errore( sub_name ,' ecfixed out of range ',1)
        IF( qcutz < 0.0d0 ) &
-          CALL errore( sub_name ,' qcutz out of range ',-1)
+          CALL errore( sub_name ,' qcutz out of range ',1)
        IF( q2sigma < 0.0d0 ) &
-          CALL errore( sub_name ,' q2sigma out of range ',-1)
+          CALL errore( sub_name ,' q2sigma out of range ',1)
        IF( prog == 'FP' ) THEN
           IF( ANY(starting_magnetization /= 0.0d0) ) &
-             CALL errore( sub_name ,&
+             CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in FPMD ',-1)
           IF( lda_plus_U ) &
-             CALL errore( sub_name ,' lda_plus_U is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' lda_plus_U is not used in FPMD ',-1)
           IF( ANY(Hubbard_U /= 0.0d0) ) &
-             CALL errore( sub_name ,' Hubbard_U is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' Hubbard_U is not used in FPMD ',-1)
           IF( ANY(Hubbard_alpha /= 0.0d0) ) &
-             CALL errore( sub_name ,' Hubbard_alpha is not used in FPMD ',-1)
+             CALL infomsg( sub_name ,' Hubbard_alpha is not used in FPMD ',-1)
           IF( nosym ) &
-             CALL errore( sub_name ,' nosym not implemented in FPMD ', -1)
+             CALL infomsg( sub_name ,' nosym not implemented in FPMD ', -1)
        END IF
        IF( prog == 'PW' ) THEN
           !
@@ -892,34 +892,34 @@ MODULE read_namelists_module
        !
        IF ( noncolin ) THEN
           IF (diagonalization == 'cg') &
-             CALL errore( sub_name ,' cg not allowed with noncolin ', -1 )
+             CALL errore( sub_name ,' cg not allowed with noncolin ', 1 )
           IF (diagonalization == 'diis') &
-             CALL errore( sub_name ,' diis not allowed with noncolin ', -1 )
+             CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
           IF ( i_cons < 0 .OR. i_cons > 2 ) &
-             CALL errore( sub_name ,' wrong i_cons ', -1 )
+             CALL errore( sub_name ,' wrong i_cons ', 1 )
        END IF       
 
 !!control on SIC variables
        IF (sic /='none' ) then
           IF (sic_epsilon > 1.d0 )  &
            CALL errore( sub_name, &
-                       & ' invalid sic_epsilon, greater than 1.',-1)
+                       & ' invalid sic_epsilon, greater than 1.',1)
           IF (sic_epsilon < 0.d0 )  &
            CALL errore( sub_name, &
-                       & ' invalid sic_epsilon, less than 0 ',-1)
+                       & ' invalid sic_epsilon, less than 0 ',1)
 
           IF ( .NOT. force_pairing ) &
            CALL errore( sub_name, &
-                       & ' invalid force_pairing with sic activated', -1)
+                       & ' invalid force_pairing with sic activated', 1)
           IF ( nspin /= 2) &
            CALL errore( sub_name, &
-                       & ' invalid nspin with sic activated', -1)
-          IF ( (nelup /= 0) .or. (neldw /= 0) ) &
+                       & ' invalid nspin with sic activated', 1)
+          IF ( (nelup == 0) .AND. (neldw == 0) ) &
            CALL errore( sub_name, &
-                      & ' invalid nelup and neldwn spin with sic activated', -1)
+                      & ' invalid nelup and neldwn spin with sic activated', 1)
           IF ( nelup /= (neldw + 1) )   &
            CALL errore( sub_name, &
-                       & ' invalid nelup /= (neldwn +1) spin with sic activated', -1)
+                       & ' invalid nelup /= (neldwn +1) spin with sic activated', 1)
           
        ENDIF  !! on sic_control 
  
@@ -951,38 +951,38 @@ MODULE read_namelists_module
        END DO
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' electron_dynamics '''//&
-                       & TRIM(electron_dynamics)//''' not allowed ',-1)
+                       & TRIM(electron_dynamics)//''' not allowed ',1)
        IF( emass <= 0.0d0 ) &
-          CALL errore( sub_name, ' emass less or equal 0 ',-1)
+          CALL errore( sub_name, ' emass less or equal 0 ',1)
        IF( emass_cutoff <= 0.0d0 ) &
-          CALL errore( sub_name, ' emass_cutoff less or equal 0 ',-1)
+          CALL errore( sub_name, ' emass_cutoff less or equal 0 ',1)
        IF( ortho_eps <= 0.0d0 ) &
-          CALL errore( sub_name, ' ortho_eps less or equal 0 ',-1)
+          CALL errore( sub_name, ' ortho_eps less or equal 0 ',1)
        IF( ortho_max < 1 ) &
-          CALL errore( sub_name, ' ortho_max less than 1 ',-1)
+          CALL errore( sub_name, ' ortho_max less than 1 ',1)
        IF( fnosee <= 0.0d0 ) &
-          CALL errore( sub_name, ' fnosee less or equal 0 ',-1)
+          CALL errore( sub_name, ' fnosee less or equal 0 ',1)
        IF( ekincw <= 0.0d0 ) &
-          CALL errore( sub_name, ' ekincw less or equal 0 ',-1)
+          CALL errore( sub_name, ' ekincw less or equal 0 ',1)
        IF( prog == 'FP' ) THEN
           IF( twall ) &
-             CALL errore( sub_name, ' twall not used in FPMD ',-1)
+             CALL infomsg( sub_name, ' twall not used in FPMD ',-1)
        END IF
        IF( empty_states_nbnd < 0 ) &
           CALL errore( sub_name, &
-                       & ' invalid empty_states_nbnd, less than 0 ',-1)
+                       & ' invalid empty_states_nbnd, less than 0 ',1)
        IF( empty_states_maxstep < 0 ) &
           CALL errore( sub_name,&
-                       & ' invalid empty_states_maxstep, less than 0 ',-1)
+                       & ' invalid empty_states_maxstep, less than 0 ',1)
        IF( empty_states_delt < 0.0d0 ) &
           CALL errore( sub_name, &
-                       & ' invalid empty_states_delt, less than 0 ',-1)
+                       & ' invalid empty_states_delt, less than 0 ',1)
        IF( empty_states_emass < 0.0d0 ) &
           CALL errore( sub_name, &
-                       & ' invalid empty_states_emass, less than 0 ',-1)
+                       & ' invalid empty_states_emass, less than 0 ',1)
        IF( empty_states_ethr < 0.0d0 ) &
           CALL errore( sub_name, &
-                       & ' invalid empty_states_ethr, less than 0 ',-1)
+                       & ' invalid empty_states_ethr, less than 0 ',1)
 
 !
        RETURN
@@ -1012,44 +1012,44 @@ MODULE read_namelists_module
        END DO
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' ion_dynamics '''// &
-                       & TRIM(ion_dynamics)//''' not allowed ',-1)
+                       & TRIM(ion_dynamics)//''' not allowed ',1)
        IF( tempw <= 0.0d0 ) &
-          CALL errore( sub_name,' tempw out of range ',-1)
+          CALL errore( sub_name,' tempw out of range ',1)
        IF( fnosep <= 0.0d0 ) &
-          CALL errore( sub_name,' fnosep out of range ',-1)
+          CALL errore( sub_name,' fnosep out of range ',1)
        IF( ion_nstepe <= 0 ) &
-          CALL errore( sub_name,' ion_nstepe out of range ',-1)
+          CALL errore( sub_name,' ion_nstepe out of range ',1)
        IF( ion_maxstep < 0 ) &
-          CALL errore( sub_name,' ion_maxstep out of range ',-1)
+          CALL errore( sub_name,' ion_maxstep out of range ',1)
        !
        ! ... NEB checkin ( C.S. 17/10/2003 )
        !
        IF ( ds < 0.D0 ) &
-          CALL errore( sub_name,' ds out of range ',-1)
+          CALL errore( sub_name,' ds out of range ',1)
        IF ( damp < 0.D0 ) &
-          CALL errore( sub_name,' damp out of range ',-1)
+          CALL errore( sub_name,' damp out of range ',1)
        IF ( temp_req < 0.D0 ) &
-          CALL errore( sub_name,' temp_req out of range ',-1)  
+          CALL errore( sub_name,' temp_req out of range ',1)  
        IF ( k_max < 0.D0 ) &
-          CALL errore( sub_name,' k_max out of range ',-1)
+          CALL errore( sub_name,' k_max out of range ',1)
        IF ( k_min < 0.D0 ) &
-          CALL errore( sub_name,' k_min out of range ',-1)
+          CALL errore( sub_name,' k_min out of range ',1)
        IF ( k_max < k_min ) &
-          CALL errore( sub_name,'  k_max < k_min ',-1)  
+          CALL errore( sub_name,'  k_max < k_min ',1)  
        ! 
        DO i = 1, SIZE( CI_scheme_allowed )
           IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
        END DO
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' CI_scheme '''// &
-                       & TRIM( CI_scheme )//''' not allowed ', -1 )        
+                       & TRIM( CI_scheme )//''' not allowed ', 1 )        
        !
        DO i = 1, SIZE( VEC_scheme_allowed )
           IF ( TRIM( VEC_scheme ) == VEC_scheme_allowed(i) ) allowed = .TRUE.
        END DO
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' VEC_scheme '''// &
-                       & TRIM( VEC_scheme )//''' not allowed ', -1 )       
+                       & TRIM( VEC_scheme )//''' not allowed ', 1 )       
        !       
        DO i = 1, SIZE( minimization_scheme_allowed )
           IF ( TRIM( minimization_scheme ) == &
@@ -1057,9 +1057,10 @@ MODULE read_namelists_module
        END DO
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' minimization_scheme '''// &
-                       & TRIM( minimization_scheme )//''' not allowed ', -1 )       
+                       & TRIM( minimization_scheme )//''' not allowed ', 1 )       
+
        IF (sic /= 'none' .and. sic_rloc == 0.d0) &
-          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', -1)
+          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1)
        !
        RETURN
        !
@@ -1090,17 +1091,17 @@ MODULE read_namelists_module
        END DO
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' cell_dynamics '''// &
-                       TRIM(cell_dynamics)//''' not allowed ',-1)
+                       TRIM(cell_dynamics)//''' not allowed ',1)
        IF( wmass < 0.0d0 ) &
-          CALL errore( sub_name,' wmass out of range ',-1)
+          CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'FP' ) THEN
           IF( temph /= 0.0d0 ) &
-             CALL errore( sub_name,' temph not used in FPMD ',-1)
+             CALL infomsg( sub_name,' temph not used in FPMD ',-1)
           IF( cell_factor /= 0.0d0 ) &
-             CALL errore( sub_name,' cell_factor not used in FPMD ',-1)
+             CALL infomsg( sub_name,' cell_factor not used in FPMD ',-1)
        END IF
        IF( cell_nstepe <= 0 ) &
-          CALL errore( sub_name,' cell_nstepe out of range ',-1)
+          CALL errore( sub_name,' cell_nstepe out of range ',1)
        !
        RETURN
        !

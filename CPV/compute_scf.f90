@@ -4,7 +4,7 @@
       !-----------------------------------------------------------------------
       !
       USE kinds
-      USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos, tscal, ion_positions
+      USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos, ion_positions
       USE input_parameters,  ONLY : outdir, prefix, nat, restart_mode
       USE input_parameters,  ONLY : scradir => tscradir_inp, ndr
       USE constants,         ONLY : e2
@@ -92,7 +92,6 @@
             !
          END DO
   
-         tscal         = .FALSE.
          ion_positions = 'from_input'
          IF( check_restartfile( outdir, ndr ) ) THEN
            WRITE( 6, * ) ' restarting calling readfile '

@@ -25,7 +25,6 @@
       INTEGER :: na(nsx) = 0    
       INTEGER :: nax     = 0
       INTEGER :: nat     = 0
-      INTEGER :: isort_pos(natx,nsx) = 0
 
       !     zv(is)    = (pseudo-)atomic charge
       !     pmass(is) = mass (converted to a.u.) of ions
@@ -42,9 +41,14 @@
       !     atm( j )  = name of the type of the j-th atomic specie
       !     tau( 1:3, i ) = position of the i-th atom
 
-      INTEGER, ALLOCATABLE :: ityp(:)
-      REAL(dbl), ALLOCATABLE :: tau(:,:)
-      CHARACTER(LEN=3 ) :: atm(ntypx) 
+      INTEGER,   ALLOCATABLE :: ityp(:)
+      REAL(dbl), ALLOCATABLE :: tau(:,:)      !  initial position
+      REAL(dbl), ALLOCATABLE :: vel(:,:)      !  initial velocities
+      REAL(dbl), ALLOCATABLE :: tau_srt(:,:)  !  tau sorted by specie
+      REAL(dbl), ALLOCATABLE :: vel_srt(:,:)  !  vel sorted by specie
+      INTEGER,   ALLOCATABLE :: ind_srt( : )  !  index of tau sorted by specie
+      CHARACTER(LEN=3  ) :: atm( ntypx ) 
+      CHARACTER(LEN=80 ) :: tau_units
 
       ! if if_pos( x, i ) = 0 then 
       !    x coordinate of the i-th atom will be kept fixed
@@ -61,6 +65,7 @@
       REAL(dbl), ALLOCATABLE :: pos_localisation(:,:)
 
       LOGICAL :: tions_base_init = .FALSE.
+      LOGICAL, PRIVATE :: tdebug = .FALSE.
       
 !
 
@@ -101,15 +106,73 @@
     END SUBROUTINE
 
 
+    SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(OUT) :: tausrt( :, : )
+      INTEGER, INTENT(OUT) :: isrt( : )
+      REAL(dbl), INTENT(IN) :: tau( :, : )
+      INTEGER, INTENT(IN) :: nat, nsp, isp( : )
+      INTEGER :: ina( nsp ), na( nsp )
+      INTEGER :: is, ia
 
-    SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , amass_ , &
-        atm_ , if_pos_ , id_loc_ , sic_ , sic_epsilon_, sic_rloc_ )
+      ! ... count the atoms for each specie
+      na  = 0
+      DO ia = 1, nat
+        is  =  isp( ia )
+        IF( is < 1 .OR. is > nsp ) &
+          CALL errore(' sorttau ', ' wrong species index for positions ', ia )
+        na( is ) = na( is ) + 1
+      END DO
+
+      ! ... compute the index of the first atom in each specie
+      ina( 1 ) = 0
+      DO is = 2, nsp
+        ina( is ) = ina( is - 1 ) + na( is - 1 )
+      END DO
+
+      ! ... sort the position according to atomic specie
+      na  = 0
+      DO ia = 1, nat
+        is  =  isp( ia )
+        na( is ) = na( is ) + 1
+        tausrt( :, na(is) + ina(is) ) = tau(:, ia )
+        isrt  (    na(is) + ina(is) ) = ia
+      END DO
+      RETURN
+    END SUBROUTINE
+
+
+    SUBROUTINE unsort_tau( tau, tausrt, isrt, nat )
+      IMPLICIT NONE
+      REAL(dbl), INTENT(IN) :: tausrt( :, : )
+      INTEGER, INTENT(IN) :: isrt( : )
+      REAL(dbl), INTENT(OUT) :: tau( :, : )
+      INTEGER, INTENT(IN) :: nat
+      INTEGER :: isa, ia
+      DO isa = 1, nat
+        ia  =  isrt( isa )
+        tau( :, ia ) = tausrt( :, isa )
+      END DO
+      RETURN
+    END SUBROUTINE
+
+
+
+
+
+    SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , vel_, amass_ , &
+        atm_ , if_pos_ , tau_units_ , id_loc_ , sic_ , sic_epsilon_, sic_rloc_ )
+
       USE constants, ONLY: scmass
+      USE io_base, ONLY: stdout
+
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nsp_ , nat_ , na_ (:) , ityp_ (:)
       REAL(dbl), INTENT(IN) :: tau_(:,:)
+      REAL(dbl), INTENT(IN) :: vel_(:,:)
       REAL(dbl), INTENT(IN) :: amass_(:)
       CHARACTER(LEN=*), INTENT(IN) :: atm_ (:)
+      CHARACTER(LEN=*), INTENT(IN) :: tau_units_
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
       INTEGER, OPTIONAL, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: sic_
@@ -131,16 +194,47 @@
       nax = MAXVAL( na( 1:nsp ) )
 
       atm( 1:nsp ) = atm_ ( 1:nsp )
+      tau_units    = TRIM( tau_units_ )
 
       if ( nat /= SUM( na( 1:nsp ) ) ) &
         call errore(' ions_base_init ',' inconsistent NAT and NA ',1)
 
       ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
+      ALLOCATE( vel( 3, nat ) )
+      ALLOCATE( tau_srt( 3, nat ) )
+      ALLOCATE( vel_srt( 3, nat ) )
+      ALLOCATE( ind_srt( nat ) )
       ALLOCATE( if_pos( 3, nat ) )
-      ityp( 1:nat ) = ityp_ ( 1:nat )
-      tau( : , 1:nat ) = tau_ ( : , 1:nat )
+
+      ityp( 1:nat )      = ityp_ ( 1:nat )
+      tau( : , 1:nat )   = tau_ ( : , 1:nat )
+      vel( : , 1:nat )   = vel_ ( : , 1:nat )
       if_pos( :, 1:nat ) = if_pos_ ( : , 1:nat )
+
+! ...     tau_srt : atomic species are ordered according to
+! ...     the ATOMIC_SPECIES input card. Within each specie atoms are ordered
+! ...     according to the ATOMIC_POSITIONS input card.
+! ...     ind_srt : can be used to restore the origina position
+
+      CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
+
+      DO ia = 1, nat
+        vel_srt( :, ia ) = vel( :, ind_srt( ia ) )
+      END DO
+
+      IF( tdebug ) THEN
+        WRITE( stdout, * ) 'ions_base_init: unsorted position and velocities'
+        DO ia = 1, nat
+          WRITE( stdout, fmt="(A3,3D12.4,3X,3D12.4)") &
+            atm( ityp( ia ) ), tau(1:3, ia), vel(1:3,ia)
+        END DO
+        WRITE( stdout, * ) 'ions_base_init: sorted position and velocities'
+        DO ia = 1, nat
+          WRITE( stdout, fmt="(A3,3D12.4,3X,3D12.4)") &
+            atm( ityp( ind_srt( ia ) ) ), tau_srt(1:3, ia), vel_srt(1:3,ia)
+        END DO
+      END IF
 
       !
       ! ... The constrain on fixed coordinates is implemented using the array
@@ -209,8 +303,13 @@
       IMPLICIT NONE
       IF( ALLOCATED( ityp ) ) DEALLOCATE( ityp )
       IF( ALLOCATED( tau ) ) DEALLOCATE( tau )
+      IF( ALLOCATED( vel ) ) DEALLOCATE( vel )
+      IF( ALLOCATED( tau_srt ) ) DEALLOCATE( tau_srt )
+      IF( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
+      IF( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
       IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
       IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
+      tions_base_init = .FALSE.
       RETURN
     END SUBROUTINE
 

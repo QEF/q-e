@@ -19,6 +19,7 @@ sort.o \
 sph_bes.o \
 transto.o \
 date_and_tim.o \
+sort_gvec.o \
 volume.o \
 ylmr2.o
 
