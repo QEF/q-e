@@ -24,16 +24,15 @@ SUBROUTINE do_cond(nodenumber)
   IMPLICIT NONE
 
   CHARACTER(len=3) nodenumber
-  REAL(kind=DP), PARAMETER :: eps=1.d-8
   REAL(kind=DP) :: wtot
-  INTEGER :: ik, ien, ios, orbin, orbfin 
-  LOGICAL :: write0
+  INTEGER :: ik, ien, ios 
 
-  NAMELIST /inputcond/ outdir, prefix, band_file, tran_file, fil_loc,  & 
-                       lwrite_loc, lread_loc, ikind, iofspin, llocal,  & 
-                       bdl1, bdl2, bdr1, bdr2, nz1, dnslab, energy0,   &
-                       denergy, ecut2d, ewind, epsproj, delgep,cutplot,&
-                       llapack
+  NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
+                       band_file, tran_file, save_file, fil_loc,       &
+                       lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
+                       orbj_in,orbj_fin,ikind,iofspin,llocal,llapack,  & 
+                       bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
+                       ewind, epsproj, delgep, cutplot
                                                                                
   CHARACTER (LEN=80)  :: input_file
   INTEGER             :: nargs, iiarg, ierr, ILEN
@@ -47,28 +46,34 @@ SUBROUTINE do_cond(nodenumber)
 !   set default values for variables in namelist
 !                                             
   outdir = './'
-  prefix = ' '
+  prefixt = ' '
+  prefixl = ' '
+  prefixs = ' '
+  prefixr = ' '
   band_file = ' '
   tran_file = ' '
+  save_file = ' ' 
   fil_loc = ' '
   lwrite_loc = .FALSE.
   lread_loc = .FALSE.
+  lwrite_cond = .FALSE.
+  lread_cond  = .FALSE.
+  orbj_in = 0
+  orbj_fin = 0
   iofspin = 1
   ikind = 0
-  bdl1 = 0.d0
-  bdl2 = 0.d0
-  bdr1 = 0.d0
-  bdr2 = 0.d0
+  bdl = 0.d0
+  bds = 0.d0
+  bdr = 0.d0
   nz1 = 11
-  dnslab = 0
   energy0 = 0.d0
   denergy = 0.d0
   ecut2d = 0.d0
-  ewind = 0.d0
+  ewind = 1.d0
   llocal = .FALSE.
-  llapack = .FALSE.
+  llapack = .TRUE.
   epsproj = 1.d-3
-  delgep = 0.d0
+  delgep = 5.d-10
   cutplot = 2.d0
 
   IF ( ionode )  THEN
@@ -140,21 +145,27 @@ SUBROUTINE do_cond(nodenumber)
 ! ... Broadcast variables
 !
   CALL mp_bcast( tmp_dir, ionode_id )
-  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( prefixt, ionode_id )
+  CALL mp_bcast( prefixl, ionode_id )
+  CALL mp_bcast( prefixs, ionode_id )
+  CALL mp_bcast( prefixr, ionode_id )
   CALL mp_bcast( band_file, ionode_id )
   CALL mp_bcast( tran_file, ionode_id )
   CALL mp_bcast( fil_loc, ionode_id )
+  CALL mp_bcast( save_file, ionode_id )
   CALL mp_bcast( lwrite_loc, ionode_id )
   CALL mp_bcast( lread_loc, ionode_id )
+  CALL mp_bcast( lwrite_cond, ionode_id )
+  CALL mp_bcast( lread_cond, ionode_id )
   CALL mp_bcast( ikind, ionode_id )
   CALL mp_bcast( iofspin, ionode_id )
+  CALL mp_bcast( orbj_in, ionode_id )
+  CALL mp_bcast( orbj_fin, ionode_id )
   CALL mp_bcast( llocal, ionode_id )
-  CALL mp_bcast( bdl1, ionode_id )
-  CALL mp_bcast( bdl2, ionode_id )
-  CALL mp_bcast( bdr1, ionode_id )
-  CALL mp_bcast( bdr2, ionode_id )
+  CALL mp_bcast( bdl, ionode_id )
+  CALL mp_bcast( bds, ionode_id )
+  CALL mp_bcast( bdr, ionode_id )
   CALL mp_bcast( nz1, ionode_id )
-  CALL mp_bcast( dnslab, ionode_id )
   CALL mp_bcast( energy0, ionode_id )
   CALL mp_bcast( denergy, ionode_id )
   CALL mp_bcast( ecut2d, ionode_id )
@@ -177,75 +188,134 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( earr, ionode_id )
   CALL mp_bcast( tran_tot, ionode_id )
 
+
 !
 ! Now allocate space for pwscf variables, read and check them.
 !
   
-  CALL read_file
-  CALL openfil
-  CALL struc_fact (nat,tau,ntyp,ityp,ngm,g,bg,                &
-                   nr1,nr2,nr3,strf,eigts1,eigts2,eigts3)
-  CALL init_us_1
-  CALL newd
+IF (lread_cond) THEN
+  call save_cond (.false.,1,efl,nrzl,nocrosl,noinsl,   &
+                  norbl,rl,rabl,betarl)
+  if(ikind.eq.1) then
+    call save_cond (.false.,2,efs,nrzs,-1,      &
+                             noinss,norbs,rs,rabs,betars)
+    norbr = norbl
+    nocrosr = nocrosl
+    noinsr = noinsl
+  endif
+  if(ikind.eq.2) then
+    call save_cond (.false.,2,efs,nrzs,-1,      &
+                             noinss,norbs,rs,rabs,betars)
 
-!
-! Allocation for pwcond variables
-!
-  CALL allocate_cond
-  CALL init_cond
+    call save_cond (.false.,3,efr,nrzr,nocrosr,&
+                             noinsr,norbr,rr,rabr,betarr)
+  endif
+ELSE
+  IF (prefixt.ne.' ') then
+    prefix = prefixt
+    call read_file
+    call init_us_1
+    call newd
+    IF (ikind.eq.0) then
+      CALL init_cond(1,'t')
+    ELSEIF (ikind.eq.1) then
+      CALL init_cond(2,'t')
+    ELSEIF (ikind.eq.2) then
+      CALL init_cond(3,'t')
+    ENDIF
+    CALL clean_pw(.true.)
+  ENDIF
+  IF (prefixl.ne.' ') then
+    prefix = prefixl
+    call read_file
+    call init_us_1
+    call newd
+    CALL init_cond(1,'l')
+    CALL clean_pw(.true.)
+  ENDIF
+  IF (prefixs.ne.' ') then
+    prefix = prefixs
+    call read_file
+    call init_us_1
+    call newd
+    CALL init_cond(1,'s')
+    CALL clean_pw(.true.)
+  ENDIF
+  IF (prefixr.ne.' ') then
+    prefix = prefixr
+    call read_file
+    call init_us_1
+    call newd
+    CALL init_cond(1,'r')
+    CALL clean_pw(.true.)
+  ENDIF
+ENDIF
+
+IF (lwrite_cond) then
+  call save_cond (.true.,1,efl,nrzl,nocrosl,noinsl,         &
+                  norbl,rl,rabl,betarl)
+  if(ikind.gt.0) call save_cond (.true.,2,efs,nrzs,-1,      &
+                             noinss,norbs,rs,rabs,betars)
+  if(ikind.gt.1) call save_cond (.true.,3,efr,nrzr,nocrosr,&
+                             noinsr,norbr,rr,rabr,betarr)
+endif
+
+  call cond_out
+
   CALL stop_clock('init')
 
   IF (llocal) &
-    CALL local_set(nocrosl,noinsl,noinss,nocrosr,noinsr,norb,norbs)
-  CALL poten
+  CALL local_set(nocrosl,noinsl,norbl,noinss,norbs,nocrosr,noinsr,norbr)
 
-  DO ik=1, nkpts
+  do ik=1, nkpts
 
     CALL init_gper(ik)
-!
-! The main loop
-!
-    eryd = earr(1)/rytoev + ef
-    CALL local
-    DO ien=1, nenergy
-      eryd = earr(ien)/rytoev + ef
-      CALL form_zk(n2d, nrzp, zkr, zk, eryd, tpiba)
-      orbin=1
-      orbfin=orbin-1+2*nocrosl+noinsl
-      CALL scatter_forw(bdl1, bdl2, orbin, orbfin)
-      orbin=1
-      orbfin=orbin-1+2*nocrosl+noinsl   
-      
-      CALL compbs(0, bdl1, bdl2, nocrosl,   & 
-              orbfin-orbin+1, orbin, nchanl, kvall,    &
-              kfunl, kfundl, kintl, kcoefl)
-      IF (ikind.EQ.2) THEN
-       orbin=2*nocrosl+noinsl+noinss+1
-       orbfin=orbin-1+2*nocrosr+noinsr
-       CALL scatter_forw(bdr1, bdr2, orbin, orbfin)
-       orbin=2*nocrosl+noinsl+noinss+1
-       orbfin=orbin-1+2*nocrosr+noinsr    
-       CALL compbs(1, bdr1, bdr2, nocrosr,  &
-            orbfin-orbin+1, orbin, nchanr, kvalr,        &
-            kfunr, kfundr, kintr, kcoefr)
-      ENDIF
-      CALL summary_band(ik,ien)
-      IF (ikind.NE.0) THEN
-       orbin=nocrosl+noinsl+1
-       orbfin=orbin-1+nocrosl+noinss+nocrosr
-       CALL scatter_forw(bdl2, bdr1, orbin, orbfin)
-       CALL transmit(ik,ien) 
-      ENDIF                                   
-    ENDDO                    
-   CALL free_mem
 
-  ENDDO
+    call local 
+
+    do ien=1, nenergy
+      eryd = earr(ien)/rytoev + efl
+      call form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
+      call scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
+                        tblml, crosl, taunewl, rl, rabl, betarl) 
+      call compbs(1, nocrosl, norbl, nchanl, kvall, kfunl, kfundl, &
+                  kintl, kcoefl) 
+
+      IF (ikind.EQ.2) THEN
+        eryd = earr(ien)/rytoev + efr
+        call form_zk(n2d, nrzpr, zkrr, zkr, eryd, tpiba)
+        call scatter_forw(nrzr, nrzpr, zr, psiperr, zkr, norbr,    &
+                          tblmr, crosr, taunewr, rr, rabr, betarr)
+        call compbs(0, nocrosr, norbr, nchanr, kvalr, kfunr, kfundr,&
+                     kintr, kcoefr) 
+      ENDIF
+
+      call summary_band(ik,ien)
+
+      IF (ikind.NE.0) THEN
+        eryd = earr(ien)/rytoev + efs
+        call form_zk(n2d, nrzps, zkrs, zks, eryd, tpiba)
+        call scatter_forw(nrzs, nrzps, zs, psipers, zks, norbs,    &
+                          tblms, cross, taunews, rs, rabs, betars)
+
+        write(6,*) 'to transmit'
+
+        call transmit(ik, ien)
+      endif
+
+
+    enddo
+   call free_mem
+  enddo
 
   IF(ikind.GT.0.AND.tran_file.NE.' ')  &
-   CALL summary_tran(tran_file,nenergy,earr,tran_tot)
+   CALL summary_tran()
 
   CALL print_clock_pwcond()
   CALL stop_clock('PWCOND')
-  RETURN
-END SUBROUTINE do_cond                                    
+
+  return
+
+END SUBROUTINE do_cond
+
 

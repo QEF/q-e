@@ -7,14 +7,13 @@
 !
 subroutine form_zk(n2d, nrzp, zkr, zk, e, tpiba)
 !
-! Just to construct complex zk=sqrt(e-E_n) for energy e  
-! from eigenvalues E_n found for some initial energy
+! To construct complex wavevectors zk=sqrt(e-E_n) 
+! for an energy e from eigenvalues E_n of 2d problem 
 !
   USE kinds, only : DP 
   implicit none
   integer :: nrzp, n2d, n, k 
   real(kind=DP) :: zkr(n2d,nrzp), e, ed, tpiba
-  real(kind=DP), parameter :: eps=1.d-4
   complex(kind=DP) :: zk(n2d,nrzp)
 
   do k=1, nrzp

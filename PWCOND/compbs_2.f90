@@ -5,8 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
+subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
                     vec, kval, llapack)
+
 !
 ! This subroutine reduces amat, bmat into amt, bmt
 ! excluding inside lying orbitals and solves GEP:
@@ -20,20 +21,20 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
   integer :: n2d,     & ! 2D dimension
              noins,   & ! interior orbitals
              nocros,  & ! crossing orbitals
-             norbnow, & ! total number of orbitals
+             norb,    & ! total number of orbitals
              ntot       ! ntot = 2*(n2d+nocros) 
   integer :: info, ishift, i, j, k, l
   integer, allocatable :: ipiv(:)
   logical :: llapack
-  complex(kind=DP) :: amat(2*n2d+norbnow, 2*n2d+norbnow),  &
-                      bmat(2*n2d+norbnow, 2*n2d+norbnow),  &
-                      vec(2*n2d+norbnow, ntot), kval(ntot) 
+  complex(kind=DP) :: amat(2*n2d+norb, 2*n2d+norb),  &
+                      bmat(2*n2d+norb, 2*n2d+norb),  &
+                      vec(2*n2d+norb, ntot), kval(ntot) 
   complex(kind=DP), allocatable :: amt(:,:), bmt(:,:),  &
                       auxa(:), auxb(:), auxc(:),    &
                       hmat(:,:), hmt(:,:), vecaux(:,:)
 
   call start_clock('compbs_2')
-  noins = norbnow-2*nocros
+  noins = norb-2*nocros
 
   allocate( bmt( ntot, ntot ) )
   allocate( amt( ntot, ntot ) )
@@ -49,7 +50,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
 ! To interchange inside and right crossing orbitals in a and b
 !
 !     rows 
-  do j=1, 2*n2d+norbnow
+  do j=1, 2*n2d+norb
     do i=1, nocros
       auxa(i)=amat(2*n2d+nocros+noins+i,j)
       auxb(i)=bmat(2*n2d+nocros+noins+i,j)
@@ -65,7 +66,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
     enddo
   enddo                        
 !     columns
-  do j=1, 2*n2d+norbnow
+  do j=1, 2*n2d+norb
     do i=1, nocros
       auxa(i)=amat(j,2*n2d+nocros+noins+i)
       auxb(i)=bmat(j,2*n2d+nocros+noins+i)
@@ -135,7 +136,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
 !ccccccc
 
 !
-! Forming (2*n2d+norbnow, ntot) matrix of eigenvectors
+! Forming (2*n2d+norb, ntot) matrix of eigenvectors
 ! cooficients, storing them in vec  
 !
   vec=(0.d0,0.d0)
@@ -165,7 +166,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
 ! (to have a right order of orbitals again)
 
 !     rows
-  do j=1, 2*n2d+norbnow
+  do j=1, 2*n2d+norb
     do i=1, nocros
       auxa(i)=amat(2*n2d+nocros+i,j)
       auxb(i)=bmat(2*n2d+nocros+i,j)
@@ -181,7 +182,7 @@ subroutine compbs_2(nocros, norbnow, n2d, ntot, amat, bmat, &
     enddo
   enddo
 !     columns
-  do j=1, 2*n2d+norbnow
+  do j=1, 2*n2d+norb
     do i=1, nocros
       auxa(i)=amat(j,2*n2d+nocros+i)
       auxb(i)=bmat(j,2*n2d+nocros+i)

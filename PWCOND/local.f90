@@ -13,67 +13,183 @@ SUBROUTINE local
 !
 ! This subroutine computes 2D eigenfunctions and eigenvalues for
 ! the local potential in each slab and performs 2D reduction of 
-! the plane wave basis set.
+! the plane wave basis set (local_1). Using this reduced basis
+! set it solves again 2D EV problem (local_2).
 !
-
-  USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE pwcom
+  USE constants, ONLY : rytoev
+  USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : npol
   USE io_files
   USE cond
-  USE mp,         ONLY : mp_barrier, mp_bcast
-  USE mp_global,        ONLY : nproc, me_pool, root_pool
-  USE parallel_include
 
   IMPLICIT NONE 
-
-  INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
-             ios, index, number, nprob, nteam, nteamnow,     &
-             status, info, kin, kfin, is, js
-  INTEGER, ALLOCATABLE :: fftxy(:,:) 
-  REAL(kind=DP), PARAMETER :: eps=1.d-6
-  REAL(kind=DP), ALLOCATABLE :: el(:), gp(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:),     &
-                                   psibase(:,:), psiprob(:,:)
-  COMPLEX(kind=DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
-  COMPLEX(kind=DP) :: aij, xfact, ZDOTC
+  
+  INTEGER :: ig, il, k, kin, kfin
+  REAL(kind=DP) :: edummy
+  COMPLEX(kind=DP), ALLOCATABLE :: psibase(:,:)  
   LOGICAL :: exst
 
 !
 ! To divide the slabs between CPU
 !
   CALL start_clock('local')
-  CALL slabcpu(nrz, nrzp, nkofz, bdl1, bdl2, bdr1, bdr2, z)
 
 !
 ! If all the information is already contained in the file it reads it.
 !
-  IF (lread_loc) THEN 
+  IF (lread_loc) THEN
     CALL seqopn(4,fil_loc,'unformatted',exst)
     IF(.NOT.exst) CALL errore ('local','fil_loc not found',1)
     READ(4) n2d
+    READ(4) nrzpl, nrzps, nrzpr
 !   Allocate variables depending on n2d
-    CALL allocate_cond_2
-    READ(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d) 
-!    WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
-    READ(4) (((psiper(ig,il,k),ig=1,n2d),il=1,n2d), &
-                                               k=1,nrzp)
-    READ(4) ((zkr(il,k),il=1,n2d),k=1,nrzp)
+    CALL allocate_cond
 
+    READ(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d)
+    READ(4) (((psiperl(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                               k=1,nrzpl)
+    READ(4) ((zkrl(il,k),il=1,n2d),k=1,nrzpl)
+    if(ikind.gt.0) then
+     READ(4) (((psipers(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                               k=1,nrzps)
+     READ(4) ((zkrs(il,k),il=1,n2d),k=1,nrzps)
+    endif
+    if(ikind.gt.1) then
+     READ(4) (((psiperr(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                               k=1,nrzpr)
+     READ(4) ((zkrr(il,k),il=1,n2d),k=1,nrzpr)
+    endif
     CLOSE(unit=4)
     RETURN
   ENDIF
 
+  allocate( psibase( ngper*npol, ngper*npol ) )
+  psibase = 0.d0
+
+  if(ewind.le.100.d0) then
+    n2d = 0
+    edummy = earr(1)/rytoev + efl
+    call local_1(edummy,nrzl,vppotl,n2d,psibase)
+    if(ikind.gt.0) then
+     edummy = earr(1)/rytoev + efs
+     call local_1(edummy,nrzs,vppots,n2d,psibase)
+    endif
+    if(ikind.eq.2) then
+     edummy = earr(1)/rytoev + efr
+     call local_1(edummy,nrzr,vppotr,n2d,psibase)
+    endif
+  else
+    n2d = ngper*npol
+  endif
+
+!
+! Allocate variables depending on n2d
+!
+  nrzps = 0
+  nrzpr = 0
+  call divide(nrzl, kin, kfin)
+  nrzpl = kfin - kin + 1
+  if(ikind.gt.0) then
+    call divide(nrzs, kin, kfin)
+    nrzps = kfin - kin + 1
+  endif
+  if(ikind.gt.1) then
+    call divide(nrzr, kin, kfin)
+    nrzpr = kfin - kin + 1
+  endif
+
+  CALL allocate_cond
+
+  IF (npol.EQ.2) THEN
+     WRITE( stdout,*) 'ngper, ngper*npol, n2d = ', ngper, ngper*npol, n2d
+  ELSE
+     WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
+  ENDIF
+
+!
+! Construct components of basis vector set on G_per
+!
+  if(ewind.le.100.d0) then
+    CALL DCOPY(2*ngper*npol*n2d,psibase,1,newbg,1)
+  else
+    newbg = 0.d0
+    do ig=1, n2d
+      newbg(ig,ig) = 1.d0
+    enddo
+  endif
+
+  deallocate( psibase )
+
+  call local_2(nrzl,nrzpl,vppotl,psiperl,zkrl)   
+  if(ikind.gt.0) call local_2(nrzs,nrzps,vppots,psipers,zkrs)
+  if(ikind.gt.1) call local_2(nrzr,nrzpr,vppotr,psiperr,zkrr)
+
+!
+! saving the 2D data on the file if lwrite_loc=.t.
+!
+  IF (lwrite_loc) THEN
+    IF(fil_loc.EQ.' ') CALL errore ('local','fil_loc no name',1)
+    CALL seqopn(4,fil_loc,'unformatted',exst)
+    WRITE(4) n2d
+    WRITE(4) nrzpl, nrzps, nrzpr
+    WRITE(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d)
+    WRITE(4) (((psiperl(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                               k=1,nrzpl)
+    WRITE(4) ((zkrl(il,k),il=1,n2d),k=1,nrzpl)
+    if(ikind.gt.0) then
+     WRITE(4) (((psipers(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                             k=1,nrzps)
+     WRITE(4) ((zkrs(il,k),il=1,n2d),k=1,nrzps)
+    endif
+    if(ikind.gt.1) then
+     WRITE(4) (((psiperr(ig,il,k),ig=1,n2d),il=1,n2d), &
+                                               k=1,nrzpr)
+     WRITE(4) ((zkrr(il,k),il=1,n2d),k=1,nrzpr)
+    endif 
+    CLOSE(unit=4)
+  ENDIF
+
+  CALL stop_clock('local')
+  RETURN
+END SUBROUTINE local
+!-----------------------------------
+
+subroutine local_1 (edummy, nrz, vppot, n2d, psibase) 
+
+  USE kinds, only : DP
+  USE cell_base, ONLY : at, tpiba2
+  USE noncollin_module, ONLY : npol
+  USE mp_global,        ONLY : nproc, me_pool, root_pool
+  USE mp,         ONLY : mp_barrier, mp_bcast
+  USE io_global, ONLY : ionode, ionode_id
+  USE parallel_include
+  use cond, only : nrx, nry, ngper, gper, ewind, epsproj
+ 
+  IMPLICIT NONE
+
+  INTEGER :: nrz, n2d 
+  INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
+             ios, index, number, nprob, nteam, nteamnow,     &
+             status, info, kin, kfin, is, js
+  INTEGER, ALLOCATABLE :: fftxy(:,:)
+  REAL(kind=DP) :: edummy
+  REAL(kind=DP), ALLOCATABLE :: el(:), gp(:)
+  complex(kind=DP) :: psibase(ngper*npol,ngper*npol),   &
+                      vppot(nrz,nrx*nry,npol,npol), aij, xfact, ZDOTC
+  COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)  
+  COMPLEX(kind=DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+
+
   ALLOCATE( gp( 2 ) )
   ALLOCATE( el( ngper * npol ) )  
   ALLOCATE( amat( ngper * npol, ngper * npol ) )
-  ALLOCATE( psibase( ngper * npol, ngper * npol ) )
   ALLOCATE( psiprob( ngper * npol, ngper * npol ) )
-  ALLOCATE( fftxy(-(nrx-1)/2:nrx/2,-(nry-1)/2:nry/2) )  
+  ALLOCATE( fftxy(-nrx:nrx,-nry:nry) )  
 
 !
 ! To form fftxy correspondence
 !      
+  fftxy = 0
   DO i=1, nrx
     il=i-1
     IF (il.GT.nrx/2) il=il-nrx 
@@ -85,29 +201,18 @@ SUBROUTINE local
   ENDDO     
 
 !
-! to find kin and kfin
-!
-  DO k=1, nrz
-    IF (z(k).LE.bdl1+eps)  kin=k
-    IF (z(k).LE.bdr2-eps)  kfin=k
-  ENDDO             
-
-!
 ! Starting k and number of CPU
 !
-  nteam=1
-
+  kin = 1
+  kfin = nrz
   kin = kin + me_pool
   nteam = nproc
 
 !
 ! set and solve the eigenvalue equation for each slab
 !                                                       
-  n2d=0
-  nprob=0
-  psibase=(0.d0,0.d0)
-
   DO WHILE(kin.LE.kfin) 
+
      amat=(0.d0,0.d0)
      DO ig=1, ngper
         DO jg=ig, ngper
@@ -120,7 +225,7 @@ SUBROUTINE local
                  DO js=1,npol
                     amat(ig+(is-1)*ngper,jg+(js-1)*ngper)=vppot(kin,index,is,js)
                     amat(jg+(js-1)*ngper,ig+(is-1)*ngper)= &
-                        DCONJG(amat(ig+(is-1)*ngper,jg+(js-1)*ngper))
+                        CONJG(amat(ig+(is-1)*ngper,jg+(js-1)*ngper))
                  ENDDO
               ENDDO
            ENDIF
@@ -132,19 +237,10 @@ SUBROUTINE local
         ENDDO
      ENDDO       
      CALL hev_ab(ngper*npol, amat, ngper*npol, el, psiprob,      &
-                     -1.d1, eryd+ewind, nprob)
-
-!     do is=1,ngper*npol
-!        write(6,'("------------------------------",i5,f15.7)') is, el(is)
-!        do ig=1,ngper*npol
-!           if (ig.eq.ngper+1) write(6,'("----")')
-!           write(6,'(i5,2f15.7)') ig, psiprob(ig,is)
-!        enddo
-!     enddo
-!     stop
+                     -1.d1, edummy+ewind, nprob)
 
 #ifdef __PARA
-     IF ( me_pool .NE. root_pool ) THEN
+    IF ( me_pool.ne.root_pool ) THEN
         CALL mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
       CALL errore ('n2d reduction','info<>0 in send',info)       
@@ -173,37 +269,70 @@ SUBROUTINE local
     CALL gramsh(ngper*npol,nprob,1,nprob,psibase,psiprob,n2d,epsproj) 
 #endif
     kin=kin+nteam
+
   ENDDO
 
 #ifdef __PARA
   CALL mp_barrier()
   CALL mp_bcast(n2d,ionode_id)
-  CALL mp_bcast(psibase,ionode_id)
+  CALL mp_bcast(psibase,ionode_id) 
 #endif
 
-!
-! Allocate variables depending on n2d
-!
-  CALL allocate_cond_2
-  IF (npol.EQ.2) THEN
-     WRITE( stdout,*) 'ngper, ngper*npol, n2d = ', ngper, ngper*npol, n2d
-  ELSE
-     WRITE( stdout,*) 'ngper, n2d = ', ngper, n2d
-  ENDIF
-!
-! Construct components of basis vector set on G_per
-!
-  CALL DCOPY(2*ngper*npol*n2d,psibase,1,newbg,1)
+  deallocate( gp )
+  deallocate( el )
+  deallocate( amat )
+  deallocate( psiprob )
+  deallocate( fftxy )
 
-!
-! set and solve the eigenvalue equation for each slab
-!
+  return
+end subroutine local_1
+
+subroutine local_2(nrz, nrzp, vppot, psiper, zkr) 
+
+  USE kinds, only : DP
+  USE cell_base, ONLY : at, tpiba2
+  USE mp,         ONLY : mp_barrier
+  USE noncollin_module, ONLY : npol
+  use cond, only : nrx, nry, ngper, n2d, gper, newbg 
+
+  IMPLICIT NONE
+
+  INTEGER :: nrz, nrzp
+  INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k, kp, &
+             ios, info, index, number, kin, kfin, is, js 
+  INTEGER, ALLOCATABLE :: fftxy(:,:)
+  REAL(kind=DP) :: zkr(n2d,nrzp)
+  REAL(kind=DP), ALLOCATABLE :: gp(:)
+  complex(kind=DP) :: psiper(n2d,n2d,nrzp),   &
+                      vppot(nrz,nrx*nry,npol,npol), aij, ZDOTC
+  COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)  
+  COMPLEX(kind=DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+
+  allocate( gp( 2 ) )
+  allocate( fftxy(-nrx:nrx, -nry:nry) )
+  ALLOCATE( amat( ngper * npol, ngper * npol ) )
   ALLOCATE( amat1( n2d, n2d ) )
   ALLOCATE( ymat( ngper*npol, n2d ) )
 
+!
+! To form fftxy correspondence
+!
+  fftxy(:,:) = 0
+  do i = 1, nrx
+    il = i-1
+    if (il.gt.nrx/2) il=il-nrx
+    do j = 1, nry
+       jl = j-1
+       if (jl.gt.nry/2) jl = jl-nry
+       fftxy(il,jl) = i+(j-1)*nrx
+    enddo
+  enddo
+
+  call divide(nrz, kin, kfin)
+
 ! for reduced basis set H'_{ab}=e*^i_aH_{ij}e^j_b
-  DO k=1, nrz
-    IF(nkofz(k).NE.0) THEN
+  do k = kin, kfin
+      kp = k - kin + 1
       ymat=(0.d0,0.d0)
 !
 !     First compute y_{ib}=H_{ij}e_{jb}
@@ -244,40 +373,24 @@ SUBROUTINE local
 !     Solving the eigenvalue problem and construction zk
 !
       info=-1
-      CALL hev_ab(n2d, amat1, n2d, zkr(1,nkofz(k)),       &
-                  psiper(1,1,nkofz(k)), 0.d0, 0.d0, info)
+      CALL hev_ab(n2d, amat1, n2d, zkr(1,kp),       &
+                  psiper(1,1,kp), 0.d0, 0.d0, info)
 
-    ENDIF
+
   ENDDO
 
-!
-! saving the 2D data on the file if lwrite_loc=.t. 
-!
-  IF (lwrite_loc) THEN
-    IF(fil_loc.EQ.' ') CALL errore ('local','fil_loc no name',1)
-    CALL seqopn(4,fil_loc,'unformatted',exst)
-    WRITE(4) n2d
-    WRITE(4) ((newbg(ig,il), ig=1, ngper*npol), il=1, n2d)
+#ifdef __PARA
+  CALL mp_barrier()
+#endif
 
-    WRITE(4) (((psiper(ig,il,k),ig=1,n2d),il=1,n2d), &
-                                                k=1,nrzp)
-    WRITE(4) ((zkr(il,k),il=1,n2d),k=1,nrzp)
-    CLOSE(unit=4)
-  ENDIF
+  deallocate(amat)
+  deallocate(amat1)
+  deallocate(ymat)
+  deallocate(gp)
+  deallocate(fftxy)
 
-  DEALLOCATE(amat)
-  DEALLOCATE(amat1)
-  DEALLOCATE(ymat)
-  DEALLOCATE(gp)
-  DEALLOCATE(psibase)
-  DEALLOCATE(psiprob)
-  DEALLOCATE(el)
-  DEALLOCATE(fftxy)
-
-  CALL stop_clock('local')
-  RETURN 
-END SUBROUTINE local
-!-----------------------------------
+  return
+end subroutine local_2
 
 FUNCTION number(gp, at, fftxy, nrx, nry)
 !
@@ -285,10 +398,9 @@ FUNCTION number(gp, at, fftxy, nrx, nry)
 ! and write on output its fft position. 
 !
   IMPLICIT NONE
-  INTEGER :: nrx, nry, fftxy(-(nrx-1)/2:nrx/2, -(nry-1)/2:nry/2), &
+  INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nrx:nry), &
              number, n1, n2
   REAL(kind=KIND(0.d0)) :: gp(2), at(3,3), x1, x2 
-  REAL(kind=KIND(0.d0)), PARAMETER :: eps=1.d-4
 
   x1=gp(1)*at(1,1)+gp(2)*at(2,1)
   x2=gp(1)*at(1,2)+gp(2)*at(2,2) 

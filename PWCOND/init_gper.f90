@@ -21,13 +21,13 @@ subroutine init_gper(ik)
   real(kind=DP), parameter :: eps=1.d-8
   real(kind=DP), allocatable :: gnorm2(:)
 
-  allocate( gnorm2( nr1s * nr2s ) ) 
-  allocate( nshell( nr1s, nr2s ) )
+  allocate( gnorm2( nrx * nry ) ) 
+  allocate( nshell( nrx, nry ) )
 !
 ! Compute ngper, ngpsh, and (i,j) --> shell
 !
-  do i=1, nr1s
-    do j=1, nr2s 
+  do i=1, nrx
+    do j=1, nry 
       nshell(i,j)=0
     enddo
   enddo
@@ -36,12 +36,12 @@ subroutine init_gper(ik)
   ngpsh=1
   gnorm2(1)=(xyk(1,ik)**2+xyk(2,ik)**2)*tpiba2  
   nshell(1,1)=1
-  do i=1, nr1s
+  do i=1, nrx
     il=i-1
-    if (il.gt.nr1s/2) il=il-nr1s
-    do j=1, nr2s
+    if (il.gt.nrx/2) il=il-nrx
+    do j=1, nry
       jl=j-1
-      if (jl.gt.nr2s/2) jl=jl-nr2s
+      if (jl.gt.nry/2) jl=jl-nry
       norm2=(((il+xyk(1,ik))*bg(1,1)+(jl+xyk(2,ik))*bg(1,2))**2+ &
             ((il+xyk(1,ik))*bg(2,1)+(jl+xyk(2,ik))*bg(2,2))**2)* &
                  tpiba2
@@ -80,8 +80,8 @@ subroutine init_gper(ik)
   do i=1, ngpsh
     ninsh(i)=0
   enddo
-  do i=1, nr1s
-    do j=1, nr2s
+  do i=1, nrx
+    do j=1, nry
       if (nshell(i,j).ne.0) then
         do k=nshell(i,j)+1, ngpsh
            ninsh(k)=ninsh(k)+1
@@ -92,12 +92,12 @@ subroutine init_gper(ik)
 !
 ! To form g
 !
-  do i=1, nr1s
+  do i=1, nrx
     il=i-1
-    if (il.gt.nr1s/2) il=il-nr1s
-    do j=1, nr2s
+    if (il.gt.nrx/2) il=il-nrx
+    do j=1, nry
       jl=j-1
-      if (jl.gt.nr2s/2) jl=jl-nr2s
+      if (jl.gt.nry/2) jl=jl-nry
       if (nshell(i,j).ne.0) then
          ninsh(nshell(i,j))=ninsh(nshell(i,j))+1
          igper=ninsh(nshell(i,j))

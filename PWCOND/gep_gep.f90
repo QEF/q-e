@@ -17,7 +17,7 @@ implicit none
         alpha(:), beta(:)
 
   do i=1, n
-    amt(i,i) = amt(i,i)-delgep
+    amt(i,i) = amt(i,i)+delgep
     bmt(i,i) = bmt(i,i)+delgep
   enddo
 

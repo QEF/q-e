@@ -13,14 +13,18 @@ subroutine free_mem
   use cond
   implicit none
 !
-! From local_2
+! From allocate_cond
 !
-  deallocate(psiper)
-  deallocate(zk)
+  deallocate(psiperl)
+  deallocate(zkl)
+  deallocate(zkrl)
+  deallocate(psipers)
+  deallocate(zks)
+  deallocate(zkrs)
+  deallocate(psiperr)
   deallocate(zkr)
-!
-! From allocate_cond_2
-!
+  deallocate(zkrr)
+
   deallocate(newbg)
 
   deallocate(fun0) 

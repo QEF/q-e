@@ -5,16 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine summary_tran(tran_file, nenergy, earr, tran_tot)
+subroutine summary_tran()
 !
 ! It writes transmission coefficients onto the file tran_file
 !
   USE kinds, only : DP
+  USE io_files, ONLY : tran_file
+  USE cond, ONLY : nenergy, earr, tran_tot
   implicit none
 
-  character(len=80) :: tran_file
-  integer ::  nenergy, i
-  real(kind=DP) :: earr(nenergy), tran_tot(nenergy)
+  integer ::  i
+
 !
 ! Output of T onto the file
 !

@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -6,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine four(alpha, w0, k, dz)
+subroutine four(w0, z0, dz, tblm, taunew, r, rab, betar)
 !
 ! This routine computes the bidimensional fourier transform of the 
 ! beta function. It has been implemented for s, p, d-orbitals. 
@@ -22,29 +21,31 @@ subroutine four(alpha, w0, k, dz)
 !             p_z, p_{-x}, p_{-y} ;
 !             d_{z^2-1}, d_{-xz}, d_{-yz}, d_{x^2-y^2}, d_{xy}
 !
-! input:  alpha -  the number of the orbital in the full list.
-!                  This orbital is the fist one for a given l.
-!         k     -  the number of the slab in z direction
-!         dz    -  the slab width           
+! input:  tblm   -  array characterizing the orbital.
+!         taunew -  coordinates and radius of the orbital.
+!         z0     -  the initial z 
+!         dz     -  the slab width           
 !
 ! output: w0(z, g, m), where 
-!                      z(k)< z <z(k+1) and 
+!                      z0< z <z0+dz  
 !                      g - 2D g-vector
 ! 
 #include "f_defs.h"
-  use pwcom
-  USE parameters, ONLY: ndmx
-  USE uspp_param,    ONLY : betar
-  use atom, only: msh, r, rab
-  use cond
+  USE kinds, ONLY: DP 
+  USE constants, ONLY : tpi, fpi
+  USE parameters, only : ndmx
+  USE cell_base, ONLY : alat, tpiba
+  USE cond, ONLY : sarea, nz1, ngper, gper, ninsh, gnsh, ngpsh
+
 implicit none
 
   integer :: alpha, k, kz, ig, ign, igphi, il, il1, nbb, itp, &
-             indexr, iz, lb, ir, nmesh, nmeshs
+             indexr, iz, lb, ir, nmesh, nmeshs, tblm(4)
   real(kind=DP), parameter :: eps=1.d-8
   complex(kind=DP), parameter :: cim=(0.d0, 1.d0)
   real(kind=DP) :: gn, s1, s2, cs, sn, cs2, sn2, arg, rz, dz1, zr, &
-                   dr, dz,  bessj  
+                   dr, z0, dz,  bessj, taunew(4), r(ndmx),         &
+                   rab(ndmx), betar(ndmx)   
   real(kind=DP), allocatable :: x1(:), x2(:), x3(:), x4(:)
   real(kind=DP), allocatable :: fx1(:), fx2(:), fx3(:), fx4(:), zsl(:)
   complex(kind=DP) :: exg, cong, xfact, w0(nz1, ngper, 5)
@@ -62,89 +63,82 @@ implicit none
   allocate( zsl( nz1) )
   allocate( wadd( nz1, ngper ) )
  
-  itp=itnew(alpha)
-  nbb=nbnew(alpha)
-  lb=ls(alpha)
-  nmesh=indexr(rsph(nbb,itp)*alat,msh(itp),r(1,itp))
+  lb = tblm(3)
+  nmesh=indexr(taunew(4)*alat,ndmx,r)
   dz1=dz/nz1
-  zsl(1)=(z(k)+dz1*0.5d0-taunew(3,alpha))*alat
-  do kz=2, nz1
-    zsl(kz)=zsl(kz-1)+dz1*alat
+  zsl(1)=(z0+dz1*0.5d0-taunew(3))*alat
+  do kz = 2, nz1
+    zsl(kz) = zsl(kz-1)+dz1*alat
   enddo
+
 
   ig=0 
   do ign=1, ngpsh
 
      gn=gnsh(ign)
      do kz=1, nz1
-       if (abs(zsl(kz))+eps.le.rsph(nbb,itp)*alat) then
-         iz=indexr(zsl(kz),nmesh,r(1,itp))
+       if (abs(zsl(kz))+eps.le.taunew(4)*alat) then
+         iz=indexr(zsl(kz),nmesh,r)
          if ((nmesh-iz)/2*2.eq.nmesh-iz) then
             nmeshs=nmesh
          else
             nmeshs=nmesh+1
          endif 
          do ir=iz, nmeshs
-            rz=sqrt(r(ir,itp)**2-zsl(kz)**2)
+            rz=sqrt(r(ir)**2-zsl(kz)**2)
             if (lb.eq.0) then
-               x1(ir)=betar(ir,nbb,itp)*bessj(0,gn*rz)
+               x1(ir)=betar(ir)*bessj(0,gn*rz)
             elseif (lb.eq.1) then
-               x1(ir)=betar(ir,nbb,itp)*bessj(1,gn*rz)/  &
-                                           r(ir,itp)*rz
-               x2(ir)=betar(ir,nbb,itp)*bessj(0,gn*rz)/  &
-                                           r(ir,itp)    
+               x1(ir)=betar(ir)*bessj(1,gn*rz)/r(ir)*rz 
+               x2(ir)=betar(ir)*bessj(0,gn*rz)/r(ir) 
             elseif (lb.eq.2) then
-               x1(ir)=betar(ir,nbb,itp)                  &
-                              *bessj(2,gn*rz)*rz**2/r(ir,itp)**2
-               x2(ir)=betar(ir,nbb,itp)                  &
-                              *bessj(1,gn*rz)*rz/r(ir,itp)**2
-               x3(ir)=betar(ir,nbb,itp)*bessj(0,gn*rz)/  &
-                                             r(ir,itp)**2
-               x4(ir)=betar(ir,nbb,itp)*bessj(0,gn*rz)
+               x1(ir)=betar(ir)*bessj(2,gn*rz)*rz**2/r(ir)**2
+               x2(ir)=betar(ir)*bessj(1,gn*rz)*rz/r(ir)**2
+               x3(ir)=betar(ir)*bessj(0,gn*rz)/r(ir)**2 
+               x4(ir)=betar(ir)*bessj(0,gn*rz)
             else
                call errore ('four','ls not programmed ',1)
             endif
          enddo
-         call simpson(nmeshs-iz+1,x1(iz),rab(iz,itp),fx1(kz))  
+         call simpson(nmeshs-iz+1,x1(iz),rab(iz),fx1(kz))  
          if (iz.eq.1) then
-            dr=r(iz,itp)
+            dr=r(iz)
          else
-            dr=r(iz,itp)-r(iz-1,itp)
+            dr=r(iz)-r(iz-1)
          endif
-         zr=r(iz,itp)-abs(zsl(kz))
+         zr=r(iz)-abs(zsl(kz))
          if (lb.eq.0) then 
             if (iz.eq.1) then
-               x1(iz-1)=betar(iz,nbb,itp)-betar(iz,nbb,itp)/dr*zr 
+               x1(iz-1)=betar(iz)-betar(iz)/dr*zr 
             else
-               x1(iz-1)=betar(iz,nbb,itp)-                   &
-                  (betar(iz,nbb,itp)-betar(iz-1,nbb,itp))/dr*zr 
+               x1(iz-1)=betar(iz)-(betar(iz)-betar(iz-1))/dr*zr      
             endif
             fx1(kz)=fx1(kz)+(x1(iz-1)+x1(iz))*0.5d0*zr
          else
             fx1(kz)=fx1(kz)+x1(iz)*0.5d0*zr
-            call simpson(nmeshs-iz+1,x2(iz),rab(iz,itp),fx2(kz))
+            call simpson(nmeshs-iz+1,x2(iz),rab(iz),fx2(kz))
          endif
          if (lb.eq.1) then
             if(iz.eq.1) then
               x2(iz-1)=0.d0
             else
-              x2(iz-1)=(betar(iz,nbb,itp)-(betar(iz,nbb,itp)-   &
-                        betar(iz-1,nbb,itp))/dr*zr)/abs(zsl(kz))
+              x2(iz-1)=(betar(iz)-(betar(iz)-   &
+                        betar(iz-1))/dr*zr)/abs(zsl(kz))
             endif 
             fx2(kz)=fx2(kz)+(x2(iz-1)+x2(iz))*0.5d0*zr           
          endif 
          if (lb.eq.2) then
             fx2(kz)=fx2(kz)+x2(iz)*0.5d0*zr 
-            call simpson(nmeshs-iz+1,x3(iz),rab(iz,itp),fx3(kz))
-            call simpson(nmeshs-iz+1,x4(iz),rab(iz,itp),fx4(kz)) 
+            call simpson(nmeshs-iz+1,x3(iz),rab(iz),fx3(kz))
+            call simpson(nmeshs-iz+1,x4(iz),rab(iz),fx4(kz)) 
             if(iz.eq.1) then
                x3(iz-1)=0.d0
                x4(iz-1)=0.d0
             else          
-               x3(iz-1)=(betar(iz,nbb,itp)-(betar(iz,nbb,itp)-   &
-                         betar(iz-1,nbb,itp))/dr*zr)/abs(zsl(kz))**2
-               x4(iz-1)=betar(iz,nbb,itp)-(betar(iz,nbb,itp)-       &
-                         betar(iz-1,nbb,itp))/dr*zr
+               x3(iz-1)=(betar(iz)-(betar(iz)-   &
+                         betar(iz-1))/dr*zr)/abs(zsl(kz))**2
+               x4(iz-1)=betar(iz)-(betar(iz)-       &
+                         betar(iz-1))/dr*zr
             endif
             fx3(kz)=fx3(kz)+(x3(iz-1)+x3(iz))*0.5d0*zr
             fx4(kz)=fx4(kz)+(x4(iz-1)+x4(iz))*0.5d0*zr
@@ -237,7 +231,7 @@ function indexr(zz, ndim, r)
 !
 !     abs(zz)<r(indexr)
 !
-  iz=1       
+  iz = 1       
   do while(r(iz).le.abs(zz)+1.d-10)
     iz=iz+1
   enddo

@@ -1,5 +1,3 @@
-
-
 !
 ! Copyright (C) 2003 A. Smogunov
 ! This file is distributed under the terms of the
@@ -10,32 +8,32 @@
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
 !
-subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
-                  nchan, kval, kfun, kfund, kint, kcoef)
+subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
+                  kfund, kint, kcoef)  
+
 !
 ! Using the basis functions obtained by scatter_forw it computes
-! the complex band structure (CBS) of the tip ( zin<z<zfin ). 
+! the complex band structure (CBS) of the lead. 
 ! Some variables needed for wave-function matching in transmission
 ! calculation are constructed and saved.
 !
 #include "f_defs.h"
-  use pwcom
   USE noncollin_module, ONLY : noncolin, npol
-  USE uspp_param, ONLY: tvanp
+  use spin_orb, only : lspinorb
+  use lsda_mod, only: nspin
   use cond
   implicit none
   integer ::   &
      nocros,   & ! number of orbitals crossing the boundary
      noins,    & ! number of interior orbitals 
-     norbnow,  & ! total number of orbitals
-     orbin,    & ! number of 1-st orbital in full list 
-     lright      ! 1/0 if it is right/left tip    
+     norb,     & ! total number of orbitals
+     lleft       ! 1/0 if it is left/right tip    
   integer :: ik, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
              iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih, &
              ih1, ij, is, js 
   real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP) :: raux, zin, zfin, dz, DDOT
-  real(kind=DP), allocatable :: zps(:,:)
+  real(kind=DP) :: raux, DDOT
+  real(kind=DP), allocatable :: zpseu(:,:,:), zps(:,:)
   complex(kind=DP), parameter :: cim=(0.d0,1.d0) 
   complex(kind=DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
@@ -43,92 +41,75 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
             kcoef(nocros*npol,2*(n2d+npol*nocros)), &
             kfund(n2d,2*(n2d+npol*nocros))   
   complex(kind=DP), allocatable :: amat(:,:), bmat(:,:), vec(:,:), &
-            zps_nc(:,:), aux(:,:) 
+                                   zpseu_nc(:,:,:,:),              &
+                                   zps_nc(:,:), aux(:,:) 
   complex(kind=DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  LOGICAL :: exst
 
   call start_clock('compbs')
-  noins = norbnow-2*nocros
 
-  allocate( amat( (2*n2d+npol*norbnow), (2*n2d+npol*norbnow) ) )
-  allocate( bmat( (2*n2d+npol*norbnow), (2*n2d+npol*norbnow) ) )
-  allocate( vec( (2*n2d+npol*norbnow), 2*(n2d+npol*nocros) ) )
-  allocate( zps( norbnow, norbnow ) )
-  allocate( aux( n2d, 2*n2d+npol*norbnow))
-  if (noncolin) allocate( zps_nc( norbnow*npol, norbnow*npol ) )
+  noins = norb-2*nocros
+  if(lleft.eq.1) then
+    if (noncolin) then
+      allocate( zpseu_nc(2,norb,norb,nspin) )
+      zpseu_nc = zpseul_nc
+    else
+      allocate( zpseu(2,norb,norb) )
+      zpseu = zpseul
+    endif
+  else
+    if (noncolin) then
+      allocate( zpseu_nc(2,norb,norb,nspin) )
+      zpseu_nc = zpseur_nc
+    else
+      allocate( zpseu(2,norb,norb) )
+      zpseu = zpseur
+    endif
+  endif
 
-!
-! To find indices of initial and final slab
-!
-  do ik=1, nrz
-    if (z(ik).le.zin+eps)  kin=ik
-    if (z(ik).le.zfin-eps) kfin=ik
-  enddo
-  dz=z(kin+1)-z(kin)
+  allocate( amat( (2*n2d+npol*norb), (2*n2d+npol*norb) ) )
+  allocate( bmat( (2*n2d+npol*norb), (2*n2d+npol*norb) ) )
+  allocate( vec( (2*n2d+npol*norb), 2*(n2d+npol*nocros) ) )
+  allocate( aux( n2d, 2*n2d+npol*norb))
+  if (noncolin) then
+    allocate( zps_nc( norb*npol, norb*npol ) )
+  else
+    allocate( zps( norb, norb ) )
+  endif
 
   amat=(0.d0,0.d0)
   bmat=(0.d0,0.d0)
+
 !
 ! zps=zpseu-e*qq for US-PP and zps=zpseu for norm-conserv. PP
 !
-  orbin=orbin-1
-  do iorb=1, norbnow
-    do iorb1=1, norbnow 
+  do iorb=1, norb
+    do iorb1=1, norb 
       if (noncolin) then
         ij=0
         do is=1,npol
           do js=1,npol
             ij=ij+1
-            zps_nc(npol*(iorb-1)+is, npol*(iorb1-1)+js)=  &
-                 zpseu_nc(orbin+iorb, orbin+iorb1,ij)
+            zps_nc(npol*(iorb-1)+is, npol*(iorb1-1)+js)=         &
+                zpseu_nc(1,iorb,iorb1,ij)
+            if (lspinorb) then
+              zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)=        &
+                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                            -eryd*zpseu_nc(2,iorb,iorb1,ij)
+            else
+              if (is.eq.js)                                      &
+                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)=    &
+                      zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                             -eryd*zpseu_nc(2,iorb,iorb1,ij)
+            endif
           enddo
         enddo
       else
-        zps(iorb, iorb1)=zpseu(orbin+iorb,orbin+iorb1,iofspin)
+        zps(iorb,iorb1)=zpseu(1,iorb,iorb1)-eryd*zpseu(2,iorb,iorb1)
       endif
     enddo
-  enddo 
-  do iorb=1, nocros+noins
-    nt=itnew(orbin+iorb) 
-    if(tvanp(nt).or.lspinorb) then
-      ih=natih(orbin+iorb,2)
-      do iorb1=1, nocros+noins
-        if (natih(orbin+iorb,1).eq.natih(orbin+iorb1,1)) then
-          ih1=natih(orbin+iorb1,2)               
-          if (noncolin) then
-            ij=0
-            do is=1,npol
-              do js=1,npol
-                ij=ij+1
-                if (lspinorb) then
-                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                        zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
-                                -eryd*qq_so(ih,ih1,ij,nt)
-                else
-                  if (is.eq.js) &
-                      zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                          zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
-                                 -eryd*qq(ih,ih1,nt)
-                endif
-              enddo
-            enddo
-          else
-            zps(iorb,iorb1)=zps(iorb,iorb1)-eryd*qq(ih,ih1,nt)
-          endif
-        endif 
-      enddo
-    endif
   enddo 
 
-  do iorb=1, nocros*npol
-    do iorb1=1, nocros*npol
-      if (noncolin) then
-         zps_nc(iorb+npol*(noins+nocros), iorb1+npol*(noins+nocros))= &
-                   zps_nc(iorb,iorb1)       
-      else
-        zps(iorb+noins+nocros,iorb1+noins+nocros)=zps(iorb,iorb1)       
-      endif
-    enddo
-  enddo 
 !
 ! Forming the matrices A and B for generalized eigenvalue problem
 
@@ -144,10 +125,11 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
       bmat(ig+n2d,n)=fund0(ig, n)
      enddo
   enddo
+
 !
 !   2 
 !
-  do iorb=1, norbnow*npol
+  do iorb=1, norb*npol
     do ig=1, n2d
       amat(ig, 2*n2d+iorb)=funl1(ig, iorb)
       amat(n2d+ig, 2*n2d+iorb)=fundl1(ig, iorb)      
@@ -158,13 +140,13 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 !  3
 !
-  do iorb=1, norbnow*npol
+  do iorb=1, norb*npol
     aorb=iorb
     borb=iorb
     if (iorb.le.npol*nocros) aorb=iorb+npol*(noins+nocros) 
     if (iorb.gt.npol*nocros) borb=iorb-npol*(noins+nocros) 
     do n=1, 2*n2d
-      do iorb1=1, norbnow*npol 
+      do iorb1=1, norb*npol 
         if (noncolin) then
            amat(2*n2d+iorb,n)=amat(2*n2d+iorb,n)+                  &
                              zps_nc(aorb, iorb1)*intw1(iorb1,n)         
@@ -183,8 +165,8 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !  4
 !
   do iorb=1, nocros*npol
-    do iorb1=1, norbnow*npol
-      do iorb2=1, norbnow*npol
+    do iorb1=1, norb*npol
+      do iorb2=1, norb*npol
         if (noncolin) then
            bmat(2*n2d+iorb,2*n2d+iorb1)=bmat(2*n2d+iorb,2*n2d+iorb1) &
                  -zps_nc(iorb,iorb2)*intw2(iorb2, iorb1)
@@ -202,11 +184,11 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 !   5 
 !
-  do iorb=1, norbnow*npol
+  do iorb=1, norb*npol
     aorb=iorb
     if (iorb.le.npol*nocros) aorb=iorb+npol*(noins+nocros)
-    do iorb1=1, norbnow*npol
-      do iorb2=1, norbnow*npol
+    do iorb1=1, norb*npol
+      do iorb2=1, norb*npol
         if (noncolin) then
            amat(2*n2d+iorb,2*n2d+iorb1)=amat(2*n2d+iorb,2*n2d+iorb1)+  &
                    zps_nc(aorb,iorb2)*intw2(iorb2, iorb1)
@@ -223,40 +205,27 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 ! To reduce matrices and solve GEP A X = c B X; X = {a_n, a_\alpha}
 ! 
-  call compbs_2(npol*nocros, npol*norbnow, n2d, 2*(n2d+npol*nocros),   &
+  call compbs_2(npol*nocros, npol*norb, n2d, 2*(n2d+npol*nocros),   &
                 amat, bmat, vec, kval, llapack) 
 
 !
 ! To normalize (over XY plane) all the states
 !
-
-!  kfun=(0.d0,0.d0)
-!  kfund=(0.d0,0.d0)
-!  do ik=1, 2*(n2d+npol*nocros)
-!    do ig=1, n2d
-!      do j=1,  2*n2d+npol*norbnow
-!        kfun(ig,ik)= kfun(ig,ik)+amat(ig,j)*vec(j,ik)
-!        kfund(ig,ik)= kfund(ig,ik)+amat(n2d+ig,j)*vec(j,ik) 
-!      enddo
-!    enddo
-!  enddo
-!
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norbnow,   &
-               one, amat, 2*n2d+npol*norbnow, vec, 2*n2d+npol*norbnow,  &
+   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
+               one, amat, 2*n2d+npol*norb, vec, 2*n2d+npol*norb,     &
                zero, kfun, n2d)
    do ig=1,n2d
-      do ik=1, 2*n2d+npol*norbnow
+      do ik=1, 2*n2d+npol*norb
          aux(ig,ik)=amat(n2d+ig,ik)
       enddo
    enddo
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norbnow,   &
-               one, aux, n2d, vec, 2*n2d+npol*norbnow, zero, kfund, n2d)
-
+   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
+               one, aux, n2d, vec, 2*n2d+npol*norb, zero, kfund, n2d)
 
   do ik=1, 2*(n2d+npol*nocros)
     raux=DDOT(2*n2d,kfun(1,ik),1,kfun(1,ik),1)*sarea
     raux=1.d0/sqrt(raux)
-    call DSCAL(2*(2*n2d+npol*norbnow),raux,vec(1,ik),1)
+    call DSCAL(2*(2*n2d+npol*norb),raux,vec(1,ik),1)
     call DSCAL(2*n2d,raux,kfun(1,ik),1)
     call DSCAL(2*n2d,raux,kfund(1,ik),1)
   enddo
@@ -267,8 +236,8 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 
   call kbloch (2*(n2d+npol*nocros), kval)
 
-  call jbloch(2*(n2d+npol*nocros), n2d, norbf, norbnow, nocros,  &
-              kfun, kfund, vec, kval, intw1, intw2, sarea, nchan, npol)
+  call jbloch(2*(n2d+npol*nocros), n2d, norbf, norb, nocros,  &
+              kfun, kfund, vec, kval, intw1, intw2, nchan, npol)
 !
 ! To save band structure result
 !
@@ -278,14 +247,14 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 ! To account for the case of the right lead  
 !
-  if (lright.eq.1) then
+  if (lleft.eq.0) then
     do i=1, 2*n2d
-      do j=1, 2*n2d+npol*norbnow
+      do j=1, 2*n2d+npol*norb
         amat(i,j)=bmat(i,j) 
       enddo
     enddo
     do i=2*n2d+1, 2*n2d+npol*nocros
-      do j=1, 2*n2d+npol*norbnow 
+      do j=1, 2*n2d+npol*norb 
         amat(i,j)=-bmat(i+npol*(nocros+noins),j) 
       enddo
     enddo  
@@ -293,34 +262,16 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 ! psi_k and psi'_k on the scattering region boundary
 !
-!  do ik=1, 2*(n2d+npol*nocros)
-!    do ig=1, n2d
-!      do j=1,  2*n2d+npol*norbnow   
-!        kfun(ig,ik)= kfun(ig,ik)+amat(ig,j)*vec(j,ik)
-!        kfund(ig,ik)= kfund(ig,ik)+amat(n2d+ig,j)*vec(j,ik)
-!      enddo
-!    enddo
-!  enddo
-
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norbnow,   &
-               one, amat, 2*n2d+npol*norbnow, vec, 2*n2d+npol*norbnow,  &
+   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
+               one, amat, 2*n2d+npol*norb, vec, 2*n2d+npol*norb,  &
                zero, kfun, n2d)
    do ig=1,n2d
-      do ik=1, 2*n2d+npol*norbnow
+      do ik=1, 2*n2d+npol*norb
          aux(ig,ik)=amat(n2d+ig,ik)
       enddo
    enddo
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norbnow,   &
-               one, aux, n2d, vec, 2*n2d+npol*norbnow, zero, kfund, n2d)
-
-!  do j=1,2*nchan
-!     write(6,'("------------------------------",i5,2f15.6)') j, kval(j)
-!     do ik=1,n2d
-!        if (ik.eq.n2d/2+1.and.noncolin) write(6,'("-------")')
-!        write(6,'(i5,f15.7)') ik, abs(kfun(ik,j))
-!     enddo
-!  enddo
-!  stop
+   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
+               one, aux, n2d, vec, 2*n2d+npol*norb, zero, kfund, n2d)
 
 !
 ! kint(iorb, ik)=\sum_{iorb1} D_{iorb,iorb1} 
@@ -329,7 +280,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !                              
   do ik=1,  2*(n2d+npol*nocros)
     do iorb=1, nocros*npol
-      do j=1, 2*n2d+npol*norbnow 
+      do j=1, 2*n2d+npol*norb 
         kint(iorb,ik)=kint(iorb,ik)+amat(2*n2d+iorb,j)*vec(j,ik)
       enddo
     enddo
@@ -341,7 +292,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
   do ik=1, 2*(n2d+npol*nocros)
     do iorb=1, nocros*npol
-      if (lright.eq.1) then 
+      if (lleft.eq.0) then 
         kcoef(iorb,ik)=vec(2*n2d+iorb,ik)
       else
         kcoef(iorb,ik)=vec(2*n2d+npol*(nocros+noins)+iorb,ik)
@@ -352,7 +303,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
 !
 ! to set up B.S. for the right lead in the case of identical tips
 !
-  if(lright.eq.0.and.ikind.eq.1) then
+  if(lleft.eq.1.and.ikind.eq.1) then
     nchanr=nchan 
     call DCOPY(2*(n2d+npol*nocros), kval, 1, kvalr, 1)
     kfunr=(0.d0,0.d0)
@@ -360,19 +311,19 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
     kintr=(0.d0,0.d0)
 
     do i=1, 2*n2d
-      do j=1, 2*n2d+npol*norbnow
+      do j=1, 2*n2d+npol*norb
         amat(i,j)=bmat(i,j)
       enddo
     enddo
     do i=2*n2d+1, 2*n2d+npol*nocros
-      do j=1, 2*n2d+npol*norbnow
+      do j=1, 2*n2d+npol*norb
         amat(i,j)=-bmat(i+npol*(nocros+noins),j)
       enddo
     enddo               
 
     do ik=1, 2*(n2d+npol*nocros)
       do ig=1, n2d
-        do j=1,  2*n2d+npol*norbnow
+        do j=1,  2*n2d+npol*norb
           kfunr(ig,ik)= kfunr(ig,ik)+amat(ig,j)*vec(j,ik)
           kfundr(ig,ik)= kfundr(ig,ik)+amat(n2d+ig,j)*vec(j,ik)
         enddo
@@ -380,7 +331,7 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
     enddo        
     do ik=1,  2*(n2d+npol*nocros)
       do iorb=1, nocros*npol
-        do j=1, 2*n2d+npol*norbnow
+        do j=1, 2*n2d+npol*norb
           kintr(iorb,ik)=kintr(iorb,ik)+amat(2*n2d+iorb,j)*vec(j,ik)
         enddo
       enddo
@@ -396,9 +347,14 @@ subroutine compbs(lright, zin, zfin, nocros, norbnow, orbin,     &
   deallocate(amat)
   deallocate(bmat)
   deallocate(vec)
-  deallocate(zps)
   deallocate(aux)
-  if (noncolin) deallocate(zps_nc)
+  if (noncolin) then
+    deallocate(zpseu_nc)
+    deallocate(zps_nc)
+  else
+    deallocate(zpseu)
+    deallocate(zps)
+  endif
   call stop_clock('compbs')
 
   return

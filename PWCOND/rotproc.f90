@@ -11,7 +11,7 @@
 #include "f_defs.h"
 !
 SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  & 
-                   fundl1, intw1, intw2, n2d, norbf, norbnow)
+                   fundl1, intw1, intw2, n2d, norbf, norb)
 !
 ! This subroutine implements a matching procedure to construct 
 ! local and nonlocal functions on the whole region from those computed
@@ -30,15 +30,17 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 ! So in this case there are 3 matching steps. 
 !
 
-  USE kinds, ONLY : DP
-  USE mp_global, ONLY: nproc, me_pool
+  USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE parallel_include
+  USE mp_global,        ONLY : nproc, me_pool
+
+
   
   IMPLICIT NONE 
 
 
-  INTEGER :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norbnow, n2d,  &
+  INTEGER :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norb, n2d,  &
              ibound, numb, ninsl, ib, icolor, ikey, new_comm, info
   INTEGER, ALLOCATABLE :: ipiv(:) 
   COMPLEX(kind=DP) :: fun0(n2d, 2*n2d),    & ! phi_n(0) 
@@ -63,8 +65,8 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   ALLOCATE( y( n2d ) )    
   ALLOCATE( amat( 2*n2d, 2*n2d ) )
   ALLOCATE( amat_aux( 2*n2d, 2*n2d ) ) 
-  ALLOCATE( vec( 2*n2d, 2*n2d+npol*norbnow ) )
-  ALLOCATE( vec_aux( 2*n2d, 2*n2d+npol*norbnow ) )
+  ALLOCATE( vec( 2*n2d, 2*n2d+npol*norb ) )
+  ALLOCATE( vec_aux( 2*n2d, 2*n2d+npol*norb ) )
   ALLOCATE( ipiv( 2*n2d ) )
 
   numb=0
@@ -92,7 +94,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
           vec(lam, lam1)=fun0(lam, lam1)
           vec(n2d+lam, lam1)=fund0(lam, lam1)
         ENDDO
-        DO iorb=1, npol*norbnow
+        DO iorb=1, npol*norb
           vec(lam, 2*n2d+iorb)=funl0(lam, iorb)
           vec(n2d+lam, 2*n2d+iorb)=fundl0(lam, iorb)
         ENDDO
@@ -107,7 +109,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
           vec(lam, n2d+lam1)=-fun1(lam, n2d+lam1)
           vec(n2d+lam, n2d+lam1)=-fund1(lam, n2d+lam1)
         ENDDO
-        DO iorb=1, npol*norbnow
+        DO iorb=1, npol*norb
           vec(lam, 2*n2d+iorb)=-funl1(lam, iorb)
           vec(n2d+lam, 2*n2d+iorb)=-fundl1(lam, iorb)
         ENDDO
@@ -116,11 +118,11 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
     ENDIF
     CALL mpi_allreduce(amat, amat_aux, 2*2*n2d*2*n2d, MPI_REAL8,     &
                        MPI_SUM, new_comm, info)
-    CALL mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+npol*norbnow),        &
+    CALL mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+npol*norb),        &
                        MPI_REAL8, MPI_SUM, new_comm, info)
     CALL DCOPY(2*2*n2d*2*n2d, amat_aux, 1, amat, 1)  
-    CALL DCOPY(2*2*n2d*(2*n2d+npol*norbnow), vec_aux, 1, vec, 1) 
-    CALL ZGESV(2*n2d, 2*n2d+npol*norbnow, amat, 2*n2d, ipiv,              &
+    CALL DCOPY(2*2*n2d*(2*n2d+npol*norb), vec_aux, 1, vec, 1) 
+    CALL ZGESV(2*n2d, 2*n2d+npol*norb, amat, 2*n2d, ipiv,              &
                vec, 2*n2d, info)          
 !
 !   recalculate the functions for CPU which is left to matching 
@@ -136,7 +138,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                            vec(n2d+lam, n)*fund1(ig, n2d+lam)
        ENDDO
       ENDDO
-      DO iorb=1, npol*norbnow
+      DO iorb=1, npol*norb
        DO lam=1, n2d
         funl1(ig, iorb)=funl1(ig, iorb)+  &
                 vec(n2d+lam, 2*n2d+iorb)*fun1(ig, n2d+lam)
@@ -174,7 +176,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                            vec(lam, n2d+n)*fund0(ig, lam)
        ENDDO
       ENDDO
-      DO iorb=1, npol*norbnow
+      DO iorb=1, npol*norb
        DO lam=1, n2d
         funl0(ig, iorb)=funl0(ig, iorb)+  &
                      vec(lam, 2*n2d+iorb)*fun0(ig, lam)
@@ -202,15 +204,15 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 !  to recalculate the integrals for a given group of CPU
 !
     IF((me_pool+1).GE.ib) THEN
-     DO iorb=1, npol*norbnow
-      DO iorb1=1, npol*norbnow
+     DO iorb=1, npol*norb
+      DO iorb1=1, npol*norb
        DO lam=1, n2d
         intw2(iorb,iorb1)=intw2(iorb,iorb1)+           &
            vec(n2d+lam, 2*n2d+iorb1)*intw1(iorb, n2d+lam)
        ENDDO
       ENDDO
      ENDDO
-     DO iorb=1, npol*norbnow
+     DO iorb=1, npol*norb
        x=(0.d0,0.d0)
        DO n=1, n2d
          DO lam=1, n2d
@@ -224,15 +226,15 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
        ENDDO
      ENDDO                            
     ELSE
-     DO iorb=1, npol*norbnow
-      DO iorb1=1, npol*norbnow
+     DO iorb=1, npol*norb
+      DO iorb1=1, npol*norb
        DO lam=1, n2d
         intw2(iorb, iorb1)=intw2(iorb, iorb1)+           &
              vec(lam, 2*n2d+iorb1)*intw1(iorb, lam)
        ENDDO
       ENDDO
      ENDDO
-     DO iorb=1, npol*norbnow
+     DO iorb=1, npol*norb
        x=(0.d0,0.d0)
        DO n=1, n2d
          DO lam=1, n2d

@@ -11,6 +11,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 ! It solves GEP: A X = lambda B X using LAPACK routines 
 !
   USE kinds, only : DP
+  USE cond, only : delgep 
   implicit none  
 
   integer :: i, n, info, lwork
@@ -32,8 +33,8 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 !  pc_ifc, ibmsp and origin. If you have problems, try llapack=.false.
 !
   do i=1,n
-     amt(i,i)=amt(i,i)+5.d-10
-     bmt(i,i)=bmt(i,i)+5.d-10
+     amt(i,i)=amt(i,i)+delgep
+     bmt(i,i)=bmt(i,i)+delgep
   enddo
 
   call ZGGEV('N', 'V', n, amt, n, bmt, n, alpha, beta, veigen, n, veigen, &
@@ -51,6 +52,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 !          
   do i=1, n
     eigen(i)=alpha(i)/beta(i)
+!    write(6,'(i5, 2f40.20)') i, dreal(eigen(i)), aimag(eigen(i))
   enddo
 
   deallocate(work)

@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -12,138 +11,149 @@
 !
 !
 !
-MODULE zdir_cond
-  USE kinds
-  !
-  ! ... description of z direction
+MODULE geomcell_cond
+  USE kinds, only : DP
   !
   SAVE
   !
-  INTEGER :: &
-      nrz,             &!  total number of the slabs in z direction
-      nrzp,            &!  number of slabs per CPU
-      dnslab,          &!  additional slabs (nrz=nr3s+dnslab) 
-      nz1               !  number of subslabs in the slab
+  INTEGER  ::  &
+     nrx,      &   !  number of mesh points in the x direction
+     nry,      &   !              -||-                 y direction
+     nrzl,     &   !  number of slabsh in the z direction for the left lead 
+     nrzs,     &   !              -||-                    for the scatt. region
+     nrzr,     &   !              -||-                    for the right lead 
+     nrzpl,    &   !  number of slabs per CPU for the left lead  
+     nrzps,    &   !              -||-        for the scatt. region 
+     nrzpr,    &   !              -||-        for the right lead 
+     ngper,    &   !  number of perpendicular G vectors
+     ngpsh,    &   !  number of shells for G
+     nkpts,    &   !  number of kpts in the perpendicular direction
+     n2d,      &   !  dimension of reduced vector space in XY
+     nz1           !  number of subslabs in the slab
   INTEGER, ALLOCATABLE :: &
-      nkofz(:)          !  local CPU order of the slabs   
-  REAL(KIND=DP) :: &
-      bdl1, bdl2,      &!  boundaries for the left tip
-      bdr1, bdr2,      &!    --- || ---      right tip 
-      zl                !  the lenght of the unit cell in z direction
-  REAL(KIND=DP), ALLOCATABLE ::  &
-      z(:)              !  the unit cell division in z direction
-  !
-END MODULE zdir_cond      
+     ninsh(:)      !  number of G in shell
+  REAL(kind=DP)    :: &
+     bdl,      &   !  right boundary of the left lead
+     bds,      &   !        -||-     of the scatt. region 
+     bdr,      &   !        -||-     of the right lead
+     sarea         !  the cross section
+  REAL(kind=DP), ALLOCATABLE ::  &
+     zl(:),    &   !  the division in the z direction of the left lead
+     zs(:),    &   !             -||-                 of the scatt. reg.
+     zr(:),    &   !             -||-                 of the right lead 
+     xyk(:,:), &   !  coordinates of perpendicular k points
+     wkpt(:),  &   !  the weight of k point
+     gper(:,:),&   !  coordinates of perpendicular G
+     gnsh(:)       !  the norm of the G shell
+END MODULE geomcell_cond
 !
 !
-MODULE perp_cond
-  USE kinds
+MODULE orbcell_cond
+  USE parameters, only : ndmx, nbrx, npsx 
+  USE kinds, only : DP
   !
-  ! ... description of the direction perpendicular to z (XY)
-  !
+  !  description of nonlocal orbitals
   SAVE
   !
-  INTEGER :: &
-       nrx,            &!  the number of mesh points in x direction
-       nry,            &!             --             in y direction
-       ngper,          &!  number of perpendicular G vectors
-       ngpsh,          &!  number of shells for G
-       nkpts,          &!  number of kpts in the perpendicular direction
-       n2d              !  dimension of reduced vector space in XY
+  INTEGER     ::     &
+     norbl,          &  ! number of orbitals for the left lead
+     norbs,          &  !           -||-      for the scatt. region
+     norbr,          &  !           -||-      for the right lead
+     nocrosl,        &  ! number of crossing orbitals for left lead
+     nocrosr,        &  !           -||-      for the right lead
+     noinsl,         &  ! number of interior orbitals for the left lead
+     noinss,         &  !           -||-      for the scatt. region
+     noinsr,         &  !           -||-      for the right lead
+     norbf              ! max number of needed orbitals
   INTEGER, ALLOCATABLE :: &
-       ninsh(:)         !  number of G in shell 
-  REAL(KIND=DP) :: &
-       sarea            !  the cross section  
-  REAL(KIND=DP), ALLOCATABLE :: &
-       xyk(:,:),       &!  coordinates of perpendicular k point
-       wkpt(:),        &
-       gper(:,:),      &!  coordinates of perpendicular G
-       gnsh(:)          !  the norm of the shell
-  !
-END MODULE perp_cond       
+     tblml(:,:),       &  ! the type/beta/l/m of each orbital for the left lead
+     tblms(:,:),       &  !         -||-                      for the scatt. reg.
+     tblmr(:,:),       &  !         -||-                      for the right lead
+     crosl(:,:),       &  ! 1 if the orbital crosses the slab - for the left lead
+     cross(:,:),       &  !                -||-                 for the scatt. reg. 
+     crosr(:,:)           !                -||-                 for the right lead
+  REAL(kind=DP) ::     &
+     rl(ndmx,npsx),          &  ! radial mesh for the left lead
+     rs(ndmx,npsx),          &  !      -||-   for the scatt. reg.
+     rr(ndmx,npsx),          &  !      -||-   for the right lead
+     rabl(ndmx,npsx),        &  ! log. mesh for the left lead
+     rabs(ndmx,npsx),        &  !      -||- for the scatt. reg.
+     rabr(ndmx,npsx),        &  !      -||- for the right lead
+     betarl(ndmx,nbrx,npsx), &  ! beta functions for the left lead
+     betars(ndmx,nbrx,npsx), &  !      -||-      for the scatt. reg.
+     betarr(ndmx,nbrx,npsx)     !      -||-      for the right lead
+  REAL(kind=DP), ALLOCATABLE :: &
+     taunewl(:,:),  &  ! center of each orbital and its radius - left lead
+     taunews(:,:),  &  !                 -||-                  - scatt. reg. 
+     taunewr(:,:),  &  !                 -||-                  - right lead
+     zpseul(:,:,:), &  ! coefficients of nonlocal pseudopotential - left lead
+     zpseus(:,:,:), &  !                 -||-                     - scatt. reg.
+     zpseur(:,:,:)     !                 -||-                     - right lead
+  COMPLEX(kind=DP), ALLOCATABLE :: &
+     zpseul_nc(:,:,:,:), &! coefficients of nonlocal PP (nc case) - left lead
+     zpseus_nc(:,:,:,:), &!              -||-                     - scatt. reg. 
+     zpseur_nc(:,:,:,:)   !              -||-                     - right lead 
+END MODULE orbcell_cond
 !
 !
 MODULE eigen_cond
-  USE kinds
+  USE kinds, only : DP
   !
-  ! ... Eigenvalue equation for local potential
-  !
+  !   Eigenvalue equation for local potential
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-       vppot(:,:,:,:), &!  Fourier comp. of local potential in each slab
-       psiper(:,:,:),  &!  eigenvectors in each slab
-       newbg(:,:),     &!  basis of reduced set --> exp(G)
-       zk(:,:)          !  the k for each eigenvalue (computed through zkr)
-  REAL(KIND=DP), ALLOCATABLE ::  &
-     zkr(:,:)           !  eigenvalues for first energy point
-  !
-END MODULE eigen_cond     
+  COMPLEX(kind=DP), ALLOCATABLE  :: &
+     vppotl(:,:,:,:),  & ! Fourier comp. of local potential in each slab - left lead
+     vppots(:,:,:,:),  & !             -||-                              - scatt. reg. 
+     vppotr(:,:,:,:),  & !             -||-                              - right lead
+     psiperl(:,:,:),   & ! eigenvectors in each slab - left lead
+     psipers(:,:,:),   & !             -||-          - scatt. reg. 
+     psiperr(:,:,:),   & !             -||-          - right lead
+     zkl(:,:),         & ! the k for each eigenvalue (computed through zkr) - left lead
+     zks(:,:),         & !             -||-                                 - scatt. reg.
+     zkr(:,:),         & !             -||-                                 - right lead
+     newbg(:,:)          ! reduced basis set --> exp(G)
+  REAL(kind=DP), ALLOCATABLE ::  &
+     zkrl(:,:),        & ! 2d eigenvalues - left lead
+     zkrs(:,:),        & !     -||-       - scatt. reg. 
+     zkrr(:,:)           !     -||-       - right lead 
+END MODULE eigen_cond
 !
 !
 MODULE control_cond
-  USE kinds
+  USE kinds, only : DP
   !
-  ! ... control of the run
-  !
+  !   control of the run
   SAVE
   !
-  INTEGER :: &
-      ikind,           &!  the kind of calculation
-      nenergy,         &!  number of energies computed             
-      iofspin           !  spin index for calculation
-  REAL(KIND=DP) :: &
-      energy0,         &!  initial energy
-      denergy,         &!  delta of energy
-      eryd,            &!  current energy
-      ecut2d,          &!  2D cutoff 
-      ewind,           &!  the window above energy for 2D computation
-      delgep,          &!  infinitesimal for GEP 
-      epsproj,         &!  accuracy of n2d reduction
-      cutplot           !  cutoff of Im(k) for CB plotting
-  REAL(KIND=DP), ALLOCATABLE :: &
-      earr(:),         &!  energy array
-      tran_tot(:)       !  transmission array
-  LOGICAL :: &
-      lwrite_loc,      &!  if .T. save eigenproblem result on fil_loc
-      lread_loc,       &!  if .T. read eigenproblem result from fil_loc
-      llapack,         &!  if .T. use LAPACK routine for GEP
-      llocal            !  if .T. the local implementation
-  !
+  INTEGER     :: &
+     orbj_in, orbj_fin, &
+     ikind,       &    ! the kind of calculation
+     nenergy,     &    ! number of energies computed
+     iofspin           ! spin index for calculation
+  REAL(kind=DP)  :: &
+     efl,           &  ! the Ef of the left lead
+     efs,           &  ! the Ef of the scatt. reg.
+     efr,           &  ! the Ef of the right lead 
+     energy0,       &  ! initial energy
+     eryd,          &  ! the current energy in Ry 
+     denergy,       &  ! delta of energy
+     ecut2d,        &  ! 2D cutoff
+     ewind,         &  ! the window above energy for 2D computation
+     delgep,        &  ! infinitesimal for GEP
+     epsproj,       &  ! accuracy of n2d reduction
+     cutplot           ! cutoff of Im(k) for CB plotting
+  REAL(kind=DP), ALLOCATABLE  :: &
+     earr(:),       &  ! energy array
+     tran_tot(:)       ! transmission array
+  LOGICAL        :: &
+     lwrite_loc,    &  ! if .t. save eigenproblem result on fil_loc
+     lread_loc,     &  ! if .t. read eigenproblem result from fil_loc
+     llapack,       &  ! if .t. use LAPACK routine for GEP
+     lwrite_cond,   &  ! if .t. save variables needed for pwcond
+     lread_cond,    &  ! if .t. read variables needed for pwcond
+     llocal            ! if .t. the local implementation
 END MODULE control_cond
-!
-!         
-MODULE cross_cond
-  USE kinds
-  !   
-  ! ... description of nonlocal orbitals 
-  !
-  SAVE
-  !
-  INTEGER :: &
-      nocrosl,         &!  number of crossing orbitals for left tip
-      nocrosr,         &!            -- || --         for right tip 
-      noinsl,          &!  number of interior orbitals for left tip
-      noinss,          &!            -- || --         for scat. reg. 
-      noinsr,          &!            -- || --         for right tip 
-      norb,            &!  total number of orbitals
-      norbf,           &!  max number of needed orbitals
-      norbs             !  tot. number of orbitals in scat. region
-  INTEGER, ALLOCATABLE :: & 
-      itnew(:),        &!  the type of each orbital
-      nbnew(:),        &!  the nb of each orbital 
-      ls(:),           &!  the l of each orbital 
-      mnew(:),         &!  the m of each orbital
-      cross(:,:),      &!  1 if the orbital crosses the slab
-      natih(:,:)        !  na and ih of the orbital
-  REAL(KIND=DP), ALLOCATABLE :: &
-      rsph(:,:),       &!  the radius of nonlocal sphere
-      taunew(:,:),     &!  center of each orbital
-      zpseu(:,:,:)      !  coefficients of nonlocal pseudopotential
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
-      zpseu_nc(:,:,:)   !  coefficients of nonlocal pseudopotential (nc case)
-  !    
-END MODULE cross_cond
 !
 !
 MODULE scattnl_cond
@@ -171,22 +181,22 @@ END MODULE scattnl_cond
 MODULE cb_cond
   USE kinds
   !
-  ! ... Some variables of CBS for the tips needed for matching
+  ! ... Some variables of CBS for the leads needed for matching
   !
   SAVE
   !
   INTEGER :: &
-       nchanl,         &!  number of prop. channels in the left tip
-       nchanr           !            -- || --             right tip     
+       nchanl,         &!  number of prop. channels in the left lead
+       nchanr           !            -- || --              right lead     
   COMPLEX(KIND=DP), ALLOCATABLE :: &
-       kvall(:),       &!  k           for left tip 
-       kfunl(:,:),     &!  phi_k(z=d)  for left tip
-       kfundl(:,:),    &!  phi_k'(z=d) for left tip
+       kvall(:),       &!  k           for the left lead 
+       kfunl(:,:),     &!  phi_k(z=d)  for the left lead
+       kfundl(:,:),    &!  phi_k'(z=d) for the left lead
        kintl(:,:),     &!  integral of phi_k with beta-fun.
        kcoefl(:,:),    &!  coeff. of phi_k over nonloc. fun.
-       kvalr(:),       &!  k           for right tip
-       kfunr(:,:),     &!  phi_k(z=0)  for right tip
-       kfundr(:,:),    &!  phi_k'(z=0) for right tip
+       kvalr(:),       &!  k           for the right lead
+       kfunr(:,:),     &!  phi_k(z=0)  for the right lead
+       kfundr(:,:),    &!  phi_k'(z=0) for the right lead
        kintr(:,:),     &!  integral of phi_k with beta-fun.
        kcoefr(:,:)      !  coeff. of phi_k over nonloc. fun.
   !
@@ -194,11 +204,10 @@ END MODULE cb_cond
 !
 !
 MODULE cond
-  USE zdir_cond
-  USE perp_cond
+  use geomcell_cond
+  USE orbcell_cond
   USE eigen_cond
   USE control_cond
-  USE cross_cond
   USE scattnl_cond
   USE cb_cond
 END MODULE cond               

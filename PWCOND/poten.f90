@@ -10,7 +10,7 @@
 !
 #include "f_defs.h"
 !
-SUBROUTINE poten 
+SUBROUTINE poten(vppot,nrz,z) 
 !
 ! This subroutine computes the 2D Fourier components of the
 ! local potential in each slab.
@@ -18,28 +18,25 @@ SUBROUTINE poten
   USE pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE cond
-  USE mp_global,        ONLY : me_pool
-  USE pfft,             ONLY : npp
+  USE mp,               ONLY : mp_bcast
+  USE io_global,        ONLY : ionode_id 
 
   IMPLICIT NONE
 
   INTEGER ::                                                & 
              i, j, ij, ijx, k, n, p, il, ik, kstart, klast, &
-             ix, jx, kx, ir, ir1, ixy, info
+             ix, jx, kx, ir, ir1, ixy, nrz, info
   INTEGER :: iis, jjs, is(4), js(4), ispin, nspin_eff
-  INTEGER :: ionode_id
   INTEGER, ALLOCATABLE :: ipiv(:) 
 
   REAL(kind=DP), PARAMETER :: eps = 1.d-8
-  REAL(kind=DP) :: arg, bet
-  REAL(kind=DP), ALLOCATABLE :: gz(:), auxr(:)
+  REAL(kind=DP) :: arg, bet, z(nrz+1), zlen
+  REAL(kind=DP), ALLOCATABLE :: gz(:), allv(:), auxr(:)
 
   COMPLEX(kind=DP), PARAMETER :: cim = (0.d0,1.d0)
-  COMPLEX(kind=DP) :: caux
+  COMPLEX(kind=DP) :: caux, vppot(nrz,nrx*nry,npol,npol)
   COMPLEX(kind=DP), ALLOCATABLE :: aux(:), amat(:,:), amat0(:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: vppot0(:,:,:,:)
-
-  LOGICAL :: lg
 
   CALL start_clock('poten')
   ALLOCATE( ipiv( nrz ) )
@@ -48,6 +45,9 @@ SUBROUTINE poten
   ALLOCATE( auxr( nrxx ) )
   ALLOCATE( amat( nrz, nrz ) )
   ALLOCATE( amat0( nrz, nrz ) )
+
+
+  zlen = at(3,3)
 
 !
 !  Compute the Gz vectors in the z direction
@@ -66,9 +66,9 @@ DO n=1,nrz
       bet=gz(n)*(z(p+1)-z(p))*tpi
       IF (ABS(gz(n)).GT.eps) THEN
         caux=cim*(CMPLX(COS(bet),-SIN(bet))-(1.d0,0.d0))  &
-                                    /zl/gz(n)/tpi
+                                    /zlen/gz(n)/tpi
       ELSE
-        caux=(z(p+1)-z(p))/zl
+        caux=(z(p+1)-z(p))/zlen
       ENDIF
       amat0(n,p)=CMPLX(COS(arg),-SIN(arg))*caux
    ENDDO
@@ -91,6 +91,11 @@ ENDIF
 !
 !     To form local potential on the real space mesh
 !
+!
+#ifdef __PARA
+  allocate ( allv(nrx1*nrx2*nrx3) )
+#endif
+
 vppot = 0.d0
 DO ispin=1,nspin_eff
    IF (noncolin) THEN
@@ -105,37 +110,13 @@ DO ispin=1,nspin_eff
 !
 ! To collect the potential from different CPUs
 !
-   aux(:) = (0.d0,0.d0)
 #ifdef __PARA
-  kstart = 1
-  DO i=1, me_pool
-    kstart = kstart+npp(i)
-  ENDDO
-  klast = kstart+npp(me_pool+1)-1 
+  call gather( auxr, allv )
+  CALL mp_bcast( allv, ionode_id )
+  aux = CMPLX(allv)
+#else
+  aux = CMPLX(auxr)
 #endif
-  DO i = 1, nrx1*nrx2
-    DO k = 1, nr3
-      lg = .TRUE.
-      ir = i+(k-1)*nrx2*nrx1
-      ir1 = ir       
-#ifdef __PARA
-      IF(k.GE.kstart.AND.k.LE.klast) THEN
-        lg = .TRUE.
-        ir1 = i+(k-kstart)*nrx2*nrx1 
-      ELSE
-        lg = .FALSE.
-      ENDIF
-#endif                       
-      IF (lg) THEN
-        aux(ir) = auxr(ir1)
-      ENDIF 
-    ENDDO
-  ENDDO
-#ifdef __PARA
-  CALL reduce (2*nrx1*nrx2*nrx3,aux)
-#endif    
-
-
 !
 ! To find FFT of the local potential
 !
@@ -199,7 +180,7 @@ IF (noncolin) THEN
 ENDIF
 
 !  do p = 1, nrz
-!    write(6,'(i5,2f12.6)') p, real(vppot(p,105,2,2)), imag(vppot(p,105,2,2))
+!    write(6,'(i5,2f12.6)') p, real(vppot(p,1,1,1)), imag(vppot(p,1,1,1))
 !  enddo
 !  stop
 
@@ -209,6 +190,9 @@ ENDIF
   DEALLOCATE(auxr) 
   DEALLOCATE(amat) 
   DEALLOCATE(amat0) 
+#ifdef __PARA
+  deallocate(allv)
+#endif
 
   CALL stop_clock('poten')
 

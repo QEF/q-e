@@ -7,6 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine transmit(ik, ien)
+
 !
 ! This subroutine constructs the scattering states
 ! using the CBS of the left and right tips (saved by compbs)
@@ -22,13 +23,14 @@ subroutine transmit(ik, ien)
 implicit none
 
   integer :: ik, ien, n, iorb, iorb1, iorb2, nt, &
-             ih, ih1, orbin, ig, ntran, ij, is, js, info
+             ih, ih1, ig, ntran, ij, is, js, info
   integer, allocatable :: ipiv(:)
   real(kind=DP) :: tk, tj, tij, eev
   real(kind=DP), allocatable :: zps(:,:), eigen(:)
   complex(kind=DP) :: x1, x2
   complex(kind=DP), allocatable :: amat(:,:), vec1(:,:), &
-                     tchan(:,:), veceig(:,:), zps_nc(:,:)
+                     tmat(:,:), veceig(:,:), zps_nc(:,:), &
+                     vec2(:,:)
 
   eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
@@ -40,18 +42,18 @@ implicit none
     return
   endif
 
-  orbin=nocrosl+noinsl
-
   allocate( ipiv( ntran ) )
-  allocate( zps( norbs, norbs ) )
   allocate( amat( ntran, ntran ) )
   allocate( vec1( ntran, nchanl ) )
 
-  allocate( tchan( nchanr, nchanl ) )
+  allocate( tmat( nchanr, nchanl ) )
   allocate( veceig( nchanl, nchanl ) )
   allocate( eigen( nchanl ) ) 
-  if (noncolin) allocate( zps_nc( norbs*npol, norbs*npol ) )
-
+  if (noncolin) then
+    allocate( zps_nc( norbs*npol, norbs*npol ) )
+  else
+    allocate( zps( norbs, norbs ) )
+  endif
   amat=(0.d0,0.d0)
 !
 ! To form  zps=zpseu-e*qq
@@ -63,79 +65,26 @@ implicit none
         do is=1,npol
           do js=1,npol
             ij=ij+1
-            zps_nc(npol*(iorb-1)+is, npol*(iorb1-1)+js)=  &
-                 zpseu_nc(orbin+iorb, orbin+iorb1,ij)
+            zps_nc(npol*(iorb-1)+is, npol*(iorb1-1)+js)=         &
+                zpseus_nc(1,iorb,iorb1,ij)
+            if (lspinorb) then
+              zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)=        &
+                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                            -eryd*zpseus_nc(2,iorb,iorb1,ij)
+            else
+              if (is.eq.js)                                      &
+                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)=    &
+                      zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
+                             -eryd*zpseus_nc(2,iorb,iorb1,ij)
+            endif
           enddo
         enddo
       else
-         zps(iorb, iorb1)=zpseu(orbin+iorb,orbin+iorb1,iofspin)
+        zps(iorb,iorb1)=zpseus(1,iorb,iorb1)-eryd*zpseus(2,iorb,iorb1)
       endif
     enddo
   enddo
-  do iorb=1, norbs-nocrosr
-    nt=itnew(orbin+iorb)
-    if(tvanp(nt)) then
-      do iorb1=1, norbs-nocrosr
-        ih=natih(orbin+iorb,2)
-        if (natih(orbin+iorb,1).eq.natih(orbin+iorb1,1)) then
-          ih1=natih(orbin+iorb1,2)
-          if (noncolin) then
-            ij=0
-            do is=1,npol
-              do js=1,npol
-                ij=ij+1
-                if (lspinorb) then
-                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                        zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
-                                -eryd*qq_so(ih,ih1,ij,nt)
-                else
-                  if (is.eq.js) &
-                      zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                          zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
-                                 -eryd*qq(ih,ih1,nt)
-                endif
-              enddo
-            enddo
-          else
-             zps(iorb,iorb1)=zps(iorb,iorb1)-                &
-                                    eryd*qq(ih,ih1,nt)
-          endif
-        endif
-      enddo
-    endif
-  enddo
-  do iorb=norbs-nocrosr+1, norbs
-    nt=itnew(orbin+iorb)
-    if(tvanp(nt)) then
-      ih=natih(orbin+iorb,2)
-      do iorb1=norbs-nocrosr+1, norbs
-        if (natih(orbin+iorb,1).eq.natih(orbin+iorb1,1)) then
-          ih1=natih(orbin+iorb1,2)
-          if (noncolin) then
-            ij=0
-            do is=1, npol
-              do js=1,npol
-                ij=ij+1
-                if (lspinorb) then
-                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js) &
-                                         -eryd*qq_so(ih,ih1,ij,nt)
-                else
-                  if (is.eq.js)  &
-                  zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)= &
-                    zps_nc(npol*(iorb-1)+is,npol*(iorb1-1)+js)- &
-                               eryd*qq(ih,ih1,nt)
-                endif
-              enddo
-            enddo
-          else
-             zps(iorb,iorb1)=zps(iorb,iorb1)-              &
-                                   eryd*qq(ih,ih1,nt)
-          endif
-        endif
-      enddo
-    endif
-  enddo
+
 !
 ! Compute the part of amat which comes from the matching of
 ! the wave function on the boundaries
@@ -251,7 +200,7 @@ implicit none
 !
   do n=1, nchanl
     do ig=1, nchanr
-      tchan(ig,n)=vec1(ntran-n2d-npol*nocrosr+ig,n)
+      tmat(ig,n)=vec1(ntran-n2d-npol*nocrosr+ig,n)
     enddo
   enddo
 !
@@ -261,16 +210,18 @@ implicit none
   do n=1, nchanl
     tj=0.d0
     do ig=1, nchanr
-      tij=DREAL(tchan(ig,n))**2+DIMAG(tchan(ig,n))**2
+      tij=DREAL(tmat(ig,n))**2+DIMAG(tmat(ig,n))**2
+      x1 = tmat(ig,n) 
       tj=tj+tij
       WRITE( stdout,'(i5,'' --> '',i5,f12.7)') n, ig, tij
+!      WRITE( stdout,'(2f12.7)') dreal(x1), aimag(x1)
     enddo
     WRITE( stdout,'(15x,f9.5)') tj
   enddo
 !
 ! eigenchannel decomposition
 !
-  call eigenchnl(nchanl, nchanr, tchan, veceig, eigen)
+  call eigenchnl(nchanl, nchanr, tmat, veceig, eigen)
   WRITE( stdout,*) 'Eigenchannel decomposition:'
   tk=0
   do n=1, nchanl
@@ -287,16 +238,53 @@ implicit none
 !
   tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
 
+
+!---------------------------
+!   Angular momentum projection of transmission
+!
+  if(orbj_in*orbj_fin.gt.0) then
+    nt = orbj_fin - orbj_in + 1
+    allocate( vec2( ntran, nchanl ) )
+    x1 = (1.d0,0.d0)
+    x2 = (0.d0,0.d0)
+    call ZGEMM('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
+              veceig, nchanl, x2, vec2, ntran)
+    write(6,*) 'Nchannel, Norbital, projection'
+!---------------------------
+!   Angular momentum projection of eigenchannels
+!
+    do n = 1, nchanl
+     if(eigen(n).gt.1.d-5) then
+      do iorb = orbj_in, orbj_fin
+       x1 = 0.d0
+       do ig = 1, 2*n2d
+        x1 = x1+intw1(iorb, ig)*vec2(ig, n)
+       enddo
+       do ig = 1, norbs
+        x1 = x1+intw2(iorb, ig)*vec2(2*n2d+ig, n)
+       enddo
+       write(6,'(2i5,f12.6)') n, iorb-orbj_in+1, DREAL(x1)**2+DIMAG(x1)**2
+      enddo
+     endif
+    enddo
+!------------------------
+    deallocate(vec2)
+
+  endif
+
+
   deallocate(ipiv)
-  deallocate(zps)
   deallocate(amat)
   deallocate(vec1)
 
-  deallocate(tchan)
+  deallocate(tmat)
   deallocate(veceig)
   deallocate(eigen)
-  if (noncolin) deallocate(zps_nc)
-
+  if (noncolin) then
+    deallocate(zps_nc)
+  else
+    deallocate(zps)
+  endif
   return
 end subroutine transmit                                     
 

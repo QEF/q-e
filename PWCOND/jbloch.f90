@@ -9,8 +9,8 @@
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
 !
-subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
-                     vec, kval, c1, c2, sarea, nchan, npol)
+subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
+                     vec, kval, c1, c2, nchan, npol)
 !
 ! This routine computes the current I carrying by the Bloch state
 ! so that <psi_k|I|psi_k'> = \delta_{kk'} I_k and does some
@@ -19,6 +19,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
 #include "f_defs.h"
   USE kinds, only : DP
   USE noncollin_module, only : noncolin
+  USE cond, only : sarea
   implicit none
 
   real(kind=DP), parameter :: eps=1.d-4 
@@ -27,19 +28,18 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
       n2d,     &  ! 2D-dimension  
       noins,   &  ! number of interior orbitals 
       nocros,  &  ! number of the orbitals crossing the boundary 
-      norbnow, &  ! total number of orbitals =noins+2*nocros 
+      norb, &  ! total number of orbitals =noins+2*nocros 
       norbf,   &  ! max number of orbitals
       npol,    &  ! number of wave-functions components
       nst,     &  ! number of Bloch states =2*(n2d+nocros) 
       nchan,   &  ! number of propagating channels
       info, i, j, k, n, iorb, n1, il, ir, in
   real(kind=DP) ::    &
-      sarea,                & ! cross-section
       k1, k2
   complex(kind=DP) ::                           &  
       kfun(n2d, nst),                           & ! phi_k(d)
       kfund(n2d, nst),                          & ! phi'_k(d)
-      vec(2*n2d+npol*norbnow, nst),             & ! exp. coeff. for phi_k 
+      vec(2*n2d+npol*norb, nst),             & ! exp. coeff. for phi_k 
       kval(nst),                                & ! k of phi_k
       c1(norbf*npol,2*n2d), c2(norbf*npol,norbf*npol),   & ! nonlocal integrals 
       z, z1, ZDOTC
@@ -49,7 +49,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
   complex(kind=DP), allocatable :: kval1(:), vec1(:,:), kcoef(:,:), &
                                kcuroff(:,:), valj(:,:) 
 
-  noins = norbnow-2*nocros
+  noins = norb-2*nocros
 !
 ! To compute the number of channels and ncond(+-,>,<) --> (...)
 !
@@ -69,7 +69,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
   allocate( valj( 2*nchan, 2*nchan ) )
   allocate( kval1( nst ) )
   allocate( kcur( nst ) )
-  allocate( vec1( (2*n2d+npol*norbnow), nst ) )
+  allocate( vec1( (2*n2d+npol*norb), nst ) )
 
   kcur=0.d0
   kcoef=(0.d0,0.d0)
@@ -81,7 +81,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
         kcoef(iorb,k)=kcoef(iorb,k)+       &
                       vec(j,ir)*c1(npol*(nocros+noins)+iorb,j)
       enddo
-      do j=1, norbnow*npol
+      do j=1, norb*npol
         kcoef(iorb,k)=kcoef(iorb,k)+       &
            vec(2*n2d+j,ir)*c2(npol*(nocros+noins)+iorb,j)
       enddo
@@ -125,7 +125,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
     do in=1, 2*nchan
       if (ej(in).gt.0.d0) then 
         ir=ir+1
-        do n=1, 2*n2d+norbnow*npol
+        do n=1, 2*n2d+norb*npol
           vec1(n,ir)=0.d0
           do j=1, 2*nchan
             vec1(n,ir)=vec1(n,ir)+vec(n,ncond(j))*valj(j,in)
@@ -138,7 +138,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
         enddo                      
       else
         il=il+1
-        do n=1, 2*n2d+npol*norbnow
+        do n=1, 2*n2d+npol*norb
           vec1(n,il)=0.d0
           do j=1, 2*nchan
             vec1(n,il)=vec1(n,il)+vec(n,ncond(j))*valj(j,in)
@@ -152,27 +152,17 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
       endif
     enddo
 
-!   do j=1,2*nchan
-!      write(6,'("------------------------------",i5,2f15.6)') j, kval1(j)
-!      do k=1,n2d
-!         if (k.eq.n2d/2+1.and.noncolin) write(6,'("-------")')
-!         write(6,'(i5,f15.7)') k, abs(kfun(k,ncond(j)))
-!      enddo
-!   enddo
-
-
-
 !--  decaying states 
     do in=1, nst  
       if (DIMAG(kval(in)).gt.eps) then
         ir=ir+1
         kval1(ir)=kval(in)
-        call DCOPY(2*(2*n2d+npol*norbnow),vec(1,in),1,vec1(1,ir),1)
+        call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,ir),1)
       endif
       if (-DIMAG(kval(in)).gt.eps) then
         il=il+1
         kval1(il)=kval(in)
-        call DCOPY(2*(2*n2d+npol*norbnow),vec(1,in),1,vec1(1,il),1)
+        call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,il),1)
       endif
     enddo           
 
@@ -181,11 +171,11 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
 !
   do k=1, nchan
     k1=1.d0/abs(kcur(k))
-    call DSCAL(2*(2*n2d+npol*norbnow),sqrt(k1),vec1(1,k),1)
+    call DSCAL(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
   enddo               
   do k=nst/2+1, nst/2+nchan
     k1=1.d0/abs(kcur(k))
-    call DSCAL(2*(2*n2d+npol*norbnow),sqrt(k1),vec1(1,k),1)
+    call DSCAL(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
   enddo       
 
 !
@@ -221,7 +211,7 @@ subroutine jbloch (nst, n2d, norbf, norbnow, nocros, kfun, kfund, &
       kval(k)=kval1(k)
     enddo    
     do k=1, nst
-      call DCOPY(2*(2*n2d+npol*norbnow),vec1(1,ncond(k)),1,vec(1,k),1)
+      call DCOPY(2*(2*n2d+npol*norb),vec1(1,ncond(k)),1,vec(1,k),1)
     enddo
 
   deallocate(kcoef)

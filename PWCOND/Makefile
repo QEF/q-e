@@ -9,13 +9,13 @@ PPOBJS = \
 
 PWCONDOBJS = \
 allocate_cond.o \
-allocate_cond_2.o \
 bessj.o \
 cft3sp.o \
 compbs.o \
 compbs_2.o \
 condcom.o \
 condmain.o \
+cond_out.o \
 do_cond.o \
 eigenchnl.o \
 form_zk.o \
@@ -27,6 +27,7 @@ gep_x.o \
 gramsh.o \
 hev_ab.o \
 init_cond.o \
+init_orbitals.o \
 init_gper.o \
 integrals.o \
 jbloch.o \
@@ -37,18 +38,17 @@ poten.o \
 print_clock_pwcond.o \
 rotate.o \
 rotproc.o \
+save_cond.o \
 scatter_back.o \
 scatter_forw.o \
-slabcpu.o \
 summary_band.o \
 summary_tran.o \
 transmit.o
 
-
-
 MODULES = \
 ../Modules/atom.o \
 ../Modules/basic_algebra_routines.o \
+../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/clocks.o \
 ../Modules/check_stop.o \
@@ -119,8 +119,10 @@ PWOBJS = \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
 ../PW/cinitcgg_nc.o \
+../PW/clean_pw.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
+../PW/constraints_module.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
@@ -193,6 +195,7 @@ PWOBJS = \
 ../PW/openfil.o \
 ../PW/ortho.o \
 ../PW/orthoatwfc.o \
+../PW/output_tau.o \
 ../PW/para.o \
 ../PW/potinit.o \
 ../PW/print_clock_pw.o \
