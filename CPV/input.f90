@@ -933,3 +933,947 @@ CONTAINS
 
 END MODULE input_cp
 
+!
+! Copyright (C) 2002 FPMD group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
+!  ----------------------------------------------
+!  Car-Parrinello Parallel Program
+!  Carlo Cavazzoni
+!  ----------------------------------------------
+!  BEGIN manual
+
+      MODULE input_fpmd
+
+!  this module handles the reading of input data
+!  ----------------------------------------------
+!
+!  END manual
+! ----------------------------------------------------------------------
+
+        USE kinds
+        USE constants, ONLY: UMA_AU, pi
+        USE io_global, ONLY: ionode, stdout
+
+        IMPLICIT NONE
+        SAVE
+
+        PRIVATE
+
+        PUBLIC :: read_input_file
+        PUBLIC :: iosys
+
+!  end of module-scope declarations
+!  ----------------------------------------------
+
+      CONTAINS
+
+!  subroutines
+!  ----------------------------------------------
+!  ----------------------------------------------
+
+      SUBROUTINE read_input_file( lneb )
+        USE read_namelists_module, ONLY: read_namelists
+        USE read_cards_module, ONLY: read_cards
+        USE input_parameters, ONLY: calculation
+        IMPLICIT NONE
+
+        LOGICAL, INTENT(OUT) :: lneb
+
+! . Read NAMELISTS ..................................................! 
+
+        CALL read_namelists( 'FP' )
+
+! . Read CARDS ......................................................! 
+
+        CALL read_cards( 'FP' )
+
+        lneb = ( TRIM( calculation ) == 'neb' )
+
+        RETURN
+      END SUBROUTINE
+
+! ----------------------------------------------------------------
+!
+!
+!
+! ----------------------------------------------------------------
+
+      SUBROUTINE iosys
+
+        USE control_flags, ONLY: fix_dependencies
+
+        IMPLICIT NONE
+
+! . Set internal flags according to the input .......................!
+
+        CALL set_internal_flags()
+
+! . Fix values for dependencies .....................................!
+
+        CALL fix_dependencies()
+
+! . Write to stdout input module information ........................!
+
+        CALL input_info()
+
+! . CALL the Module specific setup routine ..........................! 
+
+        CALL modules_setup()
+
+! . Write to stdout module specifice information  ...................!
+
+        CALL modules_info()
+
+        RETURN
+      END SUBROUTINE iosys
+
+
+! ----------------------------------------------------------------
+! ----------------------------------------------------------------
+
+
+      SUBROUTINE modules_setup()
+
+        USE input_parameters, ONLY: &
+          tturbo_inp, nturbo_inp, diis_achmix, electron_damping, vhrmax_inp, &
+          vhasse_inp, iesr_inp, diis_ethr, diis_wthr, diis_delt, &
+          etot_conv_thr, diis_g0chmix, diis_nchmix, diis_g1chmix, xc_type, &
+          narray_inp, rmxxc_inp, empty_states_maxstep, empty_states_delt, &
+          empty_states_emass, empty_states_ethr, vhnr_inp, vhiunit_inp, &
+          vhrmin_inp, tvhmean_inp, tscra_inp, scradir, max_seconds, wk, &
+          outdir, prefix, k3, nk3, k1, k2, woptical, noptical, boptical, &
+          electron_maxstep, tprnks, tprnks_empty, ks_path, diis_nreset, &
+          diis_temp, diis_nrot, diis_maxstep, diis_fthr, diis_size, diis_hcut, &
+          k_points, nk1, nk2, ortho_eps, diis_rothr, tchi2_inp, ortho_max, &
+          ekin_conv_thr, na_inp, ibrav, press, atom_mass, nkstot, xk, wmass, &
+          nbnd, nelec, nelup, tf_inp, cell_dofree, t2dpegrid_inp, &
+          diis_chguess, tpstab_inp, pstab_size_inp, ion_radius, atom_pfile, &
+          dt, ntyp, pseudo_dir, qcutz, q2sigma, tk_inp, ecfixed, celldm, &
+          ecutwfc, ecutrho, constr_dist_inp, constr_inp, ion_damping, &
+          constr_type_inp, anner_inp, nconstr_inp, constr_tol_inp, tolp, &
+          fnosee, ekincw, tempw, tneighbo, neighbo_radius, fnosep, &
+          emass_cutoff, f_inp, sp_pos, emass, neldw, nspin, empty_states_nbnd, &
+          atom_label, anne_inp, rd_vel, rd_pos, if_pos, sp_vel, rd_ht, &
+          a, b, c, cosab, cosac, cosbc, cell_symmetry, trd_ht, nat, id_loc, &
+          sic, sic_epsilon, sic_rloc, atomic_positions, cell_damping, greash, &
+          fnoseh, temph, nr1b, nr2b, nr3b, title
+
+        USE io_files, ONLY: &
+          psfile, &
+          pseudo_dir_ => pseudo_dir, &
+          prefix_     => prefix
+
+        USE nose_ions, ONLY: nose_ions_setup
+        USE nose_electrons, ONLY: nose_electrons_setup
+        USE time_step, ONLY: set_time_step
+        USE cell_module, ONLY: metric_setup
+        USE ions_module, ONLY: ions_setup, tc_ions_setup
+        USE guess, ONLY: guess_setup
+        USE real_space_mesh, ONLY: real_space_mesh_setup
+        USE bands_mesh, ONLY: bands_mesh_setup
+        USE empty_states, ONLY: empty_setup
+        USE electrons_module, ONLY: electrons_setup
+        USE pseudopotential, ONLY: pseudopotential_setup
+        USE environment, ONLY: environment_setup
+        USE exchange_correlation, ONLY: exch_corr_setup
+        USE turbo, ONLY: turbo_setup
+        USE diis, ONLY: diis_setup
+        USE charge_mix, ONLY: charge_mix_setup
+        USE chi2, ONLY: chi2_setup
+        USE potentials, ONLY:  potential_setup
+        USE wave_base, ONLY: wave_base_init
+        USE orthogonalize, ONLY: orthogonalize_setup
+        USE stress, ONLY: stress_setup
+        USE brillouin, ONLY: kpoint_setup
+        USE print_out_module, ONLY: printout_setup
+        USE kohn_sham_states, ONLY: ks_states_setup
+        USE runcg_module, ONLY: runcg_setup
+        USE optical_properties, ONLY: optical_setup
+        USE reciprocal_space_mesh, ONLY: recvecs_units
+        USE cell_base, ONLY: cell_base_init, a1, a2, a3
+        USE cell_nose, ONLY: temph_ => temph, fnoseh_ => fnoseh, qnh_ => qnh
+        USE ions_base, ONLY: ions_base_init
+        USE ions_nose, ONLY: ions_noseinit
+        USE check_stop, ONLY: check_stop_init
+        !
+        USE control_flags, ONLY: lneb, tnoseh, &
+              tolp_ => tolp, &
+              ortho_max_ => ortho_max, &
+              ortho_eps_ => ortho_eps
+        !
+        USE constants, ONLY: factem, terahertz, pi, eps8
+        USE ions_base, ONLY: self_interaction
+        USE smallbox_grid_dimensions, ONLY: &
+              nr1b_ => nr1b, nr2b_ => nr2b, nr3b_ => nr3b
+        !
+        USE printout_base, ONLY: &
+              title_ => title
+
+
+        IMPLICIT NONE
+
+! ...   Declare Variables
+        REAL(dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+! ...   DIIS
+        REAL(dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
+        REAL(dbl) :: alat_ 
+        LOGICAL :: o_diis_inp, oqnr_diis_inp
+        INTEGER :: icapstep
+        LOGICAL :: timing = .TRUE.
+
+! ...   end of declarations
+!  ----------------------------------------------
+
+        title_ = title     !  simulation title
+
+        !  set module variables
+  
+        psfile( 1 : ntyp ) = atom_pfile( 1 : ntyp )
+        pseudo_dir_        = pseudo_dir
+        prefix_            = prefix
+
+! ...   auxiliary input and/or setup routines
+
+        IF( .not. lneb ) THEN
+          CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &
+               a, b, c, cosab, cosac, cosbc , alat_ )
+        END IF
+
+        CALL set_time_step( dt )
+        CALL pseudopotential_setup( ntyp, pseudo_dir, atom_pfile, tpstab_inp, pstab_size_inp, ion_radius )
+        CALL recvecs_units( alat_ )
+
+        ! cut offs
+
+        CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
+
+        CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk)
+
+! ... Set the default value for the cell mass
+        IF( wmass == 0.d0 ) THEN  
+          wmass = 3.d0 / (4.d0 * pi**2 ) * SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
+          wmass = wmass * UMA_AU
+        END IF
+
+
+        CALL metric_setup( wmass, press, cell_damping, greash, cell_dofree )
+
+        ! set thermostat parameter for cell
+        qnh_    = 0.0d0
+        temph_  = temph
+        fnoseh_ = fnoseh
+        if( fnoseh > 0.0d0 ) qnh_ = 2.d0 * ( 3 * 3 )*temph/factem/(fnoseh*(2.d0*pi)*terahertz)**2
+
+
+        CALL real_space_mesh_setup( t2dpegrid_inp )
+
+        nr1b_ = nr1b  ! set box grid module variables
+        nr2b_ = nr2b
+        nr3b_ = nr3b
+
+        CALL guess_setup( diis_chguess )
+
+        CALL bands_mesh_setup( )
+
+        CALL electrons_setup( tf_inp, nbnd, nint(nelec), nint(nelup), &
+          nint(neldw), nspin, empty_states_nbnd, emass, emass_cutoff, &
+          f_inp, nkstot )
+
+        ! call errore( ' qui ', ' qui ', 1 )
+
+        IF( .not. lneb ) THEN
+          CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
+               atom_label, if_pos, atomic_positions, alat_ , a1 , a2 , a3 , &
+               id_loc, sic, sic_epsilon, sic_rloc  )
+        END IF
+
+        CALL ions_setup( anne_inp, anner_inp,   &
+             nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
+             constr_inp, ion_damping, tneighbo, neighbo_radius )
+
+        IF( ABS(self_interaction) /= 0 ) CALL sic_info()
+
+        CALL nose_ions_setup( fnosep, tempw )
+        CALL ions_noseinit( tempw, fnosep, nat )
+
+        icapstep = 1
+        CALL tc_ions_setup(tempw, icapstep)
+        tolp_ = tolp
+        !
+        CALL nose_electrons_setup( fnosee, ekincw )
+
+        delt_emp_inp  = dt
+        emass_emp_inp = emass
+        ethr_emp_inp  = ekin_conv_thr
+        IF( empty_states_delt > 0.d0 )  delt_emp_inp  = empty_states_delt
+        IF( empty_states_emass > 0.d0 ) emass_emp_inp = empty_states_emass
+        IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
+        CALL empty_setup( empty_states_maxstep, delt_emp_inp, ethr_emp_inp )
+
+        CALL exch_corr_setup(xc_type, narray_inp, rmxxc_inp)
+        CALL check_stop_init( max_seconds )
+        CALL environment_setup( scradir )
+        CALL potential_setup(tvhmean_inp,vhnr_inp, vhiunit_inp, &
+               vhrmin_inp, vhrmax_inp, vhasse_inp, timing, iesr_inp)
+        CALL wave_base_init( electron_damping )
+        CALL turbo_setup(tturbo_inp, nturbo_inp)
+        CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
+
+        o_diis_inp        = .TRUE.
+        oqnr_diis_inp     = .TRUE.
+        tolene_inp = etot_conv_thr
+        tol_diis_inp = ekin_conv_thr
+        delt_diis_inp = dt
+        IF( diis_ethr > 0.0d0 ) tolene_inp = diis_ethr
+        IF( diis_wthr > 0.0d0 ) tol_diis_inp = diis_wthr
+        IF( diis_delt > 0.0d0 ) delt_diis_inp = diis_delt
+        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, &
+          diis_size, diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset, delt_diis_inp, &
+          diis_temp, diis_nrot(1), diis_nrot(2), diis_nrot(3), &
+          diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
+
+        CALL chi2_setup(tchi2_inp)
+        !
+        CALL orthogonalize_setup( timing )
+        ortho_max_ = ortho_max
+        ortho_eps_ = ortho_eps
+        !
+        CALL stress_setup(timing)
+        CALL kpoint_setup(k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk)
+        CALL printout_setup( outdir, prefix )
+        CALL ks_states_setup(nspin, tprnks, tprnks_empty, ks_path)
+        CALL runcg_setup( etot_conv_thr, electron_maxstep )
+        CALL optical_setup( woptical, noptical, boptical )
+
+        RETURN
+      END SUBROUTINE modules_setup
+
+
+
+! ----------------------------------------------------------------
+! ----------------------------------------------------------------
+
+    SUBROUTINE set_internal_flags()
+
+      USE input_parameters, ONLY: &
+        ndw, ndr, iprint, tstress, isave, k_points, cell_velocities, &
+        cell_dynamics, cell_parameters, cell_temperature, trd_ht, &
+        tapos, tavel, ecutwfc, emass_cutoff, taspc, tdipole_card, tprnfor, &
+        toptical_card, tnewnfi_card, newnfi_card, electron_temperature, &
+        electron_velocities, diis_rot, ampre, startingwfc, electron_dynamics, &
+        tprnrho, verbosity, nstep, orthogonalization, restart_mode, tranp, &
+        ion_velocities, amprp, cell_nstepe, ion_nstepe, ion_positions, &
+        ekin_conv_thr, ion_dynamics, ion_maxstep, ion_temperature, &
+        electron_maxstep, etot_conv_thr, forc_conv_thr, ibrav
+
+      USE input_parameters, ONLY: force_pairing_ => force_pairing
+
+      USE control_flags, ONLY: &
+        ampre_ => ampre, &
+        nbeg_  => nbeg, &
+        nomore_ => nomore, &
+        trane_  => trane, &
+        tortho_  => tortho, &
+        prn_     => prn, &
+        tprnsfac_ => tprnsfac, &
+        rhoout_   => rhoout, &
+        memchk_   => memchk, &
+        timing_   => timing, &
+        tatomicwfc_ => tatomicwfc
+
+      USE control_flags, ONLY: &
+        t_diis_simple_ => t_diis_simple, &
+        t_diis_ => t_diis, &
+        tsde_ => tsde, &
+        t_diis_rot_ => t_diis_rot, &
+        ekin_maxiter_ => ekin_maxiter, &
+        tconjgrad_ => tconjgrad, &
+        tdamp_ => tdamp, &
+        ekin_conv_thr_ => ekin_conv_thr, &
+        tsteepdesc_ => tsteepdesc, &
+        tzeroe_ => tzeroe, &
+        tnosee_ => tnosee
+
+      USE control_flags, ONLY: &
+        ndr_     => ndr, &
+        ndw_     => ndw, &
+        iprint_  => iprint, &
+        isave_   => isave, &
+        tstress_ => tstress, &
+        tprnfor_ => tprnfor, &
+        tdipole_ => tdipole, &
+        toptical_ => toptical, &
+        newnfi_ => newnfi, &
+        tnewnfi_ => tnewnfi, &
+        gamma_only_ => gamma_only
+
+      USE control_flags, ONLY: &
+        tzeroc_ => tzeroc, &
+        tnoseh_ => tnoseh, &
+        thdyn_ => thdyn, &
+        tsdc_ => tsdc, &
+        tbeg_ => tbeg
+
+      USE control_flags, ONLY: &
+        tionstep_ => tionstep, &
+        nstepe_ => nstepe
+
+      USE control_flags, ONLY: &
+        tdampions_ => tdampions, &
+        tfor_ => tfor, &
+        tsdp_ => tsdp, &
+        tconvthrs, tconjgrad_ion
+
+      USE control_flags, ONLY: &
+        tnosep_ => tnosep, &
+        taurdr_ => taurdr, &
+        tcap_ => tcap, &
+        tcp_ => tcp, &
+        tzerop_ => tzerop, &
+        tv0rd_ => tv0rd, &
+        tranp_ => tranp, &
+        amprp_ => amprp
+
+      USE control_flags, ONLY: &
+        force_pairing
+
+      IMPLICIT NONE
+
+
+! . Set internal flags according to the input .......................!
+
+        ndr_     = ndr
+        ndw_     = ndw
+        iprint_  = iprint
+        isave_   = isave
+        tstress_ = tstress
+        tprnfor_ = tprnfor
+        tdipole_ = tdipole_card
+        toptical_ = toptical_card
+        newnfi_ = newnfi_card
+        tnewnfi_ = tnewnfi_card
+        gamma_only_ = ( k_points == 'gamma' )
+
+        !
+        !  set the level of output, the code verbosity 
+        !
+
+        prn_        = .FALSE.
+        tprnsfac_   = .FALSE.
+          ! Print on file STRUCTURE_FACTOR the structure factor
+          ! gvectors and charge density, in reciprocal space.
+        rhoout_ = .false.
+          ! save charge density to file  CHARGEDENSITY if nspin = 1, and
+          ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
+        memchk_ = .FALSE.
+          ! The code performs a memory check, write on standard
+          ! output the allocated memory at each step.
+          ! Architecture Dependent
+        timing_ = .FALSE.
+          ! The code write to files fort.8 fort.41 fort.42 fort.43
+          ! a detailed report of subroutines timing
+
+        SELECT CASE ( TRIM(verbosity) )
+          CASE ('minimal')
+            prn_ = .FALSE.
+          CASE ('low', 'default')
+            prn_ = .FALSE.
+            timing_ = .TRUE.
+          CASE ('medium')
+            prn_ = .FALSE.
+            timing_ = .TRUE.
+            rhoout_ = .TRUE.
+            tprnsfac_ = .TRUE.
+          CASE ('high')
+            prn_ = .TRUE.
+            memchk_ = .TRUE.
+            timing_ = .TRUE.
+            rhoout_ = .TRUE.
+            tprnsfac_ = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown verbosity '//TRIM(verbosity), 1 )
+        END SELECT
+
+        ! ...   If explicitly requested force the charge density to be printed
+
+        IF( tprnrho ) rhoout_ = .TRUE.
+
+        !
+        !   set the restart flags
+        !
+
+        ampre_ = ampre
+        SELECT CASE ( TRIM( restart_mode ) )
+          CASE ('from_scratch')
+            nbeg_ = -2
+            if ( ion_positions == 'from_input' ) nbeg_ = -1
+            nomore_ = nstep
+            trane_  = ( startingwfc == 'random' )
+            if ( ampre_ == 0.d0 ) ampre_ = 0.02
+          CASE ('reset_counters')
+            nbeg_ = 0
+            nomore_ = nstep
+          CASE ('restart')
+            nbeg_ = 1
+            nomore_ = nstep
+          CASE DEFAULT
+            CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
+        END SELECT
+
+        ! ...   TORTHO
+
+        SELECT CASE ( orthogonalization )
+        CASE ('Gram-Schmidt')
+           tortho_ = .FALSE.
+        CASE ('ortho')
+           tortho_ = .TRUE.
+        CASE DEFAULT
+           CALL errore(' iosys ',' unknown orthogonalization '//&
+              trim(orthogonalization), 1 )
+        END SELECT
+
+        ! ... Electronic randomization
+
+        trane_      = .FALSE.
+        tatomicwfc_ = .FALSE.
+        SELECT CASE ( TRIM(startingwfc) )
+          CASE ('default','none')
+            trane_ = .FALSE.
+          CASE ('random')
+            trane_ = .TRUE.
+          CASE ('atomic')
+            tatomicwfc_ = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown startingwfc '//TRIM(startingwfc), 1 )
+        END SELECT
+        ampre_ = ampre
+        IF( ampre == 0.0d0 ) trane_ = .FALSE.
+
+        ! ... Electron dynamics
+
+        tdamp_          = .FALSE.
+        tconjgrad_      = .FALSE.
+        tsteepdesc_     = .FALSE.
+        ekin_conv_thr_  = 1.0d+10
+        ekin_maxiter_ = 1
+        t_diis_        = .FALSE.
+        t_diis_simple_ = .FALSE.
+        t_diis_rot_    = .FALSE.
+        SELECT CASE ( TRIM(electron_dynamics) )
+          CASE ('sd', 'default')
+            tsde_ = .TRUE.
+          CASE ('verlet')
+            tsde_ = .FALSE.
+          CASE ('cg')
+            tsde_      = .FALSE.
+            tconjgrad_ = .TRUE.
+          CASE ('damp')
+            tsde_   = .FALSE.
+            tdamp_  = .TRUE.
+          CASE ('diis')
+            tsde_   = .FALSE.
+            t_diis_ = .TRUE.
+            IF( diis_rot ) THEN
+              t_diis_rot_    = .TRUE.
+            ELSE
+              t_diis_simple_ = .TRUE.
+            END IF
+          CASE ('none')
+            tsde_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown electron_dynamics '//TRIM(electron_dynamics), 1 )
+        END SELECT
+
+        ! ... Electrons initial velocity
+
+        SELECT CASE ( TRIM(electron_velocities) )
+          CASE ('default')
+            tzeroe_ = .FALSE.
+          CASE ('zero')
+            tzeroe_ = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
+        END SELECT
+
+        ! ... Electronic Temperature
+
+        tnosee_ = .FALSE.
+        SELECT CASE ( TRIM(electron_temperature) )
+          !         temperature control of electrons via Nose' thermostat
+          CASE ('nose')
+            tnosee_ = .TRUE.
+          CASE ('not_controlled', 'default')
+            tnosee_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
+        END SELECT
+
+
+        ! ... Ions dynamics
+        tdampions_        = .FALSE.
+        tconvthrs%active = .FALSE.
+        tconvthrs%nstep  = 1
+        tconvthrs%ekin   = 0.0d0
+        tconvthrs%derho  = 0.0d0
+        tconvthrs%force  = 0.0d0
+        tconjgrad_ion%active = .FALSE.
+        tconjgrad_ion%nstepix = 1
+        tconjgrad_ion%nstepex = 1
+        tconjgrad_ion%ionthr = 1.0d+10
+        tconjgrad_ion%elethr = 1.0d+10
+        SELECT CASE ( TRIM(ion_dynamics) )
+          CASE ('sd')
+            tsdp_ = .TRUE.
+            tfor_ = .TRUE.
+            tconvthrs%ekin   = ekin_conv_thr
+            tconvthrs%derho  = etot_conv_thr
+            tconvthrs%force  = forc_conv_thr
+            tconvthrs%active = .TRUE.
+            tconvthrs%nstep  = 1
+          CASE ('verlet')
+            tsdp_ = .FALSE.
+            tfor_ = .TRUE.
+          CASE ('cg')       ! Conjugate Gradient minimization for ions
+            tsdp_ = .FALSE.
+            tfor_ = .TRUE.
+            tconjgrad_ion%active  = .TRUE.
+            tconjgrad_ion%nstepix = ion_maxstep    ! maximum number of iteration
+            tconjgrad_ion%nstepex = electron_maxstep  ! maximum number of iteration for the electronic minimization
+            tconjgrad_ion%ionthr  = etot_conv_thr ! energy threshold for convergence
+            tconjgrad_ion%elethr  = ekin_conv_thr ! energy threshold for convergence in the electrons minimization
+            tconvthrs%ekin   = ekin_conv_thr
+            tconvthrs%derho  = etot_conv_thr
+            tconvthrs%force  = forc_conv_thr
+            tconvthrs%active = .TRUE.
+            tconvthrs%nstep  = 1
+          CASE ('damp')
+            tsdp_ = .FALSE.
+            tfor_ = .TRUE.
+            tdampions_ = .TRUE.
+            tconvthrs%ekin   = ekin_conv_thr
+            tconvthrs%derho  = etot_conv_thr
+            tconvthrs%force  = forc_conv_thr
+            tconvthrs%active = .TRUE.
+            tconvthrs%nstep  = 1
+          CASE ('none', 'default')
+            tsdp_ = .FALSE.
+            tfor_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown ion_dynamics '//TRIM(ion_dynamics), 1 )
+        END SELECT
+
+        ! ... Ionic Temperature
+
+        tcap_         = .FALSE.
+        tcp_          = .FALSE.
+        tnosep_       = .FALSE.
+        SELECT CASE ( TRIM(ion_temperature) )
+          !         temperature control of ions via Nose' thermostat
+          CASE ('nose')
+            tnosep_ = .TRUE.
+          CASE ('not_controlled', 'default')
+            tnosep_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown ion_temperature '//TRIM(ion_temperature), 1 )
+        END SELECT
+        ! ... Starting/Restarting Atomic positions
+        taurdr_ = .FALSE.
+        SELECT CASE ( TRIM(ion_positions) )
+          CASE ( 'from_input' )
+            taurdr_ = .TRUE.   ! Positions read from standard input
+          CASE ( 'default' )
+            taurdr_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown ion_positions '//TRIM(ion_positions), 1 )
+        END SELECT
+        ! ... Starting/Restarting ionic velocities
+        SELECT CASE ( TRIM(ion_velocities) )
+          CASE ('default')
+            tzerop_ = .FALSE.
+            tv0rd_ = .FALSE.
+          CASE ('zero')
+            tzerop_ = .TRUE.
+            tv0rd_ = .FALSE.
+          CASE ('from_input')
+            tzerop_ = .TRUE.
+            tv0rd_  = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown ion_velocities '//TRIM(ion_velocities), 1 )
+        END SELECT
+        ! ... Ionic randomization
+        tranp_ = tranp
+        amprp_ = amprp
+
+
+        tionstep_ = .FALSE.
+        nstepe_   = 1
+        IF( ( ion_nstepe > 1 ) .OR. ( cell_nstepe > 1 ) ) THEN
+!         This card is used to control the ionic step, when active ionic step are
+!         allowed only when the two criteria are met, i.e. the ions are allowed
+!         to move if MOD( NFI, NSTEP ) == 0 and EKIN < EKIN_THR .
+          tionstep_ = .TRUE.
+          nstepe_   = MAX( ion_nstepe, cell_nstepe )
+        END IF
+        ekin_conv_thr_   = ekin_conv_thr
+
+           
+        SELECT CASE ( TRIM(cell_dynamics) )
+          CASE ('sd')
+            thdyn_ = .TRUE.
+            tsdc_ = .TRUE.
+          CASE ('damp')
+            thdyn_ = .TRUE.
+            tsdc_ = .FALSE.
+          CASE ('pr')
+            thdyn_ = .TRUE.
+            tsdc_ = .FALSE.
+          CASE ('none', 'default')
+            thdyn_ = .FALSE.
+            tsdc_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown cell_dynamics '//TRIM(cell_dynamics), 1 )
+        END SELECT
+! ... Starting/Restarting Cell parameters
+        SELECT CASE ( TRIM(cell_parameters) )
+          CASE ('default')
+            tbeg_ = .FALSE.
+          CASE ('from_input')
+            tbeg_ = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown cell_parameters '//TRIM(cell_parameters), 1 )
+        END SELECT
+! ... Cell initial velocities
+        SELECT CASE ( TRIM(cell_velocities) )
+          CASE ('default')
+            tzeroc_ = .FALSE.
+          CASE ('zero')
+            tzeroc_ = .TRUE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown cell_velocities '//TRIM(cell_velocities), 1 )
+        END SELECT
+! ... Cell Temperature
+        SELECT CASE ( TRIM(cell_temperature) )
+!         cell temperature control of ions via Nose' thermostat
+          CASE ('nose')
+            tnoseh_ = .TRUE.
+          CASE ('not_controlled', 'default')
+            tnoseh_ = .FALSE.
+          CASE DEFAULT
+            CALL errore(' control_flags ',' unknown cell_temperature '//TRIM(cell_temperature), 1 )
+        END SELECT
+
+        ! .. If only electron are allowed to move 
+        ! .. check for SCF convergence on the ground state
+       
+        IF( ion_dynamics == 'none' .AND. cell_dynamics == 'none' ) THEN
+          tconvthrs%ekin   = ekin_conv_thr
+          tconvthrs%derho  = etot_conv_thr
+          tconvthrs%force  = 10d+10
+          tconvthrs%active = .TRUE.
+          tconvthrs%nstep  = 1
+        END IF
+
+        ! force pairing
+        force_pairing = force_pairing_
+
+! ... the 'ATOMIC_SPECIES' card must be present, check it
+        IF( .NOT. taspc ) &
+          CALL errore(' iosys ',' ATOMIC_SPECIES not found in stdin ',1)
+
+! ... the 'ATOMIC_POSITIONS' card must be present, check it
+        IF( .NOT. tapos ) &
+          CALL errore(' iosys ',' ATOMIC_POSITIONS not found in stdin ',1)
+
+        IF( .NOT. trd_ht .AND. TRIM(cell_parameters)=='from_input' ) &
+          CALL errore(' iosys ',' CELL_PARAMETERS not present in stdin ', 1 )
+
+        IF( .NOT. trd_ht .AND. ibrav == 0 ) &
+          CALL errore(' iosys ',' ibrav = 0 but CELL_PARAMETERS not present in stdin ', 1 )
+
+        IF( .NOT. tavel .AND. TRIM(ion_velocities)=='from_input' ) &
+          CALL errore(' iosys ',' ION_VELOCITIES not present in stdin ', 1 )
+
+        IF( TRIM(electron_dynamics) /= 'diis' .AND. TRIM(orthogonalization) /= 'ortho' ) THEN
+          IF( emass_cutoff < ecutwfc ) &
+            CALL errore(' IOSYS ', ' FOURIER ACCELERATION WITHOUT ORTHO',0)
+        END IF
+
+
+     RETURN
+   END SUBROUTINE set_internal_flags
+
+
+
+! ----------------------------------------------------------------
+
+  SUBROUTINE input_info()
+
+! this subroutine print to standard output some parameters read from input
+! ----------------------------------------------
+
+    USE input_parameters, ONLY: restart_mode, nstep, iprint, ndr, ndw, &
+      celldm, dt, emass, title
+
+    IMPLICIT NONE
+
+    IF( ionode ) THEN
+      WRITE( stdout, * )
+      WRITE( stdout, 10)
+      WRITE( stdout, 400) title
+      WRITE( stdout, 500) restart_mode, nstep, iprint, ndr, ndw
+      WRITE( stdout, 501) celldm(1), celldm
+      WRITE( stdout, 505) dt
+      WRITE( stdout, 510) emass
+      WRITE( stdout, 509)
+    END IF
+
+
+
+    RETURN
+
+ 10   FORMAT(//,3X,'MD PARAMETERS READ FROM STANDARD INPUT',/ &
+               ,3X,'-------------------------------------')
+400   FORMAT(/  3X, 'Job Title: ', A )
+500   FORMAT(   3X,'Restart Mode = ',A15,', Number of MD Steps = ',I7,/ &
+               ,3X,'Print out every ',I4,' MD Steps',/  &
+               ,3X,'Reads from unit = ',I3,', Writes to unit = ',I3)
+501   FORMAT( 3X,'Alat   = ', F10.6,/  &
+               ,3X,'Celldm = ',6F10.6)
+502   FORMAT(   3X,'An initial quench is performed')
+505   FORMAT(   3X,'MD Simulation time step    = ',F9.4)
+509   FORMAT(   3X,'Verlet algorithm for electron dynamics')
+510   FORMAT(   3X,'Electronic fictitious MASS = ',F10.2)
+
+
+
+  END SUBROUTINE input_info
+
+! ----------------------------------------------------------------
+! ----------------------------------------------------------------
+
+  SUBROUTINE modules_info()
+
+    USE input_parameters, ONLY: electron_dynamics, &
+      electron_velocities, electron_temperature, &
+      orthogonalization
+
+    USE cell_module, ONLY: metric_print_info
+    USE cutoffs, ONLY: cutoffs_print_info
+    USE ions_module, ONLY: print_scaled_positions, ions_print_info
+    USE empty_states, ONLY: empty_print_info
+    USE electrons_module, ONLY: electrons_print_info
+    USE exchange_correlation, ONLY: exch_corr_print_info
+    USE diis, ONLY:  diis_print_info
+    USE potentials, ONLY:  potential_print_info
+    USE orthogonalize, ONLY: orthogonalize_info
+    USE brillouin, ONLY: kpoint_info
+    USE runcg_module, ONLY: runcg_info
+
+    IMPLICIT NONE
+
+! ..  Write summary input infos on stdout
+      IF( ionode ) THEN
+        CALL cutoffs_print_info( stdout )
+        CALL electrons_print_info( stdout )
+        CALL empty_print_info( stdout )
+        IF( TRIM(electron_dynamics) == 'diis' ) THEN
+          CALL diis_print_info( stdout )
+        ELSE IF( TRIM(electron_dynamics) == 'cg'  ) THEN
+          CALL runcg_info( stdout )
+        ELSE IF( TRIM(electron_dynamics) == 'sd' ) THEN
+          WRITE( stdout,513)
+        ELSE
+          WRITE( stdout,514)
+        END IF
+        IF( TRIM(electron_temperature) /= 'nose') THEN
+          WRITE( stdout,535)
+        ELSE 
+          WRITE( stdout,590)
+        END IF
+        IF( TRIM(orthogonalization) == 'ortho' ) THEN
+          CALL orthogonalize_info( stdout )
+        ELSE
+          WRITE( stdout,512)
+        END IF
+        CALL kpoint_info( stdout )
+        CALL exch_corr_print_info( stdout )
+        CALL ions_print_info( stdout )
+        CALL potential_print_info( stdout )
+        CALL metric_print_info( stdout )
+      END IF
+
+    RETURN
+  512   FORMAT(   3X,'Orthog. with Gram-Schmidt')
+  513   FORMAT(   3X,'Electron dynamics with steepest descent')
+  514   FORMAT(   3X,'Electron dynamics with newton equations')
+  523   FORMAT(   3X,'Dynamic quenching for ions/cell')
+  535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
+  540   FORMAT(   3X,'Electron dynamics with rescaling of velocities :',/ &
+               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
+                  ,'Tolerance = ',F11.6)
+  545   FORMAT(   3X,'Electron dynamics with canonical temp. control : ',/ &
+               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
+                  ,'Tolerance = ',F11.6)
+  580   FORMAT(   3X,'Nstepe = ',I3  &
+                  ,' purely electronic steepest descent steps',/ &
+               ,3X,'are performed for every ionic step in the program')
+  590   FORMAT(   3X,'Electron temperature control via nose thermostat')
+END SUBROUTINE modules_info
+
+
+SUBROUTINE sic_info()
+  USE io_global, ONLY: ionode, stdout
+  USE ions_base, ONLY: self_interaction
+  IMPLICIT NONE
+! prints the type of USIC we will do :
+      if (ionode) then
+        WRITE(stdout, 591)
+        WRITE(stdout, 592) self_interaction
+        WRITE(stdout, 593)
+        select case (self_interaction)
+        case (1)
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  E_USIC_PZ = - U_hartree[rho_up-rhp_down] - E_excor[rho_up-rho_down,0] '
+        case (2)
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  E_USIC_MAC = - U_hartree[rho_up-rhp_down] - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
+        case (3)
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  E_USIC_basis = - U_hartree[rho_up-rhp_down] '
+        case (-1)
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  E_USIC_nohartree_PZ =  - E_excor[rho_up-rho_down,0] '
+        case (-2)
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  E_USIC_nohartree_MAC =  - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
+        case default
+          write(stdout,*) &
+            '  Unpaired-electron self-interaction correction of type ', self_interaction
+          write(stdout,*) &
+            '  No unpaired-electron self-interaction correction '
+        end select
+      endif
+  591 FORMAT(   3X,'')
+  592 FORMAT(   3X,'Introducing a Self_Interaction Correction case: ', I3)
+  593 FORMAT(   3X,'----------------------------------------')
+END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+END MODULE input_fpmd
+!=----------------------------------------------------------------------------=!

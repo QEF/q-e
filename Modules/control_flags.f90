@@ -63,8 +63,16 @@
         
         PUBLIC :: tuspp
 
+        PUBLIC :: program_name
+
 
 ! ...   declare execution control variables
+
+        CHARACTER(LEN=4) :: program_name = ' '  !  used to control execution flow inside module
+                                                !  main_program = 'PWSC'  pwscf
+                                                !                 'FPMD'  fpmd
+                                                !                 'CPVC'  cp
+                                                !                 'SMCP'  smcp
 
         LOGICAL :: tbuff     = .FALSE.  ! save wfc on unit 21  ( only cp, never used)
         LOGICAL :: tvlocw    = .FALSE.  ! write potential to unit 46 ( only cp, seldom used)

@@ -1,0 +1,71 @@
+!
+! Copyright (C) 2002 FPMD group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+      MODULE turbo
+
+        USE kinds
+        IMPLICIT NONE
+        SAVE
+
+        PRIVATE
+
+        LOGICAL :: TTURBO
+        INTEGER :: NTURBO
+        COMPLEX(dbl), ALLOCATABLE :: turbo_states(:,:,:,:) 
+
+        PUBLIC :: tturbo, nturbo, turbo_states, turbo_setup, init_turbo
+        PUBLIC :: deallocate_turbo
+
+      CONTAINS
+
+        SUBROUTINE turbo_setup(tturbo_inp, nturbo_inp)
+          USE io_global, ONLY: ionode
+          USE io_global, ONLY: stdout
+          LOGICAL, INTENT(IN) :: tturbo_inp
+          INTEGER, INTENT(IN) :: nturbo_inp
+          tturbo = tturbo_inp
+          nturbo = nturbo_inp
+          IF( ionode .AND. tturbo ) THEN
+            WRITE( stdout,fmt='(/,3X,"TURBO setup, nturbo = ",I10)') nturbo
+          END IF
+          RETURN
+        END SUBROUTINE turbo_setup
+
+        SUBROUTINE init_turbo( nr1, nr2, nr3 )
+          USE io_global, ONLY: ionode
+          USE io_global, ONLY: stdout
+
+          USE mp, ONLY: mp_sum
+          INTEGER :: nr1,nr2,nr3
+          INTEGER :: ierr
+          IF( ionode ) THEN
+            WRITE( stdout,fmt='(/,3X,"TURBO: allocating ",I10," bytes ")') &
+              16*nr1*nr2*nr3*nturbo
+          END IF
+          ALLOCATE( turbo_states( nr1, nr2, nr3, nturbo ), STAT = ierr)
+          CALL mp_sum(ierr)
+          IF( ierr /= 0 ) THEN 
+            IF( ionode ) THEN
+              WRITE( stdout,fmt='(3X,"TURBO: insufficient memory, turbo is switched off ")')
+            END IF
+            tturbo = .FALSE.
+            nturbo = 0
+          END IF
+          RETURN
+        END SUBROUTINE init_turbo 
+
+        SUBROUTINE deallocate_turbo
+          INTEGER :: ierr
+          IF( ALLOCATED(turbo_states) ) THEN
+            DEALLOCATE(turbo_states, STAT=ierr)
+            IF( ierr /= 0 ) CALL errore(' deallocate_turbo ', ' deallocating turbo_states ', ierr)
+          END IF
+          RETURN
+        END SUBROUTINE deallocate_turbo
+
+      END MODULE turbo

@@ -57,7 +57,7 @@
       use para_mod, ONLY: me, mygroup, nproc
       use io_files, only: psfile, pseudo_dir
       use ions_base, only: nsp
-      use control_flags, only: lneb, lsmd, lwf
+      use control_flags, only: lneb, lsmd, lwf, program_name
 !
       implicit none
 !
@@ -67,6 +67,8 @@
       call startup()
       call io_global_start( (me-1), 0 )
       call mp_global_start(0, (me-1), mygroup, nproc )
+
+      program_name = 'CPVC'
 
       CALL init_clocks( .TRUE. )
       CALL start_clock( 'CP' )

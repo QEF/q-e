@@ -17,7 +17,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE input_parameters,  ONLY : outdir, prefix, nat, restart_mode
   USE input_parameters,  ONLY : scradir, ndr
   USE constants,         ONLY : e2
-  USE control_flags,     ONLY : conv_elec, ethr
+  USE control_flags,     ONLY : conv_elec, ethr, program_name
   USE io_files,          ONLY : iunpath, iunexit
   USE io_global,         ONLY : stdout
   USE path_formats,      ONLY : scf_fmt
@@ -27,7 +27,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE mp_global,         ONLY : mpime, my_pool_id
   USE mp,                ONLY : mp_barrier
   USE check_stop,        ONLY : check_stop_now
-  USE restart,           ONLY : check_restartfile
+  USE restart_file,      ONLY : check_restartfile
+  USE main_module,       ONLY : cpmain
   !
   IMPLICIT NONE
   !
@@ -110,7 +111,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... perform an electronic minimization using CPMAIN
      !
-     CALL cprmain( tau, fion, etot )
+     IF( program_name == 'CPVC' ) THEN
+       CALL cprmain( tau, fion, etot )
+     ELSE IF( program_name == 'FPMD' ) THEN
+       CALL cpmain( tau, fion, etot )
+     ELSE
+       CALL errore( ' compute_scf ', ' unknown program ', 1 )
+     END IF
      !
      IF ( mpime == 0 .AND. my_pool_id == 0 ) THEN
         INQUIRE( UNIT = stdout, OPENED = opnd )

@@ -5,7 +5,7 @@
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 TOPDIR=`pwd`
 
-for DIR in Modules PW FPMD CPV flib pwtools upftools PP PWCOND PWNC \
+for DIR in Modules PW CPV flib pwtools upftools PP PWCOND PWNC \
            Gamma PH D3 Raman atomic Nmr
 do
     # set inter-directory dependencies

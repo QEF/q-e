@@ -111,10 +111,11 @@
 
 !------------------------------------------------------------------------------!
 
-    CHARACTER(LEN=256) FUNCTION wfc_filename( basedir, ik, ispin, tag )
+    CHARACTER(LEN=256) FUNCTION wfc_filename( basedir, name, ik, ispin, tag )
       !
       IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(IN) :: basedir
+      CHARACTER(LEN=*), INTENT(IN) :: name
       CHARACTER, INTENT(IN) :: tag
       INTEGER, INTENT(IN) :: ik, ispin
       !    
@@ -122,7 +123,7 @@
       !
       WRITE( filename, fmt='( I1 )' ) ispin
       filename = TRIM( kpoint_dir( basedir, ik ) ) // &
-               & '/wf' // TRIM( filename ) // '_' // tag // '.dat'
+               & '/' // TRIM( name ) // TRIM( filename ) // '_' // tag // '.dat'
       !
       wfc_filename = TRIM( filename )
       !
@@ -368,7 +369,22 @@
           call iotk_write_attr (attr, "ik",i,first=.true.)
           call iotk_write_attr (attr,"xyz",xk(:,i))
           call iotk_write_attr (attr,"w",wk(i))
-          call iotk_write_empty(iunpun,"K",attr)
+          call iotk_write_begin(iunpun,"Kpoint",attr)
+          DO ispin = 1, nspin
+            call iotk_write_attr (attr, "spin",ispin,first=.true.)
+            call iotk_write_begin(iunpun,"spin_component",attr)
+            filename = TRIM( wfc_filename( dirname, 'wf', i, ispin, '0' ) )
+            call iotk_link(iunpun,"wfc_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
+            filename = TRIM( wfc_filename( dirname, 'wf', i, ispin, 'm' ) )
+            call iotk_link(iunpun,"wfc_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
+            call iotk_link(iunpun,"occupations_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
+            call iotk_link(iunpun,"occupations_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
+            call iotk_write_end(iunpun,"spin_component")
+          END DO
+          filename = TRIM( kpoint_dir( dirname, i ) ) // '/occupations.dat'
+          call iotk_write_end(iunpun,"Kpoint")
         END DO
         call iotk_write_end(iunpun,"K_POINTS")
         !
@@ -381,19 +397,19 @@
         ! 
         !  Occupation number
         !
-        filename = TRIM( kpoint_dir( dirname, i ) ) // '/occupations.dat'
-        IF( ionode ) THEN
-          OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
-        END IF
-        !
-        IF( ionode ) THEN
-          DO ispin = 1, nspin
+        DO ispin = 1, nspin
+          IF( ionode ) THEN
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
+            OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
             WRITE( 10 ) ( occ0( j, i, ispin ), j=1, SIZE( occ0, 1 ) )
+            CLOSE( unit = 10 )
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
+            OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
             WRITE( 10 ) ( occm( j, i, ispin ), j=1, SIZE( occm, 1 ) )
-          END DO
-        END IF
-        !
-        IF( ionode ) CLOSE( unit = 10 )
+            CLOSE( unit = 10 )
+          END IF
+          !
+        END DO
         !
       END DO
 
@@ -488,7 +504,7 @@
       !
       kunit = 1
       ! 
-      filename = wfc_filename( dirname, ik, ispin, tag )
+      filename = wfc_filename( dirname, 'wf', ik, ispin, tag )
       IF( ionode ) THEN
         OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
       END IF
@@ -719,10 +735,11 @@
           GOTO 100
         END IF
         DO i = 1, nk
-          call iotk_scan_empty(iunpun,"K",attr)
+          call iotk_scan_begin(iunpun,"Kpoint",attr)
           call iotk_scan_attr (attr, "ik",ik_ )
           ! call iotk_scan_attr (attr,"xyz",xk(:,i))
           ! call iotk_scan_attr (attr,"w",wk(i))
+          call iotk_scan_end(iunpun,"Kpoint")
         END DO
         call iotk_scan_end(iunpun,"K_POINTS")
         !
@@ -785,24 +802,22 @@
         ! 
         !  Occupation number
         !
-        kdirname = kpoint_dir( dirname, i )
-        !
-        filename = TRIM( kdirname ) // '/occupations.dat'
-        IF( ionode ) THEN
-          OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
-        END IF
-        !
         DO ispin = 1, nspin
+          !
           IF( ionode ) THEN
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, '0' ) )
+            OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
             READ( 10 ) ( occ0( j, i, ispin ), j=1, SIZE( occ0, 1 ) )
+            CLOSE( unit = 10 )
+            filename = TRIM( wfc_filename( dirname, 'occ', i, ispin, 'm' ) )
+            OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
             READ( 10 ) ( occm( j, i, ispin ), j=1, SIZE( occm, 1 ) )
+            CLOSE( unit = 10 )
           END IF
+          !
           CALL mp_bcast(occ0( :, i, ispin), ionode_id)
           CALL mp_bcast(occm( :, i, ispin), ionode_id)
         END DO
-        !
-        IF( ionode ) CLOSE( unit = 10 )
-        ! 
         !
       END DO
 
@@ -879,7 +894,7 @@
       !
       kunit = 1
       !
-      filename = wfc_filename( dirname, ik, ispin, tag )
+      filename = wfc_filename( dirname, 'wf', ik, ispin, tag )
       IF( ionode ) THEN
         OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
       END IF

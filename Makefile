@@ -27,10 +27,10 @@ pw : bindir mods libs
 	if test -d PW   ; then ( cd PW   ; $(MAKE) $(MFLAGS) all ) ; fi
 
 fpmd : bindir mods libs iotk
-	if test -d FPMD ; then ( cd FPMD ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d CPV ; then ( cd CPV ; $(MAKE) $(MFLAGS) fpmd ) ; fi
 
 cp : bindir mods libs iotk
-	if test -d CPV  ; then ( cd CPV  ; $(MAKE) $(MFLAGS) all ) ; fi
+	if test -d CPV  ; then ( cd CPV  ; $(MAKE) $(MFLAGS) cp ) ; fi
 
 ph : bindir mods libs pw
 	if test -d PH ; then ( cd PH ; $(MAKE) $(MFLAGS) all ) ; fi
@@ -84,7 +84,7 @@ clean :
 	touch make.rules make.sys 
 	# make complains if they aren't there; same with make.depend below
 	for dir in \
-		CPV D3 FPMD Gamma Modules PH PP PW PWCOND PWNC Raman \
+		CPV D3 Gamma Modules PH PP PW PWCOND PWNC Raman \
 		atomic clib flib pwtools upftools \
 	; do \
 	    if test -d $$dir ; then \
@@ -97,7 +97,7 @@ clean :
 veryclean : clean
 	- /bin/rm -rf make.rules make.sys \
 		      config.log config.status autom4te.cache \
-		      pw.tar.gz FPMD/version.h \
+		      pw.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
 	- if test -d GUI ; then ( cd GUI; $(MAKE) $(MFLAGS) veryclean ) ; fi
@@ -132,7 +132,7 @@ links : bindir
 	for exe in \
 	    ../CPV/cp.x \
 	    ../D3/d3.x \
-	    ../FPMD/fpmd.x ../FPMD/fpmdpp.x \
+	    ../CPV/fpmd.x ../CPV/fpmdpp.x \
 	    ../Gamma/phcg.x \
 	    ../PH/ph.x \
 	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
