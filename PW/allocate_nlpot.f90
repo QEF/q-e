@@ -79,19 +79,20 @@ subroutine allocate_nlpot
   ! calculate the number of beta functions of the solid
   !
   nkb = 0
+  nkbus = 0
   do na = 1, nat
      nkb = nkb + nh (ityp(na))
+     if (tvanp(ityp(na)) nkbus = nkbus + nh (ityp(na))
   enddo
   !
   allocate (indv( nhm, ntyp))    
   allocate (nhtol(nhm, ntyp))    
   allocate (nhtolm(nhm, ntyp))    
   allocate (nhtoj(nhm, ntyp))    
+  allocate (deeq( nhm, nhm, nat, nspin))    
   if (noncolin) then
      allocate (deeq_nc( nhm, nhm, nat, nspin))    
-  else
-     allocate (deeq( nhm, nhm, nat, nspin))    
-  end if
+  endif
   if (lspinorb) then
     allocate (qq_so(nhm, nhm, 4, ntyp))    
     allocate (dvan_so( nhm, nhm, nspin, ntyp))    

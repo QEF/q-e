@@ -54,8 +54,8 @@ MODULE uspp
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, vkb, dvan, &
-       deeq, qq, nhtoj, beta, becsum, deallocate_uspp
+  PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, nkbus, &
+       vkb, dvan, deeq, qq, nhtoj, beta, becsum, deallocate_uspp
   PUBLIC :: qq_so, dvan_so, deeq_nc 
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
@@ -67,7 +67,8 @@ MODULE uspp
        ap(lqmax*lqmax,nlx,nlx)
   ! Clebsch-Gordan coefficients for spherical harmonics
   !
-  INTEGER :: nkb          ! total number of beta functions, with struct.fact.
+  INTEGER :: nkb,        &! total number of beta functions, with struct.fact.
+             nkbus        ! as above, for US-PP only
   !
   INTEGER, ALLOCATABLE ::&
        indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
