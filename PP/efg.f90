@@ -1,22 +1,27 @@
 program efg
-
+  use kinds, only: DP
   use io_files, only: nd_nmbr,prefix
   use parameters, only: ntypx
 
   implicit none
-  character (len=80) filerec(ntypx)
+  character (len=80) :: filerec(ntypx)
+  real(kind=DP) :: Q(ntypx)
   integer :: ios
 
-  namelist / inputpp / prefix, filerec
+  namelist / inputpp / prefix, filerec, Q
+  ! set default value
+
+  Q=0.d0
 
   read (5, inputpp, err=200, iostat=ios)
+
 200 call errore('efg.x', 'reading inputpp namelist', abs(ios))
   call start_postproc(nd_nmbr)
   call read_file
   call openfil
   call read_recon(filerec)
 
-  call do_efg 
+  call do_efg(Q) 
 
   call stop_pp
   stop
@@ -92,13 +97,13 @@ subroutine read_recon(filerec)
   
 end subroutine read_recon
 
-subroutine do_efg
+subroutine do_efg(Q)
 
   use io_files, only: nd_nmbr
   USE io_global,  ONLY : stdout
   use kinds ,only : DP 
   use parameters ,only: ntypx
-  use constants, only: pi,tpi,fpi
+  use constants, only: pi,tpi,fpi,ANGSTROM_AU,rytoev,ELECTRONVOLT_SI
   use scf           !rho
   use gvect         !gvectors and parameters fot the FFT
   use brilz         !parameters of the cell
@@ -107,13 +112,16 @@ subroutine do_efg
   use pseud, only : zv !valence charge
   implicit none
 
+  real(kind=DP) :: Q(ntypx), eta, Cq
   real(kind=DP) :: fac, trace, arg, e2
   integer :: alpha, beta, ig, na, i
 !  real(kind=DP), allocatable:: aux(:,:)
   complex(kind=DP), allocatable:: aux(:)
   complex(kind=DP), allocatable:: efgg_el(:,:,:),efgr_el(:,:,:)
   complex(kind=DP), allocatable:: efg_io(:,:,:)
-  real(kind=DP), allocatable:: zion(:), efg_corr_tens(:,:,:)
+  real(kind=DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg(:,:,:)
+  real(kind=DP):: efg_eig(3), v(3)
+  complex(kind=DP) :: work(3,3), efg_vect(3,3)
 
 !  allocate(aux(2,nrxx))
   allocate(aux(nrxx))
@@ -122,6 +130,7 @@ subroutine do_efg
   allocate(efg_io(nat,3,3))
   allocate(zion(nat))
   allocate(efg_corr_tens(3,3,nat))
+  allocate(efg(3,3,nat))
 
 
 !  e2 = 2.d0 ! rydberg
@@ -168,24 +177,32 @@ efgr_el=(0.d0,0.d0)
      call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
 #endif
 
+  write (stdout,*)
+  
+  do na=1,nat
+     do beta=1,3
+
+        write (stdout,1000) atm(ityp(na)),na,"efgr_el", &
+             (real(efgr_el(na,alpha,beta)) , alpha =1,3 )
+
+     enddo
      write (stdout,*)
-  do beta=1,3
-
-     write (stdout,1000) "efgr_el", (real(efgr_el(1,alpha,beta)) , alpha =1,3 )
-
   enddo
 
 
-1000 FORMAT(1x,a,3f9.6)
+1000 FORMAT(1x,a,i3,2x,a,3(1x,f9.6))
 
 !  zion(1)=6.0
   call ewald_dipole (efg_io, zv)
+  
+  do na=1,nat
+     do beta=1,3
 
-  write (stdout,*)
-  do beta=1,3
+        write (stdout,1000) atm(ityp(na)),na,"efg_ion", &
+             (real(efg_io(1,alpha,beta)) , alpha =1,3 )
 
-     write (stdout,1000) "efg_ion", (real(efg_io(1,alpha,beta)) , alpha =1,3 )
-
+     enddo
+     write (stdout,*)
   enddo
 
   call efg_correction(efg_corr_tens)
@@ -193,28 +210,66 @@ efgr_el=(0.d0,0.d0)
 !symmetrize efg_tensor
 
 
-do na = 1,nat
-   call trntns (efg_corr_tens(:,:,na),at, bg, -1)
-enddo
-   call symz(efg_corr_tens, nsym, s, nat, irt)
-do na = 1,nat
-   call trntns (efg_corr_tens(:,:,na),at, bg, 1)
-enddo
-
- write (stdout,*)
- do beta=1,3
-
-     write (stdout,1000) "efg_corr", (real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
-
+  do na = 1,nat
+     call trntns (efg_corr_tens(:,:,na),at, bg, -1)
+  enddo
+  call symz(efg_corr_tens, nsym, s, nat, irt)
+  do na = 1,nat
+     call trntns (efg_corr_tens(:,:,na),at, bg, 1)
   enddo
 
+  do na=1,nat
+     do beta=1,3
+
+        write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
+             (real(efg_corr_tens(alpha,beta,1)) , alpha =1,3 )
+        
+     enddo
+     write (stdout,*)
+  enddo
+
+  do na=1,nat
+     efg(:,:,na)=real(efg_corr_tens(:,:,na)+efgr_el(na,:,:)+ &
+          efg_io(na,:,:))
+     do beta=1,3
+        write (stdout,1000) atm(ityp(na)),na,"efg",&
+             (efg(alpha,beta,na),alpha=1,3)
+        
+     enddo
+     write (stdout,*)
+
+  do alpha=1,3
+     do beta=1,3
+        work(beta,alpha)=cmplx(efg(alpha,beta,1),0.d0)
+     enddo
+  enddo
+!  print *,work
+
+  call cdiagh(3,work,3,efg_eig,efg_vect)
+
+
+  v(2)=efg_eig(2)
+  if (abs(efg_eig(1))>abs(efg_eig(3))) then
+     v(1)=efg_eig(1)
+     v(3)=efg_eig(3)
+  else
+     v(1)=efg_eig(3)
+     v(3)=efg_eig(1)
+  endif
+
+  if (abs(v(1))<1e-5) then
+     eta=0.d0
+  else
+     eta=(v(2)-v(3))/v(1)
+  endif
+
+  Cq=v(1)*Q(ityp(na))*rytoev*2.d0*ANGSTROM_AU**2*ELECTRONVOLT_SI*1.e18/6.6262d0
+
+  write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
   write (stdout,*)
- do beta=1,3
-
-     write (stdout,1000) "efg", (real(efg_corr_tens(alpha,beta,1)+efgr_el(1,alpha,beta)+efg_io(1,alpha,beta)), alpha =1,3 )
-
   enddo
-   
+1200 FORMAT(1x,a,1x,i3,5x,'Q= ',f6.3,5x,' Cq= ',f9.6,5x,' eta= ',f9.6)
+
 end subroutine do_efg
  
 subroutine efg_correction(efg_corr_tens)
