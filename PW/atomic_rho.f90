@@ -16,6 +16,9 @@ subroutine atomic_rho (rhoa, nspina)
   ! if nspina = 2 the spin up and spin down atomic charge densities are
   !               calculated assuming an uniform atomic spin-polarization
   !               equal to starting_magnetization(nt)
+  ! if nspina = 4 noncollinear case. The total density is calculated
+  !               in the first component and the magnetization vector 
+  !               in the other three.
   !
   ! NB: nspina may not be equal to nspin because in some cases (as in update)
   ! the total charge only could be needed, even in a LSDA calculation.
@@ -29,10 +32,11 @@ subroutine atomic_rho (rhoa, nspina)
   USE cell_base, ONLY: tpiba, omega
   USE gvect, ONLY: ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        gstart, nl, nlm, gl, igtongl
-  USE lsda_mod, ONLY: starting_magnetization
+  USE lsda_mod, ONLY: starting_magnetization, lsda
   USE vlocal, ONLY: strf
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
+  USE noncollin_module, ONLY: angle1, angle2
   implicit none
   integer :: nspina
   ! the number of spin polarizations
@@ -43,7 +47,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   real(kind=DP) :: rhoneg, rhorea, rhoima, gx
   real(kind=DP), allocatable :: rhocgnt (:), aux (:)
-  complex(kind=DP), allocatable :: rhocg (:,:)
+  complex(kind=DP), allocatable :: rhocg (:,:), strf_at(:,:)
   integer :: ir, is, ig, igl, nt, ndm
   !
   ! superposition of atomic charges contained in the array rho_at
@@ -74,7 +78,7 @@ subroutine atomic_rho (rhoa, nspina)
      do igl = gstart, ngl
         gx = sqrt (gl (igl) ) * tpiba
         do ir = 1, msh (nt)
-           if (r (ir, nt) .lt.1.0d-8) then
+           if (r (ir, nt) < 1.0d-8) then
               aux(ir) = rho_at(ir,nt)
            else
               aux(ir) = rho_at(ir,nt) * sin(gx*r(ir,nt)) / (r(ir,nt)*gx)
@@ -90,7 +94,7 @@ subroutine atomic_rho (rhoa, nspina)
            rhocg(ig,1) = rhocg(ig,1) + &
                          strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
-     else
+     else if (nspina == 2) then
         do ig = 1, ngm
            rhocg(ig,1) = rhocg(ig,1) + &
                          0.5d0 * ( 1.d0 + starting_magnetization(nt) ) * &
@@ -99,8 +103,32 @@ subroutine atomic_rho (rhoa, nspina)
                          0.5d0 * ( 1.d0 - starting_magnetization(nt) ) * &
                          strf(ig,nt) * rhocgnt(igtongl(ig)) / omega
         enddo
+     else
+!
+!    Noncolinear case
+!
+        do ig = 1,ngm
+           rhocg(ig,1) = rhocg(ig,1) + &
+                strf(ig,nt)*rhocgnt(igtongl(ig))/omega
+
+           ! Now, the rotated value for the magnetization
+
+           rhocg(ig,2) = rhocg(ig,2) + &
+                starting_magnetization(nt)* &
+                sin(angle1(nt))*cos(angle2(nt))* &
+                strf(ig,nt)*rhocgnt(igtongl(ig))/omega
+           rhocg(ig,3) = rhocg(ig,3) + &
+                starting_magnetization(nt)* &
+                sin(angle1(nt))*sin(angle2(nt))* &
+                strf(ig,nt)*rhocgnt(igtongl(ig))/omega
+           rhocg(ig,4) = rhocg(ig,4) + &
+                starting_magnetization(nt)* &
+                cos(angle1(nt))* &
+                strf(ig,nt)*rhocgnt(igtongl(ig))/omega
+        end do
      endif
   enddo
+
   deallocate (rhocgnt)
   deallocate (aux)
 
@@ -129,7 +157,7 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif
-     if ( rhoneg < -1.0d-4 .or. rhoima > 1.0d-4 ) &
+     if ( (rhoneg < -1.0d-4) .and. (is == 1 .or. lsda) .or. rhoima > 1.0d-4 ) &
           WRITE( stdout,'(/"  Warning: negative or imaginary starting charge ",&
           &2f12.6,i3)') rhoneg, rhoima, is
   enddo
