@@ -130,8 +130,15 @@ subroutine memory_estimate ( )
 #endif
   implicit none
   !
-  integer, parameter :: real_size = 8, int_size = 4
-  integer, parameter :: comp_size = 2*real_size
+  ! The following variables are real in order to prevent
+  ! integer overflow for very large jobs
+  !
+#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined(__SGI64)
+  real(kind=DP), parameter :: real_size = 8, int_size = 8
+#else
+  real(kind=DP), parameter :: real_size = 8, int_size = 4
+#endif
+  real(kind=DP), parameter :: comp_size = 2*real_size
   real(kind=DP) :: total_mem, scalable_mem, nonscalable_mem
   real(kind=DP) :: scalable_wspace, nonscalable_wspace
   real(kind=DP) :: wspace_diago, wspace_mix, diis_steps
@@ -230,6 +237,8 @@ subroutine memory_estimate ( )
        scalable_wspace/1024/1024, &
        wspace_diago/1024/1024,    &
        wspace_mix/1024/1024
+  print '(5x,"Estimates based on ",i2,"-byte complex, ",i2,"-byte reals, ", &
+       & i2,"-byte integers")', nint(comp_size), nint(real_size), nint(int_size)
   !
   return
 end subroutine memory_estimate

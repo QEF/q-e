@@ -429,6 +429,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   !
   USE kinds, only : DP
+  USE constants, ONLY: eps16
   implicit none
   !
   real(kind=DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -831,7 +832,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
                    rat2d(2,na) * g(2,k) * ratd(k,na) + &
                    rat2d(3,na) * g(3,k) * ratd(k,na)
            end do
-           if (xx.gt.zero) then
+           if (xx.gt.eps16) then
               ratd (:,na) =  rat2d (:,na) * xx
               xx = 0.d0
               do k=1,3
