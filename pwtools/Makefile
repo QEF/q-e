@@ -53,4 +53,4 @@ pwi2xsf_new: pwi2xsf_new.o pwi2xsflib.o
         $(PWOBJS) $(MODULES) $(LDFLAGS)
 
 clean_:
-	rm -f *.x *.o *~ *.F90 *.mod *.d *.i work.pc
+	rm -f pwi2xsf pwi2xsf_new *.x *.o *~ *.F90 *.mod *.d *.i work.pc
