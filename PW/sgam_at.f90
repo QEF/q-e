@@ -66,8 +66,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
   do na = 1, nat
      do kpol = 1, 3
-        xau (kpol, na) = bg (1, kpol) * tau (1, na) + bg (2, kpol) &
-             * tau (2, na) + bg (3, kpol) * tau (3, na)
+        xau (kpol, na) = bg (1, kpol) * tau (1, na) + &
+                         bg (2, kpol) * tau (2, na) + &
+                         bg (3, kpol) * tau (3, na)
      enddo
   enddo
   !
@@ -82,10 +83,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   fractional_translations = .true.
   do na = 2, nat
      if (ityp (nb) .eq.ityp (na) ) then
-        ft (1) = xau (1, na) - xau (1, nb) - nint (xau (1, na) - xau ( 1, nb) )
-        ft (2) = xau (2, na) - xau (2, nb) - nint (xau (2, na) - xau ( 2, nb) )
-
-        ft (3) = xau (3, na) - xau (3, nb) - nint (xau (3, na) - xau ( 3, nb) )
+        ft (1) = xau(1,na) - xau(1,nb) - nint( xau(1,na) - xau(1,nb) )
+        ft (2) = xau(2,na) - xau(2,nb) - nint( xau(2,na) - xau(2,nb) )
+        ft (3) = xau(3,na) - xau(3,nb) - nint( xau(3,na) - xau(3,nb) )
 
 
         call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
@@ -103,13 +103,15 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
      !
      ! check that the grid is compatible with the S rotation
      !
-     if (mod (s (2, 1, irot) * nr1, nr2) .ne.0.or.mod (s (3, 1, irot) &
-          * nr1, nr3) .ne.0.or.mod (s (1, 2, irot) * nr2, nr1) .ne.0.or.mod &
-          (s (3, 2, irot) * nr2, nr3) .ne.0.or.mod (s (1, 3, irot) * nr3, &
-          nr1) .ne.0.or.mod (s (2, 3, irot) * nr3, nr2) .ne.0) then
+     if ( mod (s (2, 1, irot) * nr1, nr2) .ne.0 .or. &
+          mod (s (3, 1, irot) * nr1, nr3) .ne.0 .or. &
+          mod (s (1, 2, irot) * nr2, nr1) .ne.0 .or. &
+          mod (s (3, 2, irot) * nr2, nr3) .ne.0 .or. &
+          mod (s (1, 3, irot) * nr3, nr1) .ne.0 .or. &
+          mod (s (2, 3, irot) * nr3, nr2) .ne.0 ) then
         sym (irot) = .false.
         write (6, '(5x,"warning: symmetry operation # ",i2, &
-             &            " not compatible with FFT grid. ")') irot
+             &         " not compatible with FFT grid. ")') irot
         write (6, '(3i4)') ( (s (i, j, irot) , j = 1, 3) , i = 1, 3)
         goto 100
 
@@ -117,8 +119,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
      do na = 1, nat
         do kpol = 1, 3
            ! rau = rotated atom coordinates
-           rau (kpol, na) = s (1, kpol, irot) * xau (1, na) + s (2, kpol, &
-                irot) * xau (2, na) + s (3, kpol, irot) * xau (3, na)
+           rau (kpol, na) = s (1, kpol, irot) * xau (1, na) + &
+                            s (2, kpol, irot) * xau (2, na) + &
+                            s (3, kpol, irot) * xau (3, na)
         enddo
      enddo
      !
@@ -138,13 +141,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
               !
               !      second attempt: check all possible fractional translations
               !
-              ft (1) = rau (1, na) - xau (1, nb) - nint (rau (1, na) &
-                   - xau (1, nb) )
-              ft (2) = rau (2, na) - xau (2, nb) - nint (rau (2, na) &
-                   - xau (2, nb) )
-
-              ft (3) = rau (3, na) - xau (3, nb) - nint (rau (3, na) &
-                   - xau (3, nb) )
+              ft (1) = rau(1,na) - xau(1,nb) - nint( rau(1,na) - xau(1,nb) )
+              ft (2) = rau(2,na) - xau(2,nb) - nint( rau(2,na) - xau(2,nb) )
+              ft (3) = rau(3,na) - xau(3,nb) - nint( rau(3,na) - xau(3,nb) )
 
               call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)
               if (sym (irot) ) then
@@ -155,9 +154,9 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                  ft3 = ft (3) * nr3
                  ! check if the fractional transaltions are commensurate
                  ! with the FFT grid, discard sym.op. if not
-                 if (abs (ft1 - nint (ft1) ) / nr1.gt.1.0d-5.or.abs (ft2 - &
-                      nint (ft2) ) / nr2.gt.1.0d-5.or.abs (ft3 - nint (ft3) ) &
-                      / nr3.gt.1.0d-5) then
+                 if (abs (ft1 - nint (ft1) ) / nr1.gt.1.0d-5 .or. &
+                     abs (ft2 - nint (ft2) ) / nr2.gt.1.0d-5 .or. &
+                     abs (ft3 - nint (ft3) ) / nr3.gt.1.0d-5) then
                     write (6, '(5x,"warning: symmetry operation", &
                          &     " # ",i2," not allowed.   fractional ", &
                          &     "translation:"/5x,3f11.7,"  in crystal", &

@@ -151,7 +151,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
         call diropn (iunmix, filename, 2*ngm0*nspin, exst)
         close (unit=iunmix, status='delete')
         if (lda_plus_u) then
-           call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*25, exst)
+           call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
            close (unit=iunmix2, status='delete')
         end if
         deallocate (aux, rhocin, rhocout)
@@ -160,7 +160,7 @@ subroutine mix_rho (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      end if
 
      call diropn(iunmix,filename,2*ngm0*nspin,exst)
-     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*25, exst)
+     if (lda_plus_u) call diropn (iunmix2, trim(filename)//'.ns',nat*nspin*ldim*ldim, exst)
 
      if (iter.gt.1 .and. .not.exst) then
         call errore('mix_rho','file not found, restarting',-1)

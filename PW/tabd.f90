@@ -39,6 +39,10 @@ elseif (psd (nt) .eq.'Cu') then
 elseif (psd (nt) .eq.'Ce') then  
    occ_loc = 2.d0  
 !
+! OTHER ELEMENTS
+!
+elseif (psd (nt) .eq.'H') then  
+   occ_loc = 1.d0  
 else  
    occ_loc = 0.d0  
    call errore ('tabd', 'pseudopotential not yet inserted', 1)

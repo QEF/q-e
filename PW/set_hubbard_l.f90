@@ -21,8 +21,12 @@ if (psd.eq.'V'  .or. psd.eq.'Cr' .or. psd .eq.'Mn' .or. psd.eq.'Fe' .or. &
 elseif (psd .eq.'Ce') then  
    hubbard_l =  3
 !
+! OTHER ELEMENTS
+!
+elseif (psd .eq.'H') then  
+   hubbard_l =  0
 else  
-   hubbard_l =  -1
+   hubbard_l = -1
    call errore ('set_hubbard_l','pseudopotential not yet inserted', 1)
 endif  
 return  
