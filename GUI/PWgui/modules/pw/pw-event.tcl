@@ -218,21 +218,34 @@ tracevar nat w {
     for {set i 1} {$i <= $ni} {incr i} {
 	widgetconfigure atomic_coordinates_${i}_inter -rows $nat
     }
-    widgetconfigure starting_magnetization -end [varvalue nat]
 }
 tracevar ntyp w {
     set ntyp [varvalue ntyp]
     widgetconfigure atomic_species -rows $ntyp
+    widgetconfigure starting_magnetization -end $ntyp
+    widgetconfigure angle1 -end $ntyp
+    widgetconfigure angle2 -end $ntyp
     widgetconfigure Hubbard_U     -end $ntyp
     widgetconfigure Hubbard_alpha -end $ntyp
 }
 
 tracevar nspin w {
-    if { [vartextvalue nspin] == "Yes" } {
+    if { [vartextvalue nspin] == "Yes" || [vartextvalue nspin] == "Yes noncollinear"} {
 	widget starting_magnetization enable
-	widgetconfigure starting_magnetization -end [varvalue nat]
+	widgetconfigure starting_magnetization -end [varvalue ntyp]
+        if { [vartextvalue nspin] == "Yes" } {
+	   widget angle1 disable
+	   widget angle2 disable
+        } else {
+	   widget angle1 enable
+	   widgetconfigure angle1 -end [varvalue ntyp]
+	   widget angle2 enable
+	   widgetconfigure angle2 -end [varvalue ntyp]
+        }
     } else {
 	widget starting_magnetization disable
+	widget angle1 disable
+	widget angle2 disable
     }
 }
 

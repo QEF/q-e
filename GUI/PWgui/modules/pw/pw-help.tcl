@@ -356,6 +356,7 @@ foreach var {nelup neldw} {
 help nspin        -vartype integer -helpfmt txt2html -helptext { 
              nspin=1 :  non-polarized calculation 
              nspin=2 : spin-polarized calculation
+             nspin=4 : non-collinear spin-polarized calculation
 <p> ( default = 1 )
 }
 

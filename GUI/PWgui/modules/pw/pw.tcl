@@ -372,17 +372,30 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 
 		var nspin {
 		    -label     "Perform spin-polarized calculation (nspin):"
-		    -textvalue {No Yes}
-		    -value     {1  2}
+		    -textvalue {No Yes {Yes noncollinear} }
+		    -value     {1  2  4}
 		    -widget    radiobox
 		}
 
 		dimension starting_magnetization {
 		    -label "Starting magnetization (starting_magnetization):"
-		    -text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" atom"
+		    -text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
 		    -validate  fortranreal
-		    -start 1
-		    -end   1
+		    -start 1 -end 1
+		}
+
+		dimension angle1 {
+		    -label "Starting magnetization direction (angle1) :"
+		    -text  "Specify starting magnetization direction for each \"magnetic\" species"
+		    -validate  fortranreal
+		    -start 1 -end 1
+		}
+
+		dimension angle2 {
+		    -label "Starting magnetization direction (angle2):"
+		    -text  "Specify starting magnetization direction for each \"magnetic\" species"
+		    -validate  fortranreal
+		    -start 1 -end 1
 		}
 
 		separator -label "--- LDA + U parameters ---"
