@@ -243,8 +243,8 @@ c     write atoms for non-PATH calculation
 
 c     calculate intermediate images for PATH calculation
 
-         old_total_dist = 0.0d0;
-         old_dist(1)    = 0.0d0;
+         old_total_dist = 0.0d0
+         old_dist(1)    = 0.0d0
          do iim = 2, inp_num_of_images
             old_dist(iim) = 0.0
             do inat=1,nat
