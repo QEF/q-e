@@ -62,7 +62,10 @@ subroutine gener_pseudo
        lbes4     ! use 4 Bessel functions expansion
 
 
-  if (pseudotype == 1.or.pseudotype == 2) then
+  if (lpaw) then
+     write(6, &
+          '(/,5x,15(''-''),''  Generating PAW atomic setup  '',15(''-''),/)')
+  elseif (pseudotype == 1.or.pseudotype == 2) then
      write(6, &
           '(/,5x,15(''-''),'' Generating NC pseudopotential '',15(''-''),/)')
   elseif (pseudotype == 3) then

@@ -320,7 +320,7 @@ CONTAINS
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
        pawset_, pawset_%nwfc, pawset_%l, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl)
-    WRITE(6,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,'ryd'
+    WRITE(6,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
     WRITE(6,'(/5x,A)') 'The PAW screened D coefficients'
     DO ns1=1,pawset_%nwfc
        WRITE(6,'(6f12.5)') (ddd(ns1,ns,1),ns=1,pawset_%nwfc)
@@ -371,7 +371,6 @@ CONTAINS
              qvan(1:mesh,ns,ns1)=0._dp
              qq(ns,ns1)=0._dp
           END IF
-          WRITE (*,*) ns,ns1,qq(ns,ns1),pawset_%augmom(ns,ns1,0)
        END DO
     END DO
     !
