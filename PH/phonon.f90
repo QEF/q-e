@@ -37,6 +37,7 @@ PROGRAM phonon
   USE output,          ONLY : fildyn, fildrho
   USE units_ph,        ONLY : iudrho, lrdrho
   USE parser,          ONLY : delete_if_present
+  USE para,            ONLY : me
   USE global_version,  ONLY : version_number
   !
   IMPLICIT NONE
