@@ -3,13 +3,13 @@
                          A Car-Parrinello Parallel Code
 =------------------------------------------------------------------------------=
 
-  Version: 2.1 - Fri Sep 10 17:47:24 CEST 2004                         
+  Version: 2.1 - Tue Sep 14 16:15:49 CEST 2004                         
   Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,
     Paolo Focher, Gerardo Ballabio
 
 =------------------------------------------------------------------------------=
 
-                  THIS RUN WAS STARTED ON:  17:50:57  13Sep2004
+                  THIS RUN WAS STARTED ON:  16:23:48  14Sep2004
 
    Tasks =    1  This task id =    0
 Warning: card  &CELL ignored
@@ -218,10 +218,10 @@ Warning: card  / ignored
    H        0.152708    -0.018692    -0.000008
    H       -0.018692     0.152708     0.000017
 
-   ggen   (sec) :    0.173
+   ggen   (sec) :    0.177
    newg   (sec) :    0.011
    strucf (sec) :    0.014
-   formf  (sec) :   21.856
+   formf  (sec) :   21.890
    Occupation number from init
    nbnd =     4
     2.00 2.00 2.00 2.00
@@ -244,7 +244,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.00
+   Simulated Time (ps):     0.000000
  
  
                       TOTAL ENERGY =      61.7595523562 A.U.
@@ -314,14 +314,14 @@ Warning: card  / ignored
 
    nfi     ekinc  temph  tempp         etot       enthal        econs         ettt     sec.
      0   0.00000    0.0    0.0     61.75955     61.75955     61.75955     61.75955     24.8
-     1   4.81318    0.0    0.0     52.21967     52.21967     52.21967     57.03285      1.9
-     2   5.00702    0.0    0.0     42.04479     42.04479     42.04479     47.05180      1.9
-     3   4.72995    0.0    0.0     32.27747     32.27747     32.27747     37.00742      1.9
+     1   4.81318    0.0    0.0     52.21967     52.21967     52.21967     57.03285      2.1
+     2   5.00702    0.0    0.0     42.04479     42.04479     42.04479     47.05180      2.0
+     3   4.72995    0.0    0.0     32.27747     32.27747     32.27747     37.00742      2.0
      4   4.20503    0.0    0.0     23.53115     23.53115     23.53115     27.73618      1.9
-     5   3.64590    0.0    0.0     15.93685     15.93685     15.93685     19.58275      2.1
-     6   3.14788    0.0    0.0      9.38092      9.38092      9.38092     12.52880      1.9
-     7   2.70295    0.0    0.0      3.72877      3.72877      3.72877      6.43172      1.9
-     8   2.25655    0.0    0.0     -1.04092     -1.04092     -1.04092      1.21562      1.9
+     5   3.64590    0.0    0.0     15.93685     15.93685     15.93685     19.58275      2.0
+     6   3.14788    0.0    0.0      9.38092      9.38092      9.38092     12.52880      2.0
+     7   2.70295    0.0    0.0      3.72877      3.72877      3.72877      6.43172      2.0
+     8   2.25655    0.0    0.0     -1.04092     -1.04092     -1.04092      1.21562      2.0
      9   1.79088    0.0    0.0     -4.87418     -4.87418     -4.87418     -3.08330      1.9
 
 
@@ -331,7 +331,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.00
+   Simulated Time (ps):     0.001209
  
  
                       TOTAL ENERGY =      -7.7915720614 A.U.
@@ -405,12 +405,12 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.135203D+01  0.1D-03  0.291739D+01  0.1D-08  0.679914D+00  0.1D+12
    MAIN: convergence NOT achieved for system relaxation
-    11   0.99141    0.0    0.0     -9.93582     -9.93582     -9.93582     -8.94442      1.9
+    11   0.99141    0.0    0.0     -9.93582     -9.93582     -9.93582     -8.94442      2.0
     12   0.72210    0.0    0.0    -11.49547    -11.49547    -11.49547    -10.77337      1.9
-    13   0.52974    0.0    0.0    -12.63611    -12.63611    -12.63611    -12.10637      1.9
+    13   0.52974    0.0    0.0    -12.63611    -12.63611    -12.63611    -12.10637      2.0
     14   0.39397    0.0    0.0    -13.48123    -13.48123    -13.48123    -13.08726      1.9
     15   0.29776    0.0    0.0    -14.11742    -14.11742    -14.11742    -13.81966      1.9
-    16   0.22889    0.0    0.0    -14.60449    -14.60449    -14.60449    -14.37560      1.9
+    16   0.22889    0.0    0.0    -14.60449    -14.60449    -14.60449    -14.37560      2.1
     17   0.17896    0.0    0.0    -14.98380    -14.98380    -14.98380    -14.80484      1.9
     18   0.14227    0.0    0.0    -15.28418    -15.28418    -15.28418    -15.14191      1.9
     19   0.11494    0.0    0.0    -15.52595    -15.52595    -15.52595    -15.41101      1.9
@@ -422,7 +422,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.00
+   Simulated Time (ps):     0.002419
  
  
                       TOTAL ENERGY =     -15.7235599063 A.U.
@@ -498,12 +498,12 @@ Warning: card  / ignored
    MAIN: convergence NOT achieved for system relaxation
     21   0.07844    0.0    0.0    -15.88743    -15.88743    -15.88743    -15.80899      1.9
     22   0.06611    0.0    0.0    -16.02514    -16.02514    -16.02514    -15.95903      1.9
-    23   0.05639    0.0    0.0    -16.14228    -16.14228    -16.14228    -16.08589      1.9
+    23   0.05639    0.0    0.0    -16.14228    -16.14228    -16.14228    -16.08589      2.0
     24   0.04861    0.0    0.0    -16.24302    -16.24302    -16.24302    -16.19441      1.9
     25   0.04230    0.0    0.0    -16.33049    -16.33049    -16.33049    -16.28819      1.9
     26   0.03712    0.0    0.0    -16.40709    -16.40709    -16.40709    -16.36998      1.9
     27   0.03281    0.0    0.0    -16.47469    -16.47469    -16.47469    -16.44188      1.9
-    28   0.02918    0.0    0.0    -16.53472    -16.53472    -16.53472    -16.50554      2.1
+    28   0.02918    0.0    0.0    -16.53472    -16.53472    -16.53472    -16.50554      1.9
     29   0.02610    0.0    0.0    -16.58835    -16.58835    -16.58835    -16.56225      1.9
 
 
@@ -513,7 +513,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.00
+   Simulated Time (ps):     0.003628
  
  
                       TOTAL ENERGY =     -16.6364933560 A.U.
@@ -582,7 +582,7 @@ Warning: card  / ignored
 
 
    nfi     ekinc  temph  tempp         etot       enthal        econs         ettt     sec.
-    30   0.02345    0.0    0.0    -16.63649    -16.63649    -16.63649    -16.61304      2.6
+    30   0.02345    0.0    0.0    -16.63649    -16.63649    -16.63649    -16.61304      2.8
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.234531D-01  0.1D-03  0.481402D-01  0.1D-08  0.121506D+00  0.1D+12
@@ -594,7 +594,7 @@ Warning: card  / ignored
     35   0.01448    0.0    0.0    -16.81687    -16.81687    -16.81687    -16.80239      1.9
     36   0.01325    0.0    0.0    -16.84394    -16.84394    -16.84394    -16.83070      1.9
     37   0.01214    0.0    0.0    -16.86875    -16.86875    -16.86875    -16.85661      1.9
-    38   0.01115    0.0    0.0    -16.89152    -16.89152    -16.89152    -16.88037      2.0
+    38   0.01115    0.0    0.0    -16.89152    -16.89152    -16.89152    -16.88037      1.9
     39   0.01025    0.0    0.0    -16.91245    -16.91245    -16.91245    -16.90220      1.9
 
 
@@ -604,7 +604,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.00
+   Simulated Time (ps):     0.004838
  
  
                       TOTAL ENERGY =     -16.9317063377 A.U.
@@ -682,7 +682,7 @@ Warning: card  / ignored
     42   0.00802    0.0    0.0    -16.96582    -16.96582    -16.96582    -16.95780      1.9
     43   0.00741    0.0    0.0    -16.98093    -16.98093    -16.98093    -16.97352      1.9
     44   0.00685    0.0    0.0    -16.99490    -16.99490    -16.99490    -16.98805      1.9
-    45   0.00633    0.0    0.0    -17.00781    -17.00781    -17.00781    -17.00148      1.9
+    45   0.00633    0.0    0.0    -17.00781    -17.00781    -17.00781    -17.00148      2.0
     46   0.00586    0.0    0.0    -17.01976    -17.01976    -17.01976    -17.01390      1.9
     47   0.00543    0.0    0.0    -17.03084    -17.03084    -17.03084    -17.02540      1.9
     48   0.00503    0.0    0.0    -17.04110    -17.04110    -17.04110    -17.03606      1.9
@@ -695,7 +695,7 @@ Warning: card  / ignored
    Total integrated electronic density
    in G-space =   8.000000    in R-space =   8.000000
 
-   Integral Simulation Time (AU):         0.01
+   Simulated Time (ps):     0.006047
  
  
                       TOTAL ENERGY =     -17.0594355711 A.U.
@@ -770,28 +770,28 @@ Warning: card  / ignored
    MAIN:   0.433250D-02  0.1D-03  0.882677D-02  0.1D-08  0.442989D-01  0.1D+12
    MAIN: convergence NOT achieved for system relaxation
 
-   RESTART FILE WRITTEN ON UNIT fort.51  COMPLETED IN    0.250 SEC.
+   RESTART FILE WRITTEN ON UNIT fort.51  COMPLETED IN    0.379 SEC.
 
  
    Execution time statistics (SEC)
-   MD step mean time ..       2.013
-   Total time .........      10.066
+   MD step mean time ..       2.031
+   Total time .........      10.154
  
-   Statistica FFT sulle wave functions
-   Numero totale di fft .       306
-   Tempo medio per fft ..   0.05149
-   Tempo totale fft .....  15.75563
+   Wave functions FFT execution time statistics
+   total number of ffts ..       306
+   average time per fft ..   0.05101
+   total fft time    .....  15.61054
  
  
-   Statistica FFT sui potenziali
-   Numero totale di fft .       461
-   Tempo medio per fft ..   0.09147
-   Tempo totale fft .....  42.16574
+   Charge density and potential FFT execution statistics
+   total number of ffts ..       461
+   average time per fft ..   0.09173
+   total fft time    .....  42.28628
  
 
    PC3FFT TIMINGS
     FFTXW    FFTYW    FFTZW    TRASW    FFTXP    FFTYP    FFTZP    TRASP
-    0.000   10.448    0.909    3.542    0.000   24.656    5.789    5.169
+    0.000   10.297    0.905    3.551    0.000   24.885    5.763    5.196
 
 
    Averaged Physical Quantities
@@ -811,10 +811,10 @@ Warning: card  / ignored
    mp: high_watermark (bytes):           24
    From cploop, etot =   -17.0594355711241     
  
-     FPMD         :  2m 5.04s CPU time
+     FPMD         :  2m 5.97s CPU time
 
  
-               THIS RUN WAS TERMINATED ON:  17:53: 3  13Sep2004
+               THIS RUN WAS TERMINATED ON:  16:25:54  14Sep2004
 
 =------------------------------------------------------------------------------=
    ELAPSED SECONDS:   126.0
