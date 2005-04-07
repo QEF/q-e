@@ -385,6 +385,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: igwk( :, : )
   integer, allocatable :: l2g_new( : )
 
+
   real(DP) :: wfc_scal 
   logical :: twf0, twfm
   character(iotk_attlenx) :: attr
@@ -489,6 +490,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_empty(50,"Wfc_grid",attr)
     call iotk_write_attr (attr,"natoms",nat,first=.true.)
     call iotk_write_empty(50,"Atoms",attr=attr)
+    call iotk_write_attr (attr,"nsym",nsym,first=.true.)
+    call iotk_write_empty(50,"Symmops",attr=attr)
     call iotk_write_end  (50,"Dimensions")
 
     write(0,*) "Writing cell"
@@ -541,11 +544,22 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_end  (50,"Types")
     call iotk_write_end  (50,"Atoms")
 
+    write(0,*) "Writing symmetry operations"
+    call iotk_write_begin(50,"Symmetry")
+    call iotk_write_attr(attr,"nsym",nsym,first=.true.)
+    call iotk_write_attr(attr,"invsym",invsym)
+    call iotk_write_empty(50,"symmops",attr)
+! The matrix s is the transpose of the symmetry matrix in direct space,
+! in units of a_i.
+    DO i=1,nsym
+       call iotk_write_dat  (50,"sym"//TRIM(iotk_index(i)),s(1:3,1:3,i),fmt="(3i3)")
+    ENDDO
+    call iotk_write_end  (50,"Symmetry")
+
     write(0,*) "Writing k-mesh"
     call iotk_write_attr (attr,"nk",nkstot,first=.true.)
     call iotk_write_begin(50,"Kmesh",attr=attr)
     call iotk_write_dat  (50,"weights",wk(1:nkstot))
-! Controlla in che unita' sono !
     call iotk_write_dat  (50,"k",xk(1:3,1:nkstot),fmt="(3f15.9)")
     call iotk_write_end  (50,"Kmesh")
 
@@ -559,6 +573,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_attr(attr,"nr2",nr2)
     call iotk_write_attr(attr,"nr3",nr3)
     call iotk_write_empty(50,"Space_grid",attr)
+    call iotk_write_attr(attr,"nelec",nelec,first=.true.)
+    call iotk_write_empty(50,"Charge",attr)
     call iotk_write_end   (50,"Other_parameters")
 
     write(0,*) "Writing main grid"

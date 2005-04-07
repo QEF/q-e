@@ -275,16 +275,20 @@ EXOBJS = \
  ../Modules/iotk_module.o \
  ../Modules/iotk_external.o \
  ../Modules/iotk_multitype.o \
- ../Modules/iotk_multitype_character.o \
+ ../Modules/iotk_multitype_character1.o \
+ ../Modules/iotk_multitype_character2.o \
  ../Modules/iotk_multitype_complex1.o \
  ../Modules/iotk_multitype_complex2.o \
  ../Modules/iotk_multitype_integer1.o \
  ../Modules/iotk_multitype_integer2.o \
- ../Modules/iotk_multitype_logical.o \
- ../Modules/iotk_multitype_real.o 
+ ../Modules/iotk_multitype_logical1.o \
+ ../Modules/iotk_multitype_logical2.o \
+ ../Modules/iotk_multitype_real1.o \
+ ../Modules/iotk_multitype_real2.o
 
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
-      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x voronoy.x initial_state.x
+      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw_export.x \
+      voronoy.x initial_state.x
 
 average.x : average.o $(PPOBJS)
 	$(LD) -o $@ average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
