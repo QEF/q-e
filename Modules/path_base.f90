@@ -685,7 +685,7 @@ MODULE path_base
       USE path_variables,   ONLY : istep_path, num_of_images, &
                                    path_thr, Nft, ft_coeff, pos, pes, &
                                    use_multistep, grad_pes, err_max,  &
-                                   frozen, vel, vel_zeroed, reset_broyden
+                                   frozen, vel, vel_zeroed
       USE io_global,        ONLY : meta_ionode
       !
       IMPLICIT NONE
@@ -745,8 +745,6 @@ MODULE path_base
             images_updated = .TRUE.
             !
             num_of_images = new_num_of_images
-            !
-            reset_broyden = .TRUE.
             !
          END IF
          !

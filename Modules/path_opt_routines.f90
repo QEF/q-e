@@ -264,9 +264,17 @@ MODULE path_opt_routines
           !
           INQUIRE( FILE = broy_file, EXIST = exists )
           !
-          IF ( exists .AND. .NOT. reset_broyden ) THEN
+          IF ( exists ) THEN
              !
              OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
+             !
+             READ( UNIT = iunbroy , FMT = * ) i
+             !
+             reset_broyden = ( i /= n_im )
+             !
+          END IF
+          !
+          IF ( exists .AND. .NOT. reset_broyden ) THEN
              !
              READ( UNIT = iunbroy , FMT = * ) J0
              READ( UNIT = iunbroy , FMT = * ) accepted
@@ -274,8 +282,6 @@ MODULE path_opt_routines
              READ( UNIT = iunbroy , FMT = * ) pos_old
              READ( UNIT = iunbroy , FMT = * ) k
              READ( UNIT = iunbroy , FMT = * ) s
-             !
-             CLOSE( UNIT = iunbroy )
              !
              IF ( accepted ) THEN
                 !
@@ -328,11 +334,7 @@ MODULE path_opt_routines
              !
              IF ( reset_broyden ) THEN
                 !
-                OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
-                !
                 READ( UNIT = iunbroy , FMT = * ) J0
-                !
-                CLOSE( UNIT = iunbroy )
                 !
              ELSE
                 !
@@ -349,6 +351,8 @@ MODULE path_opt_routines
              reset_broyden = .FALSE.
              !
           END IF
+          !
+          CLOSE( UNIT = iunbroy )
           !
           PRINT '(5X,"J0        = ",F10.6)', J0
           PRINT '(5X,"norm( g ) = ",F10.6)', norm_g / bohr_radius_angs * au
@@ -420,6 +424,7 @@ MODULE path_opt_routines
           !
           OPEN( UNIT = iunbroy, FILE = broy_file )
           !
+          WRITE( UNIT = iunbroy, FMT = * ) n_im
           WRITE( UNIT = iunbroy, FMT = * ) J0
           WRITE( UNIT = iunbroy, FMT = * ) accepted
           WRITE( UNIT = iunbroy, FMT = * ) norm_g
