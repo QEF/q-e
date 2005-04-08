@@ -122,10 +122,8 @@ subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
            h (ipol, k, 1) = e2 * ( (v2xup + v2cup) * grup + v2cud * grdw )
            h (ipol, k, 2) = e2 * ( (v2xdw + v2cdw) * grdw + v2cud * grup )
         enddo
-        vtxcgc = vtxcgc + e2 * (v1xup + v1cup) * (rho (k, 1) - &
-             rho_core (k) * fac)
-        vtxcgc = vtxcgc + e2 * (v1xdw + v1cdw) * (rho (k, 2) - &
-             rho_core (k) * fac)
+        vtxcgc = vtxcgc + e2 * (v1xup + v1cup) * (rho(k,1) - rho_core(k) * fac)
+        vtxcgc = vtxcgc + e2 * (v1xdw + v1cdw) * (rho(k,2) - rho_core(k) * fac)
         etxcgc = etxcgc + e2 * (sx + sc)
      endif
   enddo
