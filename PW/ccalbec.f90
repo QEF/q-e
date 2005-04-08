@@ -10,12 +10,12 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
-  !    This subroutine computes the dot product of the beta functions
-  !    and the wavefunctions, and save them in the array bec.
+  ! ... This subroutine computes the dot product of the beta functions
+  ! ... and the wavefunctions, and save them in the array bec.
   !
   USE kinds, ONLY : DP
   USE wvfct, ONLY : gamma_only
@@ -45,9 +45,17 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
      CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, psi, npwx, bec, nkb )
      !
   ELSE
-     !   
-     CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, ONE, &
-                 vkb, npwx, psi, npwx, ZERO, bec, nkb )
+     !
+     IF ( nbnd == 1 ) THEN
+        !
+        CALL ZGEMV( 'C', npw, nkb, ONE, vkb, npwx, psi, 1, ZERO, bec, 1 )
+        !
+     ELSE
+        !
+        CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, ONE, &
+                    vkb, npwx, psi, npwx, ZERO, bec, nkb )
+        !
+     END IF
      !
      CALL reduce( 2 * nkb * nbnd, bec )
      !

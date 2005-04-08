@@ -5,24 +5,30 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-!-----------------------------------------------------------------------
-subroutine h_1psi (lda, n, psi, hpsi, spsi)
-  !-----------------------------------------------------------------------
+!
+!----------------------------------------------------------------------------
+SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
+  !----------------------------------------------------------------------------
   !
-  !    This routine applies the Hamiltonian and the S matrix
-  !    to a vector psi and puts the result in hpsi and spsi
-  !    Wrapper routine - calls h_psi and s_psi
-  USE kinds, only: DP
-  implicit none
+  ! ... This routine applies the Hamiltonian and the S matrix
+  ! ... to a vector psi and puts the result in hpsi and spsi
+  ! ... Wrapper routine - calls h_psi and s_psi
   !
-  integer :: lda, n
-  complex(kind=DP) :: psi (n), hpsi (n), spsi(n)
+  USE kinds, ONLY : DP
   !
-  call start_clock ('h_1psi')
-  call h_psi (lda, n, 1, psi, hpsi)
-  call s_psi (lda, n, 1, psi, spsi)
-  call stop_clock ('h_1psi')
-  return
-end subroutine h_1psi
-
+  IMPLICIT NONE
+  !
+  INTEGER           :: lda, n
+  COMPLEX (KIND=DP) :: psi(n), hpsi(n), spsi(n)
+  !
+  !
+  CALL start_clock( 'h_1psi' )
+  !
+  CALL h_psi( lda, n, 1, psi, hpsi )
+  CALL s_psi( lda, n, 1, psi, spsi )
+  !
+  CALL stop_clock( 'h_1psi' )
+  !
+  RETURN
+  !
+END SUBROUTINE h_1psi

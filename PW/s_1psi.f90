@@ -5,9 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE s_1psi( lda, n, psi, spsi )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... spsi = S*psi for one wavefunction
   ! ... Wrapper routine - calls ccalbec and s_psi

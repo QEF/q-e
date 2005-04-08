@@ -7,9 +7,9 @@
 !
 #include "f_defs.h"
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... matrix times matrix with summation index running on G-vectors or PWs
   ! ... c(ij)=real(a(ik)*b(kj)) using half G vectors or half PWs
@@ -19,7 +19,7 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   !
   USE kinds, ONLY : DP
-  USE gvect,      ONLY : gstart
+  USE gvect, ONLY : gstart
   !
   IMPLICIT NONE
   !
@@ -38,16 +38,24 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   CALL start_clock( 'pw_gemm' )
   !
-  CALL DGEMM( 'C', 'N', na, nb, 2 * n, 2.D0, a, 2 * lda, b, &
-              2 * ldb, 0.D0, c, ldc )
+  IF ( nb == 1 ) THEN
+     !
+     CALL DGEMV( 'C', 2 * n, na, 2.D0, a, 2 * lda, b, 1, 0.D0, c, 1 )
+     !
+     IF ( gstart == 2 ) c(:,1) = c(:,1) - a(1,:) * b(1,1)
+     !
+  ELSE
+     !
+     CALL DGEMM( 'C', 'N', na, nb, 2 * n, 2.D0, a, &
+                 2 * lda, b, 2 * ldb, 0.D0, c, ldc )
+     !
+     IF ( gstart == 2 ) &
+        CALL DGER( na, nb, -1.D0, a, ( 2 * lda ), b, ( 2 * ldb ), c, ldc )
+     !
+  END IF
   !
-  IF ( gstart == 2 ) &
-     CALL DGER(  na, nb, -1.D0, a, ( 2 * lda ), b, ( 2 * ldb ), c, ldc )
-  !
-#ifdef __PARA
-  IF ( sum_over_nodes == 'y' .OR. sum_over_nodes == 'Y' ) &
-     CALL reduce( ldc * nb, c )
-#endif
+  IF ( sum_over_nodes == 'y' .OR. &
+       sum_over_nodes == 'Y' ) CALL reduce( ldc * nb, c )
   !
   CALL stop_clock( 'pw_gemm' )
   !

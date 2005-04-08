@@ -11,17 +11,21 @@
 SUBROUTINE s_psi( lda, n, m, psi, spsi )
   !----------------------------------------------------------------------------
   !
-  !    This routine applies the S matrix to m wavefunctions psi
-  !    and puts the results in spsi.
-  !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,m) (calculated in h_psi or by ccalbec)
-  ! input:
-  !     lda   leading dimension of arrays psi, spsi
-  !     n     true dimension of psi, spsi
-  !     m     number of states psi
-  !     psi
-  ! output:
-  !     spsi  S*psi
+  ! ... This routine applies the S matrix to m wavefunctions psi
+  ! ... and puts the results in spsi.
+  ! ... Requires the products of psi with all beta functions
+  ! ... in array becp(nkb,m) (calculated in h_psi or by ccalbec)
+  !
+  ! ... input:
+  !
+  ! ...    lda   leading dimension of arrays psi, spsi
+  ! ...    n     true dimension of psi, spsi
+  ! ...    m     number of states psi
+  ! ...    psi
+  !
+  ! ... output:
+  !
+  ! ...    spsi  S*psi
   !
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : gamma_only
@@ -30,7 +34,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE wvfct,      ONLY : igk, g2kin
   USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
-  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
+  USE ions_base,  ONLY : nat, nsp, ityp
   !
   IMPLICIT NONE
   !
@@ -70,14 +74,14 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! ... here the local variables
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
-       ! counters
+         ! counters
        REAL(KIND=DP), ALLOCATABLE :: ps(:,:)
-       ! the product vkb and psi
+         ! the product vkb and psi
        !
        !
        ! ... initialize  spsi
        !
-       CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+       spsi = psi
        !
        ! ... The product with the beta functions
        !
@@ -88,7 +92,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ps(:,:) = 0.D0
        !
        ijkb0 = 0
-       DO nt = 1, ntyp
+       DO nt = 1, nsp
           IF ( tvanp (nt) ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
@@ -112,8 +116,17 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           END IF
        END DO
        !
-       CALL DGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
-                   2 * lda, ps, nkb, 1.D0, spsi, 2 * lda )
+       IF ( m == 1 ) THEN
+          !
+          CALL DGEMV( 'N', 2 * n, nkb, 1.D0, vkb, &
+                      2 * lda, ps, 1, 1.D0, spsi, 1 )
+          !
+       ELSE
+          !
+          CALL DGEMM( 'N', 'N', 2 * n, m, nkb, 1.D0, vkb, &
+                      2 * lda, ps, nkb, 1.D0, spsi, 2 * lda )
+          !
+       END IF
        !
        DEALLOCATE( ps ) 
        !
@@ -134,14 +147,14 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! ... local variables
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
-       ! counters
+         ! counters
        COMPLEX(KIND=DP), ALLOCATABLE :: ps(:,:)
-       ! the product vkb and psi
+         ! the product vkb and psi
        !
        !
        ! ... initialize  spsi
        !
-       CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+       spsi = psi
        !
        ! ... The product with the beta functions
        !
@@ -149,10 +162,10 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        ALLOCATE( ps( nkb, m ) )    
        !
-       ps(:,:) = (0.D0,0.D0)
+       ps(:,:) = ( 0.D0, 0.D0 )
        !
        ijkb0 = 0
-       DO nt = 1, ntyp
+       DO nt = 1, nsp
           IF ( tvanp(nt) ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
@@ -176,8 +189,17 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
           END IF
        END DO
        !
-       CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
-                   lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
+       IF ( m == 1 ) THEN
+          !
+          CALL ZGEMV( 'N', n, nkb, ( 1.D0, 0.D0 ), vkb, &
+                      lda, ps, 1, ( 1.D0, 0.D0 ), spsi, 1 )
+          !
+       ELSE
+          !
+          CALL ZGEMM( 'N', 'N', n, m, nkb, ( 1.D0, 0.D0 ), vkb, &
+                      lda, ps, nkb, ( 1.D0, 0.D0 ), spsi, lda )
+          !
+       END IF
        !
        DEALLOCATE( ps )
        !

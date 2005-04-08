@@ -80,10 +80,10 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           ! ... set to zero the imaginary part of psi at G=0
           ! ... absolutely needed for numerical stability
           !
-          IF ( gstart == 2 ) psi(1,ibnd) = CMPLX( REAL( psi(1,ibnd) ), 0.D0 )
-          DO j = 1, n
-             hpsi(j,ibnd) = g2kin(j) * psi(j,ibnd)
-          END DO
+          IF ( gstart == 2 ) psi(1,ibnd) = DCMPLX( REAL( psi(1,ibnd) ), 0.D0 )
+          !
+          hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
+          !
        END DO
        !
        CALL stop_clock( 'init' )
@@ -128,9 +128,9 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... Here we apply the kinetic energy (k+G)^2 psi
        !
        DO ibnd = 1, m
-          DO j = 1, n
-             hpsi(j,ibnd) = g2kin(j) * psi(j,ibnd)
-          END DO
+          !
+          hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
+          !
        END DO
        !
        CALL stop_clock( 'init' )
@@ -145,11 +145,9 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           CALL start_clock( 'firstfft' )
           !
-          psic(1:nrxxs) = (0.D0,0.D0)
+          psic(1:nrxxs) = ( 0.D0, 0.D0 )
           !
-          DO j = 1, n
-             psic(nls(igk(j))) = psi(j,ibnd)
-          END DO
+          psic(nls(igk(1:n))) = psi(1:n,ibnd)
           !
           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
           !
@@ -157,9 +155,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           ! ... product with the potential vrs = (vltot+vr) on the smooth grid
           !
-          DO j = 1, nrxxs
-             psic(j) = psic(j) * vrs(j,current_spin)
-          END DO
+          psic(1:nrxxs) = psic(1:nrxxs) * vrs(1:nrxxs,current_spin)
           !
           ! ... back to reciprocal space
           !
@@ -169,9 +165,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           ! ... addition to the total product
           !
-          DO j = 1, n
-             hpsi(j,ibnd) = hpsi(j,ibnd) + psic(nls(igk(j)))
-          END DO
+          hpsi(1:n,ibnd) = hpsi(1:n,ibnd) + psic(nls(igk(1:n)))
           !
           CALL stop_clock( 'secondfft' )
           !
@@ -180,8 +174,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... Here the product with the non local potential V_NL psi
        !
        IF ( nkb > 0 ) THEN
-          CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )   
+          !
+          CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )
+          !
           CALL add_vuspsi( lda, n, m, psi, hpsi )
+          !
        END IF
        !
        RETURN
