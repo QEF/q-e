@@ -830,7 +830,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
            do k=1,3
               xx = rat2d(1,na) * g(1,k) * ratd(k,na) + &
                    rat2d(2,na) * g(2,k) * ratd(k,na) + &
-                   rat2d(3,na) * g(3,k) * ratd(k,na)
+                   rat2d(3,na) * g(3,k) * ratd(k,na) + xx
            end do
            if (xx.gt.eps16) then
               ratd (:,na) =  rat2d (:,na) * xx
@@ -838,7 +838,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
               do k=1,3
                  xx = rat2d(1,na) * g(1,k) * rat2d(k,na) + &
                       rat2d(2,na) * g(2,k) * rat2d(k,na) + &
-                      rat2d(3,na) * g(3,k) * rat2d(k,na)
+                      rat2d(3,na) * g(3,k) * rat2d(k,na) + xx
               end do
               ratd(:,na) = ratd(:,na) / xx
            else
