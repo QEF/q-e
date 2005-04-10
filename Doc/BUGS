@@ -1,6 +1,25 @@
 
+  *  option "write_save" was not working in parallel
+
+  *  diagonalization of (0,0) matrix in init_paw_1
+
+  *  out-of-bound error in readnewvan.f90 fixed
+
+  *  FPMD: bug with UPF PP when betas are not ordered as l=0,1,2,...
+
+  *  Possible out-of-bound error with US PP in some cases
+
+  *  Martins-Troullier norm-conserving PP generation had a small
+     error when rcloc > rcut(l)
+
+  *  the default for relativistic vs nonrelativistic calculation
+     in the atomic code was the opposite of what was intended
+
   *  electron-phonon calculation was not working properly if called
      after a restart
+
+  *  Parallel execution on local filesystems (i.e. not visible to all
+     processors) could hang due to a bad check in charge extrapolation
 
   *  When imposing hermiticity in matdyn.x and dynmat.x codes in pwtools
      routine dyndiag was actually computing the complex conjugate of

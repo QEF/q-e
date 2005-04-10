@@ -302,7 +302,10 @@ Hubbard_alpha(I)  REAL      ( default = 0.D0 for all species)
                Anisimov, Zaanen, and Andersen, PRB 44, 943 (1991);
                Anisimov et al., PRB 48, 16929 (1993);
                Liechtenstein, Anisimov, and Zaanen, PRB 52, R5467 (1994); 
-               Cococcioni and de Gironcoli (to be published)
+               Cococcioni and de Gironcoli, PRB 71, 035105 (2005).
+               IMPORTANT: LDA+U works only for a few selected elements.
+               Modify PW/set_hubbard_l.f90 and PW/tabd.f90 if you plan to 
+               use LDA+U with an element that is not configured there.
 
 starting_ns_eigenvalue(m,ispin,I) REAL (default = -1.d0 that means NOT SET)
                In the first iteration of an LDA+U run it overwrites
