@@ -215,19 +215,20 @@ grid) are distributed.
 Before doing anything, inquire whether it is already there,
 or under development.
 \item 
-Before starting writing code, inquire whether you van reuse
+Before starting writing code, inquire whether you can reuse
 code that is already available in the distribution. Avoid 
 redundancy: the only bug-free software line is the one that 
 doesn't exist.
 \item When you make some change:
 \begin{itemize}
 \item Check that are not spoiling other people's work.
-In particular, do not forget to check whether you need to make changes 
-as well to specialised codes (noncolinear, Gamma-only etc.) that may
-use the routine or module you are changing.
+In particular, search the distribution for codes using the routine 
+or module you are modifying and change its usage or its calling 
+sequence everywhere.
 \item Do not forget to add/update documentation and examples as well.
 \item Do not forget that your change must work on many different 
-combinations of hardware and software.
+combinations of hardware and software, in both serial and parallel
+execution.
 \end{itemize}
 \end{itemize}
 \subsection{Programming style (or lack of it)}
