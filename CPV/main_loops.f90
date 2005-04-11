@@ -26,7 +26,7 @@
       IF( nat > 0 ) THEN
         ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
       ELSE
-        CALL errore( ' cpr_loop ', ' nat less or equal 0 ', 1 )
+        CALL errore( ' wf_loop ', ' nat less or equal 0 ', 1 )
       END IF
 
       ! ... set tprnfor = .true. to get atomic forces

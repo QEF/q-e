@@ -1353,7 +1353,7 @@
       fcc = 0.d0
       allocate( qv( nnrb ) )
       do is=1,nsp
-         if(nlcc(is)) go to 10
+         if ( .NOT. nlcc(is) ) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
