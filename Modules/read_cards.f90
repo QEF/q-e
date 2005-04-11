@@ -311,7 +311,7 @@ MODULE read_cards_module
        !
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
-       INTEGER            :: is, ip, i
+       INTEGER            :: is, ip
        CHARACTER(LEN=4)   :: lb_pos
        CHARACTER(LEN=256) :: psfile
        LOGICAL, SAVE      :: tread = .FALSE.
@@ -333,8 +333,14 @@ MODULE read_cards_module
           atom_label(is) = TRIM( lb_pos )
           !
           IF ( atom_mass(is) <= 0.D0 ) THEN
-             CALL errore( ' iosys ',' invalid  atom_mass ', is )
+             CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
           END IF
+          DO ip = 1, is - 1
+             IF ( atom_label(ip) == atom_label(is) ) THEN
+                CALL errore( ' card_atomic_species ', &
+                           & ' two occurrences of the same atomic label ', is )
+             END IF
+          END DO
           !
        END DO
        taspc = .TRUE.
@@ -395,7 +401,7 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
        CHARACTER(LEN=4)   :: lb_pos
-       INTEGER            :: ia, ip, i, k, is, nfield, index, rep_i
+       INTEGER            :: ia, i, k, is, nfield, index, rep_i
        LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
