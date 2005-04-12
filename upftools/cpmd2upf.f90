@@ -145,9 +145,11 @@ subroutine read_cpmd(iunps)
      found = found + 1
      !read (iunps,*) mesh_, amesh
      read (iunps,'(a)') line
-     read (line,*,iostat=ios) mesh_
-     amesh = -1.0
-     if ( ios /= 0 ) read (line,*,iostat=ios) mesh_, amesh
+     read (line,*,iostat=ios) mesh_, amesh
+     if ( ios /= 0) then
+        read (line,*,iostat=ios) mesh_
+        amesh = -1.0
+     end if
      allocate (r_(mesh_))
      !
      ! determine the number of angular momenta
@@ -165,6 +167,7 @@ subroutine read_cpmd(iunps)
         read(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
      end do
      ! get amesh if not available directly
+     if (amesh < 0.0) print  "('amesh set to:',f10.6)", exp (r_(1) - r_(0))
      if (amesh < 0.0) amesh = exp (r_(1) - r_(0))
   else if (matches ("&WAVEFUNCTION", trim(line)) ) then
      found = found + 1
