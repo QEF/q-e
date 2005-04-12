@@ -2509,6 +2509,14 @@ Possible reasons:
     issues''.
 \end{itemize}
 
+\paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
+            message related to MPI errors.}
+
+See info from Axel Kohlmeyer:\\
+\htmladdnormallink{\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}%
+                           {http://www.democritos.it/pipermail/pw_forum/2005-Apr
+il/002338.htm}.
+
 \paragraph{\texttt{pw.x} works for simple systems, but not for large
            systems or whenever more RAM is needed.}
 
@@ -2536,9 +2544,13 @@ Possible solutions:
     IBM only (32-bit machines): if you need more than 256 MB you must
     specify it at link time (option \texttt{-bmaxdata}).
   \item
-    buggy compiler.
-    Some versions of Portland compiler on Linux PC's or clusters have
-    this problem.
+    buggy or weird-behaving compiler.
+    Some versions of the Portland and Intel compilers on Linux PC's 
+    or clusters have this problem. For Intel ifort 8.1, the problem
+    seems to be due to the allocation of large automatic arrays
+    that exceeds the available stack. Increasing the stack size 
+    (with commands \texttt{limits} or \texttt{ulimit}) may solve the
+    problem.
 \end{itemize}
 
 \paragraph{\texttt{pw.x} runs but nothing happens.}
@@ -2803,7 +2815,7 @@ basis set.  This loss of precision (more serious for
 gradient-corrected functionals) translates into a slight but
 detectable loss of translational invariance (the energy changes if all
 atoms are displaced by the same quantity, not commensurate with the
-FFT grid).  This puts a limit to the accuracy of forces.  The
+FFT grid).  This sets a limit to the accuracy of forces.  The
 situation improves somewhat by increasing the \texttt{ecutrho} cutoff.
 
 \paragraph{\texttt{ph.x} stops with ``error reading file''.}

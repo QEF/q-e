@@ -1,3 +1,13 @@
+Fixed in version 2.1.3:
+ 
+  *  case ibrav=0 in CPV was not properly working
+
+  *  forces in CP with core corrections were wrong
+     (reported by Giacomo Saielli)
+
+  *  damped variable-cell dynamics in PWscf was not working properly
+
+  *  lambda.x could yield NaN's on negative frequencies
 
   *  option "write_save" was not working in parallel
 
@@ -26,9 +36,11 @@
      the dynamical matrix. Eigenvectors were therefore wrong, while
      eigenvalues were fine. (thanks to Nicolas Mounet)
 
-  *  The phonon code was yielding incorrect results when 4-dimensional
-     irreps were present (i.e. A point in graphite) and ultrasoft PP used.
-     (reported by Nicolas Mounet)
+Fixed in version 2.1.2:
+
+  *  The phonon code was yielding incorrect results when 4-dimensional 
+     irreps were present (i.e. A point in graphite) and ultrasoft PP used
+      (reported by Nicolas Mounet)
 
   *  in some cases ld1 was writing a bad UPF file
 
@@ -43,7 +55,9 @@
 
   *  bug in readfile_config when restarting without a "*.save" file
 
-  *  LDA+U forces not working for unpolarized (nspin=1) calculations
+  *  crash in pw2casino due to bad call to v_of_rho
+
+Fixed in version 2.1.1:
 
   *  memory leak in Raman code
 
@@ -51,16 +65,14 @@
 
   *  dangerous calls to read_restart_tetra and write_restart_tetra
      when restarting with no allocated tetrahedra
+ 
+  *  vc-relax was not working
 
-  *  vc-relax was not working 
-
-  *  projwfc failed with lda+U
+  *  projwfc failed with lda+U 
 
   *  incorrect automatic generation of k-points in the non colinear case:
-     inversion symmetry is not always present because of the presence of 
+     inversion symmetry is not always present because of the presence of  
      a magnetic field in the Hamiltonian
-
-  *  init_paw_1 fails for atom without non-local part
 
   *  electron-phonon calculation was not working if called directly
      after a phonon calculation
@@ -69,7 +81,7 @@
 
   *  cell minimization with steepest descent was not working (CP/FPMD)
 
-  *  various Alpha and SUN compilation problems
+  *  various Alpha, IBM, SGI, SUN, PGI compilation problems
 
 Fixed in version 2.1:
 
