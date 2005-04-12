@@ -41,10 +41,10 @@ DEBUGOPT  = -Wf" -init stack=zero heap=zero"
 F90       = sxf90
 F77       = sxf90
 
-FFLAGS    = -f3 $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
+FFLAGS    = -f0 $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
 # $(FTRACE)
-# FFLAGS    = -f3 $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
-# FCAUTIOUS = -f3 $(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
+# FFLAGS    = -f0 $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
+# FCAUTIOUS = -f0 $(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
 
 F90FLAGS  =  $(BASIC) $(MISC) $(OPT) $(DEBUGOPT) -I../Modules -I../PW -I../PH
 
