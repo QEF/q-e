@@ -237,7 +237,8 @@ MODULE parser
     END IF
     !
     IF ( ionode ) THEN
-       READ (5, fmt='(A256)', END=10) line
+30     READ (5, fmt='(A256)', END=10) line
+       IF( line == ' ' .OR. line(1:1) == '#' ) GO TO 30
        tend = .FALSE.
        GO TO 20
 10     tend = .TRUE.
