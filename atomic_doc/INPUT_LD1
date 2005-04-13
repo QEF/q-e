@@ -76,9 +76,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
 
       nwf            number of wavefunctions, followed by nwf cards:
    if rel <2
-      nl,n,l,oc(nl),isw(nl)  format(a2,2i3,f6.2)
+      nl,n,l,oc(nl),isw(nl)
    is rel = 2
-      nl,n,l,oc(nl),jj(nl)   format(a2,2i3,2f9.5)
+      nl,n,l,oc(nl),jj(nl)
    where
       nl= electron label
       n,l= principal and angular quantum numbers
@@ -140,7 +140,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
   2.1) additional cards for PP generation
 
       nwfs          number of pseudo wavefunctions, followed by nwf cards:
-      nls, nns, lls, ocs(nl), ener, rcut, rcutus      format(a2,2i3,4f6.2)
+      nls, nns, lls, ocs(nl), ener, rcut, rcutus
    where:
       nls, nns, lls, ocs = same as el, n, l, oc, for the reference configuration
       ener = energy used to pseudize the corresponding state
@@ -172,11 +172,11 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
 
    for each missing configts(nc):
      nwfts            number of wavefunctions, followed by nwfts cards:
-   if lsd=1   format(a2,2i3,4f6.2,i3)
+   if lsd=1
      elts, nnts, llts, octs, enerts, rcutts, rcutusts, iswts 
-   if rel=2   format(a2,2i3,4f6.2,i3)
+   if rel=2
      elts, nnts, llts, octs, enerts, rcutts, rcutusts, jjts
-   otherwise   format(a2,2i3,4f6.2)
+   otherwise
      elts, nnts, llts, octs, enerts, rcutts, rcutusts
    where:
      elts, nnts, llts, octs = same as el, n, l, oc, for the test configuration
