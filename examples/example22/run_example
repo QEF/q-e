@@ -224,7 +224,7 @@ cat > pt.cond.in << EOF
     1
 EOF
 $ECHO "  running the calculation of the complex bands of Pt...\c"
-$PWCOND_COMMAND < pt.cond.in | tee pt.cond.out
+$PWCOND_COMMAND < pt.cond.in > pt.cond.out
 $ECHO " done"
 
 

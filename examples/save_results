@@ -13,16 +13,35 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 # save results to reference
 for dir in $EXAMPLES
 do
-    if test -d $dir/reference/CVS
+    if test -d $dir/reference/
     then
-        cd $dir
-        $ECHO "saving `pwd`...\c"
-        /bin/rm -r reference.old
-        mv reference reference.old
-        mv results reference
-        mv reference.old/CVS reference
-        $ECHO " done"
-        cd ..
+        if test -d $dir/results/
+        then
+            cd $dir
+            $ECHO "saving `pwd`...\n"
+            if test -d $dir/reference.old/
+            then 
+               /bin/rm -r reference.old
+            fi
+            mv reference reference.old
+            mkdir reference
+            cd reference.old
+            if test -d CVS
+            then
+                mv CVS ../reference/
+            fi
+            files=`/bin/ls`
+            for file in $files
+            do
+	      if test -f  ../results/$file
+              then
+                 mv ../results/$file ../reference/
+              fi 
+            done
+            cd ..
+            $ECHO "`pwd` done...\n"
+            cd ..
+        fi
     fi
 done
 $ECHO "saving all : done"

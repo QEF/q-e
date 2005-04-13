@@ -110,7 +110,7 @@ K_POINTS (automatic)
  4 4 4 1 1 1                
 EOF
 $ECHO "  running the scf calculation for Al...\c"
-$PW_COMMAND < al.scf.in | tee al.scf.out 
+$PW_COMMAND < al.scf.in > al.scf.out 
 $ECHO " done"
 
 # complex bands of Al along the 001 direction K_perp=0
@@ -132,7 +132,7 @@ cat > al.cond.in << EOF
     60
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al...\c"
-$PWCOND_COMMAND < al.cond.in | tee al.cond.out 
+$PWCOND_COMMAND < al.cond.in > al.cond.out 
 $ECHO " done"
 
 # self-consistent calculation for Al monatomic wire
@@ -168,7 +168,7 @@ K_POINTS (automatic)
  1 1 15 0 0 0                
 EOF
 $ECHO "  running the scf calculation for Al monatomic wire...\c"
-$PW_COMMAND < alwire.scf.in | tee alwire.scf.out 
+$PW_COMMAND < alwire.scf.in > alwire.scf.out 
 $ECHO " done"
 
 # complex bands of the Al monatomic wire
@@ -190,7 +190,7 @@ cat > alwire.cond.in << EOF
     71
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al wire...\c"
-$PWCOND_COMMAND < alwire.cond.in | tee alwire.cond.out 
+$PWCOND_COMMAND < alwire.cond.in > alwire.cond.out 
 $ECHO " done"
 
 # self-consistent calculation for bulk Ni 
@@ -229,7 +229,7 @@ K_POINTS (automatic)
  4 4 3 1 1 1                
 EOF
 $ECHO "  running the scf calculation for Ni bulk...\c"
-$PW_COMMAND < ni.scf.in | tee ni.scf.out 
+$PW_COMMAND < ni.scf.in > ni.scf.out 
 $ECHO " done"
 
 # complex bands of Ni
@@ -251,7 +251,7 @@ cat > ni.cond.in << EOF
     30
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Ni...\c"
-$PWCOND_COMMAND < ni.cond.in | tee ni.cond.out 
+$PWCOND_COMMAND < ni.cond.in > ni.cond.out 
 $ECHO " done"
 
 # self-consistent calculation for Al monatomic wire
@@ -288,7 +288,7 @@ K_POINTS (automatic)
  2 2 24 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al monatomic wire...\c"
-$PW_COMMAND < alwire1.scf.in | tee alwire1.scf.out 
+$PW_COMMAND < alwire1.scf.in > alwire1.scf.out 
 $ECHO " done"
 
 
@@ -331,7 +331,7 @@ K_POINTS (automatic)
  2 2 2 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al wire with H impurity...\c"
-$PW_COMMAND < AlwireH.scf.in | tee AlwireH.scf.out 
+$PW_COMMAND < AlwireH.scf.in > AlwireH.scf.out 
 $ECHO " done"
 
 # transmission calculation for the perfect Al wire 
@@ -354,7 +354,7 @@ cat > AlwireAl.cond.in << EOF
     100
 EOF
 $ECHO "  running pwcond.x to calculate transmission of a perfect Al wire ...\c"
-$PWCOND_COMMAND < AlwireAl.cond.in | tee AlwireAl.cond.out 
+$PWCOND_COMMAND < AlwireAl.cond.in > AlwireAl.cond.out 
 $ECHO " done"
 
 # transmission calculation for the Al-C-Al
@@ -394,7 +394,7 @@ cat > AlwireH.cond.in << EOF
  -6.45
 EOF
 $ECHO "  running pwcond.x to calculate transmission of an Al wire with H...\c"
-$PWCOND_COMMAND < AlwireH.cond.in | tee AlwireH.cond.out 
+$PWCOND_COMMAND < AlwireH.cond.in > AlwireH.cond.out 
 $ECHO " done"
 
 $ECHO
