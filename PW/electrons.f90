@@ -709,7 +709,7 @@ SUBROUTINE electrons()
 9018 FORMAT(/'     total magnetization       =',3f9.2,' Bohr mag/cell' &
        &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell')
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
-9021 FORMAT(/'          k =',3F7.4,' (',I5,' PWs)   bands (ev):'/)
+9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/)
 9030 FORMAT( '  ',8F9.4)
 9032 FORMAT(/'     occupation numbers ')
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev')

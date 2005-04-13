@@ -15,6 +15,8 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   !
   ! rmw (18/8/99)
   !
+  !     Last updated in 04/12/2005 by Cesar RS Silva
+  !
   ! input:
   ! mxdtyp = array dimension for type of atoms
   ! mxdatm = array dimension for atoms (irrespective of type)
@@ -815,12 +817,25 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   endif
   if (calc (2:2) .eq.'m') then
      !         WRITE( stdout,109) alpha,nst
+     ! if(.true. ) = original version
+     ! if(.false.) = modified algorithm by SdG
+     !
      if (.false.) then
         do na = 1, natot
            do k = 1, 3
               xx = rat2di (k, na) * rat2d (k, na)
               if (xx.lt.zero) then
                  ratd (k, na) = zero
+
+! ======================================================================
+!        Caution: Under testing!!!!!!!!!
+
+                 rat(k,na)=rat2d(k,na)*rati(k,na)-rat2di(k,na)*rat(k,na)
+                 rat(k,na)=rat(k,na)/(rat2d(k,na)-rat2di(k,na))
+                 rat2d(k,na)=zero
+                 rat2di(k,na)=zero
+! ======================================================================
+
               endif
            enddo
         enddo
@@ -852,8 +867,15 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
            do l = 1, 3
               xx = avec2d (l, k) * avec2di (l, k)
               if (xx.lt.zero) then
-  !              WRITE( stdout, * ) l, k, avec2d (l, k), avec2di (l, k)
                  avecd (l, k) = zero
+! ======================================================================
+!        Caution: Under testing!!!!!!!!!
+
+                 avec(l, k)=avec2d(l,k)*aveci(l,k)-avec2di(l,k)*avec(l,k)
+                 avec(l, k)=avec(l,k)/(avec2d(l,k)-avec2di(l,k))
+                 avec2d(l,k)=zero
+                 avec2di(l,k)=zero
+! ======================================================================
               endif
            enddo
         enddo

@@ -48,7 +48,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   ! local variables
   !
-  real(kind=DP) :: rhoneg, rhorea, rhoima, gx
+  real(kind=DP) :: rhoneg, rhoima, gx
   real(kind=DP), allocatable :: rhocgnt (:), aux (:)
   complex(kind=DP), allocatable :: rhocg (:,:), strf_at(:,:)
   integer :: ir, is, ig, igl, nt, ndm
@@ -149,10 +149,8 @@ subroutine atomic_rho (rhoa, nspina)
      rhoneg = 0.d0
      rhoima = 0.d0
      do ir = 1, nrxx
-        rhorea = DREAL (psic (ir) )
-        rhoneg = rhoneg + min (0.d0, rhorea)
+        rhoneg = rhoneg + MIN (0.d0, DREAL (psic (ir)) )
         rhoima = rhoima + abs (DIMAG (psic (ir) ) )
-        rhoa (ir, is) = rhorea
      enddo
      rhoneg = rhoneg / (nr1 * nr2 * nr3)
      rhoima = rhoima / (nr1 * nr2 * nr3)
@@ -160,9 +158,35 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif
-     if ( (rhoneg < -1.0d-4) .and. (is == 1 .or. lsda) .or. rhoima > 1.0d-4 ) &
-          WRITE( stdout,'(/"  Warning: negative or imaginary starting charge ",&
-          &2f12.6,i3)') rhoneg, rhoima, is
+     IF ( rhoima > 1.0d-4 ) THEN
+        WRITE( stdout,'(/4x," imaginary charge or magnetization ",&
+          & f12.6," (component ",i1,")  set to zero")') rhoima, is
+     END IF
+     IF ( (is == 1) .OR. lsda ) THEN
+        !
+        !  set starting charge rho or rho up or rho down > 0 
+        !
+        DO ir = 1, nrxx
+           rhoa (ir, is) = MAX (0.d0, DREAL (psic (ir)) )
+        END DO
+        IF ( (rhoneg < -1.0d-4) ) THEN
+           IF ( lsda ) THEN 
+              WRITE( stdout,'(/4x," negative starting charge (spin=",i2,&
+          &                       ") ",f12.6,"  set to zero")') 2*is-3, rhoneg
+           ELSE
+              WRITE( stdout,'(/4x," negative starting charge ", &
+          &          f12.6,"  set to zero")') rhoneg
+           END IF
+        END IF
+     ELSE
+        !
+        !  magnetization for non collinear case (is = 2,3,4)
+        !
+        DO ir = 1, nrxx
+           rhoa (ir, is) = DREAL (psic (ir))
+        END DO
+     END IF
+
   enddo
 
   deallocate (rhocg)
