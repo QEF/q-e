@@ -56,7 +56,7 @@ PROGRAM dos
   USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : nspin
-  USE noncollin_module : noncolin
+  USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE
