@@ -56,6 +56,7 @@ PROGRAM dos
   USE ktetra,     ONLY : ntetra, tetra, ltetra
   USE wvfct,      ONLY : nbnd, et
   USE lsda_mod,   ONLY : nspin
+  USE noncollin_module : noncolin
   USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -125,6 +126,8 @@ PROGRAM dos
   CALL mp_bcast( prefix, ionode_id )
   !
   CALL read_file( )
+
+  if (noncolin) call errore('dos','not implemented yet',1)
   !
   IF ( ionode ) THEN
      !

@@ -72,6 +72,7 @@ PROGRAM projwfc
   USE kinds,      ONLY : DP 
   USE klist,      ONLY : degauss, ngauss, lgauss
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir 
+  USE noncollin_module, ONLY : noncolin
   USE mp,   ONLY : mp_bcast      
   !
   IMPLICIT NONE 
@@ -148,6 +149,8 @@ PROGRAM projwfc
   ! 
   CALL read_file 
   CALL openfil_pp
+
+  if (noncolin) call errore('projwfc','not implemented yet',1)
   ! 
   !   decide Gaussian broadening
   !
