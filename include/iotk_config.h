@@ -42,6 +42,21 @@
 #   define __IOTK_REAL3    16
 #endif
 
+#ifdef __MAC
+#   define __IOTK_LOGICAL1 1
+#   define __IOTK_LOGICAL2 2
+#   define __IOTK_LOGICAL3 4
+#   define __IOTK_LOGICAL4 8
+#   define __IOTK_INTEGER1 1
+#   define __IOTK_INTEGER2 2
+#   define __IOTK_INTEGER3 4
+#   define __IOTK_INTEGER4 8
+#   define __IOTK_REAL1    4
+#   define __IOTK_REAL2    8
+#   define __IOTK_REAL3    16
+#   define __IOTK_WORKAROUND5
+#endif
+
 #ifdef __LINUX
 #   ifdef __INTEL
 #         define __IOTK_LOGICAL1 1

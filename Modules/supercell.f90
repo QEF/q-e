@@ -23,8 +23,8 @@ MODULE supercell
        !
        REAL (KIND=DP), INTENT(IN) :: vect(:)
        REAL (KIND=DP)             :: pbc(SIZE( vect ))
-#if defined __AIX
-       !  with AIX compiler some combination of flags lead to 
+#if defined (__XLF)
+       !  with the IBM xlf compiler some combination of flags lead to 
        !  variables being defined as static, hence giving a conflict
        !  with PURE function. We then force the variable be AUTOMATIC
        REAL (KIND=DP), AUTOMATIC  :: crystal(3)

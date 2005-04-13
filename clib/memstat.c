@@ -7,7 +7,10 @@
 */
 
 #include <stdlib.h>
+
+#if !defined(__MAC)
 #include <malloc.h>
+#endif
 
 #include <stdio.h>
 

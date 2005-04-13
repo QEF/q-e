@@ -96,7 +96,7 @@ aix )
 	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
-	try_dflags="-D__AIX"
+	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
 	try_f90="f90"
@@ -135,7 +135,7 @@ mac )
 	try_f90="xlf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
-	try_dflags="-D__MAC"
+	try_dflags="-D__MAC -D__XLF"
 	ranlib="ranlib"
 	;;
 * )

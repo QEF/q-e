@@ -11146,7 +11146,7 @@ subroutine iotk_open_read_x(unit,file,dummy,attr,binary,raw,root,ierr)
   type(iotk_dummytype), optional          :: dummy
   logical,          optional, intent(in)  :: binary 
   logical,          optional, intent(in)  :: raw
-#ifdef __IOTK_WORKARUND6
+#ifdef __IOTK_WORKAROUND6
   character(len=*), optional              :: attr
   character(len=*), optional              :: root
 #else
