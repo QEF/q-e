@@ -27,7 +27,6 @@ subroutine add_vuspsi_nc (lda, n, m, psi, hpsi )
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE uspp_param, ONLY: nh
   USE uspp,       ONLY : vkb, nkb, deeq_nc
-  USE uspp_param, ONLY : nh
   USE becmod
   USE noncollin_module
   implicit none
