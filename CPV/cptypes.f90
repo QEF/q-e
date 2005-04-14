@@ -26,8 +26,6 @@
 !  SUBROUTINE deallocate_recvecs(gv)
 !  SUBROUTINE allocate_pseudo(ps,nsp,ng,ngw,lnlx,ngh,tcc)
 !  SUBROUTINE deallocate_pseudo(ps)
-!  SUBROUTINE allocate_phfac(eigr,nr1,nr2,nr3,nsp,nat,ngw)
-!  SUBROUTINE deallocate_phfac(eigr)
 !  ----------------------------------------------
 !  END manual
 
@@ -46,19 +44,6 @@
         TYPE structure_factor
           COMPLEX(dbl), POINTER :: s(:)  ! S(G) = sum_I exp(i G dot R_I)
         END TYPE
-
-!! ...  phase factors exp(i G dot R_I)
-!! ...  G = reciprocal lattice vectors
-!! ...  R_I = ionic positions
-        TYPE phase_factors
-          COMPLEX(dbl), POINTER :: xyz(:,:)  ! exp(i G dot R_I)
-          COMPLEX(dbl), POINTER :: x(:,:)    ! exp(i G_x x_I)
-          COMPLEX(dbl), POINTER :: y(:,:)    ! exp(i G_y y_I)
-          COMPLEX(dbl), POINTER :: z(:,:)    ! exp(i G_z z_I)
-                                           !   first index: G vector
-                                           !   second index: ion
-        END TYPE phase_factors
-
 
 !! ...  pseudopotential
         TYPE pseudo
@@ -132,10 +117,9 @@
 !  ----------------------------------------------
 !  END manual
 
-        PUBLIC :: pseudo, recvecs, phase_factors, pseudo_ncpp
+        PUBLIC :: pseudo, recvecs,  pseudo_ncpp
         PUBLIC :: allocate_pseudo, deallocate_pseudo
         PUBLIC :: allocate_recvecs, deallocate_rvecs
-        PUBLIC :: allocate_phfac, deallocate_phfac
 
 !  end of module-scope declarations
 !  ----------------------------------------------
@@ -326,54 +310,6 @@
 
         RETURN
       END SUBROUTINE deallocate_pseudo
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-      SUBROUTINE allocate_phfac(eigr,nr1,nr2,nr3,nsp,nat,ngw,ng)
-
-        INTEGER, INTENT(IN) :: nr1,nr2,nr3,nsp,nat,ngw,ng
-        TYPE (phase_factors) :: eigr
-
-        INTEGER :: is, ierr
-
-        ALLOCATE(eigr%xyz(ngw,nat), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_phfac ', ' allocating %xyz ', ierr )
-        ALLOCATE(eigr%x(-nr1:nr1,nat), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_phfac ', ' allocating %x ', ierr )
-        ALLOCATE(eigr%y(-nr2:nr2,nat), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_phfac ', ' allocating %y ', ierr )
-        ALLOCATE(eigr%z(-nr3:nr3,nat), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_phfac ', ' allocating %z ', ierr )
-        RETURN
-      END SUBROUTINE allocate_phfac
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE deallocate_phfac(eigr)
-
-        TYPE (phase_factors) eigr
-
-        INTEGER :: is, ierr
-
-        IF(ASSOCIATED(eigr%xyz)) THEN
-          DEALLOCATE(eigr%xyz, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_phfac ', ' deallocating %xyz ', ierr )
-        END IF
-        IF(ASSOCIATED(eigr%x)) THEN
-          DEALLOCATE(eigr%x, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_phfac ', ' deallocating %x ', ierr )
-        END IF
-        IF(ASSOCIATED(eigr%y)) THEN
-          DEALLOCATE(eigr%y, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_phfac ', ' deallocating %y ', ierr )
-        END IF
-        IF(ASSOCIATED(eigr%z)) THEN
-          DEALLOCATE(eigr%z, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_phfac ', ' deallocating %z ', ierr )
-        END IF
-        RETURN
-      END SUBROUTINE deallocate_phfac
 
 !  ----------------------------------------------
 !  ----------------------------------------------

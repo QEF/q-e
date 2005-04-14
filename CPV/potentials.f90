@@ -184,14 +184,14 @@
 
 !  -------------------------------------------------------------------------
       SUBROUTINE kspotential( tprint, tforce, tstress, rhoe, desc, &
-        atoms, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht, fi, fnl, vpot, edft, timepre )
+        atoms, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, fnl, vpot, edft, timepre )
 
         USE charge_density, ONLY: rhoofr
         USE nl, ONLY: nlrh_m
         USE energies, ONLY: dft_energy_type
         USE cell_module, ONLY: boxdimensions
         USE brillouin, ONLY: kpoints
-        USE cp_types, ONLY: pseudo, recvecs, phase_factors
+        USE cp_types, ONLY: pseudo, recvecs
         USE atoms_type_module, ONLY: atoms_type
         USE wave_types, ONLY: wave_descriptor
         USE pseudo_projector, ONLY: projector
@@ -204,7 +204,10 @@
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
         TYPE (pseudo),        INTENT(INOUT) :: ps
         REAL(dbl) :: rhoe(:,:,:,:)
-        TYPE (phase_factors), INTENT(INOUT) ::  eigr
+        COMPLEX(dbl) :: ei1(:,:)
+        COMPLEX(dbl) :: ei2(:,:)
+        COMPLEX(dbl) :: ei3(:,:)
+        COMPLEX(dbl) :: eigr(:,:)
         TYPE (recvecs),       INTENT(IN)    ::  gv
         TYPE (kpoints),       INTENT(IN)    ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
@@ -222,7 +225,7 @@
         CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht)
 
         CALL vofrhos(tprint, rhoe, desc, tforce, tstress, tforce, atoms, gv, &
-          kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht, edft)
+          kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
         RETURN
       END SUBROUTINE
@@ -233,7 +236,7 @@
 !  BEGIN manual
 
       SUBROUTINE vofrhos(tprint, rhoe, desc, tfor, thdyn, tforce, atoms, &
-              gv, kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, box, edft)
+              gv, kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, box, edft)
 
 !  this routine computes:
 !  ekin = dft_kinetic term of the DFT functional (see dft_kinetic_energy)
@@ -267,11 +270,11 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
-      USE stick, ONLY: dfftp
+      USE fft_base, ONLY: dfftp
       USE charge_types, ONLY: charge_descriptor
       USE control_flags, ONLY: tscreen, tchi2, iprsta
       USE io_global, ONLY: ionode
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE io_global, ONLY: stdout
       USE sic_module, ONLY: self_interaction, si_epsilon
 
@@ -285,7 +288,10 @@
       REAL(dbl),    INTENT(IN) :: fi(:,:,:)
       TYPE (projector) :: fnl(:,:)
       TYPE (pseudo),  INTENT(IN) :: ps
-      TYPE (phase_factors), INTENT(IN) :: eigr
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
+      COMPLEX(dbl) :: eigr(:,:)
       TYPE (recvecs), INTENT(IN) :: gv
       TYPE (kpoints), INTENT(IN) :: kp
       COMPLEX(dbl),    INTENT(IN) :: c0(:,:,:,:)
@@ -471,8 +477,7 @@
           ! ...     add core correction
           ! ...     rhoetg = rhoeg + cc
           ! ...     rhoetr = rhoe  + cc
-          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), &
-                                sfac, ps, gv, atoms%nsp )
+          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), sfac, ps, gv, atoms%nsp )
         ELSE
 
           ! ...     no core correction
@@ -608,8 +613,7 @@
         END DO
 ! ...   now rhoetg contains the xc potential
         IF (ttforce) THEN
-          CALL core_charge_forces(fion, rhoetg, ps%rhoc1, ps%tnlcc, atoms, &
-            box, eigr, gv, kp )
+          CALL core_charge_forces(fion, rhoetg, ps%rhoc1, ps%tnlcc, atoms, box, ei1, ei2, ei3, gv, kp )
         END IF
       END IF
 
@@ -628,7 +632,7 @@
       ALLOCATE( vloc( gv%ng_l ) )
       CALL vofloc(ttscreen, ttforce, edft%ehte, edft%ehti, ehp, & 
            eps, vloc, rhoeg, fion, atoms, ps%rhops, ps%vps, gv, kp, eigr, &
-           sfac, box, desc, ps%ap )
+           ei1, ei2, ei3, sfac, box, desc, ps%ap )
 
       !       edft%ehte = REAL ( ehtep )
 
@@ -827,7 +831,7 @@
       USE green_functions, ONLY: greenf
       USE mp_global, ONLY: mpime
       USE fft, ONLY : pfwfft
-      USE stick, ONLY: dfftp
+      USE fft_base, ONLY: dfftp
       USE charge_types, ONLY: charge_descriptor
       USE processors_grid_module, ONLY: get_grid_info
       USE cell_module, ONLY: boxdimensions, s_to_r, alat
@@ -917,7 +921,7 @@
 !  BEGIN manual
 
       SUBROUTINE vofloc(tscreen, ttforce, ehte, ehti, eh, eps, vloc, rhoeg, &
-                 fion, atoms, rhops, vps, gv, kp, eigr, sfac, ht, desc, ap)
+                 fion, atoms, rhops, vps, gv, kp, eigr, ei1, ei2, ei3, sfac, ht, desc, ap)
 
 !  this routine computes:
 !  omega = ht%deth
@@ -937,9 +941,9 @@
 !  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig) 
 !
 !  Local contribution to the forces on the ions
-!  eigrx(ig,isa)   = eigr%x( gv%mill(1,ig), isa)
-!  eigry(ig,isa)   = eigr%y( gv%mill(2,ig), isa)
-!  eigrz(ig,isa)   = eigr%z( gv%mill(3,ig), isa)
+!  eigrx(ig,isa)   = ei1( gv%mill(1,ig), isa)
+!  eigry(ig,isa)   = ei2( gv%mill(2,ig), isa)
+!  eigrz(ig,isa)   = ei3( gv%mill(3,ig), isa)
 !  fpibg           = fpi / ( gv%hg_l(ig) * tpiba2 )
 !  tx_h(ig,is)     = fpibg * rhops(ig, is) * CONJG( rho_e(ig) + rho_I(ig) )
 !  tx_ps(ig,is)    = vps(ig,is) * CONJG( rho_e(ig) )
@@ -958,9 +962,11 @@
       USE brillouin, ONLY: kpoints
       USE charge_types, ONLY: charge_descriptor
       USE atoms_type_module, ONLY: atoms_type
-      USE cp_types, ONLY: recvecs, phase_factors
+      USE cp_types, ONLY: recvecs
       USE pseudo_types, ONLY: pseudo_ncpp
       USE io_global, ONLY: stdout
+      USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE ions_base, ONLY: nat
 
       IMPLICIT NONE
 
@@ -981,7 +987,10 @@
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl)    :: ehte, ehti
       COMPLEX(dbl) :: eh, eps
-      TYPE (phase_factors) :: eigr
+      COMPLEX(dbl) :: ei1(-nr1:nr1,nat)
+      COMPLEX(dbl) :: ei2(-nr2:nr2,nat)
+      COMPLEX(dbl) :: ei3(-nr3:nr3,nat)
+      COMPLEX(dbl) :: eigr(:,:)
 
 ! ... Locals
 
@@ -1064,7 +1073,7 @@
             TY = (CNVG+CVN) * GY
             TZ = (CNVG+CVN) * GZ
             DO IA = 1, atoms%na(is)
-              TEIGR = eigr%x(IG1,ISA) * eigr%y(IG2,ISA) * eigr%z(IG3,ISA)
+              TEIGR = ei1(IG1,ISA) * ei2(IG2,ISA) * ei3(IG3,ISA)
               ftmp(1,ISA) = ftmp(1,ISA) + TEIGR*TX
               ftmp(2,ISA) = ftmp(2,ISA) + TEIGR*TY
               ftmp(3,ISA) = ftmp(3,ISA) + TEIGR*TZ
@@ -1467,7 +1476,7 @@
       USE sic_module, ONLY: ind_localisation, nat_localisation, print_localisation
       USE sic_module, ONLY: rad_localisation, pos_localisation
       USE ions_base, ONLY: ind_srt
-      USE stick, ONLY: dfftp
+      USE fft_base, ONLY: dfftp
       USE cp_types, ONLY: recvecs
       USE cell_base, ONLY: tpiba2
 

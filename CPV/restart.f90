@@ -120,8 +120,6 @@
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
 
-      IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
-
       DO ispin = 1, nspin
         ib = iupdwn(ispin)
         CALL cp_write_wfc( ndw, ' ', 1, 1, ispin, nspin, c0( :, ib: ) , '0' )
@@ -175,8 +173,6 @@
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
       real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
 
-
-      IF( nspin /= 1 ) CALL errore( ' writefile ', ' nspin > 1 ', 1 )
 
       IF( flag == -1 ) THEN
         CALL cp_read_cell( ndr, ' ', .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )

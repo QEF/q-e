@@ -6,23 +6,24 @@
 !     so empty states yield zero. Eigenvalues are printed out in eV
 !
       use io_global, only: stdout
+      use constants, only: au
       implicit none
 ! input
       integer, intent(in) :: nspin, nx, nupdwn(nspin), iupdwn(nspin)
       real(kind=8), intent(in) :: lambda(nx,nx), f(nx)
 ! local variables
-      real(kind=8) lambdar(nx,nx), wr(nx), fv1(nx),fm1(2,nx), zr, au
-      integer iss,j,i,ierr
-!
-      au=27.212
+      real(kind=8), allocatable :: lambdar(:,:)
+      real(kind=8) wr(nx), fv1(nx),fm1(2,nx), zr
+      integer iss, j, i, ierr
 !
       do iss=1,nspin
+         allocate( lambdar( nupdwn(iss), nupdwn(iss) ) )
          do i=1,nupdwn(iss)
             do j=1,nupdwn(iss)
                lambdar(j,i)=lambda(iupdwn(iss)-1+j,iupdwn(iss)-1+i)
             end do
          end do
-         call rs(nx,nupdwn(iss),lambdar,wr,0,zr,fv1,fm1,ierr)
+         call rs( nupdwn(iss), nupdwn(iss), lambdar, wr, 0, zr, fv1, fm1, ierr)
          do i=1,nupdwn(iss)
             if (f(iupdwn(iss)-1+i).gt.1.e-6) then
                wr(i)=au*wr(i)/f(iupdwn(iss)-1+i)
@@ -35,6 +36,7 @@
 !
          WRITE( stdout,12) 0., 0., 0.
          WRITE( stdout,14) (wr(i),i=1,nupdwn(iss))
+         deallocate( lambdar )
       end do
    12 format(//' eigenvalues at k-point: ',3f6.3)
    14 format(10f8.2)

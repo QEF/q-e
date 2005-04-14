@@ -12,9 +12,6 @@
 
         USE kinds
         USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
-        USE parallel_types,     ONLY: processors_grid, descriptor, CYCLIC_SHAPE
-        USE descriptors_module, ONLY: desc_init, get_local_dims, &
-                                      get_global_dims, owner_of, local_index
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f
         USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff
@@ -31,15 +28,12 @@
 
         LOGICAL :: band_first = .TRUE.
 
-        INTEGER :: n_emp  ! number of empty states
+        INTEGER :: n_emp       =  0  ! number of empty states
 
-        INTEGER :: nb_l, nb_g
-        INTEGER :: nb_emp_l, nb_emp_g
+        INTEGER :: nb_l(2)    =  0  ! local number of states ( for each spin components )
+        INTEGER :: n_emp_l(2) =  0
         INTEGER, ALLOCATABLE :: ib_owner(:)
         INTEGER, ALLOCATABLE :: ib_local(:)
-
-        TYPE (descriptor) :: occ_desc
-        TYPE (descriptor) :: emp_desc
 
         REAL(dbl), ALLOCATABLE :: ei(:,:,:)
         REAL(dbl), ALLOCATABLE :: ei_emp(:,:,:)
@@ -53,15 +47,11 @@
           MODULE PROCEDURE rceigs
         END INTERFACE
 
-        INTERFACE sumgam
-          MODULE PROCEDURE rsumgam, csumgam
-        END INTERFACE
-
         PUBLIC :: electrons_setup, eigs, cp_eigs
         PUBLIC :: electron_mass_init, band_init, bmeshset
         PUBLIC :: deallocate_electrons, fermi_energy
-        PUBLIC :: pmss, n_emp, emass, emp_desc, ei_emp
-        PUBLIC :: occ_desc, ei, nspin, nelt, nupdwn
+        PUBLIC :: pmss, n_emp, emass, ei_emp, n_emp_l, ib_owner, ib_local, nb_l
+        PUBLIC :: ei, nspin, nelt, nupdwn
         PUBLIC :: nbnd
 
 !
@@ -150,13 +140,11 @@
 
    SUBROUTINE bmeshset
 
-     !   This subroutine initialize the descriptors for the 
+     !   This subroutine initialize the variables for the 
      !   distribution across processors of the overlap matrixes 
      !   of sizes ( nx, nx )
 
      USE mp_global, ONLY: mpime, nproc
-     USE mp, ONLY: mp_sum 
-     USE bands_mesh, ONLY: bands_grid
 
      IMPLICIT NONE
 
@@ -166,15 +154,13 @@
        CALL errore(' bmeshset ',' module not initialized ',0)
      END IF
 
-     CALL desc_init( occ_desc, 1, nbnd, 1, 1, 0, 0, 0, 0, 0, 0, bands_grid, &
-       CYCLIC_SHAPE, CYCLIC_SHAPE, CYCLIC_SHAPE)
-     CALL desc_init( emp_desc, 1, n_emp, 1, 1, 0, 0, 0, 0, 0, 0, bands_grid, &
-       CYCLIC_SHAPE, CYCLIC_SHAPE, CYCLIC_SHAPE)
-
-     CALL get_local_dims(occ_desc, nb_l, n2, n3)
-     CALL get_global_dims(occ_desc, nb_g, n2, n3)
-     CALL get_local_dims(emp_desc, nb_emp_l, n2, n3)
-     CALL get_global_dims(emp_desc, nb_emp_g, n2, n3)
+     DO i = 1, nspin 
+       IF( i > 1 ) CALL errore( ' bmeshset ',' spin too large ', i)
+       nb_l( i ) = nupdwn( i ) / nproc
+       IF( mpime < MOD( nupdwn( i ), nproc ) ) nb_l( i ) = nb_l( i ) + 1
+       n_emp_l( i ) = n_emp / nproc
+       IF( mpime < MOD( n_emp, nproc ) ) n_emp_l( i ) = n_emp_l( i ) + 1
+     END DO
 
      ALLOCATE( ib_owner( nbndx ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' bmeshset ',' allocating ib_owner ', ierr)
@@ -187,44 +173,12 @@
      ib_local =  0
      ib_owner = -1
      DO i = 1, nbndx
-       ib_local( i ) = ( i - 1 ) / nproc
-       ib_owner( i ) = MOD( ( i - 1 ), nproc )
+       ib_local( i ) = ( i - 1 ) / nproc        !  local index of the i-th band 
+       ib_owner( i ) = MOD( ( i - 1 ), nproc )  !  owner of th i-th band
        IF( mpime <= ib_owner( i ) ) THEN
          ib_local( i ) = ib_local( i ) + 1
        END IF
      END DO
-
-     !  check consistency for fill states
-
-     ierr = 0
-     DO i = 1, nbnd
-       IF( ib_owner(i) /= owner_of( i, occ_desc, 'R' ) ) THEN
-         ierr = 1
-       END IF
-       IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-         IF( ib_local(i) /= local_index(i, occ_desc, 'R' ) ) THEN
-           ierr = 2
-         END IF
-       END IF
-     END DO
-     CALL mp_sum( ierr )
-     IF( ierr /= 0 ) CALL errore( ' bmeshset ',' occ_desc ',ierr)
-
-     !  check consistency for empty states
-
-     ierr = 0
-     DO i = 1, n_emp
-       IF( ib_owner(i) /= owner_of( i, emp_desc, 'R' ) ) THEN
-         ierr = 1
-       END IF
-       IF( mpime == owner_of( i, emp_desc, 'R' ) ) THEN
-         IF( ib_local(i) /= local_index(i, emp_desc, 'R' ) ) THEN
-           ierr = 2
-         END IF
-       END IF
-     END DO
-     CALL mp_sum( ierr )
-     IF( ierr /= 0 )  CALL errore( ' bmeshset ',' emp_desc ',ierr)
 
      RETURN
    END SUBROUTINE bmeshset
@@ -326,17 +280,19 @@
           END IF
 
           n   = nei
+          nrl = n / nproc
+          IF( mpime < MOD( n, nproc ) ) nrl = nrl + 1
+
           IF ( gamma_symmetry ) THEN
-            nrl = SIZE( gam, 1)
             IF( n > SIZE( gam, 2 ) ) CALL errore( ' eigs ',' n and gam inconsistent dimensions ',n )
           ELSE
-            nrl = SIZE( cgam, 1)
             IF( n > SIZE( cgam, 2 ) ) CALL errore( ' eigs ',' n and cgam inconsistent dimensions ',n )
           END IF
 
           IF( n < 1 ) CALL errore( ' eigs ',' n wrong value ',n )
-          IF( nrl < 1 ) CALL errore( ' eigs ',' nrl wrong value ',nrl )
           IF( n > SIZE( f ) ) CALL errore( ' eigs ',' n and f inconsistent dimensions ',n )
+          IF( nrl < 1 ) CALL errore( ' eigs ',' nrl wrong value ',nrl )
+          IF( nrl > SIZE( f ) ) CALL errore( ' eigs ',' nrl and f inconsistent dimensions ',n )
 
           ALLOCATE( ftmp( n ), STAT=ierr )
           IF( ierr/=0 ) CALL errore( ' eigs ',' allocating ftmp ',ierr )
@@ -468,32 +424,6 @@
 !
 !  ----------------------------------------------
 
-
-        SUBROUTINE rsumgam(ib, prod, gam)
-          USE mp_global, ONLY: mpime, group, nproc
-          USE mp, ONLY: mp_sum
-          IMPLICIT NONE
-          INTEGER, INTENT(IN) :: ib
-          REAL(dbl) :: prod(:), gam(:,:)
-          CALL mp_sum(prod, group)
-          IF ( ib_owner(ib) == mpime ) gam(ib_local(ib),:) = prod(:)
-          RETURN
-        END SUBROUTINE
-
-!  ----------------------------------------------
-
-        SUBROUTINE csumgam(ib, cprod, cgam)
-          USE mp_global, ONLY: mpime, group, nproc
-          USE mp, ONLY: mp_sum
-          IMPLICIT NONE
-          INTEGER, INTENT(IN) :: ib
-          COMPLEX(dbl) :: cprod(:), cgam(:,:)
-          CALL mp_sum(cprod, group)
-          IF(ib_owner(ib) == mpime ) cgam(ib_local(ib),:) = cprod(:)
-          RETURN
-        END SUBROUTINE
-
-!  ----------------------------------------------
 
         SUBROUTINE cpackgam(cgam, f, caux)
           USE mp_global, ONLY: mpime, nproc, group
@@ -685,7 +615,7 @@
    SUBROUTINE cp_eigs( nfi, bec, c0, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
 
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag
-     use electrons_base, only: nx => nbndx, n => nbnd, ispin => fspin, f, nspin
+     use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
      use energies, only: enl, ekin
      use uspp, only: rhovan => becsum
@@ -695,11 +625,11 @@
      IMPLICIT NONE
 
      INTEGER :: nfi
-     INTEGER :: irb(:,:,:)
+     INTEGER :: irb(:,:)
      COMPLEX(dbl) :: c0( :, :, :, : )
      REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
      REAL(dbl) :: tau0( :, : ), h( 3, 3 )
-     COMPLEX(dbl) :: eigrb( :, :, : ), rhog( :, : )
+     COMPLEX(dbl) :: eigrb( :, : ), rhog( :, : )
 
      real(dbl), allocatable:: rhodip(:,:)
      real(dbl) :: dipol( 3 )

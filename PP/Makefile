@@ -269,23 +269,6 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-EXOBJS = \
- ../Modules/iotk_base.o \
- ../Modules/iotk_interface.o \
- ../Modules/iotk_module.o \
- ../Modules/iotk_external.o \
- ../Modules/iotk_multitype.o \
- ../Modules/iotk_multitype_character1.o \
- ../Modules/iotk_multitype_character2.o \
- ../Modules/iotk_multitype_complex1.o \
- ../Modules/iotk_multitype_complex2.o \
- ../Modules/iotk_multitype_integer1.o \
- ../Modules/iotk_multitype_integer2.o \
- ../Modules/iotk_multitype_logical1.o \
- ../Modules/iotk_multitype_logical2.o \
- ../Modules/iotk_multitype_real1.o \
- ../Modules/iotk_multitype_real2.o
-
 all : average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw_export.x \
       voronoy.x initial_state.x
@@ -350,8 +333,8 @@ initial_state.x : initial_state.o $(PPOBJS)
 	$(LD) -o $@ initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pw_export.x : pw_export.o $(EXOBJS) $(PWOBJS) $(PPOBJS)
-	$(LD) -o $@ pw_export.o $(EXOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+pw_export.x : pw_export.o $(PWOBJS) $(PPOBJS)
+	$(LD) -o $@ pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 clean :

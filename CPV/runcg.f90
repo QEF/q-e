@@ -55,7 +55,7 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, gv, kp, &
-                ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
+                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                 fnl, vpot, doions, edft, maxnstep, cgthr )
 
 !  this routine computes the electronic ground state via ...
@@ -65,11 +65,12 @@
       USE mp_global, ONLY: mpime, nproc
       USE mp, ONLY: mp_sum
       USE energies, ONLY: dft_energy_type, print_energies
-      USE electrons_module, ONLY: pmss, eigs, occ_desc
+      USE electrons_module, ONLY: pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY: gram, rande, cp_kinetic_energy, proj, fixwave
       USE wave_base, ONLY: dotp, hpsi
+      USE wave_constrains, ONLY: update_lambda
       USE check_stop, ONLY: check_stop_now
       USE forces
       USE io_global, ONLY: ionode
@@ -97,7 +98,10 @@
       TYPE (charge_descriptor) :: desc
       TYPE (pseudo), INTENT(INOUT) :: ps
       REAL(dbl) :: rhoe(:,:,:,:)
-      TYPE (phase_factors), INTENT(INOUT) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
       TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
@@ -116,9 +120,7 @@
       REAL(dbl) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
       REAL(dbl) :: dene, eold, timerd, timeorto, ekinc
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: cprod(:)
       REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      REAL(dbl),    ALLOCATABLE :: prod(:)
       REAL(dbl), ALLOCATABLE :: dt2bye( : )
 
 
@@ -133,7 +135,6 @@
       LOGICAL :: tbad
       INTEGER :: nb  ( cdesc%nspin )
       INTEGER :: nb_g( cdesc%nspin )
-      INTEGER :: nb_l( cdesc%nspin )
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -182,7 +183,7 @@
         s1 = cclock()
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
 
@@ -241,7 +242,7 @@
         !  perform line minimization in the direction of "hacca"
 
         CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, desc, hacca, &
-          atoms_0, ht0, fnl, ps, eigr, sfac, gv, kp)
+          atoms_0, ht0, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp)
 
         ! CALL print_energies( edft )
         s5 = cclock()
@@ -319,35 +320,24 @@
             gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
 
           nb_g( ispin ) = cdesc%nbt( ispin )
-          CALL get_local_dims( occ_desc, nb_l( ispin ) )
 
           IF( gamma_symmetry ) THEN
-            ALLOCATE(cgam(1,1), cprod(1), gam( nb_l( ispin ), nb_g( ispin ) ), prod( nb_g( ispin ) ), STAT=ierr)
+            ALLOCATE(cgam(1,1), gam( nb_l( ispin ), nb_g( ispin ) ), STAT=ierr)
           ELSE
-            ALLOCATE(cgam(nb_l( ispin ),nb_g( ispin )), cprod(nb_g( ispin )), gam(1,1), prod(1), STAT=ierr)
+            ALLOCATE(cgam(nb_l( ispin ),nb_g( ispin )), gam(1,1), STAT=ierr)
           END IF
           IF( ierr/=0 ) CALL errore(' runcg ', ' allocating gam ',ierr)
           DO ik = 1, nk
             DO i = 1, nb( ispin )
               IF( gamma_symmetry ) THEN
-                prod = hpsi(gzero, c0(:,:,ik,ispin),  hacca(:,i,ik,ispin) )
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  gam(ibl,:) = prod(:)
-                END IF
+                CALL update_lambda( i,  gam, c0(:,:,ik,ispin), cdesc, hacca(:,i,ik,ispin) )
               ELSE
-                cprod = hpsi(c0(:,:,ik,ispin), hacca(:,i,ik,ispin) )
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  cgam(ibl,:) = cprod(:)
-                END IF
+                CALL update_lambda( i, cgam, c0(:,:,ik,ispin), cdesc, hacca(:,i,ik,ispin) )
               END IF
             END DO
             CALL eigs( nb( ispin ), gam, cgam, tortho, occ(:,ik,ispin), ei(:,ik,ispin), gamma_symmetry)
           END DO
-          DEALLOCATE( cgam, cprod, gam, prod, STAT=ierr )
+          DEALLOCATE( cgam, gam, STAT=ierr )
           IF( ierr/=0 ) CALL errore(' runcg ', ' deallocating gam ',ierr)
         END DO
       END IF
@@ -368,7 +358,7 @@
 ! ---------------------------------------------------------------------- !
 
     SUBROUTINE CGLINMIN(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
-        atoms, ht, fnl, ps, eigr, sfac, gv, kp)
+        atoms, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp)
 
 ! ... declare modules
 
@@ -397,8 +387,11 @@
         TYPE (pseudo), INTENT(INOUT) :: ps
         TYPE (charge_descriptor) :: desc
         REAL(dbl) :: rhoe(:,:,:,:)
-        TYPE (phase_factors), INTENT(INOUT) :: eigr
         COMPLEX(dbl) :: sfac(:,:)
+        COMPLEX(dbl) :: eigr(:,:)
+        COMPLEX(dbl) :: ei1(:,:)
+        COMPLEX(dbl) :: ei2(:,:)
+        COMPLEX(dbl) :: ei3(:,:)
         TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (kpoints), INTENT(IN) ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
@@ -606,7 +599,7 @@
         CALL gram( cp, cdesc )
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-            atoms, gv, kp, ps, eigr, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
+            atoms, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
 
         cgenergy = edft%etot
 

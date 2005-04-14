@@ -62,16 +62,14 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use control_flags, only: ortho_eps, ortho_max
   !
   use atom, only: nlcc
-  use core, only: nlcc_any, deallocate_core
+  use core, only: nlcc_any
   use uspp_param, only: nhm
   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
-  use uspp, only: deallocate_uspp
   use cvan, only: nvb
   use energies, only: eht, epseu, exc, etot, eself, enl, ekin, esr
   use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
-  use electrons_base, only: deallocate_elct, nel, iupdwn, nupdwn
-  use gvec, only: tpiba2, ng
-  use gvec, only: deallocate_gvec
+  use electrons_base, only: nel, iupdwn, nupdwn
+  use gvecp, only: ngm
   use gvecs, only: ngs
   use gvecb, only: ngb
   use gvecw, only: ngw
@@ -83,11 +81,10 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use cell_base, only: ainv, a1, a2, a3, r_to_s, celldm, ibrav
   use cell_base, only: omega, alat, frich, greash, press
   use cell_base, only: h, hold, deth, wmass, s_to_r, iforceh, cell_force
-  use cell_base, only: thdiag
+  use cell_base, only: thdiag, tpiba2
   use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
   use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
   use pseu, only: vps, rhops
-  use pseu, only: deallocate_pseu
   use io_global, ONLY: io_global_start, stdout, ionode
   use mp_global, ONLY: mp_global_start
   use mp, ONLY: mp_sum
@@ -103,11 +100,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au
   use io_files, only: psfile, pseudo_dir, smwout, outdir
   use input, only: iosys
-  use qgb_mod, only: deallocate_qgb_mod
-  use dqgb_mod, only: deallocate_dqgb_mod
-  use qradb_mod, only: deallocate_qradb_mod
-  use dqrad_mod, only: deallocate_dqrad_mod
-  use betax, only: deallocate_betax
   use wave_base, only: wave_steepest, wave_verlet
   use wave_base, only: wave_speed2, frice, grease
   USE control_flags, ONLY : conv_elec, tconvthrs
@@ -156,8 +148,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE runcp_module, ONLY: runcp_uspp
 
   USE cp_main_variables, ONLY: ei1, ei2, ei3, eigr, sfac, irb, taub, eigrb, &
-        rhog, rhor, rhos, rhoc, becdr, bephi, becp, ema0bg, allocate_mainvar, &
-        deallocate_mainvar
+        rhog, rhor, rhos, rhoc, becdr, bephi, becp, ema0bg, allocate_mainvar
   !
   !
   implicit none
@@ -451,7 +442,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   WRITE( stdout,*) " Allocation for W.F. s : successful " 
 
   CALL allocate_mainvar &
-      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, &
+      ( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnr, nnrsx, nat, nax, nsp, nspin, n, nx, nhsa, &
         nlcc_any, smd = .TRUE. )
   !
   !
@@ -462,7 +453,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   allocate(dbec (nhsa,n,3,3))
   allocate(dvps(ngs,nsp))
   allocate(drhops(ngs,nsp))
-  allocate(drhog(ng,nspin,3,3))
+  allocate(drhog(ngm,nspin,3,3))
   allocate(drhor(nnr,nspin,3,3))
   allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
   allocate( mat_z( 1, 1, 1 ) )
@@ -592,18 +583,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         call initbox ( rep(sm_k)%tau0, taub, irb )
         !
         call phbox( taub, eigrb )
-        !
-        if( iprsta > 2 ) then
-           do is=1,nvb
-              WRITE( stdout,'(/,2x,''species= '',i2)') is 
-              do ia=1,na(is)
-                 WRITE( stdout,2000) ia, (irb(i,ia,is),i=1,3)
-2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,      &
-                      &                 ' irb3= ',i3) 
-              end do
-           end do
-        endif
-
         !
         if(trane) then            ! >>>>>>>>>>>>>>>>>> ! 
            if(sm_k == 1) then
@@ -1755,28 +1734,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   IF( ALLOCATED( p_taup )) DEALLOCATE( p_taup )
   IF( ALLOCATED( p_tan )) DEALLOCATE( p_tan )
 
-  CALL deallocate_mainvar()
-  CALL deallocate_elct()
-  CALL deallocate_core()
-  CALL deallocate_uspp()
-  CALL deallocate_gvec()
-  CALL deallocate_pseu()
-  CALL deallocate_qgb_mod()
-  CALL deallocate_qradb_mod()
-  CALL deallocate_derho()
-  CALL deallocate_dqgb_mod()
-  CALL deallocate_dpseu()
-  CALL deallocate_cdvan()
-  CALL deallocate_dqrad_mod()
-  CALL deallocate_betax()
-  CALL deallocate_para_mod()
 
-  ! CALL deallocate_wavefunctions()
-
+  CALL deallocate_modules_var()
 
   CALL deallocate_smd_rep()
   CALL deallocate_smd_ene()
-
 
   if( ionode ) then
      CLOSE( 8 )

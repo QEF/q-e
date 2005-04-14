@@ -961,6 +961,8 @@
           ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
             occupation_damping, occupation_dynamics, rotation_dynamics,  degauss, smearing )
 
+     CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
+             constr_inp )
     
      IF( program_name == 'FPMD' ) THEN
 
@@ -968,8 +970,6 @@
 
         CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
-        CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
-             constr_inp )
         !
 
         o_diis_inp        = .TRUE.

@@ -33,8 +33,8 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE from_scratch_fpmd(gv, kp, ps, rhoe, desc, cm, c0, cdesc, eigr, sfac, &
-        fi, ht, atoms, fnl, vpot, edft)
+      SUBROUTINE from_scratch_fpmd( gv, kp, ps, rhoe, desc, cm, c0, cdesc, &
+        eigr, ei1, ei2, ei3, sfac, fi, ht, atoms, fnl, vpot, edft )
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -43,7 +43,7 @@
 
 ! ... declare modules
       USE kinds
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
       USE wave_functions, ONLY: gram, fixwave
@@ -73,7 +73,10 @@
 ! ... declare subroutine arguments
 
       TYPE (atoms_type) :: atoms
-      TYPE (phase_factors) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       TYPE (recvecs) :: gv 
       TYPE (kpoints) :: kp 
       REAL(dbl) :: rhoe(:,:,:,:)
@@ -105,13 +108,13 @@
 
 
       atoms%for = 0.0d0
-      CALL strucf(sfac, atoms, eigr, gv)
+      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
       edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
       CALL rhoofr(gv, kp, cm, cdesc, fi, rhoe, desc, ht)
       CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
-           gv, kp, fnl, vpot, ps, cm, cdesc, fi, eigr, sfac, timepre, ht, edft)
+           gv, kp, fnl, vpot, ps, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
-      ! CALL debug_energies( edft ) ! DEBUG
+      CALL debug_energies( edft ) ! DEBUG
 
       IF( tcarpar ) THEN
         
@@ -158,13 +161,12 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     USE ions_base, ONLY: na, nsp, randpos, zv, ions_vel, pmass
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
     USE cell_base, ONLY: wmass, iforceh, cell_force
-    USE elct, ONLY: n
+    use electrons_base, only: n => nbsp
     USE energies, ONLY: entropy
     USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
     USE wavefunctions_module, ONLY: c0, cm, phi => cp
     USE io_global, ONLY: stdout
-    USE cpr_subroutines
-    USE wannier_subroutines
+    USE cpr_subroutines, ONLY: compute_stress, print_atomic_var, print_lambda, elec_fakekine
     USE core, ONLY: nlcc_any
     USE gvecw, ONLY: ngw
     USE reciprocal_vectors, ONLY: gstart
@@ -179,13 +181,13 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     USE runcp_module, ONLY: runcp_uspp
     USE electrons_base, ONLY: f, nspin
 
-    COMPLEX(kind=8) :: eigr(:,:,:), ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
-    COMPLEX(kind=8) :: eigrb(:,:,:)
+    COMPLEX(kind=8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
+    COMPLEX(kind=8) :: eigrb(:,:)
     REAL(kind=8) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
     REAL(kind=8) :: eself
     REAL(kind=8) :: taub(:,:)
     REAL(kind=8) :: b1(:), b2(:), b3(:)
-    INTEGER :: irb(:,:,:)
+    INTEGER :: irb(:,:)
     INTEGER :: nfi, iforce(:,:), nbeg
     LOGICAL :: tfirst
     COMPLEX(kind=8) :: sfac(:,:)
@@ -236,15 +238,15 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     call phbox( taub, eigrb )
 !     
     if( trane ) then
-!       
-!     random initialization
-!     
+      !       
+      !     random initialization
+      !     
       call randin( 1, n, gstart, ngw, ampre, cm )
       
     else if( nbeg == -3 ) then
-!       
-!     gaussian initialization
-!     
+      !       
+      !     gaussian initialization
+      !     
       call gausin( eigr, cm )
       
     end if
@@ -291,7 +293,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
       END IF
 
       call vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast,                 &
-        &  ei1(1,1,1), ei2(1,1,1), ei3(1,1,1), irb(1,1,1), eigrb(1,1,1), sfac(1,1), & 
+        &  ei1(1,1), ei2(1,1), ei3(1,1), irb(1,1), eigrb(1,1), sfac(1,1), & 
         &  tau0(1,1), fion(1,1) )
 
       IF( tefield ) THEN
@@ -305,6 +307,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 
       call newd( rhor, irb, eigrb, rhovan, fion )
       call prefor( eigr, betae )
+
 !
       fccc = 0.0d0
       !
@@ -319,13 +322,14 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 !     the electron mass rises with g**2
 !
       call calphi( cm, ema0bg, bec, betae, phi )
-!
+
 
       if( tortho ) then
          call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
       else
          call graham( betae, bec, c0 )
       endif
+!
 !
       if ( tfor .or. tprnfor ) call nlfl( bec, becdr, lambda, fion )
 

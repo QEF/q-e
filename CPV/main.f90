@@ -91,20 +91,18 @@
           printacc
       USE cell_module, ONLY: movecell, press, boxdimensions, updatecell, get_celldm
       USE empty_states, ONLY: empty
-      USE polarization, ONLY: deallocate_polarization, ddipole
+      USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
-      USE recvecs_indexes, ONLY: deallocate_recvecs_indexes
-      USE turbo, ONLY: tturbo, deallocate_turbo
+      USE turbo, ONLY: tturbo
       USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
-      USE ions_module, ONLY: moveions, max_ion_forces, &
-          deallocate_ions, update_ions, resort_position
+      USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE fft, ONLY : fft_closeup
-      USE electrons_module, ONLY: ei, nspin, deallocate_electrons
-      USE diis, ONLY: allocate_diis, deallocate_diis
+      USE electrons_module, ONLY: ei, nspin
+      USE diis, ONLY: allocate_diis
       USE pseudo_projector, ONLY: projector, deallocate_projector
       USE charge_density, ONLY: rhoofr, printrho
-      USE stick, ONLY: deallocate_stick, dfftp, dffts
+      USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
       USE nl, ONLY: nlrh_m
       USE time_step, ONLY: tps, delt
@@ -123,8 +121,6 @@
       USE mp_buffers, ONLY: mp_report_buffers
       USE mp, ONLY: mp_report, mp_sum, mp_max
       USE runsd_module, ONLY: runsd
-      USE charge_mix, ONLY: deallocate_charge_mix
-      USE chi2, ONLY: deallocate_chi2
       USE guess, ONLY: guess_closeup
       USE input, ONLY: iosys
       USE problem_size, ONLY: cpsizes
@@ -134,12 +130,12 @@
       USE electrons_module, ONLY: bmeshset
       USE mp_global, ONLY: nproc, mpime, group
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE ions_base, ONLY: deallocate_ions_base, taui, cdmi
+      USE ions_base, ONLY: taui, cdmi, nat
       USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
-                            ind_localisation, pos_localisation, deallocate_sic
+                            ind_localisation, pos_localisation
       USE ions_base, ONLY: ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
-      USE electrons_base, ONLY: nupdwn, deallocate_elct
+      USE electrons_base, ONLY: nupdwn
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
@@ -156,8 +152,7 @@
            gkcut, & ! Wave function augmented cut-off (take into account all G + k_i , same units)
            ngw, & !
            ngm, & !
-           ngs, & !
-           deallocate_recvecs
+           ngs
       !
       USE recvecs_subroutines, ONLY: recvecs_init
       !
@@ -225,14 +220,25 @@
                                                 ! for filled and empty states
 
       ! electronic states filling 
+      !
       REAL(dbl), ALLOCATABLE :: fi(:,:,:)     ! occupation numbers for filled state
 
       ! phase and structure factors 
-      TYPE (phase_factors)   :: eigr         ! exp (i G dot r)
+      !
+      ! ...  G = reciprocal lattice vectors
+      ! ...  R_I = ionic positions
+      !
+      COMPLEX(dbl), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+      COMPLEX(dbl), ALLOCATABLE :: ei1(:,:)         ! exp (i G_x dot x_I)
+      COMPLEX(dbl), ALLOCATABLE :: ei2(:,:)         ! exp (i G_y dot y_I)
+      COMPLEX(dbl), ALLOCATABLE :: ei3(:,:)         ! exp (i G_z dot z_I)
 
-      ! structure factors  S( s, G ) = sum_(I in s) exp( i G dot R_(s,I) )
+      ! structure factors  
+      !
+      ! S( s, G ) = sum_(I in s) exp( i G dot R_(s,I) )
       ! s       = index of the atomic specie
       ! R_(s,I) = position of the I-th atom of the "s" specie
+      !
       COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
 
       ! reciprocal lattice and reciprocal vectors
@@ -280,13 +286,13 @@
       timeform= 0.0_dbl
       timeloop= 0.0_dbl
 
-      nfi     = 0
+      nfi             = 0
       nstep_this_run  = 0
-      ekinc   = 0.0_dbl
-      ekcell  = 0.0_dbl
-      avgs    = 0.0_dbl
-      avgs_this_run = 0.0_dbl
-      navgs   = 9
+      ekinc           = 0.0_dbl
+      ekcell          = 0.0_dbl
+      avgs            = 0.0_dbl
+      avgs_this_run   = 0.0_dbl
+      navgs           = 9
 
       edft%ent  = 0.0d0
       edft%esr  = 0.0d0
@@ -299,6 +305,10 @@
       ekincs    = 0.0d0
 
       ALLOCATE( fnl( kp%nkpt, nspin ) )
+      ALLOCATE( eigr( ngw, nat ) )
+      ALLOCATE( ei1( -nr1:nr1, nat ) )
+      ALLOCATE( ei2( -nr2:nr2, nat ) )
+      ALLOCATE( ei3( -nr3:nr3, nat ) )
 
 ! ... get information
 !
@@ -307,7 +317,7 @@
 ! ... initialization routines
 !
       CALL init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht_0, fnl, eigr, nspin)
+        wempt, ht_m, ht_0, fnl, eigr, ei1, ei2, ei3, nspin)
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
@@ -347,8 +357,8 @@
 ! ...   create a new configuration from scratch
 !
         ttprint = .true.
-        CALL from_scratch(gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, fi, &
-          ht_0, atoms_0, fnl, vpot, edft )
+        CALL from_scratch(gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, ei3, &
+                          sfac, fi, ht_0, atoms_0, fnl, vpot, edft )
 
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
           toptical, ht_0, kp, avgs, avgs_this_run, edft)
@@ -362,8 +372,8 @@
            atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m, ht_0, rhoe, &
            desc, vpot, gv, kp)
 
-        CALL from_restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, sfac, &
-           fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
+        CALL from_restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, &
+                  ei1, ei2, ei3, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
 
         velh = ht_m%hvel
 
@@ -423,7 +433,7 @@
 
         IF( tfor .OR. thdyn ) THEN
 ! ...     ionic positions aren't fixed, recompute structure factors 
-          CALL strucf(sfac, atoms_0, eigr, gv)
+          CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
         END IF
 
         IF(memchk) CALL memstat(2)
@@ -441,28 +451,28 @@
         IF( ttdiis .AND. t_diis_simple ) THEN
 ! ...     perform DIIS minimization on electronic states
           CALL runsdiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
-               ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
 ! ...     perform DIIS minimization with wavefunctions rotation
           IF(nspin.GT.1) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
           CALL rundiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
-               ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF ( tconjgrad ) THEN
 ! ...     on entry c0 should contain the wavefunctions to be optimized
           CALL runcg(tortho, ttprint, rhoe, desc, atoms_0, gv, kp, &
-               ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, etot_conv_thr )
 ! ...     on exit c0 and cp both contain the updated wave function
 ! ...     cm are overwritten (used as working space)
         ELSE IF ( tsteepdesc ) THEN
           CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms_0, gv, kp, &
-               ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
         ELSE IF ( tconjgrad_ion%active ) THEN
           CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atoms_p, atoms_0, &
-               atoms_m, gv, kp, ps, eigr, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               atoms_m, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                tconvthrs%ekin, tconjgrad_ion%nstepex )
 ! ...     when ions are being relaxed by this subroutine they 
@@ -495,7 +505,7 @@
 ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
 ! ...   ionc forces "fion" and stress "pail".
         CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms_0, &
-          gv, kp, fnl, vpot, ps, c0, wfill, fi, eigr, sfac, timepre, ht_0, edft)
+          gv, kp, fnl, vpot, ps, c0, wfill, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
 
         ! .. WRITE( stdout,*) 'DEBUG MAIN', atoms_0%for( 1:3, 1:atoms_0%nat )
         ! CALL debug_energies( edft ) ! DEBUG
@@ -783,8 +793,11 @@
       CALL deallocate_atoms_type( atoms_0 )
       CALL deallocate_atoms_type( atoms_p )
       CALL deallocate_atoms_type( atoms_m )
-      CALL deallocate_ions( )
-      CALL deallocate_sic( )
+
+      IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
+      IF( ALLOCATED( ei1  ) ) DEALLOCATE( ei1  )
+      IF( ALLOCATED( ei2  ) ) DEALLOCATE( ei2  )
+      IF( ALLOCATED( ei3  ) ) DEALLOCATE( ei3  )
 
       CALL deallocate_projector( fnl )
       deallocate(fi)
@@ -798,29 +811,15 @@
       DEALLOCATE( fnl, STAT=ierr)
       IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating fnl ', ierr)
 
-      CALL deallocate_recvecs()
-      CALL deallocate_recvecs_indexes()
-      CALL deallocate_rvecs(gv)
-      CALL deallocate_phfac(eigr)
-      CALL deallocate_electrons
-      CALL deallocate_elct
-      IF(tdipole) THEN
-        CALL deallocate_polarization
-      END IF
       CALL deallocate_pseudo(ps)
-      CALL deallocate_pseudopotential
-      CALL deallocate_turbo
-      CALL deallocate_diis
-      CALL deallocate_stick
-      CALL optical_closeup
-      CALL deallocate_charge_mix
-      CALL deallocate_chi2
+      CALL deallocate_rvecs(gv)
+
+      CALL optical_closeup()
       CALL gindex_closeup
       CALL guess_closeup
       CALL ks_states_closeup
-      IF( .NOT. lneb ) THEN
-        CALL deallocate_ions_base
-      END IF
+
+      CALL deallocate_modules_var()
 
       RETURN
     END SUBROUTINE

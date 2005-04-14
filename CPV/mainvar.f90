@@ -19,8 +19,8 @@ MODULE cp_main_variables
 !
 ! structure factors e^{-ig*R}
 !
-      complex(dbl), allocatable:: ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
-      complex(dbl), allocatable:: eigr(:,:,:)
+      complex(dbl), allocatable:: ei1(:,:),  ei2(:,:),  ei3(:,:)
+      complex(dbl), allocatable:: eigr(:,:)
 !
 ! structure factors (summed over atoms of the same kind)
 !
@@ -28,9 +28,9 @@ MODULE cp_main_variables
 !
 ! indexes, positions, and structure factors for the box grid
 !
-      integer       :: irb(3,natx,nsx)
       real(dbl)  :: taub(3,natx)
-      complex(dbl), allocatable:: eigrb(:,:,:)
+      complex(dbl), allocatable:: eigrb(:,:)
+      integer,      allocatable:: irb(:,:)
 ! 
 ! charge densities and potentials
 !     rhog  = charge density in g space
@@ -66,9 +66,9 @@ CONTAINS
 
 
    SUBROUTINE allocate_mainvar &
-      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, &
+      ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nat, nax, nsp, nspin, n, nx, nhsa, &
         nlcc_any, smd )
-      INTEGER, INTENT(IN) :: ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa
+      INTEGER, INTENT(IN) :: ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nat, nax, nsp, nspin, n, nx, nhsa
       LOGICAL, INTENT(IN) :: nlcc_any
       LOGICAL, OPTIONAL, INTENT(IN) :: smd
       !
@@ -81,9 +81,13 @@ CONTAINS
         IF( smd ) nosmd = .FALSE.
       END IF
 
-      allocate(eigr(ngw,nax,nsp))
-      allocate(eigrb(ngb,nax,nsp))
+      allocate(eigr(ngw,nat))
+      allocate(eigrb(ngb,nat))
+      allocate(irb(3,nat))
       allocate(sfac(ngs,nsp))
+      allocate(ei1(-nr1:nr1,nat))
+      allocate(ei2(-nr2:nr2,nat))
+      allocate(ei3(-nr3:nr3,nat))
       allocate(rhor(nnr,nspin))
       allocate(rhos(nnrsx,nspin))
       allocate(rhog(ng,nspin))
@@ -94,9 +98,6 @@ CONTAINS
         allocate(lambdam(nx,nx))
         allocate(lambdap(nx,nx))
       END IF
-      allocate(ei1(-nr1:nr1,nax,nsp))
-      allocate(ei2(-nr2:nr2,nax,nsp))
-      allocate(ei3(-nr3:nr3,nax,nsp))
       allocate(becdr(nhsa,n,3))
       IF( nosmd ) THEN
         allocate(bec  (nhsa,n))
@@ -115,6 +116,7 @@ CONTAINS
       IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
       IF( ALLOCATED( sfac ) ) DEALLOCATE( sfac )
       IF( ALLOCATED( eigrb ) ) DEALLOCATE( eigrb )
+      IF( ALLOCATED( irb ) ) DEALLOCATE( irb )
       IF( ALLOCATED( rhor ) ) DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) ) DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) ) DEALLOCATE( rhog )

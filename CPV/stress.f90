@@ -65,7 +65,7 @@
 !  END manual
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE cell_module, ONLY: boxdimensions
       USE energies, ONLY: dft_energy_type
       USE ions_base, ONLY: nsp
@@ -91,7 +91,7 @@
       COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
-      TYPE (phase_factors),   INTENT(IN) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
       TYPE (projector) :: fnl(:,:)
       TYPE (dft_energy_type) :: edft
 
@@ -156,7 +156,7 @@
       IF(timing) s6 = cclock()
 
 ! ... compute enl (non-local) contribution
-      CALL stress_nl(denl, gagx_l, gv, c0, cdesc, occ, eigr%xyz, ps%wsg,fnl, &
+      CALL stress_nl(denl, gagx_l, gv, c0, cdesc, occ, eigr, ps%wsg,fnl, &
         ps%wnl(:,:,:,1), edft%enl)
 
       IF(timing) s7 = cclock()

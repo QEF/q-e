@@ -10,12 +10,12 @@ for DIR in Modules clib PW CPV flib pwtools upftools PP PWCOND \
 do
     # set inter-directory dependencies
     case $DIR in
-	Modules | clib )  DEPENDS="../include"                        ;;
+	Modules | clib )  DEPENDS="../include ../iotk/src"                        ;;
 	PW | CPV | flib | pwtools | upftools | atomic )
-	                  DEPENDS="../include ../Modules"             ;;
+	                  DEPENDS="../include ../Modules ../iotk/src"             ;;
 	PP | PWCOND | Gamma | PH )
-                          DEPENDS="../include ../Modules ../PW"       ;;
-	D3 | Raman | Nmr) DEPENDS="../include ../Modules ../PW ../PH" ;;
+                          DEPENDS="../include ../Modules ../PW ../iotk/src"       ;;
+	D3 | Raman | Nmr) DEPENDS="../include ../Modules ../PW ../PH ../iotk/src" ;;
     esac
 
     # generate dependencies file

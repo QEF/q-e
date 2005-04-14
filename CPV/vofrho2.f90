@@ -18,17 +18,19 @@
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
-      use ions_base, only: nas => nax, nsp, na
-      use gvec
+      use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
-      use cell_base, only: omega
+      use reciprocal_vectors, only: g
+      use recvecs_indexes, only: np, nm
+      use gvecp, only: ngm
+      use cell_base, only: omega, tpiba2
       use cell_base, only: a1, a2, a3
       use reciprocal_vectors, only: ng0 => gstart
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc,   &
      &        atot, egrand, entropy 
@@ -49,11 +51,11 @@
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx),&
      &             v0s(nnrsx), vhxcs(nnrsx,nspin)
       real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
-     &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
-     &                rhog(ng,nspin), sfac(ngs,nsp)
+      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+     &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
+     &                rhog(ngm,nspin), sfac(ngs,nsp)
 !
-      integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), allocatable :: v(:), vs(:)
@@ -69,9 +71,9 @@
       allocate( v ( nnr   ) )
       allocate( vs( nnrsx ) )
 
-      allocate(vtemp(ng))
-      allocate(rhotmp(ng))
-      if (tpre) allocate(drhotmp(ng,3,3))
+      allocate(vtemp(ngm))
+      allocate(rhotmp(ngm))
+      if (tpre) allocate(drhotmp(ngm,3,3))
 !
 !     first routine in which fion is calculated: annihilation
 !
@@ -85,13 +87,13 @@
 !
       if(nspin.eq.1) then
          iss=1
-         do ig=1,ng
+         do ig=1,ngm
             rhotmp(ig)=rhog(ig,iss)
          end do
          if(tpre)then
             do j=1,3
                do i=1,3
-                  do ig=1,ng
+                  do ig=1,ngm
                      drhotmp(ig,i,j)=drhog(ig,iss,i,j)
                   enddo
                enddo
@@ -100,13 +102,13 @@
       else
          isup=1
          isdw=2
-         do ig=1,ng
+         do ig=1,ngm
             rhotmp(ig)=rhog(ig,isup)+rhog(ig,isdw)
          end do
          if(tpre)then
             do i=1,3
                do j=1,3
-                  do ig=1,ng
+                  do ig=1,ngm
                      drhotmp(ig,i,j) = drhog(ig,isup,i,j) +           &
      &                                 drhog(ig,isdw,i,j)
                   enddo
@@ -142,11 +144,11 @@
          end do
       end do
       if (ng0.eq.2) vtemp(1)=0.0
-      do ig=ng0,ng
+      do ig=ng0,ngm
          vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real( SUM( vtemp( 1:ng ) ) ) *wz*0.5*fpi/tpiba2
+      eh=real( SUM( vtemp( 1:ngm ) ) ) *wz*0.5*fpi/tpiba2
 
       call mp_sum( eh )
 
@@ -163,7 +165,7 @@
 !
       if (ng0.eq.2) vtemp(1)=(0.,0.)
 
-      do ig=ng0,ng
+      do ig=ng0,ngm
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
       end do
 
@@ -214,7 +216,7 @@
 !
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-         do ig=1,ng
+         do ig=1,ngm
             rhog(ig,iss)=vtemp(ig)+v(np(ig))
          end do
 !
@@ -228,7 +230,7 @@
             v(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ig=1,ng
+         do ig=1,ngm
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             rhog(ig,isup)=vtemp(ig)+0.5*cmplx( real(fp),aimag(fm))
@@ -254,7 +256,7 @@
       v = 0.0d0
       if(nspin.eq.1) then
          iss=1
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))=rhog(ig,iss)
             v(nm(ig))=conjg(rhog(ig,iss))
          end do
@@ -273,7 +275,7 @@
       else
          isup=1
          isdw=2
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             v(nm(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do

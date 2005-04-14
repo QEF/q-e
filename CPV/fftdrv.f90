@@ -29,9 +29,9 @@
 
 ! ...
      USE fft_base, ONLY: fft_transpose, fft_timing
+     USE fft_base, ONLY: dfftp
      USE fft_scalar, ONLY: cft_1z, cft_2xy
      USE mp_global, ONLY: mpime, nproc
-     USE stick, ONLY: dfftp
      USE fft_types, ONLY: fft_dlay_descriptor
      USE kinds, ONLY: dbl
 

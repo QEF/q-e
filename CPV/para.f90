@@ -394,7 +394,6 @@ end module para_mod
       subroutine write_rho_xsf(tau0,h,rho)
 !----------------------------------------------------------------------
       
-      use elct
       use ions_base, only: nsp, na, pmass
       use parameters
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx

@@ -17,8 +17,8 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use ions_base, only: na, nas => nax
-      use elct, only: n
+      use ions_base, only: na, nas => nax, nat
+      use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
@@ -30,16 +30,21 @@
       implicit none
       integer nspmn, nspmx
       complex(kind=8) c(ngw,n)
-      real(kind=8) eigr(2,ngw,nas,nspmx)
+      real(kind=8) eigr(2,ngw,nat)
       complex(kind=8), allocatable :: wrk2(:,:)
 !
-      integer ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii
+      integer ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa
       real(kind=8) signre, signim, arg
 !
       allocate( wrk2( ngw, nas ) )
 !
       do j=1,3
          do i=1,3
+
+            isa = 0
+            do is = 1, nspmn - 1
+              isa = isa + na(is)
+            end do
 
             do is=nspmn,nspmx
                do iv=1,nh(is)
@@ -70,15 +75,15 @@
                      if (gstart == 2) then
 !                   q = 0   component (with weight 1.0)
                         wrk2(1,ia)= cmplx(                             &
-     &                  signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia,is),   &
-     &                  signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia,is) )
+     &                  signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa),   &
+     &                  signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa) )
 !                   q > 0   components (with weight 2.0)
                      end if
                      do ig=gstart,ngw
                         arg = 2.0*dbeta(ig,iv,is,i,j)
                         wrk2(ig,ia) = cmplx(                           &
-     &                         signre*arg*eigr(ixr,ig,ia,is),          &
-     &                         signim*arg*eigr(ixi,ig,ia,is) )
+     &                         signre*arg*eigr(ixr,ig,ia+isa),          &
+     &                         signim*arg*eigr(ixi,ig,ia+isa) )
                      end do
                   end do
                   inl=ish(is)+(iv-1)*na(is)+1
@@ -91,6 +96,7 @@
                   call reduce(na(is)*nh(is),dbec(inl,ii,i,j))
                end do
 #endif
+               isa = isa + na(is)
             end do
          end do
       end do
@@ -113,15 +119,14 @@
       use control_flags, only: iprint, tpre, iprsta
       use io_global, only: stdout
       use bhs
-      use gvec, only: tpiba, tpiba2, g
       use gvecp, only: ng => ngm ! , ngl => ngml, ng_g => ngmt
       use gvecs
-      use cell_base, only: omega
+      use cell_base, only: omega, tpiba, tpiba2
       use constants, only: pi, fpi
       use ions_base, only: rcmax,  zv, nsp, na
       use cvan, only: oldvan
       use pseu
-      use reciprocal_vectors, only: gstart
+      use reciprocal_vectors, only: gstart, g
       use atom, only: r, rab, mesh, numeric
       use uspp_param, only: vloc_at
       use qrl_mod, only: cmesh
@@ -149,7 +154,7 @@
       do is=1,nsp
          eself=eself+float(na(is))*zv(is)*zv(is)/rcmax(is)
       end do
-      eself=eself/sqrt(2.*pi)
+      eself=eself/sqrt(2.0d0*pi)
       if(tfirst.or.iprsta.ge.4)then
          WRITE( stdout,1200) eself
       endif
@@ -187,7 +192,7 @@
             end do
 !
             do ir=1,irmax
-               vscr(ir)=0.5*r(ir,is)*vloc_at(ir,is) +                   &
+               vscr(ir)=0.5d0*r(ir,is)*vloc_at(ir,is) +                   &
      &                  zv(is)*erf(r(ir,is)/rcmax(is))
                f(ir)=vscr(ir)*r(ir,is)
             end do
@@ -363,7 +368,6 @@
       use core
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use elct
       use uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbrx, nbeta
       use atom, only: nlcc, r, rab, mesh, rho_atc
       use qradb_mod
@@ -629,12 +633,11 @@
 !-----------------------------------------------------------------------
 !     contribution to the internal stress tensor due to the constraints
 !
-      use gvec
       use cvan, only: nvb, ish
       use uspp, only: nhsa => nkb, qq
       use uspp_param, only: nh, nhm
       use ions_base, only: na
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use cell_base, only: omega, h
       use constants, only: pi, fpi
       use stre
@@ -724,13 +727,11 @@
       use parameters, only: lmaxx
       use control_flags, only: iprint, tpre
       use io_global, only: stdout
-      use gvec
       use gvecw, only: ngw
       use cvan, only: ish, nvb, oldvan
       use core
       use constants, only: pi, fpi
       use ions_base, only: na, nsp
-      use elct
       use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, &
            nhsa => nkb, nhsavb=>nkbus
       use uspp_param, only: kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &

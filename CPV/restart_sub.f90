@@ -37,7 +37,7 @@ CONTAINS
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
     USE cell_base, ONLY: wmass, iforceh, cell_force, cell_hmove
     USE efcalc, ONLY: ef_force
-    USE elct, ONLY: n
+    use electrons_base, only: n => nbsp
     USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
     USE wavefunctions_module, ONLY: c0, cm, phi => cp
     USE io_global, ONLY: stdout
@@ -59,9 +59,9 @@ CONTAINS
     use electrons_nose, only: xnhe0, xnhem, vnhe
     USE cell_nose, ONLY: xnhh0, xnhhm, vnhh, cell_nosezero
 
-    COMPLEX(kind=8) :: eigr(:,:,:), ei1(:,:,:),  ei2(:,:,:),  ei3(:,:,:)
-    COMPLEX(kind=8) :: eigrb(:,:,:)
-    INTEGER :: irb(:,:,:)
+    COMPLEX(kind=8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
+    COMPLEX(kind=8) :: eigrb(:,:)
+    INTEGER :: irb(:,:)
     REAL(kind=8) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
     REAL(kind=8) :: taub(:,:)
     REAL(kind=8) :: b1(:), b2(:), b3(:)
@@ -288,13 +288,13 @@ CONTAINS
     LOGICAL :: tfirst
     REAL(dbl) :: taus( :, : ), tau0( :, : )
     REAL(dbl) :: h(3,3)
-    COMPLEX(dbl) :: eigr( :, :, : )
+    COMPLEX(dbl) :: eigr( :, : )
     REAL(dbl) :: bec( :, : )
     COMPLEX(dbl) :: c0( :, : )
     COMPLEX(dbl) :: cm( :, : )
-    COMPLEX(dbl) :: ei1( :, :, : )
-    COMPLEX(dbl) :: ei2( :, :, : )
-    COMPLEX(dbl) :: ei3( :, :, : )
+    COMPLEX(dbl) :: ei1( :, : )
+    COMPLEX(dbl) :: ei2( :, : )
+    COMPLEX(dbl) :: ei3( :, : )
     COMPLEX(kind=8) :: sfac(:,:)
     REAL(dbl) :: eself
 
@@ -329,7 +329,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
       SUBROUTINE from_restart_fpmd( nfi, acc, gv, kp, ps, rhoe, desc, cm, c0, cdesc, &
-          eigr, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
+          eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
 
 !  this routine recreates the starting configuration from a restart file
 
@@ -346,7 +346,7 @@ CONTAINS
       USE ions_module, ONLY: set_reference_positions, print_scaled_positions, &
                              constraints_setup, set_velocities
       USE energies, ONLY: dft_energy_type
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE pseudopotential, ONLY: formf
       USE cell_module, only: boxdimensions, gethinv, alat
       USE cell_base, ONLY: r_to_s, s_to_r
@@ -380,7 +380,10 @@ CONTAINS
       COMPLEX(dbl) :: sfac(:,:)
       TYPE (atoms_type) :: atoms_0, atoms_m
       TYPE (pseudo) :: ps
-      TYPE (phase_factors) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
       COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
@@ -496,7 +499,7 @@ CONTAINS
 
 ! ...   computes form factors and initializes nl-pseudop. according
 ! ...   to starting cell (from ndr or again fort.10)
-      CALL strucf(sfac, atoms_0, eigr, gv)
+      CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
       CALL formf(ht_0, gv, kp, ps)
 
       IF( tzeroe .OR. tzerop ) THEN
@@ -512,7 +515,7 @@ CONTAINS
           edft%enl = nlrh_m(c0, cdesc, ttforce, atoms_0, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
           CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht_0)
           CALL vofrhos( ( iprsta > 1), rhoe, desc, tfor, thdyn, ttforce, atoms_0, gv, kp, fnl, vpot, ps, &
-            c0, cdesc, fi, eigr, sfac, timepre, ht_0, edft)
+            c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
 
           IF( tzeroe ) THEN
 

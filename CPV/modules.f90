@@ -29,69 +29,40 @@ contains
   end subroutine
 end module core
 
-module elct
-  use electrons_base, only: nspin, nel, nupdwn, iupdwn
-  use electrons_base, only: n => nbsp, nx => nbspx
-  use electrons_base, only: f, qbac, ispin => fspin
-  use electrons_base, only: deallocate_elct
-  implicit none
-  save
-  !     f    = occupation numbers
-  !     qbac = background neutralizing charge
-  !     nspin = number of spins (1=no spin, 2=LSDA)
-  !     nel(nspin) = number of electrons (up, down)
-  !     nupdwn= number of states with spin up (1) and down (2)
-  !     iupdwn=      first state with spin (1) and down (2)
-  !     n     = total number of electronic states
-  !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
-  !             nx is used only to dimension arrays
-  !     ispin = spin of each state
-  !
-end module elct
+!     f    = occupation numbers
+!     qbac = background neutralizing charge
+!     nspin = number of spins (1=no spin, 2=LSDA)
+!     nel(nspin) = number of electrons (up, down)
+!     nupdwn= number of states with spin up (1) and down (2)
+!     iupdwn=      first state with spin (1) and down (2)
+!     n     = total number of electronic states
+!     nx    = if n is even, nx=n ; if it is odd, nx=n+1
+!             nx is used only to dimension arrays
+!     ispin = spin of each state
+!
 
-module gvec
+!     tpiba   = 2*pi/alat
+!     tpiba2  = (2*pi/alat)**2
+!     ng      = number of G vectors for density and potential
+!     ngl     = number of shells of G
 
-  use cell_base, only: tpiba, tpiba2
-  use reciprocal_vectors, only: &
-        gl, g, gx, g2_g, mill_g, mill_l, ig_l2g, igl, bi1, bi2, bi3
-  use reciprocal_vectors, only: deallocate_recvecs
-  use recvecs_indexes, only: np, nm, deallocate_recvecs_indexes
-  use gvecp, only: &
-        ng => ngm, &
-        ngl => ngml, &
-        ng_g => ngmt
-
-  !     tpiba   = 2*pi/alat
-  !     tpiba2  = (2*pi/alat)**2
-  !     ng      = number of G vectors for density and potential
-  !     ngl     = number of shells of G
-
-  !     G-vector quantities for the thick grid - see also doc in ggen 
-  !     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
-  !     gl      = shells of G^2           ( "   "   "    "      "      )
-  !     gx      = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
-  !
-  !     g2_g    = all G^2 in increasing order, replicated on all procs
-  !     mill_g  = miller index of G vecs (increasing order), replicated on all procs
-  !     mill_l  = miller index of G vecs local to the processors
-  !     ig_l2g  = "l2g" means local to global, this array convert a local
-  !               G-vector index into the global index, in other words
-  !               the index of the G-v. in the overall array of G-vectors
-  !     bi?     = base vector used to generate the reciprocal space
-  !
-  !     np      = fft index for G>
-  !     nm      = fft index for G<
-  !     mill_l  = G components in crystal axis
-  !
-  implicit none
-  save
-
-contains
-  subroutine deallocate_gvec
-      CALL deallocate_recvecs( )
-      CALL deallocate_recvecs_indexes( )
-  end subroutine
-end module gvec
+!     G-vector quantities for the thick grid - see also doc in ggen 
+!     g       = G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
+!     gl      = shells of G^2           ( "   "   "    "      "      )
+!     gx      = G-vectors               ( "   "   "  tpiba =(2pi/a)  )
+!
+!     g2_g    = all G^2 in increasing order, replicated on all procs
+!     mill_g  = miller index of G vecs (increasing order), replicated on all procs
+!     mill_l  = miller index of G vecs local to the processors
+!     ig_l2g  = "l2g" means local to global, this array convert a local
+!               G-vector index into the global index, in other words
+!               the index of the G-v. in the overall array of G-vectors
+!     bi?     = base vector used to generate the reciprocal space
+!
+!     np      = fft index for G>
+!     nm      = fft index for G<
+!     mill_l  = G components in crystal axis
+!
 
 
 !

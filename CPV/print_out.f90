@@ -751,12 +751,12 @@
      IMPLICIT NONE
 
      INTEGER :: nfi
-     INTEGER :: irb(:,:,:)
+     INTEGER :: irb(:,:)
      COMPLEX(dbl) :: c0( :, :, :, : )
      REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
      REAL(dbl) :: tau0( :, : ), h( 3, 3 )
-     COMPLEX(dbl) :: eigrb( :, :, : ), rhog( :, : )
-     COMPLEX(dbl) :: eigr( :, :, : )
+     COMPLEX(dbl) :: eigrb( :, : ), rhog( :, : )
+     COMPLEX(dbl) :: eigr( :, : )
 
      INTEGER :: is, istart, nss, i, j
      LOGICAL, SAVE :: trhor_save

@@ -34,18 +34,8 @@
         CHARACTER(LEN=256) :: fileempty
         LOGICAL :: first = .TRUE.
 
-#define __EMPTY_SD
-
         INTERFACE EMPTY
-#if defined __EMPTY_CG
-          MODULE PROCEDURE EMPTY_CG
-#elif defined __EMPTY_CG2
-          MODULE PROCEDURE EMPTY_CG2
-#elif defined __EMPTY_IT
-          MODULE PROCEDURE EMPTY_IT
-#else
           MODULE PROCEDURE EMPTY_SD
-#endif
         END INTERFACE
 
         PUBLIC :: empty , empty_init , empty_print_info
@@ -442,8 +432,6 @@
 !=======================================================================
 !
 
-#if defined __EMPTY_SD
-
     SUBROUTINE EMPTY_SD( tortho, atoms, gv, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
 
       USE wave_types, ONLY: wave_descriptor
@@ -452,7 +440,7 @@
       USE pseudopotential, ONLY: nsanl, ngh
       USE constants, ONLY: au
       USE cell_base, ONLY: tpiba2
-      USE electrons_module, ONLY: pmss
+      USE electrons_module, ONLY: pmss, n_emp
       USE cp_electronic_mass, ONLY: emass
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce_all
@@ -468,7 +456,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE control_flags, ONLY: force_pairing
 
       IMPLICIT NONE
@@ -483,7 +471,7 @@
       TYPE (kpoints), INTENT(IN) :: kp
       TYPE (pseudo), INTENT(IN) :: ps
       LOGICAL, INTENT(IN) :: tortho
-      TYPE (phase_factors), INTENT(IN) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
 !
 ! ... LOCALS
 !
@@ -491,7 +479,6 @@
       INTEGER   ::  i, k, j, iter, ik, nk
       INTEGER   ::  ngw, ngw_g, nspin, ispin, ispin_wfc
       INTEGER   ::  n_occ( wfill%nspin )
-      INTEGER   ::  n_emp( wempt%nspin )
       INTEGER   ::  ig, iprinte, iks, nrl, jl
       REAL(dbl) ::  dek, ekinc, ekinc_old
       REAL(dbl) :: ampre
@@ -511,7 +498,6 @@
       ngw       = wfill%ngwl
       ngw_g     = wfill%ngwt
       n_occ     = wfill%nbt
-      n_emp     = wempt%nbt
       gzero     = wfill%gzero
       gamma     = wfill%gamma
       ampre     = 0.001d0
@@ -519,7 +505,7 @@
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
 
-      CALL allocate_projector(fnle, nsanl, MAXVAL( n_emp ), ngh, gamma) 
+      CALL allocate_projector(fnle, nsanl, n_emp, ngh, gamma) 
       ALLOCATE( eforce( ngw, wempt%ldb, nk, nspin ) )
       ALLOCATE( fi( wempt%ldb, nk, nspin ) )
       ALLOCATE( cp_emp( SIZE(c_emp,1), SIZE(c_emp,2), SIZE(c_emp,3), SIZE(c_emp,4) ) )
@@ -546,18 +532,18 @@
           ispin_wfc = ispin
           IF( force_pairing ) ispin_wfc = 1
 
-          IF( n_emp( ispin ) < 1 ) CYCLE SPIN_LOOP 
+          IF( n_emp < 1 ) CYCLE SPIN_LOOP 
 
           DO ik = 1, kp%nkpt
 
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr%xyz, c_emp(:,:,ik,ispin), wempt, &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
                 gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
 
             CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
               gv, vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps, ik)
 
 ! ...       Steepest descent
-            DO i = 1, n_emp( ispin )
+            DO i = 1, n_emp
               cp_emp(:,i,ik,ispin) = c_emp(:,i,ik,ispin) +  dt2bye(:) * eforce(:, i, ik, ispin)
             END DO
 
@@ -566,8 +552,6 @@
             IF (tortho) THEN
 
               CALL ortho( ispin, c_emp(:,:,ik,ispin), cp_emp(:,:,ik,ispin), wempt, pmss, emass)
-              ! WRITE( stdout,*) ' EMPTY DEBUG ', c_emp(ik,ispin)%w(4,n_emp)
-              ! WRITE( stdout,*) ' EMPTY DEBUG ', cp_emp(ik,ispin)%w(4,n_emp)
 
               CALL gram_empty( ispin, tortho, c_occ(:,:,ik,ispin_wfc), wfill, cp_emp(:,:,ik,ispin), wempt)
 
@@ -596,7 +580,7 @@
 
 ! ...   check for convergence
 !
-        IF( ( ekinc / MAXVAL( n_emp ) ) <  ethr_emp ) THEN
+        IF( ( ekinc / n_emp ) <  ethr_emp ) THEN
           IF( ionode ) WRITE( stdout,112) 
           EXIT ITERATIONS
         END IF
@@ -624,8 +608,6 @@
     RETURN
     END SUBROUTINE EMPTY_SD
 
-#endif
-
 !=----------------------------------------------------------------------------=!
 !
 !   Compute the eigenvalues of the empty states 
@@ -636,10 +618,11 @@
 
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: crot
+      USE wave_constrains, ONLY: update_lambda
       USE wave_base, ONLY: hpsi, dotp
       USE constants, ONLY: au
       USE cell_base, ONLY: tpiba2
-      USE electrons_module, ONLY: eigs, ei_emp, pmss, emass, emp_desc
+      USE electrons_module, ONLY: eigs, ei_emp, pmss, emass, n_emp_l, n_emp
       USE forces, ONLY: dforce_all
       USE brillouin, ONLY: kpoints
       USE pseudo_projector, ONLY: projector
@@ -647,9 +630,8 @@
       USE nl, ONLY: nlsm1
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: mpime, nproc, group
-      USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE atoms_type_module, ONLY: atoms_type
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
 
       IMPLICIT NONE
 
@@ -664,21 +646,19 @@
       TYPE (kpoints), INTENT(in) :: kp
       TYPE (pseudo), INTENT(in) :: ps
       LOGICAL, INTENT(IN) :: TORTHO
-      TYPE (phase_factors), INTENT(IN) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
       TYPE (projector) :: fnle(:,:)
 !
 ! ... LOCALS
 !
 
       INTEGER     kk, i, k, j, iopt, iter, nwh, ik, nk, ibl
-      INTEGER     ngw, ngw_g, n_occ, n_emp, n_emp_l, nspin, ispin
+      INTEGER     ngw, ngw_g, n_occ, nspin, ispin
       INTEGER     ig, iprinte, iks, nrl, jl
       LOGICAL     gamma, gzero
 
       REAL(dbl),    ALLOCATABLE :: gam(:,:)
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-      REAL(dbl),    ALLOCATABLE :: prod(:)
-      COMPLEX(dbl), ALLOCATABLE :: cprod(:)
 
 !
 ! ... SUBROUTINE BODY
@@ -690,22 +670,17 @@
       gzero     = wempt%gzero
       gamma     = wempt%gamma
 
-      CALL get_local_dims( emp_desc, n_emp_l )
-
 !
 ! ... empty state diagonalization ==
 
       SPIN_LOOP: DO ispin = 1, nspin
 
-        n_emp     = wempt%nbl( ispin )
-
         IF( n_emp < 1 ) CYCLE SPIN_LOOP
 
-        ALLOCATE(gam(n_emp_l, n_emp), cgam(n_emp_l, n_emp))
-        ALLOCATE(prod(n_emp), cprod(n_emp))
+        ALLOCATE(gam(n_emp_l(ispin), n_emp), cgam(n_emp_l(ispin), n_emp))
 
         DO ik = 1, nk
-          CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr%xyz, c_emp(:,:,ik,ispin), wempt, &
+          CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
               gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
         END DO
 
@@ -718,366 +693,22 @@
 ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
           DO i = 1, n_emp
             IF( gamma ) THEN
-              prod = hpsi( gzero, c_emp(:,:,ik, ispin), eforce(:,i,ik,ispin) )
-              CALL mp_sum( prod )
-              IF( mpime == owner_of( i, emp_desc, 'R' ) ) THEN
-                ibl = local_index( i, emp_desc, 'R' )
-                gam(ibl,:) = prod(:)
-              END IF
+              CALL update_lambda( i, gam, c_emp(:,:,ik, ispin), wempt, eforce(:,i,ik,ispin) )
             ELSE
-              cprod = hpsi(c_emp(:,:,ik, ispin), eforce(:,i,ik,ispin) )
-              CALL mp_sum( cprod )
-              IF( mpime == owner_of( i, emp_desc, 'R' ) ) THEN
-                ibl = local_index( i, emp_desc, 'R' )
-                cgam(ibl,:) = cprod(:)
-              END IF
+              CALL update_lambda( i, cgam, c_emp(:,:,ik, ispin), wempt, eforce(:,i,ik,ispin) )
             END IF
           END DO
 
           CALL eigs( n_emp, gam, cgam, tortho, fi(:,ik,ispin), ei_emp(:,ik,ispin), gamma)
         END DO
 
-        DEALLOCATE(gam, cgam, prod, cprod)
+        DEALLOCATE(gam, cgam)
 
       END DO SPIN_LOOP
 
 
       RETURN
     END SUBROUTINE
-
-
-#if ! defined __EMPTY_SD
-
-! ---------------------------------------------------------------------- !
-         REAL(dbl) FUNCTION eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, hstep, hacca, eforce, &
-           c_occ, wfill, vpot, fnle, ps, eigr, gv, kp)
-
-           USE wave_types, ONLY: wave_descriptor
-           USE wave_functions, ONLY: crot, fixwave
-           USE wave_base, ONLY: hpsi, dotp
-           USE electrons_module, ONLY: eigs, ei, ei_emp, pmss, emass, &
-             emp_desc
-           USE forces, ONLY: dforce_all, dforce_all2
-           USE brillouin, ONLY: kpoints
-           USE pseudo_projector, ONLY: projector
-           USE gvecw, ONLY: tecfix
-           USE orthogonalize, ONLY: ortho
-           USE nl, ONLY: nlsm1
-           USE mp, ONLY: mp_sum
-           USE mp_global, ONLY: mpime, nproc, group
-           USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-           USE atoms_type_module, ONLY: atoms_type
-           USE cp_types, ONLY: recvecs, pseudo, phase_factors
-
-           IMPLICIT NONE
-
-
-! ...      ARGUMENTS
-           COMPLEX(dbl), INTENT(inout) ::  c_emp(:), cp_emp(:), c_occ(:)
-           TYPE (wave_descriptor), INTENT(in) ::  wempt, wfill
-           TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-           TYPE (recvecs), INTENT(in) ::  gv
-           COMPLEX (dbl) ::  eforce(:,:,:)
-           COMPLEX (dbl) ::  hacca(:,:,:)
-           REAL(dbl) :: hstep
-           TYPE (kpoints), INTENT(in) :: kp
-           LOGICAL, INTENT(IN) :: TORTHO
-           REAL (dbl), INTENT(in) ::  vpot(:,:,:)
-           TYPE (pseudo), INTENT(in) :: ps
-           TYPE (phase_factors), INTENT(IN) :: eigr
-           TYPE (projector) :: fnle(:)
-           INTEGER, INTENT(IN) :: ik
-!
-! ... LOCALS
-!
-
-           INTEGER     kk, i, k, j, iopt, iter, nwh, nk
-           INTEGER     ngw, ngw_g, n_occ, n_emp, n_emp_l, nspin, ispin
-           INTEGER     ib, ig, iprinte, iks, nrl, jl, ibl
-           LOGICAL     gamma, gzero
-
-           REAL(dbl),    ALLOCATABLE :: gam(:,:)
-           COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-           REAL(dbl),    ALLOCATABLE :: prod(:)
-           COMPLEX(dbl), ALLOCATABLE :: cprod(:)
-           REAL(dbl),    POINTER :: gmod2(:)
-           REAL(dbl) :: sk1
-
-!
-! ...      SUBROUTINE BODY
-!
-           IF( ik < 1 .OR. ik > SIZE( c_emp ) ) THEN
-             CALL errore(' empty_states: eenergy ', ' ik out of bonds ', ik)
-           END IF
-           ngw       = SIZE(c_emp(ik)%w, 1)
-           n_emp     = SIZE(c_emp(ik)%w, 2)
-           ngw_g     = c_emp(ik)%ngw_g
-           gzero     = c_emp(ik)%gzero
-           gamma = c_emp(ik)%gamma
-
-           CALL get_local_dims( emp_desc, n_emp_l )
-
-           ALLOCATE(gam(n_emp_l, n_emp), cgam(n_emp_l, n_emp))
-           ALLOCATE(prod(n_emp), cprod(n_emp))
-
-           DO i = 1, n_emp
-             cp_emp(ik)%w(:,i) = c_emp(ik)%w(:,i) + hstep * hacca(:, i, ik)
-           END DO
-           CALL fixwave( cp_emp(ik), wempt, gv%kg_mask_l(:,ik) )
-           CALL gram_empty( .FALSE., c_occ(ik), wfill, cp_emp(ik), wempt )
-           CALL nlsm1( ps%wnl(:,:,:,ik), atoms, eigr%xyz, cp_emp(ik), wempt, &
-               gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik))
-
-           CALL dforce_all( cp_emp, wempt, eforce(:,:,:), gv, vpot(:,:,:), fnle, eigr, ps, ik)
-
-           ei_emp(:,ik,1) = 0.0d0
-           DO i = 1, n_emp
-             IF( gamma ) THEN
-               prod = hpsi( gzero, cp_emp(ik)%w(:,:), eforce(:,i,ik) )
-               CALL mp_sum( prod )
-               IF( mpime == owner_of( i, emp_desc, 'R' ) ) THEN
-                 ibl = local_index( i, emp_desc, 'R' )
-                 gam(ibl,:) = prod(:)
-               END IF
-             ELSE
-               cprod = hpsi(cp_emp(ik)%w(:,:), eforce(:,i,ik) )
-               CALL mp_sum( cprod )
-               IF( mpime == owner_of( i, emp_desc, 'R' ) ) THEN
-                 ibl = local_index( i, emp_desc, 'R' )
-                 cgam(ibl,:) = cprod(:)
-               END IF
-             END IF
-           END DO
-           CALL eigs( n_emp, gam, cgam, tortho, ei_emp(:,ik,1), gamma)
-           eenergy = SUM( ( ei_emp(:,ik,1)-ei(1,ik,1) )**2 )
-
-           DEALLOCATE(gam, cgam, prod, cprod)
-
-         END FUNCTION
-
-! ---------------------------------------------------------------------- !
-! ---------------------------------------------------------------------- !
-
-      SUBROUTINE EMPTY_LINMIN(ik, ispin, atoms, tbad, emin, ediff, tortho, cp_emp, c_emp, &
-        wempt, c_occ, wfill, vpot, eforce, hacca, fnle, ps, eigr, gv, kp)
-
-        USE wave_types, ONLY: wave_descriptor
-        USE brillouin, ONLY: kpoints
-        USE pseudo_projector, ONLY: projector
-        USE mp_global, ONLY: mpime, nproc, group
-        USE atoms_type_module, ONLY: atoms_type
-        USE cp_types, ONLY: recvecs, pseudo, phase_factors
-
-        IMPLICIT NONE
-
-! ...   ARGUMENTS
-        REAL(dbl) :: ediff, emin
-        COMPLEX(dbl), INTENT(inout) ::  c_emp(:)
-        COMPLEX(dbl), INTENT(inout) ::  cp_emp(:)
-        COMPLEX(dbl), INTENT(inout) ::  c_occ(:)
-        TYPE (wave_descriptor), INTENT(in) ::  wempt, wfill
-        TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-        TYPE (recvecs), INTENT(in) ::  gv
-        REAL (dbl), INTENT(in) ::  vpot(:,:,:)
-        COMPLEX (dbl) ::  hacca(:,:,:)
-        COMPLEX (dbl) ::  eforce(:,:,:)
-        TYPE (kpoints), INTENT(in) :: kp
-        TYPE (pseudo), INTENT(in) :: ps
-        LOGICAL, INTENT(IN)  :: TORTHO
-        LOGICAL, INTENT(OUT) :: tbad
-        TYPE (phase_factors), INTENT(IN) :: eigr
-        TYPE (projector) :: fnle(:)
-        INTEGER, INTENT(IN) :: ik, ispin
-!
-! ... LOCALS
-!
-
-        REAL(dbl) :: GOLD, GLIMIT, TINY, CGOLD, ZEPS
-        INTEGER   :: itmax
-        PARAMETER (GOLD=1.618034D0, GLIMIT=100.D0, TINY=1.D-20)
-        PARAMETER (ITMAX=20,CGOLD=.3819660D0,ZEPS=1.0D-10)
-
-        REAL(dbl) :: ax, bx, cx, fa, fb, fc, dum, u, fu ,r, q, ulim
-        REAL(dbl) :: x, p, v, w, e, fw, fv, xm, tol1, tol2, a, b, etemp, d
-        REAL(dbl) :: fx, xmin, brent, eold
-        LOGICAL   :: tbrent
-        INTEGER   :: iter
-
-!
-! ... SUBROUTINE BODY
-!
-        tbrent         = .TRUE.
-        tbad           = .FALSE.
-
-        ax = 0.0d0
-        bx = 1.0d0
-
-        ! FA=FUNC(AX)
-        fa = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, ax, hacca, eforce, c_occ, wfill, &
-          vpot, fnle, ps, eigr, gv, kp)
-
-        eold = fa
-
-        ! FB=FUNC(BX)
-        fb = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, bx, hacca, eforce, c_occ, wfill, &
-          vpot, fnle, ps, eigr, gv, kp)
-
-        !WRITE( stdout,*) ' ### fa = ', fa
-        !WRITE( stdout,*) ' ### fb = ', fb
-
-        IF(FB .GT. FA)THEN
-          tbad = .TRUE.
-          DUM=AX; AX=BX; BX=DUM
-          DUM=FB; FB=FA; FA=DUM
-        ENDIF
-        CX=BX+GOLD*(BX-AX)
-
-        ! FC=FUNC(CX)
-        fc = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, cx, hacca, eforce, c_occ, wfill, &
-          vpot, fnle, ps, eigr, gv, kp)
-
-100     IF(FB.GE.FC)THEN
-          R=(BX-AX)*(FB-FC)
-          Q=(BX-CX)*(FB-FA)
-          U=BX-((BX-CX)*Q-(BX-AX)*R)/(2.*SIGN(MAX(ABS(Q-R),TINY),Q-R))
-          ULIM=BX+GLIMIT*(CX-BX)
-          IF((BX-U)*(U-CX).GT.0.)THEN
-            ! FU=FUNC(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill, &
-              vpot, fnle, ps, eigr, gv, kp)
-            IF(FU.LT.FC)THEN
-              AX=BX; FA=FB; BX=U; FB=FU;
-              GO TO 100
-            ELSE IF(FU.GT.FB)THEN
-              CX=U; FC=FU;
-              GO TO 100
-            ENDIF
-            U=CX+GOLD*(CX-BX)
-            ! FU=FUNC(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill, &
-              vpot, fnle, ps, eigr, gv, kp)
-          ELSE IF((CX-U)*(U-ULIM).GT.0.)THEN
-            ! FU=FUNC(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill, &
-              vpot, fnle, ps, eigr, gv, kp)
-            IF(FU.LT.FC)THEN
-              BX=CX; CX=U
-              U=CX+GOLD*(CX-BX)
-              FB=FC; FC=FU
-              ! FU=FUNC(U)
-              fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill,  &
-                vpot, fnle, ps, eigr, gv, kp)
-            ENDIF
-          ELSE IF((U-ULIM)*(ULIM-CX).GE.0.)THEN
-            U=ULIM
-            ! FU=FUNC(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill,  &
-              vpot, fnle, ps, eigr, gv, kp)
-          ELSE
-            U=CX+GOLD*(CX-BX)
-            ! FU=FUNC(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill,  &
-              vpot, fnle, ps, eigr, gv, kp)
-          ENDIF
-          AX=BX; BX=CX; CX=U; FA=FB; FB=FC; FC=FU
-          GO TO 100
-        ENDIF
-
-        IF( tbrent .AND. tbad ) THEN
-
-          IF( mpime .EQ. 0 .AND. prn_emp ) WRITE( stdout,114) ax, bx, cx, fa, fb, fc
-
-          A=MIN(AX,CX); B=MAX(AX,CX)
-          V=BX; W=V; X=V; E=0.d0
-          ! FX=F(X)
-          fx = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, x, hacca, eforce, c_occ, wfill, &
-                vpot, fnle, ps, eigr, gv, kp)
-          FV=FX; FW=FX
-
-          DO ITER = 1, ITMAX
-            XM = 0.5d0 * (A+B)
-            ! TOL1=TOL*ABS(X)+ZEPS
-            TOL1 = ethr_emp * ABS(X) + ZEPS
-            TOL2 = 2.d0 * TOL1
-            IF(ABS(X-XM).LE.(TOL2-.5d0*(B-A))) GOTO 103
-            IF(ABS(E).GT.TOL1) THEN
-              R=(X-W)*(FX-FV)
-              Q=(X-V)*(FX-FW)
-              P=(X-V)*Q-(X-W)*R
-              Q=2.d0*(Q-R)
-              IF(Q.GT.0.d0) P=-P
-              Q=ABS(Q)
-              ETEMP=E
-              E=D
-              IF(ABS(P).GE.ABS(.5d0*Q*ETEMP).OR.P.LE.Q*(A-X).OR. P.GE.Q*(B-X)) GOTO 101
-              D=P/Q
-              U=X+D
-              IF(U-A.LT.TOL2 .OR. B-U.LT.TOL2) D=SIGN(TOL1,XM-X)
-              GOTO 102
-            ENDIF
-101         IF(X.GE.XM) THEN
-              E=A-X
-            ELSE
-              E=B-X
-            ENDIF
-            D =CGOLD*E
-102         IF(ABS(D).GE.TOL1) THEN
-              U=X+D
-            ELSE
-              U=X+SIGN(TOL1,D)
-            ENDIF
-            ! FU=F(U)
-            fu = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, u, hacca, eforce, c_occ, wfill, &
-                vpot, fnle, ps, eigr, gv, kp)
-            IF(FU.LE.FX) THEN
-              IF(U.GE.X) THEN
-                A=X
-              ELSE
-                B=X
-              ENDIF
-              V=W; FV=FW; W=X; FW=FX; X=U; FX=FU
-            ELSE
-              IF(U.LT.X) THEN
-                A=U
-              ELSE
-                B=U
-              ENDIF
-              IF(FU.LE.FW .OR. W.EQ.X) THEN
-                V=W; FV=FW; W=U; FW=FU
-              ELSE IF(FU.LE.FV .OR. V.EQ.X .OR. V.EQ.W) THEN
-                V=U; FV=FU
-              ENDIF
-            ENDIF
-          END DO
-          WRITE( stdout, fmt='(" EMPTY_LINMIN, WARNING: Brent exceed maximum iterations ")' )
-          ! CALL ERROR('EMPTY_LINMIN', 'Brent exceed maximum iterations.',itmax)
-103       XMIN=X
-          BRENT=FX
-  
-        ELSE
-
-          x = bx
-
-        END IF
-
-        emin = eenergy(ik, tortho, atoms, cp_emp, c_emp, wempt, x, hacca, eforce, c_occ, wfill, &
-          vpot, fnle, ps, eigr, gv, kp)
-
-        IF( mpime .EQ. 0 .AND. prn_emp ) WRITE( stdout,114) ax, x, cx, fa, emin, fc
-
-        IF( tbad ) THEN
-          ediff = ABS(emin - fa)
-        ELSE
-          ediff = ABS(emin - eold)
-        END IF
-
-113     FORMAT(3X,'lm',I5,2X,3F22.18,2X,2F10.6)
-114     FORMAT(3X,'lm',3F10.5,3F12.6)
-
-
-      END SUBROUTINE
-
-#endif
 
 ! ---------------------------------------------------------------------- !
       END MODULE empty_states

@@ -332,7 +332,7 @@
 ! ... declare modules
 
     USE fft, ONLY: pw_invfft
-    USE stick, ONLY: dfftp
+    USE fft_base, ONLY: dfftp
     USE mp_global, ONLY: mpime
     USE turbo, ONLY: tturbo, nturbo, turbo_states
     USE cell_module, ONLY: boxdimensions

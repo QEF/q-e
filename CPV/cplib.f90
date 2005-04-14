@@ -8,64 +8,6 @@
 
 #include "f_defs.h"
 
-!-----------------------------------------------------------------------
-      subroutine add_cc(rhoc,rhog,rhor)
-!-----------------------------------------------------------------------
-!
-! add core correction to the charge density for exch-corr calculation
-!
-      use elct, only: nspin
-      use gvec, only: np, ng
-
-      ! this isn't really needed, but if I remove it, ifc 7.1
-      ! gives an "internal compiler error"
-      use reciprocal_vectors, only: gstart
-
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      !use parm
-!
-      implicit none
-      real(kind=8), intent(in)   :: rhoc(nnr)
-      real(kind=8), intent(inout):: rhor(nnr,nspin)
-      complex(kind=8), intent(inout)::  rhog(ng,nspin)
-      complex(kind=8), allocatable :: wrk1( : )
-!
-      integer ig, ir, iss, isup, isdw
-!
-! In r-space:
-!
-      if (nspin.eq.1) then
-         iss=1
-         call DAXPY(nnr,1.d0,rhoc,1,rhor(1,iss),1)
-      else
-         isup=1
-         isdw=2
-         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isup),1)
-         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
-      end if
-! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
-      allocate( wrk1( nnr ) )
-      do ir=1,nnr
-         wrk1(ir)=rhoc(ir)
-      end do
-      call fwfft(wrk1,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-! In g-space:
-      if (nspin.eq.1) then
-         do ig=1,ng
-            rhog(ig,iss)=rhog(ig,iss)+wrk1(np(ig))
-         end do
-      else
-         do ig=1,ng
-            rhog(ig,isup)=rhog(ig,isup)+0.5d0*wrk1(np(ig))
-            rhog(ig,isdw)=rhog(ig,isdw)+0.5d0*wrk1(np(ig))
-         end do
-      end if
-
-      deallocate( wrk1 )
-!
-      return
-      end
 !
 !-----------------------------------------------------------------------
       subroutine atomic_wfc(eigr,n_atomic_wfc,wfc)
@@ -74,17 +16,17 @@
 ! Compute atomic wavefunctions in G-space
 !
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na, nas => nax
-      use gvec
-      use atom
+      use reciprocal_vectors, only: gstart, g, gx
+      use ions_base, only: nsp, na, nat
+      use cell_base, only: tpiba
+      use atom, only: nchi, lchi, mesh, r, chi, rab
 !
       implicit none
       integer, intent(in) :: n_atomic_wfc
-      complex(kind=8), intent(in) ::  eigr(ngw,nas,nsp)
+      complex(kind=8), intent(in) ::  eigr(ngw,nat)
       complex(kind=8), intent(out):: wfc(ngw,n_atomic_wfc)
 !
-      integer :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc
+      integer :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
       real(kind=8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
      &     chiq(:)
 !
@@ -107,6 +49,7 @@
       end do
 !
       natwfc=0
+      isa   = 0
       do is=1,nsp
 !
 !   radial fourier transform of the chi functions
@@ -127,13 +70,13 @@
 !
             do m = 1,2*l+1
                lm = l**2 + m
-               do ia=1,na(is)
+               do ia = 1 + isa, na(is) + isa
                   natwfc = natwfc + 1
-                  wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia,is)*       &
-     &                                ylm(:,lm)*chiq(:)
+                  wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
                enddo
             enddo
          enddo
+         isa = isa + na(is)
       enddo
 !
       if (natwfc.ne.n_atomic_wfc)                                       &
@@ -154,7 +97,6 @@
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
 !
       use parameters, only: natx, nsx
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -205,7 +147,6 @@
 ! irb   : position of the box in the dense grid
 !
       use parameters, only: nsx, natx
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -257,7 +198,6 @@
 ! Parallel execution: remember to sum the contributions from other nodes
 !
       use parameters, only: nsx, natx
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -306,10 +246,10 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use ions_base, only: na, nas => nax
+      use ions_base, only: na, nas => nax, nat
       use io_global, only: stdout
       use cvan, only: ish
-      use elct
+      use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
       use uspp_param, only: nh
@@ -318,7 +258,7 @@
       implicit none
       integer nspmn, nspmx
       real(kind=8)  bec(nhsa,n)
-      complex(kind=8) c(ngw,n), eigr(ngw,nas,nspmx)
+      complex(kind=8) c(ngw,n), eigr(ngw,nat)
 ! local variables
       integer is, ia, i , iv
 !
@@ -359,8 +299,8 @@
       use cvan, only: ish, nvb
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use elct
       use gvecw, only: ngw
+      use electrons_base, only: n => nbsp
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
       use mp, only: mp_sum
@@ -444,7 +384,7 @@
       use ions_base, only: na
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use elct
+      use electrons_base, only: n => nbsp
       use cvan, only: ish, nvb
       use uspp_param, only: nh
       use uspp, only: nhsa=>nkb, nhsavb=>nkbus, qq
@@ -496,12 +436,11 @@
 !-----------------------------------------------------------------------
 !
       use constants, only: pi, fpi
-      use elct
+      use electrons_base, only: n => nbsp, nx => nbspx, f
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use cell_base, only: ainv
+      use reciprocal_vectors, only: gstart, g, gx
+      use cell_base, only: ainv, tpiba2
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use gvec
       use mp, only: mp_sum
 !
       implicit none
@@ -557,14 +496,12 @@
 ! eh input: hartree energy
 !
       use constants, only: pi, fpi
-      use elct
       use ions_base, only: nsp
-      use gvec
       use gvecs
-      use reciprocal_vectors, only: gstart
+      use gvecp, only: ng => ngm
+      use reciprocal_vectors, only: gstart, gx, g
       use cell_base, only: omega
-      use cell_base, only: ainv
-      !use parm
+      use cell_base, only: ainv, tpiba2
       use pseu
       use dpseu
       use mp, only: mp_sum
@@ -623,7 +560,7 @@
       use uspp_param, only: nh
       use uspp, only: nhsa=>nkb, dvan
       use cdvan
-      use elct
+      use electrons_base, only: n => nbsp, ispin => fspin, f, nspin
       use reciprocal_vectors, only: gstart
       use ions_base, only: nsp, na
       implicit none
@@ -691,15 +628,14 @@
 ! sfac   input : structure factors
 ! wtemp work space
 !
-      use elct
       use ions_base, only: nsp
-      use gvec
-      use gvecs
-      use reciprocal_vectors, only: gstart
+      use gvecs, only: ngs
+      use gvecp, only: ng => ngm
+      use reciprocal_vectors, only: gstart, gx
       use cell_base, only: omega
-      use cell_base, only: ainv
-      use pseu
-      use dpseu
+      use cell_base, only: ainv, tpiba2
+      use pseu, only: vps
+      use dpseu, only: dvps
       use mp, only: mp_sum
 
       implicit none
@@ -750,7 +686,6 @@
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
       use control_flags, only: iprint, tbuff
-      use gvec
       use gvecs
       use gvecw, only: ngw
       use cvan, only: ish
@@ -758,10 +693,11 @@
       use uspp_param, only: nhm, nh
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: n => nbsp, ispin => fspin, f, nspin
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use cell_base, only: tpiba2
 !
       implicit none
 !
@@ -904,10 +840,10 @@
       subroutine dotcsc(eigr,cp)
 !-----------------------------------------------------------------------
 !
-      use ions_base, only: nas => nax, na, nsp
+      use ions_base, only: nas => nax, na, nsp, nat
       use io_global, only: stdout
-      use elct
       use gvecw, only: ngw
+      use electrons_base, only: n => nbsp
       use reciprocal_vectors, only: gstart
       use cvan, only: ish, nvb
       use uspp, only: nhsa=>nkb, qq
@@ -916,7 +852,7 @@
 !
       implicit none
 !
-      complex(kind=8)  eigr(ngw,nas,nsp), cp(ngw,n)
+      complex(kind=8)  eigr(ngw,nat), cp(ngw,n)
 ! local variables
       real(kind=8) rsum, csc(n) ! automatic array
       complex(kind=8) temp(ngw) ! automatic array
@@ -983,13 +919,13 @@
       use control_flags, only: iprint
       use parameters, only: natx, nsx
       use ions_base, only: na, nsp, nat, nas => nax
-      use gvec
       use cvan
       use uspp_param, only: nhm, nh
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use elct
+      use electrons_base, only: nspin
       use gvecb
+      use gvecp, only: ng => ngm
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use cell_base, only: ainv
@@ -998,12 +934,14 @@
       use cdvan
       use derho
       use dqgb_mod
+      use recvecs_indexes, only: nm, np
+
       implicit none
 ! input
-      integer, intent(in) ::  irb(3,natx,nsx)
+      integer, intent(in) ::  irb(3,nat)
       real(kind=8), intent(in)::  rhor(nnr,nspin)
       real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(kind=8), intent(in)::  eigrb(ngb,nas,nsp), rhog(ng,nspin)
+      complex(kind=8), intent(in)::  eigrb(ngb,nat), rhog(ng,nspin)
 ! local
       integer i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir, irb3, imin3, imax3
@@ -1050,7 +988,7 @@
 #ifdef __PARA
                   do ia=1,na(is)
                      nfft=1
-                     irb3=irb(3,ia,is)
+                     irb3=irb(3,isa)
                      call parabox(nr3b,irb3,nr3,imin3,imax3)
                      if (imax3-imin3+1.le.0) go to 15
 #else
@@ -1087,17 +1025,17 @@
                      qv(:) = (0.d0, 0.d0)
                      if(nfft.eq.2) then
                         do ig=1,ngb
-                           qv(npb(ig)) = eigrb(ig,ia  ,is)*dqgbt(ig,1)  &
-     &                        + ci*      eigrb(ig,ia+1,is)*dqgbt(ig,2)
+                           qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
+     &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
                            qv(nmb(ig))=                                 &
-     &                             conjg(eigrb(ig,ia  ,is)*dqgbt(ig,1)) &
-     &                        + ci*conjg(eigrb(ig,ia+1,is)*dqgbt(ig,2))
+     &                             conjg(eigrb(ig,isa  )*dqgbt(ig,1)) &
+     &                        + ci*conjg(eigrb(ig,isa+1)*dqgbt(ig,2))
                         end do
                      else
                         do ig=1,ngb
-                           qv(npb(ig)) = eigrb(ig,ia,is)*dqgbt(ig,1)
+                           qv(npb(ig)) = eigrb(ig,isa)*dqgbt(ig,1)
                            qv(nmb(ig)) =                                &
-     &                             conjg(eigrb(ig,ia,is)*dqgbt(ig,1))
+     &                             conjg(eigrb(ig,isa)*dqgbt(ig,1))
                         end do
                      endif
 !
@@ -1108,8 +1046,8 @@
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-                     call box2grid(irb(1,ia,is),1,qv,v)
-                     if (nfft.eq.2) call box2grid(irb(1,ia+1,is),2,qv,v)
+                     call box2grid(irb(1,isa),1,qv,v)
+                     if (nfft.eq.2) call box2grid(irb(1,isa+1),2,qv,v)
   15                 isa=isa+nfft
 !
                   end do
@@ -1141,7 +1079,7 @@
                do is=1,nvb
                   do ia=1,na(is)
 #ifdef __PARA
-                     irb3=irb(3,ia,is)
+                     irb3=irb(3,isa)
                      call parabox(nr3b,irb3,nr3,imin3,imax3)
                      if (imax3-imin3+1.le.0) go to 25
 #endif
@@ -1170,10 +1108,10 @@
 !
                      qv(:) = (0.d0, 0.d0)
                      do ig=1,ngb
-                        qv(npb(ig))= eigrb(ig,ia,is)*dqgbt(ig,1)        &
-     &                    + ci*      eigrb(ig,ia,is)*dqgbt(ig,2)
-                        qv(nmb(ig))= conjg(eigrb(ig,ia,is)*dqgbt(ig,1)) &
-     &                    +       ci*conjg(eigrb(ig,ia,is)*dqgbt(ig,2))
+                        qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
+     &                    + ci*      eigrb(ig,isa)*dqgbt(ig,2)
+                        qv(nmb(ig))= conjg(eigrb(ig,isa)*dqgbt(ig,1)) &
+     &                    +       ci*conjg(eigrb(ig,isa)*dqgbt(ig,2))
                      end do
 !
                      call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
@@ -1183,7 +1121,7 @@
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-                     call box2grid2(irb(1,ia,is),qv,v)
+                     call box2grid2(irb(1,isa),qv,v)
   25                 isa=isa+1
                   end do
                end do
@@ -1221,12 +1159,12 @@
 ! calculation of kinetic energy term
 !
       use constants, only: pi, fpi
-      use elct
-      use gvec
+      use electrons_base, only: nx => nbspx, n => nbsp, f
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use mp, only: mp_sum
+      use cell_base, only: tpiba2
 
       implicit none
 ! input
@@ -1263,7 +1201,7 @@
       use cvan, only: ish
       use uspp_param, only: nhm, nh
       use uspp, only :nhsa=>nkb, dvan
-      use elct
+      use electrons_base, only: n => nbsp, nspin, ispin => fspin, f
       use ions_base, only: nsp, nat, na
       implicit none
 ! input
@@ -1309,113 +1247,6 @@
       end
 
 !
-!-----------------------------------------------------------------------
-      subroutine force_cc(irb,eigrb,vxc,fion1)
-!-----------------------------------------------------------------------
-!
-!     core correction force: f = \int V_xc(r) (d rhoc(r)/d R_i) dr
-!     same logic as in newd - uses box grid. For parallel execution: 
-!     the sum over node contributions is done in the calling routine
-!
-      use core
-      use elct, only: nspin
-      use gvec
-      use gvecb
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nnr => nnrx
-      use reciprocal_vectors, only: gstart
-      use cell_base, only: omega
-      use ions_base, only: nsp, nas => nax, na
-      use parameters, only: natx, nsx
-      use small_box, only: tpibab
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use atom, only: nlcc
-      use para_mod
-      implicit none
-! input
-      integer, intent(in)        :: irb(3,natx,nsx)
-      complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
-      real(kind=8), intent(in)   :: vxc(nnr,nspin)
-! output
-      real(kind=8), intent(inout):: fion1(3,natx)
-! local
-      integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3, isa
-      real(kind=8) fcc(3,natx,nsx), fac, boxdotgrid
-      complex(kind=8) ci, facg
-      complex(kind=8), allocatable :: qv(:)
-      external  boxdotgrid
-!
-!
-      call start_clock( 'forcecc' )
-      ci = (0.d0,1.d0)
-      fac = omega/dble(nr1*nr2*nr3*nspin)
-      fcc = 0.d0
-      allocate( qv( nnrb ) )
-      do is=1,nsp
-         if ( .NOT. nlcc(is) ) go to 10
-#ifdef __PARA
-         do ia=1,na(is)
-            nfft=1
-            irb3=irb(3,ia,is)
-            call parabox(nr3b,irb3,nr3,imin3,imax3)
-            if (imax3-imin3+1.le.0) go to 15
-#else
-         do ia=1,na(is),2
-!
-! two fft's on two atoms at the same time (when possible)
-!
-            nfft=2
-            if(ia.eq.na(is)) nfft=1
-#endif
-            do ix=1,3
-               qv(:) = (0.d0, 0.d0)
-               if (nfft.eq.2) then
-                  do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
-                     qv(npb(ig)) = eigrb(ig,ia,is)*facg                 &
-     &                           + ci * eigrb(ig,ia+1,is)*facg 
-                     qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*facg)          &
-     &                           + ci * conjg(eigrb(ig,ia+1,is)*facg)
-                  end do
-               else
-                  do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
-                     qv(npb(ig)) = eigrb(ig,ia,is)*facg
-                     qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*facg)
-                  end do
-               end if
-!
-               call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
-!
-! note that a factor 1/2 is hidden in fac if nspin=2 
-!
-               do iss=1,nspin
-                  fcc(ix,ia  ,is) = fcc(ix,ia ,is) + fac *               &
-     &                 boxdotgrid(irb(1,ia  ,is),1,qv,vxc(1,iss))
-                  if (nfft.eq.2)                                         &
-     &               fcc(ix,ia+1,is) = fcc(ix,ia+1,is) + fac *           &
-     &                    boxdotgrid(irb(1,ia+1,is),2,qv,vxc(1,iss))
-               end do
-            end do
-15          continue
-         end do
-10       continue
-      end do
-!
-      isa = 0
-      do is = 1, nsp
-        do ia = 1, na(is)
-          isa = isa + 1
-          fion1(:,isa) = fion1(:,isa) + fcc(:,ia,is)
-        end do
-      end do
-
-      deallocate( qv )
-!
-      call stop_clock( 'forcecc' )
-      return
-      end
 !
 !-----------------------------------------------------------------------
       subroutine force_ion(tau0,esr,fion,dsr)
@@ -1501,12 +1332,12 @@
 ! Contribution to ionic forces from local pseudopotential
 !
       use constants, only: pi, fpi
-      use elct
-      use gvec
+      use electrons_base, only: nspin
       use gvecs
-      use reciprocal_vectors, only: gstart
-      use cell_base, only: omega
-      use ions_base, only: nsp, na, nas => nax
+      use gvecp, only: ng => ngm
+      use reciprocal_vectors, only: gstart, gx, mill_l, g
+      use cell_base, only: omega, tpiba, tpiba2
+      use ions_base, only: nsp, na, nas => nax, nat
       use grid_dimensions, only: nr1, nr2, nr3
       use parameters, only: nsx, natx
       use pseu
@@ -1514,9 +1345,9 @@
       implicit none
 ! input
       complex(kind=8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
-     &           ei1(-nr1:nr1,nas,nsp),                                 &
-     &           ei2(-nr2:nr2,nas,nsp),                                 &
-     &           ei3(-nr3:nr3,nas,nsp)
+     &           ei1(-nr1:nr1,nat),                                 &
+     &           ei2(-nr2:nr2,nat),                                 &
+     &           ei3(-nr3:nr3,nat)
 ! output
       real(kind=8) fion1(3,natx)
 ! local
@@ -1546,7 +1377,7 @@
                      i = mill_l(1,ig)
                      j = mill_l(2,ig)
                      k = mill_l(3,ig)
-                     eigrx=ei1(i,ia,is)*ei2(j,ia,is)*ei3(k,ia,is)
+                     eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
                      vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                else
@@ -1561,12 +1392,11 @@
                      i = mill_l(1,ig)
                      j = mill_l(2,ig)
                      k = mill_l(3,ig)
-                     eigrx=ei1(i,ia,is)*ei2(j,ia,is)*ei3(k,ia,is)
+                     eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
                      vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
                   end do
                endif
-               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega*         &
-     &                             wz*real(SUM(vtemp))
+               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega* wz*real(SUM(vtemp))
             end do
          end do
       end do
@@ -1580,96 +1410,98 @@
 !
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
-      use ions_base, only: nas => nax, na, nsp
-      use elct, only: n
+      use ions_base, only: nas => nax, na, nsp, nat
+      use electrons_base, only: n => nbsp
       use gvecw, only: ngw
-      use gvec
+      use reciprocal_vectors, only: gx, g
 !
       implicit none
 !
-      complex(kind=8) eigr(ngw,nas,nsp), cm(ngw,n)
+      complex(kind=8) eigr(ngw,nat), cm(ngw,n)
       real(kind=8)    sigma, auxf
-      integer nband, is, ia, ig
+      integer nband, is, ia, ig, isa
 !
       sigma=12.0
       nband=0
 !!!      do is=1,nsp
+      isa = 0
       is=1
          do ia=1,na(is)
 ! s-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)
+               cm(ig,nband)=auxf*eigr(ig,ia+isa)
             end do
 ! px-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)
+               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)
             end do
 ! py-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)
+               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)
             end do
 ! pz-like gaussians
             nband=nband+1
             do ig=1,ngw
                auxf=exp(-g(ig)/sigma**2)
-               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(3,ig)
+               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(3,ig)
             end do
          end do
+      isa = isa + na(is)
       is=2
          do ia=1,na(is)
 ! s-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)
 !            end do
 ! px-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)
 !            end do
 ! py-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)
 !            end do
 ! pz-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(3,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(3,ig)
 !            end do
 ! dxy-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)*gx(2,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)*gx(2,ig)
 !            end do
 ! dxz-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(1,ig)*gx(3,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)*gx(3,ig)
 !            end do
 ! dxy-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*gx(2,ig)*gx(3,ig)
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)*gx(3,ig)
 !            end do
 ! dx2-y2-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
 !               auxf=exp(-g(ig)/sigma**2)
-!               cm(ig,nband)=auxf*eigr(ig,ia,is)*                        &
+!               cm(ig,nband)=auxf*eigr(ig,ia+isa)*                        &
 !     &              (gx(1,ig)**2-gx(2,ig)**2)
 !            end do
          end do
@@ -1688,7 +1520,7 @@
       use cvan, only :nvb, ish
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use uspp_param, only:  nh
-      use elct
+      use electrons_base, only: n => nbsp, ispin => fspin, nx => nbspx
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use mp, only: mp_sum
@@ -1772,7 +1604,7 @@
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
       use uspp, only :nhsa=>nkb, nhsavb=> nkbus
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use gvecw, only: ngw
 !
       implicit none
@@ -1889,7 +1721,7 @@
 !     around atoms
 !
       use parameters, only: natx, nsx
-      use ions_base, only: nsp, na
+      use ions_base, only: nsp, na, nat
       use grid_dimensions, only: nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
@@ -1901,7 +1733,7 @@
 ! input
       real(kind=8), intent(in):: tau0(3,natx)
 ! output
-      integer, intent(out):: irb(3,natx,nsx)
+      integer, intent(out):: irb(3,nat)
       real(kind=8), intent(out):: taub(3,natx)
 ! local
       real(kind=8) x(3), xmod
@@ -1940,8 +1772,8 @@
 !           (the indices of the small box run from irb to irb+nrb-1)
 !
                   xint=int(x(i)*nr(i))
-                  irb (i,ia,is)=xint+1-nrb(i)/2+1
-                  if(irb(i,ia,is).lt.1) irb(i,ia,is)=irb(i,ia,is)+nr(i)
+                  irb (i,isa)=xint+1-nrb(i)/2+1
+                  if(irb(i,isa).lt.1) irb(i,isa)=irb(i,isa)+nr(i)
 !
 ! x(i) are the atomic positions in crystal coordinates, where the
 ! "crystal lattice" is the small box lattice and the origin is at
@@ -1954,8 +1786,8 @@
 ! case of nrb(i) odd - see above for comments
 !
                   xint=nint(x(i)*nr(i))
-                  irb (i,ia,is)=xint+1-(nrb(i)-1)/2
-                  if(irb(i,ia,is).lt.1) irb(i,ia,is)=irb(i,ia,is)+nr(i)
+                  irb (i,isa)=xint+1-(nrb(i)-1)/2
+                  if(irb(i,isa).lt.1) irb(i,isa)=irb(i,isa)+nr(i)
                   xmod=x(i)*nr(i)-xint
                   x(i)=(xmod+(nrb(i)-1)/2)/nr(i)
                end if
@@ -1970,11 +1802,13 @@
       end do
 
       if( iprsta > 2 ) then
+           isa = 1
            do is=1,nvb
               WRITE( stdout,'(/,2x,''species= '',i2)') is
               do ia=1,na(is)
-                 WRITE( stdout,2000) ia, (irb(i,ia,is),i=1,3)
+                 WRITE( stdout,2000) ia, (irb(i,isa),i=1,3)
 2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,' irb3= ',i3)
+                 isa = isa + 1
                end do
             end do
       endif
@@ -2005,16 +1839,16 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use qgb_mod
-      use elct
+      use electrons_base, only: nspin
       use control_flags, only: iprint, thdyn, tfor, tprnfor
       use para_mod
       use mp, only: mp_sum
 !
       implicit none
 ! input
-      integer irb(3,natx,nsx)
+      integer irb(3,nat)
       real(kind=8) rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(kind=8) eigrb(ngb,nas,nsp)
+      complex(kind=8) eigrb(ngb,nat)
       real(kind=8)  vr(nnr,nspin)
 ! output
       real(kind=8)  fion(3,natx)
@@ -2041,7 +1875,7 @@
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
-            irb3=irb(3,ia,is)
+            irb3=irb(3,isa)
             call parabox(nr3b,irb3,nr3,imin3,imax3)
             if (imax3-imin3+1.le.0) go to 15
 #else
@@ -2059,18 +1893,18 @@
                   qv(:) = (0.d0, 0.d0)
                   if (nfft.eq.2) then
                      do ig=1,ngb
-                        qv(npb(ig))= eigrb(ig,ia  ,is)*qgb(ig,ijv,is)   &
-     &                          + ci*eigrb(ig,ia+1,is)*qgb(ig,ijv,is)
+                        qv(npb(ig))= eigrb(ig,isa  )*qgb(ig,ijv,is)   &
+     &                          + ci*eigrb(ig,isa+1)*qgb(ig,ijv,is)
                         qv(nmb(ig))= conjg(                             &
-     &                               eigrb(ig,ia  ,is)*qgb(ig,ijv,is))  &
+     &                               eigrb(ig,isa  )*qgb(ig,ijv,is))  &
      &                          + ci*conjg(                             &
-     &                               eigrb(ig,ia+1,is)*qgb(ig,ijv,is))
+     &                               eigrb(ig,isa+1)*qgb(ig,ijv,is))
                      end do
                   else
                      do ig=1,ngb
-                        qv(npb(ig)) = eigrb(ig,ia,is)*qgb(ig,ijv,is)
+                        qv(npb(ig)) = eigrb(ig,isa)*qgb(ig,ijv,is)
                         qv(nmb(ig)) = conjg(                            &
-     &                                eigrb(ig,ia,is)*qgb(ig,ijv,is))
+     &                                eigrb(ig,isa)*qgb(ig,ijv,is))
                      end do
                   end if
 !
@@ -2078,13 +1912,13 @@
 !
                   do iss=1,nspin
                      deeq(iv,jv,isa,iss) = fac *                        &
-     &                    boxdotgrid(irb(1,ia,is),1,qv,vr(1,iss))
+     &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
                      if (iv.ne.jv)                                      &
      &                    deeq(jv,iv,isa,iss)=deeq(iv,jv,isa,iss)
 !
                      if (nfft.eq.2) then
                         deeq(iv,jv,isa+1,iss) = fac*                    &
-     &                       boxdotgrid(irb(1,ia+1,is),2,qv,vr(1,iss))
+     &                       boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
                         if (iv.ne.jv)                                   &
      &                       deeq(jv,iv,isa+1,iss)=deeq(iv,jv,isa+1,iss)
                      end if
@@ -2112,7 +1946,7 @@
 #ifdef __PARA
             do ia=1,na(is)
                nfft=1
-               irb3=irb(3,ia,is)
+               irb3=irb(3,isa)
                call parabox(nr3b,irb3,nr3,imin3,imax3)
                if (imax3-imin3+1.le.0) go to 20
 #else
@@ -2142,20 +1976,20 @@
                               facg2 = cmplx(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac2
                               qv(npb(ig)) = qv(npb(ig))                 &
-     &                                    +    eigrb(ig,ia  ,is)*facg1  &
-     &                                    + ci*eigrb(ig,ia+1,is)*facg2
+     &                                    +    eigrb(ig,isa  )*facg1  &
+     &                                    + ci*eigrb(ig,isa+1)*facg2
                               qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                                +   conjg(eigrb(ig,ia  ,is)*facg1)&
-     &                                +ci*conjg(eigrb(ig,ia+1,is)*facg2)
+     &                                +   conjg(eigrb(ig,isa  )*facg1)&
+     &                                +ci*conjg(eigrb(ig,isa+1)*facg2)
                            end do
                         else
                            do ig=1,ngb
                               facg1 = cmplx(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is)*fac1
                               qv(npb(ig)) = qv(npb(ig))                 &
-     &                                    +    eigrb(ig,ia,is)*facg1
+     &                                    +    eigrb(ig,isa)*facg1
                               qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                               +  conjg( eigrb(ig,ia,is)*facg1)
+     &                               +  conjg( eigrb(ig,isa)*facg1)
                            end do
                         end if
                      end do
@@ -2164,10 +1998,10 @@
                   call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
                   fvan(ik,ia,is) =                                      &
-     &                    boxdotgrid(irb(1,ia,is),1,qv,vr(1,iss))
+     &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
 !
                   if (nfft.eq.2) fvan(ik,ia+1,is) =                     &
-     &                    boxdotgrid(irb(1,ia+1,is),2,qv,vr(1,iss))
+     &                    boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
                end do
  20            isa = isa+nfft
             end do
@@ -2182,7 +2016,7 @@
          do is=1,nvb
             do ia=1,na(is)
 #ifdef __PARA
-               irb3=irb(3,ia,is)
+               irb3=irb(3,isa)
                call parabox(nr3b,irb3,nr3,imin3,imax3)
                if (imax3-imin3+1.le.0) go to 25
 #endif
@@ -2202,9 +2036,9 @@
                         end if
                         do ig=1,ngb
                            facg1 = fac1 * cmplx(0.d0,-gxb(ik,ig)) *     &
-     &                                qgb(ig,ijv,is) * eigrb(ig,ia,is)
+     &                                qgb(ig,ijv,is) * eigrb(ig,isa)
                            facg2 = fac2 * cmplx(0.d0,-gxb(ik,ig)) *     &
-     &                                qgb(ig,ijv,is) * eigrb(ig,ia,is)
+     &                                qgb(ig,ijv,is) * eigrb(ig,isa)
                            qv(npb(ig)) = qv(npb(ig))                    &
      &                                    + facg1 + ci*facg2
                            qv(nmb(ig)) = qv(nmb(ig))                    &
@@ -2216,8 +2050,8 @@
                   call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
                   fvan(ik,ia,is) =                                      &
-     &                    boxdotgrid(irb(1,ia,is),isup,qv,vr(1,isup)) + &
-     &                    boxdotgrid(irb(1,ia,is),isdw,qv,vr(1,isdw))
+     &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
+     &                    boxdotgrid(irb(1,isa),isdw,qv,vr(1,isdw))
                end do
 25             isa = isa+1
             end do
@@ -2249,11 +2083,10 @@
       use io_global, only: stdout
       use ions_base, only: na, nsp
       use parameters, only: natx
-      use gvec
       use uspp, only :nhsa=>nkb, qq
       use uspp_param, only: nhm, nh
       use cvan, only: ish, nvb
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use constants, only: pi, fpi
 !
       implicit none
@@ -2321,20 +2154,19 @@
 !-----------------------------------------------------------------------
 !     contribution to fion due to nonlocal part
 !
-      use gvec
       use uspp, only :nhsa=>nkb, dvan, deeq
       use uspp_param, only: nhm, nh
       use cvan, only: ish, nvb
       use ions_base, only: nas => nax, nat, nsp, na
       use parameters, only: natx, nsx
-      use elct
+      use electrons_base, only: n => nbsp, ispin => fspin, f
       use gvecw, only: ngw
       use constants, only: pi, fpi
       !use parm
 ! 
       implicit none
       real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), c(2,ngw,n)
-      complex(kind=8) eigr(ngw,nas,nsp)
+      complex(kind=8) eigr(ngw,nat)
       real(kind=8) fion(3,natx)
 !
       integer k, is, ia, isa, iss, inl, iv, jv, i
@@ -2405,7 +2237,7 @@
 !     input : beta(ig,l,is), eigr, c
 !     output: becp as parameter
 !
-      use ions_base, only: na, nas => nax
+      use ions_base, only: na, nas => nax, nat
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
@@ -2415,16 +2247,21 @@
 !
       implicit none
       integer n, nspmn, nspmx
-      real(kind=8)  eigr(2,ngw,nas,nspmx), c(2,ngw,n)
+      real(kind=8)  eigr(2,ngw,nat), c(2,ngw,n)
       real(kind=8)  becp(nhsa,n)
       complex(kind=8), allocatable :: wrk2(:,:)
 !
-      integer ig, is, iv, ia, l, ixr, ixi, inl, i
+      integer isa, ig, is, iv, ia, l, ixr, ixi, inl, i
       real(kind=8) signre, signim, arg
 !
       call start_clock( 'nlsm1' )
 
       allocate( wrk2( ngw, nas ) )
+
+      isa = 0
+      do is = 1, nspmn - 1
+        isa = isa + na(is)
+      end do
 
       do is=nspmn,nspmx
          do iv=1,nh(is)
@@ -2455,15 +2292,15 @@
                if (gstart == 2) then
 !                   q = 0   component (with weight 1.0)
                   wrk2(1,ia)= cmplx(                                   &
-     &               signre*beta(1,iv,is)*eigr(ixr,1,ia,is),           &
-     &               signim*beta(1,iv,is)*eigr(ixi,1,ia,is) )
+     &               signre*beta(1,iv,is)*eigr(ixr,1,ia+isa),           &
+     &               signim*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
 !                   q > 0   components (with weight 2.0)
                end if
                do ig=gstart,ngw
                   arg = 2.0*beta(ig,iv,is)
                   wrk2(ig,ia) = cmplx(                                 &
-     &                  signre*arg*eigr(ixr,ig,ia,is),                 &
-     &                  signim*arg*eigr(ixi,ig,ia,is) )
+     &                  signre*arg*eigr(ixr,ig,ia+isa),                 &
+     &                  signim*arg*eigr(ixi,ig,ia+isa) )
                end do
             end do
             inl=ish(is)+(iv-1)*na(is)+1
@@ -2478,9 +2315,13 @@
          end do
 #endif
 
+        isa = isa + na(is)
+
       end do
+
       deallocate( wrk2 )
       call stop_clock( 'nlsm1' )
+
       return
       end
 !-------------------------------------------------------------------------
@@ -2494,19 +2335,20 @@
 !     input : eigr, c
 !     output: becdr
 !
-      use ions_base, only: nas => nax, nsp, na
-      use elct
-      use gvec
+      use ions_base, only: nas => nax, nsp, na, nat
+      use electrons_base, only: n => nbsp
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
       use constants, only: pi, fpi
       use uspp, only :nhsa=>nkb, nhtol, beta
       use cvan, only: ish
       use uspp_param, only: nh
+      use reciprocal_vectors, only: gx
+      use cell_base, only: tpiba
 !
       implicit none
-      real(kind=8)  eigr(2,ngw,nas,nsp),c(2,ngw,n), becdr(nhsa,n,3)
-      integer ig, is, iv, ia, k, l, ixr, ixi, inl
+      real(kind=8)  eigr(2,ngw,nat),c(2,ngw,n), becdr(nhsa,n,3)
+      integer ig, is, iv, ia, k, l, ixr, ixi, inl, isa
       real(kind=8) signre, signim, arg
       real(kind=8), allocatable:: gk(:)
       complex(kind=8), allocatable :: wrk2(:,:)
@@ -2523,6 +2365,7 @@
             gk(ig)=gx(k,ig)*tpiba
          end do
 !
+         isa = 0
          do is=1,nsp
             do iv=1,nh(is)
 !
@@ -2555,21 +2398,24 @@
                   if (gstart == 2) then
 !                             q = 0   component (with weight 1.0)
                      wrk2(1,ia) = cmplx (                               &
-     &                  signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia,is),   &
-     &                  signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia,is) )
+     &                  signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa),   &
+     &                  signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
 !                            q > 0   components (with weight 2.0)
                   end if
                   do ig=gstart,ngw
                      arg = 2.0*gk(ig)*beta(ig,iv,is)
                      wrk2(ig,ia) = cmplx (                              &
-    &                     signre*arg*eigr(ixr,ig,ia,is),                &
-    &                     signim*arg*eigr(ixi,ig,ia,is) )
+    &                     signre*arg*eigr(ixr,ig,ia+isa),                &
+    &                     signim*arg*eigr(ixi,ig,ia+isa) )
                   end do
                end do
                inl=ish(is)+(iv-1)*na(is)+1
                call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1,       &
      &                   nhsa,na(is),2*ngw,n)
             end do
+ 
+            isa = isa + na(is)
+
          end do
       end do
 
@@ -2597,29 +2443,35 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     for vanderbilt pseudo pot - kl & ap
 !
-      use ions_base, only: na, nsp, nas => nax
+      use ions_base, only: na, nsp, nas => nax, nat
       use cvan, only: ish, nvb
       use uspp, only :nhsa=>nkb, qq
       use uspp_param, only: nh
-      use elct
+      use electrons_base, only: n => nbsp, nx => nbspx, nspin, nupdwn, iupdwn, f
       use gvecw, only: ngw
       use control_flags, only: iprint, iprsta
       use io_global, only: stdout
 !
       implicit none
 !
-      complex(kind=8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nas,nsp)
+      complex(kind=8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
       real(kind=8) x0(nx,nx), diff, ccc, eps, delt
       integer iter, max
       real(kind=8) bephi(nhsa,n), becp(nhsa,n)
 !
-      real(kind=8) diag(nx),work1(nx),work2(nx),                        &
-     &     xloc(nx,nx),tmp1(nx,nx),tmp2(nx,nx),dd(nx,nx),               &
-     &     x1(nx,nx),rhos(nx,nx),rhor(nx,nx),con(nx,nx),  u(nx,nx)
-      real(kind=8) sig(nx,nx), rho(nx,nx), tau(nx,nx)
+      real(kind=8), allocatable :: diag(:), work1(:), work2(:), xloc(:,:), &
+                                   tmp1(:,:), tmp2(:,:), dd(:,:), x1(:,:), &
+                                   rhos(:,:), rhor(:,:), con(:,:), u(:,:), &
+                                   sig(:,:), rho(:,:), tau(:,:)
+
 ! the above are all automatic arrays
       integer istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       real(kind=8), allocatable:: qbephi(:,:), qbecp(:,:)
+
+      allocate( diag(nx), work1(nx), work2(nx), xloc(nx,nx), tmp1(nx,nx),    &
+                tmp2(nx,nx), dd(nx,nx), x1(nx,nx), rhos(nx,nx), rhor(nx,nx), &
+                con(nx,nx),  u(nx,nx), sig(nx,nx), rho(nx,nx), tau(nx,nx) )
+
 !
 !     calculation of becp and bephi
 !
@@ -2800,6 +2652,8 @@
 !
       deallocate(qbecp )
       deallocate(qbephi)
+      deallocate( diag, work1, work2, xloc, tmp1, tmp2, dd, x1, rhos, rhor, &
+                  con, u, sig, rho, tau )
 !
       call stop_clock( 'ortho' )
       return
@@ -2839,262 +2693,7 @@
 !
       return
       end
-!-----------------------------------------------------------------------
-      subroutine phbox(taub,eigrb)
-!-----------------------------------------------------------------------
-!     calculates the phase factors for the g's of the little box
-!     eigrt=exp(-i*g*tau) .
-!     Uses the same logic for fast calculation as in phfac (see below)
-!
-      use io_global, only: stdout
-      use ions_base, only: nas => nax, nsp, na
-      use parameters, only: natx, nsx
-      use gvecb
-      use cell_base, only: ainv
-      use small_box, only: ainvb
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-      use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
-!
-      implicit none
-      real(kind=8) :: taub(3,natx)
-      complex(kind=8) :: eigrb(ngb,nas,nsp)
-! local
-      integer :: i,j,k, is, ia, ig, isa
-      real(kind=8) taup(3),s,ar1,ar2,ar3
-      complex(kind=8), allocatable:: ei1b(:,:,:), ei2b(:,:,:), ei3b(:,:,:)
-      complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
-!
-      if(nr1b.lt.3) call errore(' phbox ',' nr1b too small ',nr1b)
-      if(nr2b.lt.3) call errore(' phbox ',' nr2b too small ',nr2b)
-      if(nr3b.lt.3) call errore(' phbox ',' nr3b too small ',nr3b)
-!
-      allocate(ei1b(-nr1b:nr1b,nas,nsp))
-      allocate(ei2b(-nr2b:nr2b,nas,nsp))
-      allocate(ei3b(-nr3b:nr3b,nas,nsp))
-!
-      if(iprsta.gt.3) then 
-         WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) ) 
-      endif
-      isa = 0 
-      do is=1,nsp
-         do ia=1,na(is)
-            isa = isa + 1
-            do i=1,3
-               s=0.d0
-               do j=1,3
-                  s = s + ainvb(i,j)*taub(j,isa)
-               end do
-               taup(i)=s
-            end do
-!
-            ar1=2.d0*pi*taup(1)
-            ctep1=cmplx(cos(ar1),-sin(ar1))
-            ctem1=conjg(ctep1)
-            ei1b( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei1b( 1,ia,is)=ctep1
-            ei1b(-1,ia,is)=ctem1
-            do i=2,nr1b-1
-               ei1b( i,ia,is)=ei1b( i-1,ia,is)*ctep1
-               ei1b(-i,ia,is)=ei1b(-i+1,ia,is)*ctem1
-            end do
-!
-            ar2=2.d0*pi*taup(2)
-            ctep2=cmplx(cos(ar2),-sin(ar2))
-            ctem2=conjg(ctep2)
-            ei2b( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei2b( 1,ia,is)=ctep2
-            ei2b(-1,ia,is)=ctem2
-            do j=2,nr2b-1
-               ei2b( j,ia,is)=ei2b( j-1,ia,is)*ctep2
-               ei2b(-j,ia,is)=ei2b(-j+1,ia,is)*ctem2
-            end do
-!
-            ar3=2.d0*pi*taup(3)
-            ctep3=cmplx(cos(ar3),-sin(ar3))
-            ctem3=conjg(ctep3)
-            ei3b( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei3b( 1,ia,is)=ctep3
-            ei3b(-1,ia,is)=ctem3
-            do k=2,nr3b-1
-               ei3b( k,ia,is)=ei3b( k-1,ia,is)*ctep3
-               ei3b(-k,ia,is)=ei3b(-k+1,ia,is)*ctem3
-            end do
-!
-         end do
-      end do
-!
-!     calculation of eigrb(g,ia,is)=e^(-ig.r(ia,is))
-!
-      do is=1,nsp
-         do ia=1,na(is)
-            do ig=1,ngb
-               i = mill_b(1,ig)
-               j = mill_b(2,ig)
-               k = mill_b(3,ig)
-               eigrb(ig,ia,is) = ei1b(i,ia,is) * ei2b(j,ia,is) * ei3b(k,ia,is)
-            end do
-         end do
-      end do
-!
-      if(iprsta.gt.4) then
-         WRITE( stdout,*)
-         if(nsp.gt.1) then
-            do is=1,nsp
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (is)',is
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,1,is),ei2b(ig,1,is),ei3b(ig,1,is)
-               end do
-               WRITE( stdout,*)
-            end do
-         else
-            do ia=1,na(1)
-               WRITE( stdout,'(33x,a,i4)') ' ei1b, ei2b, ei3b (ia)',ia
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1b(ig,ia,1),ei2b(ig,ia,1),ei3b(ig,ia,1)
-               end do
-               WRITE( stdout,*)
-            end do
-         endif
-      endif
-!
-      deallocate(ei3b)
-      deallocate(ei2b)
-      deallocate(ei1b)
-!     
-      return
-      end
-!-----------------------------------------------------------------------
-      subroutine phfac(tau0,ei1,ei2,ei3,eigr)
-!-----------------------------------------------------------------------
-!  this subroutine generates the complex matrices ei1, ei2, and ei3
-!  used to compute the structure factor and forces on atoms :
-!     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
-!  and similar definitions for ei2 and ei3 ; and :
-!     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
-!  The value of n1,n2,n3 for a vector g is supplied by arrays mill_l
-!  calculated in ggen .
-!
-      use ions_base, only: nas => nax, nsp, na
-      use io_global, only: stdout
-      use parameters, only: natx, nsx
-      use gvecw, only: ngw
-      use cell_base, only: ainv
-      use grid_dimensions, only: nr1, nr2, nr3
-      use constants, only: pi, fpi
-      use gvec
-      use control_flags, only: iprint, iprsta
-!
-      implicit none
-      real(kind=8) tau0(3,natx)
-!
-      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),      &
-     &                ei3(-nr3:nr3,nas,nsp), eigr(ngw,nas,nsp)
-!
-      integer i,j,k, ia, is, ig, isa
-      real(kind=8) taup(3), s, ar1,ar2,ar3
-      complex(kind=8) ctep1,ctep2,ctep3,ctem1,ctem2,ctem3
-!
-      if(nr1.lt.3) call errore(' phfac ',' nr1 too small ',nr1)
-      if(nr2.lt.3) call errore(' phfac ',' nr1 too small ',nr2)
-      if(nr3.lt.3) call errore(' phfac ',' nr1 too small ',nr3)
-!
-      if(iprsta.gt.3) then
-         WRITE( stdout,*) ' phfac: tau0 '
-         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) )
-      endif
-      isa = 0
-      do is=1,nsp
-         do ia=1,na(is)
-            isa = isa + 1
-            do i=1,3
-               s=0.d0
-               do j=1,3
-                  s=s+ainv(i,j)*tau0(j,isa)
-               end do
-               taup(i)=s
-!
-! tau0=x1*a1+x2*a2+x3*a3 => taup(1)=x1=tau0*b1 and so on
-!
-            end do
-!
-            ar1=2.d0*pi*taup(1)
-            ctep1=cmplx(cos(ar1),-sin(ar1))
-            ctem1=conjg(ctep1)
-            ei1( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei1( 1,ia,is)=ctep1
-            ei1(-1,ia,is)=ctem1
-            do i=2,nr1-1
-               ei1( i,ia,is)=ei1( i-1,ia,is)*ctep1
-               ei1(-i,ia,is)=ei1(-i+1,ia,is)*ctem1
-            end do
-!
-            ar2=2.d0*pi*taup(2)
-            ctep2=cmplx(cos(ar2),-sin(ar2))
-            ctem2=conjg(ctep2)
-            ei2( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei2( 1,ia,is)=ctep2
-            ei2(-1,ia,is)=ctem2
-            do j=2,nr2-1
-               ei2( j,ia,is)=ei2( j-1,ia,is)*ctep2
-               ei2(-j,ia,is)=ei2(-j+1,ia,is)*ctem2
-            end do
-!
-            ar3=2.d0*pi*taup(3)
-            ctep3=cmplx(cos(ar3),-sin(ar3))
-            ctem3=conjg(ctep3)
-            ei3( 0,ia,is)=cmplx(1.d0,0.d0)
-            ei3( 1,ia,is)=ctep3
-            ei3(-1,ia,is)=ctem3
-            do k=2,nr3-1
-               ei3( k,ia,is)=ei3( k-1,ia,is)*ctep3
-               ei3(-k,ia,is)=ei3(-k+1,ia,is)*ctem3
-            end do
-!
-         end do
-      end do
-!
-      if(iprsta.gt.4) then
-         WRITE( stdout,*)
-         if(nsp.gt.1) then
-            do is=1,nsp
-               WRITE( stdout,'(33x,a,i4)') ' ei1, ei2, ei3 (is)',is
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1(ig,1,is),ei3(ig,1,is),ei3(ig,1,is)
-               end do
-               WRITE( stdout,*)
-            end do
-         else
-            do ia=1,na(1)
-               WRITE( stdout,'(33x,a,i4)') ' ei1, ei2, ei3 (ia)',ia
-               do ig=1,4
-                  WRITE( stdout,'(6f9.4)')                                    &
-     &                 ei1(ig,ia,1),ei3(ig,ia,1),ei3(ig,ia,1)
-               end do
-               WRITE( stdout,*)
-            end do
-         endif
-      endif
-!
-!     calculation of eigr(g,ia,is)=e^(-ig.r(ia,is))
-!
-      do is=1,nsp
-         do ia=1,na(is)
-            do ig=1,ngw
-               i = mill_l(1,ig)
-               j = mill_l(2,ig)
-               k = mill_l(3,ig)
-               eigr(ig,ia,is) = ei1(i,ia,is) * ei2(j,ia,is) * ei3(k,ia,is)
-            end do
-         end do
-      end do
-!
-      return
-      end
+
 !
 !-------------------------------------------------------------------------
       subroutine prefor(eigr,betae)
@@ -3103,31 +2702,32 @@
 !     input :        eigr =  e^-ig.r_i
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
-      use ions_base, only: nas => nax, nsp, na
+      use ions_base, only: nas => nax, nsp, na, nat
       use gvecw, only: ngw
       use cvan, only: ish
       use uspp, only :nhsa=>nkb, beta, nhtol
       use uspp_param, only: nh
-      use elct
 !
       implicit none
-      complex(kind=8) eigr(ngw,nas,nsp)
+      complex(kind=8) eigr(ngw,nat)
       complex(kind=8) betae(ngw,nhsa)
 !
-      integer is, iv, ia, inl, ig
+      integer is, iv, ia, inl, ig, isa
       complex(kind=8) ci
 !
       call start_clock( 'prefor' )
+      isa = 0
       do is=1,nsp
          do iv=1,nh(is)
             ci=(0.,-1.)**nhtol(iv,is)
             do ia=1,na(is)
                inl=ish(is)+(iv-1)*na(is)+ia
                do ig=1,ngw
-                  betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia,is)
+                  betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia+isa)
                end do
             end do
          end do
+         isa = isa + na(is)
       end do
       call stop_clock( 'prefor' )
 !
@@ -3141,15 +2741,15 @@
 ! Projection on atomic wavefunctions
 !
       use io_global, only: stdout
-      use elct, only: n, nx
+      use electrons_base, only: nx => nbspx, n => nbsp
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na, nas => nax
+      use ions_base, only: nsp, na, nas => nax, nat
       use uspp, only: nhsa => nkb
       use atom
 !
       implicit none
-      complex(kind=8), intent(in) :: c(ngw,nx), eigr(ngw,nas,nsp),      &
+      complex(kind=8), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
 !
       complex(kind=8), allocatable:: wfc(:,:), swfc(:,:), becwfc(:,:)
@@ -3336,7 +2936,9 @@
       subroutine randin(nmin,nmax,gstart,ngw,ampre,c)
 !---------------------------------------------------------------------
 !
+      use wave_functions, only: wave_rand_init
       implicit none
+
 ! input
       integer nmin, nmax, gstart, ngw
       real(kind=8) ampre
@@ -3346,14 +2948,15 @@
       integer i,j
       real(kind=8) ranf1, randy, ranf2, ampexp
 !
-      do i=nmin,nmax
-         do j=gstart,ngw
-            ranf1=.5-randy()
-            ranf2=.5-randy()
-            ampexp=ampre*exp(-(4.*j)/ngw)
-            c(j,i)=c(j,i)+ampexp*cmplx(ranf1,ranf2)
-         end do
-      end do
+      CALL wave_rand_init( c )
+!      do i=nmin,nmax
+!         do j=gstart,ngw
+!            ranf1=.5-randy()
+!            ranf2=.5-randy()
+!            ampexp=ampre*exp(-(4.*j)/ngw)
+!            c(j,i)=c(j,i)+ampexp*cmplx(ranf1,ranf2)
+!         end do
+!      end do
 !
       return
       end
@@ -3395,11 +2998,12 @@
       use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
       use ions_base, only: nat, nas => nax, nsp
       use parameters, only: natx, nsx
-      use gvec
+      use gvecp, only: ng => ngm
       use gvecs
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
+      use recvecs_indexes, only: np, nm
       use uspp, only: nhsa => nkb
       use uspp_param, only: nh, nhm
       use grid_dimensions, only: nr1, nr2, nr3, &
@@ -3407,7 +3011,7 @@
       use cell_base, only: omega
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
       use constants, only: pi, fpi
       use pseu
 !
@@ -3419,8 +3023,8 @@
       real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
-      complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
-      integer irb(3,natx,nsx), nfi
+      complex(kind=8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
+      integer irb(3,nat), nfi
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       real(kind=8) rsumr(2), rsumg(2), sa1, sa2
@@ -3707,7 +3311,7 @@
       use reciprocal_vectors, only: gstart
       use uspp, only: nhsa => nkb, nhsavb=>nkbus
       use cvan, only: nvb
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp ! , f, ispin => fspin, nspin
 !
       implicit none
 !
@@ -3774,14 +3378,14 @@
       use ions_base, only: nas => nax, nat, na, nsp
       use io_global, only: stdout
       use parameters, only: natx, nsx
-      use gvec
       use cvan, only: nvb
       use uspp_param, only: nh, nhm
       use uspp, only: deeq
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use elct
+      use electrons_base, only: nspin
       use gvecb
+      use gvecp, only: ng => ngm
       use cell_base, only: omega
       use small_box, only: omegab
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -3789,12 +3393,13 @@
       use control_flags, only: iprint, iprsta
       use qgb_mod
       use para_mod
+      use recvecs_indexes, only: np, nm
 !
       implicit none
 !
       real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      integer, intent(in) :: irb(3,natx,nsx)
-      complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
+      integer, intent(in) :: irb(3,nat)
+      complex(kind=8), intent(in):: eigrb(ngb,nat)
       real(kind=8), intent(inout):: rhor(nnr,nspin)
       complex(kind=8),  intent(inout):: rhog(ng,nspin)
 !
@@ -3830,7 +3435,7 @@
 
             do ia=1,na(is)
                nfft=1
-               irb3=irb(3,ia,is)
+               irb3=irb(3,isa)
                call parabox(nr3b,irb3,nr3,imin3,imax3)
                if (imax3-imin3+1.le.0) go to 15
 #else
@@ -3865,16 +3470,16 @@
                if(nfft.eq.2)then
                   do ig=1,ngb
                      qv(npb(ig))=  &
-                                   eigrb(ig,ia  ,is)*qgbt(ig,1)  &
-                        + ci*      eigrb(ig,ia+1,is)*qgbt(ig,2)
+                                   eigrb(ig,isa  )*qgbt(ig,1)  &
+                        + ci*      eigrb(ig,isa+1)*qgbt(ig,2)
                      qv(nmb(ig))=                                       &
-                             conjg(eigrb(ig,ia  ,is)*qgbt(ig,1))        &
-                        + ci*conjg(eigrb(ig,ia+1,is)*qgbt(ig,2))
+                             conjg(eigrb(ig,isa  )*qgbt(ig,1))        &
+                        + ci*conjg(eigrb(ig,isa+1)*qgbt(ig,2))
                   end do
                else
                   do ig=1,ngb
-                     qv(npb(ig)) = eigrb(ig,ia,is)*qgbt(ig,1)
-                     qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*qgbt(ig,1))
+                     qv(npb(ig)) = eigrb(ig,isa)*qgbt(ig,1)
+                     qv(nmb(ig)) = conjg(eigrb(ig,isa)*qgbt(ig,1))
                   end do
                endif
 
@@ -3898,8 +3503,8 @@
                !
                !  add qv(r) to v(r), in real space on the dense grid
                !
-               call  box2grid(irb(1,ia,is),1,qv,v)
-               if (nfft.eq.2) call  box2grid(irb(1,ia+1,is),2,qv,v)
+               call  box2grid(irb(1,isa),1,qv,v)
+               if (nfft.eq.2) call  box2grid(irb(1,isa+1),2,qv,v)
   15           isa=isa+nfft
 !
             end do
@@ -3947,7 +3552,7 @@
          do is=1,nvb
             do ia=1,na(is)
 #ifdef __PARA
-               irb3=irb(3,ia,is)
+               irb3=irb(3,isa)
                call parabox(nr3b,irb3,nr3,imin3,imax3)
                if (imax3-imin3+1.le.0) go to 25
 #endif
@@ -3970,10 +3575,10 @@
 !
                qv(:) = (0.d0, 0.d0)
                do ig=1,ngb
-                  qv(npb(ig)) =    eigrb(ig,ia,is)*qgbt(ig,1)           &
-     &                  + ci*      eigrb(ig,ia,is)*qgbt(ig,2)
-                  qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*qgbt(ig,1))       &
-     &                  + ci*   conjg(eigrb(ig,ia,is)*qgbt(ig,2))
+                  qv(npb(ig)) =    eigrb(ig,isa)*qgbt(ig,1)           &
+     &                  + ci*      eigrb(ig,isa)*qgbt(ig,2)
+                  qv(nmb(ig)) = conjg(eigrb(ig,isa)*qgbt(ig,1))       &
+     &                  + ci*   conjg(eigrb(ig,isa)*qgbt(ig,2))
                end do
 !
                call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
@@ -3995,7 +3600,7 @@
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-               call box2grid2(irb(1,ia,is),qv,v)
+               call box2grid2(irb(1,isa),qv,v)
   25           isa=isa+1
 !
             end do
@@ -4048,94 +3653,6 @@
       return
       end
 !
-!-----------------------------------------------------------------------
-      subroutine set_cc(irb,eigrb,rhoc)
-!-----------------------------------------------------------------------
-!
-!     Calculate core charge contribution in real space, rhoc(r)
-!     Same logic as for rhov: use box grid for core charges
-!
-      use ions_base, only: nas => nax, nsp, na
-      use parameters, only: natx, nsx
-      use atom, only: nlcc
-      use gvec
-      use grid_dimensions, only: nr3, nnr => nnrx
-      use elct
-      use gvecb
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use control_flags, only: iprint
-      use core
-      use para_mod
-      implicit none
-! input
-      integer, intent(in)        :: irb(3,natx,nsx)
-      complex(kind=8), intent(in):: eigrb(ngb,nas,nsp)
-! output
-      real(kind=8), intent(out)  :: rhoc(nnr)
-! local
-      integer nfft, ig, is, ia, irb3, imin3, imax3
-      complex(kind=8) ci
-      complex(kind=8), allocatable :: wrk1(:)
-      complex(kind=8), allocatable :: qv(:)
-!
-      call start_clock( 'set_cc' )
-      ci=(0.,1.)
-!
-      allocate( qv ( nnrb ) )
-      allocate( wrk1 ( nnr ) )
-      wrk1 (:) = (0.d0, 0.d0)
-!
-      do is=1,nsp
-         if (.not.nlcc(is)) go to 10
-#ifdef __PARA
-         do ia=1,na(is)
-            nfft=1
-            irb3=irb(3,ia,is)
-            call parabox(nr3b,irb3,nr3,imin3,imax3)
-            if (imax3-imin3+1.le.0) go to 15
-#else
-         do ia=1,na(is),2
-            nfft=2
-            if( ia.eq.na(is) ) nfft=1
-!
-! two ffts at the same time, on two atoms (if possible: nfft=2)
-!
-#endif
-            qv(:) = (0.d0, 0.d0)
-            if(nfft.eq.2)then
-               do ig=1,ngb
-                  qv(npb(ig))= eigrb(ig,ia  ,is)*rhocb(ig,is)          &
-     &                    + ci*eigrb(ig,ia+1,is)*rhocb(ig,is)
-                  qv(nmb(ig))= conjg(eigrb(ig,ia  ,is)*rhocb(ig,is))   &
-     &                    + ci*conjg(eigrb(ig,ia+1,is)*rhocb(ig,is))
-               end do
-            else
-               do ig=1,ngb
-                  qv(npb(ig)) = eigrb(ig,ia,is)*rhocb(ig,is)
-                  qv(nmb(ig)) = conjg(eigrb(ig,ia,is)*rhocb(ig,is))
-               end do
-            endif
-!
-            call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
-!
-            call box2grid(irb(1,ia,is),1,qv,wrk1)
-            if (nfft.eq.2) call box2grid(irb(1,ia+1,is),2,qv,wrk1)
-!
-15          continue
-         end do
-10       continue
-      end do
-!
-      call DCOPY(nnr,wrk1,2,rhoc,1)
-
-      deallocate( qv  )
-      deallocate( wrk1 )
-!
-      call stop_clock( 'set_cc' )
-!
-      return
-      end
 !
 !-------------------------------------------------------------------------
       subroutine s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
@@ -4148,7 +3665,6 @@
       use cvan, only: nvb, ish
       use uspp, only: nhsa => nkb, nhsavb=>nkbus, qq
       use uspp_param, only: nh
-      use elct
       use gvecw, only: ngw
       !use parm
       use constants, only: pi, fpi
@@ -4207,7 +3723,7 @@
       use parameters, only: natx, nsx
       use uspp, only: nhsa => nkb, nhsavb=>nkbus
       use cvan, only : nvb
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
 !
@@ -4290,7 +3806,7 @@
 !     Requires on input: c=psi, bec=<c|beta>, rhoup(r), rhodw(r)
 !     Assumes real psi, with only half G vectors.
 !
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
       use io_global, only: stdout
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
@@ -4411,42 +3927,6 @@
       return
       end
 !-------------------------------------------------------------------------
-      subroutine strucf (ei1,ei2,ei3,sfac)
-!-----------------------------------------------------------------------
-! computes the structure factor sfac(ngs,nsp) and returns it in "pseu"
-!
-!
-      use gvec
-      use gvecs
-      !use parm
-      use grid_dimensions, only: nr1, nr2, nr3
-      use constants, only: pi, fpi
-      use ions_base, only: nas => nax, nsp, na
-!
-      implicit none
-      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),          &
-     &           ei3(-nr3:nr3,nas,nsp), sfac(ngs,nsp)
-      integer is, ig, ia, i, j, k
-!
-      call start_clock( 'strucf' ) 
-      do is=1,nsp
-         do ig=1,ngs
-            sfac(ig,is)=(0.,0.)
-         end do
-         do ia=1,na(is)
-            do ig=1,ngs 
-               i = mill_l( 1, ig )
-               j = mill_l( 2, ig )
-               k = mill_l( 3, ig )
-               sfac(ig,is)=sfac(ig,is) + ei1(i,ia,is) *ei2(j,ia,is) *ei3(k,ia,is)
-            end do
-         end do
-      end do
-!
-      call stop_clock( 'strucf' ) 
-      return
-      end
-!-------------------------------------------------------------------------
       subroutine tauset(phi,bephi,qbephi,nss,ist,tau)
 !-----------------------------------------------------------------------
 !     input: phi
@@ -4458,7 +3938,7 @@
       use parameters, only: nsx, natx
       use cvan, only: nvb
       use uspp, only: nhsa => nkb, nhsavb=>nkbus
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
 !
@@ -4526,7 +4006,7 @@
       use uspp, only: nhsa => nkb, nhsavb=>nkbus
       use uspp_param, only: nh
       use gvecw, only: ngw
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp
       use control_flags, only: iprint, iprsta
 !
       implicit none
@@ -4621,18 +4101,19 @@
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
-      use ions_base, only: nas => nax, nsp, na
-      use gvec
+      use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
+      use gvecp, only: ng => ngm
       use cell_base, only: omega
-      use cell_base, only: a1, a2, a3
-      use reciprocal_vectors, only: gstart
+      use cell_base, only: a1, a2, a3, tpiba2
+      use reciprocal_vectors, only: gstart, g
+      use recvecs_indexes, only: np, nm
       !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use pseu
@@ -4650,11 +4131,11 @@
       integer nfi
       real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
       real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
-     &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
+      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+     &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
-      integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), allocatable :: v(:), vs(:)
@@ -5022,24 +4503,25 @@
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
-      use ions_base, only: nas => nax, nsp, na
-      use gvec
+      use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
-      use cell_base, only: omega
+      use cell_base, only: omega, tpiba2
       use cell_base, only: a1, a2, a3, alat
-      use reciprocal_vectors, only: ng0 => gstart
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nspin, qbac
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use pseu
       use core
       use gvecb
       use atom, only: nlcc
+      use reciprocal_vectors, only: g
+      use reciprocal_vectors, only: ng0 => gstart
+      use recvecs_indexes, only: np, nm
+      use gvecp, only: ng => ngm
 !
       use dener
       use derho
@@ -5051,11 +4533,11 @@
       integer nfi
       real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
       real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nas,nsp), ei2(-nr2:nr2,nas,nsp),     &
-     &                ei3(-nr3:nr3,nas,nsp), eigrb(ngb,nas,nsp),        &
+      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+     &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
-      integer irb(3,natx,nsx), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
       real(kind=8) fion1(3,natx), vave, ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), allocatable :: v(:), vs(:)
@@ -5461,11 +4943,10 @@
 !------------------------------------------------------------------------
 !
       use para_mod
-      use gvec
 !      use parm
       use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr=> nnrx
       use cell_base, only : a1, a2, a3, omega
-      use elct
+      use electrons_base, only: qbac
 !
       implicit none
       real(kind=8), parameter :: debye=1./0.39344, angs=1./0.52917726

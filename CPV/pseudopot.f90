@@ -288,32 +288,32 @@
 
           INTEGER :: i, j
 
-          DEALLOCATE( wsginit )
-          IF(ALLOCATED(vps_sp)) THEN
+          IF( ALLOCATED( wsginit ) ) DEALLOCATE( wsginit )
+          IF( ALLOCATED( vps_sp  ) ) THEN
             DO i = 1, size(vps_sp)
               CALL kill_spline(vps_sp(i),'a')
             END DO
             DEALLOCATE(vps_sp)
           END IF
-          IF(ALLOCATED(dvps_sp)) THEN
+          IF( ALLOCATED(dvps_sp) ) THEN
             DO i = 1, size(dvps_sp)
               CALL kill_spline(dvps_sp(i),'a')
             END DO
             DEALLOCATE(dvps_sp)
           END IF
-          IF(ALLOCATED(rhoc1_sp)) THEN
+          IF( ALLOCATED(rhoc1_sp) ) THEN
             DO i = 1, size(rhoc1_sp)
               CALL kill_spline(rhoc1_sp(i),'a')
             END DO
             DEALLOCATE(rhoc1_sp)
           END IF
-          IF(ALLOCATED(rhocp_sp)) THEN
+          IF( ALLOCATED(rhocp_sp) ) THEN
             DO i = 1, size(rhocp_sp)
               CALL kill_spline(rhocp_sp(i),'a')
             END DO
             DEALLOCATE(rhocp_sp)
           END IF
-          IF(ALLOCATED(wnl_sp)) THEN
+          IF( ALLOCATED(wnl_sp) ) THEN
             DO i = 1, size(wnl_sp,2)
               DO j = 1, size(wnl_sp,1)
                 CALL kill_spline(wnl_sp(j,i),'a')
@@ -321,7 +321,7 @@
             END DO
             DEALLOCATE(wnl_sp)
           END IF
-          IF(ALLOCATED(wnla_sp)) THEN
+          IF( ALLOCATED(wnla_sp) ) THEN
             DO i = 1, size(wnla_sp,2)
               DO j = 1, size(wnla_sp,1)
                 CALL kill_spline(wnla_sp(j,i),'a')
@@ -329,7 +329,7 @@
             END DO
             DEALLOCATE(wnla_sp)
           END IF
-          IF(ALLOCATED(xgtab))     DEALLOCATE(xgtab)
+          IF( ALLOCATED( xgtab ) )  DEALLOCATE( xgtab )
 
           RETURN
         END SUBROUTINE deallocate_pseudopotential

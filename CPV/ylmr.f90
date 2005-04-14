@@ -4,14 +4,15 @@
 !     real spherical harmonics,  l is combined index for lm  (l=1,2...9)
 !     order:  s, p_x, p_z, p_y, d_xy, d_xz, d_z^2, d_yz, d_x^2-y^2
 !
-      use gvec
+      use gvecp, only: ngm
+      use reciprocal_vectors, only: gx
       use constants, only: pi, fpi
 !
       implicit none
       integer l, ig
       real(kind=8) x,y,z,r
 !
-      if (ig.gt.ng) call errore(' ylmr ',' ig.gt.ng ',ig)
+      if (ig.gt.ngm) call errore(' ylmr ',' ig.gt.ng ',ig)
       x = gx(ig,1)
       y = gx(ig,2)
       z = gx(ig,3)

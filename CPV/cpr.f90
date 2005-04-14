@@ -68,32 +68,27 @@
       use control_flags, only: lwf, ortho_eps, ortho_max, printwfc
 
       use core, only: nlcc_any
-      use core, only: deallocate_core
       use uspp_param, only: nhm, nh
-      use cvan, only: nvb, ish, deallocate_cvan
-      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, &
-           deeq
-      use uspp, only: deallocate_uspp
+      use cvan, only: nvb, ish
+      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin, &
                           atot, entropy, egrand
 
       use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
-      use electrons_base, only: deallocate_elct, nel, iupdwn, nupdwn, nudx, nelt
+      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
 
-      use efield_module, only: efield, epol, tefield, allocate_efield, deallocate_efield, &
+      use efield_module, only: efield, epol, tefield, allocate_efield, &
             efield_update, ipolp, qmat, gqq, evalue, berry_energy
 
       use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,              &
             tdynz, tdynf, zmass, fmass, fricz, fricf, allocate_ensemble_dft,        &
-            deallocate_ensemble_dft, id_matrix_init, z0, c0diag, becdiag, bec0, &
+            id_matrix_init, z0, c0diag, becdiag, bec0, &
             v0s, vhxcs, becdrdiag, compute_entropy2, gibbsfe
 
-      use cg_module, only: tcg, maxiter, etresh, passop, allocate_cg, deallocate_cg, &
+      use cg_module, only: tcg, maxiter, etresh, passop, allocate_cg, &
             cg_update, itercg, c0old
 
-
-      use gvec, only: tpiba2, ng
-      use gvec, only: deallocate_gvec
+      use gvecp, only: ngm
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
@@ -102,7 +97,7 @@
       use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
       use ions_base, only: ions_vrescal, fricp, greasp, iforce, ions_shiftvar
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
-      use cell_base, only: ainv, a1, a2, a3, frich, greash
+      use cell_base, only: ainv, a1, a2, a3, frich, greash, tpiba2
       use cell_base, only: omega, alat, ibrav, celldm
       use cell_base, only: h, hold, deth, wmass, press
       use cell_base, only: s_to_r, r_to_s
@@ -110,7 +105,6 @@
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
-      use pseu, only: deallocate_pseu
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_sum, mp_barrier
@@ -126,11 +120,6 @@
       use constants, only: pi, factem, au_gpa, au_ps, gpa_au
       use io_files, only: psfile, pseudo_dir
       use input, only: iosys
-      use qgb_mod, only: deallocate_qgb_mod
-      use dqgb_mod, only: deallocate_dqgb_mod
-      use qradb_mod, only: deallocate_qradb_mod
-      use dqrad_mod, only: deallocate_dqrad_mod
-      use betax, only: deallocate_betax
       use wave_base, only: wave_steepest, wave_verlet
       use wave_base, only: wave_speed2, frice, grease
       USE control_flags, ONLY : conv_elec, tconvthrs
@@ -152,9 +141,8 @@
 ! wavefunctions
 !
       use wavefunctions_module, only: c0, cm, phi => cp
-      use wavefunctions_module, only: deallocate_wavefunctions
 
-      use wannier_module, only: allocate_wannier, deallocate_wannier
+      use wannier_module, only: allocate_wannier
       use wannier_subroutines
       USE printout_base, ONLY: printout_base_open, printout_base_close, &
             printout_pos, printout_cell, printout_stress
@@ -270,8 +258,7 @@
       tlast    = .false.
       nacc     = 5
 
-      call init( ibrav, celldm, ecutp, ecutw, ndr, nbeg, tfirst,  &
-           tau0, taus, delt, tps, iforce )
+      call init ( ibrav, ndr, nbeg, tfirst, tau0, taus )
 
       WRITE( stdout,*) ' out from init'
 
@@ -301,7 +288,7 @@
 !     ==================================================================
 !
       CALL allocate_mainvar &
-         ( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, nnrsx, nax, nsp, nspin, n, nx, nhsa, nlcc_any )
+         ( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnr, nnrsx, nat, nax, nsp, nspin, n, nx, nhsa, nlcc_any )
 
       allocate(c0(ngw,nx,1,1))
       allocate(cm(ngw,nx,1,1))
@@ -314,12 +301,12 @@
       allocate(dbec (nhsa,n,3,3))
       allocate(dvps(ngs,nsp))
       allocate(drhops(ngs,nsp))
-      allocate(drhog(ng,nspin,3,3))
+      allocate(drhog(ngm,nspin,3,3))
       allocate(drhor(nnr,nspin,3,3))
       allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
 
       if( lwf ) then
-        call allocate_wannier(  n, nnrsx, nspin, ng )
+        call allocate_wannier(  n, nnrsx, nspin, ngm )
       end if
 
       IF( tens ) THEN
@@ -410,6 +397,7 @@
 !
       end if
 !==============================================end of if(nbeg.lt.0)====
+
 !
 !     =================================================================
 !     restart with new averages and nfi=0
@@ -1123,30 +1111,7 @@
 !      
  1977 format(5x,//'====================== end cprvan ======================',//)
 
-      CALL deallocate_mainvar()
-      CALL deallocate_cvan()
-      CALL deallocate_efield( )
-      CALL deallocate_ensemble_dft()
-      CALL deallocate_cg( )
-      CALL deallocate_elct()
-      CALL deallocate_core()
-      CALL deallocate_uspp()
-      CALL deallocate_gvec()
-      CALL deallocate_pseu()
-      CALL deallocate_qgb_mod()
-      CALL deallocate_qradb_mod()
-      CALL deallocate_derho()
-      CALL deallocate_dqgb_mod()
-      CALL deallocate_dpseu()
-      CALL deallocate_cdvan()
-      CALL deallocate_dqrad_mod()
-      CALL deallocate_betax()
-      CALL deallocate_para_mod()
-      CALL deallocate_wavefunctions()
-      if( lwf ) then
-        CALL deallocate_wannier()
-      end if
-
+      CALL deallocate_modules_var()
 !
       return
       end subroutine

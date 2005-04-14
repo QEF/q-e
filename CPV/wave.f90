@@ -57,7 +57,7 @@
           END INTERFACE
 
           PUBLIC :: dft_kinetic_energy, cp_kinetic_energy
-          PUBLIC :: update_wave_functions
+          PUBLIC :: update_wave_functions, wave_rand_init
 
 !  end of module-scope declarations
 !  ----------------------------------------------
@@ -1035,6 +1035,81 @@
         RETURN
    END SUBROUTINE proj_kp
 
+
+
+   SUBROUTINE wave_rand_init( cm )
+
+!  this routine sets the initial wavefunctions at random
+!  ----------------------------------------------
+
+! ... declare modules
+      USE mp, ONLY: mp_sum
+      USE mp_wave, ONLY: splitwf
+      USE mp_global, ONLY: mpime, nproc, root
+      USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
+      USE io_base, ONLY: stdout
+      
+      IMPLICIT NONE
+
+! ... declare module-scope variables
+
+! ... declare subroutine arguments 
+      COMPLEX(dbl), INTENT(OUT) :: cm(:,:)
+      
+      REAL(dbl) :: rranf
+      EXTERNAL rranf
+
+! ... declare other variables
+      INTEGER :: ntest, ig, ib
+      REAL(dbl) ::  rranf1, rranf2, ampre
+      COMPLEX(dbl), ALLOCATABLE :: pwt( : )
+
+! ... end of declarations
+!  ----------------------------------------------
+
+! 
+! ... Check array dimensions
+      IF( SIZE( cm, 1 ) < ngw ) THEN 
+        CALL errore(' wave_rand_init ', ' wrong dimensions ', 3)
+      END IF
+
+! ... Reset them to zero
+!
+      cm = 0.0d0
+
+! ... initialize the wave functions in such a way that the values
+! ... of the components are independent on the number of processors
+!
+
+      ampre = 0.01d0
+      ALLOCATE( pwt( ngwt ) )
+
+      ntest = ngwt / 4
+      IF( ntest < SIZE( cm, 2 ) ) THEN
+         ntest = ngwt
+      END IF
+      !
+      ! ... assign random values to wave functions
+      !
+      DO ib = 1, SIZE( cm, 2 )
+        pwt( : ) = 0.0d0
+        DO ig = 3, ntest
+          rranf1 = 0.5d0 - rranf()
+          rranf2 = rranf()
+          pwt( ig ) = ampre * DCMPLX(rranf1, rranf2)
+        END DO
+        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, mpime, nproc, 0 )
+      END DO
+      IF ( gzero ) THEN
+        cm( 1, : ) = (0.0d0, 0.0d0)
+      END IF
+
+      DEALLOCATE( pwt )
+
+      RETURN
+    END SUBROUTINE wave_rand_init
+
+
 !=----------------------------------------------------------------------------=!
    END MODULE wave_functions
 !=----------------------------------------------------------------------------=!
@@ -1075,9 +1150,8 @@
      END SUBROUTINE
 
 
-     SUBROUTINE update_rlambda( i, lambda, ldesc, c0, cdesc, c2 )
-       USE parallel_types, ONLY: descriptor
-       USE descriptors_module, ONLY: owner_of, local_index
+     SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
+       USE electrons_module, ONLY: ib_owner, ib_local
        USE mp_global, ONLY: mpime
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
@@ -1086,7 +1160,6 @@
        REAL(dbl) :: lambda(:,:)
        COMPLEX(dbl) :: c0(:,:), c2(:)
        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-       TYPE (descriptor), INTENT(IN) :: ldesc
        INTEGER :: i
        !
        REAL(dbl), ALLOCATABLE :: prod(:)
@@ -1095,17 +1168,16 @@
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
        CALL mp_sum( prod )
-       IF( mpime == owner_of( i, ldesc, 'R' ) ) THEN
-           ibl = local_index( i, ldesc, 'R' )
+       IF( mpime == ib_owner( i ) ) THEN
+           ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )
        END IF
        DEALLOCATE( prod )
        RETURN
      END SUBROUTINE
 
-     SUBROUTINE update_clambda( i, lambda, ldesc, c0, cdesc, c2 )
-       USE parallel_types, ONLY: descriptor
-       USE descriptors_module, ONLY: owner_of, local_index
+     SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
+       USE electrons_module, ONLY: ib_owner, ib_local
        USE mp_global, ONLY: mpime
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
@@ -1114,7 +1186,6 @@
        COMPLEX(dbl) :: lambda(:,:)
        COMPLEX(dbl) :: c0(:,:), c2(:)
        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-       TYPE (descriptor), INTENT(IN) :: ldesc
        INTEGER :: i
        !
        COMPLEX(dbl), ALLOCATABLE :: prod(:)
@@ -1123,8 +1194,8 @@
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
        CALL mp_sum( prod )
-       IF( mpime == owner_of( i, ldesc, 'R' ) ) THEN
-           ibl = local_index( i, ldesc, 'R' )
+       IF( mpime == ib_owner( i ) ) THEN
+           ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )
        END IF
        DEALLOCATE( prod )

@@ -23,12 +23,12 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
   use ions_base
   use ions_base, only : nas => nax
   use cvan
-  use elct
   use parameters
   use constants
   use cell_base, only: a1, a2, a3
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
+  use electrons_base, only: n => nbsp, nx => nbspx
 
 
   implicit none

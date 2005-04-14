@@ -72,7 +72,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (phase_factors),  INTENT(INOUT)  :: eigr          ! exp(i G dot r)
+      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE (recvecs),        INTENT(IN)     :: gv            ! G and k vectors
       TYPE (kpoints),        INTENT(IN)     :: kp            ! G and k vectors
       COMPLEX(dbl),           INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
@@ -127,7 +127,7 @@
       IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-      TYPE (phase_factors),   INTENT(IN)  :: eigr     ! exp(i G dot r)
+      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
       TYPE (recvecs), INTENT(IN)  :: gv       ! G and k vectors
       TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
@@ -149,8 +149,8 @@
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
         DO ik = 1, cdesc%nkl
-          ! WRITE( stdout,*) 'DEBUG nl_projector ', SUM( eigr%xyz ), SUM( c0( :, :, ik, ispin_wfc ) )
-          CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr%xyz, c0(:, :, ik, ispin_wfc), cdesc, &
+          ! WRITE( stdout,*) 'DEBUG nl_projector ', SUM( eigr ), SUM( c0( :, :, ik, ispin_wfc ) )
+          CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:, :, ik, ispin_wfc), cdesc, &
             gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnl(ik, ispin))
         END DO
       END DO
@@ -239,7 +239,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (phase_factors),   INTENT(IN)  :: eigr     ! exp(i G dot r)
+      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE (recvecs), INTENT(IN)  :: gv       ! G and k vectors
       TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
       COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)    ! wave functions
@@ -293,7 +293,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (phase_factors),   INTENT(IN)    :: eigr     ! exp(i G dot r)
+      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),       INTENT(INOUT) :: atoms ! ions structure
       TYPE (recvecs),         INTENT(IN)    :: gv        ! G and G+k vectors
       TYPE (kpoints),         INTENT(IN)    :: kp        ! K points
@@ -319,7 +319,7 @@
       KAPPA: DO ik = 1, cdesc%nkl
         CARTE: DO k = 1, 3  ! x,y,z directions
           CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), ngh, cdesc%gamma )
-          CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr%xyz, c0(:,:,ik), cdesc, &
+          CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, &
             gv%khg_l(:,ik), gv%kgx_l(:,:,ik), dfnl, k)
           CHANN: DO igh = 1, ngh
             BANDE: DO ib = 1, cdesc%nbl( ispin )

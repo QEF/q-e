@@ -68,7 +68,7 @@
           USE nl, ONLY: nlsm1
           USE forces, ONLY: dforce_all
           USE brillouin, ONLY: kpoints
-          USE electrons_module, ONLY: ei, ei_emp, occ_desc, emp_desc
+          USE electrons_module, ONLY: ei, ei_emp
           USE kohn_sham_states, ONLY: kohn_sham
           USE constants, ONLY: au, pi, k_boltzman_au, au_to_ohmcmm1
           USE cell_base, ONLY: tpiba2
@@ -91,7 +91,7 @@
           REAL (dbl), INTENT(in) ::   vpot(:,:,:,:)
           TYPE (kpoints), INTENT(in) :: kp
           TYPE (pseudo), INTENT(in) :: ps
-          TYPE (phase_factors), INTENT(IN) :: eigr
+          COMPLEX(dbl) :: eigr(:,:)
 
           TYPE (projector) :: fnle( SIZE(ce, 1) )
 
@@ -133,11 +133,11 @@
             nb_l   = wfill%nbl( ispin )
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr%xyz, cf(:,:,1,ispin), wfill, gv%hg_l, &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, cf(:,:,1,ispin), wfill, gv%hg_l, &
               gv%gx_l, fnl(1,ispin))
             CALL dforce_all( ispin, cf(:,:,:,ispin), wfill, occ(:,:,ispin), eforce, gv, vpot(:,:,:,ispin), &
               fnl(:,ispin), eigr, ps)
-            CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, occ_desc, eforce, kp )
+            CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce, kp )
             DEALLOCATE( eforce )
 
             ngw  = wempt%ngwl
@@ -150,11 +150,11 @@
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
             CALL allocate_projector(fnle, nsanl, nb_l, ngh, kp%gamma_only)
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr%xyz, ce(:,:,1,ispin), wempt, gv%hg_l, &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, ce(:,:,1,ispin), wempt, gv%hg_l, &
               gv%gx_l, fnle(1))
             CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, ff, eforce, gv, vpot(:,:,:,ispin), &
               fnle, eigr, ps)
-            CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, emp_desc, eforce, kp )
+            CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce, kp )
             CALL deallocate_projector(fnle)
             DEALLOCATE( eforce )
             DEALLOCATE( ff )

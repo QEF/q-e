@@ -30,7 +30,7 @@
 !  BEGIN manual
 
       SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, gv, kp, &
-                 ps, eigr, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
+                 ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                  fnl, vpot, doions, edft, maxnstep, sdthr )
 
 !  this routine computes the electronic ground state via steepest descent
@@ -44,7 +44,7 @@
       USE io_global, ONLY: stdout
       USE cell_module, ONLY: boxdimensions
       USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE potentials, ONLY: kspotential
@@ -66,7 +66,10 @@
       REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: sfac(:,:)
       TYPE (charge_descriptor) :: desc
-      TYPE (phase_factors), INTENT(INOUT) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
@@ -120,14 +123,14 @@
 
       old_clock_value = cclock()
 
-      CALL strucf(sfac, atoms_0, eigr, gv)
+      CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
 
       STEEPEST_DESCENT: DO iter = 1, maxnstep
 
         s1 = cclock()
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
 
@@ -171,7 +174,7 @@
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
         CALL kspotential( ttprint, tforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot
         END IF

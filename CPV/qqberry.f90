@@ -17,7 +17,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use gvecw, only: ngw
   use reciprocal_vectors, only: mill_l
   use parameters
-  use  elct
   use  constants
   use cvan, only: oldvan, nvb, indlm
   use  ions_base
@@ -225,24 +224,22 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
 !   gqq output: as defined above
 
   use cvan
-  use ions_base
   use gvecw, only: ngw
-  use elct
-  use ions_base, only : nas => nax
+  use ions_base, only : nas => nax, nat, na, nsp
   use reciprocal_vectors, only: mill_l
   use uspp_param, only: nh, nhm
 
   implicit none
 
  
-  complex(kind=8) eigr(ngw,nas,nsp)
+  complex(kind=8) eigr(ngw,nat)
   complex(kind=8) gqq(nhm,nhm,nas,nsp)
   complex(kind=8) gqqm(nhm,nhm,nas,nsp)
   complex(kind=8) gqqm0(nhm,nhm,nas,nsp)
 
   integer ipol
   
-  integer igi,ig,is,iv,jv,ia
+  integer igi,ig,is,iv,jv,ia,isa
 
 
   do is=1,nsp
@@ -271,16 +268,18 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   if( igi.ne.-1) then
 
   
+     isa = 1
      do is=1,nvb
         do ia=1,na(is)
            do iv= 1,nh(is)
               do jv=iv,nh(is)
-                 gqqm(iv,jv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,ia,is)
-                 gqqm(jv,iv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,ia,is)
+                 gqqm(iv,jv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
+                 gqqm(jv,iv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
                  gqq(iv,jv,ia,is)=conjg(gqqm(iv,jv,ia,is))
                  gqq(jv,iv,ia,is)=conjg(gqqm(iv,jv,ia,is))
               enddo
            enddo
+           isa = isa + 1
         enddo
      enddo
   endif

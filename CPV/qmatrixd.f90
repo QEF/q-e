@@ -15,11 +15,9 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
    
 
 
-  use  gvec
   use  gvecs
   use gvecw, only: ngw
   use  parameters
-  use  elct
   use  constants
   use  cvan
   use  ions_base
@@ -28,6 +26,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use reciprocal_vectors, only: ng0 => gstart
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
+  use electrons_base, only: nx => nbspx, n => nbsp
   
 
   implicit none

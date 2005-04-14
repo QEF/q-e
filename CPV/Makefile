@@ -28,6 +28,7 @@ cpr.o \
 cprsub.o \
 cptypes.o \
 crayfft.o \
+dealloc.o \
 diis.o \
 dipol_matrix.o \
 dforceb.o \
@@ -98,7 +99,6 @@ smd.o  \
 smlam.o \
 spharmonic.o \
 spline.o \
-stick.o \
 stop_pw.o \
 stress.o \
 turbo.o \

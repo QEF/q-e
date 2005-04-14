@@ -30,7 +30,7 @@
         SUBROUTINE v2gc(v2xc, grho, rhoer, vpot, gv)
 
           USE fft
-          USE stick, ONLY: dfftp
+          USE fft_base, ONLY: dfftp
           USE cell_base, ONLY: tpiba
           USE cp_types
           USE mp_global
@@ -59,7 +59,8 @@
           nzl   = MIN( dfftp%npl, SIZE( grho, 3 ) )
           nspin = SIZE(rhoer,4)
 
-          fac = REAL(nspin)
+          !fac = REAL(nspin)
+          fac = 1.0d0
 
           ALLOCATE( vtemp( gv%ng_l ) )
           ALLOCATE( vtemp_pol( gv%ng_l ) )
@@ -119,7 +120,7 @@
     SUBROUTINE stress_gc(grho, v2xc, gcpail, omega)
 !
       use grid_dimensions, only: nr1, nr2, nr3
-      USE stick, ONLY: dfftp
+      USE fft_base, ONLY: dfftp
 
         IMPLICIT NONE
 !

@@ -36,7 +36,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use gvecw, only: ngw
   use ions_base, only: na, pmass, nsp, randpos, nat
   use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
-  use elct
+  use electrons_base, only: nx => nbspx, f
   use constants, only: pi, fpi
   use cell_base, only: hold, h
   use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix

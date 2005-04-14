@@ -364,8 +364,8 @@ SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, i
   logical, intent(in) :: tfirst
   complex(kind=8) :: cm(:,:,:,:)
   real(kind=8) :: bec(:,:), becdr(:,:,:)
-  complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
-  integer :: irb(:,:,:)
+  complex(kind=8) :: eigrb(:,:), eigr(:,:)
+  integer :: irb(:,:)
   real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)
@@ -435,8 +435,8 @@ SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, i
   complex(kind=8) :: cm(:,:,:,:)
   real(kind=8) :: bec(:,:), becdr(:,:,:)
   real(kind=8) :: rhovan(:,:,:)
-  complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
-  integer :: irb(:,:,:)
+  complex(kind=8) :: eigrb(:,:), eigr(:,:)
+  integer :: irb(:,:)
   real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)
@@ -497,7 +497,7 @@ SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, ve
   use electric_field_module, only: field_tune, e_tuned, par, rel1, rel2
   use wannier_module, only: rhos1, rhos2, wfc
   use smooth_grid_dimensions, only: nnrsx
-  use elct, only: n, nspin, nupdwn
+  use electrons_base, only: n => nbsp, nspin, nupdwn
   use cell_base, only: ainv, a1, a2, a3
   use reciprocal_vectors, only: ng0 => gstart
   use control_flags, only: tsde
@@ -625,7 +625,7 @@ SUBROUTINE ef_enthalpy( enthal, tau0 )
   use efcalc, only: efield, efx, efy, efz
   use electric_field_module, only: efe_elec, efe_ion, tt2, tt
   use wannier_module, only: wfx, wfy, wfz, ionx, iony, ionz, wfc
-  use elct, only: n, f
+  use electrons_base, only: n => nbsp, f
   use cell_base, only: ainv, a1, a2, a3
   use ions_base, only: na, nsp, zv
   use io_global, only: ionode
@@ -690,7 +690,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   use wannier_module, only: what1, wfc, utwf
   use mp, only: mp_end
   use control_flags, only: iprsta
-  use elct, only: n
+  use electrons_base, only: n => nbsp
   use gvecw, only: ngw
   use control_flags, only: ndw
   use cell_base, only: h, hold
@@ -704,8 +704,8 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
   complex(kind=8) :: c0(:,:,:,:)
   complex(kind=8) :: cm(:,:,:,:)
   real(kind=8) :: bec(:,:), becdr(:,:,:)
-  complex(kind=8) :: eigrb(:,:,:), eigr(:,:,:)
-  integer :: irb(:,:,:)
+  complex(kind=8) :: eigrb(:,:), eigr(:,:)
+  integer :: irb(:,:)
   real(kind=8) :: taub(:,:)
   integer :: ibrav
   real(kind=8) :: b1(:), b2(:), b3(:)

@@ -150,7 +150,7 @@
      !      C = FWFFT( PSI )
 
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dfftp
+     USE fft_base, ONLY: dfftp
      USE mp_global, ONLY: mpime
      USE io_global, ONLY: stdout
 
@@ -217,7 +217,7 @@
      !       A is a REAL 3D array (real space)
 
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dfftp
+     USE fft_base, ONLY: dfftp
      USE mp_global, ONLY: mpime
      use recvecs_indexes, only: nm, np
 
@@ -293,7 +293,7 @@
      !     C =     INVFFT( A )           otherwise
 !
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dfftp
+     USE fft_base, ONLY: dfftp
      USE mp_global, ONLY: mpime
 
       IMPLICIT NONE
@@ -376,7 +376,7 @@
      !   This subroutine COMPUTE on the wave function sub-grid :
 
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dffts
+     USE fft_base, ONLY: dffts
      USE mp_global, ONLY: mpime
 
      COMPLEX(dbl) :: C(:)
@@ -447,7 +447,7 @@
      !   This subroutine COMPUTE on the wave function sub-grid :
 
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE stick, ONLY: dffts
+     USE fft_base, ONLY: dffts
      USE mp_global, ONLY: mpime
 
      COMPLEX(dbl), INTENT(IN) :: C(:)

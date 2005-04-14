@@ -626,7 +626,90 @@
 
     RETURN
   END SUBROUTINE
+
+
       
+!------------------------------------------------------------------------------!
+
+
+
+  SUBROUTINE cell_base_reinit( ht )
+
+    USE constants, ONLY: pi 
+    USE io_global, ONLY: stdout
+    USE control_flags, ONLY: iprsta
+
+    IMPLICIT NONE
+    REAL(dbl), INTENT(IN) :: ht (3,3)
+
+    REAL(dbl) :: b1(3), b2(3), b3(3)
+    INTEGER   :: j
+
+    alat   =  sqrt( ht(1,1)*ht(1,1) + ht(1,2)*ht(1,2) + ht(1,3)*ht(1,3) )
+    tpiba  = 2.d0 * pi / alat
+    tpiba2 = tpiba * tpiba
+    !
+    !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
+    !
+    at     = TRANSPOSE( ht )
+    IF( iprsta > 3 ) THEN
+      WRITE( stdout, 210 )
+      WRITE( stdout, 220 ) ( ht( 1, j ), j = 1, 3 )
+      WRITE( stdout, 220 ) ( ht( 2, j ), j = 1, 3 )
+      WRITE( stdout, 220 ) ( ht( 3, j ), j = 1, 3 )
+    END IF
+210 format(3X,'Simulation cell parameters with the new cell:')
+220 format(3X,3F14.8)
+
+    !
+    a1  =  at( :, 1 )
+    a2  =  at( :, 2 )
+    a3  =  at( :, 3 )
+
+    at( :, : ) = at( :, : ) / alat
+
+    CALL volume( alat, at(1,1), at(1,2), at(1,3), deth )
+    omega = deth
+
+    CALL recips( a1, a2, a3, b1, b2, b3 )
+    ainv( 1, : ) = b1( : )
+    ainv( 2, : ) = b2( : )
+    ainv( 3, : ) = b3( : )
+
+    bg( :, 1 ) = b1( : )
+    bg( :, 2 ) = b2( : )
+    bg( :, 3 ) = b3( : )
+
+    ! ...     The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
+
+    IF( iprsta > 3 ) THEN
+      WRITE( stdout, 305 ) alat
+      WRITE( stdout, 310 ) a1
+      WRITE( stdout, 320 ) a2
+      WRITE( stdout, 330 ) a3
+      WRITE( stdout, *   )
+      WRITE( stdout, 350 ) b1
+      WRITE( stdout, 360 ) b2
+      WRITE( stdout, 370 ) b3
+      WRITE( stdout, 340 ) omega
+    END IF
+
+300 FORMAT( 3X, 'ibrav = ',I4)
+305 FORMAT( 3X, 'alat  = ',F14.8)
+310 FORMAT( 3X, 'a1    = ',3F14.8)
+320 FORMAT( 3X, 'a2    = ',3F14.8)
+330 FORMAT( 3X, 'a3    = ',3F14.8)
+350 FORMAT( 3X, 'b1    = ',3F14.8)
+360 FORMAT( 3X, 'b2    = ',3F14.8)
+370 FORMAT( 3X, 'b3    = ',3F14.8)
+340 FORMAT( 3X, 'omega = ',F14.8)
+
+
+    RETURN
+  END SUBROUTINE
+
+
+
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_steepest( hnew, h, delt, iforceh, fcell )

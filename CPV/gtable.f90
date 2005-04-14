@@ -18,8 +18,7 @@ subroutine gtable( ipol, ctable)
 
 
   use gvecw, only: ngw  
-  use gvec
-  use elct
+  use reciprocal_vectors, only: mill_l
 
 
   implicit none
@@ -135,8 +134,7 @@ subroutine gtablein( ipol, ctabin)
 
   
   use gvecw, only: ngw  
-  use gvec
-  use elct
+  use reciprocal_vectors, only: mill_l
 
   implicit none
 

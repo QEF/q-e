@@ -22,17 +22,17 @@ default :
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
 
-pw : bindir mods libs iotk
+pw : bindir mods libs libiotk
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
 	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
-fpmd : bindir mods libs iotk
+fpmd : bindir mods libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) fpmd ; \
 	else $(MAKE) $(MFLAGS) fpmd ; fi ) ; fi
 
-cp : bindir mods libs iotk
+cp : bindir mods libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) cp ; \
 	else $(MAKE) $(MFLAGS) cp ; fi ) ; fi
@@ -82,12 +82,12 @@ upf : mods libs
 	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
 	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
 
-iotk :
-	if test -d Modules ; then \
-	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) iotk ; \
-	else $(MAKE) $(MFLAGS) iotk ; fi ) ; fi
+libiotk :
+	if test -d iotk ; then \
+	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) libiotk.a ; \
+	else $(MAKE) $(MFLAGS) libiotk.a ; fi ) ; fi
 
-pw_export : iotk bindir mods libs pw
+pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) pw_export.x ; \
 	else $(MAKE) $(MFLAGS) pw_export.x ; fi ) ; fi
@@ -112,7 +112,7 @@ clean :
 	# make complains if they aren't there; same with make.depend below
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND Raman \
-		atomic clib flib pwtools upftools \
+		atomic clib flib pwtools upftools iotk \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch make.depend ; \

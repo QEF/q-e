@@ -308,22 +308,7 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
-../Modules/timestep.o \
-../Modules/iotk_module.o \
-../Modules/iotk_base.o \
-../Modules/iotk_external.o \
-../Modules/iotk_interface.o \
-../Modules/iotk_multitype.o \
-../Modules/iotk_multitype_complex1.o \
-../Modules/iotk_multitype_complex2.o \
-../Modules/iotk_multitype_character1.o \
-../Modules/iotk_multitype_character2.o \
-../Modules/iotk_multitype_integer1.o \
-../Modules/iotk_multitype_integer2.o \
-../Modules/iotk_multitype_real1.o \
-../Modules/iotk_multitype_real2.o \
-../Modules/iotk_multitype_logical1.o \
-../Modules/iotk_multitype_logical2.o
+../Modules/timestep.o
 
 
 

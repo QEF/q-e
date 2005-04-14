@@ -29,7 +29,7 @@
 !  BEGIN manual
 
       SUBROUTINE rundiis(tprint, rhoe, desc, atoms, gv, kp, &
-                 ps, eigr, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
+                 ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
 !  this routine computes the electronic ground state via diagonalization
@@ -110,8 +110,11 @@
       TYPE (pseudo), INTENT(INOUT) :: ps
       REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: sfac(:,:)
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       TYPE (charge_descriptor) :: desc
-      TYPE (phase_factors), INTENT(INOUT) ::  eigr
       TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
@@ -192,10 +195,10 @@
 ! ... starting guess on the wavefunctions
 !      CALL guessrho(rhoe, cm, c0, fi, gv, kp, ht0)
 
-      CALL strucf(sfac, atoms, eigr, gv)
+      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
       CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht0)
       CALL newrho(rhoe(:,:,:,1), drho, gv, 0)  ! memorize density
-      CALL strucf(sfac, atoms, eigr, gv)
+      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
       CALL guessc0( .NOT. kp%gamma_only, c0, cm, cdesc)
 
 ! ... Initialize the rotation index srot
@@ -233,7 +236,7 @@
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
           CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht0)
           CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, &
-            kp, fnl, vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht0, edft)
+            kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
 ! ...     density upgrade
           CALL newrho(rhoe(:,:,:,1), drho, gv, idiis)
@@ -246,7 +249,7 @@
 ! ...     recalculate potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
           CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, kp, fnl, &
-            vpot, ps, c0, cdesc, fi, eigr, sfac, timepre, ht0, edft)
+            vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
           IF( idiis /= 1 )THEN
             IF( drho < tolrhof .AND. dene < tolene) EXIT DIIS_LOOP
@@ -393,7 +396,7 @@
 !  BEGIN manual
 
       SUBROUTINE runsdiis(tprint, rhoe, desc, atoms, gv, kp, &
-                 ps, eigr, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
+                 ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
 !  this routine computes the electronic ground state via diagonalization
@@ -470,7 +473,10 @@
       TYPE (pseudo), INTENT(INOUT) :: ps
       REAL(dbl) :: rhoe(:,:,:,:)
       TYPE (charge_descriptor) :: desc
-      TYPE (phase_factors), INTENT(INOUT) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
       TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
@@ -540,7 +546,7 @@
         END IF
 
         CALL kspotential( .FALSE., tforce, tstress, rhoe, desc, &
-          atoms, gv, kp, ps, eigr, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
+          atoms, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
 
         s0 = cclock()
         seconds_per_iter = (s0 - old_clock_value)
@@ -693,10 +699,11 @@
         USE cp_types
         USE wave_types
         USE wave_functions, ONLY: crot
-        USE wave_base, ONLY: hpsi, dotp
+        USE wave_constrains, ONLY: update_lambda
+        USE wave_base, ONLY: dotp
         USE constants, ONLY: au
         USE cell_base, ONLY: tpiba2
-        USE electrons_module, ONLY: eigs, ei, pmss, emass, occ_desc
+        USE electrons_module, ONLY: eigs, ei, pmss, emass, nb_l, ib_owner, ib_local
         USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
         USE forces, ONLY: dforce_all
         USE brillouin, ONLY: kpoints
@@ -718,7 +725,7 @@
         TYPE (kpoints), INTENT(in) :: kp
         TYPE (pseudo), INTENT(INOUT) :: ps
         LOGICAL, INTENT(IN) :: TORTHO
-        TYPE (phase_factors), INTENT(INOUT) :: eigr
+        COMPLEX(dbl) :: eigr(:,:)
         TYPE (projector) :: fnle(:,:)
         TYPE(atoms_type), INTENT(INOUT)  :: atoms     
 
@@ -730,8 +737,6 @@
 
         REAL(dbl),    ALLOCATABLE :: gam(:,:)
         COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-        REAL(dbl),    ALLOCATABLE :: prod(:)
-        COMPLEX(dbl), ALLOCATABLE :: cprod(:)
 
 ! ...   SUBROUTINE BODY
 !
@@ -742,15 +747,14 @@
         n     = cdesc%nbl( 1 )
         gzero = cdesc%gzero
         gamma_symmetry = cdesc%gamma
-        CALL get_local_dims( occ_desc, n_l )
+        n_l  = nb_l(1)
 
         ALLOCATE(gam(n_l, n), cgam(n_l, n))
-        ALLOCATE(prod(n), cprod(n))
 
 ! ...   electronic state diagonalization ==
         DO ispin = 1, nspin
           DO ik = 1, SIZE( c, 3 )
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr%xyz, c(:,:,ik,ispin), cdesc, &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c(:,:,ik,ispin), cdesc, &
                 gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
           END DO
 
@@ -763,19 +767,9 @@
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
               IF( gamma_symmetry ) THEN
-                prod = hpsi( gzero, c( :, :, ik, ispin), eforce( :, i, ik, ispin) )
-                CALL mp_sum( prod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  gam(ibl,:) = prod(:)
-                END IF
+                CALL update_lambda( i,  gam, c( :, :, ik, ispin), cdesc, eforce( :, i, ik, ispin) ) 
               ELSE
-                cprod = hpsi(c( :, :, ik, ispin), eforce(:, i, ik, ispin) )
-                CALL mp_sum( cprod )
-                IF( mpime == owner_of( i, occ_desc, 'R' ) ) THEN
-                  ibl = local_index( i, occ_desc, 'R' )
-                  cgam(ibl,:) = cprod(:)
-                END IF
+                CALL update_lambda( i, cgam, c( :, :, ik, ispin), cdesc, eforce( :, i, ik, ispin) ) 
               END IF
             END DO
 
@@ -791,7 +785,7 @@
           END DO
         END DO
 
-        DEALLOCATE(gam, cgam, prod, cprod)
+        DEALLOCATE(gam, cgam)
 
         RETURN
 

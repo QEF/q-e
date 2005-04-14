@@ -23,6 +23,7 @@
         INTEGER :: n_indi_rcv(8) = 0   !   number of G-vectors to be received
         INTEGER :: n_indi_snd(8) = 0   !   number of G-vectors to be sent
         INTEGER :: icntix(8)     = 0   !   total number of G-vec to be exchanged
+        INTEGER :: lsetup = .FALSE.
 
         PUBLIC :: indi_l, sour_indi, dest_indi, n_indi_rcv, n_indi_snd, icntix
 
@@ -45,12 +46,14 @@
           ENDDO
           CALL LN_ACTIVATE
 
+          lsetup = .TRUE.
+
           RETURN
         END SUBROUTINE
 
 
         SUBROUTINE ln_closeup
-          CALL LN_DEALLOC
+          IF( lsetup ) CALL LN_DEALLOC
           RETURN
         END SUBROUTINE
 
@@ -174,7 +177,7 @@
 
 
       SUBROUTINE berry_closeup( )
-        IF( allocated( indi_l ) )  deallocate(INDI_L)
+        IF( allocated( indi_l    ) )  deallocate(INDI_L   )
         IF( allocated( sour_indi ) )  deallocate(SOUR_INDI)
         IF( allocated( dest_indi ) )  deallocate(DEST_INDI)
         RETURN

@@ -32,7 +32,7 @@
 !  BEGIN manual
 
       SUBROUTINE init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht, fnl, eigr, nspin)
+        wempt, ht_m, ht, fnl, eigr, ei1, ei2, ei3, nspin)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
@@ -66,7 +66,7 @@
       USE input_parameters, ONLY: rd_ht
       USE turbo, ONLY: tturbo, allocate_turbo
       USE ions_base, ONLY: tau_srt, tau_units, ind_srt, if_pos, atm
-      USE stick, ONLY: dfftp
+      USE fft_base, ONLY: dfftp
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE problem_size, ONLY: cpsizes
       USE reciprocal_space_mesh, ONLY : gindexset
@@ -79,7 +79,10 @@
       TYPE (wave_descriptor) :: wfill, wempt
       TYPE (pseudo) :: ps
       TYPE (projector) :: fnl(:,:)
-      TYPE (phase_factors) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(dbl) :: ei1(:,:)
+      COMPLEX(dbl) :: ei2(:,:)
+      COMPLEX(dbl) :: ei3(:,:)
       TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
       TYPE (boxdimensions) :: ht_m, ht
@@ -122,10 +125,6 @@
 ! ... Allocate + Initialize pseudopotentials
       CALL pseudopotential_init(ps, na, nsp, gv, kp)
 
-! ... Arrange for phase factors exp(i G dot r)
-      CALL allocate_phfac(eigr, nr1, nr2, nr3, nsp, nat, ngw, ngm)
-      ALLOCATE( sfac( nsp, ngm ) )
-
       s2 = cclock()
 
 ! ... Initialize simulation cell
@@ -150,7 +149,8 @@
       s3 = cclock()
 
 ! ... compute structure factors
-      CALL strucf(sfac, atoms_0, eigr, gv)
+      ALLOCATE( sfac( nsp, ngm ) )
+      CALL strucf( sfac, atoms_0, eigr, ei1, ei2, ei3, gv )
 
       s4 = cclock()
 
@@ -237,7 +237,7 @@
       TYPE (pseudo) :: ps
       REAL(dbl) :: occ(:,:,:)
       TYPE (projector) :: fnl(:,:)
-      TYPE (phase_factors) :: eigr
+      COMPLEX(dbl) :: eigr(:,:)
       TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
       TYPE (boxdimensions) :: ht_m, ht
@@ -261,7 +261,7 @@
       CALL band_init( occ )
 
 ! ...   initialize wave functions
-      CALL pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp, eigr%xyz)
+      CALL pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp, eigr )
 
 ! ... initialize the electronic fictitious mass and time step for 
 ! ... electron dynamics. Note that for 'diis' the electronic time step is
@@ -491,36 +491,23 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine init ( ibrav, celldm, ecut, ecutw, ndr, nbeg,  &
-                        tfirst, tau0, taus, delt, tps, iforce )
+      subroutine init ( ibrav, ndr, nbeg, tfirst, tau0, taus )
 !-----------------------------------------------------------------------
-!
-!     initialize G-vectors and related quantities
-!     use ibrav=0 for generic cell vectors given by the matrix h(3,3)
 !
       use control_flags, only: iprint, thdyn
       use io_global, only: stdout
-      use gvecw, only: ngw
-      use ions_base, only: na, pmass, nsp
+      use ions_base, only: na, nsp, natx
       use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
-      use constants, only: pi, fpi
       use cell_base, only: hold, h
-      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use betax, only: mmx, refg
       use cp_restart, only: cp_read_cell
-      use parameters, only: nacx, nsx, natx, nhclm
-      use electrons_base, only: f
 
       implicit none
 ! input/output
       integer ibrav, ndr, nbeg
       logical tfirst
       real(kind=8) tau0(3,natx), taus(3,natx)
-      integer iforce(3,natx)
-      real(kind=8) celldm(6), ecut, ecutw
-      real(kind=8) delt, tps
 ! local
-      integer i, j, ia, is, nfi, isa, isat
+      integer i, j
       real(kind=8) gvel(3,3)
       real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
 !
@@ -528,9 +515,6 @@
 ! taus = scaled, tau0 = alat units
 !
       CALL r_to_s( tau0, taus, na, nsp, ainv )
-!
-      refg = 1.0d0 * ecut / ( mmx - 1 )
-      WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
 !
       if( nbeg >= 0 ) then
 
@@ -588,49 +572,25 @@
 !     a1,a2,a3, ainv, and corresponding quantities for small boxes
 !     are recalculated according to the value of cell parameter h
 !
-      use control_flags, only: iprint, iprsta
+      use control_flags, only: iprsta
       use io_global, only: stdout
-      use gvec
-      use grid_dimensions, only: nr1, nr2, nr3
-      use cell_base, only: ainv, a1, a2, a3
-      use cell_base, only: omega, alat
-      use constants, only: pi, fpi
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-      use small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
-      use cell_base, only: h, deth
-      use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use cell_base, only: h, a1, a2, a3, omega, alat, cell_base_reinit
 !
       implicit none
       integer ibrav
 !
 ! local
-      integer i, j
-      real(kind=8) alatb, gmax, b1(3),b2(3),b3(3), b1b(3),b2b(3),b3b(3)
-      real(kind=8) ddum
+      integer :: i, j
+      real(kind=8) :: gmax, b1(3), b2(3), b3(3)
 !
 !
-      alat = sqrt( h(1,1)*h(1,1) + h(2,1)*h(2,1) + h(3,1)*h(3,1) )
-
-!     ==============================================================
-      tpiba  = 2.d0 * pi / alat
-      tpiba2 = tpiba * tpiba
-
-!     ==============================================================
-!     ==== generate g-space                                     ====
-!     ==============================================================
-      call invmat (3, h, ainv, deth)
-      omega = deth
-!
-      do i = 1, 3
-         a1(i) = h(i,1)
-         a2(i) = h(i,2)
-         a3(i) = h(i,3)
-      enddo
+      CALL cell_base_reinit( TRANSPOSE( h ) )
 !
       call recips( a1, a2, a3, b1, b2, b3 )
       b1 = b1 * alat
       b2 = b2 * alat
       b3 = b3 * alat
+
       call gcal( b1, b2, b3, gmax )
 !
 !     ==============================================================
@@ -638,23 +598,6 @@
 !     ==============================================================
 !
       call newgb( a1, a2, a3, omega, alat )
-
-!     ==============================================================
-      if(iprsta.ge.4)then
-         WRITE( stdout,34) ibrav,alat,omega
-         if(ibrav.eq.0) then
-            WRITE( stdout,344)
-            do i=1,3
-               WRITE( stdout,345) (h(i,j),j=1,3)
-            enddo
-            WRITE( stdout,*)
-         endif
-      endif
-!
- 34   format(' initialization ',//,                                     &
-     &       ' ibrav=',i3,' alat=',f7.3,' omega=',f10.4,//)
- 344  format(' cell parameters ',/)
- 345  format(3(4x,f10.5))
 !
       return
       end

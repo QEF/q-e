@@ -132,7 +132,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE kohn_sham(ispin, c, cdesc, descs, eforces, kp )
+      SUBROUTINE kohn_sham(ispin, c, cdesc, eforces, kp )
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -146,11 +146,11 @@
         USE io_global, ONLY: ionode
         USE wave_base, ONLY: hpsi
         USE wave_functions, ONLY: crot
+        USE wave_constrains, ONLY: update_lambda
         USE wave_types, ONLY: wave_descriptor
+        USE electrons_module, ONLY: nb_l
         USE forces
         USE brillouin, ONLY: kpoints
-        USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-        USE parallel_types, ONLY: descriptor
 
         IMPLICIT NONE
 
@@ -160,15 +160,14 @@
         INTEGER, INTENT(IN) :: ispin
 
 ! ...   descriptor of the electronic state distribution
-        TYPE (descriptor), INTENT(IN) ::  descs 
                                        
         TYPE (kpoints), INTENT(IN)  ::  kp
         COMPLEX(dbl) :: eforces(:,:,:)
 
 ! ...   declare other variables
         INTEGER ::  ik, ib, nk, ngw, nb_g, nrl, ibl
-        COMPLEX(dbl), ALLOCATABLE :: cgam(:,:), cprod(:)
-        REAL(dbl),    ALLOCATABLE :: gam(:,:), prod(:)
+        COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
+        REAL(dbl),    ALLOCATABLE :: gam(:,:)
         REAL(dbl),    ALLOCATABLE :: eig(:)
         LOGICAL :: tortho = .TRUE.
 
@@ -185,38 +184,28 @@
 
             ! ...     Distribute electronic states cyclically across processors
        
-            CALL get_local_dims(descs, nrl)
+            nrl = nb_l( ispin )
 
             ALLOCATE( eig(nb_g) )
             IF( kp%gamma_only ) THEN
-              ALLOCATE( cgam(1,1), cprod(1), gam(nrl,nb_g), prod(nb_g) )
+              ALLOCATE( cgam(1,1), gam(nrl,nb_g) )
             ELSE
-              ALLOCATE(cgam(nrl,nb_g), cprod(nb_g), gam(1,1), prod(1))
+              ALLOCATE(cgam(nrl,nb_g), gam(1,1))
             END IF
             DO ik = 1, kp%nkpt
               IF( cdesc%gamma ) THEN
                 DO ib = 1, nb_g
-                  prod = hpsi(cdesc%gzero, c(:,:,ik), eforces(:,ib,ik) )
-                  CALL mp_sum( prod )
-                  IF( mpime == owner_of( ib, descs, 'R' ) ) THEN
-                    ibl = local_index( ib, descs, 'R' )
-                    gam(ibl,:) = prod(:)        
-                  END IF
+                  CALL update_lambda( ib, gam, c(:,:,ik), cdesc, eforces(:,ib,ik) )
                 END DO
                 CALL crot( ispin, c(:,:,ik), cdesc, gam, eig)
               ELSE
                 DO ib = 1, nb_g
-                  cprod = hpsi(c(:,:,ik), eforces(:,ib,ik) )
-                  CALL mp_sum( cprod )
-                  IF( mpime == owner_of( ib, descs, 'R' ) ) THEN
-                    ibl = local_index( ib, descs, 'R' )
-                    cgam(ibl,:) = cprod(:)        
-                  END IF
+                  CALL update_lambda( ib, cgam, c(:,:,ik), cdesc, eforces(:,ib,ik) )
                 END DO
                 CALL crot( ispin, ik, c(:,:,:), cdesc, cgam, eig)
               END IF
             END DO
-            DEALLOCATE(cgam, cprod, gam, prod, eig)
+            DEALLOCATE(cgam, gam, eig)
 
           END IF
 
@@ -244,7 +233,6 @@
         USE brillouin, ONLY: kpoints
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing, force_pairing
-        USE electrons_module, ONLY: occ_desc, emp_desc
         USE parser, ONLY: int_to_char
 
         IMPLICIT NONE
@@ -253,7 +241,7 @@
         COMPLEX(dbl), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         TYPE (pseudo), INTENT(IN)  ::  ps
-        TYPE (phase_factors), INTENT(IN)  ::  eigr
+        COMPLEX(dbl)  ::  eigr(:,:)
         TYPE (recvecs), INTENT(IN)  ::  gv
         TYPE (kpoints), INTENT(IN)  ::  kp
         REAL(dbl), INTENT(IN)  ::  occ(:,:,:)
@@ -301,7 +289,7 @@
             CALL dforce_all( ispin, cf(:,:,:,ispin_wfc), wfill, occ(:,:,ispin), eforce, &
               gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
 
-            CALL kohn_sham( ispin, cf(:,:,:,ispin_wfc), wfill, occ_desc, eforce, kp )
+            CALL kohn_sham( ispin, cf(:,:,:,ispin_wfc), wfill, eforce, kp )
 
             DEALLOCATE( eforce )
 
@@ -324,7 +312,7 @@
               CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, fi, eforce, gv, vpot(:,:,:,ispin), &
                 fnl(:,ispin), eigr, ps)
 
-              CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, emp_desc, eforce, kp )
+              CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce, kp )
 
               DEALLOCATE( eforce )
               DEALLOCATE( fi )
@@ -411,7 +399,6 @@
         USE brillouin, ONLY: kpoints
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing
-        USE electrons_module, ONLY: occ_desc, emp_desc
         USE electrons_module, ONLY: nupdwn, nspin
         USE parser, ONLY: int_to_char
 
@@ -421,7 +408,7 @@
         COMPLEX(dbl), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         TYPE (pseudo), INTENT(IN)  ::  ps
-        TYPE (phase_factors), INTENT(IN)  ::  eigr
+        COMPLEX(dbl)  ::  eigr(:,:)
         TYPE (recvecs), INTENT(IN)  ::  gv
         TYPE (kpoints), INTENT(IN)  ::  kp
         REAL(dbl), INTENT(IN)  ::  occ(:,:,:)
@@ -477,7 +464,7 @@
             eforce(:,i,1,1) = occ(i,1,1) * eforce(:,i,1,1)
           END DO
 
-          CALL kohn_sham( 1, cf(:,:,:,1), wfill, occ_desc, eforce(:,:,:,1), kp )
+          CALL kohn_sham( 1, cf(:,:,:,1), wfill, eforce(:,:,:,1), kp )
 
           DEALLOCATE( eforce )
 
@@ -500,12 +487,12 @@
             CALL dforce_all( 1, ce(:,:,:,1), wempt, fi, eforce(:,:,:,1), gv, vpot(:,:,:,1), &
                 fnl(:,1), eigr, ps)
 
-            CALL kohn_sham( 1, ce(:,:,:,1), wempt, emp_desc, eforce(:,:,:,1), kp )
+            CALL kohn_sham( 1, ce(:,:,:,1), wempt, eforce(:,:,:,1), kp )
 
             CALL dforce_all( 2, ce(:,:,:,2), wempt, fi, eforce(:,:,:,1), gv, vpot(:,:,:,2), &
                 fnl(:,2), eigr, ps)
 
-            CALL kohn_sham( 2, ce(:,:,:,2), wempt, emp_desc, eforce(:,:,:,1), kp )
+            CALL kohn_sham( 2, ce(:,:,:,2), wempt, eforce(:,:,:,1), kp )
 
             DEALLOCATE( eforce )
             DEALLOCATE( fi )
@@ -580,7 +567,7 @@
         USE mp, ONLY: mp_barrier, mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
-        USE stick, ONLY: dfftp
+        USE fft_base, ONLY: dfftp
 
         IMPLICIT NONE
 

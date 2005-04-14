@@ -1745,7 +1745,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   real(dbl) :: rho, rup, rdw, ex, ec, vx(2), vc(2)
   real(dbl) :: rh, grh2, zeta, vxup, vxdw, vcup, vcdw
   real(dbl) :: grho, sx, sc, v1x, v2x, v1c, v2c
-  real(dbl) :: rhox, arhox, e2
+  real(dbl) :: rhox, arhox, e2, sx_dbg, sc_dbg
   real(dbl) :: grho2(2), arho, segno
   real(dbl) :: v1xup, v1xdw, v2xup, v2xdw
   real(dbl) :: v1cup, v1cdw
@@ -1756,6 +1756,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   logical :: debug_xc = .false.
 
   !
+  sx_dbg = 0.0d0
+  sc_dbg = 0.0d0
 
   e2  = 1.0d0
   etxc = 0.0d0
@@ -1789,6 +1791,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
               neg(3) = neg(3) + 1
               zeta = sign(1.d0,zeta)
            endif
+           ! WRITE(6,*) rhox, zeta
            if (rhor(ir,1) < 0.d0) neg(1) = neg(1) + 1
            if (rhor(ir,2) < 0.d0) neg(2) = neg(2) + 1
            call xc_spin (arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
@@ -1797,6 +1800,8 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
            enddo
            etxc = etxc + e2 * (ex + ec) * rhox
         endif
+        sx_dbg = sx_dbg + ex
+        sc_dbg = sc_dbg + ec
      enddo
   endif
 
@@ -1809,7 +1814,12 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
     debug_xc = .false.
   end if
 
+  ! write(6,*) 'debug 1 = ', sx_dbg, sc_dbg
+
   ! now come the corrections
+
+  sx_dbg = 0.0d0
+  sc_dbg = 0.0d0
 
   if( igcx > 0 .or. igcc > 0 ) then
 
@@ -1906,10 +1916,16 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
           !
        endif
        !
+       sx_dbg = sx_dbg + ex
+       sc_dbg = sc_dbg + ec
        !
     enddo
 
   end if
+
+  !write(6,*) 'debug 2 = ', sx_dbg, sc_dbg
+  !call hangup
+  !stop
 
   return
 end subroutine

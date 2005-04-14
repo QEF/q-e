@@ -23,11 +23,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 !   df     output: force for the i-th state
 
 
-  use  gvec
   use  gvecs
   use gvecw, only: ngw
   use  parameters
-  use  elct
+  use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use  constants
   use  cvan
   use  ions_base

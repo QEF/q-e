@@ -315,7 +315,7 @@
        USE cell_base, ONLY: tpiba2
        USE gvecw, ONLY: tecfix
        USE pseudopotential, ONLY: tl, l2ind, nspnl, lm1x
-       USE cp_types, ONLY: recvecs, phase_factors
+       USE cp_types, ONLY: recvecs
        USE ions_base, ONLY: nsp, na
        USE mp_global, ONLY: group
        USE mp, ONLY: mp_sum, mp_max
@@ -325,10 +325,10 @@
 ! ... declare subroutine arguments
       REAL(dbl) :: svar2
       TYPE (recvecs) :: gv
-      TYPE (phase_factors) :: eigr
       REAL(dbl) :: wnl(:,:,:,:), wsg(:,:), vps(:,:)
       REAL(dbl) :: vpp(:)
       COMPLEX(dbl) :: sfac(:,:)
+      COMPLEX(dbl) :: eigr(:,:)
       INTEGER, OPTIONAL, INTENT(IN) :: ik
 
 ! ... declare other variables
@@ -432,7 +432,7 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs, phase_factors
+      USE cp_types, ONLY: recvecs
       USE wave_types, ONLY: wave_descriptor
       USE mp_global, ONLY: group
       USE io_global, ONLY: stdout
@@ -452,8 +452,8 @@
       TYPE (recvecs) :: gv
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      TYPE (phase_factors) :: eigr
       COMPLEX(dbl) :: sfac(:,:) 
+      COMPLEX(dbl) :: eigr(:,:) 
       LOGICAL, INTENT(OUT) :: doions
       LOGICAL, INTENT(INOUT) :: treset
       REAL(dbl) :: gemax, etot, svar0, svarm, svar2
@@ -650,7 +650,7 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs, phase_factors
+      USE cp_types, ONLY: recvecs
       USE wave_types, ONLY: wave_descriptor
       USE brillouin, ONLY: kpoints
       USE mp_global, ONLY: group
@@ -672,8 +672,8 @@
       TYPE (kpoints) kp
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      TYPE (phase_factors) eigr
       COMPLEX(dbl) :: sfac(:,:) 
+      COMPLEX(dbl) :: eigr(:,:) 
       LOGICAL, INTENT(OUT) :: doions
       LOGICAL, INTENT(INOUT) :: treset
       REAL(dbl)  gemax, etot, svar0, svarm, svar2

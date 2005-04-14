@@ -8,13 +8,12 @@
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
   use constants
-  use ions_base, only : nsp, na, nas=>nax
+  use ions_base, only : nsp, na, nas=>nax, nat
   use parameters, only : natx, nsx
-  !use gvec
   use gvecs
   use cvan
   use cell_base, only : omega, a1, a2, a3, alat
-  use elct
+  use electrons_base, only: nx => nbspx, n => nbsp, nupdwn, iupdwn, nspin
   use gvecb
   use gvecw, only : ngw, ng0
   use small_box
@@ -36,14 +35,12 @@
   !
   logical what1
 !  integer, intent(in) :: nas
-  integer, intent(in) :: irb(3,natx,nsx),jw, ibrav
-!  integer, intent(in) :: irb(3,nax,nsx),jw, ibrav
-!  integer :: irb(3,nax,nsx),jw, ibrav
+  integer, intent(in) :: irb(3,nat),jw, ibrav
   real(kind=8), intent(inout) :: bec(nhsa,n), becdr(nhsa,n,3)
   real(kind=8), intent(in) :: b1(3),b2(3),b3(3),taub(3,nas)
   real(kind=8) :: becwf(nhsa,n) , becdrwf(nhsa,n), temp3(nhsa,n)
   complex(kind=8), intent(inout) :: c(ngw,nx)
-  complex(kind=8), intent(in) :: eigr(ngw,nas,nsp),eigrb(ngb,nas,nsp)
+  complex(kind=8), intent(in) :: eigr(ngw,nat),eigrb(ngb,nat)
   complex(kind=8) :: cwf(ngw,nx), bec2(n), bec3(n), bec2up(nupdwn(1))
   complex(kind=8) :: bec2dw(nupdwn(2)), bec3up(nupdwn(1)), bec3dw(nupdwn(2))
   complex(kind=8),allocatable :: c_m(:,:),c_p(:,:),c_psp(:,:),c2(:,:)
@@ -774,6 +771,7 @@
      X=(0.d0, 0.d0)
      !
      !
+     isa = 1
      do is = 1, nvb
         do ia =1, na(is)
            ijv = 0
@@ -782,16 +780,16 @@
               ijv = ijv + 1
               qv( 1 : nnrb ) = 0.0d0 
               do ig=1,ngb
-                 qv(npb(ig))=eigrb(ig,ia,is)*qgb(ig,ijv,is)
-                 qv(nmb(ig))=conjg(eigrb(ig,ia,is)*qgb(ig,ijv,is))
+                 qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
+                 qv(nmb(ig))=conjg(eigrb(ig,isa)*qgb(ig,ijv,is))
               end do
 #ifdef __PARA
-     irb3=irb(3,ia,is)
+     irb3=irb(3,isa)
 #endif
               call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
               iqv=1
               qvt=(0.d0,0.d0)
-              qvt=boxdotgridcplx(irb(1,ia,is),qv,expo(1,inw))
+              qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 
 #ifdef __PARA
               call reduce(2, qvt)
@@ -826,13 +824,13 @@
                  ijv = ijv + 1
                  qv( 1:nnrb ) = 0.0d0 ! call zero(2*nnrb,qv)
                  do ig=1,ngb
-                    qv(npb(ig))=eigrb(ig,ia,is)*qgb(ig,ijv,is)
-                    qv(nmb(ig))=conjg(eigrb(ig,ia,is)*qgb(ig,ijv,is))
+                    qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
+                    qv(nmb(ig))=conjg(eigrb(ig,isa)*qgb(ig,ijv,is))
                  end do
                  call ivfftbold(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
                  iqv=1
                  qvt=0.d0
-                 qvt=boxdotgridcplx(irb(1,ia,is),qv,expo(1,inw))
+                 qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 #ifdef __PARA
                  call reduce(2, qvt)
 #endif
@@ -869,6 +867,7 @@
                  end if
               end do
            end do
+           isa = isa + 1
         end do
      end do
      t1=omega/dfloat(nr1*nr2*nr3)
@@ -1269,7 +1268,7 @@ end subroutine wf
   use wfparm
   use cell_base
   use constants
-  use elct
+  use electrons_base, only: n => nbsp
   use control_flags, only: iprsta
   use parallel_include
 #ifdef __PARA
@@ -1600,9 +1599,9 @@ end subroutine wf
  subroutine wfunc_init(clwf,b1,b2,b3,ibrav)
 !-----------------------------------------------------------------------
 
-   use gvec, only: gx, mill_l
+   use reciprocal_vectors, only: gx, mill_l
    use gvecw, only : ngw, ng0
-   use elct
+   use electrons_base, only: n => nbsp
    use wfparm
 !   use cell_base
         use cvan
@@ -2893,9 +2892,9 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       subroutine write_rho_g(rhog)
 !-----------------------------------------------------------------------
 
-      use gvecp, only: ng=>ngm
-      use gvec, only: gx, mill_l
-      use elct
+      use gvecp, only: ngm
+      use reciprocal_vectors, only: gx, mill_l
+      use electrons_base, only: nspin
       use parallel_include
 #ifdef __PARA 
       use para_mod
@@ -2904,9 +2903,9 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       implicit none
 
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
-      complex(kind=8) ,intent(in) :: rhog(ng,nspin) 
+      complex(kind=8) ,intent(in) :: rhog(ngm,nspin) 
       complex(kind=8),allocatable :: bigrho(:)
-      complex(kind=8) :: rhotmp_g(ng)
+      complex(kind=8) :: rhotmp_g(ngm)
       integer ntot, i, j
 #ifdef __PARA
       integer proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
@@ -2915,14 +2914,14 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       character (len=6) :: name
       character (len=15) :: name2
 
-      allocate(gnx(3,ng))
+      allocate(gnx(3,ngm))
 
 
 #ifdef __PARA
       root=0
 #endif
 
-    do i=1,ng
+    do i=1,ngm
       gnx(1,i)=gx(i,1)
       gnx(2,i)=gx(i,2)
       gnx(3,i)=gx(i,3)
@@ -2959,7 +2958,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
     if(ierr.ne.0) call errore('write_rho_g0','mpi_gatherv', ierr)
     do i=1,nspin
 
-      rhotmp_g(1:ng)=rhog(1:ng,i)
+      rhotmp_g(1:ngm)=rhog(1:ngm,i)
 
       if(me.eq.1) then 
         allocate (bigrho(ntot))
@@ -2999,12 +2998,12 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
     end if
     write(6,*) "G-vectors written to G_PARA"
 #else
-    ntot=ng
+    ntot=ngm
     allocate(bigg(3,ntot))
-    bigg(1:3,1:ntot)=gnx(1:3,1:ng)
+    bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
     do i=1,nspin
       allocate(bigrho(ntot))
-      bigrho(1:ng)=rhog(1:ng,i)
+      bigrho(1:ngm)=rhog(1:ngm,i)
 
       if(i.eq.1) name2="CH_DEN_G_SERL.1"
       if(i.eq.2) name2="CH_DEN_G_SERL.2"
@@ -3036,11 +3035,11 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !-----------------------------------------------------------------------
       subroutine macroscopic_average(rhog,tau0,e_tuned)
 !-----------------------------------------------------------------------
-      use gvec
-      use elct
+      use reciprocal_vectors, only: gx
+      use gvecp, only: ngm
+      use electrons_base, only: nspin
       use tune
       use cell_base
-!      use ion_parameters
       use ions_base
       use constants
       use parallel_include
@@ -3050,9 +3049,9 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       implicit none
 
       real(kind=8), allocatable:: gnx(:,:), bigg(:,:)
-      complex(kind=8) ,intent(in) :: rhog(ng,nspin)
+      complex(kind=8) ,intent(in) :: rhog(ngm,nspin)
       complex(kind=8),allocatable :: bigrho(:)
-      complex(kind=8) :: rhotmp_g(ng)
+      complex(kind=8) :: rhotmp_g(ngm)
       complex(kind=8),parameter :: zero=(0.d0,0.d0), ci=(0.d0,1.d0)
       integer ntot, i, j, ngz, l, isa
       integer ,allocatable :: g_red(:,:)
@@ -3067,14 +3066,14 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
        real(kind=8), allocatable:: cdion(:), cdel(:), v_line(:), dist(:)
        complex(kind=8),allocatable :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
 
-       allocate(gnx(3,ng))
+       allocate(gnx(3,ngm))
 
 
 #ifdef __PARA
       root=0
 #endif
 
-    do i=1,ng
+    do i=1,ngm
       gnx(1,i)=gx(i,1)
       gnx(2,i)=gx(i,2)
       gnx(3,i)=gx(i,3)
@@ -3118,7 +3117,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
     call mpi_bcast(bigg,3*ntot  , MPI_REAL8, root, MPI_COMM_WORLD, ierr)
     if (ierr.ne.0) call errore('macroscopic_average','mpi_bcast_bigg' , ierr)
 
-      rhotmp_g(1:ng)=rhog(1:ng,1)
+      rhotmp_g(1:ngm)=rhog(1:ngm,1)
 
 !      if(me.eq.1) then
         allocate (bigrho(ntot))
@@ -3141,14 +3140,14 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 
 
 #else
-    ntot=ng
+    ntot=ngm
     allocate(bigg(3,ntot))
     allocate(g_1(3,2*ntot-1))
     allocate(g_red(3,2*ntot-1))
-    bigg(1:3,1:ntot)=gnx(1:3,1:ng)
+    bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
     allocate(bigrho(ntot))
     allocate(bigrhog(2*ntot-1))
-    bigrho(1:ng)=rhog(1:ng,1)
+    bigrho(1:ngm)=rhog(1:ngm,1)
 #endif
      
 !       e_tuned=0.d0
@@ -3789,18 +3788,18 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
       use control_flags, only: iprint, tbuff
-      use gvec
       use gvecs
       use gvecw, only: ngw
       use cvan
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp, nspin, f, ispin => fspin
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use uspp_param, only: nh, nhm
       use uspp, only : nhsa=> nkb, dvan
+      use cell_base, only: tpiba2
 !
       implicit none
 !
@@ -3945,13 +3944,13 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 ! for calwf 5             - M.S
 ! collect wavefunctions on first node and write to file
 !
-      use gvec
       use gvecs
-      use elct
+      use electrons_base, only: nx => nbspx
       use para_mod
       use smooth_grid_dimensions , nnrs => nnrsx
       use gvecw , only : ngw
       use parallel_include
+      use reciprocal_vectors, only: mill_l
 !
       implicit none
 
@@ -4083,21 +4082,20 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
-      use ions_base , nas => nax
+      use ions_base, only: nas => nax, nat, nsp, na
       use parameters, only: natx, nsx
-      use gvec
+      use recvecs_indexes, only: np, nM
       use gvecs
+      use gvecp, only: ngm
       use gvecb, only: ngb
       use gvecw, only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       use cvan
-      !use parm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base, only: omega
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use elct
+      use electrons_base, only: nx => nbspx, n => nbsp, nspin, f, ispin => fspin
       use constants, only: pi, fpi
       use pseu
       use wfparm, only : iwf
@@ -4113,8 +4111,8 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       real(kind=8) rhovanaux(nhm,nhm,nat,nspin)
       real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
       real(kind=8) enl, ekin
-      complex(kind=8) eigrb(ngb,nas,nsp), c(ngw,nx), rhog(ng,nspin)
-      integer irb(3,natx,nsx), nfi, ndwwf
+      complex(kind=8) eigrb(ngb,nat), c(ngw,nx), rhog(ngm,nspin)
+      integer irb(3,nat), nfi, ndwwf
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       integer is,iv,jv,isa,isn, jnl, j, k, inl, ism, ia
@@ -4133,7 +4131,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       do iss=1,nspin
          rhor( 1:nnr, iss ) = 0.0d0 ! call zero(nnr,rhor(1,iss))
          rhos( 1:nnrsx, iss ) = 0.0d0 ! call zero(nnrsx,rhos(1,iss))
-         rhog( 1:ng, iss ) = 0.0d0 ! call zero(2*ng,rhog(1,iss))
+         rhog( 1:ngm, iss ) = 0.0d0 ! call zero(2*ngm,rhog(1,iss))
       end do
 !
 !     ==================================================================
@@ -4194,7 +4192,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
                psi(ir)=cmplx(rhor(ir,iss),0.)
             end do
             call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ig=1,ng
+            do ig=1,ngm
                rhog(ig,iss)=psi(np(ig))
             end do
          else
@@ -4204,7 +4202,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
                psi(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
             end do
             call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ig=1,ng
+            do ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
                rhog(ig,isup)=0.5*cmplx( real(fp),aimag(fm))

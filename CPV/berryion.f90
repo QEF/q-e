@@ -16,7 +16,6 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
      
 
   
-  use elct
   use constants, only: pi, fpi
   use ions_base
   use parameters, only: natx

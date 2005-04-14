@@ -38,8 +38,7 @@
                       entropy2, f2, etot2, eqb, compute_entropy2, compute_entropy_der, &
                       compute_entropy
 !---
-      use gvec, only: tpiba2, ng
-      use gvec, only: deallocate_gvec
+      use gvecp, only: ngm
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
@@ -49,7 +48,7 @@
       use grid_dimensions, only: nnr => nnrx, nr1, nr2, nr3
       use cell_base, only: ainv, a1, a2, a3
       use cell_base, only: omega, alat
-      use cell_base, only: h, hold, deth, wmass
+      use cell_base, only: h, hold, deth, wmass, tpiba2
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use pseu, only: vps, rhops
@@ -91,18 +90,18 @@
 !
       integer :: nfi
       logical :: tfirst , tlast
-      complex(kind=8) :: eigr(ngw,nax,nsp)
+      complex(kind=8) :: eigr(ngw,nat)
       real(kind=8) :: bec(nhsa,n)
       real(kind=8) :: becdr(nhsa,n,3)
-      integer irb(3,natx,nsx)
-      complex(kind=8) :: eigrb(ngb,nax,nsp)
+      integer irb(3,nat)
+      complex(kind=8) :: eigrb(ngb,nat)
       real(kind=8) :: rhor(nnr,nspin)
-      real(kind=8) :: rhog(ng,nspin)
+      real(kind=8) :: rhog(ngm,nspin)
       real(kind=8) :: rhos(nnrsx,nspin)
       real(kind=8) :: rhoc(nnr)
-      complex(kind=8) :: ei1(-nr1:nr1,nax,nsp)
-      complex(kind=8) :: ei2(-nr2:nr2,nax,nsp)
-      complex(kind=8) :: ei3(-nr3:nr3,nax,nsp)
+      complex(kind=8) :: ei1(-nr1:nr1,nat)
+      complex(kind=8) :: ei2(-nr2:nr2,nat)
+      complex(kind=8) :: ei3(-nr3:nr3,nat)
       complex(kind=8) :: sfac( ngs, nsp )
       real(kind=8) :: fion(3,natx)
       real(kind=8) :: ema0bg(ngw)

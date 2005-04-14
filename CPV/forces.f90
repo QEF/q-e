@@ -208,7 +208,7 @@
         REAL (dbl)     :: v(:,:,:), f(:,:)
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
-        type (phase_factors)   :: eigr 
+        COMPLEX(dbl) :: eigr ( :, : )
         REAL(dbl), POINTER :: hg(:)
         INTEGER :: istate
         istate = (ib+1)/2
@@ -225,7 +225,7 @@
             f(ib,ik), f(ib+1,ik), hg, v)
         END IF
         CALL dforce2(f(ib,ik), f(ib+1,ik), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gv%khg_l(:,ik), gv%kgx_l(:,:,ik), eigr%xyz, &
+          fnl(:,:,ib+1), gv%khg_l(:,ik), gv%kgx_l(:,:,ik), eigr, &
           ps%wsg, ps%wnl(:,:,:,ik)) 
         return
       end subroutine
@@ -241,7 +241,7 @@
         COMPLEX(dbl), INTENT(OUT) :: df(:), da(:)
         TYPE (recvecs), INTENT(IN) :: gv
         REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
-        TYPE (phase_factors), INTENT(IN)  :: eigr
+        COMPLEX(dbl), INTENT(IN)  :: eigr(:,:)
         REAL(dbl), POINTER :: hg(:)
         INTEGER :: istate
         istate = (ib+1)/2
@@ -257,7 +257,7 @@
           CALL dforce1(c(:,ib), c(:,ib+1), df, da, f(ib), f(ib+1), hg, v)
         END IF
         CALL dforce2(f(ib), f(ib+1), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gv%khg_l(:,1), gv%kgx_l(:,:,1), eigr%xyz, wsg, wnl)
+          fnl(:,:,ib+1), gv%khg_l(:,1), gv%kgx_l(:,:,1), eigr, wsg, wnl)
         return
       end subroutine
 
@@ -403,7 +403,7 @@
         REAL (dbl)     :: v(:,:,:), f(:,:)
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
-        type (phase_factors)   :: eigr 
+        COMPLEX(dbl) :: eigr (:,:)
         REAL(dbl), POINTER :: hg(:)
         IF(tecfix) THEN
           hg => gv%khgcutz_l(:,ik)
@@ -412,7 +412,7 @@
         END IF
         CALL dforce1_d(c(:,ib,ik), df, f(ib,ik), hg, v)
         CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), gv%khg_l(:,ik), &
-          gv%kgx_l(:,:,ik), eigr%xyz, ps%wsg, ps%wnl(:,:,:,ik))
+          gv%kgx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik))
         return
       end subroutine
 
@@ -427,7 +427,7 @@
         COMPLEX(dbl), INTENT(OUT) :: df(:)
         TYPE (recvecs), INTENT(IN) :: gv
         REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
-        TYPE (phase_factors), INTENT(IN)  :: eigr
+        COMPLEX(dbl) :: eigr (:,:)
         REAL(dbl), POINTER :: hg(:)
         IF(tecfix) THEN
           hg => gv%khgcutz_l(:,1)
@@ -436,7 +436,7 @@
         END IF
         CALL dforce1_d(c(:,ib), df, f(ib), hg, v)
         CALL dforce2_d(f(ib), df, fnl(:,:,ib), gv%khg_l(:,1), &
-          gv%kgx_l(:,:,1), eigr%xyz, wsg, wnl)
+          gv%kgx_l(:,:,1), eigr, wsg, wnl)
         return
       end subroutine
 
@@ -461,8 +461,8 @@
         COMPLEX(dbl)        :: df(:)
         REAL (dbl)          :: v(:,:,:), f(:,:)
         COMPLEX(dbl)        :: fnlk(:,:,:)
+        COMPLEX(dbl)        :: eigr(:,:)
         TYPE (pseudo)       :: ps
-        TYPE (phase_factors):: eigr
 
         IF(tecfix) THEN
           CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gv%khgcutz_l(:,ik), v)
@@ -470,7 +470,7 @@
           CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gv%khg_l(:,ik), v)
         END IF
         CALL dforce2_kp( f(ib,ik), df, fnlk(:,:,ib), gv%khg_l(:,ik), &
-          gv%kgx_l(:,:,ik), eigr%xyz, ps%wsg, ps%wnl(:,:,:,ik) )
+          gv%kgx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik) )
 
         c0(:,ib,ik) = c0(:,ib,ik) * gv%kg_mask_l(:,ik)
         df(:) = df(:) * gv%kg_mask_l(:,ik)
@@ -603,7 +603,7 @@
         COMPLEX(dbl), INTENT(INOUT) :: c(:,:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
         TYPE (pseudo), INTENT(IN) :: ps
-        TYPE (phase_factors), INTENT(IN) ::  eigr
+        COMPLEX(dbl) ::  eigr(:,:)
         TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (projector) :: fnl(:)
         REAL(dbl), INTENT(IN) :: vpot(:,:,:), f(:,:)

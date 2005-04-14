@@ -1115,6 +1115,7 @@ END SUBROUTINE
           USE gvecw, ONLY: ecfix, ecutz, ecsig, tecfix
           USE gvecp, ONLY: ecutp
           USE gvecs, ONLY: ecuts, dual
+          use betax, only: mmx, refg
 
           IMPLICIT NONE
           REAL(dbl), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
@@ -1136,6 +1137,8 @@ END SUBROUTINE
           ELSE
             tecfix = .TRUE.
           ENDIF
+
+          refg = 1.0d0 * ecutp / ( mmx - 1 )
 
           RETURN
         END SUBROUTINE
@@ -1220,18 +1223,23 @@ END SUBROUTINE
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcuts
         USE gvecb, ONLY: ecutb, gcutb
+        use betax, only: mmx, refg
         USE io_global, ONLY: stdout
 
         WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutp), sqrt(gcuts)
         IF( tecfix ) THEN
           WRITE( stdout, 150 ) ecutz, ecsig, ecfix
         END IF
+
+        WRITE( stdout,200) refg, mmx
+
 100     FORMAT(/,3X,'Energy Cut-offs',/ &
                 ,3X,'---------------',/ &
                 ,3X,'Ecutwfc = ',F6.1,' Ryd., ', 3X,'Ecutrho = ',F6.1,' Ryd., ', 3X,'Ecuts = ',F6.1,' Ryd.',/ &
                 ,3X,'Gcutwfc = ',F6.1,'     , ', 3X,'Gcutrho = ',F6.1,'       ', 3X,'Gcuts = ',F6.1)
 150     FORMAT(  3X,'modified kinetic energy functional, with parameters:',/,   &
                  3X,'ecutz = ',f8.4,'  ecsig = ', f7.4,'  ecfix = ',f6.2)
+200     FORMAT(  3X,'NOTA BENE: refg, mmx = ', f10.6,I6 )
 
         RETURN
       END SUBROUTINE cutoffs_print_info

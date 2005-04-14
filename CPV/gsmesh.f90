@@ -133,7 +133,8 @@
 ! ...     declare modules
           USE mp_global, ONLY: mpime
           USE io_global, ONLY: stdout
-          USE stick, ONLY: dfftp, fft_dlay_descriptor
+          USE fft_types, ONLY: fft_dlay_descriptor
+          USE fft_base, ONLY: dfftp
           USE stick_base, ONLY: stown => sticks_owner
           USE reciprocal_vectors, only: &
               ngw_g  => ngwt,   &

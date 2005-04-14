@@ -268,10 +268,14 @@ END FUNCTION
 
         OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
 
-        numeric(is)=.true.
+        numeric(is) = .true.
+        !
         ! used only by obsolete "bhs" format of CP
-        oldvan(is)=.false.
+        !
+        oldvan(is)  = .false.
+        !
         ! used only by obsolete Vanderbilt format with Herman-Skillman grid
+        !
         IF( info == 20 ) THEN
            !
            !  ...      Pseudopotential form is UPF
@@ -306,16 +310,19 @@ END FUNCTION
 
           CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
           CALL read_giannoz(pseudounit, ap(is), ierr)
+          CALL ncpp2internal ( ap(is), is, xc_type, ierr )
 
         ELSE IF( info == 11 ) THEN
 
           CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
           CALL read_numeric_pp( pseudounit, ap(is), error_msg, ierr)
+          CALL ncpp2internal ( ap(is), is, xc_type, ierr )
 
         ELSE IF( info == 12 ) THEN
 
           CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
           CALL read_analytic_pp( pseudounit, ap(is), error_msg, ierr)
+          CALL ncpp2internal ( ap(is), is, xc_type, ierr )
 
         ELSE IF( info == 0 ) THEN
 
@@ -888,6 +895,7 @@ END SUBROUTINE
 !=----------------------------------------------------------------------------=!
 !
 !
+
 !
 !---------------------------------------------------------------------
 subroutine upf2internal ( upf, is, ierr )
@@ -975,6 +983,100 @@ subroutine upf2internal ( upf, is, ierr )
   !
   return
 end subroutine upf2internal
+
+
+!
+!---------------------------------------------------------------------
+subroutine ncpp2internal ( ap, is, xc_type, ierr )
+  !---------------------------------------------------------------------
+  !
+  !   convert and copy "is"-th pseudopotential in the Unified Pseudopotential 
+  !   Format to internal PWscf variables
+  !   return error code in "ierr" (success: ierr=0)
+  !
+  ! CP90 modules
+  !
+  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
+                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
+  use ions_base, only: zv
+  use funct, only: dft, which_dft
+  !
+  use pseudo_types
+  !
+  implicit none
+  !
+  integer :: ierr 
+  INTEGER, INTENT(IN) :: is
+  TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
+  CHARACTER(len=*) :: xc_type
+  !
+  !     Local variables
+  !
+  integer :: il, ir
+  real(dbl), allocatable :: fint(:)
+  !
+  zv(is)     = ap%zv
+  tvanp(is)  = .FALSE.
+  nlcc(is)   = ap%tnlcc
+  mesh(is)   = ap%mesh
+  nchi(is)   = ap%nrps
+  nbeta(is)  = ap%lnl
+  kkbeta(is) = mesh(is)
+  nqlc(is)   = 0 ! upf%nqlc
+  nqf (is)   = 0 ! upf%nqf
+  if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
+  !
+  dft = TRIM( xc_type )
+  call which_dft ( TRIM( xc_type ) )
+  !
+  !
+  lchi( 1 : ap%nrps, is ) = ap%lrps( 1 : ap%nrps )
+  chi ( 1 : ap%mesh, 1 : ap%nrps, is ) = ap%rps( 1 : ap%mesh, 1 : ap%nrps )
+  !
+  betar( 1 : ap%mesh, 1 : ap%lnl, is ) = 2.0d0 * ap%vrps( 1 : ap%mesh, 1 : ap%lnl )
+  !
+  lll  ( 1 : ap%lnl, is ) = ap%indl( 1 : ap%lnl ) - 1  ! = upf%lll( 1:upf%nbeta )
+
+  rinner(:,is) = 0.0d0
+  qqq(:,:,is)  = 0.0d0
+  qfunc(:,:,:,is) = 0.0d0
+  qfcoef(:,:,:,:,is) = 0.0d0
+
+  !
+  r  (1:ap%mesh, is) = ap%rw( 1:ap%mesh )                ! = upf%r  (1:upf%mesh)
+  rab(1:ap%mesh, is) = ap%dx * ap%rw( 1:ap%mesh )        ! = upf%rab(1:upf%mesh)
+  !
+  rho_atc (:,is) = 0.d0
+  if ( ap%tnlcc ) then
+     rho_atc (1:ap%mesh, is) = ap%rhoc(1:ap%mesh)        ! = upf%rho_atc(1:upf%mesh)
+  end if
+  !
+  ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
+  ! lloc(is) = 1
+  !
+  vloc_at (:, is) = 0.0d0 
+  vloc_at (1:ap%mesh, is) = 2.0d0 * ap%vloc( 1:ap%mesh ) ! = upf%vloc(1:upf%mesh)
+
+  dion(:,:,is) = 0.0d0                                   ! upf%dion(1:upf%nbeta, 1:upf%nbeta)
+  allocate(fint(mesh(is)))
+  do il=1,nbeta(is)
+    do ir=1,mesh(is)
+      fint(ir)= chi(ir,il,is) * 2.0d0 * ap%vrps( ir, il )
+    end do
+    call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
+    dion(il,il,is) = 1.0/dion(il,il,is)
+  end do
+  deallocate(fint)
+
+  !
+  ! compatibility with old Vanderbilt formats
+  !
+  call fill_qrl(is)
+  !
+  return
+end subroutine ncpp2internal
+
 
 
 

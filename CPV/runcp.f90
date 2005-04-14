@@ -43,13 +43,13 @@
       USE kinds
       USE mp_global, ONLY: mpime, nproc
       USE mp, ONLY: mp_sum
-      USE electrons_module, ONLY:  pmss, eigs, occ_desc
+      USE electrons_module, ONLY:  pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
       USE wave_base, ONLY : frice
       USE wave_base, ONLY: hpsi
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
@@ -69,7 +69,7 @@
       COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (pseudo), INTENT(IN)  ::  ps
-      TYPE (phase_factors), INTENT(IN)  ::  eigr
+      COMPLEX(dbl)  ::  eigr(:,:)
       TYPE (recvecs), INTENT(IN)  ::  gv
       TYPE (kpoints), INTENT(IN)  ::  kp
       REAL(dbl), INTENT(IN)  ::  fi(:,:,:)
@@ -83,7 +83,7 @@
 
 ! ...   declare other variables
       REAL(dbl) :: s1, s2, s3, s4
-      INTEGER :: ik, nx, nb_l, ierr, nkl, is
+      INTEGER :: ik, nx, nb_lx, ierr, nkl, is
 
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:,:)
       REAL(dbl),    ALLOCATABLE :: gam(:,:,:)
@@ -95,11 +95,12 @@
 
       s1 = cclock()
 
-      CALL get_local_dims( occ_desc, nb_l )
+      nb_lx = MAX( nb_l(1), nb_l(2) )
+      nb_lx = MAX( nb_lx, 1 )
       IF( cdesc%gamma ) THEN
-        ALLOCATE( cgam(1,1,1), gam( MAX(1,nb_l), SIZE( c0, 2 ), cdesc%nspin ), STAT=ierr)
+        ALLOCATE( cgam(1,1,1), gam( nb_lx, SIZE( c0, 2 ), cdesc%nspin ), STAT=ierr)
       ELSE
-        ALLOCATE( cgam(MAX(1,nb_l), SIZE( c0, 2 ), cdesc%nspin ), gam(1,1,1), STAT=ierr)
+        ALLOCATE( cgam( nb_lx, SIZE( c0, 2 ), cdesc%nspin ), gam(1,1,1), STAT=ierr)
       END IF
       IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating gam, prod ', ierr)
 
@@ -175,10 +176,10 @@
       USE kinds
       USE mp_global, ONLY: mpime, nproc
       USE mp, ONLY: mp_sum
-      USE electrons_module, ONLY:  pmss, occ_desc
+      USE electrons_module, ONLY:  pmss
       USE cp_electronic_mass, ONLY: emass
       USE wave_base, ONLY: frice, wave_steepest, wave_verlet
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
       USE brillouin, ONLY: kpoints
@@ -196,7 +197,7 @@
       REAL(dbl)    :: gam(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (pseudo), INTENT(IN)  ::  ps
-      TYPE (phase_factors), INTENT(IN)  ::  eigr
+      COMPLEX(dbl) :: eigr(:,:)
       TYPE (recvecs), INTENT(IN)  ::  gv
       TYPE (kpoints), INTENT(IN)  ::  kp
       REAL(dbl), INTENT(IN)  ::  fi(:,:,:)
@@ -303,11 +304,11 @@
 
             IF( tlam ) THEN
               IF ( cdesc%gamma ) THEN
-                CALL update_lambda( i, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
-                CALL update_lambda( i+1, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c3 )
+                CALL update_lambda( i, gam( :, :,is), c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( i+1, gam( :, :,is), c0(:,:,ik,is), cdesc, c3 )
               ELSE
-                CALL update_lambda( i, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
-                CALL update_lambda( i+1, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c3 )
+                CALL update_lambda( i, cgam( :, :,is), c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( i+1, cgam( :, :,is), c0(:,:,ik,is), cdesc, c3 )
               END IF
             END IF
 
@@ -346,9 +347,9 @@
             END IF
             IF( tlam ) THEN
               IF ( cdesc%gamma ) THEN
-                CALL update_lambda( nb, gam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( nb, gam( :, :,is), c0(:,:,ik,is), cdesc, c2 )
               ELSE
-                CALL update_lambda( nb, cgam( :, :,is), occ_desc, c0(:,:,ik,is), cdesc, c2 )
+                CALL update_lambda( nb, cgam( :, :,is), c0(:,:,ik,is), cdesc, c2 )
               END IF
             END IF
 
@@ -402,13 +403,13 @@
       USE kinds
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_sum
-      USE electrons_module, ONLY: pmss, eigs, occ_desc, nupdwn, nspin
+      USE electrons_module, ONLY: pmss, eigs, nb_l, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
       USE wave_base, ONLY: frice, wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
-      USE cp_types, ONLY: recvecs, pseudo, phase_factors
+      USE cp_types, ONLY: recvecs, pseudo
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
@@ -430,7 +431,7 @@
       COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (pseudo), INTENT(IN)  ::  ps
-      TYPE (phase_factors), INTENT(IN)  ::  eigr
+      COMPLEX(dbl)  ::  eigr(:,:)
       TYPE (recvecs), INTENT(IN)  ::  gv
       TYPE (kpoints), INTENT(IN)  ::  kp
       REAL(dbl), INTENT(INOUT) ::  fi(:,:,:)
@@ -445,7 +446,7 @@
 ! ...   declare other variables
       REAL(dbl) :: s3, s4
       REAL(dbl) ::  svar1, svar2, tmpfac, annee
-      INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_l, ierr, nkl, ibl
+      INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, nkl, ibl
       INTEGER :: ispin_wfc
       REAL(dbl), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
       REAL(dbl) :: intermed, intermed2
@@ -457,10 +458,8 @@
       COMPLEX(dbl), ALLOCATABLE :: c4(:)
       COMPLEX(dbl), ALLOCATABLE :: c5(:)
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: cprod(:)
       REAL(dbl),    ALLOCATABLE :: svar3(:)
       REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      REAL(dbl),    ALLOCATABLE :: prod(:)
       REAL(dbl),    ALLOCATABLE :: ei_t(:,:,:)
 
       REAL(dbl), EXTERNAL :: cclock
@@ -507,12 +506,13 @@
         CALL errore(' runcp_forced_pairing ',' inconsistent spin numbers ', 1)
 
       nb_g = cdesc%nbt( 1 )
-      CALL get_local_dims( occ_desc, nb_l )
+      nb_lx = MAX( nb_l(1), nb_l(2) )
+      nb_lx = MAX( nb_lx, 1 )
 
       IF( cdesc%gamma ) THEN
-        ALLOCATE(cgam(1,1), cprod(1), gam(MAX(1,nb_l),nb_g), prod(nb_g), STAT=ierr)
+        ALLOCATE(cgam(1,1), gam(nb_lx,nb_g), STAT=ierr)
       ELSE
-        ALLOCATE(cgam(MAX(1,nb_l),nb_g), cprod(nb_g), gam(1,1), prod(1), STAT=ierr)
+        ALLOCATE(cgam(nb_lx,nb_g), gam(1,1), STAT=ierr)
       END IF
       IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', ' allocating gam, prod ', ierr)
 
@@ -623,13 +623,13 @@
                 !  anche solita divisione sul gamma == matrice lambda dei moltiplicatori di Lagrange
                 !  e faccio il prodotto <psi|dH/dpsi> == <psi|H|psi>
                 !
-                CALL update_lambda( i, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
-                CALL update_lambda( i+1, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c3 )
+                CALL update_lambda( i, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
+                CALL update_lambda( i+1, gam( :, :), c0(:,:,ik,1), cdesc, c3 )
 
             ELSE
 
-                CALL update_lambda( i, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
-                CALL update_lambda( i+1, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c3 )
+                CALL update_lambda( i, cgam( :, :), c0(:,:,ik,1), cdesc, c2 )
+                CALL update_lambda( i+1, cgam( :, :), c0(:,:,ik,1), cdesc, c3 )
 
             END IF
 
@@ -695,9 +695,9 @@
 
           IF( ttprint .and. ( nupdwn(1) > nupdwn(2) ) ) THEN
             IF ( cdesc%gamma ) THEN
-              CALL update_lambda( nb, gam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
+              CALL update_lambda( nb, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
             ELSE
-              CALL update_lambda( nb, cgam( :, :), occ_desc, c0(:,:,ik,1), cdesc, c2 )
+              CALL update_lambda( nb, cgam( :, :), c0(:,:,ik,1), cdesc, c2 )
             END IF
             if ( nupdwn(1) > nupdwn(2) ) then
               intermed  = sum ( c2 * conjg(c2) )
@@ -809,7 +809,7 @@
         gv%kg_mask_l, pmss, delt)
 
 
-      DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, cgam, gam, cprod, prod, occup, occdown, STAT=ierr)
+      DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, cgam, gam, occup, occdown, STAT=ierr)
       IF( ierr /= 0 ) CALL errore(' runcp_force_pairing ', ' deallocating ', ierr)
 
       RETURN

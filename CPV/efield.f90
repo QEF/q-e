@@ -60,7 +60,7 @@ CONTAINS
 
   SUBROUTINE efield_berry_setup( eigr, tau0 )
     IMPLICIT NONE
-    COMPLEX(kind=8), INTENT(IN)  :: eigr(:,:,:)
+    COMPLEX(kind=8), INTENT(IN)  :: eigr(:,:)
     REAL(kind=8), INTENT(IN)  :: tau0(:,:)
     write(6,'(''before gtable'')')
     call gtable(ipolp,ctable(1,1,ipolp))
@@ -78,7 +78,7 @@ CONTAINS
 
   SUBROUTINE efield_update( eigr )
     IMPLICIT NONE
-    COMPLEX(kind=8), INTENT(IN)  :: eigr(:,:,:)
+    COMPLEX(kind=8), INTENT(IN)  :: eigr(:,:)
     call qqupdate(eigr,gqqm0,gqq,gqqm,ipolp)
     RETURN
   END SUBROUTINE
