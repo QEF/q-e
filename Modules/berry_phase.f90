@@ -23,7 +23,7 @@
         INTEGER :: n_indi_rcv(8) = 0   !   number of G-vectors to be received
         INTEGER :: n_indi_snd(8) = 0   !   number of G-vectors to be sent
         INTEGER :: icntix(8)     = 0   !   total number of G-vec to be exchanged
-        INTEGER :: lsetup = .FALSE.
+        LOGICAL :: lsetup = .FALSE.
 
         PUBLIC :: indi_l, sour_indi, dest_indi, n_indi_rcv, n_indi_snd, icntix
 
