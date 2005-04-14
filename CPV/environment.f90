@@ -186,19 +186,17 @@
           END IF
 
  3331     FORMAT('=',78('-'),'=')
- 3332     FORMAT( /, &
-      5X,'CPV: variable-cell Car-Parrinello molecular dynamics',/,&
-      5X,'using ultrasoft Vanderbilt pseudopotentials',//,&
-      5X,'Version: ',A60,/,&
-      5X,'Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,',/,&
-      5X,'  Paolo Giannozzi, Nicola Marzari, and others',/)
+ 3332     FORMAT( /, 5X,'CPV: variable-cell Car-Parrinello molecular dynamics',/&
+        & ,5X,'using ultrasoft Vanderbilt pseudopotentials',//&
+        & ,5X,'Version: ',A60,/&
+        & ,5X,'Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,',/&
+        & ,5X,'  Paolo Giannozzi, Nicola Marzari, and others',/)
 
- 3333     FORMAT( /,&
-      5X,'FPMD: variable-cell Car-Parrinello molecular dynamics',/,&
-      5X,'using norm-conserving pseudopotentials',//,&
-      5X,'Version: ',A60,/,&
-      5X,'Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,',/,&
-      5X,'Paolo Focher, Gerardo Ballabio',/)
+ 3333     FORMAT( /, 5X,'FPMD: variable-cell Car-Parrinello molecular dynamics',/&
+        & ,5X,'using norm-conserving pseudopotentials',//&
+        & ,5X,'Version: ',A60,/&
+        & ,5X,'Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,',/&
+        & ,5X,'Paolo Focher, Gerardo Ballabio',/)
 
  3334     FORMAT(/,3X,A60,/)
           RETURN

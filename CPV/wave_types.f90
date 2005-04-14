@@ -174,14 +174,14 @@
           desc%ngwl, desc%ngwt, desc%nbl, desc%nbt, desc%nkl, desc%nkt, &
           desc%nspin, desc%isym, desc%gzero
 
-10      FORMAT( 3X, 'Wave function descriptor . . . . . : ',A20,/, &
-                3X, 'leading dimensions (g,b,k,s) . . . : ',4I8,/, &
-                3X, 'num. of plane wave (Local, Global) : ',2I8,/,&
-                3X, 'num. of bands (Local, Global). . . : ',4I5,/,&
-                3X, 'num. of k points (Local, Global) . : ',2I5,/,&
-                3X, 'num. of spin . . . . . . . . . . . : ',I4,/,&
-                3X, 'symmetry . . . . . . . . . . . . . : ',I4,/,&
-                3X, 'has G == 0 vector. . . . . . . . . : ',L7)
+10      FORMAT( 3X, 'Wave function descriptor . . . . . : ',A20,/ &
+               ,3X, 'leading dimensions (g,b,k,s) . . . : ',4I8,/ &
+               ,3X, 'num. of plane wave (Local, Global) : ',2I8,/&
+               ,3X, 'num. of bands (Local, Global). . . : ',4I5,/&
+               ,3X, 'num. of k points (Local, Global) . : ',2I5,/&
+               ,3X, 'num. of spin . . . . . . . . . . . : ',I4,/&
+               ,3X, 'symmetry . . . . . . . . . . . . . : ',I4,/&
+               ,3X, 'has G == 0 vector. . . . . . . . . : ',L7)
 
         RETURN
       END SUBROUTINE
