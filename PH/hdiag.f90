@@ -40,11 +40,13 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   ! counter on G vectors
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
+  INTEGER, ALLOCATABLE :: btype(:)
+    ! type of band: valence (1) or conduction (0)  
 
   call start_clock ('hdiag')
 
-  allocate (h_diag( npwx))
-
+  allocate (h_diag( npwx), btype(nbnd))
+  btype(:) = 1
   !
   !   various initializations
   !
@@ -74,18 +76,18 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   enddo
   ntry = 0
 10 continue
-  if (ntry.gt.0) then
+  if (ntry > 0) then
      call cinitcgg (npwx, npw, nbnd, nbnd, evc, evc, et_ )
      avg_iter = avg_iter + 1.d0
   endif
-  call ccgdiagg (npwx, npw, nbnd, evc, et_, h_diag, eth_ns, &
+  call ccgdiagg (npwx, npw, nbnd, evc, et_, btype, h_diag, eth_ns, &
        max_iter, .true., notconv, cg_iter)
   avg_iter = avg_iter + cg_iter
   ntry = ntry + 1
 
   if (ntry.le.5.and.notconv.gt.0) goto 10
 
-  deallocate (h_diag)
+  deallocate (btype, h_diag)
   call stop_clock ('hdiag')
 
   return

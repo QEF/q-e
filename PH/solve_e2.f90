@@ -39,7 +39,7 @@ subroutine solve_e2
   ! change of the scf potential (smooth)
 
   complex(kind=DP) , allocatable :: dvscfout (:,:,:), dbecsum (:,:), &
-                                    auxg (:), spsi (:), aux1 (:)
+                                    aux1 (:)
   ! change of the scf potential (output)
   ! auxiliary space
   ! auxiliary space
@@ -83,8 +83,6 @@ subroutine solve_e2
   endif
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
-  allocate (auxg(  npwx))
-  allocate (spsi(  npwx))
   allocate (aux1(  nrxxs))
   if ( irr0.eq.-3 .and. iter0.eq.0) then
      close (unit = iunrec, status = 'keep')
@@ -173,7 +171,7 @@ subroutine solve_e2
               thresh = min (0.1d0 * sqrt(dr2), 1.0d-2)
            endif
 
-           call pcgreen (avg_iter, thresh, ik, et (1, ik), auxg, spsi)
+           call pcgreen (avg_iter, thresh, ik, et (1, ik) )
            call davcio ( dpsi, lrd2w, iud2w, nrec, +1)
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
@@ -266,8 +264,6 @@ subroutine solve_e2
   if (doublegrid) deallocate (dvscfins )
   deallocate (dvscfout )
   deallocate (dbecsum )
-  deallocate (auxg )
-  deallocate (spsi )
   deallocate (aux1 )
 
   call stop_clock('solve_e')

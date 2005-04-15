@@ -7,8 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, &
-                         auxg, spsi, auxr )
+subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   !-----------------------------------------------------------------------
   !
   !   Solve the linear system which defines the change of the wavefunctions
@@ -35,11 +34,9 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, &
   ! input: convergence threshold
   ! in/out: # of diagonalization iterations
 
-  complex(kind=DP) :: dvscfs (nrxxs, 3), auxg (npwx), spsi (npwx), &
-                      auxr(nrxxs)
+  complex(kind=DP) :: dvscfs (nrxxs, 3), auxr(nrxxs)
   ! input: potential on the smooth grid
-  ! auxiliary space
-  ! auxiliary space
+  ! auxiliary work space
 
   !
   !  Local variables
@@ -84,7 +81,7 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, &
   !
   nrec = (ipol - 1) * nksq + ik
   call davcio (dpsi, lrdwf, iudwf, nrec, -1)
-  call pcgreen (avg_iter, thresh, ik, et (1, ik), auxg, spsi)
+  call pcgreen (avg_iter, thresh, ik, et (1, ik))
 
   return
 end subroutine solve_e_nscf

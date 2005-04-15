@@ -62,11 +62,7 @@ subroutine dvpsi_e2
   ! -only the part that does not depend on the self-consistent cycle-
   !
   allocate (raux6  (nrxxs,6))
-  allocate (aux6s  (nrxxs,6))
-
   allocate (depsi  (npwx,nbnd,3))
-  allocate (auxs1  (nrxxs))
-  allocate (auxs2  (nrxxs))
   allocate (aux3s  (nrxxs,3))
   allocate (ps     (nbnd,nbnd,3,3))
 
@@ -100,13 +96,9 @@ subroutine dvpsi_e2
 
      do ipa = 1, 3
         do ipb = 1, 3
-           do ibnd = 1, nbnd_occ (ik)
-              do jbnd = 1, nbnd_occ (ik)
-                 ps (ibnd, jbnd, ipa, ipb) =                &
-                      ZDOTC (npwq, depsi (1, ibnd, ipa), 1, &
-                              depsi (1, jbnd, ipb), 1)
-              enddo
-           enddo
+           CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwq, &
+                (1.d0,0.d0), depsi(1,1, ipa), npwx, depsi(1,1,ipb), npwx, &
+                (0.d0,0.d0), ps(1,1,ipa,ipb), nbnd )
         enddo
      enddo
 #ifdef __PARA
@@ -114,14 +106,14 @@ subroutine dvpsi_e2
 #endif
 
      do ibnd = 1, nbnd_occ (ik)
-        call cft_wave (evc (1, ibnd), auxs1, +1)
+        call cft_wave (evc (1, ibnd), aux3s (1,1), +1)
         do jbnd = 1, nbnd_occ (ik)
-           call cft_wave (evc (1, jbnd), auxs2, +1)
+           call cft_wave (evc (1, jbnd), aux3s (1,2), +1)
            do ipa = 1, 6
               do ir = 1, nrxxs
-                 tmp =  auxs1 (ir) *                            &
-                        ps(ibnd, jbnd, a1j (ipa), a2j (ipa)) *  &
-                        conjg (auxs2 (ir))
+                 tmp =  aux3s (ir,1) *                           &
+                        ps(ibnd, jbnd, a1j (ipa), a2j (ipa)) *   &
+                        conjg (aux3s (ir,2))
                  raux6 (ir, ipa) = raux6 (ir, ipa) - weight * dreal (tmp)
               enddo
            enddo
@@ -131,8 +123,6 @@ subroutine dvpsi_e2
   enddo
 
   deallocate (depsi)
-  deallocate (auxs1)
-  deallocate (auxs2)
   deallocate (aux3s)
   deallocate (ps)
 
@@ -140,10 +130,10 @@ subroutine dvpsi_e2
   ! Multiplies the charge with the potential
   !
   if (doublegrid) then
-     deallocate (aux6s)
      allocate (auxs1  (nrxxs))
      allocate (aux6   (nrxx,6))
   else
+     allocate (aux6s  (nrxxs,6))
      aux6 => aux6s
   endif
 

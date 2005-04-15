@@ -151,11 +151,11 @@ subroutine phq_setup
      !
      small = 6.9626525973374d-5
      !
-     ! - limit appropriated for gaussian broadening (used for all ngauss)
+     ! - appropriate limit for gaussian broadening (used for all ngauss)
      !
      xmax = sqrt ( - log (sqrt (pi) * small) )
      !
-     ! - limit appropriated for Fermi-Dirac
+     ! - appropriate limit for Fermi-Dirac
      !
      if (ngauss.eq. - 99) then
         fac = 1.d0 / sqrt (small)

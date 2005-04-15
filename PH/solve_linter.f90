@@ -78,12 +78,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)
   complex(kind=DP), allocatable :: ldos (:,:), ldoss (:,:),&
-       dbecsum (:,:,:,:), spsi (:), auxg (:), aux1 (:), ps (:)
+       dbecsum (:,:,:,:), auxg (:), aux1 (:), ps (:,:)
   ! Misc work space
   ! ldos : local density of states af Ef
   ! ldoss: as above, without augmentation charges
   ! dbecsum: the derivative of becsum
-  ! spsi: S*psi
   complex(kind=DP) :: ZDOTC
   ! the scalar product function
 
@@ -114,7 +113,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   external ch_psi_all, cg_psi
   !
   call start_clock ('solve_linter')
-  allocate (ps ( nbnd))    
+  allocate (ps (nbnd, nbnd))
   allocate (dvscfin ( nrxx , nspin , npe))    
   if (doublegrid) then
      allocate (dvscfins ( nrxxs , nspin , npe))    
@@ -126,7 +125,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (auxg (npwx))    
   allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin , npe))    
   allocate (aux1 ( nrxxs))    
-  allocate (spsi ( npwx))    
   allocate (h_diag ( npwx , nbnd))    
   allocate (eprec ( nbnd))
   !
@@ -229,20 +227,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            !
            !  and now adds the contribution of the self consistent term
            !
-           if (iter.eq.1) then
+           if (iter == 1) then
               !
-              !  At the first iteration dpsi and dvscfin are set to zero,
-              !  dvbare_q*psi_kpoint is calculated and written to file
+              !  At the first iteration dvbare_q*psi_kpoint is calculated
+              !  and written to file
               !
-              dpsi(:,:) = (0.d0, 0.d0) 
-              dvscfin (:, :, ipert) = (0.d0, 0.d0)
               call dvqpsi_us (ik, mode, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
-              !
-              ! starting threshold for the iterative solution of 
-              ! the linear system
-              !
-              thresh = 1.0d-2
            else
               !
               ! After the first iteration dvbare_q*psi_kpoint is read from file
@@ -274,36 +265,30 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !  V_{eff} on the bare change of the potential
               !
               call adddvscf (ipert, ik)
-              !
-              ! threshold for iterative solution of the linear system
-              !
-              thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
-              !
-              ! starting value for delta_psi is read from iudwf
-              !
-              nrec1 = (ipert - 1) * nksq + ik
-              if (nksq.gt.1.or.npert (irr) .gt.1.or.kter.eq.1) &
-                       call davcio ( dpsi, lrdwf, iudwf, nrec1, -1)
            endif
            !
-           ! Ortogonalize dvpsi
+           ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
            !
            call start_clock ('ortho')
-           do ibnd = 1, nbnd_occ (ikk)
-              if (degauss.ne.0.d0) then
+           !
+           if (degauss > 0.d0) then
+              !
+              !  metallic case
+              !
+              CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwq, &
+                   (1.d0,0.d0), evq(1,1), npwx, dvpsi(1,1), npwx, &
+                   (0.d0,0.d0), ps(1,1), nbnd )
+              !
+              do ibnd = 1, nbnd_occ (ikk)
                  wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
                  w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
-              endif
-              auxg(:) = (0.d0,0.d0)
-              do jbnd = 1, nbnd
-                 if (degauss.ne.0.d0) then
-!  metals
+                 do jbnd = 1, nbnd
                     wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
                     deltae = et (jbnd, ikq) - et (ibnd, ikk)
                     theta = wgauss (deltae / degauss, 0)
                     wwg = wg1 * (1.d0 - theta) + wgp * theta
-                    if (jbnd.le.nbnd_occ (ikq) ) then
-                       if (abs (deltae) .gt.1.0d-5) then
+                    if (jbnd <= nbnd_occ (ikq) ) then
+                       if (abs (deltae) > 1.0d-5) then
                           wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
                        else
                           !
@@ -313,42 +298,74 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                           wwg = wwg - alpha_pv * theta * w0g
                        endif
                     endif
-                 else
-!  insulators
-                    if (jbnd.le.nint (nelec) / degspin) then
-                       wwg = 1.0d0
-                    else
-                       wwg = 0.0d0
-                    endif
-                 endif
-                 ps(jbnd) = - wwg * ZDOTC(npwq,evq(1,jbnd),1,dvpsi(1,ibnd),1)
+                    !
+                    ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
+                    !
+                 enddo
+                 call DSCAL (2*npwq, wg1, dvpsi(1,ibnd), 1)
               enddo
+           else
+              !
+              !  insulators
+              !
+              ps (:,:) = (0.d0, 0.d0)
+              CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
+                   (1.d0,0.d0), evq(1,1), npwx, dvpsi(1,1), npwx, &
+                   (0.d0,0.d0), ps(1,1), nbnd )
+           end if
 #ifdef __PARA
-              call reduce (2 * nbnd, ps)
+           call reduce (2 * nbnd * nbnd_occ(ikk), ps)
 #endif
-              do jbnd = 1, nbnd
-                 call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
-              enddo
-              if (degauss.ne.0.d0) call DSCAL (2*npwq, wg1, dvpsi(1,ibnd), 1)
-              call ZCOPY (npwq, auxg, 1, spsi, 1)
-              !
-              !   In the US case at the end we have to apply the S matrix
-              !
-              call ccalbec (nkb, npwx, npwq, 1, becp, vkb, auxg)
-              call s_psi (npwx, npwq, 1, auxg, spsi)
-              call DAXPY (2 * npwq, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
-           enddo
+           !
+           !!CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd, &
+           !!    (1.d0,0.d0), evq(1,1), npwx, ps(1,1), nbnd, (0.d0,0.d0), &
+           !!     dpsi(1,1), npwx )
+           !
+           !!call ccalbec (nkb, npwx, npwq, nbnd_occ (ikk), becp, vkb, dpsi)
+           !!call s_psi (npwx, npwq, nbnd_occ (ikk), dpsi, spsi)
+           !!call DAXPY (2 * npwx * nbnd_occ (ikk), -1.0d0, spsi, 1, dvpsi, 1)
+           !!call DSCAL (2 * npwx * nbnd_occ (ikk), -1.0d0,dvpsi, 1)
+           !
+           ! dpsi is used as work space to store S|evc>
+           !
+           CALL ccalbec (nkb, npwx, npwq, nbnd_occ(ikk), becp, vkb, evq)
+           CALL s_psi (npwx, npwq, nbnd_occ(ikk), evq, dpsi)
+           !
+           ! |dvspi> = - (|dvpsi> - S|evq><evq|dvpsi>)
+           !  note the change of sign!
+           !
+           CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd, &
+               ( 1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.0d0,0.d0), &
+                dvpsi(1,1), npwx )
            call stop_clock ('ortho')
            !
-           !    Here we change the sign of the known term
-           !
-           call DSCAL (2 * npwx * nbnd, - 1.d0, dvpsi, 1)
+           if (iter == 1) then
+              !
+              !  At the first iteration dpsi and dvscfin are set to zero
+              !
+              dpsi(:,:) = (0.d0, 0.d0) 
+              dvscfin (:, :, ipert) = (0.d0, 0.d0)
+              !
+              ! starting threshold for iterative solution of the linear system
+              !
+              thresh = 1.0d-2
+           else
+              !
+              ! starting value for delta_psi is read from iudwf
+              !
+              nrec1 = (ipert - 1) * nksq + ik
+              call davcio ( dpsi, lrdwf, iudwf, nrec1, -1)
+              !
+              ! threshold for iterative solution of the linear system
+              !
+              thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
+           endif
+
            !
            ! iterative solution of the linear system (H-eS)*dpsi=dvpsi,
            ! dvpsi=-P_c^+ (dvbare+dvscf)*psi , dvscf fixed.
            !
            do ibnd = 1, nbnd_occ (ikk)
-              conv_root = .true.
               do ig = 1, npwq
                  auxg (ig) = g2kin (ig) * evq (ig, ibnd)
               enddo
@@ -532,7 +549,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (lmetq0) deallocate (ldos)
   deallocate (eprec)
   deallocate (h_diag)
-  deallocate (spsi)
   deallocate (aux1)
   deallocate (dbecsum)
   deallocate (auxg)

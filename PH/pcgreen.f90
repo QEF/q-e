@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine pcgreen (avg_iter, thresh, ik, et_, auxg, spsi )
+subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !-----------------------------------------------------------------------
   !
   ! Solve the linear system which defines the change of the wavefunctions
@@ -33,9 +33,6 @@ subroutine pcgreen (avg_iter, thresh, ik, et_, auxg, spsi )
   ! input: convergence threshold
   ! input: eigenvalues of the hamiltonian
 
-  complex(kind=DP) :: auxg (npwx), spsi (npwx)
-  ! auxiliary space
-
   !
   ! Local variables
   !
@@ -57,40 +54,41 @@ subroutine pcgreen (avg_iter, thresh, ik, et_, auxg, spsi )
   complex(kind=DP) :: ZDOTC
   ! the scalar product function
 
-  complex(kind=DP) , allocatable :: ps(:)
-  ! the scalar product
+  complex(kind=DP) , allocatable :: ps(:,:), auxg (:)
+  ! auxiliary work space
 
   external   ch_psi_all, cg_psi
 
   allocate (h_diag ( npwx, nbnd ))
+  allocate (auxg   ( npwx ))
   allocate (eprec  ( nbnd ))
-  allocate (ps     ( nbnd ))
+  allocate (ps     ( nbnd, nbnd ))
 
   !
-  ! Ortogonalize dvpsi 
+  ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
   !
-  do ibnd = 1, nbnd_occ (ik)
-     auxg (:) = (0.d0, 0.d0)
-     do jbnd = 1, nbnd_occ (ik)
-        ps (jbnd) = -ZDOTC (npw, evc (1, jbnd), 1, dvpsi (1, ibnd), 1)
-     enddo
+  CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+       (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
+       ps(1,1), nbnd )
 #ifdef __PARA
-     call reduce (2 * nbnd, ps) 
+  call reduce (2 * nbnd * nbnd_occ (ik), ps)
 #endif
-     do jbnd = 1, nbnd_occ (ik)
-        call ZAXPY (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
-     enddo
-! If you uncomment the following three lines you should comment the fourth
-!     call ccalbec (nkb, npwx, npw, 1, becp, vkb, auxg)
-!     call s_psi (npwx, npw, 1, auxg, spsi)
-!     call DAXPY ( 2 * npw, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
-     call DAXPY (2 * npw, 1.0d0, auxg, 1, dvpsi (1, ibnd), 1)
-
-  enddo
   !
-  !    Here we change the sign of the known term
+  ! |dvspi> = - (|dvpsi> - S|evc><evc|dvpsi>)
+  ! note the change of sign!
   !
-  call DSCAL ( 2 * npwx * nbnd, -1.d0, dvpsi, 1)
+  ! uncomment for ultrasoft PPs
+  ! note that spsi is used as work space to store S|evc>
+  ! CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+  ! CALL s_psi (npwx, npw, nbnd_occ(ik), evc, spsi)
+  ! CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+  !     (1.d0,0.d0), spsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
+  !     dvpsi(1,1), npwx )
+  !
+  ! comment  for ultrasoft PPs
+  CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+       (1.d0,0.d0), evc(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
+       dvpsi(1,1), npwx )
   !
   ! iterative solution of the linear system (H-e)*dpsi=dvpsi
   ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
@@ -120,9 +118,10 @@ subroutine pcgreen (avg_iter, thresh, ik, et_, auxg, spsi )
       "(5x,'kpoint',i4,' ibnd',i4, ' pcgreen: root not converged',e10.3)") &
       ik,ibnd,anorm
 
-  deallocate (h_diag)
-  deallocate (eprec)
   deallocate (ps)
+  deallocate (eprec)
+  deallocate (auxg)
+  deallocate (h_diag)
 
   return
 end subroutine pcgreen

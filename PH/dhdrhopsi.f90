@@ -73,7 +73,7 @@ subroutine dhdrhopsi
   ! working space
 
   complex(kind=DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
-         depsi (:,:,:), auxg(:), spsi(:), dvscfs (:,:), &
+         depsi (:,:,:), auxg(:), dvscfs (:,:), &
          auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:), &
          becp1_sw (:,:)
   ! wavefunctions swap space
@@ -95,7 +95,6 @@ subroutine dhdrhopsi
   allocate (chif      (npwx,nbnd,6)   )
   allocate (depsi     (npwx,nbnd,3)   )
   allocate (auxg      (npwx)          )
-  allocate (spsi      (npwx)          )
   allocate (dvscfs    (nrxxs,3)       )
   allocate (auxr      (nrxxs)         )
   allocate (au2r      (nrxxs)         )
@@ -175,8 +174,8 @@ subroutine dhdrhopsi
               !    dvscfs      --self consist. part of the potential deriv.--
               !    The derivatives of the wavefunctions are stored in dpsi
               !
-              call solve_e_nscf( avg_iter2, eth_ns, ik, ipb, &
-                                 dvscfs, auxg, spsi, auxr )
+
+              call solve_e_nscf( avg_iter2, eth_ns, ik, ipb, dvscfs, auxr )
               !
               ! Now sets chi =  i * d/dk (sum_j |Du(j)><u(j)|) |u>
               !
@@ -301,7 +300,6 @@ subroutine dhdrhopsi
   deallocate (chif     )
   deallocate (depsi    )
   deallocate (auxg     )
-  deallocate (spsi     )
   deallocate (dvscfs   )
   deallocate (auxr     )
   deallocate (au2r     )
