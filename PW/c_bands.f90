@@ -68,7 +68,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   LOGICAL :: lrot
     ! .TRUE. if the wfc have already be rotated
   INTEGER, ALLOCATABLE :: btype(:)
-    ! type of band: conduction (1) or valence (0)  
+    ! type of band: valence (1) or conduction (0)  
   !
   ! ... external functions
   !
