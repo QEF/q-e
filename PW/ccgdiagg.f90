@@ -302,7 +302,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         cost = COS( theta )
         sint = SIN( theta )
         !
-        cos2t = cost*cost + sint*sint
+        cos2t = cost*cost - sint*sint
         sin2t = 2.D0*cost*sint
         !
         es(1) = 0.5D0 * (   ( e0 - b0 ) * cos2t + a0 * sin2t + e0 + b0 )
