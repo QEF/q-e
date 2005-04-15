@@ -34,21 +34,22 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !
   !... local variables
   !
-  INTEGER                        :: m, ibnd, i, j, npw2
-  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:), spsi(:)
+  INTEGER                        :: m, i, j, npw2, npwx2
+  REAL (KIND=DP)                 :: rtmp(2)
+  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: ctmp(:)
   REAL (KIND=DP),    ALLOCATABLE :: hr(:,:,:), sr(:,:)
   REAL (KIND=DP),    ALLOCATABLE :: en(:)
-  !
-  REAL (KIND=DP), EXTERNAL :: DDOT
   !
   !
   CALL start_clock( 'wfcrot1' )
   !
-  npw2 = 2 * npw
+  npw2  = 2 * npw
+  npwx2 = 2 * npwx
   !
-  ALLOCATE( spsi( npwx ) )    
-  ALLOCATE( hpsi( npwx ) )    
-  ALLOCATE( hr( nstart, nstart, 2 ) )   
+  ALLOCATE( aux( npwx, 2 ) )
+  ALLOCATE( ctmp( nbnd ) )
+  ALLOCATE( hr( nstart, nstart, 2 ) )
   ALLOCATE( sr( nstart, nstart ) )
   ALLOCATE( en( nstart ) )
   !
@@ -56,32 +57,26 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !
   DO m = 1, nstart
      !
-     CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
+     CALL h_1psi( npwx, npw, psi(1,m), aux(1,1), aux(1,2) )
      !
-     hr(m,m,1) = 2.D0 * DDOT( npw2, psi(1,m), 1, hpsi, 1 )
-     sr(m,m)   = 2.D0 * DDOT( npw2, psi(1,m), 1, spsi, 1 )
+     CALL DGEMV( 'T', npw2, 2, 2.D0, aux, npwx2, psi(1,m), 1, 0.D0, rtmp, 1 )
      !
-     IF ( gstart == 2 ) THEN
-        !
-        hr(m,m,1) = hr(m,m,1) - psi(1,m) * hpsi(1)
-        sr(m,m)   = sr(m,m)   - psi(1,m) * spsi(1)
-        !
-     END IF
+     IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,m) * aux(1,:)
+     !
+     hr(m,m,1) = rtmp(1)
+     sr(m,m)   = rtmp(2)
      !
      DO j = m + 1, nstart
         !
-        hr(j,m,1) = 2.D0 * DDOT( npw2, psi(1,j), 1, hpsi, 1 )
-        sr(j,m)   = 2.D0 * DDOT( npw2, psi(1,j), 1, spsi, 1 )
+        CALL DGEMV( 'T', npw2, 2, 2.D0, aux, npwx2, psi(1,j), 1, 0.D0, rtmp, 1 )
         !
-        IF ( gstart == 2 ) THEN
-           !
-           hr(j,m,1) = hr(j,m,1) - psi(1,j) * hpsi(1)
-           sr(j,m)   = sr(j,m)   - psi(1,j) * spsi(1)
-           !
-        END IF
+        IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,j) * aux(1,:)
         !
-        hr(m,j,1) = hr(j,m,1) 
-        sr(m,j)   = sr(j,m)
+        hr(j,m,1) = rtmp(1)
+        sr(j,m)   = rtmp(2)
+        !
+        hr(m,j,1) = rtmp(1)
+        sr(m,j)   = rtmp(2)
         !
      END DO
      !
@@ -96,27 +91,25 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !
   e(1:nbnd) = en(1:nbnd)
   !
-  ! ... update the basis set (hpsi is used as workspace)
+  ! ... update the basis set
   !
-  DO m = 1, nbnd
+  DO i = 1, npw
      !
-     hpsi = ( 0.D0, 0.D0 )
-     !
-     DO ibnd = 1, nbnd
+     DO m = 1, nbnd
         !
-        hpsi = hpsi + hr(ibnd,m,2) * psi(:,ibnd)
+        ctmp(m) = SUM( hr(:,m,2) * psi(i,:) )
         !
      END DO
      !
-     evc(:,m) = hpsi
+     evc(i,1:nbnd) = ctmp(1:nbnd)
      !
   END DO
   !
   DEALLOCATE( en )
   DEALLOCATE( sr )
   DEALLOCATE( hr )
-  DEALLOCATE( hpsi )
-  DEALLOCATE( spsi )
+  DEALLOCATE( ctmp )
+  DEALLOCATE( aux )
   !
   CALL stop_clock( 'wfcrot1' )
   !
