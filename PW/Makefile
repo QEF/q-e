@@ -48,7 +48,6 @@ cgramg1_nc.o \
 checkallsym.o \
 checksym.o \
 cinitcgg.o \
-cinitcgg_nc.o \
 clean_pw.o \
 close_files.o \
 compute_dip.o \
@@ -303,6 +302,7 @@ MODULES = \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
+../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/supercell.o \
 ../Modules/uspp.o \

@@ -469,8 +469,11 @@ SUBROUTINE wfcinit()
              !
              IF ( noncolin ) THEN
                 !
-                CALL cinitcgg_nc( npwx, npw, n_starting_wfc, nbnd, &
-                                  wfcatom_nc, wfcatom_nc, etatom, okvan, npol )
+                CALL cinitcgg( npwx, npw, n_starting_wfc, &
+                               nbnd, wfcatom_nc, wfcatom_nc, etatom )
+                !
+               ! CALL cinitcgg_nc( npwx, npw, n_starting_wfc, nbnd, &
+               !                   wfcatom_nc, wfcatom_nc, etatom, okvan, npol )
                 !
              ELSE
                 !

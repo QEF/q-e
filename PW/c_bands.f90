@@ -561,9 +561,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    !
                    IF ( noncolin ) THEN
                       !
-                      CALL cinitcgg_nc( npwx, npw, nbnd, nbnd, evc_nc, &
-                                        evc_nc, et(1,ik), okvan, npol )
-                       !                      
+                      CALL cinitcgg( npwx, npw, nbnd, &
+                                     nbnd, evc_nc, evc_nc, et(1,ik) )
+                      !
                    ELSE
                       !
                       CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )

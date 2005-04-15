@@ -49,12 +49,14 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   REAL (KIND=DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                        :: reorder
   INTEGER                        :: kdim, kdmx, kdim2
-  REAL (KIND=DP)                 :: empty_ethr
+  REAL (KIND=DP)                 :: empty_ethr, ethr_m
   !
   ! ... external functions
   !
   REAL (KIND=DP), EXTERNAL :: DDOT
   !
+  !
+  CALL start_clock( 'ccgdiagg' )
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
@@ -63,18 +65,14 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      kdim = ndim
      kdmx = ndmx
      !
-     kdim2 = 2 * ndim
-     !
   ELSE
      !
      kdim = ndmx * npol
      kdmx = ndmx * npol
      !
-     kdim2 = 2 * kdim
-     !
   END IF
   !
-  CALL start_clock( 'ccgdiagg' )
+  kdim2 = 2 * kdim
   !
   ALLOCATE( spsi( kdmx ) )
   ALLOCATE( scg(  kdmx ) )
@@ -93,6 +91,16 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   ! ... every eigenfunction is calculated separately
   !
   DO m = 1, nbnd
+     !
+     IF ( btype(m) == 1 ) THEN
+        !
+        ethr_m = ethr
+        !
+     ELSE
+        !
+        ethr_m = empty_ethr
+        !
+     END IF
      !
      spsi     = ZERO
      scg      = ZERO
@@ -329,15 +337,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... here one could test convergence on the energy
         !
-        IF ( btype(m) == 1 ) THEN
-           !
-           IF ( ABS( e(m) - e0 ) < ethr ) EXIT iterate
-           !
-        ELSE
-           !
-           IF ( ABS( e(m) - e0 ) < empty_ethr ) EXIT iterate
-           !
-        END IF
+        IF ( ABS( e(m) - e0 ) < ethr_m ) EXIT iterate
         !
         ! ... upgrade H|psi> and S|psi>
         !
@@ -356,13 +356,15 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      IF ( m > 1 .AND. reorder ) THEN
         !
-        IF ( e(m) - e(m-1) < - 2.D0 * ethr ) THEN
+        IF ( e(m) - e(m-1) < - 2.D0 * ethr_m ) THEN
            !
            ! ... if the last calculated eigenvalue is not the largest...
            !
+           PRINT *, "M = ", M,"   REORDERING"
+           
            DO i = m - 2, 1, - 1
               !
-              IF ( e(m) - e(i) > 2.D0 * ethr ) EXIT
+              IF ( e(m) - e(i) > 2.D0 * ethr_m ) EXIT
               !
            END DO
            !

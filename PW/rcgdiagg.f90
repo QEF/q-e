@@ -52,12 +52,12 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   REAL (KIND=DP), EXTERNAL :: DDOT
   !
   !
+  CALL start_clock( 'rcgdiagg' )
+  !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
   ndim2 = 2 * ndim
   ndmx2 = 2 * ndmx
-  !
-  CALL start_clock( 'rcgdiagg' )
   !
   ALLOCATE( spsi( ndmx ) )
   ALLOCATE( scg(  ndmx ) )

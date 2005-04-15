@@ -228,7 +228,6 @@ PWOBJS = \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
-../PW/cinitcgg_nc.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
