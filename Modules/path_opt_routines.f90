@@ -5,9 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define USE_SMART_STEP
-!#define DEBUG_SMART_STEP
-!
 !--------------------------------------------------------------------------
 MODULE path_opt_routines
   !---------------------------------------------------------------------------
@@ -20,7 +17,7 @@ MODULE path_opt_routines
   USE kinds,          ONLY : DP
   USE constants,      ONLY : eps32
   USE path_variables, ONLY : ds
-  USE path_variables, ONLY : pos, grad, norm_grad, frozen
+  USE path_variables, ONLY : pos, grad, frozen
   !
   USE basic_algebra_routines
   !  
@@ -59,39 +56,18 @@ MODULE path_opt_routines
      SUBROUTINE velocity_Verlet_first_step( index )
        !---------------------------------------------------------------------- 
        !
-       USE path_variables, ONLY : vel, vel_zeroed, pos_old, grad_old
+       USE path_variables, ONLY : vel
        !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
        !
        !
-       IF ( frozen(index) ) THEN
-          !
-          vel_zeroed(index) = .FALSE.
-          !
-          RETURN
-          !
-       END IF
+       IF ( frozen(index) ) RETURN
        !
-       ! ... pos_old and grad_old are updated here
-       !   
-       pos_old(:,index)  = pos(:,index)
-       grad_old(:,index) = grad(:,index)
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
        !
-       IF ( vel_zeroed(index) ) THEN
-          !
-          pos(:,index) = pos(:,index) - 0.5D0 * grad(:,index)
-          !
-          vel_zeroed(index) = .FALSE.
-          !
-       ELSE
-          !
-          vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
-          !
-          pos(:,index) = pos(:,index) + ds * vel(:,index)
-          !
-       END IF
+       pos(:,index) = pos(:,index) + ds * vel(:,index)
        !       
        RETURN
        !
@@ -128,15 +104,13 @@ MODULE path_opt_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE constants,       ONLY : eps8
-       USE path_variables,  ONLY : pos_old, grad_old, vel, dim, vel_zeroed
+       USE path_variables, ONLY : dim, vel, norm_grad
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN)         :: index
-       REAL (KIND=DP)              :: force_versor(dim)
-       REAL (KIND=DP)              :: vel_component
-       REAL (KIND=DP), ALLOCATABLE :: y(:), s(:)
+       INTEGER, INTENT(IN) :: index
+       REAL (KIND=DP)      :: force_versor(dim)
+       REAL (KIND=DP)      :: vel_component
        !
        !
        IF ( frozen(index) ) RETURN
@@ -156,46 +130,6 @@ MODULE path_opt_routines
           ELSE
              !
              vel(:,index) = 0.D0
-             !
-#if defined (USE_SMART_STEP)
-             !
-#  if defined (DEBUG_SMART_STEP)
-             PRINT '(/5X,"IMAGE = ",I2,"  resetting velocity"/)', index
-#  endif             
-             !
-             vel_zeroed(index) = .TRUE.
-             !
-             ! ... an approximate newton-raphson step is performed
-             !
-             IF ( norm( pos_old(:,index) ) > 0.D0 .AND. &
-                  norm( grad_old(:,index) ) > 0.D0 ) THEN
-                !
-                ALLOCATE( y( dim ), s( dim ) )
-                !
-                y = grad(:,index) - grad_old(:,index)
-                s = pos(:,index)  -  pos_old(:,index)
-                !
-#  if defined (DEBUG_SMART_STEP)
-                PRINT '(5X,"projection = ",F7.4)', &
-                    ( s .dot. grad(:,index) ) / ( norm( s ) * norm_grad(index) )
-#  endif
-                !
-                IF ( ( y .dot. s ) > eps8 ) THEN
-                   !
-                   grad(:,index) = 2.D0 * s * &
-                                   ( s .dot. grad(:,index) ) / ( y .dot. s )
-                   !
-                END IF
-                !
-#  if defined (DEBUG_SMART_STEP)
-                PRINT '(5X,"step length:  ",F12.8)', norm( grad(:,index) )
-#  endif
-                !
-                DEALLOCATE( y, s )
-                !
-             END IF
-             !
-#endif
              !
           END IF
           !
@@ -436,8 +370,7 @@ MODULE path_opt_routines
           !
           ! ... broyden's step
           !
-          pos(:,1:n_im) = pos(:,1:n_im) + &
-                          RESHAPE( SOURCE = s(:,k), SHAPE = (/ dim, n_im /) )
+          pos(:,1:n_im) = pos(:,1:n_im) + RESHAPE( s(:,k), (/ dim, n_im /) )
           !
        END IF
        !

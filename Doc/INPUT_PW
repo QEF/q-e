@@ -662,7 +662,8 @@ temp_req       REAL ( default = 0.D0 Kelvin )
 
 ds             REAL ( default = 1.D0 )
                optimisation step length ( Hartree atomic units ).
-               Not used if opt_scheme="broyden"
+               If opt_scheme="broyden" ds is used as a guess for the diagonal
+               Jacobian matrix.
 	              
 k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
                set them to use a Variable Elastic Constants scheme 
@@ -672,6 +673,10 @@ k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
 path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
 	       orthogonal to the path in eV/A ) is less than path_thr.
+
+use_fourier    LOGICAL ( default = .FALSE. )
+               In the string method the path is described by its 
+               Fourier components.
 
 use_freezing   LOGICAL ( default = .FALSE. )
                if. TRUE. the images are optimised according to their error:

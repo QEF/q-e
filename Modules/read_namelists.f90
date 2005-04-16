@@ -357,6 +357,7 @@ MODULE read_namelists_module
        first_last_opt  = .FALSE.
        reset_vel       = .FALSE.       
        write_save      = .FALSE.
+       use_fourier     = .FALSE.
        use_freezing    = .FALSE.
        opt_scheme      = 'quick-min'
        damp            = 1.D0
@@ -764,6 +765,7 @@ MODULE read_namelists_module
        CALL mp_bcast( reset_vel, ionode_id )
        CALL mp_bcast( init_num_of_images, ionode_id )
        CALL mp_bcast( use_multistep, ionode_id )
+       CALL mp_bcast( use_fourier, ionode_id )
        CALL mp_bcast( use_freezing, ionode_id )
        CALL mp_bcast( fixed_tan, ionode_id )
        CALL mp_bcast( free_energy, ionode_id )

@@ -102,8 +102,7 @@ MODULE path_io_routines
                                     dim, num_of_images, pos, pes, grad_pes,   &
                                     reset_vel, frozen , lquick_min, lmol_dyn, &
                                     ldamped_dyn, first_last_opt
-       USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed, &
-                                    Emax, Emin, Emax_index
+       USE path_variables,   ONLY : vel, Emax, Emin, Emax_index
        USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
        USE io_global,        ONLY : meta_ionode, meta_ionode_id
        USE mp,               ONLY : mp_bcast
@@ -234,36 +233,9 @@ MODULE path_io_routines
           !
           IF ( suspended_image == 0 ) THEN
              !
-#if defined (__PGI)
-             !
-             Emax_index = 1
-             !
-             Emax = pes(1)
-             Emin = pes(1)
-             !   
-             DO i = 2, num_of_images
-                !
-                val = pes(i)
-                !
-                IF ( val < Emin ) Emin = val
-                !
-                IF ( val > Emax ) THEN
-                   !
-                   Emax = val
-                   !
-                   Emax_index = i
-                   !
-                END IF
-                !
-             END DO
-             !
-#else
-             !
              Emin       = MINVAL( pes(:) )
              Emax       = MAXVAL( pes(:) )
              Emax_index = MAXLOC( pes(:), 1 )
-             !
-#endif
              !
           END IF
           !
@@ -279,29 +251,19 @@ MODULE path_io_routines
                 DO i = 1, num_of_images
                    !
                    READ( UNIT = iunrestart, FMT = * )
-                   READ( UNIT = iunrestart, FMT = * ) frozen(i), &
-                                                      vel_zeroed(i)
+                   READ( UNIT = iunrestart, FMT = * ) frozen(i)
                    !
                    DO j = 1, dim, 3
                       !
                       READ( UNIT = iunrestart, FMT = * ) &
                           vel(j,i),                & 
                           vel((j+1),i),            &
-                          vel((j+2),i),            &
-                          pos_old(j,i),            &
-                          pos_old((j+1),i),        &
-                          pos_old((j+2),i),        &
-                          grad_old(j,i),           &
-                          grad_old((j+1),i),       &
-                          grad_old((j+2),i)
+                          vel((j+2),i)
                       !
                    END DO
                    !
                    vel(:,i) = vel(:,i) * &
                               DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                   !
-                   grad_old(:,i) = grad_old(:,i) * &
-                                   DBLE( RESHAPE( if_pos, (/ dim /) ) )
                    !
                 END DO
                 !
@@ -342,12 +304,8 @@ MODULE path_io_routines
        IF ( .NOT. reset_vel .AND. &
             ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
           !
-          CALL mp_bcast( frozen,     meta_ionode_id )
-          CALL mp_bcast( vel_zeroed, meta_ionode_id )
-          !
-          CALL mp_bcast( vel,        meta_ionode_id )
-          CALL mp_bcast( pos_old,    meta_ionode_id )
-          CALL mp_bcast( grad_old,   meta_ionode_id )
+          CALL mp_bcast( frozen, meta_ionode_id )
+          CALL mp_bcast( vel,    meta_ionode_id )
           !
        END IF
        !
@@ -364,10 +322,8 @@ MODULE path_io_routines
        USE control_flags,    ONLY : conv_elec, lneb, lsmd
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image,  &
                                     dim, num_of_images, pos, pes, grad_pes,   &
-                                    reset_vel, frozen , lquick_min, lmol_dyn, &
-                                    ldamped_dyn, first_last_opt
-       USE path_variables,   ONLY : vel, pos_old, grad_old, vel_zeroed
-       USE path_variables,   ONLY : Nft, num_of_modes
+                                    vel, frozen, Nft, num_of_modes, lmol_dyn, &
+                                    lquick_min, ldamped_dyn, first_last_opt
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
@@ -505,20 +461,14 @@ MODULE path_io_routines
               !
               WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
               WRITE( UNIT = in_unit, &
-                     FMT = '(2(L1,1X))' ) frozen(i), vel_zeroed(i)
+                     FMT = '(2(L1,1X))' ) frozen(i)
               !
               DO j = 1, dim, 3
                  !
                  WRITE( UNIT = in_unit, FMT = quick_min ) &
                      vel(j,i),                & 
                      vel((j+1),i),            &
-                     vel((j+2),i),            &
-                     pos_old(j,i),            &
-                     pos_old((j+1),i),        &
-                     pos_old((j+2),i),        &
-                     grad_old(j,i),           &
-                     grad_old((j+1),i),       &
-                     grad_old((j+2),i)
+                     vel((j+2),i)
                  !
               END DO
               !

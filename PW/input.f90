@@ -138,6 +138,7 @@ SUBROUTINE iosys()
                              write_save_         => write_save, &
                              reset_vel_          => reset_vel, &
                              init_num_of_images_ => init_num_of_images, &
+                             use_fourier_        => use_fourier, &
                              use_multistep_      => use_multistep, &
                              CI_scheme_          => CI_scheme, &
                              fixed_tan_          => fixed_tan, &
@@ -213,11 +214,11 @@ SUBROUTINE iosys()
                                pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                reset_vel, use_multistep, first_last_opt, damp, &
-                               init_num_of_images, temp_req, k_max, k_min, ds, &
-                               use_freezing, fixed_tan, free_energy,           &
-                               write_save, trust_radius_max, trust_radius_min, &
-                               trust_radius_ini, trust_radius_end, w_1, w_2,   &
-                               lbfgs_ndim
+                               init_num_of_images, temp_req, k_max, k_min,     &
+                               ds, use_fourier, use_freezing, fixed_tan,       &
+                               free_energy, write_save, trust_radius_max,      &
+                               trust_radius_min, trust_radius_ini,             &
+                               trust_radius_end, w_1, w_2, lbfgs_ndim
   !
   ! CELL namelist
   !
@@ -974,6 +975,7 @@ SUBROUTINE iosys()
   first_last_opt_ = first_last_opt
   reset_vel_      = reset_vel
   write_save_     = write_save
+  use_fourier_    = use_fourier
   use_freezing_   = use_freezing
   damp_           = damp
   temp_req_       = temp_req

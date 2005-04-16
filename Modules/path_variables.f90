@@ -30,6 +30,8 @@ MODULE path_variables
                                   !        achieved
        reset_vel,                &! .TRUE. if velocities have to be reset at
                                   !        restart time
+       use_fourier,              &! .TRUE. for a Fourier representation of
+                                  !        the path
        use_multistep,            &! .TRUE. if multistep has to be used in smd
                                   !        optimization
        write_save,               &! .TRUE. if the save file has to be written
@@ -57,8 +59,7 @@ MODULE path_variables
        temp_req,                 &! required temperature
        activation_energy,        &! forward activatation energy
        err_max,                  &! the largest error
-       path_length,              &! length of the path
-       path_length_av             ! length of the average path
+       path_length                ! length of the path
   LOGICAL :: &
        lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
@@ -68,8 +69,7 @@ MODULE path_variables
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
   INTEGER :: &                   
        istep_path,               &! iteration in the optimization procedure
-       nstep_path,               &! maximum number of iterations
-       av_counter                 ! number of steps used to compute averages
+       nstep_path                 ! maximum number of iterations
   LOGICAL :: &
        reset_broyden = .FALSE.    ! used to reset the broyden subspace
   !
@@ -113,12 +113,7 @@ MODULE path_variables
   REAL (KIND=DP), ALLOCATABLE :: &
        vel(:,:),                 &! 
        grad(:,:),                &!
-       lang(:,:),                &! langevin random force 
-       pos_old(:,:),             &!
-       grad_old(:,:)              !
-  LOGICAL, ALLOCATABLE :: &
-       vel_zeroed(:)              ! .TRUE. if the velocity of this image has
-                                  !        been reset
+       lang(:,:)                  ! langevin random force
   !
   ! ... "smd specific" variables :
   !
@@ -135,19 +130,12 @@ MODULE path_variables
   ! ... real space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
-       pos_in_av(:),             &!
-       pos_fin_av(:),            &!
-       pos_in_h(:,:),            &!
-       pos_fin_h(:,:)             !
-  REAL (KIND=DP), ALLOCATABLE :: &
        pos_star(:,:)              !
   !
   ! ... reciprocal space arrays
   !
   REAL (KIND=DP), ALLOCATABLE :: &
-       ft_pos(:,:),              &!
-       ft_pos_av(:,:),           &!
-       ft_pos_h(:,:,:)            !
+       ft_pos(:,:)                ! fourier components of the path
   !
   ! ... Y. Kanai variabiles for combined smd/cp dynamics :
   !
@@ -192,14 +180,11 @@ MODULE path_variables
        CHARACTER (LEN=*), INTENT(IN) :: method
        !
        !
-       ALLOCATE( pos(     dim, num_of_images ) )
-       ALLOCATE( pos_old( dim, num_of_images ) )
+       ALLOCATE( pos( dim, num_of_images ) )
        !
-       ALLOCATE( vel( dim,   num_of_images ) ) 
-       ALLOCATE( vel_zeroed( num_of_images ) )    
+       ALLOCATE( vel( dim, num_of_images ) ) 
        !
        ALLOCATE( grad(     dim, num_of_images ) )
-       ALLOCATE( grad_old( dim, num_of_images ) )
        ALLOCATE( grad_pes( dim, num_of_images ) )
        ALLOCATE( tangent(  dim, num_of_images ) )
        !
@@ -215,20 +200,9 @@ MODULE path_variables
        !
        IF ( method == "smd" ) THEN
           !
-          ! ... real space arrays
-          !
-          ALLOCATE( pos_in_av(  dim ) )
-          ALLOCATE( pos_fin_av( dim ) )
-          !
-          ALLOCATE( pos_in_h(  dim, history_ndim ) )
-          ALLOCATE( pos_fin_h( dim, history_ndim ) )
-          !
           ALLOCATE( pos_star( dim, 0:( Nft - 1 ) ) )
           !
-          ALLOCATE( ft_pos(    dim, ( Nft - 1 ) ) )
-          ALLOCATE( ft_pos_av( dim, ( Nft - 1 ) ) )
-          !
-          ALLOCATE( ft_pos_h( dim, ( Nft - 1 ), history_ndim ) )
+          ALLOCATE( ft_pos( dim, ( Nft - 1 ) ) )
           !
           IF ( llangevin ) THEN
              !
@@ -251,13 +225,11 @@ MODULE path_variables
        !
        !
        IF ( ALLOCATED( pos ) )            DEALLOCATE( pos )
-       IF ( ALLOCATED( pos_old ) )        DEALLOCATE( pos_old )
        IF ( ALLOCATED( vel ) )            DEALLOCATE( vel )
        IF ( ALLOCATED( grad ) )           DEALLOCATE( grad )
-       IF ( ALLOCATED( grad_old ) )       DEALLOCATE( grad_old )
        IF ( ALLOCATED( react_coord ) )    DEALLOCATE( react_coord )
-       IF ( ALLOCATED( norm_grad ) )      DEALLOCATE( norm_grad )       
-       IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )       
+       IF ( ALLOCATED( norm_grad ) )      DEALLOCATE( norm_grad )
+       IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )       DEALLOCATE( grad_pes )
        IF ( ALLOCATED( k ) )              DEALLOCATE( k )
        IF ( ALLOCATED( elastic_grad ) )   DEALLOCATE( elastic_grad )
@@ -265,20 +237,12 @@ MODULE path_variables
        IF ( ALLOCATED( error ) )          DEALLOCATE( error )
        IF ( ALLOCATED( climbing ) )       DEALLOCATE( climbing )
        IF ( ALLOCATED( frozen ) )         DEALLOCATE( frozen )
-       IF ( ALLOCATED( vel_zeroed ) )     DEALLOCATE( vel_zeroed )          
        !
        IF ( method == "smd" ) THEN
-          !
-          IF ( ALLOCATED( pos_in_av ) )   DEALLOCATE( pos_in_av )
-          IF ( ALLOCATED( pos_fin_av ) )  DEALLOCATE( pos_fin_av )
-          !
-          IF ( ALLOCATED( pos_in_h ) )    DEALLOCATE( pos_in_h )
-          IF ( ALLOCATED( pos_fin_h ) )   DEALLOCATE( pos_fin_h )
           !
           IF ( ALLOCATED( pos_star ) )    DEALLOCATE( pos_star )
           !
           IF ( ALLOCATED( ft_pos ) )      DEALLOCATE( ft_pos )
-          IF ( ALLOCATED( ft_pos_av ) )   DEALLOCATE( ft_pos_av )
           !
           IF ( llangevin ) THEN
              !

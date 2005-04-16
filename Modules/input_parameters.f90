@@ -987,6 +987,8 @@ MODULE input_parameters
         
         LOGICAL :: reset_vel      = .FALSE.
         
+        LOGICAL :: use_fourier    = .FALSE.
+        
         LOGICAL :: use_multistep  = .FALSE.
         
         LOGICAL :: use_freezing   = .FALSE.
@@ -1092,24 +1094,25 @@ MODULE input_parameters
         !
         REAL (KIND=DP) :: smd_spal = 1.d0
  
- 
+        NAMELIST / ions / tempw, ion_dynamics, ion_radius, ion_damping,   &
+                          ion_positions, ion_velocities, ion_temperature, &
+                          fnosep, nhpcl, ndega, tranp, amprp, greasp,     &
+                          tolp, ion_nstepe, ion_maxstep, upscale,         &
+                          pot_extrapolation, wfc_extrapolation, delta_t,  &
+                          nraise, num_of_images, CI_scheme, opt_scheme,   &
+                          first_last_opt, use_multistep, reset_vel,       &
+                          write_save, damp, temp_req, ds, k_max, k_min,   &
+                          path_thr, init_num_of_images, free_energy,      &
+                          fixed_tan, use_freezing, use_fourier,           &
+                          trust_radius_max, trust_radius_min,             &
+                          trust_radius_ini, trust_radius_end, w_1, w_2,   &
+                          lbfgs_ndim, sic_rloc,                           &
+                          smd_polm, smd_kwnp, smd_linr, smd_stcd,         &
+                          smd_stcd1, smd_stcd2, smd_stcd3, smd_codf,      &
+                          smd_forf, smd_smwf, smd_lmfreq, smd_tol,        &
+                          smd_maxlm, smd_smcp, smd_smopt, smd_smlm,       &
+                          smd_ene_ini, smd_ene_fin
 
-
-        NAMELIST / ions / ion_dynamics, ion_radius, ion_damping, ion_positions,&
-          ion_velocities, ion_temperature, tempw, fnosep, nhpcl, ndega, tranp, &
-          amprp, greasp, tolp, ion_nstepe, ion_maxstep, upscale,               &
-          pot_extrapolation, wfc_extrapolation, delta_t, nraise,               &
-          num_of_images, CI_scheme, opt_scheme, first_last_opt, use_multistep, &
-          reset_vel, write_save, damp, temp_req, ds, k_max, k_min, path_thr,   &
-          init_num_of_images, free_energy, fixed_tan, use_freezing,            &
-          trust_radius_max, trust_radius_min, trust_radius_ini,                &
-          trust_radius_end, w_1, w_2, lbfgs_ndim, sic_rloc,                    &
-          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2,        &
-          smd_stcd3, smd_codf, smd_forf, smd_smwf, smd_lmfreq, smd_tol,        &
-          smd_maxlm, smd_smcp, smd_smopt, smd_smlm, smd_ene_ini, smd_ene_fin
-
-
-!
 !=----------------------------------------------------------------------------=!  
 !  CELL Namelist Input Parameters
 !=----------------------------------------------------------------------------=!  

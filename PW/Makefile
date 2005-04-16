@@ -156,6 +156,7 @@ psymrho_mag.o \
 punch.o \
 pw_gemm.o \
 pwcom.o \
+pw_restart.o \
 qvan2.o \
 rcgdiagg.o \
 rdiaghg.o \
@@ -292,6 +293,7 @@ MODULES = \
 ../Modules/path_variables.o \
 ../Modules/path_opt_routines.o \
 ../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \

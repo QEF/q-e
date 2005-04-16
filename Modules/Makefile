@@ -33,6 +33,7 @@ path_base.o \
 path_formats.o \
 path_io_routines.o  \
 path_opt_routines.o \
+path_reparametrisation.o \
 path_variables.o \
 parallel_include.o \
 parallel_types.o \
