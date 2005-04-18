@@ -107,8 +107,15 @@ program elph
            lambda(ng) = lambda(ng) + wk(ik)*lambdaq(mu,ng)
            do i=1,nex
               e=(i-1)*deltae
+              !
+              ! Note that w2 is set to zero if negative to prevent NaN's
+              ! This may happen for acoustic modes at q=0 due to Acoustic
+              ! Sum Rule violation. For these phonons the contribution to
+              ! el-ph coupling should be zero anyway - PG 2005
+              !
               ! 1 Ry = 3289.828 THz
-              omega=sqrt(w2(mu))*3289.828
+              !
+              omega = sqrt( MAX( w2(mu),0.d0 ) ) * 3289.828
               alpha2F(i,ng) = alpha2F(i,ng) + &
                    wk(ik) * lambdaq(mu,ng) * omega * 0.5d0 * &
                    w0gauss((e-omega)/degaussq,ngaussq)/degaussq
