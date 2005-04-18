@@ -156,7 +156,6 @@ psymrho_mag.o \
 punch.o \
 pw_gemm.o \
 pwcom.o \
-pw_restart.o \
 qvan2.o \
 rcgdiagg.o \
 rdiaghg.o \
@@ -328,3 +327,4 @@ clean :
 	- /bin/rm -f pw.x memory.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
 include make.depend
+

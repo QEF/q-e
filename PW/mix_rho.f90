@@ -171,21 +171,19 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   IF ( saveonfile ) THEN
      !
      iunmix = find_free_unit()
+     CALL diropn( iunmix, filename, ( 2 * ngm0 * nspin ), exst )
      !
-     IF ( lda_plus_u ) iunmix2 = find_free_unit()
+     IF ( lda_plus_u ) then
+        iunmix2 = find_free_unit()
+        CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
+                     ( ldim * ldim * nspin * nat ), exst )
+     END IF
      !
      IF ( conv ) THEN
         !
-        CALL diropn( iunmix, filename, ( 2 * ngm0 * nspin ), exst )
         CLOSE( UNIT = iunmix, STATUS = 'DELETE' )
         !
-        IF ( lda_plus_u ) THEN
-           !
-           CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
-                        ( ldim * ldim * nspin * nat ), exst )
-           CLOSE( UNIT = iunmix2, STATUS = 'DELETE' )
-           !
-        END IF
+        IF ( lda_plus_u ) CLOSE( UNIT = iunmix2, STATUS = 'DELETE' )
         !
         DEALLOCATE( rhocin, rhocout )
         !
@@ -195,11 +193,6 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     CALL diropn( iunmix, filename, ( 2 * ngm0 * nspin ), exst )
-     !
-     IF ( lda_plus_u ) &
-        CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
-                     ( ldim * ldim * nspin * nat ), exst )
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
