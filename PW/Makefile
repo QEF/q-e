@@ -60,7 +60,6 @@ cubicsym.o \
 d_matrix.o \
 data_structure.o \
 davcio.o \
-delta_e.o \
 deriv_drhoc.o \
 diis_base.o \
 real_diis_module.o \

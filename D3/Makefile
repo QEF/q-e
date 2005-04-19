@@ -237,7 +237,6 @@ PWOBJS = \
 ../PW/d_matrix.o \
 ../PW/data_structure.o \
 ../PW/davcio.o \
-../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
 ../PW/diropn.o \
 ../PW/divide.o \

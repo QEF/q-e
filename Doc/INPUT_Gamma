@@ -9,9 +9,10 @@ p.8537, 1994) and later in models of the GFP chromophore (Chem.Phys.
 287/1-2, p.33, 2003). The (non resonant) Raman cross sections are 
 calculated by finite differences of the dielectric tensor with 
 respect to small atomic displacements. This method is simple but 
-slow and is made obsolete by the use of the (2n+1) theorem. Unless
-you know what you are doing, you shouldn't use this code for the
-calculation of Raman coefficients.
+slow. The Raman calculation using such as second-order response,
+as implemented in code ph.x, should be much faster. You might still
+find this code useful for testing purposes, or in some special
+case (high-symmetry molecules for instance).
 
 Note that:
 - the code reads a file produced by pw.x with Gamma point only and

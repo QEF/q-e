@@ -504,7 +504,7 @@ MODULE path_io_routines
        REAL (KIND=DP)              :: R, delta_R, x, delta_x
        REAL (KIND=DP), ALLOCATABLE :: d_R(:)
        REAL (KIND=DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
-       REAL (KIND=DP)              :: ener, ener_0, delta_e
+       REAL (KIND=DP)              :: ener, ener_0
        INTEGER                     :: i, j, n, atom, image
        INTEGER, PARAMETER          :: max_i = 100
        !

@@ -224,13 +224,27 @@ subroutine convert_cpmd
   real(kind=8) :: vll
   character (len=20):: dft  
   character (len=2), external :: atom_name
-  integer :: lloc, kkbeta
+  integer :: lloc, kkbeta, my_lmax
   integer :: l, i, ir, iv
   !
   write(generated, '("Generated using unknown code")')
   write(date_author,'("Author: unknown    Generation date: as well")')
   comment = 'Info: automatically converted from CPMD format'
-  print '("l local > ",$)'
+
+  ! NOTE: many CPMD pseudopotentials created with the 'Hamann' code
+  ! from Juerg Hutter's homepage have additional (bogus) entries for
+  ! pseudo-potential and wavefunction. In the 'report' they have
+  ! the same rc and energy eigenvalue than the previous angular momentum.
+  ! we need to be able to ignore that part or the resulting UPF file
+  ! will be useless. so we first print the info section and ask
+  ! for the LMAX to really use. AK 2005/03/30.
+  do i=1,info_lines_
+        print '(A)', info_sect_(i)
+  enddo
+  print '("lmax to use. (max.",I2,") > ",$)', lmax_
+  read (5,*) my_lmax
+  if ((my_lmax <= lmax_) .and. (my_lmax >= 0)) lmax_ = my_lmax
+  print '("l local (max.",I2,") > ",$)', lmax_
   read (5,*) lloc
   ! reasonable assumption
   if (z > 18) then

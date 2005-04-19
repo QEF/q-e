@@ -53,7 +53,6 @@ PWOBJS = \
 ../PW/cubicsym.o \
 ../PW/data_structure.o \
 ../PW/davcio.o \
-../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
 ../PW/diis_base.o \
 ../PW/real_diis_module.o \

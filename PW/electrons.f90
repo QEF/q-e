@@ -75,7 +75,6 @@ SUBROUTINE electrons()
   CHARACTER (LEN=42) :: &
       flmix            !
   REAL(KIND=DP) :: &
-      de,             &!  the correction energy
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
       mag,            &!  local magnetization
@@ -308,8 +307,7 @@ SUBROUTINE electrons()
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                     ehart, etxc, vtxc, etotefield, charge, vnew )
      !
-     CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
-                   deband, nspin )
+     deband = delta_e ( )
      !
      IF ( imix >= 0 ) THEN
         !
@@ -378,8 +376,7 @@ SUBROUTINE electrons()
                           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                           ehart, etxc, vtxc, etotefield, charge, vnew )
            !
-           CALL delta_e( nr1, nr2, nr3, nrxx, rho, vr, vnew, omega, de, &
-                         deband, nspin )              
+           deband = delta_e ( )
            !
            IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
               !
@@ -845,5 +842,35 @@ SUBROUTINE electrons()
        END IF              
        !
      END FUNCTION check_stop_now
+     !
+     !-----------------------------------------------------------------------
+     FUNCTION delta_e ( )
+     !-----------------------------------------------------------------------
+       !
+       USE kinds
+       !
+       IMPLICIT NONE
+       !   
+       REAL(kind=DP) :: delta_e
+       !
+       INTEGER :: i, ipol
+       !
+       delta_e = 0.d0
+       !
+       DO ipol=1, nspin
+          DO i = 1, nrxx
+             delta_e = delta_e - rho(i,ipol) * vr(i,ipol)
+          END DO
+       END DO
+       !
+       delta_e = omega * delta_e / (nr1 * nr2 * nr3)
+       !
+#ifdef __PARA
+       CALL reduce (1, delta_e)
+#endif
+       !
+       RETURN
+       !
+     END FUNCTION delta_e
      !
 END SUBROUTINE electrons

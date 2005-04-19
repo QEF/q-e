@@ -81,6 +81,7 @@ PHOBJS = \
 ../PH/psyme.o \
 ../PH/q_points.o \
 ../PH/q2qstar_ph.o \
+../PH/ramanm.o \
 ../PH/random_matrix.o \
 ../PH/rotate_and_add_dyn.o \
 ../PH/set_drhoc.o \
@@ -185,7 +186,6 @@ PWOBJS = \
 ../PW/d_matrix.o \
 ../PW/data_structure.o \
 ../PW/davcio.o \
-../PW/delta_e.o \
 ../PW/deriv_drhoc.o \
 ../PW/diropn.o \
 ../PW/divide.o \
