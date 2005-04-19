@@ -189,7 +189,8 @@ SUBROUTINE phq_readin()
   IF (nat_todo.NE.0.AND.nrapp.NE.0) CALL errore ('phq_readin', &
        &' incompatible flags', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
-  IF ( (lraman.OR.elop) .AND. epsil .AND. fildrho == ' ') fildrho = 'drho'
+  epsil = epsil .OR. lraman .OR. elop
+  IF ( (lraman.OR.elop) .AND. fildrho == ' ') fildrho = 'drho'
   !
   !    reads the q point (just if ldisp = .false.)
   !

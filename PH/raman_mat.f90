@@ -260,7 +260,7 @@ subroutine raman_mat
      do iat = 1, nat
         call trntnsr_3 (matram (1, 1, 1, iat), at, bg, 1)
      enddo
-     write(6,'(/,10x,''Raman tensor in cartesian axis '',/)')
+     write(6,'(/,10x,''Raman tensor (A^-1) in cartesian axis '',/)')
 
      if (il == 1) ramtns(:,:,:,:) = matram(:,:,:,:)
      if (wr_all ) call write_raman(matram)

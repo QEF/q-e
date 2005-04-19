@@ -8,7 +8,9 @@
 !-----------------------------------------------------------------------
 subroutine write_ramtns (ramtns, nat, iudyn)
   !-----------------------------------------------------------------------
-  use kinds, only : DP
+  USE kinds, ONLY : DP
+  USE cell_base, ONLY : omega
+  USE constants, ONLY : fpi
   implicit none
   ! input variables
   integer :: iudyn, nat
@@ -22,17 +24,17 @@ subroutine write_ramtns (ramtns, nat, iudyn)
   integer :: na, ic, jc, kc
   ! counter on atoms
   ! cartesian coordinate counters
-
+  real (kind=DP), parameter ::   convfact = 0.529177**2
+  ! conversion factor from au^2 to A^2
   !
-  ! write raman tensor on iudyn
+  ! write raman tensor (D chi/d tau in A^2) to iudyn
   !
-  write(iudyn,'(/5x,"Raman tensor",/)')
+  write(iudyn,'(/5x,"Raman tensor (A^2)",/)')
   do na = 1, nat
-     write (iudyn,'(5x,"atom # ",i4)') na
      do kc = 1, 3
-        write (iudyn, '(3e24.12)') ( (ramtns(ic, jc, kc, na), &
-              ic = 1, 3), jc = 1, 3)
-        write(iudyn, '(10x)')
+        write (iudyn,'(5x,"atom # ",i4,"    pol.",i3)') na, kc
+        write (iudyn, '(3e24.12)') ( (ramtns(ic, jc, kc, na) * &
+              omega/fpi*convfact, ic = 1, 3), jc = 1, 3)
      enddo
   enddo
 
