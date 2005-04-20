@@ -99,8 +99,7 @@ SUBROUTINE summary
        &              " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
   !
   IF ( lmd .OR. lbfgs .OR. loldbfgs .OR. lpath ) &
-     WRITE( stdout, '(5X, &
-             "nstep                     = ",I12,/)') nstep
+     WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep
   !
   IF ( lspinorb ) &
      WRITE( stdout, '(5X,"Noncollinear calculation with spin-orbit",/)' )
@@ -185,7 +184,7 @@ SUBROUTINE summary
            WRITE( stdout, '(/5x,"core")')
            WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = 1, 2)
            WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (cc (i, nt) , i = 1, 2)
-           DO l = 0, lmax (nt)
+           DO l = 0, lmax(nt)
               WRITE( stdout, '(/5x,"l = ",i2)') l
               WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
                    i = 1, 3)
