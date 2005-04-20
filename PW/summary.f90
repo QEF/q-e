@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine summary
+SUBROUTINE summary
   !-----------------------------------------------------------------------
   !
   !    This routine writes on output all the information obtained from
@@ -17,113 +17,124 @@ subroutine summary
   !
   !    if iverbosity = 0 only a partial summary is done.
   !
-  USE io_global,       ONLY :  stdout
+  USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE constants,       ONLY : amconv
-  USE atom
-  USE cell_base
+  USE atom,            ONLY : numeric, xmin, dx, nlcc, mesh
+  USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE char,            ONLY : title, sname
   USE cellmd,          ONLY : calc, cmass
   USE dynam,           ONLY : amass
-  USE gvect
-  USE gsmooth
+  USE gvect,           ONLY : nr1, nr2, nr3, dual, ecutwfc, ecfixed, q2sigma, &
+                              ngm, gcutm, qcutz
+  USE gsmooth,         ONLY : nr1s, nr2s, nr3s, doublegrid, ngms, gcutms
   USE lsda_mod,        ONLY : lsda, starting_magnetization
-  USE klist
-  USE ktetra
+  USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk
+  USE ktetra,          ONLY : ltetra
   USE pseud,           ONLY : zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
                               a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, ftau
-  USE control_flags
+  USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
+                              tr2, isolve, lmd, lbfgs, loldbfgs, lpath,  &
+                              iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
   USE spin_orb,        ONLY : lspinorb
-  USE funct
+  USE funct,           ONLY : dft, iexch, icorr, igcx, igcc
   !
-  implicit none
+  IMPLICIT NONE
   !
-  !     declaration of the local variables
+  ! ... declaration of the local variables
   !
-  integer :: i, ipol, apol, na, isym, ik, ib, nt, l, ngmtot
-  ! counter on the celldm elements
-  ! counter on polarizations
-  ! counter on direct or reciprocal lattice vect
-  ! counter on atoms
-  ! counter on symmetries
-  ! counter on k points
-  ! counter on beta functions
-  ! counter on types
-  ! counter on angular momenta
-  ! total number of G-vectors (parallel executio
-  real(kind=DP) :: sr (3, 3), ft1, ft2, ft3
-  ! symmetry matrix in real axes
-  ! fractionary translation
-  real(kind=DP), allocatable :: xau (:,:)
-  ! atomic coordinate referred to the crystal axes
-  real(kind=DP) :: xkg (3)
-  ! coordinates of the k point in crystal axes
-  character :: mixing_style * 9
-  character :: ps * 5
-  ! name of pseudo type
-  real(kind=DP) :: xp
-  ! fraction contributing to a given atom type (obsolescent)
+  INTEGER :: i, ipol, apol, na, isym, ik, ib, nt, l, ngmtot
+    ! counter on the celldm elements
+    ! counter on polarizations
+    ! counter on direct or reciprocal lattice vect
+    ! counter on atoms
+    ! counter on symmetries
+    ! counter on k points
+    ! counter on beta functions
+    ! counter on types
+    ! counter on angular momenta
+    ! total number of G-vectors (parallel executio
+  REAL(KIND=DP) :: sr(3,3), ft1, ft2, ft3
+    ! symmetry matrix in real axes
+    ! fractionary translation
+  REAL(KIND=DP), ALLOCATABLE :: xau(:,:)
+    ! atomic coordinate referred to the crystal axes
+  REAL(KIND=DP) :: xkg(3)
+    ! coordinates of the k point in crystal axes
+  CHARACTER :: mixing_style * 9
+  CHARACTER :: ps * 5
+    ! name of pseudo type
+  REAL(KIND=DP) :: xp
+    ! fraction contributing to a given atom type (obsolescent)
   !
-  !     we start with a general description of the run
+  ! ... we start with a general description of the run
   !
-  if (imix.eq.-1) mixing_style = 'potential'
-  if (imix.eq. 0) mixing_style = 'plain'
-  if (imix.eq. 1) mixing_style = 'TF'
-  if (imix.eq. 2) mixing_style = 'local-TF'
-
-  if (title.ne.' ') then
-     WRITE( stdout,"(/,5x,'Title: ',/,5x,a75)") title
-  end if
+  IF ( imix == -1 ) mixing_style = 'potential'
+  IF ( imix ==  0 ) mixing_style = 'plain'
+  IF ( imix ==  1 ) mixing_style = 'TF'
+  IF ( imix ==  2 ) mixing_style = 'local-TF'
+  !
+  IF ( title /= ' ') WRITE( stdout, "(/,5X,'Title: ',/,5X,A75)" ) title
+  !
   WRITE( stdout, 100) ibrav, alat, omega, nat, ntyp, &
-       ecutwfc, dual * ecutwfc, tr2, mixing_beta, nmix, &
-       mixing_style
-
-100 format (/,/,5x, &
-       &     'bravais-lattice index     = ',i12,/,5x, &
-       &     'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x, &
-       &     'unit-cell volume          = ',f12.4,' (a.u.)^3',/,5x, &
-       &     'number of atoms/cell      = ',i12,/,5x, &
-       &     'number of atomic types    = ',i12,/,5x, &
-       &     'kinetic-energy cutoff     = ',f12.4,'  Ry',/,5x, &
-       &     'charge density cutoff     = ',f12.4,'  Ry',/,5x, &
-       &     'convergence threshold     = ',1pe12.1,/,5x, &
-       &     'beta                      = ',0pf12.4,/,5x, &
-       &     'number of iterations used = ',i12,2x,a,' mixing')
-  WRITE( stdout, '(5x,"Exchange-correlation      = ",a, &
-       &       " (",4i1,")")') trim(dft) , iexch, icorr, igcx, igcc
-  if (lmd.or.lbfgs.or.loldbfgs.or.lneb.or.lsmd) &
-     WRITE( stdout, '(5x,"  nstep  = ",i4,/)') nstep
-  if (lspinorb) write(stdout, &
-               '(5x,"Noncollinear calculation with spin-orbit",/)')
-
-  if (qcutz.gt.0.d0) then
-     WRITE( stdout, 110) ecfixed, qcutz, q2sigma
-110  format   (5x,'A smooth kinetic-energy cutoff is imposed at ', &
-          &             f12.4,' Ry',/5x,'height of the smooth ', &
-          &             'step-function =',f21.4,' Ry',/5x, &
-          &             'width of the smooth step-function  =',f21.4, &
-          &             ' Ry',/)
-
-  endif
+                      ecutwfc, dual * ecutwfc, tr2,  &
+                      mixing_beta, nmix, mixing_style
   !
-  !    and here more detailed information. Description of the unit cell
+100 FORMAT( /,/,5X, &
+       &     'bravais-lattice index     = ',I12,/,5X, &
+       &     'lattice parameter (a_0)   = ',F12.4,'  a.u.',/,5X, &
+       &     'unit-cell volume          = ',F12.4,' (a.u.)^3',/,5X, &
+       &     'number of atoms/cell      = ',I12,/,5X, &
+       &     'number of atomic types    = ',I12,/,5X, &
+       &     'kinetic-energy cutoff     = ',F12.4,'  Ry',/,5X, &
+       &     'charge density cutoff     = ',F12.4,'  Ry',/,5X, &
+       &     'convergence threshold     = ',1PE12.1,/,5X, &
+       &     'beta                      = ',0PF12.4,/,5X, &
+       &     'number of iterations used = ',I12,2X,A,' mixing')
   !
-  WRITE( stdout, '(2(3x,3(2x,"celldm(",i1,")=",f11.6),/))') &
-       (i, celldm(i), i=1,6)
-  WRITE( stdout, '(5x, &
+  WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
+       &              " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
+  !
+  IF ( lmd .OR. lbfgs .OR. loldbfgs .OR. lpath ) &
+     WRITE( stdout, '(5X, &
+             "nstep                     = ",I12,/)') nstep
+  !
+  IF ( lspinorb ) &
+     WRITE( stdout, '(5X,"Noncollinear calculation with spin-orbit",/)' )
+  !
+  IF ( qcutz > 0.D0 ) THEN
+     !
+     WRITE( stdout, 110 ) ecfixed, qcutz, q2sigma
+     !
+110  FORMAT( 5X,'A smooth kinetic-energy cutoff is imposed at ', &
+          &  F12.4,' Ry',/5X,'height of the smooth ', &
+          &  'step-function =',F21.4,' Ry',/5X, &
+          &  'width of the smooth step-function  =',F21.4,' Ry',/ )
+     !
+  END IF
+  !
+  ! ... and here more detailed information. Description of the unit cell
+  !
+  WRITE( stdout, '(2(3X,3(2X,"celldm(",I1,")=",F11.6),/))' ) &
+       ( i, celldm(i), i = 1, 6 )
+  !
+  WRITE( stdout, '(5X, &
        &     "crystal axes: (cart. coord. in units of a_0)",/, &
        &       3(15x,"a(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,  &
        (at (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
-
+  !
   WRITE( stdout, '(5x, &
        &   "reciprocal axes: (cart. coord. in units 2 pi/a_0)",/, &
        &            3(15x,"b(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,&
        &  (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
-  do nt = 1, ntyp
-     if (tvanp (nt) ) then
+  !
+  DO nt = 1, ntyp
+     !
+     IF ( tvanp(nt) ) THEN
+        !
         ps = '(US)'
         WRITE( stdout, '(/5x,"PSEUDO",i2," is ",a2, &
              &        1x,a5,"   zval =",f5.1,"   lmax=",i2, &
@@ -134,95 +145,105 @@ subroutine summary
         WRITE( stdout, '(5x,"Using log mesh of ", i5, " points")') mesh (nt)
         WRITE( stdout, '(5x,"The pseudopotential has ",i2, &
              &       " beta functions with: ")') nbeta (nt)
-        do ib = 1, nbeta (nt)
+        DO ib = 1, nbeta (nt)
            WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
-        enddo
+        END DO
         WRITE( stdout, '(5x,"Q(r) pseudized with ", &
              &          i2," coefficients,  rinner = ",3f8.3,/ &
              &          52x,3f8.3,/ &
              &          52x,3f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
-     else
-        if (nlc (nt) .eq.1.and.nnl (nt) .eq.1) then
+        !
+     ELSE
+        !
+        IF ( nlc(nt) == 1 .AND. nnl(nt) == 1 ) THEN
+           !
            ps = '(vbc)'
-        elseif (nlc (nt) .eq.2.and.nnl (nt) .eq.3) then
+           !
+        ELSE IF ( nlc(nt) == 2 .AND. nnl(nt) == 3 ) THEN
+           !
            ps = '(bhs)'
-        elseif (nlc (nt) .eq.1.and.nnl (nt) .eq.3) then
+           !
+        ELSE IF ( nlc(nt) == 1 .AND. nnl(nt) == 3 ) THEN
+           !
            ps = '(our)'
-        else
+           !
+        ELSE
+           !
            ps = '     '
-        endif
-
+           !
+        END IF
+        !
         WRITE( stdout, '(/5x,"PSEUDO",i2," is ",a2, 1x,a5,"   zval =",f5.1,&
              &      "   lmax=",i2,"   lloc=",i2)') &
                         nt, psd(nt), ps, zp(nt), lmax(nt), lloc(nt)
-        if (numeric (nt) ) then
+        IF (numeric (nt) ) THEN
            WRITE( stdout, '(5x,"(in numerical form: ",i5,&
                 &" grid points",", xmin = ",f5.2,", dx = ",f6.4,")")')&
                 & mesh (nt) , xmin (nt) , dx (nt)
-        else
+        ELSE
            WRITE( stdout, '(/14x,"i=",7x,"1",13x,"2",10x,"3")')
            WRITE( stdout, '(/5x,"core")')
            WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = 1, 2)
            WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (cc (i, nt) , i = 1, 2)
-           do l = 0, lmax (nt)
+           DO l = 0, lmax (nt)
               WRITE( stdout, '(/5x,"l = ",i2)') l
               WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
                    i = 1, 3)
               WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (aps (i, l, nt) , i = 1,3)
               WRITE( stdout, '(5x,"a(i+3)=",4x,3g13.5)') (aps (i, l, nt) , i= 4, 6)
-           enddo
-           if ( nlcc(nt) ) WRITE( stdout, 200) a_nlcc(nt), b_nlcc(nt), alpha_nlcc(nt)
-200        format(/5x,'nonlinear core correction: ', &
+           ENDDO
+           IF ( nlcc(nt) ) WRITE( stdout, 200) a_nlcc(nt), b_nlcc(nt), alpha_nlcc(nt)
+200        FORMAT(/5x,'nonlinear core correction: ', &
                 &     'rho(r) = ( a + b r^2) exp(-alpha r^2)', &
                 & /,5x,'a    =',4x,g11.5, &
                 & /,5x,'b    =',4x,g11.5, &
                 & /,5x,'alpha=',4x,g11.5)
-        endif
-     endif
+        ENDIF
+     ENDIF
 
-  enddo
+  ENDDO
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')
   xp = 1.d0
-  do nt = 1, ntyp
-     if (calc.eq.' ') then
+  DO nt = 1, ntyp
+     IF (calc.EQ.' ') THEN
         WRITE( stdout, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
                    atm(nt), zv(nt), amass(nt), psd(nt), xp
-     else
+     ELSE
         WRITE( stdout, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
                    atm(nt), zv(nt), amass(nt)/amconv, psd(nt), xp
-     end if
-  enddo
+     END IF
+  ENDDO
 
-  if (calc.eq.'cd' .or. calc.eq.'cm' ) &
+  IF (calc.EQ.'cd' .OR. calc.EQ.'cm' ) &
      WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU ")') cmass/amconv
-  if (calc.eq.'nd' .or. calc.eq.'nm' ) &
+  IF (calc.EQ.'nd' .OR. calc.EQ.'nm' ) &
      WRITE( stdout, '(/5x," cell mass =", f10.5, " AMU/(a.u.)^2 ")') cmass/amconv
 
-  if (lsda) then
+  IF (lsda) THEN
      WRITE( stdout, '(/5x,"Starting magnetic structure ", &
           &      /5x,"atomic species   magnetization")')
-     do nt = 1, ntyp
+     DO nt = 1, ntyp
         WRITE( stdout, '(5x,a6,9x,f6.3)') atm(nt), starting_magnetization(nt)
-     enddo
-  endif
+     ENDDO
+  ENDIF
   !
   !   description of symmetries
   !
-  if (nsym.le.1) then
+  IF (nsym.LE.1) THEN
      WRITE( stdout, '(/5x,"No symmetry!")')
-  else
-     if (invsym) then
+  ELSE
+     IF (invsym) THEN
         WRITE( stdout, '(/5x,i2," Sym.Ops. (with inversion)",/)') nsym
-     else
+     ELSE
         WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion)",/)') nsym
-     endif
-  endif
-  if (iverbosity.eq.1) then
+     ENDIF
+  ENDIF
+  IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
-     do isym = 1, nsym
+     DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-        call s_axis_to_cart (s(1,1,isym), sr, at, bg)
-        if (ftau(1,isym).ne.0.or.ftau(2,isym).ne.0.or.ftau(3,isym).ne.0) then
+        CALL s_axis_to_cart (s(1,1,isym), sr, at, bg)
+        IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
                  at(1,3)*ftau(3,isym)/nr3
            ft2 = at(2,1)*ftau(1,isym)/nr1 + at(2,2)*ftau(2,isym)/nr2 + &
@@ -231,11 +252,11 @@ subroutine summary
                  at(3,3)*ftau(3,isym)/nr3
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                  &        " )    f =( ",f10.7," )")') &
-                 isym, (s(1,ipol,isym),ipol=1,3), dble(ftau(1,isym))/dble(nr1)
+                 isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                       (s(2,ipol,isym),ipol=1,3), dble(ftau(2,isym))/dble(nr2)
+                       (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(nr2)
            WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                       (s(3,ipol,isym),ipol=1,3), dble(ftau(3,isym))/dble(nr3)
+                       (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(nr3)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                  &        " )    f =( ",f10.7," )")') &
                  isym, (sr(1,ipol),ipol=1,3), ft1
@@ -243,7 +264,7 @@ subroutine summary
                        (sr(2,ipol),ipol=1,3), ft2
            WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
                        (sr(3,ipol),ipol=1,3), ft3
-        else
+        ELSE
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
                                      isym,  (s (1, ipol, isym) , ipol = 1,3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol=1,3)
@@ -252,10 +273,10 @@ subroutine summary
                                          isym,  (sr (1, ipol) , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol) , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol) , ipol = 1, 3)
-        endif
-     enddo
+        ENDIF
+     ENDDO
 
-  endif
+  ENDIF
   !
   !    description of the atoms inside the unit cell
   !
@@ -267,21 +288,21 @@ subroutine summary
   !
   !  output of starting magnetization
   !
-  if (iverbosity.eq.1) then
+  IF (iverbosity.EQ.1) THEN
      !
      !   allocate work space
      !
-     allocate (xau(3,nat))
+     ALLOCATE (xau(3,nat))
      !
      !     Compute the coordinates of each atom in the basis of the direct la
      !     vectors
      !
-     do na = 1, nat
-        do ipol = 1, 3
+     DO na = 1, nat
+        DO ipol = 1, 3
            xau(ipol,na) = bg(1,ipol)*tau(1,na) + bg(2,ipol)*tau(2,na) + &
                           bg(3,ipol)*tau(3,na)
-        enddo
-     enddo
+        ENDDO
+     ENDDO
      !
      !   description of the atoms inside the unit cell
      !   (in crystallographic coordinates)
@@ -295,62 +316,61 @@ subroutine summary
      !
      !   deallocate work space
      !
-     deallocate(xau)
-  endif
+     DEALLOCATE(xau)
+  ENDIF
 
-  if (lgauss) then
+  IF (lgauss) THEN
      WRITE( stdout, '(/5x,"number of k points=",i5, &
           &               "  gaussian broad. (ryd)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
-  else if (ltetra) then
+  ELSE IF (ltetra) THEN
      WRITE( stdout,'(/5x,"number of k points=",i5, &
           &        " (tetrahedron method)")') nkstot
-  else
+  ELSE
      WRITE( stdout, '(/5x,"number of k points=",i5)') nkstot
 
-  endif
+  ENDIF
   WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
-  do ik = 1, nkstot
+  DO ik = 1, nkstot
      WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
           (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-  enddo
-  if (iverbosity.eq.1) then
+  ENDDO
+  IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')
-     do ik = 1, nkstot
-        do ipol = 1, 3
+     DO ik = 1, nkstot
+        DO ipol = 1, 3
            xkg(ipol) = at(1,ipol)*xk(1,ik) + at(2,ipol)*xk(2,ik) + &
                        at(3,ipol)*xk(3,ik)
            ! xkg are the component in the crystal RL basis
-        enddo
+        ENDDO
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') &
              ik, (xkg (ipol) , ipol = 1, 3) , wk (ik)
-     enddo
-  endif
+     ENDDO
+  ENDIF
   ngmtot = ngm
 #ifdef __PARA
-  call ireduce (1, ngmtot)
+  CALL ireduce (1, ngmtot)
 #endif
   WRITE( stdout, '(/5x,"G cutoff =",f10.4,"  (", &
        &       i7," G-vectors)","     FFT grid: (",i3, &
        &       ",",i3,",",i3,")")') gcutm, ngmtot, nr1, nr2, nr3
-  if (doublegrid) then
+  IF (doublegrid) THEN
      ngmtot = ngms
-#ifdef __PARA
-     call ireduce (1, ngmtot)
-#endif
+     !
+     CALL ireduce (1, ngmtot)
+     !
      WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
           &    i7," G-vectors)","  smooth grid: (",i3, &
           &    ",",i3,",",i3,")")') gcutms, ngmtot, nr1s, nr2s, nr3s
-  endif
+  ENDIF
 
-  if (isolve.eq.2) then
-     WRITE( stdout, * )
-     WRITE( stdout, '(5x,"reduced basis size: ",1i5)') diis_ndim
-  endif
-
+  IF ( isolve == 2 ) &
+     WRITE( stdout, '(/,5X,"reduced basis size: ",I5)' ) diis_ndim
+  !
 #ifdef FLUSH
-  call flush (6)
+  CALL flush( 6 )
 #endif
-  return
-end subroutine summary
-
+  !
+  RETURN
+  !
+END SUBROUTINE summary
