@@ -86,7 +86,6 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
     betamix(maxmix,maxmix), &
     gamma0,                 &
     work(maxmix),           &
-    dehar,                  &
     charge
   LOGICAL :: &
     saveonfile,   &! save intermediate steps on file "filename"
@@ -105,7 +104,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   !
   ! ... external functions
   !
-  REAL(KIND=DP), EXTERNAL :: rho_dot_product, ns_dot_product, fn_dehar
+  REAL(KIND=DP), EXTERNAL :: rho_dot_product, ns_dot_product
   !
   !
   CALL start_clock( 'mix_rho' )
@@ -165,8 +164,6 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   END IF
   !
   conv = ( dr2 < tr2 )
-  !
-  dehar = fn_dehar( rhocout )
   !
   IF ( saveonfile ) THEN
      !
@@ -517,7 +514,8 @@ END SUBROUTINE mix_rho
 FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   !----------------------------------------------------------------------------
   !
-  ! ... this function evaluates the dot product between two input densities
+  ! ... calculates 4pi/G^2*rho1(-G)*rho2(G) = V1_Hartree(-G)*rho2(G)
+  ! ... used as an estimate of the self-consistency error on the energy
   !
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, tpi, fpi
@@ -599,7 +597,9 @@ END FUNCTION rho_dot_product
 FUNCTION ns_dot_product( ns1, ns2 )
   !----------------------------------------------------------------------------
   !
-  ! ... this function evaluates the dot product between two input densities
+  ! ... calculates U/2 \sum_i ns1(i)*ns2(i)
+  ! ... used as an estimate of the self-consistency error on the 
+  ! ... LDA+U correction to the energy
   !
   USE kinds,      ONLY : DP
   USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
@@ -647,73 +647,6 @@ FUNCTION ns_dot_product( ns1, ns2 )
   RETURN
   !
 END FUNCTION ns_dot_product
-!
-!----------------------------------------------------------------------------
-FUNCTION fn_dehar( drho )
-  !----------------------------------------------------------------------------
-  !
-  ! ... this function evaluates the residual hartree energy of drho
-  !
-  USE kinds,          ONLY : DP
-  USE constants,      ONLY : e2, fpi
-  USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,          ONLY : gstart, gg
-  USE lsda_mod,       ONLY : nspin
-  USE control_flags,  ONLY : ngm0
-  USE wvfct,          ONLY : gamma_only
-  !
-  IMPLICIT NONE
-  !
-  ! ... I/O variables
-  !
-  REAL(KIND=DP) :: &
-    fn_dehar         ! (out) the function value
-  COMPLEX(KIND=DP), INTENT(IN) :: &
-    drho(ngm0,nspin) ! (in) the density difference
-  !
-  ! ... and the local variables
-  !
-  REAL(KIND=DP) :: fac   ! a multiplicative factors
-  INTEGER       :: ig
-  !
-  !
-  fn_dehar = 0.D0
-  !
-  fac = e2 * fpi / tpiba2
-  !
-  IF ( nspin == 1 ) THEN
-     !
-     DO ig = gstart, ngm0
-        !
-        fn_dehar = fn_dehar + fac / gg(ig) * ABS( drho(ig,1) )**2
-        !
-     END DO
-     !
-  ELSE
-     !
-     DO ig = gstart, ngm0
-        !
-        fn_dehar = fn_dehar + fac / gg(ig) * ABS( drho(ig,1) + drho(ig,2) )**2
-        !
-     END DO
-     !
-  END IF
-  !
-  IF ( gamma_only ) THEN
-     !
-     fn_dehar = fn_dehar * omega
-     !
-  ELSE
-     !
-     fn_dehar = fn_dehar * omega * 0.5D0
-     !
-  END IF
-  !
-  CALL reduce( 1, fn_dehar )
-  !
-  RETURN
-  !
-END FUNCTION fn_dehar
 !
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening( drho )

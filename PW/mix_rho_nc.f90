@@ -83,14 +83,14 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
 
   integer :: ldim
 
-  real (kind=DP) :: betamix(maxmix,maxmix), gamma0, work(maxmix), dehar
+  real (kind=DP) :: betamix(maxmix,maxmix), gamma0, work(maxmix)
 
   logical ::    &
                 saveonfile, &! save intermediate steps on file "filename"
                 opnd,       &! if true the file is already opened
                 exst         ! if true the file exists
 
-  real (kind=DP), external :: rho_dot_product_nc, ns_dot_product_nc, fn_dehar_nc
+  real (kind=DP), external :: rho_dot_product_nc, ns_dot_product_nc
 
   call start_clock('mix_rho')
 
@@ -128,14 +128,11 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   conv = (dr2 < tr2)
   !
-  dehar = fn_dehar_nc(rhocout)
-  !
 #ifdef DEBUG
 !  if (lda_plus_u) WRITE( stdout,*) ' ns_dr2 =', ns_dot_product_nc(nsout,nsout)
   IF (conv) THEN
      WRITE( stdout,100) dr2, rho_dot_product_nc(rhocout,rhocout) + &
                         ns_dot_product_nc(nsout,nsout)
-     WRITE( stdout,'(" dehar =",f15.8)') dehar
   END IF
 #endif
 
@@ -556,52 +553,6 @@ function ns_dot_product_nc (ns1,ns2)
 
   return
 end function ns_dot_product_nc
-
-!--------------------------------------------------------------------
-function fn_dehar_nc (drho)
-  !--------------------------------------------------------------------
-  ! this function evaluates the residual hartree energy of drho
-  !
-  USE kinds, only : DP
-  use pwcom
-  USE control_flags,      ONLY : ngm0
-  implicit none
-  !
-  ! I/O variables
-  !
-  real (kind=DP) :: fn_dehar_nc ! (out) the function value
-
-  complex (kind=DP) :: drho(ngm0,nspin) ! (in) the density difference
-
-  !
-  ! and the local variables
-  !
-  real (kind=DP) :: fac   ! a multiplicative factors
-
-  integer  :: is, ig
-
-  fn_dehar_nc = 0.d0
-  if (nspin == 1) then
-     is=1
-     do ig = gstart,ngm0
-        fac = e2*fpi / (tpiba2*gg(ig))
-        fn_dehar_nc = fn_dehar_nc +  fac * abs(drho(ig,is))**2
-     end do
-  else
-     do ig = gstart,ngm0
-        fac = e2*fpi / (tpiba2*gg(ig))
-        fn_dehar_nc = fn_dehar_nc +  fac * abs(drho(ig,1)+drho(ig,2))**2
-     end do
-  end if
-
-  fn_dehar_nc = fn_dehar_nc * omega / 2.d0
-
-#ifdef __PARA
-  call reduce(1,fn_dehar_nc)
-#endif
-
-  return
-end function fn_dehar_nc
 
 !--------------------------------------------------------------------
 subroutine approx_screening_nc (drho)
