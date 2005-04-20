@@ -380,7 +380,7 @@ MODULE read_namelists_module
        !
        ! ... BFGS defaults
        !
-       lbfgs_ndim       = 1
+       bfgs_ndim        = 1
        trust_radius_max = 0.8D0
        trust_radius_min = 1.D-5
        trust_radius_ini = 0.5D0
@@ -781,7 +781,7 @@ MODULE read_namelists_module
        !
        ! ... BFGS
        !
-       CALL mp_bcast( lbfgs_ndim, ionode_id )
+       CALL mp_bcast( bfgs_ndim, ionode_id )
        CALL mp_bcast( trust_radius_max, ionode_id )
        CALL mp_bcast( trust_radius_min, ionode_id )
        CALL mp_bcast( trust_radius_ini, ionode_id )

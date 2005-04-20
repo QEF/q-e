@@ -1030,7 +1030,7 @@ MODULE input_parameters
         ! ... variables added for new BFGS algorithm
         !
         
-        INTEGER ::  lbfgs_ndim = 1
+        INTEGER ::  bfgs_ndim = 1
                             
         REAL(KIND=DP)  :: trust_radius_max = 0.5D0
         REAL(KIND=DP)  :: trust_radius_min = 1.D-5
@@ -1106,7 +1106,7 @@ MODULE input_parameters
                           fixed_tan, use_freezing, use_fourier,           &
                           trust_radius_max, trust_radius_min,             &
                           trust_radius_ini, trust_radius_end, w_1, w_2,   &
-                          lbfgs_ndim, sic_rloc,                           &
+                          bfgs_ndim, sic_rloc,                            &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd,         &
                           smd_stcd1, smd_stcd2, smd_stcd3, smd_codf,      &
                           smd_forf, smd_smwf, smd_lmfreq, smd_tol,        &

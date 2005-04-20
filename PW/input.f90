@@ -163,7 +163,7 @@ SUBROUTINE iosys()
   !
   USE constraints_module, ONLY : nconstr, constr_tol, constr, target
   !
-  USE bfgs_module,   ONLY : lbfgs_ndim_       => lbfgs_ndim, &
+  USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
@@ -218,7 +218,7 @@ SUBROUTINE iosys()
                                ds, use_fourier, use_freezing, fixed_tan,       &
                                free_energy, write_save, trust_radius_max,      &
                                trust_radius_min, trust_radius_ini,             &
-                               trust_radius_end, w_1, w_2, lbfgs_ndim
+                               trust_radius_end, w_1, w_2, bfgs_ndim
   !
   ! CELL namelist
   !
@@ -1001,9 +1001,9 @@ SUBROUTINE iosys()
   fixed_tan_          = fixed_tan
   free_energy_        = free_energy
   !
-  ! ... new BFGS specific
+  ! ... BFGS specific
   !
-  lbfgs_ndim_       = lbfgs_ndim
+  bfgs_ndim_        = bfgs_ndim
   trust_radius_max_ = trust_radius_max
   trust_radius_min_ = trust_radius_min
   trust_radius_ini_ = trust_radius_ini

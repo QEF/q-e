@@ -578,13 +578,12 @@ upscale        REAL ( default = 10.D0 )
                but conv_thr will not be reduced to less that 
                conv_thr / upscale
 
-lbfgs_ndim     INTEGER ( default = 1 )
+bfgs_ndim      INTEGER ( default = 1 )
                number of old forces and displacements vectors used in the
-	       linear scaling BFGS algorithm. When lbfgs_ndim = 1 the complete
-	       inverse Hessian is stored (suggested for small/medium-size 
-	       systems).
-	       On large systems (some hundreds of atoms) a good performance can 
-	       be achieved with only 4 or 6 old vectors 
+	       PULAY mixing of the residual vectors obtained on the basis
+               of the inverse hessian matrix given by the BFGS algorithm.
+               When bfgs_ndim = 1, the standard quasi-Newton BFGS method is
+               used.
                (bfgs only)
 
 trust_radius_max

@@ -41,7 +41,6 @@ SUBROUTINE move_ions()
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE bfgs_module,   ONLY : lbfgs_ndim
   USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
                             lmd, conv_ions, history, alpha0, beta0, tr2, istep
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
@@ -52,7 +51,7 @@ SUBROUTINE move_ions()
   !
   ! ... external procedures
   !
-  USE bfgs_module,            ONLY : new_bfgs => bfgs, lin_bfgs, terminate_bfgs
+  USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
   USE constraints_module,     ONLY : dist_constrain, check_constrain, &
                                      new_force
   USE basic_algebra_routines, ONLY : norm
@@ -129,23 +128,8 @@ SUBROUTINE move_ions()
         pos      =   RESHAPE( SOURCE = tau,   SHAPE = (/ 3 * nat /) ) * alat
         gradient = - RESHAPE( SOURCE = force, SHAPE = (/ 3 * nat /) )
         !
-        IF ( lbfgs_ndim == 1 ) THEN
-           !
-           ! ... standard BFGS 
-           !
-           CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
-                          epsf, energy_error, gradient_error, step_accepted, &
-                          conv_ions )
-           !
-        ELSE
-           !
-           ! ... linear scaling BFGS
-           !
-           CALL lin_bfgs( pos, etot, gradient, tmp_dir, stdout, epse,        &
-                          epsf, energy_error, gradient_error, step_accepted, &
-                          conv_ions )
-           !
-        END IF
+        CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
+                       energy_error, gradient_error, step_accepted, conv_ions )
         !
         IF ( conv_ions ) THEN
            !
