@@ -201,6 +201,7 @@ MODULE control_flags
     lraman,           &! if .TRUE. the calc. is raman
     lconstrain,       &! if .TRUE. the calc. is constraint
     ldamped,          &! if .TRUE. the calc. is a damped dynamics
+    lrescale_t,       &! if .TRUE. the ionic temperature is rescaled
     restart            ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency

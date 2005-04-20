@@ -123,7 +123,7 @@ SUBROUTINE iosys()
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
-                            lsmd, lphonon, ldamped, lraman, &
+                            lsmd, lphonon, ldamped, lraman, lrescale_t, &
                             noinv, restart, loldbfgs, lconstrain
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -839,13 +839,20 @@ SUBROUTINE iosys()
   !
   SELECT CASE ( TRIM( ion_temperature ) )
   CASE ( 'not_controlled' )
-     CONTINUE
+     !
+     lrescale_t = .FALSE.
+     !
   CASE ( 'rescaling' )
+     !
+     lrescale_t  = .TRUE.
      temperature = tempw
      tolp_       = tolp
+     !
   CASE DEFAULT
+     !
      CALL errore( ' iosys ', ' unknown ion_temperature ' // &
                 & TRIM( ion_temperature ), 1 )
+     !
   END SELECT
   !
   SELECT CASE ( TRIM( cell_temperature ) )

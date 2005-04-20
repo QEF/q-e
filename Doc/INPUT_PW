@@ -534,11 +534,12 @@ tolp           REAL ( default = 1.D-3 )
                calculations.
 
 delta_t        REAL ( default = 1.D0 )
-               delta_T = 1                 : nothing is done.
-               delta_T /= 1 && delta_T > 0 : at each step the temperature is 
+               delta_t = 1                 : every 'nraise' step the actual 
+                                             temperature is rescaled to tempw
+               delta_t /= 1 && delta_T > 0 : at each step the temperature is 
                                              multiplied by delta_t; this is 
                                              done rescaling all the velocities.
-               delta_T < 0                 : every 'nraise' steps the temperature
+               delta_t < 0                 : every 'nraise' steps the temperature
                                              is reduced by -delta_T
                This keyword is NOT used in the case of variable cell
                calculations.

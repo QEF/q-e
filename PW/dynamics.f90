@@ -38,7 +38,7 @@ SUBROUTINE dynamics()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE constants,     ONLY : amconv, eps8, convert_E_to_temp
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm
+  USE ions_base,     ONLY : nat, nsp, ityp, tau, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot
@@ -46,7 +46,7 @@ SUBROUTINE dynamics()
   USE ions_base,     ONLY : if_pos
   USE relax,         ONLY : epse, epsf
   USE control_flags, ONLY : istep, nstep, conv_ions, &
-                            lconstrain, ldamped, lfixatom
+                            lconstrain, ldamped, lfixatom, lrescale_t
   USE io_files,      ONLY : prefix
   !
   USE basic_algebra_routines
@@ -107,7 +107,7 @@ SUBROUTINE dynamics()
             FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
          temperature
      !
-     DO na = 1, ntyp
+     DO na = 1, nsp
         !
         WRITE( UNIT = stdout, &
                FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
@@ -158,28 +158,32 @@ SUBROUTINE dynamics()
   !
   istep = istep + 1
   !
-  IF ( MOD( istep, nraise ) == 0 ) THEN
+  IF ( lrescale_t ) THEN
      !
-     IF ( delta_t == 1.D0 ) THEN
+     IF ( MOD( istep, nraise ) == 0 ) THEN
         !
-        CALL thermalize( temp_new, temperature )
-        !
-     ELSE IF ( delta_t < 0 ) THEN
-        !
-        WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
+        IF ( delta_t == 1.D0 ) THEN
+           !
+           CALL thermalize( temp_new, temperature )
+           !
+        ELSE IF ( delta_t < 0 ) THEN
+           !
+           WRITE( UNIT = stdout, &
+                  FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
                           & ", T = ",F6.1)' )  - delta_t, ( temp_new - delta_t )
+           !
+           CALL thermalize( temp_new, ( temp_new - delta_t ) )
+           !
+        END IF
         !
-        CALL thermalize( temp_new, ( temp_new - delta_t ) )
+     ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
+        !
+        WRITE( stdout, '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                            & ", T = ",F6.1)' ) delta_t, temp_new * delta_t
+        !
+        CALL thermalize( temp_new, temp_new * delta_t )
         !
      END IF
-     !
-  ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
-     !
-     WRITE( stdout, '(/,5X,"Thermalization: delta_t = ",F6.3, &
-                         & ", T = ",F6.1)' ) delta_t, temp_new * delta_t
-     !
-     CALL thermalize( temp_new, temp_new * delta_t )
      !
   END IF
   !
