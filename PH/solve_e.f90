@@ -346,7 +346,7 @@ subroutine solve_e
      if (convt.or.tcpu.gt.time_max) goto 155
 
   enddo
-155 continue
+155 iter0=0
   if (tcpu.gt.time_max) then
      WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
           time_max

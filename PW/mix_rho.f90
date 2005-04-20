@@ -136,6 +136,12 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      rhocout(:,is) = psic(nl(:)) - rhocin(:,is)
      !
   END DO
+psic(:) = ZERO
+psic(nl(:)) = rhocin(:,1)
+IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+charge = SUM (MIN(0.d0,REAL(psic(:)))) * omega/(nr1*nr2*nr3)
+print *, 'negative charge 1 =', charge
   !
   IF ( lda_plus_u ) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
   !
@@ -413,6 +419,12 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      END IF
      !
   END DO
+psic(:) = ZERO
+psic(nl(:)) = rhocin(:,1)
+IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+charge = SUM (MIN(0.d0,REAL(psic(:)))) * omega/(nr1*nr2*nr3)
+print *, 'negative charge 2 =', charge
   !
   ! ... auxiliary vectors dv and df not needed anymore
   !
@@ -464,7 +476,19 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   !
   ! ... set new trial density
   !
+psic(:) = ZERO
+psic(nl(:)) = rhocin(:,1)
+IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+charge = SUM (MIN(0.d0,REAL(psic(:)))) * omega/(nr1*nr2*nr3)
+print *, 'negative charge 3 =', charge
   rhocin = rhocin + alphamix * rhocout
+psic(:) = ZERO
+psic(nl(:)) = rhocin(:,1)
+IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+charge = SUM (MIN(0.d0,REAL(psic(:)))) * omega/(nr1*nr2*nr3)
+print *, 'negative charge 4 =', charge
   !
   IF ( lda_plus_u ) nsin = nsin + alphamix * nsout
   !
@@ -483,8 +507,9 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
  !    !
  ! END IF
   !
-  ! ... back ro real space
+  ! ... back to real space
   !
+
   DO is = 1, nspin
      !
      psic(:) = ZERO

@@ -522,7 +522,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      if (convt.or.tcpu.gt.time_max) goto 155
 
   enddo
-155 continue
+155 iter0=0
   if (tcpu.gt.time_max.and..not.convt) then
      WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, time_max
      call stop_ph (.false.)

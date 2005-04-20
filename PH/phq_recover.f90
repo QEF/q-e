@@ -68,12 +68,15 @@ subroutine phq_recover
         all_comp = ( nat_todo == nat )
      endif
 
-     if (irr0 == - 1) then
-        WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
-        close (unit = iunrec, status = 'keep')
+     if (irr0 == - 3) then
+        WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
+             &                   " of 2nd order Elect. Field")') iter0 + 1
      elseif (irr0 == - 2) then
         WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
              &                   " of Elect. Field")') iter0 + 1
+     !! elseif (irr0 == - 2) then
+     !!   WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
+     !!   close (unit = iunrec, status = 'keep')
      elseif (irr0 > 0) then
         if (iter0 /= 0) then
            WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &

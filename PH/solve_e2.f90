@@ -84,10 +84,10 @@ subroutine solve_e2
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
   allocate (aux1(  nrxxs))
-  if ( irr0.eq.-3 .and. iter0.eq.0) then
+  if ( irr0 == -3 .and. iter0 == 0) then
      close (unit = iunrec, status = 'keep')
   end if
-  if (irr0.eq.-3 .and. iter0.ne.0) then
+  if ( irr0 == -3 .and. iter0 == 0) then
      if (okvan) read(iunrec) int3
      read (iunrec) dr2, dvscfin
      close (unit = iunrec, status = 'keep')
@@ -254,7 +254,7 @@ subroutine solve_e2
      if (convt.or.tcpu.gt.time_max) goto 155
 
   enddo
-155 continue
+155 iter0=0
   if (tcpu.gt.time_max) then
      write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
           time_max

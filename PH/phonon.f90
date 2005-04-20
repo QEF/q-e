@@ -298,9 +298,9 @@ PROGRAM phonon
            !
         END IF
         !
+        IF ( lraman .OR. elop ) CALL raman()
+        !
      END IF
-     !
-     IF ( lraman .OR. elop ) CALL raman()
      !
      IF ( trans ) THEN
         !

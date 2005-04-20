@@ -1155,7 +1155,8 @@ variable to the number of CPUs installed and thus gives
 the impression of a much better performance, as the CPUu time
 is only measured for the master thread (info from Axel Kohlmeyer).
 
-The I/O libraries used by the Intel compiler ifc are incompatible 
+The I/O libraries used by older versions of the Intel compiler 
+are incompatible 
 with those called by most precompiled BLAS/LAPACK libraries 
 (including ATLAS): you get error messages at linking stage.
 A workaround is to recompile BLAS/LAPACK with ifc, or (better) to
@@ -1183,6 +1184,11 @@ A workaround is available: see
 \htmladdnormallink%
 {\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}}%
 {http://newweb.ices.utexas.edu/misc/ctype.c}.
+
+There is a well known problem with version 8 of Intel compiler and 
+pthreads (that are used both in Debian Woody and Sarge) that causes
+"segmentation fault" errors (info from Lucas Fernandez Seivane). 
+Version 7 does not have this problem.
 
 \paragraph{AMD CPUs, Intel Itanium}
 
