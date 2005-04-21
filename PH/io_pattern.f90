@@ -35,12 +35,12 @@ SUBROUTINE io_pattern (fildrho,nirr,npert,u,iflag)
   CALL seqopn(iunit,filname,'formatted',exst)
 
   IF (iflag.GT.0) THEN
-     WRITE( stdout,'(5x,"(WRITING PATTERNS TO FILE ',a)") TRIM(filname)
+     WRITE( stdout,'(5x,"(WRITING PATTERNS TO FILE ",a)') TRIM(filname)
      WRITE(iunit,*) nirr
      WRITE(iunit,*) (npert(i),i=1,nirr)
      WRITE(iunit,*) u
   ELSE
-     WRITE( stdout,'(5x,"(REAIDNG PATTERNS FROM FILE ',a)") TRIM(filname)
+     WRITE( stdout,'(5x,"(REAIDNG PATTERNS FROM FILE ",a)') TRIM(filname)
      READ(iunit,*) nirr
      READ(iunit,*) (npert(i),i=1,nirr)
      READ(iunit,*) u
