@@ -12,6 +12,7 @@ subroutine print_clock_ph
   USE io_global,  ONLY : stdout
   USE uspp, only: okvan
   USE control_ph
+  USE ramanm, ONLY: lraman, elop
   USE nlcc_ph, ONLY: nlcc_any
   implicit none
   !
@@ -56,6 +57,14 @@ subroutine print_clock_ph
      call print_clock ('add_dkmds5')
      call print_clock ('add_dkmds6')
 #endif
+     if (lraman.OR.elop) then 
+        WRITE( stdout, * )
+        WRITE( stdout,  * ) '    RAMAN COEFFICIENTS, THIRD-ORDER CHI:'
+        call print_clock ('dhdrhopsi')
+        if (elop) call print_clock ('el_opt')
+     endif
+     if (lraman) call print_clock ('dvpsi_e2')
+     if (lraman) call print_clock ('solve_e2')
   endif
   if(trans) then 
      WRITE( stdout, * )

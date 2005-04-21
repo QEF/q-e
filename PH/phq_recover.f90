@@ -24,7 +24,7 @@ subroutine phq_recover
   
   implicit none
 
-  integer :: ifat0 (nat), comp_irr0 (3 * nat), irr, na
+  integer :: irr, na
   ! dummy variable to read
   ! dummy variable to read
   ! counter on representations
@@ -39,8 +39,8 @@ subroutine phq_recover
      ! irr: state of the calculation
      ! irr > 0 irrep up to irr done
      ! irr = 0 nothing done
-     ! irr =-1 Raman
-     ! irr =-2 Electric Field
+     ! irr =-10 to -19 Raman
+     ! irr =-20 Electric Field
      !
      read (iunrec) irr0
      !
@@ -61,14 +61,14 @@ subroutine phq_recover
         all_comp = ( nat_todo == nat )
      end if
 
-     if (irr0 == - 2) then
+     if (irr0 == -20) then
         WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
-     elseif (irr0 == - 1) then
+     elseif (irr0 > -20 .AND. irr0 <= -10) then
         WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
-     elseif (irr0 > 0) then
+     elseif (irr0 > 0 .AND. irr0 <= nirr) then
         WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
      else
-        call errore ('phq_recover', 'wrong irr0', 1)
+        call errore ('phq_recover', 'wrong restart file', 1)
      endif
   else
      close (unit = iunrec, status = 'delete')

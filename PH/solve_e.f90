@@ -87,7 +87,7 @@ subroutine solve_e
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx, nbnd))    
   allocate (eprec(nbnd))
-  if (irr0 == -2) then
+  if (irr0 == -20) then
      ! restarting in Electric field calculation
      read (iunrec) iter0, convt, dr2
      read (iunrec) dvscfin
@@ -100,7 +100,7 @@ subroutine solve_e
            enddo
         enddo
      endif
-  else if (irr0 == -1) then
+  else if (irr0 > -20 .AND. irr0 <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
   else
@@ -339,12 +339,11 @@ subroutine solve_e
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation
-     ! irr > 0 irrep up to irr done
-     ! irr = 0 nothing done
-     ! irr =-1 Raman
-     ! irr =-2 Electric Field
+     ! irr=-20 Electric Field
      !
-     write (iunrec) -2
+     irr = -20
+     !
+     write (iunrec) irr
      !
      ! partially calculated results
      !

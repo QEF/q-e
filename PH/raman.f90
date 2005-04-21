@@ -25,12 +25,13 @@ subroutine raman
   !
   ! Computes Pc [DH,D\rho] |psi>
   !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  write (6,'(/,5x,''Computing Pc [DH,D\rho] |psi> '')')
-  call dhdrhopsi
-!  write(*,*) ' >>>>>>>>>>>>>>>>>>>> WARNING  <<<<<<<<<<<<<<<<<<<<<<<<'
-!  write(*,*) ' >>>>>>>>>>>>>>>  SKIPPING dhdrhodpsi <<<<<<<<<<<<<<<<<'
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  IF (irr0 == -10) THEN
+     ! restart from a previous calculation
+     write (6,'(/,5x,''Skipping computation of Pc [DH,D\rho] |psi> '')')
+  ELSE
+     write (6,'(/,5x,''Computing Pc [DH,D\rho] |psi> '')')
+     call dhdrhopsi
+  END IF
   !
   ! Computes the electro-optic tensor
   !

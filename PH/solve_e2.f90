@@ -74,7 +74,7 @@ subroutine solve_e2
   if (lsda) call errore ('solve_e2', ' LSDA not implemented', 1)
   if (okvan) call errore ('solve_e2', ' okvan is true....', 1)
 
-  call start_clock('solve_e')
+  call start_clock('solve_e2')
   allocate (dvscfin( nrxx, nspin, 6))
   if (doublegrid) then
      allocate (dvscfins(  nrxxs, nspin, 6))
@@ -84,7 +84,7 @@ subroutine solve_e2
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
   allocate (aux1(  nrxxs))
-  if (irr0 == -1) then
+  if (irr0 == -10) then
      ! restarting in Raman
      read (iunrec) iter0, convt, dr2
      read (iunrec) dvscfin
@@ -242,12 +242,10 @@ subroutine solve_e2
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation
-     ! irr > 0 irrep up to irr done
-     ! irr = 0 nothing done
-     ! irr =-1 Raman
-     ! irr =-2 Electric Field
+     ! irr=-10  to -19 Raman
+     irr = -10
      !
-     write (iunrec) -1
+     write (iunrec) irr
      !
      ! partially calculated results
      !
@@ -280,7 +278,7 @@ subroutine solve_e2
   deallocate (dbecsum )
   deallocate (aux1 )
 
-  call stop_clock('solve_e')
+  call stop_clock('solve_e2')
 
   return 
 end subroutine solve_e2

@@ -510,10 +510,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation
-     ! irr > 0 irrep up to irr done
-     ! irr = 0 nothing done
-     ! irr =-1 Raman
-     ! irr =-2 Electric Field
+     ! irr > 0: irrep up to irr done
      !
      write (iunrec) irr
      !

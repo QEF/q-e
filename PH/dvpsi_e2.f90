@@ -56,7 +56,8 @@ subroutine dvpsi_e2
   ! working space              
   ! weight in k-point summation
   ! the scalar product function
-
+  !
+  call start_clock('dvpsi_e2')
   !
   ! First, calculates the second derivative of the charge-density
   ! -only the part that does not depend on the self-consistent cycle-
@@ -236,6 +237,7 @@ subroutine dvpsi_e2
   deallocate (auxs2)
 
   deallocate (aux6s)
+  call stop_clock('dvpsi_e2')
 
   return
 end subroutine dvpsi_e2

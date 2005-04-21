@@ -103,6 +103,7 @@ subroutine dhdrhopsi
   allocate (ps2       (nbnd,nbnd,3)   )
   allocate (becp1_sw  (nkb,nbnd)      )
 
+  call start_clock('dhdrhopsi')
   write (6,'(/5x,''Derivative coefficient:'',f10.6)') dek
   itdba = CMPLX (0.d0, 0.5d0 / (dek * tpiba))
   npwq = npw
@@ -313,5 +314,6 @@ subroutine dhdrhopsi
 9010 format (5x,'Non-scf Du_k:',i4,' ,thr. = ',1pe9.2, &
         &   ', avg iteration # =',0pf5.1 )
 
+  call stop_clock('dhdrhopsi')
   return
 end subroutine dhdrhopsi

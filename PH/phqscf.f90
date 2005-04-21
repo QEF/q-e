@@ -91,21 +91,18 @@ SUBROUTINE phqscf
            CALL stop_ph (.FALSE.)
         ENDIF
         !
+        tcpu = get_clock ('PHONON')
+        ! if (tcpu > time_max) then
+        ! temporary disabled: recover does not work if program stop here
+           !
+           ! WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
+           !      tcpu, time_max
+           ! CALL stop_ph (.FALSE.)
+        ! ENDIF
+        !
         !   We test here if we have done the appropriate number of
         !   representation
         !
-        tcpu = get_clock ('PHONON')
-        IF (tcpu > 1000000000) THEN
-           !
-           !            if (tcpu.gt.time_max) then
-           ! temporary fix: recover does not work if program stop here
-           !
-           WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
-                tcpu, time_max
-           CALL stop_ph (.FALSE.)
-
-        ENDIF
-
         IF (irrc >= maxirr) THEN
            WRITE( stdout, '(/,5x,"Stopping at Representation #",i6)') irr
 #ifdef DEBUG

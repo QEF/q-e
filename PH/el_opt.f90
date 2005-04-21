@@ -34,6 +34,7 @@ subroutine el_opt
   complex(kind=DP) :: ps(3, 6), ZDOTC, tmp
   complex(kind=DP) , allocatable :: chif(:,:,:), depsi (:,:,:), aux3 (:,:)
 
+  call start_clock('el_opt')
   elop_(:,:,:,:) = 0.d0
 
   allocate (chif      (npwx,nbnd,6) )
@@ -202,6 +203,7 @@ subroutine el_opt
         write(6,'(10x)')
      enddo
   enddo
+  call stop_clock('el_opt')
   return
 end subroutine el_opt
 
