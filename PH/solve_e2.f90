@@ -50,7 +50,7 @@ subroutine solve_e2
   logical :: exst
   ! used to open the recover file
 
-  integer :: kter, ipol, ibnd, iter, ik, is, ig, iig, irr, ir, nrec, ios
+  integer :: kter, iter0, ipol, ibnd, iter, ik, is, ig, iig, irr, ir, nrec, ios
   ! counter on iterations
   ! counter on perturbations
   ! counter on bands
@@ -84,12 +84,11 @@ subroutine solve_e2
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
   allocate (aux1(  nrxxs))
-  if ( irr0 == -3 .and. iter0 == 0) then
-     close (unit = iunrec, status = 'keep')
-  end if
-  if ( irr0 == -3 .and. iter0 == 0) then
-     if (okvan) read(iunrec) int3
-     read (iunrec) dr2, dvscfin
+  if (irr0 == -1) then
+     ! restarting in Raman
+     read (iunrec) iter0, convt, dr2
+     read (iunrec) dvscfin
+     if (okvan) read (iunrec) int3 
      close (unit = iunrec, status = 'keep')
      if (doublegrid) then
         do is = 1, nspin
@@ -99,8 +98,13 @@ subroutine solve_e2
            enddo
         enddo
      end if
+  else
+     iter0 = 0
+     convt = .false.
   end if
-
+  !
+  if (convt) go to 155
+  !
   if (degauss.ne.0.d0 .or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
   !
@@ -116,7 +120,6 @@ subroutine solve_e2
 
      iter = kter + iter0
      avg_iter = 0.d0
-     convt = .true.
 
      dvscfout (:,:,:) = (0.d0, 0.d0)
      dbecsum (:,:) = (0.d0, 0.d0)
@@ -237,24 +240,35 @@ subroutine solve_e2
 #endif
 
      call seqopn (iunrec, 'recover', 'unformatted', exst)
-     irr = -3
-
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
-          zstarue0
+     !
+     ! irr: state of the calculation
+     ! irr > 0 irrep up to irr done
+     ! irr = 0 nothing done
+     ! irr =-1 Raman
+     ! irr =-2 Electric Field
+     !
+     write (iunrec) -1
+     !
+     ! partially calculated results
+     !
+     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     !
+     ! info on current iteration (iter=0 potential mixing not available)
+     !
      if (reduce_io) then
-        write(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
+        write (iunrec) 0, convt, dr2
      else
-        write(iunrec) irr, iter, convt, done_irr, comp_irr, ifat
-        if (okvan) write(iunrec) int3
-        write(iunrec) dr2, dvscfin
-     endif
-
+        write (iunrec) iter, convt, dr2
+     end if
+     write (iunrec) dvscfin
+     if (okvan) write (iunrec) int3
      close (unit = iunrec, status = 'keep')
+
      tcpu = get_clock ('PHONON')
      if (convt.or.tcpu.gt.time_max) goto 155
 
   enddo
-155 iter0=0
+155 continue
   if (tcpu.gt.time_max) then
      write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
           time_max

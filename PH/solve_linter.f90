@@ -33,7 +33,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   use pwcom
   USE uspp_param,           ONLY : nhm
 !  use phcom
-  USE control_ph,           ONLY : iter0, niter_ph, nmix_ph, elph, tr2_ph, &
+  USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
@@ -91,6 +91,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              lmetq0        ! true if xq=(0,0,0) in a metal
 
   integer :: kter,       & ! counter on iterations
+             iter0,      & ! starting iteration
              ipert,      & ! counter on perturbations
              ibnd, jbnd, & ! counter on bands
              iter,       & ! counter on iterations
@@ -128,12 +129,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (h_diag ( npwx , nbnd))    
   allocate (eprec ( nbnd))
   !
-  !    if this is a recover run
-  !
-  if (iter0.ne.0) then
+  if (irr0 > 0) then
+     ! restart from Phonon calculation
+     read (iunrec) iter0, convt, dr2
+     read (iunrec) dvscfin
      if (okvan) read (iunrec) int3
-     read (iunrec) dr2, dvscfin
      close (unit = iunrec, status = 'keep')
+     ! reset irr0 to avoid trouble at next irrep
+     irr0 = 0
      if (doublegrid) then
         do is = 1, nspin
            do ipert = 1, npe
@@ -141,6 +144,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            enddo
         enddo
      endif
+  else
+    iter0 = 0
+    convt = .false.
   endif
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
@@ -170,7 +176,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   do kter = 1, niter_ph
      iter = kter + iter0
 
-     convt = .true.
      ltaver = 0
 
      lintercall = 0
@@ -503,19 +508,32 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
      call start_clock ('write_rec')
      call seqopn (iunrec, 'recover', 'unformatted', exst)
-     if (okvan) write (iunrec) int1, int2
-
+     !
+     ! irr: state of the calculation
+     ! irr > 0 irrep up to irr done
+     ! irr = 0 nothing done
+     ! irr =-1 Raman
+     ! irr =-2 Electric Field
+     !
+     write (iunrec) irr
+     !
+     ! partially calculated results
+     !
      write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     !
+     ! info on what to do with various irreps (only if irr > 0)
+     !
+     write (iunrec) done_irr, comp_irr, ifat
+     !
+     ! info on current iteration (iter=0 potential mixing not available)
+     !
      if (reduce_io) then
-        write (iunrec) irr, 0, convt, done_irr, comp_irr, ifat
+        write (iunrec) 0, convt, dr2
      else
-        !
-        ! save recover information for current iteration, if available
-        !
-        write (iunrec) irr, iter, convt, done_irr, comp_irr, ifat
-        if (okvan) write (iunrec) int3
-        write (iunrec) dr2, dvscfin
+        write (iunrec) iter, convt, dr2
      endif
+     write (iunrec) dvscfin
+     if (okvan) write (iunrec) int3
      close (unit = iunrec, status = 'keep')
 
      call stop_clock ('write_rec')

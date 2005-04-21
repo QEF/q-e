@@ -238,12 +238,11 @@ MODULE control_ph
   !
   INTEGER, PARAMETER :: maxter = 100
   ! maximum number of iterations
-  INTEGER :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, iter0, maxirr
+  INTEGER :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, maxirr
   ! maximum number of iterations (read from input)
   ! mixing type
   ! occupated bands in metals
   ! starting representation
-  ! starting iteration
   ! maximum number of representation
   real(kind = dp) :: tr2_ph
   ! threshold for phonon calculation

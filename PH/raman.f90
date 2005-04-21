@@ -26,7 +26,7 @@ subroutine raman
   ! Computes Pc [DH,D\rho] |psi>
   !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!  write (6,'(/,5x,''Computing Pc [DH,D\rho] |psi> '')')
+  write (6,'(/,5x,''Computing Pc [DH,D\rho] |psi> '')')
   call dhdrhopsi
 !  write(*,*) ' >>>>>>>>>>>>>>>>>>>> WARNING  <<<<<<<<<<<<<<<<<<<<<<<<'
 !  write(*,*) ' >>>>>>>>>>>>>>>  SKIPPING dhdrhodpsi <<<<<<<<<<<<<<<<<'

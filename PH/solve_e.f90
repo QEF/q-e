@@ -57,7 +57,7 @@ subroutine solve_e
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
-  integer :: kter, ipol, ibnd, jbnd, iter, lter, &
+  integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
        ik, ig, irr, ir, is, nrec, ios
   ! counters
   integer :: ltaver, lintercall
@@ -87,9 +87,11 @@ subroutine solve_e
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx, nbnd))    
   allocate (eprec(nbnd))
-  if (iter0.ne.0) then
-     if (okvan) read(iunrec) int3
-     read (iunrec) dr2, dvscfin
+  if (irr0 == -2) then
+     ! restarting in Electric field calculation
+     read (iunrec) iter0, convt, dr2
+     read (iunrec) dvscfin
+     if (okvan) read (iunrec) int3
      close (unit = iunrec, status = 'keep')
      if (doublegrid) then
         do is=1,nspin
@@ -98,7 +100,21 @@ subroutine solve_e
            enddo
         enddo
      endif
+  else if (irr0 == -1) then
+     ! restarting in Raman: proceed
+     convt = .true.
+  else
+     convt = .false.
+     iter0 = 0
   endif
+  !
+  IF (ionode .AND. fildrho /= ' ') THEN
+     INQUIRE (UNIT = iudrho, OPENED = exst)
+     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
+  end if
+  !
+  if (convt) go to 155
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
@@ -111,18 +127,11 @@ subroutine solve_e
      flmixdpot = 'flmixdpot'
   endif
   !
-  IF (ionode .AND. fildrho /= ' ') THEN
-     INQUIRE (UNIT = iudrho, OPENED = exst)
-     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
-  end if
-  !
   !   The outside loop is over the iterations
   !
   do kter = 1, niter_ph
 
      iter = kter + iter0
-     convt = .true.
      ltaver = 0
      lintercall = 0
 
@@ -328,26 +337,36 @@ subroutine solve_e
 #endif
 
      call seqopn (iunrec, 'recover', 'unformatted', exst)
-     irr = - 2
-
-     if (okvan) write (iunrec) int1, int2
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
-          zstarue0
+     !
+     ! irr: state of the calculation
+     ! irr > 0 irrep up to irr done
+     ! irr = 0 nothing done
+     ! irr =-1 Raman
+     ! irr =-2 Electric Field
+     !
+     write (iunrec) -2
+     !
+     ! partially calculated results
+     !
+     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     !
+     ! info on current iteration (iter=0 if potential mixing not available)
+     !
      if (reduce_io) then
-        write(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
+        write (iunrec) 0, convt, dr2
      else
-        write(iunrec) irr, iter, convt, done_irr, comp_irr, ifat
-        if (okvan) write(iunrec) int3
-        write(iunrec) dr2, dvscfin
-     endif
+        write (iunrec) iter, convt, dr2
+     end if
+     write (iunrec) dvscfin
+     if (okvan) write (iunrec) int3
 
      close (unit = iunrec, status = 'keep')
      tcpu = get_clock ('PHONON')
-     if (convt.or.tcpu.gt.time_max) goto 155
+     if (convt .or. tcpu > time_max) goto 155
 
   enddo
-155 iter0=0
-  if (tcpu.gt.time_max) then
+155 continue
+  if (tcpu > time_max) then
      WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
           time_max
      call stop_ph (.false.)

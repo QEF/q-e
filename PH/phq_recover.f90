@@ -33,70 +33,40 @@ subroutine phq_recover
   iunrec = 99
   call seqopn (iunrec, 'recover', 'unformatted', recover)
   irr0 = 0
-  iter0 = 0
   zstarue0 (:,:) = (0.d0, 0.d0)
   if (recover) then
-     if (okvan) read (iunrec) int1, int2
-
+     !
+     ! irr: state of the calculation
+     ! irr > 0 irrep up to irr done
+     ! irr = 0 nothing done
+     ! irr =-1 Raman
+     ! irr =-2 Electric Field
+     !
+     read (iunrec) irr0
+     !
+     ! partially calculated results
+     !
      read (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
           zstarue0
-
-     read (iunrec) irr0, iter0, convt, done_irr, comp_irr0, ifat0
-     if (iter0 == 0 .and. modenum .ne. 0) then
-        call errore ('recover', 'recover not possible', 1)
-        dyn = dyn00
-        do irr = 1, nirr
-           done_irr (irr) = 0
-        enddo
-     endif
-     if (iter0 /= 0) then
-        !
-        !    If iter0.ne.0 we must recover also the irreducible representations
-        !    to do and atoms
-        !
-        do irr = 1, nirr
-           comp_irr (irr) = comp_irr0 (irr)
-        enddo
+     !
+     if (irr0 > 0) then
+        read (iunrec) done_irr, comp_irr, ifat
         nat_todo = 0
         do na = 1, nat
-           ifat (na) = ifat0 (na)
            if (ifat (na) == 1) then
               nat_todo = nat_todo + 1
               atomo (nat_todo) = na
            endif
         enddo
         all_comp = ( nat_todo == nat )
-     endif
+     end if
 
-     if (irr0 == - 3) then
-        WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
-             &                   " of 2nd order Elect. Field")') iter0 + 1
-     elseif (irr0 == - 2) then
-        WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
-             &                   " of Elect. Field")') iter0 + 1
-     !! elseif (irr0 == - 2) then
-     !!   WRITE( stdout, '(/,4x," Reading only int1 and int2" )')
-     !!   close (unit = iunrec, status = 'keep')
+     if (irr0 == - 2) then
+        WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
+     elseif (irr0 == - 1) then
+        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
      elseif (irr0 > 0) then
-        if (iter0 /= 0) then
-           WRITE( stdout, '(/,4x," Restart from Iteration #",i5, &
-                &             " of Representation #",i5)') iter0 + 1, irr0
-        else
-           if (irr0 == nirr) then
-              WRITE( stdout, '(/,4x," From recover: Dynamical ", &
-                   &       " Matrix calculation ")')
-           else
-              do irr = 1, nirr
-                 if ( (comp_irr (irr) == 1) .and. (done_irr (irr) == 0) ) then
-                    WRITE( stdout, '(/,4x," Restart from first iteration", &
-                         &      " of Representation # ",i5)') irr
-                    goto 1000
-                 endif
-              enddo
-1000          continue
-           endif
-           close (unit = iunrec, status = 'keep')
-        endif
+        WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
      else
         call errore ('phq_recover', 'wrong irr0', 1)
      endif

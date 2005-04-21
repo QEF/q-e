@@ -48,12 +48,8 @@ SUBROUTINE phqscf
   !    of the wavefunctions
   !
   irrc = 0
-  IF (irr0 < 0) THEN
-     irr0 = 0
-     iter0= 0
-  ENDIF
 
- ALLOCATE (drhoscf( nrxx , nspin, npertx))    
+  ALLOCATE (drhoscf( nrxx , nspin, npertx))    
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
         irrc = irrc + 1
@@ -90,7 +86,6 @@ SUBROUTINE phqscf
         IF (convt) THEN
            WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
            done_irr (irr) = 1
-           iter0 = 0
         ELSE
            WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
            CALL stop_ph (.FALSE.)
@@ -99,14 +94,6 @@ SUBROUTINE phqscf
         !   We test here if we have done the appropriate number of
         !   representation
         !
-        CALL seqopn (iunrec, 'recover', 'unformatted', exst)
-        IF (okvan) WRITE (iunrec) int1, int2
-
-        WRITE(iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
-
-        WRITE(iunrec) irr, 0, convt, done_irr, comp_irr, ifat
-
-        CLOSE (unit = iunrec, status = 'keep')
         tcpu = get_clock ('PHONON')
         IF (tcpu > 1000000000) THEN
            !
