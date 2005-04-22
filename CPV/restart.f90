@@ -224,11 +224,10 @@
 
 
    SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, cdesc, occ, &
-     atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
-     ht_m, ht_0, rho, desc, vpot, gv, kp)
+     atoms_0, atoms_m, acc, taui, cdmi, &
+     ht_m, ht_0, rho, desc, vpot, kp)
                                                                         
         use electrons_module, only: nspin
-        use cp_types, only: recvecs
         USE cell_module, only: boxdimensions, r_to_s
         USE brillouin, only: kpoints
         USE wave_types, ONLY: wave_descriptor
@@ -243,15 +242,15 @@
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_writefile, cp_write_wfc
+        USE reciprocal_space_mesh, ONLY: b1, b2, b3
                                                                         
         IMPLICIT NONE 
  
-        INTEGER, INTENT(IN) :: nfi, ibrav
+        INTEGER, INTENT(IN) :: nfi
         COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(IN) :: occ(:,:,:)
         TYPE (kpoints), INTENT(IN) :: kp 
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
-        TYPE (recvecs), INTENT(IN) :: gv
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
         REAL(dbl), INTENT(IN) :: rho(:,:,:,:)
         TYPE (charge_descriptor), INTENT(IN) :: desc
@@ -259,7 +258,6 @@
         REAL(dbl), INTENT(INOUT) :: vpot(:,:,:,:)
                                                                         
         REAL(dbl), INTENT(IN) :: taui(:,:)
-        REAL(dbl), INTENT(IN) :: celldm(:)
         REAL(dbl), INTENT(IN) :: acc(:), cdmi(:) 
         REAL(dbl), INTENT(IN) :: trutime
 
@@ -284,7 +282,7 @@
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda, gv%b1, gv%b2, gv%b3, &
+          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda, b1, b2, b3, &
           xnhe0, xnhem, vnhe, ekincm, mat_z )
 
         DEALLOCATE( lambda )
@@ -308,11 +306,10 @@
 !=----------------------------------------------------------------------------=!
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
-          c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, ibrav, celldm, &
-          ht_m, ht_0, rho, desc, vpot, gv, kp)
+          c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, &
+          ht_m, ht_0, rho, desc, vpot, kp)
                                                                         
         use electrons_base, only: nbsp
-        use cp_types, ONLY: recvecs
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
         USE brillouin, only: kpoints
         use parameters, only: npkx, nsx
@@ -337,16 +334,15 @@
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_readfile, cp_read_wfc
+        USE reciprocal_space_mesh, ONLY: b1, b2, b3
  
         IMPLICIT NONE 
  
-        INTEGER, INTENT(INOUT) :: ibrav
         INTEGER, INTENT(OUT) :: nfi
         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(INOUT) :: occ(:,:,:)
         TYPE (kpoints), INTENT(INOUT) :: kp 
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
-        TYPE (recvecs), INTENT(INOUT) :: gv
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
         REAL(dbl), INTENT(INOUT) :: rho(:,:,:,:)
         TYPE (charge_descriptor), INTENT(IN) :: desc
@@ -354,7 +350,6 @@
         REAL(dbl), INTENT(INOUT) :: vpot(:,:,:,:)
                                                                         
         REAL(dbl), INTENT(OUT) :: taui(:,:)
-        REAL(dbl), INTENT(INOUT) :: celldm(:)
         REAL(dbl), INTENT(OUT) :: acc(:), cdmi(:) 
         REAL(dbl), INTENT(OUT) :: trutime
 
@@ -378,8 +373,8 @@
         CALL cp_readfile( ndr, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , gv%b1, gv%b2,   &
-          gv%b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens )
+          xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , b1, b2,   &
+          b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens )
 
         DEALLOCATE( lambda_ )
 

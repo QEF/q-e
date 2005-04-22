@@ -58,25 +58,27 @@
 !  BEGIN manual
 
       SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, &
-        gv, fnl, ps, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
+        fnl, ps, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
 
 !  this routine computes stress tensor from dft total energy
 !  ----------------------------------------------
 !  END manual
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs, pseudo
-      USE cell_module, ONLY: boxdimensions
-      USE energies, ONLY: dft_energy_type
-      USE ions_base, ONLY: nsp
-      USE mp_global, ONLY: mpime, nproc, group
-      USE mp, ONLY: mp_sum
-      USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
-      USE cell_base, ONLY: tpiba2
-      USE io_global, ONLY: ionode
+      USE cp_types,             ONLY: pseudo
+      USE cell_module,          ONLY: boxdimensions
+      USE energies,             ONLY: dft_energy_type
+      USE ions_base,            ONLY: nsp
+      USE mp_global,            ONLY: mpime, nproc, group
+      USE mp,                   ONLY: mp_sum
+      USE wave_types,           ONLY: wave_descriptor
+      USE pseudo_projector,     ONLY: projector
+      USE cell_base,            ONLY: tpiba2
+      USE io_global,            ONLY: ionode
       USE exchange_correlation, ONLY: stress_xc
-      USE control_flags, ONLY: iprsta
+      USE control_flags,        ONLY: iprsta
+      USE reciprocal_vectors,   ONLY: gx
+      USE gvecp,                ONLY: ngm
 
       IMPLICIT NONE
 
@@ -87,7 +89,6 @@
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl), INTENT(IN) :: occ(:,:,:)
       TYPE (pseudo), INTENT(IN) :: ps
-      TYPE (recvecs), INTENT(IN) :: gv
       COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
@@ -118,10 +119,10 @@
 
 ! ... compute G_alpha * G_beta
 
-      ALLOCATE(gagx_l(6,gv%ng_l))
+      ALLOCATE(gagx_l(6,ngm))
       DO k = 1, 6
-        DO ig = 1, gv%ng_l
-          gagx_l(k,ig) = gv%gx_l(alpha(k),ig) * gv%gx_l(beta(k),ig) * tpiba2
+        DO ig = 1, ngm
+          gagx_l(k,ig) = gx(alpha(k),ig) * gx(beta(k),ig) * tpiba2
         END DO
       END DO
 
@@ -129,17 +130,17 @@
 
 ! ... compute kinetic energy contribution
 
-      CALL stress_kin(dekin, c0, cdesc, occ, gagx_l, gv)
+      CALL stress_kin(dekin, c0, cdesc, occ, gagx_l)
 
       IF(timing) s2 = cclock()
 
 ! ... compute hartree energy contribution
-      CALL stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, gv, box)
+      CALL stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, box)
 
       IF(timing) s3 = cclock()
 
 ! ... compute exchange & correlation energy contribution
-      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, gv, &
+      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, &
         ps%tnlcc, ps%rhocp, box)
 
       IF(timing) s4 = cclock()
@@ -151,12 +152,12 @@
 
       IF(timing) s5 = cclock()
 
-      CALL pseudo_stress(deps, edft%epseu, gv, gagx_l, sfac, ps%dvps, rhoeg, box)
+      CALL pseudo_stress(deps, edft%epseu, gagx_l, sfac, ps%dvps, rhoeg, box)
 
       IF(timing) s6 = cclock()
 
 ! ... compute enl (non-local) contribution
-      CALL stress_nl(denl, gagx_l, gv, c0, cdesc, occ, eigr, ps%wsg,fnl, &
+      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, ps%wsg,fnl, &
         ps%wnl(:,:,:,1), edft%enl)
 
       IF(timing) s7 = cclock()
@@ -231,7 +232,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE stress_nl(denl, gagx_l, gv, c0, cdesc, occ, eigr, wsg, fnl, wnl, enl)
+      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, wsg, fnl, wnl, enl)
 
 !  this routine computes nl part of the stress tensor from dft total energy
 !  ----------------------------------------------
@@ -247,13 +248,13 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE cell_base, ONLY: tpiba2
-      USE cp_types, ONLY: recvecs
       USE control_flags, ONLY: force_pairing
+      USE reciprocal_vectors, ONLY: gstart, gzero, g
+      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (recvecs), INTENT(IN) :: gv
       REAL(dbl), INTENT(IN) :: occ(:,:,:)
       COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
@@ -297,17 +298,17 @@
       me = mpime + 1
       nspin = cdesc%nspin
 
-      IF(gv%gzero) THEN
+      IF(gzero) THEN
         denl = - enl * dalbe
       ELSE
         denl = 0.0_dbl
       END IF
   
-      ngw = gv%ngw_l
+      ngw = cdesc%ngwl
       
 ! ... initialize array wnla
       ALLOCATE(wnla(ngw, lnlx, nsp))
-      CALL nlin_stress(wnla,gv)
+      CALL nlin_stress(wnla)
 
       ALLOCATE(gwork(ngw))
       ALLOCATE(gwtmp(ngw))
@@ -328,37 +329,37 @@
         IF (ts) THEN
           igh=igh+1
           gspha(1) = 0.0d0
-          CALL spharm(gspha, gv%kgx_l(:,:,1), gv%khg_l(:,1), ngw, 0, 0)
-          DO ig = gv%gstart, ngw
-            gspha(ig) = gspha(ig) / (gv%hg_l(ig)*tpiba2)
+          CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 0, 0)
+          DO ig = gstart, ngw
+            gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
           END DO
           DO kk = 1, 6
             fnls     = 0.0d0
             iss = 1
             gwork(1) = 0.0d0
-            DO ig = gv%gstart, ngw
+            DO ig = gstart, ngw
                gwork(ig) =  gagx_l(kk,ig) * gspha(ig)
             END DO
             DO is = 1, nspnl
               ll = l2ind(1,is)
               IF(ll.GT.0) THEN
 
-                ALLOCATE(auxc(gv%ngw_l,na(is)))
+                ALLOCATE(auxc(ngw,na(is)))
 
                 gwtmp(1) = 0.0d0
-                DO ig = gv%gstart, gv%ngw_l
+                DO ig = gstart, ngw
                   gwtmp(ig) = gwork(ig) * (wnl(ig,ll,is)-wnla(ig,ll,is))
                 END DO
 
                 DO ia = 1, na(is)
                   auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     auxc(ig,ia) = csign(0) * gwtmp(ig) * eigr(ig,ia+iss-1)
                   END DO
                 END DO
     
-                CALL DGEMM( 'T', 'N', na(is), nx, 2*gv%ngw_l, 1.0d0, auxc(1,1), &
-                  2*gv%ngw_l, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(iss,1), nsanl )
+                CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, auxc(1,1), &
+                  2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(iss,1), nsanl )
 
                 DEALLOCATE(auxc)
 
@@ -386,9 +387,9 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gv%kgx_l(:,:,1), gv%khg_l(:,1), ngw, 1, m-2)
-            DO ig = gv%gstart, ngw
-              gspha(ig) = gspha(ig) / (gv%hg_l(ig)*tpiba2)
+            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 1, m-2)
+            DO ig = gstart, ngw
+              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
 
             DO kk=1,6
@@ -396,7 +397,7 @@
               fnls = 0.0d0
               iss = 1
               gwork(1) = 0.0d0
-              DO ig=gv%gstart,gv%ngw_l
+              DO ig = gstart, ngw
                 gwork(ig)= gagx_l(kk,ig) * gspha(ig)
               END DO
 
@@ -404,22 +405,22 @@
 
                 ll = l2ind(2,is)
                 IF(ll.GT.0) THEN
-                  ALLOCATE(auxc(gv%ngw_l,na(is)))
+                  ALLOCATE(auxc(ngw,na(is)))
 
                   gwtmp(1) = 0.0d0
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     gwtmp(ig) = gwork(ig) * ( 3.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
                   END DO
 
                   DO ia = 1, na(is)
                     auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gv%gstart, gv%ngw_l
+                    DO ig = gstart, ngw
                       auxc(ig,ia) = csign(1) * gwtmp(ig) * eigr(ig,ia+iss-1)
                     END DO
                   END DO
 
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*gv%ngw_l, 1.0d0, &
-                    auxc(1,1),2*gv%ngw_l, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
+                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
+                    auxc(1,1),2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
                     0.0d0, fnls(iss,1), nsanl )
 
                   DEALLOCATE(auxc)
@@ -461,9 +462,9 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gv%kgx_l(:,:,1), gv%khg_l(:,1), ngw, 2, m-3)
-            DO ig = gv%gstart, ngw
-              gspha(ig) = gspha(ig) / (gv%hg_l(ig)*tpiba2)
+            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 2, m-3)
+            DO ig = gstart, ngw
+              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
 
             DO kk=1,6
@@ -471,7 +472,7 @@
               fnls = 0.0d0
               iss = 1
               gwork(1) = 0.0d0
-              DO ig=gv%gstart,gv%ngw_l
+              DO ig=gstart,ngw
                 gwork(ig)= gagx_l(kk,ig) * gspha(ig)
               END DO
 
@@ -479,26 +480,26 @@
 
                 ll = l2ind(3,is)
                 IF(ll.GT.0) THEN
-                  ALLOCATE(auxc(gv%ngw_l,na(is)))
+                  ALLOCATE(auxc(ngw,na(is)))
   
                   gwtmp(1) = 0.0d0
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     gwtmp(ig) = gwork(ig) * ( 5.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
                   END DO
 
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm(kk,m) * wnl(ig,ll,is)
                   END DO
 
                   DO ia= 1 , na(is)
                     auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gv%gstart, gv%ngw_l
+                    DO ig = gstart, ngw
                       auxc(ig,ia) = csign(2) * gwtmp(ig) * eigr(ig,ia+iss-1)
                     END DO
                   END DO
 
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*gv%ngw_l, 1.0d0, &
-                    auxc(1,1), 2*gv%ngw_l, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
+                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
+                    auxc(1,1), 2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
                     0.0d0, fnls(iss,1), nsanl )
 
                   DEALLOCATE(auxc)
@@ -545,9 +546,9 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gv%kgx_l(:,:,1), gv%khg_l(:,1), ngw, 3, m-4)
-            DO ig = gv%gstart, ngw
-              gspha(ig) = gspha(ig) / (gv%hg_l(ig)*tpiba2)
+            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 3, m-4)
+            DO ig = gstart, ngw
+              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
 
             DO kk=1,6
@@ -555,7 +556,7 @@
               fnls = 0.0d0
               iss = 1
               gwork(1) = 0.0d0
-              DO ig=gv%gstart,gv%ngw_l
+              DO ig = gstart, ngw
                 gwork(ig)= gagx_l(kk,ig) * gspha(ig)
               END DO
 
@@ -564,36 +565,36 @@
                 ll = l2ind(4,is)
 
                 IF(ll > 0) THEN
-                  ALLOCATE(auxc(gv%ngw_l,na(is)))
+                  ALLOCATE(auxc(ngw,na(is)))
   
                   gwtmp(1) = 0.0d0
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     gwtmp(ig) = gwork(ig) * ( 7.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
                   END DO
 
                   al = alpha(kk)
                   be = beta(kk)
-                  DO ig = gv%gstart, gv%ngw_l
+                  DO ig = gstart, ngw
                     fg = 0.0d0
-                    gmod = SQRT( gv%hg_l(ig) )
+                    gmod = SQRT( g(ig) )
                     DO s = 1, 3
-                      fg = fg + 3.0d0/5.0d0 * fm(be,s,s,m) * gv%kgx_l(al,ig,1) / gmod
+                      fg = fg + 3.0d0/5.0d0 * fm(be,s,s,m) * gkx_l(al,ig,1) / gmod
                     END DO
                     DO s = 1, 3
-                      fg = fg + 6.0d0/5.0d0 * fm(be,s,al,m) * gv%kgx_l(s,ig,1) / gmod
+                      fg = fg + 6.0d0/5.0d0 * fm(be,s,al,m) * gkx_l(s,ig,1) / gmod
                     END DO
                     gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,ll,is)
                   END DO
 
                   DO ia= 1 , na(is)
                     auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gv%gstart, gv%ngw_l
+                    DO ig = gstart, ngw
                       auxc(ig,ia) = csign(3) * gwtmp(ig) * eigr(ig,ia+iss-1)
                     END DO
                   END DO
 
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*gv%ngw_l, 1.0d0, &
-                    auxc(1,1), 2*gv%ngw_l, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
+                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
+                    auxc(1,1), 2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
                     0.0d0, fnls(iss,1), nsanl)
 
                   DEALLOCATE(auxc)
@@ -646,18 +647,18 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE pseudo_stress(deps, epseu, gv, gagx_l, sfac, dvps, rhoeg, ht)
+      SUBROUTINE pseudo_stress(deps, epseu, gagx_l, sfac, dvps, rhoeg, ht)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE cell_module, only: boxdimensions
-      USE ions_base, ONLY: nsp
-      USE cp_types, ONLY: recvecs
+      USE cell_module,        only: boxdimensions
+      USE ions_base,          ONLY: nsp
+      USE reciprocal_vectors, ONLY: gstart, gzero
+      USE gvecp,              ONLY: ngm
 
 ! ... declare subroutine arguments
-      TYPE (recvecs), INTENT(IN) :: gv
       TYPE (boxdimensions), INTENT(IN) :: ht
       REAL(dbl),     INTENT(OUT) :: deps(:)
       REAL(dbl),     INTENT(IN) ::  gagx_l(:,:)
@@ -679,12 +680,12 @@
       depst = (0.d0,0.d0)
 
       DO is = 1, nsp
-        DO ig = gv%gstart, gv%ng_l
+        DO ig = gstart, ngm
           rhets = rhoeg(ig, 1)
           IF( nspin > 1) THEN
             rhets = rhets + rhoeg(ig, 2)
           END IF
-          rhets = 2.d0 * sfac( is, ig ) * dvps(ig,is) * CONJG(rhets)
+          rhets = 2.d0 * sfac( ig, is ) * dvps(ig,is) * CONJG(rhets)
           depst(1) = depst(1) + rhets * gagx_l(1,ig)
           depst(2) = depst(2) + rhets * gagx_l(2,ig)
           depst(3) = depst(3) + rhets * gagx_l(3,ig)
@@ -694,7 +695,7 @@
         END DO
       END DO
 
-      IF(gv%gzero) THEN
+      IF(gzero) THEN
         deps = 2.0_dbl * omega * REAL(depst) - epseu * dalbe
       ELSE
         deps = 2.0_dbl * omega * REAL(depst)
@@ -709,7 +710,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE stress_kin(dekin, c0, cdesc, occ, gagx_l, gv) 
+      SUBROUTINE stress_kin(dekin, c0, cdesc, occ, gagx_l) 
 
 !  this routine computes the kinetic energy contribution to the stress 
 !  tensor
@@ -724,8 +725,8 @@
       USE gvecw, ONLY: tecfix, gcsig, gcfix, gcutz
       USE wave_types, ONLY: wave_descriptor
       USE constants, ONLY: pi
-      USE cp_types, ONLY: recvecs
       USE control_flags, ONLY: force_pairing
+      USE reciprocal_vectors, ONLY: gstart, g
 
       IMPLICIT NONE
 
@@ -734,7 +735,6 @@
       COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       REAL(dbl), INTENT(IN) :: occ(:,:,:)
-      TYPE (recvecs), INTENT(IN) :: gv
       REAL(dbl) gagx_l(:,:)
 
 ! ... declare other variables
@@ -749,9 +749,9 @@
       dekin = 0.0_dbl
       cost1 = 2.0_dbl / SQRT(pi)
       ALLOCATE( arg( cdesc%ldg ) ) 
-      DO ig = gv%gstart, cdesc%ngwl
+      DO ig = gstart, cdesc%ngwl
         IF(tecfix) THEN
-          arg(ig) = 1.0_dbl + cost1 * gcutz * exp(-((gv%hg_l(ig)-gcfix)/gcsig)**2)/gcsig 
+          arg(ig) = 1.0_dbl + cost1 * gcutz * exp(-((g(ig)-gcfix)/gcsig)**2)/gcsig 
         ELSE
           arg(ig) = 1.0_dbl
         END IF
@@ -763,7 +763,7 @@
         IF( force_pairing ) ispin_wfc = 1
         DO ib = 1, cdesc%nbl( ispin )
           sk = 0.0_dbl
-          DO ig = gv%gstart, cdesc%ngwl
+          DO ig = gstart, cdesc%ngwl
             scg = arg(ig) * CONJG( c0(ig,ib,1,ispin_wfc) ) * c0(ig,ib,1,ispin_wfc)
             sk(1)  = sk(1) + scg * gagx_l(1,ig)
             sk(2)  = sk(2) + scg * gagx_l(2,ig)
@@ -785,20 +785,21 @@
 !==          COMPUTES HARTREE ENERGY CONTRIBUTION                     ==
 !=======================================================================
 
-      SUBROUTINE STRESS_HAR(DEHT, EHR, sfac, PS, RHOEG, GAgx_L, GV, box ) 
+      SUBROUTINE STRESS_HAR(DEHT, EHR, sfac, PS, RHOEG, GAgx_L, box ) 
 
-      use ions_base, only: nsp
-      USE cell_module, only: boxdimensions
-      use mp_global, ONLY: mpime, nproc
-      USE constants, ONLY: fpi
-      USE cell_base, ONLY: tpiba2
-      USE cp_types, ONLY: recvecs, pseudo, pseudo_ncpp
+      use ions_base,          only: nsp
+      USE cell_module,        only: boxdimensions
+      use mp_global,          ONLY: mpime, nproc
+      USE constants,          ONLY: fpi
+      USE cell_base,          ONLY: tpiba2
+      USE cp_types,           ONLY: pseudo, pseudo_ncpp
+      USE reciprocal_vectors, ONLY: gstart, g
+      USE gvecp,              ONLY: ngm
 
       IMPLICIT NONE
 
 !---------------------------------------------------ARGUMENT
 
-      type (recvecs) :: gv
       type (boxdimensions) :: box
       TYPE (pseudo), INTENT(IN) :: ps
       REAL(dbl)    :: DEHT(:), EHR, GAgx_L(:,:)
@@ -829,14 +830,14 @@
       DEHC  = (0.D0,0.D0)
       DEHT  = 0.D0
 
-      DO IG = gv%gstart, gv%NG_L
+      DO IG = gstart, ngm
         RHOP = (0.D0,0.D0)
         RHOPR= (0.D0,0.D0)
         DO IS = 1, NSP
-          RHOP  = RHOP  + sfac( is, IG ) * ps%RHOPS(IG,is)
-          RHOPR = RHOPR + sfac( is, IG ) * ps%RHOPS(IG,is) * ps%ap(is)%RAGGIO**2 * 0.5D0
+          RHOP  = RHOP  + sfac( IG, is ) * ps%RHOPS(IG,is)
+          RHOPR = RHOPR + sfac( IG, is ) * ps%RHOPS(IG,is) * ps%ap(is)%RAGGIO**2 * 0.5D0
         END DO
-        HGM1   = 1.D0 / gv%HG_L(IG) / TPIBA2 
+        HGM1   = 1.D0 / g(IG) / TPIBA2 
         RHET   = 0.0_dbl
         DO ispin = 1, nspin
           RHET   = RHET + RHOEG(ig,ispin)

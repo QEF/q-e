@@ -92,7 +92,7 @@
       use gvecs, only: ngs
       use gvecb, only: ngb
       use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
+      use reciprocal_vectors, only: gstart, mill_l
       use ions_base, only: na, nat, pmass, nax, nsp, rcmax
       use ions_base, only: ind_srt, ions_cofmass, ions_kinene, ions_temp, ions_thermal_stress
       use ions_base, only: ions_vrescal, fricp, greasp, iforce, ions_shiftvar
@@ -137,6 +137,7 @@
             electrons_nose_nrg, electrons_nose_shiftvar, electrons_nosevel, electrons_noseupd
       use from_scratch_module, only: from_scratch
       use from_restart_module, only: from_restart
+      use phase_factors_module, only: strucf
 
 ! wavefunctions
 !
@@ -189,7 +190,7 @@
       real(kind=8)                                                      & 
      &       tempp,  fccc, savee, saveh, savep,             &
      &       enthal, epot, epre, enow, econs, econt, &
-     &       ettt, ccc, bigr, dt2bye, dt2hbe
+     &       ettt, ccc, bigr, dt2bye
       real(kind=8) ekinc0, ekinp, ekinpr, ekincm, ekinc
       real(kind=8) temps(nsx)
       real(kind=8) ekinh, temphc, temp1, temp2, randy
@@ -252,13 +253,12 @@
       call init_dimensions( )
 
       dt2bye   = dt2/emass
-      dt2hbe   = dt2by2/emass
       etot_out = 0.0d0
       tfirst   = .true.
       tlast    = .false.
       nacc     = 5
 
-      call init ( ibrav, ndr, nbeg, tfirst, tau0, taus )
+      call init_geometry ( )
 
       WRITE( stdout,*) ' out from init'
 
@@ -465,7 +465,7 @@
       !
       !     strucf calculates the structure factor sfac
       !
-      call strucf(ei1,ei2,ei3,sfac)
+      call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
       if (thdyn) call formf(tfirst,eself)
 
       if( tefield ) then
@@ -683,7 +683,7 @@
          if( thdyn ) then
             hold = h
             h = hnew
-            call newinit(ibrav)
+            call newinit( h )
             call newnlinit
          else
             hold = h

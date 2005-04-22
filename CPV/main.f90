@@ -69,7 +69,7 @@
 
 ! ... declare modules
       USE kinds
-      USE phase_factors_module, ONLY : strucf
+      USE phase_factors_module, ONLY : strucf, phfacs
       USE restart_file, ONLY : writefile, readfile
       USE parameters, ONLY: nacx, nspinx
       USE runcp_module, ONLY: runcp, runcp_force_pairing
@@ -89,7 +89,7 @@
       USE atoms_type_module, ONLY: atoms_type, deallocate_atoms_type
       USE print_out_module, ONLY: print_legend, printout, print_time, print_sfac, &
           printacc
-      USE cell_module, ONLY: movecell, press, boxdimensions, updatecell, get_celldm
+      USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
       USE empty_states, ONLY: empty
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
@@ -146,12 +146,13 @@
       USE reciprocal_space_mesh, ONLY: gmeshinfo, newg, gindex_closeup
       !
       USE reciprocal_vectors, ONLY: &
-           gcutw, & ! Wave function cut-off ( units of (2PI/alat)^2 => tpiba2 )
-           gcutp, & ! Potentials and Charge density cut-off  ( same units )
-           gcuts, & ! Smooth mesh Potentials and Charge density cut-off  ( same units )
-           gkcut, & ! Wave function augmented cut-off (take into account all G + k_i , same units)
-           ngw, & !
-           ngm, & !
+           mill_l, & ! G-vectors generators
+           gcutw,  & ! Wave function cut-off ( units of (2PI/alat)^2 => tpiba2 )
+           gcutp,  & ! Potentials and Charge density cut-off  ( same units )
+           gcuts,  & ! Smooth mesh Potentials and Charge density cut-off  ( same units )
+           gkcut,  & ! Wave function augmented cut-off (take into account all G + k_i , same units)
+           ngw,    & !
+           ngm,    & !
            ngs
       !
       USE recvecs_subroutines, ONLY: recvecs_init
@@ -181,7 +182,6 @@
       INTEGER :: nnrg
       INTEGER :: n1, n2, n3
       INTEGER :: n1s, n2s, n3s
-      INTEGER :: ngm_ , ngw_ , ngs_
 
       REAL(dbl) :: ekinc, ekcell, ekinp, erhoold, maxfion
       REAL(dbl) :: derho
@@ -241,9 +241,6 @@
       !
       COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
 
-      ! reciprocal lattice and reciprocal vectors
-      TYPE (recvecs) :: gv           ! reciprocal lattice
-
       ! cell geometry
       TYPE (boxdimensions) :: ht_m, ht_0, ht_p  ! cell metrics
 
@@ -253,8 +250,6 @@
       REAL(dbl), ALLOCATABLE :: vpot(:,:,:,:)
       REAL(dbl) :: vnosee, vnosep
 
-      REAL(dbl) :: celldm( 6 )
-      INTEGER :: ibrav
       INTEGER :: lds_wfc
 
       REAL(dbl), EXTERNAL  :: cclock
@@ -276,6 +271,9 @@
 !     ==================================================================
 
       CALL init_dimensions( )
+
+      CALL cpsizes( nproc )
+      CALL cpflush( )
 
       timepre = 0.0_dbl
       timernl = 0.0_dbl
@@ -310,14 +308,18 @@
       ALLOCATE( ei2( -nr2:nr2, nat ) )
       ALLOCATE( ei3( -nr3:nr3, nat ) )
 
-! ... get information
-!
-      CALL get_celldm(ibrav, celldm)
+!     ==================================================================
+!     initialize system geometry, cell and positions
+!     ==================================================================
 
-! ... initialization routines
+      CALL init_geometry( )
+
+!     ==================================================================
+!     initialize variables and types
+!     ==================================================================
 !
-      CALL init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht_0, fnl, eigr, ei1, ei2, ei3, nspin)
+      CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
+        wempt, ht_m, ht_0, eigr, ei1, ei2, ei3 )
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
@@ -334,8 +336,7 @@
       ce = 0.0d0
       fi = 0.0d0
 
-      CALL init1s(gv, kp, ps, atoms_m, atoms_0, atoms_p, cm, c0, wfill, &
-        ce, wempt, ht_m, ht_0, fnl, eigr, fi )
+      CALL init1s(kp, ps, cm, c0, wfill, ce, wempt, fnl, eigr, fi )
 
       CALL print_legend( )
 
@@ -344,8 +345,7 @@
              dfftp%nr1, dfftp%nr2, dfftp%npl, dfftp%nr1x, dfftp%nr2x,     &
              dfftp%npl, nspin )
 
-
-      ALLOCATE( sfac( atoms_0%nsp, gv%ng_l ) ) 
+      ALLOCATE( sfac( ngm , atoms_0%nsp ) ) 
 
       ALLOCATE( vpot( dfftp%nr1x, dfftp%nr2x, dfftp%npl, nspin), STAT=ierr)
 
@@ -357,7 +357,7 @@
 ! ...   create a new configuration from scratch
 !
         ttprint = .true.
-        CALL from_scratch(gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, ei3, &
+        CALL from_scratch(kp, ps, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, ei3, &
                           sfac, fi, ht_0, atoms_0, fnl, vpot, edft )
 
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
@@ -369,10 +369,10 @@
 ! ...   (Fortran I/O unit number ndr, file fort.<ndr>)
 
         CALL readfile( nfi, tps, c0, cm, wfill, fi, &
-           atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, ht_m, ht_0, rhoe, &
-           desc, vpot, gv, kp)
+           atoms_0, atoms_m, avgs, taui, cdmi, ht_m, ht_0, rhoe, &
+           desc, vpot, kp)
 
-        CALL from_restart( nfi, avgs, gv, kp, ps, rhoe, desc, cm, c0, wfill, eigr, &
+        CALL from_restart( nfi, avgs, kp, ps, rhoe, desc, cm, c0, wfill, eigr, &
                   ei1, ei2, ei3, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
 
         velh = ht_m%hvel
@@ -426,21 +426,22 @@
 
         IF( thdyn ) THEN
 ! ...     the simulation cell isn't fixed, recompute the reciprocal lattice
-          CALL newg(gv, kp, ht_0%m1)
+          CALL newg(kp, ht_0%m1)
         END IF
 
         IF(memchk) CALL memstat(1)
 
         IF( tfor .OR. thdyn ) THEN
 ! ...     ionic positions aren't fixed, recompute structure factors 
-          CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
+          CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
+          CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
         END IF
 
         IF(memchk) CALL memstat(2)
 
         IF( thdyn ) THEN
 ! ...     recompute local pseudopotential Fourier expansion
-          CALL formf(ht_0, gv, kp, ps)
+          CALL formf(ht_0, kp, ps)
         END IF
 
         IF(memchk) CALL memstat(3)
@@ -450,29 +451,29 @@
 
         IF( ttdiis .AND. t_diis_simple ) THEN
 ! ...     perform DIIS minimization on electronic states
-          CALL runsdiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
+          CALL runsdiis(ttprint, rhoe, desc, atoms_0, kp, &
                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
 ! ...     perform DIIS minimization with wavefunctions rotation
           IF(nspin.GT.1) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
-          CALL rundiis(ttprint, rhoe, desc, atoms_0, gv, kp, &
+          CALL rundiis(ttprint, rhoe, desc, atoms_0, kp, &
                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft )
         ELSE IF ( tconjgrad ) THEN
 ! ...     on entry c0 should contain the wavefunctions to be optimized
-          CALL runcg(tortho, ttprint, rhoe, desc, atoms_0, gv, kp, &
+          CALL runcg(tortho, ttprint, rhoe, desc, atoms_0, kp, &
                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, etot_conv_thr )
 ! ...     on exit c0 and cp both contain the updated wave function
 ! ...     cm are overwritten (used as working space)
         ELSE IF ( tsteepdesc ) THEN
-          CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms_0, gv, kp, &
+          CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms_0, kp, &
                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
         ELSE IF ( tconjgrad_ion%active ) THEN
           CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atoms_p, atoms_0, &
-               atoms_m, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
+               atoms_m, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
                fnl, vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                tconvthrs%ekin, tconjgrad_ion%nstepex )
 ! ...     when ions are being relaxed by this subroutine they 
@@ -486,7 +487,7 @@
 
 ! ...   compute nonlocal pseudopotential
         atoms_0%for = 0.0d0
-        edft%enl = nlrh_m( c0, wfill, ttforce, atoms_0, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
+        edft%enl = nlrh_m( c0, wfill, ttforce, atoms_0, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
 
         IF(memchk) CALL memstat(5)
 
@@ -494,7 +495,7 @@
         timernl = s5 - s4
 
 ! ...   compute the new charge density "rhoe"
-        CALL rhoofr(gv, kp, c0, wfill, fi, rhoe, desc, ht_0)
+        CALL rhoofr(kp, c0, wfill, fi, rhoe, desc, ht_0)
         ! CALL printrho(nfi, rhoe, atoms_0, ht_0) ! DEBUG
 
         IF(memchk) CALL memstat(6)
@@ -505,7 +506,7 @@
 ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
 ! ...   ionc forces "fion" and stress "pail".
         CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms_0, &
-          gv, kp, fnl, vpot, ps, c0, wfill, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
+          kp, fnl, vpot, ps, c0, wfill, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
 
         ! .. WRITE( stdout,*) 'DEBUG MAIN', atoms_0%for( 1:3, 1:atoms_0%nat )
         ! CALL debug_energies( edft ) ! DEBUG
@@ -528,12 +529,12 @@
           if ( force_pairing ) then 
             ! unpaired electron is assumed of spinup and in highest 
             ! index band; and put equal for paired wf spin up and down
-            CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, gv, &
+            CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
               kp, ps, vpot, eigr, fi, ekincs, timerd, &
               timeorto, ht_0, ei, fnl, vnosee )
               ! ekincs(2) = 0
           ELSE
-            CALL runcp(ttprint, tortho, tsde, cm, c0, cp, wfill, gv, &
+            CALL runcp(ttprint, tortho, tsde, cm, c0, cp, wfill, &
               kp, ps, vpot, eigr, fi, ekincs, timerd, &
               timeorto, ht_0, ei, fnl, vnosee )
           endif
@@ -609,7 +610,7 @@
 
 ! ...   Here find Empty states eigenfunctions and eigenvalues
         IF ( ttempst ) THEN
-          CALL empty(tortho, atoms_0, gv, c0, wfill, ce, wempt, kp, vpot, eigr, ps )
+          CALL empty(tortho, atoms_0, c0, wfill, ce, wempt, kp, vpot, eigr, ps )
         END IF
 
 ! ...   dipole
@@ -625,12 +626,12 @@
 
 ! ...   Optical properties
         IF( ttoptical ) THEN
-          CALL opticalp(nfi, ht_0, atoms_0, c0, wfill, fi, ce, wempt, vpot, fnl, eigr, ps, gv, kp)
+          CALL opticalp(nfi, ht_0, atoms_0, c0, wfill, fi, ce, wempt, vpot, fnl, eigr, ps, kp)
         END IF
 
         IF( self_interaction /= 0 ) THEN
           IF ( nat_localisation > 0 .AND. ttprint ) THEN
-           CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms_0, gv, kp, ht_0, desc)
+           CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms_0, kp, ht_0, desc)
           END IF
         END IF
  
@@ -725,8 +726,8 @@
 ! ...   write the restart file
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, wfill, &
-            fi, atoms_0, atoms_m, avgs, taui, cdmi, ibrav, celldm, &
-            ht_m, ht_0, rhoe, desc, vpot, gv, kp)
+            fi, atoms_0, atoms_m, avgs, taui, cdmi, &
+            ht_m, ht_0, rhoe, desc, vpot, kp)
       
         END IF
 
@@ -756,14 +757,14 @@
 
       IF(tksout) THEN
         IF ( force_pairing ) THEN 
-          CALL ks_states_force_pairing(c0, wfill, ce, wempt, fi, gv, kp, ps, vpot, eigr, fnl)
+          CALL ks_states_force_pairing(c0, wfill, ce, wempt, fi, kp, ps, vpot, eigr, fnl)
         ELSE
-          CALL ks_states(c0, wfill, ce, wempt, fi, gv, kp, ps, vpot, eigr, fnl)
+          CALL ks_states(c0, wfill, ce, wempt, fi, kp, ps, vpot, eigr, fnl)
         END IF
       END IF
 
       IF(tprnsfac) THEN
-        CALL print_sfac(gv, rhoe, desc, sfac)
+        CALL print_sfac(rhoe, desc, sfac)
       END IF
 
 ! ... report statistics
@@ -812,7 +813,6 @@
       IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating fnl ', ierr)
 
       CALL deallocate_pseudo(ps)
-      CALL deallocate_rvecs(gv)
 
       CALL optical_closeup()
       CALL gindex_closeup

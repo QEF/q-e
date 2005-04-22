@@ -34,21 +34,21 @@
           IF( ALLOCATED( rhochi ) ) DEALLOCATE(rhochi)
         end subroutine deallocate_chi2
 
-      SUBROUTINE PRINTCHI2(gv,box)
+      SUBROUTINE PRINTCHI2(box)
 
       USE cell_base, ONLY: tpiba
-      use cp_types, ONLY: recvecs
       USE cell_module, only: boxdimensions
       use mp, ONLY: mp_sum
       USE mp_global, ONLY: nproc, mpime, group
       USE io_files, ONLY: chiunit, chifile
+      USE reciprocal_vectors, ONLY: gstart, gx
+      USE gvecp, ONLY: ngm
 
       IMPLICIT NONE
 
 !---------------------------------------------------ARGUMENT
-      type (recvecs), intent(in) :: gv
       type (boxdimensions), intent(in) :: box
-      REAL(dbl) GX,GY,GZ
+      REAL(dbl) GXR,GYR,GZR
 !---------------------------------------------------COMMON 
 
 
@@ -69,28 +69,28 @@
 !=======================================================================
 
       CHI = 0.0d0
-      DO IG=gv%gstart,gv%ng_l 
+      DO IG = gstart, ngm 
         ctmp = CONJG(RHOCHI(IG))*VLOCAL(IG)
         do i=1,3
-          GX        = gv%gx_l(i,IG)*TPIBA
+          GXR       = gx(i,IG)*TPIBA
           do j=1,3
-            GY        = gv%gx_l(j,IG)*TPIBA
+            GYR       = gx(j,IG)*TPIBA
             do k=1,3
-              GZ        = gv%gx_l(k,IG)*TPIBA
-              CHI(i,j,k) = CHI(i,j,k) - GX*GY*GZ*ctmp
+              GZR       = gx(k,IG)*TPIBA
+              CHI(i,j,k) = CHI(i,j,k) - GXR*GYR*GZR*ctmp
             end do
           end do
         end do
       END DO
-      DO IG=gv%gstart,gv%ng_l 
+      DO IG = gstart, ngm 
         ctmp = RHOCHI(IG)*CONJG(VLOCAL(IG))
         do i=1,3
-          GX        = -gv%gx_l(i,IG)*TPIBA
+          GXR       = -gx(i,IG)*TPIBA
           do j=1,3
-            GY        =  -gv%gx_l(j,IG)*TPIBA
+            GYR       =  -gx(j,IG)*TPIBA
             do k=1,3
-              GZ        =  -gv%gx_l(k,IG)*TPIBA
-              CHI(i,j,k) = CHI(i,j,k) - GX*GY*GZ*ctmp
+              GZR       =  -gx(k,IG)*TPIBA
+              CHI(i,j,k) = CHI(i,j,k) - GXR*GYR*GZR*ctmp
             end do
           end do
         end do

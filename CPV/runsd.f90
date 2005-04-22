@@ -29,7 +29,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, gv, kp, &
+      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, kp, &
                  ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                  fnl, vpot, doions, edft, maxnstep, sdthr )
 
@@ -37,22 +37,25 @@
 !  END manual
 
 ! ... declare modules
-      USE energies, ONLY: dft_energy_type, print_energies
-      USE wave_functions, ONLY: update_wave_functions
-      USE check_stop, ONLY: check_stop_now
-      USE io_global, ONLY: ionode
-      USE io_global, ONLY: stdout
-      USE cell_module, ONLY: boxdimensions
-      USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: recvecs, pseudo
-      USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
-      USE potentials, ONLY: kspotential
-      USE atoms_type_module, ONLY: atoms_type
-      USE runcp_module, ONLY: runcp
-      USE phase_factors_module, ONLY : strucf
-      USE charge_types, ONLY: charge_descriptor
-      USE control_flags, ONLY: force_pairing
+      USE energies,             ONLY: dft_energy_type, print_energies
+      USE wave_functions,       ONLY: update_wave_functions
+      USE check_stop,           ONLY: check_stop_now
+      USE io_global,            ONLY: ionode
+      USE io_global,            ONLY: stdout
+      USE cell_module,          ONLY: boxdimensions
+      USE brillouin,            ONLY: kpoints
+      USE cp_types,             ONLY: pseudo
+      USE wave_types,           ONLY: wave_descriptor
+      USE pseudo_projector,     ONLY: projector
+      USE potentials,           ONLY: kspotential
+      USE atoms_type_module,    ONLY: atoms_type
+      USE runcp_module,         ONLY: runcp
+      USE phase_factors_module, ONLY: strucf, phfacs
+      USE charge_types,         ONLY: charge_descriptor
+      USE control_flags,        ONLY: force_pairing
+      use grid_dimensions,      only: nr1, nr2, nr3
+      USE reciprocal_vectors,   ONLY: mill_l
+      USE gvecp,                ONLY: ngm
 
 
       IMPLICIT NONE
@@ -70,7 +73,6 @@
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
       REAL(dbl)  :: occ(:,:,:)
@@ -123,19 +125,20 @@
 
       old_clock_value = cclock()
 
-      CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
 
       STEEPEST_DESCENT: DO iter = 1, maxnstep
 
         s1 = cclock()
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
 
         CALL runcp(ttprint, ttortho, ttsde, cm, c0, cp, &
-          cdesc, gv, kp, ps, vpot, eigr, occ, ekincs, timerd, &
+          cdesc, kp, ps, vpot, eigr, occ, ekincs, timerd, &
           timeorto, ht0, ei, fnl, vnosee)
 
         ekinc = SUM( ekincs )
@@ -174,7 +177,7 @@
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
         CALL kspotential( ttprint, tforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot
         END IF

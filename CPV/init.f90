@@ -31,45 +31,35 @@
 
 !  BEGIN manual
 
-      SUBROUTINE init0s(gv, kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht, fnl, eigr, ei1, ei2, ei3, nspin)
+      SUBROUTINE init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
+        wempt, ht_m, ht, eigr, ei1, ei2, ei3)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
 !  END manual
 
 ! ... declare modules
-      use mp_global, only: nproc
-      USE parameters, ONLY: nspinx
-      USE phase_factors_module, ONLY: strucf
-      USE cp_types
-      USE atoms_type_module, ONLY: atoms_type
-      USE time_step, ONLY: delt
-      USE cell_module, ONLY: cell_init, get_lattice_vectors
-      USE cell_base, ONLY: omega, alat
-      USE electrons_module, ONLY: electron_mass_init, band_init, n_emp, bmeshset
-      USE electrons_base, ONLY: nupdwn
-      USE reciprocal_space_mesh, ONLY:  newg
-      USE reciprocal_vectors, ONLY:  ngwt, gstart, gzero, ngm, ngmt, ngw
-      USE pseudopotential, ONLY: formf, nsanl, ngh, pseudopotential_init
-      USE ions_module, ONLY: atoms_init
-      USE ions_base, ONLY: nsp, na, nat
-      USE pseudo_projector, ONLY: allocate_projector, projector
-      USE diis, ONLY: allocate_diis, delt_diis
-      USE cell_module, only: boxdimensions
-      USE mp_global, ONLY: mpime, root
-      USE brillouin, ONLY: kpoints
-      USE wave_types, ONLY: wave_descriptor, wave_descriptor_init, &
-        wave_descriptor_info
-      USE descriptors_module, ONLY: get_local_dims, get_global_dims
-      USE control_flags, ONLY: nbeg, tbeg, timing, t_diis, iprsta
-      USE input_parameters, ONLY: rd_ht
-      USE turbo, ONLY: tturbo, allocate_turbo
-      USE ions_base, ONLY: tau_srt, tau_units, ind_srt, if_pos, atm
-      USE fft_base, ONLY: dfftp
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE problem_size, ONLY: cpsizes
-      USE reciprocal_space_mesh, ONLY : gindexset
+      USE cp_types,             ONLY: pseudo
+      use mp_global,            only: nproc
+      USE phase_factors_module, ONLY: strucf, phfacs
+      USE atoms_type_module,    ONLY: atoms_type
+      USE cell_module,          ONLY: cell_init, get_lattice_vectors
+      USE cell_module,          only: boxdimensions
+      USE electrons_module,     ONLY: electron_mass_init, band_init, n_emp
+      USE electrons_base,       ONLY: nspin, nupdwn
+      USE reciprocal_vectors,   ONLY: ngwt, gstart, gzero, ngm, ngmt, ngw, mill_l
+      USE pseudopotential,      ONLY: formf, nsanl, ngh, pseudopotential_init
+      USE ions_base,            ONLY: nsp, na, nat
+      USE ions_module,          ONLY: atoms_init
+      USE brillouin,            ONLY: kpoints
+      USE wave_types,           ONLY: wave_descriptor, wave_descriptor_init, wave_descriptor_info
+      USE control_flags,        ONLY: nbeg, tbeg, timing, iprsta
+      USE turbo,                ONLY: tturbo, allocate_turbo
+      USE ions_base,            ONLY: ind_srt, if_pos, atm
+      USE fft_base,             ONLY: dfftp
+      USE grid_dimensions,      ONLY: nr1, nr2, nr3
+      USE ions_positions,       ONLY: taus
+      USE reciprocal_space_mesh, ONLY: newg
 
       IMPLICIT NONE
 
@@ -78,112 +68,76 @@
       TYPE (atoms_type)   :: atoms_0, atoms_p, atoms_m
       TYPE (wave_descriptor) :: wfill, wempt
       TYPE (pseudo) :: ps
-      TYPE (projector) :: fnl(:,:)
       COMPLEX(dbl) :: eigr(:,:)
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
       TYPE (boxdimensions) :: ht_m, ht
-      INTEGER :: nspin
 
 ! ... declare other variables
       REAL(dbl) :: s1, s2, s3, s4, s5
       REAL(dbl) :: a1(3), a2(3), a3(3)
-      real(dbl) :: b1(3), b2(3), b3(3)
       INTEGER :: i, ispin, isym
       LOGICAL :: tk
       COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
-      REAL(dbl) :: rat1, rat2, rat3
-      INTEGER :: neupdwn( nspinx )
+      INTEGER :: neupdwn( nspin )
 
 
 !  end of declarations
 !  ----------------------------------------------
 
-      s1 = cclock()
-
       call get_lattice_vectors( a1, a2, a3 )
-      call recips( a1, a2, a3, b1, b2, b3 )
 
-! ... arrange for reciprocal lattice vectors
-      tk = .NOT. ( kp%scheme == 'gamma' )
-      CALL allocate_recvecs(gv, ngm, ngmt, ngw, ngwt, tk, kp%nkpt)
+      ! ... Initialize cell variables
 
-      CALL gindexset( gv, b1, b2, b3 )
+      CALL cell_init( ht,   a1, a2, a3 )
+      CALL cell_init( ht_m, a1, a2, a3 )
 
-      ! ... set the bands mesh
-      !
-      CALL bmeshset( )
+      ! ... compute reciprocal lattice vectors
+      CALL newg(kp, ht%m1)
 
-      CALL cpsizes( nproc )
-      !
-      CALL cpflush( )
+      ! ... initialize atomic configuration (should be called after metric_init)
+      CALL atoms_init( atoms_m, atoms_0, atoms_p, taus, ind_srt, if_pos, atm, ht%hmat )
 
+      ! ... compute structure factors
+      ALLOCATE( sfac( ngm, nsp ) )
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
 
-! ... Allocate + Initialize pseudopotentials
-      CALL pseudopotential_init(ps, na, nsp, gv, kp)
-
-      s2 = cclock()
-
-! ... Initialize simulation cell
-! ... if tbeg = .TRUE. cell parameters have been specified in the input file
-! ... (see card 'TBEG')
-! ... But the g-space grid is genereted according to celldm
-
-      IF( tbeg ) THEN
-        CALL cell_init( ht, rd_ht )
-        CALL cell_init( ht_m, rd_ht )
-      ELSE
-        CALL cell_init( ht, a1, a2, a3 )
-        CALL cell_init( ht_m, a1, a2, a3 )
-      END IF
-
-! ... initialize atomic configuration (should be called after metric_init)
-      CALL atoms_init( atoms_m, atoms_0, atoms_p, tau_srt, ind_srt, if_pos, atm, tau_units, alat, ht )
-
-! ... compute reciprocal lattice vectors
-      CALL newg(gv, kp, ht%m1)
-
-      s3 = cclock()
-
-! ... compute structure factors
-      ALLOCATE( sfac( nsp, ngm ) )
-      CALL strucf( sfac, atoms_0, eigr, ei1, ei2, ei3, gv )
+      ! ... Allocate + Initialize pseudopotentials
+      CALL pseudopotential_init(ps, na, nsp, kp)
 
       s4 = cclock()
 
-! ... compute local form factors
-      CALL formf(ht, gv, kp, ps)
+      ! ... compute local form factors
+      CALL formf(ht, kp, ps)
 
       s5 = cclock()
 
       IF(ionode) THEN
-        WRITE( stdout,'(/,"   ggen   (sec) : ",F8.3)') (s2-s1)
-        WRITE( stdout,'(  "   newg   (sec) : ",F8.3)') (s3-s2)
-        WRITE( stdout,'(  "   strucf (sec) : ",F8.3)') (s4-s3)
         WRITE( stdout,'(  "   formf  (sec) : ",F8.3)') (s5-s4)
       END IF
 
+      tk = .NOT. ( kp%scheme == 'gamma' )
       isym = 0
       IF( tk ) isym = 1
 
       !  empty states, always same number of spin up and down states
       neupdwn( 1:nspin ) = n_emp
 
-      CALL wave_descriptor_init( wfill, gv%ngw_l, gv%ngw_g, nupdwn,  nupdwn, &
-             kp%nkpt, kp%nkpt, nspin, isym, gv%gzero )
-      CALL wave_descriptor_init( wempt, gv%ngw_l, gv%ngw_g, neupdwn, neupdwn, &
-             kp%nkpt, kp%nkpt, nspin, isym, gv%gzero )
+      CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
+             kp%nkpt, kp%nkpt, nspin, isym, gzero )
+      CALL wave_descriptor_init( wempt, ngw, ngwt, neupdwn, neupdwn, &
+             kp%nkpt, kp%nkpt, nspin, isym, gzero )
 
       IF( iprsta > 2 ) THEN
         CALL wave_descriptor_info( wfill, 'wfill', stdout )
         CALL wave_descriptor_info( wempt, 'wempt', stdout )
       END IF
 
-! ... if tturbo=.TRUE. some data is stored in memory instead of being
-! ... recalculated (see card 'TURBO')
+      ! ... if tturbo=.TRUE. some data is stored in memory instead of being
+      ! ... recalculated (see card 'TURBO')
       IF( tturbo ) THEN
         CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
       ENDIF
@@ -198,87 +152,57 @@
 
 !  BEGIN manual
 
-    SUBROUTINE init1s(gv, kp, ps, atoms_m, atoms_0, atoms_p, cm, c0, wfill, &
-      ce, wempt, ht_m, ht, fnl, eigr, occ)
+    SUBROUTINE init1s(kp, ps, cm, c0, wfill, ce, wempt, fnl, eigr, occ)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
 !  END manual
 
 ! ... declare modules
-      USE phase_factors_module, ONLY: strucf
-      USE wave_init, ONLY: pw_atomic_init
       USE cp_types
-      USE atoms_type_module, ONLY: atoms_type
-      USE time_step, ONLY: delt
-      USE cell_module, ONLY: cell_init, get_lattice_vectors, alat
-      USE electrons_module, ONLY: electron_mass_init, band_init, nbnd
-      USE reciprocal_space_mesh, ONLY:  newg
-      USE reciprocal_vectors, ONLY:  ngwt, gstart, gzero, ngm, ngmt, ngw
-      USE pseudopotential, ONLY: formf, nsanl, ngh, pseudopotential_init
-      USE ions_module, ONLY: atoms_init
-      USE ions_base, ONLY: nsp, na, nat
-      USE pseudo_projector, ONLY: allocate_projector, projector
-      USE diis, ONLY: allocate_diis, delt_diis
-      USE cell_module, only: boxdimensions
-      USE mp_global, ONLY: mpime, root
-      USE brillouin, ONLY: kpoints
-      USE wave_types, ONLY: wave_descriptor
-      USE descriptors_module, ONLY: get_local_dims, get_global_dims
-      USE control_flags, ONLY: nbeg, tbeg, timing, t_diis
+      USE cell_module,        ONLY: alat
+      USE electrons_module,   ONLY: electron_mass_init, band_init, nbnd
+      USE reciprocal_vectors, ONLY: g
+      USE gvecw,              ONLY: ngw
+      USE pseudopotential,    ONLY: nsanl, ngh
+      USE pseudo_projector,   ONLY: allocate_projector, projector
+      USE diis,               ONLY: allocate_diis
+      USE brillouin,          ONLY: kpoints
+      USE wave_types,         ONLY: wave_descriptor
+      USE wave_init,          ONLY: pw_atomic_init
+      USE control_flags,      ONLY: nbeg, t_diis
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
 
-      TYPE (atoms_type)   :: atoms_0, atoms_p, atoms_m
       COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor) :: wfill, wempt
       TYPE (pseudo) :: ps
       REAL(dbl) :: occ(:,:,:)
       TYPE (projector) :: fnl(:,:)
       COMPLEX(dbl) :: eigr(:,:)
-      TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
-      TYPE (boxdimensions) :: ht_m, ht
-
-! ... declare other variables
-      REAL(dbl) :: s1, s2, s3, s4, s5
-      REAL(dbl) :: a1(3), a2(3), a3(3)
-      INTEGER :: i
-      LOGICAL :: tk
-      REAL(dbl),  ALLOCATABLE :: hg_g(:)   ! squared length
-      INTEGER,    ALLOCATABLE :: mill(:,:) ! Miller index, axis x, y, z
-      COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
-
 
 !  end of declarations
 !  ----------------------------------------------
-
-      s1 = cclock()
 
 ! ... initialize bands
       CALL band_init( occ )
 
 ! ...   initialize wave functions
-      CALL pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp, eigr )
+      CALL pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp, eigr )
 
-! ... initialize the electronic fictitious mass and time step for 
-! ... electron dynamics. Note that for 'diis' the electronic time step is
-! ... different from that of ions (delt), this is because in the diis
-! ... the time step for electrons is simply a convergence parameter.
-      IF (t_diis) THEN
-        CALL electron_mass_init(alat, gv%hg_l, gv%ngw_l)
-      ELSE
-        CALL electron_mass_init(alat, gv%hg_l, gv%ngw_l)
-      END IF
+      ! ... initialize the electronic fictitious mass and time step for 
+      ! ... electron dynamics. 
+      CALL electron_mass_init(alat, g, ngw)
 
-! ... initialize nonlocal pseudopotentials coefficients
+      ! ... initialize nonlocal pseudopotentials coefficients
       CALL allocate_projector(fnl, nsanl, nbnd, ngh, kp%gamma_only)
 
       IF(t_diis) THEN
-! ...   arrange for DIIS minimization
-        CALL allocate_diis(gv%ngw_l, nbnd, kp%nkpt)
+        ! ...   arrange for DIIS minimization
+        CALL allocate_diis(ngw, nbnd, kp%nkpt)
       END IF
 
       CALL cpflush  ! flush output streams
@@ -330,7 +254,7 @@
       USE control_flags, ONLY: tdipole
       USE berry_phase, ONLY: berry_setup
       USE real_space_mesh, ONLY: realspace_procgrid_init
-      USE bands_mesh, ONLY: bands_procgrid_init
+      USE electrons_module, ONLY: bmeshset
 
       implicit none
 ! 
@@ -345,11 +269,10 @@
                 3X,'------------------------------------' )
       END IF
       !
-      ! ... Initialize processor grid for parallel linear algebra 
-      !     used electronic states lagrange multiplier matrixes
+      ! ... Initialize bands indexes for parallel linear algebra 
+      ! ... (distribute bands to processors)
       !
-
-      CALL bands_procgrid_init( )
+      CALL bmeshset( )
 
       !
       ! ... Initialize (global) real and compute global reciprocal dimensions
@@ -490,38 +413,48 @@
 
 
 
+
 !-----------------------------------------------------------------------
-      subroutine init ( ibrav, ndr, nbeg, tfirst, tau0, taus )
+      subroutine init_geometry ( )
 !-----------------------------------------------------------------------
 !
-      use control_flags, only: iprint, thdyn
-      use io_global, only: stdout
-      use ions_base, only: na, nsp, natx
-      use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
-      use cell_base, only: hold, h
-      use cp_restart, only: cp_read_cell
+      USE input_parameters, ONLY: trd_ht
+      use control_flags,    only: iprint, thdyn, ndr, nbeg
+      use io_global,        only: stdout
+      use ions_base,        only: na, nsp, nat, natx, tau_srt
+      use cell_base,        only: a1, a2, a3, r_to_s
+      use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
+      USE ions_positions,   ONLY: tau0, taus
+      use cp_restart,       only: cp_read_cell
 
       implicit none
-! input/output
-      integer ibrav, ndr, nbeg
-      logical tfirst
-      real(kind=8) tau0(3,natx), taus(3,natx)
-! local
-      integer i, j
-      real(kind=8) gvel(3,3)
-      real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-!
-!
-! taus = scaled, tau0 = alat units
-!
-      CALL r_to_s( tau0, taus, na, nsp, ainv )
-!
-      if( nbeg >= 0 ) then
+      !
+      ! local
+      !
+      integer :: i, j
+      real(kind=8) :: gvel(3,3)
+      real(kind=8) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
 
+      IF( .NOT. tcell_base_init ) &
+         CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
+
+      ! 
+      ! Scale positions that have been read from standard input 
+      ! according to the cell given in the standard input too
+      ! taus = scaled, tau0 = atomic units
+      !
+      tau0 = 0.0d0
+      taus = 0.0d0
+      tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
+      CALL r_to_s( tau0, taus, na, nsp, ainv )
+      !
+      !  if trd_ht = .true.  the geometry is given in the standard input even if
+      !  we are restarting a previous run
+      !
+      if( ( nbeg >= 0 ) .and. ( .not. trd_ht ) ) then
         !
         ! read only h and hold from file ndr
         !
-
         CALL cp_read_cell( ndr, ' ', .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 
         h     = TRANSPOSE( h    )
@@ -535,11 +468,9 @@
         WRITE( stdout,*)
 
       else
-
         !
-        ! with variable-cell we use h to describe the cell
+        ! geometry is set to the cell parameters read from stdin ( a1, a2, a3 )
         !
-
         do i = 1, 3
             h(i,1) = a1(i)
             h(i,2) = a2(i)
@@ -549,56 +480,52 @@
         hold = h
 
       end if
+
 !
 !     ==============================================================
 !     ==== generate true g-space                                ====
 !     ==============================================================
 !
-      call newinit( ibrav )
+      call newinit( h )
 !
       !
  344  format(' ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))
       return
-      end
+      end subroutine init_geometry
 
 
 
 !-----------------------------------------------------------------------
-      subroutine newinit(ibrav)
-!-----------------------------------------------------------------------
-!     re-initialization of lattice parameters and g-space vectors.
-!     Note that direct and reciprocal lattice primitive vectors
-!     a1,a2,a3, ainv, and corresponding quantities for small boxes
-!     are recalculated according to the value of cell parameter h
-!
-      use control_flags, only: iprsta
-      use io_global, only: stdout
-      use cell_base, only: h, a1, a2, a3, omega, alat, cell_base_reinit
-!
+
+    subroutine newinit( h )
+      !
+      !     re-initialization of lattice parameters and g-space vectors.
+      !     Note that direct and reciprocal lattice primitive vectors
+      !     a1,a2,a3, ainv, and corresponding quantities for small boxes
+      !     are recalculated according to the value of cell parameter h
+      !
+      use cell_base, only: a1, a2, a3, omega, alat, cell_base_reinit
+      !
       implicit none
-      integer ibrav
-!
-! local
-      integer :: i, j
+      !
+      real(kind=8) :: h(3,3)
+
+      ! local
+      !
       real(kind=8) :: gmax, b1(3), b2(3), b3(3)
-!
-!
+      !
+      !  re-initialize the cell base module with the new geometry
+      !
       CALL cell_base_reinit( TRANSPOSE( h ) )
-!
+      !
       call recips( a1, a2, a3, b1, b2, b3 )
-      b1 = b1 * alat
-      b2 = b2 * alat
-      b3 = b3 * alat
 
-      call gcal( b1, b2, b3, gmax )
-!
-!     ==============================================================
-!     generation of little box g-vectors
-!     ==============================================================
-!
+      call gcal( alat, b1, b2, b3, gmax )
+      !
+      !   generation of little box g-vectors
+      !
       call newgb( a1, a2, a3, omega, alat )
-!
+      !
       return
-      end
-
+    end subroutine newinit

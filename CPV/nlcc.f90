@@ -27,12 +27,13 @@
 
 
 !=----------------------------------------------------------------------------=!
-   subroutine add_core_charge( rhoetg, rhoetr, sfac, ps, gv, nsp)
+   subroutine add_core_charge( rhoetg, rhoetr, sfac, ps, nsp)
 !=----------------------------------------------------------------------------=!
 
      USE fft, ONLY: pinvfft
-     USE cp_types, ONLY: pseudo, recvecs
+     USE cp_types, ONLY: pseudo
      use electrons_base, only: nspin
+     use gvecp, only: ngm
 
      implicit none
 
@@ -40,29 +41,26 @@
      COMPLEX(dbl) :: rhoetg(:)
      REAL(dbl)    :: rhoetr(:,:,:)
      type (pseudo),  intent(in) :: ps
-     type (recvecs), intent(in) :: gv
      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
           
      COMPLEX(dbl), ALLOCATABLE :: vtemp(:)
      REAL(dbl) :: fac
-     integer :: is, ig, ng
+     integer :: is, ig
 
-     ng = gv%ng_l
-
-     ALLOCATE( vtemp( ng ) )
+     ALLOCATE( vtemp( ngm ) )
      vtemp = CMPLX( 0.0d0 )
 
      fac = 1.0d0 / DBLE( nspin )
      DO is = 1, nsp
        if( ps%tnlcc( is ) ) then
-         do ig = 1, ng
-           vtemp(ig) = vtemp(ig) + fac * sfac( is, ig ) * CMPLX(ps%rhoc1(ig,is),0.0d0)
+         do ig = 1, ngm
+           vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(ps%rhoc1(ig,is),0.0d0)
          end do
        endif
      end do
 
      
-     rhoetg( 1:ng ) = rhoetg( 1:ng ) + vtemp( 1:ng )
+     rhoetg( 1:ngm ) = rhoetg( 1:ngm ) + vtemp( 1:ngm )
 
      !  rhoetr = 1.0d0 * rhoetr + INVFFT( vtemp )
      CALL pinvfft( rhoetr, vtemp, 1.0d0 )
@@ -76,7 +74,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3, gv, kp )
+   SUBROUTINE core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3, kp )
 !=----------------------------------------------------------------------------=!
 
      !   This subroutine computes the non local core correction
@@ -87,14 +85,14 @@
      USE cell_module, ONLY: boxdimensions
      USE brillouin, ONLY: kpoints
      USE atoms_type_module, ONLY: atoms_type
-     USE cp_types, ONLY: recvecs
      USE grid_dimensions, ONLY: nr1, nr2, nr3
+     USE reciprocal_vectors, ONLY: mill_l, gstart, gx
+     USE gvecp, ONLY: ngm
      USE ions_base, ONLY: nat
 
      IMPLICIT NONE
 
      TYPE (atoms_type), INTENT(IN) :: atoms    !   atomic positions
-     TYPE (recvecs), INTENT(IN) :: gv          !   reciprocal space vectors
      TYPE (boxdimensions), INTENT(IN) :: ht    !   cell parameters
      TYPE (kpoints), INTENT(IN) :: kp          !   k points
      COMPLEX(dbl) :: ei1( -nr1:nr1, nat)                  !   
@@ -106,7 +104,7 @@
      COMPLEX(dbl) :: vxc(:,:)                  !   XC potential
 
      INTEGER :: ig, ig1, ig2, ig3, isa, ia, is, ispin, nspin
-     COMPLEX(dbl) :: gx, gy, gz, tx, ty, tz, teigr, cxc
+     COMPLEX(dbl) :: gxc, gyc, gzc, tx, ty, tz, teigr, cxc
      COMPLEX(dbl), ALLOCATABLE :: ftmp(:,:)
      REAL(dbl) :: cost
 
@@ -116,13 +114,13 @@
        ALLOCATE( ftmp( 3, atoms%nat ) )
        ftmp = CMPLX( 0.0d0, 0.0d0 )
 
-       DO ig = gv%gstart, gv%ng_l
-         ig1  = gv%mill(1,ig)
-         ig2  = gv%mill(2,ig)
-         ig3  = gv%mill(3,ig)
-         GX   = CMPLX(0.D0, gv%gx_l(1,ig))
-         GY   = CMPLX(0.D0, gv%gx_l(2,ig))
-         GZ   = CMPLX(0.D0, gv%gx_l(3,ig))
+       DO ig = gstart, ngm
+         ig1  = mill_l(1,ig)
+         ig2  = mill_l(2,ig)
+         ig3  = mill_l(3,ig)
+         GXC  = CMPLX(0.D0, gx(1,ig))
+         GYC  = CMPLX(0.D0, gx(2,ig))
+         GZC  = CMPLX(0.D0, gx(3,ig))
          isa = 1
          DO is = 1, atoms%nsp
            IF ( tnlcc(is) ) THEN
@@ -130,9 +128,9 @@
              DO ispin = 1, nspin
                CXC = CXC + rhoc1( ig, is ) * CONJG( vxc( ig, ispin ) )
              END DO
-             TX = CXC * GX / DBLE( nspin )
-             TY = CXC * GY / DBLE( nspin )
-             TZ = CXC * GZ / DBLE( nspin )
+             TX = CXC * GXC / DBLE( nspin )
+             TY = CXC * GYC / DBLE( nspin )
+             TZ = CXC * GZC / DBLE( nspin )
              DO IA = 1, atoms%na(is)
                teigr = ei1( ig1, isa ) * ei2( ig2, isa ) * ei3( ig3, isa )
                ftmp( 1, isa ) = ftmp( 1, isa ) + TEIGR * TX

@@ -31,7 +31,7 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, desc, atomsp, atoms0, atomsm, &
-      gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+      kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
       fnl, vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
 !  this routine computes the equilibrium ionic positions via conjugate gradient
@@ -49,7 +49,7 @@
       USE io_global, ONLY: stdout
       USE cell_module, ONLY: boxdimensions, s_to_r, r_to_s
       USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: recvecs, pseudo
+      USE cp_types, ONLY: pseudo
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE potentials, ONLY: kspotential
@@ -79,7 +79,6 @@
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht
       REAL(dbl)  :: occ(:,:,:)
@@ -163,7 +162,7 @@
       s1 = cclock()
       old_clock_value = s1
 
-      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, gv, kp, &
+      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, kp, &
          ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
          fnl, vpot, doions, edft, maxnstep, sdthr )
 
@@ -192,7 +191,7 @@
           WRITE( stdout,fmt="(/,8X,'cgion: iter',I5,' line minimization along gradient starting')") iter
 
         CALL CGLINMIN(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, desc, xi, atomsp, atoms0, &
-          ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp, maxnstep, sdthr, displ)
+          ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp, maxnstep, sdthr, displ)
 
         IF( tbad ) THEN
 !          displ = displ * 2.0d0
@@ -206,7 +205,7 @@
           IF( ionode ) WRITE( stdout, fmt='(8X,"cgion: bad step")')  ! perform steepest descent
           displ = displ / 2.0d0
 
-          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, gv, kp, &
+          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, kp, &
             ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
             fnl, vpot, doions, edft, maxnstep, sdthr )
         
@@ -298,12 +297,12 @@
 ! ---------------------------------------------------------------------- !
 
       SUBROUTINE CGLINMIN(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
-        rhoe, desc, hacca, atomsp, atoms0, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp, &
+        rhoe, desc, hacca, atomsp, atoms0, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp, &
         maxnstep, sdthr, displ)
 
 ! ... declare modules
 
-        USE cp_types, ONLY: recvecs, pseudo
+        USE cp_types, ONLY: pseudo
         USE wave_types, ONLY: wave_descriptor
         USE brillouin, ONLY: kpoints
         USE pseudo_projector, ONLY: projector
@@ -336,7 +335,6 @@
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
         COMPLEX(dbl) :: sfac(:,:)
-        TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (kpoints), INTENT(IN) ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
         REAL(dbl)  :: occ(:,:,:)
@@ -561,7 +559,7 @@
          ! ...  Calculate Forces (fion) and DFT Total Energy (edft) for the new ionic
          ! ...  positions (atomsp)
 
-           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, gv, kp, &
+           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, kp, &
              ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
              fnl, vpot, doions, edft, maxnstep, sdthr )
 

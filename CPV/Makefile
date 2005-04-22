@@ -9,7 +9,6 @@ bessel.o \
 berryion.o \
 bforceion.o \
 blacs.o \
-bmesh.o \
 brillouin.o \
 cg.o \
 cg_sub.o \

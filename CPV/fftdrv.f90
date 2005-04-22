@@ -96,11 +96,6 @@
      ldz  = dfft%nr3x
      nz_l = dfft%npp( mpime + 1 )
 
-     IF( .NOT. ALLOCATED( fft_timing ) ) THEN
-       ALLOCATE( fft_timing( 4, 2 ) )
-       fft_timing = 0.0d0
-     END IF
-
      IF( FFT_MODE == FFT_MODE_POTE ) THEN
        ns_l = dfft%nsp( mpime + 1 )
      ELSE

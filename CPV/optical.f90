@@ -58,7 +58,7 @@
           RETURN
         END SUBROUTINE
 
-        SUBROUTINE opticalp(nfi, box, atoms, c0, wfill, occ, ce, wempt, vpot, fnl, eigr, ps, gv, kp)
+        SUBROUTINE opticalp(nfi, box, atoms, c0, wfill, occ, ce, wempt, vpot, fnl, eigr, ps, kp)
 
           USE cp_types
           USE cell_module, ONLY: boxdimensions
@@ -78,6 +78,8 @@
           USE atoms_type_module, ONLY: atoms_type
           USE io_files, ONLY: dielecunit, dielecfile
           USE control_flags, ONLY: force_pairing
+          USE reciprocal_vectors, ONLY: gx, g
+          USE reciprocal_space_mesh, ONLY: gkx_l
 
           INTEGER, INTENT(IN) :: nfi
           TYPE(boxdimensions), INTENT(IN) :: box
@@ -85,7 +87,6 @@
           COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
           COMPLEX(dbl), INTENT(INOUT) :: ce(:,:,:,:)
           TYPE(wave_descriptor), INTENT(IN) :: wempt, wfill
-          TYPE(recvecs), INTENT(IN) :: gv
           REAL(dbl), INTENT(IN) :: occ(:,:,:)
           TYPE(projector) :: fnl(:,:)
           REAL (dbl), INTENT(in) ::   vpot(:,:,:,:)
@@ -133,9 +134,9 @@
             nb_l   = wfill%nbl( ispin )
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, cf(:,:,1,ispin), wfill, gv%hg_l, &
-              gv%gx_l, fnl(1,ispin))
-            CALL dforce_all( ispin, cf(:,:,:,ispin), wfill, occ(:,:,ispin), eforce, gv, vpot(:,:,:,ispin), &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, cf(:,:,1,ispin), wfill, g, &
+              gx, fnl(1,ispin))
+            CALL dforce_all( ispin, cf(:,:,:,ispin), wfill, occ(:,:,ispin), eforce, vpot(:,:,:,ispin), &
               fnl(:,ispin), eigr, ps)
             CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce, kp )
             DEALLOCATE( eforce )
@@ -150,9 +151,9 @@
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
             CALL allocate_projector(fnle, nsanl, nb_l, ngh, kp%gamma_only)
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, ce(:,:,1,ispin), wempt, gv%hg_l, &
-              gv%gx_l, fnle(1))
-            CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, ff, eforce, gv, vpot(:,:,:,ispin), &
+            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, ce(:,:,1,ispin), wempt, g, &
+              gx, fnle(1))
+            CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, ff, eforce, vpot(:,:,:,ispin), &
               fnle, eigr, ps)
             CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce, kp )
             CALL deallocate_projector(fnle)
@@ -225,11 +226,11 @@
                     IF( gamma_symmetry ) THEN
                       curr = 0.0d0
                       DO ig = 1, ngw
-                        curr(1) = curr(1) + gv%gx_l(1,ig) * &
+                        curr(1) = curr(1) + gx(1,ig) * &
                           AIMAG( ce( ig, cie, ik, ispin ) * CONJG( cf( ig, cif, ik, ispin ) )
-                        curr(2) = curr(2) + gv%gx_l(2,ig) * &
+                        curr(2) = curr(2) + gx(2,ig) * &
                           AIMAG( ce( ig, cie, ik, ispin ) * CONJG( cf( ig, cif, ik, ispin ) )
-                        curr(3) = curr(3) + gv%gx_l(3,ig) * &
+                        curr(3) = curr(3) + gx(3,ig) * &
                           AIMAG( ce( ig, cie, ik, ispin ) * CONJG( cf( ig, cif, ik, ispin ) )
                       END DO
                       ! parallel sum of curr
@@ -256,11 +257,11 @@
 !                    IF( gamma_symmetry ) THEN
 !                      curr = 0.0d0
 !                      DO ig = 1, ngw
-!                        curr(1) = curr(1) + gv%gx_l(1,ig) * &
+!                        curr(1) = curr(1) + gx(1,ig) * &
 !                          AIMAG( ce(ik,ispin)%w(ig, ie) * CONJG( cf(ik,ispin)%w(ig, if) ) )
-!                        curr(2) = curr(2) + gv%gx_l(2,ig) * &
+!                        curr(2) = curr(2) + gx(2,ig) * &
 !                          AIMAG( ce(ik,ispin)%w(ig, ie) * CONJG( cf(ik,ispin)%w(ig, if) ) )
-!                        curr(3) = curr(3) + gv%gx_l(3,ig) * &
+!                        curr(3) = curr(3) + gx(3,ig) * &
 !                          AIMAG( ce(ik,ispin)%w(ig, ie) * CONJG( cf(ik,ispin)%w(ig, if) ) )
 !                      END DO
 !                      ! parallel sum of curr
@@ -297,11 +298,11 @@
                   IF( gamma_symmetry ) THEN
                     curr = 0.0d0
                     DO ig = 1, ngw
-                      curr(1) = curr(1) + gv%gx_l(1,ig) * &
+                      curr(1) = curr(1) + gx(1,ig) * &
                           AIMAG( ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) ) )
-                      curr(2) = curr(2) + gv%gx_l(2,ig) * &
+                      curr(2) = curr(2) + gx(2,ig) * &
                           AIMAG( ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) ) )
-                      curr(3) = curr(3) + gv%gx_l(3,ig) * &
+                      curr(3) = curr(3) + gx(3,ig) * &
                           AIMAG( ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) ) )
                     END DO
                     CALL mp_sum( curr, group )
@@ -309,11 +310,11 @@
                   ELSE
                     ccurr = 0.0d0
                     DO ig = 1, ngw
-                      ccurr(1) = ccurr(1) + gv%kgx_l(1, ig, ik) * &
+                      ccurr(1) = ccurr(1) + gkx_l(1, ig, ik) * &
                           ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) )
-                      ccurr(2) = ccurr(2) + gv%kgx_l(2, ig, ik) * &
+                      ccurr(2) = ccurr(2) + gkx_l(2, ig, ik) * &
                           ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) )
-                      ccurr(3) = ccurr(3) + gv%kgx_l(3, ig, ik) * &
+                      ccurr(3) = ccurr(3) + gkx_l(3, ig, ik) * &
                           ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) )
                     END DO
                     CALL mp_sum( ccurr, group )

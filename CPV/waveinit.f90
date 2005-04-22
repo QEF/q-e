@@ -15,10 +15,10 @@
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
 !  routines in this module:
-!  SUBROUTINE pw_rand_init(nbeg,cm,c0,gv)
-!  SUBROUTINE calphi(pslm,philm,gv,eigr,nchan)
-!  SUBROUTINE calpslm(pslm,gv,nchan,ns,np,nd)
-!  SUBROUTINE pw_atomic_init(nbeg,cm,c0,gv,eigr)
+!  SUBROUTINE pw_rand_init(nbeg,cm,c0)
+!  SUBROUTINE calphi(pslm,philm,eigr,nchan)
+!  SUBROUTINE calpslm(pslm,nchan,ns,np,nd)
+!  SUBROUTINE pw_atomic_init(nbeg,cm,c0,eigr)
 !  ----------------------------------------------
 !  END manual
 
@@ -42,7 +42,7 @@
 !  subroutines
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp)
+      SUBROUTINE pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, kp)
 
 !  this routine sets the initial wavefunctions at random
 !  ----------------------------------------------
@@ -55,9 +55,9 @@
       USE mp_global, ONLY: mpime, nproc, root
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt
       USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: recvecs
       USE io_base, ONLY: stdout
       USE control_flags, ONLY: force_pairing
+      USE reciprocal_space_mesh, ONLY: gkmask_l
 
       IMPLICIT NONE
 
@@ -66,7 +66,6 @@
 ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-      TYPE (recvecs), INTENT(IN) :: gv
       TYPE (kpoints), INTENT(IN) :: kp
       INTEGER, INTENT(IN) :: nbeg
 
@@ -121,32 +120,13 @@
         DO ispin = 1, nspin
           DO ik = 1, SIZE( cm, 3)
             CALL wave_rand_init( cm( :, :, ik, ispin ) )
-!            ntest = ngwt / 4
-!            IF( ntest < wfill%nbt( ispin ) ) THEN 
-!              ntest = ngwt
-!            END IF
-!! ...       assign random values to wave functions
-!            DO ib = 1, SIZE( cm, 2 )
-!              pwt( : ) = 0.0d0
-!              DO ig = 3, ntest
-!                rranf1 = 0.5d0 - rranf()
-!                rranf2 = rranf()
-!                pwt( ig ) = ampre * DCMPLX(rranf1, rranf2)
-!              END DO
-!              CALL splitwf ( cm( :, ib, ik, ispin ), pwt, ngw, ig_l2g, mpime, nproc, 0 )
-!            END DO
             IF ( .NOT. kp%gamma_only ) THEN
 ! ..  .       set to zero all elements outside the cutoff sphere
               DO ib = 1, SIZE( cm, 2 )
-                cm(:, ib, ik, ispin) = cm(:, ib, ik, ispin) * gv%kg_mask_l(:,ik)
+                cm(:, ib, ik, ispin) = cm(:, ib, ik, ispin) * gkmask_l(:,ik)
               END DO
             END IF
           END DO
-!          DO ik = 1, SIZE( cm, 3 )
-!            IF ( gv%gzero ) THEN
-!              cm( 1, :, ik, ispin ) = (0.0d0, 0.0d0)
-!            END IF
-!          END DO
         END DO
 
         DEALLOCATE( pwt )
@@ -185,7 +165,7 @@
 
 
 
-   SUBROUTINE pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp, eigr)
+   SUBROUTINE pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp, eigr)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -197,13 +177,11 @@
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: recvecs
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: nbeg
-      TYPE (recvecs), INTENT(IN) :: gv
       TYPE (kpoints), INTENT(IN) :: kp
       COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
@@ -214,7 +192,7 @@
 ! ... end of declarations
 !  ----------------------------------------------
 
-      CALL pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, gv, kp)
+      CALL pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, kp)
 
       IF( nbeg < 0 ) THEN
         IF( ionode ) THEN

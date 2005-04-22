@@ -33,7 +33,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE from_scratch_fpmd( gv, kp, ps, rhoe, desc, cm, c0, cdesc, &
+      SUBROUTINE from_scratch_fpmd( kp, ps, rhoe, desc, cm, c0, cdesc, &
         eigr, ei1, ei2, ei3, sfac, fi, ht, atoms, fnl, vpot, edft )
 
 !  (describe briefly what this routine does...)
@@ -43,13 +43,13 @@
 
 ! ... declare modules
       USE kinds
-      USE cp_types, ONLY: recvecs, pseudo
+      USE cp_types, ONLY: pseudo
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
       USE wave_functions, ONLY: gram, fixwave
       USE wave_base, ONLY: wave_steepest
       USE charge_density, ONLY: rhoofr
-      USE phase_factors_module, ONLY: strucf
+      USE phase_factors_module, ONLY: strucf, phfacs
       USE cell_module, only: boxdimensions
       USE electrons_module, ONLY: nspin, pmss
       USE cp_electronic_mass, ONLY: emass
@@ -67,6 +67,9 @@
       USE charge_types, ONLY: charge_descriptor
       USE time_step, ONLY: delt
       USE runcp_module, ONLY: runcp_ncpp
+      use grid_dimensions,    only: nr1, nr2, nr3
+      USE reciprocal_vectors, ONLY: mill_l
+      USE gvecp, ONLY: ngm
 
       IMPLICIT NONE
 
@@ -77,7 +80,6 @@
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (recvecs) :: gv 
       TYPE (kpoints) :: kp 
       REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: sfac(:,:)
@@ -108,11 +110,12 @@
 
 
       atoms%for = 0.0d0
-      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
-      edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-      CALL rhoofr(gv, kp, cm, cdesc, fi, rhoe, desc, ht)
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+      edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+      CALL rhoofr(kp, cm, cdesc, fi, rhoe, desc, ht)
       CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
-           gv, kp, fnl, vpot, ps, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
+           kp, fnl, vpot, ps, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
       CALL debug_energies( edft ) ! DEBUG
 
@@ -120,7 +123,7 @@
         
         IF( .NOT. force_pairing ) THEN
 
-          CALL runcp_ncpp( cm, cm, c0, cdesc, gv, kp, ps, vpot, eigr, &
+          CALL runcp_ncpp( cm, cm, c0, cdesc, kp, ps, vpot, eigr, &
              fi, fnl, vdum, gam, cgam, fromscra = .TRUE. )
 
         ELSE
@@ -169,7 +172,8 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     USE cpr_subroutines, ONLY: compute_stress, print_atomic_var, print_lambda, elec_fakekine
     USE core, ONLY: nlcc_any
     USE gvecw, ONLY: ngw
-    USE reciprocal_vectors, ONLY: gstart
+    USE reciprocal_vectors, ONLY: gstart, mill_l
+    USE gvecs, ONLY: ngs
     USE wave_base, ONLY: wave_steepest
     USE cvan, ONLY: nvb
     USE ions_nose, ONLY: xnhp0,  xnhpm,  vnhp
@@ -180,6 +184,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     USE ensemble_dft, ONLY: tens, compute_entropy
     USE runcp_module, ONLY: runcp_uspp
     USE electrons_base, ONLY: f, nspin
+    USE phase_factors_module, ONLY: strucf
 
     COMPLEX(kind=8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
     COMPLEX(kind=8) :: eigrb(:,:)
@@ -264,7 +269,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     lambdam = lambda
 !     
     call phfac( tau0, ei1, ei2, ei3, eigr )
-    call strucf( ei1, ei2, ei3, sfac )
+    call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     call formf( tfirst, eself )
 
     IF( tefield ) THEN

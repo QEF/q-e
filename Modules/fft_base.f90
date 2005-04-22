@@ -45,7 +45,7 @@
 
 
         INTEGER, ALLOCATABLE :: stmask(:)
-        REAL(dbl), ALLOCATABLE :: fft_timing(:,:)
+        REAL(dbl) :: fft_timing( 4, 2 ) = 0.0d0
 
 
 !=----------------------------------------------------------------------=!

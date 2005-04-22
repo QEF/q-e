@@ -71,7 +71,7 @@
 !  ----------------------------------------------
 
 
-    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, gv, kp, tecfix, f, rsum, xmkin)
+    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, tecfix, f, rsum, xmkin)
 
 !  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
 !  wave function
@@ -81,15 +81,14 @@
         USE brillouin, ONLY: kpoints
         USE wave_types, ONLY: wave_descriptor
         USE electrons_module, ONLY: pmss
-        USE cp_types, ONLY: recvecs
         USE control_flags, ONLY: force_pairing
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gk_l
 
         IMPLICIT NONE
 
         COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)       !  wave functions coefficients
         TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
         REAL(dbl), INTENT(IN) :: f(:,:,:)             !  occupation numbers
-        TYPE (recvecs), INTENT(IN) :: gv              !  reciprocal space vectors
         TYPE (kpoints), INTENT(IN) :: kp              !  k points
         LOGICAL, INTENT(IN) :: tecfix                 !  Constant Cut-off is used
         REAL(dbl), INTENT(OUT) :: rsum(:)             !  charge density
@@ -104,7 +103,7 @@
 
       IF( ( cdesc%nkl > SIZE( c0, 3 )       ) .OR. &
           ( cdesc%nkl > SIZE( kp%weight )   ) .OR. &
-          ( cdesc%nkl > SIZE( gv%khg_l, 2 ) ) .OR. &
+          ( cdesc%nkl > SIZE( gk_l, 2 )     ) .OR. &
           ( cdesc%nkl > SIZE( f, 2 )        )    ) &
         CALL errore( ' dft_kinetic_energy ', ' wrong arrays sizes ', 1 )
 
@@ -126,9 +125,9 @@
           END IF
 
           IF( tecfix ) THEN
-            gmod2 => gv%khgcutz_l(:,ik)
+            gmod2 => gkcutz_l(:,ik)
           ELSE
-            gmod2 => gv%khg_l(:,ik)
+            gmod2 => gk_l(:,ik)
           ENDIF
 
           xkin  = xkin + fact * &

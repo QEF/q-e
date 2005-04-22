@@ -469,47 +469,25 @@
           return
         END SUBROUTINE ions_setup
 
-!  BEGIN manual -------------------------------------------------------------   
+!   -------------------------------------------------------------   
 
-       SUBROUTINE atoms_init(atoms_m, atoms_0, atoms_p, tau_srt, ind_srt, &
-         if_pos, atml, aunits, alat, ht_0)
+       SUBROUTINE atoms_init(atoms_m, atoms_0, atoms_p, stau, ind_srt, if_pos, atml, h)
 
-!  Allocate and fill the three atoms structure using position an cell
-!  read from stdin. These initial values could be overwritten in module
-!  restart.f90 with the values read from restart file.
-!  This subroutine is called from modules init.f90
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-         USE cell_module, ONLY: boxdimensions, s_to_r, r_to_s
-         USE constants, ONLY: angstrom_au
+         !   Allocate and fill the three atoms structure using scaled position an cell
 
          IMPLICIT NONE
 !
          TYPE (atoms_type)    :: atoms_0, atoms_p, atoms_m
-         TYPE (boxdimensions) :: ht_0
-         REAL(dbl), INTENT(IN) :: tau_srt(:,:)
-         CHARACTER(LEN=*), INTENT(IN) :: aunits
+         REAL(dbl), INTENT(IN) :: h( 3, 3 )
+         REAL(dbl), INTENT(IN) :: stau(:,:)
          CHARACTER(LEN=3), INTENT(IN) :: atml(:)
-         REAL(dbl), INTENT(IN) :: alat
          INTEGER, INTENT(IN) :: ind_srt( : )
          INTEGER, INTENT(IN) :: if_pos( :, : )
           
-         REAL(dbl), ALLOCATABLE :: stau(:,:)
-         LOGICAL  , ALLOCATABLE :: ismb(:,:)
-         REAL(dbl) :: p( 3 )
-         INTEGER :: ia, isa
-         LOGICAL, SAVE :: atoms_init_first = .true.
+         LOGICAL, ALLOCATABLE :: ismb(:,:)
+         INTEGER              :: ia, isa
 
-         IF( .NOT. atoms_init_first ) THEN
-           CALL errore(' atoms_init ',' atoms objects already initialized ', 1)
-         END IF
-
-         ALLOCATE( stau( 3, nat ), ismb( 3, nat ) )
-
-         DO ia = 1, nat
-           CALL r_to_s( tau_srt(:,ia), stau(:,ia), ht_0)
-         END DO
+         ALLOCATE( ismb( 3, nat ) )
 
          ismb = .TRUE.
          DO isa = 1, nat
@@ -517,18 +495,15 @@
            IF( if_pos( 1, ia ) == 0 ) ismb( 1, isa ) = .FALSE.
            IF( if_pos( 2, ia ) == 0 ) ismb( 2, isa ) = .FALSE.
            IF( if_pos( 3, ia ) == 0 ) ismb( 3, isa ) = .FALSE.
-           ! WRITE(6,*) 'DEBUG atoms_init ', ismb(1:3,isa)
          END DO
 
-         CALL atoms_type_init(atoms_m, stau, ismb, atml, pmass, na, nsp, ht_0%hmat)
-         CALL atoms_type_init(atoms_0, stau, ismb, atml, pmass, na, nsp, ht_0%hmat)
-         CALL atoms_type_init(atoms_p, stau, ismb, atml, pmass, na, nsp, ht_0%hmat)
+         CALL atoms_type_init(atoms_m, stau, ismb, atml, pmass, na, nsp, h)
+         CALL atoms_type_init(atoms_0, stau, ismb, atml, pmass, na, nsp, h)
+         CALL atoms_type_init(atoms_p, stau, ismb, atml, pmass, na, nsp, h)
 
          CALL print_scaled_positions( atoms_0, stdout, 'from standard input')
 
-         DEALLOCATE( stau, ismb )
-
-         atoms_init_first = .FALSE.
+         DEALLOCATE( ismb )
 
          RETURN
        END SUBROUTINE atoms_init

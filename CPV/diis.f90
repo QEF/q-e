@@ -27,10 +27,10 @@
 !  SUBROUTINE diis_print_info(unit)
 !  SUBROUTINE converg(c,gemax,cnorm,tprint)
 !  SUBROUTINE converg_kp(c,weight,gemax,cnorm,tprint)
-!  SUBROUTINE hesele(svar2,gv,vpp,wsg,wnl,eigr,vps,ik)
-!  SUBROUTINE simupd(gemax,doions,gv,c0,cgrad,svar0,svarm,svar2,etot,f, &
+!  SUBROUTINE hesele(svar2,vpp,wsg,wnl,eigr,vps,ik)
+!  SUBROUTINE simupd(gemax,doions,c0,cgrad,svar0,svarm,svar2,etot,f, &
 !                    eigr,vps,wsg,wnl,treset,istate,cnorm,eold,ndiis,nowv)
-!  SUBROUTINE simupd_kp(gemax,doions,gv,c0,cgrad,svar0,svarm,svar2, &
+!  SUBROUTINE simupd_kp(gemax,doions,c0,cgrad,svar0,svarm,svar2, &
 !                       etot,f,eigr,vps,wsg,wnl, treset,istate,cnorm, &
 !                       eold,ndiis,nowv)
 !  SUBROUTINE updis(ndiis,nowv,nsize,max_diis,iact)
@@ -306,7 +306,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE hesele(svar2, gv, vpp, wsg, wnl, eigr, sfac, vps, ik)
+      SUBROUTINE hesele(svar2, vpp, wsg, wnl, eigr, sfac, vps, ik)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -315,16 +315,16 @@
        USE cell_base, ONLY: tpiba2
        USE gvecw, ONLY: tecfix
        USE pseudopotential, ONLY: tl, l2ind, nspnl, lm1x
-       USE cp_types, ONLY: recvecs
        USE ions_base, ONLY: nsp, na
        USE mp_global, ONLY: group
        USE mp, ONLY: mp_sum, mp_max
+       USE reciprocal_vectors, ONLY: gstart, gzero
+       USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l, gk_l
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       REAL(dbl) :: svar2
-      TYPE (recvecs) :: gv
       REAL(dbl) :: wnl(:,:,:,:), wsg(:,:), vps(:,:)
       REAL(dbl) :: vpp(:)
       COMPLEX(dbl) :: sfac(:,:)
@@ -350,9 +350,9 @@
 ! ... local potential
       vp = 0.0d0
       IF( .NOT. PRESENT(ik) ) THEN
-        IF(gv%gzero) THEN
+        IF(gzero) THEN
           DO i = 1, nsp
-            vp = vp + REAL( sfac(i,1) ) * vps(1,i)
+            vp = vp + REAL( sfac(1,i) ) * vps(1,i)
           END DO
         END IF
         CALL mp_sum(vp, group)
@@ -382,26 +382,24 @@
       IF( PRESENT(ik) ) ikk = ik
 
       IF(tecfix) THEN
-        vpp(:) = vpp(:) + ftpi * gv%khgcutz_l( 1:SIZE(vpp), ikk )
+        vpp(:) = vpp(:) + ftpi * gkcutz_l( 1:SIZE(vpp), ikk )
       ELSE
-        vpp(:) = vpp(:) + ftpi * gv%khg_l( 1:SIZE(vpp), ikk )
+        vpp(:) = vpp(:) + ftpi * gk_l( 1:SIZE(vpp), ikk )
       END IF
 
       WHERE ( ABS( vpp ) .LT. hthrs_diis ) vpp = hthrs_diis
       vpp = 1.0d0 / vpp
 
-      IF ( PRESENT(ik) ) vpp(:) = svar2 * gv%kg_mask_l(:,ik)
+      IF ( PRESENT(ik) ) vpp(:) = svar2 * gkmask_l(:,ik)
 
       RETURN
       END SUBROUTINE hesele
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE fermi_diis( ent, gv, kp, occ, nb, nel, eig, wke, efermi, sume, temp)
+      SUBROUTINE fermi_diis( ent, kp, occ, nb, nel, eig, wke, efermi, sume, temp)
         USE brillouin, ONLY: kpoints
         USE electrons_module, ONLY: fermi_energy
-        USE cp_types, ONLY: recvecs
-        TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (kpoints), INTENT(IN) ::  kp
         REAL(dbl)   :: occ(:,:,:)
         REAL(dbl)   :: wke(:,:,:)
@@ -424,7 +422,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE simupd(gemax,doions,gv,c0,cgrad,cdesc,svar0,svarm,svar2,etot,f, &
+      SUBROUTINE simupd(gemax,doions,c0,cgrad,cdesc,svar0,svarm,svar2,etot,f, &
                         eigr,sfac,vps,wsg,wnl,treset,istate,cnorm,eold,ndiis,nowv)
 
 !  this routine performs a DIIS step
@@ -432,11 +430,12 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs
       USE wave_types, ONLY: wave_descriptor
       USE mp_global, ONLY: group
       USE io_global, ONLY: stdout
       USE mp, ONLY: mp_sum, mp_max
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart, gzero
 
       IMPLICIT NONE
 
@@ -449,7 +448,6 @@
 ! hthrs_diis  (REAL(dbl)  ) minimum value for a hessel matrix elm.
 ! etot   (REAL(dbl)  ) Kohn-Sham energy
 
-      TYPE (recvecs) :: gv
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(dbl) :: sfac(:,:) 
@@ -462,11 +460,11 @@
       INTEGER ::  ndiis, nowv
 
 ! ... declare other variables
-      COMPLEX(dbl), ALLOCATABLE :: cm(:,:) !  cm(gv%ngw_l,c0(1)%nb_l)
+      COMPLEX(dbl), ALLOCATABLE :: cm(:,:) !  cm(ngw,c0(1)%nb_l)
       REAL(dbl),    ALLOCATABLE :: bc(:,:) !  bc(max_diis+1,max_diis+1)
       REAL(dbl),    ALLOCATABLE :: vc(:)   !  vc(max_diis+1)
       REAL(dbl),    ALLOCATABLE :: fm1(:)
-      REAL(dbl),    ALLOCATABLE :: vpp(:)  !  vpp(gv%ngw_l)
+      REAL(dbl),    ALLOCATABLE :: vpp(:)  !  vpp(ngw)
       REAL(dbl)    cnorm
       REAL(dbl)    var2,rc0rc0,ff,vvpp,fff,rri
       REAL(dbl)    rrj,rii,rij,r1,r2
@@ -553,13 +551,13 @@
         CALL update_diis_buffers( c0, cgrad, cdesc, nowv)
 
 ! ...   calculate the new Hessian
-        CALL hesele(svar2,gv,vpp,wsg,wnl,eigr,sfac,vps)
+        CALL hesele(svar2,vpp,wsg,wnl,eigr,sfac,vps)
 
 ! ...   set up DIIS matrix
         ff=1.0d0
         bc(1:nsize,1:nsize) = 0.0d0
 
-        DO l=gv%gstart,gv%ngw_l
+        DO l=gstart,ngw
           vvpp=vpp(l)*vpp(l)
           DO k=1, cdesc%nbl( 1 )
             IF(oqnr_diis ) ff = fm1(k)
@@ -576,7 +574,7 @@
           END DO
         END DO
 
-        IF(gv%gzero) THEN
+        IF(gzero) THEN
           DO k = 1, cdesc%nbl( 1 )
             IF(oqnr_diis ) ff = fm1(k)
             fff=ff*ff*vpp(1)*vpp(1)
@@ -641,7 +639,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE simupd_kp(gemax,doions,gv,kp,c0,cgrad,cdesc,svar0,svarm,svar2, &
+      SUBROUTINE simupd_kp(gemax,doions,kp,c0,cgrad,cdesc,svar0,svarm,svar2, &
                  etot,occ,eigr,sfac,vps,wsg,wnl, treset,istate,cnorm, &
                  eold,ndiis,nowv)
 
@@ -650,7 +648,6 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE cp_types, ONLY: recvecs
       USE wave_types, ONLY: wave_descriptor
       USE brillouin, ONLY: kpoints
       USE mp_global, ONLY: group
@@ -668,7 +665,6 @@
 ! hthrs_diis  (REAL(dbl)  ) minimum value for a Hessian matrix element
 ! etot   (REAL(dbl)  ) Kohn-Sham energy
 
-      TYPE (recvecs) gv
       TYPE (kpoints) kp
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
@@ -775,13 +771,13 @@
           END WHERE
 
 ! ...     calculate the new Hessian
-          CALL hesele(svar2,gv,vpp,wsg,wnl,eigr,sfac,vps,ik)
+          CALL hesele(svar2,vpp,wsg,wnl,eigr,sfac,vps,ik)
 
 ! ...       set up DIIS matrix
             ff=1.0d0
             bc(1:nsize,1:nsize) = CMPLX(0.0d0,0.0d0)
 
-            DO l=1,gv%ngw_l
+            DO l=1, cdesc%ngwl
               vvpp = vpp(l)*vpp(l)
               DO k=1, cdesc%nbl( 1 )
                 IF(oqnr_diis) ff = fm1(k)
@@ -820,7 +816,7 @@
             c0(:,:,ik) = CMPLX(0.0d0,0.0d0)
             DO i=1,nsize-1
               DO j=1,cdesc%nbl( 1 )
-                DO k=1,gv%ngw_l
+                DO k=1,cdesc%ngwl
                   cm(k,j)    = cm(k,j)    + CONJG(vc(i)) * grade(k,j,ik,i)
                   c0(k,j,ik) = c0(k,j,ik) + CONJG(vc(i)) * parame(k,j,ik,i)
                 END DO

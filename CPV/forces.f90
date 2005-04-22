@@ -13,19 +13,19 @@
 !  SISSA, Trieste, Italy - 1997-99
 !  Last modified: Wed Oct 13 15:28:58 MDT; 1999
 !  ----------------------------------------------
-!  SUBROUTINE dforce_p(ik,ib,c,df,da,f,gv,v,fnl,eigr,ps) 
+!  SUBROUTINE dforce_p(ik,ib,c,df,da,f,v,fnl,eigr,ps) 
 !  SUBROUTINE dforce1(co,ce,dco,dce,fio,fie,hg,v,psi_stored)
-!  SUBROUTINE dforce2(fi,fip1,df,da,gv,fnl,eigr,wsg,wnl) 
+!  SUBROUTINE dforce2(fi,fip1,df,da,fnl,eigr,wsg,wnl) 
 !
 !  SUBROUTINE dforce_d(ik,ib,c,df,f,hg,v,fnl,eigr,ps)
-!  SUBROUTINE dforce1_d(co,dco,fi,gv,v) 
-!  SUBROUTINE dforce2_d(i,fi,df,gv,fnl,eigr,wsg,wnl)
+!  SUBROUTINE dforce1_d(co,dco,fi,v) 
+!  SUBROUTINE dforce2_d(i,fi,df,fnl,eigr,wsg,wnl)
 !
-!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,gv,v)
-!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,gv,v)
-!  SUBROUTINE dforce2_kp(ib,ik,fi,df,gv,fnlk,eigr,wsg,wnl)
+!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,v)
+!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,v)
+!  SUBROUTINE dforce2_kp(ib,ik,fi,df,fnlk,eigr,wsg,wnl)
 !
-!  SUBROUTINE dforce_all(c0,cgrad,gv,vpot,fnl,eigr,ps)
+!  SUBROUTINE dforce_all(c0,cgrad,vpot,fnl,eigr,ps)
 !
 !  INTERFACE  dforce
 !  ----------------------------------------------
@@ -195,16 +195,16 @@
 !=----------------------------------------------------------------------------=!
 
      
-      subroutine dforce_p( ik, ib, c, cdesc, f, df, da, gv, v, fnl, eigr, ps )
+      subroutine dforce_p( ik, ib, c, cdesc, f, df, da, v, fnl, eigr, ps )
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
         USE gvecw, ONLY: tecfix
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
         implicit none
         integer ik,ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
         COMPLEX(dbl) :: df(:), da(:)
-        type (recvecs) :: gv
         REAL (dbl)     :: v(:,:,:), f(:,:)
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
@@ -213,9 +213,9 @@
         INTEGER :: istate
         istate = (ib+1)/2
         IF(tecfix) THEN
-          hg => gv%khgcutz_l(:,ik)
+          hg => gkcutz_l(:,ik)
         ELSE
-          hg => gv%khg_l(:,ik)
+          hg => gk_l(:,ik)
         END IF
         IF( tturbo .AND. ( istate <= nturbo ) ) THEN
           CALL dforce1(c(:,ib,ik), c(:,ib+1,ik), df, da, &
@@ -225,30 +225,30 @@
             f(ib,ik), f(ib+1,ik), hg, v)
         END IF
         CALL dforce2(f(ib,ik), f(ib+1,ik), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gv%khg_l(:,ik), gv%kgx_l(:,:,ik), eigr, &
+          fnl(:,:,ib+1), gk_l(:,ik), gkx_l(:,:,ik), eigr, &
           ps%wsg, ps%wnl(:,:,:,ik)) 
         return
       end subroutine
 
-      subroutine dforce_p_s(ib, c, cdesc, f, df, da, gv, v, fnl, eigr, wsg, wnl)
+      subroutine dforce_p_s(ib, c, cdesc, f, df, da, v, fnl, eigr, wsg, wnl)
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
         USE gvecw, ONLY: tecfix
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
         COMPLEX(dbl), INTENT(OUT) :: df(:), da(:)
-        TYPE (recvecs), INTENT(IN) :: gv
         REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
         COMPLEX(dbl), INTENT(IN)  :: eigr(:,:)
         REAL(dbl), POINTER :: hg(:)
         INTEGER :: istate
         istate = (ib+1)/2
         IF(tecfix) THEN
-          hg => gv%khgcutz_l(:,1)
+          hg => gkcutz_l(:,1)
         ELSE
-          hg => gv%khg_l(:,1)
+          hg => gk_l(:,1)
         END IF
         IF(tturbo.AND.(istate.LE.nturbo)) THEN
           CALL dforce1(c(:,ib), c(:,ib+1), df, da, &
@@ -257,7 +257,7 @@
           CALL dforce1(c(:,ib), c(:,ib+1), df, da, f(ib), f(ib+1), hg, v)
         END IF
         CALL dforce2(f(ib), f(ib+1), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gv%khg_l(:,1), gv%kgx_l(:,:,1), eigr, wsg, wnl)
+          fnl(:,:,ib+1), gk_l(:,1), gkx_l(:,:,1), eigr, wsg, wnl)
         return
       end subroutine
 
@@ -337,7 +337,6 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (recvecs) gv
       REAL(dbl), INTENT(IN) :: wnl(:,:,:)
       COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
       REAL(dbl), INTENT(IN) :: fi, fnl(:,:),wsg(:,:)
@@ -391,52 +390,52 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
      
-      SUBROUTINE dforce_d(ik, ib, c, cdesc, f, df, gv, v, fnl, eigr, ps)
+      SUBROUTINE dforce_d(ik, ib, c, cdesc, f, df, v, fnl, eigr, ps)
         USE wave_types, ONLY: wave_descriptor
         USE gvecw, ONLY: tecfix
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
         IMPLICIT NONE
         integer ik, ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
         COMPLEX(dbl) :: df(:)
-        type (recvecs) :: gv
         REAL (dbl)     :: v(:,:,:), f(:,:)
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
         COMPLEX(dbl) :: eigr (:,:)
         REAL(dbl), POINTER :: hg(:)
         IF(tecfix) THEN
-          hg => gv%khgcutz_l(:,ik)
+          hg => gkcutz_l(:,ik)
         ELSE
-          hg => gv%khg_l(:,ik)
+          hg => gk_l(:,ik)
         END IF
         CALL dforce1_d(c(:,ib,ik), df, f(ib,ik), hg, v)
-        CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), gv%khg_l(:,ik), &
-          gv%kgx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik))
+        CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), gk_l(:,ik), &
+          gkx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik))
         return
       end subroutine
 
-      subroutine dforce_d_s(ib, c, cdesc, f, df, gv, v, fnl, eigr, wsg, wnl)
+      subroutine dforce_d_s(ib, c, cdesc, f, df, v, fnl, eigr, wsg, wnl)
         USE wave_types, ONLY: wave_descriptor
         USE gvecw, ONLY: tecfix
         USE turbo, ONLY: tturbo, nturbo, turbo_states
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
         COMPLEX(dbl), INTENT(OUT) :: df(:)
-        TYPE (recvecs), INTENT(IN) :: gv
         REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
         COMPLEX(dbl) :: eigr (:,:)
         REAL(dbl), POINTER :: hg(:)
         IF(tecfix) THEN
-          hg => gv%khgcutz_l(:,1)
+          hg => gkcutz_l(:,1)
         ELSE
-          hg => gv%khg_l(:,1)
+          hg => gk_l(:,1)
         END IF
         CALL dforce1_d(c(:,ib), df, f(ib), hg, v)
-        CALL dforce2_d(f(ib), df, fnl(:,:,ib), gv%khg_l(:,1), &
-          gv%kgx_l(:,:,1), eigr, wsg, wnl)
+        CALL dforce2_d(f(ib), df, fnl(:,:,ib), gk_l(:,1), &
+          gkx_l(:,:,1), eigr, wsg, wnl)
         return
       end subroutine
 
@@ -444,20 +443,21 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE dforce_kp( ik, ib, c0, cdesc, f, df, gv, v, fnlk, eigr, ps )
+      SUBROUTINE dforce_kp( ik, ib, c0, cdesc, f, df, v, fnlk, eigr, ps )
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
         USE wave_types, ONLY: wave_descriptor
+        USE reciprocal_space_mesh, ONLY: gkmask_l
         USE gvecw, ONLY: tecfix
+        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
 
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: ib, ik
         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:)
         type (wave_descriptor), INTENT(IN) :: cdesc
-        TYPE (recvecs)      :: gv
         COMPLEX(dbl)        :: df(:)
         REAL (dbl)          :: v(:,:,:), f(:,:)
         COMPLEX(dbl)        :: fnlk(:,:,:)
@@ -465,15 +465,14 @@
         TYPE (pseudo)       :: ps
 
         IF(tecfix) THEN
-          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gv%khgcutz_l(:,ik), v)
+          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gkcutz_l(:,ik), v)
         ELSE
-          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gv%khg_l(:,ik), v)
+          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gk_l(:,ik), v)
         END IF
-        CALL dforce2_kp( f(ib,ik), df, fnlk(:,:,ib), gv%khg_l(:,ik), &
-          gv%kgx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik) )
+        CALL dforce2_kp( f(ib,ik), df, fnlk(:,:,ib), gk_l(:,ik), &
+          gkx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik) )
 
-        c0(:,ib,ik) = c0(:,ib,ik) * gv%kg_mask_l(:,ik)
-        df(:) = df(:) * gv%kg_mask_l(:,ik)
+        df(:)       = df(:)       * gkmask_l(:,ik)
 
         RETURN
       END SUBROUTINE dforce_kp                                                           
@@ -594,7 +593,7 @@
       END SUBROUTINE
 
 
-      SUBROUTINE dforce_all( ispin, c, cdesc, f, cgrad, gv, vpot, fnl, eigr, ps, ik)
+      SUBROUTINE dforce_all( ispin, c, cdesc, f, cgrad, vpot, fnl, eigr, ps, ik)
         USE wave_types, ONLY: wave_descriptor
         USE pseudo_projector, ONLY: projector
         IMPLICIT NONE
@@ -604,7 +603,6 @@
         type (wave_descriptor), INTENT(IN) :: cdesc
         TYPE (pseudo), INTENT(IN) :: ps
         COMPLEX(dbl) ::  eigr(:,:)
-        TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (projector) :: fnl(:)
         REAL(dbl), INTENT(IN) :: vpot(:,:,:), f(:,:)
         COMPLEX(dbl), INTENT(OUT) :: cgrad(:,:,:)
@@ -627,18 +625,18 @@
           ELSE
             IF( .NOT. cdesc%gamma ) THEN
               DO ib = 1, nb
-                CALL dforce(ikk, ib, c, cdesc, f, cgrad(:,ib,ikk), gv, vpot(:,:,:), fnl(ikk)%c, eigr, ps)
+                CALL dforce(ikk, ib, c, cdesc, f, cgrad(:,ib,ikk), vpot(:,:,:), fnl(ikk)%c, eigr, ps)
               END DO
             ELSE
 ! ...         Process two states at the same time
               DO ib = 1, ( nb - MOD(nb,2) ), 2
                 CALL dforce(ikk, ib, c, cdesc, f, cgrad(:,ib,ikk), cgrad(:,ib+1,1), &
-                  gv, vpot(:,:,:), fnl(ikk)%r, eigr, ps)
+                  vpot(:,:,:), fnl(ikk)%r, eigr, ps)
               END DO
 ! ...         Account for an odd number of states
               ib = nb
               IF( MOD(ib,2) .GT. 0 ) THEN
-                CALL dforce(ikk, ib, c, cdesc, f, cgrad(:,ib,ikk), gv, vpot(:,:,:), fnl(ikk)%r, eigr, ps)
+                CALL dforce(ikk, ib, c, cdesc, f, cgrad(:,ib,ikk), vpot(:,:,:), fnl(ikk)%r, eigr, ps)
               END IF
             END IF
           END IF

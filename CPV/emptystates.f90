@@ -75,7 +75,7 @@
 !=----------------------------------------------------------------------------=!
 !
 
-      LOGICAL FUNCTION readempty( c_emp, wempt, gv )
+      LOGICAL FUNCTION readempty( c_emp, wempt )
 
 ! ...   This subroutine reads empty states from unit emptyunit
 
@@ -85,13 +85,12 @@
         USE mp, ONLY: mp_bcast
         USE mp_wave, ONLY: splitwf
         USE io_files, ONLY: scradir
-        USE cp_types, ONLY: recvecs
+        USE reciprocal_vectors, ONLY: ig_l2g
 
         IMPLICIT none
 
         COMPLEX(dbl), INTENT(INOUT) :: c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
-        TYPE (recvecs) :: gv
 
         LOGICAL :: exst
         INTEGER :: ierr, ig, i, ik, nl, ispin
@@ -153,7 +152,7 @@
                   READ(emptyunit) ( ctmp(ig), ig = 1, MIN( SIZE(ctmp), ngw_rd ) )
                 END IF
                 IF( i <= ne(ispin) ) THEN
-                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, gv%ngw_l, gv%ig, mpime, nproc, root)
+                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, mpime, nproc, root)
                 END IF
               END DO
             END DO
@@ -175,7 +174,7 @@
 !=----------------------------------------------------------------------------=!
 !
 
-      SUBROUTINE writeempty( c_emp, wempt, gv )
+      SUBROUTINE writeempty( c_emp, wempt )
 
 ! ...   This subroutine writes empty states to unit emptyunit
 
@@ -183,13 +182,12 @@
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
         USE io_files, ONLY: scradir
-        USE cp_types, ONLY: recvecs
+        USE reciprocal_vectors, ONLY: ig_l2g
 
         COMPLEX(dbl), INTENT(IN) :: c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
-        TYPE (recvecs) :: gv
 
-        INTEGER :: ig, i, ik, nl, ne(2), ngwm_g, nk, ispin, nspin
+        INTEGER :: ig, i, ik, nl, ne(2), ngwm_g, nk, ispin, nspin, ngw
         LOGICAL :: exst
         COMPLEX(dbl), ALLOCATABLE :: ctmp(:)
 !
@@ -201,6 +199,7 @@
         nk        = wempt%nkl
         nspin     = wempt%nspin
         ngwm_g    = wempt%ngwt 
+        ngw       = wempt%ngwl
         ne        = 0
         ne( 1 : nspin ) = wempt%nbl( 1 : nspin )
 
@@ -222,7 +221,7 @@
           DO ik = 1, nk
             DO i = 1, ne(ispin)
               ctmp = 0.0d0
-              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), gv%ngw_l, gv%ig, mpime, nproc, root)
+              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, mpime, nproc, root)
               IF( mpime == 0 ) THEN
                 WRITE (emptyunit) ( ctmp(ig), ig=1, ngwm_g )
               END IF
@@ -361,19 +360,19 @@
 !     
 !================================================================
 !
-      SUBROUTINE randomizza(c_occ, wfill, ampre, c_emp, wempt, gv, kp)
+      SUBROUTINE randomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
         USE wave_types, ONLY: wave_descriptor
-        USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt
+        USE reciprocal_vectors, ONLY: ig_l2g
         USE mp_global, ONLY: mpime, nproc, root
         USE mp_wave, ONLY: splitwf
         USE brillouin, ONLY: kpoints
-        USE cp_types, ONLY: recvecs
         USE control_flags, ONLY: force_pairing
+        USE reciprocal_space_mesh, ONLY: gkmask_l
+        USE wave_functions, ONLY: wave_rand_init
 
 ! ...   Arguments
         COMPLEX(dbl), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-        TYPE (recvecs), INTENT(IN) :: gv 
         TYPE (kpoints), INTENT(IN) :: kp
         REAL(dbl)                  :: ampre  
 
@@ -382,17 +381,18 @@
 
 ! ...   Locals
         INTEGER   :: ig_local
-        INTEGER   :: ib, ik, ispin, i, ig, ntest, j, ispin_wfc
+        INTEGER   :: ngw, ngwt
+        INTEGER   :: ib, ik, ispin, ispin_wfc
         LOGICAL   :: tortho = .FALSE.
-        REAL(dbl) :: rranf1, rranf2
         COMPLEX(dbl), ALLOCATABLE :: pwt( : )
 !
-        ntest = gv%ngw_g / 4
-
 ! ...   Subroutine body
 
 ! ...   initialize the wave functions in such a way that the values
 ! ...   of the components are independent on the number of processors
+
+        ngwt  = wfill%ngwt
+        ngw   = wfill%ngwl
 
         ALLOCATE( pwt( ngwt ) )
 
@@ -400,23 +400,14 @@
           ispin_wfc = ispin
           IF( force_pairing ) ispin_wfc = 1
           DO ik = 1, wempt%nkl
-            c_emp(:,:,ik,ispin) = 0.0d0
-            DO ib = 1, wempt%nbl( ispin )
-              pwt( 1 ) = 0.0d0
-              DO ig = 2, ntest
-                rranf1 = 0.5d0 - rranf()
-                rranf2 = rranf()
-                pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
-              END DO
-              CALL splitwf ( c_emp( :, ib, ik, ispin ), pwt, ngw, ig_l2g, mpime, nproc, 0 )
-            END DO
+            CALL wave_rand_init( c_emp( :, :, ik, ispin ) )
             IF ( .NOT. kp%gamma_only ) THEN
 ! ..  .       set to zero all elements outside the cutoff sphere
               DO ib = 1, wempt%nbl( ispin )
-                c_emp(:,ib,ik,ispin) = c_emp(:,ib,ik,ispin) * gv%kg_mask_l(:,ik)
+                c_emp(:,ib,ik,ispin) = c_emp(:,ib,ik,ispin) * gkmask_l(:,ik)
               END DO
             END IF
-            IF ( gv%gzero ) THEN
+            IF ( wempt%gzero ) THEN
               c_emp(1,:,ik,ispin) = (0.0d0, 0.0d0)
             END IF
             CALL gram_empty( ispin, tortho, c_occ(:,:,ik,ispin_wfc), wfill, c_emp(:,:,ik,ispin), wempt )
@@ -432,7 +423,7 @@
 !=======================================================================
 !
 
-    SUBROUTINE EMPTY_SD( tortho, atoms, gv, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
+    SUBROUTINE EMPTY_SD( tortho, atoms, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
 
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: cp_kinetic_energy, crot, dft_kinetic_energy, fixwave
@@ -456,8 +447,9 @@
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE cp_types, ONLY: recvecs, pseudo
+      USE cp_types, ONLY: pseudo
       USE control_flags, ONLY: force_pairing
+      USE reciprocal_space_mesh, ONLY: gkmask_l, gkx_l, gk_l
 
       IMPLICIT NONE
 
@@ -466,7 +458,6 @@
       COMPLEX(dbl), INTENT(INOUT) ::  c_occ(:,:,:,:), c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wfill, wempt
       TYPE (atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      TYPE (recvecs), INTENT(IN) ::  gv
       REAL (dbl), INTENT(IN) ::   vpot(:,:,:,:)
       TYPE (kpoints), INTENT(IN) :: kp
       TYPE (pseudo), INTENT(IN) :: ps
@@ -477,9 +468,9 @@
 !
 
       INTEGER   ::  i, k, j, iter, ik, nk
-      INTEGER   ::  ngw, ngw_g, nspin, ispin, ispin_wfc
+      INTEGER   ::  nspin, ispin, ispin_wfc
       INTEGER   ::  n_occ( wfill%nspin )
-      INTEGER   ::  ig, iprinte, iks, nrl, jl
+      INTEGER   ::  ig, iprinte, iks, nrl, jl, ngw
       REAL(dbl) ::  dek, ekinc, ekinc_old
       REAL(dbl) :: ampre
       REAL(dbl), ALLOCATABLE :: dt2bye( : )
@@ -487,7 +478,7 @@
       TYPE (projector) :: fnle( SIZE(c_emp, 3), SIZE(c_emp, 4) )
       COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:,:), cp_emp(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: fi(:,:,:)
-      LOGICAL       :: gamma, gzero
+      LOGICAL       :: gamma
       LOGICAL, SAVE :: exst
 !
 ! ... SUBROUTINE BODY
@@ -496,9 +487,7 @@
       nk        = wfill%nkl
       nspin     = wfill%nspin
       ngw       = wfill%ngwl
-      ngw_g     = wfill%ngwt
       n_occ     = wfill%nbt
-      gzero     = wfill%gzero
       gamma     = wfill%gamma
       ampre     = 0.001d0
 
@@ -513,10 +502,10 @@
 
       IF( ionode ) WRITE( stdout,56)
 
-      exst = readempty( c_emp, wempt, gv )
+      exst = readempty( c_emp, wempt )
       ! .. WRITE( stdout, * )' DEBUG empty 1 ', exst
       IF( .NOT. exst ) THEN
-        CALL randomizza(c_occ, wfill, ampre, c_emp, wempt, gv, kp)
+        CALL randomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
       END IF
 
       dt2bye = delt * delt / pmss
@@ -537,17 +526,17 @@
           DO ik = 1, kp%nkpt
 
             CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-                gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
+                gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
 
             CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
-              gv, vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps, ik)
+              vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps, ik)
 
 ! ...       Steepest descent
             DO i = 1, n_emp
               cp_emp(:,i,ik,ispin) = c_emp(:,i,ik,ispin) +  dt2bye(:) * eforce(:, i, ik, ispin)
             END DO
 
-            CALL fixwave( ispin, cp_emp(:,:,ik,ispin), wempt, gv%kg_mask_l(:,ik) )
+            CALL fixwave( ispin, cp_emp(:,:,ik,ispin), wempt, gkmask_l(:,ik) )
 
             IF (tortho) THEN
 
@@ -563,7 +552,7 @@
 
           END DO
           ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, &
-            kp, gv%kg_mask_l, pmss, delt)
+            kp, gkmask_l, pmss, delt)
 
         END DO SPIN_LOOP
 
@@ -589,9 +578,9 @@
 
       END DO ITERATIONS
 
-      CALL empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, gv, kp)
+      CALL empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, kp)
 
-      CALL writeempty( c_emp, wempt, gv )
+      CALL writeempty( c_emp, wempt )
 
       CALL deallocate_projector(fnle)
       DEALLOCATE( eforce )
@@ -614,7 +603,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, gv, kp)
+    SUBROUTINE empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, kp)
 
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: crot
@@ -631,7 +620,8 @@
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: mpime, nproc, group
       USE atoms_type_module, ONLY: atoms_type
-      USE cp_types, ONLY: recvecs, pseudo
+      USE cp_types, ONLY: pseudo
+      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
 
       IMPLICIT NONE
 
@@ -640,7 +630,6 @@
       COMPLEX(dbl), INTENT(inout) ::  c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wempt
       TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      TYPE (recvecs), INTENT(in) ::  gv
       REAL (dbl), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
       COMPLEX (dbl) ::  eforce(:,:,:,:)
       TYPE (kpoints), INTENT(in) :: kp
@@ -653,9 +642,9 @@
 !
 
       INTEGER     kk, i, k, j, iopt, iter, nwh, ik, nk, ibl
-      INTEGER     ngw, ngw_g, n_occ, nspin, ispin
+      INTEGER     ngw, n_occ, nspin, ispin
       INTEGER     ig, iprinte, iks, nrl, jl
-      LOGICAL     gamma, gzero
+      LOGICAL     gamma
 
       REAL(dbl),    ALLOCATABLE :: gam(:,:)
       COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
@@ -666,8 +655,6 @@
       nspin     = wempt%nspin
       nk        = wempt%nkl
       ngw       = wempt%ngwl
-      ngw_g     = wempt%ngwt 
-      gzero     = wempt%gzero
       gamma     = wempt%gamma
 
 !
@@ -681,11 +668,11 @@
 
         DO ik = 1, nk
           CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-              gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
+              gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
         END DO
 
 ! ...   Calculate | dH / dpsi(j) >
-        CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), gv, &
+        CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
           vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps)
 
         DO ik = 1, kp%nkpt

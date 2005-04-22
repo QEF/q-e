@@ -27,7 +27,7 @@
 !  SUBROUTINE allocate_charge_mix(ng_l)
 !  SUBROUTINE deallocate_charge_mix
 !  SUBROUTINE charge_mix_print_info(unit)
-!  SUBROUTINE newrho(rhoe,nfi,tcel,drho,gv)
+!  SUBROUTINE newrho(rhoe,nfi,tcel,drho)
 !  SUBROUTINE invgen(aa,dimaa)
 !  ----------------------------------------------
 !  END manual
@@ -141,7 +141,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE newrho(rhoe, drho, gv, nfi)
+      SUBROUTINE newrho(rhoe, drho, nfi)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -150,7 +150,8 @@
       USE fft, ONLY: pfwfft, pinvfft
       USE ions_base, ONLY: nsp
       USE cell_base, ONLY: tpiba2
-      USE cp_types, ONLY: recvecs
+      USE reciprocal_vectors, ONLY: gstart, gzero, g
+      USE gvecp, ONLY: ngm
       USE wave_base, ONLY: scalw
       USE mp_global, ONLY: group
       USE io_global, ONLY: stdout
@@ -159,27 +160,23 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (recvecs), INTENT(IN) :: gv
       REAL(dbl), INTENT(INOUT) :: rhoe(:,:,:)
       REAL(dbl), INTENT(OUT) ::  drho
       INTEGER, INTENT(IN) :: nfi
 
 ! ... declare other variables
       COMPLEX(dbl) :: dr
-      COMPLEX(dbl) :: rhoout(gv%ng_l)
+      COMPLEX(dbl) :: rhoout(ngm)
       REAL(dbl) :: g02, g12, ar, den, num, rsc
       REAL(dbl) :: alpha(daamax)
       REAL(dbl), ALLOCATABLE :: aa(:,:)
       REAL(dbl), ALLOCATABLE :: rho_old(:,:,:)
-      INTEGER :: ns, sp, is, ism, i, ig, gstart
+      INTEGER :: ns, sp, is, ism, i, ig
       LOGICAL, SAVE :: tfirst = .TRUE.
       INTEGER, SAVE :: dimaa, dimaaold, nrho_t, ierr
 
 ! ... end of declarations
 !  ----------------------------------------------
-
-      gstart = 1
-      IF( gv%gzero ) gstart = 2
 
       IF( nfi /= 0 .AND. tfirst ) THEN
 
@@ -188,19 +185,19 @@
       ELSE IF( nfi == 0 )THEN
 
         IF( tfirst ) THEN
-          CALL allocate_charge_mix( gv%ng_l )
+          CALL allocate_charge_mix( ngm )
         END IF
 
 ! ...   define array chmix = A * G^2 / (G^2 + G_0^2) and metric = (G^2 + G_1^2) / G^2
         g02 = g0chmix2 / tpiba2
         g12 = g1met2 / tpiba2
-        IF(gv%gzero) THEN
+        IF(gzero) THEN
           chmix(1)  = 0.0d0
           metric(1) = 0.0d0
         END IF
-        DO ig = gstart, gv%ng_l
-          chmix(ig)  = achmix * gv%hg_l(ig) / (gv%hg_l(ig)+g02)
-          metric(ig) = (gv%hg_l(ig)+g12)    /  gv%hg_l(ig)
+        DO ig = gstart, ngm
+          chmix(ig)  = achmix * g(ig) / (g(ig)+g02)
+          metric(ig) = (g(ig)+g12)    /  g(ig)
         END DO
         tfirst = .FALSE.
 
@@ -235,18 +232,18 @@
 
         WRITE( stdout, fmt='( 3X,"charge mixing of order  1")' )
 
-        DO ig = gstart, gv%ng_l
+        DO ig = gstart, ngm
           dr = rhoout(ig) - rho(ig,1)
           rr(ig,1) = dr
           rhoout(ig) = rho(ig,1) + chmix(ig) * dr
           rho(ig,is) = rhoout(ig)
         END DO
-        IF( gv%gzero ) THEN
+        IF( gzero ) THEN
           rhoout(1) = rho(1,1)
           rr(1,1)   = (0.d0,0.d0)
         END IF
         IF( daamax /= 1 )THEN
-          rsc = scalw(gv%gzero, rr(:,1), rr(:,1), metric)
+          rsc = scalw(gzero, rr(:,1), rr(:,1), metric)
           aa_save(1, 1) =  rsc
         END IF
 
@@ -261,10 +258,10 @@
 
         WRITE( stdout, fmt='( 3X,"charge mixing of order ",I2)' ) dimaa
 
-        DO ig = gstart, gv%ng_l
+        DO ig = gstart, ngm
           rr(ig,ism) = rhoout(ig) - rho(ig,ism)
         END DO
-        IF(gv%gzero) THEN
+        IF(gzero) THEN
           rr(1,ism) = (0.d0, 0.d0)
         END IF
 
@@ -277,7 +274,7 @@
 
 ! ...   Compute new matrix A
         DO i = 1, dimaa
-          rsc = scalw(gv%gzero,rr(:,i),rr(:,ism),metric)
+          rsc = scalw(gzero,rr(:,i),rr(:,ism),metric)
           aa(i,ism)=  rsc
           aa(ism,i)=  rsc
         END DO
@@ -295,14 +292,14 @@
         DEALLOCATE( aa, STAT=ierr )
         IF( ierr /= 0 ) CALL errore(' newrho ', ' deallocating aa ', ierr)
 
-        DO ig = gstart, gv%ng_l
+        DO ig = gstart, ngm
           rhoout(ig) = (0.d0,0.d0)
           DO i = 1, dimaa
             rhoout(ig) = rhoout(ig) + alpha(i) * ( rho(ig,i) + chmix(ig) * rr(ig,i) )
           END DO
           rho(ig,is) = rhoout(ig)
         END DO
-        IF(gv%gzero) THEN
+        IF(gzero) THEN
           rhoout(1) = rho(1,1)
         END IF
 

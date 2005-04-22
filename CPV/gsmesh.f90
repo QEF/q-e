@@ -25,7 +25,6 @@
 !  ----------------------------------------------
 !  routines in this module:
 !  SUBROUTINE gmeshset(ngw,ng)
-!  SUBROUTINE gindexset(gv,nr1,nr2,nr3)
 !  INTEGER FUNCTION owner_of_gvec(ig)
 !  SUBROUTINE newg(gv,kp,htm1)
 !  ----------------------------------------------
@@ -34,16 +33,35 @@
 ! ...   declare included modules
 
         USE kinds
-        USE cp_types
 
         USE cell_base, ONLY: tpiba, tpiba2
 
         IMPLICIT NONE
         SAVE
 
+        REAL(dbl) :: b1(3) = 0.0d0
+        REAL(dbl) :: b2(3) = 0.0d0
+        REAL(dbl) :: b3(3) = 0.0d0
+
+        !! ...    quantities related to k+G vectors
+
+        REAL(dbl), ALLOCATABLE, TARGET :: gkcutz_l(:,:) ! smooth cutoff factor index: G vector
+                                                        ! first index: G vector
+                                                        ! second index: k point
+
+        REAL(dbl), ALLOCATABLE         :: gkmask_l(:,:) ! cutoff mask
+        REAL(dbl), ALLOCATABLE, TARGET :: gk_l(:,:)     ! length squared of k+G
+        REAL(dbl), ALLOCATABLE         :: gkx_l(:,:,:)  ! components of k+G
+                                                        ! first index: G vector
+                                                        ! second index: x,y,z
+                                                        ! third index: k point
+
+
         PRIVATE
 
-        PUBLIC :: recvecs_units, newg, gindexset, gmeshinfo, gindex_closeup
+        PUBLIC :: recvecs_units, newg, gmeshinfo, gindex_closeup
+        PUBLIC :: b1, b2, b3
+        PUBLIC :: gkmask_l, gkcutz_l, gkx_l, gk_l
 
 ! ...   end of module-scope declarations
 !  ----------------------------------------------
@@ -51,8 +69,6 @@
 !=----------------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------------=!
-
-!  subroutines
 
 
    SUBROUTINE recvecs_units( alat )
@@ -65,9 +81,12 @@
      RETURN
    END SUBROUTINE
 
+
 !  ----------------------------------------------
 
-        SUBROUTINE gmeshinfo( )
+
+
+   SUBROUTINE gmeshinfo( )
           
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -121,136 +140,48 @@
 
           RETURN 
 
-        END SUBROUTINE  
+   END SUBROUTINE  
 
-!  ----------------------------------------------
-!  ----------------------------------------------
-        SUBROUTINE gindexset(gv, b1, b2, b3)
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-! ...     declare modules
-          USE mp_global, ONLY: mpime
-          USE io_global, ONLY: stdout
-          USE fft_types, ONLY: fft_dlay_descriptor
-          USE fft_base, ONLY: dfftp
-          USE stick_base, ONLY: stown => sticks_owner
-          USE reciprocal_vectors, only: &
-              ngw_g  => ngwt,   &
-              ngw_l  => ngw ,   &
-              ngw_lx => ngwx,   &
-              ng_g   => ngmt,   &
-              ng_l   => ngm ,   &
-              ng_lx  => ngmx,   &
-              gstart, &
-              gzero,  &
-              ig_l2g, &
-              mill_l, g, gx
-          
-
-          IMPLICIT NONE
-       
-! ...     declare subroutine arguments
-          TYPE (recvecs) gv
-          REAL(dbl), INTENT(IN) :: b1(3), b2(3), b3(3) 
-
-! ...     declare other variables
-          INTEGER ig, ng, i, j, k, is
-
-! ... end of declarations
-!  ----------------------------------------------
-
-          ng    = 0
-
-          gv%gzero  = gzero
-          gv%gstart = gstart
-
-          gv%bi1 = b1
-          gv%bi2 = b2
-          gv%bi3 = b3
-          gv%b1 = b1
-          gv%b2 = b2
-          gv%b3 = b3
-
-          gv%hg_l => g
-          gv%ig   => ig_l2g( 1:ng_l )
-          gv%mill => mill_l
-          gv%gx_l => gx
-
-          IF( ng_l /= gv%ng_l ) THEN
-            WRITE( stdout,*) ' MSG: gv%ng_l = ',gv%ng_l,' ng = ', ng_l 
-            CALL errore(' gindexset ',' inconsistent ng ', 2)
-          END IF
-
-          ng = ng_l
-
-          IF( gv%gzero .and. ( .not. ( gv%gstart == 2 ) ) ) THEN
-            CALL errore(' gindexset ',' gzero and gstart are inconsistent ', 3)
-          END IF
-          IF( gv%gstart < 1 .or. gv%gstart > 2 ) THEN
-            CALL errore(' gindexset ',' gstart out of range ', 4)
-          END IF
-
- 200      FORMAT(3I5)
-
-          RETURN
-        END SUBROUTINE gindexset
         
 !  ----------------------------------------------
-!  ----------------------------------------------
-        INTEGER FUNCTION owner_of_gvec(mill)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
 
-! ...     declare modules
-          USE stick_base, ONLY: stown => sticks_owner
+   INTEGER FUNCTION owner_of_gvec(mill)
 
-          IMPLICIT NONE
+     USE stick_base, ONLY: stown => sticks_owner
 
-! ...     declare function arguments
-          INTEGER, INTENT(IN) :: mill(:)
+     IMPLICIT NONE
 
-! ... end of declarations
-!  ----------------------------------------------
+     INTEGER, INTENT(IN) :: mill(:)
 
-          owner_of_gvec = stown( mill(1), mill(2) )
+     owner_of_gvec = stown( mill(1), mill(2) )
 
-          RETURN
-        END FUNCTION owner_of_gvec
+     RETURN
+   END FUNCTION owner_of_gvec
+
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE newg(gv,kp,htm1)
 
-!  this routine computes the squared modulus, Cartesian components and
-!  smooth cutoff masks of G vectors, from their Miller indices and the
-!  current cell shape. G vectors are expressed in units of 2*pi/alat.
+
+      SUBROUTINE newg( kp, htm1 )
+
+!  this routine computes the squared modulus, and Ciartesian components 
+!  of G vectors, from their Miller indices and current cell shape. 
+!  G vectors are expressed in units of 2*pi/alat.
 !  In generic-k-points calculations, squared modulus and components of
 !  k+G vectors are computed too, together with cutoff masks
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE gvecw, ONLY: tecfix, gcfix, gcsig, gcutz, gcutw
-      USE cell_module, ONLY: alat
-      USE brillouin, ONLY: kpoints
-        USE reciprocal_vectors, only: &
-              ngw_g  => ngwt,   &
-              ngw_l  => ngw ,   &
-              ngw_lx => ngwx,   &
-              ng_g   => ngmt,   &
-              ng_l   => ngm ,   &
-              ng_lx  => ngmx,   &
-              gstart, &
-              gzero,  &
-              ig_l2g, &
-              mill_l
+      USE gvecw,              ONLY: ngw, tecfix, gcfix, gcsig, gcutz, gcutw
+      USE gvecp,              ONLY: ngm
+      USE reciprocal_vectors, only: g, gx, mill_l
+      USE cell_module,        ONLY: alat
+      USE brillouin,          ONLY: kpoints
 
       IMPLICIT NONE
 
 ! ... declare subroutine argumentsz
-      TYPE (recvecs), INTENT(INOUT) :: gv
       TYPE (kpoints), INTENT(IN)  :: kp
       REAL(dbl), INTENT(IN) :: htm1(3,3)
       REAL(dbl) :: xk(3, SIZE(kp%xk, 2) )
@@ -260,9 +191,9 @@
       EXTERNAL erf, erfc
 
 ! ... declare other variables
-      INTEGER ig,i,j,k,ik
-      INTEGER isign
-      REAL(dbl) :: b1(3), b2(3), b3(3)
+      INTEGER   :: ig, i, j, k, ik, nkp
+      INTEGER   :: isign
+      REAL(dbl) :: gmax
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -270,67 +201,57 @@
       b1 = htm1(:,1)
       b2 = htm1(:,2)
       b3 = htm1(:,3)
-      gv%b1 = htm1(:,1)
-      gv%b2 = htm1(:,2)
-      gv%b3 = htm1(:,3)
 
-      DO ig = 1, gv%ng_l
+      call gcal( alat, b1, b2, b3, gmax )
 
-        i = gv%mill(1,ig)
-        j = gv%mill(2,ig)
-        k = gv%mill(3,ig)
-
-! ...   compute components of G
-        gv%gx_l(1,ig) = b1(1)*i + b2(1)*j + b3(1)*k
-        gv%gx_l(2,ig) = b1(2)*i + b2(2)*j + b3(2)*k
-        gv%gx_l(3,ig) = b1(3)*i + b2(3)*j + b3(3)*k
-
-        gv%gx_l(1,ig) = gv%gx_l(1,ig) * alat
-        gv%gx_l(2,ig) = gv%gx_l(2,ig) * alat
-        gv%gx_l(3,ig) = gv%gx_l(3,ig) * alat
-
-! ...   compute squared length
-        gv%hg_l(ig) = gv%gx_l(1,ig)**2 + gv%gx_l(2,ig)**2 + gv%gx_l(3,ig)**2
-
-      END DO
+      nkp = kp%nkpt
+      IF( .NOT. ALLOCATED( gk_l ) )       ALLOCATE( gk_l( ngw, nkp ) )
+      IF( .NOT. ALLOCATED( gkx_l ) )      ALLOCATE( gkx_l( 3, ngw, nkp ) )
+      IF( .NOT. ALLOCATED( gkcutz_l ) )   ALLOCATE( gkcutz_l( ngw, nkp ) )
+      IF( .NOT. ALLOCATED( gkmask_l ) )   ALLOCATE( gkmask_l  ( ngw, nkp ) )
+      IF( SIZE( gk_l ) /= ( ngw * nkp ) ) THEN
+        DEALLOCATE( gk_l )
+        DEALLOCATE( gkx_l )
+        DEALLOCATE( gkcutz_l )
+        DEALLOCATE( gkmask_l )
+        ALLOCATE( gk_l( ngw, nkp ) )
+        ALLOCATE( gkx_l( 3, ngw, nkp ) )
+        ALLOCATE( gkcutz_l( ngw, nkp ) )
+        ALLOCATE( gkmask_l( ngw, nkp ) )
+      END IF
 
       IF( kp%scheme == 'gamma' ) THEN
 
         DO ik = 1, kp%nkpt
-          gv%khg_l( 1:SIZE(gv%khg_l,1) ,ik)      = gv%hg_l( 1:SIZE(gv%khg_l,1) )
-          gv%kgx_l( 1:3, 1:SIZE(gv%khg_l,1), ik) = gv%gx_l( 1:3, 1:SIZE(gv%khg_l,1) )
+          gk_l( 1:ngw ,ik)       = g( 1:ngw )
+          gkx_l( 1:3, 1:ngw, ik) = gx( 1:3, 1:ngw )
         END DO
 
       ELSE
 
         DO ik = 1, kp%nkpt
 
-! ...     Bring k-points in the unscaled reciprocal space
           xk(:,ik) = kp%xk(:,ik)
-          !xk(1,ik) = htm1(1,1)*kp%xk(1,ik) + htm1(1,2)*kp%xk(2,ik) + htm1(1,3)*kp%xk(3,ik)
-          !xk(1,ik) = xk(1,ik) * alat
-          !xk(2,ik) = htm1(2,1)*kp%xk(1,ik) + htm1(2,2)*kp%xk(2,ik) + htm1(2,3)*kp%xk(3,ik)
-          !xk(2,ik) = xk(2,ik) * alat
-          !xk(3,ik) = htm1(3,1)*kp%xk(1,ik) + htm1(3,2)*kp%xk(2,ik) + htm1(3,3)*kp%xk(3,ik)
-          !xk(3,ik) = xk(3,ik) * alat
-          !WRITE( stdout,*) alat, xk(1,ik), xk(2,ik), xk(3,ik)
 
 ! ...     compute components of G
-          DO ig = 1, SIZE( gv%khg_l, 1 )
+          DO ig = 1, ngw
 
 ! ...       compute components of G+k
-            gv%kgx_l(1,ig,ik) = gv%gx_l(1,ig) + xk(1,ik)
-            gv%kgx_l(2,ig,ik) = gv%gx_l(2,ig) + xk(2,ik)
-            gv%kgx_l(3,ig,ik) = gv%gx_l(3,ig) + xk(3,ik)
+
+            gkx_l(1,ig,ik) = gx(1,ig) + xk(1,ik)
+            gkx_l(2,ig,ik) = gx(2,ig) + xk(2,ik)
+            gkx_l(3,ig,ik) = gx(3,ig) + xk(3,ik)
 
 ! ...       compute squared length
-            gv%khg_l(ig,ik) = gv%kgx_l(1,ig,ik)**2 + gv%kgx_l(2,ig,ik)**2 + gv%kgx_l(3,ig,ik)**2
 
-! ...       compute cutoff mask for k+G
-            IF( gv%khg_l(ig, ik) .LE. gcutw) THEN
-              gv%kg_mask_l(ig, ik) = 1.0d0
+            gk_l(ig,ik) = gkx_l(1,ig,ik)**2 + gkx_l(2,ig,ik)**2 + gkx_l(3,ig,ik)**2
+
+            !  compute cutoff mask for k+G
+
+            IF( gk_l(ig, ik) <= gcutw ) THEN
+              gkmask_l(ig, ik) = 1.0d0
             ELSE 
-              gv%kg_mask_l(ig, ik) = 0.0d0
+              gkmask_l(ig, ik) = 0.0d0
             END IF
 
           END DO
@@ -339,18 +260,18 @@
 
       IF(tecfix) THEN
         DO ik = 1, kp%nkpt
-          DO ig = 1, SIZE( gv%khgcutz_l, 1 ) 
+          DO ig = 1, ngw
 ! ...       compute smooth cutoff G+k vectors
-            gv%khgcutz_l(ig,ik) = erf((gv%khg_l(ig,ik) - gcfix)/gcsig)
-            gv%khgcutz_l(ig,ik) = gv%khg_l(ig,ik) + gcutz * ( 1.0d0 + gv%khgcutz_l(ig,ik))
+            gkcutz_l(ig,ik) = erf( ( gk_l(ig,ik) - gcfix ) / gcsig )
+            gkcutz_l(ig,ik) = gk_l(ig,ik) + gcutz * ( 1.0d0 + gkcutz_l(ig,ik) )
           END DO
         END DO
       END IF
 
-
       RETURN
       END SUBROUTINE newg
 
+!=----------------------------------------------------------------------------=!
 
       SUBROUTINE gindex_closeup
         IMPLICIT NONE

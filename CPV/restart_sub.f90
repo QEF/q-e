@@ -46,7 +46,8 @@ CONTAINS
           ef_tune, wf_options, ef_potential
     USE core, ONLY: nlcc_any
     USE gvecw, ONLY: ngw
-    USE reciprocal_vectors, ONLY: gstart
+    USE gvecs, ONLY: ngs
+    USE reciprocal_vectors, ONLY: gstart, mill_l
     USE wave_base, ONLY: wave_verlet
     USE cvan, ONLY: nvb
     USE ions_nose, ONLY: xnhp0, xnhpm, vnhp
@@ -58,6 +59,7 @@ CONTAINS
     USE time_step, ONLY: delt
     use electrons_nose, only: xnhe0, xnhem, vnhe
     USE cell_nose, ONLY: xnhh0, xnhhm, vnhh, cell_nosezero
+    use phase_factors_module, only: strucf
 
     COMPLEX(kind=8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
     COMPLEX(kind=8) :: eigrb(:,:)
@@ -128,7 +130,7 @@ CONTAINS
     end if
      
     call phfac( tau0, ei1, ei2, ei3, eigr )
-    call strucf( ei1, ei2, ei3, sfac )
+    call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     call formf( tfirst, eself )
     call calbec ( 1, nsp, eigr, c0, bec )
     if (tpre) call caldbec( 1, nsp, eigr, c0 )
@@ -282,6 +284,10 @@ CONTAINS
     use io_global, only: stdout
     use cell_base, only: s_to_r
     use cpr_subroutines, only: print_atomic_var
+    USE reciprocal_vectors, ONLY: gstart, mill_l
+    USE gvecs, ONLY: ngs
+    use phase_factors_module, only: strucf
+
 
     IMPLICIT NONE
 
@@ -317,7 +323,7 @@ CONTAINS
     endif
     !
     call phfac(tau0,ei1,ei2,ei3,eigr)
-    call strucf(ei1,ei2,ei3,sfac)
+    call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     call formf(tfirst,eself)
     call calbec (1,nsp,eigr,c0,bec)
     if (tpre) call caldbec(1,nsp,eigr,c0)
@@ -328,14 +334,14 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE from_restart_fpmd( nfi, acc, gv, kp, ps, rhoe, desc, cm, c0, cdesc, &
+      SUBROUTINE from_restart_fpmd( nfi, acc, kp, ps, rhoe, desc, cm, c0, cdesc, &
           eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
 
 !  this routine recreates the starting configuration from a restart file
 
 ! ... declare modules
       USE kinds, ONLY: dbl
-      USE phase_factors_module, ONLY: strucf
+      USE phase_factors_module, ONLY: strucf, phfacs
       USE time_step, ONLY: delt
       USE reciprocal_space_mesh, ONLY: newg
       USE charge_density, ONLY: rhoofr
@@ -346,7 +352,7 @@ CONTAINS
       USE ions_module, ONLY: set_reference_positions, print_scaled_positions, &
                              constraints_setup, set_velocities
       USE energies, ONLY: dft_energy_type
-      USE cp_types, ONLY: recvecs, pseudo
+      USE cp_types, ONLY: pseudo
       USE pseudopotential, ONLY: formf
       USE cell_module, only: boxdimensions, gethinv, alat
       USE cell_base, ONLY: r_to_s, s_to_r
@@ -371,6 +377,9 @@ CONTAINS
       USE charge_types, ONLY: charge_descriptor
       USE ions_base, ONLY: vel_srt, tau_units
       USE runcp_module, ONLY: runcp_ncpp
+      use grid_dimensions,    only: nr1, nr2, nr3
+      USE reciprocal_vectors, ONLY: mill_l
+      USE gvecp, ONLY: ngm
 
       IMPLICIT NONE
 
@@ -384,7 +393,6 @@ CONTAINS
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (recvecs) :: gv
       TYPE (kpoints) :: kp
       COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
       REAL(dbl) :: fi(:,:,:)
@@ -415,11 +423,11 @@ CONTAINS
 ! ... with the g vectors modules
 ! ... if tbeg is false, ht_0 is read from the restart file and now
 ! ... we have to compute the inverse and the volume of the cell,
-! ... together with the new reciprocal vectors (gv)
+! ... together with the new reciprocal vectors
 
       IF ( .NOT. tbeg ) THEN
 
-        CALL newg( gv, kp, ht_0%m1 )
+        CALL newg( kp, ht_0%m1 )
 
         CALL newgb( ht_0%hmat(:,1), ht_0%hmat(:,2), ht_0%hmat(:,3), ht_0%omega, alat )
 !
@@ -499,8 +507,9 @@ CONTAINS
 
 ! ...   computes form factors and initializes nl-pseudop. according
 ! ...   to starting cell (from ndr or again fort.10)
-      CALL strucf(sfac, atoms_0, eigr, ei1, ei2, ei3, gv)
-      CALL formf(ht_0, gv, kp, ps)
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+      CALL formf(ht_0, kp, ps)
 
       IF( tzeroe .OR. tzerop ) THEN
 
@@ -512,16 +521,16 @@ CONTAINS
 
 
           atoms_0%for = 0.0d0
-          edft%enl = nlrh_m(c0, cdesc, ttforce, atoms_0, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht_0)
-          CALL vofrhos( ( iprsta > 1), rhoe, desc, tfor, thdyn, ttforce, atoms_0, gv, kp, fnl, vpot, ps, &
+          edft%enl = nlrh_m(c0, cdesc, ttforce, atoms_0, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+          CALL rhoofr(kp, c0, cdesc, fi, rhoe, desc, ht_0)
+          CALL vofrhos( ( iprsta > 1), rhoe, desc, tfor, thdyn, ttforce, atoms_0, kp, fnl, vpot, ps, &
             c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
 
           IF( tzeroe ) THEN
 
             IF( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
 
-              CALL runcp_ncpp( cm, cm, c0, cdesc, gv, kp, ps, vpot, eigr, fi, fnl, vdum, &
+              CALL runcp_ncpp( cm, cm, c0, cdesc, kp, ps, vpot, eigr, fi, fnl, vdum, &
                    gam, cgam, restart = .TRUE.)
 
               IF(tortho) THEN

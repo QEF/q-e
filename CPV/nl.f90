@@ -43,7 +43,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      REAL(dbl) FUNCTION nlrh_m(c0, cdesc, tforce, atoms, occ, gv, kp, fnl, wsg, wnl, eigr)
+      REAL(dbl) FUNCTION nlrh_m(c0, cdesc, tforce, atoms, occ, kp, fnl, wsg, wnl, eigr)
 
 !  this routine computes:
 !  fnl: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
@@ -73,7 +73,6 @@
 
 ! ... declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
-      TYPE (recvecs),        INTENT(IN)     :: gv            ! G and k vectors
       TYPE (kpoints),        INTENT(IN)     :: kp            ! G and k vectors
       COMPLEX(dbl),           INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
@@ -90,7 +89,7 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      CALL nl_projector_m(c0, cdesc, atoms, gv, kp, fnl, wsg, wnl, eigr)
+      CALL nl_projector_m(c0, cdesc, atoms, kp, fnl, wsg, wnl, eigr)
       nlrh_m = nl_energy_m(fnl, atoms, occ, kp, wsg)
       ! WRITE( stdout,*) 'DEBUG nlrh ', SUM( fnl(1,1)%r ), SUM( wsg ), SUM( wnl )
       IF( tforce ) THEN
@@ -98,7 +97,7 @@
           ispin_wfc = ispin
           IF( force_pairing ) ispin_wfc = 1
           CALL nl_ionic_forces_v( ispin, c0( :, :, :, ispin_wfc ), cdesc, atoms, occ(:,:,ispin), &
-            gv, kp, fnl(:,ispin), wsg, wnl, eigr)
+            kp, fnl(:,ispin), wsg, wnl, eigr)
         END DO
       END IF
       !  .. WRITE( stdout,*) 'DEBUG NLRH:',atoms%for(:,1:atoms%nat)
@@ -109,7 +108,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE nl_projector_m(c0, cdesc, atoms, gv, kp, fnl, wsg, wnl, eigr)
+      SUBROUTINE nl_projector_m(c0, cdesc, atoms, kp, fnl, wsg, wnl, eigr)
 
 !  this routine computes:
 !  fnl: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
@@ -123,13 +122,13 @@
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing
+      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
 
       IMPLICIT NONE
 
 ! ...   declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
-      TYPE (recvecs), INTENT(IN)  :: gv       ! G and k vectors
       TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
       COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
       TYPE (wave_descriptor),  INTENT(IN)  :: cdesc  ! wave functions
@@ -151,7 +150,7 @@
         DO ik = 1, cdesc%nkl
           ! WRITE( stdout,*) 'DEBUG nl_projector ', SUM( eigr ), SUM( c0( :, :, ik, ispin_wfc ) )
           CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:, :, ik, ispin_wfc), cdesc, &
-            gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnl(ik, ispin))
+            gk_l(:,ik), gkx_l(:,:,ik), fnl(ik, ispin))
         END DO
       END DO
       RETURN
@@ -208,7 +207,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE nl_ionic_forces_m(c0, cdesc, atoms, occ, gv, kp, fnl, wsg, wnl, eigr)
+      SUBROUTINE nl_ionic_forces_m(c0, cdesc, atoms, occ, kp, fnl, wsg, wnl, eigr)
 
 !  this routine computes:
 !  fnl/fnlk: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
@@ -240,7 +239,6 @@
 
 ! ... declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
-      TYPE (recvecs), INTENT(IN)  :: gv       ! G and k vectors
       TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
       COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)    ! wave functions
       TYPE (wave_descriptor),    INTENT(IN)  :: cdesc    ! wave functions desc.
@@ -256,7 +254,7 @@
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
         !
-        CALL nl_ionic_forces_v( ispin, c0( :, :, :, ispin_wfc), cdesc, atoms, occ(:,:,ispin), gv, &
+        CALL nl_ionic_forces_v( ispin, c0( :, :, :, ispin_wfc), cdesc, atoms, occ(:,:,ispin), &
           kp, fnl(:,ispin), wsg, wnl, eigr)
         !
       END DO
@@ -267,7 +265,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE nl_ionic_forces_v( ispin, c0, cdesc, atoms, occ, gv, kp, fnl, wsg, wnl, eigr)
+      SUBROUTINE nl_ionic_forces_v( ispin, c0, cdesc, atoms, occ, kp, fnl, wsg, wnl, eigr)
 
 !  this routine computes:
 !  nonlocal potential contribution to forces on ions
@@ -289,13 +287,13 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
       USE atoms_type_module, ONLY: atoms_type
+      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),       INTENT(INOUT) :: atoms ! ions structure
-      TYPE (recvecs),         INTENT(IN)    :: gv        ! G and G+k vectors
       TYPE (kpoints),         INTENT(IN)    :: kp        ! K points
       COMPLEX(dbl),            INTENT(INOUT) :: c0(:,:,:)     ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc     ! wave functions desc.
@@ -320,7 +318,7 @@
         CARTE: DO k = 1, 3  ! x,y,z directions
           CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), ngh, cdesc%gamma )
           CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, &
-            gv%khg_l(:,ik), gv%kgx_l(:,:,ik), dfnl, k)
+            gk_l(:,ik), gkx_l(:,:,ik), dfnl, k)
           CHANN: DO igh = 1, ngh
             BANDE: DO ib = 1, cdesc%nbl( ispin )
               isa=0

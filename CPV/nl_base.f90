@@ -25,9 +25,9 @@
 !  routines in this module:
 !  REAL(dbl) FUNCTION ene_nl(fnl,wsg,occ,ngh,nspnl,na)
 !  REAL(dbl) FUNCTION ene_nl_kp(fnlk,wk,wsg,occ,nk,ngh,nspnl,na)
-!  SUBROUTINE dedh_nls(gv,wnl,wnla,eigr,ll,auxc,gwork,na)
-!  SUBROUTINE dedh_nlp(gv,gagx,wnl,wnla,eigr,ll,kk,auxc,gwork,na)
-!  SUBROUTINE dedh_nld(gv,gagx,wnl,wnla,eigr,ll,kk,dm,auxc,gwork,na)
+!  SUBROUTINE dedh_nls(wnl,wnla,eigr,ll,auxc,gwork,na)
+!  SUBROUTINE dedh_nlp(gagx,wnl,wnla,eigr,ll,kk,auxc,gwork,na)
+!  SUBROUTINE dedh_nld(gagx,wnl,wnla,eigr,ll,kk,dm,auxc,gwork,na)
 !  ----------------------------------------------
 !  END manual
 
@@ -122,7 +122,7 @@
 !  ----------------------------------------------
 
 !  ----------------------------------------------
-        SUBROUTINE dedh_nls( gv, wnl, wnla, eigr, ll, auxc, gwork, na )
+        SUBROUTINE dedh_nls( wnl, wnla, eigr, ll, auxc, gwork, na )
 
 !  this routine computes the nonlocal contribution of s-orbitals to
 !  cell derivatives of total energy
@@ -131,10 +131,10 @@
 !  orbitals: s(r) = 1
 !  ----------------------------------------------
 
-        USE cp_types, ONLY: recvecs
+        USE gvecw,              ONLY: ngw
+        USE reciprocal_vectors, ONLY: gstart
 
 ! ...     declare subroutine arguments
-          TYPE (recvecs), INTENT(IN) :: gv
           REAL(dbl), INTENT(IN) :: wnl(:,:)
           REAL(dbl), INTENT(IN) :: wnla(:,:)
           COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
@@ -151,14 +151,14 @@
 !  ----------------------------------------------
 
           IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(gv%ngw_l))
+            ALLOCATE(gwtmp(ngw))
             gwtmp(1) = 0.0d0
-            DO ig = gv%gstart, gv%ngw_l
+            DO ig = gstart, ngw
               gwtmp(ig) = gwork(ig) * (wnl(ig,ll)-wnla(ig,ll))
             END DO
             DO ia = 1, na
               auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gv%gstart, gv%ngw_l
+              DO ig = gstart, ngw
                 auxc(ig,ia) = gwtmp(ig) * eigr(ig,ia)
               END DO
             END DO
@@ -173,7 +173,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-        SUBROUTINE dedh_nlp( gv, gagx, wnl, wnla, eigr, ll, kk, auxc, gwork, na )
+        SUBROUTINE dedh_nlp( gagx, wnl, wnla, eigr, ll, kk, auxc, gwork, na )
 
 !  this routine computes the nonlocal contribution of p-orbitals to
 !  cell derivatives of total energy
@@ -184,10 +184,10 @@
 !            p_z(r) = z/r
 !  ----------------------------------------------
 
-        USE cp_types, ONLY: recvecs
+        USE reciprocal_vectors, ONLY: gstart
+        USE gvecw,              ONLY: ngw
 
 ! ...     declare subroutine arguments
-          TYPE (recvecs), INTENT(IN) :: gv
           REAL(dbl), INTENT(IN)  :: gagx(:,:)
           REAL(dbl), INTENT(IN) :: wnl(:,:)
           REAL(dbl), INTENT(IN) :: wnla(:,:)
@@ -205,15 +205,15 @@
 !  ----------------------------------------------
 
           IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(gv%ngw_l))
+            ALLOCATE(gwtmp(ngw))
             gwtmp(1) = 0.0d0
-            DO ig = gv%gstart, gv%ngw_l
+            DO ig = gstart, ngw
               gwtmp(ig) = gagx(kk,ig) * gwork(ig)* &
               ( 3.d0 * wnl(ig,ll) - wnla(ig,ll) )
             END DO
             DO ia = 1, na
               auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gv%gstart, gv%ngw_l
+              DO ig = gstart, ngw
                 auxc(ig,ia) = uimag * gwtmp(ig) * eigr(ig,ia)
               END DO
             END DO
@@ -227,7 +227,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-        SUBROUTINE dedh_nld( gv, gagx, wnl, wnla, eigr, ll, kk, dm, auxc, gwork, na )
+        SUBROUTINE dedh_nld( gagx, wnl, wnla, eigr, ll, kk, dm, auxc, gwork, na )
 
 !  this routine computes the nonlocal contribution of d-orbitals to
 !  cell derivatives of total energy
@@ -236,10 +236,10 @@
 !  orbitals: d_m(r) = gkl(x,y,z,r,m)
 !  ----------------------------------------------
 
-        USE cp_types, ONLY: recvecs
+        USE reciprocal_vectors, ONLY: gstart
+        USE gvecw,              ONLY: ngw
 
 ! ...     declare subroutine arguments
-          TYPE (recvecs), INTENT(IN) :: gv
           REAL(dbl), INTENT(IN)  :: gagx(:,:)
           REAL(dbl), INTENT(IN) :: wnl(:,:)
           REAL(dbl), INTENT(IN) :: wnla(:,:)
@@ -257,16 +257,16 @@
 !  ----------------------------------------------
 
           IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(gv%ngw_l))
+            ALLOCATE(gwtmp(ngw))
             gwtmp(1) = 0.0d0
-            DO ig = gv%gstart, gv%ngw_l
+            DO ig = gstart, ngw
                gwtmp(ig) = gwork(ig) * gagx(kk,ig) *  &
                ( 5.d0 * wnl(ig,ll) - wnla(ig,ll) )
                gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm * wnl(ig,ll)
             END DO
             DO ia= 1 , na
               auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gv%gstart, gv%ngw_l
+              DO ig = gstart, ngw
                 auxc(ig,ia) = - gwtmp(ig) * eigr(ig,ia)
               END DO
             END DO

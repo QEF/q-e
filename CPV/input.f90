@@ -835,8 +835,6 @@
      USE potentials,               ONLY: potential_init
      USE kohn_sham_states,         ONLY: ks_states_init
      USE electrons_module,         ONLY: electrons_setup
-     USE ions_positions,           ONLY: tau0
-     USE ions_base,                ONLY: tau_srt, tions_base_init
      USE electrons_base,           ONLY: electrons_base_initval
      USE ensemble_dft,             ONLY: ensemble_initval
 
@@ -956,6 +954,8 @@
 
 
      CALL electrons_base_initval( nelec, nelup, neldw, nbnd, nspin, occupations, f_inp )
+     CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
+
 
      CALL ensemble_initval &
           ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
@@ -967,11 +967,7 @@
      IF( program_name == 'FPMD' ) THEN
 
         CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
-
-        CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
-
         !
-
         o_diis_inp        = .TRUE.
         oqnr_diis_inp     = .TRUE.
         tolene_inp        = etot_conv_thr
@@ -986,11 +982,6 @@
           diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
         CALL guess_setup( diis_chguess )
         CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
-
-     ELSE
-
-       tau0 = 0.0d0
-       tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
 
      END IF
 

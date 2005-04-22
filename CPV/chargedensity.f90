@@ -306,7 +306,7 @@
 !=----------------------------------------------------------------------=!
 !  BEGIN manual
 
-   SUBROUTINE rhoofr (gv, kp, c0, cdesc, fi, rhoe, desc, box)
+   SUBROUTINE rhoofr (kp, c0, cdesc, fi, rhoe, desc, box)
 
 !  this routine computes:
 !  rhoe = normalized electron density in real space
@@ -336,7 +336,6 @@
     USE mp_global, ONLY: mpime
     USE turbo, ONLY: tturbo, nturbo, turbo_states
     USE cell_module, ONLY: boxdimensions
-    USE cp_types, ONLY: recvecs
     USE wave_types, ONLY: wave_descriptor
     USE charge_types, ONLY: charge_descriptor
     USE io_global, ONLY: stdout
@@ -347,7 +346,6 @@
 
 ! ... declare subroutine arguments
 
-    TYPE (recvecs),       INTENT(IN) :: gv
     TYPE (kpoints),       INTENT(IN) :: kp
     COMPLEX(dbl)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box

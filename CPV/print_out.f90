@@ -583,15 +583,15 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE print_sfac( gv, rhoe, desc, sfac )
+    SUBROUTINE print_sfac( rhoe, desc, sfac )
 
-      USE cp_types, ONLY: recvecs
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_max, mp_get, mp_put
       USE fft, ONLY : pfwfft, pinvfft
       USE charge_types, ONLY: charge_descriptor
+      USE reciprocal_vectors, ONLY: ig_l2g, gx, g
+      USE gvecp, ONLY: ngm
 
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (charge_descriptor), INTENT(IN) :: desc
       REAL(dbl), INTENT(IN) :: rhoe(:,:,:,:)
       COMPLEX(dbl), INTENT(IN) ::  sfac(:,:)
@@ -605,10 +605,10 @@
       COMPLEX(dbl), ALLOCATABLE :: sfac_rcv(:,:)
 
         nspin = SIZE(rhoe,4)
-        nsp   = SIZE(sfac,1)
-        ngx_l = gv%ng_l
+        nsp   = SIZE(sfac,2)
+        ngx_l = ngm
         CALL mp_max(ngx_l, group)
-        ALLOCATE(rhoeg(gv%ng_l,nspin))
+        ALLOCATE(rhoeg(ngm,nspin))
         ALLOCATE(hg_rcv(ngx_l))
         ALLOCATE(gx_rcv(3,ngx_l))
         ALLOCATE(ig_rcv(ngx_l))
@@ -623,15 +623,15 @@
         END IF
 
         DO ip = 1, nproc
-          CALL mp_get(ng, gv%ng_l, mpime, ionode_id, ip-1, ip)
-          CALL mp_get(hg_rcv(:), gv%hg_l(:), mpime, ionode_id, ip-1, ip)
-          CALL mp_get(gx_rcv(:,:), gv%gx_l(:,:), mpime, ionode_id, ip-1, ip)
-          CALL mp_get(ig_rcv(:), gv%ig(:), mpime, ionode_id, ip-1, ip)
+          CALL mp_get(ng, ngm, mpime, ionode_id, ip-1, ip)
+          CALL mp_get(hg_rcv(:), g(:), mpime, ionode_id, ip-1, ip)
+          CALL mp_get(gx_rcv(:,:), gx(:,:), mpime, ionode_id, ip-1, ip)
+          CALL mp_get(ig_rcv(:), ig_l2g(:), mpime, ionode_id, ip-1, ip)
           DO ispin = 1, nspin
             CALL mp_get( rhoeg_rcv(:,ispin), rhoeg(:,ispin), mpime, ionode_id, ip-1, ip)
           END DO
           DO is = 1, nsp
-            CALL mp_get( sfac_rcv(:,is), sfac(is,:), mpime, ionode_id, ip-1, ip)
+            CALL mp_get( sfac_rcv(:,is), sfac(:,is), mpime, ionode_id, ip-1, ip)
           END DO
           IF( ionode ) THEN
             DO ig = 1, ng

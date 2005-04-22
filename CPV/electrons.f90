@@ -148,7 +148,7 @@
 
      IMPLICIT NONE
 
-     INTEGER :: i, n1, n2, n3, ierr
+     INTEGER :: i, ierr
 
      IF( band_first ) THEN
        CALL errore(' bmeshset ',' module not initialized ',0)
@@ -162,8 +162,10 @@
        IF( mpime < MOD( n_emp, nproc ) ) n_emp_l( i ) = n_emp_l( i ) + 1
      END DO
 
+     IF( ALLOCATED( ib_owner ) ) DEALLOCATE( ib_owner )
      ALLOCATE( ib_owner( nbndx ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' bmeshset ',' allocating ib_owner ', ierr)
+     IF( ALLOCATED( ib_local ) ) DEALLOCATE( ib_local )
      ALLOCATE( ib_local( nbndx ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' bmeshset ',' allocating ib_local ', ierr)
 

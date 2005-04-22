@@ -29,9 +29,9 @@
 !  INTEGER FUNCTION l2ind( lw, is )
 !  SUBROUTINE pseudopotential_setup(nsp,psfile)
 !  SUBROUTINE deallocate_pseudopotential
-!  SUBROUTINE formf(ht,gv,ps)
-!  SUBROUTINE nlin(gv,kp,wnl)
-!  SUBROUTINE nlin_stress(wnla,gv)
+!  SUBROUTINE formf(ht,ps)
+!  SUBROUTINE nlin(kp,wnl)
+!  SUBROUTINE nlin_stress(wnla)
 !  SUBROUTINE pseudo_wave_info(oc_out,nchan_out,mesh_out,dx_out, &
 !                              rw_out,rps_out)
 !  REAL(dbl) FUNCTION zvpseudo(is)
@@ -41,7 +41,7 @@
 ! ...   declare modules
         USE kinds
         USE parameters, ONLY: cp_lmax
-        USE cp_types, ONLY: pseudo, allocate_pseudo, recvecs
+        USE cp_types, ONLY: pseudo, allocate_pseudo
         USE splines, ONLY: spline_data
         USE read_pseudo_module_fpmd, ONLY: nspnl, l2ind
 
@@ -250,17 +250,18 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE pseudopotential_init( ps, na, nsp, gv, kp )
+      SUBROUTINE pseudopotential_init( ps, na, nsp, kp )
 
 ! ...   declare modules
         USE brillouin, ONLY: kpoints
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
         USE read_pseudo_module_fpmd, ONLY: ap
+        USE gvecp, ONLY: ngm
+        USE gvecw, ONLY: ngw
         
         IMPLICIT NONE
 
         TYPE (pseudo) :: ps
-        TYPE (recvecs), INTENT(IN) :: gv
         TYPE (kpoints), INTENT(IN) :: kp
         INTEGER, INTENT(IN) :: na(:), nsp
 
@@ -273,7 +274,7 @@
           tcc = .FALSE.
           WHERE ( ap(1:nsp)%tnlcc ) tcc = .TRUE.
 
-          CALL allocate_pseudo(ps, nsp, gv%ng_l, gv%ngw_l, kp%nkpt, lnlx, ngh, tcc)
+          CALL allocate_pseudo(ps, nsp, ngm, ngw, kp%nkpt, lnlx, ngh, tcc)
 
           ps%ap => ap
 
@@ -337,16 +338,16 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE formf(ht, gv, kp, ps)
+      SUBROUTINE formf(ht, kp, ps)
 
 !  this routine computes:
 !    the form factors of:
-!      pseudopotential (gv%vps)
-!      ionic pseudocharge (gv%rhops)
-!      core corrections to the pseudopotential (gv%cc(:)%rhoc1)
+!      pseudopotential (vps)
+!      ionic pseudocharge (rhops)
+!      core corrections to the pseudopotential (cc(:)%rhoc1)
 !    the derivatives with respect to cell degrees of freedom of:
-!      pseudopotential form factors (gv%dvps)
-!      core correction to the pseudopotential (gv%cc(:)%rhocp)
+!      pseudopotential form factors (dvps)
+!      core correction to the pseudopotential (cc(:)%rhocp)
 !  ----------------------------------------------
 
 ! ... declare modules
@@ -359,12 +360,12 @@
       USE pseudo_base, ONLY: formfn_base
       USE pseudo_base, ONLY: corecor_base
       USE pseudo_base, ONLY: rhops_base
+      USE reciprocal_vectors, ONLY: g
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       TYPE (pseudo)  ps
-      TYPE (recvecs), INTENT(IN) :: gv
       TYPE (kpoints), INTENT(IN) :: kp
       TYPE (boxdimensions), INTENT(IN)    :: ht
 
@@ -385,12 +386,12 @@
 
       IF(tpstab .AND. (.NOT.tpstab_first)) THEN
 ! ...   check the consistency of the tab with respect the g vectors
-        tpstab_first = chkpstab(gv%hg_l, xgtabmax)
+        tpstab_first = chkpstab(g, xgtabmax)
       END IF
 
       IF(tpstab .AND. tpstab_first) THEN
 ! ...   build the pseudopotential tabs
-        CALL build_pstab(gv) 
+        CALL build_pstab() 
         tpstab_first = .FALSE.
       END IF
 
@@ -398,23 +399,23 @@
 ! ... handle local part
       DO is = 1, nsp
 
-        CALL rhops_base(ps%ap(is), gv%hg_l, ps%rhops(:,is), omega) 
+        CALL rhops_base(ps%ap(is), g, ps%rhops(:,is), omega) 
 
         IF( ps%ap(is)%tnlcc ) THEN
           IF(tpstab) THEN
-            CALL corecortab_base(gv%hg_l, ps%rhoc1(:,is), ps%rhocp(:,is), &
+            CALL corecortab_base(g, ps%rhoc1(:,is), ps%rhocp(:,is), &
                    rhoc1_sp(is), rhocp_sp(is), xgtabmax, omega) 
           ELSE
-            CALL corecor_base(ps%ap(is), gv%hg_l, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
+            CALL corecor_base(ps%ap(is), g, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
           END IF
         END IF
 
 ! ...   numeric pseudopotential
         IF(tpstab) THEN
-          CALL formftab_base(gv%hg_l, ps%vps(:,is), ps%dvps(:,is), &
+          CALL formftab_base(g, ps%vps(:,is), ps%dvps(:,is), &
                vps_sp(is), dvps_sp(is), xgtabmax, omega )
         ELSE
-          CALL formfn_base(ps%ap(is), gv%hg_l, ps%vps(:,is), ps%dvps(:,is), omega)
+          CALL formfn_base(ps%ap(is), g, ps%vps(:,is), ps%dvps(:,is), omega)
         END IF
 
         ! DEBUG
@@ -433,7 +434,7 @@
 
 
 ! ... handle nonlocal part
-      CALL nlin(gv, kp, ps%wnl)
+      CALL nlin(kp, ps%wnl)
 
 
       RETURN
@@ -443,7 +444,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE build_pstab(gv)
+      SUBROUTINE build_pstab()
 
         USE ions_base, ONLY: nsp
         USE constants, ONLY: pi, fpi
@@ -457,10 +458,10 @@
         USE pseudo_base, ONLY: corecor_base
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
         USE read_pseudo_module_fpmd, ONLY: ap
+        USE reciprocal_vectors, ONLY: g
 
         IMPLICIT NONE
 
-        TYPE (recvecs), INTENT(IN) :: gv
         REAL(dbl), ALLOCATABLE :: fintl(:,:)
         INTEGER :: ig, is, mmax, lloc, nval, l, ll
         REAL(dbl)  :: xg, xgmax, xgmin, dxg, res
@@ -475,7 +476,7 @@
         nval = pstab_size
 
         xgmin = 0.0d0 
-        xgmax = tpiba * SQRT( MAXVAL( gv%hg_l ) )  
+        xgmax = tpiba * SQRT( MAXVAL( g ) )  
         CALL mp_max(xgmax, group)
         xgmax = xgmax + (xgmax-xgmin)
         dxg   = (xgmax - xgmin) / REAL(nval-1)
@@ -540,7 +541,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE nlin(gv, kp, wnl)
+      SUBROUTINE nlin(kp, wnl)
 
 !  this routine computes the temporary arrays twnl
 !  to be used by nlrh and dforce
@@ -552,11 +553,11 @@
       USE pseudotab_base, ONLY: nlintab_base
       USE pseudo_base, ONLY: nlin_base
       USE read_pseudo_module_fpmd, ONLY: ap
+      USE reciprocal_space_mesh, ONLY: gk_l
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (recvecs), INTENT(IN) :: gv
       TYPE (kpoints), INTENT(IN) :: kp
       REAL(dbl) :: wnl(:,:,:,:)
 
@@ -572,9 +573,9 @@
       DO is = 1, nspnl
         DO ik = 1, kp%nkpt
           IF( tpstab ) THEN
-            CALL nlintab_base(gv%khg_l(:,ik), wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+            CALL nlintab_base(gk_l(:,ik), wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
           ELSE
-            CALL nlin_base(ap(is), gv%khg_l(:,ik), wnl(:,:,is,ik))
+            CALL nlin_base(ap(is), gk_l(:,ik), wnl(:,:,is,ik))
           END IF
         END DO
       END DO
@@ -584,7 +585,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE nlin_stress(wnla,gv)
+      SUBROUTINE nlin_stress(wnla)
 
 !  this routine computes the temporary arrays twnl
 !  to be used by nlrh and dforce.
@@ -595,11 +596,11 @@
       USE pseudotab_base, ONLY: nlintab_base
       USE pseudo_base, ONLY: nlin_stress_base
       USE read_pseudo_module_fpmd, ONLY: ap
+      USE reciprocal_vectors, ONLY: g
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (recvecs) :: gv
       REAL(dbl) :: wnla(:,:,:)
       INTEGER :: is
 
@@ -608,9 +609,9 @@
       wnla = 0.0d0
       DO IS = 1, NSPNL
         IF (tpstab) THEN
-          CALL nlintab_base(gv%hg_l, wnla(:,:,is), ap(is)%lnl, wnla_sp(:,is), xgtabmax)
+          CALL nlintab_base(g, wnla(:,:,is), ap(is)%lnl, wnla_sp(:,is), xgtabmax)
         ELSE
-          CALL nlin_stress_base(ap(is), gv%hg_l, wnla(:,:,is))
+          CALL nlin_stress_base(ap(is), g, wnla(:,:,is))
         END IF
       END DO
       RETURN

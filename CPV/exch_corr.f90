@@ -27,13 +27,15 @@
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
-        SUBROUTINE v2gc(v2xc, grho, rhoer, vpot, gv)
+        SUBROUTINE v2gc(v2xc, grho, rhoer, vpot)
 
           USE fft
           USE fft_base, ONLY: dfftp
           USE cell_base, ONLY: tpiba
           USE cp_types
           USE mp_global
+          USE reciprocal_vectors, ONLY: gstart, gx
+          USE gvecp, ONLY: ngm
 !                                                                       
           implicit none
 !                                                                       
@@ -41,7 +43,6 @@
           REAL(dbl), intent(in)  ::  v2xc(:,:,:,:,:)
           REAL(dbl), intent(in)  ::  grho(:,:,:,:,:)
           REAL(dbl), intent(in)  ::  rhoer(:,:,:,:)
-          type (recvecs), intent(in)  ::  GV
 !                                                                       
           integer :: ig, ipol, nxl, nyl, nzl, i, j, k, is, js, nspin
           integer :: ldx, ldy, ldz
@@ -62,8 +63,8 @@
           !fac = REAL(nspin)
           fac = 1.0d0
 
-          ALLOCATE( vtemp( gv%ng_l ) )
-          ALLOCATE( vtemp_pol( gv%ng_l ) )
+          ALLOCATE( vtemp( ngm ) )
+          ALLOCATE( vtemp_pol( ngm ) )
 
           DO js = 1, nspin
             !
@@ -84,8 +85,8 @@
                 !
                 CALL pfwfft( vtemp_pol, psi )
                 !
-                DO ig = gv%gstart, gv%ng_l
-                  vtemp(ig) = vtemp(ig) + vtemp_pol(ig) *  CMPLX( 0.d0, tpiba * gv%gx_l( ipol, ig ) )
+                DO ig = gstart, ngm
+                  vtemp(ig) = vtemp(ig) + vtemp_pol(ig) *  CMPLX( 0.d0, tpiba * gx( ipol, ig ) )
                 END DO
                 !
               END DO
@@ -163,19 +164,19 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE stress_xc( dexc, strvxc, sfac, vxc, grho, v2xc, &
-        gagx_l, gv, tnlcc, rhocp, box)
+        gagx_l, tnlcc, rhocp, box)
 
-      use ions_base, only: nsp
-      USE cell_module, only: boxdimensions
-      USE cell_base, ONLY: tpiba
-      USE cp_types, ONLY: recvecs
-      USE funct, ONLY: igcx, igcc 
+      use ions_base,          only: nsp
+      USE cell_module,        only: boxdimensions
+      USE cell_base,          ONLY: tpiba
+      USE funct,              ONLY: igcx, igcc 
+      USE reciprocal_vectors, ONLY: gstart, g
+      USE gvecp,              ONLY: ngm
 
       IMPLICIT NONE
 
       ! -- ARGUMENT
 
-      type (recvecs), intent(in) :: gv
       type (boxdimensions), intent(in) :: box
       LOGICAL :: tnlcc(:)
       COMPLEX(dbl) :: vxc(:,:)
@@ -206,18 +207,18 @@
 
       IF ( ANY( tnlcc ) ) THEN
 
-        DO ig = gv%gstart, gv%ng_l
+        DO ig = gstart, ngm
           tex1 = (0.0_dbl , 0.0_dbl)
           DO is=1,nsp
             IF ( tnlcc(is) ) THEN
-              tex1 = tex1 + sfac( is, ig ) * CMPLX(rhocp(ig,is))
+              tex1 = tex1 + sfac( ig, is ) * CMPLX(rhocp(ig,is))
             END IF
           END DO
           tex2 = 0.0_dbl
           DO ispin = 1, nspin
             tex2 = tex2 + CONJG( vxc(ig, ispin) )
           END DO
-          tex3 = REAL(tex1 * tex2) / SQRT(gv%hg_l(ig)) / tpiba
+          tex3 = REAL(tex1 * tex2) / SQRT( g( ig ) ) / tpiba
           dexc = dexc + tex3 * gagx_l(:,ig)
         END DO
         dexc = dexc * 2.0_dbl * omega
@@ -241,10 +242,9 @@
 !=----------------------------------------------------------------------------=!
 
 
-     SUBROUTINE exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxc, vxc, v2xc, gv)
+     SUBROUTINE exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxc, vxc, v2xc)
 
         USE kinds, ONLY: dbl
-        USE cp_types, ONLY: recvecs
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
         USE funct, ONLY: igcx, igcc 
 
@@ -255,7 +255,6 @@
         REAL(dbl) :: sxc              ! E_xc   energy
         REAL(dbl) :: vxc              ! SUM ( v(r) * rho(r) )
         REAL (dbl) :: v2xc(:,:,:,:,:)
-        TYPE (recvecs), INTENT(IN) :: gv
         REAL(dbl) :: ddot
 
         INTEGER :: nspin, nnr, ispin, j, k
@@ -271,7 +270,7 @@
           !
           IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
             ! ... vpot additional term for gradient correction
-            CALL v2gc( v2xc, grho, rhoetr, vpot, gv )
+            CALL v2gc( v2xc, grho, rhoetr, vpot )
           END If
 
           !

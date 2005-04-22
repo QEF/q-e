@@ -73,7 +73,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use gvecs, only: ngs
   use gvecb, only: ngb
   use gvecw, only: ngw
-  use reciprocal_vectors, only: ng0 => gstart
+  use reciprocal_vectors, only: ng0 => gstart, mill_l
   use ions_base, only: na, nat, pmass, nax, nsp, rcmax
   use ions_base, only: ind_srt, ions_vel, ions_cofmass, ions_kinene, ions_temp
   use ions_base, only: ions_thermal_stress, ions_vrescal, fricp, greasp, iforce
@@ -146,6 +146,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
   USE from_restart_module, ONLY: from_restart
   USE runcp_module, ONLY: runcp_uspp
+  use phase_factors_module, only: strucf
 
   USE cp_main_variables, ONLY: ei1, ei2, ei3, eigr, sfac, irb, taub, eigrb, &
         rhog, rhor, rhos, rhoc, becdr, bephi, becp, ema0bg, allocate_mainvar
@@ -616,7 +617,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     strucf calculates the structure factor sfac
         !
-        call strucf(ei1,ei2,ei3,sfac)
+        call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
 
         IF(sm_k == 1) call formf(tfirst,eself) 
 
@@ -944,7 +945,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     strucf calculates the structure factor sfac
         !
-        call strucf(ei1,ei2,ei3,sfac)
+        call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
         if (thdyn) call formf(tfirst,eself)
         !
         IF(sm_k==1) THEN
@@ -1228,7 +1229,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            if( thdyn ) then
               hold = h
               h = hnew
-              call newinit(ibrav)
+              call newinit( h )
               call newnlinit
            else
               hold = h

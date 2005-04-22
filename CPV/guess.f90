@@ -28,7 +28,7 @@
 !  routines in this module:
 !  SUBROUTINE guess_setup(tguess_inp)
 !  SUBROUTINE guessc0(tk,c0,cm)
-!  SUBROUTINE guessrho(rho,cm,c0,occ,gv,ht) 
+!  SUBROUTINE guessrho(rho,cm,c0,occ,ht) 
 !  SUBROUTINE ucalc_kp(a,b,ngw,gzero,n,lambda)
 !  SUBROUTINE ucalc(a,b,ngw,gzero,n,lambda)
 !  ----------------------------------------------
@@ -248,7 +248,7 @@
       
 !  ----------------------------------------------
 !  ----------------------------------------------
-          SUBROUTINE guessrho(rho, desc, cm, c0, cdesc, occ, gv, kp, ht ) 
+          SUBROUTINE guessrho(rho, desc, cm, c0, cdesc, occ, kp, ht ) 
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -265,7 +265,6 @@
              TYPE (charge_descriptor), INTENT(IN) :: desc
              COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
-             TYPE (recvecs), INTENT(IN) :: gv
              TYPE (kpoints), INTENT(IN) :: kp
              TYPE (boxdimensions), INTENT(IN) :: ht
              REAL(dbl), INTENT(IN) :: occ(:,:,:)
@@ -286,12 +285,12 @@
 
              IF( tfirst ) THEN
                ALLOCATE( rho_save( nx, ny, nz, nspin ) )
-               CALL rhoofr(gv, kp, cm, cdesc, occ, rho_save, desc, ht)
+               CALL rhoofr(kp, cm, cdesc, occ, rho_save, desc, ht)
                tfirst = .FALSE.
              END IF
 
              ALLOCATE( rho0( nx, ny, nz, nspin ) )
-             CALL rhoofr(gv, kp, c0, cdesc, occ, rho0, desc, ht)
+             CALL rhoofr(kp, c0, cdesc, occ, rho0, desc, ht)
 
              rho = 2.0d0 * rho0 - rho_save
 

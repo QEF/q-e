@@ -54,7 +54,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, gv, kp, &
+   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, kp, &
                 ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                 fnl, vpot, doions, edft, maxnstep, cgthr )
 
@@ -87,6 +87,7 @@
       USE charge_types, ONLY: charge_descriptor
       USE control_flags, ONLY: force_pairing
       USE environment, ONLY: start_cclock_val
+      USE reciprocal_space_mesh, ONLY: gkmask_l
 
       IMPLICIT NONE
 
@@ -103,7 +104,6 @@
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
       REAL(dbl) :: occ(:,:,:)
@@ -183,7 +183,7 @@
         s1 = cclock()
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
 
@@ -193,7 +193,7 @@
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
           CALL dforce_all( ispin, c0(:,:,:,ispin), cdesc, occ(:,:,ispin), cp(:,:,:,ispin), &
-            gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+            vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
  
 ! ...     Project the gradient
           IF( gamma_symmetry ) THEN
@@ -242,7 +242,7 @@
         !  perform line minimization in the direction of "hacca"
 
         CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, desc, hacca, &
-          atoms_0, ht0, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp)
+          atoms_0, ht0, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp)
 
         ! CALL print_energies( edft )
         s5 = cclock()
@@ -258,7 +258,7 @@
 
           cp = c0 + cm
 
-          CALL fixwave( cp, cdesc, gv%kg_mask_l )
+          CALL fixwave( cp, cdesc, gkmask_l )
 
           IF( tortho ) THEN
              CALL ortho( c0, cp, cdesc, pmss, emass )
@@ -271,7 +271,7 @@
         ekinc = 0.0d0
         DO ispin = 1, nspin
           ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, kp, &
-            gv%kg_mask_l, pmss, delt)
+            gkmask_l, pmss, delt)
         END DO
         IF( iter > 1 ) THEN
           dek   = ekinc - ekinc_old
@@ -317,7 +317,7 @@
         DO ispin = 1, nspin
 
           CALL dforce_all( ispin, c0(:,:,:,ispin), cdesc, occ(:,:,ispin), hacca(:,:,:,ispin), &
-            gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+            vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
 
           nb_g( ispin ) = cdesc%nbt( ispin )
 
@@ -358,7 +358,7 @@
 ! ---------------------------------------------------------------------- !
 
     SUBROUTINE CGLINMIN(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
-        atoms, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, gv, kp)
+        atoms, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp)
 
 ! ... declare modules
 
@@ -374,6 +374,7 @@
         USE potentials, ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
         USE charge_types, ONLY: charge_descriptor
+        USE reciprocal_space_mesh, ONLY: gkmask_l
 
         IMPLICIT NONE
 
@@ -392,7 +393,6 @@
         COMPLEX(dbl) :: ei1(:,:)
         COMPLEX(dbl) :: ei2(:,:)
         COMPLEX(dbl) :: ei3(:,:)
-        TYPE (recvecs), INTENT(IN) ::  gv
         TYPE (kpoints), INTENT(IN) ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
         REAL(dbl) :: occ(:,:,:)
@@ -595,11 +595,11 @@
 
         cp = c + hstep * hacca
 
-        CALL fixwave( cp, cdesc, gv%kg_mask_l )
+        CALL fixwave( cp, cdesc, gkmask_l )
         CALL gram( cp, cdesc )
 
         CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
-            atoms, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
+            atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
 
         cgenergy = edft%etot
 

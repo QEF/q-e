@@ -129,7 +129,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !     ==== generate true g-space                                ==== 
   !     ==============================================================
   !
-  call newinit( ibrav )
+  call newinit( h )
   !
 344 format(' ibrav = ',i4,'       cell parameters ',/)
 345 format(3(4x,f10.5))

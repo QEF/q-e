@@ -28,7 +28,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE rundiis(tprint, rhoe, desc, atoms, gv, kp, &
+      SUBROUTINE rundiis(tprint, rhoe, desc, atoms, kp, &
                  ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
@@ -82,7 +82,7 @@
       USE electrons_module, ONLY: pmss
       USE time_step, ONLY: delt
       USE wave_functions, ONLY: gram, proj, crot
-      USE phase_factors_module, ONLY: strucf
+      USE phase_factors_module, ONLY: strucf, phfacs
       USE charge_mix
       USE charge_density, ONLY: rhoofr
       USE guess
@@ -99,6 +99,9 @@
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
       USE control_flags, ONLY: force_pairing
+      use grid_dimensions,    only: nr1, nr2, nr3
+      USE reciprocal_vectors, ONLY: mill_l
+      USE gvecp, ONLY: ngm
 
       IMPLICIT NONE
 
@@ -115,7 +118,6 @@
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       TYPE (charge_descriptor) :: desc
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
       REAL(dbl)  :: fi(:,:,:)
@@ -193,12 +195,14 @@
 
 
 ! ... starting guess on the wavefunctions
-!      CALL guessrho(rhoe, cm, c0, fi, gv, kp, ht0)
+!      CALL guessrho(rhoe, cm, c0, fi, kp, ht0)
 
-      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
-      CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht0)
-      CALL newrho(rhoe(:,:,:,1), drho, gv, 0)  ! memorize density
-      CALL strucf(sfac, atoms, eigr, ei1, ei2, ei3, gv)
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+      CALL rhoofr( kp, c0, cdesc, fi, rhoe, desc, ht0)
+      CALL newrho(rhoe(:,:,:,1), drho, 0)  ! memorize density
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
       CALL guessc0( .NOT. kp%gamma_only, c0, cm, cdesc)
 
 ! ... Initialize the rotation index srot
@@ -233,13 +237,13 @@
           END IF
 
 ! ...     self consistent energy
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL rhoofr(gv, kp, c0, cdesc, fi, rhoe, desc, ht0)
-          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, &
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+          CALL rhoofr( kp, c0, cdesc, fi, rhoe, desc, ht0)
+          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, &
             kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
 ! ...     density upgrade
-          CALL newrho(rhoe(:,:,:,1), drho, gv, idiis)
+          CALL newrho(rhoe(:,:,:,1), drho, idiis)
           IF (ionode) WRITE( stdout,45) idiis, edft%etot, drho
           dene   = abs(edft%etot - etot_m)
           etot_m = edft%etot
@@ -247,8 +251,8 @@
 45        FORMAT('etot  drho ',i3,1x,2(1x,f18.10))
 
 ! ...     recalculate potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, gv, kp, fnl, &
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, kp, fnl, &
             vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
           IF( idiis /= 1 )THEN
@@ -265,9 +269,9 @@
 
 ! ...     calculate lambda_i,j=<c_i| H |c_j>
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, kp, fnl, ps%wsg, ps%wnl, eigr)
 
-          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), gv, vpot(:,:,:,1), &
+          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), vpot(:,:,:,1), &
              fnl(:,1), eigr, ps)
 
           IF(.NOT.kp%gamma_only) THEN
@@ -283,8 +287,8 @@
           call adjef_s(eig(1,1,1),fi(1,1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call enthropy_s(fi(1,1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), gv, &
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, kp, fnl, ps%wsg, ps%wnl, eigr)
+          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), &
             vpot(:,:,:,1), fnl(:,1), eigr, ps)
 
           DO ik = 1, kp%nkpt
@@ -296,9 +300,9 @@
         ELSE
 
 ! ...     DIIS on c0 at FIXED potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, gv, kp, fnl, ps%wsg, ps%wnl, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, kp, fnl, ps%wsg, ps%wnl, eigr)
 
-          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), gv, &
+          CALL dforce_all( 1, c0(:,:,:,1), cdesc, fi(:,:,1), cgrad(:,:,:,1), &
             vpot(:,:,:,1), fnl(:,1), eigr, ps)
 
           IF( kp%gamma_only ) THEN
@@ -333,11 +337,11 @@
         svar2   = -1.d0
         svar3_0 = delt * delt / pmss(1)
         IF(.NOT.kp%gamma_only) THEN
-          CALL simupd_kp(ekinc,doions,gv,kp,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
+          CALL simupd_kp(ekinc,doions,kp,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
             svar3_0,edft%etot,fs(:,:,1),eigr,sfac,ps%vps,ps%wsg,ps%wnl,treset_diis, &
             istate,cnorm,eold,ndiis,nowv)
         ELSE
-          CALL simupd(ekinc,doions,gv,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
+          CALL simupd(ekinc,doions,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
                   svar3_0,edft%etot,fs(:,1,1),eigr,sfac,ps%vps,ps%wsg,ps%wnl, &
                   treset_diis,istate,cnorm,eold,ndiis,nowv)
         END IF
@@ -395,7 +399,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsdiis(tprint, rhoe, desc, atoms, gv, kp, &
+      SUBROUTINE runsdiis(tprint, rhoe, desc, atoms, kp, &
                  ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  fnl, vpot, doions, edft )
 
@@ -447,7 +451,6 @@
       USE electrons_module, ONLY: ei, pmss
       USE time_step, ONLY: delt
       USE wave_functions, ONLY: gram, proj, update_wave_functions
-      USE phase_factors_module, ONLY: strucf
       USE cp_types
       USE diis
       USE cell_module, ONLY: boxdimensions
@@ -478,7 +481,6 @@
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (recvecs), INTENT(IN) ::  gv
       TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
       REAL(dbl)  :: fi(:,:,:)
@@ -546,7 +548,7 @@
         END IF
 
         CALL kspotential( .FALSE., tforce, tstress, rhoe, desc, &
-          atoms, gv, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
+          atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
 
         s0 = cclock()
         seconds_per_iter = (s0 - old_clock_value)
@@ -562,7 +564,7 @@
           isteep = isteep + 1
           cm = c0
           CALL runcp(.FALSE., tortho, tsde, cm, c0, &
-            cgrad, cdesc, gv, kp, ps, vpot, eigr, fi, &
+            cgrad, cdesc, kp, ps, vpot, eigr, fi, &
             ekinc, timerd, timeorto, ht0, ei, fnl, 0.0d0 )
           CALL update_wave_functions(cm, c0, cgrad, cdesc)
 
@@ -591,7 +593,7 @@
 ! ...       so on).
 
             CALL dforce_all( ispin, c0(:,:,:,ispin), cdesc, fi(:,:,ispin), cgrad(:,:,:,ispin), &
-              gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+              vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
 
             IF(.NOT.kp%gamma_only) THEN
               DO ik = 1, kp%nkpt
@@ -603,12 +605,12 @@
 
             s4 = cclock()
             IF(.NOT.kp%gamma_only) THEN
-              CALL simupd_kp(ekinc(ispin), ddoions(ispin), gv, kp, c0(:,:,:,ispin), &
+              CALL simupd_kp(ekinc(ispin), ddoions(ispin), kp, c0(:,:,:,ispin), &
                 cgrad(:,:,:,ispin), cdesc, svar1, svar2, svar3_0, edft%etot, fi(:,:,ispin), &
                 eigr, sfac, ps%vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, &
                 cnorm, eold, ndiis, nowv)
             ELSE
-              CALL simupd(ekinc(ispin), ddoions(ispin), gv, c0(:,:,:,ispin), cgrad(:,:,:,ispin), cdesc, &
+              CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,:,:,ispin), cgrad(:,:,:,ispin), cdesc, &
                 svar1, svar2, svar3_0, edft%etot, fi(:,1,ispin), eigr, sfac, &
                 ps%vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
@@ -645,7 +647,7 @@
       END IF
 
       IF ( tprint ) THEN
-        CALL diis_eigs(.TRUE., atoms, c0, cdesc, fi, vpot, cgrad, fnl, ps, eigr, gv, kp)
+        CALL diis_eigs(.TRUE., atoms, c0, cdesc, fi, vpot, cgrad, fnl, ps, eigr, kp)
       END IF
 
       cgrad = c0
@@ -694,7 +696,7 @@
 
 !  ----------------------------------------------
 
-      SUBROUTINE diis_eigs(tortho, atoms, c, cdesc, fi, vpot, eforce, fnle, ps, eigr, gv, kp)
+      SUBROUTINE diis_eigs(tortho, atoms, c, cdesc, fi, vpot, eforce, fnle, ps, eigr, kp)
         USE kinds
         USE cp_types
         USE wave_types
@@ -713,6 +715,7 @@
         USE mp, ONLY: mp_sum
         USE mp_global, ONLY: mpime, nproc, group
         USE atoms_type_module, ONLY: atoms_type
+        USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
 
         IMPLICIT NONE
 
@@ -720,7 +723,6 @@
         COMPLEX(dbl), INTENT(inout) ::  c(:,:,:,:)
         COMPLEX(dbl), INTENT(inout) ::  eforce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(in) :: cdesc
-        TYPE (recvecs), INTENT(in) ::  gv
         REAL (dbl), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
         TYPE (kpoints), INTENT(in) :: kp
         TYPE (pseudo), INTENT(INOUT) :: ps
@@ -755,11 +757,11 @@
         DO ispin = 1, nspin
           DO ik = 1, SIZE( c, 3 )
             CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c(:,:,ik,ispin), cdesc, &
-                gv%khg_l(:,ik), gv%kgx_l(:,:,ik), fnle(ik,ispin))
+                gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
           END DO
 
 ! ...     Calculate | dH / dpsi(j) >
-          CALL dforce_all( ispin, c(:,:,:,ispin), cdesc, fi(:,:,ispin), eforce(:,:,:,ispin), gv, &
+          CALL dforce_all( ispin, c(:,:,:,ispin), cdesc, fi(:,:,ispin), eforce(:,:,:,ispin), &
             vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps)
 
           DO ik = 1, kp%nkpt

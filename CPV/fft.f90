@@ -123,7 +123,6 @@
      WRITE( stdout, fmt ="(/,3X,'PC3FFT TIMINGS')" )
      WRITE( stdout,910)
      WRITE( stdout,999) ( ( fft_timing(i,j), i = 1, 4), j = 1, 2 )
-     DEALLOCATE( fft_timing )
 
 910  FORMAT('    FFTXP    FFTYP    FFTZP    TRASP    FFTXW    FFTYW    FFTZW    TRASW')
 999  FORMAT(8(F9.3))
@@ -255,15 +254,6 @@
       CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
 
       CALL psi2c( zwrk(1), SIZE( zwrk ), c(1), c(1), ng, 10 )
-
-      !DO ig=1,ng
-      !    is = ( np( ig ) - 1 ) / dfftp%nr3x + 1
-      !    k  = MOD( ( np( ig ) - 1 ), dfftp%nr3x ) + 1
-      !    WRITE( 201, fmt="( 4I6,4D22.14 )" ) ig, is, k, np( ig ), &
-      !    C( ig ), zwrk( np( ig ) )
-      !    ! C( ig ), zwrk( k + (is-1) * dfftp%nr3x )
-      !END DO
-      !CLOSE( 201 )
 
       DEALLOCATE( zwrk )
 

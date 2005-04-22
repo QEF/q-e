@@ -216,7 +216,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE ks_states(cf, wfill, ce, wempt, occ, gv, kp, ps, vpot, eigr, fnl)
+      SUBROUTINE ks_states(cf, wfill, ce, wempt, occ, kp, ps, vpot, eigr, fnl)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -242,7 +242,6 @@
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         TYPE (pseudo), INTENT(IN)  ::  ps
         COMPLEX(dbl)  ::  eigr(:,:)
-        TYPE (recvecs), INTENT(IN)  ::  gv
         TYPE (kpoints), INTENT(IN)  ::  kp
         REAL(dbl), INTENT(IN)  ::  occ(:,:,:)
         TYPE (projector) :: fnl(:,:)
@@ -287,7 +286,7 @@
             ALLOCATE(  eforce( ngw,  nb_l, nk ))
 
             CALL dforce_all( ispin, cf(:,:,:,ispin_wfc), wfill, occ(:,:,ispin), eforce, &
-              gv, vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+              vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
 
             CALL kohn_sham( ispin, cf(:,:,:,ispin_wfc), wfill, eforce, kp )
 
@@ -309,7 +308,7 @@
 
               ALLOCATE(  eforce( ngw,  nb_l, nk ))
 
-              CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, fi, eforce, gv, vpot(:,:,:,ispin), &
+              CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, fi, eforce, vpot(:,:,:,ispin), &
                 fnl(:,ispin), eigr, ps)
 
               CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce, kp )
@@ -382,7 +381,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE ks_states_force_pairing(cf, wfill, ce, wempt, occ, gv, kp, ps, vpot, eigr, fnl)
+      SUBROUTINE ks_states_force_pairing(cf, wfill, ce, wempt, occ, kp, ps, vpot, eigr, fnl)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -409,7 +408,6 @@
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         TYPE (pseudo), INTENT(IN)  ::  ps
         COMPLEX(dbl)  ::  eigr(:,:)
-        TYPE (recvecs), INTENT(IN)  ::  gv
         TYPE (kpoints), INTENT(IN)  ::  kp
         REAL(dbl), INTENT(IN)  ::  occ(:,:,:)
         TYPE (projector) :: fnl(:,:)
@@ -453,9 +451,9 @@
           ALLOCATE(  eforce( ngw,  nb, 1, 2 ) )
 
           CALL dforce_all( 1, cf(:,:,:,1), wfill, occ(:,:,1), eforce(:,:,:,1), &
-              gv, vpot(:,:,:,1), fnl(:,1), eigr, ps)
+              vpot(:,:,:,1), fnl(:,1), eigr, ps)
           CALL dforce_all( 2, cf(:,:,:,1), wfill, occ(:,:,2), eforce(:,:,:,2), &
-              gv, vpot(:,:,:,2), fnl(:,2), eigr, ps)
+              vpot(:,:,:,2), fnl(:,2), eigr, ps)
 
           DO i = 1, nupdwn(2)
             eforce(:,i,1,1) = occ(i,1,1) * eforce(:,i,1,1) + occ(i,1,2) * eforce(:,i,1,2)
@@ -484,12 +482,12 @@
 
             ALLOCATE(  eforce( ngw,  nb_l, 1, 1 ))
 
-            CALL dforce_all( 1, ce(:,:,:,1), wempt, fi, eforce(:,:,:,1), gv, vpot(:,:,:,1), &
+            CALL dforce_all( 1, ce(:,:,:,1), wempt, fi, eforce(:,:,:,1), vpot(:,:,:,1), &
                 fnl(:,1), eigr, ps)
 
             CALL kohn_sham( 1, ce(:,:,:,1), wempt, eforce(:,:,:,1), kp )
 
-            CALL dforce_all( 2, ce(:,:,:,2), wempt, fi, eforce(:,:,:,1), gv, vpot(:,:,:,2), &
+            CALL dforce_all( 2, ce(:,:,:,2), wempt, fi, eforce(:,:,:,1), vpot(:,:,:,2), &
                 fnl(:,2), eigr, ps)
 
             CALL kohn_sham( 2, ce(:,:,:,2), wempt, eforce(:,:,:,1), kp )

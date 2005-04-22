@@ -310,16 +310,21 @@ end module qrl_mod
       end subroutine
 
 !-----------------------------------------------------------------------
-      subroutine gcalb(b1b,b2b,b3b)
+      subroutine gcalb( alatb, b1b_ , b2b_ , b3b_  )
 !-----------------------------------------------------------------------
 !
       use control_flags, only: iprint
       use gvecb
 !
       implicit none
-      real(kind=8) b1b(3),b2b(3),b3b(3)
+      real(kind=8), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
+      real(kind=8) :: b1b(3), b2b(3), b3b(3)
 !
       integer i, i1,i2,i3,ig
+
+      b1b = b1b_ * alatb
+      b2b = b2b_ * alatb
+      b3b = b3b_ * alatb
 !
 !     calculation of gxb(3,ngbx)
 !
@@ -334,7 +339,7 @@ end module qrl_mod
       enddo
 !
       return
-      end
+      end subroutine
 
 
 !-------------------------------------------------------------------------
@@ -1010,7 +1015,7 @@ END SUBROUTINE
 
 
 !-------------------------------------------------------------------------
-      subroutine gcal(b1,b2,b3,gmax)
+      subroutine gcal( alat, b1_ , b2_ , b3_ , gmax )
 !-----------------------------------------------------------------------
 !   calculates the values of g-vectors to be assigned to the lattice
 !   points generated in subroutine ggen. these values are derived
@@ -1024,18 +1029,23 @@ END SUBROUTINE
 !
 !   the g's are in units of 2pi/a.
 !
+      use constants, only: tpi
       use control_flags, only: iprint
       use reciprocal_vectors, only: g, gx, mill_l
       use gvecp, only: ngm
       use gvecw, only: ngw
       use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
-      use cell_base, only: tpiba2
       implicit none
 !
-      real(kind=8) b1(3),b2(3),b3(3), gmax
+      real(kind=8) alat, b1_(3),b2_(3),b3_(3), gmax
       real(kind=8), external :: erf
+      real(kind=8) b1(3),b2(3),b3(3), tpiba2
 !
       integer i1,i2,i3,ig
+
+      b1 = b1_ * alat
+      b2 = b2_ * alat
+      b3 = b3_ * alat
 !
 !     calculation of gx(3,ng)
 !
@@ -1050,6 +1060,8 @@ END SUBROUTINE
          g(ig)=gx(1,ig)**2 + gx(2,ig)**2 + gx(3,ig)**2
          if(g(ig).gt.gmax) gmax=g(ig)
       enddo
+ 
+      tpiba2 = ( tpi / alat ) ** 2
 !
       do ig=1,ngw
          ggp(ig) = g(ig) +                                              &
@@ -1078,25 +1090,24 @@ END SUBROUTINE
           INTEGER :: i
           REAL(dbl) :: alatb, b1b(3),b2b(3),b3b(3)
 
-          alatb  = alat/nr1*nr1b
-          tpibab = 2.d0*pi/alatb
+          alatb  = alat / nr1*nr1b
+          tpibab = 2.d0*pi / alatb
           do i=1,3
             a1b(i)=a1(i)/nr1*nr1b
             a2b(i)=a2(i)/nr2*nr2b
             a3b(i)=a3(i)/nr3*nr3b
           enddo
+
           omegab=omega/nr1*nr1b/nr2*nr2b/nr3*nr3b
 !
-          call recips(a1b,a2b,a3b,b1b,b2b,b3b)
-          b1b = b1b * alatb
-          b2b = b2b * alatb
-          b3b = b3b * alatb
-          call gcalb(b1b,b2b,b3b)
+          call recips( a1b, a2b, a3b, b1b, b2b, b3b )
+          !
+          call gcalb( alatb, b1b, b2b, b3b )
 !
           do i=1,3
-            ainvb(1,i)=b1b(i)/alatb
-            ainvb(2,i)=b2b(i)/alatb
-            ainvb(3,i)=b3b(i)/alatb
+            ainvb(1,i)=b1b(i)
+            ainvb(2,i)=b2b(i)
+            ainvb(3,i)=b3b(i)
           end do
 
           RETURN

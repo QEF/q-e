@@ -27,14 +27,12 @@
 !=----------------------------------------------------------------------------=!
 
    SUBROUTINE bands_procgrid_init( )
-
-!
-!  This subroutine initialize the processor grid, among which the electronic 
-!  bands are distributed. Note that bands are not distributed all across the
-!  execution, but only in some subroutines, and only if it is convenient to
-!  do so.
-!  
-
+     !
+     !  This subroutine initialize the processor grid, among which the electronic 
+     !  bands are distributed. Note that bands are not distributed all across the
+     !  execution, but only in some subroutines, and only if it is convenient to
+     !  do so.
+     !  
      USE mp_global, ONLY: mpime, nproc, group
      USE processors_grid_module, ONLY: grid_init
 
