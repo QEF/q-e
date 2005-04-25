@@ -136,7 +136,7 @@ SUBROUTINE iosys()
                              ldamped_dyn, lmol_dyn, llangevin, &
                              ds_                 => ds, &
                              write_save_         => write_save, &
-                             reset_vel_          => reset_vel, &
+                             use_masses_         => use_masses, &
                              init_num_of_images_ => init_num_of_images, &
                              use_fourier_        => use_fourier, &
                              use_multistep_      => use_multistep, &
@@ -213,7 +213,7 @@ SUBROUTINE iosys()
                                tolp, tempw, delta_t, nraise, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
-                               reset_vel, use_multistep, first_last_opt, damp, &
+                               use_masses, use_multistep, first_last_opt, damp,&
                                init_num_of_images, temp_req, k_max, k_min,     &
                                ds, use_fourier, use_freezing, fixed_tan,       &
                                free_energy, write_save, trust_radius_max,      &
@@ -980,7 +980,7 @@ SUBROUTINE iosys()
   ds_             = ds
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
-  reset_vel_      = reset_vel
+  use_masses_     = use_masses
   write_save_     = write_save
   use_fourier_    = use_fourier
   use_freezing_   = use_freezing
@@ -1241,7 +1241,6 @@ SUBROUTINE iosys()
   !
 END SUBROUTINE iosys
 !
-!
 !-----------------------------------------------------------------------
 SUBROUTINE read_cards( psfile, atomic_positions_ )
   !-----------------------------------------------------------------------
@@ -1265,14 +1264,16 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  if_pos_ =>  if_pos
   USE dynam,              ONLY : amass
   USE control_flags,      ONLY : lconstrain, lfixatom
-  USE constraints_module, ONLY : nconstr, constr_tol, constr, target
+  USE constraints_module, ONLY : nconstr, constr_tol, &
+                                 constr_type, constr, target
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
                                  taspc, tapos, rd_pos, &
                                  atomic_positions, if_pos, sp_pos, &
                                  k_points, xk, wk, nk1, nk2, nk3, &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
                                  trd_ht, f_inp, calculation,&
-                                 nconstr_inp, constr_tol_inp, constr_inp
+                                 nconstr_inp, constr_tol_inp, &
+                                 constr_type_inp, constr_inp
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   USE parser
@@ -1281,7 +1282,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: psfile(ntyp)
-  CHARACTER (LEN=30) :: atomic_positions_
+  CHARACTER (LEN=30)  :: atomic_positions_
   !
   LOGICAL :: tcell = .FALSE.
   INTEGER :: i, is, ns, ia, ik
@@ -1417,9 +1418,11 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   ENDIF
   !
   IF ( trd_ht ) THEN
+    !
     symm_type = cell_symmetry 
     at        = TRANSPOSE( rd_ht )
     tcell     = .TRUE.
+    !
   END IF
   !
   IF ( ibrav == 0 .AND. .NOT. tcell ) &
@@ -1432,17 +1435,19 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      nconstr    = nconstr_inp
      constr_tol = constr_tol_inp
      !
-     ALLOCATE( constr(2,nconstr) )
-     ALLOCATE( target(nconstr) )
+     ALLOCATE( target(      nconstr ) )
+     ALLOCATE( constr_type( nconstr ) )
      !
-     constr(:,:) = constr_inp(:,1:nconstr)
+     ALLOCATE( constr( 2, nconstr ) )
+     !
+     constr_type(:) = constr_type_inp(1:nconstr)
+     constr(:,:)    = constr_inp(:,1:nconstr)
      !
   END IF
   !
   RETURN 
   !
 END SUBROUTINE read_cards
-!
 !
 !-----------------------------------------------------------------------
 SUBROUTINE verify_tmpdir()

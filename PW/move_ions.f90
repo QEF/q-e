@@ -36,7 +36,7 @@ SUBROUTINE move_ions()
   USE kinds,         ONLY : DP
   USE cell_base,     ONLY : alat, at, bg, omega
   USE cellmd,        ONLY : omega_old, at_old, lmovecell, calc
-  USE ions_base,     ONLY : nat, ityp, tau, atm
+  USE ions_base,     ONLY : nat, ityp, tau, atm, if_pos
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
@@ -53,7 +53,7 @@ SUBROUTINE move_ions()
   !
   USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
   USE constraints_module,     ONLY : dist_constrain, check_constrain, &
-                                     new_force
+                                     new_force, remove_constraint_force
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
@@ -78,9 +78,38 @@ SUBROUTINE move_ions()
      !
      ALLOCATE( tauold( 3, nat, 3 ) )   
      !
-     ! ... constraints are imposed here
+     ! ... constraints are imposed here by removing the force along
+     ! ... the constraint
      !  
-     IF ( lconstrain ) CALL impose_constraints()
+     IF ( lconstrain ) THEN
+        !
+        CALL remove_constraint_force( tau, force )
+        !
+        ! ... resymmetrize (should not be needed, but...)
+        !
+        IF ( nsym > 1 ) THEN
+           !
+           DO na = 1, nat
+              !
+              CALL trnvect( force(1,na), at, bg, - 1 )
+              !
+           END DO
+           !
+           CALL symvect( nat, force, nsym, s, irt )
+           !
+           DO na = 1, nat
+              !
+              CALL trnvect( force(1,na), at, bg, 1 )
+              !
+           END DO
+           !
+        END IF
+        !
+        ! ... forces on fixed coordinates are set to zero
+        !
+        force = force * DBLE( if_pos )
+        !
+     END IF
      !
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
@@ -214,7 +243,7 @@ SUBROUTINE move_ions()
      !
      ! ... check if the new positions satisfy the constrain equation
      !
-     IF ( lconstrain ) CALL check_constrain()
+     IF ( lconstrain ) CALL check_constrain( tau )
      !
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
@@ -273,54 +302,6 @@ SUBROUTINE move_ions()
            & /5X,'by performing a new scf iteration',        & 
            &     'without any "electronic" history' )               
   !
-  CONTAINS
-     !
-     ! ... internal procedures   
-     !  
-     !-----------------------------------------------------------------------
-     SUBROUTINE impose_constraints()
-       !-----------------------------------------------------------------------
-       !
-       USE constraints_module, ONLY : nconstr
-       USE ions_base,          ONLY : ityp
-       !
-       IMPLICIT NONE
-       !
-       ! ... local variables
-       !
-       INTEGER       :: index, na
-       REAL(KIND=DP) :: gv
-       REAL(KIND=DP) :: dgv(3,nat)
-       REAL(KIND=DP) :: dgv2
-         ! gv = 0 defines the constrain
-         ! the gradient of gv
-         ! its square modulus       
-       !
-       !
-       ! ... molecular dynamics: lagrange multipliers are used
-       !
-       ! ... find the constrained forces
-       !
-       DO index = 1, nconstr
-          !
-          CALL dist_constrain( index, gv, dgv, dgv2 )
-          !
-          CALL new_force( dgv, dgv2 )
-          !
-       END DO
-       !
-       WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-       !
-       DO na = 1, nat
-          !
-          WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
-          !
-       END DO
-       !
-9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
-       !
-     END SUBROUTINE impose_constraints
-     !
 END SUBROUTINE move_ions     
 !
 ! ... this routine is used also by compute_scf (NEB)

@@ -10,6 +10,7 @@ cell_base.o  \
 check_stop.o  \
 clocks.o \
 constants.o \
+constraints_module.o \
 control_flags.o \
 descriptors.o \
 electrons_base.o \

@@ -53,7 +53,6 @@ close_files.o \
 compute_dip.o \
 compute_rho.o \
 compute_scf.o \
-constraints_module.o \
 coset.o \
 cryst_to_car.o \
 cubicsym.o \
@@ -271,6 +270,7 @@ MODULES = \
 ../Modules/check_stop.o \
 ../Modules/clocks.o \
 ../Modules/constants.o \
+../Modules/constraints_module.o \
 ../Modules/control_flags.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
