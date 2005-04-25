@@ -1,283 +1,353 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!--------------------------------------------------------------------
-subroutine gradcorr (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, &
-     nrx3, nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v)
-  !     ===================
-  !--------------------------------------------------------------------
 #include "f_defs.h"
-  USE kinds
-  use funct
-  implicit none
+!
+!----------------------------------------------------------------------------
+SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                     nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v )
+  !----------------------------------------------------------------------------
   !
-  integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, nl (ngm), &
-       nspin
+  USE constants, ONLY : e2
+  USE kinds,     ONLY : DP
+  USE funct,     ONLY : igcx, igcc
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,        INTENT(IN)    :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                                   nrxx, ngm, nl(ngm), nspin
+  REAL (KIND=DP), INTENT(IN)    :: rho_core(nrxx), g(3,ngm), alat, omega
+  REAL (KIND=DP), INTENT(OUT)   :: v(nrxx,nspin), vtxc, etxc
+  REAL (KIND=DP), INTENT(INOUT) :: rho(nrxx,nspin)
+  !
+  INTEGER :: k, ipol, is
+  !
+  REAL (KIND=DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  !
+  REAL (KIND=DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+                    v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
+                    etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2 
+  !
+  REAL (KIND=DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
+                    grhoup, grhodw, grhoud, grup, grdw
 
-  real(kind=DP) :: rho (nrxx, nspin), rho_core (nrxx), v (nrxx, nspin), &
-       g (3, ngm), vtxc, etxc, alat, omega, zeta, rh, grh2
-  integer :: k, ipol, is
-  real(kind=DP), allocatable :: grho (:,:,:), h (:,:,:), dh (:)
-  real(kind=DP) :: grho2 (2), sx, sc, v1x, v2x, v1c, v2c, v1xup, v1xdw, &
-       v2xup, v2xdw, v1cup, v1cdw , etxcgc, vtxcgc, segno, arho, fac
-  real(kind=DP) :: v2cup, v2cdw,  v2cud, rup, rdw, grhoup, grhodw, grhoud, &
-       grup, grdw
-  real(kind=DP), parameter :: e2 = 2.d0, epsr = 1.0d-6, epsg = 1.0d-10
-
-  if (igcx == 0 .and. igcc == 0) return
-  etxcgc = 0.d0
-  vtxcgc = 0.d0
-
-  allocate (h( 3, nrxx, nspin))    
-  allocate (grho( 3, nrxx, nspin))    
-
-  ! calculate the gradient of rho+rho_core in real space
-  fac = 1.d0 / dble (nspin)
-  do is = 1, nspin
-     call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
-     call gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho (1, is), &
-          ngm, g, nl, alat, grho (1, 1, is) )
-  enddo
-  do k = 1, nrxx
-     do is = 1, nspin
-        grho2 (is) = grho(1, k, is)**2 + grho(2, k, is)**2 + grho(3, k, is)**2
-     enddo
-     if (nspin == 1) then
+  REAL (KIND=DP), PARAMETER :: epsr = 1.D-6, &
+                               epsg = 1.D-10
+  !
+  !
+  IF ( igcx == 0 .AND. igcc == 0 ) RETURN
+  !
+  etxcgc = 0.D0
+  vtxcgc = 0.D0
+  !
+  ALLOCATE(    h( 3, nrxx, nspin) )
+  ALLOCATE( grho( 3, nrxx, nspin) )
+  !
+  ! ... calculate the gradient of rho + rho_core in real space
+  !
+  fac = 1.D0 / DBLE( nspin )
+  !
+  DO is = 1, nspin
+     !
+     rho(:nrxx,is) = fac * rho_core(:nrxx) + rho(:nrxx,is)
+     !
+     CALL gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
+                    rho(1,is), ngm, g, nl, alat, grho(1,1,is) )
+     !
+  END DO
+  !
+  IF ( nspin == 1 ) THEN
+     !
+     ! ... This is the spin-unpolarised case
+     !
+     DO k = 1, nrxx
         !
-        !    This is the spin-unpolarised case
+        arho = ABS( rho(k,1) )
         !
-        arho = abs (rho (k, 1) )
-        segno = sign (1.d0, rho (k, 1) )
-        if (arho.gt.epsr.and.grho2 (1) .gt.epsg) then
-
-           call gcxc (arho, grho2, sx, sc, v1x, v2x, v1c, v2c)
+        IF ( arho > epsr ) THEN
            !
-           ! first term of the gradient correction : D(rho*Exc)/D(rho)
-
-           v (k, 1) = v (k, 1) + e2 * (v1x + v1c)
-           ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
-           do ipol = 1, 3
-              h (ipol, k, 1) = e2 * (v2x + v2c) * grho (ipol, k, 1)
-           enddo
-           vtxcgc = vtxcgc + e2 * (v1x + v1c) * (rho (k, 1) - rho_core(k) )
-           etxcgc = etxcgc + e2 * (sx + sc) * segno
-        else
-           do ipol = 1, 3
-              h (ipol, k, 1) = 0.d0
-           enddo
-        endif
-     else
+           grho2(1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+           !
+           IF ( grho2(1) > epsg ) THEN
+              !
+              segno = SIGN( 1.D0, rho(k,1) )
+              !
+              CALL gcxc( arho, grho2, sx, sc, v1x, v2x, v1c, v2c )
+              !
+              ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
+              !
+              v(k,1) = v(k,1) + e2 * ( v1x + v1c )
+              !
+              ! ... h contains :
+              !
+              ! ...    D(rho*Exc) / D(|grad rho|) * (grad rho) / |grad rho|
+              !
+              h(:,k,1) = e2 * ( v2x + v2c ) * grho(:,k,1)
+              !
+              vtxcgc = vtxcgc + e2 * ( v1x + v1c ) * ( rho(k,1) - rho_core(k) )
+              etxcgc = etxcgc + e2 * ( sx + sc ) * segno
+              !
+           END IF
+           !
+        ELSE
+           !
+           h(:,k,1) = 0.D0
+           !
+        END IF
         !
-        !    spin-polarised case
+     END DO
+     !
+  ELSE
+     !
+     ! ... spin-polarised case
+     !
+     DO k = 1, nrxx
         !
-        call gcx_spin (rho (k, 1), rho (k, 2), grho2 (1), grho2 (2), &
-             sx, v1xup, v1xdw, v2xup, v2xdw)
-        rh = rho (k, 1) + rho (k, 2)
-        if (rh.gt.epsr) then
-           if ( igcc == 3 ) then
-              rup = rho (k, 1)
-              rdw = rho (k, 2)
+        rh = rho(k,1) + rho(k,2)
+        !
+        grho2(:) = grho(1,k,:)**2 + grho(2,k,:)**2 + grho(3,k,:)**2
+        !
+        CALL gcx_spin( rho(k,1), rho(k,2), grho2(1), &
+                       grho2(2), sx, v1xup, v1xdw, v2xup, v2xdw )
+        !
+        IF ( rh > epsr ) THEN
+           !
+           IF ( igcc == 3 ) THEN
+              !
+              rup = rho(k,1)
+              rdw = rho(k,2)
+              !
               grhoup = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
               grhodw = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
+              !
               grhoud = grho(1,k,1) * grho(1,k,2) + &
                        grho(2,k,1) * grho(2,k,2) + &
                        grho(3,k,1) * grho(3,k,2)
-              call gcc_spin_more(rup, rdw, grhoup, grhodw, grhoud, sc, &
-                                 v1cup, v1cdw, v2cup, v2cdw, v2cud)
-           else
-              zeta = (rho (k, 1) - rho (k, 2) ) / rh
               !
-              grh2 = (grho (1, k, 1) + grho (1, k, 2) ) **2 + &
-                     (grho (2, k, 1) + grho (2, k, 2) ) **2 + &
-                     (grho (3, k, 1) + grho (3, k, 2) ) **2
-              call gcc_spin (rh, zeta, grh2, sc, v1cup, v1cdw, v2c)
+              CALL gcc_spin_more( rup, rdw, grhoup, grhodw, grhoud, &
+                                  sc, v1cup, v1cdw, v2cup, v2cdw, v2cud )
+              !
+           ELSE
+              !
+              zeta = ( rho(k,1) - rho(k,2) ) / rh
+              !
+              grh2 = ( grho(1,k,1) + grho(1,k,2) )**2 + &
+                     ( grho(2,k,1) + grho(2,k,2) )**2 + &
+                     ( grho(3,k,1) + grho(3,k,2) )**2
+              !
+              CALL gcc_spin( rh, zeta, grh2, sc, v1cup, v1cdw, v2c )
+              !
               v2cup = v2c
               v2cdw = v2c
               v2cud = v2c
-           end if
-        else
-           sc = 0.d0
-           v1cup = 0.d0
-           v1cdw = 0.d0
-           v2c = 0.d0
-           v2cup = 0.0d0
-           v2cdw = 0.0d0
-           v2cud = 0.0d0
-        endif
+              !
+           END IF
+           !
+        ELSE
+           !
+           sc    = 0.D0
+           v1cup = 0.D0
+           v1cdw = 0.D0
+           v2c   = 0.D0
+           v2cup = 0.D0
+           v2cdw = 0.D0
+           v2cud = 0.D0
+           !
+        ENDIF
         !
-        ! first term of the gradient correction : D(rho*Exc)/D(rho)
+        ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
         !
-        v (k, 1) = v (k, 1) + e2 * (v1xup + v1cup)
-        v (k, 2) = v (k, 2) + e2 * (v1xdw + v1cdw)
+        v(k,1) = v(k,1) + e2 * ( v1xup + v1cup )
+        v(k,2) = v(k,2) + e2 * ( v1xdw + v1cdw )
         !
-        ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
+        ! ... h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
-        do ipol = 1, 3
-           grup = grho (ipol, k, 1)
-           grdw = grho (ipol, k, 2)
-           h (ipol, k, 1) = e2 * ( (v2xup + v2cup) * grup + v2cud * grdw )
-           h (ipol, k, 2) = e2 * ( (v2xdw + v2cdw) * grdw + v2cud * grup )
-        enddo
-        vtxcgc = vtxcgc + e2 * (v1xup + v1cup) * (rho(k,1) - rho_core(k) * fac)
-        vtxcgc = vtxcgc + e2 * (v1xdw + v1cdw) * (rho(k,2) - rho_core(k) * fac)
-        etxcgc = etxcgc + e2 * (sx + sc)
-     endif
-  enddo
-  do is = 1, nspin
-     call DAXPY (nrxx, - fac, rho_core, 1, rho (1, is), 1)
-  enddo
-  deallocate(grho)
-  allocate (dh( nrxx))    
-  !
-  ! second term of the gradient correction :
-  ! \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
-  !
-  do is = 1, nspin
-     call grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, h (1, 1, is), &
-          ngm, g, nl, alat, dh)
-     do k = 1, nrxx
-        v (k, is) = v (k, is) - dh (k)
-        vtxcgc = vtxcgc - dh (k) * rho (k, is)
-     enddo
-  enddo
-
-  vtxc = vtxc + omega * vtxcgc / (nr1 * nr2 * nr3)
-  etxc = etxc + omega * etxcgc / (nr1 * nr2 * nr3)
-
-  deallocate (dh)
-  deallocate (h)
-  return
-
-end subroutine gradcorr
-!--------------------------------------------------------------------
-
-subroutine gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
-     ngm, g, nl, alat, ga)
-  !--------------------------------------------------------------------
-  !
-  ! Calculates ga = \grad a in R-space (a is also in R-space)
-  USE kinds
-  use gvect, only: nlm
-  use wvfct, only: gamma_only
-  implicit none
-
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
-  real(kind=DP) :: a (nrxx), g (3, ngm), ga (3, nrxx), alat
-  integer :: n, ipol
-  real(kind=DP), allocatable :: aux (:,:), gaux (:,:)
-  real(kind=DP) ::  tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
-
-  allocate (aux( 2,nrxx))    
-  allocate (gaux(2,nrxx))    
-
-  tpiba = tpi / alat
-  !
-  ! copy a(r) to complex array...
-  !
-  aux(2,:) = 0.d0
-  call DCOPY (nrxx, a, 1, aux, 2)
-  !
-  ! bring a(r) to G-space, a(G) ...
-  !
-  call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-  !
-  ! multiply by (iG) to get (\grad_ipol a)(G) ...
-  !
-  ga(:,:) = 0.d0
-
-  do ipol = 1, 3
-     gaux(:,:) = 0.d0
-     do n = 1, ngm
-        gaux (1, nl (n) ) = - g (ipol, n) * aux (2, nl (n) )
-        gaux (2, nl (n) ) =   g (ipol, n) * aux (1, nl (n) )
-     enddo
-     if (gamma_only) then
-        do n = 1, ngm
-           gaux (1, nlm(n) ) =   gaux (1, nl(n) )
-           gaux (2, nlm(n) ) = - gaux (2, nl(n) )
-        enddo
-     end if
+        DO ipol = 1, 3
+           !
+           grup = grho(ipol,k,1)
+           grdw = grho(ipol,k,2)
+           h(ipol,k,1) = e2 * ( ( v2xup + v2cup ) * grup + v2cud * grdw )
+           h(ipol,k,2) = e2 * ( ( v2xdw + v2cdw ) * grdw + v2cud * grup )
+           !
+        END DO
+        !
+        vtxcgc = vtxcgc + &
+                 e2 * ( v1xup + v1cup ) * ( rho(k,1) - rho_core(k) * fac )
+        vtxcgc = vtxcgc + &
+                 e2 * ( v1xdw + v1cdw ) * ( rho(k,2) - rho_core(k) * fac )
+        etxcgc = etxcgc + e2 * ( sx + sc )
+        !
+     END DO
      !
-     ! bring back to R-space, (\grad_ipol a)(r) ...
+  END IF
+  !
+  DO is = 1, nspin
      !
-     call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     rho(:,is) = rho(:,is) - fac * rho_core(:)
+     !
+  END DO
+  !
+  DEALLOCATE( grho )
+  !
+  ALLOCATE( dh( nrxx ) )    
+  !
+  ! ... second term of the gradient correction :
+  ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
+  !
+  DO is = 1, nspin
+     !
+     CALL grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                    nrxx, h(1,1,is), ngm, g, nl, alat, dh )
+     !
+     v(:,is) = v(:,is) - dh(:)
+     !
+     vtxcgc = vtxcgc - SUM( dh(:) * rho(:,is) )
+     !
+  END DO
+  !
+  vtxc = vtxc + omega * vtxcgc / ( nr1 * nr2 * nr3 )
+  etxc = etxc + omega * etxcgc / ( nr1 * nr2 * nr3 )
+  !
+  DEALLOCATE( dh )
+  DEALLOCATE( h )
+  !
+  RETURN
+  !
+END SUBROUTINE gradcorr
+!
+!----------------------------------------------------------------------------
+SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                     nrxx, a, ngm, g, nl, alat, ga )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a in R-space (a is also in R-space)
+  !
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : nlm
+  USE wvfct,     ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                                    nrxx, ngm, nl(ngm)
+  REAL (KIND=DP), INTENT(IN)     :: a(nrxx), g(3,ngm), alat
+  REAL (KIND=DP), INTENT(OUT)    :: ga(3,nrxx)
+  !
+  INTEGER                        :: n, ipol
+  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:), gaux(:)
+  !
+  !
+  ALLOCATE(  aux( nrxx ) )
+  ALLOCATE( gaux( nrxx ) )
+  !
+  aux = DCMPLX( a(:nrxx), 0.D0 )
+  !
+  ! ... bring a(r) to G-space, a(G) ...
+  !
+  CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  ga(:,:) = 0.D0
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = 0.D0
+     !
+     gaux(nl(:ngm)) = g(ipol,:ngm) * DCMPLX( - AIMAG( aux(nl(:ngm)) ), &
+                                             +  REAL( aux(nl(:ngm)) ) )
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(nlm(:ngm)) = DCMPLX( +  REAL( gaux(nl(:ngm)) ), &
+                                  - AIMAG( gaux(nl(:ngm)) ) )
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-
-     call DAXPY (nrxx, tpiba, gaux, 2, ga (ipol, 1), 3)
-
-  enddo
-  deallocate (gaux)
-  deallocate (aux)
-  return
-
-end subroutine gradient
-!--------------------------------------------------------------------
-
-subroutine grad_dot (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, a, &
-     ngm, g, nl, alat, da)
-  !--------------------------------------------------------------------
-  !
-  ! Calculates da = \sum_i \grad_i a_i in R-space
-  USE kinds
-  use gvect, only: nlm
-  use wvfct, only: gamma_only
-  implicit none
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
-  real(kind=DP) :: a (3, nrxx), g (3, ngm), da (nrxx), alat
-  integer :: n, ipol
-  real(kind=DP), allocatable :: aux (:,:), gaux (:,:)
-  real(kind=DP) ::  tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
-
-  allocate (aux( 2,nrxx))    
-  allocate (gaux(2,nrxx))    
-
-  gaux(:,:) = 0.d0
-  do ipol = 1, 3
+     ga(ipol,:nrxx) = ga(ipol,:nrxx) + tpiba * REAL( gaux(:nrxx) )
      !
-     ! copy a(ipol,r) to a complex array...
-     !
-     aux(2,:) = 0.d0
-     call DCOPY (nrxx, a (ipol, 1), 3, aux, 2)
-     !
-     ! bring a(ipol,r) to G-space, a(G) ...
-     !
-     call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-     !
-     ! multiply by (iG) to get (\grad_ipol a)(G) ...
-     !
-     do n = 1, ngm
-        gaux (1, nl (n) ) = gaux (1, nl (n) ) - g (ipol, n) * aux (2,nl(n))
-        gaux (2, nl (n) ) = gaux (2, nl (n) ) + g (ipol, n) * aux (1,nl(n))
-     enddo
-  enddo
-  if (gamma_only) then
-     do n = 1, ngm
-        gaux (1, nlm(n) ) =   gaux (1, nl (n) )
-        gaux (2, nlm(n) ) = - gaux (2, nl (n) )
-     enddo
-  end if
+  END DO
   !
-  !  bring back to R-space, (\grad_ipol a)(r) ...
+  DEALLOCATE( gaux )
+  DEALLOCATE( aux )
   !
-  call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  RETURN
   !
-  ! ...add the factor 2\pi/a  missing in the definition of G and sum
+END SUBROUTINE gradient
+!
+!----------------------------------------------------------------------------
+SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                     nrxx, a, ngm, g, nl, alat, da )
+  !----------------------------------------------------------------------------
   !
-  tpiba = tpi / alat
-  do n=1,nrxx
-     da(n) = gaux(1,n)*tpiba
-  end do
+  ! ... Calculates da = \sum_i \grad_i a_i in R-space
   !
-  deallocate (gaux)
-  deallocate (aux)
-  return
-end subroutine grad_dot
-
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : nlm
+  USE wvfct,     ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                                    nrxx, ngm, nl(ngm)
+  REAL (KIND=DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
+  REAL (KIND=DP), INTENT(OUT)    :: da(nrxx)
+  !
+  INTEGER                        :: n, ipol
+  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:), gaux(:)
+  !
+  !
+  ALLOCATE(  aux( nrxx ) )
+  ALLOCATE( gaux( nrxx ) )
+  !
+  gaux(:) = 0.D0
+  !
+  DO ipol = 1, 3
+     !
+     aux = DCMPLX( a(ipol,:nrxx), 0.D0 )
+     !
+     ! ... bring a(ipol,r) to G-space, a(G) ...
+     !
+     CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     gaux(nl(:ngm)) = gaux(nl(:ngm)) + &
+                      g(ipol,:ngm) * DCMPLX( - AIMAG( aux(nl(:ngm)) ), &
+                                             +  REAL( aux(nl(:ngm)) ) )
+     !
+  END DO
+  !
+  IF ( gamma_only ) THEN
+     !
+     gaux(nlm(:ngm)) = DCMPLX( +  REAL( gaux(nl(:ngm)) ), &
+                               - AIMAG( gaux(nl(:ngm)) ) )
+     !
+  END IF
+  !
+  ! ... bring back to R-space, (\grad_ipol a)(r) ...
+  !
+  CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  !
+  ! ... add the factor 2\pi/a  missing in the definition of G and sum
+  !
+  da(:nrxx) = tpiba * REAL( gaux(:nrxx) )
+  !
+  DEALLOCATE( gaux )
+  DEALLOCATE( aux )
+  !
+  RETURN
+  !
+END SUBROUTINE grad_dot
