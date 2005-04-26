@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF-CP90 groups
+! Copyright (C) 2004-2005 PWSCF-CP90 groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,8 +12,8 @@ MODULE constraints_module
   !----------------------------------------------------------------------------
   ! 
   ! ... variables and methods for constraint Molecular Dynamics and
-  ! ... constraint ionic relaxations (based on a penalty function or lagrange
-  ! ... multipliers) are defined here.
+  ! ... constraint ionic relaxations (the SHAKE algorithm based on 
+  ! ... lagrange multipliers) are defined here.
   !
   ! ... Written by Carlo Sbraccia ( 24/02/2004 )
   !
@@ -23,7 +23,9 @@ MODULE constraints_module
   ! ...    Clarendon Press - Oxford (1986)
   !
   !
-  USE kinds, ONLY: DP  
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : eps16, eps32
+  USE io_global, ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -33,9 +35,7 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: dist_constrain,  &
-            check_constrain, &
-            new_force,       &
+  PUBLIC :: check_constrain, &
             remove_constraint_force
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
@@ -60,7 +60,7 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE dist_constrain( index, tau, g, dg, dg2 )
+     SUBROUTINE dist_constrain( index, tau, alat, g, dg, dg2 )
        !-----------------------------------------------------------------------
        ! 
        ! ... this routine defines the constrain equation:
@@ -75,28 +75,27 @@ MODULE constraints_module
        !
        ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
        !
-       USE constants, ONLY : eps32
-       USE cell_base, ONLY : alat
-       USE ions_base, ONLY : nat
-       !
        IMPLICIT NONE
        !
        INTEGER,        INTENT(IN) :: index
-       REAL (KIND=DP), INTENT(IN) :: tau(3,nat)
-         ! the index of the required constrain
-       REAL (KIND=DP), INTENT(OUT):: dg(3,nat), dg2, g
+       REAL (KIND=DP), INTENT(IN) :: tau(:,:)
+       REAL (KIND=DP), INTENT(IN) :: alat
+       REAL (KIND=DP), INTENT(OUT):: dg(:,:)
+       REAL (KIND=DP), INTENT(OUT):: dg2, g
          ! constrain terms ( in bohr )
        !
        ! ... local variables
        !
        REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
        REAL(KIND=DP) :: dist0
-       INTEGER       :: ia1, ia2
+       INTEGER       :: nat, ia1, ia2
        !
        ! ... external function
        !
        REAL(KIND=DP), EXTERNAL :: DDOT
        !
+       !
+       nat = SIZE( tau, DIM = 2 )
        !
        dg(:,:) = 0.D0
        !
@@ -146,7 +145,7 @@ MODULE constraints_module
      END SUBROUTINE dist_constrain
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_constrain( tau )
+     SUBROUTINE check_constrain( tau, alat )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -159,23 +158,21 @@ MODULE constraints_module
        ! ... in normal cases the constraint equation should be always 
        ! ... satisfied the very first iteration.
        !
-       USE io_global,  ONLY : stdout
-       USE constants,  ONLY : eps16
-       USE cell_base,  ONLY : alat
-       USE ions_base,  ONLY : nat, ityp, atm
-       !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), INTENT(INOUT) :: tau(3,nat)
+       REAL (KIND=DP), INTENT(INOUT) :: tau(:,:)
+       REAL (KIND=DP), INTENT(IN)    :: alat
        !
-       INTEGER                    :: na, i, index
+       INTEGER                    :: na, nat, i, index
        REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
        REAL(KIND=DP)              :: dg2, g
        LOGICAL                    :: ltest(nconstr), global_test
        INTEGER, PARAMETER         :: maxiter = 250
        !
        !
-       ALLOCATE( dg(3,nat) )
+       nat = SIZE( tau, DIM = 2 )
+       !
+       ALLOCATE( dg( 3, nat ) )
        !
        outer_loop: DO i = 1, maxiter
           !
@@ -183,7 +180,7 @@ MODULE constraints_module
              !
              ltest(index) = .FALSE.             
              !
-             CALL dist_constrain( index, tau, g, dg, dg2 )
+             CALL dist_constrain( index, tau, alat, g, dg, dg2 )
              !
              ! ... check if g = 0
              !
@@ -258,22 +255,20 @@ MODULE constraints_module
        !
        ! ... where dg is the gradient of the constraint function
        !
-       USE io_global, ONLY : stdout
-       USE constants, ONLY : eps16, eps32
-       USE ions_base, ONLY : nat
-       !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), INTENT(IN)  :: dg(3,nat), dg2
-       REAL (KIND=DP), INTENT(OUT) :: force(3,nat)
+       REAL (KIND=DP), INTENT(IN)  :: dg(:,:), dg2
+       REAL (KIND=DP), INTENT(OUT) :: force(:,:)
        !
-       INTEGER        :: na, i, ipol
+       INTEGER        :: nat, na, i, ipol
        REAL (KIND=DP) :: lambda, sum
        !
        ! ... external function
        !
        REAL(KIND=DP), EXTERNAL :: DDOT  
        !
+       !
+       nat = SIZE( force, DIM = 2 )
        !
        lambda = 0.D0
        !
@@ -318,44 +313,37 @@ MODULE constraints_module
      END SUBROUTINE new_force
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( tau, force )
+     SUBROUTINE remove_constraint_force( tau, alat, force )
        !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY : stdout
-       USE ions_base, ONLY : ityp, nat
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), INTENT(IN)  :: tau(3,nat)
-       REAL (KIND=DP), INTENT(OUT) :: force(3,nat)
+       REAL (KIND=DP), INTENT(IN)  :: tau(:,:)
+       REAL (KIND=DP), INTENT(IN)  :: alat
+       REAL (KIND=DP), INTENT(OUT) :: force(:,:)
        !
-       INTEGER        :: index, na
-       REAL (KIND=DP) :: gv
-       REAL (KIND=DP) :: dgv(3,nat)
-       REAL (KIND=DP) :: dgv2
+       INTEGER                     :: index, na, nat
+       REAL (KIND=DP)              :: gv
+       REAL (KIND=DP), ALLOCATABLE :: dgv(:,:)
+       REAL (KIND=DP)              :: dgv2
          ! gv = 0 defines the constrain
          ! the gradient of gv
          ! its square modulus       
+       !
+       !
+       nat = SIZE( tau, DIM = 2 )
+       !
+       ALLOCATE( dgv( 3, nat ) )
        !
        ! ... find the constrained forces
        !
        DO index = 1, nconstr
           !
-          CALL dist_constrain( index, tau, gv, dgv, dgv2 )
+          CALL dist_constrain( index, tau, alat, gv, dgv, dgv2 )
           !
           CALL new_force( dgv, dgv2, force )
           !
        END DO
-       !
-       WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-       !
-       DO na = 1, nat
-          !
-          WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
-          !
-       END DO
-       !
-9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
        !
      END SUBROUTINE remove_constraint_force
      !

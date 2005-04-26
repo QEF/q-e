@@ -52,8 +52,8 @@ SUBROUTINE move_ions()
   ! ... external procedures
   !
   USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
-  USE constraints_module,     ONLY : dist_constrain, check_constrain, &
-                                     new_force, remove_constraint_force
+  USE constraints_module,     ONLY : check_constrain, &
+                                     remove_constraint_force
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
@@ -83,7 +83,7 @@ SUBROUTINE move_ions()
      !  
      IF ( lconstrain ) THEN
         !
-        CALL remove_constraint_force( tau, force )
+        CALL remove_constraint_force( tau, alat, force )
         !
         ! ... resymmetrize (should not be needed, but...)
         !
@@ -108,6 +108,14 @@ SUBROUTINE move_ions()
         ! ... forces on fixed coordinates are set to zero
         !
         force = force * DBLE( if_pos )
+        !
+        WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+        !
+        DO na = 1, nat
+           !
+           WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
+           !
+        END DO
         !
      END IF
      !
@@ -243,7 +251,7 @@ SUBROUTINE move_ions()
      !
      ! ... check if the new positions satisfy the constrain equation
      !
-     IF ( lconstrain ) CALL check_constrain( tau )
+     IF ( lconstrain ) CALL check_constrain( tau, alat )
      !
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
@@ -294,6 +302,8 @@ SUBROUTINE move_ions()
   END IF
   ! 
   RETURN
+  !
+9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
   !
 9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
            & /5X,'                   absolute magnetization has been found' )
