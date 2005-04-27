@@ -120,7 +120,6 @@ PWOBJS = \
 ../PW/clean_pw.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
-../PW/constraints_module.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \
 ../PW/cubicsym.o \
