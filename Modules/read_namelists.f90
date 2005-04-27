@@ -351,11 +351,9 @@ MODULE read_namelists_module
        !
        ! ... defaults for "path" optimisations
        !
-       ! ... general input variables
-       !
        num_of_images   = 0
        first_last_opt  = .FALSE.
-       reset_vel       = .FALSE.       
+       use_masses      = .FALSE.       
        write_save      = .FALSE.
        use_fourier     = .FALSE.
        use_freezing    = .FALSE.
@@ -371,7 +369,7 @@ MODULE read_namelists_module
        k_max     = 0.1D0
        k_min     = 0.1D0
        !
-       ! ... Fourier-SMD specific
+       ! ... SMD specific
        !
        init_num_of_images = 3
        use_multistep      = .FALSE.
@@ -762,7 +760,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( num_of_images, ionode_id )
        CALL mp_bcast( first_last_opt, ionode_id )
-       CALL mp_bcast( reset_vel, ionode_id )
+       CALL mp_bcast( use_masses, ionode_id )
        CALL mp_bcast( init_num_of_images, ionode_id )
        CALL mp_bcast( use_multistep, ionode_id )
        CALL mp_bcast( use_fourier, ionode_id )

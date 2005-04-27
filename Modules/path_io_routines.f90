@@ -98,9 +98,9 @@ MODULE path_io_routines
        USE control_flags,    ONLY : istep, nstep, conv_elec, lneb, lsmd
        USE io_files,         ONLY : iunpath, iunrestart, path_file   
        USE input_parameters, ONLY : if_pos
-       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image,  &
-                                    dim, num_of_images, pos, pes, grad_pes,   &
-                                    reset_vel, frozen , lquick_min, lmol_dyn, &
+       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
+                                    dim, num_of_images, pos, pes, grad_pes,  &
+                                    frozen , lquick_min, lmol_dyn,           &
                                     ldamped_dyn, first_last_opt
        USE path_variables,   ONLY : vel, Emax, Emin, Emax_index
        USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
@@ -194,14 +194,14 @@ MODULE path_io_routines
              ia = ia + 1
              !
              READ( UNIT = iunrestart, FMT = * ) &
-                 pos(j,1),             &
-                 pos((j+1),1),         &
-                 pos((j+2),1),         &
-                 grad_pes(j,1),        &
-                 grad_pes((j+1),1),    & 
-                 grad_pes((j+2),1),    &
-                 if_pos(1,ia),         &
-                 if_pos(2,ia),         &
+                 pos(j+0,1),                    &
+                 pos(j+1,1),                    &
+                 pos(j+2,1),                    &
+                 grad_pes(j+0,1),               &
+                 grad_pes(j+1,1),               &
+                 grad_pes(j+2,1),               &
+                 if_pos(1,ia),                  &
+                 if_pos(2,ia),                  &
                  if_pos(3,ia) 
              !
              grad_pes(:,1) = grad_pes(:,1) * &
@@ -217,12 +217,12 @@ MODULE path_io_routines
              DO j = 1, dim, 3 
                 !
                 READ( UNIT = iunrestart, FMT = * ) &
-                    pos(j,i),                 &
-                    pos((j+1),i),             &
-                    pos((j+2),i),             &
-                    grad_pes(j,i),        &
-                    grad_pes((j+1),i),    &
-                    grad_pes((j+2),i)
+                    pos(j+0,i),                    &
+                    pos(j+1,i),                    &
+                    pos(j+2,i),                    &
+                    grad_pes(j+0,i),               &
+                    grad_pes(j+1,i),               &
+                    grad_pes(j+2,i)
                  !
              END DO
              !
@@ -241,7 +241,7 @@ MODULE path_io_routines
           !
           READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
           !
-          IF ( .NOT. reset_vel .AND. ( ierr == 0 ) .AND. &
+          IF ( ( ierr == 0 ) .AND. &
                ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
              !
              IF ( matches( "QUICK-MIN FIELDS", input_line ) ) THEN
@@ -256,9 +256,9 @@ MODULE path_io_routines
                    DO j = 1, dim, 3
                       !
                       READ( UNIT = iunrestart, FMT = * ) &
-                          vel(j,i),                & 
-                          vel((j+1),i),            &
-                          vel((j+2),i)
+                          vel(j+0,i),                    & 
+                          vel(j+1,i),                    &
+                          vel(j+2,i)
                       !
                    END DO
                    !
@@ -272,7 +272,7 @@ MODULE path_io_routines
           END IF
           !
           CLOSE( iunrestart )
-          !  
+          !
        END IF
        !
        ! ... broadcast to all nodes
@@ -301,8 +301,7 @@ MODULE path_io_routines
           !
        END IF
        !
-       IF ( .NOT. reset_vel .AND. &
-            ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
+       IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
           !
           CALL mp_bcast( frozen, meta_ionode_id )
           CALL mp_bcast( vel,    meta_ionode_id )
@@ -416,25 +415,25 @@ MODULE path_io_routines
                  IF ( i == 1 ) THEN
                     !
                     WRITE( UNIT = in_unit, FMT = restart_first ) &
-                        pos(j,i),                         &
-                        pos((j+1),i),                     &
-                        pos((j+2),i),                     &
-                        grad_pes(j,i),                    &
-                        grad_pes((j+1),i),                & 
-                        grad_pes((j+2),i),                &
-                        if_pos(1,ia),                     &
-                        if_pos(2,ia),                     &
+                        pos(j+0,i),                              &
+                        pos(j+1,i),                              &
+                        pos(j+2,i),                              &
+                        grad_pes(j+0,i),                         &
+                        grad_pes(j+1,i),                         &
+                        grad_pes(j+2,i),                         &
+                        if_pos(1,ia),                            &
+                        if_pos(2,ia),                            &
                         if_pos(3,ia) 
                     !
                  ELSE
                     !
                     WRITE( UNIT = in_unit, FMT = restart_others ) &
-                        pos(j,i),                          &
-                        pos((j+1),i),                      &
-                        pos((j+2),i),                      &
-                        grad_pes(j,i),                     &
-                        grad_pes((j+1),i),                 & 
-                        grad_pes((j+2),i)
+                        pos(j+0,i),                               &
+                        pos(j+1,i),                               &
+                        pos(j+2,i),                               &
+                        grad_pes(j+0,i),                          &
+                        grad_pes(j+1,i),                          & 
+                        grad_pes(j+2,i)
                     !
                  END IF
                  !
@@ -466,9 +465,9 @@ MODULE path_io_routines
               DO j = 1, dim, 3
                  !
                  WRITE( UNIT = in_unit, FMT = quick_min ) &
-                     vel(j,i),                & 
-                     vel((j+1),i),            &
-                     vel((j+2),i)
+                     vel(j+0,i),                          & 
+                     vel(j+1,i),                          &
+                     vel(j+2,i)
                  !
               END DO
               !
@@ -613,9 +612,9 @@ MODULE path_io_routines
              !
              WRITE( UNIT = iunxyz, FMT = xyz_fmt ) &
                  TRIM( atom_label( ityp( atom ) ) ), &
-                 pos((3*atom-2),image) * bohr_radius_angs, &
-                 pos((3*atom-1),image) * bohr_radius_angs, &
-                 pos((3*atom-0),image) * bohr_radius_angs
+                 pos(3*atom-2,image)*bohr_radius_angs, &
+                 pos(3*atom-1,image)*bohr_radius_angs, &
+                 pos(3*atom-0,image)*bohr_radius_angs
              !
           END DO   
           !
@@ -653,12 +652,12 @@ MODULE path_io_routines
              !
              WRITE( UNIT = iunaxsf, FMT = axsf_fmt ) &
                  TRIM( atom_label(ityp(atom)) ), &
-                 pos((3*atom-2),image) * bohr_radius_angs,  &
-                 pos((3*atom-1),image) * bohr_radius_angs,  &
-                 pos((3*atom-0),image) * bohr_radius_angs,  &
-                 - grad_pes((3*atom-2),image) / bohr_radius_angs, &
-                 - grad_pes((3*atom-1),image) / bohr_radius_angs, &
-                 - grad_pes((3*atom-0),image) / bohr_radius_angs
+                 pos(3*atom-2,image)*bohr_radius_angs, &
+                 pos(3*atom-1,image)*bohr_radius_angs, &
+                 pos(3*atom-0,image)*bohr_radius_angs, &
+                 - grad_pes(3*atom-2,image)/bohr_radius_angs, &
+                 - grad_pes(3*atom-1,image)/bohr_radius_angs, &
+                 - grad_pes(3*atom-0,image)/bohr_radius_angs
              !
           END DO   
           !

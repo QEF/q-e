@@ -41,7 +41,7 @@ MODULE path_base
       USE input_parameters, ONLY : pos, restart_mode, calculation, &
                                    opt_scheme, climbing, nstep, input_images
       USE control_flags,    ONLY : conv_elec, lneb, lsmd
-      USE ions_base,        ONLY : nat, if_pos
+      USE ions_base,        ONLY : nat, amass, ityp, if_pos
       USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
                                    int_file, xyz_file, axsf_file, broy_file
       USE cell_base,        ONLY : alat
@@ -49,7 +49,7 @@ MODULE path_base
                                    istep_path, nstep_path, dim, num_of_images, &
                                    pes, grad_pes, tangent, error, path_length, &
                                    path_thr, deg_of_freedom, ds, react_coord,  &
-                                   first_last_opt, reset_vel, llangevin,       &
+                                   use_masses, mass, first_last_opt, llangevin,&
                                    temp_req, use_freezing, tune_load_balance,  &
                                    lbroyden
       USE path_variables,   ONLY : climbing_ => climbing,                      &
@@ -215,6 +215,24 @@ MODULE path_base
          !
       END IF
       !
+      IF ( use_masses ) THEN
+         !
+         ! ... mass weighted coordinates are used
+         !
+         DO i = 1, nat
+            !
+            mass(3*i-2) = amass(ityp(i))
+            mass(3*i-1) = amass(ityp(i))
+            mass(3*i-0) = amass(ityp(i))
+            !
+         END DO
+         !
+      ELSE
+         !
+         mass = 1.D0
+         !
+      END IF
+      !
       ! ... initial path is read from file ( restart_mode == "restart" ) 
       ! ... or generated from the input images ( restart_mode = "from_scratch" )
       ! ... It is alway read from file in the case of "free-energy" calculations
@@ -303,10 +321,6 @@ MODULE path_base
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
-         !
-         IF ( lquick_min ) &
-            WRITE( UNIT = iunpath, &
-                   FMT = '(5X,"reset_vel",T35," = ",1X,L1))' ) reset_vel
          !
          ! ... neb specific
          !
@@ -566,7 +580,7 @@ MODULE path_base
       USE supercell,      ONLY : pbc
       USE path_variables, ONLY : pos, grad, norm_grad, elastic_grad,   &
                                  grad_pes, k, lmol_dyn, num_of_images, &
-                                 climbing, tangent
+                                 climbing, tangent, mass
       !
       IMPLICIT NONE
       !
@@ -604,17 +618,17 @@ MODULE path_base
          ! ... only the component of the pes gradient orthogonal to the path is 
          ! ... taken into account
          !
-         grad(:,i) = grad_pes(:,i)
+         grad(:,i) = grad_pes(:,i) / SQRT( mass(i) )
          !
          IF ( climbing(i) ) THEN
             !
             grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
-                                    ( grad_pes(:,i) .dot. tangent(:,i) )
+                                    ( grad(:,i) .dot. tangent(:,i) )
             ! 
          ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
             !
-            grad(:,i) = elastic_grad + grad_pes(:,i) - &
-                        tangent(:,i) * ( grad_pes(:,i) .dot. tangent(:,i) )
+            grad(:,i) = elastic_grad + grad(:,i) - &
+                        tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
             !
          END IF
          ! 
@@ -664,8 +678,8 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE ions_base,      ONLY : if_pos
-      USE path_variables, ONLY : dim, num_of_images, grad_pes,   &
-                                 tangent, llangevin, lang, grad, &
+      USE path_variables, ONLY : dim, mass, num_of_images, grad_pes, &
+                                 tangent, llangevin, lang, grad,     &
                                  norm_grad, fixed_tan, use_fourier
       !
       IMPLICIT NONE
@@ -700,13 +714,15 @@ MODULE path_base
             !
          END IF
          !
+         grad(:,i) = grad_pes(:,i) / SQRT( mass(i) )
+         !
          IF ( fixed_tan .OR. &
               ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
             !
             ! ... projection of the pes gradients 
             !
-            grad(:,i) = grad_pes(:,i) - &
-                        tangent(:,i) * ( tangent(:,i) .dot. grad_pes(:,i) )
+            grad(:,i) = grad(:,i) - &
+                        tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
             !
             IF ( llangevin ) THEN
                !
@@ -714,10 +730,6 @@ MODULE path_base
                            tangent(:,i) * ( tangent(:,i) .dot. lang(:,i) )
                !
             END IF
-            !
-         ELSE
-            !
-            grad(:,i) = grad_pes(:,i)
             !
          END IF
          !

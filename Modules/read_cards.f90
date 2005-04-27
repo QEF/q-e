@@ -170,8 +170,6 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'CONSTRAINTS' ) THEN
           !
           CALL card_constraints( input_line )
-          IF ( ( prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'VHMEAN' ) THEN
           !

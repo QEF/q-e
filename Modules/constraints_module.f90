@@ -24,7 +24,7 @@ MODULE constraints_module
   !
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : eps16, eps32
+  USE constants, ONLY : eps16
   USE io_global, ONLY : stdout
   !
   IMPLICIT NONE
@@ -120,7 +120,7 @@ MODULE constraints_module
           !
           g = ( dist0 - target(index) )
           !
-          IF ( dist0 > eps32 ) THEN
+          IF ( dist0 > eps16 ) THEN
              !           
              dg(1,ia1) = ( x1 - x2 ) / dist0
              dg(1,ia2) = ( x2 - x1 ) / dist0
@@ -163,11 +163,11 @@ MODULE constraints_module
        REAL (KIND=DP), INTENT(INOUT) :: tau(:,:)
        REAL (KIND=DP), INTENT(IN)    :: alat
        !
-       INTEGER                    :: na, nat, i, index
+       INTEGER                    :: nat, na, i, index
        REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
        REAL(KIND=DP)              :: dg2, g
        LOGICAL                    :: ltest(nconstr), global_test
-       INTEGER, PARAMETER         :: maxiter = 250
+       INTEGER, PARAMETER         :: maxiter = 100
        !
        !
        nat = SIZE( tau, DIM = 2 )
@@ -217,18 +217,11 @@ MODULE constraints_module
           !
        END DO outer_loop
        !
-       IF ( .NOT. global_test ) &
+       IF ( .NOT. global_test ) THEN
+          !
           CALL errore( 'check_constrain', 'g = 0 is not satisfied g = ', - 1 )
-       !
-       WRITE( stdout, '(5X,"Number of step(s): ",I3)') i - 1
-       !
-       ! ... if the atomic positions have been corrected write them on output
-       !
-       IF ( i > 1 ) THEN
           !
-          WRITE( stdout, '(/5X,"Corrected atomic positions:")')
-          !
-          CALL output_tau( .FALSE. )
+          WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
           !
        END IF
        !
@@ -239,70 +232,65 @@ MODULE constraints_module
      END SUBROUTINE check_constrain         
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE new_force( dg, dg2, force )
+     SUBROUTINE new_force( nat, dg, dg2, force )
        !-----------------------------------------------------------------------
        !
        ! ... find the lagrange multiplier lambda for the problem with one 
        ! ... constrain
        !
-       ! ...            force * dg
-       ! ... lambda = - ---------- ,
-       ! ...              |dg|^2
+       ! ...          force * dg
+       ! ... lambda = ---------- ,
+       ! ...            |dg|^2
        !
        ! ... and redefine the forces:
        !
-       ! ... force = force + lambda * dg
+       ! ... force = force - lambda * dg
        !
        ! ... where dg is the gradient of the constraint function
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), INTENT(IN)  :: dg(:,:), dg2
-       REAL (KIND=DP), INTENT(OUT) :: force(:,:)
+       INTEGER,        INTENT(IN)    :: nat
+       REAL (KIND=DP), INTENT(IN)    :: dg(:,:), dg2
+       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
        !
-       INTEGER        :: nat, na, i, ipol
-       REAL (KIND=DP) :: lambda, sum
+       INTEGER        :: na, i, ipol
+       REAL (KIND=DP) :: lambda, sum(3)
        !
        ! ... external function
        !
        REAL(KIND=DP), EXTERNAL :: DDOT  
        !
        !
-       nat = SIZE( force, DIM = 2 )
-       !
        lambda = 0.D0
        !
-       IF ( dg2 > eps32 ) THEN
+       IF ( dg2 > eps16 ) THEN
           !
-          lambda = - DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
+          lambda = DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
           !
-          force = lambda * dg + force
+          force = force - lambda * dg
           !
-          IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > eps32 ) THEN
+          IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > eps16 ) THEN
              !
              CALL errore( 'new_force', &
-                        & 'force is not orthogonal to constrain', - 1 )
+                        & 'force is not orthogonal to constrain', 1 )
              WRITE( stdout, * ) DDOT( 3 * nat, force, 1, dg, 1 )**2
              !
           END IF
           !
-          DO ipol = 1, 3
+          sum(:) = 0.D0
+          !
+          DO na = 1, nat
              !
-             sum = 0.D0
+             sum(:) = sum(:) + force(:,na)
              !
-             DO na = 1, nat
-                !
-                sum = sum + force(ipol,na)
-                !
-             END DO
+          END DO
+          !
+          ! ... impose total force = 0
+          !
+          DO na = 1, nat
              !
-             ! ... impose total force = 0
-             !
-             DO na = 1, nat
-                !
-                force(ipol,na) = force(ipol,na) - sum / nat
-                !
-             END DO
+             force(:,na) = force(:,na) - sum(:) / nat
              !
           END DO
           !
@@ -318,9 +306,9 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), INTENT(IN)  :: tau(:,:)
-       REAL (KIND=DP), INTENT(IN)  :: alat
-       REAL (KIND=DP), INTENT(OUT) :: force(:,:)
+       REAL (KIND=DP), INTENT(IN)    :: tau(:,:)
+       REAL (KIND=DP), INTENT(IN)    :: alat
+       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
        !
        INTEGER                     :: index, na, nat
        REAL (KIND=DP)              :: gv
@@ -341,7 +329,7 @@ MODULE constraints_module
           !
           CALL dist_constrain( index, tau, alat, gv, dgv, dgv2 )
           !
-          CALL new_force( dgv, dgv2, force )
+          CALL new_force( nat, dgv, dgv2, force )
           !
        END DO
        !

@@ -24,18 +24,20 @@ MODULE path_variables
   ! ... "general" variables :
   !
   LOGICAL :: &
-       first_last_opt,           &! .TRUE. if the first and the last image
-                                  !        have to be optimized
-       conv_path,                &! .TRUE. if "path" convergence has been
+       conv_path                  ! .TRUE. if "path" convergence has been
                                   !        achieved
-       reset_vel,                &! .TRUE. if velocities have to be reset at
-                                  !        restart time
-       use_fourier,              &! .TRUE. for a Fourier representation of
-                                  !        the path
-       use_multistep,            &! .TRUE. if multistep has to be used in smd
-                                  !        optimization
-       write_save,               &! .TRUE. if the save file has to be written
-       free_energy,              &! .TRUE. for free-energy calculations
+  LOGICAL :: &
+       first_last_opt,           &! if .TRUE. the first and the last image
+                                  !           are optimised too.
+       use_fourier,              &! if .TRUE. a Fourier representation of
+                                  !           the path is used
+       use_multistep,            &! if .TRUE. a multistep algorithm is used 
+                                  !           in smd optimization
+       use_masses,               &! if .TRUE. mass weighted coordinates are 
+                                  !           used
+       write_save,               &! if .TRUE. the save file is written for each
+                                  !           image
+       free_energy,              &! if .TRUE. a free-energy calculations is done
        fixed_tan,                &! if. TRUE. the projection is done using the
                                   !           tangent of the average path
        use_freezing,             &! if .TRUE. images are optimised according
@@ -107,6 +109,7 @@ MODULE path_variables
   !
   REAL (KIND=DP), ALLOCATABLE :: &
        elastic_grad(:),          &!
+       mass(:),                  &! atomic masses
        k(:),                     &!  
        react_coord(:),           &! the reaction coordinate (in bohr)
        norm_grad(:)               !
@@ -196,6 +199,7 @@ MODULE path_variables
        ALLOCATE( climbing(    num_of_images ) )
        ALLOCATE( frozen(      num_of_images ) )
        !
+       ALLOCATE( mass(         dim ) )
        ALLOCATE( elastic_grad( dim ) )
        !
        IF ( method == "smd" ) THEN
@@ -232,6 +236,7 @@ MODULE path_variables
        IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )       DEALLOCATE( grad_pes )
        IF ( ALLOCATED( k ) )              DEALLOCATE( k )
+       IF ( ALLOCATED( mass ) )           DEALLOCATE( mass )
        IF ( ALLOCATED( elastic_grad ) )   DEALLOCATE( elastic_grad )
        IF ( ALLOCATED( tangent ) )        DEALLOCATE( tangent ) 
        IF ( ALLOCATED( error ) )          DEALLOCATE( error )

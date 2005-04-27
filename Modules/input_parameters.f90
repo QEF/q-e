@@ -985,7 +985,7 @@ MODULE input_parameters
         
         LOGICAL :: first_last_opt = .FALSE.
         
-        LOGICAL :: reset_vel      = .FALSE.
+        LOGICAL :: use_masses     = .FALSE.
         
         LOGICAL :: use_fourier    = .FALSE.
         
@@ -1089,10 +1089,10 @@ MODULE input_parameters
          ! smlm  for SMD.
          ! splc  for future sp locater using SMD.
   
-        REAL (KIND=DP) :: smd_ene_ini = 1.d0
-        REAL (KIND=DP) :: smd_ene_fin = 1.d0
+        REAL (KIND=DP) :: smd_ene_ini = 1.D0
+        REAL (KIND=DP) :: smd_ene_fin = 1.D0
         !
-        REAL (KIND=DP) :: smd_spal = 1.d0
+        REAL (KIND=DP) :: smd_spal = 1.D0
  
         NAMELIST / ions / tempw, ion_dynamics, ion_radius, ion_damping,   &
                           ion_positions, ion_velocities, ion_temperature, &
@@ -1100,7 +1100,7 @@ MODULE input_parameters
                           tolp, ion_nstepe, ion_maxstep, upscale,         &
                           pot_extrapolation, wfc_extrapolation, delta_t,  &
                           nraise, num_of_images, CI_scheme, opt_scheme,   &
-                          first_last_opt, use_multistep, reset_vel,       &
+                          first_last_opt, use_multistep, use_masses,      &
                           write_save, damp, temp_req, ds, k_max, k_min,   &
                           path_thr, init_num_of_images, free_energy,      &
                           fixed_tan, use_freezing, use_fourier,           &
