@@ -43,8 +43,8 @@
 
       PRIVATE
 
-      PUBLIC :: nlin_base, nlin_stress_base, nlset_base, formfn_base
-      PUBLIC :: corecor_base, rhops_base
+      PUBLIC :: nlin_base, nlin_stress_base, nlset_base
+      PUBLIC :: corecor_base, compute_rhops, formfn
 
 
 !  end of module-scope declarations
@@ -439,36 +439,165 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE rhops_base(ap, hg, rhops, omega)
 
-!  this routine computes:
-!    the ionic Ewald pseudocharges form factors (rhops)
-!  pseudopotentials are given as numerical tables
-!  ----------------------------------------------
+!-----------------------------------------------------------------------
+      subroutine compute_rhops( rhops, drhops, zv, rcmax, g, omega, tpiba2, ngs, tpre )
+!-----------------------------------------------------------------------
+!
+        use kinds, only: dbl
+        !
+        implicit none
+        integer,   intent(in)  :: ngs
+        logical,   intent(in)  :: tpre
+        real(dbl), intent(in)  ::  g( ngs )
+        real(dbl), intent(out) ::  rhops( ngs )
+        real(dbl), intent(out) :: drhops( ngs )
+        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2
+        !
+        real(dbl) :: r2new
+        integer   :: ig
+        !
+        r2new = 0.25 * tpiba2 * rcmax**2
+        do ig = 1, ngs
+          rhops(ig) = - zv * exp( -r2new * g(ig) ) / omega
+        end do
+        if(tpre) then
+          drhops( 1:ngs ) = - rhops( 1:ngs ) * r2new / tpiba2
+        endif
+        !
+        return
+      end subroutine
 
-        USE pseudo_types, ONLY: pseudo_ncpp
+!-----------------------------------------------------------------------
+      subroutine formfn( vps, dvps, r, rab, vloc_at, zv, rcmax, g, omega, &
+                         tpiba2, cmesh, mesh, ngs, oldvan, tpre )
+!-----------------------------------------------------------------------
+!
+        !computes the form factors of pseudopotential (vps),
+        !         also calculated the derivative of vps with respect to
+        !         g^2 (dvps)
+        !
+        use kinds, only: dbl
+        use constants, only: pi, fpi, gsmall
+        !
+        implicit none
+        integer,   intent(in)  :: ngs
+        integer,   intent(in)  :: mesh
+        logical,   intent(in)  :: oldvan
+        logical,   intent(in)  :: tpre
+        real(dbl), intent(in)  ::  g( ngs )
+        real(dbl), intent(in)  ::  r( mesh )
+        real(dbl), intent(in)  ::  rab( mesh )
+        real(dbl), intent(in)  ::  vloc_at( mesh )
+        real(dbl), intent(out) ::  vps( ngs )
+        real(dbl), intent(out) :: dvps( ngs )
+        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2, cmesh
+        !
+        real(dbl) :: xg
+        integer   :: ig, ir, irmax
+        real(kind=8), allocatable:: f(:),vscr(:), figl(:)
+        real(kind=8), allocatable:: df(:), dfigl(:)
+        real(kind=8), external :: erf
+!
+        allocate( figl(ngs), f(mesh), vscr(mesh) )
+        if (tpre) then
+           allocate( dfigl(ngs), df(mesh) )
+        end if
+        !
+        !     definition of irmax: gridpoint beyond which potential is zero
+        !
+        irmax = 0
+        do ir = 1, mesh
+          if( r( ir ) < 10.0d0 ) irmax = ir
+        end do
+        !
+        do ir = 1, irmax
+          vscr(ir) = 0.5d0 * r(ir) * vloc_at(ir) + zv * erf( r(ir) / rcmax )
+        end do
+        do ir = irmax + 1, mesh
+          vscr(ir)=0.0
+        end do
 
-        IMPLICIT NONE
-! ...   declare subroutine arguments
-        REAL(dbl),            INTENT(OUT) :: rhops(:)
-        REAL(dbl),            INTENT(IN)  :: hg(:)
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl),            INTENT(IN)  :: omega
-! ...   declare other variables
-        REAL(dbl)   :: r2max, iondens
-        INTEGER     :: ig
-! ...   end of declarations
-!  ----------------------------------------------
-          iondens = - ap%zv / omega
-          r2max = ( 0.5d0 * ap%raggio * tpiba )**2
-          DO ig = 1, SIZE( rhops )
-            rhops( ig ) = iondens * EXP (- r2max * hg(ig) ) 
-          END DO
+        do ig = 1, ngs
+          xg = sqrt( g(ig) * tpiba2 )
+          if( xg < gsmall ) then
+            !
+            !     g=0
+            !
+            do ir = 1, irmax
+              f(ir) = vscr(ir) * r(ir)
+              if( tpre ) then
+                df(ir) = vscr(ir) * r(ir) ** 3
+              endif
+            end do
+            do ir = irmax + 1, mesh
+              f(ir)  = 0.0
+              if( tpre ) then
+                df(ir) = 0.0d0
+              end if
+            end do
+            !
+            if ( oldvan ) then
+              call herman_skillman_int( mesh, cmesh, f,  figl(ig) )
+              if(tpre) call herman_skillman_int( mesh, cmesh, df, dfigl(ig) )
+            else
+              call simpson_cp90( mesh, f, rab,  figl(ig) )
+              if(tpre) call simpson_cp90( mesh, df, rab, dfigl(ig) )
+            end if
+            !
+          else
+            !
+            !     g>0
+            !
+            do ir = 1, mesh
+              f(ir) = vscr(ir) * sin( r(ir) * xg )
+              if( tpre ) then
+                df(ir) = vscr(ir) * cos( r(ir) * xg ) * 0.5d0 * r(ir) / xg
+              endif
+            end do
+            !
+            if ( oldvan ) then
+              call herman_skillman_int( mesh, cmesh, f, figl(ig) )
+              if(tpre) call herman_skillman_int( mesh, cmesh, df, dfigl(ig) )
+            else
+              call simpson_cp90(mesh,f,rab(1),figl(ig))
+              if(tpre) call simpson_cp90(mesh,df,rab(1),dfigl(ig))
+            end if
+            !
+          end if
+        end do
+        !
+        do ig = 1, ngs
+          xg = sqrt( g(ig) * tpiba2 )
+          if( xg < gsmall ) then
+            !
+            !     g=0
+            !
+            vps(ig)   = fpi *  figl(ig) / omega
+            if(tpre)then
+              dvps(ig) = - fpi * dfigl(ig) / omega / 6.0d0  !  limit ( xg -> 0 ) dvps( xgi )
+            end if
+            !
+          else
+            !
+            !     g>0
+            !
+            vps(ig)  = fpi *  figl(ig) / ( omega * xg )
+            if(tpre)then
+              dvps(ig) = fpi * dfigl(ig) / ( omega * xg ) - 0.5 * vps(ig) / (xg*xg)
+            endif
+          end if
+        end do
+        !
+        deallocate( figl, f, vscr )
+        if (tpre) then
+           deallocate( dfigl, df )
+        end if
+        !
+      return
+      end subroutine
 
-        RETURN
-      END SUBROUTINE rhops_base
-!  ----------------------------------------------
-!  ----------------------------------------------
+
 
     END MODULE pseudo_base
 

@@ -94,7 +94,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use dpseu
   use cdvan
   use stre
-  use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+  use gvecw, only: ggp
   use restart_file
   use parameters, only: nacx, natx, nsx, nbndxx, nhclm
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au

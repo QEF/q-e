@@ -142,8 +142,7 @@
       !  Compute fictitious kinetic energy of the electrons at time t
 
       DO is = 1, cdesc%nspin
-        ekinc(is) = cp_kinetic_energy( is, cp(:,:,:,is), cm(:,:,:,is), cdesc, kp, &
-          gkmask_l, pmss, delt)
+        ekinc(is) = cp_kinetic_energy( is, cp(:,:,:,is), cm(:,:,:,is), cdesc, kp, pmss, delt)
       END DO
 
       DEALLOCATE( cgam, gam, STAT=ierr)
@@ -802,10 +801,8 @@
 
       !  Compute fictitious kinetic energy of the electrons at time t
 
-      ekinc(1) = cp_kinetic_energy( 1, cp(:,:,:,1), cm(:,:,:,1), cdesc, kp, &
-        gkmask_l, pmss, delt)
-      ekinc(2) = cp_kinetic_energy( 2, cp(:,:,:,1), cm(:,:,:,1), cdesc, kp, &
-        gkmask_l, pmss, delt)
+      ekinc(1) = cp_kinetic_energy( 1, cp(:,:,:,1), cm(:,:,:,1), cdesc, kp, pmss, delt)
+      ekinc(2) = cp_kinetic_energy( 2, cp(:,:,:,1), cm(:,:,:,1), cdesc, kp, pmss, delt)
 
 
       DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, cgam, gam, occup, occdown, STAT=ierr)

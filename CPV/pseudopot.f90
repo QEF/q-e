@@ -353,14 +353,15 @@
 ! ... declare modules
       USE ions_base, ONLY: na, nsp
       USE cell_module, ONLY: boxdimensions
+      USE cell_base, ONLY: tpiba2
       USE brillouin, ONLY: kpoints
       USE pseudotab_base, ONLY: chkpstab
       USE pseudotab_base, ONLY: formftab_base
       USE pseudotab_base, ONLY: corecortab_base
-      USE pseudo_base, ONLY: formfn_base
+      USE pseudo_base, ONLY: formfn
       USE pseudo_base, ONLY: corecor_base
-      USE pseudo_base, ONLY: rhops_base
-      USE reciprocal_vectors, ONLY: g
+      USE pseudo_base, ONLY: compute_rhops
+      USE reciprocal_vectors, ONLY: g, ngm
 
       IMPLICIT NONE
 
@@ -372,6 +373,7 @@
 ! ... declare other variables
       INTEGER is, isc, ist, ig, igh, i
       REAL(dbl)  omega, s1, s2, s3, s4
+      REAL(dbl), ALLOCATABLE :: vps(:), dvps(:), vloc(:)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -399,7 +401,8 @@
 ! ... handle local part
       DO is = 1, nsp
 
-        CALL rhops_base(ps%ap(is), g, ps%rhops(:,is), omega) 
+        CALL compute_rhops( ps%rhops(:,is), ps%drhops(:,is), ps%ap(is)%zv, &
+             ps%ap(is)%raggio, g, omega, tpiba2, ngm, .true. )
 
         IF( ps%ap(is)%tnlcc ) THEN
           IF(tpstab) THEN
@@ -415,7 +418,17 @@
           CALL formftab_base(g, ps%vps(:,is), ps%dvps(:,is), &
                vps_sp(is), dvps_sp(is), xgtabmax, omega )
         ELSE
-          CALL formfn_base(ps%ap(is), g, ps%vps(:,is), ps%dvps(:,is), omega)
+          !
+          ALLOCATE( vloc( ps%ap(is)%mesh ) )
+          !
+          vloc = ps%ap(is)%vloc * 2.0d0
+          CALL formfn( ps%vps(:,is), ps%dvps(:,is), ps%ap(is)%rw, ps%ap(is)%rab, &
+                      vloc, ps%ap(is)%zv, ps%ap(is)%raggio, g, omega, &
+                      tpiba2, 0.0d0, ps%ap(is)%mesh, ngm, .false., .true. )
+          ps%dvps(:,is) = -ps%dvps(:,is)
+          !
+          DEALLOCATE( vloc )
+
         END IF
 
         ! DEBUG
@@ -448,11 +461,11 @@
 
         USE ions_base, ONLY: nsp
         USE constants, ONLY: pi, fpi
-        USE cell_base, ONLY: tpiba
+        USE cell_base, ONLY: tpiba, tpiba2
         USE splines, ONLY: init_spline, allocate_spline
         USE mp, ONLY: mp_max
         USE mp_global, ONLY: mpime, group, nproc
-        USE pseudo_base, ONLY: formfn_base
+        USE pseudo_base, ONLY: formfn
         USE pseudo_base, ONLY: nlin_base
         USE pseudo_base, ONLY: nlin_stress_base
         USE pseudo_base, ONLY: corecor_base
@@ -463,6 +476,7 @@
         IMPLICIT NONE
 
         REAL(dbl), ALLOCATABLE :: fintl(:,:)
+        REAL(dbl), ALLOCATABLE :: vloc(:)
         INTEGER :: ig, is, mmax, lloc, nval, l, ll
         REAL(dbl)  :: xg, xgmax, xgmin, dxg, res
         LOGICAL :: tnum, tnlcc
@@ -492,7 +506,15 @@
 
           CALL allocate_spline( vps_sp(is), pstab_size, xgmin, xgmax )
           CALL allocate_spline( dvps_sp(is), pstab_size, xgmin, xgmax )
-          CALL formfn_base(ap(is), xgtab, vps_sp(is)%y, dvps_sp(is)%y, 1.0d0)
+
+          ALLOCATE( vloc( ap(is)%mesh ) )
+          vloc = ap(is)%vloc * 2.0d0
+          CALL formfn( vps_sp(is)%y, dvps_sp(is)%y, ap(is)%rw, ap(is)%rab, &
+                      vloc, ap(is)%zv, ap(is)%raggio, xgtab, 1.0d0, &
+                      tpiba2, 0.0d0, ap(is)%mesh, pstab_size, .false., .true. )
+          dvps_sp(is)%y = -dvps_sp(is)%y
+          DEALLOCATE( vloc )
+
           CALL init_spline( vps_sp(is) )
           CALL init_spline( dvps_sp(is) )
 
@@ -554,6 +576,8 @@
       USE pseudo_base, ONLY: nlin_base
       USE read_pseudo_module_fpmd, ONLY: ap
       USE reciprocal_space_mesh, ONLY: gk_l
+      USE reciprocal_vectors, ONLY: g
+      USE control_flags, ONLY: gamma_only
 
       IMPLICIT NONE
 
@@ -563,19 +587,25 @@
 
 ! ... declare other variables
       INTEGER  is, ik
-      LOGICAL :: gamma_symmetry
 
 !  end of declarations
 !  ----------------------------------------------
 
       wnl = 0.0d0
-      gamma_symmetry = ( kp%scheme == 'gamma' )
       DO is = 1, nspnl
         DO ik = 1, kp%nkpt
-          IF( tpstab ) THEN
-            CALL nlintab_base(gk_l(:,ik), wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+          IF( gamma_only ) THEN
+            IF( tpstab ) THEN
+              CALL nlintab_base(g, wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+            ELSE
+              CALL nlin_base(ap(is), g, wnl(:,:,is,ik))
+            END IF
           ELSE
-            CALL nlin_base(ap(is), gk_l(:,ik), wnl(:,:,is,ik))
+            IF( tpstab ) THEN
+              CALL nlintab_base(gk_l(:,ik), wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+            ELSE
+              CALL nlin_base(ap(is), gk_l(:,ik), wnl(:,:,is,ik))
+            END IF
           END IF
         END DO
       END DO

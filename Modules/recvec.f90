@@ -29,11 +29,8 @@
      !   values for costant cut-off computations
 
      REAL(dbl) :: ecfix = 0.0d0     ! value of the constant cut-off
-     REAL(dbl) :: gcfix = 0.0d0     ! ecfix / tpiba**2
      REAL(dbl) :: ecutz = 0.0d0     ! height of the penalty function (above ecfix)
-     REAL(dbl) :: gcutz = 0.0d0
      REAL(dbl) :: ecsig = 0.0d0     ! spread of the penalty function around ecfix
-     REAL(dbl) :: gcsig = 0.0d0
      LOGICAL   :: tecfix = .FALSE.  ! .TRUE. if constant cut-off is in use
 
      ! augmented cut-off for k-point calculation
@@ -46,7 +43,7 @@
      !
      ! ggp = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2 * g - e0gg ) / sgg ) )
 
-     REAL(dbl), ALLOCATABLE :: ggp(:)
+     REAL(dbl), ALLOCATABLE, TARGET :: ggp(:)
 
    CONTAINS
 

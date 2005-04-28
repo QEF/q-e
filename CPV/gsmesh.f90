@@ -39,28 +39,23 @@
         IMPLICIT NONE
         SAVE
 
-        REAL(dbl) :: b1(3) = 0.0d0
-        REAL(dbl) :: b2(3) = 0.0d0
-        REAL(dbl) :: b3(3) = 0.0d0
-
         !! ...    quantities related to k+G vectors
 
-        REAL(dbl), ALLOCATABLE, TARGET :: gkcutz_l(:,:) ! smooth cutoff factor index: G vector
-                                                        ! first index: G vector
-                                                        ! second index: k point
+        REAL(dbl), ALLOCATABLE :: gkcutz_l(:,:) ! smooth cutoff factor index: G vector
+                                                ! first index: G vector
+                                                ! second index: k point
 
-        REAL(dbl), ALLOCATABLE         :: gkmask_l(:,:) ! cutoff mask
-        REAL(dbl), ALLOCATABLE, TARGET :: gk_l(:,:)     ! length squared of k+G
-        REAL(dbl), ALLOCATABLE         :: gkx_l(:,:,:)  ! components of k+G
-                                                        ! first index: G vector
-                                                        ! second index: x,y,z
-                                                        ! third index: k point
+        REAL(dbl), ALLOCATABLE :: gkmask_l(:,:) ! cutoff mask
+        REAL(dbl), ALLOCATABLE :: gk_l(:,:)     ! length squared of k+G
+        REAL(dbl), ALLOCATABLE :: gkx_l(:,:,:)  ! components of k+G
+                                                ! first index: G vector
+                                                ! second index: x,y,z
+                                                ! third index: k point
 
 
         PRIVATE
 
-        PUBLIC :: recvecs_units, newg, gmeshinfo, gindex_closeup
-        PUBLIC :: b1, b2, b3
+        PUBLIC :: recvecs_units, newgk, gmeshinfo, gindex_closeup
         PUBLIC :: gkmask_l, gkcutz_l, gkx_l, gk_l
 
 ! ...   end of module-scope declarations
@@ -163,7 +158,7 @@
 !  ----------------------------------------------
 
 
-      SUBROUTINE newg( kp, htm1 )
+      SUBROUTINE newgk( kp, htm1 )
 
 !  this routine computes the squared modulus, and Ciartesian components 
 !  of G vectors, from their Miller indices and current cell shape. 
@@ -173,10 +168,10 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE gvecw,              ONLY: ngw, tecfix, gcfix, gcsig, gcutz, gcutw
+      USE gvecw,              ONLY: ngw, ecfix, ecsig, ecutz, gcutw
       USE gvecp,              ONLY: ngm
-      USE reciprocal_vectors, only: g, gx, mill_l
-      USE cell_module,        ONLY: alat
+      USE reciprocal_vectors, only: g, gx
+      USE cell_base,          ONLY: tpiba2
       USE brillouin,          ONLY: kpoints
 
       IMPLICIT NONE
@@ -193,16 +188,9 @@
 ! ... declare other variables
       INTEGER   :: ig, i, j, k, ik, nkp
       INTEGER   :: isign
-      REAL(dbl) :: gmax
 
 ! ... end of declarations
 !  ----------------------------------------------
-
-      b1 = htm1(:,1)
-      b2 = htm1(:,2)
-      b3 = htm1(:,3)
-
-      call gcal( alat, b1, b2, b3, gmax )
 
       nkp = kp%nkpt
       IF( .NOT. ALLOCATED( gk_l ) )       ALLOCATE( gk_l( ngw, nkp ) )
@@ -258,18 +246,20 @@
         END DO
       END IF
 
-      IF(tecfix) THEN
-        DO ik = 1, kp%nkpt
+      DO ik = 1, kp%nkpt
+        IF( ecutz > 0.0d0 ) THEN
           DO ig = 1, ngw
-! ...       compute smooth cutoff G+k vectors
-            gkcutz_l(ig,ik) = erf( ( gk_l(ig,ik) - gcfix ) / gcsig )
-            gkcutz_l(ig,ik) = gk_l(ig,ik) + gcutz * ( 1.0d0 + gkcutz_l(ig,ik) )
+            ! ... compute smooth cutoff G+k vectors
+            gkcutz_l(ig,ik) = erf( ( tpiba2 * gk_l(ig,ik) - ecfix ) / ecsig )
+            gkcutz_l(ig,ik) = gk_l(ig,ik) + ecutz / tpiba2 * ( 1.0d0 + gkcutz_l(ig,ik) )
           END DO
-        END DO
-      END IF
+        ELSE
+          gkcutz_l(1:ngw,ik) = gk_l(1:ngw,ik)
+        END IF
+      END DO
 
       RETURN
-      END SUBROUTINE newg
+      END SUBROUTINE newgk
 
 !=----------------------------------------------------------------------------=!
 

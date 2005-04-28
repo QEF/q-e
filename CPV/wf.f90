@@ -3796,7 +3796,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       use electrons_base, only: nx => nbspx, n => nbsp, nspin, f, ispin => fspin
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: ggp
       use uspp_param, only: nh, nhm
       use uspp, only : nhsa=> nkb, dvan
       use cell_base, only: tpiba2

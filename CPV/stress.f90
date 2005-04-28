@@ -249,8 +249,7 @@
       USE pseudo_projector, ONLY: projector
       USE cell_base, ONLY: tpiba2
       USE control_flags, ONLY: force_pairing
-      USE reciprocal_vectors, ONLY: gstart, gzero, g
-      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
+      USE reciprocal_vectors, ONLY: gstart, gzero, g, gx
 
       IMPLICIT NONE
 
@@ -329,7 +328,7 @@
         IF (ts) THEN
           igh=igh+1
           gspha(1) = 0.0d0
-          CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 0, 0)
+          CALL spharm(gspha, gx(:,:), g(:), ngw, 0, 0)
           DO ig = gstart, ngw
             gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
           END DO
@@ -387,7 +386,7 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 1, m-2)
+            CALL spharm(gspha, gx(:,:), g(:), ngw, 1, m-2)
             DO ig = gstart, ngw
               gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
@@ -462,7 +461,7 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 2, m-3)
+            CALL spharm(gspha, gx(:,:), g(:), ngw, 2, m-3)
             DO ig = gstart, ngw
               gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
@@ -546,7 +545,7 @@
             igh=igh+1
 
             gspha(1) = 0.0d0
-            CALL spharm(gspha, gkx_l(:,:,1), gk_l(:,1), ngw, 3, m-4)
+            CALL spharm(gspha, gx(:,:), g(:), ngw, 3, m-4)
             DO ig = gstart, ngw
               gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
             END DO
@@ -578,10 +577,10 @@
                     fg = 0.0d0
                     gmod = SQRT( g(ig) )
                     DO s = 1, 3
-                      fg = fg + 3.0d0/5.0d0 * fm(be,s,s,m) * gkx_l(al,ig,1) / gmod
+                      fg = fg + 3.0d0/5.0d0 * fm(be,s,s,m) * gx(al,ig) / gmod
                     END DO
                     DO s = 1, 3
-                      fg = fg + 6.0d0/5.0d0 * fm(be,s,al,m) * gkx_l(s,ig,1) / gmod
+                      fg = fg + 6.0d0/5.0d0 * fm(be,s,al,m) * gx(s,ig) / gmod
                     END DO
                     gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,ll,is)
                   END DO
@@ -722,11 +721,12 @@
 !  END manual
 
 ! ... declare modules
-      USE gvecw, ONLY: tecfix, gcsig, gcfix, gcutz
+      USE gvecw, ONLY: ecsig, ecfix, ecutz
       USE wave_types, ONLY: wave_descriptor
       USE constants, ONLY: pi
       USE control_flags, ONLY: force_pairing
       USE reciprocal_vectors, ONLY: gstart, g
+      USE cell_base, ONLY: tpiba2
 
       IMPLICIT NONE
 
@@ -738,7 +738,7 @@
       REAL(dbl) gagx_l(:,:)
 
 ! ... declare other variables
-      REAL(dbl)  :: sk(6), scg, cost1
+      REAL(dbl)  :: sk(6), scg, efac
       REAL(dbl), ALLOCATABLE :: arg(:)
       INTEGER    :: ib, ig, ispin, nspin, ispin_wfc
 
@@ -747,15 +747,16 @@
 
       nspin = cdesc%nspin
       dekin = 0.0_dbl
-      cost1 = 2.0_dbl / SQRT(pi)
       ALLOCATE( arg( cdesc%ldg ) ) 
-      DO ig = gstart, cdesc%ngwl
-        IF(tecfix) THEN
-          arg(ig) = 1.0_dbl + cost1 * gcutz * exp(-((g(ig)-gcfix)/gcsig)**2)/gcsig 
-        ELSE
-          arg(ig) = 1.0_dbl
-        END IF
-      END DO
+
+      efac = 2.0d0 * ecutz / ecsig / SQRT(pi)
+      IF( efac > 0.0d0 ) THEN
+        DO ig = gstart, cdesc%ngwl
+          arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 * g(ig) - ecfix ) / ecsig )**2 )
+        END DO
+      ELSE
+        arg = 1.0d0
+      END IF
 
 ! ... compute kinetic energy contribution
       DO ispin = 1, nspin
@@ -834,7 +835,8 @@
         RHOP = (0.D0,0.D0)
         RHOPR= (0.D0,0.D0)
         DO IS = 1, NSP
-          RHOP  = RHOP  + sfac( IG, is ) * ps%RHOPS(IG,is)
+          RHOP  = RHOP  + sfac( IG, is ) *  ps%RHOPS(IG,is)
+          ! RHOPR = RHOPR + sfac( IG, is ) * ps%DRHOPS(IG,is) 
           RHOPR = RHOPR + sfac( IG, is ) * ps%RHOPS(IG,is) * ps%ap(is)%RAGGIO**2 * 0.5D0
         END DO
         HGM1   = 1.D0 / g(IG) / TPIBA2 

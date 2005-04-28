@@ -343,7 +343,7 @@ CONTAINS
       USE kinds, ONLY: dbl
       USE phase_factors_module, ONLY: strucf, phfacs
       USE time_step, ONLY: delt
-      USE reciprocal_space_mesh, ONLY: newg
+      USE reciprocal_space_mesh, ONLY: newgk
       USE charge_density, ONLY: rhoofr
       USE wave_functions, ONLY: gram, rande, fixwave
       USE wave_base, ONLY: wave_verlet
@@ -427,10 +427,9 @@ CONTAINS
 
       IF ( .NOT. tbeg ) THEN
 
-        CALL newg( kp, ht_0%m1 )
+        CALL newinit( ht_0%hmat )
+        CALL newgk( kp, ht_0%m1 )
 
-        CALL newgb( ht_0%hmat(:,1), ht_0%hmat(:,2), ht_0%hmat(:,3), ht_0%omega, alat )
-!
         IF ( taurdr ) THEN
 
 ! ...       positions are read from stdin and not read from restart file, 

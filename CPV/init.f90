@@ -25,14 +25,13 @@
 
        REAL(dbl), EXTERNAL :: cclock
 
-       PUBLIC :: init1s, init0s
+       PUBLIC :: init0s
 
      CONTAINS
 
 !  BEGIN manual
 
-      SUBROUTINE init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht, eigr, ei1, ei2, ei3)
+      SUBROUTINE init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht)
 
 !  this routine handles data initialization
 !  ----------------------------------------------
@@ -59,7 +58,7 @@
       USE fft_base,             ONLY: dfftp
       USE grid_dimensions,      ONLY: nr1, nr2, nr3
       USE ions_positions,       ONLY: taus
-      USE reciprocal_space_mesh, ONLY: newg
+      USE reciprocal_space_mesh, ONLY: newgk
 
       IMPLICIT NONE
 
@@ -68,10 +67,6 @@
       TYPE (atoms_type)   :: atoms_0, atoms_p, atoms_m
       TYPE (wave_descriptor) :: wfill, wempt
       TYPE (pseudo) :: ps
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
       TYPE (kpoints) :: kp
       TYPE (boxdimensions) :: ht_m, ht
 
@@ -80,7 +75,6 @@
       REAL(dbl) :: a1(3), a2(3), a3(3)
       INTEGER :: i, ispin, isym
       LOGICAL :: tk
-      COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
       INTEGER :: neupdwn( nspin )
 
 
@@ -95,15 +89,10 @@
       CALL cell_init( ht_m, a1, a2, a3 )
 
       ! ... compute reciprocal lattice vectors
-      CALL newg(kp, ht%m1)
+      CALL newgk(kp, ht%m1)
 
       ! ... initialize atomic configuration (should be called after metric_init)
       CALL atoms_init( atoms_m, atoms_0, atoms_p, taus, ind_srt, if_pos, atm, ht%hmat )
-
-      ! ... compute structure factors
-      ALLOCATE( sfac( ngm, nsp ) )
-      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
-      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
 
       ! ... Allocate + Initialize pseudopotentials
       CALL pseudopotential_init(ps, na, nsp, kp)
@@ -142,73 +131,11 @@
         CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
       ENDIF
 
-
       CALL cpflush  ! flush output streams
-      DEALLOCATE( sfac )
 
       RETURN
       END SUBROUTINE
 
-
-!  BEGIN manual
-
-    SUBROUTINE init1s(kp, ps, cm, c0, wfill, ce, wempt, fnl, eigr, occ)
-
-!  this routine handles data initialization
-!  ----------------------------------------------
-!  END manual
-
-! ... declare modules
-      USE cp_types
-      USE cell_module,        ONLY: alat
-      USE electrons_module,   ONLY: electron_mass_init, band_init, nbnd
-      USE reciprocal_vectors, ONLY: g
-      USE gvecw,              ONLY: ngw
-      USE pseudopotential,    ONLY: nsanl, ngh
-      USE pseudo_projector,   ONLY: allocate_projector, projector
-      USE diis,               ONLY: allocate_diis
-      USE brillouin,          ONLY: kpoints
-      USE wave_types,         ONLY: wave_descriptor
-      USE wave_init,          ONLY: pw_atomic_init
-      USE control_flags,      ONLY: nbeg, t_diis
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-
-      COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
-      TYPE (wave_descriptor) :: wfill, wempt
-      TYPE (pseudo) :: ps
-      REAL(dbl) :: occ(:,:,:)
-      TYPE (projector) :: fnl(:,:)
-      COMPLEX(dbl) :: eigr(:,:)
-      TYPE (kpoints) :: kp
-
-!  end of declarations
-!  ----------------------------------------------
-
-! ... initialize bands
-      CALL band_init( occ )
-
-! ...   initialize wave functions
-      CALL pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp, eigr )
-
-      ! ... initialize the electronic fictitious mass and time step for 
-      ! ... electron dynamics. 
-      CALL electron_mass_init(alat, g, ngw)
-
-      ! ... initialize nonlocal pseudopotentials coefficients
-      CALL allocate_projector(fnl, nsanl, nbnd, ngh, kp%gamma_only)
-
-      IF(t_diis) THEN
-        ! ...   arrange for DIIS minimization
-        CALL allocate_diis(ngw, nbnd, kp%nkpt)
-      END IF
-
-      CALL cpflush  ! flush output streams
-
-      RETURN
-    END SUBROUTINE
 
 !=----------------------------------------------------------------------=!
    END MODULE init_fpmd
@@ -243,7 +170,7 @@
       USE reciprocal_space_mesh, ONLY: gmeshinfo
       USE reciprocal_vectors, ONLY : mill_g, g2_g, bi1, bi2, bi3
       USE recvecs_subroutines, ONLY: recvecs_init
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix, gcutw, gkcut
+      use gvecw, only: gcutw, gkcut
       use gvecp, only: ecut => ecutp, gcut => gcutp
       use gvecs, only: gcuts
       use gvecb, only: gcutb

@@ -16,9 +16,7 @@
 !  ----------------------------------------------
 !  routines in this module:
 !  SUBROUTINE pw_rand_init(nbeg,cm,c0)
-!  SUBROUTINE calphi(pslm,philm,eigr,nchan)
-!  SUBROUTINE calpslm(pslm,nchan,ns,np,nd)
-!  SUBROUTINE pw_atomic_init(nbeg,cm,c0,eigr)
+!  SUBROUTINE pw_atomic_init(nbeg,cm,c0)
 !  ----------------------------------------------
 !  END manual
 
@@ -165,7 +163,7 @@
 
 
 
-   SUBROUTINE pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp, eigr)
+   SUBROUTINE pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -185,7 +183,6 @@
       TYPE (kpoints), INTENT(IN) :: kp
       COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-      COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
 
 ! ... declare other variables
 

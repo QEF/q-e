@@ -440,7 +440,7 @@
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart, g, gx
       use cell_base, only: ainv, tpiba2
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: ggp, ecutz, ecsig, ecfix
       use mp, only: mp_sum
 !
       implicit none
@@ -452,17 +452,17 @@
       integer j, k, ig, i
       real(kind=8), allocatable:: gtmp(:)
       real(kind=8) sk(n)  ! automatic array
+      real(kind=8) :: ga, dggp, efac
 !
       allocate (gtmp(ngw))
       dekin=0.d0
       do j=1,3
          do k=1,3
             do ig=1,ngw
-               gtmp(ig) = gx(j,ig)*(gx(1,ig)*ainv(k,1)+                 &
-     &                              gx(2,ig)*ainv(k,2)+                 &
-     &                              gx(3,ig)*ainv(k,3)) *               &
-     &                 (1.d0+2.d0*agg/sgg/sqrt(pi)*                     &
-     &            exp(-(tpiba2*g(ig)-e0gg)*(tpiba2*g(ig)-e0gg)/sgg/sgg))
+               efac     = 2.d0 * ecutz / ecsig / sqrt(pi)
+               dggp     = 1.d0 + efac * exp( - ( tpiba2 * g(ig) - ecfix ) * ( tpiba2 * g(ig) - ecfix ) / ecsig / ecsig )
+               ga       = gx(1,ig) * ainv(k,1) + gx(2,ig) * ainv(k,2) + gx(3,ig) * ainv(k,3)
+               gtmp(ig) = gx(j,ig) * ga * dggp
             end do
             do i=1,n
                sk(i)=0.d0
@@ -696,7 +696,7 @@
       use electrons_base, only: n => nbsp, ispin => fspin, f, nspin
       use constants, only: pi, fpi
       use ions_base, only: nsp, na, nat
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: ggp
       use cell_base, only: tpiba2
 !
       implicit none
@@ -1162,7 +1162,7 @@
       use electrons_base, only: nx => nbspx, n => nbsp, f
       use gvecw, only: ngw
       use reciprocal_vectors, only: gstart
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: ggp
       use mp, only: mp_sum
       use cell_base, only: tpiba2
 

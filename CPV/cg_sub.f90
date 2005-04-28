@@ -62,7 +62,6 @@
       use dpseu
       use cdvan
       use stre
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir

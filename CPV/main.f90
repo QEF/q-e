@@ -100,7 +100,7 @@
       USE fft, ONLY : fft_closeup
       USE electrons_module, ONLY: ei, nspin
       USE diis, ONLY: allocate_diis
-      USE pseudo_projector, ONLY: projector, deallocate_projector
+      USE pseudo_projector, ONLY: projector, deallocate_projector, allocate_projector
       USE charge_density, ONLY: rhoofr, printrho
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
@@ -130,12 +130,12 @@
       USE electrons_module, ONLY: bmeshset
       USE mp_global, ONLY: nproc, mpime, group
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE ions_base, ONLY: taui, cdmi, nat
+      USE ions_base, ONLY: taui, cdmi, nat, nsp
       USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
                             ind_localisation, pos_localisation
       USE ions_base, ONLY: ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
-      USE electrons_base, ONLY: nupdwn
+      USE electrons_base, ONLY: nupdwn, nbnd
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
@@ -143,9 +143,10 @@
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
       !
-      USE reciprocal_space_mesh, ONLY: gmeshinfo, newg, gindex_closeup
+      USE reciprocal_space_mesh, ONLY: gmeshinfo, newgk, gindex_closeup
       !
       USE reciprocal_vectors, ONLY: &
+           g,      & ! G-vectors square modulus
            mill_l, & ! G-vectors generators
            gcutw,  & ! Wave function cut-off ( units of (2PI/alat)^2 => tpiba2 )
            gcutp,  & ! Potentials and Charge density cut-off  ( same units )
@@ -168,6 +169,9 @@
       !
       USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
                            ions_noseupd, qnp, gkbt, kbt, nhpcl
+
+      USE wave_init,        ONLY: pw_atomic_init
+      USE electrons_module, ONLY: electron_mass_init, band_init
 
       IMPLICIT NONE
 
@@ -254,21 +258,16 @@
 
       REAL(dbl), EXTERNAL  :: cclock
 
-
-! ... end of declarations
-!  ----------------------------------------------
+      ! ... end of declarations
+      !  ----------------------------------------------
 
       s1 = cclock()
 
-!     ====================================================
-!     copy-in input parameters from input_parameter module
-!     ====================================================
+      !     copy-in input parameters from input_parameter module
 
       CALL iosys()
 
-!     ==================================================================
-!     initialize g-vectors, fft grids
-!     ==================================================================
+      !     initialize g-vectors, fft grids
 
       CALL init_dimensions( )
 
@@ -308,35 +307,47 @@
       ALLOCATE( ei2( -nr2:nr2, nat ) )
       ALLOCATE( ei3( -nr3:nr3, nat ) )
 
-!     ==================================================================
-!     initialize system geometry, cell and positions
-!     ==================================================================
+      !     initialize system geometry, cell and positions
 
       CALL init_geometry( )
 
-!     ==================================================================
-!     initialize variables and types
-!     ==================================================================
-!
-      CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, &
-        wempt, ht_m, ht_0, eigr, ei1, ei2, ei3 )
+      !     initialize variables and types
+      !
+      CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht_0 )
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
 
+      ! ...   initialize wave functions
+      !
       ALLOCATE( cm( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
       ALLOCATE( c0( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
       ALLOCATE( cp( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-      ALLOCATE( fi( wfill%ldb, wfill%ldk, wfill%lds ) )
       ALLOCATE( ce( wempt%ldg, wempt%ldb, wempt%ldk, wempt%lds ) )
 
       cm = 0.0d0
       c0 = 0.0d0
       cp = 0.0d0
       ce = 0.0d0
-      fi = 0.0d0
 
-      CALL init1s(kp, ps, cm, c0, wfill, ce, wempt, fnl, eigr, fi )
+      CALL pw_atomic_init( nbeg, cm, c0, wfill, ce, wempt, kp )
+
+      ! ... initialize bands        
+      !
+      ALLOCATE( fi( wfill%ldb, wfill%ldk, wfill%lds ) )
+      fi = 0.0d0
+      CALL band_init( fi )   
+      
+      ! ... initialize the electronic fictitious mass and time step for
+      ! ... electron dynamics. 
+      CALL electron_mass_init( alat, g, ngw )
+      
+      ! ... initialize nonlocal pseudopotentials coefficients
+      CALL allocate_projector( fnl, nsanl, nbnd, ngh, kp%gamma_only)
+
+      IF( t_diis ) THEN 
+        CALL allocate_diis( ngw, nbnd, kp%nkpt )
+      END IF
 
       CALL print_legend( )
 
@@ -345,17 +356,20 @@
              dfftp%nr1, dfftp%nr2, dfftp%npl, dfftp%nr1x, dfftp%nr2x,     &
              dfftp%npl, nspin )
 
-      ALLOCATE( sfac( ngm , atoms_0%nsp ) ) 
+      ALLOCATE( sfac( ngm , nsp ) ) 
 
       ALLOCATE( vpot( dfftp%nr1x, dfftp%nr2x, dfftp%npl, nspin), STAT=ierr)
-
       IF( ierr /= 0 ) &
         CALL errore(' cpmain ', ' allocating vpot ', ierr)
 
+
+      ! --- end of initialization and allocation
+
+
       IF( nbeg < 0 ) THEN
-!
-! ...   create a new configuration from scratch
-!
+        !
+        ! ...   create a new configuration from scratch
+        !
         ttprint = .true.
         CALL from_scratch(kp, ps, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, ei3, &
                           sfac, fi, ht_0, atoms_0, fnl, vpot, edft )
@@ -365,8 +379,8 @@
 
       ELSE
 
-! ...   read configuration from a restart file
-! ...   (Fortran I/O unit number ndr, file fort.<ndr>)
+        ! ...   read configuration from a restart file
+        ! ...   (Fortran I/O unit number ndr, file fort.<ndr>)
 
         CALL readfile( nfi, tps, c0, cm, wfill, fi, &
            atoms_0, atoms_m, avgs, taui, cdmi, ht_m, ht_0, rhoe, &
@@ -426,7 +440,8 @@
 
         IF( thdyn ) THEN
 ! ...     the simulation cell isn't fixed, recompute the reciprocal lattice
-          CALL newg(kp, ht_0%m1)
+          CALL newinit( ht_0%hmat )
+          CALL newgk(kp, ht_0%m1)
         END IF
 
         IF(memchk) CALL memstat(1)

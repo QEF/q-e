@@ -711,11 +711,13 @@
         USE brillouin, ONLY: kpoints
         USE pseudo_projector, ONLY: projector
         USE orthogonalize
-        USE nl, ONLY: nlsm1
-        USE mp, ONLY: mp_sum
-        USE mp_global, ONLY: mpime, nproc, group
-        USE atoms_type_module, ONLY: atoms_type
+        USE nl,                    ONLY: nlsm1
+        USE mp,                    ONLY: mp_sum
+        USE mp_global,             ONLY: mpime, nproc, group
+        USE atoms_type_module,     ONLY: atoms_type
         USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
+        USE reciprocal_vectors,    ONLY: g, gx
+        USE control_flags,         ONLY: gamma_only
 
         IMPLICIT NONE
 
@@ -756,8 +758,12 @@
 ! ...   electronic state diagonalization ==
         DO ispin = 1, nspin
           DO ik = 1, SIZE( c, 3 )
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c(:,:,ik,ispin), cdesc, &
+            IF( gamma_only ) THEN
+              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c(:,:,ik,ispin), cdesc, g, gx, fnle(ik,ispin))
+            ELSE
+              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c(:,:,ik,ispin), cdesc, &
                 gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
+            END IF
           END DO
 
 ! ...     Calculate | dH / dpsi(j) >

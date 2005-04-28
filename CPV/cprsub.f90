@@ -17,6 +17,8 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
+      use mp, only: mp_sum
+      use mp_global, only: nproc
       use ions_base, only: na, nas => nax, nat
       use electrons_base, only: n => nbsp
       use gvecw, only: ngw
@@ -90,12 +92,12 @@
                   call MXMA(wrk2,2*ngw,1,c,1,2*ngw,dbec(inl,1,i,j),1,  &
      &                      nhsa,na(is),2*ngw,n)
                end do
-#ifdef __PARA
-               inl=ish(is)+1
-               do ii=1,n
-                  call reduce(na(is)*nh(is),dbec(inl,ii,i,j))
-               end do
-#endif
+               if( nproc > 1 ) then
+                  inl=ish(is)+1
+                  do ii=1,n
+                     call mp_sum( dbec( inl : (inl + na(is)*nh(is) - 1), ii,i,j) )
+                  end do
+               end if
                isa = isa + na(is)
             end do
          end do
@@ -106,6 +108,7 @@
       return
       end
 !
+
 !-----------------------------------------------------------------------
       subroutine formf(tfirst, eself)
 !-----------------------------------------------------------------------
@@ -116,20 +119,22 @@
 !         also calculated the derivative of vps with respect to
 !         g^2 (dvps)
 ! 
+      use mp, ONLY: mp_sum
       use control_flags, only: iprint, tpre, iprsta
       use io_global, only: stdout
-      use bhs
+      use bhs, only: rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
       use gvecp, only: ng => ngm ! , ngl => ngml, ng_g => ngmt
-      use gvecs
+      use gvecs, only: ngs
       use cell_base, only: omega, tpiba, tpiba2
       use constants, only: pi, fpi
       use ions_base, only: rcmax,  zv, nsp, na
       use cvan, only: oldvan
-      use pseu
+      use pseu, only: vps, rhops
       use reciprocal_vectors, only: gstart, g
       use atom, only: r, rab, mesh, numeric
       use uspp_param, only: vloc_at
       use qrl_mod, only: cmesh
+      use pseudo_base, only: compute_rhops, formfn
 !
       use dpseu
       use dener
@@ -174,6 +179,17 @@
 !     ==================================================================
       do is=1,nsp
          if (numeric(is)) then
+
+            call formfn( vps(:,is), dvps(:,is), r(:,is), rab(:,is), vloc_at(:,is), &
+                         zv(is), rcmax(is), g, omega, tpiba2, cmesh(is), mesh(is), &
+                         ngs, oldvan(is), tpre )
+            vpsum = SUM( vps( 1:ngs, is ) )
+
+            call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), g,   &
+                                omega, tpiba2, ngs, tpre )
+            rhopsum = SUM( rhops( 1:ngs, is ) )
+
+#if defined __PIPPO
 !     ==================================================================
 !     local potential given numerically on logarithmic mesh 
 !     ==================================================================
@@ -184,6 +200,7 @@
 !
 !     definition of irmax: gridpoint beyond which potential is zero
 !
+
             irmax=0
             do ir=1,mesh(is)
                if(r(ir,is).le.10.0)then
@@ -251,6 +268,8 @@
                rhopsum=rhopsum+rhops(ig,is)
                vpsum=vpsum+vps(ig,is)
             end do
+
+#endif
 !
          else
 !     ==================================================================
@@ -319,10 +338,8 @@
          endif
 !
          if(tfirst.or.(iprsta.ge.4))then
-#ifdef __PARA
-            call reduce(1,vpsum)
-            call reduce(1,rhopsum)
-#endif
+            call mp_sum(vpsum)
+            call mp_sum(rhopsum)
             WRITE( stdout,1250) vps(1,is),rhops(1,is)
             WRITE( stdout,1300) vpsum,rhopsum
          endif
@@ -344,7 +361,6 @@
       return
       end
 !
-
 
 
 !-----------------------------------------------------------------------

@@ -5,34 +5,13 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Wed Oct 13 15:28:58 MDT; 1999
-!  ----------------------------------------------
-!  SUBROUTINE dforce_p(ik,ib,c,df,da,f,v,fnl,eigr,ps) 
-!  SUBROUTINE dforce1(co,ce,dco,dce,fio,fie,hg,v,psi_stored)
-!  SUBROUTINE dforce2(fi,fip1,df,da,fnl,eigr,wsg,wnl) 
-!
-!  SUBROUTINE dforce_d(ik,ib,c,df,f,hg,v,fnl,eigr,ps)
-!  SUBROUTINE dforce1_d(co,dco,fi,v) 
-!  SUBROUTINE dforce2_d(i,fi,df,fnl,eigr,wsg,wnl)
-!
-!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,v)
-!  SUBROUTINE dforce1_kp(ib,ik,c0,df,fi,v)
-!  SUBROUTINE dforce2_kp(ib,ik,fi,df,fnlk,eigr,wsg,wnl)
-!
-!  SUBROUTINE dforce_all(c0,cgrad,vpot,fnl,eigr,ps)
-!
-!  INTERFACE  dforce
 !  ----------------------------------------------
 
 #include "f_defs.h"
 
-     MODULE forces
+!=----------------------------------------------------------------------------=!
+   MODULE forces
+!=----------------------------------------------------------------------------=!
 
        USE kinds
        USE cp_types
@@ -55,23 +34,19 @@
 
        PUBLIC :: dforce, dforce_all
 
-     CONTAINS
+!=----------------------------------------------------------------------------=!
+   CONTAINS
+!=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce1(co, ce, dco, dce, fio, fie, hg, v, psi_stored)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
-
+    SUBROUTINE dforce1(co, ce, dco, dce, fio, fie, hg, v, psi_stored)
 
       USE fft, ONLY: pw_invfft, pw_fwfft
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
+      ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(OUT) :: dco(:), dce(:)
       COMPLEX(dbl), INTENT(IN) ::  co(:), ce(:)
       REAL(dbl),    INTENT(IN) ::  fio, fie
@@ -79,15 +54,13 @@
       REAL(dbl),    INTENT(IN) :: hg(:)
       COMPLEX(dbl), OPTIONAL ::  psi_stored(:,:,:)
 
-! ... declare other variables
+      ! ... declare other variables
       COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
       COMPLEX(dbl) :: fp, fm, aro, are
       REAL(dbl)    :: fioby2, fieby2, arg
       INTEGER      :: ig
 
-
-!  end of declarations
-!  ----------------------------------------------
+      !  end of declarations
 
       IF( PRESENT( psi_stored ) ) THEN
         psi_stored = psi_stored * CMPLX(v, 0.0d0)
@@ -113,21 +86,20 @@
         dce(ig) = -fieby2 * (arg * ce(ig) + are)
       END DO
 
-      RETURN
-      END SUBROUTINE
+    RETURN
+    END SUBROUTINE
+
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce2(fio, fie, df, da, fnlo, fnle, hg, gx, eigr, wsg, wnl)
 
-!  this routine computes:
-!  the generalized force df=cmplx(dfr,dfi) acting on the i-th
-!  electron state at the ik-th point of the Brillouin zone
-!  represented by the vector c=cmplx(cr,ci)
-!  ----------------------------------------------
-!  END manual
+    SUBROUTINE dforce2(fio, fie, df, da, fnlo, fnle, hg, gx, eigr, wsg, wnl)
+
+        !  this routine computes:
+        !  the generalized force df=cmplx(dfr,dfi) acting on the i-th
+        !  electron state at the ik-th point of the Brillouin zone
+        !  represented by the vector c=cmplx(cr,ci)
+        !  ----------------------------------------------
 
 ! ... declare modules
       USE spherical_harmonics
@@ -189,8 +161,9 @@
 
       DEALLOCATE(temp, gwork)
 
-      RETURN
-      END SUBROUTINE
+    RETURN
+    END SUBROUTINE
+
 
 !=----------------------------------------------------------------------------=!
 
@@ -198,8 +171,8 @@
       subroutine dforce_p( ik, ib, c, cdesc, f, df, da, v, fnl, eigr, ps )
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
-        USE gvecw, ONLY: tecfix
-        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
+        USE reciprocal_vectors, ONLY: ggp, g, gx
+        USE control_flags, ONLY: gamma_only
         implicit none
         integer ik,ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
@@ -209,32 +182,36 @@
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
         COMPLEX(dbl) :: eigr ( :, : )
-        REAL(dbl), POINTER :: hg(:)
+        !
         INTEGER :: istate
+        !
+        IF( .NOT. gamma_only ) &
+          CALL errore( ' dforce_p ', ' this sub. works for gamma point only ', 1 )
+        !
         istate = (ib+1)/2
-        IF(tecfix) THEN
-          hg => gkcutz_l(:,ik)
-        ELSE
-          hg => gk_l(:,ik)
-        END IF
+        !
         IF( tturbo .AND. ( istate <= nturbo ) ) THEN
-          CALL dforce1(c(:,ib,ik), c(:,ib+1,ik), df, da, &
-            f(ib,ik), f(ib+1,ik), hg, v, turbo_states(:,:,:,istate))
+            CALL dforce1(c(:,ib,ik), c(:,ib+1,ik), df, da, &
+              f(ib,ik), f(ib+1,ik), ggp, v, turbo_states(:,:,:,istate))
         ELSE
-          CALL dforce1(c(:,ib,ik), c(:,ib+1,ik), df, da, &
-            f(ib,ik), f(ib+1,ik), hg, v)
+            CALL dforce1(c(:,ib,ik), c(:,ib+1,ik), df, da, f(ib,ik), f(ib+1,ik), ggp, v)
         END IF
+        !
         CALL dforce2(f(ib,ik), f(ib+1,ik), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gk_l(:,ik), gkx_l(:,:,ik), eigr, &
-          ps%wsg, ps%wnl(:,:,:,ik)) 
+            fnl(:,:,ib+1), g, gx, eigr, ps%wsg, ps%wnl(:,:,:,ik)) 
+        !
         return
       end subroutine
+
+
+!-----------------------------------------------------------------------------!
+
 
       subroutine dforce_p_s(ib, c, cdesc, f, df, da, v, fnl, eigr, wsg, wnl)
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
-        USE gvecw, ONLY: tecfix
-        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
+        USE reciprocal_vectors, ONLY: ggp, g, gx
+        USE control_flags, ONLY: gamma_only
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:)
@@ -242,35 +219,32 @@
         COMPLEX(dbl), INTENT(OUT) :: df(:), da(:)
         REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
         COMPLEX(dbl), INTENT(IN)  :: eigr(:,:)
-        REAL(dbl), POINTER :: hg(:)
         INTEGER :: istate
+        !
+        IF( .NOT. gamma_only ) &
+          CALL errore( ' dforce_p_s ', ' this sub. works for gamma point only ', 1 )
+        !
         istate = (ib+1)/2
-        IF(tecfix) THEN
-          hg => gkcutz_l(:,1)
-        ELSE
-          hg => gk_l(:,1)
-        END IF
-        IF(tturbo.AND.(istate.LE.nturbo)) THEN
+        !
+        IF( tturbo .AND. ( istate <= nturbo ) ) THEN
           CALL dforce1(c(:,ib), c(:,ib+1), df, da, &
-            f(ib), f(ib+1), hg, v, turbo_states(:,:,:,istate))
+              f(ib), f(ib+1), ggp, v, turbo_states(:,:,:,istate))
         ELSE
-          CALL dforce1(c(:,ib), c(:,ib+1), df, da, f(ib), f(ib+1), hg, v)
+          CALL dforce1(c(:,ib), c(:,ib+1), df, da, f(ib), f(ib+1), ggp, v)
         END IF
+        !
         CALL dforce2(f(ib), f(ib+1), df, da, fnl(:,:,ib), &
-          fnl(:,:,ib+1), gk_l(:,1), gkx_l(:,:,1), eigr, wsg, wnl)
+            fnl(:,:,ib+1), g(:), gx(:,:), eigr, wsg, wnl)
+        !
         return
       end subroutine
 
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce1_d(co, dco, fi, hg, v)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
+    SUBROUTINE dforce1_d(co, dco, fi, hg, v)
+
 
       USE fft, ONLY: pw_invfft, pw_fwfft
 
@@ -289,13 +263,8 @@
       COMPLEX(dbl) :: fp, fm
       REAL(dbl)    :: fiby2, arg
       INTEGER      :: ig
-
-      INTEGER :: ngw
-
-!  end of declarations
-!  ----------------------------------------------
-
-
+      INTEGER      :: ngw
+      !
       ngw = SIZE(co)
 
       ALLOCATE( psi2(SIZE(v,1), SIZE(v,2), SIZE(v,3)) )
@@ -313,21 +282,19 @@
         dco(ig) = -fiby2 * (arg * co(ig) + CMPLX(REAL(fp), AIMAG(fm)))
       END DO
       DEALLOCATE( ce, dce, psi2 )
-      RETURN
-      END SUBROUTINE
+      !
+    RETURN
+    END SUBROUTINE
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce2_d(fi, df, fnl, hg, gx, eigr, wsg, wnl)
 
-!  this routine computes:
-!  the generalized force df=cmplx(dfr,dfi) acting on the i-th
-!  electron state at the ik-th point of the Brillouin zone
-!  represented by the vector c=cmplx(cr,ci)
-!  ----------------------------------------------
-!  END manual
+    SUBROUTINE dforce2_d(fi, df, fnl, hg, gx, eigr, wsg, wnl)
+
+      !  this routine computes:
+      !  the generalized force df=cmplx(dfr,dfi) acting on the i-th
+      !  electron state at the ik-th point of the Brillouin zone
+      !  represented by the vector c=cmplx(cr,ci)
 
 ! ... declare modules
       USE spherical_harmonics
@@ -352,7 +319,6 @@
       INTEGER :: ngw, nngw
 
 !  end of declarations
-!  ----------------------------------------------
 
       ngw = SIZE(df)
       nngw = 2*ngw
@@ -384,16 +350,17 @@
 
       DEALLOCATE(temp, gwork)
 
-      RETURN
-      END SUBROUTINE
+    RETURN
+    END SUBROUTINE
 
-!  ----------------------------------------------
-!  ----------------------------------------------
+
+!=----------------------------------------------------------------------------=!
+
      
-      SUBROUTINE dforce_d(ik, ib, c, cdesc, f, df, v, fnl, eigr, ps)
+    SUBROUTINE dforce_d(ik, ib, c, cdesc, f, df, v, fnl, eigr, ps)
         USE wave_types, ONLY: wave_descriptor
-        USE gvecw, ONLY: tecfix
-        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
+        USE reciprocal_vectors, ONLY: ggp, g, gx
+        USE control_flags, ONLY: gamma_only
         IMPLICIT NONE
         integer ik, ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
@@ -403,55 +370,52 @@
         REAL (dbl)     :: fnl(:,:,:)
         type (pseudo)  :: ps
         COMPLEX(dbl) :: eigr (:,:)
-        REAL(dbl), POINTER :: hg(:)
-        IF(tecfix) THEN
-          hg => gkcutz_l(:,ik)
-        ELSE
-          hg => gk_l(:,ik)
-        END IF
-        CALL dforce1_d(c(:,ib,ik), df, f(ib,ik), hg, v)
-        CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), gk_l(:,ik), &
-          gkx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik))
+        !
+        IF( .NOT. gamma_only ) &
+          CALL errore( ' dforce_p ', ' this sub. works for gamma point only ', 1 )
+        !
+        CALL dforce1_d(c(:,ib,ik), df, f(ib,ik), ggp, v)
+        !
+        CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), g, gx, eigr, ps%wsg, ps%wnl(:,:,:,ik))
+        !
         return
-      end subroutine
+    end subroutine
 
-      subroutine dforce_d_s(ib, c, cdesc, f, df, v, fnl, eigr, wsg, wnl)
-        USE wave_types, ONLY: wave_descriptor
-        USE gvecw, ONLY: tecfix
-        USE turbo, ONLY: tturbo, nturbo, turbo_states
-        USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
-        IMPLICIT NONE
-        INTEGER, INTENT(IN) :: ib
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
-        type (wave_descriptor), INTENT(IN) :: cdesc
-        COMPLEX(dbl), INTENT(OUT) :: df(:)
-        REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
-        COMPLEX(dbl) :: eigr (:,:)
-        REAL(dbl), POINTER :: hg(:)
-        IF(tecfix) THEN
-          hg => gkcutz_l(:,1)
-        ELSE
-          hg => gk_l(:,1)
-        END IF
-        CALL dforce1_d(c(:,ib), df, f(ib), hg, v)
-        CALL dforce2_d(f(ib), df, fnl(:,:,ib), gk_l(:,1), &
-          gkx_l(:,:,1), eigr, wsg, wnl)
-        return
-      end subroutine
+!=----------------------------------------------------------------------------=!
+
+    subroutine dforce_d_s(ib, c, cdesc, f, df, v, fnl, eigr, wsg, wnl)
+      USE wave_types, ONLY: wave_descriptor
+      USE turbo, ONLY: tturbo, nturbo, turbo_states
+      USE reciprocal_vectors, ONLY: ggp, g, gx
+      USE control_flags, ONLY: gamma_only
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: ib
+      COMPLEX(dbl), INTENT(IN) :: c(:,:)
+      type (wave_descriptor), INTENT(IN) :: cdesc
+      COMPLEX(dbl), INTENT(OUT) :: df(:)
+      REAL (dbl), INTENT(IN) :: v(:,:,:), fnl(:,:,:), wnl(:,:,:), wsg(:,:), f(:)
+      COMPLEX(dbl) :: eigr (:,:)
+        !
+        IF( .NOT. gamma_only ) &
+          CALL errore( ' dforce_d_s ', ' this sub. works for gamma point only ', 1 )
+        !
+        CALL dforce1_d(c(:,ib), df, f(ib), ggp, v)
+        !
+        CALL dforce2_d(f(ib), df, fnl(:,:,ib), g, gx, eigr, wsg, wnl)
+        !
+      return
+    end subroutine
 
 
 !  ----------------------------------------------
-!  ----------------------------------------------
 
-      SUBROUTINE dforce_kp( ik, ib, c0, cdesc, f, df, v, fnlk, eigr, ps )
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
+    SUBROUTINE dforce_kp( ik, ib, c0, cdesc, f, df, v, fnlk, eigr, ps )
 
         USE wave_types, ONLY: wave_descriptor
         USE reciprocal_space_mesh, ONLY: gkmask_l
-        USE gvecw, ONLY: tecfix
         USE reciprocal_space_mesh, ONLY: gkcutz_l, gkx_l, gk_l
+        USE control_flags, ONLY: gamma_only
 
         IMPLICIT NONE
 
@@ -464,29 +428,24 @@
         COMPLEX(dbl)        :: eigr(:,:)
         TYPE (pseudo)       :: ps
 
-        IF(tecfix) THEN
-          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gkcutz_l(:,ik), v)
-        ELSE
-          CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gk_l(:,ik), v)
-        END IF
+        IF( gamma_only ) &
+          CALL errore( ' dforce_kp ', ' this sub. does not work for gamma point ', 1 )
+
+        CALL dforce1_kp( c0(:,ib,ik), df, f(ib,ik),  gkcutz_l(:,ik), v)
         CALL dforce2_kp( f(ib,ik), df, fnlk(:,:,ib), gk_l(:,ik), &
           gkx_l(:,:,ik), eigr, ps%wsg, ps%wnl(:,:,:,ik) )
 
         df(:)       = df(:)       * gkmask_l(:,ik)
 
-        RETURN
-      END SUBROUTINE dforce_kp                                                           
+      RETURN
+    END SUBROUTINE dforce_kp                                                           
 
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce1_kp(c, df, fi, hg, v)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
+    SUBROUTINE dforce1_kp(c, df, fi, hg, v)
+
 
       USE fft, ONLY: pw_invfft, pw_fwfft
 
@@ -505,9 +464,6 @@
       INTEGER     ig
       COMPLEX(dbl)  fp
 
-!  end of declarations
-!  ----------------------------------------------
-
       ALLOCATE( psi2(SIZE(v,1), SIZE(v,2), SIZE(v,3)) )
 
 ! ... Brings wave functions in the real space
@@ -522,21 +478,19 @@
       DO ig = 1, SIZE(df)
         df(ig)= - fi * (df(ig) + arg * hg(ig) * c(ig))
       END DO
-      RETURN
-      END SUBROUTINE
+    RETURN
+    END SUBROUTINE
+
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE dforce2_kp(fi, df, fnlk, hg, gx, eigr, wsg, wnl)
 
-!  this routine computes:
-!  the generalized force df=cmplx(dfr,dfi) acting on the i-th
-!  electron state at the ik-th point of the Brillouin zone
-!  represented by the vector c=cmplx(cr,ci)
-!  ----------------------------------------------
-!  END manual
+    SUBROUTINE dforce2_kp(fi, df, fnlk, hg, gx, eigr, wsg, wnl)
+
+      !  this routine computes:
+      !  the generalized force df=cmplx(dfr,dfi) acting on the i-th
+      !  electron state at the ik-th point of the Brillouin zone
+      !  represented by the vector c=cmplx(cr,ci)
 
 ! ... declare modules
       USE spherical_harmonics
@@ -560,7 +514,6 @@
       INTEGER   ::  igh, ll, is, isa, ig, l, m, ngw
 
 !  end of declarations
-!  ----------------------------------------------
 
       ngw = SIZE(df)
       ALLOCATE( temp(SIZE(df)), gwork(SIZE(df)) )
@@ -589,8 +542,11 @@
         END IF
       END DO
       DEALLOCATE(temp, gwork)
-      RETURN
-      END SUBROUTINE
+    RETURN
+    END SUBROUTINE
+
+
+!  ----------------------------------------------
 
 
       SUBROUTINE dforce_all( ispin, c, cdesc, f, cgrad, vpot, fnl, eigr, ps, ik)

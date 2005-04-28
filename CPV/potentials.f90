@@ -252,7 +252,6 @@
       USE cell_base, ONLY: tpiba2
       USE energies, ONLY: total_energy, dft_energy_type
       USE stress, ONLY: pstress
-      USE gvecw, ONLY: tecfix
       USE exchange_correlation, ONLY: exch_corr_energy
       USE funct, ONLY: igcx, igcc
       USE charge_density, ONLY: gradrho
@@ -437,7 +436,7 @@
 
       edft%ekin  = 0.0_dbl
       edft%emkin = 0.0_dbl
-      edft%ekin  = dft_kinetic_energy(c0, cdesc, kp, tecfix, fi, rsum, edft%emkin)
+      edft%ekin  = dft_kinetic_energy(c0, cdesc, kp, fi, rsum, edft%emkin)
 
       IF(tprint) THEN
         CALL checkrho(rhoe, desc, rsum, omega)

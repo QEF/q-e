@@ -71,7 +71,7 @@
 !  ----------------------------------------------
 
 
-    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, tecfix, f, rsum, xmkin)
+    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, f, rsum, xmkin)
 
 !  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
 !  wave function
@@ -81,8 +81,9 @@
         USE brillouin, ONLY: kpoints
         USE wave_types, ONLY: wave_descriptor
         USE electrons_module, ONLY: pmss
-        USE control_flags, ONLY: force_pairing
-        USE reciprocal_space_mesh, ONLY: gkcutz_l, gk_l
+        USE control_flags, ONLY: force_pairing, gamma_only
+        USE reciprocal_space_mesh, ONLY: gkcutz_l
+        USE reciprocal_vectors,    ONLY: ggp
 
         IMPLICIT NONE
 
@@ -90,22 +91,15 @@
         TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
         REAL(dbl), INTENT(IN) :: f(:,:,:)             !  occupation numbers
         TYPE (kpoints), INTENT(IN) :: kp              !  k points
-        LOGICAL, INTENT(IN) :: tecfix                 !  Constant Cut-off is used
         REAL(dbl), INTENT(OUT) :: rsum(:)             !  charge density
         REAL(dbl), OPTIONAL, INTENT(INOUT) :: xmkin
 
-        INTEGER    :: ib, ig, ik, ispin, ispin_wfc
-        REAL(dbl)  :: sk1, ss1, xkin, scg1, skm, fact, rsumk, xmkink, xkink
-        REAL(dbl), POINTER :: gmod2(:)
+        INTEGER    :: ib, ik, ispin, ispin_wfc
+        REAL(dbl)  :: xkin, fact, xkins, rsums, xmkins
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-      IF( ( cdesc%nkl > SIZE( c0, 3 )       ) .OR. &
-          ( cdesc%nkl > SIZE( kp%weight )   ) .OR. &
-          ( cdesc%nkl > SIZE( gk_l, 2 )     ) .OR. &
-          ( cdesc%nkl > SIZE( f, 2 )        )    ) &
-        CALL errore( ' dft_kinetic_energy ', ' wrong arrays sizes ', 1 )
 
       xkin = 0.d0
 
@@ -119,27 +113,30 @@
         DO ik = 1, cdesc%nkl
 
           fact = kp%weight(ik)
-
           IF( cdesc%gamma ) THEN
             fact = fact * 2.d0
           END IF
 
-          IF( tecfix ) THEN
-            gmod2 => gkcutz_l(:,ik)
+          IF( cdesc%gamma ) THEN
+             xkins = dft_kinetic_energy_s( ispin, c0(:,:,ik,ispin_wfc), cdesc, ggp, f(:,ik,ispin) )
+             IF( PRESENT( xmkin ) ) THEN
+               xmkins = dft_weighted_kinene( ispin, c0(:,:,ik,ispin_wfc), cdesc, ggp, f(:,ik,ispin) )
+             END IF
           ELSE
-            gmod2 => gk_l(:,ik)
+             xkins = dft_kinetic_energy_s( ispin, c0(:,:,ik,ispin_wfc), cdesc, gkcutz_l(:,ik), f(:,ik,ispin) )
+             IF( PRESENT( xmkin ) ) THEN
+               xmkins =  dft_weighted_kinene( ispin, c0(:,:,ik,ispin_wfc), cdesc, gkcutz_l(:,ik), f(:,ik,ispin) )
+             END IF
           ENDIF
 
-          xkin  = xkin + fact * &
-             dft_kinetic_energy_s( ispin, c0(:,:,ik,ispin_wfc), cdesc, gmod2, f(:,ik,ispin) )
+          xkin  = xkin + fact * xkins
 
           IF( PRESENT( xmkin ) ) THEN
-            xmkin = xmkin + fact * &
-               dft_weighted_kinene( ispin, c0(:,:,ik,ispin_wfc), cdesc, gmod2, f(:,ik,ispin) )
+            xmkin = xmkin + fact * xmkins
           END IF
 
-          rsum( ispin ) = rsum( ispin ) + fact * &
-             dft_total_charge( ispin, c0(:,:,ik,ispin_wfc), cdesc, f(:,ik,ispin) )
+          rsums         = dft_total_charge( ispin, c0(:,:,ik,ispin_wfc), cdesc, f(:,ik,ispin) )
+          rsum( ispin ) = rsum( ispin ) + fact * rsums
 
         END DO
 
@@ -478,7 +475,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-   REAL(dbl) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, kp, kmask, pmss, delt)
+   REAL(dbl) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, kp, pmss, delt)
 
 !  (describe briefly what this routine does...)
 !  if ekinc_fp will hold the full electron kinetic energy (paired and unpaired) and
@@ -500,7 +497,6 @@
       TYPE (kpoints), INTENT(IN) :: kp
       INTEGER, INTENT( IN ) :: ispin
       REAL(dbl), INTENT(IN) :: delt
-      REAL(dbl), INTENT(IN) :: kmask(:,:)
       REAL(dbl) :: pmss(:)
 
 ! ... declare other variables

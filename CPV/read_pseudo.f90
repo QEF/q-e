@@ -661,13 +661,13 @@ END FUNCTION
           in3=ap%mesh/2
           in4=ap%mesh
           WRITE( stdout,132)
-          WRITE( stdout,120) in1,ap%rw(in1),(ap%vnl(in1,m),m=1,ap%nchan)
-          WRITE( stdout,120) in2,ap%rw(in2),(ap%vnl(in2,m),m=1,ap%nchan)
-          WRITE( stdout,120) in3,ap%rw(in3),(ap%vnl(in3,m),m=1,ap%nchan)
-          WRITE( stdout,120) in4,ap%rw(in4),(ap%vnl(in4,m),m=1,ap%nchan)
+          WRITE( stdout,120) in1,ap%rw(in1),(ap%vrps(in1,m),m=1,ap%lnl)
+          WRITE( stdout,120) in2,ap%rw(in2),(ap%vrps(in2,m),m=1,ap%lnl)
+          WRITE( stdout,120) in3,ap%rw(in3),(ap%vrps(in3,m),m=1,ap%lnl)
+          WRITE( stdout,120) in4,ap%rw(in4),(ap%vrps(in4,m),m=1,ap%lnl)
   131     FORMAT(/, 3X,'Pseudopotentials Grid    : Channels = ',I2,&
                    ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
-  132     FORMAT(   3X,'point      radius        pseudopotential')
+  132     FORMAT(   3X,'point      radius        nl pseudo ( vnl - vloc )')
   120     FORMAT(I8,E14.6,5E14.6)
 
         ELSE
@@ -1094,7 +1094,8 @@ SUBROUTINE upf2ncpp( upf, ap )
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
   TYPE (pseudo_upf ), INTENT(INOUT) :: upf
 
-  integer :: l, il
+  integer :: l, il, i
+  integer :: which_lloc( upf%nbeta + 1 )
 
   ap%rw    = 0.0d0
   ap%vnl   = 0.0d0
@@ -1107,19 +1108,30 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%zv   = upf%zp
   ap%lnl  = upf%nbeta
 
-  !  assume that lloc = lmax
-
-  ap%lloc = upf%nbeta + 1 
-
   !  angular momentum indl: S = 1, P = 2, ecc ... while  lll: S = 0, P = 1, ecc ...
 
   ap%indl( 1:upf%nbeta ) = upf%lll( 1:upf%nbeta ) + 1
+
+  !  Calculate lloc
+  ap%lloc = upf%nbeta + 1 
+  which_lloc = 0
+  DO l = 1, ap%lnl
+    which_lloc( ap%indl( l ) ) = 1
+  END DO
+  DO l = 1, ap%lnl + 1
+    IF( which_lloc( l ) == 0 ) ap%lloc = l
+  END DO
+
   ap%nchan = upf%nbeta + 1   ! projectors and local part
   ap%mesh  = upf%mesh
   ap%rw( 1:upf%mesh )     = upf%r( 1:upf%mesh )
   ap%vnl( 1:upf%mesh, 1 ) = upf%vloc( 1:upf%mesh ) / 2.0d0  ! Rydberg to Hartree atomic units
   ap%dx   = calculate_dx( ap%rw, ap%mesh )
   ap%rab  = ap%dx * ap%rw
+  ! WRITE(6,*) 'read_pseudo RAB:'         ! DEBUG
+  ! DO i = 1, upf%mesh                    ! DEBUG
+  !   WRITE(6,*) ap%rab(i)/upf%rab(i)     ! DEBUG
+  ! END DO                                ! DEBUG
   ap%vloc( 1:upf%mesh ) = upf%vloc( 1:upf%mesh ) / 2.0d0
   ap%nrps = upf%nwfc
   ap%lrps( 1:upf%nwfc ) = upf%lchi( 1:upf%nwfc )

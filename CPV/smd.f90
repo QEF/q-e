@@ -39,7 +39,6 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use electrons_base, only: nx => nbspx, f
   use constants, only: pi, fpi
   use cell_base, only: hold, h
-  use gvecw, only: agg => ecutz, sgg => ecsig, e0gg => ecfix
   use betax, only: mmx, refg
   !use restartsm
   use restart_file

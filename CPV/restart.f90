@@ -46,7 +46,7 @@
 ! read from file and distribute data calculated in preceding iterations
 !
       use ions_base, only: nsp, na
-      use cell_base, only: s_to_r
+      use cell_base, only: s_to_r, a1, a2, a3
       use cp_restart, only: cp_writefile, cp_write_wfc
       USE electrons_base, ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
 !
@@ -105,11 +105,7 @@
         end do
       end do
 
-
-      CALL invmat( 3, ht, htm1, omega )
-      b1 = htm1(:,1)
-      b2 = htm1(:,2)
-      b3 = htm1(:,3)
+      CALL recips( a1, a2, a3, b1, b2, b3 )
 
       CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
@@ -229,6 +225,7 @@
                                                                         
         use electrons_module, only: nspin
         USE cell_module, only: boxdimensions, r_to_s
+        USE cell_base, only: a1, a2, a3
         USE brillouin, only: kpoints
         USE wave_types, ONLY: wave_descriptor
         USE control_flags, ONLY: ndw, gamma_only
@@ -242,8 +239,7 @@
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_writefile, cp_write_wfc
-        USE reciprocal_space_mesh, ONLY: b1, b2, b3
-                                                                        
+
         IMPLICIT NONE 
  
         INTEGER, INTENT(IN) :: nfi
@@ -265,6 +261,7 @@
         REAL(dbl) S0, S1
         REAL(dbl) :: ekincm
         REAL(dbl) :: mat_z(1,1,nspin)
+        REAL(dbl) :: b1(3), b2(3), b3(3)
              
         s0 = cclock()
 
@@ -278,6 +275,8 @@
         lambda  = 0.0d0
         ekincm = 0.0d0
         mat_z = 0.0d0
+
+        CALL recips( a1, a2, a3, b1, b2, b3 )
 
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
@@ -334,7 +333,6 @@
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_readfile, cp_read_wfc
-        USE reciprocal_space_mesh, ONLY: b1, b2, b3
  
         IMPLICIT NONE 
  
@@ -362,6 +360,7 @@
         REAL(dbl) :: gvel_ (3,3)
         REAL(dbl) :: hvel_ (3,3)
         REAL(dbl) :: mat_z_(1,1,nspin)
+        REAL(dbl) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
 
         CALL mp_barrier()

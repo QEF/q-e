@@ -270,8 +270,7 @@
 
         ekinc = 0.0d0
         DO ispin = 1, nspin
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, kp, &
-            gkmask_l, pmss, delt)
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, kp, pmss, delt)
         END DO
         IF( iter > 1 ) THEN
           dek   = ekinc - ekinc_old

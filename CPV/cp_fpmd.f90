@@ -1034,12 +1034,12 @@ END SUBROUTINE
       use reciprocal_vectors, only: g, gx, mill_l
       use gvecp, only: ngm
       use gvecw, only: ngw
-      use gvecw, only: ggp, agg => ecutz, sgg => ecsig, e0gg => ecfix
+      use gvecw, only: ggp, ecutz, ecsig, ecfix
       implicit none
 !
-      real(kind=8) alat, b1_(3),b2_(3),b3_(3), gmax
+      real(kind=8) :: alat, b1_(3),b2_(3),b3_(3), gmax
       real(kind=8), external :: erf
-      real(kind=8) b1(3),b2(3),b3(3), tpiba2
+      real(kind=8) :: b1(3),b2(3),b3(3), tpiba2, gcutz
 !
       integer i1,i2,i3,ig
 
@@ -1062,11 +1062,15 @@ END SUBROUTINE
       enddo
  
       tpiba2 = ( tpi / alat ) ** 2
+      gcutz  = ecutz / tpiba2
 !
-      do ig=1,ngw
-         ggp(ig) = g(ig) +                                              &
-     &             (agg/tpiba2)*(1.0+erf((tpiba2*g(ig)-e0gg)/sgg))
-      enddo
+      IF( gcutz > 0.0d0 ) THEN
+        do ig=1,ngw
+           ggp(ig) = g(ig) + gcutz * ( 1.0d0 + erf( ( tpiba2 * g(ig) - ecfix ) / ecsig ) )
+        enddo
+      ELSE
+        ggp( 1 : ngw ) = g( 1 : ngw )
+      END IF
 !
       return
       end subroutine
@@ -1123,7 +1127,7 @@ END SUBROUTINE
           USE kinds, ONLY: dbl
           USE constants, ONLY: eps8
           USE gvecw, ONLY: ecutw
-          USE gvecw, ONLY: ecfix, ecutz, ecsig, tecfix
+          USE gvecw, ONLY: ecfix, ecutz, ecsig
           USE gvecp, ONLY: ecutp
           USE gvecs, ONLY: ecuts, dual
           use betax, only: mmx, refg
@@ -1143,11 +1147,6 @@ END SUBROUTINE
           ecfix = ecfixed
           ecutz = qcutz
           ecsig = q2sigma
-          IF( ABS( ecutz ) < eps8 ) THEN
-            tecfix = .FALSE.
-          ELSE
-            tecfix = .TRUE.
-          ENDIF
 
           refg = 1.0d0 * ecutp / ( mmx - 1 )
 
@@ -1165,7 +1164,7 @@ END SUBROUTINE
           USE gvecp, ONLY: ecutrho => ecutp,  gcutp
           USE gvecs, ONLY: ecuts, gcuts
           USE gvecb, ONLY: ecutb, gcutb
-          USE gvecw, ONLY: ecfix, gcfix, ecutz, gcutz, esig => ecsig, g2sig => gcsig, tecfix
+          USE gvecw, ONLY: ecfix, ecutz, ecsig
           USE gvecw, ONLY: ekcut, gkcut
           USE constants, ONLY: eps8, pi
 
@@ -1195,10 +1194,6 @@ END SUBROUTINE
           tpiba = 2.0d0 * pi / alat 
 
           ! ...  Constant cutoff simulation parameters
-
-          gcfix = ecfix / tpiba**2
-          gcutz = ecutz / tpiba**2
-          g2sig = esig  / tpiba**2
 
           gcutw = ecutwfc / tpiba**2  ! wave function cut-off
           gcutp = ecutrho / tpiba**2  ! potential cut-off
@@ -1230,7 +1225,7 @@ END SUBROUTINE
 
         USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
         USE gvecp, ONLY: ecutrho => ecutp,  gcutp
-        USE gvecw, ONLY: ecfix, gcfix, ecutz, gcutz, ecsig, gcsig, tecfix
+        USE gvecw, ONLY: ecfix, ecutz, ecsig
         USE gvecw, ONLY: ekcut, gkcut
         USE gvecs, ONLY: ecuts, gcuts
         USE gvecb, ONLY: ecutb, gcutb
@@ -1238,7 +1233,7 @@ END SUBROUTINE
         USE io_global, ONLY: stdout
 
         WRITE( stdout, 100 ) ecutwfc, ecutrho, ecuts, sqrt(gcutw), sqrt(gcutp), sqrt(gcuts)
-        IF( tecfix ) THEN
+        IF( ecutz > 0.0d0 ) THEN
           WRITE( stdout, 150 ) ecutz, ecsig, ecfix
         END IF
 

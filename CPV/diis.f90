@@ -312,14 +312,14 @@
 !  ----------------------------------------------
 
 ! ...  declare modules
+       USE control_flags, ONLY: gamma_only
        USE cell_base, ONLY: tpiba2
-       USE gvecw, ONLY: tecfix
        USE pseudopotential, ONLY: tl, l2ind, nspnl, lm1x
        USE ions_base, ONLY: nsp, na
        USE mp_global, ONLY: group
        USE mp, ONLY: mp_sum, mp_max
-       USE reciprocal_vectors, ONLY: gstart, gzero
-       USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l, gk_l
+       USE reciprocal_vectors, ONLY: gstart, gzero, ggp
+       USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l
 
       IMPLICIT NONE
 
@@ -381,16 +381,18 @@
       ikk = 1
       IF( PRESENT(ik) ) ikk = ik
 
-      IF(tecfix) THEN
-        vpp(:) = vpp(:) + ftpi * gkcutz_l( 1:SIZE(vpp), ikk )
+      IF( gamma_only ) THEN
+        vpp(:) = vpp(:) + ftpi * ggp( 1:SIZE(vpp) )
       ELSE
-        vpp(:) = vpp(:) + ftpi * gk_l( 1:SIZE(vpp), ikk )
+        vpp(:) = vpp(:) + ftpi * gkcutz_l( 1:SIZE(vpp), ikk )
       END IF
 
       WHERE ( ABS( vpp ) .LT. hthrs_diis ) vpp = hthrs_diis
       vpp = 1.0d0 / vpp
 
-      IF ( PRESENT(ik) ) vpp(:) = svar2 * gkmask_l(:,ik)
+      IF( .NOT. gamma_only ) THEN
+        IF ( PRESENT(ik) ) vpp(:) = svar2 * gkmask_l(:,ik)
+      END IF
 
       RETURN
       END SUBROUTINE hesele

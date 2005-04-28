@@ -402,7 +402,7 @@
           DO ik = 1, wempt%nkl
             CALL wave_rand_init( c_emp( :, :, ik, ispin ) )
             IF ( .NOT. kp%gamma_only ) THEN
-! ..  .       set to zero all elements outside the cutoff sphere
+              ! ..  set to zero all elements outside the cutoff sphere
               DO ib = 1, wempt%nbl( ispin )
                 c_emp(:,ib,ik,ispin) = c_emp(:,ib,ik,ispin) * gkmask_l(:,ik)
               END DO
@@ -443,13 +443,13 @@
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: mpime, nproc, group
       USE check_stop, ONLY: check_stop_now
-      USE gvecw, ONLY: tecfix
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE cp_types, ONLY: pseudo
-      USE control_flags, ONLY: force_pairing
+      USE control_flags, ONLY: force_pairing, gamma_only
       USE reciprocal_space_mesh, ONLY: gkmask_l, gkx_l, gk_l
+      USE reciprocal_vectors, ONLY: g, gx
 
       IMPLICIT NONE
 
@@ -525,8 +525,13 @@
 
           DO ik = 1, kp%nkpt
 
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
+            IF( gamma_only ) THEN
+              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
+                g(:), gx(:,:), fnle(ik,ispin))
+            ELSE
+              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
                 gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
+            END IF
 
             CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
               vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps, ik)
@@ -551,8 +556,7 @@
             END IF
 
           END DO
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, &
-            kp, gkmask_l, pmss, delt)
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, kp, pmss, delt)
 
         END DO SPIN_LOOP
 
@@ -610,6 +614,7 @@
       USE wave_constrains, ONLY: update_lambda
       USE wave_base, ONLY: hpsi, dotp
       USE constants, ONLY: au
+      USE control_flags, ONLY: gamma_only
       USE cell_base, ONLY: tpiba2
       USE electrons_module, ONLY: eigs, ei_emp, pmss, emass, n_emp_l, n_emp
       USE forces, ONLY: dforce_all
@@ -622,6 +627,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE cp_types, ONLY: pseudo
       USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
+      USE reciprocal_vectors,    ONLY: gx, g
 
       IMPLICIT NONE
 
@@ -667,8 +673,13 @@
         ALLOCATE(gam(n_emp_l(ispin), n_emp), cgam(n_emp_l(ispin), n_emp))
 
         DO ik = 1, nk
-          CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
+          IF( gamma_only ) THEN
+            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
+              g(:), gx(:,:), fnle(ik,ispin))
+          ELSE
+            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
               gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
+          END IF
         END DO
 
 ! ...   Calculate | dH / dpsi(j) >
