@@ -161,7 +161,7 @@ SUBROUTINE iosys()
   !
   USE spin_orb, ONLY : lspinorb_ => lspinorb
   !
-  USE constraints_module, ONLY : nconstr, constr_tol, constr, target
+  USE constraints_module, ONLY : init_constraint
   !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
@@ -238,10 +238,9 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : pos 
   !
-  USE basic_algebra_routines, ONLY : norm
-  USE read_namelists_module,  ONLY : read_namelists, SM_NOT_SET
+  USE read_namelists_module, ONLY : read_namelists, SM_NOT_SET
   !
-  USE kinds,                  ONLY : DP
+  USE kinds,                 ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -1154,29 +1153,7 @@ SUBROUTINE iosys()
   !
   ! ... set constraints
   !
-  IF ( lconstrain ) THEN
-     !
-     ! ... target value of the constrain ( in bohr )
-     !
-     DO ia = 1, nconstr
-        !
-        target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) ) * alat
-        !
-        ltest = if_pos(1,constr(1,ia)) == 0 .OR. &
-                if_pos(1,constr(2,ia)) == 0 .OR. &
-                if_pos(2,constr(1,ia)) == 0 .OR. &
-                if_pos(2,constr(2,ia)) == 0 .OR. &
-                if_pos(3,constr(1,ia)) == 0 .OR. &
-                if_pos(3,constr(2,ia)) == 0
-                
-        !
-        IF ( ltest ) &
-           CALL errore( ' cards ', &
-                      & ' constraints cannot be set on fixed atoms', 1 )
-        !
-     END DO
-     !
-  END IF
+  IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
   !
   ! ... set default value of wmass
   !
@@ -1263,17 +1240,13 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE ions_base,          ONLY : fixatom, &
                                  if_pos_ =>  if_pos
   USE dynam,              ONLY : amass
-  USE control_flags,      ONLY : lconstrain, lfixatom
-  USE constraints_module, ONLY : nconstr, constr_tol, &
-                                 constr_type, constr, target
+  USE control_flags,      ONLY : lfixatom
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
                                  taspc, tapos, rd_pos, &
                                  atomic_positions, if_pos, sp_pos, &
                                  k_points, xk, wk, nk1, nk2, nk3, &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, calculation,&
-                                 nconstr_inp, constr_tol_inp, &
-                                 constr_type_inp, constr_inp
+                                 trd_ht, f_inp, calculation
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   USE parser
@@ -1429,21 +1402,6 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      CALL errore( ' cards ', ' ibrav=0: must read cell parameters', 1 )
   IF ( ibrav /= 0 .AND. tcell ) &
      CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
-  !
-  IF ( lconstrain ) THEN
-     !
-     nconstr    = nconstr_inp
-     constr_tol = constr_tol_inp
-     !
-     ALLOCATE( target(      nconstr ) )
-     ALLOCATE( constr_type( nconstr ) )
-     !
-     ALLOCATE( constr( 2, nconstr ) )
-     !
-     constr_type(:) = constr_type_inp(1:nconstr)
-     constr(:,:)    = constr_inp(:,1:nconstr)
-     !
-  END IF
   !
   RETURN 
   !

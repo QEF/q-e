@@ -77,6 +77,7 @@
           INTEGER :: ia1, is1
           INTEGER :: ia2, is2
           REAL(dbl) :: val
+          LOGICAL   :: set
         END TYPE distance_constrain
 
         TYPE constrain_type
@@ -212,15 +213,16 @@
 !=----------------------------------------------------------------------------=!
 
         SUBROUTINE allocate_constrains(constrains, &
-          na, cindexes, cvalues, ctype, tol, nc)
+          na, cindexes, cvalues, cvaluesset, ctype, tol, nc)
           TYPE (constrains_class) :: constrains
-          INTEGER, INTENT(IN) :: na(:)
-          INTEGER, INTENT(IN) :: cindexes(:,:)
+          INTEGER,   INTENT(IN) :: na(:)
+          INTEGER,   INTENT(IN) :: cindexes(:,:)
           REAL(dbl), INTENT(IN) :: cvalues(:)
-          INTEGER, INTENT(IN) :: ctype(:)
+          LOGICAL,   INTENT(IN) :: cvaluesset(:)
+          INTEGER,   INTENT(IN) :: ctype(:)
           REAL(dbl), INTENT(IN) :: tol
-          INTEGER, INTENT(IN) :: nc
-          INTEGER :: ic, is, ia, isa, ierr, nsp
+          INTEGER,   INTENT(IN) :: nc
+          INTEGER               :: ic, is, ia, isa, ierr, nsp
           
           
           constrains%nc        = nc
@@ -240,8 +242,7 @@
 
             DO ic = 1, nc
               constrains%tp(ic)%what = ctype(ic)
-              IF ( ( constrains%tp(ic)%what == 1 ) .OR. &
-                   ( constrains%tp(ic)%what == 2 )        ) THEN
+              IF ( constrains%tp(ic)%what == 1 ) THEN
 
                 ALLOCATE(constrains%tp(ic)%distance)
                 IF( ierr /= 0 ) THEN
@@ -256,12 +257,17 @@
                 constrains%tp(ic)%distance%ia2 = ia
                 constrains%tp(ic)%distance%is2 = is
 
-                SELECT CASE (constrains%tp(ic)%what)
-                  CASE (2)
-                    constrains%tp(ic)%distance%val = cvalues(ic)
-                  CASE DEFAULT
-                    constrains%tp(ic)%distance%val = 0.d0
-                END SELECT
+                IF ( cvaluesset(ic) ) THEN
+                   !
+                   constrains%tp(ic)%distance%set = .TRUE.
+                   constrains%tp(ic)%distance%val = cvalues(ic)
+                   !
+                ELSE
+                   !
+                   constrains%tp(ic)%distance%set = .FALSE.
+                   constrains%tp(ic)%distance%val = 0.d0
+                   !
+                END IF
 
               ELSE
 

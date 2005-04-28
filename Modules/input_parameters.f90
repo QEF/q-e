@@ -1367,11 +1367,12 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER :: nconstr_inp = 0
-      REAL(dbl) :: constr_tol_inp = 0.0d0
-      INTEGER :: constr_type_inp(natx) = 0
-      INTEGER :: constr_inp(2,natx) = 0
-      REAL(dbl) :: constr_dist_inp(natx) = 0.0d0
+      INTEGER         :: nconstr_inp = 0
+      REAL (KIND=dbl) :: constr_tol_inp = 0.0d0
+      INTEGER         :: constr_type_inp(natx) = 0
+      INTEGER         :: constr_inp(4,natx) = 0
+      REAL (KIND=dbl) :: constr_target(natx) = 0.0d0
+      LOGICAL         :: constr_target_set(natx) = .FALSE.
 
 !
 !    KOHN_SHAM

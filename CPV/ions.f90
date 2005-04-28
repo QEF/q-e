@@ -415,7 +415,7 @@
 !  BEGIN manual -------------------------------------------------------------   
 
         SUBROUTINE ions_setup(  nconstr_inp, constr_tol_inp, &
-           constr_type_inp, constr_dist_inp, constr_inp )
+           constr_type_inp, constr_target, constr_target_set, constr_inp )
 
 
 !  Check the number of atoms and of species. Does something about constrains    
@@ -431,11 +431,12 @@
 ! ...
           IMPLICIT NONE
 
-          INTEGER, INTENT(IN) :: nconstr_inp
+          INTEGER,   INTENT(IN) :: nconstr_inp
           REAL(dbl), INTENT(IN) :: constr_tol_inp
-          INTEGER, INTENT(IN) :: constr_type_inp(:)
-          REAL(dbl), INTENT(IN) :: constr_dist_inp(:)
-          INTEGER, INTENT(IN) :: constr_inp(:,:)
+          INTEGER,   INTENT(IN) :: constr_type_inp(:)
+          REAL(dbl), INTENT(IN) :: constr_target(:)
+          LOGICAL,   INTENT(IN) :: constr_target_set(:)
+          INTEGER,   INTENT(IN) :: constr_inp(:,:)
 ! ...
 ! ...     declare other variables
           INTEGER :: is, ia, idd1, idd2, k, istep, isa, ic
@@ -461,8 +462,8 @@
             call errore(' IONS ',' NSP too large, increase NSX parameter ',nsp)
 
 ! ...     Constraints Allocation
-          CALL allocate_constrains(constrains, na, constr_inp, &
-            constr_dist_inp, constr_type_inp, constr_tol_inp, nconstr_inp)
+          CALL allocate_constrains( constrains, na, constr_inp, constr_target, &
+               constr_target_set, constr_type_inp, constr_tol_inp, nconstr_inp )
 
           tsetup = .TRUE.
 
@@ -528,9 +529,9 @@
                 WRITE( stdout,30) ic, constrains%tp(ic)%what
                 IF( constrains%tp(ic)%what  ==  1 ) THEN
                   WRITE( stdout,40)  constrains%tp(ic)%distance%ia1, &
-                      constrains%tp(ic)%distance%is1, &
-                      constrains%tp(ic)%distance%ia2, &
-                      constrains%tp(ic)%distance%is2
+                                     constrains%tp(ic)%distance%is1, &
+                                     constrains%tp(ic)%distance%ia2, &
+                                     constrains%tp(ic)%distance%is2
                 END IF
               END IF
             END DO
@@ -786,13 +787,18 @@
           IF( disto  ==  0.0d0 ) THEN
             CALL errore (' constraints setup ', ' zero atomic distance ', ic )
           END IF 
-          SELECT CASE (constrains%tp(ic)%what)
-            CASE (2)
-              distn = constrains%tp(ic)%distance%val 
-              atoms%taus(:,isa2) = atoms%taus(:,isa1) + distn * sr12 / disto
-            CASE DEFAULT
-              constrains%tp(ic)%distance%val = disto
-          END SELECT
+          
+          IF ( constrains%tp(ic)%distance%set ) THEN
+             !
+             distn = constrains%tp(ic)%distance%val 
+             atoms%taus(:,isa2) = atoms%taus(:,isa1) + distn * sr12 / disto
+             !
+          ELSE
+             !
+             constrains%tp(ic)%distance%val = disto
+             !
+          END IF
+          
           IF( ionode ) THEN
             WRITE( stdout,20) ic, ia1, is1, ia2, is2, constrains%tp(ic)%distance%val
           END IF

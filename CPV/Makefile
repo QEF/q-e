@@ -62,6 +62,7 @@ main.o \
 mainvar.o \
 main_loops.o \
 modules.o \
+move_electrons.o \
 nl_base.o \
 nlcc.o \
 nl.o \

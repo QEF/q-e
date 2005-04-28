@@ -760,7 +760,7 @@
    !
    SUBROUTINE modules_setup( )
      !
-     USE control_flags,    ONLY: lneb, program_name
+     USE control_flags,    ONLY: lneb, program_name, lconstrain
      USE constants,        ONLY: UMA_AU, pi
    
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
@@ -783,17 +783,19 @@
            diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
            empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
            tprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
-           tvhmean_inp, vhasse_inp, constr_dist_inp,                           &
+           tvhmean_inp, vhasse_inp, constr_target, constr_target_set,          &
            constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, tprnks, ks_path, press,                                      &
            cell_damping, cell_dofree, tf_inp, tpstab_inp, pstab_size_inp,      &
            greash, grease, greasp, epol, efield, tcg, maxiter, etresh, passop
 
+     USE input_parameters, ONLY : nconstr_inp
      !
      USE check_stop,       ONLY: check_stop_init
      !
      !
+     USE ions_base,        ONLY: tau
      USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY: cell_nose_init
      USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
@@ -837,8 +839,10 @@
      USE electrons_module,         ONLY: electrons_setup
      USE electrons_base,           ONLY: electrons_base_initval
      USE ensemble_dft,             ONLY: ensemble_initval
-
-
+     !
+     USE constraints_module,       ONLY : init_constraint
+     USE basic_algebra_routines,   ONLY : norm
+     !
      !
      IMPLICIT NONE
 
@@ -847,6 +851,8 @@
      ! ...   DIIS
      REAL(dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
      LOGICAL :: o_diis_inp, oqnr_diis_inp
+     INTEGER :: ia
+     LOGICAL :: ltest
      !
      !   Subroutine Body
      !
@@ -960,10 +966,22 @@
      CALL ensemble_initval &
           ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
             occupation_damping, occupation_dynamics, rotation_dynamics,  degauss, smearing )
-
-     CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, constr_dist_inp, &
-             constr_inp )
-    
+     !
+     IF ( program_name == 'CP90' ) THEN
+        !
+        ! ... variables for constrained dynamics are set here
+        !
+        lconstrain = ( nconstr_inp > 0 )
+        !
+        IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
+        !
+     ELSE
+        !
+        CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, &
+                         constr_target, constr_target_set, constr_inp )
+        !
+     END IF
+     !
      IF( program_name == 'FPMD' ) THEN
 
         CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
@@ -984,9 +1002,9 @@
         CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
 
      END IF
-
-
+     !
      RETURN
+     !
   END SUBROUTINE modules_setup
   !
   !

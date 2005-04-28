@@ -1463,7 +1463,7 @@ MODULE read_cards_module
      !
      !    CONSTRAINTS
      !      NCONSTR CONSTR_TOL
-     !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.)
+     !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.) ...
      !
      ! Example:
      !
@@ -1491,30 +1491,72 @@ MODULE read_cards_module
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
-       INTEGER            :: i
+       INTEGER            :: i, nfield
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
-       IF ( tread ) THEN
+       IF ( tread ) &
           CALL errore( ' card_constraints ', ' two occurrence ', 2 )
-       END IF
        ! 
        CALL read_line( input_line )
-       READ(input_line, *) nconstr_inp, constr_tol_inp
+       !
+       READ( input_line, * ) nconstr_inp, constr_tol_inp
        ! 
        DO i = 1, nconstr_inp
           !
           CALL read_line( input_line )
-          READ(input_line,*) constr_type_inp(i)
+          !
+          READ(input_line, * ) constr_type_inp(i)
+          !
+          CALL field_count( nfield, input_line )
           !
           SELECT CASE( constr_type_inp(i) )
+          CASE( 1 )
+             !
+             IF ( nfield == 3 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i)
+                !
+             ELSE
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             END IF
+             !
           CASE( 2 )
-             READ(input_line,*) &
-                 constr_type_inp(i), constr_inp(1,i), constr_inp(2,i), &
-                 constr_dist_inp(i)
+             !
+             IF ( nfield == 4 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i)
+                !
+             ELSE
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             END IF
+             !
           CASE DEFAULT
-             READ(input_line,*) &
-                 constr_type_inp(i), constr_inp(1,i), constr_inp(2,i)
+             !
+             READ( input_line, * ) constr_type_inp(i), &
+                                   constr_inp(1,i), &
+                                   constr_inp(2,i)
+             !
           END SELECT
           !
        END DO

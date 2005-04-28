@@ -27,6 +27,8 @@ MODULE constraints_module
   USE constants, ONLY : eps16
   USE io_global, ONLY : stdout
   !
+  USE basic_algebra_routines
+  !
   IMPLICIT NONE
   !
   SAVE
@@ -35,7 +37,8 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: check_constrain, &
+  PUBLIC :: init_constraint, &
+            check_constrain, &
             remove_constraint_force
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
@@ -60,7 +63,93 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE dist_constrain( index, tau, alat, g, dg, dg2 )
+     SUBROUTINE init_constraint( nat, tau, if_pos )
+       !-----------------------------------------------------------------------
+       !
+       USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
+                                    constr_type_inp, constr_inp, &
+                                    constr_target, constr_target_set
+       !
+       IMPLICIT NONE
+       !
+       INTEGER,        INTENT(IN) :: nat
+       REAL (KIND=DP), INTENT(IN) :: tau(3,nat)
+       INTEGER,        INTENT(IN) :: if_pos(3,nat)
+       !
+       INTEGER       :: ia, ia1, ia2, ia3
+       REAL(KIND=DP) :: r12(3), r23(3)
+       LOGICAL       :: ltest
+       !
+       nconstr    = nconstr_inp
+       constr_tol = constr_tol_inp
+       !
+       ALLOCATE( target(      nconstr ) )
+       ALLOCATE( constr_type( nconstr ) )
+       !
+       ALLOCATE( constr( 4, nconstr ) )
+       !
+       constr_type(:) = constr_type_inp(1:nconstr)
+       constr(:,:)    = constr_inp(:,1:nconstr)
+       !
+       ! ... target value of the constrain ( in bohr )
+       !
+       DO ia = 1, nconstr
+          !
+          IF ( constr_target_set(ia) ) THEN
+             !
+             target(ia) = constr_target(ia)
+             !
+             CYCLE
+             !
+          END IF
+          !
+          SELECT CASE ( constr_type(ia) )
+          CASE( 1 )
+             !
+             target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) )
+             !
+             ltest = .FALSE.
+             ltest = ltest .OR. ANY( if_pos(:,constr(1,ia)) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,constr(2,ia)) == 0 )
+             !
+          CASE( 2 )
+             !
+             ia1 = constr(1,ia)
+             ia2 = constr(2,ia)
+             ia3 = constr(3,ia)
+             !
+             r12 = tau(:,ia2) - tau(:,ia1)
+             r23 = tau(:,ia2) - tau(:,ia3)
+             !
+             r12 = r12 / norm( r12 )
+             r23 = r23 / norm( r23 )
+             !
+             target(ia) = DOT_PRODUCT( r12, r23 )
+             !
+             ltest = .FALSE.
+             ltest = ltest .OR. ANY( if_pos(:,constr(1,ia)) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,constr(2,ia)) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,constr(3,ia)) == 0 )
+             !
+          CASE DEFAULT
+             !
+             CALL errore( 'init_constraint', &
+                          'constrain type not implemented ', 1 )
+             !
+          END SELECT
+          !
+          IF ( ltest ) &
+             CALL errore( 'init_constraint', &
+                        & 'constraints cannot be set on fixed atoms', 1 )
+          !
+       END DO
+       !
+       RETURN
+       !
+     END SUBROUTINE init_constraint
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE dist_constrain( index, nat, tau, alat, g, dg, dg2 )
        !-----------------------------------------------------------------------
        ! 
        ! ... this routine defines the constrain equation:
@@ -78,6 +167,7 @@ MODULE constraints_module
        IMPLICIT NONE
        !
        INTEGER,        INTENT(IN) :: index
+       INTEGER,        INTENT(IN) :: nat
        REAL (KIND=DP), INTENT(IN) :: tau(:,:)
        REAL (KIND=DP), INTENT(IN) :: alat
        REAL (KIND=DP), INTENT(OUT):: dg(:,:)
@@ -88,14 +178,14 @@ MODULE constraints_module
        !
        REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
        REAL(KIND=DP) :: dist0
-       INTEGER       :: nat, ia1, ia2
+       INTEGER       :: ia1, ia2, ia3
+       REAL(KIND=DP) :: r12(3), r23(3)
+       REAL(KIND=DP) :: norm_r12, norm_r23, cos123, sin123
        !
        ! ... external function
        !
        REAL(KIND=DP), EXTERNAL :: DDOT
        !
-       !
-       nat = SIZE( tau, DIM = 2 )
        !
        dg(:,:) = 0.D0
        !
@@ -133,6 +223,30 @@ MODULE constraints_module
           !
           dg2 = DDOT( 3 * nat, dg, 1, dg, 1 )
           !
+       CASE( 2 )
+          !
+          ia1 = constr(1,index)
+          ia2 = constr(2,index)
+          ia3 = constr(3,index)
+          !
+          r12 = tau(:,ia2) - tau(:,ia1)
+          r23 = tau(:,ia2) - tau(:,ia3)
+          !
+          norm_r12 = norm( r12 )
+          norm_r23 = norm( r23 )
+          !
+          r12 = r12 / norm_r12
+          r23 = r23 / norm_r23
+          !
+          cos123 = DOT_PRODUCT( r12, r23 )
+          sin123 = SQRT( 1.D0 - cos123**2 )
+          !
+          g = ( cos123 - target(index) )
+          !
+          dg(:,ia1) = ( cos123 * r12 - r23 ) / ( sin123 * norm_r12 )
+          dg(:,ia3) = ( cos123 * r23 - r12 ) / ( sin123 * norm_r23 )
+          dg(:,ia2) = - dg(:,ia1) - dg(:,ia3)
+          !
        CASE DEFAULT
           !
           CALL errore( 'dist_constrain', &
@@ -140,12 +254,14 @@ MODULE constraints_module
           !
        END SELECT
        !
+       dg2 = DDOT( 3 * nat, dg, 1, dg, 1 )
+       !
        RETURN
        !
      END SUBROUTINE dist_constrain
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_constrain( tau, alat )
+     SUBROUTINE check_constrain( nat, tau, alat )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -160,17 +276,16 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
+       INTEGER,        INTENT(IN)    :: nat
        REAL (KIND=DP), INTENT(INOUT) :: tau(:,:)
        REAL (KIND=DP), INTENT(IN)    :: alat
        !
-       INTEGER                    :: nat, na, i, index
+       INTEGER                    :: na, i, index
        REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
        REAL(KIND=DP)              :: dg2, g
        LOGICAL                    :: ltest(nconstr), global_test
        INTEGER, PARAMETER         :: maxiter = 100
        !
-       !
-       nat = SIZE( tau, DIM = 2 )
        !
        ALLOCATE( dg( 3, nat ) )
        !
@@ -180,7 +295,7 @@ MODULE constraints_module
              !
              ltest(index) = .FALSE.             
              !
-             CALL dist_constrain( index, tau, alat, g, dg, dg2 )
+             CALL dist_constrain( index, nat, tau, alat, g, dg, dg2 )
              !
              ! ... check if g = 0
              !
@@ -301,16 +416,17 @@ MODULE constraints_module
      END SUBROUTINE new_force
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( tau, alat, force )
+     SUBROUTINE remove_constraint_force( nat, tau, alat, force )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
+       INTEGER,        INTENT(IN)    :: nat
        REAL (KIND=DP), INTENT(IN)    :: tau(:,:)
        REAL (KIND=DP), INTENT(IN)    :: alat
        REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
        !
-       INTEGER                     :: index, na, nat
+       INTEGER                     :: index, na
        REAL (KIND=DP)              :: gv
        REAL (KIND=DP), ALLOCATABLE :: dgv(:,:)
        REAL (KIND=DP)              :: dgv2
@@ -319,15 +435,13 @@ MODULE constraints_module
          ! its square modulus       
        !
        !
-       nat = SIZE( tau, DIM = 2 )
-       !
        ALLOCATE( dgv( 3, nat ) )
        !
        ! ... find the constrained forces
        !
        DO index = 1, nconstr
           !
-          CALL dist_constrain( index, tau, alat, gv, dgv, dgv2 )
+          CALL dist_constrain( index, nat, tau, alat, gv, dgv, dgv2 )
           !
           CALL new_force( nat, dgv, dgv2, force )
           !
