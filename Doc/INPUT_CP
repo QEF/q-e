@@ -561,3 +561,40 @@ CHARACTER(LEN=80) :: cell_dofree
 !      HT(3,1) HT(3,2) HT(3,3)
 ! Where:
 !      HT(i,j) (REAL(dbl))  cell dimensions
+
+-------------------------------------------------------------------------------
+
+CONSTRAINTS
+
+   Ionic Constraints
+
+ Syntax:
+
+    CONSTRAINTS
+      nconstr   constr_tol
+      constr_type(.)   constr(1,.)   constr(2,.) ... { constr_target(.) }
+
+ Where:
+
+      nconstr (INTEGER)            INTEGER, number of constraints
+
+      constr_tol                   REAL,    tolerance for keeping the 
+                                            constraints satisfied
+
+      constr_type(.)               INTEGER, type of constrain :
+                                      1:  for fixed distances ( two atom indexes
+                                          must be specified )
+                                      2:  for fixed planar angles ( three atom 
+                                          indexes must be specified )
+
+      constr(1,.) constr(2,.) ...  INTEGER, atoms indices object of the 
+                                            constraint, as they appear in 
+                                            the 'POSITION' CARD
+                                        
+      constr_target                 REAL,   target for the constrain ( in the 
+                                            case of planar angles it is the 
+                                            COS of the angle ).
+                                            This variable is optional.
+
+-------------------------------------------------------------------------------
+

@@ -1463,7 +1463,7 @@ MODULE read_cards_module
      !
      !    CONSTRAINTS
      !      NCONSTR CONSTR_TOL
-     !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.) ...
+     !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.) ... { CONSTR_TARGET(.) }
      !
      ! Example:
      !
@@ -1472,15 +1472,24 @@ MODULE read_cards_module
      ! Where:
      !
      !      NCONSTR(INTEGER)    number of constraints
+     !
      !      CONSTR_TOL          tolerance for keeping the constraints 
      !                          satisfied
-     !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.)  
-     !                          type of constrain and atoms indices
-     !                          object of the constraint. I.E.: 1 ia1 ia2
-     !                          "1" is the constrain type (fixed distance)
-     !                          "ia1 ia2" are the indices of the atoms (as 
-     !                          they appear in the 'POSITION' CARD) whose
-     !                          distance has to be kept constant
+     !
+     !      CONSTR_TYPE(.)      type of constrain: 
+     !                          1: for fixed distances ( two atom indexes must
+     !                             be specified )
+     !                          2: for fixed planar angles ( three atom indexes
+     !                             must be specified )
+     !      
+     !      CONSTR(1,.) CONSTR(2,.) ...
+     !     
+     !                          indices object of the constraint, as 
+     !                          they appear in the 'POSITION' CARD
+     !
+     !      CONSTR_TARGET       target for the constrain ( in the case of 
+     !                          planar angles it is the COS of the angle ).
+     !                          this variable is optional.
      !
      !----------------------------------------------------------------------
      !    END manual
