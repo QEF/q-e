@@ -393,6 +393,7 @@ contains
           ra = a(1)
           rb = a(n)
           calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
+          write(6,*) 'amesh (dx) = ', calculate_dx
         RETURN
       END FUNCTION 
 
@@ -436,6 +437,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   END IF
   IF( ap%nrps > SIZE(ap%rps,2) ) THEN
     ierr = 2   
+    WRITE( 6, * ) ' nchan = (wf) ', ap%nrps
     err_msg = ' NCHAN NOT PROGRAMMED '
     GO TO 110
   END IF
@@ -496,6 +498,7 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 
   IF((ap%nchan > SIZE(ap%vnl,2) ) .OR. (ap%nchan < 1)) THEN
     ierr = 1
+    WRITE( 6, * ) ' nchan (pp) = ', ap%nchan
     err_msg = ' NCHAN NOT PROGRAMMED '
     GO TO 110
   END IF
@@ -790,7 +793,9 @@ program fpmd2upf
      epseu(i) = 0.0
   end do
 
-  psd        = 'XX'
+  write(6, * ) 'element > '
+  read(5,*) psd
+
   pseudotype = 'NC'
   nlcc       = ap%tnlcc
   zp         = ap%zv
@@ -811,18 +816,8 @@ program fpmd2upf
      elsw(i)  = els(i)
   end do
 
-  iexch =  1
-  icorr =  1
-  igcx  =  1
-  igcc  =  1
-  !
-  ! We have igcc=2 (PW91) and 3 (LYP) exchanged wrt CPMD conventions
-  !
-  if (igcc.eq.3) then
-     igcc=2
-  else if (igcc.eq.3) then
-     igcc=2
-  end if
+  write(6, * ) 'XC (iexch,icorr,igcx,igcc) > '
+  read(5,*) iexch, icorr, igcx, igcc
 
   allocate(rab(mesh))
   allocate(  r(mesh))
