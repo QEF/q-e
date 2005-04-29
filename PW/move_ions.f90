@@ -83,7 +83,7 @@ SUBROUTINE move_ions()
      !  
      IF ( lconstrain ) THEN
         !
-        CALL remove_constraint_force( tau, alat, force )
+        CALL remove_constraint_force( nat, tau, alat, force )
         !
         ! ... resymmetrize (should not be needed, but...)
         !
@@ -251,7 +251,15 @@ SUBROUTINE move_ions()
      !
      ! ... check if the new positions satisfy the constrain equation
      !
-     IF ( lconstrain ) CALL check_constrain( tau, alat )
+     IF ( lconstrain ) THEN
+        !
+        CALL check_constrain( nat, tau, alat )
+        !
+        WRITE( stdout, '(/5X,"Corrected atomic positions:")')
+        !
+        CALL output_tau( .FALSE. )
+        !
+     END IF
      !
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
