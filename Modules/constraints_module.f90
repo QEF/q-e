@@ -39,7 +39,8 @@ MODULE constraints_module
   !
   PUBLIC :: init_constraint, &
             check_constrain, &
-            remove_constraint_force
+            remove_constraint_force, &
+            deallocate_constraint
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
   !
@@ -448,5 +449,20 @@ MODULE constraints_module
        END DO
        !
      END SUBROUTINE remove_constraint_force
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE deallocate_constraint()
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       !
+       IF ( ALLOCATED( constr ) )      DEALLOCATE( constr )
+       IF ( ALLOCATED( constr_type ) ) DEALLOCATE( constr_type )
+       IF ( ALLOCATED( target ) )      DEALLOCATE( target )       
+       !
+       RETURN
+       !
+     END SUBROUTINE deallocate_constraint
      !
 END MODULE constraints_module

@@ -14,13 +14,14 @@ SUBROUTINE stop_pw( flag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE io_global,        ONLY : stdout, ionode
-  USE control_flags,    ONLY : lpath, lneb, lsmd, twfcollect
-  USE io_files,         ONLY : prefix, iunwfc, iunigk, iunres
-  USE input_parameters, ONLY : deallocate_input_parameters
-  USE path_variables,   ONLY : path_deallocation
-  USE path_io_routines, ONLY : io_path_stop
-  USE mp,               ONLY : mp_barrier, mp_end
+  USE io_global,          ONLY : stdout, ionode
+  USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain
+  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres
+  USE input_parameters,   ONLY : deallocate_input_parameters
+  USE path_variables,     ONLY : path_deallocation
+  USE path_io_routines,   ONLY : io_path_stop
+  USE constraints_module, ONLY : deallocate_constraint
+  USE mp,                 ONLY : mp_barrier, mp_end
   !
   IMPLICIT NONE
   !
@@ -82,11 +83,11 @@ SUBROUTINE stop_pw( flag )
   CALL set_d_stream( 0 )
 #endif
   !
-  CALL clean_pw(.true.)
+  CALL clean_pw( .TRUE. )
   !
   CALL deallocate_input_parameters()
   !
-  ! ... deallocation of variables specific of "path" optimizations
+  IF ( lconstrain ) CALL deallocate_constraint()
   !
   IF ( lneb ) THEN
      !

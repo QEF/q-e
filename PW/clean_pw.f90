@@ -35,18 +35,17 @@ SUBROUTINE clean_pw(lflag)
 #endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
-  USE constraints_module,   ONLY : constr, target
   USE noncollin_module,     ONLY : deallocate_noncol
   !
   IMPLICIT NONE
   !
-  logical :: lflag
-  !          if .true. deallocate_ions_base is called
+  LOGICAL :: lflag
+    ! if .true. deallocate_ions_base is called
   !
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
-  if (lflag) CALL deallocate_ions_base( )
+  IF ( lflag ) CALL deallocate_ions_base()
   !
   IF ( ALLOCATED( force ) )      DEALLOCATE( force )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
@@ -76,7 +75,7 @@ SUBROUTINE clean_pw(lflag)
   IF ( ALLOCATED( vnew ) )       DEALLOCATE( vnew )
   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
-  IF ( ALLOCATED( psic_nc ) )       DEALLOCATE( psic_nc )
+  IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
   IF ( doublegrid ) THEN
     IF ( ASSOCIATED( nls ) )     DEALLOCATE( nls )
@@ -103,13 +102,13 @@ SUBROUTINE clean_pw(lflag)
   IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
-  IF (lspinorb) then
-     IF ( ALLOCATED( fcoef ) )      DEALLOCATE( fcoef )
+  IF ( lspinorb ) THEN
+     IF ( ALLOCATED( fcoef ) )   DEALLOCATE( fcoef )
   END IF
   !
-  call deallocate_uspp () 
+  CALL deallocate_uspp() 
   !
-  call deallocate_noncol () 
+  CALL deallocate_noncol() 
   !
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
@@ -117,14 +116,15 @@ SUBROUTINE clean_pw(lflag)
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  IF ( ALLOCATED( evc_nc ) )        DEALLOCATE( evc_nc )
+  IF ( ALLOCATED( evc_nc ) )     DEALLOCATE( evc_nc )
   !
 #ifdef __SX6
   !
   ! ... arrays allocated in cft_3.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( auxp ) )       DEALLOCATE( auxp )
-  first(:)=.true.
+  !
+  first(:) = .TRUE.
   !
 #endif 
   !
@@ -135,16 +135,11 @@ SUBROUTINE clean_pw(lflag)
   !
   ! ... stick-owner matrix allocated in sticks_base
   !
-  CALL sticks_deallocate( )
+  CALL sticks_deallocate()
   !
   ! ... deallocate indices used in calculation of polarizability at gamma
   !
-  CALL berry_closeup( )
-  !
-  ! ... vectors for ionic constrains
-  !
-  IF ( ALLOCATED( constr ) )     DEALLOCATE( constr )
-  IF ( ALLOCATED( target ) )     DEALLOCATE( target )
+  CALL berry_closeup()
   !
   RETURN
   !
