@@ -977,6 +977,12 @@
         !
      ELSE
         !
+        ! ... variables for constrained dynamics are set here
+        !
+        lconstrain = ( nconstr_inp > 0 )
+        !
+        IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
+        !
         CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, &
                          constr_target, constr_target_set, constr_inp )
         !

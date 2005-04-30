@@ -462,8 +462,8 @@
             call errore(' IONS ',' NSP too large, increase NSX parameter ',nsp)
 
 ! ...     Constraints Allocation
-          CALL allocate_constrains( constrains, na, constr_inp, constr_target, &
-               constr_target_set, constr_type_inp, constr_tol_inp, nconstr_inp )
+         ! CALL allocate_constrains( constrains, na, constr_inp, constr_target, &
+         !      constr_target_set, constr_type_inp, constr_tol_inp, nconstr_inp )
 
           tsetup = .TRUE.
 
@@ -575,10 +575,12 @@
 
 ! ... declare modules
       USE cell_module, ONLY: dgcell, r_to_s, s_to_r, boxdimensions
-      use control_flags, ONLY: tnosep, tcap, tcp, tdampions
+      use control_flags, ONLY: tnosep, tcap, tcp, tdampions, lconstrain
       use time_step, ONLY: delt
       use mp_global, ONLY: mpime
       use ions_base, ONLY: fricp
+      USE constraints_module, ONLY : check_constrain, &
+                                     remove_constraint_force
 
       IMPLICIT NONE
 
@@ -617,7 +619,13 @@
         vrnos = 0.0d0
       END IF
 
-!....   Steepest descent of ionic degrees of freedom 
+! ... constraints are imposed here
+      !
+      IF ( lconstrain ) &
+         CALL remove_constraint_force( atoms_0%nat, &
+                                       atoms_0%taur, 1.D0, atoms_0%for )
+      !
+! ...   Steepest descent of ionic degrees of freedom 
 
       IF( tdampions ) THEN
 
@@ -744,7 +752,25 @@
           CALL velocity_scaling(nfi, tcap, atoms_m, atoms_0, atoms_p, delt, ht0) 
         END IF
 
-        CALL apply_constraints(ht0, atoms_0, atoms_p, dumm)
+        IF ( lconstrain ) THEN
+           !
+           DO ia = 1,  atoms_p%nat
+              !
+              CALL s_to_r( atoms_p%taus(:,ia), atoms_p%taur(:,ia), ht0 )
+              !
+           END DO
+           !
+           CALL check_constrain( atoms_p%nat, atoms_p%taur, 1.D0 )
+           !
+           DO ia = 1,  atoms_p%nat
+              !
+              CALL r_to_s( atoms_p%taur(:,ia), atoms_p%taus(:,ia), ht0 )
+              !
+           END DO
+           !
+        END IF
+
+       ! CALL apply_constraints(ht0, atoms_0, atoms_p, dumm)
 
         CALL ions_vel( atoms_0%vels, atoms_p%taus, atoms_m%taus, atoms_0%na, atoms_0%nsp, delt )
         CALL ions_kinene( atoms_0%ekint, atoms_0%vels, atoms_0%na, atoms_0%nsp, ht0%hmat, atoms_0%m )

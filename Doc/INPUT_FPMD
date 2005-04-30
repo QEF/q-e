@@ -1315,34 +1315,41 @@
    Vx(:), Vy(:) and Vz(:) (REAL) x, y and z velocity components of
                                  the ions
 
- ----------------------------------------------------------------
+-------------------------------------------------------------------------------
 
- CONSTRAINTS
+CONSTRAINTS
 
    Ionic Constraints
 
  Syntax:
 
     CONSTRAINTS
-      NCONSTR CONSTR_TOL
-      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.)
-
- Example:
-
-    ????
+      nconstr   constr_tol
+      constr_type(.)   constr(1,.)   constr(2,.) ... { constr_target(.) }
 
  Where:
 
-      NCONSTR(INTEGER)  number of constraints
-      CONSTR_TOL  tolerance for keeping the constraints satisfied
-      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.)  type of constrain and atoms indeces
-                          object of the constraint. I.E.: 1 ia1 ia2
-                          "1" is the constrain type (fixed distance)
-                          "ia1 ia2" are the indeces of the atoms (as they
-                          appear in the 'POSITION' CARD) whose distance
-                          has to be kept constant
+      nconstr (INTEGER)            INTEGER, number of constraints
 
- ----------------------------------------------------------------
+      constr_tol                   REAL,    tolerance for keeping the 
+                                            constraints satisfied
+
+      constr_type(.)               INTEGER, type of constrain :
+                                      1:  for fixed distances ( two atom indexes
+                                          must be specified )
+                                      2:  for fixed planar angles ( three atom 
+                                          indexes must be specified )
+
+      constr(1,.) constr(2,.) ...  INTEGER, atoms indices object of the 
+                                            constraint, as they appear in 
+                                            the 'POSITION' CARD
+                                        
+      constr_target                 REAL,   target for the constrain ( in the 
+                                            case of planar angles it is the 
+                                            COS of the angle ).
+                                            This variable is optional.
+
+-------------------------------------------------------------------------------
 
  KSOUT
 
@@ -1429,25 +1436,5 @@
  Where:
 
    no parameters
-
- ----------------------------------------------------------------
-
- TEMPLATE
-
-      This is a template card info section
-
- Syntax:
-
-    TEMPLATE
-     RVALUE IVALUE
-
- Example:
-
-    ???
-
- Where:
-
-      RVALUE (real)     This is a real value
-      IVALUE (integer)  This is an integer value
 
  ----------------------------------------------------------------

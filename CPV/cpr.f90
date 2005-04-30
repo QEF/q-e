@@ -511,11 +511,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         ! ... constraints are imposed here
         !
-        IF ( lconstrain ) THEN
-           !
+        IF ( lconstrain ) &
            CALL remove_constraint_force( nat, tau0, 1.D0, fion )
-           !
-        END IF
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, &
                         ainv, delt, na, nsp, fricp, hgamma, vels, &
