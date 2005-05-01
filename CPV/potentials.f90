@@ -275,6 +275,7 @@
       USE sic_module, ONLY: self_interaction, si_epsilon
       USE reciprocal_vectors, ONLY: gx
       USE gvecp, ONLY: ngm
+      USE pseudo_base, ONLY: compute_eself
 
       IMPLICIT NONE
 
@@ -336,6 +337,7 @@
       REAL(dbl)  :: omega, desr(6), pesum(16)
       REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
       REAL(dbl)  :: rsum( SIZE( rhoe, 4 ) )
+      REAL(dbl)  :: zv( atoms%nsp ), raggio( atoms%nsp )
 
       LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
 
@@ -720,14 +722,16 @@
       CALL mp_sum(edft%ekin, group)
       CALL mp_sum(edft%emkin, group)
 
-! ... self interaction energy of the pseudocharges
-      edft%eself = self_interaction_energy(atoms, ps%ap)
+      ! ... self interaction energy of the pseudocharges
+      do is = 1, atoms%nsp
+        zv( is ) = ps%ap(is)%zv
+        raggio( is ) = ps%ap(is)%raggio
+      end do
+      edft%eself = compute_eself( atoms%na, zv, raggio, atoms%nsp ) 
 
 
-      IF( ttsic ) THEN
-          if ( ionode ) &
-           write(stdout,*) &
-              & 'ESELF_EL::', edft%eself
+      IF( ttsic .and. ionode ) THEN
+        write(stdout,*) 'ESELF_EL::', edft%eself
       END IF
 
       CALL total_energy(edft,omega,vxc,eps,self_vxc,nr1_g*nr2_g*nr3_g)
@@ -1348,22 +1352,6 @@
    END SUBROUTINE vofesr
 !=----------------------------------------------------------------------------=!
 
-        REAL (dbl) FUNCTION self_interaction_energy(atoms, ap)
-          USE constants, ONLY: pi
-          USE pseudo_types, ONLY: pseudo_ncpp
-          USE atoms_type_module, ONLY: atoms_type
-          TYPE (atoms_type), INTENT(IN)    :: atoms
-          TYPE (pseudo_ncpp), INTENT(IN) :: ap(:)
-          REAL (dbl) :: eself
-          INTEGER :: is
-          eself = 0.0_dbl
-          DO is = 1, atoms%nsp
-            eself = eself + REAL(atoms%na(is)) * (ap(is)%zv)**2 / ap(is)%raggio
-          END DO
-          eself = eself / SQRT(2.0_dbl * pi)
-          self_interaction_energy = eself
-          RETURN
-        END FUNCTION self_interaction_energy
 
 !  ----------------------------------------------
 !  BEGIN manual

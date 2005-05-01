@@ -8,30 +8,13 @@
 
 #include "f_defs.h"
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sat Nov  6 12:44:29 MET 1999
-!  ----------------------------------------------
-!  BEGIN manual
-
 #undef __BESSEL_TEST
 
-      MODULE pseudo_base
+!=----------------------------------------------------------------------------=!
+   MODULE pseudo_base
+!=----------------------------------------------------------------------------=!
 
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE nlin_base(ap,hg,wnl)
-!  SUBROUTINE nlin_stress_base(ap,hg,wnla)
-!  SUBROUTINE nlset_base(ap,wsgset)
-!  SUBROUTINE formfn_base(ap,ac,hg,vps,dvps,rhoc1,rhocp,omega)
-!  ----------------------------------------------
-!  END manual
 
-! ... declare modules
       USE kinds
       USE bessel_functions, ONLY: bessel1, bessel2, bessel3
       USE constants, ONLY: gsmall, fpi, pi 
@@ -44,15 +27,17 @@
       PRIVATE
 
       PUBLIC :: nlin_base, nlin_stress_base, nlset_base
-      PUBLIC :: corecor_base, compute_rhops, formfn
+      PUBLIC :: corecor_base, compute_rhops, formfn, formfa
+      PUBLIC :: compute_eself
 
 
-!  end of module-scope declarations
-!  ----------------------------------------------
 
+!=----------------------------------------------------------------------------=!
       CONTAINS
+!=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
+
+
 !  ----------------------------------------------
       SUBROUTINE nlin_base(ap, hg, wnl)
 
@@ -285,97 +270,7 @@
         RETURN
       END SUBROUTINE nlset_base     
 
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE formfn_base(ap, hg, vps, dvps, omega)
 
-!  this routine computes:
-!    the local pseudopotentials form factors (vps)
-!    their derivatives with respect to cell degrees of freedom (dvps)
-!  pseudopotentials are given as numerical tables
-!  ----------------------------------------------
-
-        USE pseudo_types, ONLY: pseudo_ncpp
-        USE io_global, ONLY: stdout
-
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        REAL(dbl), INTENT(OUT) :: vps(:),dvps(:)
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl), INTENT(IN) :: hg(:)
-        REAL(dbl), INTENT(IN) :: omega
-
-! ... declare external function
-
-        REAL(dbl) :: erf, erfc
-        EXTERNAL erf, erfc
-
-        REAL(dbl), EXTERNAL :: cclock
-
-! ...   declare other variables
-        REAL(dbl), ALLOCATABLE :: jl(:), djl(:), fint(:), func(:)
-
-        REAL(dbl)  :: cost1, cost2, xg, check, fpibo, s1, s2, stot
-        INTEGER :: ig, mmax, ir, gstart
-
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-          stot = 0.0d0
-
-          mmax    = ap%mesh
-          ALLOCATE( jl(mmax), djl(mmax), fint(mmax), func(mmax) )
-
-          fpibo = fpi / omega
-          cost1 = 2.0d0 * ap%zv / (sqrt(pi)*ap%raggio)
-
-          ! WRITE( stdout,*) ' DEBUG formfn_base ',mmax,clfpibo,cost1  ! DEBUG
-
-          DO ir=1,mmax
-            cost2    = ap%zv * erf(ap%rw(ir)/ap%raggio)
-            func(ir) = ap%rw(ir)**2 * (ap%rw(ir) * ap%vloc(ir) + cost2)
-            IF( ABS( ap%rw(ir) ) > 1.d-8 ) THEN
-              check = ap%vloc(ir) + cost2 / ap%rw(ir)
-            ELSE
-              check = ap%vloc(ir) + cost1
-            END IF
-            IF( ABS ( check ) < 1.d-8) func(ir)=0.d0
-            ! WRITE( stdout,*) ir,func(ir),ap%rw(ir),ap%vloc(ir),cost2,ap%rw(ir) * ap%vloc(ir) ! DEBUG
-          END DO
-          DO ig = 1, SIZE( hg )
-            IF( hg(ig) < gsmall ) THEN
-              call simpson_fpmd(mmax, func, ap%dx, vps(ig))
-              ! call simpson(mmax, func, ap%rab, vps(ig))
-              vps(ig) = fpibo * vps(ig)
-              fint(1:mmax) = ap%rw(1:mmax)**2 * func(1:mmax)
-              call simpson_fpmd(mmax, fint, ap%dx, dvps(ig))
-              ! call simpson(mmax, fint, ap%rab, dvps(ig))
-              dvps(ig) = fpibo * dvps(ig) / 6.0d0
-            ELSE
-              xg = SQRT( hg( ig ) ) * tpiba
-              CALL bessel1(xg, ap%rw, jl, djl, mmax)
-              fint(1:mmax) = func(1:mmax) * jl(1:mmax)
-              call simpson_fpmd(mmax, fint, ap%dx, vps(ig))
-              ! call simpson(mmax, fint, ap%rab, vps(ig))
-              vps(ig) = fpibo * vps(ig)
-
-              fint(1:mmax) = ap%rw(1:mmax) * func(1:mmax) * djl(1:mmax)
-              call simpson_fpmd(mmax, fint, ap%dx, dvps(ig))
-              ! call simpson(mmax, fint, ap%rab, dvps(ig))
-              dvps(ig) = 0.5d0 * fpibo * dvps(ig) / xg
-            END IF
-            ! WRITE( stdout,*) ig,vps(ig)  ! DEBUG
-          END DO
-
-          ! WRITE( stdout,fmt="(/,'* FORMF_BASE TIMING: ',F18.8)" ) stot
-
-          DEALLOCATE( jl, djl, fint, func )
-
-        RETURN
-      END SUBROUTINE formfn_base
 
 !  ----------------------------------------------
       SUBROUTINE corecor_base(ap, hg, rhoc1, rhocp, omega)
@@ -436,8 +331,62 @@
           DEALLOCATE( jl, fint, djl, funcc )
         RETURN
       END SUBROUTINE corecor_base
-!  ----------------------------------------------
-!  ----------------------------------------------
+
+
+
+!-----------------------------------------------------------------------
+      subroutine compute_rhocg( rhocb, r, rab, rho_atc, gb, omegab, &
+                         tpibab2, mesh, ngb )
+
+!-----------------------------------------------------------------------
+
+        !  rhoc1(G) = (integral) rho_cc(r) j_0(r,G) r**2 dr
+        !           = (integral) rho_cc(r) j_0(r,G) r**2 dr/dx dx
+
+        use kinds,         only: dbl
+        use constants,     only: fpi
+        use control_flags, only: iprsta
+        use io_global,     only: stdout
+
+        implicit none
+        
+        integer,   intent(in)  :: mesh
+        integer,   intent(in)  :: ngb
+        real(dbl), intent(out) :: rhocb( ngb )
+        real(dbl), intent(in)  :: rho_atc( mesh )
+        real(dbl), intent(in)  :: r( mesh )
+        real(dbl), intent(in)  :: rab( mesh )
+        real(dbl), intent(in)  :: gb( ngb )
+        real(dbl), intent(in)  :: omegab
+        real(dbl), intent(in)  :: tpibab2
+        
+        integer :: ig, ir
+        real(dbl), allocatable :: fint(:), jl(:)
+        real(dbl) :: c, xg
+      
+        allocate(fint(mesh))
+        allocate(jl(mesh))
+
+        c = fpi / omegab
+        do ig = 1, ngb
+          xg = sqrt( gb(ig) * tpibab2 )
+          call sph_bes ( mesh, r(1), xg, 0, jl )
+          do ir=1,mesh
+            fint(ir)=r(ir)**2*rho_atc(ir)*jl(ir)
+          end do
+          call simpson_cp90( mesh,fint,rab(1),rhocb(ig))
+        end do
+        do ig=1,ngb
+          rhocb(ig)=c*rhocb(ig)
+        end do
+        if(iprsta >= 4) &
+          WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
+
+        deallocate( jl, fint )
+
+        return
+      end subroutine
+
 
 
 !-----------------------------------------------------------------------
@@ -467,6 +416,40 @@
         !
         return
       end subroutine
+
+
+
+!-----------------------------------------------------------------------
+      FUNCTION compute_eself( na, zv, rcmax, nsp )
+!-----------------------------------------------------------------------
+        !
+        !     calculation of gaussian selfinteraction
+        !
+        USE constants, ONLY: pi
+        !
+        IMPLICIT NONE
+        REAL (dbl) :: compute_eself
+        !
+        INTEGER,    INTENT(IN) :: nsp
+        INTEGER,    INTENT(IN) :: na( nsp )
+        REAL (dbl), INTENT(IN) :: zv( nsp )
+        REAL (dbl), INTENT(IN) :: rcmax( nsp )
+        !
+        REAL (dbl) :: eself
+        INTEGER :: is
+        !
+        eself = 0.0d0
+        DO is = 1, nsp
+          eself = eself + DBLE( na( is ) ) * zv( is )**2 / rcmax( is )
+        END DO
+        eself = eself / SQRT( 2.0d0 * pi )
+        !
+        compute_eself = eself
+        RETURN
+      END FUNCTION compute_eself
+
+
+
 
 !-----------------------------------------------------------------------
       subroutine formfn( vps, dvps, r, rab, vloc_at, zv, rcmax, g, omega, &
@@ -599,5 +582,99 @@
 
 
 
-    END MODULE pseudo_base
+
+!-----------------------------------------------------------------------
+      subroutine formfa( vps, dvps, rc1, rc2, wrc1, wrc2, rcl, al, bl, &
+                         zv, rcmax, g, omega, tpiba2, ngs, gstart, tpre )
+!-----------------------------------------------------------------------
+!
+        !computes the form factors of pseudopotential (vps),
+        !         also calculated the derivative of vps with respect to
+        !         g^2 (dvps)
+        !
+        ! bhs pseudopotentials (fourier transformed analytically)
+
+        use kinds, only: dbl
+        use constants, only: pi, fpi, gsmall
+        !
+        implicit none
+        integer,   intent(in)  :: ngs, gstart
+        logical,   intent(in)  :: tpre
+        real(dbl), intent(in)  ::  g( ngs )
+        real(dbl), intent(in)  ::  rc1, rc2
+        real(dbl), intent(in)  ::  wrc1, wrc2
+        real(dbl), intent(in)  ::  rcl( 3 ), al( 3 ), bl( 3 )
+        real(dbl), intent(out) ::  vps( ngs )
+        real(dbl), intent(out) :: dvps( ngs )
+        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2
+        !
+        real(dbl) :: r2max, r21, r22, gps, sfp, r2l, ql, el, par, sp
+        real(dbl) :: emax, e1, e2, fpibg, dgps, dsfp
+        integer   :: ib, ig
+
+        r2max = rcmax**2
+        r21   = rc1**2
+        r22   = rc2**2
+
+        !
+        !     g = 0
+        !
+        if (gstart == 2) then
+          gps = - zv * pi * ( - wrc2 * r22 - wrc1 * r21 + r2max ) / omega
+          sfp = 0.0d0
+          do ib = 1, 3
+            r2l = rcl( ib )**2
+            ql  = 0.25d0 * r2l * g(1) * tpiba2
+            el  = exp( -ql )
+            par = al( ib ) + bl( ib ) * r2l * ( 1.5d0 - ql )
+            sp  = ( pi * r2l )**1.5 * el / omega
+            sfp = sp * par + sfp
+          end do
+          vps(1) = gps + sfp
+        end if
+        !
+        !     g > 0
+        !
+        do ig = gstart, ngs
+          !
+          emax  = exp ( -0.25d0 * r2max * g(ig) * tpiba2 )
+          e1    = exp ( -0.25d0 * r21   * g(ig) * tpiba2 )
+          e2    = exp ( -0.25d0 * r22   * g(ig) * tpiba2 )
+          fpibg = fpi / ( g(ig) * tpiba2 )
+          gps   = - zv * ( wrc1 * e1 - emax + wrc2 * e2 ) / omega
+          gps   = gps * fpibg
+          !
+          if(tpre) then
+            dgps = - gps / ( tpiba2 * g(ig) ) +  fpibg * zv *                  &
+                 &   ( wrc1 * r21 * e1 - r2max * emax + wrc2 * r22 * e2 ) *    &
+                 &   0.25d0 / omega
+          end if
+          !
+          sfp   = 0.0d0
+          dsfp  = 0.0d0
+          !
+          do ib = 1, 3
+            r2l   = rcl( ib )**2
+            ql    = 0.25d0 * r2l * g(ig) * tpiba2
+            par   = al( ib ) + bl( ib ) * r2l * ( 1.5d0 - ql )
+            sp    = ( pi * r2l )**1.5d0 * exp( -ql ) / omega
+            sfp   = sp * par + sfp
+            if(tpre) then
+              dsfp  = dsfp - sp * ( par + bl( ib ) * r2l ) * ql / ( tpiba2 * g(ig) )
+            end if
+          end do
+          !
+          vps(ig) = sfp + gps
+          if(tpre) dvps(ig) = dsfp + dgps
+          !
+        end do
+!
+      return
+      end subroutine
+
+
+
+!=----------------------------------------------------------------------------=!
+   END MODULE pseudo_base
+!=----------------------------------------------------------------------------=!
 

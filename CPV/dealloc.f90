@@ -43,7 +43,6 @@
       USE sic_module, ONLY: deallocate_sic
       USE polarization, ONLY: deallocate_polarization
       USE turbo, ONLY: deallocate_turbo
-      USE ions_module, ONLY: deallocate_ions
       USE cp_main_variables, ONLY: deallocate_mainvar
       USE derho, ONLY: deallocate_derho
       USE dpseu, ONLY: deallocate_dpseu
@@ -90,7 +89,6 @@
       IF( .NOT. lneb ) THEN
         CALL deallocate_ions_base
       END IF
-      CALL deallocate_ions( )
       CALL deallocate_sic( )
 
 

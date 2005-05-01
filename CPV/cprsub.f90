@@ -119,240 +119,75 @@
 !         also calculated the derivative of vps with respect to
 !         g^2 (dvps)
 ! 
-      use mp, ONLY: mp_sum
+      use mp,            ONLY: mp_sum
       use control_flags, only: iprint, tpre, iprsta
-      use io_global, only: stdout
-      use bhs, only: rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
-      use gvecp, only: ng => ngm ! , ngl => ngml, ng_g => ngmt
-      use gvecs, only: ngs
-      use cell_base, only: omega, tpiba, tpiba2
-      use constants, only: pi, fpi
-      use ions_base, only: rcmax,  zv, nsp, na
-      use cvan, only: oldvan
-      use pseu, only: vps, rhops
+      use io_global,     only: stdout
+      use bhs,           only: rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
+      use gvecs,         only: ngs
+      use cell_base,     only: omega, tpiba2
+      use ions_base,     only: rcmax, zv, nsp, na
+      use cvan,          only: oldvan
+      use pseu,          only: vps, rhops
+      use dpseu,         only: dvps, drhops
+      use atom,          only: r, rab, mesh, numeric
+      use uspp_param,    only: vloc_at
+      use qrl_mod,       only: cmesh
+      use pseudo_base,   only: compute_rhops, formfn, formfa, compute_eself
       use reciprocal_vectors, only: gstart, g
-      use atom, only: r, rab, mesh, numeric
-      use uspp_param, only: vloc_at
-      use qrl_mod, only: cmesh
-      use pseudo_base, only: compute_rhops, formfn
-!
-      use dpseu
-      use dener
 !
       implicit none
-      logical tfirst
+      logical      :: tfirst
       real(kind=8) :: eself
-!
-      real(kind=8), allocatable:: f(:),vscr(:), figl(:)
-      real(kind=8) el, ql, par, sp, e1, e2, emax, vpsum, rhopsum, fint, &
-     &             fpibg, gps, sfp, xg, dsfp, dgps, r2new, r2max, r21,  &
-     &             r22, r2l
-      real(kind=8), external :: erf
-      integer is, irmax, ir, ig, ib, ndm
-      real(kind=8), allocatable:: df(:), dfigl(:)
-!
-!     ==================================================================
-!     calculation of gaussian selfinteraction
-!     ==================================================================
+      !
+      real(kind=8) :: vpsum, rhopsum
+      integer      :: is
+
       call start_clock( 'formf' )
-      eself=0.
-      do is=1,nsp
-         eself=eself+float(na(is))*zv(is)*zv(is)/rcmax(is)
-      end do
-      eself=eself/sqrt(2.0d0*pi)
-      if(tfirst.or.iprsta.ge.4)then
+      !
+      ! calculation of gaussian selfinteraction
+      !
+      eself = compute_eself( na, zv, rcmax, nsp )
+
+      if( tfirst .or. iprsta .ge. 4 )then
          WRITE( stdout,1200) eself
       endif
  1200 format(2x,'formf: eself=',f10.5)
 !
-      ndm = MAXVAL (mesh(1:nsp))
-      allocate(figl(ngs))
-      allocate(f(ndm))
-      allocate(vscr(ndm))
-      if (tpre) then
-         allocate(dfigl(ngs))
-         allocate(df(ndm))
-      end if
-!
-!     ==================================================================
-!     fourier transform of local pp and gaussian nuclear charge
-!     ==================================================================
       do is=1,nsp
+
          if (numeric(is)) then
 
             call formfn( vps(:,is), dvps(:,is), r(:,is), rab(:,is), vloc_at(:,is), &
                          zv(is), rcmax(is), g, omega, tpiba2, cmesh(is), mesh(is), &
                          ngs, oldvan(is), tpre )
-            vpsum = SUM( vps( 1:ngs, is ) )
 
-            call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), g,   &
-                                omega, tpiba2, ngs, tpre )
-            rhopsum = SUM( rhops( 1:ngs, is ) )
-
-#if defined __PIPPO
-!     ==================================================================
-!     local potential given numerically on logarithmic mesh 
-!     ==================================================================
-!
-!     ------------------------------------------------------------------
-!     g=0
-!     ------------------------------------------------------------------
-!
-!     definition of irmax: gridpoint beyond which potential is zero
-!
-
-            irmax=0
-            do ir=1,mesh(is)
-               if(r(ir,is).le.10.0)then
-                  irmax=ir
-               endif
-            end do
-!
-            do ir=1,irmax
-               vscr(ir)=0.5d0*r(ir,is)*vloc_at(ir,is) +                   &
-     &                  zv(is)*erf(r(ir,is)/rcmax(is))
-               f(ir)=vscr(ir)*r(ir,is)
-            end do
-            do ir=irmax+1,mesh(is)
-               vscr(ir)=0.0
-               f(ir)=0.0
-            end do
-            if (oldvan(is)) then
-               call herman_skillman_int(mesh(is),cmesh(is),f,fint)
-            else
-               call simpson_cp90(mesh(is),f,rab(1,is),fint)
-            end if
-!
-            if (gstart == 2) then
-               vps(1,is)=fpi*fint/omega
-               rhops(1,is)=-zv(is)/omega
-               vpsum=vps(1,is)
-               rhopsum=rhops(1,is)
-            else
-               vpsum=0.0
-               rhopsum=0.0
-            end if
-            r2new=0.25*tpiba2*rcmax(is)**2
-!
-!     ------------------------------------------------------------------
-!     g>0
-!     ------------------------------------------------------------------
-            do ig=gstart,ngs
-               xg=sqrt(g(ig))*tpiba
-               do ir=1,mesh(is)
-                  f(ir)=vscr(ir)*sin(r(ir,is)*xg)
-                  if(tpre) then
-                     df(ir)=vscr(ir)*cos(r(ir,is)*xg)*.5*r(ir,is)/xg
-                  endif
-               end do
-               if (oldvan(is)) then
-                  call herman_skillman_int                              &
-     &                 (mesh(is),cmesh(is),f,figl(ig))
-                  if(tpre) call herman_skillman_int                     &
-     &                          (mesh(is),cmesh(is),df,dfigl(ig))
-               else
-                  call simpson_cp90(mesh(is),f,rab(1,is),figl(ig))
-                  if(tpre) call simpson_cp90(mesh(is),df,rab(1,is),dfigl(ig))
-               end if
-            end do
-!
-            do ig=gstart,ngs
-               xg=sqrt(g(ig))*tpiba
-               rhops(ig,is)=-zv(is)*exp(-r2new*g(ig))/omega
-               vps(ig,is)=fpi*figl(ig)/(omega*xg)
-               if(tpre)then
-                  drhops(ig,is)=-rhops(ig,is)*r2new/tpiba2
-                  dvps(ig,is)=fpi*dfigl(ig)/(omega*xg)-                 &
-     &                 0.5*vps(ig,is)/(xg*xg)
-               endif
-               rhopsum=rhopsum+rhops(ig,is)
-               vpsum=vpsum+vps(ig,is)
-            end do
-
-#endif
-!
          else
-!     ==================================================================
-!     bhs pseudopotentials can be fourier transformed analytically
-!     ==================================================================
-            r2new=0.25*tpiba2*rcmax(is)**2
-            r2max=rcmax(is)**2
-            r21=rc1(is)**2
-            r22=rc2(is)**2
-!
-!     ------------------------------------------------------------------
-!     g=0
-!     ------------------------------------------------------------------
-            if (gstart == 2) then
-               rhops(1,is)=-zv(is)/omega
-               gps=-zv(is)*pi*(-wrc2(is)*r22-wrc1(is)*r21+r2max)/omega
-               sfp=0.
-               do ib=1,3
-                  r2l=rcl(ib,is,lloc(is))**2
-                  ql=0.25*r2l*g(1)*tpiba2
-                  el=exp(-ql)
-                  par=al(ib,is,lloc(is))+bl(ib,is,lloc(is))*r2l*(1.5-ql)
-                  sp=(pi*r2l)**1.5*el/omega
-                  sfp=sp*par+sfp
-               end do
-               vps(1,is)=gps+sfp
-               vpsum=vps(1,is)
-               rhopsum=rhops(1,is)
-            else
-               vpsum=0.0
-               rhopsum=0.0
-            end if
-!
-!     ------------------------------------------------------------------
-!     g>0
-!     ------------------------------------------------------------------
-            do ig=gstart,ngs
-               rhops(ig,is)=-zv(is)*exp(-r2new*g(ig))/omega
-               if(tpre) drhops(ig,is)=-rhops(ig,is)*r2new/tpiba2
-               emax=exp(-0.25*r2max*g(ig)*tpiba2)
-               e1=exp(-0.25*r21*g(ig)*tpiba2)
-               e2=exp(-0.25*r22*g(ig)*tpiba2)
-               fpibg=fpi/(g(ig)*tpiba2)
-               gps=-zv(is)*(wrc1(is)*e1-emax+wrc2(is)*e2)/omega
-               gps=gps*fpibg
-               if(tpre) dgps=-gps/(tpiba2*g(ig)) +                      &
-     &                       fpibg*zv(is)*(wrc1(is)*r21*e1-             &
-     &                       r2max*emax+wrc2(is)*r22*e2)*0.25/omega
-               sfp=0.
-               dsfp=0.
-               do ib=1,3
-                  r2l=rcl(ib,is,lloc(is))**2
-                  ql=0.25*r2l*g(ig)*tpiba2
-                  par=al(ib,is,lloc(is))+bl(ib,is,lloc(is))*r2l*(1.5-ql)
-                  sp=(pi*r2l)**1.5*exp(-ql)/omega
-                  sfp=sp*par+sfp
-                  if(tpre) dsfp = dsfp -                                &
-     &                 sp*(par+bl(ib,is,lloc(is))*r2l)*ql/(tpiba2*g(ig))
-               end do
-               vps(ig,is)=sfp+gps
-               if(tpre) dvps(ig,is)=dsfp+dgps
-               rhopsum=rhopsum+rhops(ig,is)
-               vpsum=vpsum+vps(ig,is)
-            end do
-! 
-         endif
-!
+
+            !     bhs pseudopotentials
+            !
+            call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
+                         rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
+                         zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
+
+         end if
+
+
+         !     fourier transform of local pp and gaussian nuclear charge
+         !
+         call compute_rhops( rhops(:,is), drhops(:,is), zv(is), rcmax(is), g,   &
+                             omega, tpiba2, ngs, tpre )
+
          if(tfirst.or.(iprsta.ge.4))then
-            call mp_sum(vpsum)
-            call mp_sum(rhopsum)
+            vpsum = SUM( vps( 1:ngs, is ) )
+            rhopsum = SUM( rhops( 1:ngs, is ) )
+            call mp_sum( vpsum )
+            call mp_sum( rhopsum )
             WRITE( stdout,1250) vps(1,is),rhops(1,is)
             WRITE( stdout,1300) vpsum,rhopsum
          endif
 !
       end do
 !
-      if (tpre) then
-         deallocate(df)
-         deallocate(dfigl)
-      end if
-      deallocate(vscr)
-      deallocate(f)
-      deallocate(figl)
       call stop_clock( 'formf' )
 !
  1250 format(2x,'formf:     vps(g=0)=',f12.7,'     rhops(g=0)=',f12.7)

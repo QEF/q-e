@@ -830,7 +830,6 @@
      USE optical_properties,       ONLY: optical_setup
      USE pseudopotential,          ONLY: pseudopotential_setup
      USE guess,                    ONLY: guess_setup
-     USE ions_module,              ONLY: ions_setup
      USE empty_states,             ONLY: empty_init
      USE diis,                     ONLY: diis_setup
      USE charge_mix,               ONLY: charge_mix_setup
@@ -982,9 +981,6 @@
         lconstrain = ( nconstr_inp > 0 )
         !
         IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
-        !
-        CALL ions_setup( nconstr_inp, constr_tol_inp, constr_type_inp, &
-                         constr_target, constr_target_set, constr_inp )
         !
      END IF
      !
@@ -1179,7 +1175,6 @@
                               trhor, trhow, tvlocw, tfor, tnosep, iprsta, &
                               thdyn, tnoseh
     !
-    USE ions_module,          ONLY: constraints_print_info
     USE electrons_nose,       ONLY: electrons_nose_info
     USE empty_states,         ONLY: empty_print_info
     USE diis,                 ONLY: diis_print_info
@@ -1270,7 +1265,6 @@
       if( thdyn .AND. tnoseh ) CALL cell_nose_info()
       !
       IF( program_name == 'FPMD' ) THEN
-        CALL constraints_print_info( )
         CALL potential_print_info( stdout )
         CALL sic_info( )
       END IF

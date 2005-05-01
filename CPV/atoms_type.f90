@@ -6,16 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sun Nov 14 07:54:47 MET 1999
-!  ----------------------------------------------
-!  BEGIN manual
-
 !=----------------------------------------------------------------------------=!
       MODULE atoms_type_module
 !=----------------------------------------------------------------------------=!
@@ -29,9 +19,7 @@
 !  SUBROUTINE specie_index(isa, na, is, ia)
 !  SUBROUTINE allocate_atoms_type(atoms, staur, ismbl, pma, na)
 !  SUBROUTINE deallocate_atoms_type(atoms)
-!  SUBROUTINE allocate_constrains(constrains, na, cindexes, cvalues, ctype, tol, nc)
-!  SUBROUTINE deallocate_constrains(constrains)
-!  END manual
+
 
         USE kinds
         USE parameters, ONLY: nsx, natx
@@ -73,32 +61,13 @@
 ! .. 4 int + nsx int + 4 char + 2 ( nsx int ) + nsx dbl + 3 ( 3 dbl natx ) + 3 lg natx +
 ! .. natx int + 3 lg + nsx dbl + dbl 
 
-        TYPE distance_constrain
-          INTEGER :: ia1, is1
-          INTEGER :: ia2, is2
-          REAL(dbl) :: val
-          LOGICAL   :: set
-        END TYPE distance_constrain
-
-        TYPE constrain_type
-          INTEGER :: what
-          TYPE (distance_constrain), POINTER :: distance
-        END TYPE constrain_type
-
-        TYPE constrains_class
-          INTEGER :: nc
-          REAL(dbl) :: tolerance
-          TYPE (constrain_type), POINTER :: tp(:) 
-        END TYPE
-
 !  ----------------------------------------------
 !  END manual
 
 
-        PUBLIC :: atoms_type, constrain_type, constrains_class
-        PUBLIC :: distance_constrain
-        PUBLIC :: deallocate_atoms_type, allocate_constrains
-        PUBLIC :: deallocate_constrains, atoms_type_init
+        PUBLIC :: atoms_type
+        PUBLIC :: deallocate_atoms_type
+        PUBLIC :: atoms_type_init
 
 !  end of module-scope declarations
 !  ----------------------------------------------
@@ -209,96 +178,6 @@
             INTEGER :: is, ierr
           RETURN
         END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-
-        SUBROUTINE allocate_constrains(constrains, &
-          na, cindexes, cvalues, cvaluesset, ctype, tol, nc)
-          TYPE (constrains_class) :: constrains
-          INTEGER,   INTENT(IN) :: na(:)
-          INTEGER,   INTENT(IN) :: cindexes(:,:)
-          REAL(dbl), INTENT(IN) :: cvalues(:)
-          LOGICAL,   INTENT(IN) :: cvaluesset(:)
-          INTEGER,   INTENT(IN) :: ctype(:)
-          REAL(dbl), INTENT(IN) :: tol
-          INTEGER,   INTENT(IN) :: nc
-          INTEGER               :: ic, is, ia, isa, ierr, nsp
-          
-          
-          constrains%nc        = nc
-          constrains%tolerance = tol
-          nsp = SIZE( na )
-
-          IF( nsp < 1 ) THEN
-            CALL errore(' allocate_constrains ',' wrong nsp, less than 1 ',7)
-          END IF
-
-          IF( nc > 0 ) THEN
-
-            ALLOCATE( constrains%tp( nc ), STAT=ierr )
-            IF( ierr /= 0 ) THEN
-              CALL errore(' allocate_constrains ',' allocating tp ', ABS(ierr) )
-            END IF
-
-            DO ic = 1, nc
-              constrains%tp(ic)%what = ctype(ic)
-              IF ( constrains%tp(ic)%what == 1 ) THEN
-
-                ALLOCATE(constrains%tp(ic)%distance)
-                IF( ierr /= 0 ) THEN
-                  CALL errore(' allocate_constrains ',' allocating distance ', ABS(ierr) )
-                END IF
-
-                CALL specie_index(cindexes(1,ic), na, is, ia)
-                constrains%tp(ic)%distance%is1 = is
-                constrains%tp(ic)%distance%ia1 = ia
-
-                CALL specie_index(cindexes(2,ic), na, is, ia)
-                constrains%tp(ic)%distance%ia2 = ia
-                constrains%tp(ic)%distance%is2 = is
-
-                IF ( cvaluesset(ic) ) THEN
-                   !
-                   constrains%tp(ic)%distance%set = .TRUE.
-                   constrains%tp(ic)%distance%val = cvalues(ic)
-                   !
-                ELSE
-                   !
-                   constrains%tp(ic)%distance%set = .FALSE.
-                   constrains%tp(ic)%distance%val = 0.d0
-                   !
-                END IF
-
-              ELSE
-
-                CALL errore(' allocate_constrains ',' unknown constrain type ', 8 )
-
-              END IF
-
-            END DO
-          END IF
-          RETURN
-        END SUBROUTINE allocate_constrains
-
-!=----------------------------------------------------------------------------=!
-
-        SUBROUTINE deallocate_constrains(constrains)
-          TYPE (constrains_class) :: constrains
-          INTEGER :: ierr, ic
-          IF(ASSOCIATED(constrains%tp)) THEN
-            DO ic = 1, SIZE(constrains%tp)
-              IF(ASSOCIATED(constrains%tp(ic)%distance)) THEN
-                DEALLOCATE(constrains%tp(ic)%distance, STAT=ierr)
-                IF( ierr /= 0 ) &
-                  CALL errore(' deallocate_constrains ', ' deallocating %tp(ic)%distance ', ABS(ierr) )
-              END IF
-            END DO
-            DEALLOCATE(constrains%tp, STAT=ierr)
-            IF( ierr /= 0 ) &
-              CALL errore(' deallocate_constrains ', ' deallocating %tp ', ABS(ierr) )
-          END IF
-        END SUBROUTINE deallocate_constrains
-
 
 
 !=----------------------------------------------------------------------------=!

@@ -350,7 +350,7 @@ CONTAINS
       USE electrons_module, ONLY: pmss,emass, nspin
       USE ions_base, ONLY: na, nsp, nax, randpos, taui, cdmi
       USE ions_module, ONLY: set_reference_positions, print_scaled_positions, &
-                             constraints_setup, set_velocities
+                             set_velocities
       USE energies, ONLY: dft_energy_type
       USE cp_types, ONLY: pseudo
       USE pseudopotential, ONLY: formf
@@ -556,8 +556,6 @@ CONTAINS
         nfi   = 0
         CALL set_reference_positions( cdmi, taui, atoms_0, ht_0 )
       END IF
-
-      CALL constraints_setup( ht_0, atoms_0 )
 
 
   100 FORMAT( /,3X,'MD PARAMETERS READ FROM RESTART FILE',/ &

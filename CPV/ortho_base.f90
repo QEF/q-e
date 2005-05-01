@@ -31,9 +31,9 @@
        REAL(dbl) :: small = 1.0d-14
 
 #if defined __AIX
-       INTEGER, PARAMETER :: nrlx_tune = 32
+       INTEGER, PARAMETER :: nrlx_tune = 128
 #else
-       INTEGER, PARAMETER :: nrlx_tune = 32
+       INTEGER, PARAMETER :: nrlx_tune = 4
 #endif
 
        INTERFACE sqr_matmul
@@ -108,7 +108,7 @@
 
          n = SIZE(temp,1)
 
-         IF ( nproc > 2 .AND. n >= 128 ) THEN
+         IF ( ( nproc > 1 ) .AND. ( n / nproc ) >= nrlx_tune ) THEN
 
            nrl = n/nproc
            IF(mpime < MOD(n,nproc)) THEN

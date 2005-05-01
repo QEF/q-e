@@ -28,8 +28,6 @@
 !  SUBROUTINE displacement(ht)
 !  SUBROUTINE cdm_displacement(cdm_ref, atoms, ht)
 !  SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
-!  SUBROUTINE ions_setup(nax_inp, pos_inp,ipos_inp, &
-!                        anne_inp, anner_inp )
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
 !                             taurdr,iunit)
 !  SUBROUTINE deallocate_ions
@@ -59,19 +57,11 @@
 
         PRIVATE
 
-! ...   declare module-scope variables
-
-        TYPE (constrains_class) :: constrains
-
-! ...   Module private control flag
-        LOGICAL :: tsetup = .FALSE.
-
 
         PUBLIC :: neighbo, print_scaled_positions, displacement
         PUBLIC :: cdm_displacement, set_velocities
-        PUBLIC :: set_reference_positions, ions_setup, atoms_init
-        PUBLIC :: constraints_print_info, deallocate_ions, constraints_setup
-        PUBLIC :: apply_constraints, update_ions
+        PUBLIC :: set_reference_positions, atoms_init
+        PUBLIC :: update_ions
         PUBLIC :: velocity_scaling
         PUBLIC :: max_ion_forces, moveions
         PUBLIC :: resort_position
@@ -412,63 +402,6 @@
         RETURN
       END subroutine set_reference_positions
 
-!  BEGIN manual -------------------------------------------------------------   
-
-        SUBROUTINE ions_setup(  nconstr_inp, constr_tol_inp, &
-           constr_type_inp, constr_target, constr_target_set, constr_inp )
-
-
-!  Check the number of atoms and of species. Does something about constrains    
-!    (I'll see later what).  
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-
-! ...     declare modules
-          USE constants, ONLY: scmass
-          USE io_global, ONLY: ionode
-          USE control_flags, ONLY: tdampions
-! ...
-          IMPLICIT NONE
-
-          INTEGER,   INTENT(IN) :: nconstr_inp
-          REAL(dbl), INTENT(IN) :: constr_tol_inp
-          INTEGER,   INTENT(IN) :: constr_type_inp(:)
-          REAL(dbl), INTENT(IN) :: constr_target(:)
-          LOGICAL,   INTENT(IN) :: constr_target_set(:)
-          INTEGER,   INTENT(IN) :: constr_inp(:,:)
-! ...
-! ...     declare other variables
-          INTEGER :: is, ia, idd1, idd2, k, istep, isa, ic
-          INTEGER :: ierr
-
-! ...     end of declarations
-!  ----------------------------------------------
-! ...
-
-          IF( tsetup ) THEN
-            CALL errore(' ions_setup ', ' module ions already started ', 0)
-          END IF
-
-          IF( .NOT. tions_base_init ) THEN
-            CALL errore(' ions_setup ', ' ions base module not initializeda ', 0)
-          END IF
-
-          if(nax < 1) &
-            call errore(' IONS ', ' NAX OUT OF RANGE ',1)
-          if(nsp < 1) &
-            call errore(' IONS ',' NSP OUT OF RANGE ',1)
-          if(nsp > SIZE( na ) ) &
-            call errore(' IONS ',' NSP too large, increase NSX parameter ',nsp)
-
-! ...     Constraints Allocation
-         ! CALL allocate_constrains( constrains, na, constr_inp, constr_target, &
-         !      constr_target_set, constr_type_inp, constr_tol_inp, nconstr_inp )
-
-          tsetup = .TRUE.
-
-          return
-        END SUBROUTINE ions_setup
 
 !   -------------------------------------------------------------   
 
@@ -508,63 +441,6 @@
 
          RETURN
        END SUBROUTINE atoms_init
-
-
-! -------------------------------------------------------------   
-
-       SUBROUTINE constraints_print_info( )
-
-         USE io_global, ONLY: ionode, stdout
-
-         IMPLICIT NONE
-
-         integer ic
-
-          IF( constrains%nc  >  0 ) THEN
-            IF( ionode ) THEN
-              WRITE( stdout,10) constrains%nc, constrains%tolerance
-            END IF
-            DO ic = 1, constrains%nc
-              IF( ionode ) THEN
-                WRITE( stdout,30) ic, constrains%tp(ic)%what
-                IF( constrains%tp(ic)%what  ==  1 ) THEN
-                  WRITE( stdout,40)  constrains%tp(ic)%distance%ia1, &
-                                     constrains%tp(ic)%distance%is1, &
-                                     constrains%tp(ic)%distance%ia2, &
-                                     constrains%tp(ic)%distance%is2
-                END IF
-              END IF
-            END DO
-          END IF
-    
- 10   FORMAT(/,3X,'Constraints ionic dynamics', /, &
-             3X,'--------------------------', /, &
-             3X,'number of constraints = ',I3,' tolerance = ',D14.6)
- 30   FORMAT(4X,I5,', type ',I2)
- 40   FORMAT(4X,'atoms (', I3, ',', I2, ') and (', I3, ',', I2, ')' )
-
-         RETURN
-       END SUBROUTINE constraints_print_info
-
-!  --------------------------------------------------------------------------   
-
-        SUBROUTINE deallocate_ions
-
-          !  Deallocate ions input variables
-
-          INTEGER :: ierr
-
-          IF( .NOT. tsetup ) THEN
-            CALL errore(' deallocate_ions ', ' module ions not yet started ', 0)
-          END IF
-    
-          CALL deallocate_constrains(constrains)
-
-          tsetup = .FALSE.
-
-          RETURN
-        END SUBROUTINE deallocate_ions
-
 
 !  --------------------------------------------------------------------------   
 
@@ -770,8 +646,6 @@
            !
         END IF
 
-       ! CALL apply_constraints(ht0, atoms_0, atoms_p, dumm)
-
         CALL ions_vel( atoms_0%vels, atoms_p%taus, atoms_m%taus, atoms_0%na, atoms_0%nsp, delt )
         CALL ions_kinene( atoms_0%ekint, atoms_0%vels, atoms_0%na, atoms_0%nsp, ht0%hmat, atoms_0%m )
        
@@ -779,164 +653,6 @@
 
       RETURN
       END FUNCTION moveions
-
-
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE constraints_setup(ht,atoms)
-
-!  Fill the constraints structures with the initial positions of atoms 
-!  read from stdin
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-        USE cell_module, ONLY: boxdimensions, s_to_r
-        USE io_global, ONLY: ionode
-        TYPE (boxdimensions), INTENT(IN) :: ht
-        TYPE (atoms_type) :: atoms
-        REAL(dbl)  :: sr12(3), rr12(3), disto, distn
-        INTEGER :: ic, i, is1, ia1, is2, ia2, isa1, isa2
-        IF( ionode .AND. (constrains%nc  >  0) ) THEN
-          WRITE( stdout,10)
-        END IF
- 10     FORMAT(/,3X,'Constraints settings')
-        DO ic = 1, constrains%nc
-          ia1  = constrains%tp(ic)%distance%ia1
-          is1  = constrains%tp(ic)%distance%is1
-          ia2  = constrains%tp(ic)%distance%ia2
-          is2  = constrains%tp(ic)%distance%is2
-          isa1 = atoms%isa(is1) + ia1 - 1
-          isa2 = atoms%isa(is2) + ia2 - 1
-          sr12 = atoms%taus(:,isa2) - atoms%taus(:,isa1)
-          CALL s_to_r(sr12, rr12, ht)
-          disto = SQRT(rr12(1)**2 + rr12(2)**2 + rr12(3)**2)
-          IF( disto  ==  0.0d0 ) THEN
-            CALL errore (' constraints setup ', ' zero atomic distance ', ic )
-          END IF 
-          
-          IF ( constrains%tp(ic)%distance%set ) THEN
-             !
-             distn = constrains%tp(ic)%distance%val 
-             atoms%taus(:,isa2) = atoms%taus(:,isa1) + distn * sr12 / disto
-             !
-          ELSE
-             !
-             constrains%tp(ic)%distance%val = disto
-             !
-          END IF
-          
-          IF( ionode ) THEN
-            WRITE( stdout,20) ic, ia1, is1, ia2, is2, constrains%tp(ic)%distance%val
-          END IF
- 20       FORMAT(4X,'c ',I5,' - ',4I4,F12.6)
-        END DO
-        IF( ionode .AND. (constrains%nc  >  0) ) THEN
-          WRITE( stdout,30)
- 30     FORMAT(//)
-        END IF
-        RETURN
-      END SUBROUTINE constraints_setup
-
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE apply_constraints(ht, atoms_0, atoms_p, wc)
-
-!  Descrive briefly what it does
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-
-        USE cell_module, ONLY: boxdimensions, s_to_r, r_to_s
-
-        TYPE (boxdimensions), INTENT(IN) :: ht
-        TYPE (atoms_type) :: atoms_0, atoms_p
-        REAL(dbl)  :: wc
-        LOGICAL :: moved(atoms_0%nax, atoms_0%nsp)
-        LOGICAL :: moving(atoms_0%nax,atoms_0%nsp), done
-        REAL(dbl)  :: snewa(3,MAX(constrains%nc,1))
-        REAL(dbl)  :: snewb(3,MAX(constrains%nc,1))
-        REAL(dbl)  :: solda(3,MAX(constrains%nc,1))
-        REAL(dbl)  :: soldb(3,MAX(constrains%nc,1))
-        REAL(dbl)  :: sab(3), prab(3), rab(3), rd(3), sd(3), rnew(3)
-        REAL(dbl)  :: pabsq, rabsq, diffsq, rpab, gab
-        REAL(dbl)  :: rma(constrains%nc), rmb(constrains%nc)
-        INTEGER, PARAMETER :: itermax = 20
-        INTEGER :: ia, ib, is, ic, isa, iter, is1, ia1, is2, ia2
-        INTEGER :: isa1, isa2
-
-        wc = 0.0d0
-        DO ic = 1, constrains%nc
-          ia1  = constrains%tp(ic)%distance%ia1
-          is1  = constrains%tp(ic)%distance%is1
-          ia2  = constrains%tp(ic)%distance%ia2
-          is2  = constrains%tp(ic)%distance%is2
-          isa1 = atoms_0%isa(is1) + ia1 - 1
-          isa2 = atoms_0%isa(is2) + ia2 - 1
-          snewa(:,ic) = atoms_p%taus(:,isa1)
-          snewb(:,ic) = atoms_p%taus(:,isa2) 
-          solda(:,ic) = atoms_0%taus(:,isa1)
-          soldb(:,ic) = atoms_0%taus(:,isa2)
-          rma(ic)     = 1.0d0 / atoms_0%m(is1)
-          rmb(ic)     = 1.0d0 / atoms_0%m(is2)
-        END DO
-
-        moving = .FALSE.
-        moved  = .TRUE.
-        done   = .FALSE.
-        iter   = 1
-        DO WHILE(( .NOT. done ) .AND. ( iter  <=  itermax ))
-          done = .TRUE.
-          DO ic = 1, constrains%nc
-            ia1  = constrains%tp(ic)%distance%ia1
-            is1  = constrains%tp(ic)%distance%is1
-            ia2  = constrains%tp(ic)%distance%ia2
-            is2  = constrains%tp(ic)%distance%is2
-            IF( moved(ia1,is1) .OR. moved(ia2,is2) ) THEN
-              sab(1) = snewa(1,ic) - snewb(1,ic)
-              sab(2) = snewa(2,ic) - snewb(2,ic)
-              sab(3) = snewa(3,ic) - snewb(3,ic)
-              ! CALL pbcs(sab(1),sab(2),sab(3),sab(1),sab(2),sab(3),1)
-              CALL s_to_r(sab,prab,ht)
-              pabsq  = prab(1)**2 + prab(2)**2 + prab(3)**2
-              rabsq  = constrains%tp(ic)%distance%val
-              diffsq = rabsq - pabsq
-              IF( ABS(diffsq)  >  (rabsq * constrains%tolerance) ) THEN
-                sab(1) = solda(1,ic) - soldb(1,ic)
-                sab(2) = solda(2,ic) - soldb(2,ic)
-                sab(3) = solda(3,ic) - soldb(3,ic)
-                ! CALL pbcs(sab(1),sab(2),sab(3),sab(1),sab(2),sab(3),1)
-                CALL s_to_r(sab,rab,ht)
-                rpab = rab(1) * prab(1) + rab(2) * prab(2) + rab(3) * prab(3)
-                ! WRITE( stdout,*) diffsq,  rpab 
-                gab = diffsq / ( 2.0d0 * ( rma(ic) + rmb(ic) ) * rpab )
-                wc = wc + gab * rabsq
-                rd(:) = rab(:) * gab
-                CALL r_to_s(rd,sd,ht)
-                snewa(:,ic) = snewa(:,ic) + rma(ic) * sd(:)
-                snewb(:,ic) = snewb(:,ic) - rmb(ic) * sd(:)
-                
-                moving(ia1,is1) = .TRUE.
-                moving(ia2,is2) = .TRUE.
-                done = .FALSE.
-              END IF
-            END IF
-          END DO
-          moved = moving
-          moving = .FALSE.
-          iter = iter + 1
-        END DO
-        DO ic = 1, constrains%nc
-          ia1  = constrains%tp(ic)%distance%ia1
-          is1  = constrains%tp(ic)%distance%is1
-          ia2  = constrains%tp(ic)%distance%ia2
-          is2  = constrains%tp(ic)%distance%is2
-          isa1 = atoms_p%isa(is1) + ia1 - 1
-          isa2 = atoms_p%isa(is2) + ia2 - 1
-          atoms_p%taus(:,isa1) = snewa(:,ic)
-          atoms_p%taus(:,isa2) = snewb(:,ic)
-        END DO
-        RETURN
-      END SUBROUTINE apply_constraints
 
 
 !  --------------------------------------------------------------------------   
@@ -1069,18 +785,11 @@
         INTEGER, INTENT(IN) :: isrt( : )
         INTEGER :: ia, is, isa, ipos
 
-        IF( .NOT. tsetup ) THEN 
-          CALL errore( ' resort_position ', ' ions module not initialized ', 1 )
-        END IF
-
         isa = 0
         DO is = 1, atoms%nsp
           DO ia = 1, atoms%na(is)
             isa  = isa + 1
             ipos = isrt( isa )
-            !WRITE( 6, * ) ' DEBUG resort_posi ipos ', ipos
-            !WRITE( 6, * ) atoms%for(1,isa), atoms%for(2,isa), atoms%for(3,isa)
-            !WRITE( 6, * ) ' DEBUG resort_posi isa ', isa
             CALL s_to_r( atoms%taus( : , isa ), pos( :, ipos ), ht )
             fion( :, ipos ) = atoms%for( : , isa )
           END DO
