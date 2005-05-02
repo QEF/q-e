@@ -27,7 +27,7 @@ MODULE constraints_module
   USE constants, ONLY : eps16
   USE io_global, ONLY : stdout
   !
-  USE basic_algebra_routines
+  USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
@@ -48,6 +48,7 @@ MODULE constraints_module
             constr_tol,  &
             constr_type, &
             constr,      &
+            lagrange,    &
             target
   !
   ! ... global variables
@@ -57,6 +58,7 @@ MODULE constraints_module
   INTEGER,        ALLOCATABLE :: constr_type(:)
   INTEGER,        ALLOCATABLE :: constr(:,:)
   REAL (KIND=DP), ALLOCATABLE :: target(:)
+  REAL (KIND=DP), ALLOCATABLE :: lagrange(:)
   !
   !
   CONTAINS
@@ -64,7 +66,7 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE init_constraint( nat, tau, if_pos )
+     SUBROUTINE init_constraint( nat, tau, ityp, if_pos )
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
@@ -75,15 +77,21 @@ MODULE constraints_module
        !
        INTEGER,        INTENT(IN) :: nat
        REAL (KIND=DP), INTENT(IN) :: tau(3,nat)
+       INTEGER,        INTENT(IN) :: ityp(nat)
        INTEGER,        INTENT(IN) :: if_pos(3,nat)
        !
-       INTEGER       :: ia, ia1, ia2, ia3
+       INTEGER       :: i, ia, ia1, ia2, ia3
        REAL(KIND=DP) :: r12(3), r23(3)
+       REAL(KIND=DP) :: k, r_c
+       INTEGER       :: type_coord
+       REAL(KIND=DP) :: dtau(3), norm_dtau
        LOGICAL       :: ltest
+       !
        !
        nconstr    = nconstr_inp
        constr_tol = constr_tol_inp
        !
+       ALLOCATE( lagrange(    nconstr ) )
        ALLOCATE( target(      nconstr ) )
        ALLOCATE( constr_type( nconstr ) )
        !
@@ -105,6 +113,30 @@ MODULE constraints_module
           END IF
           !
           SELECT CASE ( constr_type(ia) )
+          CASE( 0 )
+             !
+             target(ia) = 0.D0
+             !
+             k   = constr(2,ia)
+             r_c = constr(3,ia)
+             !
+             type_coord = constr(4,ia)
+             !
+             DO i = 1, nat
+                !
+                IF ( ityp(i) /= type_coord ) CYCLE
+                !
+                dtau = tau(:,ia) - tau(:,i)
+                !
+                norm_dtau = norm( dtau )
+                !
+                target(ia) = target(ia) + &
+                             1.D0 / ( EXP( - k * norm_dtau ) + 1.D0 )
+                !
+             END DO
+             !
+             ltest = ANY( if_pos(:,:) == 0 )
+             !
           CASE( 1 )
              !
              target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) )
@@ -150,7 +182,7 @@ MODULE constraints_module
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE dist_constrain( index, nat, tau, alat, g, dg, dg2 )
+     SUBROUTINE dist_constrain( index, nat, tau, ityp, alat, g, dg, dg2 )
        !-----------------------------------------------------------------------
        ! 
        ! ... this routine defines the constrain equation:
@@ -170,6 +202,7 @@ MODULE constraints_module
        INTEGER,        INTENT(IN) :: index
        INTEGER,        INTENT(IN) :: nat
        REAL (KIND=DP), INTENT(IN) :: tau(:,:)
+       INTEGER,        INTENT(IN) :: ityp(:)
        REAL (KIND=DP), INTENT(IN) :: alat
        REAL (KIND=DP), INTENT(OUT):: dg(:,:)
        REAL (KIND=DP), INTENT(OUT):: dg2, g
@@ -179,9 +212,12 @@ MODULE constraints_module
        !
        REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
        REAL(KIND=DP) :: dist0
-       INTEGER       :: ia1, ia2, ia3
+       INTEGER       :: i, ia, ia1, ia2, ia3
        REAL(KIND=DP) :: r12(3), r23(3)
        REAL(KIND=DP) :: norm_r12, norm_r23, cos123, sin123
+       REAL(KIND=DP) :: k, r_c
+       INTEGER       :: type_coord
+       REAL(KIND=DP) :: dtau(3), norm_dtau
        !
        ! ... external function
        !
@@ -191,9 +227,53 @@ MODULE constraints_module
        dg(:,:) = 0.D0
        !
        SELECT CASE ( constr_type(index) )
+       CASE( 0 )
+          !
+          ! ... constraint on coordination
+          !
+          ia  = constr(1,index)
+          k   = constr(2,index)
+          r_c = constr(3,index)
+          !
+          type_coord = constr(4,index)
+          !
+          g = 0.D0
+          !
+          DO i = 1, nat
+             !
+             IF ( i == ia ) CYCLE
+             !
+             IF ( ityp(i) /= type_coord ) CYCLE
+             !
+             dtau = tau(:,ia) - tau(:,i)
+             !
+             norm_dtau = norm( dtau )
+             !
+             g = g + 1.D0 / ( EXP( - k * norm_dtau ) + 1.D0 )
+             !
+             dg(:,i) = dg(:,i) + 0.5D0 * k * dtau / norm_dtau / &
+                                 ( COSH( k * norm_dtau ) + 1.D0 )
+             !
+          END DO
+          !
+          DO i = 1, nat
+             !
+             IF ( i == ia ) CYCLE
+             !
+             IF ( ityp(i) /= type_coord ) CYCLE
+             !
+             dtau = tau(:,ia) - tau(:,i)
+             !
+             norm_dtau = norm( dtau )
+             !
+             dg(:,ia) = dg(:,ia) - 0.5D0 * k * dtau / norm_dtau / &
+                                   ( COSH( k * norm_dtau ) + 1.D0 )
+             !
+          END DO
+          !
        CASE( 1 )
           !
-          ! ... constratint on distances
+          ! ... constraint on distances
           !
           ia1 = constr(1,index)
           ia2 = constr(2,index)
@@ -222,9 +302,9 @@ MODULE constraints_module
              !
           END IF
           !
-          dg2 = DDOT( 3 * nat, dg, 1, dg, 1 )
-          !
        CASE( 2 )
+          !
+          ! ... constraint on planar angles
           !
           ia1 = constr(1,index)
           ia2 = constr(2,index)
@@ -262,7 +342,7 @@ MODULE constraints_module
      END SUBROUTINE dist_constrain
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_constrain( nat, tau, alat )
+     SUBROUTINE check_constrain( nat, tau, ityp, alat )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -279,6 +359,7 @@ MODULE constraints_module
        !
        INTEGER,        INTENT(IN)    :: nat
        REAL (KIND=DP), INTENT(INOUT) :: tau(:,:)
+       INTEGER,        INTENT(IN)    :: ityp(:)
        REAL (KIND=DP), INTENT(IN)    :: alat
        !
        INTEGER                    :: na, i, index
@@ -296,7 +377,7 @@ MODULE constraints_module
              !
              ltest(index) = .FALSE.             
              !
-             CALL dist_constrain( index, nat, tau, alat, g, dg, dg2 )
+             CALL dist_constrain( index, nat, tau, ityp, alat, g, dg, dg2 )
              !
              ! ... check if g = 0
              !
@@ -348,19 +429,19 @@ MODULE constraints_module
      END SUBROUTINE check_constrain         
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE new_force( nat, dg, dg2, force )
+     SUBROUTINE new_force( nat, dg, dg2, force, lambda )
        !-----------------------------------------------------------------------
        !
        ! ... find the lagrange multiplier lambda for the problem with one 
        ! ... constrain
        !
-       ! ...          force * dg
-       ! ... lambda = ---------- ,
-       ! ...            |dg|^2
+       ! ...            force * dg
+       ! ... lambda = - ---------- ,
+       ! ...              |dg|^2
        !
        ! ... and redefine the forces:
        !
-       ! ... force = force - lambda * dg
+       ! ... force = force + lambda * dg
        !
        ! ... where dg is the gradient of the constraint function
        !
@@ -369,9 +450,10 @@ MODULE constraints_module
        INTEGER,        INTENT(IN)    :: nat
        REAL (KIND=DP), INTENT(IN)    :: dg(:,:), dg2
        REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
+       REAL (KIND=DP), INTENT(OUT)   :: lambda
        !
        INTEGER        :: na, i, ipol
-       REAL (KIND=DP) :: lambda, sum(3)
+       REAL (KIND=DP) :: sum(3)
        !
        ! ... external function
        !
@@ -382,9 +464,9 @@ MODULE constraints_module
        !
        IF ( dg2 > eps16 ) THEN
           !
-          lambda = DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
+          lambda = - DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
           !
-          force = force - lambda * dg
+          force = force + lambda * dg
           !
           IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > eps16 ) THEN
              !
@@ -417,13 +499,14 @@ MODULE constraints_module
      END SUBROUTINE new_force
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( nat, tau, alat, force )
+     SUBROUTINE remove_constraint_force( nat, tau, ityp, alat, force )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
        INTEGER,        INTENT(IN)    :: nat
        REAL (KIND=DP), INTENT(IN)    :: tau(:,:)
+       INTEGER,        INTENT(IN)    :: ityp(:)
        REAL (KIND=DP), INTENT(IN)    :: alat
        REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
        !
@@ -442,9 +525,9 @@ MODULE constraints_module
        !
        DO index = 1, nconstr
           !
-          CALL dist_constrain( index, nat, tau, alat, gv, dgv, dgv2 )
+          CALL dist_constrain( index, nat, tau, ityp, alat, gv, dgv, dgv2 )
           !
-          CALL new_force( nat, dgv, dgv2, force )
+          CALL new_force( nat, dgv, dgv2, force, lagrange(index) )
           !
        END DO
        !
@@ -457,6 +540,7 @@ MODULE constraints_module
        IMPLICIT NONE
        !
        !
+       IF ( ALLOCATED( lagrange ) )    DEALLOCATE( lagrange )
        IF ( ALLOCATED( constr ) )      DEALLOCATE( constr )
        IF ( ALLOCATED( constr_type ) ) DEALLOCATE( constr_type )
        IF ( ALLOCATED( target ) )      DEALLOCATE( target )       

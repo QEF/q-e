@@ -498,8 +498,8 @@
 ! ... constraints are imposed here
       !
       IF ( lconstrain ) &
-         CALL remove_constraint_force( atoms_0%nat, &
-                                       atoms_0%taur, 1.D0, atoms_0%for )
+         CALL remove_constraint_force( atoms_0%nat, atoms_0%taur, &
+                                       atoms_0%ityp, 1.D0, atoms_0%for )
       !
 ! ...   Steepest descent of ionic degrees of freedom 
 
@@ -636,7 +636,8 @@
               !
            END DO
            !
-           CALL check_constrain( atoms_p%nat, atoms_p%taur, 1.D0 )
+           CALL check_constrain( atoms_p%nat, &
+                                 atoms_p%taur, atoms_p%ityp, 1.D0 )
            !
            DO ia = 1,  atoms_p%nat
               !

@@ -795,7 +795,7 @@
      USE check_stop,       ONLY: check_stop_init
      !
      !
-     USE ions_base,        ONLY: tau
+     USE ions_base,        ONLY: tau, ityp
      USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY: cell_nose_init
      USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
@@ -966,23 +966,11 @@
           ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
             occupation_damping, occupation_dynamics, rotation_dynamics,  degauss, smearing )
      !
-     IF ( program_name == 'CP90' ) THEN
-        !
-        ! ... variables for constrained dynamics are set here
-        !
-        lconstrain = ( nconstr_inp > 0 )
-        !
-        IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
-        !
-     ELSE
-        !
-        ! ... variables for constrained dynamics are set here
-        !
-        lconstrain = ( nconstr_inp > 0 )
-        !
-        IF ( lconstrain ) CALL init_constraint( nat, tau, if_pos )
-        !
-     END IF
+     ! ... variables for constrained dynamics are set here
+     !
+     lconstrain = ( nconstr_inp > 0 )
+     !
+     IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, if_pos )
      !
      IF( program_name == 'FPMD' ) THEN
 

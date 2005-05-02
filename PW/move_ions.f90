@@ -83,7 +83,7 @@ SUBROUTINE move_ions()
      !  
      IF ( lconstrain ) THEN
         !
-        CALL remove_constraint_force( nat, tau, alat, force )
+        CALL remove_constraint_force( nat, tau, ityp, alat, force )
         !
         ! ... resymmetrize (should not be needed, but...)
         !
@@ -253,7 +253,7 @@ SUBROUTINE move_ions()
      !
      IF ( lconstrain ) THEN
         !
-        CALL check_constrain( nat, tau, alat )
+        CALL check_constrain( nat, tau, ityp, alat )
         !
         WRITE( stdout, '(/5X,"Corrected atomic positions:")')
         !
@@ -299,7 +299,7 @@ SUBROUTINE move_ions()
   CALL mp_bcast( beta0,     ionode_id, intra_image_comm )
   CALL mp_bcast( history,   ionode_id, intra_image_comm )
   !
-  IF (lmovecell) THEN
+  IF ( lmovecell ) THEN
      !
      CALL mp_bcast( at,        ionode_id, intra_image_comm )
      CALL mp_bcast( at_old,    ionode_id, intra_image_comm )

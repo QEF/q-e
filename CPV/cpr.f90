@@ -95,7 +95,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
-                                       iforce, ions_shiftvar
+                                       iforce, ions_shiftvar, ityp
   USE cell_base,                ONLY : ainv, a1, a2, a3, frich, greash, tpiba2
   USE cell_base,                ONLY : omega, alat, ibrav, celldm
   USE cell_base,                ONLY : h, hold, deth, wmass, press
@@ -512,7 +512,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         ! ... constraints are imposed here
         !
         IF ( lconstrain ) &
-           CALL remove_constraint_force( nat, tau0, 1.D0, fion )
+           CALL remove_constraint_force( nat, tau0, ityp, 1.D0, fion )
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, &
                         ainv, delt, na, nsp, fricp, hgamma, vels, &
@@ -528,7 +528,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lconstrain ) THEN
            !
-            CALL check_constrain( nat, taup, 1.D0 )
+            CALL check_constrain( nat, taup, ityp, 1.D0 )
             !
             CALL r_to_s( taup, tausp, na, nsp, ainv )
             !

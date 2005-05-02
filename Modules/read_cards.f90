@@ -1504,8 +1504,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
-       IF ( tread ) &
-          CALL errore( ' card_constraints ', ' two occurrence ', 2 )
+       IF ( tread ) CALL errore( ' card_constraints ', ' two occurrence ', 2 )
        ! 
        CALL read_line( input_line )
        !
@@ -1520,6 +1519,29 @@ MODULE read_cards_module
           CALL field_count( nfield, input_line )
           !
           SELECT CASE( constr_type_inp(i) )
+          CASE( 0 )
+             !
+             IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i)
+                !
+             ELSE
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             END IF
+             !
           CASE( 1 )
              !
              IF ( nfield == 3 ) THEN
