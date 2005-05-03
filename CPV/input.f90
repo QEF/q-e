@@ -970,7 +970,7 @@
      !
      lconstrain = ( nconstr_inp > 0 )
      !
-     IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, if_pos )
+     IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp, if_pos )
      !
      IF( program_name == 'FPMD' ) THEN
 

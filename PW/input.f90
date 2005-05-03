@@ -1153,7 +1153,7 @@ SUBROUTINE iosys()
   !
   ! ... set constraints
   !
-  IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, if_pos )
+  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp, if_pos )
   !
   ! ... set default value of wmass
   !

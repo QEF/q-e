@@ -66,7 +66,7 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE init_constraint( nat, tau, ityp, if_pos )
+     SUBROUTINE init_constraint( nat, tau, alat, ityp, if_pos )
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
@@ -77,6 +77,7 @@ MODULE constraints_module
        !
        INTEGER,        INTENT(IN) :: nat
        REAL (KIND=DP), INTENT(IN) :: tau(3,nat)
+       REAL (KIND=DP), INTENT(IN) :: alat
        INTEGER,        INTENT(IN) :: ityp(nat)
        INTEGER,        INTENT(IN) :: if_pos(3,nat)
        !
@@ -124,14 +125,16 @@ MODULE constraints_module
              !
              DO i = 1, nat
                 !
+                IF ( i == ia ) CYCLE
+                !
                 IF ( ityp(i) /= type_coord ) CYCLE
                 !
-                dtau = tau(:,ia) - tau(:,i)
+                dtau = ( tau(:,ia) - tau(:,i) ) * alat
                 !
                 norm_dtau = norm( dtau )
                 !
                 target(ia) = target(ia) + &
-                             1.D0 / ( EXP( - k * norm_dtau ) + 1.D0 )
+                             1.D0 / ( EXP( k * norm_dtau ) + 1.D0 )
                 !
              END DO
              !
@@ -139,7 +142,8 @@ MODULE constraints_module
              !
           CASE( 1 )
              !
-             target(ia) = norm( tau(:,constr(1,ia)) - tau(:,constr(2,ia)) )
+             target(ia) = norm( tau(:,constr(1,ia)) - &
+                                tau(:,constr(2,ia)) ) * alat
              !
              ltest = .FALSE.
              ltest = ltest .OR. ANY( if_pos(:,constr(1,ia)) == 0 )
@@ -151,8 +155,8 @@ MODULE constraints_module
              ia2 = constr(2,ia)
              ia3 = constr(3,ia)
              !
-             r12 = tau(:,ia2) - tau(:,ia1)
-             r23 = tau(:,ia2) - tau(:,ia3)
+             r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
+             r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
              !
              r12 = r12 / norm( r12 )
              r23 = r23 / norm( r23 )
@@ -217,7 +221,7 @@ MODULE constraints_module
        REAL(KIND=DP) :: norm_r12, norm_r23, cos123, sin123
        REAL(KIND=DP) :: k, r_c
        INTEGER       :: type_coord
-       REAL(KIND=DP) :: dtau(3), norm_dtau
+       REAL(KIND=DP) :: dtau(3), norm_dtau, expo
        !
        ! ... external function
        !
@@ -245,31 +249,24 @@ MODULE constraints_module
              !
              IF ( ityp(i) /= type_coord ) CYCLE
              !
-             dtau = tau(:,ia) - tau(:,i)
+             dtau(:) = ( tau(:,ia) - tau(:,i) ) * alat
              !
-             norm_dtau = norm( dtau )
+             norm_dtau = norm( dtau(:) )
              !
-             g = g + 1.D0 / ( EXP( - k * norm_dtau ) + 1.D0 )
+             dtau(:) = dtau(:) / norm_dtau
              !
-             dg(:,i) = dg(:,i) + 0.5D0 * k * dtau / norm_dtau / &
-                                 ( COSH( k * norm_dtau ) + 1.D0 )
+             expo = EXP( k * norm_dtau )
+             !
+             g = g + 1.D0 / ( expo + 1.D0 )
+             !
+             dtau(:) = dtau(:) * k * expo / ( expo + 1.D0 )**2
+             !
+             dg(:,i)  = dg(:,i)  + dtau(:)
+             dg(:,ia) = dg(:,ia) - dtau(:)
              !
           END DO
           !
-          DO i = 1, nat
-             !
-             IF ( i == ia ) CYCLE
-             !
-             IF ( ityp(i) /= type_coord ) CYCLE
-             !
-             dtau = tau(:,ia) - tau(:,i)
-             !
-             norm_dtau = norm( dtau )
-             !
-             dg(:,ia) = dg(:,ia) - 0.5D0 * k * dtau / norm_dtau / &
-                                   ( COSH( k * norm_dtau ) + 1.D0 )
-             !
-          END DO
+          g = ( g - target(index) )
           !
        CASE( 1 )
           !
@@ -310,8 +307,8 @@ MODULE constraints_module
           ia2 = constr(2,index)
           ia3 = constr(3,index)
           !
-          r12 = tau(:,ia2) - tau(:,ia1)
-          r23 = tau(:,ia2) - tau(:,ia3)
+          r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
+          r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
           !
           norm_r12 = norm( r12 )
           norm_r23 = norm( r23 )
@@ -353,7 +350,7 @@ MODULE constraints_module
        ! ...                |dg(tau)|^2
        !
        ! ... in normal cases the constraint equation should be always 
-       ! ... satisfied the very first iteration.
+       ! ... satisfied at the very first iteration.
        !
        IMPLICIT NONE
        !
@@ -382,7 +379,7 @@ MODULE constraints_module
              ! ... check if g = 0
              !
 #if defined (__DEBUG_CONSTRAINTS)
-             WRITE( stdout, * ) i, index, ABS( g )
+             WRITE( stdout, * ) i, index, ABS( g ), dg2
 #endif
              !             
              IF ( ABS( g ) < constr_tol ) THEN
