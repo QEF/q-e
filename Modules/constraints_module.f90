@@ -118,12 +118,12 @@ MODULE constraints_module
              !
              ia1 = INT( constr(1,ia) )
              !
-             target(ia) = 0.D0
-             !
              r_c = constr(2,ia)
-             k   = constr(3,ia)             
+             k   = constr(3,ia)
              !
              type_coord = INT( constr(4,ia) )
+             !
+             target(ia) = 0.D0
              !
              DO ia2 = 1, nat
                 !
@@ -136,7 +136,7 @@ MODULE constraints_module
                 norm_dtau = norm( dtau )
                 !
                 target(ia) = target(ia) + &
-                             1.D0 / ( EXP( k * norm_dtau ) + 1.D0 )
+                             2.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
                 !
              END DO
              !
@@ -241,8 +241,8 @@ MODULE constraints_module
           !
           ia  = INT( constr(1,index) )
           !
-          k   = constr(2,index)
-          r_c = constr(3,index)
+          r_c = constr(2,index)
+          k   = constr(3,index)          
           !
           type_coord = INT( constr(4,index) )
           !
@@ -260,14 +260,14 @@ MODULE constraints_module
              !
              dtau(:) = dtau(:) / norm_dtau
              !
-             expo = EXP( k * norm_dtau )
+             expo = EXP( k * ( norm_dtau - r_c ) )
              !
-             g = g + 1.D0 / ( expo + 1.D0 )
+             g = g + 2.D0 / ( expo + 1.D0 )
              !
-             dtau(:) = dtau(:) * k * expo / ( expo + 1.D0 )**2
+             dtau(:) = 2.D0 * dtau(:) * k * expo / ( expo + 1.D0 )**2
              !
-             dg(:,ia1) = dg(:,ia1)  + dtau(:)
-             dg(:,ia)  = dg(:,ia) - dtau(:)
+             dg(:,ia1) = dg(:,ia1) + dtau(:)
+             dg(:,ia)  = dg(:,ia)  - dtau(:)
              !
           END DO
           !
