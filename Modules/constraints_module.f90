@@ -56,7 +56,7 @@ MODULE constraints_module
   INTEGER                     :: nconstr 
   REAL (KIND=DP)              :: constr_tol
   INTEGER,        ALLOCATABLE :: constr_type(:)
-  INTEGER,        ALLOCATABLE :: constr(:,:)
+  REAL (KIND=DP), ALLOCATABLE :: constr(:,:)
   REAL (KIND=DP), ALLOCATABLE :: target(:)
   REAL (KIND=DP), ALLOCATABLE :: lagrange(:)
   !
@@ -81,7 +81,7 @@ MODULE constraints_module
        INTEGER,        INTENT(IN) :: ityp(nat)
        INTEGER,        INTENT(IN) :: if_pos(3,nat)
        !
-       INTEGER       :: i, ia, ia1, ia2, ia3
+       INTEGER       :: ia, ia1, ia2, ia3
        REAL(KIND=DP) :: r12(3), r23(3)
        REAL(KIND=DP) :: k, r_c
        INTEGER       :: type_coord
@@ -116,20 +116,22 @@ MODULE constraints_module
           SELECT CASE ( constr_type(ia) )
           CASE( 0 )
              !
+             ia1 = INT( constr(1,ia) )
+             !
              target(ia) = 0.D0
              !
-             k   = constr(2,ia)
-             r_c = constr(3,ia)
+             r_c = constr(2,ia)
+             k   = constr(3,ia)             
              !
-             type_coord = constr(4,ia)
+             type_coord = INT( constr(4,ia) )
              !
-             DO i = 1, nat
+             DO ia2 = 1, nat
                 !
-                IF ( i == ia ) CYCLE
+                IF ( ia2 == ia1 ) CYCLE
                 !
-                IF ( ityp(i) /= type_coord ) CYCLE
+                IF ( ityp(ia2) /= type_coord ) CYCLE
                 !
-                dtau = ( tau(:,ia) - tau(:,i) ) * alat
+                dtau = ( tau(:,ia1) - tau(:,ia2) ) * alat
                 !
                 norm_dtau = norm( dtau )
                 !
@@ -142,18 +144,20 @@ MODULE constraints_module
              !
           CASE( 1 )
              !
-             target(ia) = norm( tau(:,constr(1,ia)) - &
-                                tau(:,constr(2,ia)) ) * alat
+             ia1 = INT( constr(1,ia) )
+             ia2 = INT( constr(2,ia) )
+             !
+             target(ia) = norm( tau(:,ia1) - tau(:,ia2) ) * alat
              !
              ltest = .FALSE.
-             ltest = ltest .OR. ANY( if_pos(:,constr(1,ia)) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,constr(2,ia)) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,ia1) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,ia2) == 0 )
              !
           CASE( 2 )
              !
-             ia1 = constr(1,ia)
-             ia2 = constr(2,ia)
-             ia3 = constr(3,ia)
+             ia1 = INT( constr(1,ia) )
+             ia2 = INT( constr(2,ia) )
+             ia3 = INT( constr(3,ia) )
              !
              r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
              r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
@@ -216,7 +220,7 @@ MODULE constraints_module
        !
        REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
        REAL(KIND=DP) :: dist0
-       INTEGER       :: i, ia, ia1, ia2, ia3
+       INTEGER       :: ia, ia1, ia2, ia3
        REAL(KIND=DP) :: r12(3), r23(3)
        REAL(KIND=DP) :: norm_r12, norm_r23, cos123, sin123
        REAL(KIND=DP) :: k, r_c
@@ -235,21 +239,22 @@ MODULE constraints_module
           !
           ! ... constraint on coordination
           !
-          ia  = constr(1,index)
+          ia  = INT( constr(1,index) )
+          !
           k   = constr(2,index)
           r_c = constr(3,index)
           !
-          type_coord = constr(4,index)
+          type_coord = INT( constr(4,index) )
           !
           g = 0.D0
           !
-          DO i = 1, nat
+          DO ia1 = 1, nat
              !
-             IF ( i == ia ) CYCLE
+             IF ( ia1 == ia ) CYCLE
              !
-             IF ( ityp(i) /= type_coord ) CYCLE
+             IF ( ityp(ia1) /= type_coord ) CYCLE
              !
-             dtau(:) = ( tau(:,ia) - tau(:,i) ) * alat
+             dtau(:) = ( tau(:,ia) - tau(:,ia1) ) * alat
              !
              norm_dtau = norm( dtau(:) )
              !
@@ -261,8 +266,8 @@ MODULE constraints_module
              !
              dtau(:) = dtau(:) * k * expo / ( expo + 1.D0 )**2
              !
-             dg(:,i)  = dg(:,i)  + dtau(:)
-             dg(:,ia) = dg(:,ia) - dtau(:)
+             dg(:,ia1) = dg(:,ia1)  + dtau(:)
+             dg(:,ia)  = dg(:,ia) - dtau(:)
              !
           END DO
           !
@@ -272,8 +277,8 @@ MODULE constraints_module
           !
           ! ... constraint on distances
           !
-          ia1 = constr(1,index)
-          ia2 = constr(2,index)
+          ia1 = INT( constr(1,index) )
+          ia2 = INT( constr(2,index) )
           !
           x1 = tau(1,ia1) * alat
           y1 = tau(2,ia1) * alat
@@ -303,9 +308,9 @@ MODULE constraints_module
           !
           ! ... constraint on planar angles
           !
-          ia1 = constr(1,index)
-          ia2 = constr(2,index)
-          ia3 = constr(3,index)
+          ia1 = INT( constr(1,index) )
+          ia2 = INT( constr(2,index) )
+          ia3 = INT( constr(3,index) )
           !
           r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
           r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
