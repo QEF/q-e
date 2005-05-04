@@ -22,7 +22,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
               the mesh is: r(i+1) = exp(xmin+i*dx)/zed
       rmax  = outermost mesh point                 (default: 100.0)
 
-      beta  = parameter for potential mixing       (default: 0.5)
+      beta  = parameter for potential mixing       (default: 0.2)
       tr2   = convergence threshold for scf        (default: 1e-14)
 
       iswitch = 1    all-electron calculation          (default)

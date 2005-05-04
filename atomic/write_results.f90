@@ -126,7 +126,7 @@ subroutine write_results
 
   do i=1,nwf
      do j=i,nwf
-        if (ll(i)==ll(j).and.jj(i)==jj(j)) then
+        if (ll(i)==ll(j).and.jj(i)==jj(j).and.isw(i).eq.isw(j)) then
            if (rel<2) then
               do m=1,mesh
                  work(m)=psi(m,1,i)*psi(m,1,j)
