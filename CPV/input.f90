@@ -653,7 +653,6 @@
         CASE ('none', 'default')
           thdyn_ = .FALSE.
           tsdc_ = .FALSE.
-          tpre_ = .FALSE.
           frich_= 0.d0
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown cell_dynamics '//TRIM(cell_dynamics), 1 )

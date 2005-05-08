@@ -241,9 +241,9 @@
 
 ! ... declare modules
       USE pseudopotential, ONLY: nlin_stress, ngh, &
-            l2ind,nspnl,nsanl, lnlx, ts,tp,td, tf
+            l2ind,nspnl,nsanl, lnlx, ts,tp,td, tf, lm1x
       USE ions_base, ONLY: nsp, na
-      USE spherical_harmonics, ONLY: spharm, set_dmqm, set_fmrm
+      USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
       USE mp_global, ONLY: mpime, nproc
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
@@ -270,11 +270,12 @@
 
 ! ... declare other variables
       INTEGER :: is, l, ll, me, al, be, s, k
-      INTEGER :: ir, kk, m, mm, isa, ighp, ig
+      INTEGER :: ir, kk, m, mm, isa, ighp, ig, iy
       INTEGER :: igh, ia, ighd, ighf, in, i, iss, nx, ispin, nspin, ngw
-      INTEGER :: ispin_wfc
+      INTEGER :: ispin_wfc, im(7)
       REAL(dbl)  xg,xrg,arg,wnd,wnd1,wnd2,temp,tt1,fac,tt2
       REAL(dbl)  temp2, fg, gmod
+      REAL(dbl)  pm(3,3), pmtm(6,3,3)
       REAL(dbl)  dm(6,5), dmqm(6,5,5)
       REAL(dbl)  fm(3,3,3,7), fmrm(6,7,7)
 
@@ -282,7 +283,7 @@
       REAL(dbl), ALLOCATABLE :: wnla(:,:,:)
       REAL(dbl), ALLOCATABLE :: fnls(:,:)
       REAL(dbl), ALLOCATABLE :: gwork(:)
-      REAL(dbl), ALLOCATABLE :: gspha(:)
+      REAL(dbl), ALLOCATABLE :: gspha(:,:)
       REAL(dbl), ALLOCATABLE :: gwtmp(:)
       REAL(dbl), PARAMETER :: twothird = 2.0d0/3.0d0
       COMPLEX(dbl), PARAMETER :: uimag = (0.0d0,1.0d0)
@@ -311,7 +312,9 @@
 
       ALLOCATE(gwork(ngw))
       ALLOCATE(gwtmp(ngw))
-      ALLOCATE(gspha(ngw))
+      ALLOCATE(gspha(ngw, (lm1x+1)**2 ))
+
+      CALL ylmr2( (lm1x+1)**2, ngw, gx, g, gspha )
 
       SPIN_LOOP: DO ispin = 1, nspin
 
@@ -325,19 +328,21 @@
         ALLOCATE(fnls(nsanl,nx))
 
         igh = 0
+        !
         IF (ts) THEN
-          igh=igh+1
-          gspha(1) = 0.0d0
-          CALL spharm(gspha, gx(:,:), g(:), ngw, 0, 0)
+          !
+          igh = igh + 1
+          iy  = 1
+          !
           DO ig = gstart, ngw
-            gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
+            gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
           END DO
           DO kk = 1, 6
             fnls     = 0.0d0
             iss = 1
             gwork(1) = 0.0d0
             DO ig = gstart, ngw
-               gwork(ig) =  gagx_l(kk,ig) * gspha(ig)
+               gwork(ig) =  gagx_l(kk,ig) * gspha(ig,iy)
             END DO
             DO is = 1, nspnl
               ll = l2ind(1,is)
@@ -379,16 +384,24 @@
           END DO
         END IF
 
+
+        !
         IF(tp) THEN
-          ighp=igh
-          DO m=1,3
+          !
+          ighp = igh
+          !
+          im( 1 ) = 3
+          im( 2 ) = 1
+          im( 3 ) = 2
+          !
+          CALL set_pmtm( pm, pmtm )
+          !
+          DO m = 1, 3
 
-            igh=igh+1
+            iy  = 1    + im( m )
 
-            gspha(1) = 0.0d0
-            CALL spharm(gspha, gx(:,:), g(:), ngw, 1, m-2)
             DO ig = gstart, ngw
-              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
+              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
             END DO
 
             DO kk=1,6
@@ -397,7 +410,7 @@
               iss = 1
               gwork(1) = 0.0d0
               DO ig = gstart, ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig)
+                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
               END DO
 
               DO is=1,nspnl
@@ -429,17 +442,21 @@
   
               isa=0
               DO is=1,nspnl
-                temp = 2.d0 * wsg(igh,is)
+                temp = 2.d0 * wsg( ighp + im( m ), is)
                 DO ia=1,na(is)
                   isa=isa+1
                   DO in=1,nx
                     IF(me.EQ.1) THEN
-                       fnls(isa,in)= -fnl(1,ispin)%r(isa,ighp+alpha(kk),in)* &
-                       delta(m,beta(kk))+ 2.d0*fnls(isa,in)
+                      temp2=0.d0
+                      DO mm=1,3
+                        temp2=temp2 + pmtm(kk, m, mm )* &
+                          fnl(1,ispin)%r(isa, ighp + im( mm ),in)
+                      END DO
+                      fnls(isa,in)= -temp2+2.d0*fnls(isa,in)
                     ELSE
-                       fnls(isa,in)= 2.d0*fnls(isa,in)
+                      fnls(isa,in)= 2.d0*fnls(isa,in)
                     END IF
-                    tt1 = fnl(1,ispin)%r(isa,igh,in)
+                    tt1 = fnl(1,ispin)%r(isa, ighp + im( m ), in )
                     fac = occ(in,1,ispin) * temp
                     tt2 = fnls(isa,in)
                     denl(kk) = denl(kk) + fac * tt1 * tt2
@@ -449,33 +466,44 @@
 
             END DO
           END DO
+          !
+          igh = ighp + 3
+          !
         END IF
 
-! ... d-nonlocality
+        ! ... d-nonlocality
+
         IF(td) THEN
-          ighd=igh
-          CALL set_dmqm(dm,dmqm)
 
-          DO m=1,5
+          ighd = igh
+          !
+          im( 1 ) = 5
+          im( 2 ) = 3
+          im( 3 ) = 1
+          im( 4 ) = 2
+          im( 5 ) = 4
 
-            igh=igh+1
+          CALL set_dmqm( dm, dmqm )
 
-            gspha(1) = 0.0d0
-            CALL spharm(gspha, gx(:,:), g(:), ngw, 2, m-3)
+          DO m = 1, 5
+
+            iy  = 4 + im( m )
+
+            !
             DO ig = gstart, ngw
-              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
+              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
             END DO
 
-            DO kk=1,6
+            DO kk = 1, 6
 
               fnls = 0.0d0
               iss = 1
               gwork(1) = 0.0d0
               DO ig=gstart,ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig)
+                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
               END DO
 
-              DO is=1,nspnl
+              DO is = 1, nspnl
 
                 ll = l2ind(3,is)
                 IF(ll.GT.0) THEN
@@ -487,7 +515,7 @@
                   END DO
 
                   DO ig = gstart, ngw
-                    gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm(kk,m) * wnl(ig,ll,is)
+                    gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm( kk, m ) * wnl(ig,ll,is)
                   END DO
 
                   DO ia= 1 , na(is)
@@ -509,21 +537,21 @@
 
               isa=0
               DO is=1,nspnl
-                temp = 2.d0 * wsg(igh,is)
+                temp = 2.d0 * wsg(ighd+im(m),is)
                 DO ia=1,na(is)
                   isa=isa+1
                   DO in=1,nx
                     IF(me.EQ.1) THEN
                       temp2=0.d0
                       DO mm=1,5
-                        temp2=temp2 + dmqm(kk,m,mm)* &
-                          fnl(1,ispin)%r(isa,ighd+mm,in)
+                        temp2=temp2 + dmqm(kk, m, mm )* &
+                          fnl(1,ispin)%r(isa, ighd + im(mm),in)
                       END DO
                       fnls(isa,in)= -2.d0*temp2+2.d0*fnls(isa,in)
                     ELSE
                       fnls(isa,in)= 2.d0*fnls(isa,in)
                     END IF
-                    tt1 = fnl(1,ispin)%r(isa,igh,in)
+                    tt1 = fnl(1,ispin)%r(isa,ighd+im(m),in)
                     fac = occ(in,1,ispin) * temp
                     tt2 = fnls(isa,in)
                     denl(kk) = denl(kk) + fac * tt1 * tt2
@@ -533,21 +561,33 @@
 
             END DO
           END DO
+          !
+          igh = ighd + 5
+          !
         END IF
 
-! ... f-nonlocality
+        ! ... f-nonlocality
+
         IF(tf) THEN
-          ighf=igh
+
+          ighf = igh
+
           CALL set_fmrm(fm, fmrm)
+
+          im( 1 ) = 7
+          im( 2 ) = 5
+          im( 3 ) = 3
+          im( 4 ) = 1
+          im( 5 ) = 2
+          im( 6 ) = 4
+          im( 7 ) = 6
 
           DO m=1,7
 
-            igh=igh+1
+            iy  = 9 + im( m )
 
-            gspha(1) = 0.0d0
-            CALL spharm(gspha, gx(:,:), g(:), ngw, 3, m-4)
             DO ig = gstart, ngw
-              gspha(ig) = gspha(ig) / (g(ig)*tpiba2)
+              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
             END DO
 
             DO kk=1,6
@@ -556,7 +596,7 @@
               iss = 1
               gwork(1) = 0.0d0
               DO ig = gstart, ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig)
+                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
               END DO
 
               DO is=1,nspnl
@@ -605,20 +645,20 @@
 
               isa=0
               DO is=1,nspnl
-                temp = 2.d0 * wsg(igh,is)
+                temp = 2.d0 * wsg( ighf + im(m), is )
                 DO ia=1,na(is)
                   isa=isa+1
                   DO in=1,nx
                     IF(me == 1) THEN
                       temp2=0.d0
                       DO mm=1,7
-                        temp2=temp2 + fmrm(kk,m,mm) * fnl(1,ispin)%r(isa,ighf+mm,in)
+                        temp2=temp2 + fmrm(kk,m,mm) * fnl(1,ispin)%r(isa,ighf+im(mm),in)
                       END DO
                       fnls(isa,in)= -3.d0*temp2+2.d0*fnls(isa,in)
                     ELSE
                       fnls(isa,in)= 2.d0*fnls(isa,in)
                     END IF
-                    tt1 = fnl(1,ispin)%r(isa,igh,in)
+                    tt1 = fnl(1,ispin)%r(isa,ighf+im(m),in)
                     fac = occ(in,1,ispin) * temp
                     tt2 = fnls(isa,in)
                     denl(kk) = denl(kk) + fac * tt1 * tt2

@@ -22,7 +22,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use  ions_base
   use ions_base, only : nas => nax
   use cell_base, only: a1, a2, a3
-  use reciprocal_vectors, only: ng0 => gstart
+  use reciprocal_vectors, only: ng0 => gstart, gx, g
 
 
 #ifdef __PARA
@@ -44,19 +44,19 @@ subroutine qqberry2( gqq,gqqm, ipol)
        &     igi,ia
   real(kind=8), allocatable:: fint(:),jl(:)
   real(kind=8), allocatable:: qradb2(:,:,:,:) 
-  real(kind=8) c, ylmr, xg
+  real(kind=8) c, xg
   complex(kind=8) qgbs,sig
   integer ivs, jvs, ivl, jvl, lp
-  real(kind=8), allocatable:: ylm(:)
-  external ylmr
+  real(kind=8), allocatable:: ylm(:,:)
 
   lx = lqmax
 
   allocate( fint( ndmx))
   allocate( jl(ndmx))
   allocate( qradb2(nbrx,nbrx,lx,nsp))
-  allocate( ylm(ngw))
+  allocate( ylm(ngw, lqmax*lqmax))
 
+  CALL ylmr2( lqmax*lqmax, ngw, gx, g, ylm )
 
      
 
@@ -171,10 +171,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !
                  sig=(0.,-1.)**(l-1)
                   
-!                  call ylmr2b(lp,4,gx,ylm) ATTENZIONE
-!                  qgbs=qgbs+sig*ylm(igi)*qradb2(2,ivs,jvs,l,is)
                  sig=sig*ap(lp,ivl,jvl)
-                 qgbs=qgbs+sig*ylmr(lp,igi)*qradb2(ivs,jvs,l,is)
+                 qgbs=qgbs+sig*ylm(igi,lp)*qradb2(ivs,jvs,l,is)
                 
               end do
    

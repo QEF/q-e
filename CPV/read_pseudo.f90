@@ -641,6 +641,9 @@ END FUNCTION
           WRITE( stdout,11) ap%pottyp
           WRITE( stdout,50) ap%lloc
         END IF
+        IF( ap%tnlcc ) THEN
+          WRITE( stdout,12)
+        END IF
 
    10   FORMAT(   3X,'Type is ',A10,' and NONLOCAL. ')
   107   FORMAT(   3X,'Mixed reference potential:')
@@ -649,6 +652,7 @@ END FUNCTION
    50   FORMAT(   3X,'Local component is ..... : ',I3)
    60   FORMAT(   3X,'Non local components are : ',4I3)
    11   FORMAT(   3X,'Type is ',A10,' and LOCAL. ')
+   12   FORMAT(   3X,'Using non local core corcorrections for this pseudo')
    20   FORMAT(   3X,'Pseudo charge : ',F8.3,', pseudo radius : ',F8.3)
 
         WRITE( stdout,20) ap%zv, ap%raggio
@@ -661,13 +665,13 @@ END FUNCTION
           in3=ap%mesh/2
           in4=ap%mesh
           WRITE( stdout,132)
-          WRITE( stdout,120) in1,ap%rw(in1),(ap%vrps(in1,m),m=1,ap%lnl)
-          WRITE( stdout,120) in2,ap%rw(in2),(ap%vrps(in2,m),m=1,ap%lnl)
-          WRITE( stdout,120) in3,ap%rw(in3),(ap%vrps(in3,m),m=1,ap%lnl)
-          WRITE( stdout,120) in4,ap%rw(in4),(ap%vrps(in4,m),m=1,ap%lnl)
+          WRITE( stdout,120) in1,ap%rw(in1),ap%vloc(in1),(ap%vrps(in1,m),m=1,ap%lnl)
+          WRITE( stdout,120) in2,ap%rw(in2),ap%vloc(in2),(ap%vrps(in2,m),m=1,ap%lnl)
+          WRITE( stdout,120) in3,ap%rw(in3),ap%vloc(in3),(ap%vrps(in3,m),m=1,ap%lnl)
+          WRITE( stdout,120) in4,ap%rw(in4),ap%vloc(in4),(ap%vrps(in4,m),m=1,ap%lnl)
   131     FORMAT(/, 3X,'Pseudopotentials Grid    : Channels = ',I2,&
                    ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
-  132     FORMAT(   3X,'point      radius        nl pseudo ( vnl - vloc )')
+  132     FORMAT(   3X,'point    radius        vloc         ( vnl - vloc )')
   120     FORMAT(I8,E14.6,5E14.6)
 
         ELSE

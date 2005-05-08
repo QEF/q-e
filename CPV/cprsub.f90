@@ -229,6 +229,7 @@
       use dqrad_mod
       use dqgb_mod
       use betax
+      use pseudo_base, only: compute_rhocg
 !
       implicit none
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj, ierr
@@ -454,25 +455,8 @@
 !     ---------------------------------------------------------------
       do is=1,nsp
          if(nlcc(is)) then
-            allocate(fint(kkbeta(is)))
-            allocate(jl(kkbeta(is)))
-            c=fpi/omegab
-            l=1
-            do ig=1,ngb
-               xg=sqrt(gb(ig))*tpibab
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
-               do ir=1,kkbeta(is)
-                  fint(ir)=r(ir,is)**2*rho_atc(ir,is)*jl(ir)
-               end do
-               call simpson_cp90(kkbeta(is),fint,rab(1,is),rhocb(ig,is))
-            end do
-            do ig=1,ngb
-               rhocb(ig,is)=c*rhocb(ig,is)
-            end do
-            if(iprsta.ge.4) WRITE( stdout,'(a,f12.8)')                     &
-      &              ' integrated core charge= ',omegab*rhocb(1,is)
-            deallocate(jl)
-            deallocate(fint)
+            CALL compute_rhocg( rhocb(:,is), rhocb(:,is), r(:,is), rab(:,is), &
+                   rho_atc(:,is), gb, omegab, tpibab**2, kkbeta(is), ngb, 0 )
          endif
       end do
 !

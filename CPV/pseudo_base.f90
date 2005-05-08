@@ -8,8 +8,6 @@
 
 #include "f_defs.h"
 
-#undef __BESSEL_TEST
-
 !=----------------------------------------------------------------------------=!
    MODULE pseudo_base
 !=----------------------------------------------------------------------------=!
@@ -27,8 +25,8 @@
       PRIVATE
 
       PUBLIC :: nlin_base, nlin_stress_base, nlset_base
-      PUBLIC :: corecor_base, compute_rhops, formfn, formfa
-      PUBLIC :: compute_eself
+      PUBLIC :: compute_rhops, formfn, formfa
+      PUBLIC :: compute_eself, compute_rhocg
 
 
 
@@ -108,29 +106,6 @@
             END DO
 
 ! ...       Bessel Test
-
-#if defined __BESSEL_TEST
-
-            ALLOCATE( ftest( mmax, 3 ) )
-            WRITE( 11, &
-              fmt="(' ir  ','l ',' q         ',' r        ','FPMD                ','FPMD/CP             ','FPMD/PW')")
-            DO l = 1, 4
-              CALL bessjl  ( xg, ap%rw, ftest(:,1), l, mmax )
-              CALL bess    ( xg, l, mmax, ap%rw, ftest(:,2) )
-              CALL sph_bes ( mmax, ap%rw, xg, l-1, ftest(:,3) )
-              ind = 2
-              WRITE( 11, fmt="(I4,I2,2F10.5,3D19.12)" ) &
-                 ind, l, xg, ap%rw(ind), ftest(ind,1), ftest(ind,2)/ftest(ind,1), ftest(ind,3)/ftest(ind,1)
-              ind = mmax/2
-              WRITE( 11, fmt="(I4,I2,2F10.5,3D19.12)" ) &
-                 ind, l, xg, ap%rw(ind), ftest(ind,1), ftest(ind,2)/ftest(ind,1), ftest(ind,3)/ftest(ind,1)
-              ind = mmax
-              WRITE( 11, fmt="(I4,I2,2F10.5,3D19.12)" ) &
-                 ind, l, xg, ap%rw(ind), ftest(ind,1), ftest(ind,2)/ftest(ind,1), ftest(ind,3)/ftest(ind,1)
-            END DO 
-            DEALLOCATE( ftest )
-
-#endif
 
           END IF
         END DO
@@ -250,7 +225,6 @@
 
           fint( 1:mesh ) = ap%rps( 1:mesh, ll ) * ap%vrps( 1:mesh, l ) * ap%rw( 1:mesh )
           call simpson_fpmd( mesh, fint, dx, wsgl )
-          !call simpson(mesh, fint, ap%rab, wsgl)
 
           !  ltru is the true angular momentum quantum number
 
@@ -260,7 +234,8 @@
           igh2 = igh1 + ( 2*ltru + 1 ) - 1   
 
           DO igh = igh1, igh2
-            wsgset( igh ) = 4.0d0 * pi * ( 2*ltru + 1 ) / wsgl
+            ! wsgset( igh ) = 4.0d0 * pi * ( 2*ltru + 1 ) / wsgl
+            wsgset( igh ) = 4.0d0 * pi / wsgl * ( 4.0d0 * pi )
           END DO
 
         END DO
@@ -271,77 +246,18 @@
       END SUBROUTINE nlset_base     
 
 
-
-!  ----------------------------------------------
-      SUBROUTINE corecor_base(ap, hg, rhoc1, rhocp, omega)
-
-!  this routine computes:
-!  rhoc1(G) = (integral) rho_cc(r) j_0(r,G) r**2 dr
-!           = (integral) rho_cc(r) j_0(r,G) r**2 dr/dx dx
-!  rhocp(G) = (integral) rho_cc(r) dj_0(r,G)/dG r**2 dr
-!  ----------------------------------------------
-
-        USE pseudo_types, ONLY: pseudo_ncpp
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        REAL(dbl), INTENT(OUT) :: rhoc1(:), rhocp(:)
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl), INTENT(IN) :: hg(:)
-        REAL(dbl), INTENT(IN) :: omega
-
-! ...   declare other variables
-        REAL(dbl), ALLOCATABLE :: jl(:)
-        REAL(dbl), ALLOCATABLE :: fint(:)
-        REAL(dbl), ALLOCATABLE :: djl(:)
-        REAL(dbl), ALLOCATABLE :: funcc(:)
-
-        REAL(dbl)  :: xg, fpibo
-        INTEGER :: ig, mmax
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-          IF( .NOT. ap%tnlcc ) THEN
-            RETURN
-          END IF
-
-          mmax    = ap%mesh
-          fpibo = fpi / omega
-          ALLOCATE( jl(mmax), fint(mmax), djl(mmax), funcc(mmax) )
-          funcc(1:mmax) = ap%rw(1:mmax)**3 * ap%rhoc(1:mmax)
-
-          DO ig = 1, SIZE( rhoc1 )
-            IF( hg(ig) < gsmall ) THEN
-              call simpson_fpmd(mmax, funcc, ap%dx, rhoc1(ig))
-              rhoc1(ig) = fpibo * rhoc1(ig)
-              rhocp(1)  = 0.0d0
-            ELSE
-              xg = SQRT( hg( ig ) ) * tpiba
-              CALL bessel1(xg, ap%rw, jl, djl, mmax)
-              fint (1:mmax) = funcc(1:mmax) * jl(1:mmax)
-              call simpson_fpmd(mmax, fint, ap%dx, rhoc1(ig))
-              rhoc1(ig) = fpibo * rhoc1(ig)
-              fint (1:mmax) = ap%rw(1:mmax) * funcc(1:mmax) * djl(1:mmax)
-              call simpson_fpmd(mmax, fint, ap%dx, rhocp(ig))
-              rhocp(ig) = fpibo * rhocp(ig)
-            END IF
-          END DO
-          DEALLOCATE( jl, fint, djl, funcc )
-        RETURN
-      END SUBROUTINE corecor_base
-
-
-
 !-----------------------------------------------------------------------
-      subroutine compute_rhocg( rhocb, r, rab, rho_atc, gb, omegab, &
-                         tpibab2, mesh, ngb )
+      subroutine compute_rhocg( rhocb, drhocb, r, rab, rho_atc, gb, omegab, &
+                         tpibab2, mesh, ngb, what )
 
 !-----------------------------------------------------------------------
 
-        !  rhoc1(G) = (integral) rho_cc(r) j_0(r,G) r**2 dr
+        !  if what == 0 compute rhocb(G)
+        !  if what == 1 compute rhocb(G) and drhocb(G)
+        !
+        !  rhocb(G) = (integral) rho_cc(r) j_0(r,G) r**2 dr
         !           = (integral) rho_cc(r) j_0(r,G) r**2 dr/dx dx
+        ! drhocb(G) = (integral) rho_cc(r) dj_0(r,G)/dG r**2 dr
 
         use kinds,         only: dbl
         use constants,     only: fpi
@@ -352,7 +268,9 @@
         
         integer,   intent(in)  :: mesh
         integer,   intent(in)  :: ngb
+        integer,   intent(in)  :: what
         real(dbl), intent(out) :: rhocb( ngb )
+        real(dbl), intent(out) :: drhocb( ngb )
         real(dbl), intent(in)  :: rho_atc( mesh )
         real(dbl), intent(in)  :: r( mesh )
         real(dbl), intent(in)  :: rab( mesh )
@@ -361,11 +279,17 @@
         real(dbl), intent(in)  :: tpibab2
         
         integer :: ig, ir
-        real(dbl), allocatable :: fint(:), jl(:)
+        real(dbl), allocatable :: fint(:), jl(:), djl(:)
         real(dbl) :: c, xg
       
         allocate(fint(mesh))
         allocate(jl(mesh))
+        if( what == 1 ) then
+          allocate(djl(mesh))
+        end if
+
+        if( what < 0 .and. what > 1 ) &
+          call errore(" compute_rhocg ", " parameter what is out of range ", 1 )
 
         c = fpi / omegab
         do ig = 1, ngb
@@ -375,14 +299,37 @@
             fint(ir)=r(ir)**2*rho_atc(ir)*jl(ir)
           end do
           call simpson_cp90( mesh,fint,rab(1),rhocb(ig))
+          if( what == 1 ) then
+            IF( gb(ig) > gsmall ) THEN
+              call sph_bes ( mesh, r(1), xg, -1, djl )
+              do ir=1,mesh
+                djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
+              end do
+            ELSE
+              djl = 0.0d0
+            END IF
+            do ir=1,mesh
+              fint(ir)=r(ir)**3*rho_atc(ir)*djl(ir)
+            end do
+            call simpson_cp90( mesh, fint, rab(1), drhocb(ig) )
+          end if
         end do
         do ig=1,ngb
-          rhocb(ig)=c*rhocb(ig)
+          rhocb(ig) = c * rhocb(ig)
         end do
+        if( what == 1 ) then
+          do ig=1,ngb
+            drhocb(ig) = c * drhocb(ig)
+          end do
+        end if
         if(iprsta >= 4) &
           WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
 
         deallocate( jl, fint )
+        if( what == 1 ) then
+          deallocate(djl)
+        end if
+       
 
         return
       end subroutine

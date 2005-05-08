@@ -402,16 +402,16 @@
       COMPLEX(dbl) :: eigr(:,:)
 
 ! ... declare other variables
-      INTEGER :: is, igh, isa, iss, ia, ig, nb
+      INTEGER :: is, igh, isa, iss, ia, ig, nb, iy
       INTEGER :: l, ll, m, ngw, lda, ldw, ldf
-      REAL(dbl), ALLOCATABLE :: gwork(:)
+      REAL(dbl), ALLOCATABLE :: gwork(:,:)
       COMPLEX(dbl), ALLOCATABLE :: gxtmp(:)
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
       COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0)
       COMPLEX(dbl), PARAMETER :: ZERO = (0.0d0,0.0d0)
 ! ... i^l
       COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
-          (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,0.0d0) /)
+          (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -432,7 +432,7 @@
 
       ! WRITE( stdout,fmt="('DEBUG nlsm1 ',10I6)" ) ngw, nb, lda, ldw, ldf
 
-      ALLOCATE( gwork(ngw), gxtmp(ngw) )
+      ALLOCATE( gwork( ngw, (lm1x+1)**2 ), gxtmp(ngw) )
 
 ! ... angular momentum l = 0
 ! ... orbital: s
@@ -441,32 +441,26 @@
 ! ... angular momentum l = 2
 ! ... orbitals: d_{z^2}, d_{x^2-y^2}, d_{xy}, d_{yz}, d_{zx}
 
+      CALL ylmr2( (lm1x+1)**2, ngw, gx, g2, gwork )
+
       igh = 0
+      iy  = 0
       DO l = 0, lm1x
-        IF(tl(l)) THEN
-          DO m = -l, l
+        DO m = -l, l
+          iy = iy + 1
+          IF(tl(l)) THEN
             igh = igh + 1
-            CALL spharm( gwork, gx, g2, ngw, l, m )
             iss = 1
             DO is = 1, nspnl
               ll  = l2ind( l + 1, is )
               IF(ll.gt.0) THEN
                 ALLOCATE( auxc( ngw, atoms%na(is) ) )
-                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw)
+                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw, iy )
                 IF( cdesc%gamma .AND. cdesc%gzero ) gxtmp(1) = gxtmp(1) * 0.5d0
                 DO ia = 1, atoms%na(is)
                   auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss+ia-1)
                 END DO
-                ! DO ia = 1, atoms%na(is)
-                ! DO ig = 1, ngw
-                ! WRITE( stdout7,fmt="(3I5,2D18.8)") is, ia, ig, auxc(ig,ia)
-                ! END DO
-                ! END DO
-
-                ! WRITE( stdout,*) 'DEBUG nlsm_s', ll, ' ', m, ' ', is, SUM(auxc), atoms%na(is), SUM(c)
                 IF ( cdesc%gamma ) THEN
-                  ! CALL DGEMUL( auxc(1,1), lda, 'T', c(1,1), ldw, 'N', &
-                  !   fnl%r(iss,igh,1), ldf, atoms%na(is), 2*ngw, nb )
                   CALL DGEMM( 'T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, &
                     auxc(1,1), lda, c(1,1), ldw, 0.0d0, fnl%r(iss,igh,1), ldf)
                 ELSE
@@ -478,8 +472,8 @@
               END IF
               iss = iss + atoms%na(is)
             END DO
-          END DO
-        END IF
+          END IF
+        END DO
       END DO
       DEALLOCATE(gwork, gxtmp)
 
@@ -574,13 +568,14 @@
       INTEGER, INTENT(IN) :: ispin
 
 ! ... declare other variables
-      REAL(dbl), ALLOCATABLE :: gwork(:)
+      REAL(dbl), ALLOCATABLE :: gwork(:,:)
       INTEGER :: is, ia, igh, isa, ig, iss, ll, l, m, ngw, nb, lda, ldw, ldf
+      INTEGER :: iy
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:), gxtmp(:)
       COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0), ZERO = (0.0d0,0.0d0)
 ! ... (-i) * i^l
       COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (0.0d0,-1.0d0), &
-        (1.0d0,0.0d0), (0.0d0,1.0d0), (0.0d0,0.0d0) /)
+        (1.0d0,0.0d0), (0.0d0,1.0d0), (-1.0d0,0.0d0) /)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -599,26 +594,28 @@
         dfnl%c = 0.0d0
       END IF
 
-      ALLOCATE(gwork(ngw), gxtmp(ngw))
+      ALLOCATE(gwork(ngw, (lm1x+1)**2 ), gxtmp(ngw))
+
+      CALL ylmr2( (lm1x+1)**2, ngw, gx, g2, gwork )
+
       igh = 0
+      iy  = 0
       ANGMO: DO l = 0, lm1x
-        IF(tl(l)) THEN
-          MAGNE: DO m = -l, l
+        MAGNE: DO m = -l, l
+          iy = iy + 1
+          IF(tl(l)) THEN
             igh = igh + 1
             iss = 1
-            CALL spharm(gwork, gx, g2, NGW, L, M)
-            gwork(1:ngw) = tpiba * gx(kk,1:ngw) * gwork(1:ngw)
+            gwork(1:ngw,iy) = tpiba * gx(kk,1:ngw) * gwork(1:ngw,iy)
             SPECS: DO is = 1, nspnl
               ll  = l2ind(l + 1,is)
               IF(ll.gt.0) THEN
                 ALLOCATE(auxc(ngw,atoms%na(is)))
-                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw)
+                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw,iy)
                 DO ia = 1, atoms%na(is)
                   auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss + ia - 1)
                 END DO
                 IF( cdesc%gamma ) THEN
-                  ! CALL DGEMUL(auxc(1,1), lda, 'T', c%w(1,1), ldw, 'N', &
-                  !   dfnl%r(iss,igh,1), ldf, atoms%na(is), 2*ngw, nb)
                   CALL DGEMM('T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, auxc(1,1), lda, &
                     c(1,1), ldw, 0.0d0, dfnl%r(iss,igh,1), ldf)
                 ELSE
@@ -629,8 +626,8 @@
               END IF
               iss = iss + atoms%na(is)
             END DO SPECS
-          END DO MAGNE
-        END IF
+          END IF
+        END DO MAGNE
       END DO ANGMO
       IF( cdesc%gamma ) CALL DSCAL(size(dfnl%r),2.0d0,dfnl%r(1,1,1),1)
       DEALLOCATE(gwork, gxtmp)

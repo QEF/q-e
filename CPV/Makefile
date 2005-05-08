@@ -111,7 +111,6 @@ waveinit.o \
 wave.o \
 wave_types.o \
 wf.o \
-ylmr.o \
 $(WRAPPERS)
 
 

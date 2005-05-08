@@ -359,8 +359,7 @@
       USE pseudotab_base, ONLY: formftab_base
       USE pseudotab_base, ONLY: corecortab_base
       USE pseudo_base, ONLY: formfn
-      USE pseudo_base, ONLY: corecor_base
-      USE pseudo_base, ONLY: compute_rhops
+      USE pseudo_base, ONLY: compute_rhops, compute_rhocg
       USE reciprocal_vectors, ONLY: g, ngm
 
       IMPLICIT NONE
@@ -409,7 +408,10 @@
             CALL corecortab_base(g, ps%rhoc1(:,is), ps%rhocp(:,is), &
                    rhoc1_sp(is), rhocp_sp(is), xgtabmax, omega) 
           ELSE
-            CALL corecor_base(ps%ap(is), g, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
+            ! CALL corecor_base(ps%ap(is), g, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
+            CALL compute_rhocg( ps%rhoc1(:,is), ps%rhocp(:,is), ps%ap(is)%rw, &
+                   ps%ap(is)%rab, ps%ap(is)%rhoc, g, omega, tpiba2, ps%ap(is)%mesh, ngm, 1 )
+
           END IF
         END IF
 
@@ -468,7 +470,7 @@
         USE pseudo_base, ONLY: formfn
         USE pseudo_base, ONLY: nlin_base
         USE pseudo_base, ONLY: nlin_stress_base
-        USE pseudo_base, ONLY: corecor_base
+        USE pseudo_base, ONLY: compute_rhocg
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
         USE read_pseudo_module_fpmd, ONLY: ap
         USE reciprocal_vectors, ONLY: g
@@ -521,7 +523,9 @@
           IF(tnlcc) THEN
             CALL allocate_spline( rhoc1_sp(is), pstab_size, xgmin, xgmax )
             CALL allocate_spline( rhocp_sp(is), pstab_size, xgmin, xgmax )
-            CALL corecor_base(ap(is), xgtab, rhoc1_sp(is)%y, rhocp_sp(is)%y, 1.0d0)
+            ! CALL corecor_base(ap(is), xgtab, rhoc1_sp(is)%y, rhocp_sp(is)%y, 1.0d0)
+            CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, ap(is)%rw, &
+                   ap(is)%rab, ap(is)%rhoc, xgtab, 1.0d0, tpiba2, ap(is)%mesh, pstab_size, 1 )
             CALL init_spline( rhoc1_sp(is) )
             CALL init_spline( rhocp_sp(is) )
           END IF
