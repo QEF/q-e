@@ -168,9 +168,9 @@ MODULE constraints_module
              target(ia) = DOT_PRODUCT( r12, r23 )
              !
              ltest = .FALSE.
-             ltest = ltest .OR. ANY( if_pos(:,constr(1,ia)) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,constr(2,ia)) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,constr(3,ia)) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,ia1) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,ia2) == 0 )
+             ltest = ltest .OR. ANY( if_pos(:,ia3) == 0 )
              !
           CASE DEFAULT
              !
