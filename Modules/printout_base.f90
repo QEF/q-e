@@ -71,7 +71,7 @@ CONTAINS
 
      CALL mp_bcast(ierr, ionode_id, group)
      IF( ierr /= 0 ) &
-        CALL errore(' printout_base_setup ',' error in opening unit ',iunit)
+        CALL errore(' printout_base_init ',' error in opening unit, check outdir ',iunit)
 
     RETURN
   END SUBROUTINE printout_base_init

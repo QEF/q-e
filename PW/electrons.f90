@@ -99,6 +99,9 @@ SUBROUTINE electrons()
   REAL (KIND=DP) :: &
       ethr_min         ! minimal threshold for diagonalization at the first scf
                        ! iteration 
+  REAL (KIND=DP), ALLOCATABLE :: &
+      wg_g(:,:)        ! temporary array used to recover from pools array wg,
+                       ! and then print occupations on stdout
   LOGICAL :: &
       exst
   REAL (KIND=DP) :: dr2old, lambda0
@@ -538,8 +541,17 @@ SUBROUTINE electrons()
            WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
            !
            IF( iverbosity > 0 ) THEN
+               !
+               ALLOCATE( wg_g( nbnd, nkstot ) )
+               !
+               wg_g = wg
+               CALL poolrecover( wg_g, nbnd, nkstot, nks )
+               !
                WRITE( stdout, 9032 )
-               WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
+               WRITE( stdout, 9030 ) ( wg_g(ibnd,ik), ibnd = 1, nbnd )
+               !
+               DEALLOCATE( wg_g )
+               !
            END IF
            !
         END DO
