@@ -85,12 +85,16 @@ subroutine read_ncpp(iunps)
   !     ----------------------------------------------------------
   ! 
   use ncpp
+  use upf , only : els
   implicit none
   integer :: iunps
   !
+  character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
+  character(len=2) :: label
   real(kind=8), parameter:: pi=3.141592653589793d0
   real (kind=8) :: x, erf
   integer :: l, i, ir, nb, n
+  character (len=255) line
   external erf
 
   read(iunps, '(a)', end=300, err=300 ) dft_
@@ -209,11 +213,12 @@ subroutine read_ncpp(iunps)
   !
   ! read pseudowavefunctions
   !
-  allocate(lchi_(nchi))
+  allocate(lchi_(nchi), els(nchi))
   allocate(oc_(nchi))
   allocate(chi_(mesh_,nchi))
   do nb = 1, nchi
-     read(iunps, '(a)', err=300)
+     ! read wavefunction label and store for later
+     read(iunps, '(a)', err=300) line
      read(iunps, *, err=300) lchi_( nb), oc_( nb )
      !
      !     Test lchi and occupation numbers
@@ -225,6 +230,21 @@ subroutine read_ncpp(iunps)
      if ( oc_(nb).lt.0.d0 .or.            &
           oc_(nb).gt.2.d0*(2*lchi_(nb)+1)) &
              call errore('read_ncpp','wrong oc',nb)
+     !
+     ! parse and check wavefunction label
+     read(line,'(14x,a2)', err=222, end=222) label
+     if (label(2:2).ne.convel(lchi_(nb))) goto 222
+     do l = 0, lmax_
+        if (label(2:2).eq.convel(l)) then
+           els(nb) = label(1:2)
+           goto 223
+        endif
+     end do
+222  continue
+     els(nb)   = '*'//convel(lchi_(nb)) 
+223  continue
+     !
+     ! finally read the wavefunction
      read(iunps, *, err=300) (chi_(ir,nb),ir=1,mesh_)
   enddo
   !
@@ -251,7 +271,6 @@ subroutine convert_ncpp
   use ncpp
   use upf
   implicit none
-  character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
   real(kind=8), parameter :: rmax = 10.0
   real(kind=8), allocatable :: aux(:)
   real(kind=8) :: vll
@@ -268,7 +287,7 @@ subroutine convert_ncpp
   end if
   rcloc = 0.0
   nwfs  = nchi 
-  allocate( els(nwfs), oc(nwfs), epseu(nwfs))
+  allocate( oc(nwfs), epseu(nwfs))
   allocate(lchi(nwfs), nns(nwfs) )
   allocate(rcut (nwfs), rcutus (nwfs))
   do i=1, nwfs
@@ -277,7 +296,6 @@ subroutine convert_ncpp
      rcut(i)  = 0.0
      rcutus(i)= 0.0
      oc (i)   = oc_(i)
-     els(i)   = '*'//convel(lchi(i)) 
      epseu(i) = 0.0
   end do
   deallocate (lchi_, oc_)
