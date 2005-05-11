@@ -58,7 +58,7 @@ SUBROUTINE setup()
   USE symme,            ONLY : s, irt, ftau, nsym, invsym
   USE atom,             ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
   USE pseud,            ONLY : zp
-  USE wvfct,            ONLY : nbnd, nbndx
+  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
   USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, lscf, &
                                lmd, lpath, lphonon, david, isolve, imix, &
                                niter, noinv,  nosym, modenum, lraman
@@ -168,6 +168,11 @@ SUBROUTINE setup()
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
   IF ( noncolin ) THEN
+     !
+     ! gamma_only and noncollinear not allowed
+     !
+     if (gamma_only) call errore('setup', &
+                                 'gamma_only and noncolin not allowed',1)
      !
      ! ... wavefunctions are spinors with 2 components
      !
