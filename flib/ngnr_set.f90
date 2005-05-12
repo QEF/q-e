@@ -172,7 +172,7 @@
       RETURN 
       END SUBROUTINE vec_prod
 
-   END  SUBROUTINE
+   END  SUBROUTINE ngnr_set
 
 
 !
@@ -217,5 +217,5 @@
      &     call errore('set_fft_grid','n3 too small ?',nr3)
 !
       return
-      end
+      end subroutine set_fft_grid
 !

@@ -17,7 +17,7 @@
       else
         cpgt = ( a .gt. b )
       end if
-      end
+      end function cpgt
 
       logical function cplt(a,b)
       USE kinds
@@ -30,7 +30,7 @@
       else
         cplt = ( a .lt. b )
       end if
-      end
+      end function cplt
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
@@ -150,7 +150,7 @@ contains
     else
       hslt = ( a < b )
     end if
-  end function
+  end function hslt
 
   !
 end subroutine hpsort_eps
@@ -542,7 +542,7 @@ end subroutine ihpsort
   190 CONTINUE
 !     ==--------------------------------------------------------------==
   200 RETURN
-      END
+      END SUBROUTINE gqsort
 !     ==================================================================
 
 
@@ -697,7 +697,7 @@ end subroutine ihpsort
   190 CONTINUE
 !     ==--------------------------------------------------------------==
   200 RETURN
-      END
+      END SUBROUTINE iqsort
 !     ==================================================================
 
 
@@ -853,7 +853,7 @@ end subroutine ihpsort
   190 CONTINUE
 !     ==--------------------------------------------------------------==
   200 RETURN
-      END
+      END SUBROUTINE rqsort
 !     ==================================================================
 
 !-------------------------------------------------------------------------
@@ -981,5 +981,5 @@ end subroutine ihpsort
       is=mark(la-1)
   190 continue
    10 return
-      end
+      end subroutine kb07ad_cp90
 

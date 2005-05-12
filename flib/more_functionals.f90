@@ -46,7 +46,7 @@
       ENDIF
 !     ==--------------------------------------------------------------==
       RETURN
-      END SUBROUTINE 
+      END SUBROUTINE gcc_spin_more
 
 
 
@@ -551,7 +551,7 @@
       end do
 !
       return
-      end
+      end subroutine ggablyp4
 !
 !______________________________________________________________________
       subroutine ggapbe(nnr,nspin,gradr,rhor,excrho)
@@ -677,7 +677,7 @@
       end do
 !
       return
-      end
+      end subroutine ggapbe
 !
 !______________________________________________________________________
       subroutine exchpbe(rho,agrad,ex,dexdrho,dexdg)
@@ -731,7 +731,7 @@
       dexdg = ax*al*s*fs
 !
       return
-      end
+      end subroutine exchpbe
 
 !----------------------------------------------------------------------
       subroutine ecorpbe(rho,agrad,zet,ectot,decup,decdn,decdg,nspin)
@@ -885,7 +885,7 @@
       decdg = t*ht/twoksg
 !
       return
-      end
+      end subroutine ecorpbe
 !______________________________________________________________________
       subroutine gcor2(a,a1,b1,b2,b3,b4,rtrs,gg,ggrs)
 !     _________________________________________________________________
@@ -906,7 +906,7 @@
       ggrs = -2.d0*a*a1*q2-q0*q3/(q1*(1.d0+q1))
 !
       return
-      end
+      end subroutine gcor2
 !
 !______________________________________________________________________
       subroutine ggapw(nnr,nspin,gradr,rhor,exc)
@@ -1017,7 +1017,7 @@
       end do
 !
       return
-      end
+      end subroutine ggapw
 !
 !----------------------------------------------------------------------
       subroutine exchpw91(rho,grho,ex,v1x,v2x)
@@ -1083,7 +1083,7 @@
       v2x = 0.5d0*ex0/kf*s*fs/grho
 !
       return
-      end
+      end subroutine exchpw91
 !
 !----------------------------------------------------------------------
       subroutine corpw91ns(rs,grho,ec,ecrs,h,v1c,v2c)
@@ -1170,7 +1170,7 @@
       v2c = t*ht/(2.d0*ks*grho)
 !
       return
-      end
+      end subroutine corpw91ns
 !
 !----------------------------------------------------------------------
       subroutine corpw91(rs,zeta,grho,ec,ecrs,eczeta,h,v1cup,v1cdn,v2c)
@@ -1280,7 +1280,7 @@
       v2c   = t*ht/(2.d0*ks*g*grho)
 !
       return
-      end
+      end subroutine corpw91
 !----------------------------------------------------------------------
       subroutine pwlda(rs,ec,vc,ecrs)
 !----------------------------------------------------------------------
@@ -1313,7 +1313,7 @@
       vc = ec - rs*ecrs/3.d0
 !
       return
-      end
+      end subroutine pwlda
 !----------------------------------------------------------------------
       subroutine pwlsd(rs,zeta,ec,vcup,vcdn,ecrs,eczeta)
 !----------------------------------------------------------------------
@@ -1385,7 +1385,7 @@
       vcdn = comm - eczeta
 !
       return
-      end
+      end subroutine pwlsd
 !
 !______________________________________________________________________
       subroutine ggapwold(nnr,nspin,gradr,rhor,exc)
@@ -1567,7 +1567,7 @@
       end do
 !
       return
-      end
+      end subroutine ggapwold
 
 !-----------------------------------------------------------------------
       subroutine dftname_cp (exfact, dft)
@@ -1600,7 +1600,7 @@
       end if
 
       return
-      end
+      end subroutine dftname_cp
 
 
 !-------------------------------------------------------------------------
@@ -1719,7 +1719,7 @@
       end if
 
       return
-      end
+      end subroutine expxc
 
 
 !=----------------------------------------------------------------------------=!
@@ -1928,7 +1928,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   !stop
 
   return
-end subroutine
+end subroutine exch_corr_wrapper
 
 
 !=----------------------------------------------------------------------------=!
@@ -1994,7 +1994,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   deallocate( h )
 
   return
-end subroutine
+end subroutine exch_corr_cp
 
 
       SUBROUTINE wrap_b88( rho, grho, sx, v1x, v2x )
@@ -2009,7 +2009,7 @@ end subroutine
         CALL LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)
         v1x = V1XA
         v2x = V2XA
-      END SUBROUTINE
+      END SUBROUTINE wrap_b88
 
       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
         IMPLICIT NONE
@@ -2025,7 +2025,7 @@ end subroutine
                       V1CA,V2CA,V1CB,V2CB,V2CAB)
         v1c = V1CA
         v2c = 2.0d0*(v2ca+v2cb+v2cab*2.d0)*0.25d0
-      END SUBROUTINE
+      END SUBROUTINE wrap_glyp
 
 !     ==================================================================
       SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)

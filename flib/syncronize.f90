@@ -15,4 +15,4 @@
        CALL MPI_BARRIER(MPI_COMM_WORLD,IERR)
 #endif
        RETURN 
-       END 
+       END SUBROUTINE syncronize

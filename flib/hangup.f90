@@ -14,4 +14,4 @@
        CALL MPI_FINALIZE(IERR)
 #endif
        RETURN
-       END
+       END SUBROUTINE hangup

@@ -232,7 +232,7 @@
       close(unit=1)
 !
       return
-      end
+      end subroutine readmat
 !
 !-----------------------------------------------------------------------
 subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)

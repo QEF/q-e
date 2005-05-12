@@ -127,4 +127,4 @@ use funct
       close(iunps)
 
       return
-      end
+      end subroutine read_newpseudo

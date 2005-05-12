@@ -95,4 +95,4 @@
 
       deallocate(al)
       return
-      end
+      end subroutine intref

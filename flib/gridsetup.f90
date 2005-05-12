@@ -36,5 +36,5 @@
       endif
 
       return
-      end
+      end subroutine gridsetup
 

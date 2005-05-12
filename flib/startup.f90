@@ -30,4 +30,4 @@
 #endif
 
        RETURN
-       END
+       END SUBROUTINE parallel_startup

@@ -111,7 +111,7 @@
       IPVT(N) = N
       IF (CABS1(A(N,N)) .EQ. 0.0D0) INFO = N
       RETURN
-      END
+      END SUBROUTINE ZGEFA
 
       SUBROUTINE ZGEDI(A,LDA,N,IPVT,DET,WORK,JOB)
       USE kinds
@@ -248,4 +248,4 @@
   140    CONTINUE
   150 CONTINUE
       RETURN
-      END
+      END SUBROUTINE ZGEDI
