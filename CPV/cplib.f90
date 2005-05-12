@@ -85,7 +85,7 @@
       deallocate(q, chiq, vchi, jl, ylm)
 !
       return
-      end
+      end subroutine atomic_wfc
 !
 !-----------------------------------------------------------------------
       subroutine box2grid(irb,nfft,qv,vr)
