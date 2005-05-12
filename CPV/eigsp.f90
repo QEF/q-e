@@ -39,4 +39,4 @@
       WRITE( stdout,*)
 !
       return
-      end
+      end subroutine eigsp

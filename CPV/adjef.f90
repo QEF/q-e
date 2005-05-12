@@ -115,7 +115,7 @@
       WRITE( stdout,*) 'FERMIE: QTOT,SUMQ=',qtot,sumq
       STOP
 
-      END
+      END SUBROUTINE adjef
 
 !  ----------------------------------------------
 #if defined __T3E

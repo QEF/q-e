@@ -91,7 +91,7 @@
       end if
 !
       return
-      end
+      end subroutine cfft3
 !-------------------------------------------------------------------------
       subroutine cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isign)
 !-----------------------------------------------------------------------
@@ -166,7 +166,7 @@
       end if
 !
       return
-      end
+      end subroutine cfft3b
 !-------------------------------------------------------------------------
       subroutine cfft3s(f,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx,isign)
 !-----------------------------------------------------------------------
@@ -252,7 +252,7 @@
       end if
 !
       return
-      end
+      end subroutine cfft3s
 #else
       subroutine bidon_cray
          stop 'crayfft'

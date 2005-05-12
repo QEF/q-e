@@ -105,7 +105,7 @@ end subroutine berryion
       write(6,*) 'Center of charge', cdz(3)!ATTENZIONE
 !
       return
-      end
+      end subroutine cofcharge
 !
 
 

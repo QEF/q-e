@@ -122,7 +122,7 @@
       end do
 
       return
-      end
+      end subroutine calcmt
 !***ensemble-DFT
 
 
@@ -179,7 +179,7 @@
         end do
         end do
       return
-      end
+      end subroutine rotate
 
 !***ensemble-DFT
 !-----------------------------------------------------------------------
@@ -256,7 +256,7 @@
       end do
 
       return
-      end
+      end subroutine calcm
 
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
 !trova il minimo di parabola

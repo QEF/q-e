@@ -106,7 +106,7 @@
       deallocate( wrk2 )
 !
       return
-      end
+      end subroutine caldbec
 !
 
 !-----------------------------------------------------------------------
@@ -194,7 +194,7 @@
  1300 format(2x,'formf: sum_g vps(g)=',f12.7,' sum_g rhops(g)=',f12.7)
 !
       return
-      end
+      end subroutine formf
 !
 
 
@@ -462,7 +462,7 @@
 !
 !
       return
-      end
+      end subroutine newnlinit
 !-----------------------------------------------------------------------
       subroutine nlfh(bec,dbec,lambda)
 !-----------------------------------------------------------------------
@@ -538,7 +538,7 @@
       enddo
 !
       return
-      end
+      end subroutine nlfh
 !-----------------------------------------------------------------------
       subroutine nlinit
 !-----------------------------------------------------------------------
@@ -892,7 +892,7 @@
       call newnlinit
 
       return
-      end
+      end subroutine nlinit
 
 !-------------------------------------------------------------------------
       subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
@@ -965,7 +965,7 @@
       end do
 
       return
-      end
+      end subroutine qvan2b
 
 !-------------------------------------------------------------------------
       subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
@@ -1046,7 +1046,7 @@
       end do
 !
       return
-      end
+      end subroutine dqvan2b
 !-----------------------------------------------------------------------
 subroutine dylmr2_(nylm, ngy, g, gg, ainv, dylm)
   !-----------------------------------------------------------------------

@@ -137,7 +137,7 @@
       end do
 !
       return
-      end
+      end subroutine box2grid
 !
 !-----------------------------------------------------------------------
       subroutine box2grid2(irb,qv,v)
@@ -185,7 +185,7 @@
       end do
 
       return
-      end
+      end subroutine box2grid2
 !
 !-----------------------------------------------------------------------
       real(kind=8) function boxdotgrid(irb,nfft,qv,vr)
@@ -285,7 +285,7 @@
       call stop_clock( 'calbec' )
 !
       return
-      end
+      end subroutine calbec
 !-------------------------------------------------------------------------
       subroutine calphi(c0,ema0bg,bec,betae,phi)
 !-----------------------------------------------------------------------
@@ -375,7 +375,7 @@
       call stop_clock( 'calphi' )
 !
       return
-      end
+      end subroutine calphi
 !-----------------------------------------------------------------------
       real(kind=8) function cscnorm(bec,cp,i)
 !-----------------------------------------------------------------------
@@ -480,7 +480,7 @@
       call mp_sum( dekin( 1:3, 1:3 ) )
 !
       return
-      end
+      end subroutine denkin
 !
 !-----------------------------------------------------------------------
       subroutine denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
@@ -550,7 +550,7 @@
       end do
 
       return
-      end
+      end subroutine denh
 !
 !-----------------------------------------------------------------------
       subroutine dennl(bec,denl)
@@ -614,7 +614,7 @@
       end do
 !
       return
-      end
+      end subroutine dennl
 !
 !-----------------------------------------------------------------------
       subroutine denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -673,7 +673,7 @@
       call mp_sum( dps( 1:3, 1:3 ) )
 
       return
-      end
+      end subroutine denps
 !
 !-------------------------------------------------------------------------
       subroutine dforce (bec,betae,i,c,ca,df,da,v)
@@ -834,7 +834,7 @@
       call stop_clock( 'dforce' ) 
 !
       return
-      end
+      end subroutine dforce
 !
 !-----------------------------------------------------------------------
       subroutine dotcsc(eigr,cp)
@@ -904,7 +904,7 @@
       deallocate(becp)
 !
       return
-      end
+      end subroutine dotcsc
 !-----------------------------------------------------------------------
       subroutine drhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
@@ -1149,7 +1149,7 @@
       deallocate( qv )
 !
       return
-      end
+      end subroutine drhov
 
 !
 !-----------------------------------------------------------------------
@@ -1323,7 +1323,7 @@
       end do
 
       return
-      end
+      end subroutine force_ion
 !
 !-----------------------------------------------------------------------
       subroutine force_ps(rhotemp,rhog,vtemp,ei1,ei2,ei3,fion1)
@@ -1402,7 +1402,7 @@
       end do
 !
       return
-      end
+      end subroutine force_ps
 !
 !-----------------------------------------------------------------------
       subroutine gausin(eigr,cm)
@@ -1507,7 +1507,7 @@
          end do
 !!!      end do
       return
-      end
+      end subroutine gausin
 !            
 
 !-------------------------------------------------------------------------
@@ -1597,7 +1597,7 @@
       end do
 !
       return
-      end
+      end subroutine gracsc
 !-------------------------------------------------------------------------
       subroutine graham(betae,bec,cp)
 !-----------------------------------------------------------------------
@@ -1642,7 +1642,7 @@
       call stop_clock( 'graham' )
 !
       return
-      end
+      end subroutine graham
 !
 !-----------------------------------------------------------------------
       subroutine herman_skillman_grid(mesh,z,cmesh,r)
@@ -1670,7 +1670,7 @@
       end do
 !
       return
-      end
+      end subroutine herman_skillman_grid
 !
 !-----------------------------------------------------------------------
       subroutine herman_skillman_int(mesh,cmesh,func,asum)
@@ -1711,7 +1711,7 @@
       end do
 !
       return
-      end
+      end subroutine herman_skillman_int
 !
 !-----------------------------------------------------------------------
       subroutine initbox ( tau0, taub, irb )
@@ -1815,7 +1815,7 @@
 
 !
       return
-      end
+      end subroutine initbox
 !
 !-------------------------------------------------------------------------
       subroutine newd(vr,irb,eigrb,rhovan,fion)
@@ -2073,7 +2073,7 @@
   10  call stop_clock( 'newd' )
 !
       return
-      end
+      end subroutine newd
 !-------------------------------------------------------------------------
       subroutine nlfl(bec,becdr,lambda,fion)
 !-----------------------------------------------------------------------
@@ -2148,7 +2148,7 @@
 !
       call stop_clock( 'nlfl' )
       return
-      end
+      end subroutine nlfl
 !-----------------------------------------------------------------------
       subroutine nlfq(c,eigr,bec,becdr,fion)
 !-----------------------------------------------------------------------
@@ -2223,7 +2223,7 @@
       call stop_clock( 'nlfq' )
 !
       return
-      end
+      end subroutine nlfq
 !-----------------------------------------------------------------------
       subroutine nlsm1 (n,nspmn,nspmx,eigr,c,becp)
 !-----------------------------------------------------------------------
@@ -2323,7 +2323,7 @@
       call stop_clock( 'nlsm1' )
 
       return
-      end
+      end subroutine nlsm1
 !-------------------------------------------------------------------------
       subroutine nlsm2(eigr,c,becdr)
 !-----------------------------------------------------------------------
@@ -2427,7 +2427,7 @@
       call stop_clock( 'nlsm2' )
 !
       return
-      end
+      end subroutine nlsm2
 !-----------------------------------------------------------------------
       subroutine ortho                                                  &
      &      (eigr,cp,phi,x0,diff,iter,ccc,eps,max,delt,bephi,becp)
@@ -2657,7 +2657,7 @@
 !
       call stop_clock( 'ortho' )
       return
-      end
+      end subroutine ortho
 !
 !-----------------------------------------------------------------------
       subroutine pbc(rin,a1,a2,a3,ainv,rout)
@@ -2692,7 +2692,7 @@
       rout(3) = x*a1(3)+y*a2(3)+z*a3(3)
 !
       return
-      end
+      end subroutine pbc
 
 !
 !-------------------------------------------------------------------------
@@ -2732,7 +2732,7 @@
       call stop_clock( 'prefor' )
 !
       return
-      end
+      end subroutine prefor
 !
 !-----------------------------------------------------------------------
       subroutine projwfc(c,eigr,betae)
@@ -2878,7 +2878,7 @@
       deallocate(proj)
       deallocate(wfc)
       return
-      end
+      end subroutine projwfc
 !-----------------------------------------------------------------------
       subroutine raddrizza(nspin,nx,nupdwn,iupdwn,f,lambda,ngw,c)
 !-----------------------------------------------------------------------
@@ -2930,7 +2930,7 @@
 !         WRITE( stdout,'(/10f8.2/)') (wr(i),i=1,nupdwn(iss))
       end do
       return
-      end
+      end subroutine raddrizza
 !
 !---------------------------------------------------------------------
       subroutine randin(nmin,nmax,gstart,ngw,ampre,c)
@@ -2959,7 +2959,7 @@
 !      end do
 !
       return
-      end
+      end subroutine randin
 !
 !-----------------------------------------------------------------------
       subroutine rdiag (n,h,ldh,e,v)
@@ -2980,7 +2980,7 @@
       call rs(ldh,n,h,e,1,v,fv1,fv2,ierr)
 !
       return
-      end
+      end subroutine rdiag
 !-----------------------------------------------------------------------
    subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
@@ -3294,7 +3294,7 @@
 
 !
       return
-      end
+      end subroutine rhoofr
 !
 !-----------------------------------------------------------------------
       subroutine rhoset(cp,phi,bephi,qbecp,nss,ist,rho)
@@ -3364,7 +3364,7 @@
       endif
 !
       return
-      end
+      end subroutine rhoset
 !
 !-----------------------------------------------------------------------
       subroutine rhov(irb,eigrb,rhovan,rhog,rhor)
@@ -3651,7 +3651,7 @@
       call stop_clock( 'rhov' )
 !
       return
-      end
+      end subroutine rhov
 !
 !
 !-------------------------------------------------------------------------
@@ -3708,7 +3708,7 @@
       swfc=swfc+wfc
 !
       return
-      end
+      end subroutine s_wfc
 
 !
 !-------------------------------------------------------------------------
@@ -3777,7 +3777,7 @@
       endif
 !
       return
-      end
+      end subroutine sigset
 !
 !-----------------------------------------------------------------------
       subroutine spinsq (c,bec,rhor)
@@ -3925,7 +3925,7 @@
      &     spin2,spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
 !
       return
-      end
+      end subroutine spinsq
 !-------------------------------------------------------------------------
       subroutine tauset(phi,bephi,qbephi,nss,ist,tau)
 !-----------------------------------------------------------------------
@@ -3987,7 +3987,7 @@
       endif
 !
       return
-      end
+      end subroutine tauset
 !
 !-------------------------------------------------------------------------
       subroutine updatc(ccc,x0,phi,bephi,becp,bec,cp)
@@ -4081,7 +4081,7 @@
       call stop_clock( 'updatc' )
 !
       return
-      end
+      end subroutine updatc
 !
 !-----------------------------------------------------------------------
       subroutine vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
@@ -4449,7 +4449,7 @@
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 !
       return
-      end
+      end subroutine vofrho
 
 !
 !----------------------------------------------------------------------
@@ -4481,7 +4481,7 @@
       call reduce(1,rsum)
       call reduce(1,rnegsum)
       return
-      end
+      end subroutine checkrho
 !______________________________________________________________________
 
 
@@ -4936,7 +4936,7 @@
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 !
       return
-      end
+      end subroutine vofrho_wf
 
 !------------------------------------------------------------------------
       subroutine poles(rhortot,dipole,quadrupole)
@@ -5078,5 +5078,5 @@
       deallocate(dip)
 !
       return
-      end
+      end subroutine poles
 

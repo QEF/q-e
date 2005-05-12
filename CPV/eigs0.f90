@@ -43,4 +43,4 @@
       WRITE( stdout,*)
 !
       return
-      end
+      end subroutine eigs0
