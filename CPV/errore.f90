@@ -25,4 +25,4 @@ subroutine errore(a,b,n)
 #endif
 !
       stop
-      end
+end subroutine
