@@ -99,7 +99,7 @@
       END IF
 
       RETURN
-      END
+      END SUBROUTINE geninv
 
 !  ----------------------------------------------
 !  ----------------------------------------------
@@ -178,7 +178,7 @@
       END IF
 
       RETURN
-      END
+      END SUBROUTINE zgeninv
 
 !  ----------------------------------------------
 !  ----------------------------------------------
@@ -665,4 +665,4 @@
       GO TO 360
   620 CONTINUE
       RETURN
-      END
+      END SUBROUTINE dsvdc

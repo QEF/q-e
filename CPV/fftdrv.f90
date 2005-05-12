@@ -308,7 +308,7 @@ CONTAINS
       deallocate( aux )
 
       return
-      end subroutine
+      end subroutine cfft_cp
 
 !
 END MODULE
@@ -345,5 +345,5 @@ END MODULE
       call cft_b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,imin3,imax3,sign)
 !     
       return
-      end
+      end subroutine cfftpb
 

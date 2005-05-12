@@ -72,4 +72,4 @@
      &     (mode1,mode2,nar,nbc,nac,1.d0,a,lda,b,ldb,0.d0,c,icd)
 !
       return
-      end
+      end subroutine mxma

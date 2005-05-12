@@ -82,7 +82,7 @@ contains
     call fft_dlay_deallocate( dfftp )
     call fft_dlay_deallocate( dffts )
     call sticks_deallocate()
-  end subroutine
+  end subroutine deallocate_para_mod
 
 end module para_mod
 
@@ -227,7 +227,7 @@ end module para_mod
       end do
 !
       return
-      end
+      end subroutine parabox
 !
 !-----------------------------------------------------------------------
       subroutine reduce(size,ps)
@@ -281,7 +281,7 @@ end module para_mod
       call stop_clock( 'reduce' )
 !
       return
-      end
+      end subroutine reduce
 !
 !----------------------------------------------------------------------
       subroutine nrbounds(ngw,nr1s,nr2s,nr3s,mill,nmin,nmax)

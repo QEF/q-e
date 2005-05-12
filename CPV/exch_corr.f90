@@ -374,7 +374,7 @@
       end if
 !
       return
-      end
+      end subroutine exch_corr_h
 
 
 !=----------------------------------------------------------------------------=!
@@ -488,5 +488,5 @@
       deallocate(v)
 !
       return
-      end
+      end subroutine gradh
 

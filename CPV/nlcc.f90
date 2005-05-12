@@ -74,7 +74,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3, kp )
+   subroutine core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3, kp )
 !=----------------------------------------------------------------------------=!
 
      !   This subroutine computes the non local core correction
@@ -163,7 +163,7 @@
 
      RETURN
 !=----------------------------------------------------------------------------=!
-   END SUBROUTINE
+   end subroutine core_charge_forces
 !=----------------------------------------------------------------------------=!
 
 
@@ -231,7 +231,7 @@
       deallocate( wrk1 )
 !
       return
-      end subroutine
+      end subroutine add_cc
 
 
 !
@@ -340,7 +340,7 @@
 !
       call stop_clock( 'forcecc' )
       return
-      end
+      end subroutine force_cc
 
 
 !
@@ -431,5 +431,5 @@
       call stop_clock( 'set_cc' )
 !
       return
-      end
+      end subroutine set_cc
 

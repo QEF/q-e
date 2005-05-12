@@ -582,6 +582,7 @@ SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
 #endif
   !
   RETURN
+END SUBROUTINE cft_3
 !
 #elif defined(__SUN)
 !

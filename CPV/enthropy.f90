@@ -46,7 +46,7 @@
        ent=-2.d0*temp*ent
 
        RETURN
-       END
+       END SUBROUTINE enthropy
 
        subroutine enthropy_s(f,temp,nx,ent)
        use kinds
@@ -64,5 +64,5 @@
        ent=-2.d0*temp*ent
 
        return
-       end
+       end subroutine enthropy_s
 

@@ -161,4 +161,4 @@ if (.not.all_elec) then
 endif
 
 return
-end
+end subroutine el_config

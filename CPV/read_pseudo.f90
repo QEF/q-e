@@ -158,7 +158,7 @@ SUBROUTINE check_types_order( )
     END DO
   END IF
   RETURN
-END SUBROUTINE
+END SUBROUTINE check_types_order
 
 !=----------------------------------------------------------------------------=!
 
@@ -485,7 +485,7 @@ END FUNCTION
         END DO
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE analytic_to_numeric
 
 !=----------------------------------------------------------------------------=!
 
@@ -613,7 +613,7 @@ END FUNCTION
         END IF
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE read_giannoz
 
 !=----------------------------------------------------------------------------=!
 
@@ -732,7 +732,7 @@ END FUNCTION
   152   FORMAT(   3X,'point      radius        rho core')
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE ap_info
 
 !=----------------------------------------------------------------------------=!
 
@@ -808,7 +808,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_atomic_wf
 
 !=----------------------------------------------------------------------------=!
 
@@ -894,7 +894,7 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_numeric_pp
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1157,7 +1157,7 @@ SUBROUTINE upf2ncpp( upf, ap )
   END IF
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE upf2ncpp
 
 !=----------------------------------------------------------------------------=!
 
@@ -1215,7 +1215,7 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_head_pp
 
 !=----------------------------------------------------------------------------=!
 
@@ -1282,7 +1282,7 @@ SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_analytic_pp
 
 !=----------------------------------------------------------------------------=!
 
@@ -1337,7 +1337,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr )
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_atomic_cc
 
 !=----------------------------------------------------------------------------=!
    END MODULE read_pseudo_module_fpmd
@@ -1518,7 +1518,7 @@ END SUBROUTINE
       WRITE( stdout,*)
 !     
       return
-      end
+      end subroutine readbhs
 !
 !     
 !---------------------------------------------------------------------
@@ -1726,7 +1726,7 @@ END SUBROUTINE
       return
 100   call errore('readAdC','Reading pseudo file',abs(ios))
       stop
-      end
+      end subroutine readadc
 
 !     
 !---------------------------------------------------------------------
@@ -2153,7 +2153,7 @@ END SUBROUTINE
 !
       return
 100   call errore('readvan','error reading pseudo file', abs(ios) )
-      end
+      end subroutine readvan
 
 
 !

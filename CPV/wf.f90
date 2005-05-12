@@ -3935,7 +3935,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       call stop_clock( 'dforce_field' )
 !
       return
-      end
+      end subroutine dforce_field
 !----------------------------------------------------------------------
 #ifdef __PARA
 !-----------------------------------------------------------------------
@@ -4427,6 +4427,6 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       call stop_clock(' rhoiofr ')
 !
       return
-      end
+      end subroutine rhoiofr
 !
 !-----------------------------------------------------------------------

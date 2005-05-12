@@ -233,7 +233,7 @@ program wf
 
 contains
 !-------------------------------------------------------------------------
-	subroutine ddyn(m,Omat,Umat)
+  subroutine ddyn(m,Omat,Umat)
 !    (m,m) is the size of the matrix Ospin.
 !    Ospin is input overlap matrix.
 !    Uspin is the output unitary transformation.

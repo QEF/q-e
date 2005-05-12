@@ -404,5 +404,5 @@
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 !
       return
-      end
+      end subroutine vofrho2
 

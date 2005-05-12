@@ -160,4 +160,4 @@ do ir=1,mesh
    ruae(ir)=ruae(ir)/r(ir)
 enddo
 return
-end
+end subroutine dir_outward

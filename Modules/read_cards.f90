@@ -672,7 +672,7 @@ MODULE read_cards_module
            !
          END SUBROUTINE path_read_images
          !
-     END SUBROUTINE
+     END SUBROUTINE card_atomic_positions
      !
      !
      !------------------------------------------------------------------------

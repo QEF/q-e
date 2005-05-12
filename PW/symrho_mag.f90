@@ -108,5 +108,5 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
       DEALLOCATE (symflag)
 
       RETURN
-      END
+      end subroutine symrho_mag
 

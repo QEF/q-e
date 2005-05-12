@@ -88,4 +88,4 @@
  1015 format (5x,'constrained moment : ',3f12.6) 
  1017 format (5x,'constrained theta [deg] : ',f12.6) 
 
-      end
+      end subroutine report_mag

@@ -119,4 +119,4 @@ use ld1inc
       xc(8)=0.0_dp
 
       return
-      end
+      end subroutine compute_phius

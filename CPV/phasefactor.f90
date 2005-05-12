@@ -266,7 +266,7 @@
       deallocate( taus )
 !
       return
-      end
+      end subroutine phfac
 
 
 !-----------------------------------------------------------------------
@@ -340,5 +340,5 @@
       deallocate( taus )
 !
       return
-      end subroutine
+      end subroutine phbox
 

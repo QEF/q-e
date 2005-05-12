@@ -531,7 +531,7 @@
       call stop_clock( 'fft' )
 !
       return
-      end
+      end subroutine invfft
 
 !-----------------------------------------------------------------------
       subroutine ivfftb(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
@@ -564,7 +564,7 @@
 #endif
 !
       return
-      end
+      end subroutine ivfftb
 
 
 !-----------------------------------------------------------------------
@@ -591,7 +591,7 @@
       call stop_clock( 'ffts' )
 !
       return
-      end
+      end subroutine ivffts
 
 
 !-----------------------------------------------------------------------
@@ -620,7 +620,7 @@
       call stop_clock('fftw')
 !
       return
-      end
+      end subroutine ivfftw
 
 
 !-----------------------------------------------------------------------
@@ -646,7 +646,7 @@
 #endif
       call stop_clock( 'fft' )
       return
-      end
+      end subroutine fwfft
 
 
 !-----------------------------------------------------------------------
@@ -672,7 +672,7 @@
 #endif
       call stop_clock( 'ffts' )
       return
-      end
+      end subroutine fwffts
 
 
 !-----------------------------------------------------------------------
@@ -700,7 +700,7 @@
 #endif
       call stop_clock( 'fftw' )
       return
-      end
+      end subroutine fwfftw
 
 
 !-----------------------------------------------------------------------
@@ -728,7 +728,7 @@
       call stop_clock(' ivfftbold ' )
 !
       return
-      end
+      end subroutine ivfftbold
 
 !-----------------------------------------------------------------------
 
@@ -812,7 +812,7 @@
          END SELECT
 
        return
-     END SUBROUTINE
+     END SUBROUTINE c2psi
 
 !-----------------------------------------------------------------------
 
@@ -889,4 +889,4 @@
          END SELECT
        
        return
-     END SUBROUTINE
+     END SUBROUTINE psi2c
