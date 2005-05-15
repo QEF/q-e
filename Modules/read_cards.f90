@@ -462,7 +462,7 @@ MODULE read_cards_module
              CALL errore( ' read_cards ', &
                         & ' first_image missing in ATOMIC_POSITION', 1 )
              !
-          END IF      
+          END IF
           !
           read_conf_loop: DO 
              !
@@ -1367,13 +1367,13 @@ MODULE read_cards_module
      !    BEGIN manual
      !----------------------------------------------------------------------
      !
-     ! ATOMIC_VELOCITIES
+     ! ION_VELOCITIES
      !
      !   read velocities (in atomic units) from standard input
      !
      ! Syntax:
      !
-     !   ATOMIC_VELOCITIES
+     !   ION_VELOCITIES
      !     label(1)  Vx(1) Vy(1) Vz(1)
      !     ....
      !     label(n)  Vx(n) Vy(n) Vz(n)

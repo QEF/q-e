@@ -1436,8 +1436,6 @@ END SUBROUTINE
            IF( tzerop ) then
              IF( tv0rd ) THEN
                WRITE( stdout, 850 ) nv0rd
-               IF( program_name == 'CP90' ) &
-                 CALL errore( ' ions_print_info ', ' ions velocities from stdin not implemented yet ', 1 )
              ELSE
                WRITE( stdout, 635 )
              ENDIF 

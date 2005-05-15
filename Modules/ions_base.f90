@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2005 PWSCF-FPMD-CPV groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,8 +10,8 @@
   MODULE ions_base
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY: dbl
-      USE parameters, ONLY: nsx, natx, ntypx
+      USE kinds,      ONLY : dbl
+      USE parameters, ONLY : nsx, natx, ntypx
 !
       IMPLICIT NONE
       SAVE
@@ -726,35 +726,52 @@
 !------------------------------------------------------------------------------!
   CONTAINS 
 !------------------------------------------------------------------------------!
-
-  subroutine ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
-    real(kind=8), intent(in) :: tausm(:,:), pmass(:), fion(:,:)
-    integer, intent(in) :: iforce(:,:)
-    real(kind=8), intent(in) :: ainv(3,3), delt
-    real(kind=8), intent(out) :: taus(:,:) 
-    integer, intent(in) :: na(:), nsp
-    integer :: is, ia, i, isa
-    real(kind=8) :: dt2by2, fac, fions(3)
-
-    dt2by2 = .5d0 * delt * delt
-
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE ions_hmove( taus, tausm, vels, &
+                         iforce, pmass, fion, ainv, delt, na, nsp )
+    !--------------------------------------------------------------------------
+    !
+    REAL(KIND=DBL), INTENT(IN)  :: tausm(:,:), vels(:,:), pmass(:), fion(:,:)
+    INTEGER,        INTENT(IN)  :: iforce(:,:)
+    REAL(KIND=DBL), INTENT(IN)  :: ainv(3,3), delt
+    REAL(KIND=DBL), INTENT(OUT) :: taus(:,:) 
+    INTEGER,        INTENT(IN)  :: na(:), nsp
+    INTEGER                     :: is, ia, i, isa
+    REAL(KIND=DBL)              :: dt2by2, fac, fions(3)
+    !
+    !
+    dt2by2 = 0.5D0 * delt * delt
+    !
     isa = 0
-    do is=1,nsp
-      fac = dt2by2/pmass(is)
-      do ia=1,na(is)
-        isa = isa + 1
-        do i=1,3
-          fions( i ) = fion(1,isa)*ainv(i,1) + fion(2,isa)*ainv(i,2) + fion(3,isa)*ainv(i,3)
-        end do
-        do i=1,3
-          taus(i,isa) = tausm(i,isa) + iforce(i,isa) * fac * fions( i )
-        end do
-      end do
-    end do
-    return
-  end subroutine
-
-
+    !
+    DO is = 1, nsp
+       !
+       fac = dt2by2  / pmass(is)
+       !
+       DO ia = 1, na(is)
+          !
+          isa = isa + 1
+          !
+          DO i = 1, 3
+             !
+             fions(i) = fion(1,isa) * ainv(i,1) + &
+                        fion(2,isa) * ainv(i,2) + &
+                        fion(3,isa) * ainv(i,3)
+             !
+          END DO
+          !
+          taus(:,isa) = tausm(:,isa) + &
+                        delt * vels(:,isa) + iforce(:,isa) * fac * fions(:)
+          !
+       END DO
+       
+    END DO
+    !
+    RETURN
+    !
+  END SUBROUTINE
+  !
   subroutine ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp, &
                         fricp, hgamma, vels, tsdp, tnosep, fionm, vnhp, velsp, velsm )
     implicit none

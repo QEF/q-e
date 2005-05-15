@@ -384,5 +384,5 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 
 
 !=----------------------------------------------------------------------------=!
-      END MODULE
+      END MODULE from_scratch_module
 !=----------------------------------------------------------------------------=!
