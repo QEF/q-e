@@ -265,14 +265,11 @@ MODULE from_restart_module
              !
              CALL r_to_s( vel, vels, na, nsp, h )
              !
-             CALL ions_hmove( taus, tausm, vels, iforce, &
-                              pmass, fion, ainv, delt, na, nsp )
+             taus(:,:) = tausm(:,:) + delt * vels(:,:)
              !
           ELSE
              !
-             vels = 0.D0
-             !
-             CALL ions_hmove( taus, tausm, vels, iforce, &
+             CALL ions_hmove( taus, tausm, iforce, &
                               pmass, fion, ainv, delt, na, nsp )
              !
           END IF

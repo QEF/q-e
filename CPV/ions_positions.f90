@@ -23,11 +23,10 @@ MODULE ions_positions
   CONTAINS 
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE ions_hmove( taus, tausm, vels, &
-                         iforce, pmass, fion, ainv, delt, na, nsp )
+  SUBROUTINE ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
     !--------------------------------------------------------------------------
     !
-    REAL(KIND=dbl), INTENT(IN)  :: tausm(:,:), vels(:,:), pmass(:), fion(:,:)
+    REAL(KIND=dbl), INTENT(IN)  :: tausm(:,:), pmass(:), fion(:,:)
     INTEGER,        INTENT(IN)  :: iforce(:,:)
     REAL(KIND=dbl), INTENT(IN)  :: ainv(3,3), delt
     REAL(KIND=dbl), INTENT(OUT) :: taus(:,:) 
@@ -56,8 +55,7 @@ MODULE ions_positions
              !
           END DO
           !
-          taus(:,isa) = tausm(:,isa) + &
-                        delt * vels(:,isa) + iforce(:,isa) * fac * fions(:)
+          taus(:,isa) = tausm(:,isa) + iforce(:,isa) * fac * fions(:)
           !
        END DO
        

@@ -442,7 +442,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     IF( tfor .OR. thdyn ) CALL phfac( tau0, ei1, ei2, ei3, eigr ) 
+     IF ( tfor .OR. thdyn ) CALL phfac( tau0, ei1, ei2, ei3, eigr ) 
      !
      ! ... strucf calculates the structure factor sfac
      !
@@ -458,7 +458,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 )
      !
-     IF( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
+     IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      !
      !=======================================================================
      !
@@ -490,7 +490,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      hgamma(:,:) = 0.D0
      !
-     IF(thdyn) THEN
+     IF ( thdyn ) THEN
         !
         CALL cell_force( fcell, ainv, stress, omega, press, wmass )
         !
@@ -501,13 +501,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL cell_gamma( hgamma, ainv, h, velh )
         !
-     ENDIF
+     END IF
      !
      !======================================================================
      !
      IF ( tfor ) THEN
         !
-        IF( lwf ) CALL ef_force( fion, na, nsp, zv )
+        IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
         ! ... constraints are imposed here
         !
@@ -528,10 +528,10 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lconstrain ) THEN
            !
-            CALL check_constrain( nat, taup, ityp, 1.D0 )
-            !
-            CALL r_to_s( taup, tausp, na, nsp, ainv )
-            !
+           CALL check_constrain( nat, taup, ityp, 1.D0 )
+           !
+           CALL r_to_s( taup, tausp, na, nsp, ainv )
+           !
         END IF
         !
      END IF
@@ -557,7 +557,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            hold = h
            !
-        ENDIF
+        END IF
         !
         ! ... phfac calculates eigr
         !
@@ -596,7 +596,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( .NOT. tcg ) THEN
         !
-        IF( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
+        IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) CALL updatc( ccc, lambda, phi, bephi, becp, bec, cm )
         !
@@ -643,11 +643,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      ! ... fake cell-parameters kinetic energy
      !
-     ekinh=0.D0
+     ekinh = 0.D0
      !
      IF ( thdyn ) CALL cell_kinene( ekinh, temphh, velh )
      !
-     IF( COUNT( iforceh == 1 ) > 0 ) THEN
+     IF ( COUNT( iforceh == 1 ) > 0 ) THEN
         !
         temphc = 2.D0 * factem * ekinh / DBLE( COUNT( iforceh == 1 ) )
         !
@@ -655,7 +655,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         temphc = 0.D0
         !
-     ENDIF
+     END IF
      !
      ! ... udating nose-hoover friction variables
      !
@@ -720,7 +720,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      ELSE
         !
-        IF ( .NOT.tens ) THEN
+        IF ( .NOT. tens ) THEN
            !
            econs = ekinp + etot
            atot  = etot
@@ -849,12 +849,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         ! ... new variables for next step
         !
         CALL ions_shiftvar( tausp, taus, tausm )   !  scaled positions 
-        CALL ions_shiftvar( taup,  tau0,  taum )   !  real positions
+        CALL ions_shiftvar( taup,  tau0, taum  )   !  real positions
         CALL ions_shiftvar( velsp, vels, velsm )   !  scaled velocities
         !
-        IF( tnosep ) CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
-        IF( tnosee ) CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
-        IF( tnoseh ) CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
+        IF ( tnosep ) CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
+        IF ( tnosee ) CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
+        IF ( tnoseh ) CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
         !
      END IF
      !
