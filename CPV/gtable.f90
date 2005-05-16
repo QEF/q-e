@@ -1,11 +1,17 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+subroutine gtable( ipol, ctable)
 
 !respect to vectorial (serial) program I changed ngwx to ngw :-)
 
-
 ! this subroutine prepare the correspondence array to
 ! compute the operator exp(iG_ipol.r)
-
-subroutine gtable( ipol, ctable)
 
 !   ctable : output coorespondence table
 !    in (ig,1) correspondence for g+1

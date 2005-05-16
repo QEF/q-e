@@ -1,4 +1,11 @@
 !
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!
 ! This file holds XSF (=Xcrysden Structure File) utilities.
 ! Routines written by Tone Kokalj on Mon Jan 27 18:51:17 CET 2003
 ! modified by Gerardo Ballabio and Carlo Cavazzoni

@@ -1,9 +1,16 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
 ! this subroutine compute the part of force for the ions due to
 ! electronic berry phase( see internal notes)
 ! it needs becdr
-
-subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
 ! fion       : input, forces on ions
 ! tfor       : input, if true it computes force

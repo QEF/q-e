@@ -1,10 +1,18 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 
 ! this subroutine computes the inverse of the matrix Q
 ! Q_ij=<Psi_i^0|e^iG_ipol.r|Psi_j^0>
 ! and det Q
 !respect to vectorial (serial) program I changed ngwx to ngw :-)
 !this matrix is symmetric, and we make us of it
-subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 
 !    c0 input: the unperturbed wavefunctions
 !    bec0 input: the coefficients <Phi_Rj|Psi_i^0>
@@ -13,7 +21,6 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 !    qmat output: the inverse q matrix
 !    detq output: det Q
    
-
 
   use  gvecs
   use gvecw, only: ngw

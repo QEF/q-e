@@ -1,10 +1,17 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 ! this subroutine computes the force for electrons
 ! in case of Berry,s phase like perturbation
 ! see internal notes
 ! it gives the force for the i-th state
 !respect to vectorial (serial) program I changed ngwx to ngw :-)
-subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 ! c0 input: Psi^0_i
 ! c1 input: Psi^1_i

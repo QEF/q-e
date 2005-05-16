@@ -1,9 +1,17 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+subroutine qqberry2( gqq,gqqm, ipol)
 
 !  this subroutine computes the array gqq and gqqm
 !  gqq=int_dr qq(r)exp(iGr)=<Beta_r|exp(iGr)|Beta_r'>
 !  gqqm=int_dr qq(r)exp(-iGr)=<Beta_r|exp(-iGr)|Beta_r'>
 ! ATTENZIONE ora solo cella cubica
-subroutine qqberry2( gqq,gqqm, ipol)
 
 !   gqq output: as defined above
 

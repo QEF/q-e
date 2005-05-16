@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 #include "f_defs.h"
 !-----------------------------------------------------------------------
       subroutine wf(clwf,c,bec,eigr,eigrb,taub,irb,b1,b2,b3,Uall,becdr,what1,wfc,jw,ibrav)

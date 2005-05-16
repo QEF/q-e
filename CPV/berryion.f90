@@ -1,10 +1,17 @@
-!#include "../include/machine.h"
+!
+! Copyright (C) 2002-2005 FPMD-CPV groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
+
 ! this subroutine returns the berry phase energy
 ! = L/2*Pi*Im(log Sum_R exp(i*(2pi/L)*R_i*rho_i))
 ! of the ions and the constant force on the ions
 ! now only for orthorombic primitive cell
-
-subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
 !  tau0    : input, positions of ions
 !  fion    : input,output, forces on ions
