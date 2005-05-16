@@ -355,8 +355,6 @@ MODULE constraints_module
           dg(:,ia3) = ( cos123 * r23 - r12 ) / ( sin123 * norm_r23 )
           dg(:,ia2) = - dg(:,ia1) - dg(:,ia3)
           !
-          
-          !
        CASE DEFAULT
           !
           CALL errore( 'dist_constrain', &
