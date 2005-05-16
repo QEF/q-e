@@ -1356,9 +1356,8 @@ CONSTRAINTS
                                             constraint, as they appear in 
                                             the 'POSITION' CARD
                                         
-      constr_target                 REAL,   target for the constrain ( in the 
-                                            case of planar angles it is the 
-                                            COS of the angle ).
+      constr_target                 REAL,   target for the constrain ( planar 
+                                            angles are specified in degrees ).
                                             This variable is optional.
 
 -------------------------------------------------------------------------------

@@ -24,7 +24,7 @@ MODULE constraints_module
   !
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : eps16
+  USE constants, ONLY : eps16, tpi
   USE io_global, ONLY : stdout
   !
   USE basic_algebra_routines, ONLY : norm
@@ -105,16 +105,18 @@ MODULE constraints_module
        !
        DO ia = 1, nconstr
           !
-          IF ( constr_target_set(ia) ) THEN
-             !
-             target(ia) = constr_target(ia)
-             !
-             CYCLE
-             !
-          END IF
-          !
           SELECT CASE ( constr_type(ia) )
           CASE( 0 )
+             !
+             ! ... constraint on coordination number
+             !
+             IF ( constr_target_set(ia) ) THEN
+                !
+                target(ia) = constr_target(ia)
+                !
+                CYCLE
+                !
+             END IF
              !
              ia1 = INT( constr(1,ia) )
              !
@@ -144,6 +146,16 @@ MODULE constraints_module
              !
           CASE( 1 )
              !
+             ! ... constraint on distance
+             !
+             IF ( constr_target_set(ia) ) THEN
+                !
+                target(ia) = constr_target(ia)
+                !
+                CYCLE
+                !
+             END IF
+             !
              ia1 = INT( constr(1,ia) )
              ia2 = INT( constr(2,ia) )
              !
@@ -154,6 +166,19 @@ MODULE constraints_module
              ltest = ltest .OR. ANY( if_pos(:,ia2) == 0 )
              !
           CASE( 2 )
+             !
+             ! ... constraint on planar angle
+             !
+             IF ( constr_target_set(ia) ) THEN
+                !
+                ! ... in the input target for the angle (in degrees) is 
+                ! ... converted to the cosine of the angle
+                !
+                target(ia) = COS( constr_target(ia) * tpi / 360.D0 )
+                !
+                CYCLE
+                !
+             END IF
              !
              ia1 = INT( constr(1,ia) )
              ia2 = INT( constr(2,ia) )
@@ -329,6 +354,8 @@ MODULE constraints_module
           dg(:,ia1) = ( cos123 * r12 - r23 ) / ( sin123 * norm_r12 )
           dg(:,ia3) = ( cos123 * r23 - r12 ) / ( sin123 * norm_r23 )
           dg(:,ia2) = - dg(:,ia1) - dg(:,ia3)
+          !
+          
           !
        CASE DEFAULT
           !

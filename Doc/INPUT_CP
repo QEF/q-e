@@ -77,6 +77,7 @@ calculation    CHARACTER ( default = 'cp' )
                vc-cp    = variable-cell Car-Parrinello (-Rahman) dynamics
                neb      = Nudged Elastc Band method
                smd      = String Method Dynamics
+               cp-wf    = Car-Parrinello MD with Wannier functions
 
 title          CHARACTER ( default = 'MD Simulation' )
                reprinted on output.
@@ -751,9 +752,8 @@ CONSTRAINTS
                                             constraint, as they appear in 
                                             the 'POSITION' CARD
                                         
-      constr_target                 REAL,   target for the constrain ( in the 
-                                            case of planar angles it is the 
-                                            COS of the angle ).
+      constr_target                 REAL,   target for the constrain ( planar 
+                                            angles are specified in degrees ).
                                             This variable is optional.
 
 -------------------------------------------------------------------------------
