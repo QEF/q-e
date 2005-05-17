@@ -114,4 +114,4 @@
       call mp_end()
 
       stop
-      end program
+      end program main

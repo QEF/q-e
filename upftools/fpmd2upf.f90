@@ -889,7 +889,7 @@ program fpmd2upf
 
 100 continue
 
-end program
+end program fpmd2upf
 
 !----------------------------------------------------------------------
 subroutine simpson2(mesh,func,rab,asum)

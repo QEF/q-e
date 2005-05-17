@@ -97,7 +97,7 @@
            (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
 !
       stop
-      end
+      end program dynmat
 !
 !-----------------------------------------------------------------------
       subroutine readmat (fildyn,asr,nax,nat,ntyp,ityp,atm,a0,           &

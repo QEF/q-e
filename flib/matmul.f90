@@ -124,7 +124,7 @@ PROGRAM matmul
   DEALLOCATE( ax, bx, cx, dx, ex, fx )
 
   CALL PARALLEL_HANGUP
-END PROGRAM
+END PROGRAM matmul
 
 #endif
 

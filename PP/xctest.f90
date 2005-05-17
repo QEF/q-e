@@ -35,7 +35,7 @@ program xctest
   CALL test_xc( nnr, nspin, rhor, grhor )
   
   CALL mp_end()
-end program
+end program xctest
 
 subroutine test_gcxc( nnr, nspin, rhor, grhor )
   use kinds, only: dbl
