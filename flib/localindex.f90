@@ -121,4 +121,4 @@
 !
 !     End of INDXG2L
 !
-      END
+      END FUNCTION lind_block_cyclic

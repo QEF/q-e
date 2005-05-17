@@ -1210,7 +1210,7 @@
         endif
       endif
       return
-      END FUNCTION
+      END FUNCTION pythag
 
 !=----------------------------------------------------------------------------=!
 

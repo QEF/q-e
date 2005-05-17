@@ -41,4 +41,4 @@ endif
 if (sph_ind.lt.-l.or.sph_ind.gt.l) sph_ind=0
 
 return
-end
+end function sph_ind

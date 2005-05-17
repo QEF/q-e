@@ -1369,7 +1369,7 @@ end function allowed
      good_fft_order = new
   
      RETURN
-   END FUNCTION
+   END FUNCTION good_fft_order
 
 
 !=----------------------------------------------------------------------=!

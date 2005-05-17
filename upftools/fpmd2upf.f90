@@ -395,7 +395,7 @@ contains
           calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
           write(6,*) 'amesh (dx) = ', calculate_dx
         RETURN
-      END FUNCTION 
+      END FUNCTION calculate_dx
 
 
 SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)

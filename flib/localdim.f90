@@ -181,4 +181,4 @@
 !
 !     End of NUMROC
 !
-      END FUNCTION
+      END FUNCTION ldim_block_cyclic

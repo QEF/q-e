@@ -7,7 +7,7 @@
 !
 
 
-       INTEGER FUNCTION  owner_block(ig, nx, np)
+       INTEGER FUNCTION owner_block(ig, nx, np)
 !
 !   INPUT :
 !           ig  global index of the x dimension of array element
@@ -38,7 +38,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-       INTEGER FUNCTION  owner_cyclic(ig, nx, np)
+       INTEGER FUNCTION owner_cyclic(ig, nx, np)
 !
 !   INPUT :
 !           ig  global index of the x dimension of array element
@@ -118,4 +118,4 @@
 !
 !     End of INDXG2P
 !
-      END
+      END FUNCTION owner_block_cyclic

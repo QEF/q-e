@@ -291,7 +291,7 @@
       electrons_nose_nrg = 0.5d0 * qne * vnhe * vnhe + 2.0d0 * ekincw * xnhe0
       !
     return
-  end function
+  end function electrons_nose_nrg
 
   subroutine electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
     !  shift values of nose variables to start a new step

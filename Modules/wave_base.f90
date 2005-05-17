@@ -553,7 +553,7 @@
             wdot_kp = ZDOTC(n, a(1), 1, b(1), 1)
 
             RETURN
-          END FUNCTION 
+          END FUNCTION wdot_kp
 
 !==----------------------------------------------==!
 !==----------------------------------------------==!
@@ -643,7 +643,7 @@
          scalw = rsc
 
          RETURN
-       END FUNCTION
+       END FUNCTION scalw
 
 !==----------------------------------------------==!
 !==----------------------------------------------==!
@@ -693,7 +693,7 @@
      END DO
      wave_speed2 = ekinc
      RETURN
-   END FUNCTION
+   END FUNCTION wave_speed2
 
 
 

@@ -41,4 +41,4 @@ else
 endif
 
 return
-end
+end function spinor

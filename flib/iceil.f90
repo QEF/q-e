@@ -18,5 +18,5 @@
       iceil = CEILING(a)
 
       return
-      end
+      end function iceil
 

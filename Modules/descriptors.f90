@@ -378,7 +378,7 @@
 
             END IF
             RETURN
-          END FUNCTION
+          END FUNCTION globalindex_shape
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -407,7 +407,7 @@
             END IF
             globalindex_desc = globalindex_shape(lind, n, nb, my_pe, src_pe, np, pshape )
             RETURN
-          END FUNCTION
+          END FUNCTION globalindex_desc
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -450,7 +450,7 @@
 
            END IF
            RETURN
-         END FUNCTION
+         END FUNCTION localdim_shape
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -478,7 +478,7 @@
             END IF
             localdim_desc = localdim_shape( N, NB, my_pe, src_pe, np, pshape)
             RETURN
-          END FUNCTION
+          END FUNCTION localdim_desc
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -519,7 +519,7 @@
              LOCALINDEX_SHAPE = ig
            END IF
            RETURN
-         END FUNCTION
+         END FUNCTION localindex_shape
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -547,12 +547,12 @@
             END IF
             localindex_desc = localindex_shape(ig,n,nb,me,np,pshape)
             RETURN
-          END FUNCTION
+          END FUNCTION localindex_desc
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
 
-         INTEGER FUNCTION  ownerof_shape(ig,n,nb,src_pe,np,pshape)
+         INTEGER FUNCTION ownerof_shape(ig,n,nb,src_pe,np,pshape)
 !
 !  ig      global index of the x dimension of array element
 !  n       dimension of the global array
@@ -582,7 +582,7 @@
          ownerof_shape = MOD( ig-1, np )
        END IF
        RETURN
-       END FUNCTION
+       END FUNCTION ownerof_shape
 
 
 !=----------------------------------------------------------------------------=!
@@ -611,7 +611,7 @@
             END IF
             ownerof_desc = ownerof_shape(ig, n, nb, src_pe, np, pshape)
             RETURN
-          END FUNCTION
+          END FUNCTION ownerof_desc
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual

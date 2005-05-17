@@ -881,7 +881,7 @@
       call errore( ' cell_alat ', ' alat has not been set ', 1 )
     cell_alat = alat
     return 
-  end function
+  end function cell_alat
 
 !
 !------------------------------------------------------------------------------!
@@ -966,7 +966,7 @@ CONTAINS
       enddo
     enddo
     return
-  end function
+  end function cell_nose_nrg
 
   subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
     !  shift values of nose variables to start a new step

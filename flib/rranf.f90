@@ -12,18 +12,18 @@
 !
 !-------------------------------------------------------------------------
 
-      FUNCTION RRANF()
+      FUNCTION rranf()
         USE kinds
         IMPLICIT NONE
-        REAL(dbl) :: RRANF
-        INTEGER :: KK, M, KONST
-        DATA M/100001/, KONST/125/
-        SAVE M, KONST
-          M=M*KONST
-          M=M-2796203 * (M/2796203)
-          RRANF = REAL(M)/2796203.D0
+        REAL(dbl) :: rranf
+        INTEGER :: kk, m, konst
+        DATA m/100001/, konst/125/
+        SAVE m, konst
+          m=m*konst
+          m=m-2796203 * (m/2796203)
+          rranf = REAL(m)/2796203.d0
         RETURN
-      END FUNCTION
+      END FUNCTION rranf
 
 !-------------------------------------------------------------------------
       real(kind=8) function randy()
@@ -73,7 +73,7 @@
       ir(j)=idum
 #endif
       return
-      end
+      end function randy
 !
 function rndm ()
   !
