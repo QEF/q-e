@@ -2893,7 +2893,7 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
       end do
 
       return
-      end
+      end function boxdotgridcplx
 
 !-----------------------------------------------------------------------
       subroutine write_rho_g(rhog)

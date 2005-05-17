@@ -171,7 +171,7 @@ REAL(dbl) FUNCTION calculate_dx( a, m )
   rb = a(n)
   calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
   RETURN
-END FUNCTION 
+END FUNCTION calculate_dx
 
 !=----------------------------------------------------------------------------=!
 

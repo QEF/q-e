@@ -601,7 +601,7 @@
 
         cgenergy = edft%etot
 
-      END FUNCTION
+      END FUNCTION cgenergy
 
     END SUBROUTINE
 

@@ -758,7 +758,7 @@
         END DO
         max_ion_forces = fmax
         RETURN
-      END FUNCTION
+      END FUNCTION max_ion_forces
 
 !
 !

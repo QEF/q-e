@@ -132,19 +132,19 @@
 !      stepf=derfc(x)
 !!     stepf=derfc(x)-c*x*dexp(-x*x)
 !      RETURN
-!      END
+!      END FUNCTION stepf
 
-      DOUBLE PRECISION FUNCTION STEPF(X)
-      use kinds
-      IMPLICIT  NONE
-      real(dbl) c,x,erfc
-      PARAMETER (C=0.5641895835D0)
-!     STEPF=ERFC(X)
-      STEPF=1.d0/(exp(min(x,100.d0))+1.d0)
-      END 
+      DOUBLE PRECISION FUNCTION stepf(x)
+      USE kinds
+      IMPLICIT NONE
+      REAL(dbl) c,x,erfc
+      PARAMETER (c=0.5641895835D0)
+!     stepf=erfc(x)
+      stepf=1.d0/(exp(min(x,100.d0))+1.d0)
+      END FUNCTION stepf
 
 
-      subroutine adjef_s(e,fke,ef,nel,nx,temp,sume)
+      SUBROUTINE adjef_s(e,fke,ef,nel,nx,temp,sume)
 
 ! e(nstati)
 ! fke(nstati) = f(nstati)       (output)

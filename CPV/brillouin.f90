@@ -224,7 +224,7 @@
       INTEGER FUNCTION get_kpoints_number()
         get_kpoints_number = kp%nkpt
         RETURN
-      END FUNCTION
+      END FUNCTION get_kpoints_number
 
 !------------------------------------------------------------------------------!
     END MODULE brillouin

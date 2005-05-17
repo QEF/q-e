@@ -234,7 +234,7 @@
       end do
 
       return
-      end
+      end function boxdotgrid
 !
 !-----------------------------------------------------------------------
       subroutine calbec (nspmn,nspmx,eigr,c,bec)
@@ -429,7 +429,7 @@
       cscnorm=sqrt(rsum)
 !
       return
-      end
+      end function cscnorm
 !
 !-----------------------------------------------------------------------
       subroutine denkin(c,dekin)
@@ -1190,7 +1190,7 @@
       enkin=enkin*tpiba2
 !
       return
-      end
+      end function enkin
 !
 !-----------------------------------------------------------------------
       real(kind=8) function ennl(rhovan, bec)
@@ -1244,7 +1244,7 @@
       end do
 !
       return
-      end
+      end function ennl
 
 !
 !

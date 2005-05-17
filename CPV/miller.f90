@@ -38,5 +38,5 @@
       miller2gsqr = gsq
 
       RETURN
-      END
+      END FUNCTION miller2gsqr
 

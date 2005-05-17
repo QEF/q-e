@@ -87,7 +87,7 @@
       END IF
       restart_dir = TRIM( dirname )
       RETURN
-    END FUNCTION
+    END FUNCTION restart_dir
 
 !------------------------------------------------------------------------------!
 
@@ -107,7 +107,7 @@
       kpoint_dir = TRIM( kdirname )
       !
       RETURN
-    END FUNCTION
+    END FUNCTION kpoint_dir
 
 !------------------------------------------------------------------------------!
 
@@ -128,7 +128,7 @@
       wfc_filename = TRIM( filename )
       !
       RETURN
-    END FUNCTION
+    END FUNCTION wfc_filename
 
 
 !------------------------------------------------------------------------------!

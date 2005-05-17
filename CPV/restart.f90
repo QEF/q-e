@@ -426,7 +426,7 @@
           CALL mp_bcast( lval, ionode_id )
           check_restartfile = lval
           RETURN 
-        END FUNCTION
+        END FUNCTION check_restartfile
 
 !=----------------------------------------------------------------------------=!
      END MODULE restart_file

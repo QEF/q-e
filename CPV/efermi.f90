@@ -571,7 +571,7 @@
 !
 !-----------------------------------------------------------------------
 !
-!      real*8 FUNCTION ERFC(XX)
+!      REAL*8 FUNCTION erfc(xx)
 !
 !     COMPLEMENTARY ERROR FUNCTION
 !     FROM THE SANDIA MATHEMATICAL PROGRAM LIBRARY
@@ -642,9 +642,9 @@
 !330   ERFC = 0.0D0
 !
 !9999  RETURN
-!      END
+!      END FUNCTION erfc
 !-----------------------------------------------------------------------
-      real*8 FUNCTION FERMID(XX)
+      REAL*8 FUNCTION fermid(xx)
 !
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       IF(XX .GT. 30.D0) THEN
@@ -656,9 +656,9 @@
       ENDIF
 !
       RETURN
-      END
+      END FUNCTION fermid
 !-----------------------------------------------------------------------
-      real*8 FUNCTION DELTHM(XX)
+      REAL*8 FUNCTION delthm(xx)
 !
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       pi=3.14159265358979
@@ -671,9 +671,9 @@
       ENDIF
 !
       RETURN
-      END
+      END FUNCTION delthm
 !-----------------------------------------------------------------------
-      real*8 FUNCTION SPLINE(X)
+      REAL*8 FUNCTION spline(x)
 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       eesqh=sqrt(exp(1.0))*0.5
@@ -686,9 +686,9 @@
       spline=2.0*fx
 !
       return
-      end
+      END FUNCTION spline
 !-----------------------------------------------------------------------
-      real*8 FUNCTION POSHM(X)
+      REAL*8 FUNCTION poshm(x)
 !
 ! NOTE g's are all intended to be normalized to 1 !
 ! function = 2 * int_minf^x [g(t)] dt
@@ -706,9 +706,9 @@
       ENDIF
 !
       RETURN
-      END
+      END FUNCTION poshm
 !-----------------------------------------------------------------------
-      real*8 FUNCTION POSHM2(X)
+      REAL*8 FUNCTION poshm2(x)
 !
 ! NOTE g's are all intended to be normalized to 1 !
 ! function = 2 * int_minf^x [g(t)] dt
@@ -725,5 +725,5 @@
       ENDIF
 !
       RETURN
-      END
+      END FUNCTION poshm2
 !-----------------------------------------------------------------------

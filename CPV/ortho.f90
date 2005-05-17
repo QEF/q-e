@@ -422,7 +422,7 @@
 
       ortho_gamma = iter
       RETURN
-      END FUNCTION
+      END FUNCTION ortho_gamma
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -635,7 +635,7 @@
 
       ortho_gamma_p = iter
       RETURN
-      END FUNCTION
+      END FUNCTION ortho_gamma_p
 
 
 !=----------------------------------------------------------------------------=!
@@ -904,7 +904,7 @@
 
       ortho_kp = iter
       RETURN
-      END FUNCTION
+      END FUNCTION ortho_kp
 
 
 !=----------------------------------------------------------------------------=!
