@@ -61,6 +61,9 @@ MODULE io_files
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   CHARACTER (LEN=11), PARAMETER :: xmlpun = 'restart.xml'
+  CHARACTER(LEN=256) :: vib_out  = 'vibrations.out' & ! output of phrozen phonon vibrational calculation
+                        vib_mass = 'mass.vib'         ! isotope masses used for diagonalizing the
+                                                      ! ...dynamical matrix
   !
   ! ... The units where various variables are saved
   !
@@ -107,8 +110,10 @@ MODULE io_files
   !
   ! ... Y. Kanai combined smd/cp method
   !
-  INTEGER :: smwout = 20 ! base value to compute index for replica files
+  INTEGER :: smwout      = 20 ! base value to compute index for replica files
   !
+  INTEGER :: vib_out     = 20 ! output of phrozen phonon vibrational calculation
+  INTEGER :: vib_mass    = 21 ! isotope masses used for the dynamical matrix
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!
