@@ -74,7 +74,7 @@
        ainvb(3,:) = b3b(:) / alatb
 
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE small_box_set
 !
 !------------------------------------------------------------------------------!
    END MODULE small_box

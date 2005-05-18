@@ -74,7 +74,7 @@ MODULE mp_global
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE mp_global_start
      !
      !-----------------------------------------------------------------------     
      SUBROUTINE mp_global_group_start( mep, myp, nprocp, num_of_pools )
@@ -91,6 +91,6 @@ MODULE mp_global
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE mp_global_group_start
      !
 END MODULE mp_global

@@ -135,7 +135,7 @@
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE nullify_pseudo_upf
 
         SUBROUTINE deallocate_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
@@ -164,7 +164,7 @@
           IF( ASSOCIATED( upf%chi ) ) DEALLOCATE( upf%chi )
           IF( ASSOCIATED( upf%rho_at ) ) DEALLOCATE( upf%rho_at )
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_pseudo_upf
 
       END MODULE pseudo_types
 

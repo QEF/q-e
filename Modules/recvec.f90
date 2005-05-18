@@ -49,7 +49,7 @@
 
      SUBROUTINE deallocate_gvecw
        IF( ALLOCATED( ggp ) ) DEALLOCATE( ggp )
-     END SUBROUTINE
+     END SUBROUTINE deallocate_gvecw
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecw
@@ -104,7 +104,7 @@
      SUBROUTINE deallocate_gvecs()
        IF( ALLOCATED( nps ) ) DEALLOCATE( nps )
        IF( ALLOCATED( nms ) ) DEALLOCATE( nms )
-     END SUBROUTINE
+     END SUBROUTINE deallocate_gvecs
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecs
@@ -140,7 +140,7 @@
          ecutb = ecut
          gcutb = ecut / tpibab / tpibab
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE gvecb_set
 
      SUBROUTINE deallocate_gvecb()
        IF( ALLOCATED( gb ) ) DEALLOCATE( gb )
@@ -150,7 +150,7 @@
        IF( ALLOCATED( nmb ) ) DEALLOCATE( nmb )
        IF( ALLOCATED( iglb ) ) DEALLOCATE( iglb )
        IF( ALLOCATED( mill_b ) ) DEALLOCATE( mill_b )
-     END SUBROUTINE
+     END SUBROUTINE deallocate_gvecb
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecb
@@ -238,7 +238,7 @@
        CALL deallocate_gvecw( )
        CALL deallocate_gvecs( )
        CALL deallocate_gvecb( )
-     END SUBROUTINE
+     END SUBROUTINE deallocate_recvecs
 
 !=----------------------------------------------------------------------------=!
    END MODULE reciprocal_vectors

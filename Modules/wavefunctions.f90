@@ -50,7 +50,7 @@
        IF( ALLOCATED( evc_nc ) ) DEALLOCATE( evc_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
-     END SUBROUTINE
+     END SUBROUTINE deallocate_wavefunctions
 
 !=----------------------------------------------------------------------------=!
    END MODULE wavefunctions_module

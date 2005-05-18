@@ -33,7 +33,7 @@
    CONTAINS
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE  sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
+      SUBROUTINE sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
           USE mp, ONLY: mp_sum
           USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, my_image_id
@@ -185,11 +185,11 @@
 ! Test sticks
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE sticks_maps
 
 !=----------------------------------------------------------------------=
 
-  SUBROUTINE  sticks_maps_scalar( lgamma, ub, lb, b1, b2, b3, gcutm, gkcut, gcutms, stw, ngm, ngms )
+  SUBROUTINE sticks_maps_scalar( lgamma, ub, lb, b1, b2, b3, gcutm, gkcut, gcutms, stw, ngm, ngms )
 
     LOGICAL, INTENT(IN) :: lgamma !  if true use gamma point simmetry
     INTEGER, INTENT(IN) :: ub(:)  !  upper bounds for i-th grid dimension
@@ -247,7 +247,7 @@
     enddo loop1
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE sticks_maps_scalar
 
 
 !=----------------------------------------------------------------------=
@@ -317,7 +317,7 @@
         ! WRITE( stdout,*) '-----------------'
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE sticks_sort
 
 !=----------------------------------------------------------------------=
 
@@ -379,7 +379,7 @@
       END DO
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sticks_countg
 
 !=----------------------------------------------------------------------=
 
@@ -478,7 +478,7 @@
       END DO
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sticks_dist1
 
 !=----------------------------------------------------------------------=
     
@@ -550,7 +550,7 @@
       sticks_owner( :, : ) = ABS( stown( :, :) )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sticks_pairup
 
 !=----------------------------------------------------------------------=
 
@@ -811,7 +811,7 @@
     SUBROUTINE sticks_deallocate
       IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sticks_deallocate
    
 
 !=----------------------------------------------------------------------=

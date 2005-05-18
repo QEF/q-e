@@ -207,7 +207,7 @@
         DEALLOCATE( wtmp )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_wfc1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -226,7 +226,7 @@
       CHARACTER(LEN=20) :: section_name = 'wfc'
       idum = nbnd
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_wfc2
 
 !=----------------------------------------------------------------------------=!
 !

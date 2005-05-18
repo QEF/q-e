@@ -84,7 +84,7 @@ CONTAINS
        OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
     END DO
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE printout_base_open
 
   SUBROUTINE printout_base_close( )
     INTEGER :: iunit
@@ -97,7 +97,7 @@ CONTAINS
        END IF
     END DO
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE printout_base_close
 
   
   SUBROUTINE printout_pos( iunit, nfi, tau, nat, simtime, label )
@@ -120,7 +120,7 @@ CONTAINS
 255 FORMAT(3X,A3,3E14.6)
 252 FORMAT(3E14.6)
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE printout_pos
  
 
   SUBROUTINE printout_cell( iunit, nfi, h, simtime )
@@ -135,7 +135,7 @@ CONTAINS
  30 FORMAT(3X,'STEP:',I7,1X,F10.6)
  1000    format(3F14.8)
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE printout_cell
 
 
   SUBROUTINE printout_stress( iunit, nfi, str, simtime )
@@ -150,6 +150,6 @@ CONTAINS
  30 FORMAT(3X,'STEP:',I7,1X,F10.6)
  1000    format(3(F18.8,1X))
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE printout_stress
 
 END MODULE printout_base

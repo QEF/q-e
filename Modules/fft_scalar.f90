@@ -595,8 +595,8 @@
             CALL f_hpmstop( 40 + ABS(sgn)  )
 #endif
 
-     return
-   end subroutine cft_2xy
+     RETURN
+   END SUBROUTINE cft_2xy
 
 
 !
@@ -761,7 +761,7 @@
 #endif
       
      RETURN
-   END SUBROUTINE
+   END SUBROUTINE cfft3d
 
 !
 !=----------------------------------------------------------------------=!
@@ -785,7 +785,7 @@
 !
 !----------------------------------------------------------------------
 
-subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y)
+SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y)
   !
   !     driver routine for 3d complex "reduced" fft
   !     sign > 0 : f(G) => f(R)   ; sign < 0 : f(R) => f(G)
@@ -1030,7 +1030,7 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
      END IF
 
      RETURN
-   END SUBROUTINE 
+   END SUBROUTINE cfft3ds
 
 !
 !=----------------------------------------------------------------------=!
@@ -1226,7 +1226,7 @@ subroutine cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 #endif
 
      RETURN
-   END SUBROUTINE
+   END SUBROUTINE cft_b
 
 !
 !=----------------------------------------------------------------------=!

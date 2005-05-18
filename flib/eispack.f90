@@ -1,5 +1,5 @@
 #include "f_defs.h"
-     SUBROUTINE RS(nm, n, a, w, matz, z, fv1, fv2, ierr)
+     SUBROUTINE rs(nm, n, a, w, matz, z, fv1, fv2, ierr)
 
         INTEGER n,nm,ierr,matz
         REAL*8 :: a(nm,n),w(n),z(nm,n),fv1(n),fv2(n)
@@ -37,4 +37,4 @@
         end if
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE rs

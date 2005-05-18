@@ -44,4 +44,4 @@
 #endif
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE avrec

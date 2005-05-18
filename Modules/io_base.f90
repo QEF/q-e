@@ -284,7 +284,7 @@
       END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_header1
 
 
     SUBROUTINE write_restart_header2(iuni)
@@ -303,7 +303,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_header2
 
 
 !=----------------------------------------------------------------------------=!
@@ -488,7 +488,7 @@
         tmp_dir = tmp_dir_
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_header1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -523,7 +523,7 @@
         WRITE( stdout, fmt = " (3X,'W: read_restart_header, header not read from restart ' ) " )
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_header2
 
 
 !=----------------------------------------------------------------------------=!
@@ -553,7 +553,7 @@
       END IF
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_xdim1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -579,7 +579,7 @@
       END IF 
 !
       RETURN 
-    END SUBROUTINE
+    END SUBROUTINE write_restart_xdim2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -627,7 +627,7 @@
         CALL mp_bcast( nrxxs, ionode_id )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_xdim1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -658,7 +658,7 @@
         WRITE( stdout,fmt="(3X,'W: read_restart_xdim, xdim not read from restart ' )")
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_xdim2
 
 
 !=----------------------------------------------------------------------------=!
@@ -701,7 +701,7 @@
        ENDIF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_ldau1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -727,7 +727,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_ldau2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -787,7 +787,7 @@
         CALL mp_bcast(Hubbard_alpha, ionode_id)
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_ldau1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -820,7 +820,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_ldaU, Data Section not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_ldau2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -873,7 +873,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_symmetry1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -896,7 +896,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_symmetry2
 
 
 !=----------------------------------------------------------------------------=!
@@ -969,7 +969,7 @@
         CALL mp_bcast( irt, ionode_id )
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_symmetry1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -995,7 +995,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_symmetry, symmetries not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_symmetry2
 
 
 !=----------------------------------------------------------------------------=!
@@ -1107,7 +1107,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_pseudo1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1239,7 +1239,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_pseudo3
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1264,7 +1264,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_pseudo2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1454,7 +1454,7 @@
         CALL mp_bcast( iver, ionode_id )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_pseudo1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1646,7 +1646,7 @@
         CALL mp_bcast( rho_at(1:mesh), ionode_id )
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_pseudo3
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1680,7 +1680,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_pseudo, pseudo not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_pseudo2
 
 
 !=----------------------------------------------------------------------------=!
@@ -1740,7 +1740,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_gvec1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1767,7 +1767,7 @@
       END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_gvec2
 
 
 !=----------------------------------------------------------------------------=!
@@ -1846,7 +1846,7 @@
         END IF
   
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_gvec1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1879,7 +1879,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_gvec, data not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_gvec2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1921,7 +1921,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_gkvec1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -1943,7 +1943,7 @@
           WRITE(iuni) idum
         END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_gkvec2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2001,7 +2001,7 @@
         ! .. CALL mp_bcast( igk_, ionode_id )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_gkvec1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2036,7 +2036,7 @@
         WRITE( stdout,fmt="(3X,'W: read_restart_gkvec, xdim not read from restart ' )")
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_gkvec2
 
 
 !=----------------------------------------------------------------------------=!
@@ -2088,7 +2088,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_cell1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2112,7 +2112,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_cell2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2172,7 +2172,7 @@
         CALL mp_bcast( xnosm2, ionode_id )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_cell1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2202,7 +2202,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_cell, xdim not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_cell2
 
 
 
@@ -2297,7 +2297,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_ions1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2329,7 +2329,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_ions2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2453,7 +2453,7 @@
         CALL mp_bcast(xnosm2, ionode_id)
   
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_ions1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2491,7 +2491,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_ions, Data Section not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_ions2
 
 
 !=----------------------------------------------------------------------------=!
@@ -2607,7 +2607,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_electrons1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2640,7 +2640,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_electrons2
 
 
 !=----------------------------------------------------------------------------=!
@@ -2808,7 +2808,7 @@
         END IF
   
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_electrons1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -2847,7 +2847,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_electrons, Data Sections not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_electrons2
 
 
 !=----------------------------------------------------------------------------=!
@@ -3015,7 +3015,7 @@
         DEALLOCATE( wtmp )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_wfc1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3047,7 +3047,7 @@
         END DO
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_wfc2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3259,7 +3259,7 @@
         tm   = tm_
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_wfc1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3296,7 +3296,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_wfc, Data Section not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_wfc2
 
 
 !=----------------------------------------------------------------------------=!
@@ -3352,7 +3352,7 @@
         DEALLOCATE( vtmp )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_charge1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3379,7 +3379,7 @@
         WRITE(iuni) idum
       END IF
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_charge2
 
 
 !=----------------------------------------------------------------------------=!
@@ -3457,7 +3457,7 @@
         END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_charge1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3489,7 +3489,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_charge, Data Section not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_charge2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3526,7 +3526,7 @@
       END IF 
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_tetra1
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3555,7 +3555,7 @@
       IF( ionode ) WRITE(iuni) idum
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_restart_tetra2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3604,7 +3604,7 @@
       END IF 
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_tetra1
 
 
 !=----------------------------------------------------------------------------=!
@@ -3633,7 +3633,7 @@
       IF( restart_module_verbosity > 1000 ) &
         WRITE( stdout,fmt="(3X,'W: read_restart_tetra, Data Section not read from restart ' )")
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_restart_tetra2
 
 !=----------------------------------------------------------------------------=!
 !
@@ -3669,7 +3669,7 @@
       CALL mp_bcast( section_name, ionode_id )
 
       RETURN
-    END SUBROUTINE       
+    END SUBROUTINE data_section_head
 
 !=----------------------------------------------------------------------------=!
   END MODULE io_base

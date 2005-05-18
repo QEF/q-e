@@ -123,7 +123,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE mergewf
 
 !=----------------------------------------------------------------------------=!
 
@@ -219,7 +219,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE splitwf
 
 !=----------------------------------------------------------------------------=!
 
@@ -308,7 +308,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE mergerho
 
 
       SUBROUTINE splitrho(rho, rhot, ngl, ig_l2g, mpime, nproc, root)
@@ -388,7 +388,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE splitrho
 
 !=----------------------------------------------------------------------------=!
 
@@ -483,7 +483,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE mergeig
 
 !=----------------------------------------------------------------------------=!
 
@@ -574,7 +574,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE splitig
 
 !=----------------------------------------------------------------------------=!
 
@@ -680,7 +680,7 @@
       DEALLOCATE( ibuf )
 
       RETURN
-    END SUBROUTINE PWSCATTER
+    END SUBROUTINE pwscatter
 
 
 

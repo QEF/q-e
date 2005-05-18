@@ -60,7 +60,7 @@ contains
     CLOSE(iunit)
 
     return 
-  end subroutine
+  end subroutine read_pseudo_fpmd
 
 
 !=----------------------------------------------------------------------------=!
@@ -140,7 +140,7 @@ contains
         END DO
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE analytic_to_numeric
 
 !=----------------------------------------------------------------------------=!
 
@@ -268,7 +268,7 @@ contains
         END IF
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE read_giannoz
 
 !=----------------------------------------------------------------------------=!
 
@@ -380,7 +380,7 @@ contains
   152   FORMAT(   3X,'point      radius        rho core')
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE ap_info
 
 !=----------------------------------------------------------------------------=!
 
@@ -468,7 +468,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_atomic_wf
 
 !=----------------------------------------------------------------------------=!
 
@@ -555,7 +555,7 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_numeric_pp
 
 !
 
@@ -613,7 +613,7 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_head_pp
 
 !=----------------------------------------------------------------------------=!
 
@@ -680,7 +680,7 @@ SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_analytic_pp
 
 !=----------------------------------------------------------------------------=!
 
@@ -731,7 +731,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
 110 CONTINUE
   
   RETURN
-END SUBROUTINE
+END SUBROUTINE read_atomic_cc
 
 
 end module

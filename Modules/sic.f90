@@ -62,7 +62,7 @@
       IF( nat_localisation > 0 ) print_localisation = .TRUE.
       !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sic_initval
     
 !------------------------------------------------------------------------------!
 
@@ -70,7 +70,7 @@
       IMPLICIT NONE
       IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE deallocate_sic
 
 !------------------------------------------------------------------------------!
 
@@ -127,7 +127,7 @@
   593 FORMAT(   3X,'----------------------------------------')
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE sic_info
 
 
 !------------------------------------------------------------------------------!

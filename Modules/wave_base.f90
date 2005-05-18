@@ -656,7 +656,7 @@
       REAL(dbl), INTENT(IN) ::  dt2m(:)
         CP( : )  = C0( : )  + dt2m(:) * grad(:)
       RETURN
-   END SUBROUTINE
+   END SUBROUTINE wave_steepest
 
 !==----------------------------------------------==!
 !==----------------------------------------------==!
@@ -670,7 +670,7 @@
         cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &
                    ver3( : ) * grad( : )
       RETURN
-   END SUBROUTINE
+   END SUBROUTINE wave_verlet
 
 
 !==----------------------------------------------==!

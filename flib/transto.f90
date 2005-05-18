@@ -143,7 +143,7 @@
         end select
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE  mytranspose
 
 
 
@@ -277,7 +277,7 @@
         end select
 
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE mytransposez
 
 
 

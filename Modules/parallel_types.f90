@@ -176,7 +176,8 @@
           ALLOCATE(v%v(locr))
           v%desc => desc
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_real_vector
+
         SUBROUTINE allocate_real_matrix(m,desc)
           TYPE (real_parallel_matrix) :: m
           TYPE (descriptor), POINTER :: desc
@@ -187,7 +188,8 @@
           ALLOCATE(m%m(locr,locc))
           m%desc => desc
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_real_matrix
+
         SUBROUTINE allocate_real_tensor(t,desc)
           TYPE (real_parallel_tensor) :: t
           TYPE (descriptor), POINTER :: desc
@@ -199,24 +201,27 @@
           ALLOCATE(t%t(locr,locc,locp))
           t%desc => desc
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_real_tensor
+
         SUBROUTINE deallocate_real_vector(v)
           TYPE (real_parallel_vector) :: v
           DEALLOCATE(v%v)
           NULLIFY(v%desc) 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_real_vector
+
         SUBROUTINE deallocate_real_matrix(m)
           TYPE (real_parallel_matrix) :: m
           DEALLOCATE(m%m)
           NULLIFY(m%desc) 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_real_matrix
+
         SUBROUTINE deallocate_real_tensor(t)
           TYPE (real_parallel_tensor) :: t
           DEALLOCATE(t%t)
           NULLIFY(t%desc)
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_real_tensor
 
       END MODULE parallel_types

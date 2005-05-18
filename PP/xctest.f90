@@ -112,7 +112,7 @@ subroutine test_gcxc( nnr, nspin, rhor, grhor )
     end do
 
     return
-end subroutine
+end subroutine test_gcxc
 
 !
 !
@@ -173,4 +173,4 @@ subroutine test_xc( nnr, nspin, rhor, grhor )
     end do
   end do
 100 FORMAT( I5, I2, 1X, E15.8, 1X, E15.8 )
-end subroutine
+end subroutine test_xc

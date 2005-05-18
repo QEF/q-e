@@ -845,7 +845,7 @@
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_get_i1
 
 !------------------------------------------------------------------------------!
 !
@@ -893,7 +893,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_get_iv
 
 !------------------------------------------------------------------------------!
 !
@@ -941,7 +941,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_get_rv
 
 !------------------------------------------------------------------------------!
 !
@@ -989,7 +989,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_get_rm
 
 
 !------------------------------------------------------------------------------!
@@ -1038,7 +1038,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_get_cv
 !------------------------------------------------------------------------------!
 !
 !
@@ -1087,7 +1087,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_put_i1
 
 !------------------------------------------------------------------------------!
 !
@@ -1132,7 +1132,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_put_iv
 
 !------------------------------------------------------------------------------!
 !
@@ -1177,7 +1177,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_put_rv
 
 !------------------------------------------------------------------------------!
 !
@@ -1222,7 +1222,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_put_rm
 
 
 !------------------------------------------------------------------------------!
@@ -1268,7 +1268,7 @@
 #endif
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mp_put_cv
 
 !
 !------------------------------------------------------------------------------!

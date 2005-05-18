@@ -300,7 +300,7 @@ SUBROUTINE mymatmul(ax, lda, tac, dista, bx, ldb, tbc, distb, cx, ldc, distc, n,
   END IF
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul
 
 
 SUBROUTINE mymatmul_rrrnn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
@@ -375,7 +375,7 @@ SUBROUTINE mymatmul_rrrnn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
 #endif
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul_rrrnn
 
 SUBROUTINE mymatmul_rrcnn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
   IMPLICIT NONE
@@ -431,7 +431,7 @@ SUBROUTINE mymatmul_rrcnn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
     DEALLOCATE( br )
   END DO
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul_rrcnn
 
 
 SUBROUTINE mymatmul_rrrtn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
@@ -496,7 +496,7 @@ SUBROUTINE mymatmul_rrrtn(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
 #endif
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul_rrrtn
 
 
 SUBROUTINE mymatmul_rrrnt(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
@@ -574,7 +574,7 @@ SUBROUTINE mymatmul_rrrnt(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
 #endif
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul_rrrnt
 
 
 
@@ -637,7 +637,7 @@ SUBROUTINE mymatmul_rrrtt(ax, lda, bx, ldb, cx, ldc, n, mpime, nproc)
   CALL mytrasp_dati(cc, nloc, 'R', cx, nloc, 'R', n, mpime, nproc)
   DEALLOCATE( cc )
   RETURN
-END SUBROUTINE
+END SUBROUTINE mymatmul_rrrtt
 
 
 
@@ -768,7 +768,7 @@ SUBROUTINE mytrasp_dati(ax, lda, dista, bx, ldb, distb, n, mpime, nproc)
     END IF
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mytrasp_dati
 
 
 SUBROUTINE mytrasp_dist(ax, lda, dista, bx, ldb, distb, n, mpime, nproc)
@@ -899,5 +899,5 @@ SUBROUTINE mytrasp_dist(ax, lda, dista, bx, ldb, distb, n, mpime, nproc)
 
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE mytrasp_dist
 

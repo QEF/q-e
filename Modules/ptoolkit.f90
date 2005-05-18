@@ -48,7 +48,7 @@
 !==----------------------------------------------==!
 
 
-    SUBROUTINE MATMULP1(TRANSA, TRANSB, A, B, C, N)
+    SUBROUTINE matmulp1(transa, transb, a, b, c, n)
 
       !
       ! Parallel driver for matrix multiplication of square matrixes
@@ -216,13 +216,13 @@
 #endif
 
        RETURN
-       END SUBROUTINE 
+       END SUBROUTINE matmulp1
 
 
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE MATMULP( TRANSA, TRANSB, A, B, C, N )
+    SUBROUTINE matmulp( transa, transb, a, b, c, n )
 
       !
       ! Parallel driver for matrix multiplication of square matrixes
@@ -348,12 +348,12 @@
 #endif
 
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE matmulp
 
 !==----------------------------------------------==!
 
 
-    SUBROUTINE CMATMULP(TRANSA,TRANSB,A,B,C,N)
+    SUBROUTINE cmatmulp(transa,transb,a,b,c,n)
 
       !
       ! Parallel driver for matrix multiplication of square matrixes
@@ -517,7 +517,7 @@
 #endif
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cmatmulp
 
 !==----------------------------------------------==!
 
@@ -540,7 +540,7 @@
 ! PRENTICE HALL INTERNATIONAL (1992). 
 !
 !
-      SUBROUTINE PTREDV(A,LDA,D,E,V,LDV,NRL,N,NPROC,ME)
+      SUBROUTINE ptredv(a,lda,d,e,v,ldv,nrl,n,nproc,me)
 !
 !
 !     INPUTS :
@@ -936,7 +936,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE ptredv
 
 !==----------------------------------------------==!
 
@@ -1137,7 +1137,7 @@
 15    continue
 
       return
-      END SUBROUTINE
+      END SUBROUTINE ptqliv
 
 !==----------------------------------------------==!
 
@@ -1191,7 +1191,7 @@
         endif
 13    continue
       return
-      END SUBROUTINE
+      END SUBROUTINE peigsrtv
 
       FUNCTION pythag(a,b)
       USE kinds
@@ -1319,7 +1319,7 @@
         DEALLOCATE( e )
  
         RETURN
-      END SUBROUTINE 
+      END SUBROUTINE diagonalize
 
 !==----------------------------------------------==!
 
@@ -1334,7 +1334,7 @@
         CALL ptqliv(w, sd, n, z, ldz, nrl)
         CALL peigsrtv(w, z, ldz, n, nrl)
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pdspev_drv
  
 
 !==----------------------------------------------==!
@@ -1368,7 +1368,7 @@
         DEALLOCATE( work )
  
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE dspev_drv
 
 !==----------------------------------------------==!
 
@@ -1520,7 +1520,7 @@
 !==----------------------------------------------==!
 
 
-      SUBROUTINE PZHPTRD( N, NRL, AP, LDA, D, E, TAU, NPROC, ME)
+      SUBROUTINE pzhptrd( n, nrl, ap, lda, d, e, tau, nproc, me)
 !
 !  Parallel MPI version of the LAPACK routine ZHPTRD
 !
@@ -1984,11 +1984,11 @@
 !
 !     End of ZHPTRD
 !
-      END SUBROUTINE
+      END SUBROUTINE pzhptrd
 
 !==----------------------------------------------==!
 
-      SUBROUTINE PZUPGTR( N, NRL, AP, LDA, TAU, Q, LDQ, NPROC, ME)
+      SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me)
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
 !
@@ -2229,11 +2229,11 @@
 !
 !     End of ZUPGTR
 !
-      END SUBROUTINE
+      END SUBROUTINE pzupgtr
 
 !==----------------------------------------------==!
 
-      SUBROUTINE PZSTEQR( COMPZ, N, NRL, D, E, Z, LDZ, NPROC, ME )
+      SUBROUTINE pzsteqr( compz, n, nrl, d, e, z, ldz, nproc, me )
 !
 !  Parallel MPI version of the LAPACK routine ZHPTRD
 !
@@ -2785,7 +2785,7 @@
 !
 !     End of ZSTEQR
 !
-      END SUBROUTINE
+      END SUBROUTINE pzsteqr
 
 !==----------------------------------------------==!
 
@@ -2822,7 +2822,7 @@
 #endif
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE zhpev_drv
 
 !==----------------------------------------------==!
 
@@ -2843,7 +2843,7 @@
         CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime)
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pzhpev_drv
 
 
 !==----------------------------------------------==!

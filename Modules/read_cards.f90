@@ -115,7 +115,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_default_values
      !
      !
      !----------------------------------------------------------------------
@@ -264,7 +264,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE read_cards
      !
      !
      ! ... Description of the allowed input CARDS for FPMD code
@@ -344,7 +344,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_atomic_species
      !
      !
      !------------------------------------------------------------------------
@@ -787,7 +787,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_kpoints
      !
      !
      !------------------------------------------------------------------------
@@ -834,7 +834,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_setnfi
      !
      !
      !------------------------------------------------------------------------
@@ -936,7 +936,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_occupations
      !
      !
      !------------------------------------------------------------------------
@@ -984,7 +984,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_vhmean
      !
      !
      !------------------------------------------------------------------------
@@ -1038,7 +1038,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_optical
      !
      !
      !------------------------------------------------------------------------
@@ -1078,7 +1078,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_dipole
      !
      !
      !------------------------------------------------------------------------
@@ -1128,7 +1128,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_esr
      !
      !
      !------------------------------------------------------------------------
@@ -1179,7 +1179,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_neighbours
      !
      !
      !------------------------------------------------------------------------
@@ -1230,7 +1230,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_pstab
      !
      !
      !------------------------------------------------------------------------
@@ -1303,7 +1303,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_cell_parameters
      !
      !
      !------------------------------------------------------------------------
@@ -1358,7 +1358,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_turbo
      !
      !
      !------------------------------------------------------------------------
@@ -1446,7 +1446,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_ion_velocities
      !
      !
      !------------------------------------------------------------------------
@@ -1594,7 +1594,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_constraints
      !
      !
      !------------------------------------------------------------------------
@@ -1683,7 +1683,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_ksout
      !
      !
      !------------------------------------------------------------------------
@@ -1771,7 +1771,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_ksout_empty
      !
      !
      !------------------------------------------------------------------------
@@ -1812,7 +1812,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_rhoout
      !
      !
      !------------------------------------------------------------------------
@@ -1882,7 +1882,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_climbing_images   
+     END SUBROUTINE card_climbing_images
      !
      !
      !------------------------------------------------------------------------
@@ -1931,6 +1931,6 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_template
      !
 END MODULE read_cards_module

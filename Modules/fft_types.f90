@@ -73,7 +73,7 @@ CONTAINS
     desc%iplp  = 0
     desc%iplw  = 0
     desc%id    = 0
-  END SUBROUTINE
+  END SUBROUTINE fft_dlay_allocate
 
   SUBROUTINE fft_dlay_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
@@ -89,7 +89,7 @@ CONTAINS
     IF ( ASSOCIATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ASSOCIATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
-  END SUBROUTINE
+  END SUBROUTINE fft_dlay_deallocate
 
 !=----------------------------------------------------------------------------=!
 
@@ -318,7 +318,7 @@ CONTAINS
     desc%tptr = icount
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE fft_dlay_set
 
 !=----------------------------------------------------------------------------=!
 
@@ -367,8 +367,8 @@ CONTAINS
     desc%npp  = nr3
     desc%ipp  = 0
 
-    return
-  end subroutine fft_dlay_scalar
+    RETURN
+  END SUBROUTINE fft_dlay_scalar
 
 
 END MODULE fft_types

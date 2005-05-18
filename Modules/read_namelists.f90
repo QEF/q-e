@@ -102,7 +102,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE control_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -188,7 +188,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        ! 
-     END SUBROUTINE
+     END SUBROUTINE system_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -297,7 +297,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        ! 
-     END SUBROUTINE
+     END SUBROUTINE electrons_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -413,7 +413,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE ions_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -458,7 +458,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE cell_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -480,7 +480,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE phonon_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -500,7 +500,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE raman_defaults
      !
      !=----------------------------------------------------------------------=!
      !
@@ -548,7 +548,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE control_bcast
      !
      !=----------------------------------------------------------------------=!
      !
@@ -625,7 +625,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE system_bcast
      !
      !=----------------------------------------------------------------------=!
      !
@@ -716,7 +716,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE electrons_bcast
      !
      !=----------------------------------------------------------------------=!
      !
@@ -812,7 +812,7 @@ MODULE read_namelists_module
 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE ions_bcast
      !
      !=----------------------------------------------------------------------=!
      !
@@ -846,7 +846,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE cell_bcast
      !
      !=----------------------------------------------------------------------------=!
      !
@@ -869,7 +869,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE phonon_bcast
      
      !
      !=----------------------------------------------------------------------------=!
@@ -893,7 +893,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE raman_bcast
      !
      !=----------------------------------------------------------------------=!
      !
@@ -984,7 +984,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE control_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1117,7 +1117,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE system_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1175,7 +1175,7 @@ MODULE read_namelists_module
 
 !
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE electrons_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1275,7 +1275,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE ions_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1314,7 +1314,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE cell_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1333,7 +1333,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE phonon_checkin
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1352,7 +1352,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE raman_checkin
 
      !
      !=----------------------------------------------------------------------=!
@@ -1512,7 +1512,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE fixval
      !
      !=----------------------------------------------------------------------=!
      !

@@ -63,4 +63,4 @@ subroutine sort_gvec( ng, g2, mill )
   DEALLOCATE( index )
 
   return
-end subroutine
+end subroutine sort_gvec

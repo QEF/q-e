@@ -106,7 +106,7 @@
         END DO
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE packtau
 
 !------------------------------------------------------------------------------!
 
@@ -124,7 +124,7 @@
         END DO
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE unpacktau
 
 !------------------------------------------------------------------------------!
 
@@ -161,7 +161,7 @@
         isrt  (    na(is) + ina(is) ) = ia
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE sort_tau
 
 !------------------------------------------------------------------------------!
 
@@ -177,7 +177,7 @@
         tau( :, ia ) = tausrt( :, isa )
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE unsort_tau
 
 
 !------------------------------------------------------------------------------!
@@ -362,7 +362,7 @@
       tions_base_init = .TRUE.
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE ions_base_init
     
 !------------------------------------------------------------------------------!
 
@@ -379,7 +379,7 @@
       IF( ALLOCATED( taui ) ) DEALLOCATE( taui )
       tions_base_init = .FALSE.
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE deallocate_ions_base
 
 !------------------------------------------------------------------------------!
 
@@ -401,7 +401,7 @@
         END DO
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE ions_vel3
 
 !------------------------------------------------------------------------------!
 
@@ -419,7 +419,7 @@
         END DO
       END DO
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE ions_vel2
 
 !------------------------------------------------------------------------------!
 
@@ -448,7 +448,7 @@
       end do
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cofmass1
 
 !------------------------------------------------------------------------------!
 
@@ -479,7 +479,7 @@
       end do
 !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cofmass2
 
 !------------------------------------------------------------------------------!
 
@@ -561,7 +561,7 @@
     end do
     ekinp=0.5d0*ekinp
     return
-  END SUBROUTINE
+  END SUBROUTINE ions_kinene
 
 !------------------------------------------------------------------------------!
 
@@ -603,7 +603,7 @@
     ekinpr = 0.5 * ekinpr
     tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
     return
-  end subroutine
+  end subroutine ions_temp
 
 !------------------------------------------------------------------------------!
 
@@ -626,7 +626,7 @@
       enddo
     enddo
     return
-  end subroutine
+  end subroutine ions_thermal_stress
 
 !------------------------------------------------------------------------------!
 
@@ -690,7 +690,7 @@
       end do
     end if
     return
-  end subroutine
+  end subroutine ions_vrescal
 
 !------------------------------------------------------------------------------!
 
@@ -701,7 +701,7 @@
       varm = var0
       var0 = varp
     return
-  end subroutine
+  end subroutine ions_shiftvar
 
 
 !------------------------------------------------------------------------------!
