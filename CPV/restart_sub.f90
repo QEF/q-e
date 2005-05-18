@@ -134,7 +134,7 @@ MODULE from_restart_module
     IF ( trane .AND. trhor ) THEN
        !
        CALL prefor( eigr, vkb )
-       CALL graham( vkb, bec, c0 )
+       CALL gram( vkb, bec, c0 )
        !
        cm(:,1:nbsp,1,1) = c0(:,1:nbsp,1,1)
        !
@@ -239,7 +239,7 @@ MODULE from_restart_module
           !
        ELSE
           !
-          CALL graham( vkb, bec, cm )
+          CALL gram( vkb, bec, cm )
           !
        END IF
        !
@@ -357,7 +357,7 @@ MODULE from_restart_module
        !
        CALL prefor( eigr, vkb )
        !
-       CALL graham( vkb, bec, c0 )
+       CALL gram( vkb, bec, c0 )
        !
        cm(:,1:nbsp) = c0(:,1:nbsp)
        !

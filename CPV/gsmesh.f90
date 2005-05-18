@@ -73,7 +73,7 @@
      tpiba = tpi / alat
      tpiba2 = tpiba ** 2
      RETURN
-   END SUBROUTINE
+   END SUBROUTINE recvecs_units
 
 
 !  ----------------------------------------------
@@ -134,7 +134,7 @@
 
           RETURN 
 
-   END SUBROUTINE  
+   END SUBROUTINE gmeshinfo
 
         
 !  ----------------------------------------------
@@ -175,7 +175,7 @@
 
       IMPLICIT NONE
 
-! ... declare subroutine argumentsz
+! ... declare subroutine arguments
       TYPE (kpoints), INTENT(IN)  :: kp
       REAL(dbl), INTENT(IN) :: htm1(3,3)
       REAL(dbl) :: xk(3, SIZE(kp%xk, 2) )
@@ -265,7 +265,7 @@
       SUBROUTINE gindex_closeup
         IMPLICIT NONE
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE gindex_closeup
      
 
 !=----------------------------------------------------------------------------=!

@@ -31,11 +31,11 @@ contains
   subroutine allocate_cvan( nind, ns )
     integer, intent(in) :: nind, ns
     allocate( indlm( nind, ns ) )
-  end subroutine
+  end subroutine allocate_cvan
 
   subroutine deallocate_cvan( )
     if( allocated(indlm) ) deallocate( indlm )
-  end subroutine
+  end subroutine deallocate_cvan
 
 end module cvan
 
@@ -315,7 +315,7 @@ end module qrl_mod
       END IF
 
       return
-      end subroutine
+      end subroutine ggenb
 
 !-----------------------------------------------------------------------
       subroutine gcalb( alatb, b1b_ , b2b_ , b3b_  )
@@ -347,7 +347,7 @@ end module qrl_mod
       enddo
 !
       return
-      end subroutine
+      end subroutine gcalb
 
 
 !-------------------------------------------------------------------------
@@ -616,7 +616,7 @@ end module qrl_mod
       end do
 
       return
-      end subroutine
+      end subroutine ggencp
 
 
 
@@ -697,7 +697,7 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
       end do loop_x
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE gcount
 
 
 
@@ -769,7 +769,7 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 !      END IF
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE gglobal
 
 
 
@@ -856,7 +856,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
       deallocate( index )
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE glocal
 
 
 
@@ -901,7 +901,7 @@ SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
      &     '' G-vectors refolded into FFT grid (ng,nrefold)'')') ng, nrefold
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE gchkrefold
 
 
 !-------------------------------------------------------------------------
@@ -991,7 +991,7 @@ SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x
       end do
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE gfftindex
 
 
 !-------------------------------------------------------------------------
@@ -1019,7 +1019,7 @@ SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
       end do
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE gshcount
 
 
 !-------------------------------------------------------------------------
@@ -1081,7 +1081,7 @@ END SUBROUTINE
       END IF
 !
       return
-      end subroutine
+      end subroutine gcal
 
 
 !=----------------------------------------------------------------------------=!
@@ -1123,7 +1123,7 @@ END SUBROUTINE
           end do
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE newgb
 
 !------------------------------------------------------------------------------!
 !
@@ -1159,7 +1159,7 @@ END SUBROUTINE
           refg = 1.0d0 * ecutp / ( mmx - 1 )
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE ecutoffs_setup
 
 
         SUBROUTINE gcutoffs_setup( alat, tk_inp, nk_inp, kpoints_inp )
@@ -1269,7 +1269,7 @@ END SUBROUTINE
   511   FORMAT(   3X,'Orthog. with lagrange multipliers : eps = ',E10.2, ',  max = ',I3)
   585   FORMAT(   3X,'Eigenvalues calculated without the kinetic term contribution')
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE orthogonalize_info
 
 
 !  ----------------------------------------------

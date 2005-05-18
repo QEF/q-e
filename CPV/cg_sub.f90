@@ -136,7 +136,7 @@
 
       call calbec(1,nsp,eigr,c0,bec)
 
-      call graham(betae,bec,c0)
+      call gram(betae,bec,c0)
 
       call calbec(1,nsp,eigr,c0,bec)
 
@@ -561,7 +561,7 @@
         !le ortonormalizza
 
         call calbec(1,nsp,eigr,cm,becm)
-        call graham(betae,becm,cm)
+        call gram(betae,becm,cm)
         !              call riordina(cm,e0) 
         call calbec(1,nsp,eigr,cm,becm)
                
@@ -617,7 +617,7 @@
 
         !               call ordina(cm,e0)               
         call calbec(1,nsp,eigr,cm,becm)
-        call graham(betae,becm,cm)
+        call gram(betae,becm,cm)
         !              call riordina(cm,e0) 
 
 
@@ -675,7 +675,7 @@
           restartcg=.true.!ATTENZIONE
           !                  call ordina(c0,e0)
           call calbec(1,nsp,eigr,c0,bec)
-          call graham(betae,bec,c0)
+          call gram(betae,bec,c0)
           !                  call riordina(c0,e0)
           !se anche ene1 e' piu grande di ene0 fa un passo di gradiente coniugato,
           !riducendo il passetto in scala 2
@@ -691,7 +691,7 @@
             spasso=spasso*(-1.d0)
             !                   call ordina(cm,e0)
             call calbec(1,nsp,eigr,cm,becm)
-            call graham(betae,bec,cm)
+            call gram(betae,bec,cm)
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
@@ -1264,4 +1264,4 @@
       endif
       !        end if
 
-END SUBROUTINE
+END SUBROUTINE runcg_uspp

@@ -120,7 +120,7 @@
 #endif
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE environment_start
 
 !==-----------------------------------------------------------------------==!
 
@@ -153,7 +153,7 @@
  3335     FORMAT('=',78('-'),'=')
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE environment_end
 
 !==-----------------------------------------------------------------------==!
 
@@ -198,7 +198,7 @@
 
  3334     FORMAT(/,3X,A60,/)
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE opening_date_and_time
 
 !==-----------------------------------------------------------------------==!
 
@@ -223,7 +223,7 @@
  3335     FORMAT('=',78('-'),'=')
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE closing_date_and_time
 
 !==-----------------------------------------------------------------------==!
    END MODULE environment

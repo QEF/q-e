@@ -174,7 +174,7 @@
             ' ', i, kp%weight(i), kp%xk(1,i), kp%xk(2,i), kp%xk(3,i)
           END DO
         END IF
-      END SUBROUTINE 
+      END SUBROUTINE kpoint_info
 
 !------------------------------------------------------------------------------!
 

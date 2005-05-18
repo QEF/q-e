@@ -112,7 +112,7 @@
         desc % lds = nspin
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE charge_descriptor_init
 
 
       SUBROUTINE charge_descriptor_info( desc, nam, iunit )
@@ -134,7 +134,7 @@
                 3X, 'leading dimensions (lx,ly,lz,ls) . : ',4I5)
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE charge_descriptor_info
 
 !  ----------------------------------------------  !
       END MODULE

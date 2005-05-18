@@ -44,7 +44,7 @@
 #endif
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE start_blacs
 
 !=----------------------------------------------------------------------------=!
 
@@ -57,7 +57,7 @@
 #endif
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE stop_blacs
 
 !=----------------------------------------------------------------------------=!
    END MODULE blacs

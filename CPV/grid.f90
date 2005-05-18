@@ -33,7 +33,7 @@
             END DO
             npcol = nproc/nprow
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE calculate_grid_dims
 
           SUBROUTINE get_grid_dims(gr, npx, npy, npz)
             INTEGER, INTENT(OUT) :: npx, npy, npz
@@ -42,7 +42,7 @@
             npy = gr%npy
             npz = gr%npz
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE get_grid_dims
 
           SUBROUTINE get_grid_coor(gr, mex, mey, mez)
             INTEGER, INTENT(OUT) :: mex, mey, mez
@@ -51,7 +51,7 @@
             mey = gr%mey
             mez = gr%mez
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE get_grid_coor
 
 
           SUBROUTINE get_grid_info(gr, nproc, my_pe, npx, mex, npy, mey, npz, mez)
@@ -68,7 +68,7 @@
             mey = gr%mey
             mez = gr%mez
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE get_grid_info
 
 
 
@@ -80,7 +80,7 @@
             grid%context = -1
 #endif
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE free_blacs_grid
 
           SUBROUTINE get_blacs_grid(grid, rows, columns, debug)
             TYPE (processors_grid), INTENT(OUT) :: grid

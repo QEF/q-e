@@ -77,7 +77,7 @@
       has_been_read = .TRUE.
 
       RETURN
-   END SUBROUTINE
+   END SUBROUTINE read_input_file
    !
    !
    !  ----------------------------------------------
@@ -119,7 +119,7 @@
         call readpp( xc_type )
         !
         return
-   END SUBROUTINE
+   END SUBROUTINE iosys_pseudo
    !
    !
    !  ----------------------------------------------
@@ -741,7 +741,7 @@
       END IF
 
       RETURN
-   END SUBROUTINE
+   END SUBROUTINE set_control_flags
    !
    !
    !  ----------------------------------------------
@@ -1102,7 +1102,7 @@
       END IF
       !
       RETURN
-  END SUBROUTINE
+  END SUBROUTINE smd_initvar
   !
   !
   !     --------------------------------------------------------

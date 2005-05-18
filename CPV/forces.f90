@@ -85,7 +85,7 @@
       END DO
 
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce1
 
 
 !  ----------------------------------------------
@@ -163,13 +163,13 @@
       DEALLOCATE(temp, gwork)
 
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce2
 
 
 !=----------------------------------------------------------------------------=!
 
      
-      subroutine dforce_p( ik, ib, c, cdesc, f, df, da, v, fnl, eigr, ps )
+      SUBROUTINE dforce_p( ik, ib, c, cdesc, f, df, da, v, fnl, eigr, ps )
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
         USE reciprocal_vectors, ONLY: ggp, g, gx
@@ -201,14 +201,14 @@
         CALL dforce2(f(ib,ik), f(ib+1,ik), df, da, fnl(:,:,ib), &
             fnl(:,:,ib+1), g, gx, eigr, ps%wsg, ps%wnl(:,:,:,ik)) 
         !
-        return
-      end subroutine
+        RETURN
+      END SUBROUTINE dforce_p
 
 
 !-----------------------------------------------------------------------------!
 
 
-      subroutine dforce_p_s(ib, c, cdesc, f, df, da, v, fnl, eigr, wsg, wnl)
+      SUBROUTINE dforce_p_s(ib, c, cdesc, f, df, da, v, fnl, eigr, wsg, wnl)
         USE wave_types, ONLY: wave_descriptor
         USE turbo, ONLY: tturbo, nturbo, turbo_states
         USE reciprocal_vectors, ONLY: ggp, g, gx
@@ -238,7 +238,7 @@
             fnl(:,:,ib+1), g(:), gx(:,:), eigr, wsg, wnl)
         !
         return
-      end subroutine
+      END SUBROUTINE dforce_p_s
 
 
 !  ----------------------------------------------
@@ -285,7 +285,7 @@
       DEALLOCATE( ce, dce, psi2 )
       !
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce1_d
 
 !  ----------------------------------------------
 
@@ -355,7 +355,7 @@
       DEALLOCATE(temp, gwork)
 
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce2_d
 
 
 !=----------------------------------------------------------------------------=!
@@ -366,13 +366,13 @@
         USE reciprocal_vectors, ONLY: ggp, g, gx
         USE control_flags, ONLY: gamma_only
         IMPLICIT NONE
-        integer ik, ib
+        INTEGER ik, ib
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
-        type (wave_descriptor), INTENT(IN) :: cdesc
+        TYPE (wave_descriptor), INTENT(IN) :: cdesc
         COMPLEX(dbl) :: df(:)
         REAL (dbl)     :: v(:,:,:), f(:,:)
         REAL (dbl)     :: fnl(:,:,:)
-        type (pseudo)  :: ps
+        TYPE (pseudo)  :: ps
         COMPLEX(dbl) :: eigr (:,:)
         !
         IF( .NOT. gamma_only ) &
@@ -382,12 +382,12 @@
         !
         CALL dforce2_d(f(ib,ik), df, fnl(:,:,ib), g, gx, eigr, ps%wsg, ps%wnl(:,:,:,ik))
         !
-        return
-    end subroutine
+        RETURN
+    END SUBROUTINE dforce_d
 
 !=----------------------------------------------------------------------------=!
 
-    subroutine dforce_d_s(ib, c, cdesc, f, df, v, fnl, eigr, wsg, wnl)
+    SUBROUTINE dforce_d_s(ib, c, cdesc, f, df, v, fnl, eigr, wsg, wnl)
       USE wave_types, ONLY: wave_descriptor
       USE turbo, ONLY: tturbo, nturbo, turbo_states
       USE reciprocal_vectors, ONLY: ggp, g, gx
@@ -408,7 +408,7 @@
         CALL dforce2_d(f(ib), df, fnl(:,:,ib), g, gx, eigr, wsg, wnl)
         !
       return
-    end subroutine
+    END SUBROUTINE dforce_d_s
 
 
 !  ----------------------------------------------
@@ -483,7 +483,7 @@
         df(ig)= - fi * (df(ig) + arg * hg(ig) * c(ig))
       END DO
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce1_kp
 
 
 !  ----------------------------------------------
@@ -551,7 +551,7 @@
       END DO
       DEALLOCATE(temp, gwork)
     RETURN
-    END SUBROUTINE
+    END SUBROUTINE dforce2_kp
 
 
 !  ----------------------------------------------
@@ -606,7 +606,7 @@
           END IF
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE dforce_all
 
 
 

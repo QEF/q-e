@@ -46,7 +46,7 @@ CONTAINS
     epol   = epol_
     efield = efield_
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE efield_init
 
   SUBROUTINE efield_info( )
     USE io_global, ONLY: stdout
@@ -62,7 +62,7 @@ CONTAINS
      &        /4x,'=====================================')
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE efield_info
 
 
   SUBROUTINE efield_berry_setup( eigr, tau0 )
@@ -80,7 +80,7 @@ CONTAINS
     write(6,'(''out of qqupdate'')')
     call cofcharge(tau0,cdz0)
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE efield_berry_setup
 
 
   SUBROUTINE efield_update( eigr )
@@ -88,7 +88,7 @@ CONTAINS
     COMPLEX(kind=8), INTENT(IN)  :: eigr(:,:)
     call qqupdate(eigr,gqqm0,gqq,gqqm,ipolp)
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE efield_update
 
 
   SUBROUTINE allocate_efield( ngw, nx, nhx, nas, nsp )
@@ -103,7 +103,7 @@ CONTAINS
       allocate( gqq0(nhx,nhx,nas,nsp))
       allocate( gqqm0(nhx,nhx,nas,nsp))
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE allocate_efield
 
 
   SUBROUTINE deallocate_efield( )
@@ -117,7 +117,7 @@ CONTAINS
     IF( allocated( gqq0 ) ) deallocate( gqq0 )
     IF( allocated( gqqm0 ) )  deallocate( gqqm0 )
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE deallocate_efield
 
 
   SUBROUTINE berry_energy( enb, enbi, bec, cm, fion )
@@ -138,7 +138,7 @@ CONTAINS
     write(6,*) 'Polarizzazione',pberryel,evalue
     enb=enb*evalue
     enbi=enbi*evalue
-  END SUBROUTINE
+  END SUBROUTINE berry_energy
 
 
   SUBROUTINE dforce_efield (bec,i,cm,c2,c3,rhos)
@@ -159,6 +159,6 @@ CONTAINS
     do ig=1,ngw
       c3(ig)=c3(ig)+evalue*df(ig)
     enddo
-  END SUBROUTINE
+  END SUBROUTINE dforce_efield
 
 END MODULE

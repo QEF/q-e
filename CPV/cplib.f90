@@ -1599,7 +1599,7 @@
       return
       end subroutine gracsc
 !-------------------------------------------------------------------------
-      subroutine graham(betae,bec,cp)
+      subroutine gram(betae,bec,cp)
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
@@ -1617,7 +1617,7 @@
       integer :: i,k
       external cscnorm
 !
-      call start_clock( 'graham' )
+      call start_clock( 'gram' )
 
       allocate( csc( nx ) )
 !
@@ -1639,10 +1639,10 @@
 !
       deallocate( csc )
 
-      call stop_clock( 'graham' )
+      call stop_clock( 'gram' )
 !
       return
-      end subroutine graham
+      end subroutine gram
 !
 !-----------------------------------------------------------------------
       subroutine herman_skillman_grid(mesh,z,cmesh,r)

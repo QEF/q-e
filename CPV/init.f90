@@ -133,7 +133,7 @@
       CALL cpflush  ! flush output streams
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE init0s
 
 
 !=----------------------------------------------------------------------=!
@@ -335,7 +335,7 @@
       !
 
       return
-      end subroutine
+      end subroutine init_dimensions
 
 
 

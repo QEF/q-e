@@ -96,7 +96,7 @@ CONTAINS
        entropy=-f2*log(f2)-(1.-f2)*log(1.-f2)
     end if
     entropy=-etemp*2.0*entropy/float(nspin)
-  END SUBROUTINE
+  END SUBROUTINE compute_entropy
 
 
   SUBROUTINE compute_entropy2( entropy, f, n, nspin )
@@ -115,7 +115,7 @@ CONTAINS
     end do
     entropy=-etemp*2.0*entropy/float(nspin)
     return
-  END SUBROUTINE
+  END SUBROUTINE compute_entropy2
 
 
   SUBROUTINE compute_entropy_der( ex, fx, n, nspin )
@@ -142,7 +142,7 @@ CONTAINS
     end do
 
     return
-  END SUBROUTINE
+  END SUBROUTINE compute_entropy_der
 
 
 
@@ -160,7 +160,7 @@ CONTAINS
       end do
       z0 = id  ! initialize rotation matrix to a default value
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE id_matrix_init
 
 
   SUBROUTINE ensemble_initval &
@@ -247,10 +247,10 @@ CONTAINS
 
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE ensemble_initval
 
 
-  SUBROUTINE enemble_dft_info()
+  SUBROUTINE ensemble_dft_info()
     USE io_global, ONLY: stdout
       write(stdout,250) tens
       write(stdout,252) tgrand
@@ -278,7 +278,7 @@ CONTAINS
      &        /4x,'=====================================')
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE ensemble_dft_info
 
 
   SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat )
@@ -318,7 +318,7 @@ CONTAINS
       allocate(vhxcs(nnrsx,nspin))
       allocate(epsi0(nudx,nudx,nspin))
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE allocate_ensemble_dft
 
 
 
@@ -358,7 +358,7 @@ CONTAINS
     IF( ALLOCATED( vhxcs ) )  deallocate(vhxcs )
     IF( ALLOCATED( epsi0 ) )  deallocate(epsi0 )
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE deallocate_ensemble_dft
   
 
 END MODULE

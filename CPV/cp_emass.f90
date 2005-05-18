@@ -42,7 +42,7 @@
       end do
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE emass_precond
 
 
 !------------------------------------------------------------------------------!

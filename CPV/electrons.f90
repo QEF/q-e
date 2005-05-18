@@ -388,7 +388,7 @@
           END IF
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE rceigs
 
 
 !  ----------------------------------------------
@@ -464,7 +464,7 @@
             END IF
           END IF
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE cpackgam
 
 !  ----------------------------------------------
 
@@ -506,7 +506,7 @@
             END IF
           END IF
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE rpackgam
 
 !  ----------------------------------------------
 
@@ -605,7 +605,7 @@
       WRITE( stdout,*) 'FERMIE: QTOT,SUMQ=',qtot,sumq
       STOP
 
-      END SUBROUTINE
+      END SUBROUTINE fermi_energy
 
 !  ----------------------------------------------
 !
@@ -696,7 +696,7 @@
          WRITE( stdout,*)
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE cp_eigs
 
 
 !=----------------------------------------------------------------------------=!

@@ -603,11 +603,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            endif
         end if            ! <<<<<<<<<<<<<<<<<<<< !
         !
-        !     prefor calculates betae (used by graham)
+        !     prefor calculates betae (used by gram)
         !
         call prefor(eigr,betae)
         !
-        call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+        call gram(betae,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
         !
         if(iprsta.ge.3) call dotcsc(eigr,rep_el(sm_k)%cm)
         !     
@@ -694,9 +694,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            call ortho  (eigr,rep_el(sm_k)%c0,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
                 &                   bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
         else
-           call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
+           call gram(betae,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
            !
-           if(ionode) WRITE( sm_file,*) ' graham  c0 '
+           if(ionode) WRITE( sm_file,*) ' gram  c0 '
         endif
         !
         !     nlfl needs lambda becdr and bec
@@ -1255,7 +1255,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
                 &         (eigr,rep_el(sm_k)%cm,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
                 & bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
         else
-           call graham(betae,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+           call gram(betae,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
            if(iprsta.gt.4) call dotcsc(eigr,rep_el(sm_k)%cm)
         endif
         !
@@ -1623,7 +1623,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         call print_clock( 'calphi' )
         call print_clock( 'ortho' )
         call print_clock( 'updatc' )
-        call print_clock( 'graham' )
+        call print_clock( 'gram' )
         call print_clock( 'newd' )
         call print_clock( 'calbec' )
         call print_clock( 'prefor' )

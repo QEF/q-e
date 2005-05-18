@@ -63,7 +63,7 @@
                       & ' non existent or non writable', 1 )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE create_directory
 
 !------------------------------------------------------------------------------!
 
@@ -425,7 +425,7 @@
       end if 
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_writefile
 
 
 !=-----------------------------------------------------------------------------=!
@@ -458,7 +458,7 @@
       END DO
       !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_write_wfc4
 
 !=-----------------------------------------------------------------------------=!
 
@@ -490,7 +490,7 @@
       IF( ionode ) CLOSE( unit = 10 )
       !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_write_wfc2
 
 
 !=----------------------------------------------------------------------------=!
@@ -804,7 +804,7 @@
 
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_readfile
 
 !=-----------------------------------------------------------------------------=!
 
@@ -836,7 +836,7 @@
       END DO
       !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_read_wfc4
 
 
 !=-----------------------------------------------------------------------------=!
@@ -870,7 +870,7 @@
       IF( ionode ) CLOSE( unit = 10 )
       !
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_read_wfc2
 
 !=----------------------------------=!
 
@@ -959,7 +959,7 @@
       END IF
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cp_read_cell
 
 
 
@@ -1090,7 +1090,7 @@
         DEALLOCATE( wtmp )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE write_wfc
 
 !
 !
@@ -1237,7 +1237,7 @@
         DEALLOCATE( wtmp )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE read_wfc
 
 !=----------------------------------------------------------------------------=!
 !

@@ -51,7 +51,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: maxiter_
     REAL(dbl), INTENT(IN) :: etresh_ , passop_
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cg_init
 
   SUBROUTINE cg_info()
     USE io_global, ONLY: stdout 
@@ -66,7 +66,7 @@ CONTAINS
    &        /4x,'| passop       =',f10.5,' a.u.     |'                           &
    &        /4x,'=====================================')
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cg_info
 
 
   SUBROUTINE allocate_cg( ngw, nx )
@@ -78,7 +78,7 @@ CONTAINS
     allocate( emme(nx,nx))
     allocate( hpsi(ngw,nx))
     RETURN
-  END SUBROUTINE  
+  END SUBROUTINE allocate_cg
 
   SUBROUTINE deallocate_cg( )
     IMPLICIT NONE
@@ -88,7 +88,7 @@ CONTAINS
     IF( ALLOCATED( emme ) ) deallocate( emme )
     IF( ALLOCATED( hpsi ) ) deallocate( hpsi )
     RETURN
-  END SUBROUTINE  
+  END SUBROUTINE deallocate_cg
 
   SUBROUTINE cg_update( tfirst, nfi, c0 )
     use gvecw, only: ngw
@@ -113,7 +113,7 @@ CONTAINS
       enddo
     endif
     RETURN
-  END SUBROUTINE  
+  END SUBROUTINE cg_update
 
 
 END MODULE

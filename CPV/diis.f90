@@ -890,7 +890,7 @@
             parame(:,:,ik,nowv) = c(:,:,ik)
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE update_diis_buffers
 
 !=----------------------------------------------------------------------------=!
 
@@ -909,7 +909,7 @@
             END IF
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE diis_steepest
 
 !=----------------------------------------------------------------------------=!
 

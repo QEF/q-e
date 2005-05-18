@@ -146,7 +146,7 @@
       CALL set_reference_positions(cdmi, taui, atoms, ht)
 
    RETURN
-   END SUBROUTINE
+   END SUBROUTINE from_scratch_fpmd
 
 !=----------------------------------------------------------------------------=!
 
@@ -254,8 +254,8 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
       
     end if
 
-    call prefor( eigr, betae )   !     prefor calculates betae (used by graham)
-    call graham( betae, bec, cm )
+    call prefor( eigr, betae )   !     prefor calculates betae (used by gram)
+    call gram( betae, bec, cm )
 
     if( iprsta .ge. 3 ) call dotcsc( eigr, cm )
 
@@ -330,7 +330,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
       if( tortho ) then
          call ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
       else
-         call graham( betae, bec, c0 )
+         call gram( betae, bec, c0 )
       endif
 !
 !
@@ -379,7 +379,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     end if
 
     return
-  end subroutine
+  END SUBROUTINE from_scratch_cp
 
 
 !=----------------------------------------------------------------------------=!

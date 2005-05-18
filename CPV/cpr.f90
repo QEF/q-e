@@ -582,7 +582,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
         ELSE
            !
-           CALL graham( vkb, bec,cm )
+           CALL gram( vkb, bec,cm )
            !
            IF ( iprsta > 4 ) CALL dotcsc( eigr, cm )
            !
@@ -1007,7 +1007,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   CALL print_clock( 'calphi' )
   CALL print_clock( 'ortho' )
   CALL print_clock( 'updatc' )
-  CALL print_clock( 'graham' )
+  CALL print_clock( 'gram' )
   CALL print_clock( 'newd' )
   CALL print_clock( 'calbec' )
   CALL print_clock( 'prefor' )

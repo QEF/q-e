@@ -387,7 +387,7 @@
       SUBROUTINE guess_closeup()
         IF( ALLOCATED( rho_save ) ) DEALLOCATE( rho_save )
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE guess_closeup
 
 !  ----------------------------------------------
 !  ----------------------------------------------

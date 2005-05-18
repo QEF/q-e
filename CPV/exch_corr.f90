@@ -113,7 +113,7 @@
           DEALLOCATE(vtemp)
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE v2gc
 
 !=----------------------------------------------------------------------------=!
 
@@ -235,7 +235,7 @@
       END IF
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE stress_xc
 
 
 !=----------------------------------------------------------------------------=!
@@ -286,7 +286,7 @@
           END DO
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE exch_corr_energy
 
 !=----------------------------------------------------------------------------=!
    END MODULE exchange_correlation

@@ -95,7 +95,7 @@
             END IF
           END DO LOOP
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE specie_index
 
 
         SUBROUTINE atoms_type_init(atoms, staur, ismbl, label, pma, na, nsp, h)
@@ -169,7 +169,7 @@
           atoms%doft = MAX( SUM( atoms%dof(1:nsp) )-3, 1 )
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE atoms_type_init
 
 !=----------------------------------------------------------------------------=!
 
@@ -177,7 +177,7 @@
           TYPE (atoms_type) :: atoms
             INTEGER :: is, ierr
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_atoms_type
 
 
 !=----------------------------------------------------------------------------=!

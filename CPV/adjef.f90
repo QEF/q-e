@@ -214,4 +214,4 @@
       WRITE( stdout,*) 'FERMIE: ITERATION HAS NOT CONVERGED.'
       WRITE( stdout,*) 'FERMIE: QTOT,SUMQ=',QTOT,SUMQ
       STOP
-      END SUBROUTINE
+      END SUBROUTINE adjef_s

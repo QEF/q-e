@@ -354,12 +354,12 @@
       END IF
 
       RETURN
-      END SUBROUTINE GRAM_EMPTY
+      END SUBROUTINE gram_empty
 
 !     
 !================================================================
 !
-      SUBROUTINE randomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
+      SUBROUTINE sodomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
         USE wave_types, ONLY: wave_descriptor
         USE reciprocal_vectors, ONLY: ig_l2g
         USE mp_global, ONLY: mpime, nproc, root
@@ -416,13 +416,13 @@
         DEALLOCATE( pwt )
 
         RETURN
-      END SUBROUTINE RANDOMIZZA
+      END SUBROUTINE sodomizza
 
 !
 !=======================================================================
 !
 
-    SUBROUTINE EMPTY_SD( tortho, atoms, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
+    SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
 
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: cp_kinetic_energy, crot, dft_kinetic_energy, fixwave
@@ -504,7 +504,7 @@
       exst = readempty( c_emp, wempt )
       ! .. WRITE( stdout, * )' DEBUG empty 1 ', exst
       IF( .NOT. exst ) THEN
-        CALL randomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
+        CALL sodomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
       END IF
 
       dt2bye = delt * delt / pmss
@@ -598,7 +598,7 @@
 112   FORMAT(/,3X,'Empty states: convergence achieved') 
 
     RETURN
-    END SUBROUTINE EMPTY_SD
+    END SUBROUTINE empty_sd
 
 !=----------------------------------------------------------------------------=!
 !
@@ -705,7 +705,7 @@
 
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE empty_eigs
 
 ! ---------------------------------------------------------------------- !
       END MODULE empty_states

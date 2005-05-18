@@ -54,7 +54,7 @@
             fnl%c = 0.0d0
           END IF
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_projector_s
 
         SUBROUTINE allocate_projector_v(fnl, nsanl, nx, ngh, gamma)
           IMPLICIT NONE
@@ -66,7 +66,7 @@
             CALL allocate_projector_s(fnl(i), nsanl, nx, ngh, gamma)
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_projector_v
 
         SUBROUTINE allocate_projector_m(fnl, nsanl, nx, ngh, gamma)
           IMPLICIT NONE
@@ -80,7 +80,7 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE allocate_projector_m
 
 
         SUBROUTINE deallocate_projector_s(fnl)
@@ -96,7 +96,7 @@
             IF( ierr /= 0 ) CALL errore(' deallocate_projector ',' deallocating fnl%c ',ierr)
           END IF
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_projector_s
 
         SUBROUTINE deallocate_projector_v(fnl)
           IMPLICIT NONE
@@ -106,7 +106,7 @@
             CALL deallocate_projector_s(fnl(i))
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_projector_v
 
         SUBROUTINE deallocate_projector_m(fnl)
           IMPLICIT NONE
@@ -118,7 +118,7 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE deallocate_projector_m
 
 
       END MODULE pseudo_projector

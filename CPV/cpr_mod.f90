@@ -18,7 +18,7 @@ module dqrad_mod
 contains
   subroutine deallocate_dqrad_mod
       IF( ALLOCATED( dqrad ) ) DEALLOCATE( dqrad )
-  end subroutine
+  end subroutine deallocate_dqrad_mod
 end module dqrad_mod
 
 module betax
@@ -34,7 +34,7 @@ contains
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
       IF( ALLOCATED( qradx ) ) DEALLOCATE( qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
-  end subroutine
+  end subroutine deallocate_betax
 end module betax
 
 module cpr_subroutines
@@ -54,7 +54,7 @@ contains
             enddo
          enddo
     return
-  end subroutine
+  end subroutine compute_stress
 
   subroutine print_atomic_var( var, na, nsp, head, iunit )
     use io_global, only: stdout
@@ -79,7 +79,7 @@ contains
       END DO
     END DO
     return
-  end subroutine
+  end subroutine print_atomic_var
 
   subroutine print_cell_var( var, head, iunit )
     use io_global, only: stdout
@@ -104,7 +104,7 @@ contains
  3340     format(9(1x,f9.5))
     end if
     return
-  end subroutine
+  end subroutine print_cell_var
 
 
   subroutine ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
@@ -123,7 +123,7 @@ contains
       enddo
     enddo
     return
-  end subroutine
+  end subroutine ions_cofmsub
 
 
   subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
@@ -154,7 +154,7 @@ contains
     DEALLOCATE( emainv )
 
     return
-  end subroutine
+  end subroutine elec_fakekine
 
   subroutine elec_fakekine2( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
     use mp, only: mp_sum
@@ -184,7 +184,7 @@ contains
     DEALLOCATE( emainv )
 
     return
-  end subroutine
+  end subroutine elec_fakekine2
 
  
   subroutine print_lambda( lambda, n, nshow, ccc, iunit )
@@ -210,7 +210,7 @@ contains
 3370     format(26x,a,i4)
 3380     format(9f8.4)
     return
-  end subroutine
+  end subroutine print_lambda
 
    subroutine add_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
      real(kind=8) :: stress(3,3)
@@ -232,7 +232,7 @@ contains
        enddo
      enddo
      return
-   end subroutine
+   end subroutine add_thermal_stress
 
 
 end module cpr_subroutines
