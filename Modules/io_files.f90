@@ -61,8 +61,8 @@ MODULE io_files
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   CHARACTER (LEN=11), PARAMETER :: xmlpun = 'restart.xml'
-  CHARACTER(LEN=256) :: vib_out  = 'vibrations.out' & ! output of phrozen phonon vibrational calculation
-                        vib_mass = 'mass.vib'         ! isotope masses used for diagonalizing the
+  CHARACTER(LEN=256) :: vib_out_file  = 'vibrations.out' & ! output of phrozen phonon vibrational calculation
+                        vib_mass_file = 'mass.vib'         ! isotope masses used for diagonalizing the
                                                       ! ...dynamical matrix
   !
   ! ... The units where various variables are saved
