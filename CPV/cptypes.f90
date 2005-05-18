@@ -41,11 +41,6 @@
 
 !! ...  pseudopotential
         TYPE pseudo
-!! ...    local part
-          REAL(dbl), POINTER :: vps(:,:)     ! form factors
-          REAL(dbl), POINTER :: dvps(:,:)    ! cell derivatives of form factors
-          REAL(dbl), POINTER :: rhops(:,:)   ! Ewald pseudocharges form factors
-          REAL(dbl), POINTER :: drhops(:,:)   ! Ewald pseudocharges form factors
 !! ...    nonlocal part
           REAL(dbl), POINTER :: wsg(:,:)     ! inverse of Kleinman-Bylander
                                           !   denominators
@@ -91,14 +86,6 @@
         LOGICAL, INTENT(IN) :: tcc(:)
         INTEGER :: ierr
 
-        ALLOCATE(ps%vps(ng,nsp), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %vps ', ierr )
-        ALLOCATE(ps%dvps(ng,nsp), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %dvps ', ierr )
-        ALLOCATE(ps%rhops(ng,nsp), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %rhops ', ierr )
-        ALLOCATE(ps%drhops(ng,nsp), STAT=ierr)
-        IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %drhops ', ierr )
         ALLOCATE(ps%wnl(ngw,lnlx,nsp,nk), STAT=ierr)
         IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %wnl ', ierr )
         ALLOCATE(ps%wsg(ngh,nsp), STAT=ierr)
@@ -133,22 +120,6 @@
         TYPE (pseudo) ps
         INTEGER :: ierr
 
-        IF(ASSOCIATED(ps%vps)) THEN
-          DEALLOCATE(ps%vps, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %vps ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%dvps)) THEN
-          DEALLOCATE(ps%dvps, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %dvps ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%rhops)) THEN
-          DEALLOCATE(ps%rhops, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %rhops ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%drhops)) THEN
-          DEALLOCATE(ps%drhops, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %drhops ', ierr )
-        END IF
         IF(ASSOCIATED(ps%wnl)) THEN
           DEALLOCATE(ps%wnl, STAT=ierr)
           IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %wnl ', ierr )

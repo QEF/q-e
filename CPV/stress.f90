@@ -78,6 +78,7 @@
       USE control_flags,        ONLY: iprsta
       USE reciprocal_vectors,   ONLY: gx
       USE gvecp,                ONLY: ngm
+      USE local_pseudo,         ONLY: dvps
 
       IMPLICIT NONE
 
@@ -151,7 +152,7 @@
 
       IF(timing) s5 = cclock()
 
-      CALL pseudo_stress(deps, edft%epseu, gagx_l, sfac, ps%dvps, rhoeg, box)
+      CALL pseudo_stress(deps, edft%epseu, gagx_l, sfac, dvps, rhoeg, box)
 
       IF(timing) s6 = cclock()
 
@@ -239,8 +240,8 @@
 
 
 ! ... declare modules
-      USE pseudopotential, ONLY: nlin_stress, ngh, &
-            l2ind,nspnl,nsanl, lnlx, ts,tp,td, tf, lm1x
+      USE pseudopotential, ONLY: nlin_stress, &
+            nspnl,nsanl
       USE ions_base, ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
       USE mp_global, ONLY: mpime, nproc
@@ -249,6 +250,8 @@
       USE cell_base, ONLY: tpiba2
       USE control_flags, ONLY: force_pairing
       USE reciprocal_vectors, ONLY: gstart, gzero, g, gx
+      USE uspp_param, only: nh, lmaxkb, nbeta
+      USE uspp, only: nhtol, nhtolm, indv
 
       IMPLICIT NONE
 
@@ -269,19 +272,19 @@
 
 ! ... declare other variables
       INTEGER :: is, l, ll, me, al, be, s, k
-      INTEGER :: ir, kk, m, mm, isa, ighp, ig, iy
-      INTEGER :: igh, ia, ighd, ighf, in, i, iss, nx, ispin, nspin, ngw
-      INTEGER :: ispin_wfc, im(7)
+      INTEGER :: ir, kk, m, mm, isa, ig, iy, iv, iyy, ih, ihh
+      INTEGER :: ia, in, i, iss, nx, ispin, nspin, ngw
+      INTEGER :: ispin_wfc, mi(16), igh(0:3)
       REAL(dbl)  xg,xrg,arg,wnd,wnd1,wnd2,temp,tt1,fac,tt2
-      REAL(dbl)  temp2, fg, gmod
+      REAL(dbl)  temp2, fg, gmod, anm
       REAL(dbl)  pm(3,3), pmtm(6,3,3)
       REAL(dbl)  dm(6,5), dmqm(6,5,5)
       REAL(dbl)  fm(3,3,3,7), fmrm(6,7,7)
+      REAL(dbl)  facty(16)
 
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
       REAL(dbl), ALLOCATABLE :: wnla(:,:,:)
       REAL(dbl), ALLOCATABLE :: fnls(:,:)
-      REAL(dbl), ALLOCATABLE :: gwork(:)
       REAL(dbl), ALLOCATABLE :: gspha(:,:)
       REAL(dbl), ALLOCATABLE :: gwtmp(:)
       REAL(dbl), PARAMETER :: twothird = 2.0d0/3.0d0
@@ -306,14 +309,44 @@
       ngw = cdesc%ngwl
       
 ! ... initialize array wnla
-      ALLOCATE(wnla(ngw, lnlx, nsp))
-      CALL nlin_stress(wnla)
+      ALLOCATE( wnla( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp) )
+      CALL nlin_stress( wnla )
 
-      ALLOCATE(gwork(ngw))
-      ALLOCATE(gwtmp(ngw))
-      ALLOCATE(gspha(ngw, (lm1x+1)**2 ))
+      ALLOCATE( gwtmp( ngw ) )
+      ALLOCATE( gspha( ngw, (lmaxkb+1)**2 ) )
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, g, gspha )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, g, gspha )
+
+      DO iy = 1, (lmaxkb+1)**2
+        DO ig = gstart, ngw
+          gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
+        END DO
+      END DO
+
+      CALL set_pmtm( pm, pmtm )
+      CALL set_dmqm( dm, dmqm )
+      CALL set_fmrm( fm, fmrm )
+
+      mi( 1 ) = 1
+
+      mi( 2 ) = 2    !   im( 1 ) = 3
+      mi( 3 ) = 3    !   im( 2 ) = 1
+      mi( 4 ) = 1    !   im( 3 ) = 2
+
+      mi( 5 ) = 3    !   im( 1 ) = 5
+      mi( 6 ) = 4    !   im( 2 ) = 3
+      mi( 7 ) = 2    !   im( 3 ) = 1
+      mi( 8 ) = 5    !   im( 4 ) = 2
+      mi( 9 ) = 1    !   im( 5 ) = 4
+
+      mi( 10 ) = 4    !   im( 1 ) = 7
+      mi( 11 ) = 5    !   im( 2 ) = 5
+      mi( 12 ) = 3    !   im( 3 ) = 3
+      mi( 13 ) = 6    !   im( 4 ) = 1
+      mi( 14 ) = 2    !   im( 5 ) = 2
+      mi( 15 ) = 7    !   im( 6 ) = 4
+      mi( 16 ) = 1    !   im( 7 ) = 6
+
 
       SPIN_LOOP: DO ispin = 1, nspin
 
@@ -324,357 +357,107 @@
 
         IF( nx < 1 ) CYCLE SPIN_LOOP
 
-        ALLOCATE(fnls(nsanl,nx))
+        iss = 1
 
-        igh = 0
-        !
-        IF (ts) THEN
-          !
-          igh = igh + 1
-          iy  = 1
-          !
-          DO ig = gstart, ngw
-            gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
-          END DO
+        SPECIES: DO is = 1, nspnl
+
+          ALLOCATE(fnls(na(is),nx))
+          ALLOCATE(auxc(ngw,na(is)))
+
           DO kk = 1, 6
-            fnls     = 0.0d0
-            iss = 1
-            gwork(1) = 0.0d0
-            DO ig = gstart, ngw
-               gwork(ig) =  gagx_l(kk,ig) * gspha(ig,iy)
-            END DO
-            DO is = 1, nspnl
-              ll = l2ind(1,is)
-              IF(ll.GT.0) THEN
-
-                ALLOCATE(auxc(ngw,na(is)))
-
-                gwtmp(1) = 0.0d0
-                DO ig = gstart, ngw
-                  gwtmp(ig) = gwork(ig) * (wnl(ig,ll,is)-wnla(ig,ll,is))
-                END DO
-
-                DO ia = 1, na(is)
-                  auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                  DO ig = gstart, ngw
-                    auxc(ig,ia) = csign(0) * gwtmp(ig) * eigr(ig,ia+iss-1)
-                  END DO
-                END DO
-    
-                CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, auxc(1,1), &
-                  2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(iss,1), nsanl )
-
-                DEALLOCATE(auxc)
-
-              END IF
-              iss = iss + na(is)
-            END DO
-
-            CALL DSCAL(size(fnls),2.d0,fnls,1)
-            DO i = 1, nx
-              isa = 1
-              DO is = 1, nspnl
-                tt1 = DDOT(na(is), fnl(1,ispin)%r(isa,igh,i), 1, fnls(isa,i), 1)
-                denl(kk) = denl(kk) +  2.0d0 * occ(i,1,ispin) * wsg(igh,is)  * tt1
-                isa = isa + na(is)
-              END DO
-            END DO
-
-          END DO
-        END IF
-
-
-        !
-        IF(tp) THEN
-          !
-          ighp = igh
-          !
-          im( 1 ) = 3
-          im( 2 ) = 1
-          im( 3 ) = 2
-          !
-          CALL set_pmtm( pm, pmtm )
-          !
-          DO m = 1, 3
-
-            iy  = 1    + im( m )
-
-            DO ig = gstart, ngw
-              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
-            END DO
-
-            DO kk=1,6
-
-              fnls = 0.0d0
-              iss = 1
-              gwork(1) = 0.0d0
-              DO ig = gstart, ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
-              END DO
-
-              DO is=1,nspnl
-
-                ll = l2ind(2,is)
-                IF(ll.GT.0) THEN
-                  ALLOCATE(auxc(ngw,na(is)))
-
-                  gwtmp(1) = 0.0d0
-                  DO ig = gstart, ngw
-                    gwtmp(ig) = gwork(ig) * ( 3.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
-                  END DO
-
-                  DO ia = 1, na(is)
-                    auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gstart, ngw
-                      auxc(ig,ia) = csign(1) * gwtmp(ig) * eigr(ig,ia+iss-1)
-                    END DO
-                  END DO
-
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
-                    auxc(1,1),2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
-                    0.0d0, fnls(iss,1), nsanl )
-
-                  DEALLOCATE(auxc)
-                END IF
-                iss = iss + na(is)
-              END DO
-  
-              isa=0
-              DO is=1,nspnl
-                temp = 2.d0 * wsg( ighp + im( m ), is)
-                DO ia=1,na(is)
-                  isa=isa+1
-                  DO in=1,nx
-                    IF(me.EQ.1) THEN
-                      temp2=0.d0
-                      DO mm=1,3
-                        temp2=temp2 + pmtm(kk, m, mm )* &
-                          fnl(1,ispin)%r(isa, ighp + im( mm ),in)
-                      END DO
-                      fnls(isa,in)= -temp2+2.d0*fnls(isa,in)
-                    ELSE
-                      fnls(isa,in)= 2.d0*fnls(isa,in)
-                    END IF
-                    tt1 = fnl(1,ispin)%r(isa, ighp + im( m ), in )
-                    fac = occ(in,1,ispin) * temp
-                    tt2 = fnls(isa,in)
-                    denl(kk) = denl(kk) + fac * tt1 * tt2
-                  END DO
-                END DO
-              END DO
-
-            END DO
-          END DO
-          !
-          igh = ighp + 3
-          !
-        END IF
-
-        ! ... d-nonlocality
-
-        IF(td) THEN
-
-          ighd = igh
-          !
-          im( 1 ) = 5
-          im( 2 ) = 3
-          im( 3 ) = 1
-          im( 4 ) = 2
-          im( 5 ) = 4
-
-          CALL set_dmqm( dm, dmqm )
-
-          DO m = 1, 5
-
-            iy  = 4 + im( m )
-
             !
-            DO ig = gstart, ngw
-              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
-            END DO
+            igh(0:3) = -1
 
-            DO kk = 1, 6
+            DO ih = 1, nh( is )
+        
+              iy  = nhtolm( ih, is )
+              iv  = indv  ( ih, is )
+              l   = nhtol ( ih, is )
+              anm = 2*l + 1
 
-              fnls = 0.0d0
-              iss = 1
-              gwork(1) = 0.0d0
-              DO ig=gstart,ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
-              END DO
+              ! WRITE(6,*) 'DEBUG ih, iy, iv, l = ', ih, iy, iv, l
 
-              DO is = 1, nspnl
-
-                ll = l2ind(3,is)
-                IF(ll.GT.0) THEN
-                  ALLOCATE(auxc(ngw,na(is)))
-  
-                  gwtmp(1) = 0.0d0
-                  DO ig = gstart, ngw
-                    gwtmp(ig) = gwork(ig) * ( 5.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
-                  END DO
-
-                  DO ig = gstart, ngw
-                    gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm( kk, m ) * wnl(ig,ll,is)
-                  END DO
-
-                  DO ia= 1 , na(is)
-                    auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gstart, ngw
-                      auxc(ig,ia) = csign(2) * gwtmp(ig) * eigr(ig,ia+iss-1)
-                    END DO
-                  END DO
-
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
-                    auxc(1,1), 2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
-                    0.0d0, fnls(iss,1), nsanl )
-
-                  DEALLOCATE(auxc)
-
-                END IF
-                iss = iss + na(is)
-              END DO
-
-              isa=0
-              DO is=1,nspnl
-                temp = 2.d0 * wsg(ighd+im(m),is)
-                DO ia=1,na(is)
-                  isa=isa+1
-                  DO in=1,nx
-                    IF(me.EQ.1) THEN
-                      temp2=0.d0
-                      DO mm=1,5
-                        temp2=temp2 + dmqm(kk, m, mm )* &
-                          fnl(1,ispin)%r(isa, ighd + im(mm),in)
-                      END DO
-                      fnls(isa,in)= -2.d0*temp2+2.d0*fnls(isa,in)
-                    ELSE
-                      fnls(isa,in)= 2.d0*fnls(isa,in)
-                    END IF
-                    tt1 = fnl(1,ispin)%r(isa,ighd+im(m),in)
-                    fac = occ(in,1,ispin) * temp
-                    tt2 = fnls(isa,in)
-                    denl(kk) = denl(kk) + fac * tt1 * tt2
-                  END DO
-                END DO
-              END DO
-
-            END DO
-          END DO
-          !
-          igh = ighd + 5
-          !
-        END IF
-
-        ! ... f-nonlocality
-
-        IF(tf) THEN
-
-          ighf = igh
-
-          CALL set_fmrm(fm, fmrm)
-
-          im( 1 ) = 7
-          im( 2 ) = 5
-          im( 3 ) = 3
-          im( 4 ) = 1
-          im( 5 ) = 2
-          im( 6 ) = 4
-          im( 7 ) = 6
-
-          DO m=1,7
-
-            iy  = 9 + im( m )
-
-            DO ig = gstart, ngw
-              gspha(ig,iy) = gspha(ig,iy) / (g(ig)*tpiba2)
-            END DO
-
-            DO kk=1,6
-
-              fnls = 0.0d0
-              iss = 1
-              gwork(1) = 0.0d0
+              gwtmp(1) = 0.0d0
               DO ig = gstart, ngw
-                gwork(ig)= gagx_l(kk,ig) * gspha(ig,iy)
+                gwtmp( ig ) = gagx_l(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is) - wnla(ig,iv,is) )
               END DO
 
-              DO is=1,nspnl
-
-                ll = l2ind(4,is)
-
-                IF(ll > 0) THEN
-                  ALLOCATE(auxc(ngw,na(is)))
-  
-                  gwtmp(1) = 0.0d0
-                  DO ig = gstart, ngw
-                    gwtmp(ig) = gwork(ig) * ( 7.d0 * wnl(ig,ll,is) - wnla(ig,ll,is) )
+              IF( igh(l) < 0 ) igh(l) = ih
+              IF ( l == 1 ) THEN
+              ELSE IF ( l == 2 ) THEN
+                DO ig = gstart, ngw
+                  gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm( kk, mi( iy ) ) * wnl(ig,iv,is)
+                END DO
+              ELSE IF ( l == 3 ) THEN
+                al = alpha(kk)
+                be = beta(kk)
+                DO ig = gstart, ngw
+                  fg = 0.0d0
+                  gmod = SQRT( g(ig) )
+                  DO s = 1, 3
+                    fg = fg + 3.0d0/5.0d0 * fm(be,s,s,mi(iy)) * gx(al,ig) / gmod
                   END DO
-
-                  al = alpha(kk)
-                  be = beta(kk)
-                  DO ig = gstart, ngw
-                    fg = 0.0d0
-                    gmod = SQRT( g(ig) )
-                    DO s = 1, 3
-                      fg = fg + 3.0d0/5.0d0 * fm(be,s,s,m) * gx(al,ig) / gmod
-                    END DO
-                    DO s = 1, 3
-                      fg = fg + 6.0d0/5.0d0 * fm(be,s,al,m) * gx(s,ig) / gmod
-                    END DO
-                    gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,ll,is)
+                  DO s = 1, 3
+                    fg = fg + 6.0d0/5.0d0 * fm(be,s,al,mi(iy)) * gx(s,ig) / gmod
                   END DO
-
-                  DO ia= 1 , na(is)
-                    auxc(1,ia) = CMPLX(0.0d0,0.0d0)
-                    DO ig = gstart, ngw
-                      auxc(ig,ia) = csign(3) * gwtmp(ig) * eigr(ig,ia+iss-1)
-                    END DO
-                  END DO
-
-                  CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, &
-                    auxc(1,1), 2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, &
-                    0.0d0, fnls(iss,1), nsanl)
-
-                  DEALLOCATE(auxc)
-
+                  gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,iv,is)
+                END DO
+              END IF
+              DO ihh = igh(l), igh(l) + 2*l
+                iyy = nhtolm( ihh, is )
+                IF ( l == 0 ) THEN
+                  facty( ihh ) = 0.0d0
+                ELSE IF( l == 1 ) THEN
+                  facty( ihh ) =  pmtm(kk, mi( iy ), mi( iyy ) )
+                ELSE IF( l == 2 ) THEN
+                  facty( ihh ) =  dmqm(kk, mi( iy ), mi( iyy ) )
+                ELSE IF( l == 3 ) THEN
+                  facty( ihh ) =  fmrm(kk, mi( iy ), mi( iyy ) )
                 END IF
-
-                iss = iss + na(is)
               END DO
+              !
+              DO ia = 1, na(is)
+                auxc(1,ia) = CMPLX(0.0d0,0.0d0)
+                DO ig = gstart, ngw
+                  auxc(ig,ia) = csign(l) * gwtmp(ig) * eigr(ig,ia+iss-1)
+                END DO
+              END DO
+    
+              CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, auxc(1,1), &
+                2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(1,1), na(is) )
 
-              isa=0
-              DO is=1,nspnl
-                temp = 2.d0 * wsg( ighf + im(m), is )
-                DO ia=1,na(is)
-                  isa=isa+1
-                  DO in=1,nx
-                    IF(me == 1) THEN
-                      temp2=0.d0
-                      DO mm=1,7
-                        temp2=temp2 + fmrm(kk,m,mm) * fnl(1,ispin)%r(isa,ighf+im(mm),in)
-                      END DO
-                      fnls(isa,in)= -3.d0*temp2+2.d0*fnls(isa,in)
-                    ELSE
-                      fnls(isa,in)= 2.d0*fnls(isa,in)
-                    END IF
-                    tt1 = fnl(1,ispin)%r(isa,ighf+im(m),in)
-                    fac = occ(in,1,ispin) * temp
-                    tt2 = fnls(isa,in)
-                    denl(kk) = denl(kk) + fac * tt1 * tt2
-                  END DO
+              DO in = 1, nx
+                !
+                fac = 2.0d0 * occ( in, 1, ispin ) * wsg( ih, is)
+                !
+                DO ia = 1, na(is)
+                  isa = iss + ia - 1
+                  temp2 = 0.d0
+                  IF( me == 1 ) THEN
+                    DO ihh = igh(l), igh(l) + 2*l
+                      temp2 = temp2 + facty( ihh ) * fnl(1,ispin)%r( isa, ihh, in )
+                    END DO
+                  END IF
+                  tt1 = fnl(1,ispin)%r(isa, ih, in )
+                  tt2 = - l * temp2 + 2.d0 * fnls( ia, in )
+                  denl(kk) = denl(kk) + fac * tt1 * tt2
                 END DO
               END DO
 
             END DO
 
           END DO
-        END IF
+          !
+          DEALLOCATE(auxc)
+          DEALLOCATE(fnls)
 
-        DEALLOCATE(fnls)
+          iss = iss + na(is)
+          !
+        END DO SPECIES
+
 
       END DO SPIN_LOOP
 
-      DEALLOCATE(gwork)
       DEALLOCATE(gwtmp)
       DEALLOCATE(gspha)
       DEALLOCATE(wnla)
@@ -827,7 +610,7 @@
 
       SUBROUTINE stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, box ) 
 
-      use ions_base,          only: nsp
+      use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
       use mp_global,          ONLY: mpime, nproc
       USE constants,          ONLY: fpi
@@ -835,6 +618,7 @@
       USE cp_types,           ONLY: pseudo, pseudo_ncpp
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
+      USE local_pseudo,       ONLY: rhops
 
       IMPLICIT NONE
 
@@ -874,9 +658,9 @@
         RHOP = (0.D0,0.D0)
         RHOPR= (0.D0,0.D0)
         DO IS = 1, NSP
-          RHOP  = RHOP  + sfac( IG, is ) *  ps%RHOPS(IG,is)
+          RHOP  = RHOP  + sfac( IG, is ) *  RHOPS(IG,is)
           ! RHOPR = RHOPR + sfac( IG, is ) * ps%DRHOPS(IG,is) 
-          RHOPR = RHOPR + sfac( IG, is ) * ps%RHOPS(IG,is) * ps%ap(is)%RAGGIO**2 * 0.5D0
+          RHOPR = RHOPR + sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
         END DO
         HGM1   = 1.D0 / g(IG) / TPIBA2 
         RHET   = 0.0_dbl

@@ -90,7 +90,6 @@
 
       CALL nl_projector_m(c0, cdesc, atoms, kp, fnl, wsg, wnl, eigr)
       nlrh_m = nl_energy_m(fnl, atoms, occ, kp, wsg)
-      ! WRITE( stdout,*) 'DEBUG nlrh ', SUM( fnl(1,1)%r ), SUM( wsg ), SUM( wnl )
       IF( tforce ) THEN
         DO ispin = 1, cdesc%nspin
           ispin_wfc = ispin
@@ -99,7 +98,6 @@
             kp, fnl(:,ispin), wsg, wnl, eigr)
         END DO
       END IF
-      !  .. WRITE( stdout,*) 'DEBUG NLRH:',atoms%for(:,1:atoms%nat)
       RETURN
       END FUNCTION nlrh_m
 
@@ -285,7 +283,7 @@
 !  END manual
 
 ! ... include modules
-      USE pseudopotential, ONLY: nspnl, nsanl, ngh
+      USE pseudopotential, ONLY: nspnl, nsanl
       USE brillouin, ONLY: kpoints
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
@@ -293,6 +291,7 @@
       USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
       USE control_flags, ONLY: gamma_only
       USE reciprocal_vectors, ONLY: gx, g
+      USE uspp_param, ONLY: nhm
 
       IMPLICIT NONE
 
@@ -321,14 +320,14 @@
 ! ... compute nonlocal contribution to forces on ions
       KAPPA: DO ik = 1, cdesc%nkl
         CARTE: DO k = 1, 3  ! x,y,z directions
-          CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), ngh, cdesc%gamma )
+          CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), nhm, cdesc%gamma )
           IF( gamma_only ) THEN
             CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, g, gx, dfnl, k)
           ELSE
             CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, &
                           gk_l(:,ik), gkx_l(:,:,ik), dfnl, k)
           END IF
-          CHANN: DO igh = 1, ngh
+          CHANN: DO igh = 1, nhm
             BANDE: DO ib = 1, cdesc%nbl( ispin )
               isa=0
               SPECS: DO is = 1, nspnl
@@ -381,12 +380,14 @@
 
 ! ... declare modules
 
-      USE pseudopotential, ONLY: l2ind, nspnl, tl, lm1x
+      USE pseudopotential, ONLY: nspnl
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE mp
       USE mp_global, ONLY: nproc, mpime, group
       USE atoms_type_module, ONLY: atoms_type
+      USE uspp_param, only: nh, lmaxkb
+      USE uspp, only: nhtol, nhtolm, indv
 
       IMPLICIT NONE 
 
@@ -402,7 +403,7 @@
 
 ! ... declare other variables
       INTEGER :: is, igh, isa, iss, ia, ig, nb, iy
-      INTEGER :: l, ll, m, ngw, lda, ldw, ldf
+      INTEGER :: l, ll, m, ngw, lda, ldw, ldf, ih, iv
       REAL(dbl), ALLOCATABLE :: gwork(:,:)
       COMPLEX(dbl), ALLOCATABLE :: gxtmp(:)
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
@@ -429,9 +430,8 @@
         fnl%c = 0.0d0
       END IF
 
-      ! WRITE( stdout,fmt="('DEBUG nlsm1 ',10I6)" ) ngw, nb, lda, ldw, ldf
 
-      ALLOCATE( gwork( ngw, (lm1x+1)**2 ), gxtmp(ngw) )
+      ALLOCATE( gwork( ngw, (lmaxkb+1)**2 ), gxtmp(ngw) )
 
 ! ... angular momentum l = 0
 ! ... orbital: s
@@ -440,51 +440,44 @@
 ! ... angular momentum l = 2
 ! ... orbitals: d_{z^2}, d_{x^2-y^2}, d_{xy}, d_{yz}, d_{zx}
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, g2, gwork )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, g2, gwork )
 
-      igh = 0
-      iy  = 0
-      DO l = 0, lm1x
-        DO m = -l, l
-          iy = iy + 1
-          IF(tl(l)) THEN
-            igh = igh + 1
-            iss = 1
-            DO is = 1, nspnl
-              ll  = l2ind( l + 1, is )
-              IF(ll.gt.0) THEN
-                ALLOCATE( auxc( ngw, atoms%na(is) ) )
-                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw, iy )
-                IF( cdesc%gamma .AND. cdesc%gzero ) gxtmp(1) = gxtmp(1) * 0.5d0
-                DO ia = 1, atoms%na(is)
-                  auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss+ia-1)
-                END DO
-                IF ( cdesc%gamma ) THEN
-                  CALL DGEMM( 'T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, &
-                    auxc(1,1), lda, c(1,1), ldw, 0.0d0, fnl%r(iss,igh,1), ldf)
-                ELSE
-                  CALL ZGEMM( 'C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), lda, &
-                    c(1,1), ldw, zero, fnl%c(iss,igh,1), ldf )
-                END IF
-                DEALLOCATE(auxc)
-                ! WRITE( stdout,*) 'DEBUG nlsm_s', tl(l), l, SUM( fnl%r )
-              END IF
-              iss = iss + atoms%na(is)
-            END DO
+      iss = 1
+      DO is = 1, nspnl
+        ALLOCATE( auxc( ngw, atoms%na(is) ) )
+        DO ih = 1, nh( is )
+          iy  = nhtolm( ih, is )
+          iv  = indv  ( ih, is )
+          ll  = nhtol ( ih, is ) + 1
+          l   = ll - 1
+          igh = ih
+          gxtmp(1:ngw) = csign(l) * wnl(1:ngw, iv, is) * gwork(1:ngw, iy )
+          ! WRITE(6,* ) 'debug is, igh, ll, iy, iv = ', is, igh, ll, iy, iv  ! debug
+          IF( cdesc%gamma .AND. cdesc%gzero ) gxtmp(1) = gxtmp(1) * 0.5d0
+          DO ia = 1, atoms%na(is)
+            auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss+ia-1)
+          END DO
+          IF ( cdesc%gamma ) THEN
+            CALL DGEMM( 'T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, &
+                 auxc(1,1), lda, c(1,1), ldw, 0.0d0, fnl%r(iss,igh,1), ldf)
+          ELSE
+            CALL ZGEMM( 'C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), lda, &
+                 c(1,1), ldw, zero, fnl%c(iss,igh,1), ldf )
           END IF
         END DO
+        iss = iss + atoms%na(is)
+        DEALLOCATE(auxc)
       END DO
       DEALLOCATE(gwork, gxtmp)
 
 ! ... since G vectors only span half space, multiply results by two
       IF ( cdesc%gamma ) THEN
         CALL DSCAL( size( fnl%r ), 2.0d0, fnl%r(1,1,1), 1 )
-      !  WRITE( stdout,*) ' DEBUG nlsm1: ', SIZE(fnl%r,1), SIZE(fnl%r,2), SIZE(fnl%r,3) ! DEBUG
         CALL mp_sum( fnl%r, group )
       ELSE
         CALL mp_sum( fnl%c, group )
       END IF
-      
+
       RETURN
       END SUBROUTINE nlsm1_s
 
@@ -548,11 +541,13 @@
 !  END manual
 
 ! ... declare modules
-      USE pseudopotential, ONLY: l2ind, lm1x, nspnl, tl
+      USE pseudopotential, ONLY: nspnl
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
       USE cell_base, ONLY: tpiba
+      USE uspp_param, only: nh, lmaxkb
+      USE uspp, only: nhtol, nhtolm, indv
 
       IMPLICIT   NONE
 
@@ -569,7 +564,7 @@
 ! ... declare other variables
       REAL(dbl), ALLOCATABLE :: gwork(:,:)
       INTEGER :: is, ia, igh, isa, ig, iss, ll, l, m, ngw, nb, lda, ldw, ldf
-      INTEGER :: iy
+      INTEGER :: iy, ih, iv
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:), gxtmp(:)
       COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0), ZERO = (0.0d0,0.0d0)
 ! ... (-i) * i^l
@@ -593,45 +588,42 @@
         dfnl%c = 0.0d0
       END IF
 
-      ALLOCATE(gwork(ngw, (lm1x+1)**2 ), gxtmp(ngw))
+      ALLOCATE(gwork(ngw, (lmaxkb+1)**2 ), gxtmp(ngw))
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, g2, gwork )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, g2, gwork )
+      !
+      DO iy = 1, (lmaxkb+1)**2 
+        gwork(1:ngw,iy) = tpiba * gx(kk,1:ngw) * gwork(1:ngw,iy)
+      END DO
 
-      igh = 0
-      iy  = 0
-      ANGMO: DO l = 0, lm1x
-        MAGNE: DO m = -l, l
-          iy = iy + 1
-          IF(tl(l)) THEN
-            igh = igh + 1
-            iss = 1
-            gwork(1:ngw,iy) = tpiba * gx(kk,1:ngw) * gwork(1:ngw,iy)
-            SPECS: DO is = 1, nspnl
-              ll  = l2ind(l + 1,is)
-              IF(ll.gt.0) THEN
-                ALLOCATE(auxc(ngw,atoms%na(is)))
-                gxtmp(1:ngw) = csign(l) * wnl(1:ngw,ll,is) * gwork(1:ngw,iy)
-                DO ia = 1, atoms%na(is)
-                  auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss + ia - 1)
-                END DO
-                IF( cdesc%gamma ) THEN
-                  CALL DGEMM('T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, auxc(1,1), lda, &
-                    c(1,1), ldw, 0.0d0, dfnl%r(iss,igh,1), ldf)
-                ELSE
-                  CALL ZGEMM('C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), lda, &
-                    c(1,1), ldw, zero, dfnl%c(iss,igh,1), ldf)
-                END IF
-                DEALLOCATE(auxc)
-              END IF
-              iss = iss + atoms%na(is)
-            END DO SPECS
-          END IF
-        END DO MAGNE
-      END DO ANGMO
+      iss = 1
+      SPECS: DO is = 1, nspnl
+        ALLOCATE(auxc(ngw,atoms%na(is)))
+        LM: DO ih = 1, nh( is )
+          iv  = indv  ( ih, is )
+          iy  = nhtolm( ih, is )
+          ll  = nhtol ( ih, is ) + 1
+          l   = ll - 1
+          igh = ih
+          gxtmp(1:ngw) = csign(l) * wnl(1:ngw,iv,is) * gwork(1:ngw,iy)
+          DO ia = 1, atoms%na(is)
+            auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss + ia - 1)
+          END DO
+          IF( cdesc%gamma ) THEN
+             CALL DGEMM('T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, auxc(1,1), lda, &
+                c(1,1), ldw, 0.0d0, dfnl%r(iss,igh,1), ldf)
+           ELSE
+             CALL ZGEMM('C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), lda, &
+                c(1,1), ldw, zero, dfnl%c(iss,igh,1), ldf)
+           END IF
+        END DO LM
+        DEALLOCATE(auxc)
+        iss = iss + atoms%na(is)
+      END DO SPECS
       IF( cdesc%gamma ) CALL DSCAL(size(dfnl%r),2.0d0,dfnl%r(1,1,1),1)
       DEALLOCATE(gwork, gxtmp)
       RETURN
       END SUBROUTINE nlsm2_s
 
 
-      END MODULE nl
+    END MODULE nl

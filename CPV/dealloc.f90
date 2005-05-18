@@ -22,7 +22,7 @@
       use cg_module, only: deallocate_cg
       use reciprocal_vectors, only: deallocate_recvecs
       use recvecs_indexes,    only: deallocate_recvecs_indexes
-      use pseu, only: deallocate_pseu
+      use local_pseudo, only: deallocate_local_pseudo
       use qgb_mod, only: deallocate_qgb_mod
       use dqgb_mod, only: deallocate_dqgb_mod
       use qradb_mod, only: deallocate_qradb_mod
@@ -43,7 +43,6 @@
       USE turbo, ONLY: deallocate_turbo
       USE cp_main_variables, ONLY: deallocate_mainvar
       USE derho, ONLY: deallocate_derho
-      USE dpseu, ONLY: deallocate_dpseu
       USE cdvan, ONLY: deallocate_cdvan
       USE pseudopotential, ONLY: deallocate_pseudopotential
 
@@ -59,12 +58,11 @@
       CALL deallocate_uspp()
       CALL deallocate_recvecs()
       CALL deallocate_recvecs_indexes()
-      CALL deallocate_pseu()
+      CALL deallocate_local_pseudo()
       CALL deallocate_qgb_mod()
       CALL deallocate_qradb_mod()
       CALL deallocate_derho()
       CALL deallocate_dqgb_mod()
-      CALL deallocate_dpseu()
       CALL deallocate_cdvan()
       CALL deallocate_dqrad_mod()
       CALL deallocate_betax()

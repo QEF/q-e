@@ -46,7 +46,9 @@
       USE electrons_module,     ONLY: electron_mass_init, band_init, n_emp
       USE electrons_base,       ONLY: nspin, nupdwn
       USE reciprocal_vectors,   ONLY: ngwt, gstart, gzero, ngm, ngmt, ngw, mill_l
-      USE pseudopotential,      ONLY: formf, nsanl, ngh, pseudopotential_init
+      USE pseudopotential,      ONLY: formf, nsanl, pseudopotential_init, &
+                                      pseudopotential_initval, &
+                                      pseudopotential_indexes
       USE ions_base,            ONLY: nsp, na, nat
       USE ions_module,          ONLY: atoms_init
       USE brillouin,            ONLY: kpoints
@@ -94,6 +96,8 @@
       CALL atoms_init( atoms_m, atoms_0, atoms_p, taus, ind_srt, if_pos, atm, ht%hmat )
 
       ! ... Allocate + Initialize pseudopotentials
+      CALL pseudopotential_indexes()
+      CALL pseudopotential_initval()
       CALL pseudopotential_init(ps, na, nsp, kp)
 
       s4 = cclock()

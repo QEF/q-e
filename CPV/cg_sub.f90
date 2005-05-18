@@ -51,15 +51,13 @@
       use cell_base, only: h, hold, deth, wmass, tpiba2
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
-      use pseu, only: vps, rhops
-      use pseu, only: deallocate_pseu
+      use local_pseudo, only: vps, rhops
       use io_global, ONLY: io_global_start, stdout, ionode
       use mp_global, ONLY: mp_global_start
       use mp, ONLY: mp_end
       use para_mod
       use dener
       use derho
-      use dpseu
       use cdvan
       use stre
       use parameters, only: nacx, natx, nsx, nbndxx

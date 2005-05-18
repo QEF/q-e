@@ -168,8 +168,4 @@
         RETURN
       END SUBROUTINE corecortab_base
 
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-    END MODULE pseudotab_base
-
+  END MODULE pseudotab_base

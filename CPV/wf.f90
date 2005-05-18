@@ -4104,7 +4104,6 @@ subroutine tric_wts(rp1,rp2,rp3,alat,wts)
             nr1sx, nr2sx, nr3sx, nnrsx
       use electrons_base, only: nx => nbspx, n => nbsp, nspin, f, ispin => fspin
       use constants, only: pi, fpi
-      use pseu
       use wfparm, only : iwf
 !
       use cdvan

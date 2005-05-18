@@ -15,45 +15,22 @@
 
 #include "f_defs.h"
 
-!  BEGIN manual
-
    MODULE pseudopotential
 
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE readpot(na,nsp,tcc)
-!  SUBROUTINE defngh(nsp)
-!  INTEGER FUNCTION l2ind( lw, is )
-!  SUBROUTINE pseudopotential_setup(nsp,psfile)
-!  SUBROUTINE deallocate_pseudopotential
-!  SUBROUTINE formf(ht,ps)
-!  SUBROUTINE nlin(kp,wnl)
-!  SUBROUTINE nlin_stress(wnla)
-!  SUBROUTINE pseudo_wave_info(oc_out,nchan_out,mesh_out,dx_out, &
-!                              rw_out,rps_out)
-!  REAL(dbl) FUNCTION zvpseudo(is)
-!  ----------------------------------------------
-!  END manual
 
 ! ...   declare modules
         USE kinds
         USE parameters, ONLY: cp_lmax
         USE cp_types, ONLY: pseudo, allocate_pseudo
         USE splines, ONLY: spline_data
-        USE read_pseudo_module_fpmd, ONLY: nspnl, l2ind
+        USE read_pseudo_module_fpmd, ONLY: nspnl
 
         IMPLICIT NONE
         SAVE
 
 !  declare module-scope variables
         INTEGER :: nsanl   ! number of atoms of the non local species
-        INTEGER :: lnlx    ! maximum number of different non local components
-        INTEGER :: lmax    ! maximum value of the angular momentum
-        INTEGER :: lm1x    ! maximum value of the angular momentum, of non local components
-        INTEGER :: ngh     ! actual number of spherical harmonics 
-
-        REAL(dbl), ALLOCATABLE :: wsginit(:,:)
+        INTEGER :: nbetax  ! number of atoms of the non local species
 
         TYPE (spline_data), ALLOCATABLE ::  vps_sp(:)
         TYPE (spline_data), ALLOCATABLE :: dvps_sp(:)
@@ -67,53 +44,33 @@
 
         LOGICAL :: tpstab, tpstab_first
 
-        LOGICAL :: ts, tp, td, tf, tl(0:(cp_lmax-1))
-
         PRIVATE
 
         PUBLIC :: pseudopotential_setup, formf, nlin, nlin_stress
         PUBLIC :: pseudo_wave_info, pseudopotential_init
         PUBLIC :: deallocate_pseudopotential
-        PUBLIC :: l2ind
-        PUBLIC :: nspnl, tl, lm1x, ngh, nsanl, ts, tp, td, tf, lnlx, lmax
+        PUBLIC :: nspnl, nsanl
+        PUBLIC :: pseudopotential_initval, pseudopotential_indexes
+        PUBLIC :: compute_dvan, compute_betagx, compute_qradx
 
 !  end of module-scope declarations
 !  ----------------------------------------------
 
       CONTAINS
 
-!  subroutines
-!  ----------------------------------------------
 !  ----------------------------------------------
 
 
-      SUBROUTINE pseudopotential_setup(nsp, tpstab_inp, pstab_size_inp, raggio_inp)
+   SUBROUTINE pseudopotential_setup( nsp, tpstab_inp, pstab_size_inp )
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-        USE splines, ONLY: nullify_spline
-        USE pseudo_base, ONLY: nlset_base
         USE ions_base, ONLY: zv
-        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE pseudo_types, ONLY: pseudo_ncpp
         USE read_pseudo_module_fpmd, ONLY: ap
-        USE splines, ONLY: kill_spline
 
         INTEGER, INTENT(IN) :: nsp, pstab_size_inp
         LOGICAL, INTENT(IN) :: tpstab_inp
-        REAL(dbl), INTENT(IN) :: raggio_inp(:)
 
-        INTEGER :: i, is, il, l, j
-
-!  end of declarations
-!  ----------------------------------------------
-
-        DO i = 1, nsp
-          ap(i)%raggio = raggio_inp(i)
-          IF( ap(i)%raggio <= 0.0d0 ) THEN
-            CALL errore(' pseudopotential_setup ',' ion_radius less than 0 ',-1)
-          END IF
-        END DO
+        INTEGER :: i
 
         !  initialize the global array zv containing the 
         !  value of the ionic charges
@@ -122,49 +79,36 @@
           zv( i ) = ap( i )%zv
         END DO
 
-! ...   set flags selecting angular momentum
-        lnlx = 0
-        ts=.FALSE.
-        tp=.FALSE.
-        td=.FALSE.
-        tf=.FALSE.
-        tl=.FALSE.
-        DO is = 1, nspnl
-          lnlx = MAX( lnlx, ap(is)%lnl )
-          DO l = 1, ap(is)%lnl
-            IF (ap(is)%indl(l).EQ.1) ts = .TRUE.  ! state = s
-            IF (ap(is)%indl(l).EQ.2) tp = .TRUE.  ! state = p
-            IF (ap(is)%indl(l).EQ.3) td = .TRUE.  ! state = d
-            IF (ap(is)%indl(l).EQ.4) tf = .TRUE.  ! state = f
-          END DO
-        END DO
-        tl(0) = ts
-        tl(1) = tp
-        tl(2) = td
-        tl(3) = tf
+        !  set the sizes for the spline tables
 
-! ...   count orbitals
-        ngh = 0
-        IF (ts) ngh = ngh + 1
-        IF (tp) ngh = ngh + 3
-        IF (td) ngh = ngh + 5
-        IF (tf) ngh = ngh + 7
+        tpstab       = tpstab_inp
+        pstab_size   = pstab_size_inp
 
-        ! maximum value of l (lmax = 1(s),2(p),3(d),4(f) )
-        ! lmax - 1, number of non-local components (Projectors)
-        ! one of the component is added to the local part
+     RETURN
+   END SUBROUTINE pseudopotential_setup
 
-        lm1x = 0
-        IF (ts) lm1x = 0
-        IF (tp) lm1x = 1
-        IF (td) lm1x = 2
-        IF (tf) lm1x = 3
-        lmax  = lm1x
-        DO is = 1, nspnl
-          lmax = MAX( lmax, ( ap(is)%lloc - 1 ) )
-        END DO
 
-        tpstab = tpstab_inp
+
+!  ----------------------------------------------
+
+
+
+   SUBROUTINE pseudopotential_initval()
+
+        USE splines, ONLY: nullify_spline
+        USE ions_base, ONLY: zv, nsp
+        USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE read_pseudo_module_fpmd, ONLY: ap
+        USE splines, ONLY: kill_spline
+        USE constants, ONLY: pi
+        use uspp_param, only: nbeta
+
+        INTEGER :: i, is, il, j
+
+        ! ...   set flags selecting angular momentum
+
+        nbetax = MAXVAL( nbeta( 1:nsp ) )
+
         IF( tpstab ) THEN
           !
           IF( ALLOCATED( vps_sp ) ) THEN
@@ -207,7 +151,7 @@
             END DO
             DEALLOCATE(wnl_sp)
           END IF
-          ALLOCATE( wnl_sp(lnlx,nsp))
+          ALLOCATE( wnl_sp(nbetax,nsp))
           !
           IF(ALLOCATED(wnla_sp)) THEN
             DO i = 1, size(wnla_sp,2)
@@ -217,35 +161,171 @@
             END DO
             DEALLOCATE(wnla_sp)
           END IF
-          ALLOCATE( wnla_sp(lnlx,nsp))
+          ALLOCATE( wnla_sp(nbetax,nsp))
           !
           DO is = 1, nsp
             CALL nullify_spline( vps_sp( is ) )
             CALL nullify_spline( dvps_sp( is ) )
             CALL nullify_spline( rhoc1_sp( is ) )
             CALL nullify_spline( rhocp_sp( is ) )
-            DO il = 1, lnlx
+            DO il = 1, nbetax
               CALL nullify_spline( wnl_sp( il, is ) )
               CALL nullify_spline( wnla_sp( il, is ) )
             END DO
           END DO
           !
           tpstab_first = .TRUE.
-          pstab_size   = pstab_size_inp
           !
         END IF
 
-        IF( ALLOCATED( wsginit ) ) DEALLOCATE( wsginit )
-        ALLOCATE(wsginit(ngh,nsp))
-        wsginit = 0.0d0
-        DO is = 1, nspnl
-          CALL nlset_base(ap(is), wsginit(:,is))
-        END DO
+        call compute_dvan()
 
-        RETURN
-      END SUBROUTINE pseudopotential_setup
+     RETURN
+   END SUBROUTINE pseudopotential_initval
+
+
+
 
 !  ----------------------------------------------
+
+
+!     
+!     calculate array  dvan(iv,jv,is)
+!    
+!  rw**2 * vrps   = [ ( Vpsnl(r) - Vpsloc(r) )* Rps(r) * r^2 ]
+!                 = [ DVpsnl(r) * Rps(r) * r^2 ]
+!  dion           = (2l+1) / < Rps(r) | DVpsnl(r) | Rps(r) >
+
+
+   SUBROUTINE compute_dvan()
+     use uspp,       only: dvan, nhtolm, indv
+     use uspp_param, only: nhm, nh, dion
+     use ions_base,  only: nsp
+     use atom,       only: numeric
+     implicit none
+     integer :: is, iv, jv
+     real(dbl) :: fac
+     !
+     if( allocated( dvan ) ) deallocate( dvan )
+     allocate( dvan( nhm, nhm, nsp ) )
+     dvan(:,:,:) =0.d0
+     !
+     do is = 1, nsp
+       if ( .not. numeric( is ) ) then
+         fac = 1.0d0
+       else
+         !     fac converts ry to hartree
+         fac = 0.5d0
+       end if
+       do iv=1,nh(is)
+         do jv=1,nh(is)
+           if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
+             dvan( iv, jv, is ) = fac * dion( indv(iv,is), indv(jv,is), is )
+           endif
+         end do
+       end do
+     end do
+     RETURN
+   END SUBROUTINE compute_dvan
+
+
+
+!  ----------------------------------------------
+
+
+
+   SUBROUTINE pseudopotential_indexes()
+
+      use parameters, only: lmaxx    !
+      use ions_base,  only: nsp, &   !  number of specie
+                            na       !  number of atoms for each specie
+      use cvan,       only: ish      !
+      use uspp,       only: nkb, &   !
+                            nkbus    !
+      use core,       only: nlcc_any !
+      use uspp_param, only: nbeta,  &!
+                            lmaxkb, &!
+                            lll,    &!
+                            nhm,    &!
+                            nh,     &!
+                            tvanp,  &!
+                            nqlc,   &!
+                            lmaxq    !
+      use uspp,       only: nhtol,  &!
+                            nhtolm, &!
+                            indv     !
+      use atom,       only: nlcc     !
+
+
+      IMPLICIT NONE
+     
+      INTEGER :: is, iv, ind, il, lm
+      !     ------------------------------------------------------------------
+      !     find  number of beta functions per species, max dimensions,
+      !     total number of beta functions (all and Vanderbilt only)
+      !     ------------------------------------------------------------------
+      lmaxkb   = -1
+      nhm      =  0
+      nkb      =  0
+      nkbus    =  0
+      nlcc_any = .false.
+      !
+      do is = 1, nsp
+         ind = 0
+         do iv = 1, nbeta(is)
+            lmaxkb = max( lmaxkb, lll( iv, is ) )
+            ind = ind + 2 * lll( iv, is ) + 1
+         end do
+         nh(is) = ind
+         nhm    = max( nhm, nh(is) )
+         ish(is)=nkb
+         nkb = nkb + na(is) * nh(is)
+         if( tvanp(is) ) nkbus = nkbus + na(is) * nh(is)
+         nlcc_any = nlcc_any .OR. nlcc(is)
+      end do
+      if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
+      lmaxq = 2*lmaxkb + 1
+      !
+      ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
+      ! but in some versions of the PP files lmax is not set to the maximum
+      ! l of the beta functions but includes the l of the local potential
+      !
+      do is=1,nsp
+         nqlc(is) = MIN ( nqlc(is), lmaxq )
+      end do
+      if (nkb <= 0) call errore('nlinit ','not implemented ?',nkb)
+
+      if( allocated( nhtol ) ) deallocate( nhtol )
+      if( allocated( indv  ) ) deallocate( indv )
+      if( allocated( nhtolm  ) ) deallocate( nhtolm )
+      !
+      allocate(nhtol(nhm,nsp))
+      allocate(indv (nhm,nsp))
+      allocate(nhtolm(nhm,nsp))
+
+      !     ------------------------------------------------------------------
+      !     definition of indices nhtol, indv, nhtolm
+      !     ------------------------------------------------------------------
+      !
+      do is = 1, nsp
+         ind = 0
+         do iv = 1, nbeta(is)
+            lm = lll(iv,is)**2
+            do il = 1, 2*lll( iv, is ) + 1
+               lm = lm + 1
+               ind = ind + 1
+               nhtolm( ind, is ) = lm
+               nhtol( ind, is ) = lll( iv, is )
+               indv( ind, is ) = iv
+            end do
+         end do
+      end do
+
+
+      RETURN
+   END SUBROUTINE
+
+
 !  ----------------------------------------------
 
       SUBROUTINE pseudopotential_init( ps, na, nsp, kp )
@@ -253,9 +333,11 @@
 ! ...   declare modules
         USE brillouin, ONLY: kpoints
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
+        USE local_pseudo, ONLY: allocate_local_pseudo
         USE read_pseudo_module_fpmd, ONLY: ap
         USE gvecp, ONLY: ngm
         USE gvecw, ONLY: ngw
+        use uspp_param, only: lmaxkb, nhm
         
         IMPLICIT NONE
 
@@ -272,7 +354,8 @@
           tcc = .FALSE.
           WHERE ( ap(1:nsp)%tnlcc ) tcc = .TRUE.
 
-          CALL allocate_pseudo(ps, nsp, ngm, ngw, kp%nkpt, lnlx, ngh, tcc)
+          CALL allocate_local_pseudo( ngm, nsp )
+          CALL allocate_pseudo(ps, nsp, ngm, ngw, kp%nkpt, nbetax, nhm, tcc)
 
           ps%ap => ap
 
@@ -284,10 +367,11 @@
         SUBROUTINE deallocate_pseudopotential
 
           USE splines, ONLY: kill_spline
+          USE uspp,    ONLY: dvan
 
           INTEGER :: i, j
 
-          IF( ALLOCATED( wsginit ) ) DEALLOCATE( wsginit )
+          IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
           IF( ALLOCATED( vps_sp  ) ) THEN
             DO i = 1, size(vps_sp)
               CALL kill_spline(vps_sp(i),'a')
@@ -349,7 +433,7 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE ions_base, ONLY: na, nsp
+      USE ions_base, ONLY: na, nsp, rcmax
       USE cell_module, ONLY: boxdimensions
       USE cell_base, ONLY: tpiba2
       USE brillouin, ONLY: kpoints
@@ -359,6 +443,10 @@
       USE pseudo_base, ONLY: formfn
       USE pseudo_base, ONLY: compute_rhops, compute_rhocg
       USE reciprocal_vectors, ONLY: g, ngm
+      USE local_pseudo, ONLY: vps, dvps, rhops, drhops
+      use uspp_param, only: lmaxkb, nhm, nh
+      use uspp, only: dvan
+      USE constants, ONLY: pi
 
       IMPLICIT NONE
 
@@ -368,9 +456,9 @@
       TYPE (boxdimensions), INTENT(IN)    :: ht
 
 ! ... declare other variables
-      INTEGER is, isc, ist, ig, igh, i
+      INTEGER is, isc, ist, ig, igh, i, l, iv
       REAL(dbl)  omega, s1, s2, s3, s4
-      REAL(dbl), ALLOCATABLE :: vps(:), dvps(:), vloc(:)
+      REAL(dbl), ALLOCATABLE :: vloc(:)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -378,8 +466,8 @@
       omega = ht%deth
 
       do is = 1, size(ps%wsg,2)
-        do igh = 1, size(ps%wsg,1)
-          ps%wsg(igh, is) = wsginit(igh, is) / omega
+        do igh = 1, nh( is )
+          ps%wsg( igh, is) = 4.0d0 * ( 4.0d0 * pi ) ** 2 * dvan( igh, igh, is ) / omega
         end do
       end do
 
@@ -398,15 +486,14 @@
 ! ... handle local part
       DO is = 1, nsp
 
-        CALL compute_rhops( ps%rhops(:,is), ps%drhops(:,is), ps%ap(is)%zv, &
-             ps%ap(is)%raggio, g, omega, tpiba2, ngm, .true. )
+        CALL compute_rhops( rhops(:,is), drhops(:,is), ps%ap(is)%zv, &
+             rcmax(is), g, omega, tpiba2, ngm, .true. )
 
         IF( ps%ap(is)%tnlcc ) THEN
           IF(tpstab) THEN
             CALL corecortab_base(g, ps%rhoc1(:,is), ps%rhocp(:,is), &
                    rhoc1_sp(is), rhocp_sp(is), xgtabmax, omega) 
           ELSE
-            ! CALL corecor_base(ps%ap(is), g, ps%rhoc1(:,is), ps%rhocp(:,is), omega)
             CALL compute_rhocg( ps%rhoc1(:,is), ps%rhocp(:,is), ps%ap(is)%rw, &
                    ps%ap(is)%rab, ps%ap(is)%rhoc, g, omega, tpiba2, ps%ap(is)%mesh, ngm, 1 )
 
@@ -415,33 +502,21 @@
 
 ! ...   numeric pseudopotential
         IF(tpstab) THEN
-          CALL formftab_base(g, ps%vps(:,is), ps%dvps(:,is), &
+          CALL formftab_base(g, vps(:,is), dvps(:,is), &
                vps_sp(is), dvps_sp(is), xgtabmax, omega )
         ELSE
           !
           ALLOCATE( vloc( ps%ap(is)%mesh ) )
           !
           vloc = ps%ap(is)%vloc * 2.0d0
-          CALL formfn( ps%vps(:,is), ps%dvps(:,is), ps%ap(is)%rw, ps%ap(is)%rab, &
-                      vloc, ps%ap(is)%zv, ps%ap(is)%raggio, g, omega, &
+          CALL formfn( vps(:,is), dvps(:,is), ps%ap(is)%rw, ps%ap(is)%rab, &
+                      vloc, ps%ap(is)%zv, rcmax(is), g, omega, &
                       tpiba2, 0.0d0, ps%ap(is)%mesh, ngm, .false., .true. )
-          ps%dvps(:,is) = -ps%dvps(:,is)
+          dvps(:,is) = -dvps(:,is)
           !
           DEALLOCATE( vloc )
 
         END IF
-
-        ! DEBUG
-        ! IF( is == 2 ) THEN
-        !   DO i = 1, SIZE(ps%vps,1)
-        !   ps%dvps(1,is) = 0.0
-        !   WRITE( stdout,fmt="(I5,2F14.6)" ) i,ps%vps(i,is),ps%dvps(i,is)
-        !   END DO
-        ! END IF
-
-        ! WRITE( stdout,fmt="(/,'* FORMF TIMING: ',F18.8)" ) (s2-s1)
-        ! WRITE( stdout,fmt="(/,'* FORMF TIMING: ',F18.8)" ) (s3-s2)
-        ! WRITE( stdout,fmt="(/,'* FORMF TIMING: ',F18.8)" ) (s4-s3)
 
       END DO
 
@@ -459,7 +534,7 @@
 
       SUBROUTINE build_pstab()
 
-        USE ions_base, ONLY: nsp
+        USE ions_base, ONLY: nsp, rcmax
         USE constants, ONLY: pi, fpi
         USE cell_base, ONLY: tpiba, tpiba2
         USE splines, ONLY: init_spline, allocate_spline
@@ -510,7 +585,7 @@
           ALLOCATE( vloc( ap(is)%mesh ) )
           vloc = ap(is)%vloc * 2.0d0
           CALL formfn( vps_sp(is)%y, dvps_sp(is)%y, ap(is)%rw, ap(is)%rab, &
-                      vloc, ap(is)%zv, ap(is)%raggio, xgtab, 1.0d0, &
+                      vloc, ap(is)%zv, rcmax(is), xgtab, 1.0d0, &
                       tpiba2, 0.0d0, ap(is)%mesh, pstab_size, .false., .true. )
           dvps_sp(is)%y = -dvps_sp(is)%y
           DEALLOCATE( vloc )
@@ -533,23 +608,23 @@
 
           NONLOCAL: IF( is <= nspnl ) THEN
 
-            DO l = 1, ap(is)%lnl
+            DO l = 1, ap(is)%nbeta
               CALL allocate_spline(  wnl_sp(l,is), pstab_size, xgmin, xgmax )
               CALL allocate_spline( wnla_sp(l,is), pstab_size, xgmin, xgmax )
             END DO
 
             ALLOCATE( fintl( SIZE( xgtab ), SIZE( wnl_sp, 1) ) )
             CALL nlin_base(ap(is), xgtab(:), fintl)
-            DO l = 1, ap(is)%lnl
+            DO l = 1, ap(is)%nbeta
               wnl_sp(l,is)%y = fintl(:,l)
             END DO
             CALL nlin_stress_base(ap(is), xgtab, fintl)
-            DO l = 1, ap(is)%lnl
+            DO l = 1, ap(is)%nbeta
               wnla_sp(l,is)%y = fintl(:,l)
             END DO
             DEALLOCATE(fintl)
 
-            DO l = 1, ap(is)%lnl
+            DO l = 1, ap(is)%nbeta
               CALL init_spline( wnl_sp(l,is) )
               CALL init_spline( wnla_sp(l,is) )
             END DO
@@ -598,13 +673,13 @@
         DO ik = 1, kp%nkpt
           IF( gamma_only ) THEN
             IF( tpstab ) THEN
-              CALL nlintab_base(g, wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+              CALL nlintab_base(g, wnl(:,:,is,ik), ap(is)%nbeta, wnl_sp(:,is), xgtabmax)
             ELSE
               CALL nlin_base(ap(is), g, wnl(:,:,is,ik))
             END IF
           ELSE
             IF( tpstab ) THEN
-              CALL nlintab_base(gk_l(:,ik), wnl(:,:,is,ik), ap(is)%lnl, wnl_sp(:,is), xgtabmax)
+              CALL nlintab_base(gk_l(:,ik), wnl(:,:,is,ik), ap(is)%nbeta, wnl_sp(:,is), xgtabmax)
             ELSE
               CALL nlin_base(ap(is), gk_l(:,ik), wnl(:,:,is,ik))
             END IF
@@ -641,7 +716,7 @@
       wnla = 0.0d0
       DO IS = 1, NSPNL
         IF (tpstab) THEN
-          CALL nlintab_base(g, wnla(:,:,is), ap(is)%lnl, wnla_sp(:,is), xgtabmax)
+          CALL nlintab_base(g, wnla(:,:,is), ap(is)%nbeta, wnla_sp(:,is), xgtabmax)
         ELSE
           CALL nlin_stress_base(ap(is), g, wnla(:,:,is))
         END IF
@@ -691,6 +766,258 @@
 
         RETURN
       END SUBROUTINE pseudo_wave_info
+
+
+! ----------------------------------------------
+
+! calculation of array  betagx(ig,iv,is)
+
+! ----------------------------------------------
+
+
+    SUBROUTINE compute_betagx( tpre )
+      !
+      USE ions_base,  ONLY: nsp
+      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbeta
+      USE atom,       ONLY: r, numeric, rab
+      USE uspp,       ONLY: nhtol, indv
+      USE betax,      only: refg, betagx, mmx, dbetagx
+      USE cvan,       only: oldvan
+      USE qrl_mod,    only: qrl, cmesh
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(IN) :: tpre
+      !
+      INTEGER :: is, iv, l, il, ltmp, i0, ir
+      REAL(dbl), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(dbl) :: xg, xrg
+      !
+      IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
+      IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
+      ALLOCATE( betagx ( mmx, nhm, nsp ) )
+      ALLOCATE( dbetagx( mmx, nhm, nsp ) )
+
+      !
+      do is = 1, nsp
+         !
+         if ( tpre ) then
+            allocate( dfint( kkbeta( is ) ) )
+            allocate( djl  ( kkbeta( is ) ) )
+            allocate( jltmp( kkbeta( is ) ) )
+         end if
+         allocate( fint ( kkbeta( is ) ) )
+         allocate( jl   ( kkbeta( is ) ) )
+         !
+         do iv = 1, nh(is)
+            !
+            l = nhtol(iv,is) + 1
+            !
+            do il = 1, mmx
+               !
+               xg = sqrt( refg * (il-1) )
+               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
+!
+               if( tpre )then
+                  !
+                  ltmp=l-1
+                  !
+                  ! r(i0) is the first point such that r(i0) >0
+                  !
+                  i0 = 1
+                  if ( r(1,is) < 1.0d-8 ) i0 = 2
+                  ! special case q=0
+                  if ( xg < 1.0d-8 ) then
+                     if (l == 1) then
+                        ! Note that dj_1/dx (x=0) = 1/3
+                        jltmp(:) = 1.0d0/3.d0
+                     else
+                        jltmp(:) = 0.0d0
+                     end if
+                  else
+                     call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                  end if
+                  do ir = i0, kkbeta(is)
+                     xrg = r(ir,is) * xg
+                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
+                  end do
+                  if ( i0 == 2 ) djl(1) = djl(2)
+                  !
+               endif
+               !
+               !     beta(ir)=r*beta(r)
+               !
+               do ir = 1, kkbeta(is)
+                  fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
+               end do
+               if (oldvan(is)) then
+                  call herman_skillman_int(kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
+               else
+                  call simpson_cp90(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
+               endif
+               ! 
+               if(tpre) then
+                  do ir = 1, kkbeta(is)
+                     dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
+                  end do
+                  if (oldvan(is)) then
+                     call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
+                  else
+                     call simpson_cp90(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
+                  end if
+               endif
+               !
+            end do
+         end do
+!
+         deallocate(jl)
+         deallocate(fint)
+         if (tpre) then
+            deallocate(jltmp)
+            deallocate(djl)
+            deallocate(dfint)
+         end if
+         !
+      end do
+
+      RETURN
+    END SUBROUTINE compute_betagx
+
+
+!     ---------------------------------------------------------------
+!     calculation of array qradx(igb,iv,jv,is)
+!
+!       qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
+!
+!     ---------------------------------------------------------------
+
+
+    SUBROUTINE compute_qradx( tpre )
+      !
+      use io_global,  only: stdout
+      USE ions_base,  ONLY: nsp
+      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nqlc, qqq, nbrx, lmaxq, nbeta
+      USE atom,       ONLY: r, numeric, rab
+      USE uspp,       ONLY: nhtol, indv
+      USE betax,      only: refg, qradx, mmx, dqradx
+      USE cvan,       only: oldvan, ish, nvb
+      USE qrl_mod,    only: qrl, cmesh
+      use gvecb,      only: ngb
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(IN) :: tpre
+      !
+      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv
+      REAL(dbl), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(dbl) :: xg, xrg
+
+      IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
+      IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
+      ALLOCATE(  qradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
+      ALLOCATE( dqradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
+
+      DO is = 1, nvb
+         !
+         IF ( tpre ) THEN
+            ALLOCATE( dfint( kkbeta(is) ) )
+            ALLOCATE( djl  ( kkbeta(is) ) )
+            ALLOCATE( jltmp( kkbeta(is) ) )
+         END IF
+         allocate( fint( kkbeta(is) ) )
+         allocate( jl  ( kkbeta(is) ) )
+         !
+         !     qqq and beta are now indexed and taken in the same order
+         !     as vanderbilts ppot-code prints them out
+         !
+         WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
+     &        nh(is), ngb, is, kkbeta(is), nqlc(is)
+         !
+         do l = 1, nqlc( is )
+            !
+            do il = 1, mmx
+               !
+               xg = sqrt( refg * (il-1) )
+               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
+               !
+               if(tpre) then
+                  !
+                  ltmp = l - 1
+                  !
+                  ! r(i0) is the first point such that r(i0) >0
+                  !
+                  i0 = 1
+                  if ( r(1,is) < 1.0d-8 ) i0 = 2
+                  ! special case q=0
+                  if ( xg < 1.0d-8 ) then
+                     if (l == 1) then
+                        ! Note that dj_1/dx (x=0) = 1/3
+                        jltmp(:) = 1.0d0/3.d0
+                     else
+                        jltmp(:) = 0.0d0
+                     end if
+                  else
+                     call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                  end if
+                  do ir = i0, kkbeta(is)
+                     xrg = r(ir,is) * xg
+                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
+                  end do
+                  if (i0.eq.2) djl(1) = djl(2)
+               endif
+               !
+               do iv = 1, nbeta(is)
+                  do jv = iv, nbeta(is)
+                     !
+                     !      note qrl(r)=r^2*q(r)
+                     !
+                     do ir=1,kkbeta(is)
+                        fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
+                     end do
+                     if (oldvan(is)) then
+                        call herman_skillman_int(kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
+                     else
+                        call simpson_cp90(kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
+                     end if
+                     !
+                     qradx(il,jv,iv,l,is)=qradx(il,iv,jv,l,is)
+                     !
+                     if( tpre ) then
+                        do ir = 1, kkbeta(is)
+                           dfint(ir) = qrl(ir,iv,jv,l,is) * djl(ir)
+                        end do
+                        if ( oldvan(is) ) then
+                           call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dqradx(il,iv,jv,l,is))
+                        else
+                           call simpson_cp90(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))
+                        end if
+                     end if
+                     !
+                  end do
+               end do
+            end do
+         end do
+         !
+         WRITE( stdout,*)
+         WRITE( stdout,'(20x,a)') '    qqq '
+         do iv=1,nbeta(is)
+            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
+         end do
+         WRITE( stdout,*)
+         !
+         deallocate(jl)
+         deallocate(fint)
+         if (tpre) then
+            deallocate(jltmp)
+            deallocate(djl)
+            deallocate(dfint)
+         end if
+         !
+      end do
+
+      RETURN
+    END SUBROUTINE compute_qradx
+
 
 !  ----------------------------------------------
    END MODULE pseudopotential

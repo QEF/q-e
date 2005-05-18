@@ -24,14 +24,14 @@
       use electrons_module, only: n_emp
       use brillouin, only: get_kpoints_number
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
-      use pseudopotential, only: lmax, ngh 
+      use uspp_param, only: nhm, lmaxkb
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE fft_base, ONLY: dfftp, dffts
  
       implicit none 
                                                                         
-      integer NGWXM_EMP,ngh_EMP,NSAX_EMP,NCHAINX, NPROC 
+      integer NGWXM_EMP,nhm_EMP,NSAX_EMP,NCHAINX, NPROC 
       integer NNR1X, NNR2X,NNR3X,LM1X 
       integer NR1X, NR2X, NR3X, nr1_l,nr2_l,nr3_l
       integer NSAX,NAMX,NAFX 
@@ -55,7 +55,7 @@
 
       nk = get_kpoints_number()
 
-      ngh_EMP = ngh 
+      nhm_EMP = nhm 
       NGWXM_EMP = ngwx 
       NNR1X  = 2*NR1X-1 
       NNR2X  = 2*NR2X-1 
@@ -63,7 +63,7 @@
       NSAX   = NSP*NAX 
       NAMX   = NSAX 
       NAFX   = NSAX 
-      LM1X   = LMAX -1 
+      LM1X   = lmaxkb
       nbyte         = 0 
       nbyte_alloc   = 0 
       NSAX_EMP = NSAX 
@@ -80,11 +80,11 @@
       nbyte = nbyte + 8 * ngmx * 3 
 
 ! ... FNL
-      nbyte = nbyte + 8 * NSAX * NX * ngh * nspin
+      nbyte = nbyte + 8 * NSAX * NX * nhm * nspin
 
 ! ... WNL RHOPS VPS GNL RW RPS VR
       nbyte = nbyte + 8*ndmx*NSP*3 
-      nbyte = nbyte + 8*ngwx*ngh*NSP 
+      nbyte = nbyte + 8*ngwx*nhm*NSP 
       nbyte = nbyte + 8*NSP*ngmx 
       nbyte = nbyte + 8*NSP*ngmx 
       nbyte = nbyte + 8*ndmx*NSP 
@@ -113,10 +113,10 @@
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 
 ! ... nlsm1 e nlsm2                                                     
-      itmp = 8 * 2*ngwx*NSAX + 8*NSAX*NX*ngh
+      itmp = 8 * 2*ngwx*NSAX + 8*NSAX*NX*nhm
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 ! ... eigsnew                                                           
-      itmp = 8 * ( 3*NX + NX*NX + N_EMP + NSAX_EMP*N_EMP*ngh_EMP       &
+      itmp = 8 * ( 3*NX + NX*NX + N_EMP + NSAX_EMP*N_EMP*nhm_EMP       &
      &           + NX*(NX+1)/2 + N_EMP*N_EMP + N_EMP + NX )             
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 ! ... phfac                                                             
@@ -124,8 +124,8 @@
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 ! ... pvofrho & pstress                                                 
       itmp = 8 * (2*3*NAX*NSP+3*NAX*NSP+NR1_L*NR2_L*NR3_L*8 +           &
-     &       NSAX*NX*ngh*6 + 6*ngmx + ndmx + 6*ngwx +               &
-     &       ngwx*ngh*NSP + 2*ngwx*NSAX)                             
+     &       NSAX*NX*nhm*6 + 6*ngmx + ndmx + 6*ngwx +               &
+     &       ngwx*nhm*NSP + 2*ngwx*NSAX)                             
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 ! ... formf                                                             
       itmp = 8 * 3 * ndmx + 8 * 3 * ngmx 

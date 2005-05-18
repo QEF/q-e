@@ -126,8 +126,7 @@
       use cell_base,     only: omega, tpiba2
       use ions_base,     only: rcmax, zv, nsp, na
       use cvan,          only: oldvan
-      use pseu,          only: vps, rhops
-      use dpseu,         only: dvps, drhops
+      use local_pseudo,  only: vps, rhops, dvps, drhops
       use atom,          only: r, rab, mesh, numeric
       use uspp_param,    only: vloc_at
       use qrl_mod,       only: cmesh
@@ -563,7 +562,7 @@
       use io_global, only: stdout
       use gvecw, only: ngw
       use cvan, only: ish, nvb, oldvan
-      use core
+      use core, only: rhocb, nlcc_any
       use constants, only: pi, fpi
       use ions_base, only: na, nsp
       use uspp, only: aainit, beta, qq, dvan, nhtol, nhtolm, indv, &
@@ -572,13 +571,16 @@
            nbeta, lmaxkb, lll, nhm, nh, tvanp
       use qrl_mod, only: qrl, cmesh
       use atom, only: mesh, r, rab, nlcc, numeric
-      use qradb_mod
-      use qgb_mod
-      use gvecb
-      use cdvan
-      use dqrad_mod
-      use dqgb_mod
-      use betax
+      use qradb_mod, only: qradb
+      use qgb_mod, only: qgb
+      use gvecb, only: ngb
+      use cdvan, only: dbeta
+      use dqrad_mod, only: dqrad
+      use dqgb_mod, only: dqgb
+      use betax, only: qradx, dqradx, refg, betagx, mmx, dbetagx
+      use pseudopotential, only: pseudopotential_indexes, compute_dvan, &
+            compute_betagx, compute_qradx
+
 !
       implicit none
 !
@@ -586,308 +588,70 @@
       real(kind=8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
      &              dfint(:)
       real(kind=8) xg, xrg, fac
-!     ------------------------------------------------------------------
-!     find  number of beta functions per species, max dimensions,
-!     total number of beta functions (all and Vanderbilt only)
-!     ------------------------------------------------------------------
-      lmaxkb=-1
-      nhm=0
-      nhsa=0
-      nhsavb=0
-      nlcc_any=.false.
-      do is=1,nsp
-         ind=0
-         do iv=1,nbeta(is)
-            lmaxkb = max(lmaxkb,lll(iv,is))
-            ind=ind+2*lll(iv,is)+1
-         end do
-         nh(is)=ind
-         nhm=max(nhm,nh(is))
-         ish(is)=nhsa
-         nhsa=nhsa+na(is)*nh(is)
-         if(tvanp(is)) nhsavb=nhsavb+na(is)*nh(is)
-         nlcc_any = nlcc_any .OR. nlcc(is)
-      end do
-      if (lmaxkb > lmaxx) call errore('nlinit ',' l > lmax ',lmaxkb)
-      lmaxq = 2*lmaxkb + 1
+
       !
-      ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
-      ! but in some versions of the PP files lmax is not set to the maximum
-      ! l of the beta functions but includes the l of the local potential
+      !   initialize indexes
       !
-      do is=1,nsp
-         nqlc(is) = MIN ( nqlc(is), lmaxq )
-      end do
-      if (nhsa <= 0) call errore('nlinit ','not implemented ?',nhsa)
-!
-!     initialize array ap
-!
-      call aainit(lmaxkb+1)
+      CALL pseudopotential_indexes()
+      !
+      !   initialize array ap
+      !
+      call aainit( lmaxkb + 1 )
 !
       allocate(beta(ngw,nhm,nsp))
       allocate(qradb(ngb,nbrx,nbrx,lmaxq,nsp))
       allocate(qgb(ngb,nhm*(nhm+1)/2,nsp))
       allocate(qq(nhm,nhm,nsp))
-      allocate(dvan(nhm,nhm,nsp))
       if (nlcc_any) allocate(rhocb(ngb,nsp))
-      allocate(nhtol(nhm,nsp))
-      allocate(indv (nhm,nsp))
-      allocate(nhtolm(nhm,nsp))
 !
       allocate(dqrad(ngb,nbrx,nbrx,lmaxq,nsp,3,3))
       allocate(dqgb(ngb,nhm*(nhm+1)/2,nsp,3,3))
       allocate(dbeta(ngw,nhm,nsp,3,3))
-      allocate(betagx(mmx,nhm,nsp))
-      allocate(dbetagx(mmx,nhm,nsp))
-      allocate(qradx(mmx,nbrx,nbrx,lmaxq,nsp))
-      allocate(dqradx(mmx,nbrx,nbrx,lmaxq,nsp))
 !
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
-      dvan(:,:,:) =0.d0
       if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
-!
-!     ------------------------------------------------------------------
-!     definition of indices nhtol, indv, nhtolm
-!     ------------------------------------------------------------------
-      do is=1,nsp
-         ind=0
-         do iv=1,nbeta(is)
-            lm = lll(iv,is)**2
-            do il=1,2*lll(iv,is)+1
-               lm=lm+1
-               ind=ind+1
-               nhtolm(ind,is)=lm
-               nhtol(ind,is)=lll(iv,is)
-               indv(ind,is)=iv
-            end do
-         end do
-      end do
-!
-!     ===============================================================
-!     initialization for vanderbilt species
-!     ===============================================================
-      do is=1,nvb
-         if (tpre) then
-            allocate(dfint(kkbeta(is)))
-            allocate(djl(kkbeta(is)))
-            allocate(jltmp(kkbeta(is)))
-         end if
-         allocate(fint(kkbeta(is)))
-         allocate(jl(kkbeta(is)))
-!
-!     qqq and beta are now indexed and taken in the same order
-!     as vanderbilts ppot-code prints them out
-!
-!     ---------------------------------------------------------------
-!     calculation of array qradx(igb,iv,jv,is)
-!     ---------------------------------------------------------------
-         WRITE( stdout,*) ' nlinit  nh(is),ngb,is,kkbeta,lmaxq = ', &
-     &        nh(is),ngb,is,kkbeta(is),nqlc(is)
-         do l=1,nqlc(is)
-            do il=1,mmx
-               xg=sqrt(refg*(il-1))
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
-!
-               if(tpre) then
-                  ltmp=l-1
-                  !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2  
-                  ! special case q=0
-                  if (xg < 1.0d-8) then
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                  else
-                     call sph_bes &
-                          (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
-                  end if
-                  do ir=i0, kkbeta(is)
-                     xrg=r(ir,is)*xg
-                     djl(ir)=jltmp(ir)*xrg-l*jl(ir)
-                  end do
-                  if (i0.eq.2) djl(1) = djl(2)
-               endif
-!
-               do iv= 1,nbeta(is)
-                  do jv=iv,nbeta(is)
-!
-!      note qrl(r)=r^2*q(r)
-!
-                     do ir=1,kkbeta(is)
-                        fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
-                     end do
-                     if (oldvan(is)) then
-                        call herman_skillman_int                        &
-     &                    (kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
-                     else
-                        call simpson_cp90                               &
-     &                    (kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
-                     end if
-                     qradx(il,jv,iv,l,is)=qradx(il,iv,jv,l,is)
-!
-                     if(tpre) then
-                        do ir=1,kkbeta(is)
-                           dfint(ir)=qrl(ir,iv,jv,l,is)*djl(ir)
-                        end do
-                        if (oldvan(is)) then
-                           call herman_skillman_int                     &
-     &                          (kkbeta(is),cmesh(is),dfint,            &
-     &                          dqradx(il,iv,jv,l,is))
-                        else
-                           call simpson_cp90                            &
-     &                          (kkbeta(is),dfint,rab(1,is),            &
-     &                          dqradx(il,iv,jv,l,is))
-                        end if
-                     end if
-!
-                  end do
-               end do
-            end do
-         end do
-!
-         WRITE( stdout,*)
-         WRITE( stdout,'(20x,a)') '    qqq '
-         do iv=1,nbeta(is)
-            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
-         end do
-         WRITE( stdout,*)
-!
-         deallocate(jl)
-         deallocate(fint)
-         if (tpre) then
-            deallocate(jltmp)
-            deallocate(djl)
-            deallocate(dfint)
-         end if
-!
-      end do
-!
-!     ===============================================================
-!     initialization that is common to all species
-!     ===============================================================
+      !
+      !     initialization for vanderbilt species
+      !
+      CALL compute_qradx( tpre )
+      !    
+      !     initialization that is common to all species
+      !   
       WRITE( stdout, fmt="(//,3X,'Common initialization' )" )
-      do is=1,nsp
+
+      do is = 1, nsp
          WRITE( stdout, fmt="(/,3X,'Specie: ',I5)" ) is
-         if (.not.numeric(is)) then
+         if ( .not. numeric(is) ) then
             fac=1.0
          else
-!     fac converts ry to hartree
+            !     fac converts ry to hartree
             fac=0.5
          end if
-         if (tpre) then
-            allocate(dfint(kkbeta(is)))
-            allocate(djl(kkbeta(is)))
-         end if
-         allocate(fint(kkbeta(is)))
-         allocate(jl(kkbeta(is)))
-         allocate(jltmp(kkbeta(is)))
-!     ---------------------------------------------------------------
-!     calculation of array  betagx(ig,iv,is)
-!     ---------------------------------------------------------------
-         WRITE( stdout,*)  '  betagx  '
-         do iv=1,nh(is)
-            l=nhtol(iv,is)+1
-            do il=1,mmx
-               xg=sqrt(refg*(il-1))
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
-!
-               if(tpre)then
-                  ltmp=l-1
-                  !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2  
-                  ! special case q=0
-                  if (xg < 1.0d-8) then
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                  else
-                     call sph_bes &
-                          (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
-                  end if
-                  do ir=i0, kkbeta(is)
-                     xrg=r(ir,is)*xg
-                     djl(ir)=jltmp(ir)*xrg-l*jl(ir)
-                  end do
-                  if (i0.eq.2) djl(1) = djl(2)
-!
-               endif
-!
-!     beta(ir)=r*beta(r)
-!
-               do ir=1,kkbeta(is)
-                  fint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*jl(ir)
-               end do
-               if (oldvan(is)) then
-                  call herman_skillman_int                              &
-     &                 (kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
-               else
-                  call simpson_cp90                                     &
-     &                 (kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
-               endif
-!
-               if(tpre) then
-                  do ir=1,kkbeta(is)
-                     dfint(ir)=r(ir,is)*betar(ir,indv(iv,is),is)*djl(ir)
-                  end do
-                  if (oldvan(is)) then
-                     call herman_skillman_int                           &
-     &                 (kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
-                  else
-                     call simpson_cp90                                  &
-     &                 (kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
-                  end if
-               endif
-!
-            end do
-         end do
-! 
-!     ---------------------------------------------------------------
-!     calculate array  dvan(iv,jv,is)
-!     ---------------------------------------------------------------
-         do iv=1,nh(is)
-            do jv=1,nh(is)
-               if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
-                  dvan(iv,jv,is)=fac*dion(indv(iv,is),indv(jv,is),is)
-               endif 
-            end do
-         end do
-!
-         do iv=1,nh(is)
-            WRITE( stdout,901) iv,indv(iv,is),nhtol(iv,is)
+         do iv = 1, nh(is)
+            WRITE( stdout,901) iv, indv(iv,is), nhtol(iv,is)
          end do
  901     format(2x,i2,'  indv= ',i2,'   ang. mom= ',i2)
-!
+         !
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    dion '
-         do iv=1,nbeta(is)
-            WRITE( stdout,'(8f9.4)') (fac*dion(iv,jv,is),jv=1,nbeta(is))
+         do iv = 1, nbeta(is)
+            WRITE( stdout,'(8f9.4)') ( fac * dion(iv,jv,is), jv = 1, nbeta(is) )
          end do
-!
-         deallocate(jltmp)
-         deallocate(jl)
-         deallocate(fint)
-         if (tpre) then
-            deallocate(djl)
-            deallocate(dfint)
-         end if
+         !
       end do
-!
-! newnlinit stores qgb and qq, calculates arrays  beta  qradb  rhocb
-! and derivatives wrt cell    dbeta dqrad
-!
+      !
+      !   calculation of array  betagx(ig,iv,is)
+      !
+      call compute_betagx( tpre )
+      !
+      !   calculate array  dvan(iv,jv,is)
+      !
+      call compute_dvan()
+      !
+      ! newnlinit stores qgb and qq, calculates arrays  beta  qradb  rhocb
+      ! and derivatives wrt cell    dbeta dqrad
+      !
       call newnlinit
 
       return

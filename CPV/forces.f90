@@ -102,7 +102,10 @@
 ! ... declare modules
       USE spherical_harmonics
       USE ions_base, ONLY: na
-      USE pseudopotential, ONLY: l2ind, lm1x, nspnl, tl
+      USE pseudopotential, ONLY: nspnl
+      USE uspp_param, only: nh, lmaxkb
+      USE uspp, only: nhtol, nhtolm, indv
+
 
       IMPLICIT NONE
 
@@ -118,46 +121,40 @@
       COMPLEX(dbl), ALLOCATABLE :: temp(:,:)
       REAL(dbl),    ALLOCATABLE :: gwork(:,:)
       REAL(dbl) :: t1
-      INTEGER   :: igh, ll, is, isa, ig, l, m, ngw, nngw, iy
+      INTEGER   :: igh, ll, is, isa, ig, l, m, ngw, nngw, iy, ih, iv
 
 !  end of declarations
 !  ----------------------------------------------
 
       ngw  = SIZE(df)
       nngw = 2*ngw
-      ALLOCATE(temp(ngw,2), gwork(ngw,(lm1x+1)**2))
+      ALLOCATE(temp(ngw,2), gwork(ngw,(lmaxkb+1)**2))
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, hg, gwork )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, hg, gwork )
 
-      igh = 0
-      iy  = 0
-      DO l = 0, lm1x
-        DO m = -l, l
-          iy  = iy + 1
-          IF(tl(l)) THEN
-            igh = igh + 1
-            isa = 1
-            DO is = 1, nspnl
-              ll  = l2ind(l + 1,is)
-              IF(ll.GT.0) THEN
-                t1= - fio * wsg(igh,is)
-                CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
-                  2*SIZE(eigr,1), fnlo(isa,igh), 1, rzero, temp(1,1), 1)
-                t1= - fie * wsg(igh,is)
-                CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
-                  2*SIZE(eigr,1), fnle(isa,igh), 1, rzero, temp(1,2), 1)
-                CALL ZSCAL( nngw, cimgl(l), temp, 1)
-                DO ig=1,ngw
-                  df(ig) = df(ig) + temp(ig,1) * wnl(ig,ll,is) * gwork(ig,iy)
-                END DO
-                DO ig=1,ngw
-                  da(ig) = da(ig) + temp(ig,2) * wnl(ig,ll,is) * gwork(ig,iy)
-                END DO
-              END IF
-              isa=isa+na(is)
-            END DO
-          END IF
+      isa = 1
+      DO is = 1, nspnl
+        DO ih = 1, nh( is )
+          iv  = indv  ( ih, is )
+          iy  = nhtolm( ih, is )
+          ll  = nhtol ( ih, is ) + 1
+          l   = ll - 1
+          igh = ih
+          t1= - fio * wsg(igh,is)
+          CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
+               2*SIZE(eigr,1), fnlo(isa,igh), 1, rzero, temp(1,1), 1)
+          t1= - fie * wsg(igh,is)
+          CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
+               2*SIZE(eigr,1), fnle(isa,igh), 1, rzero, temp(1,2), 1)
+          CALL ZSCAL( nngw, cimgl(l), temp, 1)
+          DO ig=1,ngw
+             df(ig) = df(ig) + temp(ig,1) * wnl(ig,iv,is) * gwork(ig,iy)
+          END DO
+          DO ig=1,ngw
+             da(ig) = da(ig) + temp(ig,2) * wnl(ig,iv,is) * gwork(ig,iy)
+          END DO
         END DO
+        isa=isa+na(is)
       END DO
 
       DEALLOCATE(temp, gwork)
@@ -300,7 +297,9 @@
 ! ... declare modules
       USE spherical_harmonics
       USE ions_base, ONLY: na
-      USE pseudopotential, ONLY: l2ind, lm1x, nspnl, tl
+      USE pseudopotential, ONLY: nspnl
+      USE uspp_param, only: nh, lmaxkb
+      USE uspp, only: nhtol, nhtolm, indv
 
       IMPLICIT NONE
 
@@ -316,40 +315,36 @@
       COMPLEX(dbl), ALLOCATABLE :: temp(:)
       REAL(dbl),    ALLOCATABLE :: gwork(:,:)
       REAL(dbl) ::  t1
-      INTEGER   ::  igh, ll, is, isa, ig, l, m, iy
+      INTEGER   ::  igh, ll, is, isa, ig, l, m, iy, ih, iv
       INTEGER :: ngw, nngw
 
 !  end of declarations
 
       ngw = SIZE(df)
       nngw = 2*ngw
-      ALLOCATE( temp(ngw), gwork(ngw, (lm1x+1)**2) )
+      ALLOCATE( temp(ngw), gwork(ngw, (lmaxkb+1)**2) )
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, hg, gwork )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, hg, gwork )
 
-      igh = 0
-      iy  = 0
-      DO l = 0, lm1x
-        DO m = -l, l
-          iy = iy + 1
-          IF(tl(l)) THEN
-            igh = igh + 1
-            isa = 1
-            DO is = 1, nspnl
-              ll  = l2ind(l + 1,is)
-              IF(ll.GT.0) THEN
-                t1= - fi * wsg(igh,is)
-                CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
-                  2*SIZE(eigr,1), fnl(isa,igh), 1, rzero, temp(1), 1)
-                CALL ZSCAL(ngw, cimgl(l), temp(1), 1)
-                DO ig = 1, ngw
-                  df(ig) = df(ig) + temp(ig) * wnl(ig,ll,is) * gwork(ig,iy)
-                END DO
-              END IF
-              isa = isa + na(is)
-            END DO
-          END IF
+      isa = 1
+      DO is = 1, nspnl
+        DO ih = 1, nh( is )
+          !
+          iv  = indv  ( ih, is )
+          iy  = nhtolm( ih, is )
+          ll  = nhtol ( ih, is ) + 1
+          l   = ll - 1
+          igh = ih
+          !
+          t1= - fi * wsg(igh,is)
+          CALL DGEMV('N', nngw, na(is), t1, eigr(1,isa), &
+               2*SIZE(eigr,1), fnl(isa,igh), 1, rzero, temp(1), 1)
+          CALL ZSCAL(ngw, cimgl(l), temp(1), 1)
+          DO ig = 1, ngw
+            df(ig) = df(ig) + temp(ig) * wnl(ig,iv,is) * gwork(ig,iy)
+          END DO
         END DO
+        isa = isa + na(is)
       END DO
 
       DEALLOCATE(temp, gwork)
@@ -499,7 +494,9 @@
 ! ... declare modules
       USE spherical_harmonics
       USE ions_base, ONLY: na
-      USE pseudopotential, ONLY: l2ind, lm1x, nspnl, tl
+      USE pseudopotential, ONLY: nspnl
+      USE uspp_param, only: nh, lmaxkb
+      USE uspp, only: nhtol, nhtolm, indv
 
       IMPLICIT NONE
 
@@ -515,39 +512,35 @@
       COMPLEX(dbl), ALLOCATABLE :: temp(:)
       REAL(dbl),    ALLOCATABLE :: gwork(:,:)
       COMPLEX(dbl)  fw
-      INTEGER   ::  igh, ll, is, isa, ig, l, m, ngw, iy
+      INTEGER   ::  igh, ll, is, isa, ig, l, m, ngw, iy, ih, iv
 
 !  end of declarations
 
       ngw = SIZE(df)
-      ALLOCATE( temp( SIZE(df) ), gwork( ngw, (lm1x+1)**2 ) ) 
+      ALLOCATE( temp( SIZE(df) ), gwork( ngw, (lmaxkb+1)**2 ) ) 
 
-      CALL ylmr2( (lm1x+1)**2, ngw, gx, hg, gwork )
+      CALL ylmr2( (lmaxkb+1)**2, ngw, gx, hg, gwork )
 
-      igh = 0
-      iy  = 0
-      DO l = 0, lm1x
-        DO m = -l, l
-          iy = iy + 1
-          IF(tl(l)) THEN
-            igh = igh + 1
-            isa = 1
-            DO is = 1, nspnl
-              ll  = l2ind(l + 1,is)
-              IF(ll.GT.0) THEN
-! ...           TEMP(IG) = EIGR(IG,:) * FNLK(:,IGH) 
-                fw = CMPLX( -fi * wsg(igh,is), 0.0d0)
-                CALL ZGEMV('N', ngw, na(is), fw, eigr(1,isa), &
+      isa = 1
+      DO is = 1, nspnl
+        DO ih = 1, nh( is )
+          !
+          iv  = indv  ( ih, is )
+          iy  = nhtolm( ih, is )
+          ll  = nhtol ( ih, is ) + 1
+          l   = ll - 1
+          igh = ih
+          !
+          ! ... TEMP(IG) = EIGR(IG,:) * FNLK(:,IGH) 
+          fw = CMPLX( -fi * wsg(igh,is), 0.0d0)
+          CALL ZGEMV('N', ngw, na(is), fw, eigr(1,isa), &
                   size(eigr,1), fnlk(isa,igh), 1, czero, temp(1), 1)
-                CALL ZSCAL(ngw,cimgl(l),temp(1),1)
-                DO ig = 1, SIZE(df)
-                  df(ig) = df(ig) + temp(ig) * wnl(ig,ll,is) * gwork(ig,iy)
-                END DO
-              END IF
-              isa = isa + na(is)
-            END DO
-          END IF
+          CALL ZSCAL(ngw,cimgl(l),temp(1),1)
+          DO ig = 1, SIZE(df)
+            df(ig) = df(ig) + temp(ig) * wnl(ig,iv,is) * gwork(ig,iy)
+          END DO
         END DO
+        isa = isa + na(is)
       END DO
       DEALLOCATE(temp, gwork)
     RETURN

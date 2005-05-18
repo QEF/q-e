@@ -23,7 +23,7 @@
 
       PRIVATE
 
-      PUBLIC :: nlin_base, nlin_stress_base, nlset_base
+      PUBLIC :: nlin_base, nlin_stress_base
       PUBLIC :: compute_rhops, formfn, formfa
       PUBLIC :: compute_eself, compute_rhocg
 
@@ -68,25 +68,25 @@
 ! ...   declare other variables
         REAL(dbl), ALLOCATABLE :: fint(:,:)
         REAL(dbl)  :: xg, dx
-        INTEGER :: ig, mmax, lnl, l, ind
+        INTEGER :: ig, mmax, nbeta, l, ind
         REAL(dbl), ALLOCATABLE :: ftest(:,:)
 
 ! ...   end of declarations
 !  ----------------------------------------------
 
-        lnl  = ap%lnl
+        nbeta  = ap%nbeta
         mmax = ap%mesh
         dx = ap%dx
 
-        ALLOCATE(fint(mmax,lnl))
+        ALLOCATE(fint(mmax,nbeta))
 
         ! WRITE( stdout,*) 'DEBUG nlin_base, tpiba = ', tpiba
 
         DO ig = 1, SIZE( wnl, 1 )
           IF( hg(ig) < gsmall ) THEN
-            DO l = 1,lnl
+            DO l = 1,nbeta
 ! ...         G=0 (Only if l=1, since otherwise the radial Bessel function jl=0)
-              IF( ap%indl(l) == 1 ) THEN
+              IF( ap%lll(l) == 0 ) THEN
                 fint(1:mmax,l) = ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
                 call simpson_fpmd(mmax, fint(:,l), dx, wnl(ig,l))
                 ! call simpson(mmax, fint(:,l), ap%rab, wnl(ig,l))
@@ -97,8 +97,8 @@
           ELSE
 ! ...       Bessel functions: j_0(0)=1, j_n(0)=0 for n>0
             xg = SQRT( hg(ig) ) * tpiba
-            CALL bessel2(xg, ap%rw, fint, lnl, ap%indl, mmax)
-            DO l = 1, lnl
+            CALL bessel2(xg, ap%rw, fint, nbeta, ap%lll, mmax)
+            DO l = 1, nbeta
               fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
               call simpson_fpmd(mmax, fint(:,l), dx, wnl(ig,l))
               ! call simpson(mmax, fint(:,l), ap%rab, wnl(ig,l))
@@ -133,24 +133,24 @@
 ! ...   declare other variables
         REAL(dbl), ALLOCATABLE :: fint(:,:)
         REAL(dbl)  xg, dx
-        INTEGER ig,mmax,gstart,lnl
+        INTEGER ig,mmax,gstart,nbeta
         INTEGER l,ll
         INTEGER ir
 
 ! ...   end of declarations
 !  ----------------------------------------------
 
-        lnl   = ap%lnl
+        nbeta   = ap%nbeta
         mmax  = ap%mesh
         dx  = ap%dx
 
-        ALLOCATE( fint(mmax, lnl) )
+        ALLOCATE( fint(mmax, nbeta) )
 
         DO ig = 1, SIZE( wnla, 1 )
           IF( hg(ig) < gsmall ) THEN
 ! ...       G=0 (Only if L=1, since otherwise the radial Bessel function JL=0)
-            DO l = 1, lnl
-              IF(ap%indl(l).EQ.1) THEN
+            DO l = 1, nbeta
+              IF( ap%lll(l) == 0 ) THEN
                 fint(1:mmax,l) = ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l) 
                 call simpson_fpmd(mmax, fint(:,l), dx, wnla(ig, l))
               ELSE
@@ -159,8 +159,8 @@
             END DO
           ELSE
             xg = SQRT(hg(ig)) * tpiba
-            CALL bessel3(xg, ap%rw, fint, lnl, ap%indl, mmax)
-            DO l = 1, lnl
+            CALL bessel3(xg, ap%rw, fint, nbeta, ap%lll, mmax)
+            DO l = 1, nbeta
               fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
               call simpson_fpmd(mmax, fint(:,l), dx, wnla(ig,l))
             END DO
@@ -171,78 +171,6 @@
 
         RETURN
       END SUBROUTINE nlin_stress_base
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE nlset_base(ap, wsgset)
-
-!  This subroutine computes the pseudopotential 
-!  constants
-!  ap%rw**2 * ap%vrps   = [ ( Vpsnl(r) - Vpsloc(r) )* Rps(r) * r^2 ]  
-!                       = [ DVpsnl(r) * Rps(r) * r^2 ]  
-!  wsgset = 4 PI (2l+1) / < Rps(r) | DVpsnl(r) | Rps(r) >
-!
-!  for all l and m
-!  
-
-!  This subroutine is executed only for non-local
-!  pseudopotentials.
-!  ----------------------------------------------
-
-        USE pseudo_types, ONLY: pseudo_ncpp
-
-! ...   declare subroutine arguments
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl), INTENT(OUT) :: wsgset(:)
-
-! ...   declare other variables
-        INTEGER :: ir,i,igh2,l,ll,igh1,igh,mesh,igau,lnl,ltru
-        REAL(dbl)  :: alt,blt,one_by_rcl
-        REAL(dbl)  :: wsgl, dx
-        REAL(dbl), ALLOCATABLE :: gloc(:), fint(:)
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-        lnl  = ap%lnl
-        igau = ap%igau
-        dx   = ap%dx
-        mesh = ap%mesh
-
-        wsgset = 0.0d0
-        ALLOCATE(fint(mesh))
-
-! ...   Set the normalizing factor "wsg" 
-
-        igh2 = 0
-
-        DO l = 1, lnl
-
-          !  find out the angular momentum (ll-1) of the component stored in position l
-
-          ll = ap%indl( l )  
-
-          fint( 1:mesh ) = ap%rps( 1:mesh, ll ) * ap%vrps( 1:mesh, l ) * ap%rw( 1:mesh )
-          call simpson_fpmd( mesh, fint, dx, wsgl )
-
-          !  ltru is the true angular momentum quantum number
-
-          ltru = ll - 1  
-
-          igh1 = igh2 + 1
-          igh2 = igh1 + ( 2*ltru + 1 ) - 1   
-
-          DO igh = igh1, igh2
-            ! wsgset( igh ) = 4.0d0 * pi * ( 2*ltru + 1 ) / wsgl
-            wsgset( igh ) = 4.0d0 * pi / wsgl * ( 4.0d0 * pi )
-          END DO
-
-        END DO
-
-        DEALLOCATE(fint)
-
-        RETURN
-      END SUBROUTINE nlset_base     
 
 
 !-----------------------------------------------------------------------

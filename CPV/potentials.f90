@@ -274,6 +274,8 @@
       USE reciprocal_vectors, ONLY: gx
       USE gvecp, ONLY: ngm
       USE pseudo_base, ONLY: compute_eself
+      USE local_pseudo, ONLY: vps, rhops
+      USE ions_base, ONLY: rcmax
 
       IMPLICIT NONE
 
@@ -335,7 +337,7 @@
       REAL(dbl)  :: omega, desr(6), pesum(16)
       REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
       REAL(dbl)  :: rsum( SIZE( rhoe, 4 ) )
-      REAL(dbl)  :: zv( atoms%nsp ), raggio( atoms%nsp )
+      REAL(dbl)  :: zv( atoms%nsp )
 
       LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
 
@@ -628,7 +630,7 @@
 
       ALLOCATE( vloc( ngm ) )
       CALL vofloc(ttscreen, ttforce, edft%ehte, edft%ehti, ehp, & 
-           eps, vloc, rhoeg, fion, atoms, ps%rhops, ps%vps, kp, eigr, &
+           eps, vloc, rhoeg, fion, atoms, rhops, vps, kp, eigr, &
            ei1, ei2, ei3, sfac, box, desc, ps%ap )
 
       !       edft%ehte = REAL ( ehtep )
@@ -723,9 +725,8 @@
       ! ... self interaction energy of the pseudocharges
       do is = 1, atoms%nsp
         zv( is ) = ps%ap(is)%zv
-        raggio( is ) = ps%ap(is)%raggio
       end do
-      edft%eself = compute_eself( atoms%na, zv, raggio, atoms%nsp ) 
+      edft%eself = compute_eself( atoms%na, zv, rcmax, atoms%nsp ) 
 
 
       IF( ttsic .and. ionode ) THEN
@@ -752,11 +753,11 @@
 
       IF(tprint.AND.tvhmean) THEN
         IF(nspin.GT.2) CALL errore(' vofrho ',' spin + vmean ',nspin)
-        IF(nspin==1) CALL vofmean( sfac, ps%rhops, rhoeg(:,1) )
+        IF(nspin==1) CALL vofmean( sfac, rhops, rhoeg(:,1) )
         IF(nspin==2) THEN
              ALLOCATE(rho12(ngm))
             rho12 (:) = rhoeg(:,1)+rhoeg(:,2)
-          CALL vofmean( sfac, ps%rhops, rho12)
+          CALL vofmean( sfac, rhops, rho12)
            DEALLOCATE(rho12)
         END IF
       END IF
@@ -1150,6 +1151,7 @@
       USE descriptors_module, ONLY: global_index, local_dimension
       USE atoms_type_module, ONLY: atoms_type
       USE cp_types, ONLY: pseudo
+      USE ions_base, ONLY: rcmax
  
       IMPLICIT NONE
 
@@ -1224,7 +1226,7 @@
       DO k = 1, atoms%nsp
         DO j = k, atoms%nsp
           zv2( k, j ) = ps%ap(k)%zv * ps%ap(j)%zv 
-          rc ( k, j ) = SQRT( ps%ap(k)%raggio**2 + ps%ap(j)%raggio**2 )
+          rc ( k, j ) = SQRT( rcmax(k)**2 + rcmax(j)**2 )
         END DO
       END DO
 

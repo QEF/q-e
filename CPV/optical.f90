@@ -63,7 +63,7 @@
           USE cell_module, ONLY: boxdimensions
           USE wave_types, ONLY: wave_descriptor
           USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
-          USE pseudopotential, ONLY: nsanl, ngh
+          USE pseudopotential, ONLY: nsanl
           USE nl, ONLY: nlsm1
           USE forces, ONLY: dforce_all
           USE brillouin, ONLY: kpoints
@@ -79,6 +79,7 @@
           USE control_flags, ONLY: force_pairing
           USE reciprocal_vectors, ONLY: gx, g
           USE reciprocal_space_mesh, ONLY: gkx_l
+          USE uspp_param, ONLY: nhm
 
           INTEGER, INTENT(IN) :: nfi
           TYPE(boxdimensions), INTENT(IN) :: box
@@ -149,7 +150,7 @@
             END DO
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
-            CALL allocate_projector(fnle, nsanl, nb_l, ngh, kp%gamma_only)
+            CALL allocate_projector(fnle, nsanl, nb_l, nhm, kp%gamma_only)
             CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, ce(:,:,1,ispin), wempt, g, &
               gx, fnle(1))
             CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, ff, eforce, vpot(:,:,:,ispin), &

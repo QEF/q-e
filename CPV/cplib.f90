@@ -502,8 +502,7 @@
       use reciprocal_vectors, only: gstart, gx, g
       use cell_base, only: omega
       use cell_base, only: ainv, tpiba2
-      use pseu
-      use dpseu
+      use local_pseudo, only: rhops, drhops
       use mp, only: mp_sum
 
       implicit none
@@ -634,8 +633,7 @@
       use reciprocal_vectors, only: gstart, gx
       use cell_base, only: omega
       use cell_base, only: ainv, tpiba2
-      use pseu, only: vps
-      use dpseu, only: dvps
+      use local_pseudo, only: vps, dvps
       use mp, only: mp_sum
 
       implicit none
@@ -1340,7 +1338,7 @@
       use ions_base, only: nsp, na, nas => nax, nat
       use grid_dimensions, only: nr1, nr2, nr3
       use parameters, only: nsx, natx
-      use pseu
+      use local_pseudo, only: vps, rhops
 !
       implicit none
 ! input
@@ -3013,7 +3011,7 @@
             nr1sx, nr2sx, nr3sx, nnrsx
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
       use constants, only: pi, fpi
-      use pseu
+      ! use local_pseudo
 !
       use cdvan
       use dener
@@ -4108,7 +4106,6 @@
       use cell_base, only: a1, a2, a3, tpiba2
       use reciprocal_vectors, only: gstart, g
       use recvecs_indexes, only: np, nm
-      !use parm
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
@@ -4116,13 +4113,11 @@
       use electrons_base, only: nspin
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
-      use pseu
+      use local_pseudo, only: vps, rhops
       use core
       use gvecb
-!
       use dener
       use derho
-      use dpseu
       use mp, only: mp_sum
 !
       implicit none
@@ -4514,7 +4509,7 @@
       use electrons_base, only: nspin, qbac
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
-      use pseu
+      use local_pseudo, only: rhops, vps
       use core
       use gvecb
       use atom, only: nlcc
@@ -4525,7 +4520,6 @@
 !
       use dener
       use derho
-      use dpseu
 !
       implicit none
 !

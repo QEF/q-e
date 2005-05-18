@@ -103,13 +103,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
   USE smooth_grid_dimensions,   ONLY : nnrsx, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
-  USE pseu,                     ONLY : vps, rhops
+  USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : io_global_start, stdout, ionode
   USE mp_global,                ONLY : mp_global_start
   USE mp,                       ONLY : mp_sum, mp_barrier
   USE dener,                    ONLY : detot
   USE derho,                    ONLY : drhor, drhog
-  USE dpseu,                    ONLY : dvps, drhops
   USE cdvan,                    ONLY : dbec, drhovan
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
@@ -279,14 +278,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   ALLOCATE( c0(  ngw, nbspx, 1, 1 ) )
   ALLOCATE( cm(  ngw, nbspx, 1, 1 ) )
   ALLOCATE( phi( ngw, nbspx, 1, 1 ) )
-  ALLOCATE( rhops( ngs, nsp ) )
-  ALLOCATE( vps( ngs, nsp ) )
+  !
+  CALL allocate_local_pseudo( ngs, nsp )
+  !
   ALLOCATE( vkb( ngw, nkb ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   ALLOCATE( becsum( nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
-  ALLOCATE( dvps(   ngs, nsp ) )
-  ALLOCATE( drhops( ngs, nsp ) )
   ALLOCATE( drhog( ngm, nspin, 3, 3 ) )
   ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
   ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )

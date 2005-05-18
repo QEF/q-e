@@ -37,7 +37,7 @@
         TYPE (pseudo_ncpp), ALLOCATABLE, TARGET :: ap(:)
         TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
-        PUBLIC :: ap, upf, nspnl, l2ind, readpp
+        PUBLIC :: ap, upf, nspnl, readpp
         PUBLIC :: upf2internal, pseudo_filename, check_file_type
 
 !=----------------------------------------------------------------------------=!
@@ -70,7 +70,6 @@ INTEGER FUNCTION check_file_type( is )
   !  0   file is unknow (guess: old CPV norm-conserving format) 
   !  1   file is *.vdb or *.van  Vanderbilt US pseudopotential
   !  2   file is *.RRKJ3         Andrea's   US new code 
-  ! 10   file is GIANNOZ (FPMD only)
   ! 11   file is NUMERIC (FPMD only)
   ! 12   file is ANALYTIC (FPMD only)
   ! 20   file is UPF
@@ -100,9 +99,7 @@ INTEGER FUNCTION check_file_type( is )
     READ ( pseudounit, *, iostat = ios, err = 300)
     dummy = ' ' 
     READ ( pseudounit, *, iostat = ios, err = 300) dummy  
-    IF( matches( "GIANNOZ", dummy ) ) THEN
-      info = 10
-    ELSE IF( matches( "NUMERIC", dummy ) ) THEN
+    IF( matches( "NUMERIC", dummy ) ) THEN
       info = 11
     ELSE IF( matches( "ANALYTIC", dummy ) ) THEN
       info = 12
@@ -134,28 +131,24 @@ SUBROUTINE check_types_order( )
   INTEGER :: is, il
   LOGICAL :: tvanp
   !
+  !   With Vanderbilt, only UPF are allowed
+  !
+  IF( ANY( upf(1:nsp)%tvanp  ) ) THEN
+    CALL errore( &
+           ' check_types_order ', ' vanderbilt pseudo, not yet implemened in FPMD ', 1 )
+  END IF
+  !
   !   non-local species must be ahead the local one,
   !
   il = 0
   DO is = 1, nsp
-    IF ( ap(is)%lnl == 0 ) THEN
+    IF ( ap(is)%nbeta == 0 ) THEN
       il = 1
     ELSE IF ( il == 1 ) THEN
       CALL errore( &
            ' check_types_order ', ' Local pseudopotentials should follow non local ones ', 1 )
     END IF
   END DO
-  !
-  !   With Vanderbilt, only UPF are allowed
-  !
-  IF( ANY( upf(1:nsp)%tvanp  ) ) THEN
-    DO is = 1, nsp
-      IF ( ap(is)%pottyp /= 'UPF' ) THEN
-        CALL errore( &
-           ' check_types_order ', ' With vanderbilt pseudo, only UPF format is allowed ', 1 )
-      END IF
-    END DO
-  END IF
   RETURN
 END SUBROUTINE check_types_order
 
@@ -244,8 +237,7 @@ END FUNCTION calculate_dx
         CALL nullify_pseudo_upf( upf( is ) )
         !
         ap(is)%tnlcc  = .FALSE.
-        ap(is)%raggio = 0.5d0
-        ap(is)%lnl    = 0
+        ap(is)%nbeta    = 0
         upf(is)%tvanp = .FALSE.
         !
 
@@ -305,12 +297,6 @@ END FUNCTION calculate_dx
 
            call readAdC( is, pseudounit )
 
-        ELSE IF( info == 10 ) THEN
-
-          CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
-          CALL read_giannoz(pseudounit, ap(is), ierr)
-          CALL ncpp2internal ( ap(is), is, xc_type, ierr )
-
         ELSE IF( info == 11 ) THEN
 
           CALL read_head_pp( pseudounit, ap(is), error_msg, ierr)
@@ -342,7 +328,7 @@ END FUNCTION calculate_dx
       
         IF( program_name == 'FPMD' ) THEN
           !
-          IF( ap(is)%lnl > 0 ) nspnl = nspnl + 1
+          IF( ap(is)%nbeta > 0 ) nspnl = nspnl + 1
           IF( upf(is)%tvanp  ) nvb   = nvb + 1
           IF( ionode ) THEN
             CALL ap_info( ap(is) )
@@ -404,27 +390,6 @@ END FUNCTION calculate_dx
 
 !=----------------------------------------------------------------------------=!
 
-      INTEGER FUNCTION l2ind( lw, is )
-
-        ! this function returns the index of the wanted channel lw
-        ! ( 1 = s, 2 = p, 3 = d, 4 = f ) within the non local pseudopotential
-        ! array WNL. The p component of the pseudopotential is stored, for the specie
-        ! is, in wnl(:,l2ind(2,is),is)
-        !  ----------------------------------------------
-
-        INTEGER, INTENT(IN) :: lw, is
-        INTEGER :: l
-
-        l2ind = 0
-        DO l = 1, ap(is)%lnl
-          IF ( ap(is)%indl(l) == lw ) l2ind = l
-        END DO
-
-        RETURN
-      END FUNCTION l2ind
-
-!=----------------------------------------------------------------------------=!
-
       SUBROUTINE analytic_to_numeric(ap)
 
 !       This subroutine converts an Analytic pseudo into a numeric one
@@ -477,8 +442,8 @@ END FUNCTION calculate_dx
 
 ! ...   Copy local component to a separate array
         ap%vloc(:) = ap%vnl(:,ap%lloc)
-        DO l = 1, ap%lnl
-          ll=ap%indl(l)  ! find out the angular momentum (ll-1) of the component stored
+        DO l = 1, ap%nbeta
+          ll=ap%lll(l) + 1  ! find out the angular momentum (ll-1) of the component stored
                          ! in position l
           ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
         END DO
@@ -488,135 +453,6 @@ END FUNCTION calculate_dx
 
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE read_giannoz(uni, ap, ierr)
-        USE constants, ONLY: pi
-        USE pseudo_types, ONLY: pseudo_ncpp
-        IMPLICIT NONE
-        TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
-        INTEGER, INTENT(IN) :: uni
-        INTEGER, INTENT(OUT) :: ierr
-        REAL(dbl) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
-        REAL(dbl) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
-        REAL(dbl) :: rho_core( SIZE(ap%rhoc, 1) )
-        REAL(dbl) :: r, ra, rb, fac
-        REAL(dbl) :: oc( SIZE(ap%rps, 2) )
-        REAL(dbl) :: enl( SIZE(ap%rps, 2) )
-        REAL(dbl) :: zmesh, xmin, dx, etot
-        REAL(dbl) :: zval
-        INTEGER   :: nn(SIZE(ap%rps, 2)), ll(SIZE(ap%rps, 2))
-        INTEGER   :: nwf, mesh, i, j, in1, in2, in3, in4, m
-        INTEGER   :: lmax, nlc, nnl, lloc, l, il
-        LOGICAL   :: nlcc
-        CHARACTER(len=80) :: dft
-        CHARACTER(len=4)  :: atom
-        CHARACTER(len=2)  :: el( SIZE(ap%rps, 2) )
-        CHARACTER(len=80) :: ppinfo
-        CHARACTER(len=80) :: strdum
-        CHARACTER(len=2) :: sdum1, sdum2
-
-!
-        ierr = 0
-
-        READ(uni,fmt='(a)') dft
-        READ(uni,fmt='(a4,f5.1,3i2,a2,l1,a2,i2,a)') &
-          atom, zval, lmax, nlc, nnl, sdum1, nlcc, sdum2, lloc, ppinfo
-
-        ! WRITE( stdout,*) ' DEBUG ', atom, zval,lmax, nlc, nnl, nlcc, lloc, ppinfo
-
-        IF( (lmax+1) > SIZE(ap%vnl, 2) ) THEN
-          ierr = 1
-          RETURN
-        END IF
-        IF( (nlcc .AND. .NOT.ap%tnlcc) .OR. (.NOT.nlcc .AND. ap%tnlcc) ) THEN
-          ierr = 2
-          RETURN
-        END IF
-
-        READ(uni,fmt='(f8.2,f8.4,f10.6,2i6)') zmesh, xmin, dx, mesh, nwf
-
-        IF( mesh > SIZE(ap%rps, 1) ) THEN
-          ierr = 3
-          RETURN
-        END IF
-        IF( nwf > SIZE(ap%rps, 2) ) THEN
-          ierr = 4
-          RETURN
-        END IF
-
-        DO j = 0, lmax
-           READ(uni,fmt="(A16,i1)") strdum, l
-           READ(uni,'(4e16.8)') (vnl(i,j+1), i=1,mesh)
-        END DO
-        IF (nlcc) THEN
-          READ(uni,fmt='(4e16.8)') (rho_core(i), i=1,mesh)
-        END IF   
-        DO j = 1, nwf
-          READ(uni,fmt="(A16,a2)") strdum,el(j)
-          READ(uni,fmt='(i5,f6.2)') ll(j),oc(j)
-          READ(uni,fmt='(4e16.8)') (chi(i,j), i=1,mesh)
-        END DO
-
-        ap%zv = zval
-        ap%nchan = lmax+1
-        ap%mesh = mesh
-        ap%rw = 0.0d0
-        ap%vnl = 0.0d0
-        ap%vrps = 0.0d0
-        fac = 0.5d0
-
-        ! WRITE( stdout,*) ' DEBUG ', ap%lloc, ap%numeric, ap%lnl, ap%raggio, ap%zv
-
-        DO i = 1, mesh
-          r = EXP(xmin+REAL(i-1)*dx)/zmesh
-          ap%rw(i) = r
-          DO j = 1, lmax+1
-            ap%vnl(i,j) = vnl(i,j) * fac
-          END DO
-        END DO
-        IF( MINVAL( ap%rw(1:mesh) ) <= 0.0d0 ) THEN
-           ierr = 5
-           RETURN
-        END IF
-        ap%dx  = dx
-        ap%rab = ap%dx * ap%rw
-        ap%vloc(:) = ap%vnl(:,ap%lloc)
-
-        ap%lrps(1:nwf) = ll(1:nwf)
-        ap%oc = 0.0d0
-        ap%nrps = nwf
-        ap%mesh = mesh
-        ap%rps = 0.0d0
-        fac = 1.0d0/SQRT(4.0d0*pi)
-        fac = 1.0d0
-        DO i = 1, mesh
-          r = EXP(xmin+REAL(i-1)*dx)/zmesh
-          DO j = 1, nwf
-            ap%rps(i,j) = chi(i,j) * fac
-          END DO
-        END DO
-
-        DO l = 1, ap%lnl
-          il=ap%indl(l)  ! find out the angular momentum (il-1) of the component stored
-                         ! in position l
-          DO i = 1, mesh
-            ap%vrps(i,l) = ( ap%vnl(i,il) - ap%vloc(i) ) * ap%rps(i,il)
-          END DO
-        END DO
-
-        IF( nlcc ) THEN
-          ap%rhoc = 0.0d0
-          DO i = 1, mesh
-            r = EXP(xmin+REAL(i-1)*dx)/zmesh
-            ap%rhoc(i) = rho_core(i)
-          END DO
-        END IF
-
-        RETURN
-      END SUBROUTINE read_giannoz
-
-!=----------------------------------------------------------------------------=!
-
-
       SUBROUTINE ap_info( ap )
         USE pseudo_types, ONLY: pseudo_ncpp
         USE io_global, ONLY: stdout
@@ -625,16 +461,16 @@ END FUNCTION calculate_dx
         INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
 
         WRITE( stdout, * ) 
-        IF (ap%lnl > 0) THEN
+        IF (ap%nbeta > 0) THEN
           WRITE( stdout,10) ap%pottyp
           IF (ap%tmix) THEN
             WRITE( stdout,107) 
-            WRITE( stdout,106)  (ap%indl(l),l=1,ap%lnl)
-            WRITE( stdout,105)  (ap%wgv(l),l=1,ap%lnl)
+            WRITE( stdout,106)  (ap%lll(l),l=1,ap%nbeta)
+            WRITE( stdout,105)  (ap%wgv(l),l=1,ap%nbeta)
           ELSE
             WRITE( stdout,50) ap%lloc
           END IF
-          WRITE( stdout,60) (ap%indl(l),l=1,ap%lnl)
+          WRITE( stdout,60) (ap%lll(l),l=1,ap%nbeta)
         ELSE
 ! ...     A local pseudopotential has been read.
           WRITE( stdout,11) ap%pottyp
@@ -652,9 +488,9 @@ END FUNCTION calculate_dx
    60   FORMAT(   3X,'Non local components are : ',4I3)
    11   FORMAT(   3X,'Type is ',A10,' and LOCAL. ')
    12   FORMAT(   3X,'Using non local core corcorrections for this pseudo')
-   20   FORMAT(   3X,'Pseudo charge : ',F8.3,', pseudo radius : ',F8.3)
+   20   FORMAT(   3X,'Pseudo charge : ',F8.3)
 
-        WRITE( stdout,20) ap%zv, ap%raggio
+        WRITE( stdout,20) ap%zv
 
         IF( ap%pottyp /= 'ANALYTIC' ) THEN
 
@@ -664,10 +500,10 @@ END FUNCTION calculate_dx
           in3=ap%mesh/2
           in4=ap%mesh
           WRITE( stdout,132)
-          WRITE( stdout,120) in1,ap%rw(in1),ap%vloc(in1),(ap%vrps(in1,m),m=1,ap%lnl)
-          WRITE( stdout,120) in2,ap%rw(in2),ap%vloc(in2),(ap%vrps(in2,m),m=1,ap%lnl)
-          WRITE( stdout,120) in3,ap%rw(in3),ap%vloc(in3),(ap%vrps(in3,m),m=1,ap%lnl)
-          WRITE( stdout,120) in4,ap%rw(in4),ap%vloc(in4),(ap%vrps(in4,m),m=1,ap%lnl)
+          WRITE( stdout,120) in1,ap%rw(in1),ap%vloc(in1),(ap%vrps(in1,m),m=1,ap%nbeta)
+          WRITE( stdout,120) in2,ap%rw(in2),ap%vloc(in2),(ap%vrps(in2,m),m=1,ap%nbeta)
+          WRITE( stdout,120) in3,ap%rw(in3),ap%vloc(in3),(ap%vrps(in3,m),m=1,ap%nbeta)
+          WRITE( stdout,120) in4,ap%rw(in4),ap%vloc(in4),(ap%vrps(in4,m),m=1,ap%nbeta)
   131     FORMAT(/, 3X,'Pseudopotentials Grid    : Channels = ',I2,&
                    ', Mesh = ',I5,/,30X,'dx   = ',F16.14)
   132     FORMAT(   3X,'point    radius        vloc         ( vnl - vloc )')
@@ -763,7 +599,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ap%lrps = 0
 
   ! this is for local pseudopotentials
-  IF( ap%lnl == 0 ) RETURN
+  IF( ap%nbeta == 0 ) RETURN
               
   READ(iunit,'(A80)',end=100) input_line
   CALL field_count(nf, input_line)
@@ -829,7 +665,7 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   err_msg = ' error while reading atomic numeric pseudo '
 
   IF(ap%tmix) THEN
-    READ(iunit,*) (ap%wgv(l),l=1,ap%lnl)
+    READ(iunit,*) (ap%wgv(l),l=1,ap%nbeta)
   END IF
 
   READ(iunit,*,IOSTAT=ierr) ap%zv
@@ -878,8 +714,8 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   CALL read_atomic_wf( iunit, ap, err_msg, ierr)
   IF( ierr /= 0 ) GO TO 110
 
-  DO l = 1, ap%lnl
-    ll=ap%indl(l) 
+  DO l = 1, ap%nbeta
+    ll=ap%lll(l) + 1
     ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
   END DO
 
@@ -1024,7 +860,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   nlcc(is)   = ap%tnlcc
   mesh(is)   = ap%mesh
   nchi(is)   = ap%nrps
-  nbeta(is)  = ap%lnl
+  nbeta(is)  = ap%nbeta
   kkbeta(is) = mesh(is)
   nqlc(is)   = 0 ! upf%nqlc
   nqf (is)   = 0 ! upf%nqf
@@ -1037,9 +873,9 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   lchi( 1 : ap%nrps, is ) = ap%lrps( 1 : ap%nrps )
   chi ( 1 : ap%mesh, 1 : ap%nrps, is ) = ap%rps( 1 : ap%mesh, 1 : ap%nrps )
   !
-  betar( 1 : ap%mesh, 1 : ap%lnl, is ) = 2.0d0 * ap%vrps( 1 : ap%mesh, 1 : ap%lnl )
+  betar( 1 : ap%mesh, 1 : ap%nbeta, is ) = 2.0d0 * ap%vrps( 1 : ap%mesh, 1 : ap%nbeta )
   !
-  lll  ( 1 : ap%lnl, is ) = ap%indl( 1 : ap%lnl ) - 1  ! = upf%lll( 1:upf%nbeta )
+  lll  ( 1 : ap%nbeta, is ) = ap%lll( 1 : ap%nbeta )  ! = upf%lll( 1:upf%nbeta )
 
   rinner(:,is) = 0.0d0
   qqq(:,:,is)  = 0.0d0
@@ -1109,19 +945,17 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%tnlcc = upf%nlcc
   !
   ap%zv   = upf%zp
-  ap%lnl  = upf%nbeta
+  ap%nbeta  = upf%nbeta
 
-  !  angular momentum indl: S = 1, P = 2, ecc ... while  lll: S = 0, P = 1, ecc ...
-
-  ap%indl( 1:upf%nbeta ) = upf%lll( 1:upf%nbeta ) + 1
+  ap%lll( 1:upf%nbeta ) = upf%lll( 1:upf%nbeta )
 
   !  Calculate lloc
   ap%lloc = upf%nbeta + 1 
   which_lloc = 0
-  DO l = 1, ap%lnl
-    which_lloc( ap%indl( l ) ) = 1
+  DO l = 1, ap%nbeta
+    which_lloc( ap%lll( l ) + 1 ) = 1
   END DO
-  DO l = 1, ap%lnl + 1
+  DO l = 1, ap%nbeta + 1
     IF( which_lloc( l ) == 0 ) ap%lloc = l
   END DO
 
@@ -1140,11 +974,9 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%lrps( 1:upf%nwfc ) = upf%lchi( 1:upf%nwfc )
   ap%rps( 1:upf%mesh, 1:upf%nwfc ) = upf%chi( 1:upf%mesh, 1:upf%nwfc )
   
-  DO l = 1, ap%lnl
+  DO l = 1, ap%nbeta
 
-    !  find out the angular momentum (il-1) of the component stored in position l
-    !  il = ap%indl(l)  
-    !  vrps(i, il) = ( vnl(i, il) - vloc(i) ) * rps(i, il)
+    !  vrps(i, l) = ( vnl(i, l) - vloc(i) ) * rps(i, l)
      
     ap%vrps( 1:upf%mesh, l ) = upf%beta( 1:upf%mesh, l ) / 2.0d0 
 
@@ -1175,13 +1007,14 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
   ierr = 0
   err_msg = ' error while reading header pseudo '
 
-  ap%indl = 0
+  ap%lll = 0
   READ(iunit, *) ap%tnlcc, ap%tmix
-  READ(iunit, *) ap%pottyp, ap%lloc, ap%lnl, (ap%indl(l), l = 1, MIN(ap%lnl, SIZE(ap%indl)) ) 
+  READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, MIN(ap%nbeta, SIZE(ap%lll)) ) 
+  ap%lll = ap%lll - 1
 
-  IF( ap%lnl > SIZE(ap%indl) .OR. ap%lnl < 0 ) THEN
+  IF( ap%nbeta > SIZE(ap%lll) .OR. ap%nbeta < 0 ) THEN
     ierr = 1
-    err_msg = 'LNL out of range'
+    err_msg = 'nbeta out of range'
     GO TO 110
   END IF
   IF( ap%lloc < 0 .OR. ap%lloc > SIZE(ap%vnl,2) ) THEN
@@ -1194,15 +1027,15 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
     err_msg = 'tmix not implemented for pseudo ' // ap%pottyp
     GO TO 110
   END IF
-  DO l = 2, ap%lnl
-    IF( ap%indl(l) <= ap%indl(l-1)) THEN
+  DO l = 2, ap%nbeta
+    IF( ap%lll(l) <= ap%lll(l-1)) THEN
       ierr = 5
       err_msg =' NONLOCAL COMPONENTS MUST BE GIVEN IN ASCENDING ORDER'
       GO TO 110
     END IF
   END DO
-  DO l = 1, ap%lnl
-    IF( ap%indl(l) == ap%lloc) THEN
+  DO l = 1, ap%nbeta
+    IF( ap%lll(l) + 1 == ap%lloc) THEN
       ierr = 6
       err_msg = ' LLOC.EQ.L NON LOCAL!!' 
       GO TO 110

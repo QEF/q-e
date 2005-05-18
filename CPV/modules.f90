@@ -90,18 +90,40 @@ end module core
 !              angular momentum (for r<rinner)
 !  vloc_at  local potential for each atom
 
-module pseu
+
+module local_pseudo
   implicit none
   save
+  !
   !    rhops = ionic pseudocharges (for Ewald term)
   !    vps   = local pseudopotential in G space for each species
+  !
   real(kind=8), allocatable:: rhops(:,:), vps(:,:)
+  !
+  !    drhops = derivative of rhops respect to G^2
+  !    dvps   = derivative of vps respect to G^2
+  !
+  real(kind=8),allocatable:: dvps(:,:), drhops(:,:)
+  !
 contains
-  subroutine deallocate_pseu
+  !
+  subroutine allocate_local_pseudo( ng, nsp )
+      integer, intent(in) :: ng, nsp
+      call deallocate_local_pseudo()
+      ALLOCATE( rhops( ng, nsp ) )
+      ALLOCATE( vps( ng, nsp ) )
+      ALLOCATE( drhops( ng, nsp ) )
+      ALLOCATE( dvps( ng, nsp ) )
+  end subroutine
+  !
+  subroutine deallocate_local_pseudo
       IF( ALLOCATED( rhops ) ) DEALLOCATE( rhops )
       IF( ALLOCATED( vps ) ) DEALLOCATE( vps )
-  end subroutine deallocate_pseu
-end module pseu
+      IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
+      IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
+  end subroutine
+  !
+end module local_pseudo
 
 module qgb_mod
   implicit none
@@ -152,17 +174,6 @@ contains
       IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
   end subroutine deallocate_dqgb_mod
 end module dqgb_mod
-
-module dpseu
-  implicit none
-  save
-  real(kind=8),allocatable:: dvps(:,:), drhops(:,:)
-contains
-  subroutine deallocate_dpseu
-      IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
-      IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
-  end subroutine deallocate_dpseu
-end module dpseu
 
 module cdvan
   implicit none

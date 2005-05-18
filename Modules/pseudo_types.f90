@@ -85,12 +85,11 @@
           LOGICAL :: tnlcc
           INTEGER :: igau
           INTEGER :: lloc
-          INTEGER :: lnl 
-          INTEGER :: indl(ndmx)
+          INTEGER :: nbeta 
+          INTEGER :: lll(cp_lmax)
           INTEGER :: nchan
           INTEGER :: mesh
           REAL(dbl) ::  zv
-          REAL(dbl) ::  raggio
           REAL(dbl) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
           REAL(dbl) ::  rab(ndmx)
           REAL(dbl) ::  rw(ndmx)

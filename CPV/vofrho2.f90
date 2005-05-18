@@ -42,13 +42,12 @@
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc,   &
      &        atot, egrand, entropy 
 
-      use pseu
+      use local_pseudo, only: vps, rhops
       use core
       use gvecb
 !
       use dener
       use derho
-      use dpseu
       use mp, only: mp_sum
 !
       implicit none

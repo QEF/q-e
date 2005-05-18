@@ -116,7 +116,7 @@
       ARG_S(1:mmax) = RW(1:mmax) * XG 
       xrgm1 = 1.0d0 / arg_s
 
-      LMAX = MAXVAL( INDL )
+      LMAX = MAXVAL( INDL ) + 1
 
       IF ( LMAX > 0 ) THEN
 ! ...   Calculate J0(|G||r|) = SIN(|G||r|) / (|G||r|)
@@ -140,16 +140,16 @@
 
       DO L = 1,LNL
         LL = INDL(L)
-        IF(LL == 1) THEN 
+        IF(LL == 0) THEN 
 ! ...     FINT = FUNT * J0
           FINT(1:mmax,L) = J0(1:mmax)
-        ELSE IF (LL == 2) THEN
+        ELSE IF (LL == 1) THEN
 ! ...     FINT = FUNT * J1
           FINT(1:mmax,L) = J1(1:mmax)
-        ELSE IF (LL == 3) THEN
+        ELSE IF (LL == 2) THEN
 ! ...     FINT = FUNT * J2
           FINT(1:mmax,L) = J2(1:mmax)
-        ELSE IF (LL == 4) THEN
+        ELSE IF (LL == 3) THEN
 ! ...     FINT = FUNT * J3
           FINT(1:mmax,L) = J3(1:mmax)
         ELSE
@@ -195,7 +195,7 @@
 
 ! ... Subroutine Body
 
-      LMAX = MAXVAL( INDL )
+      LMAX = MAXVAL( INDL ) + 1
 
       IF( ABS(XG) < small ) THEN 
         CALL errore( ' bessel3 ',' xg too small ', 1)
@@ -241,13 +241,13 @@
 
       DO L = 1,LNL
         LL = INDL(L)
-        IF(LL.EQ.1) THEN 
+        IF(LL.EQ.0) THEN 
           FINT(1:mmax, L) = F0(1:mmax)
-        ELSE IF (LL.EQ.2) THEN
+        ELSE IF (LL.EQ.1) THEN
           FINT(1:mmax, L) = F1(1:mmax)
-        ELSE IF (LL.EQ.3) THEN
+        ELSE IF (LL.EQ.2) THEN
           FINT(1:mmax, L) = F2(1:mmax)
-        ELSE IF (LL.EQ.4) THEN
+        ELSE IF (LL.EQ.3) THEN
           FINT(1:mmax, L) = F3(1:mmax)
         ELSE
           CALL errore(" bessel3 "," ll value not programmed ", MAX( 1, ABS(ll) ) )

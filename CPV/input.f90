@@ -971,7 +971,7 @@
      !
      IF( program_name == 'FPMD' ) THEN
 
-        CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp, ion_radius )
+        CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp )
         !
         o_diis_inp        = .TRUE.
         oqnr_diis_inp     = .TRUE.

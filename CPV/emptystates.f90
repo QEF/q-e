@@ -427,7 +427,7 @@
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: cp_kinetic_energy, crot, dft_kinetic_energy, fixwave
       USE wave_base, ONLY: hpsi, converg_base, dotp
-      USE pseudopotential, ONLY: nsanl, ngh
+      USE pseudopotential, ONLY: nsanl
       USE constants, ONLY: au
       USE cell_base, ONLY: tpiba2
       USE electrons_module, ONLY: pmss, n_emp
@@ -449,6 +449,7 @@
       USE control_flags, ONLY: force_pairing, gamma_only
       USE reciprocal_space_mesh, ONLY: gkmask_l, gkx_l, gk_l
       USE reciprocal_vectors, ONLY: g, gx
+      USE uspp_param, ONLY: nhm
 
       IMPLICIT NONE
 
@@ -493,7 +494,7 @@
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
 
-      CALL allocate_projector(fnle, nsanl, n_emp, ngh, gamma) 
+      CALL allocate_projector(fnle, nsanl, n_emp, nhm, gamma) 
       ALLOCATE( eforce( ngw, wempt%ldb, nk, nspin ) )
       ALLOCATE( fi( wempt%ldb, nk, nspin ) )
       ALLOCATE( cp_emp( SIZE(c_emp,1), SIZE(c_emp,2), SIZE(c_emp,3), SIZE(c_emp,4) ) )

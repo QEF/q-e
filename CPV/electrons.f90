@@ -10,6 +10,7 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds
+        USE parameters,         ONLY: nspinx
         USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f
@@ -29,8 +30,8 @@
 
         INTEGER :: n_emp       =  0  ! number of empty states
 
-        INTEGER :: nb_l(2)    =  0  ! local number of states ( for each spin components )
-        INTEGER :: n_emp_l(2) =  0
+        INTEGER :: nb_l(nspinx)    =  0  ! local number of states ( for each spin components )
+        INTEGER :: n_emp_l(nspinx) =  0
         INTEGER, ALLOCATABLE :: ib_owner(:)
         INTEGER, ALLOCATABLE :: ib_local(:)
 
@@ -109,13 +110,16 @@
        DO ik = 1, nk
          occ( 1:nbnd, ik, 1 ) = f( 1:nbnd )
        END DO
-     ELSE
+     ELSE IF( nspin == 2 ) THEN
        DO ik = 1, nk
          occ( 1:nupdwn(1), ik, 1 ) = f( 1:nupdwn(1) )
        END DO
        DO ik = 1, nk
          occ( 1:nupdwn(2), ik, 2 ) = f( iupdwn(2) : ( iupdwn(2) + nupdwn(2) - 1 ) )
        END DO
+     ELSE
+       WRITE( stdout, * ) ' nspin = ', nspin
+       CALL errore(' band_init ',' nspin not implemented ', 3)
      END IF
 
      IF( ionode ) THEN
@@ -154,7 +158,7 @@
      END IF
 
      DO i = 1, nspin 
-       IF( i > 1 ) CALL errore( ' bmeshset ',' spin too large ', i)
+       IF( i > nspinx ) CALL errore( ' bmeshset ',' spin too large ', i)
        nb_l( i ) = nupdwn( i ) / nproc
        IF( mpime < MOD( nupdwn( i ), nproc ) ) nb_l( i ) = nb_l( i ) + 1
        n_emp_l( i ) = n_emp / nproc

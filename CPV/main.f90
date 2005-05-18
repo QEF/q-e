@@ -171,6 +171,10 @@
 
       USE wave_init,        ONLY: pw_atomic_init
       USE electrons_module, ONLY: electron_mass_init, band_init
+      !
+      USE uspp_param      , ONLY: nhm
+      !
+      !
 
       IMPLICIT NONE
 
@@ -306,13 +310,16 @@
       ALLOCATE( ei2( -nr2:nr2, nat ) )
       ALLOCATE( ei3( -nr3:nr3, nat ) )
 
+
       !     initialize system geometry, cell and positions
 
       CALL init_geometry( )
 
+
       !     initialize variables and types
       !
       CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht_0 )
+
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
@@ -342,7 +349,7 @@
       CALL electron_mass_init( alat, g, ngw )
       
       ! ... initialize nonlocal pseudopotentials coefficients
-      CALL allocate_projector( fnl, nsanl, nbnd, ngh, kp%gamma_only)
+      CALL allocate_projector( fnl, nsanl, nbnd, nhm, kp%gamma_only)
 
       IF( t_diis ) THEN 
         CALL allocate_diis( ngw, nbnd, kp%nkpt )

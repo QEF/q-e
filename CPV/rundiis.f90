@@ -101,6 +101,7 @@
       use grid_dimensions,    only: nr1, nr2, nr3
       USE reciprocal_vectors, ONLY: mill_l
       USE gvecp, ONLY: ngm
+      USE local_pseudo, ONLY: vps
 
       IMPLICIT NONE
 
@@ -337,11 +338,11 @@
         svar3_0 = delt * delt / pmss(1)
         IF(.NOT.kp%gamma_only) THEN
           CALL simupd_kp(ekinc,doions,kp,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
-            svar3_0,edft%etot,fs(:,:,1),eigr,sfac,ps%vps,ps%wsg,ps%wnl,treset_diis, &
+            svar3_0,edft%etot,fs(:,:,1),eigr,sfac,vps,ps%wsg,ps%wnl,treset_diis, &
             istate,cnorm,eold,ndiis,nowv)
         ELSE
           CALL simupd(ekinc,doions,c0(:,:,:,1),cgrad(:,:,:,1),cdesc, svar1,svar2, &
-                  svar3_0,edft%etot,fs(:,1,1),eigr,sfac,ps%vps,ps%wsg,ps%wnl, &
+                  svar3_0,edft%etot,fs(:,1,1),eigr,sfac,vps,ps%wsg,ps%wnl, &
                   treset_diis,istate,cnorm,eold,ndiis,nowv)
         END IF
 
@@ -464,6 +465,7 @@
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
+      USE local_pseudo, ONLY: vps
 
       IMPLICIT NONE
 
@@ -606,12 +608,12 @@
             IF(.NOT.kp%gamma_only) THEN
               CALL simupd_kp(ekinc(ispin), ddoions(ispin), kp, c0(:,:,:,ispin), &
                 cgrad(:,:,:,ispin), cdesc, svar1, svar2, svar3_0, edft%etot, fi(:,:,ispin), &
-                eigr, sfac, ps%vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, &
+                eigr, sfac, vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, &
                 cnorm, eold, ndiis, nowv)
             ELSE
               CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,:,:,ispin), cgrad(:,:,:,ispin), cdesc, &
                 svar1, svar2, svar3_0, edft%etot, fi(:,1,ispin), eigr, sfac, &
-                ps%vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, cnorm, &
+                vps, ps%wsg, ps%wnl, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
             END IF
             CALL gram( ispin, c0(:,:,:,ispin), cdesc)

@@ -313,12 +313,15 @@
 ! ...  declare modules
        USE control_flags, ONLY: gamma_only
        USE cell_base, ONLY: tpiba2
-       USE pseudopotential, ONLY: tl, l2ind, nspnl, lm1x
+       USE pseudopotential, ONLY: nspnl
        USE ions_base, ONLY: nsp, na
        USE mp_global, ONLY: group
        USE mp, ONLY: mp_sum, mp_max
        USE reciprocal_vectors, ONLY: gstart, gzero, ggp
        USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l
+       USE uspp_param, only: nh
+       USE uspp, only: nhtol, indv
+
 
       IMPLICIT NONE
 
@@ -332,7 +335,7 @@
 
 ! ... declare other variables
       REAL(dbl)  vp,ftpi,arg
-      INTEGER l,ll,i,ig,igh,is,m,j, ikk
+      INTEGER l,ll,i,ig,igh,is,m,j, ikk, ih, iv
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -360,19 +363,12 @@
       vpp = vp
 
 ! ... nonlocal potential
-      igh = 0
-      DO l = 0, lm1x
-        IF(tl(l)) THEN
-          DO m = -l, l
-            igh = igh + 1
-            DO is = 1, nspnl
-              ll = l2ind( l+1, is)
-              IF( ll > 0 ) THEN
-                vpp(:) = vpp(:) + na(is) * wsg(igh,is) * wnl(:,ll,is,ikk)**2
-              END IF
-            END DO
-          END DO
-        END IF
+      DO is = 1, nspnl
+        DO igh = 1, nh( is )
+          ll = nhtol ( ih, is ) + 1
+          iv = indv  ( ih, is ) 
+          vpp(:) = vpp(:) + na(is) * wsg(igh,is) * wnl(:,iv,is,ikk)**2
+        END DO
       END DO
 
 ! ... kinetic energy

@@ -1419,7 +1419,7 @@ END SUBROUTINE gshcount
                                   tv0rd, taurdr, nv0rd, nbeg, tcp, tcap, &
                                   program_name
          USE ions_base,     ONLY: tau_srt, tau_units, if_pos, ind_srt, nsp, na, &
-                                  pmass, nat, fricp, greasp
+                                  pmass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: scmass
 
@@ -1460,7 +1460,7 @@ END SUBROUTINE gshcount
          WRITE(stdout,660) 
          isa = 0
          DO IS = 1, nsp
-           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / scmass
+           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / scmass, rcmax(is)
            DO IA = 1, na(is)
              isa = isa + 1
              WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )
@@ -1549,7 +1549,8 @@ END SUBROUTINE gshcount
 
   850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
 
- 1000 FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass = ',F12.2, ' (a.u.), ', F12.2, ' (uma)' )
+ 1000 FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass = ',F12.2, ' (a.u.), ', &
+               & F12.2, ' (uma)', ' rcmax = ', F6.2, ' (a.u.)' )
  1010 FORMAT(3X,3(1X,F12.6))
  1020 FORMAT(/,3X,'NOT all atoms are allowed to move ')
  1021 FORMAT(/,3X,'All atoms are allowed to move')

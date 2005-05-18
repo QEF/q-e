@@ -82,14 +82,13 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use cell_base, only: thdiag, tpiba2
   use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
   use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
-  use pseu, only: vps, rhops
+  use local_pseudo, only: allocate_local_pseudo
   use io_global, ONLY: io_global_start, stdout, ionode
   use mp_global, ONLY: mp_global_start
   use mp, ONLY: mp_sum
   use para_mod
   use dener
   use derho
-  use dpseu
   use cdvan
   use stre
   use gvecw, only: ggp
@@ -445,13 +444,11 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         nlcc_any, smd = .TRUE. )
   !
   !
-  allocate(rhops(ngs,nsp))
-  allocate(vps(ngs,nsp))
+  CALL allocate_local_pseudo( ngs, nsp )
+  !
   allocate(betae(ngw,nhsa))
   allocate(deeq(nhm,nhm,nat,nspin))
   allocate(dbec (nhsa,n,3,3))
-  allocate(dvps(ngs,nsp))
-  allocate(drhops(ngs,nsp))
   allocate(drhog(ngm,nspin,3,3))
   allocate(drhor(nnr,nspin,3,3))
   allocate(drhovan(nhm*(nhm+1)/2,nat,nspin,3,3))
