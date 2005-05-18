@@ -310,7 +310,7 @@ CONTAINS
       end subroutine cfft_cp
 
 !
-END MODULE
+END MODULE fft_cp
 
 
 

@@ -427,4 +427,4 @@
       RETURN
       END SUBROUTINE set_fmrm
 
-     END MODULE
+     END MODULE spherical_harmonics

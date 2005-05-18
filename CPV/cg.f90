@@ -116,4 +116,4 @@ CONTAINS
   END SUBROUTINE cg_update
 
 
-END MODULE
+END MODULE cg_module

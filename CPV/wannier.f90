@@ -176,7 +176,7 @@ CONTAINS
     RETURN
   END SUBROUTINE deallocate_wannier
 
-END MODULE
+END MODULE wannier_module
 
 MODULE electric_field_module
   IMPLICIT NONE
@@ -186,7 +186,7 @@ MODULE electric_field_module
   real(kind=8) ::  tt(3), cdmm(3), tt2(3)
   real(kind=8) :: par, alen, blen, clen, rel1(3), rel2(3)
 !     ====  1 Volt / meter      = 1/(5.1412*1.e+11) a.u.            ====
-END MODULE
+END MODULE electric_field_module
 
 
 MODULE wannier_subroutines
@@ -764,4 +764,4 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
 END SUBROUTINE wf_closing_options
 
 
-END MODULE
+END MODULE wannier_subroutines

@@ -361,4 +361,4 @@ CONTAINS
   END SUBROUTINE deallocate_ensemble_dft
   
 
-END MODULE
+END MODULE ensemble_dft

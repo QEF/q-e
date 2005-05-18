@@ -635,5 +635,5 @@
 
 !  ----------------------------------------------
 
-      END MODULE 
+      END MODULE kohn_sham_states
 

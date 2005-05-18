@@ -137,5 +137,5 @@
       END SUBROUTINE charge_descriptor_info
 
 !  ----------------------------------------------  !
-      END MODULE
+      END MODULE charge_types
 !  ----------------------------------------------  !

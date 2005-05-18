@@ -734,7 +734,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
 END SUBROUTINE read_atomic_cc
 
 
-end module
+end module fpmd2upf_module
 
 
 

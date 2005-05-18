@@ -186,5 +186,5 @@
       END SUBROUTINE wave_descriptor_info
 
 !  ----------------------------------------------  !
-      END MODULE
+      END MODULE wave_types
 !  ----------------------------------------------  !

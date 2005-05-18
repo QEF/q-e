@@ -516,7 +516,7 @@ MODULE sticks
   TYPE ( fft_dlay_descriptor ) :: dfftp   ! dense grid
   TYPE ( fft_dlay_descriptor ) :: dffts   ! smooth grid
   !
-END MODULE
+END MODULE sticks
 !  
 !  
 MODULE bp
