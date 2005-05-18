@@ -108,7 +108,7 @@ subroutine dynmatrix
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   if (zue) call sym_and_write_zue
-  if (lraman) call write_ramtns (ramtns, nat, iudyn)
+  if (lraman) call write_ramtns (iudyn, ramtns)
   !
   !   Diagonalizes the dynamical matrix at q
   !

@@ -260,7 +260,7 @@ subroutine raman_mat
      do iat = 1, nat
         call trntnsr_3 (matram (1, 1, 1, iat), at, bg, 1)
      enddo
-     write(6,'(/,10x,''Raman tensor (A^-1) in cartesian axis '',/)')
+     write(6,'(/,10x,''Raman tensor (au^-1) in cartesian axis '',/)')
 
      if (il == 1) ramtns(:,:,:,:) = matram(:,:,:,:)
      if (wr_all ) call write_raman(matram)
@@ -276,7 +276,12 @@ subroutine raman_mat
         enddo
      enddo
   enddo
-
+  !
+  ! write Raman tensor dchi/du = (omega/4pi)*deps/du in A^2
+  ! it may not be written to file fildyn if trans=.false.
+  !
+  call write_ramtns (6, ramtns)
+  !
   deallocate (wrk       )
   deallocate (matram    )
   deallocate (matw      )

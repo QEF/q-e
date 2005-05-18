@@ -6,24 +6,20 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine write_ramtns (ramtns, nat, iudyn)
+subroutine write_ramtns (iudyn, ramtns)
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE cell_base, ONLY : omega
   USE constants, ONLY : fpi
+  USE cell_base, ONLY : omega
+  USE ions_base, ONLY : nat
+  !
   implicit none
-  ! input variables
-  integer :: iudyn, nat
-  ! unit number
-  ! number of atom in the unit cell
-
-  real(kind=DP) :: ramtns(3, 3, 3, nat)
-  ! the raman tensor
+  integer, intent(in) :: iudyn  ! unit
+  real(kind=DP), intent(in) :: ramtns(3, 3, 3, nat) ! raman tensor
 
   ! local variables
   integer :: na, ic, jc, kc
-  ! counter on atoms
-  ! cartesian coordinate counters
+  ! counters
   real (kind=DP), parameter ::   convfact = 0.529177**2
   ! conversion factor from au^2 to A^2
   !
