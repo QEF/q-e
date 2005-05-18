@@ -62,7 +62,7 @@
         spl%xmin = 0.0d0
         spl%xmax = 0.0d0
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE nullify_spline
 
       SUBROUTINE allocate_spline( spl, nn, xmin, xmax )
 
@@ -574,7 +574,7 @@
           y2(k)=y2(k)*y2(k+1)+u(k)
         end do
         return
-      END SUBROUTINE
+      END SUBROUTINE splinedx
 
 
       SUBROUTINE splintdx(xmin,xmax,ya,y2a,n,x,y)
@@ -602,7 +602,7 @@
         y   = a*ya(klo) + b*ya(khi) + &
               ( (a*a*a-a)*y2a(klo) + (b*b*b-b)*y2a(khi) ) * (dx*dx)/6.0d0
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE splintdx
 
 !-----------------------------------------------------------------------
 
@@ -638,7 +638,7 @@
         y2(k)=y2(k)*y2(k+1)+u(k)
       end do
       return
-      END SUBROUTINE
+      END SUBROUTINE nr_spline
 
 
       SUBROUTINE nr_splint( xa, ya, y2a, n, x, y )
@@ -664,7 +664,7 @@
       y=a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))* &
         (h**2)/6.
       return
-      END SUBROUTINE
+      END SUBROUTINE nr_splint
 
 
       SUBROUTINE nr_splie2( x1a, x2a, ya, m, n, y2a )
@@ -682,7 +682,7 @@
         end do
       end do
       return
-      END SUBROUTINE
+      END SUBROUTINE nr_splie2
 
 
       SUBROUTINE nr_splin2( x1a, x2a, ya, y2a, m, n, x1, x2, y )
@@ -700,7 +700,7 @@
       call nr_spline( x1a, yytmp, m, 1.d30, 1.d30, y2tmp )
       call nr_splint( x1a, yytmp, y2tmp, m, x1, y )
       return
-      END SUBROUTINE
+      END SUBROUTINE nr_splin2
 
 !-----------------------------------------------------------------------
 

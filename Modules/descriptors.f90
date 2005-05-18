@@ -305,7 +305,7 @@
               END SELECT
 
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE desc_init_x
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -627,7 +627,7 @@
             ny = d%ny
             nz = d%nz
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE desc_gdims
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -645,7 +645,7 @@
             IF( PRESENT( nzl ) ) nzl = d%nzl
 
             RETURN
-          END SUBROUTINE
+          END SUBROUTINE desc_ldims
 
 
 

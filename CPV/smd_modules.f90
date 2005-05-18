@@ -65,7 +65,7 @@ MODULE smd_rep
     subroutine deallocate_smd_rep()
       IF( ALLOCATED( rep    ) ) DEALLOCATE( rep    )
       IF( ALLOCATED( rep_el ) ) DEALLOCATE( rep_el )
-  end subroutine
+  end subroutine deallocate_smd_rep
  !
  !
 END MODULE smd_rep
@@ -89,7 +89,7 @@ MODULE smd_ene
       IF( ALLOCATED( epseu_ar ) ) DEALLOCATE( epseu_ar )
       IF( ALLOCATED( exc_ar   ) ) DEALLOCATE( exc_ar   )
       IF( ALLOCATED( esr_ar   ) ) DEALLOCATE( esr_ar   )
-  end subroutine
+  end subroutine deallocate_smd_ene
  !
 END MODULE smd_ene
 

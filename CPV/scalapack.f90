@@ -47,7 +47,7 @@
 #endif
           DEALLOCATE(work)
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE print_rmatrix
 
 
         SUBROUTINE redistribute_rmatrix(a,b)
@@ -62,7 +62,7 @@
             b%m(1,1), 1, 1, desc_b, b%desc%grid%context)
 #endif
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE redistribute_rmatrix
 
         SUBROUTINE redistribute_cmatrix(a,b)
           USE parallel_types, ONLY: complex_parallel_matrix
@@ -76,7 +76,7 @@
             b%m(1,1), 1, 1, desc_b, b%desc%grid%context)
 #endif
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE redistribute_cmatrix
 
         SUBROUTINE redistribute_imatrix(a,b)
           USE parallel_types, ONLY: integer_parallel_matrix
@@ -90,7 +90,7 @@
             b%m(1,1), 1, 1, desc_b, b%desc%grid%context)
 #endif
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE redistribute_imatrix
 
         SUBROUTINE real_parallel_matmul(a,b,c,transa,transb,eq_dist, &
           alphax,betax,iax,jax,ibx,jbx,icx,jcx)
@@ -138,7 +138,7 @@
 #endif
           END IF
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE real_parallel_matmul
 
 
         SUBROUTINE real_parallel_mtran(a,c,alphax,betax,iax,jax,icx,jcx)
@@ -167,7 +167,7 @@
               beta, c%m(1,1), ic, jc, DESC_C)
 #endif
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE real_parallel_mtran
 
         SUBROUTINE real_parallel_mdiag(uplo, a, w, z, iax, jax, izx, jzx)
           USE parallel_types, ONLY: real_parallel_matrix

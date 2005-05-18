@@ -195,7 +195,7 @@
 100   FORMAT(6X,A3,10X,F8.4)
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE pstress
 
 
       SUBROUTINE print_stress_time( iunit )
@@ -225,7 +225,7 @@
 999     FORMAT(1X,7(1X,F9.3))
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE print_stress_time
 
 
 
@@ -680,7 +680,7 @@
       DEALLOCATE(wnla)
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE stress_nl
 
 !  ----------------------------------------------
 !  ----------------------------------------------
@@ -818,14 +818,14 @@
       dekin = - 2.0_dbl * dekin
       DEALLOCATE(arg) 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE stress_kin
 
 
 !=======================================================================
 !==          COMPUTES HARTREE ENERGY CONTRIBUTION                     ==
 !=======================================================================
 
-      SUBROUTINE STRESS_HAR(DEHT, EHR, sfac, PS, RHOEG, GAgx_L, box ) 
+      SUBROUTINE stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, box ) 
 
       use ions_base,          only: nsp
       USE cell_module,        only: boxdimensions
@@ -895,7 +895,7 @@
       end if
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE stress_har
 
 
 
@@ -981,7 +981,7 @@
   105   FORMAT(' denl  :',6F12.4)
   106   FORMAT(' detot :',6F12.4)
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE stress_debug
 
 
   END MODULE stress

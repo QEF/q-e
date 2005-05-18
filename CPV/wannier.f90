@@ -104,7 +104,7 @@ contains
       END IF
     END IF
     return
-  end subroutine
+  end subroutine clear_nbeg
 
   subroutine ef_force( fion, na, nsp, zv )
     implicit none
@@ -127,7 +127,7 @@ contains
     !   End Electric field for ions
     !                           - M.S
     return
-  end subroutine
+  end subroutine ef_force
 
 end module efcalc
 
@@ -166,7 +166,7 @@ CONTAINS
     allocate(rhos2(nnrsx, nspin))
     allocate(rhogdum(ng,nspin))
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE allocate_wannier
   SUBROUTINE deallocate_wannier( )
     if( allocated(utwf) ) deallocate(utwf)
     if( allocated(wfc) ) deallocate(wfc)
@@ -174,7 +174,7 @@ CONTAINS
     if( allocated(rhos2) ) deallocate(rhos2)
     if( allocated(rhogdum) ) deallocate(rhogdum)
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE deallocate_wannier
 
 END MODULE
 
@@ -259,7 +259,7 @@ SUBROUTINE read_efwan_param( nbeg )
     CLOSE(1)
   end if
  
-END SUBROUTINE
+END SUBROUTINE read_efwan_param
 
 SUBROUTINE wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
 
@@ -360,7 +360,7 @@ SUBROUTINE wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
 
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE wannier_init
 
 
 SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, ibrav, b1, b2, b3 )
@@ -389,7 +389,7 @@ SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, eigrb, taub, irb, i
     end if
   end if
   RETURN
-END SUBROUTINE
+END SUBROUTINE get_wannier_center
 
 
 SUBROUTINE ef_tune( rhog, tau0 )
@@ -407,7 +407,7 @@ SUBROUTINE ef_tune( rhog, tau0 )
   end if
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE ef_tune
 
 
 SUBROUTINE write_charge_and_exit( rhog )
@@ -423,7 +423,7 @@ SUBROUTINE write_charge_and_exit( rhog )
          stop 'write_charge_and_exit'
       end if
   RETURN
-END SUBROUTINE
+END SUBROUTINE write_charge_and_exit
 
 
 SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, irb, &
@@ -495,7 +495,7 @@ SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, taub, i
 !=======================================================================
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE wf_options
 
 
 SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
@@ -621,7 +621,7 @@ SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, ve
   end do
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE ef_potential
 
 
 !--------------------------------------------------------------------
@@ -684,7 +684,7 @@ SUBROUTINE ef_enthalpy( enthal, tau0 )
   enthal=enthal+efe_elec-efe_ion
 
   RETURN
-END SUBROUTINE
+END SUBROUTINE ef_enthalpy
 
 
 SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, &
@@ -761,7 +761,7 @@ SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, irb, 
     call wf (calwf,c0(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
   end if
   RETURN
-END SUBROUTINE
+END SUBROUTINE wf_closing_options
 
 
 END MODULE

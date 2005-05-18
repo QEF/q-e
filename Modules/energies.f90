@@ -140,7 +140,7 @@
                 ,'     xc           : ',F14.8,/ &
                 ,'     eii          : ',F14.8)
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE eig_total_energy
 
 ! ---------------------------------------------------------------------------- !
 
@@ -245,4 +245,4 @@
         END SUBROUTINE debug_energies
 
 
-      END MODULE Energies
+      END MODULE energies

@@ -49,13 +49,13 @@
           lsetup = .TRUE.
 
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE ln_setup
 
 
         SUBROUTINE ln_closeup
           IF( lsetup ) CALL LN_DEALLOC
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE ln_closeup
 
 
     SUBROUTINE berry_setup( ngw, mill )
@@ -163,17 +163,17 @@
 
       call mp_max( icntix(1:8), group )
       WRITE( stdout, fmt="(3X,'Dipole init ')" )
-      do i = 1, 8
+      DO i = 1, 8
         WRITE( stdout, fmt="(3X,'icntix ',I3,' = ',I5)" ) i, icntix(i)
-      end do
+      END DO
 
       CALL ln_closeup( )
 
-      deallocate(icnt_snd)
-      deallocate(icnt_rcv)
+      DEALLOCATE(icnt_snd)
+      DEALLOCATE(icnt_rcv)
 
-      return
-      end SUBROUTINE berry_setup
+      RETURN
+      END SUBROUTINE berry_setup
 
 
       SUBROUTINE berry_closeup( )
@@ -181,7 +181,7 @@
         IF( allocated( sour_indi ) )  deallocate(SOUR_INDI)
         IF( allocated( dest_indi ) )  deallocate(DEST_INDI)
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE berry_closeup
      
 
         SUBROUTINE indi_of_ig( mill, indi )
@@ -251,7 +251,7 @@
           END IF
 
           RETURN
-        END SUBROUTINE INDI_OF_IG
+        END SUBROUTINE indi_of_ig
 
 
 

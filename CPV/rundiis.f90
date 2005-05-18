@@ -673,7 +673,7 @@
             END DO
           END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE set_lambda_c
 
 !  ----------------------------------------------
 
@@ -691,7 +691,7 @@
             ib = ib + nproc
           END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE set_lambda_r
 
 !  ----------------------------------------------
 
@@ -796,7 +796,7 @@
 
         RETURN
 
-      END SUBROUTINE
+      END SUBROUTINE diis_eigs
 
 
 

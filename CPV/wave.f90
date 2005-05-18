@@ -1141,7 +1141,7 @@
        lambdam(:,:)=lambda (:,:)
        lambda (:,:)=lambdap(:,:)
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE interpolate_lambda
 
 
      SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
@@ -1168,7 +1168,7 @@
        END IF
        DEALLOCATE( prod )
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE update_rlambda
 
      SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
        USE electrons_module, ONLY: ib_owner, ib_local
@@ -1194,7 +1194,7 @@
        END IF
        DEALLOCATE( prod )
        RETURN
-     END SUBROUTINE
+     END SUBROUTINE update_clambda
 
 
 

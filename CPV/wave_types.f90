@@ -158,7 +158,7 @@
         desc % lds = MAX( 1, desc % nspin )
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE wave_descriptor_init
 
 
       SUBROUTINE wave_descriptor_info( desc, nam, iunit )
@@ -183,7 +183,7 @@
                ,3X, 'has G == 0 vector. . . . . . . . . : ',L7)
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE wave_descriptor_info
 
 !  ----------------------------------------------  !
       END MODULE

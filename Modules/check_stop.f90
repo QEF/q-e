@@ -69,7 +69,7 @@ MODULE check_stop
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE check_stop_init
      !
      !-----------------------------------------------------------------------
      FUNCTION check_stop_now( inunit )

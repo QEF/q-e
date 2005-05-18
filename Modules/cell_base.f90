@@ -117,7 +117,7 @@
             box_tm1  = box_t0
             box_t0   = box_tp1
           RETURN
-        END SUBROUTINE UPDATECELL
+        END SUBROUTINE updatecell
 
 !------------------------------------------------------------------------------!
 
@@ -153,7 +153,7 @@
             box%hvel = 0.0d0
             box%pail = 0.0d0
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE cell_init_ht
           
 !------------------------------------------------------------------------------!
 
@@ -175,11 +175,11 @@
             box%g    = MATMUL( box%a(:,:), box%hmat(:,:) )
             box%gvel = 0.0d0
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE cell_init_a
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE R_TO_S1 (R,S,box)
+        SUBROUTINE r_to_s1 (r,s,box)
           REAL(dbl), intent(out) ::  S(3)
           REAL(dbl), intent(in) :: R(3)
           type (boxdimensions), intent(in) :: box
@@ -191,11 +191,11 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE R_TO_S1
+        END SUBROUTINE r_to_s1
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE R_TO_S3 ( R, S, na, nsp, hinv )
+        SUBROUTINE r_to_s3 ( r, s, na, nsp, hinv )
           REAL(dbl), intent(out) ::  S(:,:)
           INTEGER, intent(in) ::  na(:), nsp
           REAL(dbl), intent(in) :: R(:,:)
@@ -214,11 +214,11 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE R_TO_S3
+        END SUBROUTINE r_to_s3
 
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE R_TO_S1B ( R, S, hinv )
+        SUBROUTINE r_to_s1b ( r, s, hinv )
           REAL(dbl), intent(out) ::  S(:)
           REAL(dbl), intent(in) :: R(:)
           REAL(dbl), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
@@ -230,7 +230,7 @@
             END DO
           END DO
           RETURN
-        END SUBROUTINE R_TO_S1B
+        END SUBROUTINE r_to_s1b
 
 
 !------------------------------------------------------------------------------!
@@ -393,7 +393,7 @@
         Y2 = Y1 - DNINT(Y1/MIC)*MIC
         Z2 = Z1 - DNINT(Z1/MIC)*MIC
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pbcs_components
 
 !------------------------------------------------------------------------------!
 
@@ -410,7 +410,7 @@
         w(2) = v(2) - DNINT(v(2)/MIC)*MIC
         w(3) = v(3) - DNINT(v(3)/MIC)*MIC
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pbcs_vectors
 
 !------------------------------------------------------------------------------!
 
@@ -625,7 +625,7 @@
 
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cell_base_init
 
 
       
@@ -706,7 +706,7 @@
 
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cell_base_reinit
 
 
 
@@ -726,7 +726,7 @@
       ENDDO
     ENDDO
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cell_steepest
 
 
 !------------------------------------------------------------------------------!
@@ -764,7 +764,7 @@
       ENDDO
     ENDDO
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cell_verlet
 
 !------------------------------------------------------------------------------!
 
@@ -783,7 +783,7 @@
       end do
     end do
     return
-  end subroutine
+  end subroutine cell_hmove
 
 !------------------------------------------------------------------------------!
 
@@ -804,7 +804,7 @@
     end do
     fcell = omega * fcell / wmass
     return
-  end subroutine
+  end subroutine cell_force
 
 !------------------------------------------------------------------------------!
 
@@ -831,7 +831,7 @@
     END IF
 
     return
-  end subroutine
+  end subroutine cell_move
 
 !------------------------------------------------------------------------------!
 
@@ -853,7 +853,7 @@
             enddo
          enddo
     return
-  end subroutine
+  end subroutine cell_gamma
 
 !------------------------------------------------------------------------------!
 
@@ -871,7 +871,7 @@
       end do
     end do
     return
-  end subroutine
+  end subroutine cell_kinene
 
 !------------------------------------------------------------------------------!
 
@@ -917,7 +917,7 @@ CONTAINS
      fnoseh = fnoseh_init
      if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 )*temph/factem/(fnoseh*(2.d0*pi)*terahertz)**2
     return
-  end subroutine
+  end subroutine cell_nose_init
 
   subroutine cell_nosezero( vnhh, xnhh0, xnhhm )
     real(dbl), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
@@ -925,7 +925,7 @@ CONTAINS
     xnhhm=0.0d0
     vnhh =0.0d0
     return
-  end subroutine
+  end subroutine cell_nosezero
 
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt )
     implicit none
@@ -933,7 +933,7 @@ CONTAINS
     real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
     vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
     return
-  end subroutine
+  end subroutine cell_nosevel
 
   subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
     use constants, only: factem
@@ -948,7 +948,7 @@ CONTAINS
       end do
     end do
     return
-  end subroutine
+  end subroutine cell_noseupd
 
   
   real(kind=8) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
@@ -977,7 +977,7 @@ CONTAINS
       xnhhm = xnhh0
       xnhh0 = xnhhp
     return
-  end subroutine
+  end subroutine cell_nose_shiftvar
 
 
   SUBROUTINE cell_nose_info()

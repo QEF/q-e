@@ -188,7 +188,7 @@
       END IF
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE runsd
 
 ! ---------------------------------------------------------------------- !
       END MODULE

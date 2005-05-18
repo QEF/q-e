@@ -226,7 +226,7 @@
 
       RETURN
 
-    END SUBROUTINE
+    END SUBROUTINE electrons_base_initval
 
 
 
@@ -235,7 +235,7 @@
       IF( ALLOCATED( fspin ) ) DEALLOCATE( fspin )
       telectrons_base_initval = .FALSE.
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE deallocate_elct
 
 
 !------------------------------------------------------------------------------!
@@ -279,7 +279,7 @@
      vnhe    = 0.0d0
      if( fnosee > 0.0d0 ) qne = 4.d0 * ekincw / ( fnosee * ( 2.d0 * pi ) * terahertz )**2
     return
-  end subroutine
+  end subroutine electrons_nose_init
 
 
   function electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
@@ -304,7 +304,7 @@
       xnhe0 = xnhep
       !
     return
-  end subroutine
+  end subroutine electrons_nose_shiftvar
 
   subroutine electrons_nosevel( vnhe, xnhe0, xnhem, delt )
     implicit none
@@ -312,7 +312,7 @@
     real(kind=8), intent(in) :: xnhe0, xnhem, delt 
     vnhe=2.*(xnhe0-xnhem)/delt-vnhe
     return
-  end subroutine
+  end subroutine electrons_nosevel
 
   subroutine electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
     implicit none
@@ -321,7 +321,7 @@
     xnhep = 2.0d0 * xnhe0 - xnhem + 2.0d0 * ( delt**2 / qne ) * ( ekinc - ekincw )
     vnhe  = ( xnhep - xnhem ) / ( 2.0d0 * delt )
     return
-  end subroutine
+  end subroutine electrons_noseupd
 
 
   SUBROUTINE electrons_nose_info()

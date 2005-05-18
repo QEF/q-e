@@ -5,17 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-     module spherical_harmonics
+     MODULE spherical_harmonics
 
         USE kinds
-        implicit none
-        save
+        IMPLICIT NONE
+        SAVE
 
         PRIVATE
 
         PUBLIC :: set_dmqm, set_fmrm, set_pmtm
 
-     contains
+     CONTAINS
 
       SUBROUTINE mspharm( lm1x, ngw, gx, gg, ylm)
         INTEGER, INTENT(IN) :: lm1x, ngw
@@ -41,7 +41,7 @@
 !        END DO
         CALL ylmr2( (lm1x+1)**2, ngw, gx, gg, ylm )
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE mspharm
 
 
       SUBROUTINE spharm(S,G,GSQM,NG,L,M)
@@ -152,7 +152,7 @@
 !==      G_A = TM(A,M) * Y_M(G)                                         ==
 !=========================================================================
 !
-      SUBROUTINE SET_PMTM(PM,PMTM)
+      SUBROUTINE set_pmtm(pm,pmtm)
 
       IMPLICIT NONE
       REAL(dbl) P_M(3,3),T_M(3,3)
@@ -195,7 +195,7 @@
 
 
       RETURN
-      END SUBROUTINE SET_PMTM
+      END SUBROUTINE set_pmtm
 
 
 !=========================================================================
@@ -206,7 +206,7 @@
 !==      G_A * G_B = QM(A,B,M) * Y_M(G) + DELTA_A,B / 3                 ==
 !=========================================================================
 !
-      SUBROUTINE SET_DMQM(DM,DMQM)
+      SUBROUTINE set_dmqm(dm,dmqm)
 
       IMPLICIT NONE
       REAL(dbl) D_M(3,3,5),Q_M(3,3,5)
@@ -276,7 +276,7 @@
       END DO
 
       RETURN
-      END SUBROUTINE SET_DMQM
+      END SUBROUTINE set_dmqm
 
 
 
@@ -292,7 +292,7 @@
 !==                        DELTA_A,C * G_B / 5.0 +                      ==
 !=========================================================================
 !
-      SUBROUTINE SET_FMRM(FM,FMRM)
+      SUBROUTINE set_fmrm(fm,fmrm)
 
       IMPLICIT NONE
       REAL(dbl) :: F_M(3,3,3,7), R_M(3,3,3,7)
@@ -425,6 +425,6 @@
 
 
       RETURN
-      END SUBROUTINE SET_FMRM
+      END SUBROUTINE set_fmrm
 
-     end module
+     END MODULE

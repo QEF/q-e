@@ -936,7 +936,7 @@
 !
      if(tbuff) rewind 21
 
-   END SUBROUTINE
+   END SUBROUTINE runcp_uspp
 
 
 !=----------------------------------------------------------------------------=!
