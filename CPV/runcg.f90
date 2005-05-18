@@ -46,7 +46,7 @@
           INTEGER, INTENT(IN) :: unit
  100      FORMAT(/,3X,'Using Conjugate Gradient for electronic minimization')
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE runcg_info
 
 
 
@@ -346,7 +346,7 @@
       IF( ierr/=0 ) CALL errore(' runcg ', ' deallocating dt2bye ',ierr)
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE runcg_new
 
 
 ! ---------------------------------------------------------------------- !
@@ -355,7 +355,7 @@
 !
 ! ---------------------------------------------------------------------- !
 
-    SUBROUTINE CGLINMIN(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
+    SUBROUTINE cglinmin(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
         atoms, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp)
 
 ! ... declare modules
@@ -603,7 +603,7 @@
 
       END FUNCTION cgenergy
 
-    END SUBROUTINE
+    END SUBROUTINE cglinmin
 
 ! ---------------------------------------------------------------------- !
       END MODULE

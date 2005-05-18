@@ -182,11 +182,11 @@
               WRITE(unit,555) atoms%label(is), (atoms%taus(k,ia), k = 1,3)
             END DO
           END DO
-          return
+          RETURN
  100      FORMAT(/,3X,'Scaled atomic positions ',A50)
  1300     FORMAT(3X,'Species ',I3,' atoms = ',I4)
   555     FORMAT(3X, A4, 3(1X,F12.6), 3L6)
-        end SUBROUTINE print_scaled_positions
+        END SUBROUTINE print_scaled_positions
 
 
 !  BEGIN manual -------------------------------------------------------------   
@@ -288,7 +288,7 @@
         END DO
 
         RETURN
-      ENd  SUBROUTINE displacement
+      END SUBROUTINE displacement
 
 !  BEGIN manual -------------------------------------------------------------   
 
@@ -325,7 +325,7 @@
 1000    FORMAT(/,3X,'Center of mass displacement (a.u.): ',F10.6)
 
         RETURN
-      ENd  SUBROUTINE cdm_displacement
+      END SUBROUTINE cdm_displacement
 
 
 !  BEGIN manual -------------------------------------------------------------   
@@ -362,7 +362,7 @@
         END DO
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE set_velocities
 
 
 
@@ -399,7 +399,7 @@
         END DO
 
         RETURN
-      END subroutine set_reference_positions
+      END SUBROUTINE set_reference_positions
 
 
 !   -------------------------------------------------------------   
@@ -796,7 +796,7 @@
         END DO
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE resort_position
      
 
 

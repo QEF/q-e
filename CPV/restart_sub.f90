@@ -386,7 +386,7 @@ MODULE from_restart_module
     !
     RETURN
     !
-  END SUBROUTINE
+  END SUBROUTINE from_restart_sm
   !
   !--------------------------------------------------------------------------
   SUBROUTINE from_restart_fpmd( nfi, acc, kp, ps, rhoe, desc, cm, c0, cdesc, &

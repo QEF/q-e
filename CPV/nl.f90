@@ -509,7 +509,7 @@
               gx(:,:,i), fnl(i) )
           END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE nlsm1_v
 
       SUBROUTINE nlsm2_v( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, dfnl, kk)
 !! ...   declare modules
@@ -533,7 +533,7 @@
               gx(:,:,i), dfnl(i), kk)
           END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE nlsm2_v
 
 
 !  ----------------------------------------------

@@ -257,7 +257,7 @@
 
 
       RETURN
-      END  SUBROUTINE
+      END SUBROUTINE rsigset
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -310,7 +310,7 @@
       ENDDO
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE csigset
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -363,7 +363,7 @@
 #endif
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE rrhoset
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -420,7 +420,7 @@
       ENDDO
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE crhoset
 
 !----------------------------------------------------------------------!
 
@@ -580,7 +580,7 @@
 
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE sigrhoset
 
 
       SUBROUTINE sigrhoset2( ngw, nx, CP,C0,SIG,RHO,TMASS,PMSS,EMASS,gzero)
@@ -766,7 +766,7 @@
       ENDIF
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE sigrhoset2
 
 !
 !----------------------------------------------------------------------
@@ -871,7 +871,7 @@
 
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE backrhoset
 
 
       SUBROUTINE backrhoset2( ngw, nx, cp, c0, rho, pmss, emass )
@@ -989,7 +989,7 @@
       DEALLOCATE(SIGTMP)
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE backrhoset2
 
 
 !=----------------------------------------------------------------------------=!
@@ -1008,7 +1008,7 @@
            END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE prpack
 
       SUBROUTINE pzpack( ap, a)
         USE mp_global, ONLY: mpime, nproc
@@ -1023,7 +1023,7 @@
            END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pzpack
 
       SUBROUTINE prunpack( a, ap)
         USE mp_global, ONLY: mpime, nproc
@@ -1041,7 +1041,7 @@
           END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE prunpack
 
       SUBROUTINE pzunpack( a, ap)
         USE mp_global, ONLY: mpime, nproc
@@ -1059,7 +1059,7 @@
           END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE pzunpack
 
       SUBROUTINE rpack( ap, a)
         REAL(dbl), INTENT(IN) :: a(:,:)
@@ -1073,7 +1073,7 @@
           END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE rpack
 
       SUBROUTINE zpack( ap, a)
         COMPLEX(dbl), INTENT(IN) :: a(:,:)
@@ -1087,7 +1087,7 @@
           END DO
         END DO
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE zpack
 
 
      END MODULE orthogonalize_base

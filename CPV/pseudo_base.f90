@@ -331,7 +331,7 @@
        
 
         return
-      end subroutine
+      end subroutine compute_rhocg
 
 
 
@@ -361,7 +361,7 @@
         endif
         !
         return
-      end subroutine
+      end subroutine compute_rhops
 
 
 
@@ -524,7 +524,7 @@
         end if
         !
       return
-      end subroutine
+      end subroutine formfn
 
 
 
@@ -616,7 +616,7 @@
         end do
 !
       return
-      end subroutine
+      end subroutine formfa
 
 
 

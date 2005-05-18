@@ -114,7 +114,7 @@
         END IF
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE ks_states_init
 
 !  ----------------------------------------------
 
@@ -126,7 +126,7 @@
         IF( ALLOCATED( n_ksout_emp ) ) DEALLOCATE( n_ksout_emp )
         tksout_emp = .FALSE.
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE ks_states_closeup
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -210,7 +210,7 @@
 
         RETURN
 ! ...
-      END SUBROUTINE
+      END SUBROUTINE kohn_sham
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -375,7 +375,7 @@
 ! ...
         RETURN
 ! ...
-      END SUBROUTINE
+      END SUBROUTINE ks_states
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -551,7 +551,7 @@
 ! ...
         RETURN
 ! ...
-      END SUBROUTINE
+      END SUBROUTINE ks_states_force_pairing
 
 
 !  ----------------------------------------------
@@ -631,7 +631,7 @@
 ! ...
         RETURN
 ! ...
-      END SUBROUTINE
+      END SUBROUTINE print_ks_states
 
 !  ----------------------------------------------
 

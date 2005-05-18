@@ -107,7 +107,7 @@
  130  FORMAT(3X,'time steps per nose oscillation: ',I5,//)
 
     return
-  end subroutine
+  end subroutine ions_nose_init
 
 
   SUBROUTINE ions_nose_info()
@@ -169,7 +169,7 @@
         !  but we do not need variables at time t-2dt ( xnos2m )
         !
     return
-  end subroutine
+  end subroutine ions_nosevel
 
 
  subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
@@ -235,7 +235,7 @@
       xnhp0 = xnhpp
       !
     return
-  end subroutine
+  end subroutine ions_nose_shiftvar
   
 !------------------------------------------------------------------------------!
   END MODULE ions_nose

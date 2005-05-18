@@ -836,7 +836,7 @@
       CALL deallocate_modules_var()
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cpmain
 
 !=----------------------------------------------------------------------------=!
   END MODULE main_module

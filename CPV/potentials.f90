@@ -223,7 +223,7 @@
           kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE kspotential
 
 !=----------------------------------------------------------------------------=!
 
@@ -788,7 +788,7 @@
       CALL cpflush
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE vofrhos
 
 !=----------------------------------------------------------------------------=!
 
@@ -820,7 +820,7 @@
         timstr = 0.0d0
         timcnt = 0
         RETURN
-      END SUBROUTINE
+      END SUBROUTINE print_vofrho_time
      
 
 !=----------------------------------------------------------------------------=!
@@ -911,7 +911,7 @@
       DEALLOCATE( grr, grg )
 
     RETURN
-  END SUBROUTINE
+  END SUBROUTINE cluster_bc
 
 
 !=----------------------------------------------------------------------------=!
@@ -1135,7 +1135,7 @@
       IF(ALLOCATED(screen_coul)) DEALLOCATE(screen_coul)
        
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE vofloc
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1440,7 +1440,7 @@
       IF(ALLOCATED(screen_coul)) DEALLOCATE(screen_coul)
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE self_vofloc
 
 
 
@@ -1619,7 +1619,7 @@
       DEALLOCATE( k_density, density, psi )
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE localisation
 
 
  

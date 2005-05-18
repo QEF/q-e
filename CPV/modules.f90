@@ -25,7 +25,7 @@ module core
 contains
   subroutine deallocate_core()
       IF( ALLOCATED( rhocb ) ) DEALLOCATE( rhocb )
-  end subroutine
+  end subroutine deallocate_core
 end module core
 
 !     f    = occupation numbers
@@ -100,7 +100,7 @@ contains
   subroutine deallocate_pseu
       IF( ALLOCATED( rhops ) ) DEALLOCATE( rhops )
       IF( ALLOCATED( vps ) ) DEALLOCATE( vps )
-  end subroutine
+  end subroutine deallocate_pseu
 end module pseu
 
 module qgb_mod
@@ -110,7 +110,7 @@ module qgb_mod
 contains
   subroutine deallocate_qgb_mod
       IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
-  end subroutine
+  end subroutine deallocate_qgb_mod
 end module qgb_mod
 
 module qradb_mod
@@ -120,7 +120,7 @@ module qradb_mod
 contains
   subroutine deallocate_qradb_mod
       IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
-  end subroutine
+  end subroutine deallocate_qradb_mod
 end module qradb_mod
 
 ! Variable cell
@@ -133,7 +133,7 @@ contains
   subroutine deallocate_derho
       IF( ALLOCATED( drhog ) ) DEALLOCATE( drhog )
       IF( ALLOCATED( drhor ) ) DEALLOCATE( drhor )
-  end subroutine
+  end subroutine deallocate_derho
 end module derho
 
 module dener
@@ -150,7 +150,7 @@ module dqgb_mod
 contains
   subroutine deallocate_dqgb_mod
       IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
-  end subroutine
+  end subroutine deallocate_dqgb_mod
 end module dqgb_mod
 
 module dpseu
@@ -161,7 +161,7 @@ contains
   subroutine deallocate_dpseu
       IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
       IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
-  end subroutine
+  end subroutine deallocate_dpseu
 end module dpseu
 
 module cdvan
@@ -174,5 +174,5 @@ contains
       IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
       IF( ALLOCATED( dbec ) ) DEALLOCATE( dbec )
       IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
-  end subroutine
+  end subroutine deallocate_cdvan
 end module cdvan

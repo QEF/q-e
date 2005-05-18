@@ -14,7 +14,7 @@
 
   CONTAINS
 
-      SUBROUTINE CPSIZES(NPROC) 
+      SUBROUTINE cpsizes(nproc) 
                                                                         
       USE kinds
       USE parameters
@@ -139,7 +139,7 @@
      &         ,3X,'------------------------------',/                   &
      &         ,3X,'dimension of the problem (byte/pe) : ',I12)
                                                                         
-      return 
-      END  SUBROUTINE 
+      RETURN 
+      END SUBROUTINE cpsizes
 
   END MODULE

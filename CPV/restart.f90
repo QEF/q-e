@@ -122,7 +122,7 @@
       END DO
 
       return
-      end subroutine
+      end subroutine writefile_cp
 
 !-----------------------------------------------------------------------
       subroutine readfile_cp                                        &
@@ -212,7 +212,7 @@
       END DO
 
       return
-      end subroutine
+      end subroutine readfile_cp
 
 
 !=----------------------------------------------------------------------------=!

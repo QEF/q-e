@@ -405,7 +405,7 @@
       first   = .FALSE.
 
     RETURN
-  END  SUBROUTINE printout
+  END SUBROUTINE printout
 
 !=----------------------------------------------------------------------------=!
 
@@ -655,7 +655,7 @@
         DEALLOCATE(sfac_rcv)
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE print_sfac
 
 
 !=----------------------------------------------------------------------------=!
@@ -812,7 +812,7 @@
      endif
 
      RETURN
-   END SUBROUTINE
+   END SUBROUTINE cp_print_rho
 
 
 !=----------------------------------------------------------------------------=!

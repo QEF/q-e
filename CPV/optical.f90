@@ -48,14 +48,14 @@
           sigma_total = 0.0d0
           n_total = 0
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE optical_setup
 
         SUBROUTINE optical_closeup
           IF( ALLOCATED( dielec_total ) ) DEALLOCATE( dielec_total )
           IF( ALLOCATED( sigma_total ) ) DEALLOCATE( sigma_total )
           IF( ALLOCATED( n_total ) ) DEALLOCATE( n_total )
           RETURN
-        END SUBROUTINE
+        END SUBROUTINE optical_closeup
 
         SUBROUTINE opticalp(nfi, box, atoms, c0, wfill, occ, ce, wempt, vpot, fnl, eigr, ps, kp)
 
@@ -348,10 +348,10 @@
           DEALLOCATE( cf )
 
           RETURN
-        END SUBROUTINE 
+        END SUBROUTINE opticalp
 
 
-        SUBROUTINE WRITE_DIELEC (nfi, tm)
+        SUBROUTINE write_dielec (nfi, tm)
           USE constants, ONLY: au, au_to_ohmcmm1
           USE io_files, ONLY: dielecunit, dielecfile
           USE io_global, ONLY: ionode
@@ -407,7 +407,7 @@
  100      FORMAT(3X,F12.6,3D16.8,I5)
  110      FORMAT(3X,F12.6,D16.8,I5)
           RETURN
-        END SUBROUTINE 
+        END SUBROUTINE write_dielec
         
 
       END MODULE 

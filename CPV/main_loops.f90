@@ -45,7 +45,7 @@
       DEALLOCATE( tau, fion )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE wf_loop
 
 !=----------------------------------------------------------------------------=!
 
@@ -85,7 +85,7 @@
       DEALLOCATE( tau, fion, etot )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE smd_loop
 
 !=----------------------------------------------------------------------------=!
 
@@ -173,7 +173,7 @@
       DEALLOCATE( tau, fion )
 
       RETURN
-    END SUBROUTINE
+    END SUBROUTINE cpr_loop
 
 
 !=----------------------------------------------------------------------------=!

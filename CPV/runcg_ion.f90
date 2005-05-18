@@ -289,13 +289,13 @@
       nfi = iter
 
       RETURN
-      END SUBROUTINE
+      END SUBROUTINE runcg_ion
 
 
 ! ---------------------------------------------------------------------- !
 ! ---------------------------------------------------------------------- !
 
-      SUBROUTINE CGLINMIN(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
+      SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
         rhoe, desc, hacca, atomsp, atoms0, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp, &
         maxnstep, sdthr, displ)
 
@@ -566,7 +566,7 @@
 
          END FUNCTION
 
-      END SUBROUTINE
+      END SUBROUTINE cglinmin
 
 ! ---------------------------------------------------------------------- !
     END MODULE
