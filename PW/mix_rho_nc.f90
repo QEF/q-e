@@ -30,7 +30,7 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   !   First the I/O variable
   !
-  character (len=42) ::  &
+  character (len=256) ::  &
                 filename     !  (in) I/O filename for mixing history
                              !  if absent everything is kept in memory
   integer ::    &

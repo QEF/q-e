@@ -34,7 +34,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !   First the dummy variables
   !
-  character (len=42) :: filename
+  character (len=256) :: filename
   integer :: ndim, iter, n_iter
   real(kind=DP) :: vout (ndim), vin (ndim), alphamix, dr2, tr2
   logical :: conv

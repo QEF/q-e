@@ -18,7 +18,7 @@ subroutine solve_e2
   use pwcom
   use becmod
   USE control_flags, ONLY: reduce_io
-  USE io_files, ONLY: iunigk
+  USE io_files, ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
   USE uspp_param, ONLY : nhm
   USE wavefunctions_module,  ONLY: evc
@@ -65,7 +65,7 @@ subroutine solve_e2
   real(kind=DP) :: tcpu, get_clock
   ! timing variables
 
-  character (len=42) :: flmixdpot
+  character (len=256) :: flmixdpot
   ! the name of the file with the
   ! mixing potential
 
@@ -113,7 +113,7 @@ subroutine solve_e2
   if (reduce_io) then
      flmixdpot = ' '
   else
-     flmixdpot = 'flmixdpot'
+     flmixdpot = TRIM(prefix)//'.mixd'
   endif
 
   do kter = 1, niter_ph

@@ -1,8 +1,8 @@
-TODO LIST - 18 Jan 2005
+TODO LIST - 1 may 2005
 
 BUGS TO EXAMINE
 
-- Zr hcp (Nathalie)
+- Zr pp buggy?
 
 NEW DEVELOPMENTS TO MERGE
 
@@ -23,7 +23,7 @@ COMMON
 
 - data files: move to new format (XML + directories)
 
-- pseudopotentials: support new format (XML)
+- pseudopotentials: support new format (XML) if/when ready
 
 - adding/removing/modifying input variables is too complex
 
@@ -97,8 +97,6 @@ Low priority:
 
 - add traceback in error (error_handler module)
 
-- Put SHMEM stuff into a single module
-
 POSTPROCESSING
 
 - complete postprocessing in Gamma case, and with CP/FPMD data
@@ -111,13 +109,10 @@ POSTPROCESSING
 
 PH, D3, Gamma, Raman
 
-- the factors in Raman coefficients are not what they should be 
-  (I think) in order to have the stated units A^4/amu
-
 - finish simplification of phonon dispersion calculation:
   move all phonon-specific stuff (symmetry etc) from pw into phonon?
 
-- same input for Gamma and PH; Gamma output compatible with Raman
+- same input for Gamma and PH
 
 - better algorithms for electron-phonon
 

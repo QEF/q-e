@@ -76,8 +76,8 @@ SUBROUTINE electrons()
   !  
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
-  CHARACTER (LEN=42) :: &
-      flmix            !
+  CHARACTER (LEN=256) :: &
+      flmix            !  used by mixing to store preceding iterations
   REAL(KIND=DP) :: &
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
@@ -227,7 +227,7 @@ SUBROUTINE electrons()
   IF ( reduce_io ) THEN
      flmix = ' '
   ELSE
-     flmix = 'flmix'
+     flmix = TRIM (prefix)//'.mix'
   END IF
   !
   ! ... Convergence threshold for iterative diagonalization

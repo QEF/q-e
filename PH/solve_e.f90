@@ -23,7 +23,7 @@ subroutine solve_e
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
-  USE io_files,              ONLY : iunigk
+  USE io_files,              ONLY : prefix, iunigk
   use pwcom
   USE check_stop,            ONLY : time_max => max_seconds
   USE wavefunctions_module,  ONLY : evc
@@ -65,7 +65,7 @@ subroutine solve_e
   real(kind=DP) :: tcpu, get_clock
   ! timing variables
 
-  character (len=42) :: flmixdpot
+  character (len=256) :: flmixdpot
   ! the name of the file with the mixing potential
 
   external ch_psi_all, cg_psi
@@ -124,7 +124,7 @@ subroutine solve_e
   if (reduce_io) then
      flmixdpot = ' '
   else
-     flmixdpot = 'flmixdpot'
+     flmixdpot = TRIM(prefix) // '.mixd'
   endif
   !
   !   The outside loop is over the iterations
