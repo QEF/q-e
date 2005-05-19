@@ -133,8 +133,8 @@ contains
 
 ! ...   Copy local component to a separate array
         ap%vloc(:) = ap%vnl(:,ap%lloc)
-        DO l = 1, ap%lnl
-          ll=ap%indl(l)  ! find out the angular momentum (ll-1) of the component stored
+        DO l = 1, ap%nbeta
+          ll=ap%lll(l) + 1  ! find out the angular momentum (ll-1) of the component stored
                          ! in position l
           ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
         END DO
@@ -220,7 +220,7 @@ contains
         ap%vrps = 0.0d0
         fac = 0.5d0
 
-        ! WRITE(6,*) ' DEBUG ', ap%lloc, ap%numeric, ap%lnl, ap%raggio, ap%zv
+        ! WRITE(6,*) ' DEBUG ', ap%lloc, ap%numeric, ap%nbeta, ap%raggio, ap%zv
 
         DO i = 1, mesh
           r = EXP(xmin+REAL(i-1)*dx)/zmesh
@@ -251,8 +251,8 @@ contains
           END DO
         END DO
 
-        DO l = 1, ap%lnl
-          il=ap%indl(l)  ! find out the angular momentum (il-1) of the component stored
+        DO l = 1, ap%nbeta
+          il=ap%lll(l) + 1  ! find out the angular momentum (il-1) of the component stored
                          ! in position l
           DO i = 1, mesh
             ap%vrps(i,l) = ( ap%vnl(i,il) - ap%vloc(i) ) * ap%rps(i,il)
@@ -278,16 +278,16 @@ contains
         TYPE (pseudo_ncpp), INTENT(IN) :: ap
         INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
 
-        IF (ap%lnl > 0) THEN
+        IF (ap%nbeta > 0) THEN
           WRITE(6,10) ap%pottyp
           IF (ap%tmix) THEN
             WRITE(6,107) 
-            WRITE(6,106)  (ap%indl(l),l=1,ap%lnl)
-            WRITE(6,105)  (ap%wgv(l),l=1,ap%lnl)
+            WRITE(6,106)  (ap%lll(l),l=1,ap%nbeta)
+            WRITE(6,105)  (ap%wgv(l),l=1,ap%nbeta)
           ELSE
             WRITE(6,50) ap%lloc
           END IF
-          WRITE(6,60) (ap%indl(l),l=1,ap%lnl)
+          WRITE(6,60) (ap%lll(l),l=1,ap%nbeta)
         ELSE
 ! ...     A local pseudopotential has been read.
           WRITE(6,11) ap%pottyp
@@ -303,7 +303,7 @@ contains
    11   FORMAT(   3X,'Type is ',A10,' and LOCAL. ')
    20   FORMAT(   3X,'Pseudo charge : ',F8.3,', pseudo radius : ',F8.3)
 
-        WRITE(6,20) ap%zv, ap%raggio
+        WRITE(6,20) ap%zv
 
         IF( ap%pottyp /= 'ANALYTIC' ) THEN
 
@@ -423,7 +423,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ap%lrps = 0
 
   ! this is for local pseudopotentials
-  IF( ap%lnl == 0 ) RETURN
+  IF( ap%nbeta == 0 ) RETURN
               
   READ(iunit,'(A80)',end=100) input_line
   CALL field_count(nf, input_line)
@@ -490,7 +490,7 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   err_msg = ' error while reading atomic numeric pseudo '
 
   IF(ap%tmix) THEN
-    READ(iunit,*) (ap%wgv(l),l=1,ap%lnl)
+    READ(iunit,*) (ap%wgv(l),l=1,ap%nbeta)
   END IF
 
   READ(iunit,*,IOSTAT=ierr) ap%zv
@@ -540,8 +540,8 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
   CALL read_atomic_wf( iunit, ap, err_msg, ierr)
   IF( ierr /= 0 ) GO TO 110
 
-  DO l = 1, ap%lnl
-    ll=ap%indl(l) 
+  DO l = 1, ap%nbeta
+    ll=ap%lll(l) + 1 
     ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
   END DO
 
@@ -574,11 +574,13 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
   ierr = 0
   err_msg = ' error while reading header pseudo '
 
-  ap%indl = 0
+  ap%lll = 0
   READ(iunit, *) ap%tnlcc, ap%tmix
-  READ(iunit, *) ap%pottyp, ap%lloc, ap%lnl, (ap%indl(l), l = 1, MIN(ap%lnl, SIZE(ap%indl)) ) 
+  READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, MIN(ap%nbeta, SIZE(ap%lll)) ) 
 
-  IF( ap%lnl > SIZE(ap%indl) .OR. ap%lnl < 0 ) THEN
+  ap%lll = ap%lll - 1
+
+  IF( ap%nbeta > SIZE(ap%lll) .OR. ap%nbeta < 0 ) THEN
     ierr = 1
     err_msg = 'LNL out of range'
     GO TO 110
@@ -593,15 +595,15 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
     err_msg = 'tmix not implemented for pseudo ' // ap%pottyp
     GO TO 110
   END IF
-  DO l = 2, ap%lnl
-    IF( ap%indl(l) <= ap%indl(l-1)) THEN
+  DO l = 2, ap%nbeta
+    IF( ap%lll(l) <= ap%lll(l-1)) THEN
       ierr = 5
       err_msg =' NONLOCAL COMPONENTS MUST BE GIVEN IN ASCENDING ORDER'
       GO TO 110
     END IF
   END DO
-  DO l = 1, ap%lnl
-    IF( ap%indl(l) == ap%lloc) THEN
+  DO l = 1, ap%nbeta
+    IF( ap%lll(l)+1 == ap%lloc) THEN
       ierr = 6
       err_msg = ' LLOC.EQ.L NON LOCAL!!' 
       GO TO 110
@@ -802,11 +804,11 @@ program fpmd2upf
   etotps     = 0.0
 
   lloc  = ap%lloc 
-  lmax  = MAX( MAXVAL( ap%indl( 1:ap%lnl ) ) - 1, ap%lloc - 1 )
+  lmax  = MAX( MAXVAL( ap%lll( 1:ap%nbeta ) ), ap%lloc - 1 )
 
 !  go to 100
 
-  nbeta = ap%lnl
+  nbeta = ap%nbeta
   mesh  = ap%mesh
   ntwfc = nwfs
   allocate( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
@@ -825,7 +827,7 @@ program fpmd2upf
   ap%dx = calculate_dx( ap%rw, ap%mesh )
   rab = ap%rw * ap%dx
 
-  write(6,*) ap%lloc, ap%indl( 1:ap%lnl ) , ap%lnl, ap%dx
+  write(6,*) ap%lloc, ap%lll( 1:ap%nbeta ) , ap%nbeta, ap%dx
 
 
   allocate (rho_atc(mesh))

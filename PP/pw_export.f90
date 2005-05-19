@@ -207,7 +207,7 @@
         DEALLOCATE( wtmp )
 
       RETURN
-    END SUBROUTINE write_restart_wfc1
+    END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
 !
@@ -226,13 +226,13 @@
       CHARACTER(LEN=20) :: section_name = 'wfc'
       idum = nbnd
       RETURN
-    END SUBROUTINE write_restart_wfc2
+    END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
 !
 !
 !=----------------------------------------------------------------------------=!
-  END MODULE io_base_export
+  END MODULE
 !=----------------------------------------------------------------------------=!
 
 
@@ -538,7 +538,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_attr (attr,"pseudo_dir",TRIM(pseudo_dir),FIRST=.TRUE.)
     call iotk_write_empty(50,"Data",attr=attr)
     DO i=1, nsp 
-        call iotk_write_attr (attr,"pseudo_file",TRIM(psfile(i)),FIRST=.TRUE.)
+        call iotk_write_attr (attr,"type",TRIM(atm(i)),FIRST=.TRUE.)
+        call iotk_write_attr (attr,"pseudo_file",TRIM(psfile(i)) )
         call iotk_write_empty(50,"specie"//TRIM(iotk_index(i)), ATTR=attr )
     ENDDO
     call iotk_write_end  (50,"Types")

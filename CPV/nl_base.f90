@@ -7,25 +7,16 @@
 !
 #include "f_defs.h"
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sun Nov 14 08:42:17 MET 1999
 !  ----------------------------------------------
 !  BEGIN manual
 
-      MODULE nl_base
+   MODULE nl_base
 
 !  this module handles nonlocal pseudopotential calculations
 !  ----------------------------------------------
 !  routines in this module:
 !  REAL(dbl) FUNCTION ene_nl(fnl,wsg,occ,ngh,nspnl,na)
 !  REAL(dbl) FUNCTION ene_nl_kp(fnlk,wk,wsg,occ,nk,ngh,nspnl,na)
-!  SUBROUTINE dedh_nls(wnl,wnla,eigr,ll,auxc,gwork,na)
-!  SUBROUTINE dedh_nlp(gagx,wnl,wnla,eigr,ll,kk,auxc,gwork,na)
-!  SUBROUTINE dedh_nld(gagx,wnl,wnla,eigr,ll,kk,dm,auxc,gwork,na)
 !  ----------------------------------------------
 !  END manual
 
@@ -117,167 +108,6 @@
 
           RETURN
         END FUNCTION ene_nl
-!  ----------------------------------------------
 
-!  ----------------------------------------------
-        SUBROUTINE dedh_nls( wnl, wnla, eigr, ll, auxc, gwork, na )
 
-!  this routine computes the nonlocal contribution of s-orbitals to
-!  cell derivatives of total energy
-!  version for Gamma-point calculations
-!
-!  orbitals: s(r) = 1
-!  ----------------------------------------------
-
-        USE gvecw,              ONLY: ngw
-        USE reciprocal_vectors, ONLY: gstart
-
-! ...     declare subroutine arguments
-          REAL(dbl), INTENT(IN) :: wnl(:,:)
-          REAL(dbl), INTENT(IN) :: wnla(:,:)
-          COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-          INTEGER, INTENT(IN) :: ll,na
-          COMPLEX(dbl), INTENT(OUT) :: auxc(:,:)
-          REAL(dbl), INTENT(IN)  :: gwork(:)
-
-! ...     declare other variables
-          INTEGER   :: ia, ig
-          REAL(dbl) :: arg
-          REAL(dbl), ALLOCATABLE :: gwtmp(:)
-
-! ...     end of declarations
-!  ----------------------------------------------
-
-          IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(ngw))
-            gwtmp(1) = 0.0d0
-            DO ig = gstart, ngw
-              gwtmp(ig) = gwork(ig) * (wnl(ig,ll)-wnla(ig,ll))
-            END DO
-            DO ia = 1, na
-              auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gstart, ngw
-                auxc(ig,ia) = gwtmp(ig) * eigr(ig,ia)
-              END DO
-            END DO
-            DEALLOCATE(gwtmp)
-          ELSE
-            auxc = CMPLX( 0.0d0 )
-          END IF
-
-          RETURN
-        END SUBROUTINE dedh_nls
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-        SUBROUTINE dedh_nlp( gagx, wnl, wnla, eigr, ll, kk, auxc, gwork, na )
-
-!  this routine computes the nonlocal contribution of p-orbitals to
-!  cell derivatives of total energy
-!  version for Gamma-point calculations
-!
-!  orbitals: p_x(r) = x/r
-!            p_y(r) = y/r
-!            p_z(r) = z/r
-!  ----------------------------------------------
-
-        USE reciprocal_vectors, ONLY: gstart
-        USE gvecw,              ONLY: ngw
-
-! ...     declare subroutine arguments
-          REAL(dbl), INTENT(IN)  :: gagx(:,:)
-          REAL(dbl), INTENT(IN) :: wnl(:,:)
-          REAL(dbl), INTENT(IN) :: wnla(:,:)
-          COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-          INTEGER, INTENT(IN) :: ll,na,kk
-          COMPLEX(dbl), INTENT(OUT) :: auxc(:,:)
-          REAL(dbl), INTENT(IN)  :: gwork(:)
-
-! ...     declare other variables
-          INTEGER  :: ia, ig
-          REAL(dbl), ALLOCATABLE :: gwtmp(:)
-          COMPLEX(dbl), PARAMETER :: uimag = (0.0d0,1.0d0)
-
-! ...     end of declarations
-!  ----------------------------------------------
-
-          IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(ngw))
-            gwtmp(1) = 0.0d0
-            DO ig = gstart, ngw
-              gwtmp(ig) = gagx(kk,ig) * gwork(ig)* &
-              ( 3.d0 * wnl(ig,ll) - wnla(ig,ll) )
-            END DO
-            DO ia = 1, na
-              auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gstart, ngw
-                auxc(ig,ia) = uimag * gwtmp(ig) * eigr(ig,ia)
-              END DO
-            END DO
-            DEALLOCATE(gwtmp)
-          ELSE
-            auxc = CMPLX( 0.0d0 )
-          END IF
-
-          RETURN
-        END SUBROUTINE dedh_nlp
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-        SUBROUTINE dedh_nld( gagx, wnl, wnla, eigr, ll, kk, dm, auxc, gwork, na )
-
-!  this routine computes the nonlocal contribution of d-orbitals to
-!  cell derivatives of total energy
-!  version for Gamma-point calculations
-!
-!  orbitals: d_m(r) = gkl(x,y,z,r,m)
-!  ----------------------------------------------
-
-        USE reciprocal_vectors, ONLY: gstart
-        USE gvecw,              ONLY: ngw
-
-! ...     declare subroutine arguments
-          REAL(dbl), INTENT(IN)  :: gagx(:,:)
-          REAL(dbl), INTENT(IN) :: wnl(:,:)
-          REAL(dbl), INTENT(IN) :: wnla(:,:)
-          COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-          INTEGER, INTENT(IN) :: ll,na,kk
-          COMPLEX(dbl), INTENT(OUT) :: auxc(:,:)
-          REAL(dbl), INTENT(IN)  :: dm
-
-! ...     declare other variables
-          REAL(dbl), INTENT(IN)  :: gwork(:)
-          INTEGER :: ia, ig
-          REAL(dbl), ALLOCATABLE :: gwtmp(:)
-
-! ...     end of declarations
-!  ----------------------------------------------
-
-          IF(ll.GT.0) THEN
-            ALLOCATE(gwtmp(ngw))
-            gwtmp(1) = 0.0d0
-            DO ig = gstart, ngw
-               gwtmp(ig) = gwork(ig) * gagx(kk,ig) *  &
-               ( 5.d0 * wnl(ig,ll) - wnla(ig,ll) )
-               gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm * wnl(ig,ll)
-            END DO
-            DO ia= 1 , na
-              auxc(1,ia) = CMPLX( 0.0d0 )
-              DO ig = gstart, ngw
-                auxc(ig,ia) = - gwtmp(ig) * eigr(ig,ia)
-              END DO
-            END DO
-            DEALLOCATE(gwtmp)
-          ELSE
-            auxc = CMPLX( 0.0d0 )
-          END IF
-
-          RETURN
-        END SUBROUTINE dedh_nld
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-      END MODULE nl_base
-
+   END MODULE nl_base
