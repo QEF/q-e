@@ -40,6 +40,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc, evc_nc  
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
+
+#ifdef EXX
+  USE exx,                  ONLY: currentk
+#endif
+
   !
   IMPLICIT NONE
   !
@@ -459,6 +464,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        ! ... For each k point diagonalizes the hamiltonian
        !
        k_loop: DO ik = 1, nks
+          !
+#ifdef EXX
+          currentk=ik
+#endif
           !
           IF ( lsda ) current_spin = isk(ik)
           !

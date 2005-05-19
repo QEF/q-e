@@ -83,6 +83,7 @@ error_handler.o \
 estimate.o \
 ewald.o \
 ewald_dipole.o \
+exx.o \
 fftw.o \
 force_cc.o \
 force_corr.o \

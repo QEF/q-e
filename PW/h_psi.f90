@@ -30,6 +30,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
   USE gvect,    ONLY : gstart
+
+#ifdef EXX
+  USE exx,      ONLY : exxstart, vexx, brutalvexx !Suriano
+#endif
+
   !
   IMPLICIT NONE
   !
@@ -180,6 +185,14 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           CALL add_vuspsi( lda, n, m, psi, hpsi )
           !
        END IF
+       !
+#ifdef EXX
+       !Suriano exx
+       if (exxstart) then 
+          call vexx(lda, n, m, psi, hpsi)
+       endif
+       !End Suriano exx
+#endif
        !
        RETURN
        !

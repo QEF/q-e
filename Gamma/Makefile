@@ -74,6 +74,7 @@ PWOBJS = \
 ../PW/electrons.o \
 ../PW/eqvect.o \
 ../PW/estimate.o \
+../PW/exx.o \
 ../PW/ewald.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \

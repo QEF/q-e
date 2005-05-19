@@ -65,6 +65,10 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
+
+#ifdef EXX
+  USE exx,                  ONLY : exxalfa, exxinit !Suriano
+#endif
   !
   IMPLICIT NONE
   !
@@ -246,6 +250,12 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   DO idum = 1, niter
+     !
+#ifdef EXX
+     !Antonio Suriano - EXX
+     if (exxalfa.ne.0D0) call exxinit()
+     !END Antonio Suriano - EXX
+#endif
      !
      IF ( imix >= 0 ) rho_save = rho
      !  

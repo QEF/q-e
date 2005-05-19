@@ -253,6 +253,7 @@ PWOBJS = \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \
+../PW/exx.o \
 ../PW/ewald.o \
 ../PW/fftw.o \
 ../PW/g_psi.o \

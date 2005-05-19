@@ -38,6 +38,12 @@ PROGRAM pwscf
   !
   CALL startup( nd_nmbr, code, version_number )
   !
+#ifdef EXX
+    WRITE( UNIT = stdout, &
+         & FMT = '(/,5X,"!!! EXPERIMENTAL VERSION WITH EXX STUFF  !!!", &
+         &         /,5X,"!!! DO NOT USE IT FOR ANY PRODUCTION RUN !!!")' )
+
+#endif
   IF ( ionode ) THEN
      !
      WRITE( UNIT = stdout, &
