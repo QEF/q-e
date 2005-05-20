@@ -8,7 +8,7 @@ cc  variable             meaning                              default value
 c
 c*********     Variables that MUST BE SPECIFIED      ********** 
 c
-c amass(ntyp) atomic mass of each atomic type 
+c amass(ntyp) atomic mass [amu] of each atomic type 
 c
 c*********           Optional Variables              **********
 c
@@ -53,7 +53,8 @@ c             (nrapp and nat_todo are not compatible)
 c
 c epsil       if .true. in a q=0 calculation for a non metal the      .false.
 c             macroscopic dielectric constant of the system is 
-c             computed. 
+c             computed. Do not set epsil to .true. if you have a
+c             metallic system or q/=0: the code will complain and stop
 c
 c trans       if .true. the phonons are computed                      .true.
 c             If trans.and.epsil effective charges are calculated            

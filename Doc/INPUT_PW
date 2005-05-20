@@ -1,6 +1,6 @@
 Input data format: { } = optional, [ ] = it depends
 
-All quantities MUST be set (when not otherwise specified) in 
+All quantities whose dimensions are not explicitly specified are in
 RYDBERG ATOMIC UNITS
 
 ===============================================================================
@@ -757,7 +757,7 @@ ATOMIC_SPECIES
 
 Description:
  X           CHARACTER : label of the atom
- Mass_X      REAL      : mass of the atomic species
+ Mass_X      REAL      : mass of the atomic species [amu: mass of C = 12]
                          not used if calculation='scf', 'nscf', 'phonon'
  PseudoPot_X CHARACTER:  file containing PP for this species
 

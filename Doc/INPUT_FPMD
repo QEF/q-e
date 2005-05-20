@@ -971,7 +971,7 @@
  Where:
 
       label(i)  ( character(len=4) )  label of the atomic species
-      mass(i)   ( real )              atomic mass ( in u.m.a, carbon mass is 12.0 )
+      mass(i)   ( real )              atomic mass ( in a.m.u, carbon mass is 12.0 )
       psfile(i) ( character(len=80) ) file name of the pseudopotential
 
  ----------------------------------------------------------------

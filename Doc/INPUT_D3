@@ -13,7 +13,7 @@ c
 c fild0rho      the file containing the variation of the charge     ' '
 c               density at q=0, this file is produced by phonon
 c
-c amass(:)      ionic masses [atomic units]                         none
+c amass(:)      ionic masses [atomic mass units]                    none
 c
 c*********           Optional Variables              **********
 c
