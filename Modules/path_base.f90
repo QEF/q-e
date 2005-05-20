@@ -618,7 +618,7 @@ MODULE path_base
          ! ... only the component of the pes gradient orthogonal to the path is 
          ! ... taken into account
          !
-         grad(:,i) = grad_pes(:,i) / SQRT( mass(i) )
+         grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
          !
          IF ( climbing(i) ) THEN
             !
@@ -714,7 +714,7 @@ MODULE path_base
             !
          END IF
          !
-         grad(:,i) = grad_pes(:,i) / SQRT( mass(i) )
+         grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
          !
          IF ( fixed_tan .OR. &
               ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
