@@ -373,7 +373,7 @@ SUBROUTINE iosys()
         CALL errore( ' iosys ', 'wrong input value for nspin ', 1 )
   END SELECT
   !
-  IF ( nspin == 4 .AND. lda_plus_u_) CALL errore( ' iosys ', &
+  IF ( nspin == 4 .AND. lda_plus_u) CALL errore( ' iosys ', &
                ' noncolin .and. lda_plus_u not supported yet ', 1 )
 
   IF ( (nelup ==0.d0) .and. (neldw ==  0.d0) ) THEN
