@@ -57,7 +57,6 @@ SUBROUTINE electrons()
                                    niter_with_fixed_ns, Hubbard_lmax, &
                                    lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
-  USE bp,                   ONLY : lberry  
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
   USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
@@ -101,13 +100,12 @@ SUBROUTINE electrons()
       etotefield_new, &!
       charge_new      !
   REAL (KIND=DP) :: &
-      ethr_min         ! minimal threshold for diagonalization at the first scf
-                       ! iteration 
+       tr2_min        ! estimated error on the energy coming from diagonalization
   REAL (KIND=DP), ALLOCATABLE :: &
       wg_g(:,:)        ! temporary array used to recover from pools array wg,
                        ! and then print occupations on stdout
   LOGICAL :: &
-      exst
+      exst, first
   REAL (KIND=DP) :: dr2old, lambda0
   !
   ! ... external functions
@@ -152,69 +150,7 @@ SUBROUTINE electrons()
   !
   IF ( .NOT. lscf ) THEN
      !
-     WRITE( stdout, 9002 )
-     !
-#if defined (FLUSH)
-     CALL flush( stdout )
-#endif
-     !
-     IF ( imix >= 0 ) rho_save = rho
-     !  
-     iter = iter + 1
-     !
-     ! ... diagonalization of the KS hamiltonian
-     !
-     CALL c_bands( iter, ik_, dr2 )
-     !
-     conv_elec = .TRUE.
-     !
-     CALL poolrecover( et, nbnd, nkstot, nks )
-     !
-     tcpu = get_clock( 'PWSCF' )
-     WRITE( stdout, 9000 ) tcpu
-     !
-     WRITE( stdout, 9102 )
-     !
-     ! ... write band eigenvalues
-     !
-     DO ik = 1, nkstot
-        !
-        IF ( lsda ) THEN
-           !   
-           IF ( ik == 1 ) WRITE( stdout, 9015 )
-           IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
-           !
-        END IF
-        !
-        WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-        WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
-        !
-     END DO
-     !
-     IF ( lgauss ) THEN
-        !
-        call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk)
-        WRITE( stdout, 9040 ) ef * rytoev
-        !
-     ELSE IF ( ltetra ) THEN
-        !
-        CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk)
-        WRITE( stdout, 9040 ) ef * rytoev
-        !
-     END IF
-     !
-#if defined (FLUSH)
-     CALL flush( stdout )
-#endif
-     !
-     ! ... do a Berry phase polarization calculation if required
-     !
-     IF ( lberry ) CALL c_phase()
-     !
-     IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
-     !
-     CALL stop_clock( 'electrons' )
-     !
+     CALL non_scf()
      RETURN
      !
   END IF
@@ -296,6 +232,18 @@ SUBROUTINE electrons()
         !
      END IF
      !
+     first = ( iter == 1 )
+     !
+     ! ... tr2_min is set to an estimate of the error on the energy
+     ! ... due to diagonalization - used only in the first scf iteration
+     !
+10   CONTINUE
+     IF ( first ) THEN
+        tr2_min = nelec*ethr
+     ELSE
+        tr2_min = 0.D0
+     END IF
+     !
      ! ... diagonalization of the KS hamiltonian
      !
      CALL c_bands( iter, ik_, dr2 )
@@ -309,7 +257,7 @@ SUBROUTINE electrons()
      !
      IF ( lda_plus_u ) CALL write_ns()
      !
-     IF ( iter == 1 .AND. lda_plus_u .AND. &
+     IF ( first .AND. lda_plus_u .AND. &
           startingpot == 'atomic' .AND. istep == 1 ) CALL ns_adj()
      !
      ! ... calculate total and absolute magnetization
@@ -331,22 +279,6 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF ( iter == 1 ) THEN
-           !
-           ! ... for the first scf iteration ethr_min is set for a check 
-           ! ... in mix_rho ( in mix_rho ethr_min = dr2 * ethr_min )
-           !
-           ethr_min = 1.D0 / nelec
-           !
-        ELSE
-           !
-           ! ... otherwise ethr_min is set to a negative number: 
-           ! ... no check is needed
-           !
-           ethr_min = - 1.D0
-           !
-        END IF      
-        !
         IF ( noncolin ) THEN
            !
            CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
@@ -354,61 +286,28 @@ SUBROUTINE electrons()
            !
         ELSE
            !
-           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
-                         ethr_min, iter, nmix, flmix, conv_elec )
+           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, &
+                         tr2_min, iter, nmix, flmix, conv_elec )
            !
         END IF
         !
         ! ... for the first scf iteration it is controlled that the threshold 
         ! ... is small enough for the diagonalization to be adequate
         !
-        IF ( iter == 1 .AND. ethr >= ethr_min ) THEN
+        IF ( first ) THEN
            !
-           ! ... a new diagonalization is needed       
-           !
-           WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
-                            &    "too large:",/,                         &
-                            & 5X,"Diagonalizing with lowered threshold",/)' )
-           !
-           CALL c_bands( iter, ik_, dr2 )
-           !
-           ! ... check if the maximum CPU time has been exceeded
-           ! ... or if the user has required a soft exit
-           !
-           IF ( check_stop_now() ) RETURN
-           !
-           CALL sum_band()
-           !
-           IF ( lda_plus_u ) CALL write_ns()
-           !
-           ! ... calculate total and absolute magnetization
-           !
-           IF ( lsda .OR. noncolin ) CALL compute_magnetization()
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, etotefield, charge, vnew )
-           !
-           deband = delta_e ( )
-           !
-           IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
+           first = .FALSE.
+           IF ( dr2 < tr2_min ) THEN
               !
-              ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-              nsnew = ns             
+              ! ... a new diagonalization is needed       
               !
-           END IF
-           !
-           ! ... ethr_min is set to a negative number: no check is needed
-           !
-           IF (  noncolin ) THEN
+              WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
+                               &    "too large:",/,                         &
+                               & 5X,"Diagonalizing with lowered threshold",/)' )
               !
-              CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, dr2, &
-                               iter, nmix, flmix, conv_elec )
+              ethr = dr2 / nelec
               !
-           ELSE
-              !
-              CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, ethr, &
-                           -1.D0, iter, nmix, flmix, conv_elec )
+              GO TO 10
               !
            END IF
            !
@@ -719,7 +618,6 @@ SUBROUTINE electrons()
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
 9001 FORMAT(/'     Self-consistent Calculation')
-9002 FORMAT(/'     Band Structure Calculation')
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X,'beta=',F4.2)
 9015 FORMAT(/' ------ SPIN UP ------------'/)
 9016 FORMAT(/' ------ SPIN DOWN ----------'/)
@@ -759,14 +657,94 @@ SUBROUTINE electrons()
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
 9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
             /'     potential mean squ. error =',1PE15.1,' ryd^2')
-! 9090 FORMAT(/'     the final potential is written on file ',A14)
-! 9100 FORMAT(/'     this iteration took ',F9.2,' cpu secs')
 9101 FORMAT(/'     End of self-consistent calculation')
-9102 FORMAT(/'     End of band structure calculation')
 9110 FORMAT(/'     convergence has been achieved')
 9120 FORMAT(/'     convergence NOT achieved, stopping')
   !
   CONTAINS
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE non_scf()
+       !-----------------------------------------------------------------------
+       !
+       USE bp, ONLY : lberry
+       !
+       IMPLICIT NONE
+       !
+       WRITE( stdout, 9002 )
+       !
+#if defined (FLUSH)
+       CALL flush( stdout )
+#endif
+       !
+       IF ( imix >= 0 ) rho_save = rho
+       !  
+       iter = 1
+       !
+       ! ... diagonalization of the KS hamiltonian
+       !
+       CALL c_bands( iter, ik_, dr2 )
+       !
+       conv_elec = .TRUE.
+       !
+       CALL poolrecover( et, nbnd, nkstot, nks )
+       !
+       tcpu = get_clock( 'PWSCF' )
+       WRITE( stdout, 9000 ) tcpu
+       !
+       WRITE( stdout, 9102 )
+       !
+       ! ... write band eigenvalues
+       !
+       DO ik = 1, nkstot
+          !
+          IF ( lsda ) THEN
+             !   
+             IF ( ik == 1 ) WRITE( stdout, 9015 )
+             IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
+             !
+          END IF
+          !
+          WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
+          WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
+          !
+       END DO
+       !
+       IF ( lgauss ) THEN
+          !
+          call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk)
+
+          WRITE( stdout, 9040 ) ef * rytoev
+          !
+       ELSE IF ( ltetra ) THEN
+          !
+          CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk)
+          WRITE( stdout, 9040 ) ef * rytoev
+          !
+       END IF
+       !
+#if defined (FLUSH)
+       CALL flush( stdout )
+#endif
+       !
+       ! ... do a Berry phase polarization calculation if required
+       !
+       IF ( lberry ) CALL c_phase()
+       !
+       IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
+       !
+       CALL stop_clock( 'electrons' )
+       !
+9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
+9002 FORMAT(/'     Band Structure Calculation')
+9015 FORMAT(/' ------ SPIN UP ------------'/)
+9016 FORMAT(/' ------ SPIN DOWN ----------'/)
+9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
+9030 FORMAT( '  ',8F9.4)
+9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
+9102 FORMAT(/'     End of band structure calculation')
+       !
+     END SUBROUTINE non_scf
      !
      !-----------------------------------------------------------------------
      SUBROUTINE compute_magnetization()

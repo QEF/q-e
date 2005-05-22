@@ -11,7 +11,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
-                    dr2, ethr, ethr_min, iter, n_iter, filename, conv )
+                    dr2, tr2_min, iter, n_iter, filename, conv )
   !----------------------------------------------------------------------------
   !
   ! ... Modified Broyden's method for charge density mixing
@@ -29,7 +29,6 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   USE control_flags,        ONLY : imix, ngm0, tr2
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE klist,                ONLY : nelec
   USE parser,               ONLY : find_free_unit
   USE cell_base,            ONLY : omega
   !
@@ -51,10 +50,8 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
     alphamix,              &! (in) mixing factor
     dr2                     ! (out) the estimated errr on the energy
   REAL (KIND=DP) :: &
-    ethr,        &! actual threshold for diagonalization
-    ethr_min      ! minimal threshold for diagonalization
-                  ! if in output ethr >= ethr_min a more accurate
-                  ! diagonalization is needed
+    tr2_min       ! estimated error from diagonalization. If the estimated scf error
+                  ! is smaller than this, exit: a more accurate diagonalization is needed
   LOGICAL :: &
     conv                    ! (out) if true the convergence has been reached
   INTEGER, PARAMETER :: &
@@ -141,26 +138,15 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   !
   dr2 = rho_dot_product( rhocout, rhocout ) + ns_dot_product( nsout, nsout )
   !
-  ! ... ethr_min is dr2 * 1.D0 / nelec or - 1.0 if no check is required
+  ! ... if the self-consistency error (dr2) is smaller than the estimated error due to
+  !     diagonalization (tr2_min), exit and leave rhoin and rhout unchanged
   !
-  IF ( ethr_min > 0.D0 ) THEN
+  IF ( dr2 < tr2_min ) THEN
      !
-     ethr_min = dr2 * ethr_min
+     DEALLOCATE( rhocin, rhocout )
+     CALL stop_clock( 'mix_rho' )
+     RETURN
      !
-     IF ( ethr > ethr_min ) THEN
-        !
-        ethr = ethr_min
-        !
-        ! ... rhoin and rhout are unchanged
-        !
-        DEALLOCATE( rhocin, rhocout )
-        !
-        CALL stop_clock( 'mix_rho' )
-        !
-        RETURN
-        !
-     END IF
-     !   
   END IF
   !
   conv = ( dr2 < tr2 )
