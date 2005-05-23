@@ -43,7 +43,7 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
     iter,                  &!  (in)  counter of the number of iterations
     n_iter                  !  (in)  numb. of iterations used in mixing
   REAL(KIND=DP) :: &
-    rhout(nrxx,nspin),     &! (in) the "out" density; (out) rhout-rhoin
+    rhout(nrxx,nspin),     &! (in) the "out" density
     rhoin(nrxx,nspin),     &! (in) the "in" density; (out) the new dens.
     nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
     nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
@@ -237,9 +237,6 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   END IF
   !
   ! ... copy only the high frequency Fourier component into rhoin
-  ! ...                                         ( NB: rhout = rhout - rhoin )
-  !
-  rhoin = rhout
   !
   DO is = 1, nspin
      !
@@ -251,9 +248,10 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
      !
-     rhoin(:,is) = rhoin(:,is) - psic
+     rhoin(:,is) = rhout(:,is) - psic
      !
   END DO
+  !
   !
   ! ... iter_used = mixrho_iter-1  if  mixrho_iter <= n_iter
   ! ... iter_used = n_iter         if  mixrho_iter >  n_iter

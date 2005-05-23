@@ -38,7 +38,7 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 n_iter       !  (in)  numb. of iterations used in mixing
 
   real (kind=DP) :: &
-                rhout(nrxx,nspin), &! (in) the "out" density; (out) rhout-rhoin
+                rhout(nrxx,nspin), &! (in) the "out" density
                 rhoin(nrxx,nspin), &! (in) the "in" density; (out) the new dens.
                 nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
                 nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
@@ -99,8 +99,6 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   if (lda_plus_u) ldim = 2 * Hubbard_lmax + 1
 
   saveonfile = ( filename /= ' ' )
-
-!  call DAXPY(nrxx*nspin,-1.d0,rhoin,1,rhout,1)
 
   allocate(rhocin(ngm0,nspin), rhocout(ngm0,nspin))
   !
@@ -213,9 +211,6 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   END IF
   !
   ! copy only the high frequency Fourier component into rhoin
-  !                                                (NB: rhout=rhout-rhoin)
-  !
-  rhoin = rhout
   !
   DO is=1,nspin
      !
@@ -225,7 +220,7 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
      !
      CALL cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      !
-     rhoin(:,is) = rhoin(:,is) - psic(:,1)
+     rhoin(:,is) = rhout(:,is) - psic(:,1)
      !
   END DO
   !

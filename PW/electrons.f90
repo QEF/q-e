@@ -97,13 +97,8 @@ SUBROUTINE electrons()
   INTEGER :: &
       ldim2           !
   REAL (KIND=DP) :: &
-      ehart_new,      &!
-      etxc_new,       &!
-      vtxc_new,       &!
-      etotefield_new, &!
-      charge_new      !
-  REAL (KIND=DP) :: &
-       tr2_min        ! estimated error on the energy coming from diagonalization
+       tr2_min,      &! estimated error on energy coming from diagonalization
+       descf          ! correction for variational energy
   REAL (KIND=DP), ALLOCATABLE :: &
       wg_g(:,:)        ! temporary array used to recover from pools array wg,
                        ! and then print occupations on stdout
@@ -171,8 +166,8 @@ SUBROUTINE electrons()
   !
   ! ... Convergence threshold for iterative diagonalization
   !
-  ! ... for the first scf iteration of each ionic step (except than for the
-  ! ... first) the threshold is fixed to a default value of 1.D-5
+  ! ... for the first scf iteration of each ionic step after the first,
+  ! ... the threshold is fixed to a default value of 1.D-5
   !
   IF ( istep > 1 ) ethr = 1.D-5
   !
@@ -267,10 +262,6 @@ SUBROUTINE electrons()
      !
      IF ( lsda .OR. noncolin ) CALL compute_magnetization()
      !
-     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, etotefield, charge, vnew )
-     !
      deband = delta_e ( )
      !
      IF ( imix >= 0 ) THEN
@@ -316,24 +307,28 @@ SUBROUTINE electrons()
            !
         END IF             
         !
-        vnew =  vnew - vr
-        !
+        vnew =  vr
         CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                       ehart_new, etxc_new, vtxc_new, etotefield_new,       &
-                       charge_new, vr )
+                       ehart, etxc, vtxc, etotefield, charge, vr )
+        vnew =  vr - vnew
+        !
+        descf = delta_escf ( )
         !
      ELSE 
         !
         ! ... old style potential mixing
         !
-        CALL vpack( NRXX, nrxx, nspin, vnew, vr, + 1 )
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+             ehart, etxc, vtxc, etotefield, charge, vnew )
         !
+        CALL vpack( NRXX, nrxx, nspin, vnew, vr, + 1 )
         CALL mix_potential( ( nspin * NRXX ), vnew, vr, mixing_beta, dr2, &
                             tr2, iter, nmix, flmix, conv_elec )
-        !
         CALL vpack( NRXX, nrxx, nspin, vnew, vr, -1 )
         !
+        descf = 0.d0
         if (i_cons.eq.3) then
            if (dr2*5.d0.lt.dr2old.or.dr2<tr2*1.d2) then
               lambda=min(lambda*2.d0,lambda0)
@@ -481,13 +476,7 @@ SUBROUTINE electrons()
      IF ( ( ABS( charge - nelec ) / charge ) > 1.D-7 ) &
         WRITE( stdout, 9050 ) charge
      !
-     IF ( ( imix >= 0 ) .AND. &
-          ( ABS( charge_new - nelec ) / charge_new ) > 1.D-7 ) &
-        WRITE( stdout, 9051 ) charge_new
-     !
-     !
-     
-     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
 #ifdef EXX
      fock1=exxenergy2()
      call exxinit()
@@ -648,7 +637,6 @@ SUBROUTINE electrons()
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev')
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
 9050 FORMAT(/'     integrated charge         =',F15.8)
-9051 FORMAT(/'     integrated charge_new     =',F15.8)
 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
             /'     one-electron contribution =',  F15.8,' ryd' &
             /'     hartree contribution      =',  F15.8,' ryd' &
@@ -866,6 +854,8 @@ SUBROUTINE electrons()
      FUNCTION delta_e ( )
      !-----------------------------------------------------------------------
        !
+       ! delta_e = - \int rho(r) V_scf(r)
+       !
        USE kinds
        !
        IMPLICIT NONE
@@ -891,5 +881,39 @@ SUBROUTINE electrons()
        RETURN
        !
      END FUNCTION delta_e
+     !
+     !-----------------------------------------------------------------------
+     FUNCTION delta_escf ( )
+     !-----------------------------------------------------------------------
+       !
+       ! delta_escf = - \int \delta rho(r) V_scf(r)
+       ! this is the correction needed to have variational energy
+       !
+       USE kinds
+       !
+       IMPLICIT NONE
+       !   
+       REAL(kind=DP) :: delta_escf
+       !
+       INTEGER :: i, ipol
+       !
+       delta_escf = 0.d0
+       !
+       DO ipol=1, nspin
+          DO i = 1, nrxx
+             delta_escf = delta_escf - ( rho_save(i,ipol) - rho(i,ipol) ) &
+                                       * vr(i,ipol)
+          END DO
+       END DO
+       !
+       delta_escf = omega * delta_escf / (nr1 * nr2 * nr3)
+       !
+#ifdef __PARA
+       CALL reduce (1, delta_escf)
+#endif
+       !
+       RETURN
+       !
+     END FUNCTION delta_escf
      !
 END SUBROUTINE electrons
