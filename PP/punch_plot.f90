@@ -73,9 +73,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
-  IF ( ( plot_num == 8 .OR. plot_num == 9 ) .AND. gamma_only) &
-       CALL errore('punch_plot', &
-      ' gamma_only not implemented for this plot ',1)
+  IF ( plot_num == 9 .AND. gamma_only) CALL errore('punch_plot', &
+      ' planar averge plot with  gamma tricks not yet implemented',1)
   !
   ALLOCATE (raux( nrxx))    
   !
@@ -176,12 +175,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 8) THEN
 
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
+     if (noncolin) &
+        call errore('punch_plot','elf+noncolin not yet implemented',1)
      CALL do_elf (raux)
 
   ELSEIF (plot_num == 9) THEN
 
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
+     if (noncolin) &
+        call errore('punch_plot','planar avg+noncolin not yet implemented',1)
      ALLOCATE (averag( nat, nbnd, nkstot))    
      ALLOCATE (plan(nr3, nbnd, nkstot))    
      CALL plan_avg (averag, plan, ninter)

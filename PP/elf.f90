@@ -8,22 +8,23 @@
 !-----------------------------------------------------------------------
 subroutine do_elf (elf)
   !-----------------------------------------------------------------------
-  !  calculate electron localization function
+  !
+  !  calculatation of the electron localization function
   !
   !  elf = 1/(1+d**2)
   !
   !          where
   !
-  !  d = ( t(r) - t_von_Weitzacker(r) ) / t_Thomas-Fermi(r)
+  !  d = ( t(r) - t_von_Weizacker(r) ) / t_Thomas-Fermi(r)
   !
   !          and
   !
   !  t (r) = (hbar**2/2m) * \sum_{k,i} |grad psi_{k,i}|**2
   !
-  !  t_von_Weitzaecker(r) = (hbar**2/2m) * 0.25 * |grad rho(r)|**2/rho
-  !  t_von_Weitzaecker(r) == t_noninteracting-boson
+  !  t_von_Weizaecker(r) = (hbar**2/2m) * 0.25 * |grad rho(r)|**2/rho
+  !  t_von_Weizaecker(r) == t_noninteracting-boson
   !
-  !  t_Thomas-Fermi (r) =  (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5
+  !  t_Thomas-Fermi (r) = (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5/3)
   !
   !
 #include "f_defs.h"
@@ -31,13 +32,13 @@ subroutine do_elf (elf)
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
-       dual, g, ngm, nl
+       dual, g, ngm, nl, nlm
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: nsym, ftau, s
-  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
+  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg, gamma_only
   USE wavefunctions_module,  ONLY: evc
   !
   ! I/O variables
@@ -76,27 +77,27 @@ subroutine do_elf (elf)
      !
      !   reads the eigenfunctions
      !
-
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     !
      do ibnd = 1, nbnd
-
         do j = 1, 3
            aux(:) = (0.d0,0.d0)
            w1 = wg (ibnd, ik) / omega
            do i = 1, npw
               gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
               aux (nl (igk (i) ) ) = cmplx (0d0, gv (j) ) * evc (i, ibnd)
-
+              IF (gamma_only) THEN
+                 aux (nlm (igk (i) ) ) = cmplx (0d0, -gv (j) ) * &
+                      CONJG ( evc (i, ibnd) )
+              END IF
            enddo
            call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
            do i = 1, nrxx
               kkin(i) = kkin(i) + w1 * (real(aux(i))**2 + DIMAG(aux(i))**2)
-
            enddo
            ! j
         enddo
         ! ibnd
-
      enddo
      ! ik
 
@@ -126,6 +127,12 @@ subroutine do_elf (elf)
      do i = 1, ngm
         aux2(nl(i)) = aux(nl(i)) * cmplx (0.0d0, g(j,i)*tpiba)
      enddo
+     IF (gamma_only) THEN
+        do i = 1, ngm
+           aux2(nlm(i)) = aux(nlm(i)) * cmplx (0.0d0,-g(j,i)*tpiba)
+        enddo
+     END IF
+
      call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      do i = 1, nrxx
         tbos (i) = tbos (i) + real(aux2(i))**2
@@ -134,12 +141,11 @@ subroutine do_elf (elf)
   !
   ! Calculates ELF
   !
-
   fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
   do i = 1, nrxx
      arho = abs (rho (i, 1) )
-     if (arho.gt.1.d-30) then
+     if (arho > 1.d-30) then
         d = fac / rho(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho(i,1))
         elf (i) = 1.0d0 / (1.0d0 + d**2)
      endif
