@@ -27,7 +27,7 @@ USE noncollin_module, ONLY : magtot_nc, bfield, lambda, i_cons, mcons, &
 IMPLICIT NONE
   !
 REAL(KIND=dp) :: v(nrxx, nspin), rho(nrxx,nspin)
-REAL(KIND=dp) :: ma, xx, xxx, fact, m1(3), m_loc(3,nat), r_loc(nat)
+REAL(KIND=dp) :: ma, xx, fact, m1(3), m_loc(3,nat), r_loc(nat)
 
 
 INTEGER :: ir, ipol, nt, na
@@ -54,13 +54,14 @@ IF (i_cons.LT.3) THEN
       ELSE IF (i_cons==2) THEN
          ! i_cons = 2 means that the angle theta between the local
          ! magn. moment and the z-axis is constrained
-         ! mcons (1,nt) is the cos of the constraining angle theta
+         ! mcons (3,nt) is the cos of the constraining angle theta
          ! the penalty functional in this case is
-         ! lambda*(acos(m_loc(z)/|m_loc|) - theta )^2
+         ! lambda*(m_loc(z)/|m_loc| - cos(theta) )^2
             ma = dsqrt(m_loc(1,na)**2+m_loc(2,na)**2+m_loc(3,na)**2)
-            m1(1) = - m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
-            m1(2) = - m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
-            m1(3) = - m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma
+            xx=(m_loc(3,na)/ma - mcons(3,nt))
+            m1(1) = - xx*m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
+            m1(2) = - xx*m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
+            m1(3) =   xx*(-m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma)
             etcon = etcon + &
                       lambda * (m_loc(3,na)/ma - mcons(3,nt))**2
 
