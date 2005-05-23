@@ -32,7 +32,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE gvect,    ONLY : gstart
 
 #ifdef EXX
-  USE exx,      ONLY : exxstart, vexx, brutalvexx !Suriano
+  USE exx,      ONLY : exxstart, vexx !Suriano
 #endif
 
   !

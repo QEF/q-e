@@ -8,6 +8,8 @@
 !
 !-----------------------------------------------------------------------
 
+
+
 module exx
 #include "f_defs.h"
 
@@ -167,104 +169,143 @@ contains
 
   end subroutine vexx
 
-  subroutine brutalexxinit()
-
-    !This subroutine is run before the first H_psi()
-    !It saves the wavefunctions for the right density matrix. 
-    !It saves all the wavefunctions in an only file called prefix.exx
-    USE wavefunctions_module, ONLY : evc  
+  function exxenergy ()
+    ! This function is called to correct the deband value and have the correct energy 
     USE io_files,             ONLY : nwordwfc
-    USE io_files, ONLY : prefix
-    use io_files, only : tmp_dir,iunwfc
-    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-    integer :: ios,ik
-    complex (kind=dp) :: tempevc( npwx, nbnd )
-    call start_clock ('exxinit')
-    exx_nwordwfc=nwordwfc
-    exx_file = TRIM( tmp_dir ) // TRIM( prefix ) //'.exx'
 
-    if (.not.exxstart) then 
-       open (unit=iunexx, file=exx_file, form="unformatted", &
-            action="readwrite", status="scratch", &
-            recl=DIRECT_IO_FACTOR*exx_nwordwfc, access="direct")
-    endif
+    USE cell_base,  ONLY : alat, omega
+    USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
+    USE gsmooth,    ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
+         nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, et
+    USE klist,      ONLY : xk,wk
+    USE lsda_mod,   ONLY : lsda, current_spin, isk
 
-    DO ik = 1, nks     
-       call davcio (tempevc, nwordwfc, iunwfc, ik, -1)
-       CALL davcio (tempevc, nwordwfc, iunexx, ik, 1 )
+    USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
+    USE parameters, only : ndmx
+    USE gvect,      ONLY : g, nl
+    implicit none
+    integer          :: m
+    REAL (KIND=DP)   :: exxenergy
+    COMPLEX(KIND=DP) :: psi(ndmx,nbnd) 
+    COMPLEX(KIND=DP) :: hpsi(ndmx,nbnd)
+    COMPLEX(KIND=DP) :: tempphic(nrxx)   
+    COMPLEX(KIND=DP) :: temppsic(nrxx)   
+    COMPLEX(KIND=DP) :: result(nrxx)
+    COMPLEX(KIND=DP) :: rhoc(nrxx)   
+    COMPLEX(KIND=DP) :: vc(nrxx)   
+    real (kind=DP)   :: fac(ngm)
+    integer          :: ibnd, ik, im , ig, inrxx, ikk
+    real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, &
+         e2  = 2.d0
+    real(kind=DP) :: tpiba2, qq
+    complex(kind=dp) :: tempevc( npwx, nbnd )
 
-    end do
-    exxstart=.true.
-    call stop_clock ('exxinit')  
-  end subroutine brutalexxinit
+    tpiba2 = (fpi / 2.d0 / alat) **2
 
-  subroutine brutalvexx(lda, n, m, psi, hpsi)
-    !This routine calculates V_xx \Psi
-    !It uses the \rho extimated in exxinit 
+    call start_clock ('exxenergy')
+    exxenergy=0
+    IF ( nks > 1 ) REWIND( iunigk )
 
-    ! ... This routine computes the product of the Hamiltonian
-    ! ... matrix with m wavefunctions contained in psi
-    !
-    ! ... input:
-    ! ...    lda   leading dimension of arrays psi, spsi, hpsi
-    ! ...    n     true dimension of psi, spsi, hpsi
-    ! ...    m     number of states psi
-    ! ...    psi
-    !
-    ! ... output:
-    ! ...    hpsi  Vexx*psi
-    !
-    USE wvfct,          ONLY : npwx, nbnd, nbndx
-    USE cell_base,      ONLY : tpiba2, omega
-    USE constants,      ONLY : fpi,e2
-    USE klist,          ONLY : xk,wk
-    USE gvect,          ONLY : g, nl
-    INTEGER          :: lda, n, m, kspi
-    COMPLEX(KIND=DP) :: psi(lda,m) 
-    COMPLEX(KIND=DP) :: hpsi(lda,m)   
-    REAL (KIND=DP) :: fac
-    INTEGER ::  ibnd, igp, igpp, ikp,ig,ik
-    COMPLEX(KIND=DP) :: phi(npwx, nbnd)   
-    COMPLEX(KIND=DP) :: temppsi(lda,m)   
-    REAL (KIND=DP) :: sqfac
+    do ikk=1,nks
+       call davcio (tempevc, nwordwfc, iunwfc, ikk, -1)
+       IF ( nks > 1 ) READ( iunigk ) npw, igk
 
-    CALL start_clock ('exx')
-    temppsi=0D0
-    fac= fpi * e2 *omega / (2*tpiba2)
-    write (*,*) 'fac=   ', fac
-    do ik =1, nks
-       write (*,*) ik
-       CALL davcio( phi, exx_nwordwfc, iunexx, ik, -1 )
-       do ibnd=1,m
-          do igp=1,npwx
-             do igpp=1,npwx
-                do ig=1,npwx
-                   sqfac=(xk(1,ik)-xk(1,currentk)+g(1,igp)-g(1,ig))**2 + &
-                         (xk(2,ik)-xk(2,currentk)+g(2,igp)-g(2,ig))**2 + &
-                         (xk(3,ik)-xk(3,currentk)+g(3,igp)-g(3,ig))**2
-                   if ((sqfac).ne.0) then
-                      temppsi(ig,ibnd)=temppsi(ig,ibnd) + &
-                                       (phi(igp,ibnd)*conjg(phi(igpp,ibnd))* &
-                                        psi(nl(ig+igp-igpp),ibnd)/(((sqfac))))
-                   endif
+       m=nbnd ! We have to compute all bands to have the correct energy
+       do im=1,m !for each band of psi (the k cycle )
+
+          result(:)= ( 0.D0, 0.D0 )
+          temppsic(:) = ( 0.D0, 0.D0 )
+          temppsic(nls(igk(1:npw))) = tempevc(1:npw,im)
+
+          CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+          do ik=1,nks !for each k point of phi
+             if (ik /=ikk ) cycle
+             if (lsda) then
+                if ( isk(ik) /= isk(ikk) ) cycle
+             end if
+             do ig=1,ngm
+                qq = (xk(1,ik)-xk(1,currentk)+g(1,ig))**2 + &
+                     (xk(2,ik)-xk(2,currentk)+g(2,ig))**2 + &
+                     (xk(3,ik)-xk(3,currentk)+g(3,ig))**2
+                if (qq.gt.1.d-8) then
+                   fac(ig)=e2*fpi/tpiba2/qq
+                else
+                   fac(ig)=0.d0
+                end if
+             end do
+             do ibnd=1,nbnd !for each band of psi
+                if ( abs(wg(ibnd,ik)) < 1.d-6) cycle
+                !
+                !loads the phi from file
+                !
+                CALL davcio(tempphic,exx_nwordwfc,iunexx,(ik-1)*nbnd+ibnd,-1)
+                !calculate rho in real space
+                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                !brings it to G-space
+                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+
+                vc(:) = ( 0.D0, 0.D0 )
+                do ig=1,ngm
+                   vc(nls(ig)) = fac(ig) * rhoc(nls(ig))! v in G-space
+                end do
+                vc = vc * wg (ibnd, ik) 
+
+                !brings back v in real space
+                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+
+                do inrxx=1,nrxx
+                   !accumulates over bands and k points
+                   result(inrxx)=result(inrxx)+vc(inrxx)*tempphic(inrxx)
                 end do
              end do
           end do
-       end do
-    end do
-    do ibnd=1,m
-       do ig=1,npwx
-          write (*,*) temppsi(ig,ibnd),'     ',hpsi(ig,ibnd)
-       end do
-    end do
+          !brings back result in G-space
+          CALL cft3s( result, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
 
-    do ibnd=1,m
-       do ig=1,npwx
-          hpsi(ig,ibnd)=fac*temppsi(ig,ibnd)+hpsi(ig,ibnd)
+          !hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
+          do ig=1,npw
+             exxenergy=exxenergy - exxalfa*real(conjg ( tempevc(ig,im)) *result(nls(igk(ig))))
+          end do
+
        end do
     end do
-    call stop_clock ('exx')
+    call stop_clock ('exxenergy')
+  end function exxenergy
 
-  end subroutine brutalvexx
+  function exxenergy2 ()
+    ! This function is called to correct the deband value and have the correct energy 
+    USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
+    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg
+    USE wavefunctions_module, ONLY : evc
+    USE lsda_mod,   ONLY : lsda, current_spin, isk
+
+    implicit none
+    REAL (KIND=DP)   :: exxenergy2,  energy
+    INTEGER          :: ibnd, ik
+    COMPLEX(KIND=DP) :: vxpsi ( npwx, nbnd ), psi(npwx,nbnd)
+    COMPLEX(KIND=DP) :: ZDOTC
+
+    call start_clock ('exxenergy')
+
+    energy=0.d0
+    IF ( nks > 1 ) REWIND( iunigk )
+    do ik=1,nks
+       currentk = ik
+       IF ( nks > 1 ) READ( iunigk ) npw, igk
+       IF ( lsda ) current_spin = isk(ik)
+       call davcio (psi, nwordwfc, iunwfc, ik, -1)
+       vxpsi(:,:) = (0.d0, 0.d0)
+!!    subroutine vexx(lda, n, m, psi, hpsi)
+       call vexx(npwx,npw,nbnd,psi,vxpsi)
+       do ibnd=1,nbnd
+          energy = energy + &
+                   wg(ibnd,ik) * ZDOTC(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1)
+       end do
+    end do
+    exxenergy2 = energy
+
+    call stop_clock ('exxenergy')
+  end function exxenergy2
 
 end module exx

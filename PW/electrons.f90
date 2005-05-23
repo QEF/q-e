@@ -66,17 +66,20 @@ SUBROUTINE electrons()
   USE pfft,                 ONLY : npp, ncplane
 
 #ifdef EXX
-  USE exx,                  ONLY : exxalfa, exxinit !Suriano
+  USE exx,                  ONLY : exxalfa, exxinit,exxenergy2 !Suriano
 #endif
   !
   IMPLICIT NONE
   !
   ! ... a few local variables
   !  
+#ifdef EXX
+  real (kind=DP)     :: fock1,fock2
+#endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
   CHARACTER (LEN=256) :: &
-      flmix            !  used by mixing to store preceding iterations
+      flmix            !
   REAL(KIND=DP) :: &
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
@@ -483,7 +486,14 @@ SUBROUTINE electrons()
         WRITE( stdout, 9051 ) charge_new
      !
      !
+     
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet
+#ifdef EXX
+     fock1=exxenergy2()
+     call exxinit()
+     fock2=exxenergy2()
+     etot=etot-fock1+0.5*fock2
+#endif
      !
      IF ( lda_plus_u ) etot = etot + eth
      IF ( tefield )    etot = etot + etotefield
@@ -507,6 +517,12 @@ SUBROUTINE electrons()
         !
         WRITE( stdout, 9060 ) &
             eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+#ifdef EXX
+      WRITE(stdout,9062)  fock1
+      WRITE(stdout,9063)  fock2
+      WRITE(stdout,9064)  0.5*fock2
+
+#endif
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
@@ -639,6 +655,9 @@ SUBROUTINE electrons()
             /'     xc contribution           =',  F15.8,' ryd' &
             /'     ewald contribution        =',  F15.8,' ryd' )
 9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
+9062 FORMAT( '     Fock energy 1             =',  F15.8,' ryd')
+9063 FORMAT( '     Fock energy 2             =',  F15.8,' ryd')
+9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd')
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd')
 9070 FORMAT( '     correction for metals     =',F15.8,' ryd')
 9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd')
