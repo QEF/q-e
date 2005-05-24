@@ -27,28 +27,33 @@ variables see the appropriate INPUT_* file)
 4) make a self-consistent calculation for Fe with penalty functional
    where the angle between the direction of the magnetization of each atom
    and the z axis is constrained; mcons(1) = cosine of this angle.
-   (input=fe.pen.in, output=fe.pen.out).
+   (input=fe.angl.in, output=fe.angl.out).
 
-5) make a self-consistent calculation for Cu (input=cu.scf.in,
+5) make a self-consistent calculation for Fe with penalty functional
+   where each component of the total magnetization is constrained; 
+   fixed_magnetization(ipol) = value of the magnetization.
+   (input=fe.total.in, output=fe.total.out).
+
+6) make a self-consistent calculation for Cu (input=cu.scf.in,
    output=cu.scf.out).
    Copper is also a metal. In this case the tetrahedron method is used
    for the calculation of the Fermi energy. K-points are automatically
    generated.
 
-6) make a band structure calculation for Cu (input=cu.band.in,
+7) make a band structure calculation for Cu (input=cu.band.in,
    output=cu.band.out).
    The variable nbnd is explicitly set = 8.
    The list of k points given in input is the list of point where the
    bands are computed, the k-point weight is arbitrary and is not used.
 
-7) make a self-consistent calculation for Cu (input=cu.cg.in,
+8) make a self-consistent calculation for Cu (input=cu.cg.in,
    output=cu.cg.out) with cg diagonalization.
 
-8) make a self-consistent calculation for Cu (input=cu.diis.in,
+9) make a self-consistent calculation for Cu (input=cu.diis.in,
    output=cu.diis.out) with diis diagonalization.
 
 
-9) make a self-consistent calculation for Ni (input=ni.scf.in,
+10) make a self-consistent calculation for Ni (input=ni.scf.in,
    output=ni.scf.out).
    Nickel is a magnetic metal. A local-spin-density calculation is
    performed by specifying nspin=2 and an initial guess for the
@@ -56,7 +61,7 @@ variables see the appropriate INPUT_* file)
    build spin-up and spin-down starting charges from superposition of
    atomic charges.
 
-10) make a band structure calculation for Ni (input=ni.band.in,
+11) make a band structure calculation for Ni (input=ni.band.in,
    output=ni.band.out).
 
-11) make a scf calculation of molecular oxygen relaxing the atoms.
+12) make a scf calculation of molecular oxygen relaxing the atoms.
