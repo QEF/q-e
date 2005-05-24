@@ -883,9 +883,6 @@ SUBROUTINE iosys()
   CASE ( 'local-TF' )
      imix = 2
      starting_scf_threshold = tr2
-  CASE ( 'potential' )
-     imix = -1
-     starting_scf_threshold = SQRT( tr2 )
   CASE DEFAULT
      CALL errore( ' iosys ', ' unknown mixing ' // TRIM( mixing_mode ), 1 )
   END SELECT

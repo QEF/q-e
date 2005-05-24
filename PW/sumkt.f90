@@ -7,8 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, &
-                is, isk)
+function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   !--------------------------------------------------------------------
   !
   USE kinds
@@ -22,6 +21,7 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, &
   ! local variables
   real(kind=DP) :: etetra (4), e1, e2, e3, e4
   integer :: nt, nk, ns, ibnd, i
+
 
   sumkt = 0.0
   do ns = 1, nspin

@@ -158,7 +158,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
                                eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
   USE lsda_mod,         ONLY : lsda, nspin
   USE scf,              ONLY : rho, rho_core, vr
-  USE control_flags,    ONLY : alpha0, beta0, imix
+  USE control_flags,    ONLY : alpha0, beta0
   USE ener,             ONLY : ehart, etxc, vtxc
   USE extfield,         ONLY : etotefield
   USE cellmd,           ONLY : lmovecell, omega_old

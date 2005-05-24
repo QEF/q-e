@@ -7,8 +7,8 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg, &
-                     is, isk )
+subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
+     ef, wg, is, isk )
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
   USE kinds

@@ -60,7 +60,7 @@ SUBROUTINE setup()
   USE pseud,            ONLY : zp
   USE wvfct,            ONLY : nbnd, nbndx, gamma_only
   USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, lscf, &
-                               lmd, lpath, lphonon, david, isolve, imix, &
+                               lmd, lpath, lphonon, david, isolve, &
                                niter, noinv,  nosym, modenum, lraman
   USE relax,            ONLY : dtau_ref, starting_diag_threshold
   USE cellmd,           ONLY : calc
@@ -217,8 +217,6 @@ SUBROUTINE setup()
      END DO
      !
      bfield=0.d0
-!     if (i_cons.ne.0.and.imix>=0) &
-!        call errore('setup','use potential mixing with constraints',1)
      IF ( i_cons == 2 ) THEN    
         !
         ! ... angle theta between the magnetic moments and the z-axis is
@@ -366,15 +364,13 @@ SUBROUTINE setup()
              & FMT = '(5X,"diago_thr_init overwritten ", &
              &            "with conv_thr / nelec")' )
      !
-     IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-     IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.D-6, SQRT( tr2 ) )     
+     ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
      !
   ELSE IF ( .NOT. lscf ) THEN
      !
      IF ( ltest ) THEN
         !
-        IF ( imix >= 0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-        IF ( imix < 0 )  ethr = 0.1D0 * MIN( 1.D-6, SQRT( tr2 ) )
+        ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
         !
      END IF   
      !
@@ -388,16 +384,14 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           IF ( imix >= 0 ) ethr = 1.D-5
-           IF ( imix < 0 )  ethr = 1.D-8
+           ethr = 1.D-5
            !
         ELSE
            !
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           IF ( imix >= 0 ) ethr = 1.0D-2
-           IF ( imix < 0 )  ethr = 1.0D-5
+           ethr = 1.0D-2
            !
         END IF
         !

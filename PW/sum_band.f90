@@ -85,8 +85,16 @@ SUBROUTINE sum_band()
      !
      IF ( me_image == root_image ) THEN
         !
-        CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, ef, wg )
-        !
+        IF (two_fermi_energies) THEN
+           CALL tweights( nkstot, nspin, nbnd, nelup, ntetra, tetra, et, &
+                ef_up, wg, 1, isk )
+           CALL tweights( nkstot, nspin, nbnd, neldw, ntetra, tetra, et, &
+                ef_dw, wg, 2, isk )
+        ELSE
+           CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, &
+                ef, wg, 0, isk )
+        END IF
+       !
      END IF
      !
      CALL poolscatter( nbnd, nkstot, wg, nks, wg )

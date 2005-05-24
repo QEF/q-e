@@ -72,7 +72,6 @@ SUBROUTINE summary
   !
   ! ... we start with a general description of the run
   !
-  IF ( imix == -1 ) mixing_style = 'potential'
   IF ( imix ==  0 ) mixing_style = 'plain'
   IF ( imix ==  1 ) mixing_style = 'TF'
   IF ( imix ==  2 ) mixing_style = 'local-TF'

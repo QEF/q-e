@@ -7,13 +7,6 @@
 !  
 #include "f_defs.h"
 !
-#if defined (__PARA)
-#define NRXX ncplane*npp(me_pool+1)
-  ! This is needed in mix_pot whenever nproc is not a divisor of nr3.
-#else
-#define NRXX nrxx
-#endif
-!
 !----------------------------------------------------------------------------
 SUBROUTINE electrons()
   !----------------------------------------------------------------------------
@@ -48,7 +41,7 @@ SUBROUTINE electrons()
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
-                                   niter, nmix, imix, iprint, istep, &
+                                   niter, nmix, iprint, istep, &
                                    lscf, lpath, lmd, conv_elec, restart, &
                                    reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
@@ -166,7 +159,7 @@ SUBROUTINE electrons()
   !
   IF ( istep > 1 ) ethr = 1.D-5
   !
-  IF ( imix >= 0 ) ngm0 = ngm
+  ngm0 = ngm
   !
   WRITE( stdout, 9001 )
   !
@@ -186,7 +179,7 @@ SUBROUTINE electrons()
      !END Antonio Suriano - EXX
 #endif
      !
-     IF ( imix >= 0 ) rho_save = rho
+     rho_save = rho
      !  
      iter = iter + 1
      !
@@ -209,19 +202,10 @@ SUBROUTINE electrons()
      !
      IF ( iter > 1 .AND. ik_ == 0 ) THEN
         !
-        IF ( imix >= 0 ) THEN
-           !
-           IF ( iter == 2 ) ethr = 1.D-2
-           !
-           ethr = MAX( MIN( ethr , ( dr2 / nelec * 0.1D0 ) ) , &
+        IF ( iter == 2 ) ethr = 1.D-2
+        !
+        ethr = MAX( MIN( ethr , ( dr2 / nelec * 0.1D0 ) ) , &
                        ( tr2 / nelec * 0.01D0 ) )
-           !
-        ELSE
-           !
-           ethr = MAX( MIN( ( ethr * 0.5D0 ) , &
-                            ( SQRT( dr2 ) * 0.001D0 ) ) , 1.D-12 )
-           !
-        END IF
         !
      END IF
      !
@@ -248,10 +232,17 @@ SUBROUTINE electrons()
      !
      CALL sum_band()
      !
-     IF ( lda_plus_u ) CALL write_ns()
-     !
-     IF ( first .AND. lda_plus_u .AND. &
-          startingpot == 'atomic' .AND. istep == 1 ) CALL ns_adj()
+     IF ( lda_plus_u )  THEN
+        !
+        ldim2 = ( 2 * Hubbard_lmax + 1 )**2
+        CALL write_ns()
+        !
+        IF ( first .AND. istep == 1 .AND. startingpot == 'atomic' ) &
+           CALL ns_adj()
+        !
+        IF ( iter <= niter_with_fixed_ns ) nsnew = ns 
+        !
+     END IF
      !
      ! ... calculate total and absolute magnetization
      !
@@ -261,88 +252,63 @@ SUBROUTINE electrons()
      !
      deband = delta_e ( )
      !
-     IF ( imix >= 0 ) THEN
+     IF ( noncolin ) THEN
         !
-        IF ( lda_plus_u .AND. iter <= niter_with_fixed_ns ) THEN
+        CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
+                         nmix, flmix, conv_elec )
+        !
+     ELSE
+        !
+        CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, &
+                      tr2_min, iter, nmix, flmix, conv_elec )
+        !
+     END IF
+     !
+     ! ... for the first scf iteration we check that the threshold 
+     ! ... (ethr) is small enough for the diagonalization to be adequate
+     !
+     IF ( first ) THEN
+        !
+        first = .FALSE.
+        IF ( dr2 < tr2_min ) THEN
            !
-           ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-           nsnew = ns 
+           ! ... a new diagonalization is needed       
+           !
+           WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
+                            &    "too large:",/,                         &
+                            & 5X,"Diagonalizing with lowered threshold",/)' )
+           !
+           ethr = dr2 / nelec
+           !
+           GO TO 10
            !
         END IF
         !
-        IF ( noncolin ) THEN
-           !
-           CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
-                            nmix, flmix, conv_elec )
-           !
-        ELSE
-           !
-           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, &
-                         tr2_min, iter, nmix, flmix, conv_elec )
-           !
-        END IF
+     END IF             
+     !
+     IF (.NOT. conv_elec) THEN
         !
-        ! ... for the first scf iteration it is controlled that the threshold 
-        ! ... is small enough for the diagonalization to be adequate
+        ! ... no convergence yet: calculate new potential from 
+        ! ... new estimate of the charge density (rho_save),
         !
-        IF ( first ) THEN
-           !
-           first = .FALSE.
-           IF ( dr2 < tr2_min ) THEN
-              !
-              ! ... a new diagonalization is needed       
-              !
-              WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
-                               &    "too large:",/,                         &
-                               & 5X,"Diagonalizing with lowered threshold",/)' )
-              !
-              ethr = dr2 / nelec
-              !
-              GO TO 10
-              !
-           END IF
-           !
-        END IF             
+        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,   &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
         !
-        IF (.NOT. conv_elec) THEN
-           !
-           ! ... no convergence yet: calculate new potential from 
-           ! ... new estimate of the charge density (rho_save),
-           !
-           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,   &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
-           !
-           ! ... estimate correction needed to have variational energy 
-           !
-           descf = delta_escf ( )
-        ELSE
-           !
-           ! ... convergence reached: store V(out)-V(in) in vnew
-           ! ... Used to correct the forces
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, etotefield, charge, vnew )
-           vnew =  vnew - vr
-           !
-           ! ... correction for variational energy no longer needed
-           !
-           descf = 0.d0
-        END IF
+        ! ... estimate correction needed to have variational energy 
         !
-     ELSE 
+        descf = delta_escf ( )
+     ELSE
         !
-        ! ... old style potential mixing
+        ! ... convergence reached: store V(out)-V(in) in vnew
+        ! ... Used to correct the forces
         !
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-             ehart, etxc, vtxc, etotefield, charge, vnew )
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart, etxc, vtxc, etotefield, charge, vnew )
+        vnew =  vnew - vr
         !
-        CALL vpack( NRXX, nrxx, nspin, vnew, vr, + 1 )
-        CALL mix_potential( ( nspin * NRXX ), vnew, vr, mixing_beta, dr2, &
-                            tr2, iter, nmix, flmix, conv_elec )
-        CALL vpack( NRXX, nrxx, nspin, vnew, vr, -1 )
+        ! ... correction for variational energy no longer needed
         !
         descf = 0.d0
      END IF
@@ -352,10 +318,6 @@ SUBROUTINE electrons()
      CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
      !
      IF ( lda_plus_u ) THEN  
-        !
-        ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-        !
-        IF ( iter > niter_with_fixed_ns .AND. imix < 0 ) ns = nsnew
         !
         IF ( ionode ) THEN
            !
@@ -376,8 +338,7 @@ SUBROUTINE electrons()
      !
      ! ... write the potential (and rho) on file
      !     
-     IF ( imix >= 0 ) CALL io_pot( 1, TRIM( prefix )//'.rho', rho_save, nspin )
-     !
+     CALL io_pot( 1, TRIM( prefix )//'.rho', rho_save, nspin )
      CALL io_pot( 1, TRIM( prefix )//'.pot', vr, nspin )     
      !
      ! ... save converged wfc if they have not been written previously
@@ -499,18 +460,10 @@ SUBROUTINE electrons()
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
           ( .NOT. lmd ) ) THEN
         !  
-        IF ( imix >= 0 ) THEN
-           !
-           IF ( dr2 > eps8 ) THEN
-              WRITE( stdout, 9081 ) etot, dr2
-           ELSE
-              WRITE( stdout, 9083 ) etot, dr2
-           END IF
-           !
+        IF ( dr2 > eps8 ) THEN
+           WRITE( stdout, 9081 ) etot, dr2
         ELSE
-           !
-           WRITE( stdout, 9086 ) etot, dr2
-           !
+           WRITE( stdout, 9083 ) etot, dr2
         END IF
         !
         WRITE( stdout, 9060 ) &
@@ -528,34 +481,18 @@ SUBROUTINE electrons()
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !
-        IF ( imix >= 0 ) THEN
-           !   
-           IF ( dr2 > eps8 ) THEN
-              WRITE( stdout, 9081 ) etot, dr2
-           ELSE
-              WRITE( stdout, 9083 ) etot, dr2
-           END IF
-           !   
+        IF ( dr2 > eps8 ) THEN
+           WRITE( stdout, 9081 ) etot, dr2
         ELSE
-           !   
-           WRITE( stdout, 9086 ) etot, dr2
-           !   
+           WRITE( stdout, 9083 ) etot, dr2
         END IF
         !
      ELSE
         !
-        IF ( imix >=  0 ) THEN
-           !   
-           IF ( dr2 > eps8 ) THEN
-              WRITE( stdout, 9080 ) etot, dr2
-           ELSE
-              WRITE( stdout, 9082 ) etot, dr2
-           END IF
-           !   
+        IF ( dr2 > eps8 ) THEN
+           WRITE( stdout, 9080 ) etot, dr2
         ELSE
-           !   
-           WRITE( stdout, 9085 ) etot, dr2
-           !   
+           WRITE( stdout, 9082 ) etot, dr2
         END IF
         !
      END IF
@@ -568,9 +505,7 @@ SUBROUTINE electrons()
      IF ( i_cons == 3 .OR. i_cons == 4 )  WRITE(stdout, 9071) bfield(1), &
                                                     bfield(2),bfield(3)
      IF ( i_cons == 5 )  WRITE(stdout, 9072) bfield(3)
-     IF (i_cons.ne.0.and.i_cons.lt.4) WRITE( stdout,9073) lambda
-
-
+     IF ( i_cons /= 0 .AND. i_cons < 4 ) WRITE( stdout,9073) lambda
      !
      IF ( lpath ) THEN
         !
@@ -603,7 +538,7 @@ SUBROUTINE electrons()
      !
      !CALL forces()
      !
-     IF ( imix >= 0 ) rho = rho_save
+     rho = rho_save
      !
   END DO
   !
@@ -693,8 +628,6 @@ SUBROUTINE electrons()
        CALL flush( stdout )
 #endif
        !
-       IF ( imix >= 0 ) rho_save = rho
-       !  
        iter = 1
        !
        ! ... diagonalization of the KS hamiltonian

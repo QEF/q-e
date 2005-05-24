@@ -13,7 +13,7 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,     ONLY : stdout
-   USE control_flags, ONLY : isolve, imix
+   USE control_flags, ONLY : isolve
    USE force_mod,     ONLY : lforce, lstres
    USE mp_global,     ONLY : mpime, root
    !
@@ -50,11 +50,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'newd:int2' )
 #endif
    !
-   IF ( imix >= 0 ) THEN
-      CALL print_clock( 'mix_rho' )
-   ELSE
-      CALL print_clock( 'mix_pot' )
-   END IF
+   CALL print_clock( 'mix_rho' )
    !
    WRITE( stdout, * )
    !

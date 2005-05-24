@@ -30,7 +30,7 @@ SUBROUTINE potinit()
   USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                nrxx, nl, g, gg
   USE gsmooth,          ONLY : doublegrid
-  USE control_flags,    ONLY : imix, lscf
+  USE control_flags,    ONLY : lscf
   USE scf,              ONLY : rho, rho_core, vltot, vr, vrs
   USE ener,             ONLY : ehart, etxc, vtxc
   USE ldaU,             ONLY : niter_with_fixed_ns
@@ -55,7 +55,7 @@ SUBROUTINE potinit()
   !
   IF ( ionode ) THEN
      !
-     IF ( imix >= 0 .AND. lscf ) THEN
+     IF ( lscf ) THEN
         !
         CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
         !
@@ -85,7 +85,7 @@ SUBROUTINE potinit()
      ! ... NB: this case applies also for a restarting run, in which case
      ! ...     potential and rho files have been read from the restart file
      !
-     IF ( imix >= 0 .AND. lscf ) THEN
+     IF ( lscf ) THEN
         !      
         CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
         !       
