@@ -311,12 +311,11 @@ cat > fe.total.in << EOF
     fixed_magnetization(1)=0.3,
     fixed_magnetization(2)=0.4,
     fixed_magnetization(3)=0.5,
-    lambda = 1.0
+    lambda = 0.5
  /
  &electrons
-    conv_thr = 1.0e-12
-    mixing_beta = 0.4
-    mixing_mode ='potential',
+    conv_thr = 1.0e-9
+    mixing_beta = 0.3
  /
 ATOMIC_SPECIES
  Fe 55.847 Fe.pz-nd-rrkjus.UPF

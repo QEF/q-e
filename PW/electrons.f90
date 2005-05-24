@@ -105,7 +105,6 @@ SUBROUTINE electrons()
                        ! and then print occupations on stdout
   LOGICAL :: &
       exst, first
-  REAL (KIND=DP) :: dr2old, lambda0
   !
   ! ... external functions
   !
@@ -116,11 +115,6 @@ SUBROUTINE electrons()
   !
   iter = 0
   ik_  = 0
-  if (i_cons==3) then
-     dr2old=0.d0
-     lambda0=lambda
-     lambda=0.003
-  endif
   !
   IF ( restart ) THEN
      !
@@ -351,12 +345,6 @@ SUBROUTINE electrons()
         CALL vpack( NRXX, nrxx, nspin, vnew, vr, -1 )
         !
         descf = 0.d0
-        if (i_cons.eq.3) then
-           if (dr2*5.d0.lt.dr2old.or.dr2<tr2*1.d2) then
-              lambda=min(lambda*2.d0,lambda0)
-           endif
-           dr2old=dr2
-        endif
      END IF
      !
      ! ... define the total local potential (external + scf)

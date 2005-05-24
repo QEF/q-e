@@ -79,9 +79,19 @@ IF (i_cons.LT.3) THEN
    END DO      ! na
    write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
 ELSE IF (i_cons==3) THEN
+   m1 = 0.d0
+   DO ir = 1,nrxx
+      DO ipol = 1, 3
+         m1(ipol) = m1(ipol) + rho(ir,ipol+1)
+      END DO
+   END DO
+   CALL reduce( 3, m1 )
+   DO ipol = 1, 3
+      m1(ipol) = m1(ipol) * omega / ( nr1 * nr2 * nr3 )
+   END DO
    fact = 2.D0*lambda
    DO ipol=1,3
-      bfield(ipol)=-fact*(magtot_nc(ipol)-mcons(ipol,1))
+      bfield(ipol)=-fact*(m1(ipol)-mcons(ipol,1))
    END DO
    write(6,'(5x," External magnetic field: ", 3f13.5)') &
                                           (bfield(ipol),ipol=1,3)

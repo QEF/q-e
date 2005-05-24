@@ -48,7 +48,6 @@ SUBROUTINE potinit()
   !
   REAL (KIND=DP) :: charge           ! the starting charge
   REAL (KIND=DP) :: etotefield       ! 
-  REAL (KIND=DP) :: lambda0          ! the value of lambda
   INTEGER        :: ios
   INTEGER        :: ldim             ! integer variable for I/O control
   LOGICAL        :: exst 
@@ -195,13 +194,10 @@ SUBROUTINE potinit()
      ! ... here we compute the potential which corresponds to the 
      ! ... initial charge
      !
-     lambda0=lambda
-     if (i_cons==3) lambda=0.003
      !
      CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                     ehart, etxc, vtxc, etotefield, charge, vr )
-     lambda=lambda0
      !   
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         !
@@ -213,12 +209,9 @@ SUBROUTINE potinit()
         !
         ! ... and compute v_of_rho again
         !
-        lambda0=lambda
-        if (i_cons==3) lambda=0.003
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
                        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                        ehart, etxc, vtxc, etotefield, charge, vr )
-        lambda=lambda0
         !
      END IF
      !
