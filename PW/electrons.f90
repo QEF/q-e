@@ -99,6 +99,7 @@ SUBROUTINE electrons()
   REAL (KIND=DP) :: &
        tr2_min,      &! estimated error on energy coming from diagonalization
        descf          ! correction for variational energy
+
   REAL (KIND=DP), ALLOCATABLE :: &
       wg_g(:,:)        ! temporary array used to recover from pools array wg,
                        ! and then print occupations on stdout
@@ -262,6 +263,8 @@ SUBROUTINE electrons()
      !
      IF ( lsda .OR. noncolin ) CALL compute_magnetization()
      !
+     ! ... delta_e = - int rho(r) (V_H + V_xc)(r) dr
+     !
      deband = delta_e ( )
      !
      IF ( imix >= 0 ) THEN
@@ -307,13 +310,32 @@ SUBROUTINE electrons()
            !
         END IF             
         !
-        vnew =  vr
-        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,    &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
-        vnew =  vr - vnew
-        !
-        descf = delta_escf ( )
+        IF (.NOT. conv_elec) THEN
+           !
+           ! ... no convergence yet: calculate new potential from 
+           ! ... new estimate of the charge density (rho_save),
+           !
+           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,   &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
+           !
+           ! ... estimate correction needed to have variational energy 
+           !
+           descf = delta_escf ( )
+        ELSE
+           !
+           ! ... convergence reached: store V(out)-V(in) in vnew
+           ! ... Used to correct the forces
+           !
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vnew )
+           vnew =  vnew - vr
+           !
+           ! ... correction for variational energy no longer needed
+           !
+           descf = 0.d0
+        END IF
         !
      ELSE 
         !
@@ -337,7 +359,6 @@ SUBROUTINE electrons()
         endif
      END IF
      !
-     ! ... On output vnew contains V(out)-V(in). Used to correct the forces
      ! ... define the total local potential (external + scf)
      !
      CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
