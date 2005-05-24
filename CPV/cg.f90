@@ -50,6 +50,11 @@ CONTAINS
     LOGICAL, INTENT(IN) :: tcg_
     INTEGER, INTENT(IN) :: maxiter_
     REAL(dbl), INTENT(IN) :: etresh_ , passop_
+    tcg=tcg_
+    maxiter=maxiter_
+    etresh=etresh_
+    passop=passop_
+    IF (tcg) CALL cg_info()
     RETURN
   END SUBROUTINE cg_init
 
