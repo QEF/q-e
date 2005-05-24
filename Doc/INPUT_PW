@@ -362,7 +362,7 @@ constrained_magnetization CHARACTER ( defalt = 'none' )
                Used to perform constrained calculations in magnetic systems
                Currently available choices:
                `none` : no constraint
-               `total`: total magmetization is constrained
+               `total`: total magnetization is constrained
                         If nspin=4 (noncolin=.True.) constraint is imposed by
                         adding a penalty functional to the total energy: 
      - LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
@@ -371,7 +371,7 @@ constrained_magnetization CHARACTER ( defalt = 'none' )
                         If nspin=2 constraint is imposed by defining two Fermi
                         energies for spin up and down.
                         Only fixed_magnetization(3) can be defined in this case.
-               `atomic`: atomic magmetization are constrained to the defined 
+               `atomic`: atomic magnetization are constrained to the defined 
                         starting magnetization adding a penalty
      - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
                         where i runs over the components (1-3) and itype over 
@@ -428,7 +428,6 @@ mixing_mode    CHARACTER
                             (for highly homogeneous systems)
                'local-TF':  as above, with local-density-dependent TF screening
                             (for highly inhomogeneous systems)
-               'potential': (obsolete) potential mixing
 
 mixing_beta    REAL ( default = 0.7D0 )
                mixing factor for self-consistency 
