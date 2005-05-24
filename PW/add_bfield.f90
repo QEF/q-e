@@ -58,6 +58,8 @@ IF (i_cons.LT.3) THEN
          ! the penalty functional in this case is
          ! lambda*(m_loc(z)/|m_loc| - cos(theta) )^2
             ma = dsqrt(m_loc(1,na)**2+m_loc(2,na)**2+m_loc(3,na)**2)
+            if (ma.lt.1.d-30) call errore('add_bfield', &
+                                          'local magnetization is zero',1)
             xx=(m_loc(3,na)/ma - mcons(3,nt))
             m1(1) = - xx*m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
             m1(2) = - xx*m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
