@@ -360,8 +360,6 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
            !
            ! ... if the last calculated eigenvalue is not the largest...
            !
-           PRINT *, "M = ", M,"   REORDERING"
-           
            DO i = m - 2, 1, - 1
               !
               IF ( e(m) - e(i) > 2.D0 * ethr_m ) EXIT
