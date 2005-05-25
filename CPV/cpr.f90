@@ -291,8 +291,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   IF ( lwf ) CALL allocate_wannier(  nbsp, nnrsx, nspin, ngm )
   !
-  IF ( tens ) CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
-                                          nspin, nbspx, nnrsx, nat )
+  IF ( tens .or. tcg) CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
+                                          nspin, nbspx, nnrsx, natx )
   !
   IF( tcg ) CALL allocate_cg( ngw, nbspx )
   !
