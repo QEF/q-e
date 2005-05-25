@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE summary
+SUBROUTINE summary()
   !-----------------------------------------------------------------------
   !
   !    This routine writes on output all the information obtained from
@@ -365,9 +365,7 @@ SUBROUTINE summary
   IF ( isolve == 2 ) &
      WRITE( stdout, '(/,5X,"reduced basis size: ",I5)' ) diis_ndim
   !
-#ifdef FLUSH
-  CALL flush( 6 )
-#endif
+  CALL flush_unit( stdout )
   !
   RETURN
   !

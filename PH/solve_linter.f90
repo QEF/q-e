@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !-----------------------------------------------------------------------
 subroutine solve_linter (irr, imode0, npe, drhoscf)
   !-----------------------------------------------------------------------
@@ -19,8 +21,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
-#include "f_defs.h"
-  !
   USE ions_base,            ONLY : nat
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, iunigk
@@ -32,7 +32,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE becmod,               ONLY : becp  
   use pwcom
   USE uspp_param,           ONLY : nhm
-!  use phcom
   USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
   USE nlcc_ph,              ONLY : nlcc_any
@@ -503,9 +502,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !    Here we save the information for recovering the run from this poin
      !
-#ifdef FLUSH
-     call flush (6)
-#endif
+     CALL flush_unit( stdout )
+     !
      call start_clock ('write_rec')
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !

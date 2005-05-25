@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_e
@@ -18,8 +19,6 @@ subroutine solve_e
   !     c) applies P_c^+ (orthogonalization to valence states)
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
-  !
-#include "f_defs.h"
   !
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
@@ -332,10 +331,9 @@ subroutine solve_e
      dr2 = dr2 / 3
      WRITE( stdout, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',e10.3 )") thresh, alpha_mix (kter), dr2
-#ifdef FLUSH
-     call flush (6)
-#endif
-
+     !
+     CALL flush_unit( stdout )
+     !
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation

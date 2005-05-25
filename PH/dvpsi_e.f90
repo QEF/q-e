@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine dvpsi_e (ik, ipol)
@@ -15,8 +16,6 @@ subroutine dvpsi_e (ik, ipol)
   !
   ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true. 
   ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
-  !
-#include "f_defs.h"
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE io_global,      ONLY : stdout
@@ -207,9 +206,9 @@ subroutine dvpsi_e (ik, ipol)
   if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
        & " linter: root not converged ",e10.3)') &
        ik, ibnd, anorm
-#ifdef FLUSH
-  call flush (6)
-#endif
+  !
+  CALL flush_unit( stdout )
+  !
   !
   ! we have now obtained P_c x |psi>.
   ! In the case of USPP this quantity is needed for the Born 

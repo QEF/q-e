@@ -316,8 +316,8 @@ subroutine phq_summary
      WRITE( stdout, '(/,5x,"Compute atoms: ",8(i5,","))') (atomo (na) &
           , na = 1, nat_todo)
   endif
-#ifdef FLUSH
-  call flush (6)
-#endif
+  !
+  CALL flush_unit( stdout )
+  !
   return
 end subroutine phq_summary

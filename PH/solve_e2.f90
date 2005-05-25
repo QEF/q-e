@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_e2
@@ -13,8 +14,8 @@ subroutine solve_e2
   !   Self consistent cycle to compute the second order derivatives
   !   of the wavefunctions with respect to electric fields
   !
-#include "f_defs.h"
   use kinds, only : DP
+  USE io_global, ONLY : stdout
   use pwcom
   use becmod
   USE control_flags, ONLY: reduce_io
@@ -235,10 +236,9 @@ subroutine solve_e2
      dr2 = dr2 / 6
      write (6, "(5x,' thresh=',e10.3, ' alpha_mix = ',f6.3, &
           &      ' |ddv_scf|^2 = ',e10.3 )") thresh, alpha_mix (kter), dr2
-#ifdef FLUSH
-     call flush (6)
-#endif
-
+     !
+     CALL flush_unit( stdout )
+     !
      call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation

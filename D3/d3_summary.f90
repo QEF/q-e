@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
+!
 !-----------------------------------------------------------------------
 subroutine d3_summary
   !-----------------------------------------------------------------------
@@ -362,8 +363,8 @@ subroutine d3_summary
 
   enddo
   WRITE( stdout, '(/20x,"**   Complex  Version    **")')
-#ifdef FLUSH
-  call flush (6)
-#endif
+  !
+  CALL flush_unit( stdout )
+  !
   return
 end subroutine d3_summary

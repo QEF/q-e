@@ -26,7 +26,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... unit 0 (the message will appear in the error files produced by 
   ! ... loadleveler).
   !
-  USE io_files,   ONLY : crashunit, crash_file
+  USE io_global, ONLY : stdout
+  USE io_files,  ONLY : crashunit, crash_file
   USE parallel_include
   !
   IMPLICIT NONE
@@ -68,11 +69,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
      !
      WRITE( *, '("     stopping ...")' )
      !
-#if defined (FLUSH)
-     !
-     CALL flush( 6 )
-     !
-#endif
+     CALL flush_unit( stdout )
      !
 #if defined (__PARA) && defined (__MPI)
      !

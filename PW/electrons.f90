@@ -42,7 +42,7 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
                                    niter, nmix, iprint, istep, &
-                                   lscf, lpath, lmd, conv_elec, restart, &
+                                   lscf, lmd, conv_elec, restart, &
                                    reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho
@@ -57,17 +57,16 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
-
-#ifdef EXX
-  USE exx,                  ONLY : exxalfa, exxinit,exxenergy2 !Suriano
+#if defined (EXX)
+  USE exx,                  ONLY : exxalfa, exxinit, exxenergy2 !Suriano
 #endif
   !
   IMPLICIT NONE
   !
   ! ... a few local variables
   !  
-#ifdef EXX
-  real (kind=DP)     :: fock1,fock2
+#if defined (EXX)
+  REAL (KIND=DP) :: fock1, fock2
 #endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
@@ -130,13 +129,12 @@ SUBROUTINE electrons()
   tcpu = get_clock( 'PWSCF' )
   WRITE( stdout, 9000 ) tcpu
   !
-#if defined (FLUSH)
-  CALL flush( stdout )
-#endif
+  CALL flush_unit( stdout )
   !
   IF ( .NOT. lscf ) THEN
      !
      CALL non_scf()
+     !
      RETURN
      !
   END IF
@@ -147,9 +145,13 @@ SUBROUTINE electrons()
                 g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !               
   IF ( reduce_io ) THEN
+     !
      flmix = ' '
+     !
   ELSE
-     flmix = TRIM (prefix)//'.mix'
+     !
+     flmix = TRIM( prefix ) // '.mix'
+     !
   END IF
   !
   ! ... Convergence threshold for iterative diagonalization
@@ -163,9 +165,7 @@ SUBROUTINE electrons()
   !
   WRITE( stdout, 9001 )
   !
-#if defined (FLUSH)
-  CALL flush( stdout )
-#endif
+  CALL flush_unit( stdout )
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
@@ -173,9 +173,11 @@ SUBROUTINE electrons()
   !
   DO idum = 1, niter
      !
-#ifdef EXX
+     IF ( check_stop_now() ) RETURN
+     !
+#if defined (EXX)
      !Antonio Suriano - EXX
-     if (exxalfa.ne.0D0) call exxinit()
+     IF ( exxalfa /= 0.D0 ) CALL exxinit()
      !END Antonio Suriano - EXX
 #endif
      !
@@ -185,17 +187,7 @@ SUBROUTINE electrons()
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
      !
-     IF ( lpath ) THEN
-        !
-        CALL flush( stdout )
-        !
-     ELSE
-        !
-#if defined (FLUSH)
-        CALL flush( stdout )
-#endif
-        !
-     END IF
+     CALL flush_unit( stdout )
      !
      ! ... Convergence threshold for iterative diagonalization
      ! ... is automatically updated during self consistency
@@ -211,107 +203,119 @@ SUBROUTINE electrons()
      !
      first = ( iter == 1 )
      !
-     ! ... tr2_min is set to an estimate of the error on the energy
-     ! ... due to diagonalization - used only in the first scf iteration
-     !
-10   CONTINUE
-     IF ( first ) THEN
-        tr2_min = nelec*ethr
-     ELSE
-        tr2_min = 0.D0
-     END IF
-     !
-     ! ... diagonalization of the KS hamiltonian
-     !
-     CALL c_bands( iter, ik_, dr2 )
-     !
-     ! ... the program checks if the maximum CPU time has been exceeded
-     ! ... or if the user has required a soft exit
-     !
-     IF ( check_stop_now() ) RETURN
-     !
-     CALL sum_band()
-     !
-     IF ( lda_plus_u )  THEN
+     scf_step: DO 
         !
-        ldim2 = ( 2 * Hubbard_lmax + 1 )**2
-        CALL write_ns()
+        ! ... tr2_min is set to an estimate of the error on the energy
+        ! ... due to diagonalization - used only in the first scf iteration
         !
-        IF ( first .AND. istep == 1 .AND. startingpot == 'atomic' ) &
-           CALL ns_adj()
-        !
-        IF ( iter <= niter_with_fixed_ns ) nsnew = ns 
-        !
-     END IF
-     !
-     ! ... calculate total and absolute magnetization
-     !
-     IF ( lsda .OR. noncolin ) CALL compute_magnetization()
-     !
-     ! ... delta_e = - int rho(r) (V_H + V_xc)(r) dr
-     !
-     deband = delta_e ( )
-     !
-     IF ( noncolin ) THEN
-        !
-        CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, dr2, iter, &
-                         nmix, flmix, conv_elec )
-        !
-     ELSE
-        !
-        CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, dr2, &
-                      tr2_min, iter, nmix, flmix, conv_elec )
-        !
-     END IF
-     !
-     ! ... for the first scf iteration we check that the threshold 
-     ! ... (ethr) is small enough for the diagonalization to be adequate
-     !
-     IF ( first ) THEN
-        !
-        first = .FALSE.
-        IF ( dr2 < tr2_min ) THEN
+        IF ( first ) THEN
            !
-           ! ... a new diagonalization is needed       
+           tr2_min = nelec * ethr
            !
-           WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
-                            &    "too large:",/,                         &
-                            & 5X,"Diagonalizing with lowered threshold",/)' )
+        ELSE
            !
-           ethr = dr2 / nelec
-           !
-           GO TO 10
+           tr2_min = 0.D0
            !
         END IF
         !
-     END IF             
-     !
-     IF (.NOT. conv_elec) THEN
+        ! ... diagonalization of the KS hamiltonian
         !
-        ! ... no convergence yet: calculate new potential from 
-        ! ... new estimate of the charge density (rho_save),
+        CALL c_bands( iter, ik_, dr2 )
         !
-        CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,&
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,   &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
+        IF ( check_stop_now() ) RETURN
         !
-        ! ... estimate correction needed to have variational energy 
+        CALL sum_band()
         !
-        descf = delta_escf ( )
-     ELSE
+        IF ( lda_plus_u )  THEN
+           !
+           ldim2 = ( 2 * Hubbard_lmax + 1 )**2
+           !
+           CALL write_ns()
+           !
+           IF ( first .AND. istep == 1 .AND. &
+                startingpot == 'atomic' ) CALL ns_adj()
+           !
+           IF ( iter <= niter_with_fixed_ns ) nsnew = ns 
+           !
+        END IF
         !
-        ! ... convergence reached: store V(out)-V(in) in vnew
-        ! ... Used to correct the forces
+        ! ... calculate total and absolute magnetization
         !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vnew )
-        vnew =  vnew - vr
+        IF ( lsda .OR. noncolin ) CALL compute_magnetization()
         !
-        ! ... correction for variational energy no longer needed
+        ! ... delta_e = - int rho(r) (V_H + V_xc)(r) dr
         !
-        descf = 0.d0
-     END IF
+        deband = delta_e()
+        !
+        IF ( noncolin ) THEN
+           !
+           CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, &
+                            dr2, iter, nmix, flmix, conv_elec )
+           !
+        ELSE
+           !
+           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, &
+                         dr2, tr2_min, iter, nmix, flmix, conv_elec )
+           !
+        END IF
+        !
+        ! ... for the first scf iteration it is controlled that the 
+        ! ... threshold is small enough for the diagonalization to 
+        ! ... be adequate
+        !
+        IF ( first ) THEN
+           !
+           first = .FALSE.
+           !
+           IF ( dr2 < tr2_min ) THEN
+              !
+              ! ... a new diagonalization is needed       
+              !
+              WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
+                               &    "too large:",/,5X,                      &
+                               & "Diagonalizing with lowered threshold",/)' )
+              !
+              ethr = dr2 / nelec
+              !
+              CYCLE scf_step
+              !
+           END IF
+           !
+        END IF             
+        !
+        IF ( .NOT. conv_elec ) THEN
+           !
+           ! ... no convergence yet: calculate new potential from 
+           ! ... new estimate of the charge density (rho_save),
+           !
+           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2,   &
+                          nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
+                          omega, ehart, etxc, vtxc, etotefield, charge, vr )
+           !
+           ! ... estimate correction needed to have variational energy 
+           !
+           descf = delta_escf()
+           !
+        ELSE
+           !
+           ! ... convergence reached: store V(out)-V(in) in vnew
+           ! ... Used to correct the forces
+           !
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vnew )
+           !
+           vnew = vnew - vr
+           !
+           ! ... correction for variational energy no longer needed
+           !
+           descf = 0.D0
+           !
+        END IF
+        !
+        EXIT scf_step
+        !
+     END DO scf_step
      !
      ! ... define the total local potential (external + scf)
      !
@@ -371,20 +375,10 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
      !
-     IF ( lpath ) THEN
-        !
-        CALL flush( stdout )
-        !
-     ELSE
-        !
-#if defined (FLUSH)
-        CALL flush( stdout )
-#endif
-        !
-     END IF
+     CALL flush_unit( stdout )
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
-          (.NOT. lmd) ) THEN
+          ( .NOT. lmd ) ) THEN
         !
 #if defined (__PARA)
         !
@@ -447,11 +441,17 @@ SUBROUTINE electrons()
         WRITE( stdout, 9050 ) charge
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
-#ifdef EXX
-     fock1=exxenergy2()
-     call exxinit()
-     fock2=exxenergy2()
-     etot=etot-fock1+0.5*fock2
+     !
+#if defined (EXX)
+     !
+     fock1 = exxenergy2()
+     !
+     CALL exxinit()
+     !
+     fock2 = exxenergy2()
+     !
+     etot = etot - fock1 + 0.5D0 * fock2
+     !
 #endif
      !
      IF ( lda_plus_u ) etot = etot + eth
@@ -468,11 +468,13 @@ SUBROUTINE electrons()
         !
         WRITE( stdout, 9060 ) &
             eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
-#ifdef EXX
-      WRITE(stdout,9062)  fock1
-      WRITE(stdout,9063)  fock2
-      WRITE(stdout,9064)  0.5*fock2
-
+        !
+#if defined (EXX)
+        !
+        WRITE( stdout, 9062 ) fock1
+        WRITE( stdout, 9063 ) fock2
+        WRITE( stdout, 9064 ) 0.5D0 * fock2
+        !
 #endif
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
@@ -502,22 +504,14 @@ SUBROUTINE electrons()
      IF ( noncolin .AND. domag ) &
         WRITE( stdout, 9018 ) ( magtot_nc(i), i = 1, 3 ), absmag
      !
-     IF ( i_cons == 3 .OR. i_cons == 4 )  WRITE(stdout, 9071) bfield(1), &
-                                                    bfield(2),bfield(3)
-     IF ( i_cons == 5 )  WRITE(stdout, 9072) bfield(3)
-     IF ( i_cons /= 0 .AND. i_cons < 4 ) WRITE( stdout,9073) lambda
+     IF ( i_cons == 3 .OR. i_cons == 4 )  &
+        WRITE( stdout, 9071 ) bfield(1), bfield(2),bfield(3)
+     IF ( i_cons == 5 ) &
+        WRITE( stdout, 9072 ) bfield(3)
+     IF ( i_cons /= 0 .AND. i_cons < 4 ) &
+        WRITE( stdout, 9073 ) lambda
      !
-     IF ( lpath ) THEN
-        !
-        CALL flush( stdout )
-        !
-     ELSE
-        !
-#if defined (FLUSH)
-        CALL flush( stdout )
-#endif
-        !
-     END IF
+     CALL flush_unit( stdout )
      !
      IF ( conv_elec ) THEN
         !
@@ -545,17 +539,7 @@ SUBROUTINE electrons()
   WRITE( stdout, 9101 )
   WRITE( stdout, 9120 )
   !
-  IF ( lpath ) THEN
-     !
-     CALL flush( stdout )
-     !
-  ELSE
-     !
-#if defined (FLUSH)
-     CALL flush( stdout )
-#endif
-     !
-  END IF
+  CALL flush_unit( stdout )
   !
   IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
   !
@@ -565,52 +549,51 @@ SUBROUTINE electrons()
   !
   ! ... formats
   !
-9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
-9001 FORMAT(/'     Self-consistent Calculation')
-9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X,'beta=',F4.2)
-9015 FORMAT(/' ------ SPIN UP ------------'/)
-9016 FORMAT(/' ------ SPIN DOWN ----------'/)
+9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
+9001 FORMAT(/'     Self-consistent Calculation' )
+9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X,'beta=',F4.2 )
+9015 FORMAT(/' ------ SPIN UP ------------'/ )
+9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
-            /'     absolute magnetization    =', F9.2,' Bohr mag/cell')
+            /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9018 FORMAT(/'     total magnetization       =',3f9.2,' Bohr mag/cell' &
-       &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell')
-9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
-9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/)
-9030 FORMAT( '  ',8F9.4)
-9032 FORMAT(/'     occupation numbers ')
-9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev')
-9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
-9050 FORMAT(/'     integrated charge         =',F15.8)
+       &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell' )
+9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
+9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
+9030 FORMAT( '  ',8F9.4 )
+9032 FORMAT(/'     occupation numbers ' )
+9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
+9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
+9050 FORMAT(/'     integrated charge         =',F15.8 )
 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
             /'     one-electron contribution =',  F15.8,' ryd' &
             /'     hartree contribution      =',  F15.8,' ryd' &
             /'     xc contribution           =',  F15.8,' ryd' &
             /'     ewald contribution        =',  F15.8,' ryd' )
 9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
-9062 FORMAT( '     Fock energy 1             =',  F15.8,' ryd')
-9063 FORMAT( '     Fock energy 2             =',  F15.8,' ryd')
-9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd')
-9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd')
-9070 FORMAT( '     correction for metals     =',F15.8,' ryd')
-9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd')
-9072 FORMAT( '     Magnetic field            =', F12.7,' ryd')
-9073 FORMAT( '     lambda                    =', F11.2,' ryd')
-
+9062 FORMAT( '     Fock energy 1             =',  F15.8,' ryd' )
+9063 FORMAT( '     Fock energy 2             =',  F15.8,' ryd' )
+9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd' )
+9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
+9070 FORMAT( '     correction for metals     =',F15.8,' ryd' )
+9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
+9072 FORMAT( '     Magnetic field            =', F12.7,' ryd' )
+9073 FORMAT( '     lambda                    =', F11.2,' ryd' )
 9080 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',0PF15.8,' ryd')
+            /'     estimated scf accuracy    <',0PF15.8,' ryd' )
 9081 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',0PF15.8,' ryd')
+            /'     estimated scf accuracy    <',0PF15.8,' ryd' )
 9082 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',1PE15.1,' ryd')
+            /'     estimated scf accuracy    <',1PE15.1,' ryd' )
 9083 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',1PE15.1,' ryd')
+            /'     estimated scf accuracy    <',1PE15.1,' ryd' )
 9085 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
-            /'     potential mean squ. error =',1PE15.1,' ryd^2')
+            /'     potential mean squ. error =',1PE15.1,' ryd^2' )
 9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
-            /'     potential mean squ. error =',1PE15.1,' ryd^2')
-9101 FORMAT(/'     End of self-consistent calculation')
-9110 FORMAT(/'     convergence has been achieved')
-9120 FORMAT(/'     convergence NOT achieved, stopping')
+            /'     potential mean squ. error =',1PE15.1,' ryd^2' )
+9101 FORMAT(/'     End of self-consistent calculation' )
+9110 FORMAT(/'     convergence has been achieved' )
+9120 FORMAT(/'     convergence NOT achieved, stopping' )
   !
   CONTAINS
      !
@@ -622,11 +605,10 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !
+       !
        WRITE( stdout, 9002 )
        !
-#if defined (FLUSH)
-       CALL flush( stdout )
-#endif
+       CALL flush_unit( stdout )
        !
        iter = 1
        !
@@ -661,20 +643,19 @@ SUBROUTINE electrons()
        !
        IF ( lgauss ) THEN
           !
-          call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk)
-
+          CALL efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk )
+          !
           WRITE( stdout, 9040 ) ef * rytoev
           !
        ELSE IF ( ltetra ) THEN
           !
-          CALL efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk)
+          CALL efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk )
+          !
           WRITE( stdout, 9040 ) ef * rytoev
           !
        END IF
        !
-#if defined (FLUSH)
-       CALL flush( stdout )
-#endif
+       CALL flush_unit( stdout )
        !
        ! ... do a Berry phase polarization calculation if required
        !
@@ -684,14 +665,14 @@ SUBROUTINE electrons()
        !
        CALL stop_clock( 'electrons' )
        !
-9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs')
-9002 FORMAT(/'     Band Structure Calculation')
-9015 FORMAT(/' ------ SPIN UP ------------'/)
-9016 FORMAT(/' ------ SPIN DOWN ----------'/)
-9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/)
-9030 FORMAT( '  ',8F9.4)
-9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev')
-9102 FORMAT(/'     End of band structure calculation')
+9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
+9002 FORMAT(/'     Band Structure Calculation' )
+9015 FORMAT(/' ------ SPIN UP ------------'/ )
+9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
+9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
+9030 FORMAT( '  ',8F9.4 )
+9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
+9102 FORMAT(/'     End of band structure calculation' )
        !
      END SUBROUTINE non_scf
      !
@@ -762,7 +743,8 @@ SUBROUTINE electrons()
      FUNCTION check_stop_now()
        !-----------------------------------------------------------------------
        !
-       USE check_stop, ONLY : global_check_stop_now => check_stop_now
+       USE control_flags, ONLY : lpath
+       USE check_stop,    ONLY : global_check_stop_now => check_stop_now
        !
        IMPLICIT NONE
        !
@@ -794,31 +776,30 @@ SUBROUTINE electrons()
      !
      !-----------------------------------------------------------------------
      FUNCTION delta_e ( )
-     !-----------------------------------------------------------------------
+       !-----------------------------------------------------------------------
        !
-       ! delta_e = - \int rho(r) V_scf(r)
+       ! ... delta_e = - \int rho(r) V_scf(r)
        !
        USE kinds
        !
        IMPLICIT NONE
        !   
-       REAL(kind=DP) :: delta_e
+       REAL (KIND=DP) :: delta_e
        !
-       INTEGER :: i, ipol
+       INTEGER :: ipol
        !
-       delta_e = 0.d0
        !
-       DO ipol=1, nspin
-          DO i = 1, nrxx
-             delta_e = delta_e - rho(i,ipol) * vr(i,ipol)
-          END DO
+       delta_e = 0.D0
+       !
+       DO ipol = 1, nspin
+          !
+          delta_e = delta_e - SUM( rho(:,ipol) * vr(:,ipol) )
+          !
        END DO
        !
-       delta_e = omega * delta_e / (nr1 * nr2 * nr3)
+       delta_e = omega * delta_e / ( nr1 * nr2 * nr3 )
        !
-#ifdef __PARA
-       CALL reduce (1, delta_e)
-#endif
+       CALL reduce( 1, delta_e )
        !
        RETURN
        !
@@ -826,10 +807,10 @@ SUBROUTINE electrons()
      !
      !-----------------------------------------------------------------------
      FUNCTION delta_escf ( )
-     !-----------------------------------------------------------------------
+       !-----------------------------------------------------------------------
        !
-       ! delta_escf = - \int \delta rho(r) V_scf(r)
-       ! this is the correction needed to have variational energy
+       ! ... delta_escf = - \int \delta rho(r) V_scf(r)
+       ! ... this is the correction needed to have variational energy
        !
        USE kinds
        !
@@ -837,22 +818,21 @@ SUBROUTINE electrons()
        !   
        REAL(kind=DP) :: delta_escf
        !
-       INTEGER :: i, ipol
+       INTEGER :: ipol
        !
-       delta_escf = 0.d0
        !
-       DO ipol=1, nspin
-          DO i = 1, nrxx
-             delta_escf = delta_escf - ( rho_save(i,ipol) - rho(i,ipol) ) &
-                                       * vr(i,ipol)
-          END DO
+       delta_escf = 0.D0
+       !
+       DO ipol = 1, nspin
+          !
+          delta_escf = delta_escf - &
+                       SUM( ( rho_save(:,ipol) - rho(:,ipol) ) * vr(:,ipol) )
+          !
        END DO
        !
-       delta_escf = omega * delta_escf / (nr1 * nr2 * nr3)
+       delta_escf = omega * delta_escf / ( nr1 * nr2 * nr3 )
        !
-#ifdef __PARA
-       CALL reduce (1, delta_escf)
-#endif
+       CALL reduce( 1, delta_escf )
        !
        RETURN
        !
