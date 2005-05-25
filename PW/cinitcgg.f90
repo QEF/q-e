@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -62,7 +62,7 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
   kdim2 = 2 * kdim
   kdmx2 = 2 * kdmx
   !
-  ALLOCATE( aux( kdmx, npol, 2 ) )
+  ALLOCATE( aux( ndmx, npol, 2 ) )
   ALLOCATE( hc( nstart, nstart, 2 ) )
   ALLOCATE( sc( nstart, nstart ) )
   ALLOCATE( en( nstart ) )
