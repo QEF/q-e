@@ -1,29 +1,30 @@
 This is the available documentation for the Quantum-ESPRESSO package:
 
-manual.tex      User's Guide for Quantum-ESPRESSO
-                requires html.sty (from latex2html package): if not
-                available, comment "\usepackage{html}" and uncomment
-                "\def\htmladdnormallink#1#2{#1}"
+users-guide.tex    User's Guide for Quantum-ESPRESSO
+                   Requires "html.sty" (from latex2html package): if
+                   not available, comment "\usepackage{html}" and
+                   uncomment "\def\htmladdnormallink#1#2{#1}" near the
+                   beginning of the file.
 
-refman.tex      Reference (technical) manual for PWscf: little more
-                than a template at present
+refman.tex         Reference (technical) manual for PWscf: little more
+                   than a template at present
 
-INPUT_FPMD      Input parameters for FPMD
-INPUT_CP        As above for CP (possibly obsolete)
-INPUT.HOWTO     Hints on how to choose simulation parameters for CP/FPMD with
-                Car-Parrinello dynamics
-INPUT_PW        Input parameters for PWscf (pw.x)
-INPUT_PP        Input parameters for postprocessing (pp.x)
-INPUT_PROJWFC   Input parameters for postprocessing (projwave.x)
-INPUT_CHDENS    Input parameters for plotting (chdens.x)
-INPUT_PH        Input parameters for phonon calculations (ph.x)
-INPUT_Gamma     Input parameters for normal-mode calculations (phcg.x)
-INPUT_D3        Input parameters for 3rd-order derivatives (d3.x)
-INPUT_EFG       Input parameters for electric-field gradient calc (efg.x)
-INPUT_NC        Input parameters for noncolinear magnetism (pwnc.x)
-INPUT_PWCOND    Input parameters for ballistic conductance (pwcond.x)
-INPUT_RAM       Input parameters for Raman calculation (raman.x)
-
+INPUT_FPMD       Input parameters for FPMD
+INPUT_CP         As above for CP (possibly obsolete)
+INPUT.HOWTO      Hints on how to choose simulation parameters for
+                 CP/FPMD with Car-Parrinello dynamics
+INPUT_PW         Input parameters for PWscf (pw.x)
+INPUT_PP         Input parameters for postprocessing (pp.x)
+INPUT_PROJWFC    Input parameters for postprocessing (projwave.x)
+INPUT_CHDENS     Input parameters for plotting (chdens.x)
+INPUT_PH         Input parameters for phonon calculations (ph.x)
+INPUT_Gamma      Input parameters for normal-mode calculations (phcg.x)
+INPUT_D3         Input parameters for 3rd-order derivatives (d3.x)
+INPUT_EFG        Input parameters for electric-field gradient calc (efg.x)
+INPUT_NC         Input parameters for noncolinear magnetism (pwnc.x)
+INPUT_PWCOND     Input parameters for ballistic conductance (pwcond.x)
+INPUT_RAM        Input parameters for Raman calculation (raman.x)
+ 
 ChangeLog       ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
 ChangeLog.pw    ChangeLog before aug 2004 for PWscf
 ChangeLog.cp    ChangeLog before aug 2004 for CP and FPMD
