@@ -65,7 +65,7 @@
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PARAMETER :: file_version = 202
+  INTEGER, PARAMETER :: file_version = 299
   INTEGER :: restart_module_verbosity = 0
 
   INTERFACE write_restart_header
