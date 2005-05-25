@@ -8,6 +8,7 @@ atomic_number.o \
 capital.o \
 dost.o \
 erf.o \
+flush_unit.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
