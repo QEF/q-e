@@ -761,6 +761,13 @@ MODULE read_cards_module
           nkstot = 0
           CALL read_line( input_line )
           READ(input_line, *) nk1, nk2, nk3, k1, k2 ,k3
+          IF ( k1 < 0 .OR. k1 > 1 .OR. &
+               k2 < 0 .OR. k2 > 1 .OR. &
+               k3 < 0 .OR. k3 > 1 ) CALL errore &
+                  ('card_kpoints', 'invalid offsets: must be 0 or 1', 1)
+          IF ( nk1 <= 0 .OR. nk2 <= 0 .OR. nk3 <= 0 ) CALL errore &
+                  ('card_kpoints', 'invalid values for nk1, nk2, nk3', 1)
+
           !
        ELSE IF ( ( k_points == 'tpiba' ) .OR. ( k_points == 'crystal' ) ) THEN
           !
