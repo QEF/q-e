@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002 CP90 group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -75,7 +75,7 @@
       use cg_module, only: ltresh, itercg, etotnew, etotold, tcutoff, &
           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
           enever, etresh, ene0, hpsi, gi, hi, esse, essenew, dene0, spasso, &
-          ene1, passo, iter3, enesti, ninner_ef
+          ene1, passo, iter3, enesti, ninner_ef, emme
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
       use wavefunctions_module, only: deallocate_wavefunctions
@@ -114,6 +114,13 @@
       real(kind=8) :: gamma, entmp, sta
 !
 !
+
+
+
+     evalue=0.d0!ATTENZIONE
+     fion2=0.d0
+
+      open(37,file='convergenza.dat',status='unknown')
       if(tfirst) write(6,*) 'GRADIENTE CONIUGATO'
 
       ! in caso ismear=0 o =-1 mette tutte le f a posto:
@@ -155,9 +162,7 @@
         !ATTENZIONE estendere enever a caso metallico
 
         ENERGY_CHECK: if(.not. ene_ok ) then
-
           call calbec(1,nsp,eigr,c0,bec)
-
           if(.not.tens) then
             call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
@@ -184,7 +189,7 @@
             etotnew=etot
 
           else
-            
+
             call compute_entropy2( entropy, f, n, nspin )
            
             call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
@@ -201,7 +206,6 @@
              enbi=enbi*evalue
              etot=etot+enb+enbi
           endif
-
         else
 
           etot=enever
@@ -213,7 +217,7 @@
           ene_ok=.false.
 
         end if ENERGY_CHECK
-
+        write(37,*)itercg, etotnew
         !se prima iterazione diagonalizza stati
 
         !           if(itercg.eq.2) then
@@ -258,14 +262,14 @@
         !               call cal_emme(c0,bec,emme, 1)
         !calcula nove d
 
-        call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+        call newd(rhor,irb,eigrb,rhovan,fion)
 
         !calcula el gradiente al paso sucesivo, e calcula la soma energie de ks:
 
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,n,2
-          call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+          call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
           if(evalue.ne.0.d0) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -320,9 +324,9 @@
           ! calculation of  contribution of the non-local part of the pseudopotential
           ! to the force on each ion
           if (.not.tens) then
-            if (tfor .or. tprnfor) call nlfq(c0,deeq,eigr,bec,becdr,fion)
+            if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
           else
-            if (tfor .or. tprnfor) call nlfq(c0diag,deeq,eigr,becdiag,becdrdiag,fion)
+            if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
             !EL PARAMETRO becdrdiag el xe in output, tuto bon...
           endif
 
@@ -677,6 +681,7 @@
           !                  call riordina(c0,e0)
           !se anche ene1 e' piu grande di ene0 fa un passo di gradiente coniugato,
           !riducendo il passetto in scala 2
+          ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
           if(iprsta.gt.1) write(6,*) 'CASO: 3'
           iter3=0
@@ -719,12 +724,12 @@
               etot=etot+enb+enbi
             endif
             enever=etot
-  
+           
           end do
   
           c0(:,:,1,1)=cm(:,:,1,1)
           restartcg=.true.
-  
+          ene_ok=.false.
         end if
   
         call calbec (1,nsp,eigr,c0,bec)
@@ -747,18 +752,12 @@
         !
         !=======================================================================
   
-        ! per lo stato eccitato ismear=-1, e poi similmente per tutti stati eccitati
-        ! se ltresh e' = .true. fa un passo cambiando le f
             
         if(tens) then
-  
           if(.not. ene_ok) then
-  
             !     calculation of the array bec:
             call calbec (1,nsp,eigr,c0,bec)
   
-            !     calculation of ekinc
-            call calcmt(f,z0,fmat0)
                    
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
   
@@ -772,32 +771,36 @@
             call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
                  ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
             !     calculation of the array deeq: 
+
+            call compute_entropy2( entropy, f, n, nspin )
+
+    
             !     deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
           endif
   
           ene_ok=.false.
-          call newd(rhor,irb,eigrb,rhovan,deeq,fion2)
+ !     calculation of ekinc
+            call calcmt(f,z0,fmat0)
+          call newd(rhor,irb,eigrb,rhovan,fion2)
     
           !     free energy at x=0
-          atot0=atot    
+          atot0=etot+entropy    
           etot0=etot      
   
           !     start of the loop
           call prefor(eigr,betae)!ATTENZIONE
   
-          !a causa stato eccitato introduzione ninner_ef
   
-          ninner_ef=ninner
-          if(ismear.eq.-1) then
-            if(ltresh) ninner_ef = 1
-          endif
-  
-          do niter=1,ninner_ef
-  
+          do niter=1,ninner
+          !   call xebona(z0,n)!debug 
             h0c0 = 0.0d0
+!DEBUG  controlla c0
+
+
+
             do i=1,n,2                      
-              call dforce(bec,deeq,betae,i,c0(1,i,1,1), &
-                   c0(1,i+1,1,1),h0c0(1,i),h0c0(1,i+1),rhos)
+              call dforce(bec,betae,i,c0(1,i,1,1), &
+              &     c0(1,i+1,1,1),h0c0(1,i),h0c0(1,i+1),rhos)
             end do
                    
             do is=1,nspin
@@ -808,23 +811,37 @@
                   c0hc0(k,i,is)=0.d0
                   do ig=1,ngw
                     c0hc0(k,i,is)=c0hc0(k,i,is)- &
-                    2.0*real(conjg(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
+                 &   2.0*real(conjg(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
                   enddo
                   if (ng0.eq.2) then
                     c0hc0(k,i,is)=c0hc0(k,i,is)+&
-                    real(conjg(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
+                 &   real(conjg(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
                   endif
                 end do
               end do
             end do
-  
+ 
+!           do is=1,nspin
+!              nss=nupdwn(is)
+!              istart=iupdwn(is)
+!              do i=1,nss
+!                do k=i,nss
+!                     c0hc0(k,i,is)=0.5d0*(c0hc0(k,i,is)+c0hc0(i,k,is))
+!                     c0hc0(i,k,is)=c0hc0(k,i,is)
+!                enddo
+!             enddo
+!           enddo 
+
+ 
             call mp_sum(c0hc0)
   
             do is=1,nspin
               nss=nupdwn(is)
               epsi0(1:nss,1:nss,is)=c0hc0(1:nss,1:nss,is)!ATTENZIONE
             end do
-                      
+   
+
+          
             !    diagonalization of the matrix epsi0_ij
             e0 = 0.0d0
             do  is=1,nspin
@@ -835,38 +852,31 @@
                 e0(i+istart-1)=dval(i)
               enddo
             enddo
-                   
-            !    printing of the eigenvalues in fort.101
-            !              write(101,*)   '============='
-            !              write(101,'(2i10)') nfi,niter
-            !              write(101,*) 'Eigenvalues(x=0)'
-            !              do is=1,nspin
-            !                 nss=nupdwn(is)
-            !                 write(101,*) 'spin=',is
-            !                 write(101,*) (e0(j),j=1,nss)
-            !              enddo
+  
+
+!            !    printing of the eigenvalues in fort.101
+!                         write(101,*)   '============='
+!                          write(101,'(2i10)') nfi,niter
+!                          write(101,*) 'Eigenvalues(x=0)'
+!                          do is=1,nspin
+!                             nss=nupdwn(is)
+!                             write(101,*) 'spin=',is
+!                             write(101,*) (e0(j),j=1,nss)
+!                          enddo
   
             !     calculation of the occupations and the fermi energy
             !     corresponding to the chosen ismear,etemp and nspin
   
-            if(ismear.eq.-1) then
-              if( ltresh) then 
-                call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,-1,nspin)
-              else
-                call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,0,nspin)
-              endif
-            else
-              call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,ismear,nspin)
-            endif
+           call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,ismear,nspin)
   
-            !    printing of the occupations in fort.101
-            !              write(101,*) 'Fermi energy(x=0):',ef1 
-            !              write(101,*) 'Occupations(x=0)'
-            !              do is=1,nspin
-            !                 nss=nupdwn(is)
-            !                 write(101,*) 'spin=',is
-            !                 write(101,*) (f1(j),j=1,nss)
-            !              enddo
+!            !    printing of the occupations in fort.101
+!                          write(101,*) 'Fermi energy(x=0):',ef1 
+!                          write(101,*) 'Occupations(x=0)'
+!                          do is=1,nspin
+!                             nss=nupdwn(is)
+!                             write(101,*) 'spin=',is
+!                             write(101,*) (f1(j),j=1,nss)
+!                          enddo
   
             !     calculation of the initial and final occupation matrices
             !     in the z0-rotated orbital basis
@@ -887,7 +897,8 @@
             !     initialization when xmin is determined by sampling 
             do il=1,1
               !     this loop is useful to check that the sampling is correct
-              x=1.0*il
+              !x=0.1*real(il)
+              x=1.*real(il)
               do is=1,nspin
                 nss=nupdwn(is)
                 fmatx(1:nss,1:nss,is)=fmat0(1:nss,1:nss,is)+x*dfmat(1:nss,1:nss,is)
@@ -939,6 +950,7 @@
               !     using the previously calculated rotation matrix 
               !     (similar to what has been done at x=0)
               call calcmt(f,zxt,fmatx)
+              !call xebona(zxt,n)!DEBUG
              
               !     calculation of the rotated quantities for the calculation
               !     of the epsi0_ij matrix at x=1
@@ -949,15 +961,15 @@
   
               call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
                            &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
-              call newd(rhor,irb,eigrb,rhovan,deeq,fion2)
+              call newd(rhor,irb,eigrb,rhovan,fion2)
               call prefor(eigr,betae)
     
               !     free energy at x=1
-              atot1=atot
+              atot1=etot+entropy
               etot1=etot
-              ! write(100,'(3f12.6)') x,atot1,entropy   
+  !            write(*,*)'Energie:', x,atot1,entropy   
   
-            end do
+           end do
   
             !write(100,*) "____________________"
   
@@ -965,7 +977,7 @@
             call prefor(eigr,betae)!ATTENZIONE
             h0c0 = 0.0d0
             do i=1,n,2
-              call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),&
+              call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),&
                 h0c0(1,i),h0c0(1,i+1),rhos)
             end do
   
@@ -1049,9 +1061,9 @@
             atotmin=atot0
             xmin=0.0
                    
-            do il=0,200
+            do il=0,2000
                       
-              x=0.005*il     
+              x=0.0005*real(il)     
               entropy2=0.0
                       
               do is=1,nspin
@@ -1065,14 +1077,14 @@
                 end do
               end do
               etot2=eqa*x**2+eqb*x+eqc
-              ! write(100,'(3f12.6)') x,etot2+entropy2,entropy2
+!              write(*,*) 'Energie2: ',x,etot2+entropy2,entropy2
               if ((etot2+entropy2).lt.atotmin) then
                 xmin=x
                 atotmin=etot2+entropy2
               endif
   
             end do
-  
+ 
             !le righe qua soto le xe per far el minimo con fit parabolico
   
             !                     eqc=atot0
@@ -1081,9 +1093,6 @@
   
             !                     xmin=-eqb/(2.d0*eqa)
   
-            if(ismear.eq.-1) then
-              if(ltresh) xmin=1
-            endif
   
             !     if xmin=1, no need do recalculate the quantities
              
@@ -1139,8 +1148,29 @@
             end do
   
             !     calculation of the rotated quantities
+!DEBUG
+!            z0=z0_s
+!            f(1:n)=f_s(1:n)
+
+
+!DEBGUG
+
+
+
             call calcmt(f,z0,fmat0)
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
+ !DEBUG
+ !         do i=1,n
+ !            do j=1,n
+ !               add=0.d0
+ !                 do ig=1,ngw
+ !                add = add + 2*real(conjg(c0diag(ig,i))*c0diag(ig,j))
+ !                 enddo
+ !              add = add - real(conjg(c0diag(1,i))*c0diag(1,j))
+ !               write(*,*) 'Conrollo c0diag', i,j, add
+ !            enddo
+ !         enddo
+
             call rhoofr (nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin) 
   
             !     put core charge (if present) in rhoc(r)
@@ -1148,12 +1178,13 @@
   
             call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
                     &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
-            call newd(rhor,irb,eigrb,rhovan,deeq,fion2)
+            call newd(rhor,irb,eigrb,rhovan,fion2)
+            CALL compute_entropy2( entropy, f, n, nspin )
             call prefor(eigr,betae)
             ene_ok=.true. !so does not calculate the energy again
     
             !     free energy at x=xmin
-            atotmin=atot      
+            atotmin=etot+entropy      
   
             !     output
             !    write(100,'(a35,f12.7)') 'Fermi energy =',ef1
@@ -1166,6 +1197,7 @@
             if(iprsta.gt.1) write(6,*) 'Ciclo :', itercg,atot0,atot1
             atot0=atotmin
             etot0=etot
+            enever=etot
             !     end of the loop
   
           end do!su ninnner
@@ -1184,11 +1216,11 @@
       !calcola forze se richiesto
       !       if(tfor .or. tprnfor) then
       !calcola sempre le forze in modo da calcolare lambda che serve per gli autostati
-      call newd(rhor,irb,eigrb,rhovan,deeq,fion)
+      call newd(rhor,irb,eigrb,rhovan,fion)
       if (.not.tens) then
-        if (tfor .or. tprnfor) call nlfq(c0,deeq,eigr,bec,becdr,fion)
+        if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
       else
-        if (tfor .or. tprnfor) call nlfq(c0diag,deeq,eigr,becdiag,becdrdiag,fion)
+        if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
         !EL PARAMETRO becdrdiag el xe in output, tuto bon...
       endif
   
@@ -1197,7 +1229,7 @@
       if(nvb.ge.1) then
         call prefor(eigr,betae)!ATTENZIONE
         do i=1,n,2
-          call dforce(bec,deeq,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
+          call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
           if(evalue .ne. 0.d0) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
@@ -1262,4 +1294,4 @@
       endif
       !        end if
 
-END SUBROUTINE runcg_uspp
+END SUBROUTINE
