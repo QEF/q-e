@@ -281,16 +281,16 @@ CONTAINS
   END SUBROUTINE ensemble_dft_info
 
 
-  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat )
+  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, natx )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat
+    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, natx
       allocate( bec0(nhsa,n))
       allocate( becm(nhsa,n))
       allocate(c0diag(ngw,n))
       allocate(becdrdiag(nhsa,n,3))
       allocate(id(nudx,nudx,nspin))
       allocate(z0(nudx,nudx,nspin))
-      allocate(fion2(3,nat))
+      allocate(fion2(3,natx))
       allocate(becdiag(nhsa,n))
       allocate(c0hc0(nudx,nudx,nspin))
       allocate(c0h0c0(nudx,nudx,nspin))
