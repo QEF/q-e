@@ -7,10 +7,6 @@
 !
 
 
-#if defined (__SX4) || defined (__ORIGIN) || defined (__T3E) || defined (FUJ64) || defined (HITACHI)
-#  define FLUSH
-#endif
-
 #if defined(CRAYY) || defined(__LINUX) || defined(HITACHI) || defined(__SUN)
 #  define C_POINTER  integer(kind=4)
 #endif
