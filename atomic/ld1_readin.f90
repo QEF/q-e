@@ -262,6 +262,7 @@ subroutine ld1_readin
      end if
      !
      do ns=1,nwfs
+        if (pseudotype < 3) rcutus(ns) = rcut(ns)
         do ns1=1,ns-1
            if (lls(ns) == lls(ns1).and.pseudotype == 1) &
                 call errore('ld1_readin','two wavefunctions for same l',1)
