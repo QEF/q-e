@@ -696,6 +696,7 @@
       use ions_base, only: nsp, na, nat
       use gvecw, only: ggp
       use cell_base, only: tpiba2
+      use ensemble_dft, only: tens
 !
       implicit none
 !
@@ -771,8 +772,15 @@
 !       in the kinetic energy because it is defined as 0.5*g**2
 !       in the potential part because of the logics
 !
-      fi =-  f(i)*0.5
-      fip=-f(i+1)*0.5
+   
+     if (tens) then
+        fi =-0.5
+        fip=-0.5
+      else
+        fi =-  f(i)*0.5
+        fip=-f(i+1)*0.5
+      end if
+
       do ig=1,ngw
          fp= psi(nps(ig)) + psi(nms(ig))
          fm= psi(nps(ig)) - psi(nms(ig))
@@ -800,9 +808,17 @@
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      isa=isa+1
                      dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
-                     af(inl)=af(inl)-  f(i)*dd*bec(jnl,  i)
+                     if(tens) then
+                      af(inl)=af(inl)-dd*bec(jnl,  i)
+                     else
+                      af(inl)=af(inl)- f(i)*dd*bec(jnl,  i)
+                     end if
                      dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
-                     if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
+                     if(tens) then
+                      if (i.ne.n) aa(inl)=aa(inl)-dd*bec(jnl,i+1)
+                     else
+                      if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
+                     end if
                   end do
                end do
             end do
