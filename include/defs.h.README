@@ -32,7 +32,7 @@
       ADD_BLAS_ONE_UNDERSCORE
                    may be needed depending on how blas/lapack are
                    compiled and how they are called by the compiler
-      __BENCHLIB   t3e machines with benchlib library
+      __BENCHLIB   t3e machines with benchlib library (obsolete)
       __LAM        LAM-MPI version
    
    Other definitions not used in the f_defs.h file:
@@ -41,9 +41,6 @@
 
    Output Definitions:
 
-      FLUSH            : define FLUSH if you want output to be written 
-                         immediately to disk and not keep in buffers
-                         (useful in case of crash)
       DIRECT_IO_FACTOR : record length in direct-access I/O is given by
                          the number of real*8 words times DIRECT_IO_FACTOR
       C_POINTER        : the type for C pointer
