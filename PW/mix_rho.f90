@@ -50,8 +50,9 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
     alphamix,              &! (in) mixing factor
     dr2                     ! (out) the estimated errr on the energy
   REAL (KIND=DP) :: &
-    tr2_min       ! estimated error from diagonalization. If the estimated scf error
-                  ! is smaller than this, exit: a more accurate diagonalization is needed
+    tr2_min       ! estimated error from diagonalization. If the estimated scf 
+                  ! error is smaller than this, exit: a more accurate 
+                  ! diagonalization is needed
   LOGICAL :: &
     conv                    ! (out) if true the convergence has been reached
   INTEGER, PARAMETER :: &
@@ -138,13 +139,16 @@ SUBROUTINE mix_rho( rhout, rhoin, nsout, nsin, alphamix, &
   !
   dr2 = rho_dot_product( rhocout, rhocout ) + ns_dot_product( nsout, nsout )
   !
-  ! ... if the self-consistency error (dr2) is smaller than the estimated error due to
-  !     diagonalization (tr2_min), exit and leave rhoin and rhout unchanged
+  ! ... if the self-consistency error (dr2) is smaller than the estimated 
+  ! ... error due to diagonalization (tr2_min), exit and leave rhoin and 
+  ! ... rhout unchanged
   !
   IF ( dr2 < tr2_min ) THEN
      !
      DEALLOCATE( rhocin, rhocout )
+     !
      CALL stop_clock( 'mix_rho' )
+     !
      RETURN
      !
   END IF

@@ -40,10 +40,9 @@ SUBROUTINE electrons()
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
   USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
-  USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, &
-                                   niter, nmix, iprint, istep, &
-                                   lscf, lmd, conv_elec, restart, &
-                                   reduce_io, iverbosity
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, niter, nmix, &
+                                   iprint, istep, lscf, lmd, conv_elec,       &
+                                   restart, reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -250,7 +249,7 @@ SUBROUTINE electrons()
         IF ( noncolin ) THEN
            !
            CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, &
-                            dr2, iter, nmix, flmix, conv_elec )
+                            dr2, tr2_min, iter, nmix, flmix, conv_elec )
            !
         ELSE
            !

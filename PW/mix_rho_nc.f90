@@ -12,8 +12,8 @@
 !
 #undef DEBUG
 !-----------------------------------------------------------------------
-SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
-                    n_iter, filename, conv)
+SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
+                       dr2, tr2_min, iter, n_iter, filename, conv )
   !-----------------------------------------------------------------------
   !
   ! Modified Broyden's method for charge density mixing
@@ -44,7 +44,10 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
                 nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
                 alphamix,          &! (in) mixing factor
                 dr2                 ! (out) the estimated errr on the energy
-
+  REAL (KIND=DP) :: &
+    tr2_min       ! estimated error from diagonalization. If the estimated scf 
+                  ! error is smaller than this, exit: a more accurate 
+                  ! diagonalization is needed
   logical ::    &
                 conv        ! (out) if true the convergence has been reached
   !
@@ -99,7 +102,7 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   if (lda_plus_u) ldim = 2 * Hubbard_lmax + 1
 
   saveonfile = ( filename /= ' ' )
-
+  !
   allocate(rhocin(ngm0,nspin), rhocout(ngm0,nspin))
   !
   ! psic is used as work space - must be already allocated !
@@ -124,16 +127,22 @@ SUBROUTINE mix_rho_nc (rhout, rhoin, nsout, nsin, alphamix, dr2, iter, &
   !
   dr2 = rho_dot_product_nc(rhocout,rhocout) + ns_dot_product_nc(nsout,nsout) 
   !
+  ! ... if the self-consistency error (dr2) is smaller than the estimated 
+  ! ... error due to diagonalization (tr2_min), exit and leave rhoin and 
+  ! ... rhout unchanged
+  !
+  IF ( dr2 < tr2_min ) THEN
+     !
+     DEALLOCATE( rhocin, rhocout )
+     !
+     CALL stop_clock( 'mix_rho' )
+     !
+     RETURN
+     !
+  END IF
+  !
   conv = (dr2 < tr2)
   !
-#ifdef DEBUG
-!  if (lda_plus_u) WRITE( stdout,*) ' ns_dr2 =', ns_dot_product_nc(nsout,nsout)
-  IF (conv) THEN
-     WRITE( stdout,100) dr2, rho_dot_product_nc(rhocout,rhocout) + &
-                        ns_dot_product_nc(nsout,nsout)
-  END IF
-#endif
-
   IF (saveonfile) THEN
      !
      iunmix = find_free_unit()
