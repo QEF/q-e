@@ -549,8 +549,17 @@ use, you can override it.)
 
 If you want to use a precompiled FFTW library, the corresponding
 \texttt{fftw.h} include file is also required.
-If \texttt{configure} wasn't able to find it, you may specify its
-location in the \texttt{INCLUDEFFTW} environment variable.
+That may or may not have been installed on your system together with
+the library: in particular, most Linux distributions split library
+packages into ``base'' and ``development'' packages, and include files
+normally belong to the latter.
+Thus if you can't find \texttt{fftw.h} on your machine, chances are
+you must install the FFTW development package (how exactly it's called
+depends on your distribution).
+
+If instead the file is there, but \texttt{configure} doesn't find it,
+you may specify its location in the \texttt{INCLUDEFFTW} environment
+variable.
 For example:
 \begin{verbatim}
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
@@ -2518,10 +2527,10 @@ Possible reasons:
 \paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
             message related to MPI errors.}
 
-See info from Axel Kohlmeyer:\\
-\htmladdnormallink{\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}%
-                           {http://www.democritos.it/pipermail/pw_forum/2005-Apr
-il/002338.htm}.
+See info from Axel Kohlmeyer:\hfill\break
+\htmladdnormallink%
+{{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
+{http://www.democritos.it/pipermail/pw_forum/2005-April/002338.html}
 
 \paragraph{\texttt{pw.x} works for simple systems, but not for large
            systems or whenever more RAM is needed.}
