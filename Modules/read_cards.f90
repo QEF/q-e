@@ -115,7 +115,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_default_values
+     END SUBROUTINE
      !
      !
      !----------------------------------------------------------------------
@@ -159,13 +159,13 @@ MODULE read_cards_module
           !
           CALL card_setnfi( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'OPTICAL' ) THEN
           !  
           CALL card_optical( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CONSTRAINTS' ) THEN
           !
@@ -175,41 +175,43 @@ MODULE read_cards_module
           !
           CALL card_vhmean( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'DIPOLE' ) THEN
           !
           CALL card_dipole( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'ESR' ) THEN
           !
           CALL card_esr( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
           !
           CALL card_kpoints( input_line )
           IF ( prog == 'CP' .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'NEIGHBOURS' ) THEN
           !
           CALL card_neighbours( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
           !
           CALL card_occupations( input_line )
+!          IF ( prog == 'PW' .AND. ionode ) &
+!             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'PSTAB' ) THEN
           !
           CALL card_pstab( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CELL_PARAMETERS' ) THEN
           !
@@ -219,31 +221,31 @@ MODULE read_cards_module
           !
           CALL card_turbo( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'ION_VELOCITIES' ) THEN
           !
           CALL card_ion_velocities( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT' ) THEN
           !
           CALL card_ksout( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(a)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT_EMPTY' ) THEN
           !
           CALL card_ksout_empty( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'RHOOUT' ) THEN
           !
           CALL card_rhoout( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
@@ -264,7 +266,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE read_cards
+     END SUBROUTINE
      !
      !
      ! ... Description of the allowed input CARDS for FPMD code
@@ -344,7 +346,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_atomic_species
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -402,8 +404,13 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
-       IF ( ( calculation == 'neb ') .OR. ( calculation == 'smd' ) ) &
-          ALLOCATE( pos( ( 3 * natx ) , num_of_images ) )
+       IF ( full_phs_path_flag ) THEN
+          !
+          ALLOCATE( pos( 3*natx, num_of_images ) )
+          !
+          pos = 0.D0
+          !
+       END IF
        !
        IF ( tread ) THEN
           CALL errore( ' card_atomic_positions  ', ' two occurrence ', 2 )
@@ -420,7 +427,7 @@ MODULE read_cards_module
        END IF
        !
        if_pos = 1
-       IF ( (calculation == 'neb') .OR. (calculation == 'smd') ) pos = 0.D0
+       !
        sp_pos = 0
        rd_pos = 0.D0
        na_inp = 0
@@ -444,8 +451,26 @@ MODULE read_cards_module
           IF ( prog == 'PW' ) atomic_positions = 'alat'
        END IF
        !
-       IF ( calculation == 'neb' .OR. &
-            ( calculation == 'smd' .AND. prog == 'PW' ) ) THEN
+       IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
+          !
+          rep_loop : DO rep_i = 1, smd_kwnp
+             !
+             CALL read_line( input_line )
+             !
+             IF ( matches( "first_image", input_line ) .OR. &
+                  matches( "image", input_line )       .OR. &
+                  matches( "last_image", input_line) ) THEN
+                !
+                CALL path_read_images( rep_i )
+                !
+             ELSE
+                CALL errore( ' read_cards ', ' missing or wrong image' // &
+                           & ' identifier in ATOMIC_POSITION', 1 )
+             ENDIF
+             !
+          END DO rep_loop
+          !
+       ELSE IF ( full_phs_path_flag ) THEN
           !
           CALL read_line( input_line )
           !
@@ -460,7 +485,7 @@ MODULE read_cards_module
              CALL errore( ' read_cards ', &
                         & ' first_image missing in ATOMIC_POSITION', 1 )
              !
-          END IF
+          END IF      
           !
           read_conf_loop: DO 
              !
@@ -494,25 +519,6 @@ MODULE read_cards_module
                         & ' last_image missing in ATOMIC_POSITION', 1 )
              !
           END IF
-          !
-       ELSE IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
-          !
-          rep_loop : DO rep_i = 1, smd_kwnp
-             !
-             CALL read_line( input_line )
-             !
-             IF ( matches( "first_image", input_line ) .OR. &
-                  matches( "image", input_line )       .OR. &
-                  matches( "last_image", input_line) ) THEN
-                !
-                CALL path_read_images( rep_i )
-                !
-             ELSE
-                CALL errore( ' read_cards ', ' missing or wrong image' // &
-                           & ' identifier in ATOMIC_POSITION', 1 )
-             ENDIF
-             !
-          END DO rep_loop
           !
        ELSE
           !
@@ -670,7 +676,7 @@ MODULE read_cards_module
            !
          END SUBROUTINE path_read_images
          !
-     END SUBROUTINE card_atomic_positions
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -794,7 +800,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_kpoints
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -841,7 +847,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_setnfi
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -943,7 +949,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_occupations
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -991,7 +997,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_vhmean
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1045,7 +1051,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_optical
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1085,7 +1091,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_dipole
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1135,7 +1141,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_esr
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1186,7 +1192,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_neighbours
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1237,7 +1243,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_pstab
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1310,7 +1316,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_cell_parameters
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1365,20 +1371,20 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_turbo
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
      !
-     ! ION_VELOCITIES
+     ! ATOMIC_VELOCITIES
      !
      !   read velocities (in atomic units) from standard input
      !
      ! Syntax:
      !
-     !   ION_VELOCITIES
+     !   ATOMIC_VELOCITIES
      !     label(1)  Vx(1) Vy(1) Vz(1)
      !     ....
      !     label(n)  Vx(n) Vy(n) Vz(n)
@@ -1453,7 +1459,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_ion_velocities
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1510,11 +1516,21 @@ MODULE read_cards_module
        ! 
        ! 
        IF ( tread ) CALL errore( ' card_constraints ', ' two occurrence ', 2 )
-       ! 
+       !
        CALL read_line( input_line )
        !
        READ( input_line, * ) nconstr_inp, constr_tol_inp
-       ! 
+       !
+       IF ( cg_phs_path_flag ) THEN
+          !
+          ALLOCATE( pos( nconstr_inp, 2 ) )
+          !
+          pos = 0.D0
+          !
+          input_images = 2
+          !
+       END IF
+       !
        DO i = 1, nconstr_inp
           !
           CALL read_line( input_line )
@@ -1526,7 +1542,17 @@ MODULE read_cards_module
           SELECT CASE( constr_type_inp(i) )
           CASE( 0 )
              !
-             IF ( nfield == 5 ) THEN
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i),    &
+                                      constr_inp(2,i),    &
+                                      constr_inp(3,i),    &
+                                      constr_inp(4,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1534,7 +1560,7 @@ MODULE read_cards_module
                                       constr_inp(3,i), &
                                       constr_inp(4,i)
                 !
-             ELSE
+             ELSE IF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1545,17 +1571,29 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+             ELSE
+                !
+                CALL errore( ' card_constraints ', ' too many fields ', 1 )
+                !
              END IF
              !
           CASE( 1 )
              !
-             IF ( nfield == 3 ) THEN
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i),    &
+                                      constr_inp(2,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 3 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
                                       constr_inp(2,i)
                 !
-             ELSE
+             ELSE IF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1564,18 +1602,31 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+             ELSE
+                !
+                CALL errore( ' card_constraints ', ' too many fields ', 1 )
+                !
              END IF
              !
           CASE( 2 )
              !
-             IF ( nfield == 4 ) THEN
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i),    &
+                                      constr_inp(2,i),    &
+                                      constr_inp(3,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
                                       constr_inp(2,i), &
                                       constr_inp(3,i)
                 !
-             ELSE
+             ELSE IF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1584,6 +1635,10 @@ MODULE read_cards_module
                                       constr_target(i)
                 !
                 constr_target_set(i) = .TRUE.
+                !
+             ELSE
+                !
+                CALL errore( ' card_constraints ', ' too many fields ', 1 )
                 !
              END IF
              !
@@ -1601,7 +1656,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_constraints
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1690,7 +1745,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_ksout
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1778,7 +1833,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_ksout_empty
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1819,7 +1874,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE card_rhoout
+     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------
@@ -1889,7 +1944,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_climbing_images
+     END SUBROUTINE card_climbing_images   
      !
      !
      !------------------------------------------------------------------------
@@ -1938,6 +1993,6 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE card_template
+     END SUBROUTINE
      !
 END MODULE read_cards_module

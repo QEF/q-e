@@ -102,7 +102,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE control_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -188,7 +188,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        ! 
-     END SUBROUTINE system_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -276,7 +276,6 @@ MODULE read_namelists_module
        sic_epsilon = 1.D0
        force_pairing = .false.
        ! 
-       !***ensemble-DFT
        fermi_energy = 0.D0
        n_inner = 0
        rotation_dynamics = "line-minimization"
@@ -285,19 +284,18 @@ MODULE read_namelists_module
        occmass = 0.D0
        rotation_damping = 0.D0
        occupation_damping = 0.D0
-       !***gradiente coniugato
-       tcg = .false.
-       maxiter= 40
-       passop=0.3
-       etresh=1.d-6
-       !**** campo elettrico
-       epol=3
-       efield=0.d0
-
+       !
+       tcg     = .FALSE.
+       maxiter = 40
+       passop  = 0.3D0
+       etresh  = 1.D-6
+       !
+       epol   = 3
+       efield = 0.D0
        ! 
        RETURN
        ! 
-     END SUBROUTINE electrons_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -313,6 +311,10 @@ MODULE read_namelists_module
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
        !
+       !
+       ! ... ( 'full' | 'coarse-grained' )
+       !
+       phase_space = 'full'
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' )
        ! ... ( 'constrained-verlet' | 'bfgs' | 'constrained-damp' | 'beeman' )
@@ -413,7 +415,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE ions_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -458,7 +460,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE cell_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -480,7 +482,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE phonon_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -500,7 +502,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE raman_defaults
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -548,7 +550,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE control_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -625,7 +627,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE system_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -716,7 +718,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE electrons_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -734,6 +736,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        !
+       CALL mp_bcast( phase_space, ionode_id )
        CALL mp_bcast( ion_dynamics, ionode_id )
        CALL mp_bcast( ion_radius, ionode_id )
        CALL mp_bcast( ion_damping, ionode_id )
@@ -812,7 +815,7 @@ MODULE read_namelists_module
 
        RETURN
        !
-     END SUBROUTINE ions_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -846,7 +849,7 @@ MODULE read_namelists_module
        ! 
        RETURN
        !
-     END SUBROUTINE cell_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------------=!
      !
@@ -869,7 +872,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE phonon_bcast
+     END SUBROUTINE
      
      !
      !=----------------------------------------------------------------------------=!
@@ -893,7 +896,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE raman_bcast
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -984,7 +987,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE control_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1117,7 +1120,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE system_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1175,7 +1178,7 @@ MODULE read_namelists_module
 
 !
        RETURN
-     END SUBROUTINE electrons_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1195,6 +1198,13 @@ MODULE read_namelists_module
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
        !
+       !
+       DO i = 1, SIZE( phase_space_allowed )
+          IF( TRIM( phase_space ) == phase_space_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF ( .NOT. allowed ) &
+          CALL errore( sub_name, ' phase_space '''// &
+                       & TRIM( phase_space )// ''' not allowed ', 1 )
        !
        DO i = 1, SIZE(ion_dynamics_allowed)
           IF( TRIM(ion_dynamics) == ion_dynamics_allowed(i) ) allowed = .TRUE.
@@ -1232,6 +1242,27 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' opt_scheme '''// &
                      & TRIM( opt_scheme )//''' not allowed ', 1 )
        !
+       IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
+          !
+          IF ( phase_space == 'coarse-grained' ) THEN
+             !
+             full_phs_path_flag = .FALSE.
+             cg_phs_path_flag   = .TRUE.
+             !
+             IF ( calculation /= 'neb' .AND. calculation /= 'smd' ) &
+                CALL errore( sub_name, &
+                           & ' coarse-grained phase-space is presently' // &
+                           & ' allowed only for neb or smd ', 1 )        
+             !
+          ELSE
+             !
+             full_phs_path_flag = .TRUE.
+             cg_phs_path_flag   = .FALSE.
+             !
+          END IF
+          !
+       END IF
+       !
        ! ... NEB specific checkin
        !
        IF ( k_max < 0.D0 ) &
@@ -1246,7 +1277,7 @@ MODULE read_namelists_module
        END DO
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' CI_scheme '''// &
-                       & TRIM( CI_scheme )//''' not allowed ', 1 )        
+                       & TRIM( CI_scheme )//''' not allowed ', 1 )
        !
        ! ... SMD checking ( Y.K. 15/04/2004 )
        !
@@ -1275,7 +1306,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE ions_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1314,7 +1345,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE cell_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1333,7 +1364,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE phonon_checkin
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1352,7 +1383,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE raman_checkin
+     END SUBROUTINE
 
      !
      !=----------------------------------------------------------------------=!
@@ -1505,14 +1536,13 @@ MODULE read_namelists_module
        END IF                   
        !
        IF ( TRIM( sic ) /= 'none' ) THEN 
-         IF ( nspin == 2 .and. nelec > 1 .and. ( nelup == neldw .or. nelup == (neldw+1) ) ) THEN
-            force_pairing = .true.
-         END IF
+         IF ( nspin == 2 .AND. nelec > 1 .AND. &
+              ( nelup == neldw .OR. nelup == neldw+1 ) ) force_pairing = .TRUE.
        END IF
        !
        RETURN
        !
-     END SUBROUTINE fixval
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !

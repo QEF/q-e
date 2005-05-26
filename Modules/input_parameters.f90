@@ -847,6 +847,15 @@ MODULE input_parameters
 !  IONS Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
+        CHARACTER(LEN=80) :: phase_space = 'full'
+          ! phase_space = 'full' | 'coarse-grained'
+          ! 'full'             the full phase-space is used for the ionic 
+          !                    dynamics
+          ! 'coarse-grained'   a coarse-grained phase-space, defined by a set 
+          !                    of constraints, is used for the ionic dynamics
+        
+        CHARACTER(LEN=80) :: phase_space_allowed(2)
+        DATA phase_space_allowed / 'full', 'coarse-grained' /
 
         CHARACTER(LEN=80) :: ion_dynamics = 'none' 
           ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 
@@ -966,11 +975,20 @@ MODULE input_parameters
         ! ... variables added for "path" calculations
         !
         
-        INTEGER   :: input_images = 0
+        !
+        ! ... these are two auxiliary variables used in read_cards to
+        ! ... distinguish among neb and smd done in the full phase-space
+        ! ... or in the coarse-grained phase-space
+        !
+        LOGICAL :: full_phs_path_flag = .FALSE. 
+        LOGICAL :: cg_phs_path_flag   = .FALSE.        
+        !
         
-        INTEGER   :: num_of_images = 0
+        INTEGER :: input_images = 0
         
-        INTEGER   :: init_num_of_images = 0
+        INTEGER :: num_of_images = 0
+        
+        INTEGER :: init_num_of_images = 0
 
         CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
           ! CI_scheme = 'no-CI' | 'highest-TS' | 'all-SP' | 'manual'
@@ -1094,24 +1112,22 @@ MODULE input_parameters
         !
         REAL (KIND=DP) :: smd_spal = 1.D0
  
-        NAMELIST / ions / tempw, ion_dynamics, ion_radius, ion_damping,   &
-                          ion_positions, ion_velocities, ion_temperature, &
-                          fnosep, nhpcl, ndega, tranp, amprp, greasp,     &
-                          tolp, ion_nstepe, ion_maxstep, upscale,         &
-                          pot_extrapolation, wfc_extrapolation, delta_t,  &
-                          nraise, num_of_images, CI_scheme, opt_scheme,   &
-                          first_last_opt, use_multistep, use_masses,      &
-                          write_save, damp, temp_req, ds, k_max, k_min,   &
-                          path_thr, init_num_of_images, free_energy,      &
-                          fixed_tan, use_freezing, use_fourier,           &
-                          trust_radius_max, trust_radius_min,             &
-                          trust_radius_ini, trust_radius_end, w_1, w_2,   &
-                          bfgs_ndim, sic_rloc,                            &
-                          smd_polm, smd_kwnp, smd_linr, smd_stcd,         &
-                          smd_stcd1, smd_stcd2, smd_stcd3, smd_codf,      &
-                          smd_forf, smd_smwf, smd_lmfreq, smd_tol,        &
-                          smd_maxlm, smd_smcp, smd_smopt, smd_smlm,       &
-                          smd_ene_ini, smd_ene_fin
+        NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
+                          ion_positions, ion_velocities, ion_temperature,      &
+                          tempw, fnosep, nhpcl, ndega, tranp, amprp, greasp,   &
+                          tolp, ion_nstepe, ion_maxstep, upscale, delta_t,     &
+                          pot_extrapolation, wfc_extrapolation, nraise,        &
+                          num_of_images, CI_scheme, opt_scheme, use_masses,    &
+                          first_last_opt, use_multistep, write_save, damp,     &
+                          temp_req, ds, k_max, k_min, path_thr, fixed_tan,     &
+                          init_num_of_images, free_energy, use_freezing,       &
+                          use_fourier, trust_radius_max, trust_radius_min,     &
+                          trust_radius_ini, trust_radius_end, w_1, w_2,        &
+                          bfgs_ndim, sic_rloc,                                 &
+                          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &
+                          smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
+                          smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
+                          smd_smlm, smd_ene_ini, smd_ene_fin
 
 !=----------------------------------------------------------------------------=!  
 !  CELL Namelist Input Parameters
@@ -1367,12 +1383,12 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER         :: nconstr_inp = 0
-      REAL (KIND=dbl) :: constr_tol_inp = 0.0d0
-      INTEGER         :: constr_type_inp(natx) = 0
-      REAL (KIND=dbl) :: constr_inp(4,natx) = 0
-      REAL (KIND=dbl) :: constr_target(natx) = 0.0d0
-      LOGICAL         :: constr_target_set(natx) = .FALSE.
+      INTEGER         :: nconstr_inp               = 0
+      REAL (KIND=dbl) :: constr_tol_inp            = 0.D0
+      INTEGER         :: constr_type_inp(natx)     = 0
+      REAL (KIND=dbl) :: constr_inp(4,natx)        = 0
+      REAL (KIND=dbl) :: constr_target(natx)       = 0.D0
+      LOGICAL         :: constr_target_set(natx)   = .FALSE.
 
 !
 !    KOHN_SHAM

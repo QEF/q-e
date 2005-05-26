@@ -202,6 +202,7 @@ MODULE control_flags
     lconstrain,       &! if .TRUE. the calc. is constraint
     ldamped,          &! if .TRUE. the calc. is a damped dynamics
     lrescale_t,       &! if .TRUE. the ionic temperature is rescaled
+    lcoarsegrained,   &! if .TRUE. a coarse-grained phase-space is used
     restart            ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency
