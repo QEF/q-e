@@ -82,6 +82,7 @@ MODULE constants
   !
   REAL(dbl), PARAMETER :: eps4  = 1.0D-4
   REAL(dbl), PARAMETER :: eps8  = 1.0D-8
+  REAL(dbl), PARAMETER :: eps14 = 1.0D-14
   REAL(dbl), PARAMETER :: eps16 = 1.0D-16
   REAL(dbl), PARAMETER :: eps32 = 1.0D-32
   !

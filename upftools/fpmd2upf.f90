@@ -5,6 +5,30 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
+! This utility can be used to convert norm-conserving
+! pseudopotentials from FPMD old format to UPF format
+!
+! Usage:
+!   fpmd2upf.x < input.namelist
+!
+!   input.namelist should contain the namelist fpmd_pseudo
+!   fpmd_pseudo parameter are:
+!
+!   psfile   pseudopotential filename in FPMD format
+!   nwfs     Number of wavefunction
+!   wfl(i)   i = 1, nwfs  Wavefunction label
+!   wfoc(i)  i = 1, nwfs  Wavefunction occupation
+!   psd      element name
+!   zp       valence charge
+!   iexch    exchange functional
+!   icorr    correlation functional
+!   igcx     exchange gradient correction
+!   igcc     correlation gradient correction
+!
+! Example:
+
+
 module fpmd2upf_module
 
   USE kinds, ONLY: dbl
@@ -109,6 +133,7 @@ contains
           DO ir = 1, mesh
             x = xmin + REAL(ir-1) * dx
             ap%rw(ir)  = EXP(x) / zmesh
+            IF( ap%rw(ir) > 1000.0d0 ) EXIT
           END DO
           ap%mesh = mesh
           ap%dx   = dx
@@ -758,19 +783,22 @@ program fpmd2upf
 
   TYPE (pseudo_ncpp) :: ap
   CHARACTER(LEN=256) :: psfile
+  CHARACTER(LEN=2)   :: wfl( 10 )
+  REAL(kind=8)       :: wfoc( 10 )
   INTEGER :: nsp, nspnl, i, lloc, l, ir, iv, kkbeta
   REAL(kind=8) :: rmax = 10
   REAL(kind=8) :: vll
   REAL(kind=8), allocatable :: aux(:)
 
-! ... end of declarations
-!  ----------------------------------------------
+  namelist / fpmd_pseudo / psfile, nwfs, wfl, wfoc, psd, &
+                           iexch, icorr, igcx, igcc, zp
 
-      WRITE(6,*) ' Enter the pseudopotential filename in FPMD format : '
-      READ(5,'(a)') psfile
+  ! ... end of declarations
 
-      nsp = 1
-      CALL read_pseudo_fpmd(ap, psfile)
+  read( 5, fpmd_pseudo )
+
+  nsp = 1
+  CALL read_pseudo_fpmd(ap, psfile)
 
   write(generated, '("Generated using unknown code")')
   write(date_author,'("Author: unknown    Generation date: as well")')
@@ -778,16 +806,15 @@ program fpmd2upf
 
   rcloc = 0.0
 
-  write(6, * ) 'Number of wavefunction  > '
-  read (5,*) nwfs
-
   allocate( els(nwfs), oc(nwfs), epseu(nwfs) )
   allocate( lchi(nwfs), nns(nwfs) )
   allocate( rcut (nwfs), rcutus (nwfs) )
 
+  els = '?' 
+  oc  = 0.0d0
   do i = 1, nwfs
-     write(6, * ) 'Wavefunction ',i,' label, occupation > '
-     read (5,*) els(i), oc(i)
+     els(i)   = wfl(i)
+     oc(i)    = wfoc(i)
      lchi(i)  = i - 1
      nns (i)  = 0
      rcut(i)  = 0.0
@@ -795,18 +822,13 @@ program fpmd2upf
      epseu(i) = 0.0
   end do
 
-  write(6, * ) 'element > '
-  read(5,*) psd
-
   pseudotype = 'NC'
   nlcc       = ap%tnlcc
-  zp         = ap%zv
+  if( ap%zv > 0.0d0 ) zp = ap%zv
   etotps     = 0.0
 
   lloc  = ap%lloc 
   lmax  = MAX( MAXVAL( ap%lll( 1:ap%nbeta ) ), ap%lloc - 1 )
-
-!  go to 100
 
   nbeta = ap%nbeta
   mesh  = ap%mesh
@@ -818,9 +840,6 @@ program fpmd2upf
      elsw(i)  = els(i)
   end do
 
-  write(6, * ) 'XC (iexch,icorr,igcx,igcc) > '
-  read(5,*) iexch, icorr, igcx, igcc
-
   allocate(rab(mesh))
   allocate(  r(mesh))
   r   = ap%rw
@@ -828,7 +847,6 @@ program fpmd2upf
   rab = ap%rw * ap%dx
 
   write(6,*) ap%lloc, ap%lll( 1:ap%nbeta ) , ap%nbeta, ap%dx
-
 
   allocate (rho_atc(mesh))
   if (nlcc) rho_atc = ap%rhoc
@@ -892,6 +910,8 @@ program fpmd2upf
 100 continue
 
 end program fpmd2upf
+
+
 
 !----------------------------------------------------------------------
 subroutine simpson2(mesh,func,rab,asum)

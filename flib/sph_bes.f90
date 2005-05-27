@@ -19,7 +19,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   ! ...   jl(1:msh) = j_l(q*r(i))  (j_l = spherical bessel function)
   !
   use kinds, only: DP
-  USE constants, ONLY : eps8
+  USE constants, ONLY : eps14
   !
   implicit none
   !
@@ -32,7 +32,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   real(kind=DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
 #endif
   !
-  if (abs (q) < eps8) then
+  if (abs (q) < eps14) then
      if (l == -1) then
         call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
      elseif (l == 0) then
@@ -41,7 +41,7 @@ subroutine sph_bes (msh, r, q, l, jl)
         jl(:) = 0.d0
      endif
   else
-     if (abs (q * r (1) ) > eps8) then
+     if (abs (q * r (1) ) > eps14) then
         ir0 = 1
      else
         if (l == -1) then

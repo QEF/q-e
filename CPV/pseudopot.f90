@@ -465,6 +465,7 @@
 
       omega = ht%deth
 
+      ps%wsg = 0.0d0
       do is = 1, size(ps%wsg,2)
         do igh = 1, nh( is )
           ps%wsg( igh, is) = 4.0d0 * ( 4.0d0 * pi ) ** 2 * dvan( igh, igh, is ) / omega
@@ -509,10 +510,17 @@
           ALLOCATE( vloc( ps%ap(is)%mesh ) )
           !
           vloc = ps%ap(is)%vloc * 2.0d0
+          WRITE(6,*) ' DEBUG vloc = ', SUM( vloc( : ) )
           CALL formfn( vps(:,is), dvps(:,is), ps%ap(is)%rw, ps%ap(is)%rab, &
                       vloc, ps%ap(is)%zv, rcmax(is), g, omega, &
                       tpiba2, 0.0d0, ps%ap(is)%mesh, ngm, .false., .true. )
           dvps(:,is) = -dvps(:,is)
+          WRITE(6,*) ' DEBUG mesh = ', ps%ap(is)%mesh
+          WRITE(6,*) ' DEBUG rcma = ', rcmax(is)
+          WRITE(6,*) ' DEBUG zv   = ', ps%ap(is)%zv
+          WRITE(6,*) ' DEBUG rw   = ', SUM( ps%ap(is)%rw( : ) )
+          WRITE(6,*) ' DEBUG rab  = ', SUM( ps%ap(is)%rab( : ) )
+          WRITE(6,*) ' DEBUG dvps = ', SUM( dvps( :, is ) )
           !
           DEALLOCATE( vloc )
 
