@@ -166,6 +166,8 @@ SUBROUTINE potinit()
      !
   END IF
   !
+  call reduce (1, charge)
+  !
   IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
      !
      WRITE( stdout, &
