@@ -152,41 +152,37 @@ subroutine atomic_rho (rhoa, nspina)
         rhoneg = rhoneg + MIN (0.d0, DREAL (psic (ir)) )
         rhoima = rhoima + abs (DIMAG (psic (ir) ) )
      enddo
-     rhoneg = rhoneg / (nr1 * nr2 * nr3)
-     rhoima = rhoima / (nr1 * nr2 * nr3)
+     rhoneg = omega * rhoneg / (nr1 * nr2 * nr3)
+     rhoima = omega * rhoima / (nr1 * nr2 * nr3)
 #ifdef __PARA
      call reduce (1, rhoneg)
      call reduce (1, rhoima)
 #endif
      IF ( rhoima > 1.0d-4 ) THEN
-        WRITE( stdout,'(/4x," imaginary charge or magnetization ",&
-          & f12.6," (component ",i1,")  set to zero")') rhoima, is
+        WRITE( stdout,'(/4x," integrated imaginary charge or magnetization:",&
+          & f12.6," (component ",i1,") set to zero")') rhoima, is
      END IF
      IF ( (is == 1) .OR. lsda ) THEN
         !
-        !  set starting charge rho or rho up or rho down > 0 
-        !
-        DO ir = 1, nrxx
-           rhoa (ir, is) = MAX (0.d0, DREAL (psic (ir)) )
-        END DO
         IF ( (rhoneg < -1.0d-4) ) THEN
            IF ( lsda ) THEN 
-              WRITE( stdout,'(/4x," negative starting charge (spin=",i2,&
-          &                       ") ",f12.6,"  set to zero")') 2*is-3, rhoneg
+              WRITE( stdout,'(/4x," integrated negative starting charge ", &
+                   &"(spin=",i2,"):",f12.6)') 2*is-3, rhoneg
            ELSE
-              WRITE( stdout,'(/4x," negative starting charge ", &
-          &          f12.6,"  set to zero")') rhoneg
+              WRITE( stdout,'(/4x," integrated negative starting charge: ", &
+          &          f12.6)') rhoneg
            END IF
         END IF
-     ELSE
-        !
-        !  magnetization for non collinear case (is = 2,3,4)
-        !
-        DO ir = 1, nrxx
-           rhoa (ir, is) = DREAL (psic (ir))
-        END DO
      END IF
-
+     !
+     ! set imaginary terms to zero - negative terms are not set to zero
+     ! because it is basically useless to do it in real space: negative
+     ! charge will re-appear when Fourier-transformed back and forth
+     !
+     DO ir = 1, nrxx
+        rhoa (ir, is) = DREAL (psic (ir))
+     END DO
+     !
   enddo
 
   deallocate (rhocg)

@@ -14,11 +14,14 @@ SUBROUTINE potinit()
   ! ... This routine initializes the self consistent potential in the array
   ! ... vr. There are three possible cases:
   !
-  ! ... a) In this run the code is restarting from a broken run
-  ! ... b) The potential (or rho) is read from file
-  ! ... c) if a and b are both false, the total charge is computed
-  ! ...    as a sum of atomic charges, and the corresponding potential
-  ! ...    is saved in vr
+  ! ... a) the code is restarting from a broken run:
+  ! ...    read rho from data stored during the previous run
+  ! ... b) the code is performing a non-scf calculation following a scf one:
+  ! ...    read rho from the file produced by the scf calculation
+  ! ... c) the code starts a new calculation:
+  ! ...    calculate rho as a sum of atomic charges
+  ! 
+  ! ... In all cases the scf potential is recalculated and saved in vr
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
@@ -55,15 +58,7 @@ SUBROUTINE potinit()
   !
   IF ( ionode ) THEN
      !
-     IF ( lscf ) THEN
-        !
-        CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
-        !
-     ELSE
-        !
-        CALL seqopn( 4, TRIM( prefix )//'.pot', 'UNFORMATTED', exst )
-        !
-     END IF
+     CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
      !
      IF ( exst ) THEN
         !
@@ -81,49 +76,16 @@ SUBROUTINE potinit()
   !
   IF ( startingpot == 'file' .AND. exst ) THEN
      ! 
-     ! ... First case, the potential is read from file
-     ! ... NB: this case applies also for a restarting run, in which case
-     ! ...     potential and rho files have been read from the restart file
+     ! ... Cases a) and b): the charge density is read from file
      !
+     CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
+     !       
      IF ( lscf ) THEN
-        !      
-        CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
-        !       
-        WRITE( stdout, '(/5X,"The initial density is read from file ", A20)' ) &
-            TRIM( prefix ) // '.rho'
-        !
-        ! ... here we compute the potential which correspond to the 
-        ! ... initial charge
-        !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
-        !       
-        !
-        IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
-           !
-           WRITE( stdout, &
-                 '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-               charge, nelec
-           !
-           rho = rho / charge * nelec
-           !
-           ! ... and compute v_of_rho again
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
-           !
-        END IF
-        !
+        WRITE( stdout, '(/5X,"The initial density is read from file ", A20)' )&
+           TRIM( prefix ) // '.rho'
      ELSE
-        !
-        CALL io_pot( -1, TRIM( prefix )//'.pot', vr, nspin )
-        !
-        WRITE( stdout, &
-               '(/5X,"The initial potential is read from file ", A20)' ) &
-            TRIM( prefix ) // '.pot'
-        !    
+        WRITE( stdout, '(/5X,"The potential is recalculated from file ",A20)')&
+           TRIM( prefix ) // '.rho'
      END IF
      !
      ! ... The occupations ns also need to be read in order to build up 
@@ -154,11 +116,11 @@ SUBROUTINE potinit()
      !
   ELSE
      !   
-     ! ... Second case, the potential is built from a superposition 
+     ! ... Case c): the potential is built from a superposition 
      ! ... of atomic charges contained in the array rho_at
-     !     
+     !
      IF ( startingpot == 'file' .AND. .NOT. exst ) &
-        WRITE( stdout, '(5X,"Cannot read pot/rho file: not found")' )
+        WRITE( stdout, '(5X,"Cannot read rho : file not found")' )
      !
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"Initial potential from superposition of free atoms")' )
@@ -166,8 +128,6 @@ SUBROUTINE potinit()
      ! ... in the lda+U case set the initial value of ns
      !
      IF ( lda_plus_u ) THEN
-        !
-        ldim = 2 * Hubbard_lmax + 1
         !
         CALL init_ns()  
         !
@@ -191,31 +151,40 @@ SUBROUTINE potinit()
         !
      END IF
      !
-     ! ... here we compute the potential which corresponds to the 
-     ! ... initial charge
-     !
-     !
-     CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                    ehart, etxc, vtxc, etotefield, charge, vr )
-     !   
-     IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
-        !
-        WRITE( stdout, &
-            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-            charge, nelec
-        !
-        rho = rho / charge * nelec
-        !
-        ! ... and compute v_of_rho again
-        !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
-        !
-     END IF
      !
   END IF
+  !
+  ! ... check the integral of the starting charge
+  !
+  IF ( nspin == 2 ) THEN
+     !
+     charge = SUM ( rho (:, 1:nspin) ) * omega / ( nr1 * nr2 * nr3 )
+     !
+  ELSE
+     !
+     charge = SUM ( rho (:, 1) ) * omega / ( nr1 * nr2 * nr3 )
+     !
+  END IF
+  !
+  IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
+     !
+     WRITE( stdout, &
+          '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+          charge, nelec
+     !
+     rho = rho / charge * nelec
+     !
+  ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
+     !
+     CALL errore ( 'potinit', 'starting and expected charges differ', 1 )
+     !
+  END IF
+  !
+  ! ... compute the potential and store it in vr
+  !
+  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+       ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)
   !

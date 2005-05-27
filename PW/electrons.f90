@@ -75,6 +75,7 @@ SUBROUTINE electrons()
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
       mag,            &!  local magnetization
+      ehomo, elumo,   &!  highest occupied and lowest onuccupied levels
       tcpu             !  cpu time
    INTEGER :: &
       i,              &!  counter on polarization
@@ -432,7 +433,23 @@ SUBROUTINE electrons()
            ELSE
               WRITE( stdout, 9040 ) ef * rytoev
            END IF
-        END IF
+       ELSE
+          !
+          IF (nspin == 1) THEN
+             ibnd =  nint (nelec) / 2.d0
+          ELSE
+             ibnd =  nint (nelec)
+          END IF
+          !
+          IF (nbnd > ibnd ) THEN
+             !
+             ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
+             elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
+             !
+             WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
+             !
+          END IF
+       END IF
         !
      END IF
      !
@@ -561,6 +578,7 @@ SUBROUTINE electrons()
 9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
 9030 FORMAT( '  ',8F9.4 )
 9032 FORMAT(/'     occupation numbers ' )
+9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
 9050 FORMAT(/'     integrated charge         =',F15.8 )
@@ -603,7 +621,6 @@ SUBROUTINE electrons()
        USE bp, ONLY : lberry
        !
        IMPLICIT NONE
-       !
        !
        WRITE( stdout, 9002 )
        !
@@ -652,6 +669,24 @@ SUBROUTINE electrons()
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !
+       ELSE
+          !
+          IF (nspin == 1) THEN
+             ibnd =  nint (nelec) / 2.d0
+          ELSE
+             ibnd =  nint (nelec)
+          END IF
+          !
+          IF (nbnd > ibnd ) THEN
+             !
+             ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
+             elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
+             !
+             IF ( ehomo < elumo ) &
+                  WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
+             !
+          END IF
+          !
        END IF
        !
        CALL flush_unit( stdout )
@@ -671,6 +706,7 @@ SUBROUTINE electrons()
 9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
 9030 FORMAT( '  ',8F9.4 )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
+9042 FORMAT(/'     Highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9102 FORMAT(/'     End of band structure calculation' )
        !
      END SUBROUTINE non_scf
