@@ -26,7 +26,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
   USE cell_base,            ONLY : tpiba2 
-  USE klist,                ONLY : nkstot, nks, xk, nelec
+  USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : g, gstart, ecfixed, qcutz, q2sigma, nrxx, &
                                    nr1, nr2, nr3  
@@ -40,11 +40,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc, evc_nc  
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
-
-#ifdef EXX
-  USE exx,                  ONLY: currentk
+#if defined (EXX)
+  USE exx,                  ONLY : currentk
 #endif
-
   !
   IMPLICIT NONE
   !
@@ -182,7 +180,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = SUM( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM( vltot(1:nrxx) ) / DBLE( nr1 * nr2 * nr3 )
        !
        CALL reduce( 1, v_of_0 )
        !
@@ -244,7 +242,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( wg_set ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_set ) WHERE( wg(:,ik)*wk(ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !
@@ -455,7 +453,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        ! ... v_of_0 is (Vloc)(G=0)
        !
-       v_of_0 = SUM( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
+       v_of_0 = SUM( vltot(1:nrxx) ) / DBLE( nr1 * nr2 * nr3 )
        !
        CALL reduce( 1, v_of_0 )
        !
@@ -465,8 +463,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
-#ifdef EXX
-          currentk=ik
+#if defined (EXX)
+          currentk = ik
 #endif
           !
           IF ( lsda ) current_spin = isk(ik)
@@ -530,7 +528,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... a band is considered empty when its occupation is less 
           ! ... than 1.0 %  ( the occupation is known after the first step )
           !
-          IF ( wg_set ) WHERE( wg(:,ik) < 0.01D0 ) btype(:) = 0
+          IF ( wg_set ) WHERE( wg(:,ik)*wk(ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !
