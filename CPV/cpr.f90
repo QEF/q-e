@@ -926,6 +926,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( tconvthrs%active ) tconv = ( ekinc < tconvthrs%ekin ) .AND. &
                                      ( delta_etot < tconvthrs%derho )
      !
+     ! ... in the case cp-wf the check on convergence is done starting
+     ! ... from the second step 
+     !
+     IF ( lwf .AND. tfirst ) tconv = .FALSE.
+     !
      IF ( tconv ) THEN
         !
         IF ( ionode ) THEN
