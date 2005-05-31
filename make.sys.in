@@ -30,6 +30,11 @@ LDFLAGS        = @ldflags@ $(LIBOBJS) $(LIBS)
 AR             = @ar@
 ARFLAGS        = @arflags@
 RANLIB         = @ranlib@
+BLAS_LIBS      = @blas_libs@
+LAPACK_LIBS    = @lapack_libs@
+FFT_LIBS       = @fft_libs@
+MPI_LIBS       = @mpi_libs@
+MASS_LIBS      = @mass_libs@
 
 # -----------------------------
 # application-specific settings
@@ -43,7 +48,7 @@ MODFLAGS       = @imod@. @imod@../Modules @imod@../PW @imod@../PH @imod@../iotk/
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 # LIBS must contain the location of all needed external libraries
-LIBS           = @libs@
+LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS)
 # MYLIB can be one of the following (depending on LIBS):
 # blas       : compile the local copy of blas routines
 # lapack     : compile the local copy of lapack routines
