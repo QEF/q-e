@@ -12,13 +12,13 @@
 !
 #undef DEBUG
 !-----------------------------------------------------------------------
-SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
+SUBROUTINE mix_rho_nc( rhocout, rhocin, nsout, nsin, alphamix, &
                        dr2, tr2_min, iter, n_iter, filename, conv )
   !-----------------------------------------------------------------------
   !
   ! Modified Broyden's method for charge density mixing
   !             d.d. johnson prb 38, 12807 (1988)
-  ! On output: the mixed density is in rhoin, rhout is UNCHANGED
+  ! On output: the mixed density is in rhocin, rhocout is UNCHANGED
   !
   USE ions_base,  ONLY : nat, ityp
   USE kinds, only : DP
@@ -37,9 +37,10 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
                 iter,       &!  (in)  counter of the number of iterations
                 n_iter       !  (in)  numb. of iterations used in mixing
 
+  COMPLEX (kind=DP) :: &
+                rhocout(ngm,nspin), &! (in) the "out" density
+                rhocin (ngm,nspin)   ! (in) the "in" density; (out) the new dens.
   real (kind=DP) :: &
-                rhout(nrxx,nspin), &! (in) the "out" density
-                rhoin(nrxx,nspin), &! (in) the "in" density; (out) the new dens.
                 nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
                 nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
                 alphamix,          &! (in) mixing factor
@@ -70,7 +71,7 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
                 iwork(maxmix),&! dummy array used as output by libr. routines
                 info        ! flag saying if the exec. of libr. routines was ok
 
-  complex (kind=DP), allocatable :: rhocin(:,:), rhocout(:,:), &
+  complex (kind=DP), allocatable :: &
                 rhoinsave(:,:), rhoutsave(:,:), &
                 nsinsave(:,:,:,:),  nsoutsave(:,:,:,:)
   complex (kind=DP), allocatable, save :: df(:,:,:), dv(:,:,:), &
@@ -103,25 +104,7 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
 
   saveonfile = ( filename /= ' ' )
   !
-  allocate(rhocin(ngm0,nspin), rhocout(ngm0,nspin))
-  !
-  ! psic is used as work space - must be already allocated !
-  !
-  DO is=1,nspin
-     !
-     psic(:,1) = DCMPLX (rhoin(:,is), 0.d0)
-     !
-     call cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-     !
-     rhocin(:,is) = psic(nl(:),1)
-     !
-     psic(:,1) = DCMPLX (rhout(:,is), 0.d0)
-     !
-     call cft3( psic(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-     !
-     rhocout(:,is) = psic(nl(:),1) - rhocin(:,is)
-     !
-  END DO
+  rhocout(:,is) = rhocout(:,is) - rhocin(:,is)
   !
   IF (lda_plus_u) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
   !
@@ -133,7 +116,7 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
   !
   IF ( dr2 < tr2_min ) THEN
      !
-     DEALLOCATE( rhocin, rhocout )
+     rhocout(:,:) = rhocout(:,:) + rhocin(:,:)
      !
      CALL stop_clock( 'mix_rho' )
      !
@@ -161,8 +144,6 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
            CLOSE( UNIT = iunmix2, STATUS = 'DELETE' )
            !
         END IF
-        !
-        DEALLOCATE (rhocin, rhocout)
         !
         CALL stop_clock('mix_rho')
         !
@@ -204,8 +185,6 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
         !
         DEALLOCATE (df, dv)
         !
-        DEALLOCATE (rhocin, rhocout)
-        !
         CALL stop_clock('mix_rho')
         !
         RETURN
@@ -218,20 +197,6 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
         ALLOCATE(nsinsave (ldim,ldim,nspin,nat), &
                  nsoutsave(ldim,ldim,nspin,nat))
   END IF
-  !
-  ! copy only the high frequency Fourier component into rhoin
-  !
-  DO is=1,nspin
-     !
-     psic(:,1) = ZERO
-     !
-     psic(nl(:),1) = rhocin(:,is) + rhocout(:,is)
-     !
-     CALL cft3(psic(1,1),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
-     !
-     rhoin(:,is) = rhout(:,is) - psic(:,1)
-     !
-  END DO
   !
   ! iter_used = iter-1  if iter <= n_iter
   ! iter_used = n_iter  if iter >  n_iter
@@ -435,24 +400,6 @@ SUBROUTINE mix_rho_nc( rhout, rhoin, nsout, nsin, alphamix, &
   !
   IF ( lda_plus_u ) nsin = nsin + alphamix * nsout
   !
-  ! ... back ro real space
-  !
-  do is=1,nspin
-     !
-     psic(:,1) = ZERO
-     !
-     psic(nl(:),1) = rhocin(:,is)
-     !
-     CALL cft3( psic(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-     !
-     rhoin(:,is) = rhoin(:,is) + DBLE( psic(:,1) )
-
-  END DO
-  !
-  ! - clean up
-  !
-  DEALLOCATE( rhocout )
-  DEALLOCATE( rhocin )
   CALL stop_clock( 'mix_rho' )
 
   RETURN

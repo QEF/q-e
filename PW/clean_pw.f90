@@ -21,7 +21,7 @@ SUBROUTINE clean_pw(lflag)
   USE vlocal,               ONLY : strf, vloc, vnew
   USE wvfct,                ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
   USE force_mod,            ONLY : force
-  USE scf,                  ONLY : rho, rho_save,vr, vltot, rho_core, vrs
+  USE scf,                  ONLY : rho, rho_save, vr, vltot, rho_core, vrs
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at
   USE uspp,                 ONLY : deallocate_uspp

@@ -307,15 +307,15 @@ MODULE ener
   SAVE
   !
   REAL(KIND=DP) :: &
-       etot,           &! the total energy T + \int rho V + E_H + E_xc + E_ew of the solid
-       eband,          &! the sum of the band energies: eband = T + \int rho (V+V_H+V_xc)
-       deband,         &! - \int rho (V_H+V_xc): eband+deband = T + \int rho V
-       ehart,          &! the hartree energy E_H = e^2/2 \int n(r) n(r')/|r-r'|
-       etxc,           &! the exchange and correlation energy E_xc
-       vtxc,           &! \int rho V_xc
-       etxcc,          &! the core-correction contribution to the exch-corr energy
-       ewld,           &! the ewald energy E_ew
-       demet,          &! correction for metals: TS/2
+       etot,           &! the total energy of the solid
+       eband,          &! the band energy
+       deband,         &! correction for variational energy
+       ehart,          &! the hartree energy
+       etxc,           &! the exchange and correlation energy
+       vtxc,           &! another exchange-correlation energy
+       etxcc,          &! the nlcc exchange and correlation
+       ewld,           &! the ewald energy
+       demet,          &! correction for metals
        ef, ef_up, ef_dw ! the fermi energy (up and dw if two_fermi_energies=.T.)
   !
 END MODULE ener

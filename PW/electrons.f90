@@ -29,7 +29,7 @@ SUBROUTINE electrons()
   USE ions_base,            ONLY : zv, nat, ntyp => nsp, ityp, tau
   USE basis,                ONLY : startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
-                                   nrx3, nrxx, nl, g, gg, ecutwfc, gcutm
+                                   nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
                                    lgauss, ngauss, two_fermi_energies
@@ -49,7 +49,7 @@ SUBROUTINE electrons()
                                    niter_with_fixed_ns, Hubbard_lmax, &
                                    lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc, evc_nc, psic
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
   USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
                                    i_cons, bfield, lambda, vtcon, report
@@ -79,8 +79,8 @@ SUBROUTINE electrons()
       tcpu             !  cpu time
    INTEGER :: &
       i,              &!  counter on polarization
-      ir,             &!  counter on the mesh points
-      ig,             &!
+      is,             &!  counter on spins
+      ig,             &!  counter on G-vectors
       ik,             &!  counter on k points
       ibnd,           &!  counter on bands
       idum,           &!  dummy counter on iterations
@@ -101,7 +101,9 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL (KIND=DP), EXTERNAL :: ewald, get_clock
-  !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  COMPLEX (KIND=DP), ALLOCATABLE :: rhocin(:,:), rhocout(:,:)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   CALL start_clock( 'electrons' )
   !
@@ -171,6 +173,14 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  allocate (rhocin(ngm, nspin), rhocout(ngm, nspin))
+  do is = 1, nspin
+     psic(:) = rho (:, is)
+     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     rhocin(:, is) = psic ( nl(:) )
+  end do
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) RETURN
@@ -180,8 +190,6 @@ SUBROUTINE electrons()
      IF ( exxalfa /= 0.D0 ) CALL exxinit()
      !END Antonio Suriano - EXX
 #endif
-     !
-     rho_save = rho
      !  
      iter = iter + 1
      !
@@ -247,17 +255,16 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
-        IF ( noncolin ) THEN
-           !
-           CALL mix_rho_nc( rho, rho_save, nsnew, ns, mixing_beta, &
-                            dr2, tr2_min, iter, nmix, flmix, conv_elec )
-           !
-        ELSE
-           !
-           CALL mix_rho( rho, rho_save, nsnew, ns, mixing_beta, &
-                         dr2, tr2_min, iter, nmix, flmix, conv_elec )
-           !
-        END IF
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        do is = 1, nspin
+           psic(:) = rho (:, is)
+           call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+           rhocout (:, is) = psic ( nl(:) )
+        end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !
+        CALL mix_rho( rhocout, rhocin, nsnew, ns, mixing_beta, &
+             dr2, tr2_min, iter, nmix, flmix, conv_elec )
         !
         ! ... for the first scf iteration it is controlled that the 
         ! ... threshold is small enough for the diagonalization to 
@@ -284,6 +291,15 @@ SUBROUTINE electrons()
         END IF             
         !
         IF ( .NOT. conv_elec ) THEN
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+           do is = 1, nspin
+              psic( :) = (0.d0, 0.d0)
+              psic( nl(:) ) = rhocin (:, is)
+              if (gamma_only) psic( nlm(:) ) = CONJG (rhocin (:, is))
+              call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+              rho_save (:, is) = psic (:)
+           end do
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
            !
            ! ... no convergence yet: calculate new potential from 
            ! ... new estimate of the charge density (rho_save),
@@ -538,6 +554,9 @@ SUBROUTINE electrons()
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
         !
         CALL stop_clock( 'electrons' )
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  deallocate (rhocin, rhocout)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !
         RETURN
         !
@@ -547,8 +566,6 @@ SUBROUTINE electrons()
      ! ... of the force calculation during self-consistency
      !
      !CALL forces()
-     !
-     rho = rho_save
      !
   END DO
   !
@@ -716,6 +733,8 @@ SUBROUTINE electrons()
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
+       !
+       INTEGER :: ir
        !
        !
        IF ( lsda ) THEN
