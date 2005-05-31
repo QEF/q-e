@@ -435,13 +435,13 @@ SUBROUTINE electrons()
            END IF
        ELSE
           !
-          IF (nspin == 1) THEN
+          IF ( nspin == 1 ) THEN
              ibnd =  nint (nelec) / 2.d0
           ELSE
              ibnd =  nint (nelec)
           END IF
           !
-          IF (nbnd > ibnd ) THEN
+          IF ( ionode .AND. nbnd > ibnd ) THEN
              !
              ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
              elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
@@ -671,13 +671,13 @@ SUBROUTINE electrons()
           !
        ELSE
           !
-          IF (nspin == 1) THEN
+          IF ( nspin == 1 ) THEN
              ibnd =  nint (nelec) / 2.d0
           ELSE
              ibnd =  nint (nelec)
           END IF
           !
-          IF (nbnd > ibnd ) THEN
+          IF ( ionode .AND. nbnd > ibnd ) THEN
              !
              ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
              elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
