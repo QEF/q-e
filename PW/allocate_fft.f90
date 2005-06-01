@@ -20,7 +20,7 @@ subroutine allocate_fft
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
-  USE scf,       ONLY : rho, vr, vltot, vrs, rho_core, rho_save
+  USE scf,       ONLY : rho, vr, vltot, vrs, rho_core
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
@@ -61,7 +61,6 @@ subroutine allocate_fft
   allocate (ig2(  ngm))    
   allocate (ig3(  ngm))    
   allocate (rho( nrxx, nspin))    
-  allocate (rho_save( nrxx, nspin))    
   allocate (vr( nrxx,nspin))    
   allocate (vltot( nrxx))    
   allocate (vnew  ( nrxx, nspin))    

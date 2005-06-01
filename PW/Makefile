@@ -133,7 +133,6 @@ linmin.o \
 make_pointlists.o \
 mix_pot.o \
 mix_rho.o \
-mix_rho_nc.o \
 mode_group.o \
 move_ions.o \
 multable.o \

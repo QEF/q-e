@@ -350,7 +350,6 @@ MODULE scf
   !
   REAL(KIND=DP), ALLOCATABLE :: &
        rho(:,:),       &! the charge density in real space
-       rho_save(:,:),  &! another charge density in real space
        vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)

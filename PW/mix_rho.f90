@@ -17,7 +17,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   ! ... Modified Broyden's method for charge density mixing
   ! ...         D.D. Johnson PRB 38, 12807 (1988)
   !
-  ! ... On output: the mixed density is in rhocin, rhocut is UNCHANGED
+  ! ... On output: the mixed density is in rhocin
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -25,7 +25,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   USE gvect,                ONLY : ngm, nl, nlm, gstart
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : imix, ngm0, tr2
+  USE control_flags,        ONLY : imix, tr2
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE parser,               ONLY : find_free_unit
@@ -74,8 +74,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim            ! 2 * Hubbard_lmax + 1
   COMPLEX(KIND=DP), ALLOCATABLE :: &
-    rhoinsave(:,:),     &! rhoinsave(ngm0,nspin): work space
-    rhoutsave(:,:),     &! rhoutsave(ngm0,nspin): work space
+    rhoinsave(:,:),     &! rhoinsave(ngm,nspin): work space
+    rhoutsave(:,:),     &! rhoutsave(ngm,nspin): work space
     nsinsave(:,:,:,:),  &!
     nsoutsave(:,:,:,:)   !
   REAL(KIND=DP) :: &
@@ -84,7 +84,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     work(maxmix),           &
     charge
   LOGICAL :: &
-    saveonfile,   &! save intermediate steps on file "filename"
+    savetofile,   &! save intermediate steps on file "filename"
     exst           ! if true the file exists
   !
   ! ... saved variables and arrays
@@ -111,7 +111,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   IF ( lda_plus_u ) ldim = 2 * Hubbard_lmax + 1
   !
-  saveonfile = ( filename /= ' ' )
+  savetofile = ( filename /= ' ' )
   !
   rhocout(:,:) = rhocout(:,:) - rhocin(:,:)
   !
@@ -119,11 +119,18 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   dr2 = rho_dot_product( rhocout, rhocout ) + ns_dot_product( nsout, nsout )
   !
+  conv = ( dr2 < tr2 )
+  !
   ! ... if the self-consistency error (dr2) is smaller than the estimated 
   ! ... error due to diagonalization (tr2_min), exit and leave rhocin and 
   ! ... rhocout unchanged
   !
-  IF ( dr2 < tr2_min ) THEN
+  IF ( conv .OR. dr2 < tr2_min ) THEN
+     !
+     IF ( ALLOCATED ( df ) ) DEALLOCATE ( df )
+     IF ( ALLOCATED ( dv ) ) DEALLOCATE ( dv )
+     IF ( lda_plus_u .AND. ALLOCATED ( df_ns ) ) DEALLOCATE ( df_ns )
+     IF ( lda_plus_u .AND. ALLOCATED ( dv_ns ) ) DEALLOCATE ( dv_ns )
      !
      rhocout(:,:) = rhocout(:,:) + rhocin(:,:)
      !
@@ -133,31 +140,17 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
   END IF
   !
-  conv = ( dr2 < tr2 )
   !
-  IF ( saveonfile ) THEN
+  IF ( savetofile ) THEN
      !
      iunmix = find_free_unit()
-     CALL diropn( iunmix, filename, ( 2 * ngm0 * nspin ), exst )
+     CALL diropn( iunmix, filename, ( 2 * ngm * nspin ), exst )
      !
      IF ( lda_plus_u ) then
         iunmix2 = find_free_unit()
         CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
                      ( ldim * ldim * nspin * nat ), exst )
      END IF
-     !
-     IF ( conv ) THEN
-        !
-        CLOSE( UNIT = iunmix, STATUS = 'DELETE' )
-        !
-        IF ( lda_plus_u ) CLOSE( UNIT = iunmix2, STATUS = 'DELETE' )
-        !
-        CALL stop_clock( 'mix_rho' )
-        !
-        RETURN
-        !
-     END IF
-     !
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
@@ -166,53 +159,21 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0, nspin, n_iter ) )
-     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0, nspin, n_iter ) )
+  END IF
+  !
+  IF ( savetofile .OR. mixrho_iter == 1 ) THEN
+
+     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm, nspin, n_iter ) )
+     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm, nspin, n_iter ) )
      !
      IF ( lda_plus_u ) THEN
         !
         IF ( .NOT. ALLOCATED( df_ns ) ) &
-           ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
+             ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
         IF ( .NOT. ALLOCATED( dv_ns ) ) &
-           ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
+             ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
         !
      END IF
-     !
-  ELSE
-     !
-     IF ( mixrho_iter == 1 ) THEN
-        !
-        IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0, nspin, n_iter ) )
-        IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0, nspin, n_iter ) )
-        !
-        IF ( lda_plus_u ) THEN
-           !
-           IF ( .NOT. ALLOCATED( df_ns ) ) &
-              ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
-           IF ( .NOT. ALLOCATED( dv_ns ) ) &
-              ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
-           !
-        END IF
-        !
-     END IF
-     !
-     IF ( conv ) THEN
-        !
-        DEALLOCATE( df, dv )
-        !
-        IF ( lda_plus_u ) DEALLOCATE( df_ns, dv_ns )
-        !
-        CALL stop_clock( 'mix_rho' )
-        !
-        RETURN
-        !
-     END IF
-     !
-     ALLOCATE( rhoinsave(ngm0,nspin), rhoutsave(ngm0,nspin) )
-     !
-     IF ( lda_plus_u ) &
-        ALLOCATE( nsinsave (ldim,ldim,nspin,nat), &
-                  nsoutsave(ldim,ldim,nspin,nat) )
      !
   END IF
   !
@@ -228,10 +189,10 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   IF ( mixrho_iter > 1 ) THEN
      !
-     IF ( saveonfile ) THEN
+     IF ( savetofile ) THEN
         !
-        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 1, -1 )
-        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2, -1 )
+        CALL davcio( df(1,1,ipos), 2*ngm*nspin, iunmix, 1, -1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm*nspin, iunmix, 2, -1 )
         !
         IF ( lda_plus_u ) THEN
            !
@@ -242,8 +203,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     df(:,:,ipos) = df(:,:,ipos) - rhocout(1:ngm0,:)
-     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (1:ngm0,:)
+     df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (:,:)
      !
      IF ( lda_plus_u ) THEN
         !
@@ -254,14 +215,14 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
   END IF
   !
-  IF ( saveonfile ) THEN
+  IF ( savetofile ) THEN
      !
      DO i = 1, iter_used
         !
         IF ( i /= ipos ) THEN
            !
-           CALL davcio( df(1,1,i), 2*ngm0*nspin, iunmix, 2*i+1, -1 )
-           CALL davcio( dv(1,1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
+           CALL davcio( df(1,1,i), 2*ngm*nspin, iunmix, 2*i+1, -1 )
+           CALL davcio( dv(1,1,i), 2*ngm*nspin, iunmix, 2*i+2, -1 )
            !
            IF ( lda_plus_u ) THEN
               !
@@ -273,14 +234,14 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         END IF
         !
      END DO
-     ! will not work if ngm != ngm0
-     CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
-     CALL davcio( rhocin , 2*ngm0*nspin, iunmix, 2, 1 )
+     !
+     CALL davcio( rhocout, 2*ngm*nspin, iunmix, 1, 1 )
+     CALL davcio( rhocin , 2*ngm*nspin, iunmix, 2, 1 )
      !
      IF ( mixrho_iter > 1 ) THEN
         !
-        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+1, 1 )
-        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+2, 1 )
+        CALL davcio( df(1,1,ipos), 2*ngm*nspin, iunmix, 2*ipos+1, 1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm*nspin, iunmix, 2*ipos+2, 1 )
         !
      END IF
      !
@@ -301,11 +262,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
   ELSE
      !
-     rhoinsave = rhocin (1:ngm0,:)
-     rhoutsave = rhocout(1:ngm0,:)
+     !
+     ALLOCATE( rhoinsave(ngm,nspin), rhoutsave(ngm,nspin) )
+     rhoinsave = rhocin (:,:)
+     rhoutsave = rhocout(:,:)
      !
      IF ( lda_plus_u ) THEN
         !
+        ALLOCATE( nsinsave (ldim,ldim,nspin,nat), &
+                  nsoutsave(ldim,ldim,nspin,nat) )
         nsinsave  = nsin
         nsoutsave = nsout
         !
@@ -349,8 +314,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
      gamma0 = SUM( betamix(1:iter_used,i) * work(1:iter_used) )
      !
-     rhocin (1:ngm0,:) = rhocin (1:ngm0,:) - gamma0 * dv(:,:,i)
-     rhocout(1:ngm0,:) = rhocout(1:ngm0,:) - gamma0 * df(:,:,i)
+     rhocin (:,:) = rhocin (:,:) - gamma0 * dv(:,:,i)
+     rhocout(:,:) = rhocout(:,:) - gamma0 * df(:,:,i)
      !
      IF ( lda_plus_u ) THEN
         !
@@ -363,7 +328,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   ! ... auxiliary vectors dv and df not needed anymore
   !
-  IF ( saveonfile ) THEN
+  IF ( savetofile ) THEN
      !
      IF ( lda_plus_u ) THEN
         !
@@ -433,7 +398,6 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart, ngm
   USE lsda_mod,      ONLY : nspin
-  USE control_flags, ONLY : ngm0
   USE wvfct,         ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -441,7 +405,7 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   ! ... I/O variables
   !
   COMPLEX(KIND=DP), INTENT(IN) :: rho1(ngm,nspin), rho2(ngm,nspin)
-  !will not work if ngm != ngm0
+  !
   REAL(KIND=DP)                :: rho_ddot
   !
   ! ... and the local variables
@@ -451,17 +415,13 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   !
   !
   gi = gstart
-  gf = ngm0
-  !
-  rho_ddot = 0.D0
   !
   fac = e2 * fpi / tpiba2
   !
   IF ( nspin == 1 ) THEN
      !
-     rho_ddot = rho_ddot + &
-                fac * SUM( DBLE( CONJG( rho1(gi:gf,1) ) * &
-                                        rho2(gi:gf,1) ) / gg(gi:gf) )
+     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1) ) * &
+                                        rho2(gi:,1) ) / gg(gi:) )
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -469,9 +429,8 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      !
      ! ... first the charge
      !
-     rho_ddot = rho_ddot + fac * &
-                SUM( DBLE( CONJG( rho1(gi:gf,1)+rho1(gi:gf,2) ) * &
-                                ( rho2(gi:gf,1)+rho2(gi:gf,2) ) ) / gg(gi:gf) )
+     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1)+rho1(gi:,2) ) * &
+                                      ( rho2(gi:,1)+rho2(gi:,2) ) ) / gg(gi:) )
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -492,15 +451,14 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      IF ( gamma_only ) fac = 2.D0 * fac
      !
      rho_ddot = rho_ddot + fac * &
-                SUM( DBLE( CONJG( rho1(gi:gf,1) - rho1(gi:gf,2) ) * &
-                                ( rho2(gi:gf,1) - rho2(gi:gf,2) ) ) )
+                SUM( DBLE( CONJG( rho1(gi:,1) - rho1(gi:,2) ) * &
+                                ( rho2(gi:,1) - rho2(gi:,2) ) ) )
      !
 
   ELSE IF ( nspin == 4 ) THEN
 
-     rho_ddot = rho_ddot + &
-                fac * SUM( DBLE( CONJG( rho1(gi:gf,1) ) * &
-                                        rho2(gi:gf,1) ) / gg(gi:gf) )
+     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1) ) * &
+                                        rho2(gi:,1) ) / gg(gi:) )
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -551,7 +509,7 @@ FUNCTION ns_dot_product( ns1, ns2 )
   ! ... I/O variables
   !
   REAL(KIND=DP) :: &
-    ns_dot_product                                    ! (out) the function value
+    ns_dot_product                           ! (out) the function value
   REAL(KIND=DP), INTENT(IN) :: &
     ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
     ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)  ! (in) the two ns 
@@ -599,7 +557,6 @@ SUBROUTINE approx_screening( drho )
   USE gvect,          ONLY : gstart, gg, ngm
   USE klist,          ONLY : nelec
   USE lsda_mod,       ONLY : nspin
-  USE control_flags,  ONLY : ngm0
   !
   IMPLICIT NONE  
   !
@@ -618,17 +575,13 @@ SUBROUTINE approx_screening( drho )
   !
   agg0 = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / rs
   !
-  IF ( nspin == 1 ) THEN
+  IF ( nspin == 1 .OR. nspin == 4 ) THEN
      !
-     DO ig = 1, ngm0
-        !
-        drho(ig,1) =  drho(ig,1) * gg(ig) / ( gg(ig) + agg0 )
-        !
-     END DO
+     drho(:,1) =  drho(:,1) * gg(:) / ( gg(:) + agg0 )
      !
   ELSE IF ( nspin == 2 ) THEN
      !
-     DO ig = 1, ngm0
+     DO ig = 1, ngm
         !
         rrho = ( drho(ig,1) + drho(ig,2) ) * gg(ig) / ( gg(ig) + agg0 )
         rmag = ( drho(ig,1) - drho(ig,2) )
@@ -637,10 +590,6 @@ SUBROUTINE approx_screening( drho )
         drho(ig,2) =  0.5D0 * ( rrho - rmag )
         !
      END DO
-     !
-  ELSE
-     !
-     CALL errore ('approx_screning','noncolinear not implemented',1)
      !
   END IF
   !
@@ -661,7 +610,6 @@ SUBROUTINE approx_screening2( drho, rhobest )
                                    nl, nlm, ngm, gg
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : ngm0
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
@@ -670,7 +618,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   ! ... I/O variables
   !
   COMPLEX(KIND=DP) :: &
-    drho(ngm,nspin), rhobest(ngm,nspin)   !will not work if ngm != ngm0
+    drho(ngm,nspin), rhobest(ngm,nspin)
   !
   ! ... and the local variables
   !
@@ -683,11 +631,11 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(KIND=DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(KIND=DP), ALLOCATABLE :: &
-    v(:,:),     &! v(ngm0,mmx)
-    w(:,:),     &! w(ngm0,mmx)
-    dv(:),      &! dv(ngm0)
-    vbest(:),   &! vbest(ngm0)
-    wbest(:)     ! wbest(ngm0)
+    v(:,:),     &! v(ngm,mmx)
+    w(:,:),     &! w(ngm,mmx)
+    dv(:),      &! dv(ngm)
+    vbest(:),   &! vbest(ngm)
+    wbest(:)     ! wbest(ngm)
   REAL(KIND=DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(nrxx)
   !
@@ -704,7 +652,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( nspin == 2 ) THEN
      !
-     DO ig = 1, ngm0
+     DO ig = 1, ngm
         !
         rrho = drho(ig,1) + drho(ig,2)
         rmag = drho(ig,1) - drho(ig,2)
@@ -722,8 +670,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   IF ( gg(1) < eps8 ) drho(1,1) = ZERO
   !
-  ALLOCATE( alpha(nrxx), v(ngm0,mmx), w(ngm0,mmx), &
-            dv(ngm0), vbest(ngm0), wbest(ngm0) )
+  ALLOCATE( alpha(nrxx), v(ngm,mmx), w(ngm,mmx), &
+            dv(ngm), vbest(ngm), wbest(ngm) )
   !
   v(:,:)   = ZERO
   w(:,:)   = ZERO
@@ -877,7 +825,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
         !
         IF ( nspin == 2 ) THEN
            !
-           DO ig = 1, ngm0
+           DO ig = 1, ngm
               !
               rrho = drho(ig,1)
               rmag = drho(ig,2)

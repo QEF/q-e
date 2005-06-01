@@ -208,7 +208,7 @@ subroutine memory_estimate ( )
   ! psymrho, io_pot
 #endif
   !
-  ! workspace : mixing (mix_rho, save on file, ngm0 = ngm)
+  ! workspace : mixing (mix_rho, save on file)
   !
   wspace_mix = comp_size * 2 * ngm * nspin * (nmix + 1)
   !

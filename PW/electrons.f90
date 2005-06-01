@@ -39,8 +39,8 @@ SUBROUTINE electrons()
   USE wvfct,                ONLY : nbnd, et, gamma_only, wg  
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
-  USE scf,                  ONLY : rho, rho_save, vr, vltot, vrs, rho_core
-  USE control_flags,        ONLY : mixing_beta, tr2, ethr, ngm0, niter, nmix, &
+  USE scf,                  ONLY : rho, vr, vltot, vrs, rho_core
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix,       &
                                    iprint, istep, lscf, lmd, conv_elec,       &
                                    restart, reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
@@ -102,7 +102,9 @@ SUBROUTINE electrons()
   !
   REAL (KIND=DP), EXTERNAL :: ewald, get_clock
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  COMPLEX (KIND=DP), ALLOCATABLE :: rhocin(:,:), rhocout(:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: rhog(:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: rhognew(:,:)
+  REAL (KIND=DP), ALLOCATABLE :: rhonew(:,:)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !
   CALL start_clock( 'electrons' )
@@ -163,8 +165,6 @@ SUBROUTINE electrons()
   !
   IF ( istep > 1 ) ethr = 1.D-5
   !
-  ngm0 = ngm
-  !
   WRITE( stdout, 9001 )
   !
   CALL flush_unit( stdout )
@@ -173,14 +173,14 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  allocate (rhocin(ngm, nspin), rhocout(ngm, nspin))
+  !TEMP
+  ALLOCATE (rhog(ngm, nspin))
   do is = 1, nspin
      psic(:) = rho (:, is)
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
-     rhocin(:, is) = psic ( nl(:) )
+     rhog(:, is) = psic ( nl(:) )
   end do
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !TEMP
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) RETURN
@@ -255,16 +255,20 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !TEMP
+        ALLOCATE (rhognew(ngm, nspin))
         do is = 1, nspin
            psic(:) = rho (:, is)
            call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-           rhocout (:, is) = psic ( nl(:) )
+           rhognew (:, is) = psic ( nl(:) )
         end do
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !TEMP
         !
-        CALL mix_rho( rhocout, rhocin, nsnew, ns, mixing_beta, &
+        CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
              dr2, tr2_min, iter, nmix, flmix, conv_elec )
+        !TEMP
+        DEALLOCATE (rhognew)
+        !TEMP
         !
         ! ... for the first scf iteration it is controlled that the 
         ! ... threshold is small enough for the diagonalization to 
@@ -291,20 +295,21 @@ SUBROUTINE electrons()
         END IF             
         !
         IF ( .NOT. conv_elec ) THEN
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !TEMP
+           ALLOCATE (rhonew (nrxx, nspin) )
            do is = 1, nspin
               psic( :) = (0.d0, 0.d0)
-              psic( nl(:) ) = rhocin (:, is)
-              if (gamma_only) psic( nlm(:) ) = CONJG (rhocin (:, is))
+              psic( nl(:) ) = rhog (:, is)
+              if (gamma_only) psic( nlm(:) ) = CONJG (rhog (:, is))
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
-              rho_save (:, is) = psic (:)
+              rhonew (:, is) = psic (:)
            end do
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+           !TEMP
            !
            ! ... no convergence yet: calculate new potential from 
-           ! ... new estimate of the charge density (rho_save),
+           ! ... new estimate of the charge density 
            !
-           CALL v_of_rho( rho_save, rho_core, nr1, nr2, nr3, nrx1, nrx2,   &
+           CALL v_of_rho( rhonew, rho_core, nr1, nr2, nr3, nrx1, nrx2,   &
                           nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
                           omega, ehart, etxc, vtxc, etotefield, charge, vr )
            !
@@ -312,6 +317,12 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
+           ! ... write the charge density to file
+           !
+           !TEMP
+           CALL io_pot( 1, TRIM( prefix )//'.rho', rhonew, nspin )
+           DEALLOCATE (rhonew )
+           !TEMP
         ELSE
            !
            ! ... convergence reached: store V(out)-V(in) in vnew
@@ -356,9 +367,8 @@ SUBROUTINE electrons()
      !
      CALL newd()
      !
-     ! ... write the potential (and rho) on file
-     !     
-     CALL io_pot( 1, TRIM( prefix )//'.rho', rho_save, nspin )
+     ! ... write the potential to file
+     !
      CALL io_pot( 1, TRIM( prefix )//'.pot', vr, nspin )     
      !
      ! ... save converged wfc if they have not been written previously
@@ -554,9 +564,9 @@ SUBROUTINE electrons()
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
         !
         CALL stop_clock( 'electrons' )
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  deallocate (rhocin, rhocout)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !TEMP
+        DEALLOCATE (rhog)
+        !TEMP
         !
         RETURN
         !
@@ -880,7 +890,7 @@ SUBROUTINE electrons()
        DO ipol = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rho_save(:,ipol) - rho(:,ipol) ) * vr(:,ipol) )
+                       SUM( ( rhonew(:,ipol) - rho(:,ipol) ) * vr(:,ipol) )
           !
        END DO
        !
