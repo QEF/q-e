@@ -279,7 +279,6 @@ PWOBJS = \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
-../PW/mix_rho_nc.o \
 ../PW/mode_group.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \

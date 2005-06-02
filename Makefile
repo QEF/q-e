@@ -11,11 +11,10 @@ default :
 	@echo '  gamma        Gamma-only version of phonon code'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
-	@echo '  raman        raman tensor'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
-	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 raman tools"'
+	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 tools"'
 	@echo '  all          same as "make pwall fpmd cp ld1 upf"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
@@ -92,7 +91,7 @@ pw_export : libiotk bindir mods libs pw
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) pw_export.x ; \
 	else $(MAKE) $(MFLAGS) pw_export.x ; fi ) ; fi
 
-pwall : pw ph pp gamma pwcond d3 raman tools
+pwall : pw ph pp gamma pwcond d3 tools
 all   : pwall fpmd cp ld1 upf 
 
 mods :
