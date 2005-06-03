@@ -53,7 +53,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   DO is = 1, nspin
      !
-     rho(:nrxx,is) = fac * rho_core(:nrxx) + rho(:nrxx,is)
+     rho(:,is) = fac * rho_core(:) + rho(:,is)
      !
      CALL gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
                     rho(1,is), ngm, g, nl, alat, grho(1,1,is) )
@@ -246,7 +246,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   ALLOCATE(  aux( nrxx ) )
   ALLOCATE( gaux( nrxx ) )
   !
-  aux = DCMPLX( a(:nrxx), 0.D0 )
+  aux = DCMPLX( a(:), 0.D0 )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
@@ -260,13 +260,13 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      gaux(:) = 0.D0
      !
-     gaux(nl(:ngm)) = g(ipol,:ngm) * DCMPLX( - AIMAG( aux(nl(:ngm)) ), &
-                                             +  REAL( aux(nl(:ngm)) ) )
+     gaux(nl(:)) = g(ipol,:) * DCMPLX( - AIMAG( aux(nl(:)) ), &
+                                       +  REAL( aux(nl(:)) ) )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:ngm)) = DCMPLX( +  REAL( gaux(nl(:ngm)) ), &
-                                  - AIMAG( gaux(nl(:ngm)) ) )
+        gaux(nlm(:)) = DCMPLX( +  REAL( gaux(nl(:)) ), &
+                               - AIMAG( gaux(nl(:)) ) )
         !
      END IF
      !
@@ -276,7 +276,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:nrxx) = ga(ipol,:nrxx) + tpiba * REAL( gaux(:nrxx) )
+     ga(ipol,:) = ga(ipol,:) + tpiba * REAL( gaux(:) )
      !
   END DO
   !
@@ -318,22 +318,22 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   DO ipol = 1, 3
      !
-     aux = DCMPLX( a(ipol,:nrxx), 0.D0 )
+     aux = DCMPLX( a(ipol,:), 0.D0 )
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
      CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     gaux(nl(:ngm)) = gaux(nl(:ngm)) + &
-                      g(ipol,:ngm) * DCMPLX( - AIMAG( aux(nl(:ngm)) ), &
-                                             +  REAL( aux(nl(:ngm)) ) )
+     gaux(nl(:)) = gaux(nl(:)) + &
+                   g(ipol,:) * DCMPLX( - AIMAG( aux(nl(:)) ), &
+                                       +  REAL( aux(nl(:)) ) )
      !
   END DO
   !
   IF ( gamma_only ) THEN
      !
-     gaux(nlm(:ngm)) = DCMPLX( +  REAL( gaux(nl(:ngm)) ), &
-                               - AIMAG( gaux(nl(:ngm)) ) )
+     gaux(nlm(:)) = DCMPLX( +  REAL( gaux(nl(:)) ), &
+                            - AIMAG( gaux(nl(:)) ) )
      !
   END IF
   !
@@ -343,7 +343,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !
-  da(:nrxx) = tpiba * REAL( gaux(:nrxx) )
+  da(:) = tpiba * REAL( gaux(:) )
   !
   DEALLOCATE( gaux )
   DEALLOCATE( aux )

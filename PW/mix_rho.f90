@@ -411,7 +411,7 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   ! ... and the local variables
   !
   REAL(KIND=DP) :: fac   ! a multiplicative factors
-  INTEGER       :: ig, gi, gf
+  INTEGER       :: ig, gi
   !
   !
   gi = gstart
@@ -476,9 +476,9 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      IF ( gamma_only ) fac = 2.D0 * fac
      !
      rho_ddot = rho_ddot + &
-          fac * SUM ( DBLE( CONJG( rho1(gi:gf,2))*(rho2(gi:gf,2) )) + &
-                      DBLE( CONJG( rho1(gi:gf,3))*(rho2(gi:gf,3) )) + &
-                      DBLE( CONJG( rho1(gi:gf,4))*(rho2(gi:gf,4) )) )
+          fac * SUM ( DBLE( CONJG( rho1(gi:,2))*(rho2(gi:,2) )) + &
+                      DBLE( CONJG( rho1(gi:,3))*(rho2(gi:,3) )) + &
+                      DBLE( CONJG( rho1(gi:,4))*(rho2(gi:,4) )) )
      !
   END IF
   !
