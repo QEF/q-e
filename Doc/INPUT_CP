@@ -147,13 +147,16 @@ pseudo_dir     CHARACTER ( default = current directory ('./') )
 
 ekin_conv_thr  REAL ( default = 1.D-6 )
                convergence criterion for electron minimization:
-               convergence is achieved when "ekin < ekin_conv_thr"
+               convergence is achieved when "ekin < ekin_conv_thr".
+               See also etot_conv_thr - both criteria must be satisfied.
 
 etot_conv_thr  REAL ( default = 1.D-4 )
                convergence criteria for ion minimization:
                "etot(n+1)-etot(n) < etot_conv_thr", where "n" is the step 
                index, and "etot" the DFT energy.
-               See also forc_conv_thr - both criteria must be satisfied.
+               See also ekin_conv_thr for electron minimization and 
+               forc_conv_thr for ion minimization - both criteria must be 
+               satisfied.
 
 forc_conv_thr  REAL ( default = 1.D-3 )
                "MAXVAL(fion) < forc_conv_thr", where fion are the atomic 
