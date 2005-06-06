@@ -17,7 +17,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... Written by Carlo Sbraccia (2003-2004)
   !
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : if_pos, sp_pos, startingwfc, startingpot, &
+  USE input_parameters, ONLY : startingwfc, startingpot, &
                                diago_thr_init
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, wg_set, &
@@ -26,13 +26,11 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
-  USE ions_base,        ONLY : tau, ityp, nat, nsp
+  USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE basis,            ONLY : startingwfc_ => startingwfc, &
                                startingpot_ => startingpot    
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
-  USE ions_base,        ONLY : if_pos_ => if_pos
-  USE extfield,         ONLY : tefield, forcefield
   USE io_files,         ONLY : prefix, tmp_dir, &
                                iunpath, iunupdate, exit_file, iunexit
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
@@ -133,6 +131,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF ( .NOT. frozen(image) ) THEN
         !
+        CALL clean_pw( .FALSE. )
+        !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
                   TRIM( int_to_char( image ) ) // "/"
         !
@@ -148,8 +148,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF
         !
-        CALL clean_pw( .TRUE. )
-        !
         ! ... unit stdout is connected to the appropriate file
         !
         IF ( ionode ) THEN
@@ -161,19 +159,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
         END IF
         !
-        IF ( .NOT. ALLOCATED( tau ) )      ALLOCATE( tau( 3, nat ) )
-        IF ( .NOT. ALLOCATED( ityp ) )     ALLOCATE( ityp( nat ) )
-        IF ( .NOT. ALLOCATED( force ) )    ALLOCATE( force( 3, nat ) )  
-        IF ( .NOT. ALLOCATED( if_pos_ ) )  ALLOCATE( if_pos_( 3, nat ) )
-        IF ( tefield .AND. .NOT. ALLOCATED( forcefield ) ) &
-                                           ALLOCATE( forcefield( 3, nat ) )
-        !
         ! ... tau is in alat units ( pos is in bohr )
         !
         tau = RESHAPE( SOURCE = pos(:,image), SHAPE = SHAPE( tau ) ) / alat
-        !
-        if_pos_(:,:) = if_pos(:,1:nat) 
-        ityp(:)      = sp_pos(1:nat)
         !
         ! ... initialization of the scf calculation
         !

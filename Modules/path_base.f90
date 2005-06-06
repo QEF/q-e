@@ -38,33 +38,36 @@ MODULE path_base
     SUBROUTINE initialize_path( prog )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : pos, restart_mode, calculation, &
-                                   opt_scheme, climbing, nstep, input_images
-      USE control_flags,    ONLY : conv_elec, lneb, lsmd
-      USE ions_base,        ONLY : nat, amass, ityp, if_pos
-      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
-                                   int_file, xyz_file, axsf_file, broy_file
-      USE cell_base,        ONLY : alat
-      USE path_variables,   ONLY : pos_ => pos, &
-                                   istep_path, nstep_path, dim, num_of_images, &
-                                   pes, grad_pes, tangent, error, path_length, &
-                                   path_thr, deg_of_freedom, ds, react_coord,  &
-                                   use_masses, mass, first_last_opt, llangevin,&
-                                   temp_req, use_freezing, tune_load_balance,  &
-                                   lbroyden
-      USE path_variables,   ONLY : climbing_ => climbing,                      &
-                                   CI_scheme, vel, grad, elastic_grad, frozen, &
-                                   norm_grad, k, k_min, k_max, Emax_index,     &
-                                   lquick_min, ldamped_dyn, lmol_dyn
-      USE path_variables,   ONLY : num_of_modes, ft_pos, Nft, fixed_tan,   &
-                                   ft_coeff, Nft_smooth, use_multistep, &
-                                   free_energy, use_fourier
-      USE path_formats,     ONLY : summary_fmt
-      USE mp_global,        ONLY : nimage
-      USE io_global,        ONLY : meta_ionode
-      USE parser,           ONLY : int_to_char
-      USE path_io_routines, ONLY : read_restart
-      USE path_variables,   ONLY : path_allocation
+      USE input_parameters,   ONLY : pos, restart_mode, calculation, &
+                                     opt_scheme, climbing, nstep, input_images
+      USE control_flags,      ONLY : conv_elec, lneb, lsmd, lcoarsegrained
+      USE ions_base,          ONLY : nat, amass, ityp, if_pos
+      USE constraints_module, ONLY : nconstr
+      USE io_files,           ONLY : prefix, tmp_dir, path_file, dat_file, &
+                                     int_file, xyz_file, axsf_file, broy_file
+      USE cell_base,          ONLY : alat
+      USE path_variables,     ONLY : pos_ => pos,                           &
+                                     climbing_ => climbing,                 &
+                                     istep_path, nstep_path, dim,           &
+                                     num_of_images, pes, grad_pes, tangent, &
+                                     error, path_length, path_thr,          &
+                                     deg_of_freedom, ds, react_coord,       &
+                                     use_masses, mass, first_last_opt,      &
+                                     llangevin,temp_req, use_freezing,      &
+                                     tune_load_balance,  lbroyden,          &
+                                     CI_scheme, vel, grad, elastic_grad,    &
+                                     frozen, norm_grad, k, k_min, k_max,    &
+                                     Emax_index, lquick_min, ldamped_dyn,   &
+                                     lmol_dyn, num_of_modes, ft_pos, Nft,   &
+                                     fixed_tan, ft_coeff, Nft_smooth,       &
+                                     use_multistep, use_fourier
+      USE path_formats,       ONLY : summary_fmt
+      USE mp_global,          ONLY : nimage
+      USE io_global,          ONLY : meta_ionode
+      USE parser,             ONLY : int_to_char
+      USE path_io_routines,   ONLY : read_restart
+      USE path_variables,     ONLY : path_allocation
+      USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars
       !
       IMPLICIT NONE
       !
@@ -99,7 +102,19 @@ MODULE path_base
       ! ... the dimension of all "path" arrays is set here
       ! ... ( It corresponds to the dimension of the configurational space )
       !
-      dim = 3 * nat
+      IF ( lcoarsegrained ) THEN
+         !
+         dim = nconstr
+         !
+         use_masses = .FALSE.
+         !
+         CALL allocate_coarsegrained_vars( dim )
+         !
+      ELSE
+         !
+         dim = 3 * nat
+         !
+      END IF
       !
       IF ( nimage > 1 ) THEN
          !
@@ -136,16 +151,6 @@ MODULE path_base
          !
       ELSE IF ( lsmd ) THEN
          !
-         IF ( free_energy ) THEN
-            !
-            fixed_tan      = .TRUE.
-            first_last_opt = .TRUE.
-            !
-            use_multistep  = .FALSE.
-            use_freezing   = .FALSE.
-            !
-         END IF
-         !
          IF ( use_fourier ) THEN
             !
             ! ... some coefficients for Fourier string dynamics
@@ -176,9 +181,7 @@ MODULE path_base
          grad         = 0.D0
          norm_grad    = 0.D0
          error        = 0.D0
-         !
          k            = k_min
-         !
          frozen       = .FALSE.
          !
          IF ( ALLOCATED( climbing ) ) THEN
@@ -202,7 +205,6 @@ MODULE path_base
          vel       = 0.D0
          grad      = 0.D0
          norm_grad = 0.D0
-         !
          frozen    = .FALSE.
          !
          IF ( use_fourier ) THEN
@@ -237,7 +239,7 @@ MODULE path_base
       ! ... or generated from the input images ( restart_mode = "from_scratch" )
       ! ... It is alway read from file in the case of "free-energy" calculations
       !
-      IF ( free_energy .OR. restart_mode == "restart" ) THEN
+      IF ( restart_mode == "restart" ) THEN
          !
          ALLOCATE( image_spacing( num_of_images - 1 ) )
          !
@@ -317,6 +319,9 @@ MODULE path_base
                 FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
+                FMT = '(5X,"coarse-grained phase-space",T35," = ",1X,L1))' ) lcoarsegrained
+         !
+         WRITE( UNIT = iunpath, &
                 FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
          !
          WRITE( UNIT = iunpath, &
@@ -342,9 +347,6 @@ MODULE path_base
             !
             WRITE( UNIT = iunpath, &
                 FMT = '(5X,"use_multistep",T35," = ",1X,L1))' ) use_multistep
-            !
-            WRITE( UNIT = iunpath, &
-                FMT = '(5X,"free_energy",T35," = ",1X,L1))' ) free_energy
             !
             WRITE( UNIT = iunpath, &
                 FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
@@ -431,9 +433,9 @@ MODULE path_base
           !
           pos_(:,num_of_images) = pos(1:dim,input_images)
           !
-          ! ... coordinates must be in bohr ( pwscf uses alat units )
-          !
-          IF ( prog == 'PW' ) THEN
+          IF ( prog == 'PW' .AND. .NOT. lcoarsegrained ) THEN
+             !
+             ! ... coordinates must be in bohr ( pwscf uses alat units )
              !
              path_length = path_length * alat
              !
@@ -589,16 +591,6 @@ MODULE path_base
       INTEGER :: i
       !
       !
-      tangent = 0
-      !
-      DO i = 1, num_of_images
-         !
-         ! ... tangent to the path ( normalised )
-         !
-         CALL real_space_tangent( i )
-         !
-      END DO
-      !
       CALL elastic_constants()
       !
       gradient_loop: DO i = 1, num_of_images
@@ -680,31 +672,16 @@ MODULE path_base
       USE ions_base,      ONLY : if_pos
       USE path_variables, ONLY : dim, mass, num_of_images, grad_pes, &
                                  tangent, llangevin, lang, grad,     &
-                                 norm_grad, fixed_tan, use_fourier
+                                 norm_grad, fixed_tan
       !
       IMPLICIT NONE
       !
-      INTEGER       :: i
-      LOGICAL, SAVE :: first = .TRUE.
+      INTEGER :: i
       !
       !
       ! ... we project pes gradients and gaussian noise
       !
       DO i = 1, num_of_images
-         !
-         IF ( first ) THEN
-            !
-            IF ( use_fourier ) THEN
-               !
-               CALL fourier_tangent( i )
-               !
-            ELSE
-               !
-               CALL real_space_tangent( i )
-               !
-            END IF
-            !
-         END IF
          !
          IF ( llangevin ) THEN
             !
@@ -737,13 +714,47 @@ MODULE path_base
          !
       END DO
       !
-      IF ( fixed_tan ) first = .FALSE.
-      !
       RETURN
       !
     END SUBROUTINE smd_gradient
     !
     ! ... shared routines
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE compute_tangent()
+      !-----------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : fixed_tan, use_fourier, num_of_images
+      !
+      IMPLICIT NONE
+      !
+      INTEGER       :: i
+      LOGICAL, SAVE :: first = .TRUE.
+      !
+      !
+      IF ( first ) THEN
+         !
+         DO i = 1, num_of_images
+            !
+            IF ( use_fourier ) THEN
+               !
+               CALL fourier_tangent( i )
+               !
+            ELSE
+               !
+               CALL real_space_tangent( i )
+               !
+            END IF
+            !
+         END DO
+         !
+      END IF
+      !
+      IF ( fixed_tan ) first = .FALSE.
+      !
+      RETURN
+      !
+    END SUBROUTINE compute_tangent
     !
     !-----------------------------------------------------------------------
     SUBROUTINE compute_error( err_out )
@@ -758,11 +769,7 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      ! ... I/O variables
-      !
       REAL (KIND=DP), OPTIONAL, INTENT(OUT) :: err_out
-      !
-      ! ... local variables
       !
       INTEGER        :: i, n
       INTEGER        :: N_in, N_fin, free_me, num_of_scf_images
@@ -891,19 +898,12 @@ MODULE path_base
       !
       USE path_variables, ONLY : num_of_images, suspended_image,  &
                                  istep_path, pes, first_last_opt, &
-                                 Emin , Emax, Emax_index, frozen, &
-                                 error
+                                 Emin , Emax, Emax_index
       !
       IMPLICIT NONE
       !
-      ! ... I/O variables
-      !
       LOGICAL, INTENT(OUT) :: stat
-      !
-      ! ... local variables
-      !
-      INTEGER        :: N_in, N_fin, i
-      REAL (KIND=DP) :: val
+      INTEGER              :: N_in, N_fin
       !
       !
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
@@ -932,12 +932,65 @@ MODULE path_base
       !
     END SUBROUTINE born_oppenheimer_pes
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE born_oppenheimer_fes( stat )
+      !------------------------------------------------------------------------
+      !
+      USE path_io_routines, ONLY : write_output
+      USE path_variables,   ONLY : num_of_images, suspended_image, &
+                                   istep_path, pos, pes, grad_pes, &
+                                   first_last_opt, Emin , Emax,    &
+                                   Emax_index, tangent
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(OUT) :: stat
+      INTEGER              :: N_in, N_fin, i
+      !
+      !
+      IF ( istep_path == 0 .OR. first_last_opt ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in  = 2
+         N_fin = ( num_of_images - 1 )
+         !
+      END IF
+      !
+      IF ( suspended_image /= 0 ) N_in = suspended_image
+      !
+      CALL compute_fes_grads( N_in, N_fin, stat )
+      !
+      IF ( .NOT. stat ) RETURN
+      !
+      pes(:) = 0.D0
+      !
+      DO i = 2, num_of_images
+         !
+         pes(i) = pes(i-1) + &
+                  norm( pos(:,i) - pos(:,i-1) ) * 0.25D0 * &
+                  ( ( tangent(:,i-1) + tangent(:,i) ) .dot. &
+                    ( grad_pes(:,i-1) + grad_pes(:,i) ) )
+         !
+      END DO
+      !
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      !
+      RETURN
+      !
+    END SUBROUTINE born_oppenheimer_fes
+    !
     !-----------------------------------------------------------------------
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
       USE path_reparametrisation
-      USE control_flags,    ONLY : lneb, lsmd
+      USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    lquick_min, ldamped_dyn, lmol_dyn,  &
                                    suspended_image, activation_energy, &
@@ -988,7 +1041,11 @@ MODULE path_base
          !
          ! ... the restart file is written (in real space)
          !
-         IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
+         IF ( .NOT. lcoarsegrained ) THEN
+            !
+            IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
+            !
+         END IF
          !
          IF ( suspended_image == 0 ) THEN
             !
@@ -1037,6 +1094,10 @@ MODULE path_base
                !
             END IF
             !
+            ! ... normalised tangent of the new path
+            !
+            CALL compute_tangent()
+            !
          END IF
          !
          IF ( check_stop_now() ) THEN
@@ -1053,7 +1114,15 @@ MODULE path_base
          ! ... energies and gradients acting on each image of the path (in real
          ! ... space) are computed calling a driver for the scf calculations
          !
-         CALL born_oppenheimer_PES( stat )
+         IF ( lcoarsegrained ) THEN
+            !
+            CALL born_oppenheimer_fes( stat )
+            !
+         ELSE
+            !
+            CALL born_oppenheimer_pes( stat )
+            !
+         END IF
          !
          IF ( .NOT. stat ) THEN
             !
@@ -1122,7 +1191,7 @@ MODULE path_base
       !
       ! ... the restart file is written before exit
       !
-      CALL write_restart()
+      IF ( .NOT. lcoarsegrained ) CALL write_restart()
       !
       RETURN
       !

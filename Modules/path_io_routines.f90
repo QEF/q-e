@@ -485,12 +485,13 @@ MODULE path_io_routines
        !
        USE constants,        ONLY : pi
        USE input_parameters, ONLY : atom_label
+       USE control_flags,    ONLY : lcoarsegrained
        USE cell_base,        ONLY : alat, at
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
-                                    path_length, react_coord
-       USE path_variables,   ONLY : tangent, dim, Emax_index, error
+                                    path_length, react_coord, tangent, &
+                                    dim, Emax_index, error
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
@@ -598,6 +599,8 @@ MODULE path_io_routines
        !
        CLOSE( UNIT = iundat )
        CLOSE( UNIT = iunint )
+       !
+       IF ( lcoarsegrained ) RETURN
        !
        ! ... the *.xyz file is written here
        !

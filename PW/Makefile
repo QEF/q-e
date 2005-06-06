@@ -52,6 +52,7 @@ clean_pw.o \
 close_files.o \
 compute_dip.o \
 compute_rho.o \
+compute_fes_grads.o \
 compute_scf.o \
 coset.o \
 cryst_to_car.o \
@@ -269,6 +270,7 @@ MODULES = \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
 ../Modules/clocks.o \
+../Modules/coarsegrained_vars.o \
 ../Modules/constants.o \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \

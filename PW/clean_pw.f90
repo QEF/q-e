@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-SUBROUTINE clean_pw(lflag)
+SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
   !    
   !    This routine deallocates all dynamically allocated arrays
@@ -39,18 +39,24 @@ SUBROUTINE clean_pw(lflag)
   !
   IMPLICIT NONE
   !
-  LOGICAL :: lflag
-    ! if .true. deallocate_ions_base is called
+  LOGICAL, INTENT(IN) :: lflag
+    ! if .TRUE. deallocate_ions_base is called 
+    ! ( for instance neb and smd do not call it )
   !
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
-  IF ( lflag ) CALL deallocate_ions_base()
+  IF ( lflag ) THEN
+     !
+     CALL deallocate_ions_base()
+     !
+     IF ( ALLOCATED( force ) )      DEALLOCATE( force )
+     IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
+     !
+  END IF
   !
-  IF ( ALLOCATED( force ) )      DEALLOCATE( force )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
-  IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
   !
   ! ... arrays allocated in ggen.f90
   !

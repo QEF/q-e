@@ -367,18 +367,23 @@
 !------------------------------------------------------------------------------!
 
     SUBROUTINE deallocate_ions_base()
+      !
       IMPLICIT NONE
-      IF( ALLOCATED( ityp ) ) DEALLOCATE( ityp )
-      IF( ALLOCATED( tau ) ) DEALLOCATE( tau )
-      IF( ALLOCATED( vel ) ) DEALLOCATE( vel )
-      IF( ALLOCATED( tau_srt ) ) DEALLOCATE( tau_srt )
-      IF( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
-      IF( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
-      IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
-      IF( ALLOCATED( iforce ) ) DEALLOCATE( iforce )
-      IF( ALLOCATED( taui ) ) DEALLOCATE( taui )
+      !
+      IF ( ALLOCATED( ityp ) )    DEALLOCATE( ityp )
+      IF ( ALLOCATED( tau ) )     DEALLOCATE( tau )
+      IF ( ALLOCATED( vel ) )     DEALLOCATE( vel )
+      IF ( ALLOCATED( tau_srt ) ) DEALLOCATE( tau_srt )
+      IF ( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
+      IF ( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
+      IF ( ALLOCATED( if_pos ) )  DEALLOCATE( if_pos )
+      IF ( ALLOCATED( iforce ) )  DEALLOCATE( iforce )
+      IF ( ALLOCATED( taui ) )    DEALLOCATE( taui )
+      !
       tions_base_init = .FALSE.
+      !
       RETURN
+      !
     END SUBROUTINE deallocate_ions_base
 
 !------------------------------------------------------------------------------!
