@@ -22,6 +22,9 @@ module exx
   integer :: iunexx=49
   CHARACTER(len=80) :: exx_file = 'os.exx'
   integer :: exx_nwordwfc
+  real (kind=DP) :: exxdivergency=0d0
+  real (kind=DP) :: exxdivfac=0d0
+
 contains
 
   subroutine exxinit()
@@ -66,7 +69,11 @@ contains
        end do
     end do
     exxstart=.true.
+
+
+
     call stop_clock ('exxinit')  
+
   end subroutine exxinit
 
   subroutine vexx(lda, n, m, psi, hpsi)
@@ -87,7 +94,7 @@ contains
     USE cell_base,  ONLY : alat, omega
     USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
     USE gsmooth,    ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
-                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+         nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, et
     USE klist,      ONLY : xk,wk
     USE lsda_mod,   ONLY : lsda, current_spin, isk
@@ -104,70 +111,95 @@ contains
     COMPLEX(KIND=DP) :: rhoc(nrxx)   
     COMPLEX(KIND=DP) :: vc(nrxx)   
     real (kind=DP)   :: fac(ngm)
-    integer          :: ibnd, ik, im , ig, inrxx
+    integer          :: ibnd, ik, im , ig, inrxx, ikdiv
+    real(kind=DP), parameter  :: pi =  3.14159265358979d0
     real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, &
-                               e2  = 2.d0
+         e2  = 2.d0
     real(kind=DP) :: tpiba2, qq
     tpiba2 = (fpi / 2.d0 / alat) **2
-  
+
     call start_clock ('exx')
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
 
     do im=1,m !for each band of psi (the k cycle is outside band)
-
-       result(:)= ( 0.D0, 0.D0 )
        temppsic(:) = ( 0.D0, 0.D0 )
        temppsic(nls(igk(1:npw))) = psi(1:npw,im)
        CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+
+       result(:)= ( 0.D0, 0.D0 )
        do ik=1,nks !for each k point of phi
           if (ik /= currentk) cycle
           if (lsda) then
              if ( isk(ik) /= current_spin ) cycle
           end if
-          do ig=1,ngm
-             qq = (xk(1,ik)-xk(1,currentk)+g(1,ig))**2 + &
-                  (xk(2,ik)-xk(2,currentk)+g(2,ig))**2 + &
-                  (xk(3,ik)-xk(3,currentk)+g(3,ig))**2
-             if (qq.gt.1.d-8) then
-                fac(ig)=e2*fpi/tpiba2/qq
-             else
-                fac(ig)=0.d0
-             end if
-          end do
-          do ibnd=1,nbnd !for each band of psi
-             if ( abs(wg(ibnd,ik)) < 1.d-6) cycle
-             !
-             !loads the phi from file
-             !
+!!!!!! calculate the divergency 
+          exxdivergency=0d0
+          do ibnd=1,nbnd
              CALL davcio(tempphic,exx_nwordwfc,iunexx,(ik-1)*nbnd+ibnd,-1)
-             !calculate rho in real space
-             rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
-             !brings it to G-space
-             CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
-   
-             vc(:) = ( 0.D0, 0.D0 )
-             do ig=1,ngm
-                vc(nls(ig)) = fac(ig) * rhoc(nls(ig))! v in G-space
+             exxdivergency=exxdivergency + e2*fpi/tpiba2*sum(tempphic(:))* dot_product(temppsic,tempphic)
+          end do
+!!!!!!!!!calculate factor of divergency F(q) calculated on grid minus calculated through integration
+          do ik=1,nks
+             qq = (xk(1,ik)-xk(1,currentk))**2 + &
+                  (xk(2,ik)-xk(2,currentk))**2 + &
+                  (xk(3,ik)-xk(3,currentk))**2
+             if (qq.gt.1.d-8) then
+                exxdivfac=exxdivfac+exp(-qq)/qq
+             else
+                exxdivfac=exxdivfac+1
+             endif
              end do
-             vc = vc * wg (ibnd, ik) 
+             exxdivfac=exxdivfac-(omega/((2*pi)**3))*2*((pi/1)**(1.5))
+             exxdivergency=exxdivergency*exxdivfac
 
-             !brings back v in real space
-             CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+!!!!!! calculate the divergency
 
-             do inrxx=1,nrxx
-                !accumulates over bands and k points
-                result(inrxx)=result(inrxx)+vc(inrxx)*tempphic(inrxx)
+
+
+             do ig=1,ngm
+                qq = (xk(1,ik)-xk(1,currentk)+g(1,ig))**2 + &
+                     (xk(2,ik)-xk(2,currentk)+g(2,ig))**2 + &
+                     (xk(3,ik)-xk(3,currentk)+g(3,ig))**2
+                if (qq.gt.1.d-8) then
+                   fac(ig)=e2*fpi/tpiba2/qq
+                else
+                   fac(ig)=exxdivergency
+                end if
+             end do
+             do ibnd=1,nbnd !for each band of phi
+                if ( abs(wg(ibnd,ik)) < 1.d-6) cycle
+                !
+                !loads the phi from file
+                !
+                CALL davcio(tempphic,exx_nwordwfc,iunexx,(ik-1)*nbnd+ibnd,-1)
+                !calculate rho in real space
+                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                !brings it to G-space
+                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+
+                vc(:) = ( 0.D0, 0.D0 )
+                do ig=1,ngm
+                   vc(nls(ig)) = fac(ig) * rhoc(nls(ig))! v in G-space
+                end do
+                vc = vc * wg (ibnd, ik) 
+
+                !brings back v in real space
+                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+
+                do inrxx=1,nrxx
+                   !accumulates over bands and k points
+                   result(inrxx)=result(inrxx)+vc(inrxx)*tempphic(inrxx)
+                end do
              end do
           end do
+          !brings back result in G-space
+          CALL cft3s( result, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
+          !adds it to hpsi
+          hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
        end do
-       !brings back result in G-space
-       CALL cft3s( result, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
-       !adds it to hpsi
-       hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
-    end do
-    call stop_clock ('exx')
+       call stop_clock ('exx')
 
-  end subroutine vexx
+     end subroutine vexx
 
   function exxenergy ()
     ! This function is called to correct the deband value and have the correct energy 
@@ -231,7 +263,7 @@ contains
                 if (qq.gt.1.d-8) then
                    fac(ig)=e2*fpi/tpiba2/qq
                 else
-                   fac(ig)=0.d0
+                   fac(ig)=exxdivergency
                 end if
              end do
              do ibnd=1,nbnd !for each band of psi
