@@ -5,149 +5,215 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-# if defined __AIX || defined __FFTW || defined __SGI
-#  define __FFT_MODULE_DRV
-# endif
-!
-#ifdef __PARA
-!
-!----------------------------------------------------------------------
-subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
-  !----------------------------------------------------------------------
-  !
-  !   sign = +-1 : parallel 3d fft for rho and for the potential
-  !
-  !   sign = +1 : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-  !               fft along z using pencils (cft_1)
-  !               transpose across nodes    (fft_scatter)
-  !                  and reorder
-  !               fft along y and x         (cft_2)
-  !   sign = -1 : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
-  !               fft along x and y         (cft_2)
-  !               transpose across nodes    (fft_scatter)
-  !                  and reorder
-  !               fft along z using pencils (cft_1)
-  !
 #include "f_defs.h"
-
-#if defined __FFT_MODULE_DRV
-  use fft_scalar, only : cft_1z, cft_2xy
+!
+#if defined (__AIX) || defined (__FFTW) || defined (__SGI)
+#  define __FFT_MODULE_DRV
 #endif
-  use sticks, only: dfftp
-  use fft_base, only: fft_scatter
-  USE kinds, only : DP
-  USE mp_global, ONLY : nproc_pool, me_pool
-  use pfft, only: nct, ncp, ncplane, nxx, npp
-
-  implicit none
-
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign
-
-  complex (kind=DP) :: f (nxx)
-  integer :: nxx_save, mc, i, j, ii, iproc, nppx
-  complex (kind=DP), allocatable  :: aux (:)
+!
+#if defined (__PARA)
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
+  !----------------------------------------------------------------------------
   !
-  call start_clock ('cft3')
-
-  allocate( aux( nxx ) )
-
+  ! ...  sign = +-1 : parallel 3d fft for rho and for the potential
   !
-  ! the following is needed if the fft is distributed over only one proces
-  ! for the special case nx3.ne.n3. Not an elegant solution, but simple, f
-  ! and better than the preceding one that did not work in some cases. Not
-  ! that fft_scatter does nothing if nproc_pool=1. PG
+  ! ...  sign = +1  : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
+  ! ...               fft along z using pencils (cft_1)
+  ! ...               transpose across nodes    (fft_scatter)
+  ! ...                  and reorder
+  ! ...               fft along y and x         (cft_2)
   !
-  if (nproc_pool.eq.1) then
+  ! ...  sign = -1  : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
+  ! ...               fft along x and y         (cft_2)
+  ! ...               transpose across nodes    (fft_scatter)
+  ! ...                  and reorder
+  ! ...               fft along z using pencils (cft_1)
+  !
+#if defined (__FFT_MODULE_DRV)
+  USE fft_scalar, ONLY : cft_1z, cft_2xy
+#endif
+  USE sticks,     ONLY : dfftp
+  USE fft_base,   ONLY : fft_scatter
+  USE kinds,      ONLY : DP
+  USE mp_global,  ONLY : nproc_pool, me_pool
+  USE pfft,       ONLY : nct, ncp, ncplane, nxx, npp
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
+  COMPLEX(KIND=DP), INTENT(INOUT) :: f(nxx)
+  !
+  INTEGER                        :: nxx_save, mc, i, j, ii, iproc, nppx
+  INTEGER                        :: me_p
+  COMPLEX(KIND=DP), ALLOCATABLE  :: aux(:)
+  !
+  !
+  CALL start_clock( 'cft3' )
+  !
+  ALLOCATE( aux( nxx ) )
+  !
+  me_p = me_pool + 1
+  !
+  ! ... the following is needed if the fft is distributed over only one proces
+  ! ... for the special case nx3.ne.n3. Not an elegant solution, but simple, f
+  ! ... and better than the preceding one that did not work in some cases. Not
+  ! ... that fft_scatter does nothing if nproc_pool=1. PG
+  !
+  IF ( nproc_pool == 1 ) THEN
+     !
      nppx = nx3
-  else
-     nppx = npp (me_pool+1)
-  endif
+     !
+  ELSE
+     !
+     nppx = npp(me_p)
+     !
+  END IF
   !
-  if (sign.eq.1) then
-#if defined __FFT_MODULE_DRV
-     call cft_1z (f, ncp (me_pool+1), n3, nx3, sign, aux)
-     ! call cft_1z (f, dfftp%nsp(me_pool+1), n3, nx3, sign, aux)
+  IF ( sign == 1 ) THEN
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cft_1z( f, ncp(me_p), n3, nx3, sign, aux )
+     !
 #else
-     call cft_1 (f, ncp (me_pool+1), n3, nx3, sign, aux)
+     !
+     CALL cft_1( f, ncp(me_p), n3, nx3, sign, aux )
+     !
 #endif
-     call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
-     f(:) = (0.d0,0.d0)
-     do i = 1, nct
-        mc = dfftp%ismap (i)
-        do j = 1, npp (me_pool+1)
-           f (mc + (j - 1) * ncplane) = aux (j + (i - 1) * nppx)
-        enddo
-     enddo
-#if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
-     ! call cft_2xy (f, dfftp%npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     !
+     CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
+     !
+     f(:) = ( 0.D0, 0.D0 )
+     !
+     DO i = 1, nct
+        !
+        mc = dfftp%ismap(i)
+        !
+        DO j = 1, npp(me_p)
+           !
+           f(mc+(j-1)*ncplane) = aux(j+(i-1)*nppx)
+           !
+        END DO
+        !
+     END DO
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
+     !
 #else
-     call cft_2 (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     !
+     CALL cft_2( f, npp(me_p), n1, n2, nx1, nx2, sign )
+     !
 #endif
-  elseif (sign.eq. - 1) then
-#if defined __FFT_MODULE_DRV
-     call cft_2xy (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
-     ! call cft_2xy (f, dfftp%npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     !
+  ELSE IF ( sign == - 1) THEN
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
+     !
 #else
-     call cft_2 (f, npp (me_pool+1), n1, n2, nx1, nx2, sign)
+     !
+     CALL cft_2( f, npp(me_p), n1, n2, nx1, nx2, sign )
+     !
 #endif
-     do i = 1, nct
-        mc = dfftp%ismap (i)
-        do j = 1, npp (me_pool+1)
-           aux (j + (i - 1) * nppx) = f (mc + (j - 1) * ncplane)
-        enddo
-     enddo
-     call fft_scatter (aux, nx3, nxx, f, ncp, npp, sign)
-#if defined __FFT_MODULE_DRV
-     call cft_1z (aux, ncp (me_pool+1), n3, nx3, sign, f)
-     ! call cft_1z (aux, dfftp%nsp (me_pool+1), n3, nx3, sign, f)
+     !
+     DO i = 1, nct
+        !
+        mc = dfftp%ismap(i)
+        !
+        DO j = 1, npp (me_p)
+           !
+           aux(j+(i-1)*nppx) = f(mc+(j-1)*ncplane)
+           !
+        END DO
+        !
+     END DO
+     !
+     CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cft_1z( aux, ncp(me_p), n3, nx3, sign, f )
+     !
 #else
-     call cft_1 (aux, ncp (me_pool+1), n3, nx3, sign, f)
+     !
+     CALL cft_1( aux, ncp(me_p), n3, nx3, sign, f )
+     !
 #endif
-  else
-     call errore ('cft3', 'not allowed', abs (sign) )
-
-  endif
-  deallocate( aux )
-  call stop_clock ('cft3')
-  return
-end subroutine cft3
+     !
+  ELSE
+     !
+     CALL errore( 'cft3', 'not allowed', ABS( sign ) )
+     !
+  END IF
+  !
+  DEALLOCATE( aux )
+  !
+  CALL stop_clock( 'cft3' )
+  !
+  RETURN
+  !
+END SUBROUTINE cft3
+!
 #else
 !
-!----------------------------------------------------------------------
-subroutine cft3 (f, n1, n2, n3, nx1, nx2, nx3, sign)
-  !----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
+  !----------------------------------------------------------------------------
   !
-#if defined __FFT_MODULE_DRV
-  use fft_scalar, only : cfft3d
+#if defined( __FFT_MODULE_DRV)
+  USE fft_scalar, ONLY : cfft3d
 #endif
-  USE kinds
-  implicit none
-  integer :: n1, n2, n3, nx1, nx2, nx3, sign
-
-  complex(kind=DP) :: f (nx1 * nx2 * nx3)
-  call start_clock ('cft3')
+  USE kinds,      ONLY : DP
   !
-  !   sign = +-1 : complete 3d fft (for rho and for the potential)
+  IMPLICIT NONE
   !
-  if (sign.eq.1) then
-#if defined __FFT_MODULE_DRV
-     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, 1)
+  INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
+  COMPLEX(KIND=DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
+  !
+  !
+  CALL start_clock( 'cft3' )
+  !
+  ! ... sign = +-1 : complete 3d fft (for rho and for the potential)
+  !
+  IF ( sign == 1 ) THEN
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
+     !
 #else
-     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 1, 1)
+     !
+     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 1, 1 )
+     !
 #endif
-  elseif (sign.eq. - 1) then
-#if defined __FFT_MODULE_DRV
-     call cfft3d (f, n1, n2, n3, nx1, nx2, nx3, - 1)
+     !
+  ELSE IF ( sign == - 1 ) THEN
+     !
+#if defined (__FFT_MODULE_DRV)
+     !
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
+     !
 #else
-     call cft_3 (f, n1, n2, n3, nx1, nx2, nx3, 1, - 1)
+     !
+     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 1, -1 )
+     !
 #endif
-  else
-     call errore ('cft3', 'what should i do?', 1)
-  endif
-
-  call stop_clock ('cft3')
-  return
-end subroutine cft3
+     !
+  ELSE
+     !
+     CALL errore( 'cft3', 'what should i do?', 1 )
+     !
+  ENDIF
+  !
+  CALL stop_clock( 'cft3' )
+  !
+  RETURN
+  !
+END SUBROUTINE cft3
+!
 #endif
-
