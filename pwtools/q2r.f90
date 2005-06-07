@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,6 +10,48 @@
 !----------------------------------------------------------------------------
 PROGRAM q2r
   !----------------------------------------------------------------------------
+  !
+  !  q2r.x: 
+  !     reads force constant matrices C(q) produced by the phonon code
+  !     for a grid of q-points, calculates the corresponding set of 
+  !     interatomic force constants (IFC), C(R)
+  !
+  !  Input data:
+  !     namelist "input"
+  !  followed by a card
+  !     nfile
+  !  followed by nfile cards
+  !     filin
+  !
+  !  Namelist "input" :
+  !     nr1,nr2,nr3:  dimensions of the FFT grid formed by the q-point grid
+  !     (integer)     no default value, must be specified
+  !     fild       :  output file containing the IFC
+  !     (character)   no default value, must be specified
+  !     zasr       :  Indicates type of Acoustic Sum Rules used for the Born 
+  !     (character)   effective charges: 
+  !                   - 'no': no Acoustic Sum Rules imposed (default)
+  !                   - 'simple':  previous implementation of the asr used 
+  !                     (3 translational asr imposed by correction of 
+  !                     the diagonal elements of the force-constants matrix)
+  !                   - 'crystal': 3 translational asr imposed by optimized 
+  !                      correction of the IFC (projection).
+  !                   - 'one-dim': 3 translational asr + 1 rotational asr
+  !                     imposed by optimized correction of the IFC (the
+  !                     rotation axis is the direction of periodicity; it
+  !                     will work only if this axis considered is one of
+  !                     the cartesian axis).
+  !                   - 'zero-dim': 3 translational asr + 3 rotational asr
+  !                     imposed by optimized correction of the IFC. 
+  !                   Note that in certain cases, not all the rotational asr
+  !                   can be applied (e.g. if there are only 2 atoms in a 
+  !                   molecule or if all the atoms are aligned, etc.). 
+  !                   In these cases the supplementary asr are cancelled
+  !                   during the orthonormalization procedure (see below).
+  !
+  !  nfile (integer)  : number of files containing C(q), one per q
+  !  filin (character): name of the files containing C(q). Their order
+  !                     is not important but q=0 MUST be the first file
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
@@ -26,7 +68,8 @@ PROGRAM q2r
   CHARACTER(len=256) :: filin,filj,filf,fild
   CHARACTER(len=3)   :: atm(nax)
   !
-  LOGICAL :: lq,lrigid,zasr, lrigid_save 
+  LOGICAL :: lq,lrigid,lrigid_save 
+  CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, l1, l2, l3, i, j, j1, j2, na1, na2, ipol
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
   INTEGER :: na, nt
@@ -130,18 +173,8 @@ PROGRAM q2r
            at = at / celldm(1)  !  bring at in units of alat 
            CALL volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
            CALL recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
-           IF (lrigid.AND.zasr) THEN
-              DO i=1,3
-                 DO j=1,3
-                    sum=0.d0
-                    DO na=1,nat
-                       sum=sum+zeu(i,j,na)
-                    END DO
-                    DO na=1,nat
-                       zeu(i,j,na)=zeu(i,j,na)-sum/nat
-                    END DO
-                 END DO
-              END DO
+           IF (lrigid .AND. (zasr.NE.'no')) THEN
+              CALL set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
            END IF
         END IF
         IF (lrigid.AND..NOT.lrigid_save) CALL errore('main',            &
@@ -166,8 +199,10 @@ PROGRAM q2r
            IF (.NOT.lq) CALL errore('init','q not allowed',1)
            IF(nc(m(1),m(2),m(3)).EQ.0) THEN
               nc(m(1),m(2),m(3))=1
-              IF (lrigid) CALL rgd_blk (nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
+              IF (lrigid) THEN
+                 CALL rgd_blk (nr1,nr2,nr3,nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
                    tau,epsil,zeu,bg,omega,-1.d0)
+              END IF
               CALL trasl(phid,phiq,nq,nrx1,nrx2,nrx3,nat,m(1),m(2),m(3),nax)
               nqtot=nqtot+1
            ELSE
@@ -470,3 +505,225 @@ SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, nrx1, nrx2, nrx3, iflg )
   !
   RETURN
 END SUBROUTINE tolerant_cft3
+
+!----------------------------------------------------------------------
+subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
+  !-----------------------------------------------------------------------
+  !
+  ! Impose ASR - refined version by Nicolas Mounet
+  !
+  implicit none
+  character(len=10) :: zasr
+  integer ibrav,nr1,nr2,nr3,nr,m,p,k,l,q,r
+  integer n,i,j,n1,n2,n3,na,nb,nat,nax,axis,i1,j1,na1
+  !
+  real(kind=8) sum, zeu(3,3,nax)
+  real(kind=8) tau(3,nax),zeu_new(3,3,nat)
+  ! 
+  !
+  real(kind=8) zeu_u(6*3,3,3,nat)
+  ! These are the "vectors" associated with the sum rules on effective charges
+  !
+  integer zeu_less(6*3),nzeu_less,izeu_less
+  ! indices of the vectors zeu_u that are not independent to the preceding ones,
+  ! nzeu_less = number of such vectors, izeu_less = temporary parameter
+  !
+  real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
+  ! temporary vectors and parameters
+
+  ! Initialization. n is the number of sum rules to be considered (if zasr.ne.'simple')
+  ! and 'axis' is the rotation axis in the case of a 1D system
+  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
+  !
+  if((zasr.ne.'simple').and.(zasr.ne.'crystal').and.(zasr.ne.'one-dim') &
+       .and.(zasr.ne.'zero-dim')) then
+              call errore('q2r','reading zasr',zasr)
+  endif
+  if(zasr.eq.'crystal') n=3
+  if(zasr.eq.'one-dim') then
+          ! the direction of periodicity is the rotation axis
+          ! It will work only if the crystal axis considered is one of
+          ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
+          ! z-direction)
+          if (nr1*nr2*nr3.eq.1) axis=3
+          if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
+          if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
+          if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
+          if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
+             (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
+                    call errore('q2r','too many directions of &
+                            periodicity in 1D system',axis)
+          endif
+          if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
+             ((ibrav.ne.4).or.(axis.ne.3)) ) then
+                    write(6,*) 'zasr: rotational axis may be wrong'
+          endif
+          write(6,'("zasr rotation axis in 1D system= ",I4)') axis
+          n=4
+  endif 
+  if(zasr.eq.'zero-dim') n=6
+
+  ! Acoustic Sum Rule on effective charges
+  !
+  if(zasr.eq.'simple') then
+      do i=1,3
+         do j=1,3
+            sum=0.0
+            do na=1,nat
+               sum = sum + zeu(i,j,na)
+            end do
+            do na=1,nat
+               zeu(i,j,na) = zeu(i,j,na) - sum/nat
+            end do
+         end do
+      end do
+    else
+      ! generating the vectors of the orthogonal of the subspace to project 
+      ! the effective charges matrix on
+      !
+      zeu_u(:,:,:,:)=0.0d0
+      do i=1,3
+        do j=1,3
+          do na=1,nat
+            zeu_new(i,j,na)=zeu(i,j,na)
+          enddo
+        enddo
+      enddo
+      !
+      p=0
+      do i=1,3
+        do j=1,3
+          ! These are the 3*3 vectors associated with the 
+          ! translational acoustic sum rules
+          p=p+1
+          zeu_u(p,i,j,:)=1.0d0
+          !
+        enddo
+      enddo
+      !
+      if (n.eq.4) then
+         do i=1,3
+           ! These are the 3 vectors associated with the 
+           ! single rotational sum rule (1D system)
+           p=p+1
+           do na=1,nat
+             zeu_u(p,i,MOD(axis,3)+1,na)=-tau(MOD(axis+1,3)+1,na)
+             zeu_u(p,i,MOD(axis+1,3)+1,na)=tau(MOD(axis,3)+1,na)
+           enddo
+           !
+         enddo
+      endif
+      !
+      if (n.eq.6) then
+         do i=1,3
+           do j=1,3
+             ! These are the 3*3 vectors associated with the 
+             ! three rotational sum rules (0D system - typ. molecule)
+             p=p+1
+             do na=1,nat
+               zeu_u(p,i,MOD(j,3)+1,na)=-tau(MOD(j+1,3)+1,na)
+               zeu_u(p,i,MOD(j+1,3)+1,na)=tau(MOD(j,3)+1,na)
+             enddo
+             !
+           enddo
+         enddo
+      endif
+      !
+      ! Gram-Schmidt orthonormalization of the set of vectors created.
+      !
+      nzeu_less=0
+      do k=1,p
+        zeu_w(:,:,:)=zeu_u(k,:,:,:)
+        zeu_x(:,:,:)=zeu_u(k,:,:,:)
+        do q=1,k-1
+          r=1
+          do izeu_less=1,nzeu_less
+            if (zeu_less(izeu_less).eq.q) r=0
+          enddo
+          if (r.ne.0) then
+              call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
+              zeu_w(:,:,:) = zeu_w(:,:,:) - scal* zeu_u(q,:,:,:)
+          endif
+        enddo
+        call sp_zeu(zeu_w,zeu_w,nat,norm2)
+        if (norm2.gt.1.0d-16) then
+           zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
+          else
+           nzeu_less=nzeu_less+1
+           zeu_less(nzeu_less)=k
+        endif
+      enddo
+      !
+      !
+      ! Projection of the effective charge "vector" on the orthogonal of the 
+      ! subspace of the vectors verifying the sum rules
+      !
+      zeu_w(:,:,:)=0.0d0
+      do k=1,p
+        r=1
+        do izeu_less=1,nzeu_less
+          if (zeu_less(izeu_less).eq.k) r=0
+        enddo
+        if (r.ne.0) then
+            zeu_x(:,:,:)=zeu_u(k,:,:,:)
+            call sp_zeu(zeu_x,zeu_new,nat,scal)
+            zeu_w(:,:,:) = zeu_w(:,:,:) + scal*zeu_u(k,:,:,:)
+        endif
+      enddo
+      !
+      ! Final substraction of the former projection to the initial zeu, to get
+      ! the new "projected" zeu
+      !
+      zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
+      call sp_zeu(zeu_w,zeu_w,nat,norm2)
+      write(6,'("Norm of the difference between old and new effectives charges: " &
+                        ,F25.20)') DSQRT(norm2)
+      !
+      ! Check projection
+      !
+      !write(6,'("Check projection of zeu")')
+      !do k=1,p
+      !  zeu_x(:,:,:)=zeu_u(k,:,:,:)
+      !  call sp_zeu(zeu_x,zeu_new,nat,scal)
+      !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," zeu_new|zeu_u(k)= ",F15.10)') k,scal
+      !enddo
+      !
+      do i=1,3
+        do j=1,3
+          do na=1,nat
+            zeu(i,j,na)=zeu_new(i,j,na)
+          enddo
+        enddo
+      enddo
+  endif
+  !
+  !
+  return
+end subroutine set_zasr
+!
+!----------------------------------------------------------------------
+subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
+  !-----------------------------------------------------------------------
+  !
+  ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
+  ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
+  !
+  implicit none
+  integer i,j,na,nat
+  real(kind=8) zeu_u(3,3,nat)
+  real(kind=8) zeu_v(3,3,nat)
+  real(kind=8) scal  
+  !
+  !
+  scal=0.0d0
+  do i=1,3
+    do j=1,3
+      do na=1,nat
+        scal=scal+zeu_u(i,j,na)*zeu_v(i,j,na)
+      enddo
+    enddo
+  enddo
+  !
+  return
+  !
+end subroutine sp_zeu

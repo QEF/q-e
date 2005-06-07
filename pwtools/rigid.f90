@@ -1,18 +1,19 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine rgd_blk (nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
+subroutine rgd_blk (nr1,nr2,nr3,nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
   ! compute the rigid-ion (long-range) term for q 
   !
 #include "f_defs.h"
   implicit none
   real(kind=8), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
+  integer ::  nr1, nr2, nr3    !  FFT grid
   integer ::  nax, nat         ! (maximum) number of atoms 
   complex(kind=8) :: dyn(3,3,nax,nax) ! dynamical matrix
   real(kind=8) &
@@ -28,14 +29,33 @@ subroutine rgd_blk (nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   real(kind=8) zag(3),zbg(3),zcg(3),&! eff. charges  times g-vector
        geg              !  <q+G| epsil | q+G>
-  integer :: na,nb,nc, i,j
+  integer :: na,nb,nc, i,j, im, m1, m2, m3
+  integer :: nrx1, nrx2, nrx3, nmegax
+  integer, parameter :: nrx=16
+  real(kind=8), save :: gmega(3,(2*nrx+1)*(2*nrx+1)*(2*nrx+1))
+  real(kind=8) :: alph, fac,g1,g2,g3, fnat(3), facgd, arg
+  complex(kind=8) :: facg, cmplx
   !
-  integer, parameter:: nrx1=16, nrx2=16, nrx3=16, &
-       nmegax=(2*nrx1+1)*(2*nrx2+1)*(2*nrx3+1)
-  integer im, m1, m2, m3
-  complex(kind=8) facg, cmplx
-  real(kind=8) gmega(3,nmegax), alph, fac,g1,g2,g3, fnat(3), facgd, arg
-  save gmega
+  ! Check if some dimensions should not be taken into account:
+  ! e.g. if nr1=1 and nr2=1, then the G-vectors run along nr3 only.
+  ! (useful if system is in vacuum, e.g. 1D or 2D)
+  !
+  if (nr1.eq.1) then 
+     nrx1=0
+  else
+     nrx1=nrx
+  endif
+  if (nr2.eq.1) then 
+     nrx2=0
+  else
+     nrx2=nrx
+  endif
+  if (nr3.eq.1) then 
+     nrx3=0
+  else
+     nrx3=nrx
+  endif
+  nmegax=(2*nrx1+1)*(2*nrx2+1)*(2*nrx3+1)
   !
   if (abs(sign).ne.1.0) &
        call errore ('rgd_blk',' wrong value for sign ',1)
