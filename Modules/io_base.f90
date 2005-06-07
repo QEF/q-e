@@ -868,8 +868,12 @@
         IF( ionode ) THEN
           WRITE(iuni) twrite, file_version, section_name
           WRITE(iuni) symm_type, nsym, invsym, noinv, nat
-          WRITE(iuni) (s(:,:,i),i=1,nsym), ((irt(i,j),i=1,nsym),j=1,nat),  &
-            (ftau(:,i),i=1,nsym), (sname(i),i=1,nsym)
+          !
+          ! We write all possible sym.ops., and not only true symmetries,
+          ! because in the third-order code D3 we may need all of them
+          !
+          WRITE(iuni) (s(:,:,i),i=1,48), ((irt(i,j),i=1,48),j=1,nat),  &
+            (ftau(:,i),i=1,48), (sname(i),i=1,48)
         END IF
 
       RETURN
@@ -960,8 +964,8 @@
           CALL errore( sub_name, ' wrong size ', 5 )
 !
         IF( ionode ) THEN
-          READ(iuni) (s(:,:,i),i=1,nsym), ((irt(i,j),i=1,nsym),j=1,nat),  &
-            (ftau(:,i),i=1,nsym), (sname(i),i=1,nsym)
+          READ(iuni) (s(:,:,i),i=1,48), ((irt(i,j),i=1,48),j=1,nat),  &
+            (ftau(:,i),i=1,48), (sname(i),i=1,48)
         END IF
         CALL mp_bcast( s, ionode_id )
         CALL mp_bcast( sname(:), ionode_id )

@@ -247,6 +247,14 @@ SUBROUTINE d3_setup()
      CALL set_d3irr
   ENDIF
   !
+  npertx = 0
+  do irr = 1, nirr
+      npertx = max (npertx, npert (irr) )
+  enddo
+  do irr = 1, nirrg0
+      npertx = max (npertx, npertg0 (irr) )
+  enddo
+  !
   ! 6) Set non linear core correction stuff
   !
   nlcc_any = .FALSE.

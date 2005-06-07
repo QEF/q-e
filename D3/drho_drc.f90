@@ -45,7 +45,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
   DO ipert = 1, 3 * nat
      drhoc(:) = (0.d0, 0.d0)
-     uact = u_x (1, ipert)
+     uact(:) = u_x (:, ipert)
      DO na = 1, nat
         mu = 3 * (na - 1)
         IF (ABS (uact (mu + 1) ) + ABS (uact (mu + 2) ) + &
