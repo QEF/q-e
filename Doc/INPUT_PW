@@ -415,7 +415,7 @@ lspinorb       LOGICAL
 NAMELIST &ELECTRONS
 
 electron_maxstep  
-               INTEGER ( default = 50 )
+               INTEGER ( default = 100 )
                maximum number of iterations in a scf step
 
 conv_thr       REAL  ( default = 1.D-6 )
