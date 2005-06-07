@@ -17,15 +17,18 @@ subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
   real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, E, dosg (2)
   real(kind=DP) :: w0gauss
   integer :: n, ns, nk0, nk, ik
+  integer :: nspin0
   external w0gauss
   !
-  if (nspin.eq.1) then
+  if (nspin == 1 .or. nspin == 4) then
      nk = nks
   else
      nk = nks / 2
   endif
+  nspin0=nspin
+  if (nspin==4) nspin0=1
   !
-  do ns = 1, nspin
+  do ns = 1, nspin0
      if (ns.eq.1) then
         nk0 = 1
      else

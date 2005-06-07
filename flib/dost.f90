@@ -18,8 +18,16 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
   integer :: itetra (4), nk, ns, nt, ibnd, i
 
   real(kind=DP) :: etetra (4), e1, e2, e3, e4
-  do ns = 1, nspin
-     dost (ns) = 0.0
+  integer :: nspin0, nspin1
+
+  nspin0=nspin
+  nspin1=nspin
+  if (nspin==4) then
+     nspin0=1
+     nspin1=2
+  endif
+  do ns = 1, nspin0
+     dost (ns) = 0.d0
      !
      ! nk is used to select k-points with up (ns=1) or down (ns=2) spin
      !
@@ -56,9 +64,10 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
 
 
      enddo
-     ! add correct spin normalization : 2 for LDA, 1 for LSDA calculations
+     ! add correct spin normalization : 2 for LDA, 1 for LSDA or
+     ! noncollinear calculations 
 
-     dost (ns) = dost (ns) * 2.d0 / nspin
+     dost (ns) = dost (ns) * 2.d0 / nspin1
 
   enddo
   return

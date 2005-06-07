@@ -126,8 +126,6 @@ PROGRAM dos
   CALL mp_bcast( prefix, ionode_id )
   !
   CALL read_file( )
-
-  if (noncolin) call errore('dos','not implemented yet',1)
   !
   IF ( ionode ) THEN
      !
@@ -163,19 +161,19 @@ PROGRAM dos
         Eup = MAX (Eup, et (nbnd, ik) )
      ENDDO
      IF (degauss.NE.0.d0) THEN
-        Eup = Eup + 3d0 * degauss
-        Elw = Elw - 3d0 * degauss
+        Eup = Eup + 3.d0 * degauss
+        Elw = Elw - 3.d0 * degauss
      ENDIF
      !
      Emin=MAX(Emin/rytoev,Elw)
      Emax=MIN(Emax/rytoev,Eup)
      DeltaE = DeltaE / rytoev
      ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)
-     DOSint = 0.0
+     DOSint = 0.d0
      !
      IF ( fildos == ' ' ) fildos = TRIM(prefix)//'.dos'
      OPEN (unit = 4, file = fildos, status = 'unknown', form = 'formatted')
-     IF (nspin.EQ.1) THEN
+     IF (nspin.EQ.1.OR.nspin.EQ.4) THEN
         WRITE(4,'("#  E (eV)   dos(E)     Int dos(E)")')
      ELSE
         WRITE(4,'("#  E (eV)   dosup(E)     dosdw(E)   Int dos(E)")')
@@ -187,7 +185,7 @@ PROGRAM dos
         ELSE
            CALL dos_g(et,nspin,nbnd, nks,wk,degauss,ngauss, E, DOSofE)
         ENDIF
-        IF (nspin.EQ.1) THEN
+        IF (nspin.EQ.1.OR.nspin.EQ.4) THEN
            DOSint = DOSint + DOSofE (1) * DeltaE
            WRITE (4, '(f7.3,2e12.4)') E * rytoev, DOSofE(1)/rytoev, DOSint
         ELSE
