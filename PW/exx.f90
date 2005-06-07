@@ -139,10 +139,10 @@ contains
              exxdivergency=exxdivergency + e2*fpi/tpiba2*sum(tempphic(:))* dot_product(temppsic,tempphic)
           end do
 !!!!!!!!!calculate factor of divergency F(q) calculated on grid minus calculated through integration
-          do ik=1,nks
-             qq = (xk(1,ik)-xk(1,currentk))**2 + &
-                  (xk(2,ik)-xk(2,currentk))**2 + &
-                  (xk(3,ik)-xk(3,currentk))**2
+          do ikdiv=1,nks
+             qq = (xk(1,ikdiv)-xk(1,currentk))**2 + &
+                  (xk(2,ikdiv)-xk(2,currentk))**2 + &
+                  (xk(3,ikdiv)-xk(3,currentk))**2
              if (qq.gt.1.d-8) then
                 exxdivfac=exxdivfac+exp(-qq)/qq
              else
