@@ -14,6 +14,7 @@ lsda_functionals.o \
 more_functionals.o \
 iceil.o \
 iglocal.o \
+inpfile.o \
 invmat.o \
 latgen.o \
 linpack.o \

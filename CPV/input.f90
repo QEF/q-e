@@ -45,6 +45,10 @@
       IF( program_name == 'FPMD' ) prog = 'FP'
       IF( program_name == 'CP90' ) prog = 'CP'
 
+      IF( ionode ) THEN
+        CALL input_from_file()
+      END IF
+
       ! . Read NAMELISTS ..................................................!
 
       CALL read_namelists( prog )

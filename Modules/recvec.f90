@@ -98,6 +98,7 @@
      REAL(dbl) :: gcuts = 0.0d0
 
      REAL(dbl) :: dual = 0.0d0
+     LOGICAL   :: doublegrid = .FALSE.
 
    CONTAINS
 

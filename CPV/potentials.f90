@@ -389,6 +389,7 @@
       ALLOCATE( fion( 3, atoms%nat ) )
 
       fion = atoms%for( 1:3, 1:atoms%nat )
+      ! WRITE(6,*) 'DEBUG atoms = ', SUM(fion)
       pail = box%pail
 
       IF(tgc) THEN
@@ -456,6 +457,7 @@
         IF( iflag == 0 ) &
           WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
         iflag = 1
+        ! WRITE(6,*) 'DEBUG esr = ', SUM(fion)
       END IF
 
       IF(timing) s2 = cclock()
@@ -632,6 +634,8 @@
       CALL vofloc(ttscreen, ttforce, edft%ehte, edft%ehti, ehp, & 
            eps, vloc, rhoeg, fion, atoms, rhops, vps, kp, eigr, &
            ei1, ei2, ei3, sfac, box, desc, ps%ap )
+      !
+      ! WRITE(6,*) 'DEBUG vofloc = ', SUM(fion)
 
       !       edft%ehte = REAL ( ehtep )
 
@@ -709,6 +713,7 @@
       IF (ttforce) THEN
         CALL mp_sum(fion, group)
       END IF
+      ! WRITE(6,*) 'DEBUG end = ', SUM(fion)
 
 ! ... sum up energies
       CALL mp_sum(eps, group)

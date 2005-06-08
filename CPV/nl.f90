@@ -337,6 +337,7 @@
                     isa = isa + 1
                     tt = dfnl%r(isa,igh,ib) * fnl(ik)%r(isa,igh,ib)
                     atoms%for(k,isa) = atoms%for(k,isa) - tt * temp
+                    ! WRITE( 6, * ) 'DD tt, temp = ', igh, ib, is, ia, tt, temp
                   END DO
                 ELSE
                   DO ia = 1, atoms%na(is)
@@ -605,15 +606,16 @@
           ll  = nhtol ( ih, is ) + 1
           l   = ll - 1
           igh = ih
+          ! write( 6, * ) 'DEBUG = ', SUM( wnl( :, iv, is ) ), SUM( gwork( :, iy ) )
           gxtmp(1:ngw) = csign(l) * wnl(1:ngw,iv,is) * gwork(1:ngw,iy)
           DO ia = 1, atoms%na(is)
             auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss + ia - 1)
           END DO
           IF( cdesc%gamma ) THEN
-             CALL DGEMM('T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, auxc(1,1), lda, &
+             CALL DGEMM('T', 'N', atoms%na(is), nb, 2*ngw, 1.0d0, auxc(1,1), 2*ngw, &
                 c(1,1), ldw, 0.0d0, dfnl%r(iss,igh,1), ldf)
            ELSE
-             CALL ZGEMM('C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), lda, &
+             CALL ZGEMM('C', 'N', atoms%na(is), nb, ngw, one, auxc(1,1), ngw, &
                 c(1,1), ldw, zero, dfnl%c(iss,igh,1), ldf)
            END IF
         END DO LM
@@ -621,6 +623,7 @@
         iss = iss + atoms%na(is)
       END DO SPECS
       IF( cdesc%gamma ) CALL DSCAL(size(dfnl%r),2.0d0,dfnl%r(1,1,1),1)
+      !write( 6, * ) 'DEBUG ==== ', SUM( dfnl%r )
       DEALLOCATE(gwork, gxtmp)
       RETURN
       END SUBROUTINE nlsm2_s

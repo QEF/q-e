@@ -1137,21 +1137,42 @@ END SUBROUTINE gshcount
           USE gvecw, ONLY: ecutw
           USE gvecw, ONLY: ecfix, ecutz, ecsig
           USE gvecp, ONLY: ecutp
-          USE gvecs, ONLY: ecuts, dual
+          USE gvecs, ONLY: ecuts, dual, doublegrid
           use betax, only: mmx, refg
 
           IMPLICIT NONE
           REAL(dbl), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
 
           ecutw = ecutwfc
-          ecutp = ecutrho
-          IF( ecutp <= 0.d0 ) THEN
-              ecutp = 4.0d0 * ecutw
-          ELSE IF( ecutp < ecutw ) THEN
-              CALL errore(' ecutoffs_setup ',' invalid ecutrho ', INT( ecutp ) )
+
+          IF ( ecutrho <= 0.D0 ) THEN
+             !
+             dual = 4.D0
+             !
+          ELSE
+             !
+             dual = ecutrho / ecutwfc
+             !
+             IF ( dual <= 1.D0 ) &
+                CALL errore( ' ecutoffs_setup ', ' invalid dual? ', 1 )
+             !
           END IF
-          dual  = 4.0d0
-          ecuts = dual * ecutwfc
+
+          ecutp = dual * ecutwfc
+
+          doublegrid = ( dual > 4.D0 )
+          !
+          IF ( doublegrid ) THEN
+             !
+             ecuts = 4.D0 * ecutwfc
+             !
+          ELSE
+             !
+             ecuts = ecutp
+             !
+          END IF
+
+          !
           ecfix = ecfixed
           ecutz = qcutz
           ecsig = q2sigma
@@ -1205,8 +1226,7 @@ END SUBROUTINE gshcount
 
           gcutw = ecutwfc / tpiba**2  ! wave function cut-off
           gcutp = ecutrho / tpiba**2  ! potential cut-off
-
-          gcuts = ecuts / tpiba**2    ! smooth mesh cut-off
+          gcuts = ecuts   / tpiba**2  ! smooth mesh cut-off
 
           kcut = 0.0_dbl
           IF ( tk_inp ) THEN

@@ -148,9 +148,9 @@
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE gvecp, ONLY: ngm, ngmt, ecutp
-      USE gvecs, ONLY: ngs, ngst
-      USE gvecw, ONLY: ngw, ngwt, ecutw
+      USE gvecp, ONLY: ngm, ngmt, ecutp, gcutp
+      USE gvecs, ONLY: ngs, ngst, ecuts, gcuts, dual
+      USE gvecw, ONLY: ngw, ngwt, ecutw, gcutw
       USE electrons_base, ONLY: nspin, nbnd, nbsp, nelt, nel, nupdwn, iupdwn
       USE cell_base, ONLY: ibrav, alat, celldm
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
@@ -231,6 +231,17 @@
 
       CALL invmat( 3, ht, htm1, omega )
 
+      !   
+      !  Write G vectors (up to ecutrho) to file
+      !   
+      ALLOCATE( mill(3,ngmt) )
+      mill = 0
+      DO ig = 1, ngm
+        mill(:,ig_l2g(ig)) = mill_l(:,ig)
+      END DO
+      CALL mp_sum( mill )
+
+      !
       !  Open XML descriptor
 
       IF ( ionode ) THEN
@@ -245,30 +256,68 @@
       IF( ionode ) THEN
         !
         call iotk_write_begin(iunpun,"STATUS")
-        call iotk_write_attr (attr,"nfi",nfi,first=.true.)
-        call iotk_write_empty(iunpun,"STEP",attr)
-        call iotk_write_dat (iunpun, "TIME", simtime)
-        call iotk_write_dat (iunpun, "TITLE", TRIM(title) )
+          call iotk_write_attr (attr,"nfi",nfi,first=.true.)
+          call iotk_write_empty(iunpun,"STEP",attr)
+          call iotk_write_dat (iunpun, "TIME", simtime)
+          call iotk_write_dat (iunpun, "TITLE", TRIM(title) )
         call iotk_write_end(iunpun,"STATUS")
         !
         call iotk_write_begin(iunpun,"DIMENSIONS")
-        call iotk_write_attr (attr,"nx",nr1,first=.true.)
-        call iotk_write_attr (attr,"ny",nr2)
-        call iotk_write_attr (attr,"nz",nr3)
-        call iotk_write_empty(iunpun,"FFT_GRID",attr)
-        call iotk_write_attr (attr,"nx",nr1s,first=.true.)
-        call iotk_write_attr (attr,"ny",nr2s)
-        call iotk_write_attr (attr,"nz",nr3s)
-        call iotk_write_empty(iunpun,"SMOOTH_FFT_GRID",attr)
-        call iotk_write_attr (attr,"nx",nr1b,first=.true.)
-        call iotk_write_attr (attr,"ny",nr2b)
-        call iotk_write_attr (attr,"nz",nr3b)
-        call iotk_write_empty(iunpun,"SMALLBOX_FFT_GRID",attr)
-        call iotk_write_attr (attr,"ng",ngmt,first=.true.)
-        call iotk_write_empty(iunpun,"GVECTORS",attr)
-        call iotk_write_attr (attr,"ng",ngst,first=.true.)
-        call iotk_write_empty(iunpun,"SMOOTH_GVECTORS",attr)
+          !
+          CALL iotk_write_attr( attr, "unit", "Hartree", FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "ecutwfc", ecutw/2.D0 )
+          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_WAVE-FUNCTIONS", attr )
+          !
+          CALL iotk_write_attr( attr, "unit", "Hartree", FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "ecutrho", ecutw*dual/2.D0 )
+          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_CHARGE-DENSITY", attr )
+          !
+          CALL iotk_write_attr( attr, "npw", ngwt, FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "NUMBER_OF_PLANE_WAVES", attr )
+          !
+          CALL iotk_write_attr( attr, "nr1", nr1, FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "nr2", nr2 )
+          CALL iotk_write_attr( attr, "nr3", nr3 )
+          CALL iotk_write_empty( iunpun, "FFT_GRID", attr )
+          !
+          CALL iotk_write_attr( attr, "gcutm", gcutp, FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_G-VECTORS", attr )
+          ! 
+          CALL iotk_write_attr( attr, "ngm_g", ngmt, FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "NUMBER_OF_G-VECTORS", attr )
+          !
+          CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "nr2s", nr2s )
+          CALL iotk_write_attr( attr, "nr3s", nr3s )
+          CALL iotk_write_empty( iunpun, "SMOOTH_FFT_GRID", attr )
+          !
+          CALL iotk_write_attr( attr, "gcutms", gcuts, FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_SMOOTH_G-VECTORS", attr )
+          !
+          CALL iotk_write_attr( attr, "ngms_g", ngst, FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "NUMBER_OF_SMOOTH_G-VECTORS", attr )
+          !
+          call iotk_write_attr (attr,"nx",nr1b,first=.true.)
+          call iotk_write_attr (attr,"ny",nr2b)
+          call iotk_write_attr (attr,"nz",nr3b)
+          call iotk_write_empty(iunpun,"SMALLBOX_FFT_GRID",attr)
+          !
         call iotk_write_end(iunpun,"DIMENSIONS")
+        !
+        !
+        ! ... G-VECTORS
+        !
+        CALL iotk_write_begin( iunpun, "G-VECTORS" )
+          !
+          CALL iotk_link( iunpun, "G-VECTORS", "gvectors.dat", &
+                         CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
+          !
+          CALL iotk_write_begin( iunpun, "G-VECTORS", attr = attr )
+          CALL iotk_write_dat( iunpun, "g", mill(1:3,1:ngm), FMT = "(3I5)" )
+          CALL iotk_write_end( iunpun, "G-VECTORS" )
+          !
+        CALL iotk_write_end( iunpun, "G-VECTORS" )
+
         !
         call iotk_write_begin(iunpun,"ELECTONS")
         call iotk_write_attr (attr,"nspin",nspin,first=.true.)
@@ -287,26 +336,11 @@
         call iotk_write_dat (iunpun, "ACCUMULATORS", acc)
         call iotk_write_end(iunpun,"AVERAGES")
         !
-        call iotk_write_attr (attr,"unit","Hartree",first=.true.)
-        call iotk_write_begin(iunpun,"CUTOFFS",attr)
-        call iotk_write_dat (iunpun, "ECUTRHO", ecutp/2.0d0)
-        call iotk_write_dat (iunpun, "ECUTWFC", ecutw/2.0d0)
-        call iotk_write_end(iunpun,"CUTOFFS")
-        !
         call iotk_write_begin(iunpun,"LATTICE")
         call iotk_write_attr (attr, "ibrav",ibrav,first=.true.)
         call iotk_write_attr (attr, "alat", alat )
         call iotk_write_empty(iunpun,"TYPE",attr)
         call iotk_write_dat (iunpun, "CELLDM", celldm(1:6))
-        call iotk_write_dat (iunpun, "ht", ht)
-        call iotk_write_dat (iunpun, "htm", htm)
-        call iotk_write_dat (iunpun, "htvel", htvel)
-        call iotk_write_dat (iunpun, "gvel", gvel)
-        call iotk_write_begin(iunpun,"NOSE")
-          call iotk_write_dat (iunpun, "xnhh0", xnhh0)
-          call iotk_write_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_write_dat (iunpun, "vnhh", vnhh)
-        call iotk_write_end(iunpun,"NOSE")
         call iotk_write_begin(iunpun,"RECIPROCAL_BASIS")
           call iotk_write_dat (iunpun, "b1", b1)
           call iotk_write_dat (iunpun, "b2", b2)
@@ -326,27 +360,82 @@
         END DO
         call iotk_write_dat(iunpun, "taui", taui(1:3,1:nat) )
         call iotk_write_dat(iunpun, "cdmi", cdmi(1:3) )
-        call iotk_write_dat(iunpun, "stau0", stau0(1:3,1:nat) )
-        call iotk_write_dat(iunpun, "svel0", svel0(1:3,1:nat) )
-        call iotk_write_dat(iunpun, "staum", staum(1:3,1:nat) )
-        call iotk_write_dat(iunpun, "svelm", svelm(1:3,1:nat) )
         call iotk_write_dat(iunpun, "force", force(1:3,1:nat) )
-        call iotk_write_begin(iunpun,"NOSE")
-          call iotk_write_dat (iunpun, "nhpcl", nhpcl)
-          call iotk_write_dat (iunpun, "xnhp0", xnhp0 )
-          call iotk_write_dat (iunpun, "xnhpm", xnhpm )
-          call iotk_write_dat (iunpun, "vnhp", vnhp)
-        call iotk_write_end(iunpun,"NOSE")
         call iotk_write_end(iunpun,"IONS")
         ! 
         call iotk_write_begin(iunpun,"ELECTRONS")
-        call iotk_write_begin(iunpun,"NOSE")
-          call iotk_write_dat (iunpun, "xnhe0", xnhe0)
-          call iotk_write_dat (iunpun, "xnhem", xnhem)
-          call iotk_write_dat (iunpun, "vnhe", vnhe)
-        call iotk_write_end(iunpun,"NOSE")
-        call iotk_write_dat (iunpun, "ekincm", ekincm)
+          call iotk_write_dat (iunpun, "ekincm", ekincm)
         call iotk_write_end(iunpun,"ELECTRONS")
+        !
+        !
+        call iotk_write_attr (attr, "nt", 2, first=.true.)
+        call iotk_write_begin(iunpun,"TIMESTEPS", attr)
+          !
+          call iotk_write_begin(iunpun,"STEP0")
+            !
+            call iotk_write_begin(iunpun,"IONS_POSITIONS")
+              call iotk_write_dat(iunpun, "stau", stau0(1:3,1:nat) )
+              call iotk_write_dat(iunpun, "svel", svel0(1:3,1:nat) )
+            call iotk_write_end(iunpun,"IONS_POSITIONS")
+            !
+            call iotk_write_begin(iunpun,"IONS_NOSE")
+              call iotk_write_dat (iunpun, "nhpcl", nhpcl)
+              call iotk_write_dat (iunpun, "xnhp", xnhp0 )
+              call iotk_write_dat (iunpun, "vnhp", vnhp)
+            call iotk_write_end(iunpun,"IONS_NOSE")
+            !
+            call iotk_write_begin(iunpun,"ELECTRONS_NOSE")
+              call iotk_write_dat (iunpun, "xnhe", xnhe0)
+              call iotk_write_dat (iunpun, "vnhe", vnhe)
+            call iotk_write_end(iunpun,"ELECTRONS_NOSE")
+            !
+            call iotk_write_begin(iunpun,"CELL_PARAMETERS")
+              call iotk_write_dat (iunpun, "ht", ht)
+              call iotk_write_dat (iunpun, "htvel", htvel)
+              call iotk_write_dat (iunpun, "gvel", gvel)
+            call iotk_write_end(iunpun,"CELL_PARAMETERS")
+            !
+            call iotk_write_begin(iunpun,"CELL_NOSE")
+              call iotk_write_dat (iunpun, "xnhh", xnhh0)
+              call iotk_write_dat (iunpun, "vnhh", vnhh)
+            call iotk_write_end(iunpun,"CELL_NOSE")
+            !
+          call iotk_write_end(iunpun,"STEP0")
+          !
+          !
+          call iotk_write_begin(iunpun,"STEPM")
+            !
+            call iotk_write_begin(iunpun,"IONS_POSITIONS")
+              call iotk_write_dat(iunpun, "stau", staum(1:3,1:nat) )
+              call iotk_write_dat(iunpun, "svel", svelm(1:3,1:nat) )
+            call iotk_write_end(iunpun,"IONS_POSITIONS")
+            !
+            call iotk_write_begin(iunpun,"IONS_NOSE")
+              call iotk_write_dat (iunpun, "nhpcl", nhpcl)
+              call iotk_write_dat (iunpun, "xnhp", xnhpm )
+              ! call iotk_write_dat (iunpun, "vnhp", vnhp)
+            call iotk_write_end(iunpun,"IONS_NOSE")
+            !
+            call iotk_write_begin(iunpun,"ELECTRONS_NOSE")
+              call iotk_write_dat (iunpun, "xnhe", xnhem)
+              ! call iotk_write_dat (iunpun, "vnhe", vnhe)
+            call iotk_write_end(iunpun,"ELECTRONS_NOSE")
+            !
+            call iotk_write_begin(iunpun,"CELL_PARAMETERS")
+              call iotk_write_dat (iunpun, "ht", htm)
+              ! call iotk_write_dat (iunpun, "htvel", htvel)
+              ! call iotk_write_dat (iunpun, "gvel", gvel)
+            call iotk_write_end(iunpun,"CELL_PARAMETERS")
+            !
+            call iotk_write_begin(iunpun,"CELL_NOSE")
+              call iotk_write_dat (iunpun, "xnhh", xnhhm)
+              ! call iotk_write_dat (iunpun, "vnhh", vnhh)
+            call iotk_write_end(iunpun,"CELL_NOSE")
+            !
+          call iotk_write_end(iunpun,"STEPM")
+          !
+        call iotk_write_end(iunpun,"TIMESTEPS")
+        !
         !
         call iotk_write_begin(iunpun,"K_POINTS")
         call iotk_write_attr (attr, "nk",nk,first=.true.)
@@ -391,23 +480,6 @@
         call iotk_write_end(iunpun,"K_POINTS")
         !
       END IF
-      !   
-      !  Write G vectors (up to ecutrho) to file
-      !   
-      ALLOCATE( mill(3,ngmt) )
-      mill = 0
-      DO ig = 1, ngm
-        mill(:,ig_l2g(ig)) = mill_l(:,ig)
-      END DO
-      CALL mp_sum( mill )
-      !
-      filename = TRIM( dirname ) // '/gvectors.dat'
-      IF( ionode ) THEN
-        OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
-        WRITE( 10 ) mill
-        CLOSE( unit = 10 )
-      END IF
-      DEALLOCATE( mill )
 
       !
       !  Write matrix lambda to file
@@ -423,6 +495,8 @@
       if( ionode ) then
         call iotk_close_write( iunpun )
       end if 
+
+      DEALLOCATE( mill )
 
       RETURN
     END SUBROUTINE cp_writefile
@@ -578,7 +652,7 @@
       !
       INTEGER :: ibrav_
       INTEGER :: nat_ , nsp_, na_
-      INTEGER :: nk_ , ik_ 
+      INTEGER :: nk_ , ik_ , nt_
       LOGICAL :: gamma_only_ , found
       REAL(dbl) :: alat_
       REAL(dbl) :: pmass_ , zv_
@@ -596,7 +670,7 @@
       ierr = 0
       IF( ionode ) THEN
         !
-        call iotk_scan_begin(iunpun,"STATUS")
+        call iotk_scan_begin(iunpun,"STATUS" )
         call iotk_scan_empty(iunpun,"STEP",attr)
         call iotk_scan_attr (attr,"nfi",nfi)
         call iotk_scan_dat (iunpun, "TIME", simtime )
@@ -622,7 +696,7 @@
         END IF
         ! 
         !
-        call iotk_scan_begin(iunpun,"AVERAGES")
+        call iotk_scan_begin(iunpun,"AVERAGES" )
         call iotk_scan_dat (iunpun, "ACCUMULATORS", acc)
         call iotk_scan_end(iunpun,"AVERAGES")
         !
@@ -631,19 +705,6 @@
         call iotk_scan_attr (attr, "ibrav",ibrav_ )
         call iotk_scan_attr (attr, "alat", alat_ )
         call iotk_scan_dat (iunpun, "CELLDM", celldm_ (1:6) )
-        call iotk_scan_dat (iunpun, "ht", ht)
-        call iotk_scan_dat (iunpun, "htm", htm)
-        call iotk_scan_dat (iunpun, "htvel", htvel)
-        call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
-        if ( .NOT. found ) then
-          gvel = 0.0d0
-        end if
-
-        call iotk_scan_begin(iunpun,"NOSE")
-          call iotk_scan_dat (iunpun, "xnhh0", xnhh0)
-          call iotk_scan_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_scan_dat (iunpun, "vnhh", vnhh)
-        call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_begin(iunpun,"RECIPROCAL_BASIS")
           call iotk_scan_dat (iunpun, "b1", b1)
           call iotk_scan_dat (iunpun, "b2", b2)
@@ -672,28 +733,92 @@
         END DO
         call iotk_scan_dat(iunpun, "taui", taui(1:3,1:nat) )
         call iotk_scan_dat(iunpun, "cdmi", cdmi(1:3) )
-        call iotk_scan_dat(iunpun, "stau0", stau0(1:3,1:nat) )
-        call iotk_scan_dat(iunpun, "svel0", svel0(1:3,1:nat) )
-        call iotk_scan_dat(iunpun, "staum", staum(1:3,1:nat) )
-        call iotk_scan_dat(iunpun, "svelm", svelm(1:3,1:nat) )
         call iotk_scan_dat(iunpun, "force", force(1:3,1:nat) )
-        call iotk_scan_begin(iunpun,"NOSE")
-          call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
-          call iotk_scan_dat (iunpun, "xnhp0", xnhp0 )
-          call iotk_scan_dat (iunpun, "xnhpm", xnhpm )
-          call iotk_scan_dat (iunpun, "vnhp", vnhp)
-          ! nhpcl = nhpcl_  ! maybe we would like to change lenght
-        call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_end(iunpun,"IONS")
         ! 
         call iotk_scan_begin(iunpun,"ELECTRONS")
-        call iotk_scan_begin(iunpun,"NOSE")
-          call iotk_scan_dat (iunpun, "xnhe0", xnhe0)
-          call iotk_scan_dat (iunpun, "xnhem", xnhem)
-          call iotk_scan_dat (iunpun, "vnhe", vnhe)
-        call iotk_scan_end(iunpun,"NOSE")
-        call iotk_scan_dat (iunpun, "ekincm", ekincm)
+          call iotk_scan_dat (iunpun, "ekincm", ekincm)
         call iotk_scan_end(iunpun,"ELECTRONS")
+        !
+        call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
+        call iotk_scan_attr (attr, "nt", nt_ )
+
+          !
+          IF( nt_ > 0 ) THEN
+            !
+            call iotk_scan_begin(iunpun,"STEP0")
+              !
+              call iotk_scan_begin(iunpun,"IONS_POSITIONS")
+                call iotk_scan_dat(iunpun, "stau", stau0(1:3,1:nat) )
+                call iotk_scan_dat(iunpun, "svel", svel0(1:3,1:nat) )
+              call iotk_scan_end(iunpun,"IONS_POSITIONS")
+              !
+              call iotk_scan_begin(iunpun,"IONS_NOSE")
+                call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
+                call iotk_scan_dat (iunpun, "xnhp", xnhp0 )
+                call iotk_scan_dat (iunpun, "vnhp", vnhp)
+              call iotk_scan_end(iunpun,"IONS_NOSE")
+              !
+              call iotk_scan_begin(iunpun,"ELECTRONS_NOSE")
+                call iotk_scan_dat (iunpun, "xnhe", xnhe0)
+                call iotk_scan_dat (iunpun, "vnhe", vnhe)
+              call iotk_scan_end(iunpun,"ELECTRONS_NOSE")
+              !
+              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                call iotk_scan_dat (iunpun, "ht", ht)
+                call iotk_scan_dat (iunpun, "htvel", htvel)
+                call iotk_scan_dat (iunpun, "gvel", gvel )
+              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+              !
+              call iotk_scan_begin(iunpun,"CELL_NOSE")
+                call iotk_scan_dat (iunpun, "xnhh", xnhh0)
+                call iotk_scan_dat (iunpun, "vnhh", vnhh)
+              call iotk_scan_end(iunpun,"CELL_NOSE")
+              !
+            call iotk_scan_end(iunpun,"STEP0")
+
+            !
+          ELSE
+            ierr = 40
+            GOTO 100
+          END IF
+         
+          IF( nt_ > 1 ) THEN
+            !
+            call iotk_scan_begin(iunpun,"STEPM")
+              !
+              call iotk_scan_begin(iunpun,"IONS_POSITIONS")
+                call iotk_scan_dat(iunpun, "stau", staum(1:3,1:nat) )
+                call iotk_scan_dat(iunpun, "svel", svelm(1:3,1:nat) )
+              call iotk_scan_end(iunpun,"IONS_POSITIONS")
+              !
+              call iotk_scan_begin(iunpun,"IONS_NOSE")
+                call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
+                call iotk_scan_dat (iunpun, "xnhp", xnhpm )
+              call iotk_scan_end(iunpun,"IONS_NOSE")
+              !
+              call iotk_scan_begin(iunpun,"ELECTRONS_NOSE")
+                call iotk_scan_dat (iunpun, "xnhe", xnhem)
+              call iotk_scan_end(iunpun,"ELECTRONS_NOSE")
+              !
+              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                call iotk_scan_dat (iunpun, "ht", htm)
+                ! call iotk_scan_dat (iunpun, "htvel", htvel)
+                ! call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
+                ! if ( .NOT. found ) gvel = 0.0d0
+              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+              !
+              call iotk_scan_begin(iunpun,"CELL_NOSE")
+                call iotk_scan_dat (iunpun, "xnhh", xnhhm)
+              call iotk_scan_end(iunpun,"CELL_NOSE")
+              !
+            call iotk_scan_end(iunpun,"STEPM")
+
+            !
+          END IF
+          !
+        call iotk_scan_end(iunpun,"TIMESTEPS")
+        !
         !
         call iotk_scan_begin(iunpun,"K_POINTS")
         call iotk_scan_empty(iunpun,"GRID",attr)
@@ -898,7 +1023,8 @@
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER :: strlen
       CHARACTER(iotk_attlenx) :: attr
-      INTEGER :: i, ierr
+      INTEGER :: i, ierr, nt_
+      LOGICAL :: found
       !
       ! Variables read for testing pourposes
       !
@@ -925,16 +1051,51 @@
         call iotk_scan_attr (attr, "ibrav",ibrav_ )
         call iotk_scan_attr (attr, "alat", alat_ )
         call iotk_scan_dat (iunpun, "CELLDM", celldm_ (1:6) )
-        call iotk_scan_dat (iunpun, "ht", ht)
-        call iotk_scan_dat (iunpun, "htm", htm)
-        call iotk_scan_dat (iunpun, "htvel", htvel)
-        call iotk_scan_dat (iunpun, "gvel", gvel)
-        call iotk_scan_begin(iunpun,"NOSE")
-          call iotk_scan_dat (iunpun, "xnhh0", xnhh0)
-          call iotk_scan_dat (iunpun, "xnhhm", xnhhm)
-          call iotk_scan_dat (iunpun, "vnhh", vnhh)
-        call iotk_scan_end(iunpun,"NOSE")
         call iotk_scan_end(iunpun,"LATTICE")
+        !
+        call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
+        call iotk_scan_attr (attr, "nt", nt_ )
+          !
+          IF( nt_ > 0 ) THEN
+            !
+            call iotk_scan_begin(iunpun,"STEP0")
+              !
+              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                call iotk_scan_dat (iunpun, "ht", ht)
+                call iotk_scan_dat (iunpun, "htvel", htvel)
+                call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
+                if ( .NOT. found ) gvel = 0.0d0
+              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+              !
+              call iotk_scan_begin(iunpun,"CELL_NOSE")
+                call iotk_scan_dat (iunpun, "xnhh", xnhh0)
+                call iotk_scan_dat (iunpun, "vnhh", vnhh)
+              call iotk_scan_end(iunpun,"CELL_NOSE")
+              !
+            call iotk_scan_end(iunpun,"STEP0")
+            !
+          ELSE
+            ierr = 40
+            GOTO 100
+          END IF
+         
+          IF( nt_ > 1 ) THEN
+            !
+            call iotk_scan_begin(iunpun,"STEPM")
+              !
+              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                call iotk_scan_dat (iunpun, "ht", htm)
+              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+              !
+              call iotk_scan_begin(iunpun,"CELL_NOSE")
+                call iotk_scan_dat (iunpun, "xnhh", xnhhm)
+              call iotk_scan_end(iunpun,"CELL_NOSE")
+              !
+            call iotk_scan_end(iunpun,"STEPM")
+            !
+          END IF
+          !
+        call iotk_scan_end(iunpun,"TIMESTEPS")
         !
       END IF
       !
