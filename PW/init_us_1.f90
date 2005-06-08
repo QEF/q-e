@@ -86,6 +86,7 @@ subroutine init_us_1
   !
   do nt=1,ntyp
      nqlc(nt) = MIN ( nqlc(nt), lmaxq )
+     IF ( nqlc(nt) < 0 )  nqlc(nt) = 0
   end do
 
   prefr = fpi / omega
