@@ -69,7 +69,8 @@ contains
        end do
     end do
     exxstart=.true.
-
+    
+    call facdiv ()
 
 
     call stop_clock ('exxinit')  
@@ -132,30 +133,6 @@ contains
           if (lsda) then
              if ( isk(ik) /= current_spin ) cycle
           end if
-!!!!!! calculate the divergency 
-          exxdivergency=0d0
-          do ibnd=1,nbnd
-             CALL davcio(tempphic,exx_nwordwfc,iunexx,(ik-1)*nbnd+ibnd,-1)
-             exxdivergency=exxdivergency + e2*fpi/tpiba2*sum(tempphic(:))* dot_product(temppsic,tempphic)
-          end do
-!!!!!!!!!calculate factor of divergency F(q) calculated on grid minus calculated through integration
-          do ikdiv=1,nks
-             qq = (xk(1,ikdiv)-xk(1,currentk))**2 + &
-                  (xk(2,ikdiv)-xk(2,currentk))**2 + &
-                  (xk(3,ikdiv)-xk(3,currentk))**2
-             if (qq.gt.1.d-8) then
-                exxdivfac=exxdivfac+exp(-qq)/qq
-             else
-                exxdivfac=exxdivfac+1
-             endif
-             end do
-             exxdivfac=exxdivfac-(omega/((2*pi)**3))*2*((pi/1)**(1.5))
-             exxdivergency=exxdivergency*exxdivfac
-
-!!!!!! calculate the divergency
-
-
-
              do ig=1,ngm
                 qq = (xk(1,ik)-xk(1,currentk)+g(1,ig))**2 + &
                      (xk(2,ik)-xk(2,currentk)+g(2,ig))**2 + &
@@ -163,7 +140,7 @@ contains
                 if (qq.gt.1.d-8) then
                    fac(ig)=e2*fpi/tpiba2/qq
                 else
-                   fac(ig)=exxdivergency
+                   fac(ig)=e2*fpi/tpiba2*exxdivfac
                 end if
              end do
              do ibnd=1,nbnd !for each band of phi
@@ -340,4 +317,33 @@ contains
     call stop_clock ('exxenergy')
   end function exxenergy2
 
+  subroutine facdiv ()
+    USE cell_base,  ONLY : alat, omega
+    USE gvect,      ONLY : ecutwfc
+    USE klist,      ONLY : xk
+
+
+    real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, &
+         e2  = 2.d0
+    real(kind=DP), parameter  :: pi =  3.14159265358979d0
+    real(kind=DP) ::alfa,tpiba2,qq
+    integer ::ikdiv
+    tpiba2 = (fpi / 2.d0 / alat) **2
+    alfa=(((alat)**2)/tpiba2+1/(ecutwfc))/2  !To check alfa
+    ! alfa = omega **(2d0/3d0)
+!!!!!!!!!calculate factor of divergency F(q) calculated on grid minus calculated through integration
+    do ikdiv=1,nks
+       qq = (xk(1,ikdiv)-xk(1,currentk))**2 + &
+            (xk(2,ikdiv)-xk(2,currentk))**2 + &
+            (xk(3,ikdiv)-xk(3,currentk))**2
+       if (qq.gt.1.d-8) then
+          exxdivfac=exxdivfac+exp(-alfa*qq)/qq
+       else
+          exxdivfac=exxdivfac+alfa
+       endif
+    end do
+    exxdivfac=exxdivfac-(omega/((2*pi)**3))*2*((pi/alfa)**(1.5))
+
+
+  end subroutine facdiv
 end module exx
