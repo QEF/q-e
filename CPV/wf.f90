@@ -2713,7 +2713,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
 END SUBROUTINE small_box_wf
 !
 !-----------------------------------------------------------------------
-COMPLEX(KIND=dbl) FUNCTION boxdotgridcplx(irb,qv,vr)
+FUNCTION boxdotgridcplx(irb,qv,vr)
   !-----------------------------------------------------------------------
   !
   ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
@@ -2733,6 +2733,7 @@ COMPLEX(KIND=dbl) FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   INTEGER,           INTENT(IN):: irb(3)
   COMPLEX(KIND=dbl), INTENT(IN):: qv(nnrbx), vr(nnrx)
+  COMPLEX(KIND=dbl)            :: boxdotgridcplx
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
   !
