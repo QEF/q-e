@@ -34,10 +34,6 @@ SUBROUTINE do_cond(nodenumber)
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
                        ewind, epsproj, delgep, cutplot
                                                                                
-  CHARACTER (LEN=80)  :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ILEN
-  INTEGER, EXTERNAL   :: iargc
-
   nd_nmbr=nodenumber
   CALL init_clocks(.TRUE.)
   CALL start_clock('PWCOND')
@@ -78,28 +74,9 @@ SUBROUTINE do_cond(nodenumber)
 
   IF ( ionode )  THEN
      !
-     ! ... Input from file ?
+     CALL input_from_file ( )
      !
-     nargs = iargc()
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, input_file )
-        IF ( TRIM( input_file ) == '-input' .OR. &
-             TRIM( input_file ) == '-inp'   .OR. &
-             TRIM( input_file ) == '-in' ) THEN
-           !
-           CALL getarg( ( iiarg + 1 ) , input_file )
-           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-                STATUS = 'OLD', IOSTAT = ierr )
-           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                & ' not found' , ierr )
-           !
-        END IF
-        !
-     END DO
-     !
-     !     reading the namelist inputpp
+     !     reading the namelist inputcond
      !
      READ (5, inputcond, err=200, iostat=ios )
 200  CALL errore ('do_cond','reading inputcond namelist',ABS(ios))

@@ -87,10 +87,6 @@ PROGRAM q2r
   !
   NAMELIST / input / nr1, nr2, nr3, fild, zasr
   !
-  CHARACTER (LEN=256) :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ILEN
-  INTEGER, EXTERNAL   :: iargc
-  !
   !
   CALL mp_start()
   !
@@ -104,29 +100,7 @@ PROGRAM q2r
      nr2 = 0
      nr3 = 0
      !
-     ! ... Input from file ?
-     !
-     nargs = iargc()
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, input_file )
-        !
-        IF ( TRIM( input_file ) == '-input' .OR. &
-             TRIM( input_file ) == '-inp'   .OR. &
-             TRIM( input_file ) == '-in' ) THEN
-           !
-           CALL getarg( ( iiarg + 1 ) , input_file )
-           !
-           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-                STATUS = 'OLD', IOSTAT = ierr )
-           !
-           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                & ' not found' , ierr )
-           !
-        END IF
-        !
-     END DO
+     CALL input_from_file ( ) 
      !
      READ ( 5, input )
      !

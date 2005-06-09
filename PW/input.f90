@@ -24,7 +24,7 @@ SUBROUTINE iosys()
   USE constants,     ONLY : AU, eV_to_kelvin
   USE mp_global,     ONLY : npool, nproc_pool
   !
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout, ionode
   !
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
@@ -245,9 +245,7 @@ SUBROUTINE iosys()
   ! ... local variables
   !
   INTEGER             :: unit = 5, &
-                         i, iiarg, nargs, ia, ios, ierr, ilen, is, image, nt
-  INTEGER, EXTERNAL   :: iargc
-  CHARACTER (LEN=80)  :: input_file
+                         i, ia, ios, is, image, nt
   LOGICAL             :: ltest
   REAL(kind=DP)       :: theta, phi
   !
@@ -256,29 +254,9 @@ SUBROUTINE iosys()
   !
   pseudo_dir = TRIM( pseudo_dir ) // '/pw/pseudo/'
   !
-  ! ... Input from file ?
-  !
-  nargs = iargc() 
-  !
-  DO iiarg = 1, ( nargs - 1 )
-     !
-     CALL getarg( iiarg, input_file )
-     !
-     IF ( TRIM( input_file ) == '-input' .OR. &
-          TRIM( input_file ) == '-inp'   .OR. &
-          TRIM( input_file ) == '-in' ) THEN
-        !
-        CALL getarg( ( iiarg + 1 ) , input_file )
-        !
-        OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
-               STATUS = 'OLD', IOSTAT = ierr )
-        !
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
-        !
-     END IF
-     !
-  END DO
+  IF (ionode) THEN
+     CALL input_from_file ( )
+  END IF
   !
   ! ... all namelists are read
   !
