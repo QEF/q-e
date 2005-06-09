@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,6 +33,8 @@ subroutine do_elf (elf)
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
        dual, g, ngm, nl, nlm
+  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
+                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
@@ -52,18 +54,11 @@ subroutine do_elf (elf)
   real(kind=DP) :: gv(3), w1, d, arho, fac
   real(kind=DP), allocatable :: kkin (:), tbos (:)
   complex(kind=DP), allocatable :: aux (:), aux2 (:)
-
-  allocate (kkin( nrxx))    
-  allocate (tbos( nrxx))    
-  allocate (aux ( nrxx))    
-  allocate (aux2( nrxx))    
+  !
   call errore ('do_elf', 'elf + US not fully implemented', - 1)
   !
-  ! put the total (up+down) charge density in rho(*,1)
-  !
-  do is = 2, nspin
-     call DAXPY (nrxx, 1.d0, rho (1, is), 1, rho (1, 1), 1)
-  enddo
+  allocate (kkin( nrxx))    
+  allocate (aux ( nrxxs))
   aux(:) = (0.d0,0.d0)
   kkin(:) = 0.d0
   !
@@ -85,14 +80,14 @@ subroutine do_elf (elf)
            w1 = wg (ibnd, ik) / omega
            do i = 1, npw
               gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
-              aux (nl (igk (i) ) ) = cmplx (0d0, gv (j) ) * evc (i, ibnd)
+              aux (nls(igk (i) ) ) = cmplx (0d0, gv (j) ) * evc (i, ibnd)
               IF (gamma_only) THEN
-                 aux (nlm (igk (i) ) ) = cmplx (0d0, -gv (j) ) * &
+                 aux (nlsm(igk (i) ) ) = cmplx (0d0, -gv (j) ) * &
                       CONJG ( evc (i, ibnd) )
               END IF
            enddo
-           call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-           do i = 1, nrxx
+           call cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+           do i = 1, nrxxs
               kkin(i) = kkin(i) + w1 * (real(aux(i))**2 + DIMAG(aux(i))**2)
            enddo
            ! j
@@ -100,13 +95,20 @@ subroutine do_elf (elf)
         ! ibnd
      enddo
      ! ik
-
   enddo
 #ifdef __PARA
   !
   ! reduce local kinetic energy across pools
   !
-  call poolreduce (nrxx, kkin)
+  call poolreduce (nrxxs, kkin)
+#endif
+  !
+  ! interpolate the local kinetic energy to the dense grid
+  ! Note that for US PP this term is incomplete: it contains
+  ! only the contribution from the smooth part of the wavefunction
+  !
+  if (doublegrid) call interpolate (kkin, kkin, 1)
+#ifdef __PARA
   call psymrho (kkin, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else
   call symrho  (kkin, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
@@ -116,12 +118,19 @@ subroutine do_elf (elf)
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
+  deallocate (aux)
+  allocate ( tbos(nrxx), aux2(nrxx), aux(nrxx) )
   tbos(:) = 0.d0
-  aux(:) = (0.d0,0.d0)
-
-  call DCOPY (nrxx, rho, 1, aux, 2)
-
+  !
+  ! put the total (up+down) charge density in rho(*,1)
+  !
+  do is = 2, nspin
+     rho (:, 1) =  rho (:, 1) + rho (:, is)
+  enddo
+  !
+  aux(:) = cmplx ( rho(:, 1), 0.d0 )
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  !
   do j = 1, 3
      aux2(:) = (0.d0,0.d0)
      do i = 1, ngm
@@ -150,9 +159,6 @@ subroutine do_elf (elf)
         elf (i) = 1.0d0 / (1.0d0 + d**2)
      endif
   enddo
-  deallocate (aux)
-  deallocate (aux2)
-  deallocate (tbos)
-  deallocate (kkin)
+  deallocate (aux, aux2, tbos, kkin)
   return
 end subroutine do_elf

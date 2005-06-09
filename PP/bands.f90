@@ -25,10 +25,6 @@ PROGRAM bands
   !
   NAMELIST / inputpp / outdir, prefix, filband, spin_component
   !                                  
-  CHARACTER (LEN=256) :: input_file
-  INTEGER             :: nargs, iiarg, ierr, ILEN
-  INTEGER, EXTERNAL   :: iargc
-  !
   !
   CALL start_postproc (nd_nmbr)
   !
@@ -43,27 +39,8 @@ PROGRAM bands
   !
   IF ( ionode )  THEN
      !
-     ! ... Input from file ?
+     CALL input_from_file ( )
      !
-     nargs = iargc()
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, input_file )
-        IF ( TRIM( input_file ) == '-input' .OR. &
-             TRIM( input_file ) == '-inp'   .OR. &
-             TRIM( input_file ) == '-in' ) THEN
-           !
-           CALL getarg( ( iiarg + 1 ) , input_file )
-           OPEN ( UNIT = 5, FILE = input_file, FORM = 'FORMATTED', &
-                STATUS = 'OLD', IOSTAT = ierr )
-           CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                & ' not found' , ierr )
-           !
-        END IF
-        !
-     END DO
-
      READ (5, inputpp, err = 200, iostat = ios)
 200  CALL errore ('do_bands', 'reading inputpp namelist', ABS (ios) )
      !
@@ -364,7 +341,7 @@ SUBROUTINE punch_band (filband, spin_component)
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
                 nbnd, nks2-nks1+1
         END IF
-        WRITE (iunpun, '(14x,3f7.4)') xk(1,ik),xk(2,ik),xk(3,ik)
+        WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
         WRITE (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
              * rytoev, ibnd = 1, nbnd)
         !
