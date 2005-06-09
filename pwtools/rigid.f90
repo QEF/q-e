@@ -156,20 +156,24 @@ subroutine rgd_blk (nr1,nr2,nr3,nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
 end subroutine rgd_blk
 !
 !-----------------------------------------------------------------------
-subroutine nonanal(nax,nat,dyn,q,itau_blk,nax_blk,epsil,zeu,omega)
+subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
   !-----------------------------------------------------------------------
-  !     add the term with macroscopic electric fields
+  !     add the nonanalytical term with macroscopic electric fields
   !
  implicit none
-  real(kind=8), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
- integer     nax, nat,       &! (maximum) number of atoms 
-      &      nax_blk,        &! maximum number of atoms in the bulk
-      &      itau_blk(nat)    ! 
+ real(kind=8), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
+ integer, intent(in) :: nat, nat_blk, itau_blk(nat)
+ !  nat: number of atoms in the cell (in the supercell in the case
+ !       of a dyn.mat. constructed in the mass approximation)
+ !  nat_blk: number of atoms in the original cell (the same as nat if
+ !       we are not using the mass approximation to build a supercell)
+ !  itau_blk(na): atom in the original cell corresponding to 
+ !                atom na in the supercell
  !
- complex(kind=8) dyn(3,3,nax,nax) ! dynamical matrix
- real(kind=8) q(3),           &! polarization vector
+ complex(kind=8), intent(inout) :: dyn(3,3,nat,nat) ! dynamical matrix
+ real(kind=8), intent(in) :: q(3),  &! polarization vector
       &       epsil(3,3),     &! dielectric constant tensor
-      &       zeu(3,3,nax_blk),&! effective charges tenso
+      &       zeu(3,3,nat_blk),   &! effective charges tensor
       &       omega            ! unit cell volume
  !
  ! local variables
@@ -177,7 +181,7 @@ subroutine nonanal(nax,nat,dyn,q,itau_blk,nax_blk,epsil,zeu,omega)
  real(kind=8) zag(3),zbg(3),  &! eff. charges  times g-vector
       &       qeq              !  <q| epsil | q>
  integer na,nb,              &! counters on atoms
-      &  na_blk,nb_blk,      &! counters on bulk atoms
+      &  na_blk,nb_blk,      &! as above for the original cell
       &  i,j                  ! counters on cartesian coordinates
  !
  qeq = (q(1)*(epsil(1,1)*q(1)+epsil(1,2)*q(2)+epsil(1,3)*q(3))+    &
@@ -211,7 +215,7 @@ subroutine nonanal(nax,nat,dyn,q,itau_blk,nax_blk,epsil,zeu,omega)
 end subroutine nonanal
 !
 !-----------------------------------------------------------------------
-subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
+subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
   !-----------------------------------------------------------------------
   !
   !   diagonalise the dynamical matrix
@@ -219,12 +223,12 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
   !
  implicit none
  ! input
- integer nax, nat, ityp(*)
- complex(kind=8) dyn(3,3,nax,nax)
- real(kind=8) amass(*)
+ integer nat, ntyp, ityp(nat)
+ complex(kind=8) dyn(3,3,nat,nat)
+ real(kind=8) amass(ntyp)
  ! output
  real(kind=8) w2(3*nat)
- complex(kind=8) z(3*nax,3*nat)
+ complex(kind=8) z(3*nat,3*nat)
  ! local
  real(kind=8) diff, dif1, difrel
  integer nat3, na, nta, ntb, nb, ipol, jpol, i, j
@@ -233,7 +237,7 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  !  fill the two-indices dynamical matrix
  !
  nat3 = 3*nat
- allocate(dyn2 (3*nax, nat3))
+ allocate(dyn2 (nat3, nat3))
  !
  do na = 1,nat
     do nb = 1,nat
@@ -283,7 +287,7 @@ subroutine dyndiag (nax,nat,amass,ityp,dyn,w2,z)
  !
  !  diagonalisation
  !
- call cdiagh2(nat3,dyn2,3*nax,w2,z)
+ call cdiagh2(nat3,dyn2,nat3,w2,z)
  !
  deallocate(dyn2)
  !

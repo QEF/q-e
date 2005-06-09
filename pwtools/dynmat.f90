@@ -97,11 +97,10 @@ end Module dynamical
          stop
       end if
 !
+      ntyp = ntypx ! avoids spurious out-of-bound errors
       call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
            omega, amass_, eps0, q_ )
-!!!
-      nax = nat
-!!!
+      !
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
       amconv = 1.66042e-24/9.1095e-28*0.5
       do nt=1, ntyp
@@ -117,12 +116,13 @@ end Module dynamical
          do na=1,nat
             itau(na)=na
          end do
-         call nonanal (nax,nat,dyn,q,itau,nax,eps0,zstar,omega)
+         call nonanal ( nat, nat, itau, eps0, q, zstar,omega, dyn )
          deallocate (itau)
       end if
 !
+      nax = nat
       allocate ( z(3*nat,3*nat), w2(3*nat) )
-      call dyndiag(nax,nat,amass,ityp,dyn,w2,z)
+      call dyndiag(nat,ntyp,amass,ityp,dyn,w2,z)
 !
       if (filout.eq.' ') then
          iout=6
@@ -152,7 +152,7 @@ end Module dynamical
       character(len=256), intent(in) :: fildyn
       character(len=10), intent(in) :: asr
       integer, intent(in) :: axis
-      integer, intent(out) :: nat, ntyp
+      integer, intent(inout) :: nat, ntyp
       character(len=3), intent(out) ::  atm(ntyp)
       real(kind=8), intent(out) :: amass(ntyp), a0, omega, eps0(3,3), q(3)
       !
@@ -562,8 +562,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !
      zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
      call sp_zeu(zeu_w,zeu_w,nat,norm2)
-     write(6,'("Norm of the difference between old and new effectives charges: " &
-          ,F25.20)') DSQRT(norm2)
+     write(6,'("Norm of the difference between old and new effective ", &
+          & "charges: " ,F25.20)') SQRT(norm2)
      !
      ! Check projection
      !

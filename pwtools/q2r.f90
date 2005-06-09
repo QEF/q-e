@@ -7,6 +7,17 @@
 !
 #include "f_defs.h"
 !
+Module dynamicalq
+  !
+  ! All variables read from file that need dynamical allocation
+  !
+  USE kinds, ONLY: DP
+  COMPLEX(KIND=DP), ALLOCATABLE :: phiq(:,:,:,:,:) 
+  REAL(KIND=DP), ALLOCATABLE ::  tau(:,:), zeu(:,:,:)
+  INTEGER, ALLOCATABLE ::  ityp(:)
+  !
+end Module dynamicalq
+!
 !----------------------------------------------------------------------------
 PROGRAM q2r
   !----------------------------------------------------------------------------
@@ -56,34 +67,34 @@ PROGRAM q2r
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
+  USE dynamicalq, ONLY : phiq, tau, ityp, zeu
   !
   IMPLICIT NONE
   !
-  INTEGER,       PARAMETER :: nax = 16, nrx1 = 8, nrx2 = 8, nrx3 = 8
+  INTEGER,       PARAMETER :: ntypx = 10
   REAL(kind=DP), PARAMETER :: eps=1.D-5
-  INTEGER                  :: nr1, nr2, nr3, nr(3)
+  INTEGER                  :: nr1, nr2, nr3, nr(3), nax
   !
   CHARACTER(len=20)  :: crystal
   CHARACTER(len=80)  :: title
   CHARACTER(len=256) :: filin,filj,filf,fild
-  CHARACTER(len=3)   :: atm(nax)
+  CHARACTER(len=3)   :: atm(ntypx)
   !
   LOGICAL :: lq,lrigid,lrigid_save 
   CHARACTER (LEN=10) :: zasr
-  INTEGER :: m1, m2, m3, l1, l2, l3, i, j, j1, j2, na1, na2, ipol
+  INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
   INTEGER :: na, nt
   !
-  INTEGER :: gid
+  INTEGER :: gid, ibrav
   !
-  INTEGER :: m(3), nc(nrx1,nrx2,nrx3),ibrav,ityp(nax)
+  INTEGER, ALLOCATABLE ::  nc(:,:,:)
+  COMPLEX(KIND=DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
   !
-  REAL(KIND=DP) :: celldm(6), at(3,3), bg(3,3), tau(3,nax)
-  REAL(KIND=DP) :: q(3,48),omega, xq, amass(nax), resi,sum
-  REAL(KIND=DP) :: epsil(3,3),zeu(3,3,nax)
+  REAL(KIND=DP) :: celldm(6), at(3,3), bg(3,3)
+  REAL(KIND=DP) :: q(3,48),omega, xq, amass(ntypx), resi,sum
+  REAL(KIND=DP) :: epsil(3,3)
   !
-  COMPLEX(KIND=DP) :: phiq(3,3,nax,nax,48)
-  COMPLEX(KIND=DP) :: phid(nrx1,nrx2,nrx3,3,3,nax,nax)
   !
   NAMELIST / input / nr1, nr2, nr3, fild, zasr
   !
@@ -106,9 +117,6 @@ PROGRAM q2r
      !
      ! check input
      !
-     IF (nr1 > nrx1) CALL errore ('q2r',' nr1 too big, increase nrx1',nrx1)
-     IF (nr2 > nrx2) CALL errore ('q2r',' nr2 too big, increase nrx2',nrx2)
-     IF (nr3 > nrx3) CALL errore ('q2r',' nr3 too big, increase nrx3',nrx3)
      IF (nr1 < 1) CALL errore ('q2r',' nr1 wrong or missing',1)
      IF (nr2 < 1) CALL errore ('q2r',' nr2 wrong or missing',1)
      IF (nr3 < 1) CALL errore ('q2r',' nr3 wrong or missing',1)
@@ -121,16 +129,11 @@ PROGRAM q2r
      !
      ! D matrix (analytical part)
      !
-     !
      nqtot = 0
+     ntyp = ntypx ! avoids spurious out-of-bound errors
      !
-     DO l1=1,nr1
-        DO l2=1,nr2
-           DO l3=1,nr3
-              nc(l1,l2,l3)=0
-           END DO
-        END DO
-     END DO
+     ALLOCATE ( nc(nr1,nr2,nr3) )
+     nc = 0
      !
      ! Reciprocal space dyn.mat. read from file
      !
@@ -138,17 +141,20 @@ PROGRAM q2r
      DO ifile=1,nfile
         READ(5,'(a)') filin
         WRITE (6,*) ' reading dyn.mat. from file ',TRIM(filin)
-        OPEN(unit=1,file=filin,status='old',form='formatted')
-        CALL read_file(nqs,q,phiq,nax,epsil,zeu,lrigid,  &
-             ntyp,nat,ibrav,celldm,atm,amass,ityp,tau)
+        OPEN (unit=1,file=filin,status='old',form='formatted')
+        CALL read_file (nqs, q, epsil, lrigid,  &
+             ntyp, nat, ibrav, celldm, atm, amass)
         IF (ifile.EQ.1) THEN
+           ! it must be allocated here because nat is read from file
+           ALLOCATE (phid(nr1,nr2,nr3,3,3,nat,nat) )
+           !
            lrigid_save=lrigid
            CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
            at = at / celldm(1)  !  bring at in units of alat 
            CALL volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
            CALL recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
            IF (lrigid .AND. (zasr.NE.'no')) THEN
-              CALL set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
+              CALL set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
            END IF
         END IF
         IF (lrigid.AND..NOT.lrigid_save) CALL errore('main',            &
@@ -171,13 +177,15 @@ PROGRAM q2r
               IF (m(ipol) .LT. 1) m(ipol) = m(ipol) + nr(ipol) 
            END DO
            IF (.NOT.lq) CALL errore('init','q not allowed',1)
+
            IF(nc(m(1),m(2),m(3)).EQ.0) THEN
               nc(m(1),m(2),m(3))=1
+              nax = nat
               IF (lrigid) THEN
                  CALL rgd_blk (nr1,nr2,nr3,nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
-                   tau,epsil,zeu,bg,omega,-1.d0)
+                  tau,epsil,zeu,bg,omega,-1.d0)
               END IF
-              CALL trasl(phid,phiq,nq,nrx1,nrx2,nrx3,nat,m(1),m(2),m(3),nax)
+              CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
               nqtot=nqtot+1
            ELSE
               WRITE (*,'(3i4)') (m(i),i=1,3)
@@ -200,10 +208,10 @@ PROGRAM q2r
         DO j2=1,3
            DO na1=1,nat
               DO na2=1,nat
-                 CALL tolerant_cft3(phid(1,1,1,j1,j2,na1,na2), &
-                      nr1,nr2,nr3,nrx1,nrx2,nrx3,1)
-                 CALL DSCAL(2*nrx1*nrx2*nrx3,1.d0/(nr1*nr2*nr3),       &
-                      phid(1,1,1,j1,j2,na1,na2),1)
+                 CALL tolerant_cft3 ( phid (1,1,1,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, 1 )
+                 phid(:,:,:,j1,j2,na1,na2) = &
+                      phid(:,:,:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
               END DO
            END DO
         END DO
@@ -211,7 +219,6 @@ PROGRAM q2r
      !
      ! Real space force constants written to file (analytical part)
      !
-     resi = 0
      OPEN(unit=2,file=fild,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
      DO nt = 1,ntyp
@@ -233,14 +240,6 @@ PROGRAM q2r
         DO j2=1,3
            DO na1=1,nat
               DO na2=1,nat
-                 DO m1=1,nr1
-                    DO m2=1,nr2
-                       DO m3=1,nr3
-                          resi = resi + &
-                                 dabs(dimag(phid(m1,m2,m3,j1,j2,na1,na2)))
-                       END DO
-                    END DO
-                 END DO
                  WRITE (2,'(4i4)') j1,j2,na1,na2
                  WRITE (2,'(3i4,2x,1pe18.11)')   &
                       (((m1,m2,m3,REAL(phid(m1,m2,m3,j1,j2,na1,na2)), &
@@ -250,7 +249,10 @@ PROGRAM q2r
         END DO
      END DO
      CLOSE(2)
+     resi = SUM ( ABS (AIMAG ( phid ) ) )
      WRITE (6,"(/5x,' fft-check: imaginary sum = ',e12.7)") resi
+     !
+     DEALLOCATE (phid, phiq, nc, tau, zeu, ityp) 
      !
   END IF
   ! 
@@ -261,32 +263,29 @@ PROGRAM q2r
 END PROGRAM q2r
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file( nqs, xq, phi, nax, epsil, zeu, lrigid, &
-                      ntyp, nat, ibrav, celldm, atm, amass, ityp, tau )
+SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
+                      ntyp, nat, ibrav, celldm, atm, amass )
   !----------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
+  USE dynamicalq, ONLY: phiq, tau, ityp, zeu
   !
   IMPLICIT NONE
   !
   ! I/O variables
   LOGICAL :: lrigid
-  INTEGER :: nqs, nax, ntyp, nat, ibrav, ityp(nax)
-  REAL(KIND=DP) :: epsil(3,3),zeu(3,3,nax)
-  REAL(KIND=DP) :: xq(3,48), celldm(6), amass(nax), tau(3,nax)
-  COMPLEX(KIND=DP) :: phi(3,3,nax,nax,48)
-  CHARACTER(LEN=3) atm(nax)
+  INTEGER :: nqs, ntyp, nat, ibrav
+  REAL(KIND=DP) :: epsil(3,3)
+  REAL(KIND=DP) :: xq(3,48), celldm(6), amass(ntyp)
+  CHARACTER(LEN=3) atm(ntyp)
   ! local variables
   INTEGER :: ntyp1,nat1,ibrav1,ityp1
   INTEGER :: i, j, na, nb, nt
-  REAL(KIND=DP) :: tau1(3), amass1, celldm1(6),q2
+  REAL(KIND=DP) :: tau1(3), amass1, celldm1(6), q2
   REAL(KIND=DP) :: phir(3),phii(3)
-  COMPLEX(KIND=DP) dcmplx
   CHARACTER(LEN=75) :: line
   CHARACTER(LEN=3)  :: atm1
-  LOGICAL :: first
-  DATA first/.TRUE./
-  SAVE first
+  LOGICAL, SAVE :: first =.TRUE.
   !
   READ(1,*) 
   READ(1,*) 
@@ -295,16 +294,18 @@ SUBROUTINE read_file( nqs, xq, phi, nax, epsil, zeu, lrigid, &
      ! read cell information from file
      !
      READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-     IF (nat.GT.nax) CALL errore('read_f','nax too small',nat)
      IF (ntyp.GT.nat) CALL errore('read_f','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
         READ(1,*) i,atm(nt),amass(nt)
         IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
      END DO
+     ALLOCATE ( ityp(nat), tau(3,nat) )
      DO na=1,nat
         READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
         IF (i.NE.na) CALL errore('read_f','wrong data read',na)
      END DO
+     !
+     ALLOCATE ( phiq (3,3,nat,nat,48), zeu (3,3,nat) )
      !
      first=.FALSE.
      lrigid=.FALSE.
@@ -381,7 +382,7 @@ SUBROUTINE read_file( nqs, xq, phi, nax, epsil, zeu, lrigid, &
         DO i=1,3
            READ (1,*) (phir(j),phii(j),j=1,3)
            DO j = 1,3
-              phi(i,j,na,nb,nqs) = dcmplx(phir(j),phii(j))
+              phiq (i,j,na,nb,nqs) = CMPLX (phir(j),phii(j))
            END DO
         END DO
      END DO
@@ -392,22 +393,23 @@ SUBROUTINE read_file( nqs, xq, phi, nax, epsil, zeu, lrigid, &
 END SUBROUTINE read_file
 !
 !----------------------------------------------------------------------------
-SUBROUTINE trasl( phi, phiq, nq, nrx1, nrx2, nrx3, nat, m1, m2, m3, nax )
+SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
   !----------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
-  INTEGER:: j1,j2, m1, m2, m3, nrx1, nrx2, nrx3, na1, na2, nat, nax, nq
+  INTEGER, intent(in) ::  nr1, nr2, nr3, m1, m2, m3, nat, nq 
+  COMPLEX(KIND=DP), intent(in) :: phiq(3,3,nat,nat,48)
+  COMPLEX(KIND=DP), intent(out) :: phid(nr1,nr2,nr3,3,3,nat,nat)
   !
-  COMPLEX(KIND=DP) :: phi(nrx1,nrx2,nrx3,3,3,nax,nax)
-  COMPLEX(KIND=DP) :: phiq(3,3,nax,nax,48)
+  INTEGER :: j1,j2,  na1, na2
   !
   DO j1=1,3
      DO j2=1,3
         DO na1=1,nat
            DO na2=1,nat
-              phi(m1,m2,m3,j1,j2,na1,na2) = &
+              phid(m1,m2,m3,j1,j2,na1,na2) = &
                    0.5 * (      phiq(j1,j2,na1,na2,nq) +  &
                           CONJG(phiq(j2,j1,na2,na1,nq)))
            END DO
@@ -423,7 +425,7 @@ END SUBROUTINE trasl
 # endif
 
 !----------------------------------------------------------------------------
-SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, nrx1, nrx2, nrx3, iflg )
+SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, iflg )
   !----------------------------------------------------------------------------
   !
   !  cft3 called for vectors with arbitrary maximal dimensions
@@ -434,10 +436,10 @@ SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, nrx1, nrx2, nrx3, iflg )
 #endif
 
   IMPLICIT NONE
-  INTEGER :: nr1,nr2,nr3,nrx1,nrx2,nrx3,iflg
-  COMPLEX(KIND=DP) :: f(nrx1,nrx2,nrx3)
+  INTEGER :: nr1,nr2,nr3,iflg
+  COMPLEX(KIND=DP) :: f(nr1,nr2,nr3)
 #if defined __FFT_MODULE_DRV
-  COMPLEX(KIND=DP) :: ftmp(nrx1*nrx2*nrx3)
+  COMPLEX(KIND=DP) :: ftmp(nr1*nr2*nr3)
 #endif
   INTEGER :: i0,i1,i2,i3
   !
@@ -481,7 +483,7 @@ SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, nrx1, nrx2, nrx3, iflg )
 END SUBROUTINE tolerant_cft3
 
 !----------------------------------------------------------------------
-subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
+subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   !-----------------------------------------------------------------------
   !
   ! Impose ASR - refined version by Nicolas Mounet
@@ -489,25 +491,26 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
   implicit none
   character(len=10) :: zasr
   integer ibrav,nr1,nr2,nr3,nr,m,p,k,l,q,r
-  integer n,i,j,n1,n2,n3,na,nb,nat,nax,axis,i1,j1,na1
+  integer n,i,j,n1,n2,n3,na,nb,nat,axis,i1,j1,na1
   !
-  real(kind=8) sum, zeu(3,3,nax)
-  real(kind=8) tau(3,nax),zeu_new(3,3,nat)
-  ! 
+  real(kind=8) sum, zeu(3,3,nat)
+  real(kind=8) tau(3,nat), zeu_new(3,3,nat)
   !
   real(kind=8) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
-  ! indices of the vectors zeu_u that are not independent to the preceding ones,
+  ! indices of vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
   real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
   ! temporary vectors and parameters
 
-  ! Initialization. n is the number of sum rules to be considered (if zasr.ne.'simple')
+  ! Initialization.
+  ! n is the number of sum rules to be considered (if zasr.ne.'simple')
   ! and 'axis' is the rotation axis in the case of a 1D system
-  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
+  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' 
+  ! and (Oz) if axis='3') 
   !
   if((zasr.ne.'simple').and.(zasr.ne.'crystal').and.(zasr.ne.'one-dim') &
        .and.(zasr.ne.'zero-dim')) then
@@ -515,35 +518,35 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
   endif
   if(zasr.eq.'crystal') n=3
   if(zasr.eq.'one-dim') then
-          ! the direction of periodicity is the rotation axis
-          ! It will work only if the crystal axis considered is one of
-          ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
-          ! z-direction)
-          if (nr1*nr2*nr3.eq.1) axis=3
-          if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
-          if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
-          if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
-          if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
-             (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
-                    call errore('q2r','too many directions of &
-                            periodicity in 1D system',axis)
-          endif
-          if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
-             ((ibrav.ne.4).or.(axis.ne.3)) ) then
-                    write(6,*) 'zasr: rotational axis may be wrong'
-          endif
-          write(6,'("zasr rotation axis in 1D system= ",I4)') axis
-          n=4
-  endif 
+     ! the direction of periodicity is the rotation axis
+     ! It will work only if the crystal axis considered is one of
+     ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
+     ! z-direction)
+     if (nr1*nr2*nr3.eq.1) axis=3
+     if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
+     if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
+     if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
+     if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
+          (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
+        call errore('q2r','too many directions of &
+             &   periodicity in 1D system',axis)
+     endif
+     if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
+          ((ibrav.ne.4).or.(axis.ne.3)) ) then
+        write(6,*) 'zasr: rotational axis may be wrong'
+     endif
+     write(6,'("zasr rotation axis in 1D system= ",I4)') axis
+     n=4
+  endif
   if(zasr.eq.'zero-dim') n=6
 
   ! Acoustic Sum Rule on effective charges
   !
   if(zasr.eq.'simple') then
-      do i=1,3
-         do j=1,3
-            sum=0.0
-            do na=1,nat
+     do i=1,3
+        do j=1,3
+           sum=0.0
+           do na=1,nat
                sum = sum + zeu(i,j,na)
             end do
             do na=1,nat
@@ -551,55 +554,55 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
             end do
          end do
       end do
-    else
+   else
       ! generating the vectors of the orthogonal of the subspace to project 
       ! the effective charges matrix on
       !
       zeu_u(:,:,:,:)=0.0d0
       do i=1,3
-        do j=1,3
-          do na=1,nat
-            zeu_new(i,j,na)=zeu(i,j,na)
-          enddo
-        enddo
+         do j=1,3
+            do na=1,nat
+               zeu_new(i,j,na)=zeu(i,j,na)
+            enddo
+         enddo
       enddo
       !
       p=0
       do i=1,3
-        do j=1,3
-          ! These are the 3*3 vectors associated with the 
-          ! translational acoustic sum rules
-          p=p+1
-          zeu_u(p,i,j,:)=1.0d0
-          !
-        enddo
+         do j=1,3
+            ! These are the 3*3 vectors associated with the 
+            ! translational acoustic sum rules
+            p=p+1
+            zeu_u(p,i,j,:)=1.0d0
+            !
+         enddo
       enddo
       !
       if (n.eq.4) then
          do i=1,3
-           ! These are the 3 vectors associated with the 
-           ! single rotational sum rule (1D system)
-           p=p+1
-           do na=1,nat
-             zeu_u(p,i,MOD(axis,3)+1,na)=-tau(MOD(axis+1,3)+1,na)
-             zeu_u(p,i,MOD(axis+1,3)+1,na)=tau(MOD(axis,3)+1,na)
-           enddo
-           !
+            ! These are the 3 vectors associated with the 
+            ! single rotational sum rule (1D system)
+            p=p+1
+            do na=1,nat
+               zeu_u(p,i,MOD(axis,3)+1,na)=-tau(MOD(axis+1,3)+1,na)
+               zeu_u(p,i,MOD(axis+1,3)+1,na)=tau(MOD(axis,3)+1,na)
+            enddo
+            !
          enddo
       endif
       !
       if (n.eq.6) then
          do i=1,3
-           do j=1,3
-             ! These are the 3*3 vectors associated with the 
-             ! three rotational sum rules (0D system - typ. molecule)
-             p=p+1
-             do na=1,nat
-               zeu_u(p,i,MOD(j,3)+1,na)=-tau(MOD(j+1,3)+1,na)
-               zeu_u(p,i,MOD(j+1,3)+1,na)=tau(MOD(j,3)+1,na)
-             enddo
-             !
-           enddo
+            do j=1,3
+               ! These are the 3*3 vectors associated with the 
+               ! three rotational sum rules (0D system - typ. molecule)
+               p=p+1
+               do na=1,nat
+                  zeu_u(p,i,MOD(j,3)+1,na)=-tau(MOD(j+1,3)+1,na)
+                  zeu_u(p,i,MOD(j+1,3)+1,na)=tau(MOD(j,3)+1,na)
+               enddo
+               !
+            enddo
          enddo
       endif
       !
@@ -607,42 +610,41 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
       !
       nzeu_less=0
       do k=1,p
-        zeu_w(:,:,:)=zeu_u(k,:,:,:)
-        zeu_x(:,:,:)=zeu_u(k,:,:,:)
-        do q=1,k-1
-          r=1
-          do izeu_less=1,nzeu_less
-            if (zeu_less(izeu_less).eq.q) r=0
-          enddo
-          if (r.ne.0) then
-              call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
-              zeu_w(:,:,:) = zeu_w(:,:,:) - scal* zeu_u(q,:,:,:)
-          endif
-        enddo
-        call sp_zeu(zeu_w,zeu_w,nat,norm2)
-        if (norm2.gt.1.0d-16) then
-           zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
-          else
-           nzeu_less=nzeu_less+1
-           zeu_less(nzeu_less)=k
-        endif
+         zeu_w(:,:,:)=zeu_u(k,:,:,:)
+         zeu_x(:,:,:)=zeu_u(k,:,:,:)
+         do q=1,k-1
+            r=1
+            do izeu_less=1,nzeu_less
+               if (zeu_less(izeu_less).eq.q) r=0
+            enddo
+            if (r.ne.0) then
+               call sp_zeu(zeu_x,zeu_u(q,:,:,:),nat,scal)
+               zeu_w(:,:,:) = zeu_w(:,:,:) - scal* zeu_u(q,:,:,:)
+            endif
+         enddo
+         call sp_zeu(zeu_w,zeu_w,nat,norm2)
+         if (norm2.gt.1.0d-16) then
+            zeu_u(k,:,:,:) = zeu_w(:,:,:) / DSQRT(norm2)
+         else
+            nzeu_less=nzeu_less+1
+            zeu_less(nzeu_less)=k
+         endif
       enddo
-      !
       !
       ! Projection of the effective charge "vector" on the orthogonal of the 
       ! subspace of the vectors verifying the sum rules
       !
       zeu_w(:,:,:)=0.0d0
       do k=1,p
-        r=1
-        do izeu_less=1,nzeu_less
-          if (zeu_less(izeu_less).eq.k) r=0
-        enddo
-        if (r.ne.0) then
+         r=1
+         do izeu_less=1,nzeu_less
+            if (zeu_less(izeu_less).eq.k) r=0
+         enddo
+         if (r.ne.0) then
             zeu_x(:,:,:)=zeu_u(k,:,:,:)
             call sp_zeu(zeu_x,zeu_new,nat,scal)
             zeu_w(:,:,:) = zeu_w(:,:,:) + scal*zeu_u(k,:,:,:)
-        endif
+         endif
       enddo
       !
       ! Final substraction of the former projection to the initial zeu, to get
@@ -650,8 +652,8 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
       !
       zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-      write(6,'("Norm of the difference between old and new effectives charges: " &
-                        ,F25.20)') DSQRT(norm2)
+      write(6,'("Norm of the difference between old and new effective ", &
+           &  "charges: " , F25.20)') SQRT(norm2)
       !
       ! Check projection
       !
@@ -663,17 +665,17 @@ subroutine set_zasr(zasr,nr1,nr2,nr3,zeu,nat,nax,ibrav,tau)
       !enddo
       !
       do i=1,3
-        do j=1,3
-          do na=1,nat
-            zeu(i,j,na)=zeu_new(i,j,na)
-          enddo
-        enddo
+         do j=1,3
+            do na=1,nat
+               zeu(i,j,na)=zeu_new(i,j,na)
+            enddo
+         enddo
       enddo
-  endif
-  !
-  !
-  return
-end subroutine set_zasr
+   endif
+   !
+   !
+   return
+ end subroutine set_zasr
 !
 !----------------------------------------------------------------------
 subroutine sp_zeu(zeu_u,zeu_v,nat,scal)

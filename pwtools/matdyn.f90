@@ -158,7 +158,7 @@ PROGRAM matdyn
      amass(:) =0.d0
      amass_blk(:) =0.d0
      at(:,:) = 0.d0
-     ntyp=0
+     ntyp = 0
      l1=1
      l2=1
      l3=1
@@ -173,6 +173,7 @@ PROGRAM matdyn
      !
      ! read force constants 
      !
+     ntyp_blk = ntypx ! avoids fake out-of-bound error
      CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
           ibrav, alat, at_blk, ntyp_blk, &
           amass_blk, omega_blk, has_zstar)
@@ -182,13 +183,11 @@ PROGRAM matdyn
      !
      ! set up (super)cell
      !
-     ! types of atoms
-     ! 
-     IF (ntyp < 0) THEN
-        CALL errore ('matdyn','wrong ntyp ', ABS(ntyp))
-     ELSE IF (ntyp == 0) THEN
+     if (ntyp < 0) then
+        call errore ('matdyn','wrong ntyp ', abs(ntyp))
+     else if (ntyp == 0) then
         ntyp=ntyp_blk
-     END IF
+     end if
      !
      ! masses (for mass approximation)
      ! 
@@ -302,28 +301,37 @@ PROGRAM matdyn
            !
            ! q = 0 : we need the direction q => 0 for the non-analytic part
            !
-           IF ( (n == 1 .AND. nq > 1) .OR. &
-                (n > 1 .AND. n < nq .AND.  &
-                q(1,n-1)==0.d0.AND.q(2,n-1)==0.d0.AND.q(3,n-1)==0.d0) ) THEN
-              ! if q is the first point in the list, or
-              ! if preceding q is also 0 :
-              qhat(:) = q(:,n) - q(:,n+1)
+           IF ( n == 1 ) THEN
+              ! if q is the first point in the list
+              IF ( nq > 1 ) THEN
+                 ! one more point
+                 qhat(:) = q(:,n) - q(:,n+1)
+              ELSE
+                 ! no more points
+                 qhat(:) = 0.d0
+              END IF
            ELSE IF ( n > 1 ) THEN
               ! if q is not the first point in the list
-              qhat(:) = q(:,n) - q(:,n-1)
-           ELSE
-              qhat(:) = 0.d0
+              IF ( q(1,n-1)==0.d0 .AND. &
+                   q(2,n-1)==0.d0 .AND. &
+                   q(3,n-1)==0.d0 .AND. n < nq ) THEN
+                 ! if the preceding q is also 0 :
+                 qhat(:) = q(:,n) - q(:,n+1)
+              ELSE
+                 ! if the preceding q is npt 0 :
+                 qhat(:) = q(:,n) - q(:,n-1)
+              END IF
            END IF
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL errore  &
                 ('matdyn','non-analytic term for q=0 missing !', -1)
            !
-           CALL nonanal (nax,nat,dyn,qhat,itau_blk,nax_blk,epsil,zeu,omega)
+           CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
         END IF
         !
-        CALL dyndiag(nax,nat,amass,ityp,dyn,w2(1,n),z)
+        CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
         CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
@@ -679,28 +687,28 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
-          ! the direction of periodicity is the rotation axis
-          ! It will work only if the crystal axis considered is one of
-          ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
-          ! z-direction)
-          if (nr1*nr2*nr3.eq.1) axis=3
-          if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
-          if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
-          if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
-          if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
-             (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
-                    call errore('matdyn','too many directions of &
-                            periodicity in 1D system',axis)
-          endif
-          if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
-             ((ibrav.ne.4).or.(axis.ne.3)) ) then
-                    write(6,*) 'asr: rotational axis may be wrong'
-          endif
-          write(6,'("asr rotation axis in 1D system= ",I4)') axis
-          n=4
-  endif 
+     ! the direction of periodicity is the rotation axis
+     ! It will work only if the crystal axis considered is one of
+     ! the cartesian axis (typically, ibrav=1, 6 or 8, or 4 along the
+     ! z-direction)
+     if (nr1*nr2*nr3.eq.1) axis=3
+     if ((nr1.ne.1).and.(nr2*nr3.eq.1)) axis=1
+     if ((nr2.ne.1).and.(nr1*nr3.eq.1)) axis=2
+     if ((nr3.ne.1).and.(nr1*nr2.eq.1)) axis=3
+     if (((nr1.ne.1).and.(nr2.ne.1)).or.((nr2.ne.1).and. &
+          (nr3.ne.1)).or.((nr1.ne.1).and.(nr3.ne.1))) then
+        call errore('matdyn','too many directions of &
+             & periodicity in 1D system',axis)
+     endif
+     if ((ibrav.ne.1).and.(ibrav.ne.6).and.(ibrav.ne.8).and. &
+          ((ibrav.ne.4).or.(axis.ne.3)) ) then
+        write(6,*) 'asr: rotational axis may be wrong'
+     endif
+     write(6,'("asr rotation axis in 1D system= ",I4)') axis
+     n=4
+  endif
   if(asr.eq.'zero-dim') n=6
-
+  
   ! Acoustic Sum Rule on effective charges
   !
   if(asr.eq.'simple') then
@@ -814,8 +822,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       !
       zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
       call sp_zeu(zeu_w,zeu_w,nat,norm2)
-      write(6,'("Norm of the difference between old and new effectives charges: " &
-                        ,F25.20)') DSQRT(norm2)
+      write(6,'("Norm of the difference between old and new effective ", &
+           & "charges: ",F25.20)') SQRT(norm2)
       !
       ! Check projection
       !
@@ -1076,8 +1084,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       !
       frc_new(:,:,:,:,:,:,:)=frc_new(:,:,:,:,:,:,:) - w(:,:,:,:,:,:,:)
       call sp1(w,w,nr1,nr2,nr3,nat,norm2)
-      write(6,'("Norm of the difference between old and new force-constants: ", &
-                          F25.20)') DSQRT(norm2)
+      write(6,'("Norm of the difference between old and new force-constants:",&
+           &     F25.20)') SQRT(norm2)
       !
       ! Check projection
       !
