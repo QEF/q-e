@@ -208,7 +208,7 @@ done
 
 cat > q2r.in <<EOF
  &input
-   nr1=4,nr2=4, nr3=4, zasr=.true., fild='alas444.fc'
+   nr1=4,nr2=4, nr3=4, zasr='simple', fild='alas444.fc'
  /
 8
 alas.dynG
@@ -227,7 +227,7 @@ $ECHO " done"
 
 cat > matdyn.in <<EOF
  &input
-    asr=.true.,  amass(1)=26.98, amass(2)=74.922, 
+    asr='simple',  amass(1)=26.98, amass(2)=74.922, 
     flfrc='alas444.fc', flfrq='alas.freq'
  /
  9
@@ -248,7 +248,7 @@ $ECHO " done"
 
 cat > phdos.in <<EOF
  &input
-    asr=.true.,  dos=.true. amass(1)=26.98, amass(2)=74.922, 
+    asr='simple',  dos=.true. amass(1)=26.98, amass(2)=74.922, 
     flfrc='alas444.fc', fldos='alas.phdos', nk1=6,nk2=6,nk3=6
  /
  9
