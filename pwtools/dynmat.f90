@@ -5,6 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+Module dynamical 
+  !
+  ! All variables read from file that need dynamical allocation
+  !
+  complex(kind=8), allocatable :: dyn(:,:,:,:)
+  real(kind=8), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
+  integer, allocatable :: ityp(:)
+  !
+end Module dynamical
 !
 !--------------------------------------------------------------------
       program dynmat
@@ -50,17 +59,20 @@
 !  filmol  character as above, in a format suitable for 'molden'
 !                    (default: filmol='molden.out') 
 !
+      use dynamical
+      !
       implicit none
-      integer, parameter :: nax=40
+      integer, parameter :: ntypx = 10
       character(len=256):: fildyn, filout, filmol
-      character(len=3) :: atm(nax)
+      character(len=3) :: atm(ntypx)
       character(len=10) :: asr
       logical :: lread, gamma
-      complex(kind=8) :: dyn(3,3,nax,nax), z(3*nax,3*nax)
-      real(kind=8) :: tau(3,nax), amass(nax), amass_(nax), zstar(3,3,nax),&
-           eps0(3,3), a0, omega, amconv, q(3), q_(3), w2(3*nax)
-      real(kind=8) :: dchi_dtau(3,3,3,nax)
-      integer :: ityp(nax), itau(nax), nat, na, nt, ntyp, nu, iout, axis
+      complex(kind=8), allocatable :: z(:,:)
+      real(kind=8) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
+           amconv, q(3), q_(3)
+      real(kind=8), allocatable :: w2(:)
+      integer, allocatable :: itau(:)
+      integer :: nat, na, nt, ntyp, nu, iout, axis, nax
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, q
 !
 !
@@ -85,9 +97,11 @@
          stop
       end if
 !
-      call readmat ( fildyn, asr, axis, nax, nat, ntyp, ityp, atm, a0, &
-           omega, amass_, tau, zstar, eps0, dyn, dchi_dtau, q_ )
-!
+      call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
+           omega, amass_, eps0, q_ )
+!!!
+      nax = nat
+!!!
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
       amconv = 1.66042e-24/9.1095e-28*0.5
       do nt=1, ntyp
@@ -99,12 +113,15 @@
       end do
 !
       if (gamma) then
+         allocate (itau(nat))
          do na=1,nat
             itau(na)=na
          end do
          call nonanal (nax,nat,dyn,q,itau,nax,eps0,zstar,omega)
+         deallocate (itau)
       end if
 !
+      allocate ( z(3*nat,3*nat), w2(3*nat) )
       call dyndiag(nax,nat,amass,ityp,dyn,w2,z)
 !
       if (filout.eq.' ') then
@@ -119,37 +136,44 @@
       call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,filmol)
 !
       if (gamma) call RamanIR &
-           (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
+           (nat, omega, w2, z, zstar, eps0, dchi_dtau)
 !
       stop
       end program dynmat
 !
 !-----------------------------------------------------------------------
-      subroutine readmat ( fildyn, asr, axis, nax, nat, ntyp, ityp, atm, &
-           a0, omega, amass, tau, zstar, eps0, dynr, dchi_dtau, q )
+      subroutine readmat ( fildyn, asr, axis, nat, ntyp, atm, &
+           a0, omega, amass, eps0, q )
 !-----------------------------------------------------------------------
 !
+      use dynamical
+      !
       implicit none
-      character(len=256) :: fildyn
-      character(len=10) :: asr
-      integer :: axis, nax, nat, ntyp, ityp(nax)
-      character(len=3) atm(ntyp)
-      real(kind=8) amass(ntyp), tau(3,nax), a0, omega
-      real(kind=8) dynr(2,3,3,nax,nax), eps0(3,3), zstar(3,3,nax), &
-           dchi_dtau(3,3,3,nax), q(3)
-!
-      character(len=80) line
-      real(kind=8)  at(3,3), celldm(6), sum
-      integer ibrav, nt, na, nb, naa, nbb, i, j, k
-      logical qfinito, noraman
-!
-!
+      character(len=256), intent(in) :: fildyn
+      character(len=10), intent(in) :: asr
+      integer, intent(in) :: axis
+      integer, intent(out) :: nat, ntyp
+      character(len=3), intent(out) ::  atm(ntyp)
+      real(kind=8), intent(out) :: amass(ntyp), a0, omega, eps0(3,3), q(3)
+      !
+      character(len=80) :: line
+      real(kind=8) :: at(3,3), celldm(6), sum, dyn0r(3,3,2)
+      integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
+      logical :: qfinito, noraman
+      !
+      !
       noraman=.true.
       open (unit=1,file=fildyn,status='old',form='formatted')
       read(1,'(a)') line
       read(1,'(a)') line
       read(1,*) ntyp,nat,ibrav,celldm
-      if (nat.gt.nax) stop ' too many atoms '
+      !
+      allocate ( dyn (3,3,nat,nat) )
+      allocate ( dchi_dtau (3,3,3,nat) )
+      allocate (zstar(3,3,nat) )
+      allocate ( tau (3,nat) )
+      allocate (ityp (nat) )
+      !
       a0=celldm(1)
       call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
       at = at / a0 !  bring at in units of alat
@@ -165,19 +189,19 @@
       read(1,'(a)') line
       read(line(11:80),*) (q(i),i=1,3)
       qfinito=q(1).ne.0.0 .or. q(2).ne.0.0 .or. q(3).ne.0.0 
-      read(1,'(a)') line
+      if (qfinito .and. asr .ne. 'no') &
+           call errore('readmat','Acoustic Sum Rule for q != 0 ?',1)
       do na = 1,nat
          do nb = 1,nat
             read (1,*) naa, nbb
             if (na.ne.naa .or. nb.ne.nbb) then
-               print *, 'na, nb, naa, nbb =', na,nb,naa,nbb
-               stop ' sgrunt!'
+               call errore ('readmat','mismatch in reading file',1)
             end if
-            read (1,*) ((dynr(1,i,j,na,nb),                             &
-     &           dynr(2,i,j,na,nb), j=1,3), i=1,3)
+            read (1,*) ((dyn0r(i,j,1), dyn0r(i,j,2), j=1,3), i=1,3)
+            dyn(:,:,na,nb) = CMPLX ( dyn0r(:,:,1), dyn0r(:,:,2) )
          end do
       end do
-!
+      !
       if (.not.qfinito) then
          read(1,*)
          read(1,'(a)') line
@@ -224,7 +248,7 @@
       if (noraman) dchi_dtau=0.d0
 !
       if(asr.ne.'no') then 
-          call set_asr(asr,dynr,zstar,nat,nax,tau,axis)
+          call set_asr ( asr, axis, nat, tau, dyn, zstar )
       endif
 !
       close(unit=1)
@@ -233,7 +257,7 @@
       end subroutine readmat
 !
 !-----------------------------------------------------------------------
-subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
+subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !-----------------------------------------------------------------------
   !
   !   write IR and Raman cross sections
@@ -243,14 +267,14 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !                         (units: A^2)
  implicit none
  ! input
- integer nax, nat
+ integer, intent(in) :: nat
  real(kind=8) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
       dchi_dtau(3,3,3,nat), chi(3,3)
- complex(kind=8) z(3*nax,3*nat)
+ complex(kind=8) z(3*nat,3*nat)
  ! local
  integer na, nu, ipol, jpol, lpol
  logical noraman
- real(kind=8), pointer :: infrared(:), raman(:,:,:)
+ real(kind=8), allocatable :: infrared(:), raman(:,:,:)
  real(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
  real(kind=8):: cmfac, alpha, beta2
  !
@@ -360,24 +384,28 @@ subroutine RamanIR (nax, nat, omega, w2, z, zstar, eps0, dchi_dtau)
     end if
  end do
  !
+ deallocate (raman)
+ deallocate (infrared)
  return
  !
 end subroutine RamanIR
 !
 !----------------------------------------------------------------------
-subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
+subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   !-----------------------------------------------------------------------
   !
   !  Impose ASR - refined version by Nicolas Mounet
   !
   implicit none
-  character(len=10) :: asr
-  integer m,p,k,l,q,r
-  integer n,i,j,na,nb,nat,nax,axis,i1,j1,na1
-  real(kind=8) dynr(2,3,3,nax,nax), sum, zeu(3,3,nax)
-  real(kind=8) dynr_new(2,3,3,nat,nat),tau(3,nax),zeu_new(3,3,nat)
-  ! 
-  real(kind=8) u(6*3*nat,3,3,nat,nat)
+  character(len=10), intent(in) :: asr
+  integer, intent(in) :: axis, nat
+  real(kind=8), intent(in) :: tau(3,nat)
+  real(kind=8), intent(inout) :: zeu(3,3,nat)
+  complex(kind=8), intent(inout) :: dyn(3,3,nat,nat)
+  !
+  integer :: i,j,n,m,p,k,l,q,r,na, nb, na1, i1, j1
+  real(kind=8) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
+  real(kind=8), allocatable :: u(:,:,:,:,:)
   ! These are the "vectors" associated with the sum rules
   !
   integer u_less(6*3*nat),n_less,i_less
@@ -387,39 +415,39 @@ subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
   integer ind_v(9*nat*nat,2,4)
   real(kind=8) v(9*nat*nat,2)
   ! These are the "vectors" associated with symmetry conditions, coded by 
-  ! indicating the positions (i.e. the four indices) of the non-zero elements (there
-  ! should be only 2 of them) and the value of that element.
-  ! We do so in order
-  ! to use limit the amount of memory used. 
+  ! indicating the positions (i.e. the four indices) of the non-zero elements
+  ! (there should be only 2 of them) and the value of that element.
+  ! We do so in order to use limit the amount of memory used. 
   !
-  real(kind=8) w(3,3,nat,nat),scal,norm2
-  real(kind=8) x(3,3,nat,nat)
+  real(kind=8) w(3,3,nat,nat), x(3,3,nat,nat)
+  real(kind=8) sum, scal, norm2
   ! temporary vectors and parameters  
   !
   real(kind=8) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
-  ! indices of the vectors zeu_u that are not independent to the preceding ones,
-  ! nzeu_less = number of such vectors, izeu_less = temporary parameter
+  ! indices of the vectors zeu_u that are not independent to the preceding
+  ! ones, nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
   real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
-
-
-  ! Initialization. n is the number of sum rules to be considered (if asr.ne.'simple')
-  ! and 'axis' is the rotation axis in the case of a 1D system
-  ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
-  if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim').and.(asr.ne.'zero-dim')) then
-            call errore('matdyn','reading asr',asr)
+  !
+  ! Initialization
+  ! n is the number of sum rules to be considered (if asr.ne.'simple')
+  ! 'axis' is the rotation axis in the case of a 1D system (i.e. the rotation
+  !  axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
+  !
+  if ( (asr.ne.'simple') .and. (asr.ne.'crystal') .and. (asr.ne.'one-dim') &
+                         .and.(asr.ne.'zero-dim')) then
+     call errore('matdyn','reading asr',asr)
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
-          write(6,'("asr rotation axis in 1D system= ",I4)') axis 
-          n=4
-  endif 
+     write(6,'("asr rotation axis in 1D system= ",I4)') axis 
+     n=4
+  endif
   if(asr.eq.'zero-dim') n=6
-
   !
   ! ASR on effective charges
   !
@@ -563,9 +591,9 @@ subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
            do na=1,nat
               sum=0.0
               do nb=1,nat
-                 if (na.ne.nb) sum=sum+dynr(1,i,j,na,nb)
+                 if (na.ne.nb) sum=sum + REAL (dyn(i,j,na,nb))
               end do
-              dynr(1,i,j,na,na) = -sum
+              dyn(i,j,na,na) = CMPLX (-sum, 0.d0)
            end do
         end do
      end do
@@ -574,14 +602,14 @@ subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
      ! generating the vectors of the orthogonal of the subspace to project 
      ! the dyn. matrix on
      !
+     allocate (u(6*3*nat,3,3,nat,nat))
      u(:,:,:,:,:)=0.0d0
-     do r=1,2
-        do i=1,3
-           do j=1,3
-              do na=1,nat
-                 do nb=1,nat
-                    dynr_new(r,i,j,na,nb)=dynr(r,i,j,na,nb)
-                 enddo
+     do i=1,3
+        do j=1,3
+           do na=1,nat
+              do nb=1,nat
+                 dynr_new(1,i,j,na,nb) = REAL (dyn(i,j,na,nb) )
+                 dynr_new(2,i,j,na,nb) =AIMAG (dyn(i,j,na,nb) )
               enddo
            enddo
         enddo
@@ -752,8 +780,8 @@ subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
         endif
      enddo
      !
-     ! Final substraction of the former projection to the initial dynr, to get
-     ! the new "projected" dynr
+     ! Final substraction of the former projection to the initial dyn,
+     ! to get the new "projected" dyn
      !
      dynr_new(1,:,:,:,:)=dynr_new(1,:,:,:,:) - w(:,:,:,:)
      call sp1(w,w,nat,norm2)
@@ -772,11 +800,14 @@ subroutine set_asr(asr,dynr,zeu,nat,nax,tau,axis)
      !  if (DABS(scal).gt.1d-10) write(6,'("k= ",I8," dyn|u(k)= ",F15.10)') k,scal
      !enddo
      !
+     deallocate ( u )
+     !
      do i=1,3
         do j=1,3
            do na=1,nat
               do nb=1,nat
-                 dynr(1,i,j,na,nb)=dynr_new(1,i,j,na,nb)
+                 dyn (i,j,na,nb) = CMPLX (dynr_new(1,i,j,na,nb), &
+                                          dynr_new(2,i,j,na,nb) )
               enddo
            enddo
         enddo

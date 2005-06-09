@@ -7,6 +7,19 @@
 !
 #include "f_defs.h"
 !
+Module ifconstants
+  !
+  ! All variables read from file that need dynamical allocation
+  !
+  REAL(KIND=8), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
+  ! frc : interatomic force constants in real space
+  ! tau_blk : atomic positions for the original cell
+  ! zeu : effective charges for the original cell
+  INTEGER, ALLOCATABLE  :: ityp_blk(:)
+  ! ityp_blk : atomic types for each atom of the original cell
+  !
+end Module ifconstants
+!
 !---------------------------------------------------------------------
 PROGRAM matdyn
   !-----------------------------------------------------------------------
@@ -78,6 +91,7 @@ PROGRAM matdyn
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start  
+  USE ifconstants
   !
   IMPLICIT NONE
   !
@@ -86,44 +100,35 @@ PROGRAM matdyn
   ! variables *_blk refer to the original cell, other variables
   ! to the (super)cell (which may coincide with the original cell)
   !
-  INTEGER, PARAMETER:: nax=16, nax_blk=16, nrx=8, nqx=500, nrwsx=200, &
-                       nax3=3*nax
+  INTEGER:: nax, nax_blk
+  INTEGER, PARAMETER:: ntypx=10, nrwsx=200
   REAL(KIND=DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
        amconv = 1.66042e-24/9.1095e-28*0.5
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
   CHARACTER(LEN=10)  :: asr
   LOGICAL :: dos, has_zstar
-  COMPLEX(KIND=DP) :: dyn(3,3,nax,nax), dyn_blk(3,3,nax_blk,nax_blk)
-  COMPLEX(KIND=DP) :: z(3*nax,3*nax)         ! eigenvalues
-  REAL(KIND=DP) :: frc(nrx,nrx,nrx,3,3,nax_blk,nax_blk) ! force constants
-  REAL(KIND=DP) :: at(3,3), bg(3,3), omega,   &! cell parameters and volume
-                  alat, tau(3,nax),          &! atomic positions 
+  COMPLEX(KIND=DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
+  COMPLEX(KIND=DP), ALLOCATABLE :: z(:,:)
+  REAL(KIND=DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
+  INTEGER, ALLOCATABLE:: tetra(:,:), ityp(:), itau_blk(:)
+  REAL(KIND=DP) :: at(3,3), bg(3,3), omega,alat, &! cell parameters and volume
                   at_blk(3,3), bg_blk(3,3),  &! original cell
                   omega_blk,                 &! original cell volume
-                  tau_blk(3,nax_blk),        &! original atomic positions 
                   epsil(3,3),                &! dielectric tensor
-                  zeu(3,3,nax_blk),          &! effective charges
-                  amass(nax),                 &! atomic masses
-                  amass_blk(nax_blk),         &! original atomic masses
-                  q(3,nqx),                   &! list of q-points
-                  w2(3*nax,nqx),              &! frequencies (square)
+                  amass(ntypx),              &! atomic masses
+                  amass_blk(ntypx),          &! original atomic masses
                   atws(3,3),      &! lattice vector for WS initialization
                   rws(0:3,nrwsx)   ! nearest neighbor list, rws(0,*) = norm^2
-  INTEGER, ALLOCATABLE:: tetra(:,:)
-  REAL(KIND=DP), ALLOCATABLE:: freq(:,:)
   !
-  INTEGER :: nat, nat_blk,                 & 
-             ityp_blk(nax_blk), ityp(nax), &
-             ntyp, ntyp_blk,               &
-             itau_blk(nax),                &
+  INTEGER :: nat, nat_blk, ntyp, ntyp_blk, &
              l1, l2, l3,                   &! supercell dimensions
              nrws                          ! number of nearest neighbor
   !
   LOGICAL :: readtau
   !
   REAL(KIND=DP) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
-  INTEGER :: n, i, j, it, nq, na, nb, ndos, iout
+  INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
   !
@@ -168,8 +173,8 @@ PROGRAM matdyn
      !
      ! read force constants 
      !
-     CALL readfc ( flfrc, nr1, nr2, nr3, nrx, frc, epsil, zeu, nat_blk, &
-          nax_blk, ibrav, alat, tau_blk, at_blk, ntyp_blk, ityp_blk,    &
+     CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
+          ibrav, alat, at_blk, ntyp_blk, &
           amass_blk, omega_blk, has_zstar)
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -222,15 +227,21 @@ PROGRAM matdyn
      ! read/generate atomic positions of the (super)cell
      !
      nat = nat_blk * nsc
-     IF (nat.GT.nax) CALL errore ('matdyn','nat.gt.nax',nat)
+     !!!
+     nax_blk = nat_blk
+     nax = nat
+     !!!
+     ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat_blk) )
      !
      IF (readtau) THEN
-        CALL read_tau (nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
+        CALL read_tau &
+             (nat, nat_blk, ntyp, bg_blk, tau, tau_blk, ityp, itau_blk)
      ELSE
-        CALL set_tau  (nat,nat_blk,at,at_blk,tau,tau_blk,ityp,ityp_blk,itau_blk)
+        CALL set_tau  &
+             (nat, nat_blk, at, at_blk, tau, tau_blk, ityp, ityp_blk, itau_blk)
      ENDIF
      !
-     IF (fltau.NE.' ') CALL write_tau(fltau,nat,tau,ityp)
+     IF (fltau.NE.' ') CALL write_tau (fltau, nat, tau, ityp)
      !
      ! reciprocal lattice vectors
      !
@@ -250,7 +261,8 @@ PROGRAM matdyn
         IF (nk1 < 1 .OR. nk2 < 1 .OR. nk3 < 1) &
              CALL errore  ('matdyn','specify correct q-point grid!',1)
         ntetra = 6 * nk1 * nk2 * nk3
-        ALLOCATE ( tetra(4,ntetra) )
+        nqx = nk1*nk2*nk3
+        ALLOCATE ( tetra(4,ntetra), q(3,nqx) )
         CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
              ntetra, nqx, nq, q, tetra)
      ELSE
@@ -258,15 +270,15 @@ PROGRAM matdyn
         ! read q-point list
         !
         READ (5,*) nq
-        IF (nq.GT.nqx) CALL errore ('matdyn','too many k-points',nq)
+        ALLOCATE ( q(3,nq) )
         DO n = 1,nq
            READ (5,*) (q(i,n),i=1,3)
         END DO
      END IF
      !
      IF (asr /= 'no') THEN
-        CALL set_asr (asr, nr1, nr2, nr3, nrx, frc, zeu, &
-             nat_blk, nax_blk, ibrav, tau_blk)
+        CALL set_asr (asr, nr1, nr2, nr3, frc, zeu, &
+             nat_blk, ibrav, tau_blk)
      END IF
      !
      IF (flvec.EQ.' ') THEN
@@ -275,12 +287,16 @@ PROGRAM matdyn
         iout=4
         OPEN (unit=iout,file=flvec,status='unknown',form='formatted')
      END IF
+
+     ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
+     ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
+
      DO n=1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
-        CALL setupmat (q(1,n),dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
-             dyn_blk,nat_blk,nax_blk,at_blk,bg_blk,tau_blk,omega_blk,  &
-             epsil,zeu,frc,nr1,nr2,nr3,nrx,has_zstar,rws,nrws)
+        CALL setupmat (q(1,n), dyn, nat, at, bg, tau, itau_blk, nsc, alat, &
+             dyn_blk, nat_blk, at_blk, bg_blk, tau_blk, omega_blk,  &
+             epsil, zeu, frc, nr1,nr2,nr3, has_zstar, rws, nrws)
 
         IF (q(1,n)==0.d0 .AND. q(2,n)==0.d0 .AND. q(3,n)==0.d0) THEN
            !
@@ -365,34 +381,33 @@ PROGRAM matdyn
 END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
-SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
-                   ibrav,alat,tau,at,ntyp,ityp,amass,omega,has_zstar)
+SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
+                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE ifconstants,ONLY : tau => tau_blk, ityp => ityp_blk, frc, zeu
   !
   IMPLICIT NONE
   ! I/O variable
   CHARACTER(LEN=256) flfrc
-  INTEGER ibrav, nr1,nr2,nr3,nrx, nat, nax, ntyp, ityp(nax)
-  REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), epsil(3,3),zeu(3,3,nax)
-  REAL(KIND=DP) alat, at(3,3), tau(3,nax)
+  INTEGER ibrav, nr1,nr2,nr3,nat, ntyp
+  REAL(KIND=DP) alat, at(3,3), epsil(3,3)
   LOGICAL has_zstar
   ! local variables
   INTEGER i, j, na, nb, m1,m2,m3
   INTEGER ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  REAL(KIND=DP) amass(nax), amass_from_file, celldm(6), omega
+  REAL(KIND=DP) amass(ntyp), amass_from_file, celldm(6), omega
   INTEGER nt
   CHARACTER(LEN=3) atm
   !
   !
   OPEN (unit=1,file=flfrc,status='old',form='formatted')
   !
-  !
   !  read cell data
   !
   READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
-  IF (nat.GT.nax) CALL errore ('readfc','too many atoms',nat)
+  !
   CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
   at = at / alat !  bring at in units of alat
@@ -409,6 +424,9 @@ SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
         WRITE(*,*) 'for atomic type',nt,' mass from file not used'
      END IF
   END DO
+  !
+  ALLOCATE (tau(3,nat), ityp(nat), zeu(3,3,nat))
+  !
   DO na=1,nat
      READ(1,*) i,ityp(na),(tau(j,na),j=1,3)
      IF (i.NE.na) CALL errore ('readfc','wrong data read',na)
@@ -428,17 +446,11 @@ SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
      epsil(:,:) = 0.d0
   END IF
   !
-  !  read real space part
-  !
   READ (1,*) nr1,nr2,nr3
-  IF (nr1.GT.nrx)  CALL errore ('readin','nr1 .gt. nrx ',+1)
-  IF (nr2.GT.nrx)  CALL errore ('readin','nr2 .gt. nrx ',+1)
-  IF (nr3.GT.nrx)  CALL errore ('readin','nr3 .gt. nrx ',+1)
-  !
-  IF(nat.GT.nax) CALL errore  ('readfc','nax too small', nat)
   !
   !  read real-space interatomic force constants
   !
+  ALLOCATE ( frc(nr1,nr2,nr3,3,3,nat,nat) )
   frc(:,:,:,:,:,:,:) = 0.d0
   DO i=1,3
      DO j=1,3
@@ -462,8 +474,7 @@ SUBROUTINE readfc (flfrc,nr1,nr2,nr3,nrx,frc,epsil,zeu,nat,nax,    &
 END SUBROUTINE readfc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE frc_blk(nax,dyn,q,tau,nat,                             &
-     &                   nr1,nr2,nr3,nrx,frc,at,bg,rws,nrws)
+SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   !-----------------------------------------------------------------------
   ! calculates the dynamical matrix at q from the (short-range part of the)
   ! force constants 
@@ -471,10 +482,10 @@ SUBROUTINE frc_blk(nax,dyn,q,tau,nat,                             &
   USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
-  INTEGER nr1, nr2, nr3, nrx, nax, nat, n1, n2, n3, &
+  INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
           ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws
-  COMPLEX(KIND=DP) dyn(3,3,nax,nax), cmplx
-  REAL(KIND=DP) frc(nrx,nrx,nrx,3,3,nax,nax), tau(3,nax), q(3), arg, &
+  COMPLEX(KIND=DP) dyn(3,3,nat,nat)
+  REAL(KIND=DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
                total_weight, rws(0:3,nrws)
   REAL(KIND=DP), PARAMETER:: tpi = 2.0*3.14159265358979d0
@@ -483,9 +494,9 @@ SUBROUTINE frc_blk(nax,dyn,q,tau,nat,                             &
   DO na=1, nat
      DO nb=1, nat
         total_weight=0.0d0
-        DO n1=-2*nrx,2*nrx
-           DO n2=-2*nrx,2*nrx
-              DO n3=-2*nrx,2*nrx
+        DO n1=-2*nr1,2*nr1
+           DO n2=-2*nr2,2*nr2
+              DO n3=-2*nr3,2*nr3
                  !
                  ! SUM OVER R VECTORS IN THE SUPERCELL - VERY VERY SAFE RANGE!
                  !
@@ -532,9 +543,9 @@ SUBROUTINE frc_blk(nax,dyn,q,tau,nat,                             &
 END SUBROUTINE frc_blk
 !
 !-----------------------------------------------------------------------
-SUBROUTINE setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
-     &         dyn_blk,nat_blk,nax_blk,at_blk,bg_blk,tau_blk,omega_blk, &
-     &                 epsil,zeu,frc,nr1,nr2,nr3,nrx,has_zstar,rws,nrws)
+SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
+     &         dyn_blk,nat_blk,at_blk,bg_blk,tau_blk,omega_blk, &
+     &                 epsil,zeu,frc,nr1,nr2,nr3,has_zstar,rws,nrws)
   !-----------------------------------------------------------------------
   ! compute the dynamical matrix (the analytic part only)
   !
@@ -545,21 +556,20 @@ SUBROUTINE setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
   !
   ! I/O variables
   !
-  INTEGER:: nr1, nr2, nr3, nrx, nax, nat, nat_blk, nax_blk, &
-       &    nsc, nrws, itau_blk(nat)
-  REAL(KIND=DP) :: q(3), tau(3,nax), at(3,3), bg(3,3), alat,      &
-                  epsil(3,3), zeu(3,3,nax_blk), rws(0:3,nrws),   &
-                  frc(nrx,nrx,nrx,3,3,nax_blk,nax_blk)
-  REAL(KIND=DP) :: tau_blk(3,nax_blk), at_blk(3,3), bg_blk(3,3), omega_blk
-  COMPLEX(KIND=DP) dyn_blk(3,3,nax_blk,nax_blk)
-  COMPLEX(KIND=DP) ::  dyn(3,3,nax,nax)
+  INTEGER:: nr1, nr2, nr3, nat, nat_blk, nsc, nrws, itau_blk(nat)
+  REAL(KIND=DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat,      &
+                  epsil(3,3), zeu(3,3,nat_blk), rws(0:3,nrws),   &
+                  frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
+  REAL(KIND=DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
+  COMPLEX(KIND=DP) dyn_blk(3,3,nat_blk,nat_blk)
+  COMPLEX(KIND=DP) ::  dyn(3,3,nat,nat)
   LOGICAL has_zstar
   !
   ! local variables
   !
   REAL(KIND=DP) :: arg
   COMPLEX(KIND=DP) :: cfac(nat)
-  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq
+  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq, nax
   REAL(KIND=DP) qp(3), qbid(3,nsc) ! automatic array
   !
   !
@@ -572,10 +582,11 @@ SUBROUTINE setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
      END DO
      !
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
-     CALL frc_blk (nax_blk,dyn_blk,qp,tau_blk,nat_blk,              &
-          &              nr1,nr2,nr3,nrx,frc,at_blk,bg_blk,rws,nrws)
+     CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
+          &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws)
+     nax = nat_blk
      IF (has_zstar) &
-          CALL rgd_blk(nr1,nr2,nr3,nax_blk,nat_blk,dyn_blk,qp,tau_blk,   &
+          CALL rgd_blk(nr1,nr2,nr3,nax,nat_blk,dyn_blk,qp,tau_blk,   &
                        epsil,zeu,bg_blk,omega_blk,+1.d0)
      !
      DO na=1,nat
@@ -612,20 +623,20 @@ SUBROUTINE setupmat (q,dyn,nat,nax,at,bg,tau,itau_blk,nsc,alat, &
   RETURN
 END SUBROUTINE setupmat
 !----------------------------------------------------------------------
-SUBROUTINE set_asr (asr, nr1, nr2, nr3, nrx, frc, zeu, nat, nax, ibrav, tau)
+SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
   CHARACTER (LEN=10) :: asr
-  INTEGER :: nr1, nr2, nr3, nrx, nat, nax, ibrav
-  REAL(KIND=DP) :: frc(nrx,nrx,nrx,3,3,nax,nax), zeu(3,3,nax),tau(3,nax)
+  INTEGER :: nr1, nr2, nr3, nat, ibrav
+  REAL(KIND=DP) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat),tau(3,nat)
   !
   INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1
-  REAL(KIND=DP) :: frc_new(nr1,nr2,nr3,3,3,nat,nat), zeu_new(3,3,nat), sum
+  REAL(KIND=DP) :: frc_new(nr1,nr2,nr3,3,3,nat,nat), zeu_new(3,3,nat)
   type vector
-        real(kind=8),pointer :: vec(:,:,:,:,:,:,:)
+     real(kind=8),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   ! 
   type (vector) u(6*3*nat)
@@ -642,9 +653,9 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, nrx, frc, zeu, nat, nax, ibrav, tau)
   ! should be only 2 of them) and the value of that element. We do so in order
   ! to limit the amount of memory used. 
   !
-  real(kind=8) w(nr1,nr2,nr3,3,3,nat,nat),scal,norm2
-  real(kind=8) x(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=8) w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat)
   ! temporary vectors and parameters  
+  real(kind=8) :: scal,norm2, sum
   !
   real(kind=8) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
@@ -1345,8 +1356,8 @@ SUBROUTINE check_at(at,bg_blk,alat,omega)
 END SUBROUTINE check_at
 !
 !-----------------------------------------------------------------------
-SUBROUTINE set_tau                                                &
-     &        (nat,nat_blk,at,at_blk,tau,tau_blk,ityp,ityp_blk,itau_blk)
+SUBROUTINE set_tau (nat, nat_blk, at, at_blk, tau, tau_blk, &
+     ityp, ityp_blk, itau_blk)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1400,7 +1411,8 @@ SUBROUTINE set_tau                                                &
 END SUBROUTINE set_tau
 !
 !-----------------------------------------------------------------------
-SUBROUTINE read_tau(nat,nat_blk,ntyp,bg_blk,tau,tau_blk,ityp,itau_blk)
+SUBROUTINE read_tau &
+     (nat, nat_blk, ntyp, bg_blk, tau, tau_blk, ityp, itau_blk)
   !---------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1471,10 +1483,10 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   IMPLICIT NONE
   ! input 
-  INTEGER :: ibrav, nat, nqx, nk1, nk2, nk3, ntetra, ityp(*)
+  INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
   REAL(KIND=DP) :: at(3,3), bg(3,3), tau(3,nat)
   ! output 
-  INTEGER :: nq, tetra(4,ntetra)
+  INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(KIND=DP) :: q(3,nqx)
   ! local
   INTEGER :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
