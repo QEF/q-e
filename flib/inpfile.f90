@@ -10,14 +10,14 @@
 !----------------------------------------------------------------------------
 SUBROUTINE input_from_file( )
   !
-  ! This subroutine check program arguments and, if input file is present,
-  ! attach input unit ( 5 ) to the file specified
+  ! This subroutine checks program arguments and, if input file is present,
+  ! attach input unit ( 5 ) to the specified file
   !
   !
   IMPLICIT NONE
   !
   INTEGER             :: unit = 5, &
-                         i, iiarg, nargs, ierr
+                         ilen, iiarg, nargs, ierr
   INTEGER, EXTERNAL   :: iargc
   CHARACTER (LEN=80)  :: input_file
   !
@@ -38,12 +38,11 @@ SUBROUTINE input_from_file( )
         OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
                STATUS = 'OLD', IOSTAT = ierr )
         !
-        CALL errore( 'iosys', 'input file ' // TRIM( input_file ) // &
-                   & ' not found' , ierr )
+        CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
+             & // ' not found' , ierr )
         !
      END IF
      !
   END DO
 
-
-END SUBROUTINE 
+END SUBROUTINE input_from_file
