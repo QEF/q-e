@@ -135,7 +135,7 @@ $ECHO " done"
 
 # IR cross sections  for SiH4
 cat > sih4.dyn.in << EOF
- &input fildyn='sih4.dyn', asr='simple' /
+ &input fildyn='sih4.dyn', asr='zero-dim' /
 EOF
 
 $ECHO "  running IR cross section calculation for SiH4...\c"
