@@ -24,7 +24,7 @@ module exx
   integer :: exx_nwordwfc
   real (kind=DP) :: exxdivergency=0d0
   real (kind=DP) :: exxdivfac=0d0
-
+  
 contains
 
   subroutine exxinit()
@@ -68,10 +68,10 @@ contains
           CALL davcio( temppsic, exx_nwordwfc, iunexx, (ik-1)*nbnd+ibnd, 1 )
        end do
     end do
-    exxstart=.true.
-    
-    call facdiv ()
 
+    
+    if (.not.exxstart) call facdiv ()
+    exxstart=.true.
 
     call stop_clock ('exxinit')  
 
