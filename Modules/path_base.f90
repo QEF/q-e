@@ -1041,11 +1041,7 @@ MODULE path_base
          !
          ! ... the restart file is written (in real space)
          !
-         IF ( .NOT. lcoarsegrained ) THEN
-            !
-            IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
-            !
-         END IF
+         IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
          !
          IF ( suspended_image == 0 ) THEN
             !
@@ -1191,7 +1187,7 @@ MODULE path_base
       !
       ! ... the restart file is written before exit
       !
-      IF ( .NOT. lcoarsegrained ) CALL write_restart()
+      CALL write_restart()
       !
       RETURN
       !

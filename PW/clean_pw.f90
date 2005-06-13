@@ -9,7 +9,7 @@
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
   !    
-  !    This routine deallocates all dynamically allocated arrays
+  ! ... This routine deallocates all dynamically allocated arrays
   !
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &

@@ -17,8 +17,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... Written by Carlo Sbraccia (2003-2004)
   !
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : startingwfc, startingpot, &
-                               diago_thr_init
+  USE input_parameters, ONLY : startingwfc, startingpot, diago_thr_init
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, wg_set, &
                                alpha0, beta0, ethr, pot_order
@@ -28,7 +27,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
   USE ions_base,        ONLY : tau, nat, nsp, ityp
   USE basis,            ONLY : startingwfc_ => startingwfc, &
-                               startingpot_ => startingpot    
+                               startingpot_ => startingpot
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
   USE io_files,         ONLY : prefix, tmp_dir, &
@@ -68,7 +67,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   CALL flush_unit( iunpath )
   !
-  ALLOCATE( tauold( 3, nat, 3 ) )  
+  ALLOCATE( tauold( 3, nat, 3 ) )
   !
   tmp_dir_saved = tmp_dir
   !
@@ -133,9 +132,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         CALL clean_pw( .FALSE. )
         !
-        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
-                  TRIM( int_to_char( image ) ) // "/"
-        !
         tcpu = get_clock( 'PWSCF' )
         !
         IF ( nimage > 1 ) THEN
@@ -147,6 +143,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
            !
         END IF
+        !
+        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
+                  TRIM( int_to_char( image ) ) // "/"
         !
         ! ... unit stdout is connected to the appropriate file
         !
@@ -264,7 +263,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         ! ... gradients are converted from ( rydberg / bohr ) 
         ! ... to ( hartree / bohr )
         !
-        grad_pes(:,image) = - RESHAPE( SOURCE = force, SHAPE = (/ dim /) ) / e2 
+        grad_pes(:,image) = - RESHAPE( force, (/ dim /) ) / e2
         !
         IF ( ionode ) THEN
            !

@@ -443,7 +443,7 @@ MODULE constraints_module
        !
        IF ( .NOT. global_test ) THEN
           !
-          CALL errore( 'check_constrain', 'g = 0 is not satisfied g = ', - 1 )
+          CALL errore( 'check_constrain', 'g = 0 is not satisfied', - 1 )
           !
           WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
           !
@@ -462,13 +462,13 @@ MODULE constraints_module
        ! ... find the lagrange multiplier lambda for the problem with one 
        ! ... constrain
        !
-       ! ...            force * dg
-       ! ... lambda = - ---------- ,
-       ! ...              |dg|^2
+       ! ...           force * dg
+       ! ... lambda =  ---------- ,
+       ! ...             |dg|^2
        !
        ! ... and redefine the forces:
        !
-       ! ... force = force + lambda * dg
+       ! ... force = force - lambda * dg
        !
        ! ... where dg is the gradient of the constraint function
        !
@@ -491,9 +491,9 @@ MODULE constraints_module
        !
        IF ( dg2 > eps16 ) THEN
           !
-          lambda = - DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
+          lambda = DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
           !
-          force = force + lambda * dg
+          force = force - lambda * dg
           !
           IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > eps16 ) THEN
              !

@@ -13,8 +13,8 @@ MODULE coarsegrained_vars
   !
   IMPLICIT NONE
   !
-  INTEGER, PARAMETER :: max_fe_iter    = 100
-  INTEGER, PARAMETER :: max_shake_iter = 20
+  INTEGER, PARAMETER :: max_fe_iter    = 10
+  INTEGER, PARAMETER :: max_shake_iter = 5
   INTEGER, PARAMETER :: num_acc        = 8
   !
   REAL (KIND=DP), PARAMETER :: fe_step     = 0.2D0

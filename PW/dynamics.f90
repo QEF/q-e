@@ -192,16 +192,7 @@ SUBROUTINE dynamics()
   IF ( ldamped ) THEN
      !
      conv_ions = ( etotold - etot ) < epse
-     !
-     DO i = 1, 3
-        !
-        DO na = 1, nat
-           !
-           conv_ions = conv_ions .AND. ( ABS( force(i,na) ) < epsf )
-           !
-        END DO
-        !
-     END DO
+     conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
      !
      IF ( conv_ions ) THEN
         !

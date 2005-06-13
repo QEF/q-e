@@ -95,7 +95,8 @@ MODULE path_io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,    ONLY : istep, nstep, conv_elec, lneb, lsmd
+       USE control_flags,    ONLY : istep, nstep, conv_elec, &
+                                    lneb, lsmd, lcoarsegrained
        USE io_files,         ONLY : iunpath, iunrestart, path_file   
        USE input_parameters, ONLY : if_pos
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
@@ -182,60 +183,78 @@ MODULE path_io_routines
              !
           END IF
           !
-          READ( UNIT = iunrestart, FMT = * )
-          READ( UNIT = iunrestart, FMT = * ) pes(1)
-          !
-          ia = 0  
-          !
-          if_pos = 0
-          !
-          DO j = 1, dim, 3 
+          IF ( lcoarsegrained ) THEN
              !
-             ia = ia + 1
+             DO i = 1, num_of_images
+                !
+                READ( UNIT = iunrestart, FMT = * )                
+                !
+                DO j = 1, dim
+                   !
+                   READ( UNIT = iunrestart, FMT = * ) pos(j,i), grad_pes(j,i)
+                   !
+                END DO
+                !
+             END DO
              !
-             READ( UNIT = iunrestart, FMT = * ) &
-                 pos(j+0,1),                    &
-                 pos(j+1,1),                    &
-                 pos(j+2,1),                    &
-                 grad_pes(j+0,1),               &
-                 grad_pes(j+1,1),               &
-                 grad_pes(j+2,1),               &
-                 if_pos(1,ia),                  &
-                 if_pos(2,ia),                  &
-                 if_pos(3,ia) 
-             !
-             grad_pes(:,1) = grad_pes(:,1) * &
-                             DBLE( RESHAPE( if_pos, (/ dim /) ) )
-             !
-          END DO
-          !
-          DO i = 2, num_of_images
+          ELSE
              !
              READ( UNIT = iunrestart, FMT = * )
-             READ( UNIT = iunrestart, FMT = * ) pes(i)
+             READ( UNIT = iunrestart, FMT = * ) pes(1)
+             !
+             ia = 0  
+             !
+             if_pos = 0
              !
              DO j = 1, dim, 3 
                 !
+                ia = ia + 1
+                !
                 READ( UNIT = iunrestart, FMT = * ) &
-                    pos(j+0,i),                    &
-                    pos(j+1,i),                    &
-                    pos(j+2,i),                    &
-                    grad_pes(j+0,i),               &
-                    grad_pes(j+1,i),               &
-                    grad_pes(j+2,i)
-                 !
+                    pos(j+0,1),                    &
+                    pos(j+1,1),                    &
+                    pos(j+2,1),                    &
+                    grad_pes(j+0,1),               &
+                    grad_pes(j+1,1),               &
+                    grad_pes(j+2,1),               &
+                    if_pos(1,ia),                  &
+                    if_pos(2,ia),                  &
+                    if_pos(3,ia) 
+                !
+                grad_pes(:,1) = grad_pes(:,1) * &
+                               DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                !
              END DO
              !
-             grad_pes(:,i) = grad_pes(:,i) * &
-                             DBLE( RESHAPE( if_pos, (/ dim /) ) )
+             DO i = 2, num_of_images
+                !
+                READ( UNIT = iunrestart, FMT = * )
+                READ( UNIT = iunrestart, FMT = * ) pes(i)
+                !
+                DO j = 1, dim, 3 
+                   !
+                   READ( UNIT = iunrestart, FMT = * ) &
+                       pos(j+0,i),                    &
+                       pos(j+1,i),                    &
+                       pos(j+2,i),                    &
+                       grad_pes(j+0,i),               &
+                       grad_pes(j+1,i),               &
+                       grad_pes(j+2,i)
+                   !
+                END DO
+                !
+                grad_pes(:,i) = grad_pes(:,i) * &
+                                DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                !
+             END DO
              !
-          END DO
-          !
-          IF ( suspended_image == 0 ) THEN
-             !
-             Emin       = MINVAL( pes(:) )
-             Emax       = MAXVAL( pes(:) )
-             Emax_index = MAXLOC( pes(:), 1 )
+             IF ( suspended_image == 0 ) THEN
+                !
+                Emin       = MINVAL( pes(:) )
+                Emax       = MAXVAL( pes(:) )
+                Emax_index = MAXLOC( pes(:), 1 )
+                !
+             END IF
              !
           END IF
           !
@@ -248,24 +267,40 @@ MODULE path_io_routines
                 !
                 ! ... optional fields
                 !
-                DO i = 1, num_of_images
+                IF ( lcoarsegrained ) THEN
                    !
-                   READ( UNIT = iunrestart, FMT = * )
-                   READ( UNIT = iunrestart, FMT = * ) frozen(i)
-                   !
-                   DO j = 1, dim, 3
+                   DO i = 1, num_of_images
                       !
-                      READ( UNIT = iunrestart, FMT = * ) &
-                          vel(j+0,i),                    & 
-                          vel(j+1,i),                    &
-                          vel(j+2,i)
+                      DO j = 1, dim
+                         !
+                         READ( UNIT = iunrestart, FMT = * ) vel(j,i)
+                         !
+                      END DO
+                      !
+                   END DO                   
+                   !
+                ELSE
+                   !
+                   DO i = 1, num_of_images
+                      !
+                      READ( UNIT = iunrestart, FMT = * )
+                      READ( UNIT = iunrestart, FMT = * ) frozen(i)
+                      !
+                      DO j = 1, dim, 3
+                         !
+                         READ( UNIT = iunrestart, FMT = * ) &
+                             vel(j+0,i),                    & 
+                             vel(j+1,i),                    &
+                             vel(j+2,i)
+                         !
+                      END DO
+                      !
+                      vel(:,i) = vel(:,i) * &
+                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                    END DO
                    !
-                   vel(:,i) = vel(:,i) * &
-                              DBLE( RESHAPE( if_pos, (/ dim /) ) )
-                   !
-                END DO
+                END IF
                 !
              END IF
              !
@@ -318,7 +353,7 @@ MODULE path_io_routines
        !
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, path_file, tmp_dir 
-       USE control_flags,    ONLY : conv_elec, lneb, lsmd
+       USE control_flags,    ONLY : conv_elec, lneb, lsmd, lcoarsegrained
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image,  &
                                     dim, num_of_images, pos, pes, grad_pes,   &
                                     vel, frozen, Nft, num_of_modes, lmol_dyn, &
@@ -404,40 +439,54 @@ MODULE path_io_routines
            DO i = 1, num_of_images
               !
               WRITE( UNIT = in_unit, FMT = '("Image: ",I4)' ) i
-              WRITE( UNIT = in_unit, FMT = energy ) pes(i)
               !
-              ia = 0
-              !
-              DO j = 1, dim, 3
+              IF ( lcoarsegrained ) THEN
                  !
-                 ia = ia + 1
+                 DO j = 1, dim
+                    !
+                    WRITE( UNIT = in_unit, &
+                           FMT = '(2(2X,F18.12))' ) pos(j,i), grad_pes(j,i)
+                    !
+                 END DO
                  !
-                 IF ( i == 1 ) THEN
-                    !
-                    WRITE( UNIT = in_unit, FMT = restart_first ) &
-                        pos(j+0,i),                              &
-                        pos(j+1,i),                              &
-                        pos(j+2,i),                              &
-                        grad_pes(j+0,i),                         &
-                        grad_pes(j+1,i),                         &
-                        grad_pes(j+2,i),                         &
-                        if_pos(1,ia),                            &
-                        if_pos(2,ia),                            &
-                        if_pos(3,ia) 
-                    !
-                 ELSE
-                    !
-                    WRITE( UNIT = in_unit, FMT = restart_others ) &
-                        pos(j+0,i),                               &
-                        pos(j+1,i),                               &
-                        pos(j+2,i),                               &
-                        grad_pes(j+0,i),                          &
-                        grad_pes(j+1,i),                          & 
-                        grad_pes(j+2,i)
-                    !
-                 END IF
+              ELSE
                  !
-              END DO
+                 WRITE( UNIT = in_unit, FMT = energy ) pes(i)
+                 !
+                 ia = 0
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    ia = ia + 1
+                    !
+                    IF ( i == 1 ) THEN
+                       !
+                       WRITE( UNIT = in_unit, FMT = restart_first ) &
+                           pos(j+0,i),                              &
+                           pos(j+1,i),                              &
+                           pos(j+2,i),                              &
+                           grad_pes(j+0,i),                         &
+                           grad_pes(j+1,i),                         &
+                           grad_pes(j+2,i),                         &
+                           if_pos(1,ia),                            &
+                           if_pos(2,ia),                            &
+                           if_pos(3,ia) 
+                       !
+                    ELSE
+                       !
+                       WRITE( UNIT = in_unit, FMT = restart_others ) &
+                           pos(j+0,i),                               &
+                           pos(j+1,i),                               &
+                           pos(j+2,i),                               &
+                           grad_pes(j+0,i),                          &
+                           grad_pes(j+1,i),                          & 
+                           grad_pes(j+2,i)
+                       !
+                    END IF
+                    !
+                 END DO
+                 !
+              END IF
               !
            END DO
            !
@@ -462,14 +511,27 @@ MODULE path_io_routines
               WRITE( UNIT = in_unit, &
                      FMT = '(2(L1,1X))' ) frozen(i)
               !
-              DO j = 1, dim, 3
+              IF ( lcoarsegrained ) THEN
                  !
-                 WRITE( UNIT = in_unit, FMT = quick_min ) &
-                     vel(j+0,i),                          & 
-                     vel(j+1,i),                          &
-                     vel(j+2,i)
+                 DO j = 1, dim
+                    !
+                    WRITE( UNIT = in_unit, &
+                           FMT = '(2X,F18.12)' ) vel(j,i)
+                    !
+                 END DO
                  !
-              END DO
+              ELSE
+                 !
+                 DO j = 1, dim, 3
+                    !
+                    WRITE( UNIT = in_unit, FMT = quick_min ) &
+                        vel(j+0,i),                          & 
+                        vel(j+1,i),                          &
+                        vel(j+2,i)
+                    !
+                 END DO
+                 !
+              END IF
               !
            END DO
            !
