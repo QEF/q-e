@@ -23,7 +23,7 @@ module exx
   CHARACTER(len=80) :: exx_file = 'os.exx'
   integer :: exx_nwordwfc
   real (kind=DP) :: exxdivergency=0d0
-  real (kind=DP) :: exxdivfac=0d0
+  real (kind=DP),allocatable :: exxdivfac(:)
   
 contains
 
@@ -54,6 +54,7 @@ contains
        open (unit=iunexx, file=exx_file, form="unformatted", &
              action="readwrite", status="replace", &
              recl=DIRECT_IO_FACTOR*exx_nwordwfc, access="direct")
+       allocate (exxdivfac(nks))
     endif
 
     IF ( nks > 1 ) REWIND( iunigk )
@@ -140,7 +141,7 @@ contains
                 if (qq.gt.1.d-8) then
                    fac(ig)=e2*fpi/tpiba2/qq
                 else
-                   fac(ig)=e2*fpi/tpiba2*exxdivfac
+                   fac(ig)=e2*fpi/tpiba2*exxdivfac(currentk)
                 end if
              end do
              do ibnd=1,nbnd !for each band of phi
@@ -327,23 +328,25 @@ contains
          e2  = 2.d0
     real(kind=DP), parameter  :: pi =  3.14159265358979d0
     real(kind=DP) ::alfa,tpiba2,qq
-    integer ::ikdiv
+    integer ::ikdiv, ik
     tpiba2 = (fpi / 2.d0 / alat) **2
     alfa=(((alat)**2)/tpiba2+1/(ecutwfc))/2  !To check alfa
     ! alfa = omega **(2d0/3d0)
 !!!!!!!!!calculate factor of divergency F(q) calculated on grid minus calculated through integration
-    do ikdiv=1,nks
-       qq = (xk(1,ikdiv)-xk(1,currentk))**2 + &
-            (xk(2,ikdiv)-xk(2,currentk))**2 + &
-            (xk(3,ikdiv)-xk(3,currentk))**2
-       if (qq.gt.1.d-8) then
-          exxdivfac=exxdivfac+exp(-alfa*qq)/qq
-       else
-          exxdivfac=exxdivfac+alfa
-       endif
-    end do
-    exxdivfac=exxdivfac-(omega/((2*pi)**3))*2*((pi/alfa)**(1.5))
 
+    do ik=1,nks
+       do ikdiv=1,nks
+          qq = (xk(1,ikdiv)-xk(1,ik))**2 + &
+               (xk(2,ikdiv)-xk(2,ik))**2 + &
+               (xk(3,ikdiv)-xk(3,ik))**2
+          if (qq.gt.1.d-8) then
+             exxdivfac(ik)=exxdivfac(ik)+exp(-alfa*qq)/qq
+          else
+             exxdivfac(ik)=exxdivfac(ik)+alfa
+          endif
+       end do
+       exxdivfac(ik)=exxdivfac(ik)-(omega/((2*pi)**3))*2*((pi/alfa)**(1.5))
+    end do
 
   end subroutine facdiv
 end module exx
