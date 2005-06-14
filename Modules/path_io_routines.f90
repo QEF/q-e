@@ -187,7 +187,7 @@ MODULE path_io_routines
              !
              DO i = 1, num_of_images
                 !
-                READ( UNIT = iunrestart, FMT = * )                
+                READ( UNIT = iunrestart, FMT = * )
                 !
                 DO j = 1, dim
                    !
@@ -270,6 +270,9 @@ MODULE path_io_routines
                 IF ( lcoarsegrained ) THEN
                    !
                    DO i = 1, num_of_images
+                      !
+                      READ( UNIT = iunrestart, FMT = * )
+                      READ( UNIT = iunrestart, FMT = * ) frozen(i)                      
                       !
                       DO j = 1, dim
                          !
