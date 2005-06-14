@@ -18,8 +18,9 @@ Bologna (http://www.cineca.it/), under the responsibility of Carlo
 Cavazzoni (c.cavazzoni@cineca.it).
 
 Currently active developers include Gerardo Ballabio (CINECA), 
-Stefano Fabris, Guido Fratesi, Adriano Mosca Conte, Carlo Sbraccia
-(SISSA, Trieste), Anton Kokalj (Joszef Stefan Institute, Ljubljana).
+Stefano Fabris, Guido Fratesi, Adriano Mosca Conte (SISSA, Trieste), 
+Anton Kokalj (Joszef Stefan Institute, Ljubljana), Carlo Sbraccia 
+(Princeton).
 
 The PWscf package was developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
