@@ -86,6 +86,8 @@ SUBROUTINE cg_readin()
       'need pw.x data file produced using Gamma tricks',1)
   IF (okvan) CALL errore('cg_readin', &
       'ultrasoft pseudopotential not implemented',1)
+  IF (doublegrid) &
+      CALL errore('cg_readin', 'double grid not implemented',1)
   IF (.NOT.trans .AND. .NOT.epsil)                                  &
        &     CALL errore('cg_readin','nothing to do',1)
   IF (nks.NE.1) CALL errore('cg_readin','too many k-points',1)
