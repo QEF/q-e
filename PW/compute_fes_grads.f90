@@ -58,8 +58,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   REAL (KIND=DP), EXTERNAL :: get_clock
   !
   !
-  stat = .TRUE.
-  !
   CALL flush_unit( iunpath )
   !
   ALLOCATE( tauold( 3, nat, 3 ) )
@@ -286,7 +284,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            istep = iter
            !
-           CALL electronic_scf( tfirst )
+           CALL electronic_scf( tfirst, stat )
+           !
+           IF ( .NOT. stat ) RETURN
            !
            CALL move_ions()
            !
@@ -306,7 +306,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            istep = iter
            !
-           CALL electronic_scf( tfirst )
+           CALL electronic_scf( tfirst, stat )
+           !
+           IF ( .NOT. stat )  RETURN
            !
            CALL move_ions()
            !
@@ -599,7 +601,7 @@ SUBROUTINE write_config( iter )
 END SUBROUTINE write_config
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electronic_scf( tfirst )
+SUBROUTINE electronic_scf( tfirst, stat )
   !----------------------------------------------------------------------------
   !
   USE control_flags, ONLY : conv_elec
@@ -607,19 +609,22 @@ SUBROUTINE electronic_scf( tfirst )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: tfirst 
+  LOGICAL, INTENT(IN)  :: tfirst
+  LOGICAL, INTENT(OUT) :: stat
   !
   !
   IF ( .NOT. tfirst ) CALL hinit1()
   !
   CALL electrons()
   !
+  stat = conv_elec
+  !
   IF ( .NOT. conv_elec ) THEN
-     !
-     CALL stop_pw( conv_elec )
      !
      WRITE( UNIT = iunpath, &
             FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
+     !
+     RETURN
      !
   END IF
   !
