@@ -8,13 +8,14 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE io_pot( iop, filename, pot, nc )
+SUBROUTINE io_pot( iop, extension, pot, nc )
   !----------------------------------------------------------------------------
   !
   ! ... This routine reads ( iop = - 1 ) or write ( iop = + 1 ) the
-  ! ... potential in real space onto a file
+  ! ... potential in real space onto a file named "prefix"."extension"
   !
   USE kinds,        ONLY : DP
+  USE io_files,     ONLY : prefix
   USE gvect,        ONLY : nrxx, nrx1, nrx2, nrx3
   USE mp_global,    ONLY : inter_pool_comm, me_pool, &
                            root_pool, me_image, root_image, my_image_id
@@ -25,7 +26,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   INTEGER           :: iop, nc, ic
     ! option: write if + 1,  read if - 1
     ! number of components and index for them
-  CHARACTER (LEN=*) :: filename
+  CHARACTER (LEN=*) :: extension
   REAL(KIND=DP)     :: pot(nrxx,nc)
   LOGICAL           :: exst
 #if defined (__PARA)
@@ -55,7 +56,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
      !
      ! ... Only the first node of the first pool reads or writes the file
      !
-     CALL seqopn( 4, filename, 'UNFORMATTED', exst )
+     CALL seqopn( 4, extension, 'UNFORMATTED', exst )
      !
      IF ( iop == 1 ) THEN
         !
@@ -93,7 +94,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   ! ... serial case
   !
-  CALL seqopn( 4, filename, 'UNFORMATTED', exst )
+  CALL seqopn( 4, extension, 'UNFORMATTED', exst )
   !  
   IF ( iop == 1 ) THEN
      !
@@ -111,7 +112,7 @@ SUBROUTINE io_pot( iop, filename, pot, nc )
   !
   RETURN
   !
-10 CALL errore( 'io_pot', 'error writing ' // filename, 1 )
-20 CALL errore( 'io_pot', 'error reading ' // filename, 2 )
+10 CALL errore( 'io_pot', 'error writing ' // trim(prefix) // extension, 1 )
+20 CALL errore( 'io_pot', 'error reading ' // trim(prefix) // extension, 2 )
   !
 END SUBROUTINE io_pot

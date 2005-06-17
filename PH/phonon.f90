@@ -22,7 +22,7 @@ PROGRAM phonon
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, nd_nmbr
+  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE mp,              ONLY : mp_bcast
   USE ions_base,       ONLY : nat
   USE lsda_mod,        ONLY : nspin
@@ -77,9 +77,7 @@ PROGRAM phonon
   !
   IF ( ionode ) THEN
      !
-     filname = TRIM( prefix ) // '.stat'
-     !
-     CALL seqopn( iustat, filname, 'FORMATTED', exst )
+     CALL seqopn( iustat, 'stat', 'FORMATTED', exst )
      !
      IF ( exst ) THEN
         !
@@ -151,7 +149,7 @@ PROGRAM phonon
      !
      IF ( ionode ) THEN
         !
-        CALL seqopn( iustat, filname, 'FORMATTED', exst )
+        CALL seqopn( iustat, 'stat', 'FORMATTED', exst )
         !
         REWIND( iustat )
         !
@@ -335,7 +333,7 @@ PROGRAM phonon
      !
   END DO
   !
-  IF ( ionode ) CALL delete_if_present( filname )
+  IF ( ionode ) CALL delete_if_present( TRIM(tmp_dir)//TRIM(prefix)//".stat" )
   !
   IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
   IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )

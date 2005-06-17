@@ -154,7 +154,7 @@ SUBROUTINE electrons()
      !
   ELSE
      !
-     flmix = TRIM( prefix ) // '.mix'
+     flmix = 'mix'
      !
   END IF
   !
@@ -320,7 +320,7 @@ SUBROUTINE electrons()
            ! ... write the charge density to file
            !
            !TEMP
-           CALL io_pot( 1, TRIM( prefix )//'.rho', rhonew, nspin )
+           CALL io_pot( 1, 'rho', rhonew, nspin )
            DEALLOCATE (rhonew )
            !TEMP
         ELSE
@@ -352,7 +352,7 @@ SUBROUTINE electrons()
         !
         IF ( ionode ) THEN
            !
-           CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'FORMATTED', exst )
+           CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
            !
            WRITE( iunocc, * ) ns
            !
@@ -369,7 +369,7 @@ SUBROUTINE electrons()
      !
      ! ... write the potential to file
      !
-     CALL io_pot( 1, TRIM( prefix )//'.pot', vr, nspin )     
+     CALL io_pot( 1, 'pot', vr, nspin )     
      !
      ! ... save converged wfc if they have not been written previously
      !     

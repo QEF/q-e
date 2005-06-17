@@ -52,8 +52,7 @@ SUBROUTINE openfilq()
   iuwfc = 20
 
   lrwfc = 2 * nbnd * npwx
-  filint = TRIM(prefix)//'.wfc'
-  CALL diropn (iuwfc, filint, lrwfc, exst)
+  CALL diropn (iuwfc, 'wfc', lrwfc, exst)
 
   IF (.NOT.exst) THEN
     ndr      = 4
@@ -63,7 +62,7 @@ SUBROUTINE openfilq()
 
     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
     IF( ierr > 0 ) &
-      CALL errore ('openfilq', 'file '//filint//' not found', 1)
+      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
     twfcollect=.NOT.exst
   END IF
   !
@@ -71,26 +70,26 @@ SUBROUTINE openfilq()
   !
   iubar = 21
   lrbar = 2 * nbnd * npwx
-  filint = TRIM(prefix) //'.bar'
-  CALL diropn (iubar, filint, lrbar, exst)
-  IF (recover.AND..NOT.exst) CALL errore ('openfilq','file bar not found', 1)
+  CALL diropn (iubar, 'bar', lrbar, exst)
+  IF (recover.AND..NOT.exst) &
+     CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
   !
   !    The file with the solution delta psi
   !
   iudwf = 22
   lrdwf = 2 * nbnd * npwx
-  filint = TRIM(prefix) //'.dwf'
-  CALL diropn (iudwf, filint, lrdwf, exst)
-  IF (recover.AND..NOT.exst) CALL errore ('openfilq','file dwf not found', 1)
+  CALL diropn (iudwf, 'dwf', lrdwf, exst)
+  IF (recover.AND..NOT.exst) &
+     CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
   !
   !   open a file with the static change of the charge
   !
   IF (okvan) THEN
      iudrhous = 25
      lrdrhous = 2 * nrxx * nspin
-     filint = TRIM(prefix) //'.prd'
-     CALL diropn (iudrhous, filint, lrdrhous, exst)
-     IF (recover.AND..NOT.exst) CALL errore ('openfilq','file prod not found', 1)
+     CALL diropn (iudrhous, 'prd', lrdrhous, exst)
+     IF (recover.AND..NOT.exst) &
+        CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
   ENDIF
   !
   !  Optional file(s) containing Delta\rho (opened and written in solve_e
@@ -105,8 +104,7 @@ SUBROUTINE openfilq()
   !   The igk at a given k (and k+q if q!=0)
   !
   iunigk = 24
-  filint = TRIM(prefix) //'.igk'
-  CALL seqopn (iunigk, filint, 'unformatted', exst)
+  CALL seqopn (iunigk, 'igk', 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
@@ -122,8 +120,7 @@ SUBROUTINE openfilq()
 
   IF (trans.OR.elph) THEN
      iudyn = 26
-     OPEN (unit = iudyn, file = fildyn, status = 'unknown', err = &
-          100, iostat = ios)
+     OPEN (unit=iudyn, file=fildyn, status='unknown', err=100, iostat=ios)
 100  CALL errore ('openfilq', 'opening file'//fildyn, ABS (ios) )
      REWIND (iudyn)
   ENDIF
@@ -146,28 +143,25 @@ SUBROUTINE openfilq()
   IF (okvan .AND. (epsil .OR. zue)) THEN
      iucom = 28
      lrcom = 2 * nbnd * npwx
-     filint = TRIM(prefix) //'.com'
-     CALL diropn (iucom, filint, lrcom, exst)
+     CALL diropn (iucom, 'com', lrcom, exst)
      IF (recover.AND..NOT.exst) &
-         CALL errore ('openfilq', 'file com not found', 1)
+         CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
   !
   !    In the USPP case we also need a file in  order to store derivatives 
   !    of kb projectors
   !  
      iudvkb3 = 29
      lrdvkb3 = 2 * npwx * nkb * 3
-     filint = TRIM(prefix) //'.dvkb3'
-     CALL diropn (iudvkb3, filint, lrdvkb3, exst)
+     CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
      IF (recover.AND..NOT.exst) &
-         CALL errore ('openfilq', 'file dvkb3 not found', 1)
+         CALL errore ('openfilq', 'file '//trim(prefix)//'.dvkb3 not found', 1)
   ENDIF
   IF (epsil .OR. zue) THEN
      iuebar = 30
      lrebar = 2 * nbnd * npwx
-     filint = TRIM(prefix) //'.ebar'
-     CALL diropn (iuebar, filint, lrebar, exst)
+     CALL diropn (iuebar, 'ebar', lrebar, exst)
      IF (recover.AND..NOT.exst) &
-        CALL errore ('openfilq','file ebar not found', 1)
+        CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
   ENDIF
   !
   !    files used by raman calculation
@@ -175,18 +169,15 @@ SUBROUTINE openfilq()
   IF (lraman .OR.elop) THEN
      iuchf = 31
      lrchf = 2 * nbnd * npwx
-     filint= TRIM(prefix) //'.cwf'
-     CALL diropn (iuchf, filint, lrchf, exst)
+     CALL diropn (iuchf, 'cwf', lrchf, exst)
 
      iud2w = 32
      lrd2w = 2 * nbnd * npwx
-     filint= TRIM(prefix) //'.d2w'
-     CALL diropn (iud2w, filint, lrd2w, exst)
+     CALL diropn (iud2w, 'd2w', lrd2w, exst)
 
      iuba2 = 33
      lrba2 = 2 * nbnd * npwx
-     filint= TRIM(prefix) //'.ba2' 
-     CALL diropn(iuba2, filint, lrba2, exst)
+     CALL diropn(iuba2, 'ba2', lrba2, exst)
   ENDIF
 
   RETURN

@@ -233,7 +233,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      WRITE( stdout, &
             '(/5X,"NEW-OLD atomic charge density approx. for the potential")' )
      !
-     CALL io_pot( + 1, TRIM( prefix )//'.oldrho', rho, 1 )
+     CALL io_pot( + 1, 'oldrho', rho, 1 )
      !
   ELSE IF ( rho_extr == 2 ) THEN
      !
@@ -242,13 +242,13 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      ! ...   oldrho  ->  work
      !
-     CALL io_pot( - 1, TRIM( prefix )//'.oldrho',  work, 1 )
+     CALL io_pot( - 1, 'oldrho',  work, 1 )
      !
      ! ...   rho   ->  oldrho          
      ! ...   work  ->  oldrho2     
      !
-     CALL io_pot( + 1, TRIM( prefix )//'.oldrho',  rho,  1 )
-     CALL io_pot( + 1, TRIM( prefix )//'.old2rho', work, 1 )
+     CALL io_pot( + 1, 'oldrho',  rho,  1 )
+     CALL io_pot( + 1, 'old2rho', work, 1 )
      !
      ! ... extrapolation
      !
@@ -266,14 +266,14 @@ SUBROUTINE extrapolate_charge( rho_extr )
      ! ...   oldrho2  ->  work1
      ! ...   oldrho   ->  work
      !
-     CALL io_pot( - 1, TRIM( prefix )//'.old2rho', work1, 1 )
-     CALL io_pot( - 1, TRIM( prefix )//'.oldrho',  work,  1 )
+     CALL io_pot( - 1, 'old2rho', work1, 1 )
+     CALL io_pot( - 1, 'oldrho',  work,  1 )
      !
      ! ...   rho   ->  oldrho     
      ! ...   work  ->  oldrho2     
      !
-     CALL io_pot( + 1, TRIM( prefix )//'.oldrho',  rho,  1 )
-     CALL io_pot( + 1, TRIM( prefix )//'.old2rho', work, 1 )
+     CALL io_pot( + 1, 'oldrho',  rho,  1 )
+     CALL io_pot( + 1, 'old2rho', work, 1 )
      !
      ! ... alpha0 and beta0 have been calculated in move_ions
      !
@@ -390,7 +390,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   IF ( wfc_extr == 1 ) THEN
      !
-     CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
      !
      DO ik = 1, nks
         !
@@ -405,10 +405,10 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
   ELSE IF ( wfc_extr == 2 ) THEN
      !
-     CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
      !
      IF ( wfc_order > 2 ) &
-        CALL diropn( iunoldwfc2, TRIM( prefix ) // '.old2wfc', nwordwfc, exst )
+        CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !
@@ -522,8 +522,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      ! ... case :  wfc_extr = 3
      !
-     CALL diropn( iunoldwfc, TRIM( prefix ) // '.oldwfc', nwordwfc, exst )
-     CALL diropn( iunoldwfc2, TRIM( prefix ) // '.old2wfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !

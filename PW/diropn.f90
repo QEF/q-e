@@ -7,22 +7,23 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine diropn (unit, filename, recl, exst)
+subroutine diropn (unit, extension, recl, exst)
   !-----------------------------------------------------------------------
   !
-  !     this routine opens a file in tmp_dir for direct I/O access
+  !     this routine opens a file named "prefix"."extension" in tmp_dir 
+  !     for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
 #include "f_defs.h"
   USE kinds
-  use io_files
+  use io_files, only: prefix, tmp_dir, nd_nmbr
   use mp_global, only: mpime
   implicit none
 
   !
   !    first the input variables
   !
-  character(len=*) :: filename
+  character(len=*) :: extension
   ! input: name of the file to open
   integer :: unit, recl
   ! input: unit of the file to open
@@ -32,7 +33,7 @@ subroutine diropn (unit, filename, recl, exst)
   !
   !    local variables
   !
-  character(len=256) :: tempfile
+  character(len=256) :: tempfile, filename
   ! complete file name
   character(len=80) :: assstr
   integer :: ios, unf_recl, ierr
@@ -51,10 +52,11 @@ subroutine diropn (unit, filename, recl, exst)
   inquire (unit = unit, opened = opnd)
   if (opnd) call errore ('diropn', "can't open a connected unit", abs(unit))
   !
-  !      then we check the filename
+  !      then we check the filename extension
   !
 
-  if (filename == ' ') call errore ('diropn', 'filename not given', 2)
+  if (extension == ' ') call errore ('diropn','filename extension not given',2)
+  filename = trim(prefix) // "." // trim(extension)
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
   ! debug
   !write(200+mpime,*) trim(tmp_dir)

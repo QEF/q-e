@@ -7,19 +7,20 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine seqopn (unit, filename, formatt, exst)
+subroutine seqopn (unit, extension, formatt, exst)
   !-----------------------------------------------------------------------
   !
-  !     this routine opens a file in tmp_dir for sequential I/O access
+  !     this routine opens a file named "prefix"."extension"
+  !     in tmp_dir for sequential I/O access
   !     If appropriate, the node number is added to the file name
   !
   USE kinds
-  use io_files
+  use io_files, ONLY: prefix, tmp_dir, nd_nmbr
   implicit none
   !
   !    first the dummy variables
   !
-  character(len=*) :: filename, formatt
+  character(len=*) :: formatt, extension
   ! input: name of the file to connect
   ! input: 'formatted' or 'unformatted'
   integer :: unit
@@ -29,7 +30,7 @@ subroutine seqopn (unit, filename, formatt, exst)
   !
   !    here the local variables
   !
-  character(len=256) :: tempfile
+  character(len=256) :: tempfile, filename
   ! complete file name
   integer :: ios
   ! integer variable to test I/O status
@@ -46,10 +47,11 @@ subroutine seqopn (unit, filename, formatt, exst)
   if (opnd) call errore ('seqopn', "can't open a connected unit", &
        abs (unit) )
   !
-  !      then we check the filename
+  !      then we check the extension of the filename
   !
 
-  if (filename.eq.' ') call errore ('seqopn', 'filename not given', 2)
+  if (extension.eq.' ') call errore ('seqopn','filename extension  not given',2)
+  filename = trim(prefix) // "." // trim(extension)
   if ( trim(nd_nmbr) == '1' .or. trim(nd_nmbr) == '01'.or. &
        trim(nd_nmbr) == '001') then
      !
@@ -70,7 +72,6 @@ subroutine seqopn (unit, filename, formatt, exst)
   open (unit = unit, file = tempfile, form = formatt, status = &
        'unknown', iostat = ios)
 
-  if (ios /= 0) call errore ('seqopn', 'error opening '//filename, &
-       unit)
+  if (ios /= 0) call errore ('seqopn', 'error opening '//filename, unit)
   return
 end subroutine seqopn

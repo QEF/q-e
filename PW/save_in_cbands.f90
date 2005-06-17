@@ -9,7 +9,7 @@
 subroutine save_in_cbands (iter, ik_, dr2)
   !-----------------------------------------------------------------------
   USE kinds, ONLY: DP
-  USE io_files, ONLY: iunres
+  USE io_files, ONLY: iunres, prefix
   USE klist, ONLY: nks
   USE control_flags, ONLY: reduce_io, tr2, ethr
   USE wvfct, ONLY: nbnd, et

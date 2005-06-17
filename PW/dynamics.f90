@@ -97,7 +97,7 @@ SUBROUTINE dynamics()
   !
   ! ... one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtoseconds
   !
-  CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
+  CALL seqopn( 4, 'md', 'FORMATTED', exst )
   !
   IF ( .NOT. exst ) THEN
      !
@@ -270,7 +270,7 @@ SUBROUTINE dynamics()
   !
   ! ... save on file all the needed quantities
   !
-  CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED',  exst )
+  CALL seqopn( 4, 'md', 'FORMATTED',  exst )
   !
   WRITE( UNIT = 4, FMT = * ) &
       etot, temp_new, mass, total_mass, &

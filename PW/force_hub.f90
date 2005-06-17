@@ -67,7 +67,7 @@ SUBROUTINE force_hub(forceh)
 
    IF ( me_pool == 0 .AND. my_pool_id == 0 ) THEN
 
-      CALL seqopn (iunocc, TRIM(prefix)//'.occup', 'formatted', exst)
+      CALL seqopn (iunocc, 'occup', 'formatted', exst)
       READ(iunocc,*) ns
       CLOSE(unit=iunocc,status='keep')
 

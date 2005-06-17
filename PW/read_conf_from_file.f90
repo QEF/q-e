@@ -96,7 +96,7 @@ subroutine read_config_from_file_old
   !     check if restart file is present
   !
   iunit = 1
-  call seqopn (iunit, trim(prefix)//".config", 'unformatted', exst)
+  call seqopn (iunit, "config", 'unformatted', exst)
   if (.not.exst) then
      close (unit = iunit, status = 'delete')
      WRITE( stdout, '(/5x,"Failed to open file", a14 )') trim(prefix)//".config"

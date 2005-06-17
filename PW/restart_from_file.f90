@@ -10,7 +10,7 @@ SUBROUTINE restart_from_file
   !----------------------------------------------------------------------------
   !
   USE io_global,     ONLY : stdout, ionode
-  USE io_files,      ONLY : iunres, tmp_dir
+  USE io_files,      ONLY : iunres, tmp_dir, prefix
   USE control_flags, ONLY : restart
   USE parser,        ONLY : delete_if_present
   USE mp_global,     ONLY : mpime
@@ -34,7 +34,7 @@ SUBROUTINE restart_from_file
         !     & FMT = '(/5X,"RECOVER from restart file has been", &
         !     &             " switched off on input")' )
         !
-        CALL delete_if_present( TRIM( tmp_dir ) // 'restart' )
+        CALL delete_if_present( TRIM(tmp_dir) // TRIM(prefix) // '.restart' )
         !
         RETURN
         !

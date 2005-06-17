@@ -101,8 +101,7 @@ SUBROUTINE cg_setup
   !   open the wavefunction file (already existing)
   !
   lrwfc=2*nbnd*npwx
-  filint = TRIM(prefix) //'.wfc'
-  CALL diropn(iunpun,filint,lrwfc,exst)
+  CALL diropn(iunpun, 'wfc',lrwfc,exst)
   IF(.NOT.exst) THEN 
      ndr      = 34
      kunittmp = 1
@@ -113,7 +112,7 @@ SUBROUTINE cg_setup
      CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
                         iunpun, ierr )
      IF ( ierr > 0 ) &
-        CALL errore('main','file '//filint//' not found',1)
+        CALL errore('main','file '//trim(prefix) // '.wfc not found',1)
   END IF
   !  read wave functions and calculate indices
   !

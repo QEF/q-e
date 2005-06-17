@@ -146,11 +146,11 @@ SUBROUTINE read_file
   !
   ! read the charge density
   !
-  CALL io_pot ( - 1, TRIM(prefix)//'.rho', rho, nspin)
+  CALL io_pot ( - 1, 'rho', rho, nspin)
   !
   ! read the potential
   !
-  CALL io_pot ( - 1, TRIM(prefix)//'.pot', vr, nspin)
+  CALL io_pot ( - 1, 'pot', vr, nspin)
   !
   ! re-calculate the local part of the pseudopotential vltot
   ! and the core correction charge (if any) - This is done here

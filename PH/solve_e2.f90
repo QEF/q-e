@@ -114,7 +114,7 @@ subroutine solve_e2
   if (reduce_io) then
      flmixdpot = ' '
   else
-     flmixdpot = TRIM(prefix)//'.mixd'
+     flmixdpot = 'mixd'
   endif
 
   do kter = 1, niter_ph

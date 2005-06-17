@@ -42,16 +42,14 @@ SUBROUTINE openfild3
   iuwfc = 20
 
   lrwfc = 2 * nbnd * npwx
-  filint = TRIM(prefix) //'.wfc'
-  CALL diropn (iuwfc, filint, lrwfc, exst)
+  CALL diropn (iuwfc, 'wfc', lrwfc, exst)
   IF (.NOT.exst) THEN 
      ndr      = 4
      kunittmp = 1
      kunittmp = kunit
-     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
-                        iuwfc, ierr )
+     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
      IF ( ierr > 0 ) &
-        CALL errore ('openfild3', 'file '//filint//' not found', 1)
+        CALL errore ('openfild3', 'file ' // TRIM(prefix) //'.wfc not found', 1)
      twfcollect=.NOT.exst
   END IF
   !
@@ -59,27 +57,24 @@ SUBROUTINE openfild3
   !
   iubar = 21
   lrbar = 2 * nbnd * npwx
-  filint = TRIM(prefix) //'.bar'
-  CALL diropn (iubar, filint, lrbar, exst)
-  IF (recover.AND..NOT.exst) CALL errore ('openfild3', 'file bar not &
-       &found', 1)
+  CALL diropn (iubar, 'bar', lrbar, exst)
+  IF (recover.AND..NOT.exst) &
+     CALL errore ('openfild3', 'file ' // TRIM(prefix) //'.bar not found', 1)
   !
   !    The file with the solution delta psi
   !
   iudwf = 22
   lrdwf = 2 * nbnd * npwx
-  filint = TRIM(prefix) //'.dwf'
-  CALL diropn (iudwf, filint, lrdwf, exst)
-  IF (recover.AND..NOT.exst) CALL errore ('openfild3', 'file dwf not &
-       &found', 1)
+  CALL diropn (iudwf, 'dwf', lrdwf, exst)
+  IF (recover.AND..NOT.exst) &
+     CALL errore ('openfild3', 'file ' // TRIM(prefix) //'.dwf not found', 1)
   !
   !   Here the sequential files
   !
   !   The igk at a given k (and k+q if q!=0)
   !
   iunigk = 24
-  filint = TRIM(prefix) //'.igk'
-  CALL seqopn (iunigk, filint, 'unformatted', exst)
+  CALL seqopn (iunigk, 'igk', 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
@@ -89,8 +84,7 @@ SUBROUTINE openfild3
   IF ( ionode ) THEN
      !
      iudyn = 26
-     OPEN (unit = iudyn, file = fildyn, status = 'unknown', err = 110, &
-          iostat = ios)
+     OPEN (unit=iudyn, file=fildyn, status='unknown', err=110, iostat=ios)
 110  CALL errore ('openfild3', 'opening file'//fildyn, ABS (ios) )
      REWIND (iudyn)
      !
@@ -135,30 +129,26 @@ SUBROUTINE openfild3
      !    Open the file with the solution q=0 delta psi
      !
      iud0qwf = 34
-     filint = TRIM(prefix) //'.d0wf'
-     CALL diropn (iud0qwf, filint, lrdwf, exst)
+     CALL diropn (iud0qwf, 'd0wf', lrdwf, exst)
      !
      !    Open the file with the solution q=0 delta psi
      !
      iudqwf = 35
-     filint = TRIM(prefix) //'.dqwf'
-     CALL diropn (iudqwf, filint, lrdwf, exst)
+     CALL diropn (iudqwf, 'dqwf', lrdwf, exst)
   ENDIF
   !
   !    The file with   <psi| dqV |psi>
   !
   iupdqvp = 36
   lrpdqvp = 2 * nbnd * nbnd
-  filint = TRIM(prefix) //'.pdp'
-  CALL diropn (iupdqvp, filint, lrpdqvp, exst)
+  CALL diropn (iupdqvp, 'pdp' , lrpdqvp, exst)
   !
   !    The file with   <psi| d0V |psi>
   !
   iupd0vp = iupdqvp
   IF (.NOT.lgamma) THEN
      iupd0vp = 37
-     filint = TRIM(prefix) //'.p0p'
-     CALL diropn (iupd0vp, filint, lrpdqvp, exst)
+     CALL diropn (iupd0vp, 'p0p', lrpdqvp, exst)
 
   ENDIF
   IF (degauss.NE.0.d0) THEN
@@ -167,8 +157,7 @@ SUBROUTINE openfild3
      !
      iudpdvp_1 = 38
      lrdpdvp = 2 * nbnd * nbnd
-     filint = TRIM(prefix) //'.pv1'
-     CALL diropn (iudpdvp_1, filint, lrdpdvp, exst)
+     CALL diropn (iudpdvp_1, 'pv1' , lrdpdvp, exst)
      !
      !    The file with   <dqpsi| d0V |psi>
      !
@@ -176,14 +165,12 @@ SUBROUTINE openfild3
      iudpdvp_3 = iudpdvp_1
      IF (.NOT.lgamma) THEN
         iudpdvp_2 = 39
-        filint = TRIM(prefix) //'.pv2'
-        CALL diropn (iudpdvp_2, filint, lrdpdvp, exst)
+        CALL diropn (iudpdvp_2, 'pv2' , lrdpdvp, exst)
         !
         !    The file with   <d0psi| dqV |psi>
         !
         iudpdvp_3 = 40
-        filint = TRIM(prefix) //'.pv3'
-        CALL diropn (iudpdvp_3, filint, lrdpdvp, exst)
+        CALL diropn (iudpdvp_3, 'pv3', lrdpdvp, exst)
      ENDIF
      !
      ! The file containing the variation of the FermiEnergy ef_sh
@@ -194,8 +181,7 @@ SUBROUTINE openfild3
      IF ( ionode ) THEN
         !
         iuef = 41
-        filint = TRIM(prefix) //'.efs'
-        CALL seqopn (iuef, filint, 'unformatted', exst)
+        CALL seqopn (iuef, 'efs', 'unformatted', exst)
         !
      END IF
      !

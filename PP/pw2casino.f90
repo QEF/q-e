@@ -9,8 +9,8 @@
 PROGRAM pw2casino
   !----------------------------------------------------------------------- 
 
-  ! This subroutine writes the file pwfn.data containing the plane wave
-  ! coefficients and other stuff needed by the QMC code CASINO. 
+  ! This subroutine writes the file "prefix".pwfn.data containing the 
+  ! plane wave coefficients and other stuff needed by the QMC code CASINO. 
 
   ! #include "f_defs.h"
 

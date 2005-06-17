@@ -118,7 +118,7 @@ SUBROUTINE vcsmd()
   !
   ! ... open MD history file (if not present this is a new run!)
   !
-  CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
+  CALL seqopn( 4, 'md', 'FORMATTED', exst )
   !
   IF ( .NOT. exst ) THEN
      !
@@ -406,7 +406,7 @@ SUBROUTINE vcsmd()
   !
   ! ... save MD history on file
   !
-  CALL seqopn( 4, TRIM( prefix )//'.md', 'FORMATTED', exst )
+  CALL seqopn( 4, 'md', 'FORMATTED', exst )
   !
   WRITE(4,*) rati, ratd, rat2d, rat2di, tauold
   WRITE(4,*) aveci, avecd, avec2d, avec2di

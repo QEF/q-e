@@ -171,8 +171,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            ! ... the file containing old positions is opened 
            ! ... ( needed for extrapolation )
            !
-           CALL seqopn( iunupdate, TRIM( prefix ) // '.update', &
-                        'FORMATTED', file_exists ) 
+           CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists ) 
            !
            IF ( file_exists ) THEN
               !
@@ -276,8 +275,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            !
            history = MIN( 3, ( history + 1 ) )
            !
-           CALL seqopn( iunupdate, &
-                      & TRIM( prefix ) // '.update', 'FORMATTED', file_exists ) 
+           CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists ) 
            !
            WRITE( UNIT = iunupdate, FMT = * ) history
            WRITE( UNIT = iunupdate, FMT = * ) tauold

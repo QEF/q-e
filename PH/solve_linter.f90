@@ -161,7 +161,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (reduce_io) then
      flmixdpot = ' '
   else
-     flmixdpot = TRIM(prefix)//'.mixd'
+     flmixdpot = 'mixd'
   endif
   !
   IF (ionode .AND. fildrho /= ' ') THEN

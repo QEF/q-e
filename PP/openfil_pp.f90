@@ -39,7 +39,7 @@ SUBROUTINE openfil_pp()
   !
   nwordwfc = 2 * nbnd * npwx * npol
   !
-  CALL diropn( iunwfc, TRIM( prefix )//'.wfc', nwordwfc, exst )
+  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
   IF ( .NOT. exst ) THEN
      ndr      = 4
@@ -63,13 +63,13 @@ SUBROUTINE openfil_pp()
   nwordatwfc = 2 * npwx * natomwfc
   !
   IF ( lda_plus_u ) &
-     CALL diropn( iunat, TRIM( prefix )//'.atwfc', nwordatwfc, exst )
+     CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
   !
   ! ... iunigk contains the number of PW and the indices igk
   ! ... Note that unit 15 is reserved for error messages 
   !
   iunigk = 16
-  CALL seqopn( iunigk, TRIM( prefix )//'.igk', 'UNFORMATTED', exst )
+  CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !
   RETURN
   !

@@ -22,7 +22,7 @@ SUBROUTINE close_open (isw)
   IMPLICIT NONE
   !
   INTEGER :: isw
-  CHARACTER (len=256) :: filint
+  CHARACTER (len=256) :: file_extension
   ! the name of the file
   LOGICAL :: exst
   ! logical variable to check file existence
@@ -37,20 +37,20 @@ SUBROUTINE close_open (isw)
         !
         IF (degauss.NE.0.d0) THEN
            CLOSE (unit = iuef, status = 'keep')
-           filint = TRIM(prefix) //'.efs'
-           CALL seqopn (iuef, filint, 'unformatted', exst)
+           file_extension = 'efs'
+           CALL seqopn (iuef, file_extension, 'unformatted', exst)
         ENDIF
         !
      END IF
      CLOSE (unit = iupd0vp, status = 'keep')
-     filint = TRIM(prefix) //'.p0p'
-     IF (lgamma) filint = TRIM(prefix) //'.pdp'
+     file_extension = 'p0p'
+     IF (lgamma) file_extension = 'pdp'
 
-     CALL diropn (iupd0vp, filint, lrpdqvp, exst)
+     CALL diropn (iupd0vp, file_extension, lrpdqvp, exst)
      CLOSE (unit = iudwf, status = 'keep')
-     filint = TRIM(prefix) //'.dwf'
+     file_extension = 'dwf'
 
-     CALL diropn (iudwf, filint, lrdwf, exst)
+     CALL diropn (iudwf, file_extension, lrdwf, exst)
      !
   ELSE IF (isw.EQ.1) THEN
      !
@@ -58,38 +58,38 @@ SUBROUTINE close_open (isw)
      !
      IF (lgamma) CALL errore (' close_open ', ' isw=1 ; lgamma', 1)
      CLOSE (unit = iupdqvp, status = 'keep')
-     filint = TRIM(prefix) //'.pdp'
+     file_extension = 'pdp'
 
-     CALL diropn (iupdqvp, filint, lrpdqvp, exst)
+     CALL diropn (iupdqvp, file_extension, lrpdqvp, exst)
      CLOSE (unit = iudqwf, status = 'keep')
-     filint = TRIM(prefix) //'.dqwf'
+     file_extension = 'dqwf'
 
-     CALL diropn (iudqwf, filint, lrdwf, exst)
+     CALL diropn (iudqwf, file_extension, lrdwf, exst)
   ELSEIF (isw.EQ.2) THEN
      !
      ! This is to be used after gen_dwf(2)
      !
      IF (lgamma) CALL errore (' close_open ', ' isw=2 ; lgamma', 1)
      CLOSE (unit = iud0qwf, status = 'keep')
-     filint = TRIM(prefix) //'.d0wf'
-     CALL diropn (iud0qwf, filint, lrdwf, exst)
+     file_extension = 'd0wf'
+     CALL diropn (iud0qwf, file_extension, lrdwf, exst)
   ELSEIF (isw.EQ.4) THEN
      !
      ! This is to be used after gen_dpdvp
      !
      IF (degauss.EQ.0.d0) RETURN
      CLOSE (unit = iudpdvp_1, status = 'keep')
-     filint = TRIM(prefix) //'.pv1'
+     file_extension = 'pv1'
 
-     CALL diropn (iudpdvp_1, filint, lrdpdvp, exst)
+     CALL diropn (iudpdvp_1, file_extension, lrdpdvp, exst)
      IF (.NOT.lgamma) THEN
         CLOSE (unit = iudpdvp_2, status = 'keep')
-        filint = TRIM(prefix) //'.pv2'
+        file_extension = 'pv2'
 
-        CALL diropn (iudpdvp_2, filint, lrdpdvp, exst)
+        CALL diropn (iudpdvp_2, file_extension, lrdpdvp, exst)
         CLOSE (unit = iudpdvp_3, status = 'keep')
-        filint = TRIM(prefix) //'.pv3'
-        CALL diropn (iudpdvp_3, filint, lrdpdvp, exst)
+        file_extension = 'pv3'
+        CALL diropn (iudpdvp_3, file_extension, lrdpdvp, exst)
      ENDIF
   ENDIF
   RETURN

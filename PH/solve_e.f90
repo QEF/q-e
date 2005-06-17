@@ -123,7 +123,7 @@ subroutine solve_e
   if (reduce_io) then
      flmixdpot = ' '
   else
-     flmixdpot = TRIM(prefix) // '.mixd'
+     flmixdpot = 'mixd'
   endif
   !
   !   The outside loop is over the iterations

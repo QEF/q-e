@@ -122,7 +122,7 @@ SUBROUTINE move_ions()
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
      !
-     CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
      !
      IF ( exst ) THEN
         !
@@ -277,7 +277,7 @@ SUBROUTINE move_ions()
      !
      ! ... old positions are written on file
      !
-     CALL seqopn( iunupdate, TRIM( prefix ) // '.update', 'FORMATTED', exst ) 
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
      !
      WRITE( UNIT = iunupdate, FMT = * ) history
      WRITE( UNIT = iunupdate, FMT = * ) tauold

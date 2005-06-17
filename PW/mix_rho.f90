@@ -11,7 +11,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
-                    dr2, tr2_min, iter, n_iter, filename, conv )
+                    dr2, tr2_min, iter, n_iter, file_extension, conv )
   !----------------------------------------------------------------------------
   !
   ! ... Modified Broyden's method for charge density mixing
@@ -36,7 +36,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   ! ... First the I/O variable
   !
   CHARACTER(LEN=256) :: &
-    filename                !  (in) I/O filename for mixing history
+    file_extension          !  (in) I/O filename extension for mixing history
                             !  if absent everything is kept in memory
   INTEGER :: &
     iter,                  &!  (in)  counter of the number of iterations
@@ -84,7 +84,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     work(maxmix),           &
     charge
   LOGICAL :: &
-    savetofile,   &! save intermediate steps on file "filename"
+    savetofile,   &! save intermediate steps on file "prefix"."file_extension"
     exst           ! if true the file exists
   !
   ! ... saved variables and arrays
@@ -111,7 +111,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   IF ( lda_plus_u ) ldim = 2 * Hubbard_lmax + 1
   !
-  savetofile = ( filename /= ' ' )
+  savetofile = ( file_extension /= ' ' )
   !
   rhocout(:,:) = rhocout(:,:) - rhocin(:,:)
   !
@@ -144,11 +144,11 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   IF ( savetofile ) THEN
      !
      iunmix = find_free_unit()
-     CALL diropn( iunmix, filename, ( 2 * ngm * nspin ), exst )
+     CALL diropn( iunmix, file_extension, ( 2 * ngm * nspin ), exst )
      !
      IF ( lda_plus_u ) then
         iunmix2 = find_free_unit()
-        CALL diropn( iunmix2, TRIM( filename ) // '.ns', &
+        CALL diropn( iunmix2, TRIM( file_extension ) // '.ns', &
                      ( ldim * ldim * nspin * nat ), exst )
      END IF
      !

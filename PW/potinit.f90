@@ -58,7 +58,7 @@ SUBROUTINE potinit()
   !
   IF ( ionode ) THEN
      !
-     CALL seqopn( 4, TRIM( prefix )//'.rho', 'UNFORMATTED', exst )
+     CALL seqopn( 4, 'rho', 'UNFORMATTED', exst )
      !
      IF ( exst ) THEN
         !
@@ -78,7 +78,7 @@ SUBROUTINE potinit()
      ! 
      ! ... Cases a) and b): the charge density is read from file
      !
-     CALL io_pot( -1, TRIM( prefix )//'.rho', rho, nspin )
+     CALL io_pot( -1, 'rho', rho, nspin )
      !       
      IF ( lscf ) THEN
         WRITE( stdout, '(/5X,"The initial density is read from file ", A20)' )&
@@ -97,7 +97,7 @@ SUBROUTINE potinit()
         !
         IF ( ionode ) THEN
            !
-           CALL seqopn( iunocc, TRIM( prefix )//'.occup', 'FORMATTED', exst )
+           CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
            READ( UNIT = iunocc, FMT = * ) ns
            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
            !

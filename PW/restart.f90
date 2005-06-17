@@ -114,7 +114,7 @@ CONTAINS
     INTEGER :: strlen
     INTEGER, ALLOCATABLE :: mill(:,:)
     INTEGER :: ngm_p( nproc_pool )
-    CHARACTER(len=256) :: filename, file_pseudo
+    CHARACTER(len=256) :: file_pseudo
     LOGICAL :: twf0, twfm, tupf
     INTEGER :: nkl, nkr, nkbl, iks, ike, npw_g, ipol, j
     INTEGER :: npool, ipmask( nproc ), ipsour
@@ -135,11 +135,10 @@ CONTAINS
 
     !
     !
-    filename = TRIM(prefix)//'.save'
-    ! WRITE( stdout, '(/,5x,"Writing file ",a14)') filename
+    ! WRITE( stdout, '(/,5x,"Writing file ",a)') trim(prefix)//'.save'
     !
     IF( ionode ) THEN
-       CALL seqopn (ndw, filename, 'unformatted', exst)
+       CALL seqopn (ndw, 'save', 'unformatted', exst)
        REWIND ndw
     END IF
 
@@ -630,7 +629,6 @@ CONTAINS
     LOGICAL :: tscal
     REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
     INTEGER, ALLOCATABLE :: ityp_(:)
-    CHARACTER(len=256) :: filename
 
     INTEGER :: nelu_, neld_, nacx_, kunit_
     INTEGER :: na_(nsx), ngk_l(npk), ngk_g(npk)
@@ -666,15 +664,13 @@ CONTAINS
     !
     !
     ierr = 0
-    filename = TRIM(prefix)//'.save'
-    flen = INDEX(filename,' ')-1
-    WRITE( stdout, '(/,5x,"Reading file ",a," ... ",$)') filename(1:flen)
+    WRITE( stdout, '(/,5x,"Reading file ",a," ... ",$)') TRIM(prefix)//'.save'
     !
     IF( ionode ) THEN
-       CALL seqopn (ndr, filename(1:flen), 'unformatted', exst)
+       CALL seqopn (ndr, 'save', 'unformatted', exst)
        IF (.NOT.exst) THEN
           CLOSE (unit = ndr, status = 'delete')
-          ierr = 1
+          ierr = 33
        ELSE
           REWIND ndr
        ENDIF
@@ -1211,7 +1207,6 @@ CONTAINS
     LOGICAL :: tscal
     REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
     INTEGER, ALLOCATABLE :: ityp_(:)
-    CHARACTER(len=256) :: filename
 
     INTEGER :: istep_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngm_, ngmg_, nkstot_
     INTEGER :: nspin_, nbnd_, nelu_, neld_, nat_, ntyp_, nacx_, kunit_, nks_
@@ -1243,11 +1238,10 @@ CONTAINS
     !  read configuration from .save file
     !
     ierr = 0
-    filename = TRIM( prefix )//'.save'
-    WRITE( stdout, '(/,5x,"Reading file ",a14)') filename
+    WRITE( stdout, '(/,5x,"Reading file ",a)') TRIM( prefix )//'.save'
     !
     IF( ionode ) THEN
-       CALL seqopn (ndr, filename, 'unformatted', exst)
+       CALL seqopn (ndr, 'save', 'unformatted', exst)
        IF ( .NOT. exst ) THEN
           CLOSE (unit = ndr, status = 'delete')
           ierr = 1

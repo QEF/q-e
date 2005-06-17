@@ -60,7 +60,7 @@ SUBROUTINE bfgs()
   !
   iunit = 4
   !
-  CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
+  CALL seqopn( iunit, 'bfgs', 'UNFORMATTED', exst )
   !
   ! ... exst flags whether restarting from preceding iterations
   ! ... do not restart from existing data unless explicitely required
@@ -214,7 +214,7 @@ SUBROUTINE bfgs()
   !
   IF ( .NOT. conv_ions ) THEN
      !
-     CALL seqopn( iunit, TRIM( prefix )//'.bfgs', 'UNFORMATTED', exst )
+     CALL seqopn( iunit, 'bfgs', 'UNFORMATTED', exst )
      WRITE( iunit ) &
           minimum_ok, xnew, starting_scf_threshold, starting_diag_threshold
      WRITE( iunit ) dtau

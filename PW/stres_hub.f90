@@ -51,7 +51,7 @@ SUBROUTINE stres_hub ( sigmah )
 
    IF ( ionode ) THEN
 
-      CALL seqopn(iunocc,TRIM(prefix)//'.occup','formatted',exst)
+      CALL seqopn(iunocc,'occup','formatted',exst)
       READ(iunocc,*) ns
       CLOSE(unit=iunocc,status='keep')
 

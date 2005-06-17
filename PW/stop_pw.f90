@@ -52,16 +52,16 @@ SUBROUTINE stop_pw( flag )
      CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iunres, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.bfgs', 'UNFORMATTED', exst )
+     CALL seqopn( 4, 'bfgs', 'UNFORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.md', 'FORMATTED', exst )
+     CALL seqopn( 4, 'md', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     !CALL seqopn( 4, TRIM( prefix ) // '.para', 'FORMATTED', exst )
+     !CALL seqopn( 4, 'para', 'FORMATTED', exst )
      !CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, TRIM( prefix ) // '.BLOCK', 'FORMATTED', exst )
+     CALL seqopn( 4, 'BLOCK', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
   END IF

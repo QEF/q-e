@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
-     iter, n_iter, filename, conv)
+     iter, n_iter, file_extension, conv)
   !-----------------------------------------------------------------------
   !
   ! Modified Broyden's method for potential/charge density mixing
@@ -21,8 +21,9 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    tr2       threshold for selfconsistency
   !    iter      current iteration number
   !    n_iter    number of iterations used in the mixing
-  !    filename  if present save previous iterations on file 'filename'
-  !              otherwise keep everything in memory
+  !    file_extension  if present save previous iterations on 
+  !                    file 'prefix'.'file_extension'
+  !                    otherwise keep everything in memory
   ! On output:
   !    dr2       [(vout-vin)/ndim]^2
   !    vin       mixed potential
@@ -34,7 +35,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   !   First the dummy variables
   !
-  character (len=256) :: filename
+  character (len=256) :: file_extension
   integer :: ndim, iter, n_iter
   real(kind=DP) :: vout (ndim), vin (ndim), alphamix, dr2, tr2
   logical :: conv
@@ -48,7 +49,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   integer :: iunit, iunmix, n, i, j, iwork (maxter), info, iter_used, &
        ipos, inext, ndimtot
   ! work space containing info from previous iterations:
-  ! must be kept in memory and saved between calls if filename=' '
+  ! must be kept in memory and saved between calls if file_extension=' '
   real(kind=DP), allocatable, save :: df (:,:), dv (:,:)
   !
   real(kind=DP), allocatable :: vinsave (:)
@@ -66,7 +67,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   if (n_iter.gt.maxter) call errore ('mix_potential', 'n_iter too big', 1)
   if (ndim.le.0) call errore ('mix_potential', 'ndim .le. 0', 3)
   !
-  saveonfile = filename.ne.' '
+  saveonfile = file_extension.ne.' '
   !
   do n = 1, ndim
      vout (n) = vout (n) - vin (n)
@@ -90,12 +91,12 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
 10   continue
      if (conv) then
         ! remove temporary file (open and close it)
-        call diropn (iunmix, filename, ndim, exst)
+        call diropn (iunmix, file_extension, ndim, exst)
         close (unit=iunmix, status='delete')
         call stop_clock ('mix_pot')
         return
      endif
-     call diropn (iunmix, filename, ndim, exst)
+     call diropn (iunmix, file_extension, ndim, exst)
      if (iter.gt.1.and..not.exst) then
         call errore ('mix_potential', 'file not found, restarting', -1)
         iter = 1
