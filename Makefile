@@ -20,6 +20,7 @@ default :
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
+	@echo '  log          create ChangeLog and ChangeLog.html files'
 
 pw : bindir mods libs libiotk
 	if test -d PW ; then \
@@ -160,6 +161,11 @@ tar-gui :
 	    echo "  Sorry, tar-gui works only for CVS-sources !!!" ; \
 	    echo ; \
 	fi
+
+log :
+	-perl ./cvs2cl.pl
+	-perl ./cvs2cl.pl --xml --header /dev/null --stdout \
+		| perl ./cl2html.pl --entries 0 > ChangeLog.html
 
 links : bindir
 	( cd bin/ ; \

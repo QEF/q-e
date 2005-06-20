@@ -2507,10 +2507,6 @@ If this doesn't help, move to next point.
 Possible reasons:
 \begin{itemize}
   \item
-    nonexistent or non accessible {\tt outdir}. 
-    Note that in parallel execution, {\tt outdir} must exist and be
-    accessible to all active processors.
-  \item
     too much RAM memory requested (see next item).
   \item
     if you are using highly optimized mathematical libraries, verify
@@ -2523,14 +2519,6 @@ Possible reasons:
     clusters, see section \ref{installissues}, ``Installation
     issues''.
 \end{itemize}
-
-\paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
-            message related to MPI errors.}
-
-See info from Axel Kohlmeyer:\hfill\break
-\htmladdnormallink%
-{{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
-{http://www.democritos.it/pipermail/pw_forum/2005-April/002338.html}
 
 \paragraph{\texttt{pw.x} works for simple systems, but not for large
            systems or whenever more RAM is needed.}
@@ -2567,6 +2555,14 @@ Possible solutions:
     (with commands \texttt{limits} or \texttt{ulimit}) may solve the
     problem.
 \end{itemize}
+
+\paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
+            message related to MPI errors.}
+
+See info from Axel Kohlmeyer:\hfill\break
+\htmladdnormallink%
+{{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
+{http://www.democritos.it/pipermail/pw_forum/2005-April/002338.html}
 
 \paragraph{\texttt{pw.x} runs but nothing happens.}
 
