@@ -4,5 +4,5 @@ high-symmetry point:  0.0000 0.0000 0.0000
 high-symmetry point:  0.0000 0.0000 1.0000
 high-symmetry point:  0.0000 1.0000 1.0000
 high-symmetry point:  0.0000 0.0000 0.0000
-output file (xmgr) > bands in xmgr format written to file sibands.xmgr                                                                    
-output file (ps) > Efermi > deltaE, reference E (for tics) bands in PostScript format written to file sibands.ps                                                                      
+output file (xmgr) > bands in xmgr format written to file sibands.xmgr                                                                                                                                                                                                                                                    
+output file (ps) > Efermi > deltaE, reference E (for tics) bands in PostScript format written to file sibands.ps                                                                                                                                                                                                                                                      

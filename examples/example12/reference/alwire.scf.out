@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.2.1    starts ...
-     Today is 28Jan2005 at 11:27:58 
+     Program PWSCF     v.2.1cvs starts ...
+     Today is  3Jun2005 at 12:34:47 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -63,14 +63,16 @@
      G cutoff =  218.8538  (   5115 G-vectors)     FFT grid: ( 30, 30, 12)
 
      nbndx  =    24  nbnd   =     6  natomwfc =     9  npwx   =     654
-     nelec  =    3.00 nkb   =     4  ngl    =     320
+     nelec  =   3.00  nkb   =     4  ngl    =     320
 
      Initial potential from superposition of free atoms
 
      starting charge    2.99794, renormalised to    3.00000
+
+     negative rho (up, down):  0.103E-05 0.000E+00
      Starting wfc are atomic
 
-     total cpu time spent up to now is      0.33 secs
+     total cpu time spent up to now is      0.28 secs
 
      Self-consistent Calculation
 
@@ -78,129 +80,138 @@
      Davidson diagonalization (with overlap)
      ethr =  1.00E-02,  avg # of iterations =  2.1
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.68 secs
 
-     total energy              =    -4.00901864 ryd
-     estimated scf accuracy    <     0.04231737 ryd
+     total energy              =    -4.01104005 ryd
+     estimated scf accuracy    <     0.04215894 ryd
 
      iteration #  2     ecut=    15.00 ryd     beta=0.70
      Davidson diagonalization (with overlap)
-     ethr =  1.41E-03,  avg # of iterations =  2.2
+     ethr =  1.41E-03,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is      1.29 secs
+     total cpu time spent up to now is      1.01 secs
 
-     total energy              =    -4.01628075 ryd
-     estimated scf accuracy    <     0.00061097 ryd
+     total energy              =    -4.01625166 ryd
+     estimated scf accuracy    <     0.00059694 ryd
 
      iteration #  3     ecut=    15.00 ryd     beta=0.70
      Davidson diagonalization (with overlap)
-     ethr =  2.04E-05,  avg # of iterations =  2.6
+     ethr =  1.99E-05,  avg # of iterations =  2.5
 
-     total cpu time spent up to now is      1.79 secs
+     total cpu time spent up to now is      1.40 secs
 
-     total energy              =    -4.01634890 ryd
-     estimated scf accuracy    <     0.00005343 ryd
+     total energy              =    -4.01634879 ryd
+     estimated scf accuracy    <     0.00004897 ryd
 
      iteration #  4     ecut=    15.00 ryd     beta=0.70
      Davidson diagonalization (with overlap)
-     ethr =  1.78E-06,  avg # of iterations =  1.5
+     ethr =  1.63E-06,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is      2.22 secs
+     total cpu time spent up to now is      1.72 secs
 
-     total energy              =    -4.01635020 ryd
-     estimated scf accuracy    <     0.00000023 ryd
+     total energy              =    -4.01635019 ryd
+     estimated scf accuracy    <     0.00000022 ryd
 
      iteration #  5     ecut=    15.00 ryd     beta=0.70
      Davidson diagonalization (with overlap)
-     ethr =  7.64E-09,  avg # of iterations =  2.6
+     ethr =  7.44E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.68 secs
+     total cpu time spent up to now is      2.07 secs
+
+     total energy              =    -4.01635028 ryd
+     estimated scf accuracy    <     0.00000001 ryd
+
+     iteration #  6     ecut=    15.00 ryd     beta=0.70
+     Davidson diagonalization (with overlap)
+     ethr =  3.45E-10,  avg # of iterations =  1.4
+
+     total cpu time spent up to now is      2.40 secs
 
      End of self-consistent calculation
 
-          k = 0.0000 0.0000 0.0000 (  645 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.0000 (   645 PWs)   bands (ev):
 
-    -8.4060  -2.2034  -2.2034   0.6403   1.9863   3.8233
+    -8.4055  -2.2031  -2.2031   0.6407   1.9870   3.8232
 
-          k = 0.0000 0.0000 0.1778 (  625 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.1778 (   625 PWs)   bands (ev):
 
-    -8.2886  -2.0950  -2.0950   0.7527   2.1037   3.9400
+    -8.2881  -2.0947  -2.0947   0.7531   2.1044   3.9400
 
-          k = 0.0000 0.0000 0.3556 (  637 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.3556 (   637 PWs)   bands (ev):
 
-    -7.9436  -1.7720  -1.7720   1.0841   2.4558   4.2898
+    -7.9431  -1.7717  -1.7717   1.0844   2.4565   4.2897
 
-          k = 0.0000 0.0000 0.5333 (  641 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.5333 (   641 PWs)   bands (ev):
 
-    -7.3738  -1.2332  -1.2332   1.6146   3.0424   4.8720
+    -7.3733  -1.2328  -1.2328   1.6150   3.0431   4.8720
 
-          k = 0.0000 0.0000 0.7111 (  642 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.7111 (   642 PWs)   bands (ev):
 
-    -6.5898  -0.4781  -0.4781   2.2336   3.8629   4.7590
+    -6.5893  -0.4778  -0.4778   2.2340   3.8636   4.7595
 
-          k = 0.0000 0.0000 0.8889 (  642 PWs)   bands (ev):
+          k = 0.0000 0.0000 0.8889 (   642 PWs)   bands (ev):
 
-    -5.6093   0.4921   0.4921   2.0525   4.1710   4.9159
+    -5.6088   0.4924   0.4924   2.0530   4.1714   4.9166
 
-          k = 0.0000 0.0000 1.0667 (  654 PWs)   bands (ev):
+          k = 0.0000 0.0000 1.0667 (   654 PWs)   bands (ev):
 
-    -4.4803   0.6134   1.6751   1.6751   5.1112   6.6075
+    -4.4798   0.6139   1.6755   1.6755   6.6078   6.6078
 
-          k = 0.0000 0.0000 1.2444 (  654 PWs)   bands (ev):
+          k = 0.0000 0.0000 1.2444 (   654 PWs)   bands (ev):
 
-    -3.3889  -0.7385   3.0458   3.0458   4.7963   4.7963
+    -3.3884  -0.7381   3.0462   3.0462   4.7966   4.7966
 
-     the Fermi energy is    -1.7930 ev
+     the Fermi energy is    -1.7927 ev
 
 !    total energy              =    -4.01635028 ryd
-     estimated scf accuracy    <        7.6E-09 ryd
+     estimated scf accuracy    <        8.6E-10 ryd
 
-     band energy sum           =    -1.08977091 ryd
-     one-electron contribution =    -2.40738171 ryd
-     hartree contribution      =     1.56352271 ryd
-     xc contribution           =    -1.38930026 ryd
+     band energy sum           =    -1.08967752 ryd
+     one-electron contribution =    -2.40733898 ryd
+     hartree contribution      =     1.56346382 ryd
+     xc contribution           =    -1.38928410 ryd
      ewald contribution        =    -1.78254032 ryd
      correction for metals     =    -0.00065070 ryd
 
      convergence has been achieved
 
-     Writing file       alw.save for program phonon
+     Writing data file       alw.save
  
-     PWSCF        :     2.69s CPU time
+     PWSCF        :     2.40s CPU time
 
-     init_run     :     0.32s CPU
-     electrons    :     2.35s CPU
+     init_run     :     0.27s CPU
+     electrons    :     2.12s CPU
  
-     electrons    :     2.35s CPU
-     c_bands      :     1.76s CPU (       5 calls,   0.352 s avg)
-     sum_band     :     0.39s CPU (       5 calls,   0.078 s avg)
-     v_of_rho     :     0.12s CPU (      11 calls,   0.011 s avg)
-     mix_rho      :     0.07s CPU (       5 calls,   0.014 s avg)
+     electrons    :     2.12s CPU
+     c_bands      :     1.63s CPU (       6 calls,   0.272 s avg)
+     sum_band     :     0.38s CPU (       6 calls,   0.063 s avg)
+     v_of_rho     :     0.07s CPU (       7 calls,   0.010 s avg)
+     mix_rho      :     0.01s CPU (       6 calls,   0.002 s avg)
  
-     c_bands      :     1.76s CPU (       5 calls,   0.352 s avg)
-     init_us_2    :     0.04s CPU (      88 calls,   0.000 s avg)
-     cegterg      :     1.72s CPU (      40 calls,   0.043 s avg)
+     c_bands      :     1.63s CPU (       6 calls,   0.272 s avg)
+     init_us_2    :     0.07s CPU (     104 calls,   0.001 s avg)
+     cegterg      :     1.58s CPU (      48 calls,   0.033 s avg)
  
-     sum_band     :     0.39s CPU (       5 calls,   0.078 s avg)
+     sum_band     :     0.38s CPU (       6 calls,   0.063 s avg)
  
-     wfcrot       :     0.20s CPU (       8 calls,   0.025 s avg)
-     cegterg      :     1.72s CPU (      40 calls,   0.043 s avg)
-     h_psi        :     1.71s CPU (     137 calls,   0.012 s avg)
-     g_psi        :     0.00s CPU (      89 calls,   0.000 s avg)
-     overlap      :     0.04s CPU (      89 calls,   0.000 s avg)
-     cdiaghg      :     0.06s CPU (      97 calls,   0.001 s avg)
-     update       :     0.04s CPU (      89 calls,   0.000 s avg)
-     last         :     0.02s CPU (      40 calls,   0.001 s avg)
+     wfcrot       :     0.15s CPU (       8 calls,   0.019 s avg)
+     cegterg      :     1.58s CPU (      48 calls,   0.033 s avg)
+     h_psi        :     1.46s CPU (     143 calls,   0.010 s avg)
+     g_psi        :     0.02s CPU (      87 calls,   0.000 s avg)
+     overlap      :     0.04s CPU (      87 calls,   0.000 s avg)
+     cdiaghg      :     0.04s CPU (     135 calls,   0.000 s avg)
+     update       :     0.06s CPU (      87 calls,   0.001 s avg)
+     last         :     0.01s CPU (      48 calls,   0.000 s avg)
  
-     h_psi        :     1.71s CPU (     137 calls,   0.012 s avg)
-     init         :     0.01s CPU (     137 calls,   0.000 s avg)
-     firstfft     :     0.75s CPU (     648 calls,   0.001 s avg)
-     secondfft    :     0.81s CPU (     648 calls,   0.001 s avg)
-     add_vuspsi   :     0.04s CPU (     137 calls,   0.000 s avg)
+     h_psi        :     1.46s CPU (     143 calls,   0.010 s avg)
+     init         :     0.01s CPU (     143 calls,   0.000 s avg)
+     firstfft     :     0.66s CPU (     741 calls,   0.001 s avg)
+     secondfft    :     0.57s CPU (     741 calls,   0.001 s avg)
+     add_vuspsi   :     0.04s CPU (     143 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.03s CPU (     137 calls,   0.000 s avg)
-     cft3         :     0.15s CPU (      42 calls,   0.004 s avg)
-     cft3s        :     1.78s CPU (    1536 calls,   0.001 s avg)
-     davcio       :     0.02s CPU (     128 calls,   0.000 s avg)
+     ccalbec      :     0.05s CPU (     143 calls,   0.000 s avg)
+     cft3         :     0.06s CPU (      28 calls,   0.002 s avg)
+     cft3s        :     1.35s CPU (    1770 calls,   0.001 s avg)
+     davcio       :     0.03s CPU (     152 calls,   0.000 s avg)
  

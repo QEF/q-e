@@ -1,5 +1,5 @@
  &inputpp
-    outdir='/home/stefano/tmp/', 
+    outdir='/home/giannozz/tmp/', 
     prefix='feo_af',
     first_band=9, last_band=20, 
  /

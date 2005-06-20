@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.2.1    starts ...
-     Today is 28Jan2005 at 18:32: 1 
+     Program POST-PROC v.2.1cvs starts ...
+     Today is  3Jun2005 at 14:16:51 
 
      Reading file ptt.save ...      only dimensions
      read complete
@@ -9,8 +9,9 @@
      read complete
 
      nbndx  =    28  nbnd   =    28  natomwfc =    36  npwx   =     570
-     nelec  =   20.00 nkb   =    52  ngl    =     947
-  warning: negative or imaginary core charge    -0.000004    0.000000
+     nelec  =  20.00  nkb   =    52  ngl    =     947
+
+     warning: negative or imaginary core charge    -0.000004    0.000000
  
 ===== INPUT FILE containing the left lead =====
 
@@ -196,25 +197,25 @@
  Nchannels of the left tip =            6
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0642854   0.0000000   0.0000000
-  -0.0642854   0.0000000   0.0000000
-  -0.1970833   0.0000000   0.0000000
-  -0.1970833   0.0000000   0.0000000
-  -0.3204877   0.0000000   0.0000000
-  -0.3204877   0.0000000   0.0000000
+  -0.0642912   0.0000000   0.0000000
+  -0.0642912   0.0000000   0.0000000
+  -0.1970836   0.0000000   0.0000000
+  -0.1970836   0.0000000   0.0000000
+  -0.3204902   0.0000000   0.0000000
+  -0.3204902   0.0000000   0.0000000
  
-     PWCOND       :  1m13.07s CPU time
+     PWCOND       :  1m26.98s CPU time
 
-     init         :     4.59s CPU
-     poten        :     0.08s CPU
-     local        :     3.51s CPU
+     init         :     4.72s CPU
+     poten        :     0.07s CPU
+     local        :     3.77s CPU
  
-     scatter_forw :    55.30s CPU
-     integrals    :    34.69s CPU
-     rotatef      :     1.81s CPU (      24 calls,   0.075 s avg)
-     rotateb      :     1.11s CPU (      24 calls,   0.046 s avg)
-     scatter_back :     8.10s CPU
+     scatter_forw :    64.72s CPU
+     integrals    :    36.24s CPU
+     rotatef      :     2.11s CPU (      24 calls,   0.088 s avg)
+     rotateb      :     1.38s CPU (      24 calls,   0.058 s avg)
+     scatter_back :    12.22s CPU
  
-     compbs       :     9.67s CPU
-     compbs_2     :     8.61s CPU
+     compbs       :    13.76s CPU
+     compbs_2     :    12.57s CPU
  

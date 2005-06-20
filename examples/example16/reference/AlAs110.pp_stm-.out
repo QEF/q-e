@@ -1,25 +1,25 @@
 
-     Program POST-PROC v.2.1    starts ...
-     Today is 26Aug2004 at 11:19:50 
+     Program POST-PROC v.2.1cvs starts ...
+     Today is  3Jun2005 at 13:44:31 
 
-     Reading file AlAs110.save ... 
+     Reading file AlAs110.save ...      only dimensions
      read complete
 
-     Reading file AlAs110.save ... 
+     Reading file AlAs110.save ...      all except wavefuctions
      read complete
 
      nbndx  =    34  nbnd   =    34  natomwfc =    91  npwx   =    3109
-     nelec  =   56.00 nkb   =    56  ngl    =    2793
+     nelec  =  56.00  nkb   =    56  ngl    =    2793
 
      Calling punch_plot, plot_num =   5
 
-     workfunction     =   -12.9694 +-    13.9602 eV
-     without exchcorr =    -4.4429 +-    12.7449 eV
+     workfunction     =   -12.9707 +-    13.9601 eV
+     without exchcorr =    -4.4437 +-    12.7453 eV
 
      Work function written on file workf
      Planar mean charge written on file charge
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     stm took       1.28 cpu secs
-     Writing data on file  AlAsresm-1.0                                                                    
+     stm took       1.58 cpu secs
+     Writing data on file  AlAsresm-1.0                                                                                                                                                                                                                                                    

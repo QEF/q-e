@@ -1,133 +1,227 @@
-************************************************************************
-****                                                                ****
-****  CPV: variable-cell Car-Parrinello molecular dynamics          ****
-****  using ultrasoft Vanderbilt pseudopotentials - v.2.1           ****
-****                                                                ****
-************************************************************************
+=------------------------------------------------------------------------------=
 
-     Parallel version (MPI)
-     Number of processors in use:      1
-reading ppot for species #  1 from file /clx/usercin/acv0/Sources/O-sesame/pseudo/O.LDA.US.RRKJ3.UPF
-reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseudo/Si.vbc.UPF
-   wmass (calculated) =        49868.29
+     CPV: variable-cell Car-Parrinello molecular dynamics
+     using ultrasoft Vanderbilt pseudopotentials
 
+     Version: 2.1cvs - Mon Jan 31 11:35:49 CET 2005                       
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, and others
 
+=------------------------------------------------------------------------------=
 
- nbeg=  0 nomore=     10    iprint=  10
- reads from 92 writes on 93
- time step =   12.0000
+   This run was started on:  13:57:27   3Jun2005               
 
- parameters for electron dynamics:
- emass=     700.00  emaec=       3.00ry
- orthog. with lagrange multipliers: eps=  0.10E-07 max= 30
- verlet algorithm for electron dynamics
- with friction frice =  0.0000 , grease =  1.0000
+   Serial Build
+
+   Job Title: MD Simulation
 
 
- ions are allowed to move
- ion dynamics with fricp =  0.0000 and greasp =  1.0000
- ion dynamics with nose` temp. control:
- temperature required= 300.00000(kelvin) nose` mass = 100013.420
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
+   file type is 20
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/giannozz/espresso/pseudo/Si.vbc.UPF
+   file type is 20
 
 
- internal stress tensor calculated
- cell parameters dynamics with nose` temp. control:
- cell temperature required =  300.00000(kelvin) nose` mass =  10000.049
- external pressure =   1.0000000(gpa)
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       0   reset_counters 
+   Number of MD Steps =      10
+   Print out every           10 MD Steps
+   Reads from unit    =      92
+   Writes to unit     =      93
+   MD Simulation time step            =      12.00
+   Electronic fictitious mass (emass) =     700.00
+   emass cut-off                      =       3.00
 
-
- modified kinetic energy functional, with parameters:
- agg = 150.0000  sgg =  2.0000  e0gg =  16.00
- iprsta =  1
-
+   Simulation Cell Parameters (from input)
+   external pressure       =            1.00 [GPa]
+   wmass (calculated)      =        49868.29 [AU]
+   ibrav =    8
+   alat  =     9.28990000
+   a1    =     9.28990000    0.00000000    0.00000000
+   a2    =     0.00000000   16.09066419    0.00000000
+   a3    =     0.00000000    0.00000000   10.21470954
  
- unit vectors of full simulation cell
- in real space:                         in reciprocal space:
-    9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
-    0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
-    0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
- Proc  planes cols    G   planes cols    G    columns  G
-       (dense grid)     (smooth grid)   (wavefct grid)
-  1     40   1783  47285   30    951  18431  239   2305
-  0     40   1783  47285   30    951  18431  239   2305
+   b1    =     0.10764379    0.00000000    0.00000000
+   b2    =     0.00000000    0.06214784    0.00000000
+   b3    =     0.00000000    0.00000000    0.09789804
+   omega =  1526.90153773
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   20.0 Ryd.,    Ecutrho =  150.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
+   modified kinetic energy functional, with parameters:
+   ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
+   NOTA BENE: refg, mmx =   0.030000  5001
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  30
+   Electron dynamics with newton equations
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electron =    96, of States =    48
+   Occupation numbers :
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+   2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: PERDEW AND ZUNGER                                           
+     Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for    54 degrees of freedom
+   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =   12 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   1.00 (a.u.)
+        3.188294    14.832370     1.228830
+        7.832315     6.787040     1.228830
+        2.074435     5.995380     4.737583
+        6.720314    14.042319     4.737583
+        3.963071    11.269898     7.878606
+        8.608021     3.222959     7.878606
+        3.963071     4.819153     9.146251
+        8.608021    12.864483     9.146251
+        3.187365     1.256681     5.580296
+        7.833244     9.302011     5.580296
+        2.075364    10.092062     2.073586
+        6.719385     2.046732     2.073586
+   Species   2 atoms =    6 mass =     51040.92 (a.u.),        28.00 (uma) rcmax =   1.00 (a.u.)
+        0.288916     8.045330     3.404563
+        4.933866     0.000000     3.404563
+        2.133890    12.277174    -0.041880
+        6.778840     4.231844    -0.041880
+        2.133890     3.813486     6.852027
+        6.778840    11.858816     6.852027
+
+   All atoms are allowed to move
+   Ionic temperature control via nose thermostat
+
+
+   ion dynamics with nose` temperature control:
+   temperature required      =  300.00000 (kelvin) 
+   NH chain length           =   1
+   active degrees of freedom =  54
+   time steps per nose osc.  =   516
+
+
+   nose` frequency(es)       =       6.667
+
+
+   nose` mass(es)            =  100013.420
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Volume dynamics with newton equations
+   cell parameters dynamics with nose` temp. control
+   Constant PRESSURE Molecular dynamics:
+   External pressure (GPa) =        1.00
+   Volume mass             =    49868.29
+
+
+   cell dynamics with nose` temperature control:
+   Kinetic energy required   =  300.00000 (Kelvin) 
+   time steps per nose osc.  =   400
+   nose` frequency           =      8.607 (THz) 
+   nose` mass(es)            =   10000.049
+
+   Verbosity: iprsta =  1
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1     9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
+   3     0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
  
- ggen:  # of g vectors < gcut   ng=  23643
- ggen:  # of g vectors < gcuts ngs=   9216
- ggen:  # of g vectors < gcutw ngw=   1153
- ggen:  # of g shells  < gcut  ngl=   6537
+   Stick Mesh
+   ----------
+   nst =   892,  nstw =   120, nsts =   476
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1    1783     239     951   47285    2305   18431
+          0    1783     239     951   47285    2305   18431
  
  
- unit vectors of box grid cell
- in real space:                         in reciprocal space:
-    3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
-    0.0000    4.0227    0.0000              0.0000    0.9238    0.0000
-    0.0000    0.0000    4.0859              0.0000    0.0000    0.9095
+   Real Mesh Report 
+   ---------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    40    64    40      40    64    40       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     40    64    40
+   Local number of cell to store the grid ( nnrx ) =  *****
+   Number of x-y planes for each processors: 
+   nr3l =    40
  
- ggenb: # of gb vectors < gcutb ngb =    948
- ggenb: # of gb shells  < gcutb ngbl=    312
- initialization 
+   Smooth Real Mesh Report 
+   ----------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    27    45    30      27    45    30       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    45    30
+   Local number of cell to store the grid ( nnrx ) =  36450
+   Number of x-y planes for each processors: 
+   nr3sl =    30
+ 
+   Small Box Real Mesh Report 
+   -------------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    16    16    16      16    16    16       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     16    16    16
+   Local number of cell to store the grid ( nnrx ) =   4096
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh Number of G               Small Mesh Number of G
+   PE       Global       Local   Max Local       Global       Local   Max Local
+    1        23643       23643       23643         1153        1153        1153
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    4.0227    0.0000              0.0000    0.9238    0.0000
+       0.0000    0.0000    4.0859              0.0000    0.0000    0.9095
 
- ibrav=  8 alat=  9.290 omega= 1526.9015
- gcut=  327.91    gcuts=  174.88 gcutw=   43.72
- k-points: nkpt= 1
+                Small box Mesh Number of G
+   PE       Global       Local   Max Local
+    1          948         948         948
+
+   Simulation dimensions initialization completed
 
 
- meshes:
-  dense grid: nr1 ,nr2, nr3  =   40  64  40  nr1x, nr2x, nr3x =   40  64  40
- smooth grid: nr1s,nr2s,nr3s =   27  45  30  nr1sx,nr2sx,nr3sx=   27  45  30
-    box grid: nr1b,nr2b,nr3b =   16  16  16  nr1bx,nr2bx,nr3bx=   16  16  16
-
- exchange-correlation potential:  SLA  PZ   NOGX NOGC
-
- ecutw=   20.0 ryd    ecuts=   80.0 ryd    ecut=  150.0 ryd
-
- # of electrons=   96 # of states=   48
-
-
- nspin= 1
- occupation numbers:
- 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
- 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
- 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
-
- # of atomic species    2
- is=  1
-  na=  12  atomic mass= 16.00 gaussian rcmax=  1.00
- atomic coordinates:
-       3.19  14.83   1.23
-       7.83   6.79   1.23
-       2.07   6.00   4.74
-       6.72  14.04   4.74
-       3.96  11.27   7.88
-       8.61   3.22   7.88
-       3.96   4.82   9.15
-       8.61  12.86   9.15
-       3.19   1.26   5.58
-       7.83   9.30   5.58
-       2.08  10.09   2.07
-       6.72   2.05   2.07
- is=  2
-  na=   6  atomic mass= 28.00 gaussian rcmax=  1.00
- atomic coordinates:
-       0.29   8.05   3.40
-       4.93   0.00   3.40
-       2.13  12.28  -0.04
-       6.78   4.23  -0.04
-       2.13   3.81   6.85
-       6.78  11.86   6.85
-    NOTA BENE: refg, mmx =   3.000000000000000E-002        5001
-
-   READING FROM RESTART FILE ...
- ### reading from file  92 only h  ##
  ibrav =    8       cell parameters 
 
        9.28990       0.00000       0.00000
        0.00000      16.09066       0.00000
        0.00000       0.00000      10.21471
  
-  out from init
-  nlinit  nh(is),ngb,is,kkbeta,lmaxq =            8         948           1
-         865           5
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8         948           1
+         865           3
  
                         qqq 
   -0.0987   0.4865   0.0000   0.0000
@@ -135,7 +229,11 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
    0.0000   0.0000   0.2330   0.2950
    0.0000   0.0000   0.2950   0.3737
  
-   betagx  
+
+
+   Common initialization
+
+   Specie:     1
    1  indv=  1   ang. mom=  0
    2  indv=  2   ang. mom=  0
    3  indv=  3   ang. mom=  1
@@ -150,7 +248,8 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
   -1.2813   2.3075   0.0000   0.0000
    0.0000   0.0000   0.6338   0.8752
    0.0000   0.0000   0.8752   1.2039
-   betagx  
+
+   Specie:     2
    1  indv=  1   ang. mom=  0
    2  indv=  2   ang. mom=  1
    3  indv=  2   ang. mom=  1
@@ -159,10 +258,6 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
                         dion 
    0.7619   0.0000
    0.0000   1.8417
-  out from nlinit
-
-   READING FROM RESTART FILE ...
- ## reading from file  92
   formf: eself= 210.64152
   formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
   formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
@@ -180,13 +275,13 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
 
 
                 total energy =     -211.98238 a.u.
-              kinetic energy =       94.60073 a.u.
-        electrostatic energy =     -198.25264 a.u.
+              kinetic energy =       94.60094 a.u.
+        electrostatic energy =     -198.25263 a.u.
                          esr =        0.42692 a.u.
                        eself =      210.64152 a.u.
-      pseudopotential energy =      -96.26637 a.u.
-  n-l pseudopotential energy =       36.46553 a.u.
- exchange-correlation energy =      -48.52963 a.u.
+      pseudopotential energy =      -96.26674 a.u.
+  n-l pseudopotential energy =       36.46572 a.u.
+ exchange-correlation energy =      -48.52967 a.u.
            average potential =       -0.53150 a.u.
 
 
@@ -198,9 +293,9 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
 
  
  derivative of e(tot)
-      0.08522     -0.00001      0.00002
-     -0.00001      0.07374      0.00341
-      0.00002      0.00217      0.15898
+      0.08520     -0.00001      0.00003
+     -0.00002      0.07371      0.00341
+      0.00004      0.00217      0.15891
 
 
  
@@ -209,175 +304,185 @@ reading ppot for species #  2 from file /clx/usercin/acv0/Sources/O-sesame/pseud
  eigenvalues at k-point:  0.000 0.000 0.000
   -23.66  -23.19  -22.79  -22.33  -22.27  -22.24  -21.79  -21.78  -21.76  -21.74
   -21.71  -21.71  -11.61  -11.55  -11.39  -10.72   -9.14   -8.68   -8.68   -8.65
-   -8.63   -8.44   -8.40   -7.73   -6.23   -6.09   -6.07   -6.00   -5.94   -5.68
-   -5.63   -5.24   -5.18   -4.79   -4.77   -4.40   -4.37   -4.34   -4.17   -4.02
-   -3.99   -3.96   -3.67   -3.62   -3.25   -3.24   -3.17   -2.98
+   -8.63   -8.43   -8.39   -7.73   -6.23   -6.09   -6.06   -5.99   -5.94   -5.68
+   -5.63   -5.23   -5.18   -4.79   -4.77   -4.40   -4.37   -4.34   -4.16   -4.02
+   -3.99   -3.96   -3.67   -3.62   -3.25   -3.24   -3.16   -2.98
  
  
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    1  0.00001  184.1    6.1  -211.98238  -211.93048  -211.92733  -211.92732  0.0000  0.0000  0.0000  0.0000
-    2  0.00018  720.5   23.4  -211.98208  -211.93012  -211.91785  -211.91768  0.0000  0.0000  0.0000 -0.0001
-    3  0.00094  686.6   20.9  -211.98179  -211.92977  -211.91819  -211.91725  0.0000  0.0001  0.0000 -0.0002
-    4  0.00171  655.4   19.0  -211.98203  -211.92995  -211.91898  -211.91726  0.0000  0.0003  0.0000 -0.0004
-    5  0.00154  639.0   19.1  -211.98219  -211.93004  -211.91930  -211.91775  0.0000  0.0006  0.0000 -0.0007
-    6  0.00076  639.9   21.8  -211.98190  -211.92970  -211.91872  -211.91794  0.0000  0.0009  0.0000 -0.0010
-    7  0.00028  650.2   26.0  -211.98182  -211.92956  -211.91807  -211.91776  0.0000  0.0013  0.0000 -0.0015
-    8  0.00016  655.9   29.9  -211.98207  -211.92975  -211.91785  -211.91766  0.0000  0.0017  0.0000 -0.0019
-    9  0.00019  646.4   31.3  -211.98207  -211.92968  -211.91779  -211.91756  0.0000  0.0022  0.0000 -0.0025
+    1  0.00001  240.2    7.9  -211.98238  -211.93048  -211.92638  -211.92637  0.0000  0.0000  0.0000  0.0000
+    2  0.00023  940.9   30.1  -211.98197  -211.93000  -211.91402  -211.91379  0.0000  0.0000  0.0000 -0.0001
+    3  0.00121  898.1   26.8  -211.98162  -211.92957  -211.91448  -211.91327  0.0000  0.0002  0.0000 -0.0002
+    4  0.00221  858.7   24.3  -211.98197  -211.92986  -211.91555  -211.91333  0.0000  0.0004  0.0000 -0.0004
+    5  0.00198  838.0   24.3  -211.98217  -211.92998  -211.91596  -211.91396  0.0000  0.0008  0.0000 -0.0007
+    6  0.00098  839.9   27.6  -211.98180  -211.92955  -211.91522  -211.91421  0.0000  0.0012  0.0000 -0.0010
+    7  0.00035  853.7   33.0  -211.98168  -211.92937  -211.91438  -211.91398  0.0000  0.0018  0.0000 -0.0014
+    8  0.00019  861.3   37.7  -211.98200  -211.92962  -211.91412  -211.91386  0.0001  0.0024  0.0000 -0.0019
+    9  0.00024  849.0   39.3  -211.98197  -211.92952  -211.91406  -211.91374  0.0001  0.0031  0.0000 -0.0025
 
 
-                total energy =     -211.98182 a.u.
-              kinetic energy =       94.34282 a.u.
-        electrostatic energy =     -198.25048 a.u.
-                         esr =        0.40534 a.u.
+                total energy =     -211.98163 a.u.
+              kinetic energy =       94.30847 a.u.
+        electrostatic energy =     -198.24958 a.u.
+                         esr =        0.40273 a.u.
                        eself =      210.64152 a.u.
-      pseudopotential energy =      -95.97609 a.u.
-  n-l pseudopotential energy =       36.33388 a.u.
- exchange-correlation energy =      -48.43194 a.u.
-           average potential =       -0.52830 a.u.
+      pseudopotential energy =      -95.93813 a.u.
+  n-l pseudopotential energy =       36.31662 a.u.
+ exchange-correlation energy =      -48.41901 a.u.
+           average potential =       -0.52782 a.u.
 
 
  cell parameters h
-      9.33949     -0.00009      0.00000
-     -0.00015     16.11667     -0.00046
-      0.00000     -0.00029     10.25047
+      9.34597      0.00010     -0.00012
+      0.00017     16.12074     -0.00048
+     -0.00013     -0.00030     10.25646
 
 
  
  derivative of e(tot)
-      0.12913     -0.00013      0.00032
-     -0.00023      0.08667      0.00310
-      0.00035      0.00197      0.17547
+      0.13441     -0.00003      0.00070
+     -0.00004      0.08851      0.00304
+      0.00077      0.00194      0.17763
 
 
  
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -23.63  -23.16  -22.79  -22.34  -22.29  -22.22  -21.81  -21.77  -21.76  -21.75
-  -21.74  -21.71  -11.63  -11.55  -11.38  -10.74   -9.16   -8.71   -8.68   -8.65
+  -23.63  -23.15  -22.80  -22.34  -22.29  -22.22  -21.82  -21.77  -21.76  -21.75
+  -21.75  -21.72  -11.63  -11.55  -11.38  -10.74   -9.17   -8.72   -8.68   -8.65
    -8.63   -8.43   -8.38   -7.73   -6.26   -6.13   -6.09   -6.00   -5.98   -5.69
-   -5.66   -5.24   -5.23   -4.83   -4.81   -4.43   -4.39   -4.37   -4.23   -4.06
-   -4.05   -4.03   -3.70   -3.69   -3.30   -3.29   -3.22   -3.04
+   -5.66   -5.25   -5.23   -4.83   -4.81   -4.44   -4.40   -4.37   -4.24   -4.06
+   -4.05   -4.03   -3.71   -3.70   -3.31   -3.30   -3.23   -3.05
  
  
-   10  0.00061  621.7   30.3  -211.98182  -211.92937  -211.91792  -211.91725  0.0000  0.0027 -0.0001 -0.0031
+   10  0.00079  816.6   37.8  -211.98163  -211.92911  -211.91424  -211.91334  0.0001  0.0039 -0.0001 -0.0031
 
    Cell Variables (AU)
 
-   STEP:     10   0.019109
-    9.33949285   -0.00008888   -0.00000364
-   -0.00015396   16.11667386   -0.00046060
-   -0.00000400   -0.00029260   10.25046945
+   STEP:     10   0.019835
+    9.34596622    0.00009983   -0.00012088
+    0.00017292   16.12073543   -0.00047881
+   -0.00013294   -0.00030418   10.25645888
 
    Total Stress (GPa)
 
-   STEP:     10   0.019109
-       -2.43907260         0.03621652        -0.06636355
-        0.03621652        -6.09604969        -0.61432880
-       -0.06636359        -0.61432874       -13.71803528
+   STEP:     10   0.019835
+       -3.41517287        -0.00533499        -0.14156829
+       -0.00533499        -6.65594711        -0.59632060
+       -0.14156829        -0.59632063       -14.13117613
 
    Atomic Positions (AU)
 
-   STEP:     10   0.019109
-  0.319814E+01  0.148664E+02  0.122968E+01
-  0.786874E+01  0.680381E+01  0.122622E+01
-  0.209818E+01  0.600844E+01  0.474836E+01
-  0.677025E+01  0.140638E+02  0.474963E+01
-  0.398097E+01  0.112774E+02  0.790116E+01
-  0.865236E+01  0.321953E+01  0.790228E+01
-  0.397662E+01  0.483194E+01  0.918453E+01
-  0.864724E+01  0.128955E+02  0.918568E+01
-  0.319960E+01  0.125174E+01  0.560365E+01
-  0.787200E+01  0.930748E+01  0.560343E+01
-  0.209596E+01  0.101079E+02  0.208188E+01
-  0.676277E+01  0.205257E+01  0.208666E+01
-  0.289881E+00  0.805786E+01  0.341632E+01
-  0.495970E+01 -0.572493E-03  0.341655E+01
-  0.214481E+01  0.122967E+02 -0.422220E-01
-  0.681457E+01  0.423818E+01 -0.421017E-01
-  0.214484E+01  0.381908E+01  0.687586E+01
-  0.681457E+01  0.118773E+02  0.687575E+01
+   STEP:     10   0.019835
+  0.320761E+01  0.148720E+02  0.122705E+01
+  0.787674E+01  0.680734E+01  0.122656E+01
+  0.209539E+01  0.600726E+01  0.475020E+01
+  0.677264E+01  0.140673E+02  0.474994E+01
+  0.398321E+01  0.112794E+02  0.790498E+01
+  0.865683E+01  0.322125E+01  0.790253E+01
+  0.397867E+01  0.484251E+01  0.919078E+01
+  0.865232E+01  0.128986E+02  0.920052E+01
+  0.320539E+01  0.125475E+01  0.560342E+01
+  0.787850E+01  0.930935E+01  0.560633E+01
+  0.209668E+01  0.101046E+02  0.208493E+01
+  0.676863E+01  0.204437E+01  0.208617E+01
+  0.289700E+00  0.806029E+01  0.341875E+01
+  0.496266E+01  0.187448E-05  0.341891E+01
+  0.214606E+01  0.123002E+02 -0.418149E-01
+  0.681893E+01  0.423987E+01 -0.417712E-01
+  0.214592E+01  0.382050E+01  0.688031E+01
+  0.681899E+01  0.118810E+02  0.688011E+01
 
    Atomic Velocities (AU)
 
-   STEP:     10   0.019109
- -0.673769E-04  0.105481E-03 -0.327602E-04
- -0.507384E-04  0.675035E-04 -0.660989E-04
-  0.126229E-03  0.382439E-04 -0.580486E-04
-  0.139042E-03 -0.384158E-05 -0.451617E-04
- -0.331973E-04 -0.109018E-03 -0.585252E-04
- -0.188012E-04 -0.889576E-04 -0.492968E-04
- -0.738550E-04  0.636650E-04  0.731476E-04
- -0.658071E-04  0.113825E-03  0.853169E-04
- -0.450509E-04 -0.735503E-04  0.391983E-04
- -0.293064E-04 -0.957547E-04  0.390379E-04
-  0.968673E-04 -0.688592E-05  0.155863E-04
-  0.778507E-04  0.220391E-04  0.594146E-04
- -0.662533E-05 -0.333638E-05 -0.446761E-06
- -0.625816E-05 -0.346895E-05  0.114911E-05
- -0.478310E-05 -0.330038E-05  0.342987E-06
- -0.524799E-05 -0.455863E-05 -0.182510E-06
- -0.471453E-05 -0.178486E-05 -0.119665E-05
- -0.428826E-05 -0.226450E-05 -0.700533E-06
+   STEP:     10   0.019835
+ -0.196971E-05  0.120948E-03 -0.648034E-04
+ -0.282363E-04  0.803476E-04 -0.690756E-04
+  0.862632E-04  0.114848E-04 -0.664560E-04
+  0.116953E-03 -0.777722E-05 -0.653218E-04
+ -0.387646E-04 -0.117051E-03 -0.655651E-04
+ -0.329722E-04 -0.834686E-04 -0.883844E-04
+ -0.795928E-04  0.149769E-03  0.818090E-04
+ -0.749967E-04  0.109801E-03  0.173939E-03
+ -0.117958E-04 -0.484401E-04  0.794063E-05
+ -0.203756E-04 -0.101142E-03  0.374835E-04
+  0.900155E-04 -0.603215E-04  0.321358E-04
+  0.897532E-04 -0.600144E-04  0.418992E-04
+ -0.108332E-04  0.312234E-07  0.394451E-05
+ -0.105150E-04  0.160743E-06  0.514270E-05
+ -0.794899E-05  0.173698E-06  0.530715E-05
+ -0.907575E-05 -0.127208E-05  0.437538E-05
+ -0.807773E-05  0.205383E-05  0.315767E-05
+ -0.742415E-05  0.220373E-05  0.344335E-05
 
    Atomic Forces (AU)
 
-   STEP:     10   0.019109
-  0.111303E-01 -0.815469E-02  0.307273E-02
-  0.859023E-02 -0.376741E-03  0.903653E-02
- -0.142475E-01 -0.283156E-02  0.497394E-02
- -0.169989E-01  0.407782E-02  0.254824E-02
-  0.258295E-02  0.866082E-02 -0.246311E-02
- -0.450050E-03  0.499554E-02 -0.389367E-02
-  0.981435E-02 -0.812602E-03 -0.207214E-04
-  0.791742E-02 -0.914758E-02 -0.205413E-02
-  0.801838E-02  0.186431E-02 -0.411056E-02
-  0.472346E-02  0.658885E-02 -0.351736E-02
- -0.946692E-02 -0.148941E-02  0.128502E-02
- -0.613870E-02 -0.658966E-02 -0.523089E-02
- -0.250638E-02 -0.285878E-03 -0.933174E-03
- -0.144014E-02 -0.134503E-02  0.103137E-02
- -0.136942E-02 -0.183635E-03 -0.160100E-02
- -0.214042E-02 -0.164317E-02 -0.214289E-02
- -0.129877E-02  0.153793E-02 -0.527210E-03
- -0.964006E-03  0.437203E-03  0.850332E-03
+   STEP:     10   0.019835
+ -0.254879E-03 -0.119422E-01  0.770658E-02
+  0.436595E-02 -0.406108E-02  0.927005E-02
+ -0.762736E-02  0.835773E-03  0.646670E-02
+ -0.125117E-01  0.305573E-02  0.809694E-02
+  0.302875E-02  0.102815E-01 -0.133090E-02
+  0.171313E-02  0.368142E-02  0.310074E-02
+  0.110686E-01 -0.155622E-01 -0.169880E-02
+  0.937841E-02 -0.909048E-02 -0.177453E-01
+  0.227552E-02 -0.177109E-02  0.200822E-02
+  0.289579E-02  0.879923E-02 -0.222701E-02
+ -0.700649E-02  0.901041E-02 -0.236771E-02
+ -0.685627E-02  0.899064E-02 -0.457706E-02
+ -0.308916E-02 -0.980921E-03 -0.227480E-04
+ -0.237930E-02 -0.182670E-02  0.174033E-02
+ -0.443091E-03 -0.793756E-03 -0.289797E-03
+ -0.218881E-02 -0.298274E-02 -0.108311E-02
+ -0.400183E-03  0.762009E-03  0.882857E-03
+  0.508088E-03  0.134643E-02  0.136042E-02
 
 
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
-       0.00064      94.49025    -342.88982    -211.98202      22.8
-     initialize   :    14.76s CPU
-     total_time   :    37.67s CPU (      10 calls,   3.767 s avg)
-     formf        :    27.07s CPU (      11 calls,   2.461 s avg)
-     rhoofr       :     3.91s CPU (      10 calls,   0.391 s avg)
-     vofrho       :     1.43s CPU (      10 calls,   0.143 s avg)
-     dforce       :     2.41s CPU (     240 calls,   0.010 s avg)
-     calphi       :     0.07s CPU (      10 calls,   0.007 s avg)
-     ortho        :     0.47s CPU (      10 calls,   0.047 s avg)
-     updatc       :     0.04s CPU (      10 calls,   0.004 s avg)
-     newd         :     1.03s CPU (      10 calls,   0.103 s avg)
-     calbec       :     0.11s CPU (      11 calls,   0.010 s avg)
-     prefor       :     0.02s CPU (      20 calls,   0.001 s avg)
-     strucf       :     0.04s CPU (      11 calls,   0.004 s avg)
-     nlfl         :     0.01s CPU (      10 calls,   0.001 s avg)
-     nlfq         :     0.64s CPU (      10 calls,   0.064 s avg)
-     rhov         :     0.22s CPU (      10 calls,   0.022 s avg)
-     nlsm1        :     0.41s CPU (      31 calls,   0.013 s avg)
-     nlsm2        :     0.62s CPU (      10 calls,   0.062 s avg)
-     fft          :     1.44s CPU (     130 calls,   0.011 s avg)
-     ffts         :     0.07s CPU (      20 calls,   0.004 s avg)
-     fftw         :     2.51s CPU (     720 calls,   0.003 s avg)
-     fftb         :     0.43s CPU (    2940 calls,   0.000 s avg)
-     rsg          :     0.02s CPU (      10 calls,   0.002 s avg)
-     setfftpara   :     0.00s CPU
+       0.00082      94.47551    -342.86881    -211.98192      28.9
+     initialize   :    15.44s CPU
+     total_time   :    49.83s CPU (      10 calls,   4.983 s avg)
+     formf        :    24.12s CPU (      11 calls,   2.193 s avg)
+     rhoofr       :    10.43s CPU (      10 calls,   1.043 s avg)
+     vofrho       :     3.02s CPU (      10 calls,   0.302 s avg)
+     dforce       :     3.96s CPU (     240 calls,   0.017 s avg)
+     calphi       :     0.18s CPU (      10 calls,   0.018 s avg)
+     ortho        :     0.72s CPU (      10 calls,   0.072 s avg)
+     updatc       :     0.10s CPU (      10 calls,   0.010 s avg)
+     newd         :     2.93s CPU (      10 calls,   0.293 s avg)
+     calbec       :     0.13s CPU (      11 calls,   0.012 s avg)
+     prefor       :     0.12s CPU (      20 calls,   0.006 s avg)
+     strucf       :     0.07s CPU (      11 calls,   0.006 s avg)
+     nlfl         :     0.04s CPU (      10 calls,   0.004 s avg)
+     nlfq         :     1.00s CPU (      10 calls,   0.100 s avg)
+     rhov         :     0.74s CPU (      10 calls,   0.074 s avg)
+     nlsm1        :     0.56s CPU (      31 calls,   0.018 s avg)
+     nlsm2        :     0.99s CPU (      10 calls,   0.099 s avg)
+     fft          :     6.52s CPU (     130 calls,   0.050 s avg)
+     ffts         :     0.21s CPU (      20 calls,   0.011 s avg)
+     fftw         :     3.60s CPU (     720 calls,   0.005 s avg)
+     fftb         :     2.22s CPU (    2940 calls,   0.001 s avg)
+     rsg          :     0.01s CPU (      10 calls,   0.001 s avg)
+ Creating dir : RESTART93
+ Creating dir : RESTART93/K00001
+ Opening file restart.xml
 
 
 ====================== end cprvan ======================
 
 
-     CP           :    52.50s CPU time
+ 
+     CP90         :  1m 5.43s CPU time
 
+ 
+   This run was terminated on:  13:58:36   3Jun2005            
+
+=------------------------------------------------------------------------------=
+   ELAPSED SECONDS:    69.0
+   JOB DONE.
+=------------------------------------------------------------------------------=
 
    MEMORY STATISTICS FROM PE(1) : 
