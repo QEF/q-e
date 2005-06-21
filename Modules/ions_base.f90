@@ -45,6 +45,7 @@
       REAL(dbl), ALLOCATABLE :: tau_srt(:,:)  !  tau sorted by specie in bohr
       REAL(dbl), ALLOCATABLE :: vel_srt(:,:)  !  vel sorted by specie in bohr
       INTEGER,   ALLOCATABLE :: ind_srt( : )  !  index of tau sorted by specie
+      INTEGER,   ALLOCATABLE :: ind_bck( : )  !  reverse of ind_srt
       CHARACTER(LEN=3  ) :: atm( ntypx ) 
       CHARACTER(LEN=80 ) :: tau_units
 
@@ -227,6 +228,7 @@
       ALLOCATE( tau_srt( 3, nat ) )
       ALLOCATE( vel_srt( 3, nat ) )
       ALLOCATE( ind_srt( nat ) )
+      ALLOCATE( ind_bck( nat ) )
       ALLOCATE( if_pos( 3, nat ) )
       ALLOCATE( iforce( 3, nat ) )
       ALLOCATE( taui( 3, nat ) )
@@ -309,6 +311,11 @@
         vel_srt( :, ia ) = vel( :, ind_srt( ia ) )
       END DO
 
+! ... generate ind_bck from ind_srt (reverse sort list)
+      DO ia = 1, nat
+         ind_bck(ind_srt(ia)) = ia
+      END DO
+
       IF( tdebug ) THEN
         WRITE( stdout, * ) 'ions_base_init: unsorted position and velocities'
         DO ia = 1, nat
@@ -376,6 +383,7 @@
       IF ( ALLOCATED( tau_srt ) ) DEALLOCATE( tau_srt )
       IF ( ALLOCATED( vel_srt ) ) DEALLOCATE( vel_srt )
       IF ( ALLOCATED( ind_srt ) ) DEALLOCATE( ind_srt )
+      IF ( ALLOCATED( ind_bck ) ) DEALLOCATE( ind_bck )
       IF ( ALLOCATED( if_pos ) )  DEALLOCATE( if_pos )
       IF ( ALLOCATED( iforce ) )  DEALLOCATE( iforce )
       IF ( ALLOCATED( taui ) )    DEALLOCATE( taui )

@@ -122,6 +122,27 @@ CONTAINS
     RETURN
   END SUBROUTINE printout_pos
  
+  SUBROUTINE print_pos_in( iunit, nfi, tau, nat, simtime, ityp, atm, ind_bck , fact)
+    USE kinds
+    INTEGER :: iunit, nfi, nat, ityp( : ), ind_bck( : )
+    REAL(dbl) :: tau( :, : ), simtime, fact
+    CHARACTER(LEN=3) :: atm( : )
+    INTEGER :: ia, k
+    WRITE( iunit, 30 ) NFI, simtime
+!    IF( PRESENT( label ) ) THEN
+       DO ia = 1, nat
+         WRITE( iunit, 255 ) atm(ityp(ia)), (fact*tau(k,ind_bck(ia)),k = 1,3)
+       END DO
+!    ELSE
+!       DO ia = 1, nat
+!         WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)
+!       END DO
+!    END IF
+ 30 FORMAT(3X,'STEP:',I7,1X,F10.6)
+255 FORMAT(A3,2X,3(1X,E15.8))
+252 FORMAT(3E14.6)
+    RETURN
+  END SUBROUTINE print_pos_in
 
   SUBROUTINE printout_cell( iunit, nfi, h, simtime )
     USE kinds

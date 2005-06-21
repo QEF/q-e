@@ -95,7 +95,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
-                                       iforce, ions_shiftvar, ityp
+                                       iforce, ions_shiftvar, ityp, &
+                                       atm, ind_bck
   USE cell_base,                ONLY : ainv, a1, a2, a3, frich, greash, tpiba2
   USE cell_base,                ONLY : omega, alat, ibrav, celldm
   USE cell_base,                ONLY : h, hold, deth, wmass, press
@@ -140,7 +141,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE printout_base,            ONLY : printout_base_open, &
                                        printout_base_close, &
                                        printout_pos, printout_cell, &
-                                       printout_stress
+                                       printout_stress, print_pos_in
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
                                        qnh, cell_nosevel, cell_noseupd,  &
                                        cell_nose_nrg, cell_nose_shiftvar
@@ -198,7 +199,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   REAL(KIND=dbl) :: temps(nsx)
   REAL(KIND=dbl) :: ekinh, temphc, temp1, temp2, randy
   REAL(KIND=dbl) :: delta_etot
-  REAL(KIND=dbl) :: ftmp, enb, enbi
+  REAL(KIND=dbl) :: ftmp, enb, enbi, one, toang
   INTEGER        :: is, nacc, ia, j, iter, nfi, i, isa, ipos
   INTEGER        :: k, ii, l, m, ibeg
   !
@@ -248,6 +249,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
+  one = 1.0d0
+  toang = 0.5291772083
+
   tfirst   = .TRUE.
   tlast    = .FALSE.
   nacc     = 5
@@ -793,7 +797,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         WRITE( stdout,11)
         !
         CALL printout_pos( stdout, nfi, tau0, nat, tps )
+!         CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
         CALL printout_pos( 35    , nfi, tau0, nat, tps )
+         ! write out a standard XYZ file in angstroms
+!         WRITE( 35, '(I5)') nat
+!         CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,toang)
+
         !
         ALLOCATE( tauw( 3, natx ) )
         !
@@ -815,11 +824,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL printout_pos( stdout, nfi, tauw, nat, tps )
         CALL printout_pos( 34    , nfi, tauw, nat, tps )
+!        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
+!        CALL print_pos_in( 34    , nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
         !
         WRITE( stdout, 13 )
         !
         CALL printout_pos( stdout, nfi, fion, nat, tps )
         CALL printout_pos( 37    , nfi, fion, nat, tps )
+!        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,one)
+!        CALL print_pos_in( 37    , nfi, fion , nat, tps, ityp, atm,ind_bck,one)
         !
         DEALLOCATE( tauw )
         !
