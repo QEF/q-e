@@ -16,25 +16,9 @@ program vdb2upf
   !
   implicit none
   character(len=256) filein, fileout
-  logical exst
-  integer :: i, ilen, ierr
-  integer, external :: iargc  
   !
-  i = iargc ()  
-  if (i.eq.0) then  
-5    print '(''  Input PP file in formatted Vanderbilt format > '',$)'  
-     read (5, '(a)', end = 20, err = 20) filein
-     exst=filein.ne.' '
-     if (.not. exst) go to 5  
-     inquire (file=filein,exist=exst)
-     if(.not.exst) go to 5
-  elseif (i.eq.1) then  
-     call getarg(1, filein)  
-  else  
-     print '(''   usage: vdb2upf  [input file] '')'  
-     stop
-  end if
-
+  !
+  call get_file ( filein )
   open(unit=1,file=filein,status='old',form='formatted')
   call read_vdb(1)
   close (unit=1)

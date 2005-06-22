@@ -17,25 +17,9 @@ program cpmd2upf
   !
   implicit none
   character(len=256) filein, fileout
-  logical exst
-  integer :: i,ierr,ilen
-  integer, external :: iargc
   !
-  i = iargc ()  
-  if (i.eq.0) then  
-5    print '(''  input PP file in CPMD format > '',$)'  
-     read (5, '(a)', end = 20, err = 20) filein
-     exst=filein.ne.' '
-     if (.not. exst) go to 5  
-     inquire (file=filein,exist=exst)
-     if(.not.exst) go to 5
-  elseif (i.eq.1) then  
-     call getarg(1, filein)  
-  else  
-     print '(''   usage: cpmd2upf  [input file] '')'  
-     stop  
-  endif
-
+  !
+  call get_file ( filein )
   open (unit = 1, file = filein, status = 'old', form = 'formatted')
   call read_cpmd(1)
   close (1)
