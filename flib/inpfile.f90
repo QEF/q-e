@@ -60,7 +60,7 @@ SUBROUTINE get_file( input_file )
   !
   CHARACTER (LEN=256)  :: prgname
   ! do not define iargc as external: g95 does not like it
-  INTEGER             :: nargs, ierr, iargc
+  INTEGER             :: nargs, iargc
   LOGICAL             :: exst
   !
   nargs = iargc()
@@ -80,6 +80,7 @@ SUBROUTINE get_file( input_file )
   ELSE
      CALL errore( TRIM(prgname), 'too many arguments' , nargs )
   END IF
+  RETURN
 20 CALL errore( TRIM(prgname), 'reading file name' , 1 )
   !
 END SUBROUTINE get_file
