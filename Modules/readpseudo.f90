@@ -245,12 +245,13 @@ subroutine read_pseudo_mesh (upf, iunps)
   read (iunps, *, err = 100, iostat = ios) (upf%r(ir), ir=1,upf%mesh )
   call scan_end (iunps, "R")  
   call scan_begin (iunps, "RAB", .false.)  
-  read (iunps, *, err = 100, iostat = ios) (upf%rab(ir), ir=1,upf%mesh )
+  read (iunps, *, err = 101, iostat = ios) (upf%rab(ir), ir=1,upf%mesh )
   call scan_end (iunps, "RAB")  
 
   return  
 
-100 call errore ('read_pseudo_mesh', 'Reading pseudo file', abs (ios) )  
+100 call errore ('read_pseudo_mesh', 'Reading pseudo file (R) for '//upf%psd, abs (ios) )  
+101 call errore ('read_pseudo_mesh', 'Reading pseudo file (RAB) for '//upf%psd, abs (ios) )  
 end subroutine read_pseudo_mesh
 
 

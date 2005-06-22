@@ -267,7 +267,7 @@
          '.X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.',/, &
          3(1X,I5),2X,3(1X,I5),2X,3(1X,I5) )
 1010  FORMAT(3X, 'Array leading dimensions ( nr1x, nr2x, nr3x )   = ', 3(1X,I5) )
-1020  FORMAT(3X, 'Local number of cell to store the grid ( nnrx ) = ', 1X, I5 )
+1020  FORMAT(3X, 'Local number of cell to store the grid ( nnrx ) = ', 1X, I9 )
 
       RETURN
       END SUBROUTINE realspace_grids_para
