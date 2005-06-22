@@ -18,7 +18,8 @@ SUBROUTINE input_from_file( )
   !
   INTEGER             :: unit = 5, &
                          ilen, iiarg, nargs, ierr
-  INTEGER, EXTERNAL   :: iargc
+  ! do not define iargc as external: g95 does not like it
+  INTEGER             :: iargc
   CHARACTER (LEN=80)  :: input_file
   !
   ! ... Input from file ?
@@ -46,3 +47,39 @@ SUBROUTINE input_from_file( )
   END DO
 
 END SUBROUTINE input_from_file
+!
+!----------------------------------------------------------------------------
+SUBROUTINE get_file( input_file )
+  !
+  ! This subroutine reads, either from command line or from terminal,
+  ! the name of a file to be opened
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER (LEN=*)  :: input_file
+  !
+  CHARACTER (LEN=256)  :: prgname
+  ! do not define iargc as external: g95 does not like it
+  INTEGER             :: nargs, ierr, iargc
+  LOGICAL             :: exst
+  !
+  nargs = iargc()
+  CALL getarg (0,prgname)
+  !
+  IF ( nargs == 0 ) THEN
+10   PRINT  '("Input file > ",$)'
+     READ (5,'(a)', end = 20, err=20) input_file
+     IF ( input_file == ' ') GO TO 10
+     INQUIRE ( FILE = input_file, EXIST = exst )
+     IF ( .NOT. exst) THEN
+        PRINT  '(A,": file not found")', TRIM(input_file)
+        GO TO 10
+     END IF
+  ELSE IF ( nargs == 1 ) then
+     CALL getarg (1,input_file)
+  ELSE
+     CALL errore( TRIM(prgname), 'too many arguments' , nargs )
+  END IF
+20 CALL errore( TRIM(prgname), 'reading file name' , 1 )
+  !
+END SUBROUTINE get_file

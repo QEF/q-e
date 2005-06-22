@@ -33,25 +33,11 @@ program plotrho
   real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
   real(kind=DP) :: at (3, 3), a0
   character (len=256) :: filename, fileout, ans * 1
-  integer, external :: iargc
   logical :: logarithmic_scale
 
 
-  i = iargc ()
-  if (i == 0) then
-     WRITE( stdout, '("input file > ",$)')
-     read (5, '(a)', end = 20, err = 20) filename
-  elseif (i == 1) then
-     call getarg(1, filename)
-  else
-     WRITE( stdout, '("usage: plotrho  [input file] ")')
-  endif
-  open (unit = 1, file = filename, form = 'formatted', status = &
-       'old', iostat = i)
-  if (i /= 0) then
-     WRITE( stdout, '("Error: file not found ")')
-     stop
-  endif
+  call get_file ( filename )
+  open (unit = 1, file = filename, form = 'formatted', status = 'old')
 
   read (1, * ) nxi, nyi
   if (nxi > nximax .or. nyi > nyimax) then

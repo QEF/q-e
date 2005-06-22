@@ -15,9 +15,8 @@ program read_bands
   real :: k1(3), k2(3), xk1, xk2, ps
   integer, allocatable :: npoints(:)
   integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl, ierr, ilen
-  integer, external :: iargc
   logical, allocatable :: high_symmetry(:), is_in_range(:)
-  character(len=256) :: filename, prgname
+  character(len=256) :: filename
   namelist /plot/ nks, nbnd
   integer :: n_interp, init
   real, allocatable :: k_interp(:), e_interp(:), coef_interp(:,:)
@@ -27,17 +26,7 @@ program read_bands
                      x0=2.0*cm, y0=2.0*cm
 
 
-  i=iargc()
-  call getarg(0,prgname)
-  if (i==0) then
-10   print '("input file > ",$)'
-     read(5,'(a)',end=10,err=10)  filename
-  else if(i==1) then
-     call getarg(1,filename)
-  else
-     print '("usage:",a20," [input file] ")',prgname
-  end if
-
+  call get_file ( filename )
   open(unit=1,file=filename,form='formatted')
   read (1, plot, iostat=ios)
   !

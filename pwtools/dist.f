@@ -30,7 +30,7 @@
       parameter (nspx=6, ndistx=1000, nax=200, nnx=4)
       integer nat, ibrav, nsp, ityp(nax)
       integer nsp1, nsp2, nat0, na, nb, n, nd, nn, nn1, nn2, nn3
-      integer iout, i, iargc
+      integer iout, i
       integer atom1(ndistx), atom2(ndistx), index(ndistx), ndist
       character*3 atm(nspx), atm1, atm2
       character*80 filename, line
@@ -41,25 +41,11 @@
       real*8 fact, pi
       parameter (fact=0.529177d0, pi=3.141592653589793d0)
       logical crys, matches
-      external capital, matches, iargc
+      external capital, matches
 !
 !
-      i=iargc()
-      if (i.eq.0) then
-         print '(''input file > '',$)'
-         read(5,'(a)',end=20,err=20)  filename
-      else if(i.eq.1) then
-         call getarg(1,filename)
-!!! T3E: replace the above line with
-!!!         call pxfgetarg(1,filename,n,i)
-      else
-         print '(''   usage: dist  [input file] '')'
-      end if
-      open(unit=1,file=filename,form='formatted',status='old',iostat=i)
-      if (i.ne.0) then
-         print '(''   file not found '')'
-         stop
-      end if
+      call get_file ( filename ) 
+      open(unit=1,file=filename,form='formatted',status='old')
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Begin data reading
       read(1,*) nat, ibrav, celldm
       if (nat.le.0.or.nat.gt.nax) stop ' nat!'
