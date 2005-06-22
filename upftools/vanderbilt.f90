@@ -17,7 +17,7 @@ module Vanderbilt
        mesh_, iver(3), idmy(3), nnlz, ifqopt, nqf_, irel,  npf, &
        nlc, lloc
   real(kind=8) ::  z_, zp_, exfact, etot, eloc, rcloc_, rpcor, &
-       qtryc, ptryc
+       qtryc, ptryc, rinner1_
   real(kind=8), allocatable::  wwnlps(:), eeps(:), rinner_(:), rc(:), &
        beta(:,:), ddd0(:,:), ddd(:,:), qqq_(:,:), eee(:), rho_atc_(:), &
        r_(:), rab_(:), rho_at_(:), qfunc_(:,:,:), vloc(:), vloc_(:), &
@@ -61,6 +61,7 @@ subroutine read_uspp(iunit)
 
   allocate(rinner_(2*nang-1))
   rinner_(1) = rinner1
+  rinner1_ = rinner1
   if (10*iver(1)+iver(2).ge.51) &
        read (iunit) (rinner_(i),i=1,nang*2-1)
 
@@ -257,8 +258,8 @@ subroutine convert_uspp
   do i=1, nwfs
      nns (i)  = nnlzps(i)/100
      lchi(i)  = mod (nnlzps(i)/10,10)
-     rcut(i)  = 10.0
-     rcutus(i)=  rc(lchi(i)+1)
+     rcut(i)  = rinner1_
+     rcutus(i)= rc(lchi(i)+1) 
      oc (i) = wwnlps(i)
      write(els(i),'(i1,a1)') nns(i), convel(lchi(i))
      epseu(i) = eeps(i)
