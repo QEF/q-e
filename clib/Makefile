@@ -4,7 +4,6 @@ include ../make.sys
 
 OBJS = \
 c_mkdir.o \
-cpflush.o \
 cptimer.o \
 fft_stick.o \
 indici.o \
