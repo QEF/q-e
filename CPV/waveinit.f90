@@ -45,7 +45,7 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE wave_functions, ONLY: gram, dft_kinetic_energy, wave_rand_init
+      USE wave_functions, ONLY: gram, wave_rand_init
       USE wave_types, ONLY: wave_descriptor
       USE mp, ONLY: mp_sum
       USE mp_wave, ONLY: splitwf

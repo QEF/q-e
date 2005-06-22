@@ -181,7 +181,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
           atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
@@ -596,7 +596,7 @@
         CALL fixwave( cp, cdesc, gkmask_l )
         CALL gram( cp, cdesc )
 
-        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
             atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
 
         cgenergy = edft%etot

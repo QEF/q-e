@@ -424,7 +424,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) ' Allocation begun, smpm = ', smpm
   !
-  call cpflush()
+  call flush_unit( stdout )
   !
   DO sm_k=1,smpm
      allocate(rep_el(sm_k)%c0(ngw,nx))
@@ -496,7 +496,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   WRITE( stdout,*) ' Allocation ended '
   !
-  call cpflush()
+  call flush_unit( stdout )
   !
 
 666 continue
@@ -895,7 +895,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              & (((rep(j)%tau0(i,ia),i=1,3),ia=1,SUM(na(1:nsp))),j=0,sm_p)
      ENDIF
      !
-     call cpflush()
+     call flush_unit( stdout )
      !
   ENDIF
   !
@@ -1401,7 +1401,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
              & 1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5,1x,f8.5)
         !
 #if defined (FLUSH) 
-        call flush( sm_file )
+        call flush_unit( sm_file )
 #endif
         !
         ! 
@@ -1425,7 +1425,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
               ENDIF
               !
 #if defined (FLUSH) 
-              call flush( unico )
+              call flush_unit( unico )
 #endif
 3340          format(9(1x,f9.5))
            endif
@@ -1607,7 +1607,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      !
      !
 #if defined (FLUSH)
-     call flush(sm_file)
+     call flush_unit(sm_file)
 #endif
      !
      !

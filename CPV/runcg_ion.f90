@@ -51,7 +51,6 @@
       USE cp_types, ONLY: pseudo
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
-      USE potentials, ONLY: kspotential
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
       USE print_out_module
@@ -310,7 +309,6 @@
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE cell_module, ONLY: boxdimensions, r_to_s
-        USE potentials, ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
         USE check_stop, ONLY: check_stop_now
         USE charge_types, ONLY: charge_descriptor

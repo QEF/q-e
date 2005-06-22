@@ -425,7 +425,7 @@
     SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
 
       USE wave_types, ONLY: wave_descriptor
-      USE wave_functions, ONLY: cp_kinetic_energy, crot, dft_kinetic_energy, fixwave
+      USE wave_functions, ONLY: cp_kinetic_energy, crot, fixwave
       USE wave_base, ONLY: hpsi, converg_base, dotp
       USE pseudopotential, ONLY: nsanl
       USE constants, ONLY: au

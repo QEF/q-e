@@ -179,7 +179,7 @@
       END SUBROUTINE vofmean
 
 !  -------------------------------------------------------------------------
-      SUBROUTINE kspotential( tprint, tforce, tstress, rhoe, desc, &
+      SUBROUTINE kspotential( nfi, tprint, tforce, tstress, rhoe, desc, &
         atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, fnl, vpot, edft, timepre )
 
         USE charge_density, ONLY: rhoofr
@@ -195,6 +195,7 @@
 
 ! ...   declare subroutine arguments
         LOGICAL   :: tcel
+        INTEGER,              INTENT(IN)    :: nfi
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
         COMPLEX(dbl),         INTENT(INOUT) :: c0(:,:,:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
@@ -217,7 +218,7 @@
 
         edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
 
-        CALL rhoofr(kp, c0, cdesc, fi, rhoe, desc, ht)
+        CALL rhoofr( nfi, kp, c0, cdesc, fi, rhoe, desc, ht)
 
         CALL vofrhos(tprint, rhoe, desc, tforce, tstress, tforce, atoms, &
           kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
@@ -276,6 +277,8 @@
       USE pseudo_base, ONLY: compute_eself
       USE local_pseudo, ONLY: vps, rhops
       USE ions_base, ONLY: rcmax
+      USE atom, ONLY: nlcc
+      USE core, ONLY: nlcc_any, rhoc
 
       IMPLICIT NONE
 
@@ -336,7 +339,6 @@
       REAL(dbl)  :: dum, sxcp, vxc, ehr, strvxc
       REAL(dbl)  :: omega, desr(6), pesum(16)
       REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
-      REAL(dbl)  :: rsum( SIZE( rhoe, 4 ) )
       REAL(dbl)  :: zv( atoms%nsp )
 
       LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
@@ -439,10 +441,9 @@
 
       edft%ekin  = 0.0_dbl
       edft%emkin = 0.0_dbl
-      edft%ekin  = dft_kinetic_energy(c0, cdesc, kp, fi, rsum, edft%emkin)
+      edft%ekin  = dft_kinetic_energy(c0, cdesc, kp, fi, edft%emkin)
 
       IF(tprint) THEN
-        CALL checkrho(rhoe, desc, rsum, omega)
         IF( ionode .AND.  ttscreen ) &
            WRITE( stdout,fmt="(3X,'Using screened Coulomb potential for cluster calculation')")
       END IF
@@ -473,12 +474,12 @@
         CALL ZCOPY( SIZE(rhoetg,1), rhoeg(1,ispin), 1, rhoetg(1,ispin), 1 )
         CALL DCOPY( SIZE(rhoe(:,:,:,ispin)), rhoe(1,1,1,ispin), 1, rhoetr(1,1,1,ispin), 1 )
 
-        IF( ANY(ps%tnlcc) ) THEN
+        IF( nlcc_any ) THEN
 
           ! ...     add core correction
           ! ...     rhoetg = rhoeg + cc
           ! ...     rhoetr = rhoe  + cc
-          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), sfac, ps, atoms%nsp )
+          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), sfac, rhoc, atoms%nsp )
         ELSE
 
           ! ...     no core correction
@@ -606,7 +607,7 @@
         strvxc = ( edft%sxc - vxc ) * omega / REAL( nr1_g * nr2_g * nr3_g )
       END IF
 
-      IF( ANY( ps%tnlcc ) ) THEN
+      IF( nlcc_any ) THEN
 ! ...   xc potential (vpot) from real to G space, to compute nlcc forces
 ! ...   rhoetg = fwfft(vpot)
         DO ispin = 1, nspin
@@ -614,7 +615,7 @@
         END DO
 ! ...   now rhoetg contains the xc potential
         IF (ttforce) THEN
-          CALL core_charge_forces(fion, rhoetg, ps%rhoc1, ps%tnlcc, atoms, box, ei1, ei2, ei3, kp )
+          CALL core_charge_forces(fion, rhoetg, rhoc, nlcc, atoms, box, ei1, ei2, ei3, kp )
         END IF
       END IF
 
@@ -791,7 +792,7 @@
 
 ! ... Flush stdout
 !
-      CALL cpflush
+      CALL flush_unit( stdout )
 
       RETURN
       END SUBROUTINE vofrhos

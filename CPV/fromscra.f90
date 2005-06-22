@@ -112,7 +112,7 @@
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
       edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
-      CALL rhoofr(kp, cm, cdesc, fi, rhoe, desc, ht)
+      CALL rhoofr( 0, kp, cm, cdesc, fi, rhoe, desc, ht)
       CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
            kp, fnl, vpot, ps, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 

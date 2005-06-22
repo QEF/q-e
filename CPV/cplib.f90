@@ -3027,6 +3027,7 @@
             nr1sx, nr2sx, nr3sx, nnrsx
       use electrons_base, only: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
       use constants, only: pi, fpi
+      use mp, ONLY: mp_sum
       ! use local_pseudo
 !
       use cdvan
@@ -3229,8 +3230,8 @@
                rsumg(iss)=omega*real(rhog(1,iss))
                rsumr(iss)=SUM(rhor(:,iss))*omega/dble(nr1*nr2*nr3)
             end do
-#ifdef __PARA
-            if (gstart.ne.2) then
+
+            if ( gstart /= 2 ) then
                !
                !    in the parallel case, only one processor has G=0 ! 
                !
@@ -3238,14 +3239,15 @@
                   rsumg(iss)=0.0
                end do
             end if
-            call reduce(nspin,rsumg)
-            call reduce(nspin,rsumr)
-#endif
-            if (nspin.eq.1) then
-               WRITE( stdout,1) rsumg(1),rsumr(1)
+            call mp_sum( rsumg( 1:nspin ) )
+            call mp_sum( rsumr( 1:nspin ) )
+
+            if ( nspin == 1 ) then
+              WRITE( stdout, 10) rsumg(1), rsumr(1)
             else
-               WRITE( stdout,2) (rsumg(iss),iss=1,nspin),(rsumr(iss),iss=1,nspin)
+              WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
             endif
+
          endif
          !
          !     add vanderbilt contribution to the charge density
@@ -3270,39 +3272,41 @@
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
       end if
 !
-      if(nfi.eq.0.or.mod(nfi-1,iprint).eq.0) then
+      if( nfi == 0 .or. mod(nfi, iprint) == 0 ) then
+
          do iss=1,nspin
             rsumg(iss)=omega*real(rhog(1,iss))
             rsumr(iss)=SUM(rhor(:,iss),1)*omega/dble(nr1*nr2*nr3)
          end do
-#ifdef __PARA
+
          if (gstart.ne.2) then
-! in the parallel case, only one processor has G=0 ! 
+            ! in the parallel case, only one processor has G=0 ! 
             do iss=1,nspin
                rsumg(iss)=0.0
             end do
          end if
-         call reduce(nspin,rsumg)
-         call reduce(nspin,rsumr)
-#endif
-         if (nspin.eq.1) then
-            WRITE( stdout,1) rsumg(1),rsumr(1)
+
+         call mp_sum( rsumg( 1:nspin ) )
+         call mp_sum( rsumr( 1:nspin ) )
+
+         if ( nspin == 1 ) then
+           WRITE( stdout, 10) rsumg(1), rsumr(1)
          else
-            if(iprsta.ge.3)                                             &
-     &          WRITE( stdout,2) rsumg(1),rsumg(2),rsumr(1),rsumr(2)
-            WRITE( stdout,1) rsumg(1)+rsumg(2),rsumr(1)+rsumr(2)
+           WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
          endif
+
       endif
 
       deallocate( psi ) 
       deallocate( psis ) 
-!
-    2 format(//' subroutine rhoofr: total integrated electronic',       &
-     &     ' density'/' in g-space =',f10.6,2x,f10.6,4x,                &
-     &     ' in r-space =',f10.6,2x,f10.6)
-    1 format(//' subroutine rhoofr: total integrated electronic',       &
-     &     ' density'/' in g-space =',f10.6,4x,                         &
-     &     ' in r-space =',f10.6)
+
+10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+20    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'spin up', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 , &
+            & /, 3X, 'spin down', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
 !
       call stop_clock( 'rhoofr' )
 

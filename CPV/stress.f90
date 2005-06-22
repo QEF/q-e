@@ -79,6 +79,8 @@
       USE reciprocal_vectors,   ONLY: gx
       USE gvecp,                ONLY: ngm
       USE local_pseudo,         ONLY: dvps
+      USE atom,                 ONLY: nlcc
+      USE core,                 ONLY: drhoc
 
       IMPLICIT NONE
 
@@ -141,7 +143,7 @@
 
 ! ... compute exchange & correlation energy contribution
       CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, &
-        ps%tnlcc, ps%rhocp, box)
+        nlcc, drhoc, box)
 
       IF(timing) s4 = cclock()
 

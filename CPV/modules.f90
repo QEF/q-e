@@ -22,9 +22,15 @@ module core
   !     rhocb = core charge in G space (box grid)
   logical :: nlcc_any
   real(kind=8), allocatable:: rhocb(:,:)
+  !     rhoc  = core charge in G space 
+  real(kind=8), allocatable:: rhoc(:,:)
+  !     drhoc = derivative of core charge in G space (used for stress) 
+  real(kind=8), allocatable:: drhoc(:,:)
 contains
   subroutine deallocate_core()
       IF( ALLOCATED( rhocb ) ) DEALLOCATE( rhocb )
+      IF( ALLOCATED( rhoc  ) ) DEALLOCATE( rhoc  )
+      IF( ALLOCATED( drhoc ) ) DEALLOCATE( drhoc )
   end subroutine deallocate_core
 end module core
 

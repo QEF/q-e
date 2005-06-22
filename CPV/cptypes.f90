@@ -53,10 +53,6 @@
                                           !   second index: orbital
                                           !   third index: atomic species
                                           !   fourth index: k point
-!! ...    core corrections
-          LOGICAL, POINTER :: tnlcc (:)
-          REAL(dbl), POINTER :: rhoc1(:,:)  ! correction to pseudopotential
-          REAL(dbl), POINTER :: rhocp(:,:)  ! cell derivative
 
           TYPE (pseudo_ncpp), POINTER :: ap(:)
 
@@ -79,11 +75,10 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE allocate_pseudo(ps,nsp,ng,ngw,nk,lnlx,ngh,tcc)
+      SUBROUTINE allocate_pseudo(ps,nsp,ngw,lnlx,ngh,nk)
 
         TYPE (pseudo) ps
-        INTEGER, INTENT(IN) :: ng,nsp,lnlx,ngh,ngw,nk
-        LOGICAL, INTENT(IN) :: tcc(:)
+        INTEGER, INTENT(IN) :: nsp,lnlx,ngh,ngw,nk
         INTEGER :: ierr
 
         ALLOCATE(ps%wnl(ngw,lnlx,nsp,nk), STAT=ierr)
@@ -92,24 +87,6 @@
         IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %wsg ', ierr )
 
         NULLIFY(ps%ap)
-
-        IF(ANY(tcc)) THEN 
-          ALLOCATE(ps%tnlcc(nsp), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %tnlcc ', ierr )
-          ALLOCATE(ps%rhoc1(ng,nsp), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %rhoc1 ', ierr )
-          ALLOCATE(ps%rhocp(ng,nsp), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %rhocp ', ierr )
-          ps%tnlcc = tcc
-        ELSE
-          ALLOCATE(ps%tnlcc(1), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %tnlcc ', ierr )
-          ALLOCATE(ps%rhoc1(1,1), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %rhoc1 ', ierr )
-          ALLOCATE(ps%rhocp(1,1), STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' allocate_pseudo ', ' allocating %rhocp ', ierr )
-          ps%tnlcc = .FALSE.
-        END IF
 
         RETURN
       END SUBROUTINE allocate_pseudo
@@ -127,18 +104,6 @@
         IF(ASSOCIATED(ps%wsg)) THEN
           DEALLOCATE(ps%wsg, STAT=ierr)
           IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %wsg ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%tnlcc)) THEN
-          DEALLOCATE(ps%tnlcc, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %tnlcc ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%rhoc1)) THEN
-          DEALLOCATE(ps%rhoc1, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %rhoc1 ', ierr )
-        END IF
-        IF(ASSOCIATED(ps%rhocp)) THEN
-          DEALLOCATE(ps%rhocp, STAT=ierr)
-          IF( ierr /= 0 ) CALL errore(' deallocate_pseudo ', ' deallocating %rhocp ', ierr )
         END IF
 
         RETURN

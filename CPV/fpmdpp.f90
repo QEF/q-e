@@ -27,7 +27,7 @@ PROGRAM fpmd_postproc
 
   INTEGER, PARAMETER :: maxsp = 20
 
-  INTEGER                    :: natoms, nsp, nat(maxsp), species(maxsp)
+  INTEGER                    :: natoms, nsp, na(maxsp), species(maxsp)
   INTEGER                    :: ounit, cunit, punit, funit, dunit, bunit
   INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
   INTEGER                    :: np1, np2, np3, np, ispin
@@ -52,7 +52,7 @@ PROGRAM fpmd_postproc
   NAMELIST /inputpp/ prefix, filepp, fileout, output, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
                      nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3, &
-                     ispin, natoms, nat, nsp, species, nframes
+                     ispin, natoms, na, nsp, species, nframes
 
   ! default values
   prefix = 'fpmd'
@@ -71,8 +71,10 @@ PROGRAM fpmd_postproc
   np2 = 1
   np3 = 1
   nsp = 0
-  nat(:) = 0
+  na(:) = 0
   nframes = 1
+
+  call input_from_file()
 
   ! read namelist
   READ(*, inputpp, iostat=ios)
@@ -126,7 +128,7 @@ PROGRAM fpmd_postproc
   ! atoms and forces
   natoms = 0
   DO i = 1, nsp
-     natoms = natoms + nat(i)                  ! total number of atoms
+     natoms = natoms + na(i)                  ! total number of atoms
   END DO
   ALLOCATE(tau_in(3, natoms))                  ! atomic positions, angstroms
   ALLOCATE(tau_out(3, natoms * np))            ! replicated positions
@@ -146,7 +148,7 @@ PROGRAM fpmd_postproc
   ! assign species to each atom
   k = 0
   DO i = 1, nsp
-     DO j = 1, nat(i)
+     DO j = 1, na(i)
         k = k + 1
         ityp(k) = species(i)
      END DO
@@ -669,3 +671,21 @@ END SUBROUTINE write_pdb
 !   -  |   67 - 67    |   1X    | Blank                                         
 !  14. |   68 - 68    |   I3    | Footnote number                               
 !---------------------------------------------------------------------------
+
+
+
+subroutine errore( a, b, ierr )
+  !
+  !  A substitution for subroutine Errore, used only by fpmdpp
+  !
+  implicit none
+  character(len=*) :: a, b
+  integer :: ierr
+  !
+  WRITE( *, * ) 'FATAL ERROR'
+  WRITE( *, * ) 'SUB:', a
+  WRITE( *, * ) 'MSG:', b
+  WRITE( *, * ) 'COD:', ierr
+  stop
+  return
+end subroutine

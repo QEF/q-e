@@ -603,7 +603,7 @@ MODULE from_restart_module
        edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, &
                           fi, kp, fnl, ps%wsg, ps%wnl, eigr )
        !
-       CALL rhoofr( kp, c0, cdesc, fi, rhoe, desc, ht_0 )
+       CALL rhoofr( nfi, kp, c0, cdesc, fi, rhoe, desc, ht_0 )
        !
        CALL vofrhos( ( iprsta > 1 ), rhoe, desc, tfor, thdyn, ttforce, &
                      atoms_0, kp, fnl, vpot, ps, c0, cdesc, fi, eigr,  &

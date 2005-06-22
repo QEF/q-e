@@ -284,12 +284,12 @@
 
              IF( tfirst ) THEN
                ALLOCATE( rho_save( nx, ny, nz, nspin ) )
-               CALL rhoofr(kp, cm, cdesc, occ, rho_save, desc, ht)
+               CALL rhoofr( 1, kp, cm, cdesc, occ, rho_save, desc, ht)
                tfirst = .FALSE.
              END IF
 
              ALLOCATE( rho0( nx, ny, nz, nspin ) )
-             CALL rhoofr(kp, c0, cdesc, occ, rho0, desc, ht)
+             CALL rhoofr( 1, kp, c0, cdesc, occ, rho0, desc, ht)
 
              rho = 2.0d0 * rho0 - rho_save
 

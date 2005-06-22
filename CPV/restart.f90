@@ -45,7 +45,7 @@
 ! read from file and distribute data calculated in preceding iterations
 !
       use ions_base, only: nsp, na
-      use cell_base, only: s_to_r, a1, a2, a3
+      use cell_base, only: s_to_r
       use cp_restart, only: cp_writefile, cp_write_wfc
       USE electrons_base, ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
 !
@@ -73,7 +73,7 @@
       real(kind=8) :: cdmi_ (3) = 0.0d0
       real(kind=8), ALLOCATABLE :: taui_ (:,:) 
       real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+      real(kind=8) :: htm1(3,3), omega
 
 !
 ! Do not write restart file if the unit number 
@@ -104,13 +104,10 @@
         end do
       end do
 
-      CALL recips( a1, a2, a3, b1, b2, b3 )
-
       CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
-        occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, vnhe, ekincm, mat_z  )
+        occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z  )
 
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
@@ -224,7 +221,6 @@
                                                                         
         use electrons_module, only: nspin
         USE cell_module, only: boxdimensions, r_to_s
-        USE cell_base, only: a1, a2, a3
         USE brillouin, only: kpoints
         USE wave_types, ONLY: wave_descriptor
         USE control_flags, ONLY: ndw, gamma_only
@@ -260,7 +256,6 @@
         REAL(dbl) S0, S1
         REAL(dbl) :: ekincm
         REAL(dbl) :: mat_z(1,1,nspin)
-        REAL(dbl) :: b1(3), b2(3), b3(3)
              
         s0 = cclock()
 
@@ -275,12 +270,10 @@
         ekincm = 0.0d0
         mat_z = 0.0d0
 
-        CALL recips( a1, a2, a3, b1, b2, b3 )
-
         CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda, b1, b2, b3, &
+          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda,  &
           xnhe0, xnhem, vnhe, ekincm, mat_z )
 
         DEALLOCATE( lambda )

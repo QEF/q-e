@@ -199,7 +199,7 @@
 
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-      CALL rhoofr( kp, c0, cdesc, fi, rhoe, desc, ht0)
+      CALL rhoofr( 1, kp, c0, cdesc, fi, rhoe, desc, ht0)
       CALL newrho(rhoe(:,:,:,1), drho, 0)  ! memorize density
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
@@ -238,7 +238,7 @@
 
 ! ...     self consistent energy
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
-          CALL rhoofr( kp, c0, cdesc, fi, rhoe, desc, ht0)
+          CALL rhoofr( 1, kp, c0, cdesc, fi, rhoe, desc, ht0)
           CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, &
             kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
@@ -548,7 +548,7 @@
           EXIT DIIS_LOOP
         END IF
 
-        CALL kspotential( .FALSE., tforce, tstress, rhoe, desc, &
+        CALL kspotential( 1, .FALSE., tforce, tstress, rhoe, desc, &
           atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, fnl, vpot, edft, timepre )
 
         s0 = cclock()

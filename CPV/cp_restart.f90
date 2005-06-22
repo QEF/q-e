@@ -23,7 +23,8 @@
         MODULE PROCEDURE cp_read_wfc2, cp_read_wfc4
       END INTERFACE
 
-      PRIVATE :: write_wfc, read_wfc, create_directory
+      PRIVATE :: write_wfc, read_wfc, create_directory, read_cell, write_cell, &
+                 write_ions, write_plane_wave
 
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -111,19 +112,31 @@
 
 !------------------------------------------------------------------------------!
 
-    CHARACTER(LEN=256) FUNCTION wfc_filename( basedir, name, ik, ispin, tag )
+    CHARACTER(LEN=256) FUNCTION wfc_filename( basedir, name, ik, ipol, tag )
       !
       IMPLICIT NONE
       CHARACTER(LEN=*), INTENT(IN) :: basedir
       CHARACTER(LEN=*), INTENT(IN) :: name
-      CHARACTER, INTENT(IN) :: tag
-      INTEGER, INTENT(IN) :: ik, ispin
+      INTEGER, INTENT(IN) :: ik
+      INTEGER, INTENT(IN), OPTIONAL :: ipol
+      CHARACTER, INTENT(IN), OPTIONAL :: tag
       !    
       CHARACTER(LEN=256) :: filename
       !
-      WRITE( filename, fmt='( I1 )' ) ispin
-      filename = TRIM( kpoint_dir( basedir, ik ) ) // &
+      filename = ''
+      IF ( PRESENT( ipol ) ) THEN
+         !
+         WRITE( filename, FMT = '( I1 )' ) ipol
+         !
+      END IF
+
+      IF( PRESENT( tag ) ) THEN
+        filename = TRIM( kpoint_dir( basedir, ik ) ) // &
                & '/' // TRIM( name ) // TRIM( filename ) // '_' // tag // '.dat'
+      ELSE
+        filename = TRIM( kpoint_dir( basedir, ik ) ) // &
+               & '/' // TRIM( name ) // TRIM( filename ) // '.dat'
+      END IF
       !
       wfc_filename = TRIM( filename )
       !
@@ -136,14 +149,13 @@
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, occ0, &
-        occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-        ekincm, mat_z )
+        occm, lambda0, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE control_flags, ONLY: gamma_only, force_pairing
-      USE io_files, ONLY: iunpun, xmlpun
+      USE io_files, ONLY: iunpun, xmlpun, psfile, pseudo_dir, prefix
       USE printout_base, ONLY: title
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s
@@ -151,10 +163,12 @@
       USE gvecp, ONLY: ngm, ngmt, ecutp, gcutp
       USE gvecs, ONLY: ngs, ngst, ecuts, gcuts, dual
       USE gvecw, ONLY: ngw, ngwt, ecutw, gcutw
-      USE electrons_base, ONLY: nspin, nbnd, nbsp, nelt, nel, nupdwn, iupdwn
-      USE cell_base, ONLY: ibrav, alat, celldm
-      USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
       USE reciprocal_vectors, ONLY: ig_l2g, mill_l
+      USE electrons_base, ONLY: nspin, nbnd, nbsp, nelt, nel, nupdwn, iupdwn, &
+                                f, fspin, nudx
+      USE cell_base, ONLY: ibrav, alat, celldm, symm_type, s_to_r
+      USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass, amass, iforce
+      USE funct,     ONLY: dft
       USE mp, ONLY: mp_sum
 
       IMPLICIT NONE
@@ -189,23 +203,28 @@
       REAL(dbl), INTENT(IN) :: occm(:,:,:) ! 
       REAL(dbl), INTENT(IN) :: lambda0(:,:) ! 
       REAL(dbl), INTENT(IN) :: lambdam(:,:) ! 
-      REAL(dbl), INTENT(IN) :: b1(3) ! 
-      REAL(dbl), INTENT(IN) :: b2(3) ! 
-      REAL(dbl), INTENT(IN) :: b3(3) ! 
       REAL(dbl), INTENT(IN) :: xnhe0 ! 
       REAL(dbl), INTENT(IN) :: xnhem ! 
       REAL(dbl), INTENT(IN) :: vnhe ! 
       REAL(dbl), INTENT(IN) :: ekincm ! 
       REAL(dbl), INTENT(IN) :: mat_z(:,:,:) ! 
       !
-      CHARACTER(LEN=256) :: dirname, filename
+      CHARACTER(LEN=256)      :: dirname, filename
       CHARACTER(iotk_attlenx) :: attr
+      CHARACTER(LEN=4)        :: cspin
       INTEGER :: kunit
       INTEGER :: k1, k2, k3
       INTEGER :: nk1, nk2, nk3
       INTEGER :: j, i, ispin, ig, nspin_wfc
+      INTEGER :: is, ia, isa, iss, ise, ik
       INTEGER, ALLOCATABLE :: mill(:,:)
-      REAL(dbl) :: omega, htm1(3,3)
+      INTEGER, ALLOCATABLE :: ftmp(:,:)
+      INTEGER, ALLOCATABLE :: ityp(:)
+      REAL(dbl), ALLOCATABLE :: tau(:,:)
+      REAL(dbl) :: omega, htm1(3,3), h(3,3)
+      REAL(dbl) :: a1(3), a2(3), a3(3)
+      REAL(dbl) :: b1(3), b2(3), b3(3)
+      LOGICAL   :: lsda
 
       !
       !  Create main restart directory
@@ -229,10 +248,32 @@
       nk2 = 1
       nk3 = 1
 
+      !
+      !  Compute Cell related variables
+      !
+      h  = TRANSPOSE( ht )
       CALL invmat( 3, ht, htm1, omega )
+      a1 = ht( 1, : )
+      a2 = ht( 2, : )
+      a3 = ht( 3, : )
+      CALL recips( a1, a2, a3, b1, b2, b3 )
+
+      !
+      !  Compute array ityp, and tau
+      !
+      ALLOCATE( ityp( nat ) )
+      ALLOCATE( tau( 3, nat ) )
+      isa = 0
+      DO is = 1, nsp
+        DO ia = 1, na( is )
+          isa = isa + 1
+          ityp( isa ) = is
+        END DO
+      END DO
+      call s_to_r( stau0, tau, na, nsp, h )
 
       !   
-      !  Write G vectors (up to ecutrho) to file
+      !  Collect G vectors
       !   
       ALLOCATE( mill(3,ngmt) )
       mill = 0
@@ -241,15 +282,27 @@
       END DO
       CALL mp_sum( mill )
 
+
+      lsda = ( nspin == 2 )
+
+      ALLOCATE( ftmp( nudx, nspin ) )
+      DO ispin = 1, nspin
+        iss = iupdwn( ispin )
+        ise = iss + nupdwn( ispin ) - 1
+        ftmp( 1:nupdwn( ispin ), ispin ) = f( iss : ise )
+      END DO
+
       !
       !  Open XML descriptor
 
       IF ( ionode ) THEN
         write(stdout,*) "Opening file "//trim(xmlpun)
         IF( ascii ) THEN
-          call iotk_open_write(iunpun,file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.false.)
+          call iotk_open_write(iunpun, &
+               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.false.)
         ELSE
-          call iotk_open_write(iunpun,file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.true.)
+          call iotk_open_write(iunpun, &
+               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.true.)
         ENDIF
       END IF
 
@@ -261,121 +314,126 @@
           call iotk_write_dat (iunpun, "TIME", simtime)
           call iotk_write_dat (iunpun, "TITLE", TRIM(title) )
         call iotk_write_end(iunpun,"STATUS")
+        
         !
-        call iotk_write_begin(iunpun,"DIMENSIONS")
-          !
-          CALL iotk_write_attr( attr, "unit", "Hartree", FIRST = .TRUE. )
-          CALL iotk_write_attr( attr, "ecutwfc", ecutw/2.D0 )
-          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_WAVE-FUNCTIONS", attr )
-          !
-          CALL iotk_write_attr( attr, "unit", "Hartree", FIRST = .TRUE. )
-          CALL iotk_write_attr( attr, "ecutrho", ecutw*dual/2.D0 )
-          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_CHARGE-DENSITY", attr )
-          !
-          CALL iotk_write_attr( attr, "npw", ngwt, FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "NUMBER_OF_PLANE_WAVES", attr )
-          !
-          CALL iotk_write_attr( attr, "nr1", nr1, FIRST = .TRUE. )
-          CALL iotk_write_attr( attr, "nr2", nr2 )
-          CALL iotk_write_attr( attr, "nr3", nr3 )
-          CALL iotk_write_empty( iunpun, "FFT_GRID", attr )
-          !
-          CALL iotk_write_attr( attr, "gcutm", gcutp, FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_G-VECTORS", attr )
-          ! 
-          CALL iotk_write_attr( attr, "ngm_g", ngmt, FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "NUMBER_OF_G-VECTORS", attr )
-          !
-          CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
-          CALL iotk_write_attr( attr, "nr2s", nr2s )
-          CALL iotk_write_attr( attr, "nr3s", nr3s )
-          CALL iotk_write_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-          !
-          CALL iotk_write_attr( attr, "gcutms", gcuts, FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "CUTOFF_FOR_SMOOTH_G-VECTORS", attr )
-          !
-          CALL iotk_write_attr( attr, "ngms_g", ngst, FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "NUMBER_OF_SMOOTH_G-VECTORS", attr )
-          !
-          call iotk_write_attr (attr,"nx",nr1b,first=.true.)
-          call iotk_write_attr (attr,"ny",nr2b)
-          call iotk_write_attr (attr,"nz",nr3b)
-          call iotk_write_empty(iunpun,"SMALLBOX_FFT_GRID",attr)
-          !
-        call iotk_write_end(iunpun,"DIMENSIONS")
-        !
-        !
-        ! ... G-VECTORS
-        !
-        CALL iotk_write_begin( iunpun, "G-VECTORS" )
-          !
-          CALL iotk_link( iunpun, "G-VECTORS", "gvectors.dat", &
-                         CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
-          !
-          CALL iotk_write_begin( iunpun, "G-VECTORS", attr = attr )
-          CALL iotk_write_dat( iunpun, "g", mill(1:3,1:ngm), FMT = "(3I5)" )
-          CALL iotk_write_end( iunpun, "G-VECTORS" )
-          !
-        CALL iotk_write_end( iunpun, "G-VECTORS" )
+        call write_cell( ibrav, symm_type, celldm, alat, a1, a2, a3, b1, b2, b3 )
+
+        ! 
+        call write_ions( nsp, nat, atm, ityp, psfile, pseudo_dir, amass, tau, iforce, dirname )
+
+        !  Symmetries ?
 
         !
-        call iotk_write_begin(iunpun,"ELECTONS")
-        call iotk_write_attr (attr,"nspin",nspin,first=.true.)
-        call iotk_write_attr (attr,"nbnd",nbnd)
-        call iotk_write_attr (attr,"nel",nelt)
-        call iotk_write_empty(iunpun,"BANDS",attr)
-        call iotk_write_attr (attr,"nel",nel(1),first=.true.)
-        call iotk_write_attr (attr,"nbnd",nupdwn(1))
-        call iotk_write_empty(iunpun,"SPINUP",attr)
-        call iotk_write_attr (attr,"nel",nel(2),first=.true.)
-        call iotk_write_attr (attr,"nbnd",nupdwn(2))
-        call iotk_write_empty(iunpun,"SPINDW",attr)
-        call iotk_write_end(iunpun,"ELECTONS")
-        ! 
-        call iotk_write_begin(iunpun,"AVERAGES")
-        call iotk_write_dat (iunpun, "ACCUMULATORS", acc)
-        call iotk_write_end(iunpun,"AVERAGES")
+        call write_plane_wave( mill )
+
         !
-        call iotk_write_begin(iunpun,"LATTICE")
-        call iotk_write_attr (attr, "ibrav",ibrav,first=.true.)
-        call iotk_write_attr (attr, "alat", alat )
-        call iotk_write_empty(iunpun,"TYPE",attr)
-        call iotk_write_dat (iunpun, "CELLDM", celldm(1:6))
-        call iotk_write_begin(iunpun,"RECIPROCAL_BASIS")
-          call iotk_write_dat (iunpun, "b1", b1)
-          call iotk_write_dat (iunpun, "b2", b2)
-          call iotk_write_dat (iunpun, "b3", b3)
-        call iotk_write_end(iunpun,"RECIPROCAL_BASIS")
-        call iotk_write_end(iunpun,"LATTICE")
-        ! 
-        call iotk_write_attr (attr, "nsp", nsp, first=.true.)
-        call iotk_write_attr (attr, "nat", nat )
-        call iotk_write_begin(iunpun,"IONS", attr)
-        DO i = 1, nsp
-          call iotk_write_attr (attr, "label",atm(i),first=.true.)
-          call iotk_write_attr (attr, "na",na(i) )
-          call iotk_write_attr (attr, "zv", zv(i) )
-          call iotk_write_attr (attr, "mass", pmass(i) )
-          call iotk_write_empty(iunpun,"SPECIE",attr)
-        END DO
-        call iotk_write_dat(iunpun, "taui", taui(1:3,1:nat) )
-        call iotk_write_dat(iunpun, "cdmi", cdmi(1:3) )
-        call iotk_write_dat(iunpun, "force", force(1:3,1:nat) )
-        call iotk_write_end(iunpun,"IONS")
-        ! 
-        call iotk_write_begin(iunpun,"ELECTRONS")
-          call iotk_write_dat (iunpun, "ekincm", ekincm)
-        call iotk_write_end(iunpun,"ELECTRONS")
+        ! ... SPIN
         !
+        CALL iotk_write_begin( iunpun, "SPIN" )
+        !
+        CALL iotk_write_dat( iunpun, "LSDA", lsda )
+        !
+        CALL iotk_write_dat( iunpun, "NON-COLINEAR_CALCULATION", .false. )
+        !
+        CALL iotk_write_dat( iunpun, "SPIN-ORBIT_CALCULATION", .false. )
+        !
+        CALL iotk_write_end( iunpun, "SPIN" )
+
+        !
+        ! ... EXCHANGE_CORRELATION
+        !
+        CALL iotk_write_begin( iunpun, "EXCHANGE_CORRELATION" )
+        !
+        CALL iotk_write_dat( iunpun, "DFT", dft )
+        !
+        CALL iotk_write_dat( iunpun, "LDA_PLUS_U_CALCULATION", .false. )
+        !
+        CALL iotk_write_end( iunpun, "EXCHANGE_CORRELATION" )
+
+        !
+        CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
+          !
+          CALL iotk_write_dat( iunpun, "SMEARING_METHOD", .false. )
+          !
+          CALL iotk_write_dat( iunpun, "TETRAHEDRON_METHOD", .false. )
+          !
+          CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", .true. )
+          !
+          DO ispin = 1, nspin
+               !
+               IF ( ispin == 1 ) THEN
+                  !
+                  CALL iotk_write_attr( attr, "SPIN", "UP", FIRST = .TRUE. )
+                  !
+               ELSE
+                  !
+                  CALL iotk_write_attr( attr, "SPIN", "DOWN", FIRST = .TRUE. )
+                  !
+               END IF
+               !
+               CALL iotk_write_dat( iunpun, "INPUT_OCC", ftmp( 1:nupdwn(ispin), ispin ) )
+               !
+          END DO
+          !
+        CALL iotk_write_end( iunpun, "OCCUPATIONS" )
+
+
+        CALL iotk_write_begin( iunpun, "BRILLOUIN_ZONE" )
+          !
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", nk )
+          !
+          CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+          CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
+          !
+          DO ik = 1, nk
+            !
+            CALL iotk_write_attr( attr, "XYZ", xk(:,ik), FIRST = .TRUE. )
+            !
+            CALL iotk_write_attr( attr, "WEIGHT", wk(ik) )
+            !
+            CALL iotk_write_empty( iunpun, "K-POINT" // TRIM( iotk_index(ik) ), attr )
+            !
+          END DO
+          !
+        CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
+
+        !
+        ! ... PARALLELISM
+        !
+        CALL iotk_write_begin( iunpun, "PARALLELISM" )
+          !
+          CALL iotk_write_dat( iunpun, "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
+          !
+        CALL iotk_write_end( iunpun, "PARALLELISM" )
+
+        !
+        ! ... CHARGE-DENSITY
+        !
+        CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
+        !
+        CALL iotk_link( iunpun, "RHO_FILE", TRIM( prefix ) // ".rho", &
+                        CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+        !
+        ! CALL iotk_write_begin( iunpun, "CHARGE-DENSITY", attr = attr )
+        ! CALL iotk_write_dat( iunpun, "RHO", rho )
+        ! CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
+        !
+        CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
+
         !
         call iotk_write_attr (attr, "nt", 2, first=.true.)
         call iotk_write_begin(iunpun,"TIMESTEPS", attr)
           !
           call iotk_write_begin(iunpun,"STEP0")
             !
+            call iotk_write_dat (iunpun, "ACCUMULATORS", acc)
+            !
             call iotk_write_begin(iunpun,"IONS_POSITIONS")
               call iotk_write_dat(iunpun, "stau", stau0(1:3,1:nat) )
               call iotk_write_dat(iunpun, "svel", svel0(1:3,1:nat) )
+              call iotk_write_dat(iunpun, "taui", taui(1:3,1:nat) )
+              call iotk_write_dat(iunpun, "cdmi", cdmi(1:3) )
+              call iotk_write_dat(iunpun, "force", force(1:3,1:nat) )
             call iotk_write_end(iunpun,"IONS_POSITIONS")
             !
             call iotk_write_begin(iunpun,"IONS_NOSE")
@@ -383,6 +441,8 @@
               call iotk_write_dat (iunpun, "xnhp", xnhp0 )
               call iotk_write_dat (iunpun, "vnhp", vnhp)
             call iotk_write_end(iunpun,"IONS_NOSE")
+            !
+            call iotk_write_dat (iunpun, "ekincm", ekincm)
             !
             call iotk_write_begin(iunpun,"ELECTRONS_NOSE")
               call iotk_write_dat (iunpun, "xnhe", xnhe0)
@@ -436,23 +496,123 @@
           !
         call iotk_write_end(iunpun,"TIMESTEPS")
         !
+
+        !  
+        ! ... BAND_STRUCTURE
+        !
+        ! 
+        CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
+        !
+        CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
+        !
+        IF( nspin == 2 ) THEN
+          call iotk_write_attr (attr,"up",nel(1),first=.true.)
+          call iotk_write_attr (attr,"dw",nel(2))
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt, ATTR = attr )
+        ELSE
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt )
+        END IF
+        !
+        IF( nspin == 2 ) THEN
+          call iotk_write_attr (attr,"up",nupdwn(1),first=.true.)
+          call iotk_write_attr (attr,"dw",nupdwn(2))
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd, ATTR = attr )
+        ELSE
+	  CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+        END IF
+        !
+        CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+        !
+      END IF
+
+      k_points_loop: DO ik = 1, nk
+         !
+         IF ( ionode ) THEN
+            !
+            CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+            !
+            CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+            CALL iotk_write_dat( iunpun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
+            !
+            CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
+
+            DO ispin = 1, nspin
+               !
+               cspin = iotk_index(ispin)
+               !
+               CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), 0.0d0, ATTR = attr  )
+               !
+               CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ),  occ0(:, ik, ispin ) )
+               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ),  occm(:, ik, ispin ) )
+               !
+            END DO
+            !
+            ! ... G+K vectors
+            !
+            filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
+            !
+            CALL iotk_link( iunpun, "gkvectors", filename, &
+                            CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+            !
+            filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
+            !
+         END IF
+
+
+         DO ispin = 1, nspin
+            ! 
+            IF ( ionode ) THEN
+               !
+               filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+               !
+               CALL iotk_link( iunpun, "wfc", filename, &
+                               CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+               !
+               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               !
+            END IF
+            !
+         END DO
+
+
+         IF ( ionode ) THEN
+            !
+            CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+            !
+         END IF
+         !
+      END DO k_points_loop
+
+
+      DO ispin = 1, nspin
+         ! 
+         cspin = iotk_index(ispin)
+         !
+         IF ( ionode ) THEN
+            ! 
+            filename = 'mat_z' // cspin
+            call iotk_link(iunpun,"mat_z" // TRIM( cspin ), filename,create=.true.,binary=.true.,raw=.true.)
+            call iotk_write_dat(iunpun,"mat_z" // TRIM( cspin ), mat_z(:,:,ispin) )
+            !
+         END IF
+         !
+      END DO
+
+
+      IF( ionode ) THEN
+        !  
+        CALL iotk_write_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+        !     
+        CALL iotk_write_end( iunpun, "BAND_STRUCTURE" )
+        ! 
+      END IF
+
+
+      IF( ionode ) THEN
         !
         call iotk_write_begin(iunpun,"K_POINTS")
-        call iotk_write_attr (attr, "nk",nk,first=.true.)
-        call iotk_write_attr (attr, "gamma_only", gamma_only )
-        call iotk_write_attr (attr, "kunit", kunit )
-        call iotk_write_attr (attr, "k1", k1 )
-        call iotk_write_attr (attr, "k2", k2 )
-        call iotk_write_attr (attr, "k3", k3 )
-        call iotk_write_attr (attr, "nk1", nk1 )
-        call iotk_write_attr (attr, "nk2", nk2 )
-        call iotk_write_attr (attr, "nk3", nk3 )
-        call iotk_write_empty(iunpun,"GRID",attr)
         DO i = 1, nk
-          call iotk_write_attr (attr, "ik",i,first=.true.)
-          call iotk_write_attr (attr,"xyz",xk(:,i))
-          call iotk_write_attr (attr,"w",wk(i))
-          call iotk_write_begin(iunpun,"Kpoint",attr)
           DO ispin = 1, nspin
             call iotk_write_attr (attr, "spin",ispin,first=.true.)
             call iotk_write_begin(iunpun,"spin_component",attr)
@@ -460,22 +620,8 @@
             call iotk_link(iunpun,"wfc_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
             filename = TRIM( wfc_filename( ".", 'wf', i, ispin, 'm' ) )
             call iotk_link(iunpun,"wfc_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
-
-            filename = TRIM( wfc_filename( ".", 'occ', i, ispin, '0' ) ) ! filename GIUSTO !!
-            call iotk_link(iunpun,"occupations_0",filename,create=.true.,binary=.not.ascii,raw=.true.)
-            call iotk_write_dat(iunpun,"occupations_0",occ0(:,i,ispin))
-            !
-            filename = TRIM( wfc_filename( ".", 'occ', i, ispin, 'm' ) ) ! filename GIUSTO !!
-            call iotk_link(iunpun,"occupations_m",filename,create=.true.,binary=.not.ascii,raw=.true.)
-            call iotk_write_dat(iunpun,"occupations_m",occm(:,i,ispin))
-            !
-            filename = TRIM( wfc_filename( ".", 'mat_z', i, ispin, '0' ) ) ! filename GIUSTO !!
-            call iotk_link(iunpun,"mat_z",filename,create=.true.,binary=.true.,raw=.true.)
-            call iotk_write_dat(iunpun,"mat_z",mat_z(:,:,ispin))
-            !
             call iotk_write_end(iunpun,"spin_component")
           END DO
-          call iotk_write_end(iunpun,"Kpoint")
         END DO
         call iotk_write_end(iunpun,"K_POINTS")
         !
@@ -496,6 +642,9 @@
         call iotk_close_write( iunpun )
       end if 
 
+      DEALLOCATE( ftmp )
+      DEALLOCATE( tau  )
+      DEALLOCATE( ityp )
       DEALLOCATE( mill )
 
       RETURN
@@ -589,7 +738,7 @@
       USE gvecs, ONLY: ngs, ngst
       USE gvecw, ONLY: ngw, ngwt, ecutw
       USE electrons_base, ONLY: nspin, nbnd, nelt, nel, nupdwn, iupdwn
-      USE cell_base, ONLY: ibrav, alat, celldm
+      USE cell_base, ONLY: ibrav, alat, celldm, symm_type
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
       USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g, mill_l
       USE mp, ONLY: mp_sum, mp_bcast
@@ -638,23 +787,25 @@
 
       !
       CHARACTER(LEN=256) :: dirname, kdirname, filename
-      CHARACTER(LEN=5) :: kindex
+      CHARACTER(LEN=5)   :: kindex
+      CHARACTER(LEN=4)   :: cspin
       INTEGER :: strlen
       CHARACTER(iotk_attlenx) :: attr
       INTEGER :: kunit
       INTEGER :: k1, k2, k3
       INTEGER :: nk1, nk2, nk3
-      INTEGER :: i, j, ispin, ig, nspin_wfc, ierr
+      INTEGER :: i, j, ispin, ig, nspin_wfc, ierr, ik
       INTEGER, ALLOCATABLE :: mill(:,:)
       REAL(dbl) :: omega, htm1(3,3)
       !
       ! Variables read for testing pourposes
       !
       INTEGER :: ibrav_
+      CHARACTER(LEN=256) :: symm_type_
       INTEGER :: nat_ , nsp_, na_
       INTEGER :: nk_ , ik_ , nt_
       LOGICAL :: gamma_only_ , found
-      REAL(dbl) :: alat_
+      REAL(dbl) :: alat_ , a1_ (3), a2_ (3), a3_ (3)
       REAL(dbl) :: pmass_ , zv_
       REAL(dbl) :: celldm_ ( 6 )
       INTEGER :: ispin_ , nspin_ , ngwt_ , nbnd_ , nelt_
@@ -677,68 +828,19 @@
         call iotk_scan_dat (iunpun, "TITLE", title )
         call iotk_scan_end(iunpun,"STATUS")
         !
-        call iotk_scan_begin(iunpun,"ELECTONS")
-        call iotk_scan_empty(iunpun,"BANDS",attr)
-        call iotk_scan_attr (attr,"nspin",nspin_ )
-        call iotk_scan_attr (attr,"nbnd",nbnd_ )
-        call iotk_scan_attr (attr,"nel",nelt_ )
-        !call iotk_scan_empty(iunpun,"SPINUP",attr)
-        !call iotk_scan_attr (attr,"nel",nel(1))
-        !call iotk_scan_attr (attr,"nbnd",nupdwn(1))
-        !call iotk_scan_empty(iunpun,"SPINDW",attr)
-        !call iotk_scan_attr (attr,"nel",nel(2))
-        !call iotk_scan_attr (attr,"nbnd",nupdwn(2))
-        call iotk_scan_end(iunpun,"ELECTONS")
+        call read_cell( ibrav_ , symm_type_ , celldm_ , alat_ , &
+                        a1_ , a2_ , a3_ , b1, b2, b3 )
         !
-        IF( ( nspin_ /= nspin ) .OR. ( nbnd_ /= nbnd ) .OR. ( nelt_ /= nelt ) ) THEN 
-          ierr = 30
-          GOTO 100
-        END IF
-        ! 
-        !
-        call iotk_scan_begin(iunpun,"AVERAGES" )
-        call iotk_scan_dat (iunpun, "ACCUMULATORS", acc)
-        call iotk_scan_end(iunpun,"AVERAGES")
-        !
-        call iotk_scan_begin(iunpun,"LATTICE")
-        call iotk_scan_empty(iunpun,"TYPE",attr)
-        call iotk_scan_attr (attr, "ibrav",ibrav_ )
-        call iotk_scan_attr (attr, "alat", alat_ )
-        call iotk_scan_dat (iunpun, "CELLDM", celldm_ (1:6) )
-        call iotk_scan_begin(iunpun,"RECIPROCAL_BASIS")
-          call iotk_scan_dat (iunpun, "b1", b1)
-          call iotk_scan_dat (iunpun, "b2", b2)
-          call iotk_scan_dat (iunpun, "b3", b3)
-        call iotk_scan_end(iunpun,"RECIPROCAL_BASIS")
-        call iotk_scan_end(iunpun,"LATTICE")
-        !
-        call iotk_scan_begin(iunpun,"IONS", attr)
-        call iotk_scan_attr (attr, "nsp", nsp_ )
-        call iotk_scan_attr (attr, "nat", nat_ )
-        IF( nsp_ /= nsp .OR. nat_ /= nat ) THEN 
-          ierr = 10
-          GOTO 100
-        END IF
-        !
-        DO i = 1, nsp
-          call iotk_scan_empty(iunpun, "SPECIE", attr)
-          ! call iotk_scan_attr (attr, "label", atm(i) )
-          call iotk_scan_attr (attr, "na", na_ )
-          IF( na_ /= na( i ) ) THEN 
-            ierr = 11
+        call iotk_scan_begin(iunpun,"IONS")
+          call iotk_scan_dat ( iunpun, "NUMBER_OF_ATOMS", nat_ )
+          call iotk_scan_dat ( iunpun, "NUMBER_OF_SPECIES", nsp_ )
+          IF( nsp_ /= nsp .OR. nat_ /= nat ) THEN 
+            ierr = 10
             GOTO 100
           END IF
-          call iotk_scan_attr (attr, "zv", zv_ )
-          call iotk_scan_attr (attr, "mass", pmass_ )
-        END DO
-        call iotk_scan_dat(iunpun, "taui", taui(1:3,1:nat) )
-        call iotk_scan_dat(iunpun, "cdmi", cdmi(1:3) )
-        call iotk_scan_dat(iunpun, "force", force(1:3,1:nat) )
         call iotk_scan_end(iunpun,"IONS")
+        !
         ! 
-        call iotk_scan_begin(iunpun,"ELECTRONS")
-          call iotk_scan_dat (iunpun, "ekincm", ekincm)
-        call iotk_scan_end(iunpun,"ELECTRONS")
         !
         call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
         call iotk_scan_attr (attr, "nt", nt_ )
@@ -748,9 +850,14 @@
             !
             call iotk_scan_begin(iunpun,"STEP0")
               !
+              call iotk_scan_dat (iunpun, "ACCUMULATORS", acc)
+              !
               call iotk_scan_begin(iunpun,"IONS_POSITIONS")
                 call iotk_scan_dat(iunpun, "stau", stau0(1:3,1:nat) )
                 call iotk_scan_dat(iunpun, "svel", svel0(1:3,1:nat) )
+                call iotk_scan_dat(iunpun, "taui", taui(1:3,1:nat) )
+                call iotk_scan_dat(iunpun, "cdmi", cdmi(1:3) )
+                call iotk_scan_dat(iunpun, "force", force(1:3,1:nat) )
               call iotk_scan_end(iunpun,"IONS_POSITIONS")
               !
               call iotk_scan_begin(iunpun,"IONS_NOSE")
@@ -758,6 +865,8 @@
                 call iotk_scan_dat (iunpun, "xnhp", xnhp0 )
                 call iotk_scan_dat (iunpun, "vnhp", vnhp)
               call iotk_scan_end(iunpun,"IONS_NOSE")
+              !
+              call iotk_scan_dat (iunpun, "ekincm", ekincm)
               !
               call iotk_scan_begin(iunpun,"ELECTRONS_NOSE")
                 call iotk_scan_dat (iunpun, "xnhe", xnhe0)
@@ -819,54 +928,84 @@
           !
         call iotk_scan_end(iunpun,"TIMESTEPS")
         !
-        !
-        call iotk_scan_begin(iunpun,"K_POINTS")
-        call iotk_scan_empty(iunpun,"GRID",attr)
-        call iotk_scan_attr (attr, "nk",nk_ )
-        call iotk_scan_attr (attr, "gamma_only", gamma_only_ )
-        call iotk_scan_attr (attr, "kunit", kunit )
-        !call iotk_scan_attr (attr, "k1", k1 )
-        !call iotk_scan_attr (attr, "k2", k2 )
-        !call iotk_scan_attr (attr, "k3", k3 )
-        !call iotk_scan_attr (attr, "nk1", nk1 )
-        !call iotk_scan_attr (attr, "nk2", nk2 )
-        !call iotk_scan_attr (attr, "nk3", nk3 )
-        IF( ( nk_ /= nk ) .OR.  &
-            ( gamma_only .AND. .NOT. gamma_only_ ) .OR. &
-            ( .NOT. gamma_only .AND. gamma_only_ ) ) THEN 
-          ierr = 20
-          GOTO 100
-        END IF
-        DO i = 1, nk
-          call iotk_scan_begin(iunpun,"Kpoint",attr)
-          call iotk_scan_attr (attr, "ik",ik_ )
-          ! call iotk_scan_attr (attr,"xyz",xk(:,i))
-          ! call iotk_scan_attr (attr,"w",wk(i))
-          DO ispin = 1, nspin
-            call iotk_scan_begin(iunpun,"spin_component",attr)
-            !
-            call iotk_scan_dat(iunpun,"occupations_0",occ0(:,i,ispin))
-            call iotk_scan_dat(iunpun,"occupations_m",occm(:,i,ispin))
-            !
-            IF( tens ) THEN
-              call iotk_scan_dat(iunpun,"mat_z",mat_z(:,:,ispin))
-            END IF
-            !
-            call iotk_scan_end(iunpun,"spin_component")
-          END DO
+      END IF   !  ionode
 
-          call iotk_scan_end(iunpun,"Kpoint")
-        END DO
-        call iotk_scan_end(iunpun,"K_POINTS")
+      ! 
+      !  Band Structure
+      !
+
+      IF( ionode ) THEN
+
+        call iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+          !
+          call iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
+          !
+          IF( nspin_ == 2 ) THEN
+            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt_ , ATTR = attr)
+            call iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_ , ATTR = attr)
+          ELSE
+            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt_ )
+            call iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_ )
+          END IF
+
+          IF( ( nspin_ /= nspin ) .OR. ( nbnd_ /= nbnd ) .OR. ( nelt_ /= nelt ) ) THEN 
+            ierr = 30
+            GOTO 100
+          END IF
+          ! 
+
+          CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+
+      END IF   !  ionode
+
+
+      k_points_loop: DO ik = 1, nk
         !
-      END IF
+        IF ( ionode ) THEN
+          CALL iotk_scan_begin( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+        END IF
+        !
+        DO ispin = 1, nspin
+          !
+          cspin = iotk_index( ispin )
+          !
+          IF( ionode ) THEN
+            CALL iotk_scan_dat( iunpun, "OCC"  // TRIM( cspin ),  occ0(:, ik, ispin ) )
+            CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ),  occm(:, ik, ispin ), FOUND=found, IERR=ierr )
+            IF ( .NOT. found ) occm(:, ik, ispin ) = occ0(:, ik, ispin )
+          END IF
+          !
+        END DO
+        !
+        IF ( ionode ) THEN
+          CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+        END IF
+        !
+      END DO k_points_loop
+
+
+      DO ispin = 1, nspin
+        IF( ionode .AND. tens ) THEN
+          call iotk_scan_dat( iunpun, "mat_z" // TRIM( iotk_index(ispin) ), mat_z(:,:,ispin) )
+        END IF
+      END DO
+
+      IF( ionode ) THEN
+
+          CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+
+        call iotk_scan_end( iunpun,"BAND_STRUCTURE")
+
+      END IF   !  ionode
+
+      !
       !
  100  CONTINUE
       !
       CALL mp_bcast( ierr, ionode_id )
       CALL mp_bcast( attr, ionode_id )
       IF( ierr /= 0 ) THEN
-        CALL errore( " cp_readfile ", attr, ierr )
+        CALL errore( " cp_readfile ", TRIM( attr ), ierr )
       END IF
       !
       CALL mp_bcast( nfi, ionode_id )
@@ -999,7 +1138,8 @@
 
 !=----------------------------------=!
 
-    SUBROUTINE cp_read_cell( ndr, scradir, ascii, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
+    SUBROUTINE cp_read_cell &
+      ( ndr, scradir, ascii, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -1045,13 +1185,6 @@
 
       ierr = 0
       IF( ionode ) THEN
-        !
-        call iotk_scan_begin(iunpun,"LATTICE")
-        call iotk_scan_empty(iunpun,"TYPE",attr)
-        call iotk_scan_attr (attr, "ibrav",ibrav_ )
-        call iotk_scan_attr (attr, "alat", alat_ )
-        call iotk_scan_dat (iunpun, "CELLDM", celldm_ (1:6) )
-        call iotk_scan_end(iunpun,"LATTICE")
         !
         call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
         call iotk_scan_attr (attr, "nt", nt_ )
@@ -1402,6 +1535,276 @@
 
 !=----------------------------------------------------------------------------=!
 !
+
+    SUBROUTINE write_cell( ibrav, symm_type, celldm, alat, a1, a2, a3, b1, b2, b3 )
+      !
+      USE iotk_module
+      USE kinds,       ONLY: dbl
+      USE io_files,    ONLY: iunpun
+      !
+      INTEGER,   INTENT(IN) :: ibrav
+      CHARACTER(LEN=*), INTENT(IN) :: symm_type
+      REAL(dbl), INTENT(IN) :: celldm( 6 ), alat
+      REAL(dbl), INTENT(IN) :: a1( 3 ), a2( 3 ), a3( 3 )
+      REAL(dbl), INTENT(IN) :: b1( 3 ), b2( 3 ), b3( 3 )
+      !
+      CHARACTER(LEN=256)      :: bravais_lattice
+      CHARACTER(iotk_attlenx) :: attr
+      !
+      call iotk_write_begin(iunpun,"CELL")
+         !
+         SELECT CASE ( ibrav )
+           CASE(  0 )
+              bravais_lattice = "free"
+           CASE(  1 )
+              bravais_lattice = "cubic P (sc)"
+           CASE(  2 )
+              bravais_lattice = "cubic F (fcc)"
+           CASE(  3 )
+              bravais_lattice = "cubic I (bcc)"
+           CASE(  4 )
+              bravais_lattice = "Hexagonal and Trigonal P"
+           CASE(  5 )
+              bravais_lattice = "Trigonal R"
+           CASE(  6 )
+              bravais_lattice = "Tetragonal P (st)"
+           CASE(  7 )
+              bravais_lattice = "Tetragonal I (bct)"
+           CASE(  8 )
+              bravais_lattice = "Orthorhombic P"
+           CASE(  9 )
+              bravais_lattice = "Orthorhombic base-centered(bco)"
+           CASE( 10 )
+              bravais_lattice = "Orthorhombic face-centered"
+           CASE( 11 )
+              bravais_lattice = "Orthorhombic body-centered"
+           CASE( 12 )
+              bravais_lattice = "Monoclinic P"
+           CASE( 13 )
+              bravais_lattice = "Monoclinic base-centered"
+           CASE( 14 )
+              bravais_lattice = "Triclinic P"
+         END SELECT
+         !
+         CALL iotk_write_attr( attr, "ibrav", ibrav, FIRST = .TRUE. )
+         CALL iotk_write_dat( iunpun, &
+                             "BRAVAIS_LATTICE", TRIM( bravais_lattice ), ATTR = attr )
+         !
+         IF ( ibrav == 0 ) &
+            CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
+         !
+         CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
+         CALL iotk_write_dat( iunpun, "LATTICE_PARAMETER", alat, ATTR = attr )
+         !
+         call iotk_write_dat (iunpun, "CELLDM", celldm(1:6))
+         !
+         CALL iotk_write_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
+           CALL iotk_write_dat(   iunpun, "a1", a1, ATTR = attr )
+           CALL iotk_write_dat(   iunpun, "a2", a2, ATTR = attr )
+           CALL iotk_write_dat(   iunpun, "a3", a3, ATTR = attr )
+         CALL iotk_write_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
+         !
+         CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+           CALL iotk_write_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
+           CALL iotk_write_dat(   iunpun, "b1", b1, ATTR = attr )
+           CALL iotk_write_dat(   iunpun, "b2", b2, ATTR = attr )
+           CALL iotk_write_dat(   iunpun, "b3", b3, ATTR = attr )
+         CALL iotk_write_end(   iunpun, "RECIPROCAL_LATTICE_VECTORS" )
+         !
+      CALL iotk_write_end( iunpun, "CELL" )
+
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+!
+
+    SUBROUTINE read_cell( ibrav, symm_type, celldm, alat, a1, a2, a3, b1, b2, b3 )
+      !
+      USE iotk_module
+      USE kinds,       ONLY: dbl
+      USE io_files,    ONLY: iunpun
+      !
+      INTEGER,   INTENT(OUT) :: ibrav
+      CHARACTER(LEN=*), INTENT(OUT) :: symm_type
+      REAL(dbl), INTENT(OUT) :: celldm( 6 ), alat
+      REAL(dbl), INTENT(OUT) :: a1( 3 ), a2( 3 ), a3( 3 )
+      REAL(dbl), INTENT(OUT) :: b1( 3 ), b2( 3 ), b3( 3 )
+      !
+      CHARACTER(LEN=256)      :: bravais_lattice
+      CHARACTER(iotk_attlenx) :: attr
+      !
+
+      call iotk_scan_begin(iunpun,"CELL")
+         !
+         CALL iotk_scan_dat( iunpun, &
+                             "BRAVAIS_LATTICE", bravais_lattice, ATTR = attr )
+         CALL iotk_scan_attr( attr, "ibrav", ibrav )
+         !
+         IF ( ibrav == 0 ) &
+            CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
+         !
+         CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
+         call iotk_scan_dat( iunpun, "CELLDM", celldm(1:6))
+         !
+         CALL iotk_scan_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
+           CALL iotk_scan_dat(   iunpun, "a1", a1 )
+           CALL iotk_scan_dat(   iunpun, "a2", a2 )
+           CALL iotk_scan_dat(   iunpun, "a3", a3 )
+         CALL iotk_scan_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
+         !
+         CALL iotk_scan_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
+           CALL iotk_scan_dat(   iunpun, "b1", b1 )
+           CALL iotk_scan_dat(   iunpun, "b2", b2 )
+           CALL iotk_scan_dat(   iunpun, "b3", b3 )
+         CALL iotk_scan_end(   iunpun, "RECIPROCAL_LATTICE_VECTORS" )
+         !
+      CALL iotk_scan_end( iunpun, "CELL" )
+
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE write_ions( nsp, nat, atm, ityp, psfile, pseudo_dir, amass, tau, &
+                           if_pos, dirname )
+      !
+      USE iotk_module
+      USE kinds,       ONLY: dbl
+      USE io_files,    ONLY: iunpun
+      !
+      INTEGER,          INTENT(IN) :: nsp, nat
+      INTEGER,          INTENT(IN) :: ityp( : )
+      CHARACTER(LEN=*), INTENT(IN) :: atm( : )
+      CHARACTER(LEN=*), INTENT(IN) :: psfile( : )
+      CHARACTER(LEN=*), INTENT(IN) :: pseudo_dir
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      REAL(dbl),        INTENT(IN) :: amass( : )
+      REAL(dbl),        INTENT(IN) :: tau( :, : )
+      INTEGER,          INTENT(IN) :: if_pos( :, : )
+      !
+      INTEGER :: i, flen
+      CHARACTER(LEN=256) :: file_pseudo
+      CHARACTER(iotk_attlenx) :: attr
+
+         CALL iotk_write_begin( iunpun, "IONS" )
+         !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMS", nat )
+         !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
+         !
+         DO i = 1, nsp
+            !
+            flen = LEN_TRIM( pseudo_dir )
+            !
+            IF ( pseudo_dir(flen:flen) /= '/' ) THEN
+               !
+               file_pseudo = pseudo_dir(1:flen) // '/' // psfile(i)
+               !
+            ELSE
+               !
+               file_pseudo = pseudo_dir(1:flen) // psfile(i)
+               !
+            END IF
+            !
+!            CALL copy_file( TRIM( file_pseudo ), &
+!                            TRIM( dirname ) // "/" // TRIM( psfile( i ) ) )
+            !
+            CALL iotk_write_attr( attr, "UNIT", "a.m.u.", FIRST = .TRUE. )
+            CALL iotk_write_dat( iunpun, TRIM( atm( i ) )//"_MASS", &
+                                 amass( i ), ATTR = attr )
+            !
+            CALL iotk_link( iunpun, "PSEUDO_FOR_" // TRIM( atm( i ) ), &
+                            TRIM( psfile(i) ), CREATE = .FALSE.,           &
+                            BINARY = .FALSE., RAW = .TRUE. )
+            !
+         END DO
+         !
+         CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
+         CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
+         !
+         DO i = 1, nat
+            !
+            CALL iotk_write_attr( attr, "SPECIES", &
+                                & atm( ityp( i ) ), FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "tau", tau(:,i) )
+            CALL iotk_write_attr( attr, "if_pos", if_pos(:,i) )
+            CALL iotk_write_empty( iunpun, &
+                                 & "ATOM" // TRIM( iotk_index(i) ), attr )
+            !
+         END DO
+         !
+         CALL iotk_write_end( iunpun, "IONS" )
+
+      !
+      RETURN
+    END SUBROUTINE
+
+!=----------------------------------------------------------------------------=!
+
+    SUBROUTINE write_plane_wave( itmp )
+      !
+      USE iotk_module
+      USE kinds,       ONLY: dbl
+      USE io_files,    ONLY: iunpun
+      USE constants,   ONLY: e2
+      !
+      USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
+      USE gvecp, ONLY: ngm, ngmt, ecutp, gcutp
+      USE gvecs, ONLY: ngs, ngst, ecuts, gcuts, dual
+      USE gvecw, ONLY: ngw, ngwt, ecutw, gcutw
+      USE control_flags, ONLY: gamma_only
+      !
+      INTEGER :: itmp( :, : )
+      !
+      INTEGER :: i
+      CHARACTER(iotk_attlenx) :: attr
+
+        CALL iotk_write_begin( iunpun, "PLANE_WAVES" )
+          !
+          CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+          !
+          CALL iotk_write_dat( iunpun, "WFC_CUTOFF", ecutw / e2, ATTR = attr )
+          !
+          CALL iotk_write_dat( iunpun, "RHO_CUTOFF", &
+                              ecutw * dual / e2, ATTR = attr )
+          !
+          CALL iotk_write_dat( iunpun, "MAX_NPW", ngwt )
+          !
+          CALL iotk_write_dat( iunpun, "GAMMA_ONLY", gamma_only )
+          !
+          CALL iotk_write_attr( attr, "nr1", nr1, FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "nr2", nr2 )
+          CALL iotk_write_attr( attr, "nr3", nr3 )
+          CALL iotk_write_empty( iunpun, "FFT_GRID", attr )
+          !
+          CALL iotk_write_dat( iunpun, "GVECT_NUMBER", ngmt )
+          !
+          CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
+          CALL iotk_write_attr( attr, "nr2s", nr2s )
+          CALL iotk_write_attr( attr, "nr3s", nr3s )
+          CALL iotk_write_empty( iunpun, "SMOOTH_FFT_GRID", attr )
+          !
+          CALL iotk_write_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngst )
+          !
+          CALL iotk_link( iunpun, "G-VECTORS_FILE", "gvectors.dat", &
+                         CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
+          !  
+          CALL iotk_write_begin( iunpun, "G-VECTORS", attr = attr )
+          CALL iotk_write_dat( iunpun, "g", itmp(1:3,1:ngmt), FMT = "(3I5)" )
+          CALL iotk_write_end( iunpun, "G-VECTORS" )
+
+          call iotk_write_attr (attr,"nr1b",nr1b,first=.true.)
+          call iotk_write_attr (attr,"nr2b",nr2b)
+          call iotk_write_attr (attr,"nr3b",nr3b)
+          call iotk_write_empty(iunpun,"SMALLBOX_FFT_GRID",attr)
+          !  
+        CALL iotk_write_end( iunpun, "PLANE_WAVES" )
+
+      RETURN
+    END SUBROUTINE
 
 !------------------------------------------------------------------------------!
   END MODULE cp_restart

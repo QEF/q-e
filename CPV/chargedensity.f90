@@ -301,12 +301,61 @@
 !=----------------------------------------------------------------------=!
 
 
+      REAL(dbl) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
+
+!  This subroutine compute the Total Charge in reciprocal space
+!  ------------------------------------------------------------
+
+        USE wave_types, ONLY: wave_descriptor
+
+        IMPLICIT NONE
+
+        COMPLEX(dbl), INTENT(IN) :: c(:,:)
+        INTEGER, INTENT(IN) :: ispin
+        TYPE (wave_descriptor), INTENT(IN) :: cdesc
+        REAL (dbl),  INTENT(IN) :: fi(:)
+        INTEGER   :: ib, igs
+        REAL(dbl) :: rsum
+        COMPLEX(dbl) :: wdot
+        COMPLEX(dbl) :: ZDOTC
+        EXTERNAL ZDOTC
+
+! ... end of declarations
+
+        IF( ( cdesc%nbl( ispin ) > SIZE( c, 2 ) ) .OR. &
+            ( cdesc%nbl( ispin ) > SIZE( fi )     )    ) &
+          CALL errore( ' dft_total_charge ', ' wrong sizes ', 1 )
+
+        rsum = 0.0d0
+
+        IF( cdesc%gamma .AND. cdesc%gzero ) THEN
+
+          DO ib = 1, cdesc%nbl( ispin )
+            wdot = ZDOTC( ( cdesc%ngwl - 1 ), c(2,ib), 1, c(2,ib), 1 )
+            wdot = wdot + REAL( c(1,ib), dbl )**2 / 2.0d0
+            rsum = rsum + fi(ib) * REAL( wdot )
+          END DO
+
+        ELSE
+
+          DO ib = 1, cdesc%nbl( ispin )
+            wdot = ZDOTC( cdesc%ngwl, c(1,ib), 1, c(1,ib), 1 )
+            rsum = rsum + fi(ib) * REAL( wdot )
+          END DO
+
+        END IF
+
+        dft_total_charge = rsum
+
+        RETURN
+      END FUNCTION dft_total_charge
+
 
 
 !=----------------------------------------------------------------------=!
 !  BEGIN manual
 
-   SUBROUTINE rhoofr (kp, c0, cdesc, fi, rhoe, desc, box)
+   SUBROUTINE rhoofr (nfi, kp, c0, cdesc, fi, rhoe, desc, box)
 
 !  this routine computes:
 !  rhoe = normalized electron density in real space
@@ -334,18 +383,21 @@
     USE fft, ONLY: pw_invfft
     USE fft_base, ONLY: dfftp
     USE mp_global, ONLY: mpime
+    USE mp, ONLY: mp_sum
     USE turbo, ONLY: tturbo, nturbo, turbo_states
     USE cell_module, ONLY: boxdimensions
     USE wave_types, ONLY: wave_descriptor
     USE charge_types, ONLY: charge_descriptor
-    USE io_global, ONLY: stdout
-    USE control_flags, ONLY: force_pairing
+    USE io_global, ONLY: stdout, ionode
+    USE control_flags, ONLY: force_pairing, iprint
+    USE parameters, ONLY: nspinx
 
 
     IMPLICIT NONE
 
 ! ... declare subroutine arguments
 
+    INTEGER,              INTENT(IN) :: nfi
     TYPE (kpoints),       INTENT(IN) :: kp
     COMPLEX(dbl)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
@@ -357,11 +409,13 @@
 ! ... declare other variables
 
     INTEGER :: i, is1, is2, j, k, ib, ik, nb, nxl, nyl, nzl, ispin
-    INTEGER :: nr1x, nr2x, nr3x, nspin, nbnd
-    REAL(dbl)  :: r2, r1, coef3, coef4, omega
+    INTEGER :: nr1x, nr2x, nr3x, nspin, nbnd, nnr
+    REAL(dbl)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
+    REAL(dbl)  :: fact, rsumr( nspinx )
     REAL(dbl), ALLOCATABLE :: rho(:,:,:)
     COMPLEX(dbl), ALLOCATABLE :: psi2(:,:,:)
     INTEGER :: ierr, ispin_wfc
+    LOGICAL :: ttprint
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -369,6 +423,7 @@
     nxl =  dfftp%nr1
     nyl =  dfftp%nr2
     nzl =  dfftp%npl
+    nnr =  dfftp%nr1 * dfftp%nr2 * dfftp%nr3
 
     nr1x = dfftp%nr1x
     nr2x = dfftp%nr2x
@@ -377,6 +432,12 @@
     omega = box%deth
 
     nspin = cdesc%nspin
+
+    rsumg = 0.0d0
+    rsumr = 0.0d0
+
+    ttprint = .FALSE.
+    IF( nfi == 0 .or. mod( nfi, iprint ) == 0 ) ttprint = .TRUE.
 
     ! ... Check consistensy of the charge density grid and fft grid
 
@@ -417,11 +478,6 @@
 
           ! ...  Fourier-transform wave functions to real-scaled space
           ! ...  psi(s,ib,ik) = INV_FFT (  c0(ig,ib,ik)  )
-
-          !WRITE( *, * ) 'DEBUG c0 is1'
-          !WRITE( *, fmt='(2D24.16)' ) c0( 1: SIZE(c0,1), is1, 1, ispin_wfc )
-          !WRITE( *, * ) 'DEBUG c0 is2'
-          !WRITE( *, fmt='(2D24.16)' ) c0( 1: SIZE(c0,1), is2, 1, ispin_wfc )
 
           CALL pw_invfft( psi2, c0( :, is1, 1, ispin_wfc ), c0( :, is2, 1, ispin_wfc ) )
 
@@ -526,21 +582,55 @@
 
       END IF
 
-      !  WRITE(stdout,*) 'DEBUG: rhoofr (rho) ', SUM( rho ) * omega / ( nxl * nyl * nzl )
+      IF( ttprint ) rsumr( ispin ) = SUM( rho ) * omega / nnr
 
       rhoe( 1:nxl, 1:nyl, 1:nzl, ispin ) = rho( 1:nxl, 1:nyl, 1:nzl )
 
+    END DO
+
+
+    IF( ttprint ) THEN
+      !
+      DO ispin = 1, nspin
+        ispin_wfc = ispin
+        IF( force_pairing ) ispin_wfc = 1
+        DO ik = 1, cdesc%nkl
+          fact = kp%weight(ik)
+          IF( cdesc%gamma ) fact = fact * 2.d0
+          rsumgs = dft_total_charge( ispin, c0(:,:,ik,ispin_wfc), cdesc, fi(:,ik,ispin) )
+          rsumg( ispin ) = rsumg( ispin ) + fact * rsumgs
+        END DO
       END DO
+      !
+      CALL mp_sum( rsumg( 1:nspin ) )
+      CALL mp_sum( rsumr( 1:nspin ) )
+      !
+      if ( nspin == 1 ) then
+        WRITE( stdout, 10) rsumg(1), rsumr(1)
+      else
+        WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
+      endif
 
-      DEALLOCATE(psi2, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating psi2 ', ABS(ierr) )
-      DEALLOCATE(rho, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating rho ', ABS(ierr) )
+10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+20    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'spin up', & 
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 , &
+            & /, 3X, 'spin down', & 
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
 
 
-      RETURN
+    END IF
+
+    DEALLOCATE(psi2, STAT=ierr)
+    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating psi2 ', ABS(ierr) )
+    DEALLOCATE(rho, STAT=ierr)
+    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating rho ', ABS(ierr) )
+
+
+    RETURN
 !=----------------------------------------------------------------------=!
-      END SUBROUTINE rhoofr
+  END SUBROUTINE rhoofr
 !=----------------------------------------------------------------------=!
 
 

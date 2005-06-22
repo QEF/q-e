@@ -180,7 +180,7 @@ END FUNCTION calculate_dx
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp_param, ONLY : tvanp
-      USE atom, ONLY: numeric
+      USE atom, ONLY: numeric, nlcc
       USE cvan, ONLY: oldvan, nvb
       use ions_base, only: nsp
       use read_pseudo_module, only: read_pseudo_upf
@@ -441,11 +441,11 @@ END FUNCTION calculate_dx
         end do
 
 ! ...   Copy local component to a separate array
-        ap%vloc(:) = ap%vnl(:,ap%lloc)
+        ap%vloc( : ) = ap%vnl( :, ( ap%lloc + 1 ) )
         DO l = 1, ap%nbeta
-          ll=ap%lll(l) + 1  ! find out the angular momentum (ll-1) of the component stored
-                         ! in position l
-          ap%vrps(:,l) = ( ap%vnl(:,ll) - ap%vloc(:) ) * ap%rps(:,ll)
+          ll = ap%lll(l) + 1  ! find out the angular momentum (ll-1) of the  
+                              ! component stored in position l
+          ap%vrps( :, l ) = ( ap%vnl( :, ll ) - ap%vloc( : ) ) * ap%rps( :, ll )
         END DO
 
         RETURN
@@ -468,13 +468,13 @@ END FUNCTION calculate_dx
             WRITE( stdout,106)  (ap%lll(l),l=1,ap%nbeta)
             WRITE( stdout,105)  (ap%wgv(l),l=1,ap%nbeta)
           ELSE
-            WRITE( stdout,50) ap%lloc
+            WRITE( stdout,50 )   ap%lloc   
           END IF
           WRITE( stdout,60) (ap%lll(l),l=1,ap%nbeta)
         ELSE
 ! ...     A local pseudopotential has been read.
           WRITE( stdout,11) ap%pottyp
-          WRITE( stdout,50) ap%lloc
+          WRITE( stdout,50) ap%lloc 
         END IF
         IF( ap%tnlcc ) THEN
           WRITE( stdout,12)
@@ -699,15 +699,15 @@ SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
 ! ...  mixed reference potential is in vr(lloc)
   IF(ap%tmix) THEN
     DO j=1,ap%mesh
-      ap%vnl(j,ap%lloc)= 0.d0
+      ap%vnl( j, ( ap%lloc + 1 ) )= 0.d0
       DO l=1,ap%nchan
-        IF(l /= ap%lloc) THEN
-          ap%vnl(j,ap%lloc)=  ap%vnl(j,ap%lloc) + ap%wgv(l) * ap%vnl(j,l)
+        IF( l /= ( ap%lloc + 1 ) ) THEN
+          ap%vnl(j, ( ap%lloc + 1 ) )=  ap%vnl(j, ( ap%lloc + 1 ) ) + ap%wgv(l) * ap%vnl(j,l)
         END IF
       END DO
     END DO
   END IF
-  ap%vloc(:) = ap%vnl(:,ap%lloc)
+  ap%vloc(:) = ap%vnl( :, ap%lloc + 1 )
   ap%dx = calculate_dx( ap%rw, ap%mesh )
   ap%rab  = ap%dx * ap%rw
 
@@ -766,8 +766,9 @@ subroutine upf2internal ( upf, is, ierr )
   !
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
-  tvanp(is)=upf%tvanp
-  nlcc(is) = upf%nlcc
+  tvanp(is) = upf%tvanp
+  nlcc(is)  = .FALSE.
+  nlcc(is)  = upf%nlcc
   !
   dft = upf%dft
   call which_dft (upf%dft)
@@ -934,7 +935,7 @@ SUBROUTINE upf2ncpp( upf, ap )
   TYPE (pseudo_upf ), INTENT(INOUT) :: upf
 
   integer :: l, il, i
-  integer :: which_lloc( upf%nbeta + 1 )
+  integer :: which_lloc( 0 : upf%nbeta )
 
   ap%rw    = 0.0d0
   ap%vnl   = 0.0d0
@@ -950,12 +951,12 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%lll( 1:upf%nbeta ) = upf%lll( 1:upf%nbeta )
 
   !  Calculate lloc
-  ap%lloc = upf%nbeta + 1 
+  ap%lloc = upf%nbeta
   which_lloc = 0
   DO l = 1, ap%nbeta
-    which_lloc( ap%lll( l ) + 1 ) = 1
+    which_lloc( ap%lll( l ) ) = 1
   END DO
-  DO l = 1, ap%nbeta + 1
+  DO l = 0, ap%nbeta
     IF( which_lloc( l ) == 0 ) ap%lloc = l
   END DO
 
@@ -1011,13 +1012,14 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
   READ(iunit, *) ap%tnlcc, ap%tmix
   READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, MIN(ap%nbeta, SIZE(ap%lll)) ) 
   ap%lll = ap%lll - 1
+  ap%lloc = ap%lloc - 1
 
   IF( ap%nbeta > SIZE(ap%lll) .OR. ap%nbeta < 0 ) THEN
     ierr = 1
     err_msg = 'nbeta out of range'
     GO TO 110
   END IF
-  IF( ap%lloc < 0 .OR. ap%lloc > SIZE(ap%vnl,2) ) THEN
+  IF( ( ap%lloc + 1 ) < 1 .OR. ( ap%lloc + 1 ) > SIZE( ap%vnl, 2 ) ) THEN
     ierr = 3
     err_msg = 'LLOC out of range'
     GO TO 110
@@ -1035,7 +1037,7 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
     END IF
   END DO
   DO l = 1, ap%nbeta
-    IF( ap%lll(l) + 1 == ap%lloc) THEN
+    IF( ap%lll(l) == ap%lloc ) THEN
       ierr = 6
       err_msg = ' LLOC.EQ.L NON LOCAL!!' 
       GO TO 110

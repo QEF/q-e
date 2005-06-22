@@ -134,7 +134,7 @@
         CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
       ENDIF
 
-      CALL cpflush  ! flush output streams
+      CALL flush_unit( stdout )  ! flush output streams
 
       RETURN
       END SUBROUTINE init0s
@@ -335,7 +335,7 @@
       !
       !   Flush stdout
       !
-      CALL cpflush()
+      CALL flush_unit( stdout )
       !
 
       return

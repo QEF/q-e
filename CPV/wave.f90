@@ -17,7 +17,7 @@
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
 !  routines in this module:
-!  REAL(dbl) FUNCTION dft_kinetic_energy(c,hg,f,nb,rsum)
+!  REAL(dbl) FUNCTION dft_kinetic_energy(c,hg,f,nb)
 !  REAL(dbl) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
 !  SUBROUTINE rande(cm,ampre)
 !  SUBROUTINE gram(cp)
@@ -70,7 +70,7 @@
 !  ----------------------------------------------
 
 
-    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, f, rsum, xmkin)
+    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, f, xmkin)
 
 !  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
 !  wave function
@@ -90,11 +90,10 @@
         TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
         REAL(dbl), INTENT(IN) :: f(:,:,:)             !  occupation numbers
         TYPE (kpoints), INTENT(IN) :: kp              !  k points
-        REAL(dbl), INTENT(OUT) :: rsum(:)             !  charge density
         REAL(dbl), OPTIONAL, INTENT(INOUT) :: xmkin
 
         INTEGER    :: ib, ik, ispin, ispin_wfc
-        REAL(dbl)  :: xkin, fact, xkins, rsums, xmkins
+        REAL(dbl)  :: xkin, fact, xkins, xmkins
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -103,8 +102,6 @@
       xkin = 0.d0
 
       DO ispin = 1, cdesc%nspin
-
-        rsum( ispin ) = 0.d0
 
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
@@ -134,9 +131,6 @@
             xmkin = xmkin + fact * xmkins
           END IF
 
-          rsums         = dft_total_charge( ispin, c0(:,:,ik,ispin_wfc), cdesc, f(:,ik,ispin) )
-          rsum( ispin ) = rsum( ispin ) + fact * rsums
-
         END DO
 
       END DO
@@ -148,57 +142,6 @@
 
 !=----------------------------------------------------------------------------=!
 
-
-      REAL(dbl) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
-
-!  This subroutine compute the Total Charge in reciprocal space
-!  ------------------------------------------------------------
-
-        USE wave_types, ONLY: wave_descriptor
-
-        IMPLICIT NONE
-
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
-        INTEGER, INTENT(IN) :: ispin
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (dbl),  INTENT(IN) :: fi(:)
-        INTEGER   :: ib, igs
-        REAL(dbl) :: rsum
-        COMPLEX(dbl) :: wdot
-        COMPLEX(dbl) :: ZDOTC
-        EXTERNAL ZDOTC
-
-! ... end of declarations
-
-        IF( ( cdesc%nbl( ispin ) > SIZE( c, 2 ) ) .OR. &
-            ( cdesc%nbl( ispin ) > SIZE( fi )     )    ) &
-          CALL errore( ' dft_total_charge ', ' wrong sizes ', 1 )
-
-        rsum = 0.0d0
-
-        IF( cdesc%gamma .AND. cdesc%gzero ) THEN
-
-          DO ib = 1, cdesc%nbl( ispin )
-            wdot = ZDOTC( ( cdesc%ngwl - 1 ), c(2,ib), 1, c(2,ib), 1 )
-            wdot = wdot + REAL( c(1,ib), dbl )**2 / 2.0d0 
-            rsum = rsum + fi(ib) * REAL( wdot )
-          END DO
-
-        ELSE
-
-          DO ib = 1, cdesc%nbl( ispin )
-            wdot = ZDOTC( cdesc%ngwl, c(1,ib), 1, c(1,ib), 1 )
-            rsum = rsum + fi(ib) * REAL( wdot )
-          END DO
-
-        END IF
-
-        dft_total_charge = rsum
-        
-        RETURN
-      END FUNCTION dft_total_charge
-
-!=----------------------------------------------------------------------------=!
 
       REAL(dbl) FUNCTION dft_weighted_kinene( ispin, c, cdesc, g2, fi)
 

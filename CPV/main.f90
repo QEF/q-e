@@ -174,6 +174,8 @@
       !
       USE uspp_param      , ONLY: nhm
       !
+      USE core            , ONLY: deallocate_core
+      USE local_pseudo    , ONLY: deallocate_local_pseudo
       !
 
       IMPLICIT NONE
@@ -275,7 +277,7 @@
       CALL init_dimensions( )
 
       CALL cpsizes( nproc )
-      CALL cpflush( )
+      CALL flush_unit( stdout )
 
       timepre = 0.0_dbl
       timernl = 0.0_dbl
@@ -434,7 +436,7 @@
 
 
         IF( ionode .AND. ttprint ) THEN
-          WRITE( stdout, fmt = '(  //, " * MD STEP  <> ",  I6,  " <> "  )' ) nfi
+          WRITE( stdout, fmt = '( /, " * Step ",  I6 )' ) nfi
         END IF
 
         IF(memchk) CALL memstat(0)
@@ -516,7 +518,7 @@
         timernl = s5 - s4
 
 ! ...   compute the new charge density "rhoe"
-        CALL rhoofr(kp, c0, wfill, fi, rhoe, desc, ht_0)
+        CALL rhoofr( nfi, kp, c0, wfill, fi, rhoe, desc, ht_0)
         ! CALL printrho(nfi, rhoe, atoms_0, ht_0) ! DEBUG
 
         IF(memchk) CALL memstat(6)
@@ -659,8 +661,36 @@
 
         ! ---------------------------------------------------------------------------- !
 
+
+        ! ...   if we are going to check convergence, then compute the
+        ! ...   maximum value of the ionic forces
+
+        tconv = .FALSE.
+        IF( ttconvchk ) THEN
+          maxfion = max_ion_forces( atoms_0 )
+          derho = ( erhoold - edft%etot )
+          tconv =             ( derho < tconvthrs%derho )
+          tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
+          tconv = tconv .AND. ( maxfion < tconvthrs%force )
+          IF( ionode ) THEN
+            IF( ttprint .OR. tconv ) THEN
+              WRITE( stdout,fmt= &
+                "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )
+              WRITE( stdout,fmt="(3X,'MAIN: ',3(D14.6,1X,D8.1))" ) &
+                ekinc, tconvthrs%ekin, derho, tconvthrs%derho, maxfion, tconvthrs%force
+              IF( tconv ) THEN
+                WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
+              ELSE
+                WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation')")
+              END IF
+            END IF
+          END IF
+          erhoold = edft%etot
+        END IF
+
         ! ...   printout 
         !
+
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, &
           avgs, avgs_this_run, edft)
 
@@ -679,14 +709,6 @@
           END IF
         END IF
 
-! ...   if we are going to check convergence, then compute the
-! ...   maximum value of the ionic forces
-
-        IF( ttconvchk ) THEN
-          maxfion = max_ion_forces( atoms_0 )
-          etot = edft%etot
-          CALL resort_position( tau, fion, atoms_0, ind_srt, ht_0 )
-        END IF
 
 
         IF ( doions ) THEN
@@ -719,27 +741,6 @@
 ! ...   stop if only the electronic minimization was required
 !        IF(.NOT. (tfor .OR. thdyn) .AND. ttdiis ) tstop = .TRUE.
 
-        tconv = .FALSE.
-        IF( ttconvchk ) THEN
-          derho   = ( erhoold - edft%etot )
-          tconv =             ( derho < tconvthrs%derho )
-          tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
-          tconv = tconv .AND. ( maxfion < tconvthrs%force )
-          IF( ionode ) THEN
-            IF( ttprint .OR. tconv ) THEN
-              WRITE( stdout,fmt= &
-                "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )
-              WRITE( stdout,fmt="(3X,'MAIN: ',3(D14.6,1X,D8.1))" ) &
-                ekinc, tconvthrs%ekin, derho, tconvthrs%derho, maxfion, tconvthrs%force
-              IF( tconv ) THEN
-                WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
-              ELSE
-                WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation')")
-              END IF
-            END IF
-          END IF
-          erhoold = edft%etot
-        END IF
         tstop = tstop .OR. tconv
 
         ttexit = tstop .OR. ( nfi >= nomore )
@@ -749,7 +750,6 @@
           CALL writefile( nfi, tps, c0, cm, wfill, &
             fi, atoms_0, atoms_m, avgs, taui, cdmi, &
             ht_m, ht_0, rhoe, desc, vpot, kp)
-      
         END IF
 
         IF( ttexit .AND. .NOT. ttprint ) THEN
@@ -774,7 +774,12 @@
 
       END DO MAIN_LOOP                    !  *** END OF MAIN LOOP ***  !
 
+
       conv_elec = tconv
+      etot      = edft%etot
+      !
+      CALL resort_position( tau, fion, atoms_0, ind_srt, ht_0 )
+      !
 
       IF(tksout) THEN
         IF ( force_pairing ) THEN 
@@ -834,6 +839,8 @@
       IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating fnl ', ierr)
 
       CALL deallocate_pseudo(ps)
+      CALL deallocate_core()
+      CALL deallocate_local_pseudo()
 
       CALL optical_closeup()
       CALL gindex_closeup

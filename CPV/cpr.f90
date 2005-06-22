@@ -415,6 +415,14 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      CALL start_clock( 'total_time' )
      !
+     nfi     = nfi + 1
+     tlast   = ( nfi == nomore )
+     ttprint = ( MOD( nfi, iprint ) == 0 )
+     !
+     IF( ionode .AND. ttprint ) THEN
+       WRITE( stdout, fmt = '( /, " * Step ",  I6 )' ) nfi
+     END IF
+     !
      ! ... calculation of velocity of nose-hoover variables
      !
      IF ( .NOT. tsde ) fccc = 1.D0 / ( 1.D0 + frice )
@@ -455,10 +463,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... why this call ??? from Paolo Umary
      !
      IF ( tefield ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
-     !
-     nfi     = nfi + 1
-     tlast   = ( nfi == nomore )
-     ttprint = ( MOD( nfi, iprint ) == 0 )
      !
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      !

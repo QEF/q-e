@@ -131,7 +131,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( ttprint, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
           atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
 
         s2 = cclock()
@@ -175,7 +175,7 @@
 
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
-        CALL kspotential( ttprint, tforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, tforce, ttstress, rhoe, desc, &
           atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot

@@ -26,20 +26,21 @@
 
 
 !=----------------------------------------------------------------------------=!
-   subroutine add_core_charge( rhoetg, rhoetr, sfac, ps, nsp)
+   subroutine add_core_charge( rhoetg, rhoetr, sfac, rhoc, nsp)
 !=----------------------------------------------------------------------------=!
 
-     USE fft, ONLY: pinvfft
-     USE cp_types, ONLY: pseudo
+     USE fft,            ONLY: pinvfft
+     USE cp_types,       ONLY: pseudo
      use electrons_base, only: nspin
-     use gvecp, only: ngm
+     use gvecp,          only: ngm
+     use atom,           only: nlcc
 
      implicit none
 
      integer :: nsp
      COMPLEX(dbl) :: rhoetg(:)
      REAL(dbl)    :: rhoetr(:,:,:)
-     type (pseudo),  intent(in) :: ps
+     REAL(dbl)    :: rhoc(:,:)
      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
           
      COMPLEX(dbl), ALLOCATABLE :: vtemp(:)
@@ -51,9 +52,9 @@
 
      fac = 1.0d0 / DBLE( nspin )
      DO is = 1, nsp
-       if( ps%tnlcc( is ) ) then
+       if( nlcc( is ) ) then
          do ig = 1, ngm
-           vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(ps%rhoc1(ig,is),0.0d0)
+           vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(rhoc(ig,is),0.0d0)
          end do
        endif
      end do
