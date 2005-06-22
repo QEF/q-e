@@ -372,13 +372,13 @@ subroutine ld1_readin
      !
      if (file_pseudo == ' ') &
        call errore('ld1_readin','file_pseudo is needed',1)
-     if (matches('upf',file_pseudo) .or. matches('UPF', file_pseudo)) then
+     if (matches('.upf',file_pseudo) .or. matches('.UPF', file_pseudo)) then
         !
         !    UPF format
         !
         call read_pseudoupf
         !
-     else if (matches('PAW',file_pseudo) .or. matches('PAW',file_pseudo)) then
+     else if (matches('.PAW',file_pseudo) .or. matches('.PAW',file_pseudo)) then
         !
         !    PAW dataset
         !
@@ -391,8 +391,8 @@ subroutine ld1_readin
         call paw2us ( pawsetup, zval, mesh, r, r2, sqr, dx, nbeta, lls, &
              ikk, betas, qq, qvan, pseudotype )
         !
-     else if ( matches('rrkj3', file_pseudo) .or. &
-               matches('RRKJ3', file_pseudo)) then
+     else if ( matches('.rrkj3', file_pseudo) .or. &
+               matches('.RRKJ3', file_pseudo)) then
         !
         !    Old RRKJ format
         !

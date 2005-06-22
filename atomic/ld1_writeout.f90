@@ -33,17 +33,17 @@ subroutine ld1_writeout
 
   if (.not. lpaw) then
 
-     if (rel == 2 .and. .not. matches('UPF',file_pseudopw) &
-                  .and. .not. matches('upf',file_pseudopw) ) then
+     if (rel == 2 .and. .not. matches('.UPF',file_pseudopw) &
+                  .and. .not. matches('.upf',file_pseudopw) ) then
         file_pseudopw=trim(file_pseudopw)//'.UPF'
      end if
 
-     oldformat = .not. matches('UPF',file_pseudopw) .and. &
-                 .not. matches('upf',file_pseudopw)
+     oldformat = .not. matches('.UPF',file_pseudopw) .and. &
+                 .not. matches('.upf',file_pseudopw)
 
   else
-     if ( .not. matches('PAW',file_pseudopw) .and. &
-          .not. matches('paw',file_pseudopw) ) then
+     if ( .not. matches('.PAW',file_pseudopw) .and. &
+          .not. matches('.paw',file_pseudopw) ) then
         file_pseudopw=trim(file_pseudopw)//'.PAW'
      end if
   end if
@@ -63,12 +63,20 @@ subroutine ld1_writeout
      !
      if (pseudotype == 1) then
        !
+       ! write in CPMD format 
+       if ( matches('.psp',file_pseudopw) ) then
+          call write_cpmd &
+               (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+               dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+               rhoc,vnl,phis,vpsloc,elts,llts,octs,rcut,etots,nwfts)
+       else
        ! write old "NC" format (semilocal)
        !
-        call write_pseudo &
-             (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-             dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-             rhoc,vnl,phis,vpsloc,elts,llts,octs,etots,nwfts)
+          call write_pseudo &
+               (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+               dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+               rhoc,vnl,phis,vpsloc,elts,llts,octs,etots,nwfts)
+       end if
      else
        !
        ! write old "RRKJ" format (nonlocal)

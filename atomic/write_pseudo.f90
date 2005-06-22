@@ -96,7 +96,7 @@ subroutine write_pseudo &
         endif
      enddo
   enddo
-300 call errore('ld1_readin','reading pseudo file',abs(ios))
+300 call errore('write_pseudo','writing pseudo file',abs(ios))
 
   return
 end subroutine write_pseudo

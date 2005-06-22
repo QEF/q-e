@@ -63,6 +63,7 @@ vext.o \
 vpack.o \
 vxcgc.o \
 vxc_t.o \
+write_cpmd.o \
 write_paw_recon.o \
 write_pseudo.o \
 write_results.o \
