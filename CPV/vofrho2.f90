@@ -43,7 +43,7 @@
      &        atot, egrand, entropy 
 
       use local_pseudo, only: vps, rhops
-      use core
+      use core, only: nlcc_any
       use gvecb
 !
       use dener

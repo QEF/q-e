@@ -4134,7 +4134,7 @@
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use local_pseudo, only: vps, rhops
-      use core
+      use core, only: nlcc_any
       use gvecb
       use dener
       use derho
@@ -4530,7 +4530,7 @@
       use constants, only: pi, fpi
       use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
       use local_pseudo, only: rhops, vps
-      use core
+      use core, only: nlcc_any
       use gvecb
       use atom, only: nlcc
       use reciprocal_vectors, only: g
