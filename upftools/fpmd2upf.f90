@@ -795,6 +795,8 @@ program fpmd2upf
 
   ! ... end of declarations
 
+  call input_from_file()
+
   read( 5, fpmd_pseudo )
 
   nsp = 1
