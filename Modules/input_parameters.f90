@@ -405,6 +405,14 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: U_projection_type = 'atomic'
           ! ONLY PWSCF
+#if defined (EXX)
+
+        LOGICAL :: lexx = .FALSE.
+          ! ONLY PWSCF
+
+        INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
+          ! ONLY PWSCF
+#endif
 
         REAL(dbl) :: a = 0.0d0
 
@@ -510,8 +518,11 @@ MODULE input_parameters
              occupations, degauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             U_projection_type, noncolin, &
-             lspinorb, lambda, angle1, angle2, report, &
+             U_projection_type,  &
+#if defined (EXX)
+             lexx, nqx1, nqx2, nqx3, &
+#endif
+             noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
              sic, sic_epsilon, force_pairing
 
@@ -1129,9 +1140,9 @@ MODULE input_parameters
                           smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
                           smd_smlm, smd_ene_ini, smd_ene_fin
 
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 
         CHARACTER(LEN=80) :: cell_parameters = 'default' 
@@ -1217,9 +1228,9 @@ MODULE input_parameters
           wmass, cell_temperature, temph, fnoseh, cell_dofree, greash, cell_factor, &
           cell_nstepe, cell_damping
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  PHONON Namelist Input Parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 
         INTEGER :: modenum = 0
@@ -1234,9 +1245,9 @@ MODULE input_parameters
 
         NAMELIST / phonon / modenum, xqq, nq1, nq2, nq3, tr2_ph
 
- !=----------------------------------------------------------------------------=!  
- !  RAMAN Namelist Input Parameters
- !=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
+!  RAMAN Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
  
          real(dbl) :: b_length
            ! length of the b-vector
@@ -1442,8 +1453,8 @@ MODULE input_parameters
        !  
      END SUBROUTINE deallocate_input_parameters
      !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 END MODULE input_parameters
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!

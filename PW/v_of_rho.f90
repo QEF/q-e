@@ -163,7 +163,7 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            !
            CALL xc( arhox, ex, ec, vx(1), vc(1) )
            !
-#ifdef EXX
+#if defined EXX
            v(ir,1) = e2 * ( (1.d0-exxalfa)*vx(1) + vc(1) )
            !
            etxc = etxc + e2 * ( (1.d0-exxalfa)*ex + ec ) * rhox

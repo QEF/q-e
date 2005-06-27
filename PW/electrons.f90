@@ -57,7 +57,7 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
 #if defined (EXX)
-  USE exx,                  ONLY : exxalfa, exxinit, exxenergy2 !Suriano
+  USE exx,                  ONLY : lexx, exxinit, exxenergy !Suriano
 #endif
   !
   IMPLICIT NONE
@@ -186,9 +186,7 @@ SUBROUTINE electrons()
      IF ( check_stop_now() ) RETURN
      !
 #if defined (EXX)
-     !Antonio Suriano - EXX
-     IF ( exxalfa /= 0.D0 ) CALL exxinit()
-     !END Antonio Suriano - EXX
+!     IF ( lexx ) CALL exxinit()
 #endif
      !  
      iter = iter + 1
@@ -485,15 +483,19 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
 #if defined (EXX)
-     !
-     fock1 = exxenergy2()
-     !
-     CALL exxinit()
-     !
-     fock2 = exxenergy2()
-     !
-     etot = etot - fock1 + 0.5D0 * fock2
-     !
+     if (lexx .and. conv_elec) then
+        CALL exxinit()
+
+        fock1 = exxenergy()
+        !
+!        CALL exxinit()
+!        !
+!        fock2 = exxenergy()
+        fock2 = fock1
+        !
+        etot = etot - fock1 + 0.5D0 * fock2
+        !
+     end if
 #endif
      !
      IF ( lda_plus_u ) etot = etot + eth

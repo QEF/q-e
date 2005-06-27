@@ -75,6 +75,9 @@ SUBROUTINE setup()
   USE spin_orb,         ONLY : lspinorb, domag
   USE noncollin_module, ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                angle1, angle2, bfield
+#if defined (EXX)
+  USE exx             , ONLY : lexx, exxalfa, exx_grid_init
+#endif
   !
   IMPLICIT NONE
   !
@@ -766,6 +769,13 @@ SUBROUTINE setup()
   !
   IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
   !
+#if defined (EXX)
+  IF ( lexx ) then
+     call exx_grid_init
+     exxalfa = 0.d0
+  END IF
+#endif
+
   IF ( lsda ) THEN
      !
      ! ... LSDA case: two different spin polarizations, 

@@ -99,6 +99,11 @@ SUBROUTINE iosys()
                             Hubbard_alpha_ => hubbard_alpha, &
                             niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
+
+  USE exx,           ONLY : lexx_ => lexx, &
+                            nqx1_  => nq1,  &
+                            nqx2_  => nq2,  &
+                            nqx3_  => nq3
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -193,6 +198,9 @@ SUBROUTINE iosys()
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
                                starting_ns_eigenvalue, U_projection_type, &
+#if defined (EXX)                               
+                               lexx, nqx1, nqx2, nqx3, &
+#endif
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, angle1, angle2, &
                                constrained_magnetization, B_field, &
@@ -1127,6 +1135,13 @@ SUBROUTINE iosys()
   U_projection               = U_projection_type
   nosym_                     = nosym
   nbnd_                      = nbnd
+#if defined (EXX)
+  !
+  lexx_  = lexx
+  nqx1_   = nqx1
+  nqx2_   = nqx2
+  nqx3_   = nqx3
+#endif
   !
   startingwfc_ = startingwfc
   startingpot_ = startingpot

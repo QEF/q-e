@@ -154,8 +154,10 @@ SUBROUTINE print_clock_pw()
 #ifdef EXX
    WRITE( stdout, '(5X,"EXX routines")' )
    !
+   CALL print_clock( 'exx_grid' )
    CALL print_clock( 'exxinit' )
-   CALL print_clock( 'exx' )
+   CALL print_clock( 'vexx' )
+   CALL print_clock( 'exxenergy' )
    CALL print_clock ('cycleig')
 #endif
    !
