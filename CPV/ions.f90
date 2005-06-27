@@ -454,8 +454,7 @@
       use time_step, ONLY: delt
       use mp_global, ONLY: mpime
       use ions_base, ONLY: fricp
-      USE constraints_module, ONLY : check_constrain, &
-                                     remove_constraint_force
+      USE constraints_module, ONLY : check_constraint
 
       IMPLICIT NONE
 
@@ -494,11 +493,6 @@
         vrnos = 0.0d0
       END IF
 
-! ... constraints are imposed here
-      !
-      IF ( lconstrain ) &
-         CALL remove_constraint_force( atoms_0%nat, atoms_0%taur, &
-                                       atoms_0%ityp, 1.D0, atoms_0%for )
       !
 ! ...   Steepest descent of ionic degrees of freedom 
 
@@ -629,14 +623,16 @@
 
         IF ( lconstrain ) THEN
            !
+           ! ... constraints are imposed here
+           !
            DO ia = 1,  atoms_p%nat
               !
               CALL s_to_r( atoms_p%taus(:,ia), atoms_p%taur(:,ia), ht0 )
               !
            END DO
            !
-           CALL check_constrain( atoms_p%nat, &
-                                 atoms_p%taur, atoms_p%ityp, 1.D0 )
+           CALL check_constraint( atoms_p%nat, atoms_p%taur, atoms_0%taur, &
+                                  atoms_0%for, atoms_p%ityp, 1.D0, delt )
            !
            DO ia = 1,  atoms_p%nat
               !

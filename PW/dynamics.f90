@@ -11,8 +11,8 @@
 SUBROUTINE dynamics()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine performs one step of molecular dynamics evolution using
-  ! ... the Velocity Verlet algorithm. 
+  ! ... This routine performs one step of molecular dynamics evolution
+  ! ... using the Verlet algorithm. 
   !
   ! ... Parameters:
   ! ... mass         mass of the atoms
@@ -49,35 +49,34 @@ SUBROUTINE dynamics()
                             lconstrain, ldamped, lfixatom, lrescale_t
   USE io_files,      ONLY : prefix
   !
+  USE constraints_module
   USE basic_algebra_routines
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  REAL(KIND=DP), ALLOCATABLE :: vel(:,:), acc(:,:), accold(:,:)
-    ! velocities, accelerations and accelerations at the previous step
-  REAL(KIND=DP), ALLOCATABLE :: mass(:)    
-    ! masses of atoms
-  REAL(KIND=DP) :: ekin, etotold
-    ! ionic kinetic energy 
-    ! ionic potential energy (of the previous step)
-  REAL(KIND=DP) :: total_mass, temp_new, elapsed_time, norm_of_dtau
-  REAL(KIND=DP) :: ml(3), mlt
-    ! total linear momentum and its modulus
-  INTEGER :: i, na
-  LOGICAL :: exst
+  REAL(KIND=DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
+  REAL(KIND=DP), ALLOCATABLE :: mass(:)
+  REAL(KIND=DP)              :: ekin, etotold
+  REAL(KIND=DP)              :: total_mass, temp_new, &
+                                elapsed_time, norm_of_dtau
+  REAL(KIND=DP)              :: ml(3), mlt
+  INTEGER                    :: i, na
+  LOGICAL                    :: exst
   !
   !
   ALLOCATE( mass( nat ) )
   !
-  ALLOCATE( vel(    3, nat ) )         
-  ALLOCATE( acc(    3, nat ) )
-  ALLOCATE( accold( 3, nat ) )
+  ALLOCATE( tau_old( 3, nat ) )
+  ALLOCATE( tau_new( 3, nat ) )
+  ALLOCATE( vel(     3, nat ) )
+  ALLOCATE( acc(     3, nat ) )
   !
-  vel    = 0.D0
-  acc    = 0.D0
-  accold = 0.D0
+  tau_old = tau
+  tau_new = 0.D0
+  vel     = 0.D0
+  acc     = 0.D0
   !
   IF ( istep == 1 ) THEN
      !
@@ -145,11 +144,14 @@ SUBROUTINE dynamics()
      ! ... the file is read
      !
      READ( UNIT = 4, FMT = * ) &
-        etotold, temp_new, mass, total_mass, &
-        elapsed_time, istep, tau, vel, accold
+        etotold, temp_new, mass, total_mass, elapsed_time, istep, tau_old
      !
      CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
+     ! ... the velocity is computed here (used as an auxiliary variable)
+     !
+     vel = ( tau - tau_old ) / dt
+     ! 
   END IF
   !
   ! ... elapsed_time is in picoseconds
@@ -187,6 +189,51 @@ SUBROUTINE dynamics()
      !
   END IF
   !
+  WRITE( UNIT = stdout, &
+         FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",I5,/, &
+                & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
+      istep, elapsed_time
+  !
+  ! ... here starts the molecular dynamics :
+  !
+  ! ... calculate accelerations in a.u. units / alat
+  !
+  FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
+  !
+  ! ... atoms are moved accordingly to the classical equation of motion.
+  ! ... Damped dynamics ( based on the quick-min algorithm ) is also
+  ! ... done here.
+  !
+  IF ( ldamped ) CALL project_velocity()
+  !
+  ! ... constraints ( atoms kept fixed ) are reinforced 
+  !
+  vel = vel * DBLE( if_pos )
+  !
+  ! ... positions are updated here
+  !
+  tau_new = tau + dt * vel + 0.5D0 * dt**2 * acc
+  !
+  IF ( lconstrain ) THEN
+     !
+     ! ... check if the new positions satisfy the constrain equation
+     !
+     CALL check_constraint( nat, tau_new, tau, force, ityp, alat, dt )
+     !
+     WRITE( stdout, '(/5X,"Corrected atomic positions:")')
+     !
+     CALL output_tau( .FALSE. )
+     !
+     WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+     !
+     DO na = 1, nat
+        !
+        WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
+        !
+     END DO
+     !
+  END IF
+  !
   ! ... check if convergence for structural minimization is achieved
   !
   IF ( ldamped ) THEN
@@ -219,39 +266,15 @@ SUBROUTINE dynamics()
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"End of molecular dynamics calculation")' )
         !
+        RETURN
+        !
      END IF
      !   
   END IF
   !
-  WRITE( UNIT = stdout, &
-         FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",I5,/, &
-                & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
-      istep, elapsed_time
+  ! ... the linear momentum and the kinetic energy are computed here
   !
-  ! ... here starts the molecular dynamics :
-  !
-  ! ... calculate accelerations in a.u. units / alat
-  !
-  FORALL( na = 1 : nat ) &
-     acc(:,na) = force(:,na) / mass(na) / alat
-  !
-  ! ... atoms are moved accordingly to the classical equation of motion.
-  ! ... Damped dynamics ( based on the quick-min algorithm ) is also
-  ! ... done here.
-  !
-  vel = vel + 0.5D0 * dt * ( accold + acc )
-  !
-  IF ( ldamped ) CALL project_velocity()
-  !
-  ! ... constraints ( atoms kept fixed ) are reinforced 
-  !
-  vel = vel * DBLE( if_pos )
-  !
-  ! ... positions are updated here
-  !
-  tau = tau + dt * vel + 0.5D0 * dt**2 * acc
-  !
-  ! ... the linear momentum ant the kinetic energy are computed here
+  vel = ( tau_new - tau_old ) / ( 2.D0 * dt )
   !
   ml   = 0.D0
   ekin = 0.D0  
@@ -259,24 +282,28 @@ SUBROUTINE dynamics()
   DO na = 1, nat 
      ! 
      ml(:) = ml(:) + vel(:,na) * mass(na)
-     ekin  = ekin + &
-             0.5D0 * mass(na) * ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+     ekin  = ekin + mass(na) * ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
      !
   END DO  
   !
+  ekin = ekin * alat**2
+  !
   ! ... find the new temperature
   !
-  temp_new = 2.D0 / 3.D0 * ekin * alat**2 / nat * convert_E_to_temp
+  temp_new = 2.D0 / 3.D0 * ekin / nat * convert_E_to_temp
   !
   ! ... save on file all the needed quantities
   !
   CALL seqopn( 4, 'md', 'FORMATTED',  exst )
   !
   WRITE( UNIT = 4, FMT = * ) &
-      etot, temp_new, mass, total_mass, &
-      elapsed_time, istep, tau, vel, acc
+      etot, temp_new, mass, total_mass, elapsed_time, istep, tau
   !
   CLOSE( UNIT = 4, STATUS = 'KEEP' )
+  !
+  ! ... here the tau are shifted
+  !
+  tau(:,:) = tau_new(:,:)
   !
   ! ... infos are written on the standard output
   !
@@ -296,9 +323,7 @@ SUBROUTINE dynamics()
      WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/, &
                     & 5X,"temperature           = ",F14.8," K", /, &
                     & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
-         ekin*alat**2, &
-         temp_new, &
-         ekin*alat**2 + etot
+         ekin, temp_new, ( ekin  + etot )
       !
   END IF    
   !
@@ -313,11 +338,14 @@ SUBROUTINE dynamics()
   WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
   !
   DEALLOCATE( mass )
+  DEALLOCATE( tau_old )
+  DEALLOCATE( tau_new )
   DEALLOCATE( vel )         
   DEALLOCATE( acc )
-  DEALLOCATE( accold )
   !
   RETURN
+  !
+9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)
   !
   CONTAINS
      !

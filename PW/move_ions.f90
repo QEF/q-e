@@ -11,21 +11,9 @@ SUBROUTINE move_ions()
   !
   ! ... This routine moves the ions according to the requested scheme:
   !
-  ! ... l(old)bfgs       bfgs minimizations
-  ! ... lmd              molecular dynamics ( verlet of vcsmd )
-  ! ... lmd+lconstrain   molecular dynamics with one constraint,
-  ! ...                  the user must supply the routine 'constrain' which
-  ! ...                  defines the constraint equation and the gradient
-  ! ...                  the constraint function gv(tau), dgv(i,tau) such
-  ! ...                  that:
-  !
-  ! ...                            gv({tau}) - target = 0,
-  !
-  ! ...                  and
-  !
-  ! ...                                         D gv( {tau} )
-  ! ...                            dgv(i,na) = ---------------.
-  ! ...                                         D tau(i,na)
+  ! ... l(old)bfgs          bfgs minimizations
+  ! ... lmd                 molecular dynamics ( verlet of vcsmd )
+  ! ... lmd + lconstrain    constrained molecular dynamics,
   !
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
@@ -41,8 +29,8 @@ SUBROUTINE move_ions()
   USE symme,         ONLY : s, ftau, nsym, irt
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lconstrain, &
-                            lmd, conv_ions, history, alpha0, beta0, tr2, istep
+  USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lmd, lconstrain, &
+                            conv_ions, history, alpha0, beta0, tr2, istep
   USE relax,         ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,      ONLY : lsda, absmag
   USE mp_global,     ONLY : intra_image_comm
@@ -52,8 +40,6 @@ SUBROUTINE move_ions()
   ! ... external procedures
   !
   USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
-  USE constraints_module,     ONLY : check_constrain, &
-                                     remove_constraint_force
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
@@ -77,47 +63,6 @@ SUBROUTINE move_ions()
      conv_ions = .FALSE.
      !
      ALLOCATE( tauold( 3, nat, 3 ) )   
-     !
-     ! ... constraints are imposed here by removing the force along
-     ! ... the constraint
-     !  
-     IF ( lconstrain ) THEN
-        !
-        CALL remove_constraint_force( nat, tau, ityp, alat, force )
-        !
-        ! ... resymmetrize (should not be needed, but...)
-        !
-        IF ( nsym > 1 ) THEN
-           !
-           DO na = 1, nat
-              !
-              CALL trnvect( force(1,na), at, bg, - 1 )
-              !
-           END DO
-           !
-           CALL symvect( nat, force, nsym, s, irt )
-           !
-           DO na = 1, nat
-              !
-              CALL trnvect( force(1,na), at, bg, 1 )
-              !
-           END DO
-           !
-        END IF
-        !
-        ! ... forces on fixed coordinates are set to zero
-        !
-        force = force * DBLE( if_pos )
-        !
-        WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-        !
-        DO na = 1, nat
-           !
-           WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
-           !
-        END DO
-        !
-     END IF
      !
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
@@ -162,8 +107,8 @@ SUBROUTINE move_ions()
         ALLOCATE( pos(      3 * nat ) )
         ALLOCATE( gradient( 3 * nat ) )
         !
-        pos      =   RESHAPE( SOURCE = tau,   SHAPE = (/ 3 * nat /) ) * alat
-        gradient = - RESHAPE( SOURCE = force, SHAPE = (/ 3 * nat /) )
+        pos      =   RESHAPE( tau,   (/ 3 * nat /) ) * alat
+        gradient = - RESHAPE( force, (/ 3 * nat /) )
         !
         CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
                        energy_error, gradient_error, step_accepted, conv_ions )
@@ -224,8 +169,8 @@ SUBROUTINE move_ions()
            !
         END IF
         !   
-        tau   =   RESHAPE( SOURCE = pos, SHAPE = (/ 3, nat /) ) / alat
-        force = - RESHAPE( SOURCE = gradient, SHAPE = (/ 3, nat /) )
+        tau   =   RESHAPE( pos,      (/ 3, nat /) ) / alat
+        force = - RESHAPE( gradient, (/ 3, nat /) )
         !
         CALL output_tau( conv_ions )
         !
@@ -244,20 +189,21 @@ SUBROUTINE move_ions()
      !
      IF ( lmd ) THEN
         !
-        IF ( calc == ' ' ) CALL dynamics()  ! verlet dynamics
-        IF ( calc /= ' ' ) CALL vcsmd()     ! variable cell shape md
+        IF ( calc == ' ' ) THEN
+           !
+           ! ... Verlet dynamics
+           !
+           CALL dynamics()
+           !
+        END IF
         !
-     END IF
-     !
-     ! ... check if the new positions satisfy the constrain equation
-     !
-     IF ( lconstrain ) THEN
-        !
-        CALL check_constrain( nat, tau, ityp, alat )
-        !
-        WRITE( stdout, '(/5X,"Corrected atomic positions:")')
-        !
-        CALL output_tau( .FALSE. )
+        IF ( calc /= ' ' ) THEN
+           !
+           ! ... variable cell shape md
+           !
+           CALL vcsmd()
+           !
+        END IF
         !
      END IF
      !

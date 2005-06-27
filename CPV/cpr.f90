@@ -165,8 +165,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_init, wf_closing_options, &
                                        read_efwan_param, ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
-  USE constraints_module,       ONLY : check_constrain, &
-                                       remove_constraint_force
+  USE constraints_module,       ONLY : check_constraint
   !
   IMPLICIT NONE
   !
@@ -190,6 +189,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   ! ... forces on ions
   !
   REAL(KIND=dbl) :: fion(3,natx), fionm(3,natx)
+  REAL(KIND=dbl) :: maxfion
   !
   ! ... work variables
   !
@@ -515,30 +515,27 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
-        ! ... constraints are imposed here
-        !
-        IF ( lconstrain ) &
-           CALL remove_constraint_force( nat, tau0, ityp, 1.D0, fion )
-        !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, &
                         ainv, delt, na, nsp, fricp, hgamma, vels, &
                         tsdp, tnosep, fionm, vnhp, velsp, velsm )
+        !
+        IF ( lconstrain ) THEN
+           !
+           ! ... constraints are imposed here
+           !
+           CALL s_to_r( tausp, taup, na, nsp, hnew )
+           !
+           CALL check_constraint( nat, taup, tau0, fion, ityp, 1.D0, delt )
+           !
+           CALL r_to_s( taup, tausp, na, nsp, ainv )
+           !
+        END IF
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
         CALL ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
-        !
-        ! ... check if the new positions satisfy the constrain equation
-        !
-        IF ( lconstrain ) THEN
-           !
-           CALL check_constrain( nat, taup, ityp, 1.D0 )
-           !
-           CALL r_to_s( taup, tausp, na, nsp, ainv )
-           !
-        END IF
         !
      END IF
      !     
@@ -801,11 +798,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         WRITE( stdout,11)
         !
         CALL printout_pos( stdout, nfi, tau0, nat, tps )
-!         CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
         CALL printout_pos( 35    , nfi, tau0, nat, tps )
-         ! write out a standard XYZ file in angstroms
-!         WRITE( 35, '(I5)') nat
-!         CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,toang)
+        !
+        ! ... write out a standard XYZ file in angstroms
+        !
+!        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
+!        WRITE( 35, '(I5)') nat
+!        CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,toang)
 
         !
         ALLOCATE( tauw( 3, natx ) )
@@ -863,8 +862,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         ! ... new variables for next step
         !
-        CALL ions_shiftvar( tausp, taus, tausm )   !  scaled positions 
         CALL ions_shiftvar( taup,  tau0, taum  )   !  real positions
+        CALL ions_shiftvar( tausp, taus, tausm )   !  scaled positions         
         CALL ions_shiftvar( velsp, vels, velsm )   !  scaled velocities
         !
         IF ( tnosep ) CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
@@ -940,8 +939,25 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      tstop = check_stop_now()
      tconv = .FALSE.
      !
-     IF ( tconvthrs%active ) tconv = ( ekinc < tconvthrs%ekin ) .AND. &
-                                     ( delta_etot < tconvthrs%derho )
+     IF ( tconvthrs%active ) THEN
+        !
+        ! ... electrons
+        !
+        tconv = ( ekinc < tconvthrs%ekin .AND. delta_etot < tconvthrs%derho )
+        !
+        IF ( tfor ) THEN
+           !
+           ! ... ions
+           !
+           maxfion = MAXVAL( ABS( fion(:,1:nat) ) )
+           !
+           PRINT *, maxfion, tconvthrs%force
+           !
+           tconv = tconv .AND. ( maxfion < tconvthrs%force )
+           !
+        END IF
+        !
+     END IF
      !
      ! ... in the case cp-wf the check on convergence is done starting
      ! ... from the second step 

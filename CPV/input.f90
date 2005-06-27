@@ -702,7 +702,7 @@
       IF( ion_dynamics == 'none' .AND. cell_dynamics == 'none' ) THEN
         tconvthrs%ekin   = ekin_conv_thr
         tconvthrs%derho  = etot_conv_thr
-        tconvthrs%force  = 10d+10
+        tconvthrs%force  = 1.D+10
         tconvthrs%active = .TRUE.
         tconvthrs%nstep  = 1
       END IF

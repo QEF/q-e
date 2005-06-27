@@ -24,7 +24,7 @@ MODULE constraints_module
   !
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : eps16, tpi
+  USE constants, ONLY : eps32, tpi
   USE io_global, ONLY : stdout
   !
   USE basic_algebra_routines, ONLY : norm
@@ -37,9 +37,8 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: init_constraint, &
-            check_constrain, &
-            remove_constraint_force, &
+  PUBLIC :: init_constraint,  &
+            check_constraint, &
             deallocate_constraint
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
@@ -118,7 +117,7 @@ MODULE constraints_module
                 !
              END IF
              !
-             ia1 = INT( constr(1,ia) )
+             ia1 = ANINT( constr(1,ia) )
              !
              r_c = constr(2,ia)
              k   = constr(3,ia)
@@ -156,8 +155,8 @@ MODULE constraints_module
                 !
              END IF
              !
-             ia1 = INT( constr(1,ia) )
-             ia2 = INT( constr(2,ia) )
+             ia1 = ANINT( constr(1,ia) )
+             ia2 = ANINT( constr(2,ia) )
              !
              target(ia) = norm( tau(:,ia1) - tau(:,ia2) ) * alat
              !
@@ -180,9 +179,9 @@ MODULE constraints_module
                 !
              END IF
              !
-             ia1 = INT( constr(1,ia) )
-             ia2 = INT( constr(2,ia) )
-             ia3 = INT( constr(3,ia) )
+             ia1 = ANINT( constr(1,ia) )
+             ia2 = ANINT( constr(2,ia) )
+             ia3 = ANINT( constr(3,ia) )
              !
              r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
              r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
@@ -215,10 +214,10 @@ MODULE constraints_module
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE dist_constrain( index, nat, tau, ityp, alat, g, dg, dg2 )
+     SUBROUTINE constraint_grad( index, nat, tau, ityp, alat, g, dg )
        !-----------------------------------------------------------------------
        ! 
-       ! ... this routine defines the constrain equation:
+       ! ... this routine defines the constraint equation:
        !
        ! ...  g(tau,dist) = 0
        !
@@ -238,8 +237,7 @@ MODULE constraints_module
        INTEGER,        INTENT(IN) :: ityp(:)
        REAL (KIND=DP), INTENT(IN) :: alat
        REAL (KIND=DP), INTENT(OUT):: dg(:,:)
-       REAL (KIND=DP), INTENT(OUT):: dg2, g
-         ! constrain terms ( in bohr )
+       REAL (KIND=DP), INTENT(OUT):: g
        !
        ! ... local variables
        !
@@ -264,7 +262,7 @@ MODULE constraints_module
           !
           ! ... constraint on coordination
           !
-          ia  = INT( constr(1,index) )
+          ia = ANINT( constr(1,index) )
           !
           r_c = constr(2,index)
           k   = constr(3,index)          
@@ -302,8 +300,8 @@ MODULE constraints_module
           !
           ! ... constraint on distances
           !
-          ia1 = INT( constr(1,index) )
-          ia2 = INT( constr(2,index) )
+          ia1 = ANINT( constr(1,index) )
+          ia2 = ANINT( constr(2,index) )
           !
           x1 = tau(1,ia1) * alat
           y1 = tau(2,ia1) * alat
@@ -318,24 +316,21 @@ MODULE constraints_module
           !
           g = ( dist0 - target(index) )
           !
-          IF ( dist0 > eps16 ) THEN
-             !           
-             dg(1,ia1) = ( x1 - x2 ) / dist0
-             dg(1,ia2) = ( x2 - x1 ) / dist0
-             dg(2,ia1) = ( y1 - y2 ) / dist0
-             dg(2,ia2) = ( y2 - y1 ) / dist0
-             dg(3,ia1) = ( z1 - z2 ) / dist0
-             dg(3,ia2) = ( z2 - z1 ) / dist0
-             !
-          END IF
+          dg(1,ia1) = ( x1 - x2 ) / dist0
+          dg(2,ia1) = ( y1 - y2 ) / dist0
+          dg(3,ia1) = ( z1 - z2 ) / dist0
+          !
+          dg(1,ia2) = - dg(1,ia1)
+          dg(2,ia2) = - dg(2,ia1)
+          dg(3,ia2) = - dg(3,ia1)
           !
        CASE( 2 )
           !
           ! ... constraint on planar angles
           !
-          ia1 = INT( constr(1,index) )
-          ia2 = INT( constr(2,index) )
-          ia3 = INT( constr(3,index) )
+          ia1 = ANINT( constr(1,index) )
+          ia2 = ANINT( constr(2,index) )
+          ia3 = ANINT( constr(3,index) )
           !
           r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
           r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
@@ -362,78 +357,104 @@ MODULE constraints_module
           !
        END SELECT
        !
-       dg2 = DDOT( 3 * nat, dg, 1, dg, 1 )
-       !
        RETURN
        !
-     END SUBROUTINE dist_constrain
+     END SUBROUTINE constraint_grad
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_constrain( nat, tau, ityp, alat )
+     SUBROUTINE check_constraint( nat, taup, tau0, force, ityp, alat, dt )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
        ! ... use the recursion formula:
        !
-       ! ...                  g(tau)
-       ! ... tau' = tau -  ------------ * dg(tau)
-       ! ...                |dg(tau)|^2
+       ! ...                       g(taup)
+       ! ... taup = taup - ----------------------- * dg(tau0)
+       ! ...               M^-1<dg(taup)|dg(tau0)>
        !
        ! ... in normal cases the constraint equation should be always 
        ! ... satisfied at the very first iteration.
        !
+       USE constants, ONLY : amconv
+       USE ions_base, ONLY : amass
+       !
        IMPLICIT NONE
        !
        INTEGER,        INTENT(IN)    :: nat
-       REAL (KIND=DP), INTENT(INOUT) :: tau(:,:)
+       REAL (KIND=DP), INTENT(INOUT) :: taup(:,:)
+       REAL (KIND=DP), INTENT(IN)    :: tau0(:,:)
+       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
        INTEGER,        INTENT(IN)    :: ityp(:)
        REAL (KIND=DP), INTENT(IN)    :: alat
+       REAL (KIND=DP), INTENT(IN)    :: dt
        !
        INTEGER                    :: na, i, index
-       REAL(KIND=DP), ALLOCATABLE :: dg(:,:)
-       REAL(KIND=DP)              :: dg2, g
+       REAL(KIND=DP), ALLOCATABLE :: dgp(:,:), dg0(:,:)
+       REAL(KIND=DP)              :: gp, g0
+       REAL(KIND=DP)              :: lambda, fac
        LOGICAL                    :: ltest(nconstr), global_test
        INTEGER, PARAMETER         :: maxiter = 100
        !
+       REAL(KIND=DP), EXTERNAL :: DDOT
        !
-       ALLOCATE( dg( 3, nat ) )
+       !
+       ALLOCATE( dgp( 3, nat ) )
+       ALLOCATE( dg0( 3, nat ) )
+       !
+       lagrange = 0.D0
        !
        outer_loop: DO i = 1, maxiter
           !
           inner_loop: DO index = 1, nconstr
              !
-             ltest(index) = .FALSE.             
+             ltest(index) = .FALSE.
              !
-             CALL dist_constrain( index, nat, tau, ityp, alat, g, dg, dg2 )
+             CALL constraint_grad( index, nat, taup,  ityp, alat, gp, dgp )
              !
-             ! ... check if g = 0
+             ! ... check if gp = 0
              !
 #if defined (__DEBUG_CONSTRAINTS)
-             WRITE( stdout, * ) i, index, ABS( g ), dg2
+             WRITE( stdout, * ) i, index, ABS( gp )
 #endif
              !             
-             IF ( ABS( g ) < constr_tol ) THEN
+             IF ( ABS( gp ) < constr_tol ) THEN
                 !
                 ltest(index) = .TRUE.
                 !
                 CYCLE inner_loop
                 !
-             END IF   
+             END IF
              !
-             ! ... if  g <> 0  find new  tau = tau - g * dg / dg2  and 
-             ! ... check again ( g is in bohr and tau in alat units )
+             ! ... if  gp <> 0  find new  taup check again 
+             ! ... ( gp is in bohr and taup in alat units )
              !
-             tau(:,:) = tau(:,:) - g * dg(:,:) / dg2 / alat
+             DO na = 1, nat
+                !
+                dgp(:,na) = dgp(:,na) / ( amass( ityp(na) ) * amconv )
+                !
+             END DO
+             !
+             CALL constraint_grad( index, nat, tau0, ityp, alat, g0, dg0 )
+             !
+             lambda = gp / DDOT( 3 * nat, dgp, 1, dg0, 1 )
+             !
+             DO na = 1, nat
+                !
+                fac = amass( ityp(na) ) * amconv * alat
+                !
+                taup(:,na) = taup(:,na) - lambda * dg0(:,na) / fac
+                !
+                ! ... Why should I multiply by 2 ???
+                !
+                force(:,na) = force(:,na) - 2.D0 * lambda * dg0(:,na) / dt**2
+                !
+             END DO
+             !
+             lagrange(index) = lagrange(index) + lambda / dt**2
              !
           END DO inner_loop
           !
-          global_test = .TRUE.
-          !
-          DO index = 1, nconstr
-            !
-            global_test = global_test .AND. ltest(index)
-            !
-          END DO
+          global_test = ALL( ltest(:) )
           !
           ! ... all constraints are satisfied
           !
@@ -449,116 +470,12 @@ MODULE constraints_module
           !
        END IF
        !
-       DEALLOCATE( dg )
+       DEALLOCATE( dgp )
+       DEALLOCATE( dg0 )
        !
        RETURN
        !
-     END SUBROUTINE check_constrain         
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE new_force( nat, dg, dg2, force, lambda )
-       !-----------------------------------------------------------------------
-       !
-       ! ... find the lagrange multiplier lambda for the problem with one 
-       ! ... constrain
-       !
-       ! ...           force * dg
-       ! ... lambda =  ---------- ,
-       ! ...             |dg|^2
-       !
-       ! ... and redefine the forces:
-       !
-       ! ... force = force - lambda * dg
-       !
-       ! ... where dg is the gradient of the constraint function
-       !
-       IMPLICIT NONE
-       !
-       INTEGER,        INTENT(IN)    :: nat
-       REAL (KIND=DP), INTENT(IN)    :: dg(:,:), dg2
-       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
-       REAL (KIND=DP), INTENT(OUT)   :: lambda
-       !
-       INTEGER        :: na, i, ipol
-       REAL (KIND=DP) :: sum(3)
-       !
-       ! ... external function
-       !
-       REAL(KIND=DP), EXTERNAL :: DDOT  
-       !
-       !
-       lambda = 0.D0
-       !
-       IF ( dg2 > eps16 ) THEN
-          !
-          lambda = DDOT( 3 * nat, force, 1, dg, 1 ) / dg2
-          !
-          force = force - lambda * dg
-          !
-          IF ( DDOT( 3 * nat, force, 1, dg, 1 )**2 > eps16 ) THEN
-             !
-             CALL errore( 'new_force', &
-                        & 'force is not orthogonal to constrain', 1 )
-             WRITE( stdout, * ) DDOT( 3 * nat, force, 1, dg, 1 )**2
-             !
-          END IF
-          !
-          sum(:) = 0.D0
-          !
-          DO na = 1, nat
-             !
-             sum(:) = sum(:) + force(:,na)
-             !
-          END DO
-          !
-          ! ... impose total force = 0
-          !
-          DO na = 1, nat
-             !
-             force(:,na) = force(:,na) - sum(:) / nat
-             !
-          END DO
-          !
-       END IF
-       !
-       RETURN
-       !
-     END SUBROUTINE new_force
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( nat, tau, ityp, alat, force )
-       !-----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       INTEGER,        INTENT(IN)    :: nat
-       REAL (KIND=DP), INTENT(IN)    :: tau(:,:)
-       INTEGER,        INTENT(IN)    :: ityp(:)
-       REAL (KIND=DP), INTENT(IN)    :: alat
-       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
-       !
-       INTEGER                     :: index, na
-       REAL (KIND=DP)              :: gv
-       REAL (KIND=DP), ALLOCATABLE :: dgv(:,:)
-       REAL (KIND=DP)              :: dgv2
-         ! gv = 0 defines the constrain
-         ! the gradient of gv
-         ! its square modulus       
-       !
-       !
-       ALLOCATE( dgv( 3, nat ) )
-       !
-       ! ... find the constrained forces
-       !
-       DO index = 1, nconstr
-          !
-          CALL dist_constrain( index, nat, tau, ityp, alat, gv, dgv, dgv2 )
-          !
-          CALL new_force( nat, dgv, dgv2, force, lagrange(index) )
-          !
-       END DO
-       !
-     END SUBROUTINE remove_constraint_force
+     END SUBROUTINE check_constraint
      !
      !-----------------------------------------------------------------------
      SUBROUTINE deallocate_constraint()
