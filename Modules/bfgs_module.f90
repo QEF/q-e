@@ -148,9 +148,7 @@ MODULE bfgs_module
       dim = SIZE( pos )
       !
       ! ... conditional work-space allocation
-      !
-      
-      
+      !   
       IF ( .NOT. ALLOCATED( grad_old ) ) ALLOCATE( grad_old( dim, bfgs_ndim ) )
       IF ( .NOT. ALLOCATED( pos_old ) )  ALLOCATE( pos_old(  dim, bfgs_ndim ) )
       !
@@ -176,15 +174,9 @@ MODULE bfgs_module
       !
       ! ... convergence is checked here
       !
-      conv_bfgs = ( energy_error < energy_thr )
-      !
-      DO i = 1, dim
-         !
-         conv_bfgs = ( conv_bfgs .AND. ( ABS( grad(i) ) < grad_thr ) )
-         !
-         grad_error = MAX( grad_error, ABS( grad(i) ) )
-         !
-      END DO
+      grad_error = MAXVAL( ABS( grad(:) ) )
+      conv_bfgs  = energy_error < energy_thr      
+      conv_bfgs  = conv_bfgs .AND. ( grad_error < grad_thr )
       !
       IF ( conv_bfgs ) RETURN
       !
@@ -458,8 +450,6 @@ MODULE bfgs_module
       !
     END SUBROUTINE bfgs
     !
-    ! ... private methods :
-    !
     !------------------------------------------------------------------------
     SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, dim, stdout )
       !------------------------------------------------------------------------
@@ -496,13 +486,15 @@ MODULE bfgs_module
          READ( iunbfgs, * ) scf_iter
          READ( iunbfgs, * ) bfgs_iter
          READ( iunbfgs, * ) energy_p
-         READ( iunbfgs, * ) step_old
-         READ( iunbfgs, * ) trust_radius_old
          READ( iunbfgs, * ) pos_old
          READ( iunbfgs, * ) grad_old
          READ( iunbfgs, * ) inv_hess
          !     
          CLOSE( UNIT = iunbfgs )
+         !
+         trust_radius_old = norm( pos(:) - pos_p(:) )
+         !
+         step_old = ( pos(:) - pos_p(:) ) / trust_radius_old
          !
       ELSE
          !
@@ -573,8 +565,6 @@ MODULE bfgs_module
       WRITE( iunbfgs, * ) scf_iter
       WRITE( iunbfgs, * ) bfgs_iter
       WRITE( iunbfgs, * ) energy
-      WRITE( iunbfgs, * ) step
-      WRITE( iunbfgs, * ) trust_radius
       WRITE( iunbfgs, * ) pos_old
       WRITE( iunbfgs, * ) grad_old
       WRITE( iunbfgs, * ) inv_hess
