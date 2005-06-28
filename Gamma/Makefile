@@ -68,7 +68,6 @@ PWOBJS = \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dvloc_of_g.o \
-../PW/dynamics.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
