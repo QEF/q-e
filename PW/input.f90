@@ -519,9 +519,9 @@ SUBROUTINE iosys()
      !
   CASE( 'restart' )
      !
-     ! ... "path" specific
-     !       
      IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
+        !
+        ! ... "path" specific
         !
         restart      = .FALSE.
         restart_bfgs = .FALSE.
@@ -532,9 +532,13 @@ SUBROUTINE iosys()
         restart_bfgs = .TRUE.
         !
         IF ( TRIM( ion_positions ) == 'from_input' ) THEN
+           !
            startingconfig = 'input'
+           !
         ELSE
+           !
            startingconfig = 'file'
+           !
         END IF
         !
      END IF
@@ -633,6 +637,11 @@ SUBROUTINE iosys()
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
+        !
+     CASE( 'constrained-bfgs' )
+        !
+        lbfgs      = .TRUE.
+        lconstrain = .TRUE.
         !
      CASE( 'constrained-damp' )
         !

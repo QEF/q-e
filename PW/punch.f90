@@ -5,15 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE punch()
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... This routine is called at the end of the run to save on a file
-  ! ... the information needed for further processing
+  ! ... the information needed to the phonon program.
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, nkstot
+  USE lsda_mod,             ONLY : nspin
+  USE scf,                  ONLY : rho
   USE control_flags,        ONLY : reduce_io, lscf
   USE wvfct,                ONLY : et, wg, nbnd
   USE wavefunctions_module, ONLY : evc, evc_nc
@@ -21,6 +23,7 @@ SUBROUTINE punch()
   USE noncollin_module,     ONLY : noncolin
   USE restart_module,       ONLY : writefile_new
   USE mp_global,            ONLY : kunit
+  USE pw_restart,           ONLY : pw_writefile
   !
   IMPLICIT NONE
   !
@@ -28,7 +31,8 @@ SUBROUTINE punch()
   LOGICAL :: exst
   !
   !
-  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing data file ",A14)' ) &
+  WRITE( UNIT = stdout, &
+         FMT = '(/,5X,"Writing file ",A16," for program phonon")' ) &
       TRIM( prefix ) // '.save'
   !
   kunittmp = 1
@@ -47,26 +51,23 @@ SUBROUTINE punch()
      !
   ENDIF
   !
-  ! ... The following instruction is needed to recalculate the weights
-  ! ... of k-points: this is useful for finite-q phonon calculations
-  ! ... and when more k-points are needed than in self-consistency.
-  ! ... In such a case, a self-consistent calculation with few k-points
-  ! ... is followed by a non-self-consistent one with added k-points,
-  ! ... whose weight is set to zero. Note that the charge density
-  ! ... is recalculated but NOT written to file, because doing this
-  ! ... might spoil the charge density in other cases
+  ! ... The following instruction is used  when more k-points are needed
+  ! ... for finite-q phonon calculations (on fine q-grid) then those needed
+  ! ... for self-consistency. In such a case, a self-consistent calculation
+  ! ... with few k-points is followed by a non-self-consistent one with added
+  ! ... k-points, whose weight is set to zero.
   !
   IF ( .NOT. lscf ) CALL sum_band()
   !
-  ! ...  Write: general variables (including dimensions of the arrays),
-  ! ...  atomic positions, forces, k-points, eigenvalues
+  ! ... Write: general variables (including dimensions of the arrays),
+  ! ... atomic positions, forces, k-points, eigenvalues
   !
 #if defined (__PARA)
   !
   ! ... xk, wk, isk, et, wg are distributed across pools
   ! ... the first node has a complete copy of xk, wk, isk,
   ! ... while eigenvalues et and weights wg must be
-  ! ... explicitly collected to the first node
+  ! ... explicitely collected to the first node
   !
   CALL poolrecover( et, nbnd, nkstot, nks )
   CALL poolrecover( wg, nbnd, nkstot, nks )
@@ -77,7 +78,20 @@ SUBROUTINE punch()
   !
 #endif
   !
+  ! ... Write the charge density on a separate file
+  !
+  CALL io_pot( + 1, TRIM(prefix)//'.rho', rho, nspin )
+  !
+#if defined (__NEWPUNCH)
+  !
+  iunpun = 999
+  !
+  CALL pw_writefile( '' )
+  !
+#endif
+  !
   iunpun = 4
+  !
   CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
   !
   RETURN

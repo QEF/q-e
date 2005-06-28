@@ -154,6 +154,7 @@ psymrho.o \
 psymrho_mag.o \
 punch.o \
 pw_gemm.o \
+pw_restart.o \
 pwcom.o \
 qvan2.o \
 rcgdiagg.o \
