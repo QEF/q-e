@@ -91,9 +91,9 @@ end Module dynamical
       inquire(file=fildyn,exist=lread)
       if (lread) then
          write(6,'(/5x,a,a)') 'Reading Dynamical Matrix from file ',&
-              & fildyn
+              & TRIM(fildyn)
       else
-         write(6,'(/5x,a)') 'file not found', fildyn
+         write(6,'(/5x,a,a)') 'File not found: ', TRIM(fildyn)
          stop
       end if
 !
@@ -240,7 +240,7 @@ end Module dynamical
                        ((dchi_dtau(k,j,i,na), j=1,3), k=1,3)
                end do
             end do
-            write(6,'(/5x,a)') 'Raman cross sections read'
+            write(6,'(5x,a)') 'Raman cross sections read'
             noraman=.false.
 10          continue
          end if
@@ -369,7 +369,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
     ! alpha, beta2: see PRB 54, 7830 (1996) and refs quoted therein
     !
     if (noraman) then
-       write (6,'(i5,f10.2,f12.4,2f10.4)') &
+       write (6,'(i5,f10.2,2f10.4)') &
          nu, freq, freq*cm1thz, infrared(nu)
     else
        alpha = (raman(1,1,nu) + raman(2,2,nu) + raman(3,3,nu))/3.d0
@@ -377,7 +377,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
                  (raman(1,1,nu) - raman(3,3,nu))**2 + &
                  (raman(2,2,nu) - raman(3,3,nu))**2 + 6.d0 * &
           (raman(1,2,nu)**2 + raman(1,3,nu)**2 + raman(2,3,nu)**2) )/2.d0
-       write (6,'(i5,f10.2,f12.4,3f10.4)') &
+       write (6,'(i5,f10.2,2f10.4,f11.4,f10.4)') &
             nu, freq, freq*cm1thz, infrared(nu), &
             (45.d0*alpha**2 + 7.0d0*beta2)*r1fac, &
              3.d0*beta2/(45.d0*alpha**2 + 4.0d0*beta2)
@@ -440,7 +440,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   !
   if ( (asr.ne.'simple') .and. (asr.ne.'crystal') .and. (asr.ne.'one-dim') &
                          .and.(asr.ne.'zero-dim')) then
-     call errore('matdyn','reading asr',asr)
+     call errore('set_asr','reading asr',asr)
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
@@ -562,8 +562,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !
      zeu_new(:,:,:)=zeu_new(:,:,:) - zeu_w(:,:,:)
      call sp_zeu(zeu_w,zeu_w,nat,norm2)
-     write(6,'("Norm of the difference between old and new effective ", &
-          & "charges: " ,F25.20)') SQRT(norm2)
+     write(6,'(5x,"Acoustic Sum Rule: || Z*(ASR) - Z*(orig)|| = ",E15.6)') &
+          SQRT(norm2)
      !
      ! Check projection
      !
@@ -785,7 +785,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      !
      dynr_new(1,:,:,:,:)=dynr_new(1,:,:,:,:) - w(:,:,:,:)
      call sp1(w,w,nat,norm2)
-     write(6,'("norm w= ",F25.20)') DSQRT(norm2)
+     write(6,'(5x,"Acoustic Sum Rule: ||dyn(ASR) - dyn(orig)||= ",E15.6)') &
+          DSQRT(norm2)
      !
      ! Check projection
      !

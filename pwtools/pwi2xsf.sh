@@ -28,7 +28,7 @@ Usage: pwi2xsf.sh [-r] pw-input
 
 Option for PWscf version < 1.2:
 
--r ... one must spefify i.e. ityp->nat conversion, and the corresponding
+-r ... one must specify i.e. ityp->nat conversion, and the corresponding
        data are writen to file nuclei.charges. The -r flag deletes this
        file.
 "
