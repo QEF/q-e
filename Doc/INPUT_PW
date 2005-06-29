@@ -793,19 +793,19 @@ if calculation = 'neb' .OR. 'smd' there are many cards like the following
   first_image                                           <= mandatory
    X 0.0  0.0  0.0  { if_pos(1) if_pos(2) if_pos(3) }
    Y 0.5  0.0  0.0  { if_pos(1) if_pos(2) if_pos(3) }
-   Z O.0  0.2  0.2  { if_pos(1) if_pos(2) if_pos(3) }
+   Z 0.0  0.2  0.2  { if_pos(1) if_pos(2) if_pos(3) }
   intermediate_image 1                                  <= optional
    X 0.0  0.0  0.0
    Y 0.9  0.0  0.0
-   Z O.0  0.2  0.2
+   Z 0.0  0.2  0.2
   intermediate_image ...                                <= optional
    X 0.0  0.0  0.0
    Y 0.9  0.0  0.0
-   Z O.0  0.2  0.2 }
+   Z 0.0  0.2  0.2
   last_image                                            <= mandatory
    X 0.0  0.0  0.0
    Y 0.7  0.0  0.0
-   Z O.0  0.5  0.2  
+   Z 0.0  0.5  0.2  
    
   IMPORTANT: the total number of configurations specified in the input file 
              must be less than num_of_images (as specified in &IONS).

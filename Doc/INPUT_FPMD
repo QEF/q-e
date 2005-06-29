@@ -898,16 +898,6 @@
       LOGICAL :: tturbo_inp
       INTEGER :: nturbo_inp
 
-
-    CONSTRAINTS
-
-      INTEGER :: nconstr_inp
-      REAL(dbl) :: constr_tol_inp
-      INTEGER :: constr_type_inp(natx)
-      INTEGER :: constr_inp(2,natx)
-      REAL(dbl) :: constr_dist_inp(natx)
-
-
     KOHN_SHAM
 
       LOGICAL :: tprnks( nbndxx, nspinx )
