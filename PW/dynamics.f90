@@ -38,12 +38,11 @@ SUBROUTINE dynamics()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE constants,     ONLY : amconv, eps8, convert_E_to_temp
-  USE ions_base,     ONLY : nat, nsp, ityp, tau, atm
+  USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
   USE ener,          ONLY : etot
   USE force_mod,     ONLY : force
-  USE ions_base,     ONLY : if_pos
   USE relax,         ONLY : epse, epsf
   USE control_flags, ONLY : istep, nstep, conv_ions, &
                             lconstrain, ldamped, lfixatom, lrescale_t
@@ -218,7 +217,7 @@ SUBROUTINE dynamics()
      !
      ! ... check if the new positions satisfy the constrain equation
      !
-     CALL check_constraint( nat, tau_new, tau, force, ityp, alat, dt )
+     CALL check_constraint( nat, tau_new, tau, force, if_pos, ityp, alat, dt )
      !
      WRITE( stdout, '(/5X,"Corrected atomic positions:")')
      !

@@ -85,7 +85,6 @@ MODULE constraints_module
        REAL(KIND=DP) :: k, r_c
        INTEGER       :: type_coord
        REAL(KIND=DP) :: dtau(3), norm_dtau
-       LOGICAL       :: ltest
        !
        !
        nconstr    = nconstr_inp
@@ -141,8 +140,6 @@ MODULE constraints_module
                 !
              END DO
              !
-             ltest = ANY( if_pos(:,:) == 0 )
-             !
           CASE( 1 )
              !
              ! ... constraint on distance
@@ -159,10 +156,6 @@ MODULE constraints_module
              ia2 = ANINT( constr(2,ia) )
              !
              target(ia) = norm( tau(:,ia1) - tau(:,ia2) ) * alat
-             !
-             ltest = .FALSE.
-             ltest = ltest .OR. ANY( if_pos(:,ia1) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,ia2) == 0 )
              !
           CASE( 2 )
              !
@@ -191,21 +184,12 @@ MODULE constraints_module
              !
              target(ia) = DOT_PRODUCT( r12, r23 )
              !
-             ltest = .FALSE.
-             ltest = ltest .OR. ANY( if_pos(:,ia1) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,ia2) == 0 )
-             ltest = ltest .OR. ANY( if_pos(:,ia3) == 0 )
-             !
           CASE DEFAULT
              !
              CALL errore( 'init_constraint', &
                           'constrain type not implemented ', 1 )
              !
           END SELECT
-          !
-          IF ( ltest ) &
-             CALL errore( 'init_constraint', &
-                        & 'constraints cannot be set on fixed atoms', 1 )
           !
        END DO
        !
@@ -214,9 +198,9 @@ MODULE constraints_module
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE constraint_grad( index, nat, tau, ityp, alat, g, dg )
+     SUBROUTINE constraint_grad( index, nat, tau, if_pos, ityp, alat, g, dg )
        !-----------------------------------------------------------------------
-       ! 
+       !
        ! ... this routine defines the constraint equation:
        !
        ! ...  g(tau,dist) = 0
@@ -234,6 +218,7 @@ MODULE constraints_module
        INTEGER,        INTENT(IN) :: index
        INTEGER,        INTENT(IN) :: nat
        REAL (KIND=DP), INTENT(IN) :: tau(:,:)
+       INTEGER,        INTENT(IN) :: if_pos(:,:)
        INTEGER,        INTENT(IN) :: ityp(:)
        REAL (KIND=DP), INTENT(IN) :: alat
        REAL (KIND=DP), INTENT(OUT):: dg(:,:)
@@ -357,12 +342,15 @@ MODULE constraints_module
           !
        END SELECT
        !
+       dg = dg * DBLE( if_pos )
+       !
        RETURN
        !
      END SUBROUTINE constraint_grad
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_constraint( nat, taup, tau0, force, ityp, alat, dt )
+     SUBROUTINE check_constraint( nat, taup, tau0, &
+                                  force, if_pos, ityp, alat, dt )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -381,10 +369,11 @@ MODULE constraints_module
        IMPLICIT NONE
        !
        INTEGER,        INTENT(IN)    :: nat
-       REAL (KIND=DP), INTENT(INOUT) :: taup(:,:)
-       REAL (KIND=DP), INTENT(IN)    :: tau0(:,:)
-       REAL (KIND=DP), INTENT(INOUT) :: force(:,:)
-       INTEGER,        INTENT(IN)    :: ityp(:)
+       REAL (KIND=DP), INTENT(INOUT) :: taup(3,nat)
+       REAL (KIND=DP), INTENT(IN)    :: tau0(3,nat)
+       INTEGER,        INTENT(IN)    :: if_pos(3,nat)
+       REAL (KIND=DP), INTENT(INOUT) :: force(3,nat)
+       INTEGER,        INTENT(IN)    :: ityp(nat)
        REAL (KIND=DP), INTENT(IN)    :: alat
        REAL (KIND=DP), INTENT(IN)    :: dt
        !
@@ -409,7 +398,8 @@ MODULE constraints_module
              !
              ltest(index) = .FALSE.
              !
-             CALL constraint_grad( index, nat, taup,  ityp, alat, gp, dgp )
+             CALL constraint_grad( index, nat, taup, &
+                                   if_pos, ityp, alat, gp, dgp )
              !
              ! ... check if gp = 0
              !
@@ -434,7 +424,8 @@ MODULE constraints_module
                 !
              END DO
              !
-             CALL constraint_grad( index, nat, tau0, ityp, alat, g0, dg0 )
+             CALL constraint_grad( index, nat, tau0, &
+                                   if_pos, ityp, alat, g0, dg0 )
              !
              lambda = gp / DDOT( 3 * nat, dgp, 1, dg0, 1 )
              !

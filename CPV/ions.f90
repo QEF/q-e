@@ -449,11 +449,11 @@
       !  Moves the ions
 
 ! ... declare modules
-      USE cell_module, ONLY: dgcell, r_to_s, s_to_r, boxdimensions
-      use control_flags, ONLY: tnosep, tcap, tcp, tdampions, lconstrain
-      use time_step, ONLY: delt
-      use mp_global, ONLY: mpime
-      use ions_base, ONLY: fricp
+      USE cell_module,        ONLY : dgcell, r_to_s, s_to_r, boxdimensions
+      use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
+      use time_step,          ONLY : delt
+      use mp_global,          ONLY : mpime
+      use ions_base,          ONLY : fricp, if_pos
       USE constraints_module, ONLY : check_constraint
 
       IMPLICIT NONE
@@ -632,7 +632,7 @@
            END DO
            !
            CALL check_constraint( atoms_p%nat, atoms_p%taur, atoms_0%taur, &
-                                  atoms_0%for, atoms_p%ityp, 1.D0, delt )
+                                  atoms_0%for, if_pos, atoms_p%ityp, 1.D0, delt )
            !
            DO ia = 1,  atoms_p%nat
               !

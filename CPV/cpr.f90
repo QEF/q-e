@@ -525,7 +525,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !
-           CALL check_constraint( nat, taup, tau0, fion, ityp, 1.D0, delt )
+           CALL check_constraint( nat, taup, tau0, &
+                                  fion, iforce, ityp, 1.D0, delt )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !
