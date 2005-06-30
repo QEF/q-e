@@ -957,187 +957,6 @@ MODULE pw_restart
     END SUBROUTINE pw_writefile
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
-                          nspin, wf0, ngw, nbnd, igl, ngwl, filename )
-      !------------------------------------------------------------------------
-      !
-      USE mp_wave
-      USE mp,         ONLY : mp_sum, mp_get, mp_bcast, mp_max
-      USE mp_global,  ONLY : mpime, nproc, root, me_pool, my_pool_id, &
-                             nproc_pool, intra_pool_comm, root_pool
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,            INTENT(IN) :: iuni
-      INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(KIND=DP),   INTENT(IN) :: wf0(:,:)
-      INTEGER,            INTENT(IN) :: ngw
-      INTEGER,            INTENT(IN) :: nbnd
-      INTEGER,            INTENT(IN) :: ngwl
-      INTEGER,            INTENT(IN) :: igl(:)
-      CHARACTER(LEN=256), INTENT(IN) :: filename
-      !
-      INTEGER                       :: i, j, ierr, idum = 0
-      INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
-      INTEGER                       :: npool, ipmask(nproc), ipsour
-      COMPLEX(KIND=DP), ALLOCATABLE :: wtmp(:)
-      INTEGER,          ALLOCATABLE :: igltot(:)
-      INTEGER                       :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx)   :: attr
-      !
-      !
-      ! ... set working variables for k point index (ikt) 
-      ! ... and k points number (nkt)
-      !
-      ikt = ik
-      nkt = nk
-      !
-      ! ... find out the number of pools
-      !
-      npool = nproc / nproc_pool 
-      !
-      ! ... find out number of k points blocks
-      !
-      nkbl = nkt / kunit  
-      !
-      ! ... k points per pool
-      !
-      nkl = kunit * ( nkbl / npool )
-      !
-      ! ... find out the reminder
-      !
-      nkr = ( nkt - nkl * npool ) / kunit
-      !
-      ! ... Assign the reminder to the first nkr pools
-      !
-      IF( my_pool_id < nkr ) nkl = nkl + kunit
-      !
-      ! ... find out the index of the first k point in this pool
-      !
-      iks = nkl * my_pool_id + 1
-      !
-      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
-      !
-      ! ... find out the index of the last k point in this pool
-      !
-      ike = iks + nkl - 1
-      !
-      ipmask = 0
-      ipsour = ionode_id
-      !
-      ! ... find out the index of the processor which collect the data 
-      ! ... in the pool of ik
-      !
-      IF ( npool > 1 ) THEN
-         !
-         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-            !
-            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
-            !
-         END IF
-         !
-         CALL mp_sum( ipmask )
-         !
-         DO i = 1, nproc
-            !
-            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
-            !
-         END DO
-         !
-      END IF
-      !
-      igwx = 0
-      ierr = 0
-      !
-      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-         !
-         IF ( ngwl > SIZE( igl ) ) THEN
-            !
-            ierr = 1
-            !
-         ELSE
-            !
-            igwx = MAXVAL( igl(1:ngwl) )
-            !
-         END IF
-         !
-      END IF
-      !
-      ! ... get the maximum index within the pool
-      !
-      CALL mp_max( igwx, intra_pool_comm ) 
-      !
-      ! ... now notify all procs if an error has been found 
-      !
-      CALL mp_max( ierr ) 
-      !
-      IF ( ierr > 0 ) &
-         CALL errore( ' write_restart_wfc ', ' wrong size ngl ', ierr )
-      !
-      IF ( ipsour /= ionode_id ) &
-         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
-         !
-         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_write_attr( attr, "ngw",   ngw, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "nbnd",  nbnd )
-         CALL iotk_write_attr( attr, "ik",    ik )
-         CALL iotk_write_attr( attr, "nk",    nk )
-         CALL iotk_write_attr( attr, "kunit", kunit )
-         CALL iotk_write_attr( attr, "ispin", ispin )
-         CALL iotk_write_attr( attr, "nspin", nspin )
-         CALL iotk_write_attr( attr, "igwx",  igwx )
-         !
-         CALL iotk_write_empty( iuni, "INFO", attr )
-         !
-      END IF
-      !
-      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
-      !
-      wtmp = 0.D0
-      !
-      DO j = 1, nbnd
-         !
-         IF ( npool > 1 ) THEN
-            !
-            IF ( ikt >= iks .AND. ikt <= ike ) &      
-               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_pool, &
-                             nproc_pool, root_pool, intra_pool_comm )
-            !
-            IF ( ipsour /= ionode_id ) &
-               CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
-            !
-         ELSE
-            !
-            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
-                          mpime, nproc, ionode_id )
-            !
-         END IF
-         !
-         IF ( ionode ) &
-            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
-         !
-      END DO
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_close_write( iuni )
-         !
-      END IF
-      !
-      DEALLOCATE( wtmp )
-      !
-      RETURN
-      !
-    END SUBROUTINE write_wfc
-    !
-    !------------------------------------------------------------------------
     SUBROUTINE pw_readfile( what, ierr )
       !------------------------------------------------------------------------
       !
@@ -1177,9 +996,18 @@ MODULE pw_restart
       lgvec = .FALSE.
       !
       SELECT CASE( what )
-      CASE( 'nowave' )
+      CASE( 'config' )
          !
-         ! ... all except wavefunctions
+         lcell = .TRUE.
+         lions = .TRUE.
+         !
+      CASE( 'wave' )
+         !
+         lpw   = .TRUE.
+         lwfc  = .TRUE.
+         lgvec = .TRUE.
+         !
+      CASE( 'nowave' )
          !
          lcell = .TRUE.
          lpw   = .TRUE.
@@ -1192,8 +1020,6 @@ MODULE pw_restart
          !
       CASE( 'all' )
          !
-         ! ... 
-         !
          lcell = .TRUE.
          lpw   = .TRUE.
          lions = .TRUE.
@@ -1205,13 +1031,6 @@ MODULE pw_restart
          lwfc  = .TRUE.
          lgvec = .TRUE.
          !
-      CASE( 'config' )
-         !
-         ! ...
-         !
-         lcell = .TRUE.
-         lions = .TRUE.
-         !
       END SELECT
       !
       IF ( lcell ) CALL read_cell( dirname )
@@ -1222,8 +1041,7 @@ MODULE pw_restart
       IF ( locc  ) CALL read_occupations( dirname )
       IF ( lbz   ) CALL read_brillouin_zone( dirname )
       IF ( lbs   ) CALL read_band_structure( dirname )
-     ! IF ( lwfc  )
-     ! IF ( lgvec ) 
+      IF ( lwfc  ) CALL read_wavefunctions( dirname )
       !
       RETURN
       !
@@ -1328,7 +1146,6 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
-      USE io_files,  ONLY : psfile, pseudo_dir
       !
       IMPLICIT NONE
       !
@@ -1349,8 +1166,6 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
          !
-     !    pseudo_dir = TRIM( dirname )
-         !
          DO i = 1, nsp
             !
             CALL iotk_scan_dat( iunpun, &
@@ -1358,9 +1173,6 @@ MODULE pw_restart
             !
             CALL iotk_scan_dat( iunpun, &
                                 TRIM( atm(i) ) // "_MASS", amass(i) )
-            !            
-     !       CALL iotk_scan_dat( iunpun, &
-     !                           "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
             !
          END DO
          !
@@ -1385,8 +1197,6 @@ MODULE pw_restart
       !
       CALL mp_bcast( nat,        ionode_id )
       CALL mp_bcast( nsp,        ionode_id )
-      CALL mp_bcast( pseudo_dir, ionode_id )
-      CALL mp_bcast( psfile,     ionode_id )
       CALL mp_bcast( amass,      ionode_id )
       CALL mp_bcast( atm,        ionode_id )
       CALL mp_bcast( ityp,       ionode_id )
@@ -1882,9 +1692,267 @@ MODULE pw_restart
     END SUBROUTINE read_band_structure
     !
     !------------------------------------------------------------------------
+    SUBROUTINE read_wavefunctions( dirname )
+      !------------------------------------------------------------------------
+      !
+      USE cell_base,            ONLY : tpiba2
+      USE lsda_mod,             ONLY : nspin, isk
+      USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
+      USE wvfct,                ONLY : et, wg, nbnd
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
+                                       igk_l2g, nbnd
+      USE wavefunctions_module, ONLY : evc, evc_nc
+      USE reciprocal_vectors,   ONLY : ig_l2g
+      USE io_files,             ONLY : nwordwfc, iunwfc
+      USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
+      USE noncollin_module,     ONLY : noncolin, npol                             
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool
+      USE mp_global,            ONLY : my_pool_id, &
+                                       intra_pool_comm, inter_pool_comm
+      USE mp,                   ONLY : mp_sum, mp_max
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      !
+      CHARACTER(LEN=iotk_attlenx)    :: attr
+      CHARACTER(LEN=4)               :: cspin
+      CHARACTER(LEN=256)             :: filename
+      INTEGER                        :: i, ig, ik, ngg,ig_, ierr, ipol, &
+                                        flen, ik_eff, num_k_points
+      INTEGER,           ALLOCATABLE :: kisort(:)
+      INTEGER                        :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER                        :: ike, iks, npw_g, ispin, local_pw
+      INTEGER,           ALLOCATABLE :: ngk_g(:)
+      INTEGER,           ALLOCATABLE :: itmp(:,:)
+      !
+      !
+      IF ( nkstot > 0 ) THEN
+         !
+         ! ... find out the number of pools
+         !
+         npool = nproc / nproc_pool
+         !
+         ! ... find out number of k points blocks
+         !
+         nkbl = nkstot / kunit
+         !
+         !  k points per pool
+         !
+         nkl = kunit * ( nkbl / npool )
+         !
+         ! ... find out the reminder
+         !
+         nkr = ( nkstot - nkl * npool ) / kunit
+         !
+         ! ... Assign the reminder to the first nkr pools
+         !
+         IF ( my_pool_id < nkr ) nkl = nkl + kunit
+         !
+         ! ... find out the index of the first k point in this pool
+         !
+         iks = nkl * my_pool_id + 1
+         !
+         IF ( my_pool_id >= nkr ) iks = iks + nkr * kunit
+         !
+         ! ... find out the index of the last k point in this pool
+         !
+         ike = iks + nkl - 1
+         !
+      END IF
+      !
+      ! ... find out the global number of G vectors: ngm_g  
+      !
+      ngm_g = ngm
+      !
+      CALL mp_sum( ngm_g, intra_pool_comm )      
+      !
+      ! ... collect all G vectors across processors within the pools
+      !
+      ALLOCATE( itmp( 3, ngm_g ) )
+      !
+      itmp = 0
+      !
+      DO ig = 1, ngm
+         !
+         itmp(1,ig_l2g(ig)) = ig1(ig)
+         itmp(2,ig_l2g(ig)) = ig2(ig)
+         itmp(3,ig_l2g(ig)) = ig3(ig)
+         !
+      END DO
+      !
+      CALL mp_sum( itmp, intra_pool_comm )
+      !
+      ! ... build the G+k array indexes
+      !
+      ALLOCATE( kisort( npwx ) )
+      !
+      DO ik = 1, nks
+         !
+         kisort = 0
+         npw    = npwx
+         !
+         CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
+                       ecutwfc/tpiba2, npw, kisort(1), g2kin )
+         !
+         CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
+         !
+         ngk(ik) = npw
+         !
+      END DO
+      !
+      DEALLOCATE( kisort )
+      !
+      ! ... compute the global number of G+k vectors for each k point
+      !
+      ALLOCATE( ngk_g( nkstot ) )
+      !
+      ngk_g = 0
+      ngk_g(iks:ike) = ngk(1:nks)
+      !
+      CALL mp_sum( ngk_g )
+      !
+      ! ... compute the Maximum G vector index among all G+k an processors
+      !
+      npw_g = MAXVAL( igk_l2g(:,:) )
+      !
+      CALL mp_max( npw_g )
+      !
+      ! ... compute the Maximum number of G vector among all k points
+      !
+      npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
+      !      
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
+                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         !
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         !
+      END IF
+      !
+      num_k_points = nkstot
+      !
+      IF ( nspin == 2 ) num_k_points = nkstot / 2
+      !
+      k_points_loop: DO ik = 1, num_k_points
+         !
+         IF ( ionode ) THEN
+            !
+            CALL iotk_scan_begin( iunpun, &
+                                  "K-POINT" // TRIM( iotk_index( ik ) ) )
+            !
+         END IF
+         !
+         IF ( nspin == 2 ) THEN
+            !
+            isk(ik) = 1
+            !
+            cspin = iotk_index( 1 )
+            !
+            IF ( ionode ) THEN
+               !
+               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               !
+            END IF
+            !
+            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+                           evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
+                           ngk(ik-iks+1), filename )
+            !
+            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+               !
+               CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+               !
+            END IF
+            !
+            ik_eff = ik + num_k_points
+            !
+            isk(ik_eff) = 2
+            !
+            cspin = iotk_index( 2 )
+            !
+            IF ( ionode ) THEN
+               !
+               filename = TRIM( wfc_filename( dirname, 'evc', ik_eff, ispin ) )
+               !
+            END IF
+            !
+            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+                           evc, npw_g, nbnd, igk_l2g(:,ik_eff-iks+1),   &
+                           ngk(ik_eff-iks+1), filename )
+            !
+            IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
+               !
+               CALL davcio( evc, nwordwfc, iunwfc, (ik_eff-iks+1), + 1 )
+               !
+            END IF
+            !
+         ELSE
+            !
+            isk(ik) = 1
+            !
+            cspin = iotk_index( 1 )
+            !
+            IF ( noncolin ) THEN
+               !
+               DO ipol = 1, npol
+                  !
+                  CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, &
+                                 nspin, evc_nc(:,ipol,:), npw_g, nbnd, &
+                                 igk_l2g(:,ik-iks+1), ngk(ik-iks+1), filename )
+                  !
+               END DO
+               !
+            ELSE
+               !
+                CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+                               evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
+                               ngk(ik-iks+1), filename )
+               !
+            END IF
+            !
+            IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+               !
+               IF ( noncolin ) THEN
+                  !
+                  CALL davcio( evc_nc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+                  !
+               ELSE
+                  !
+                  CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+                  !
+               END IF
+               !
+            END IF
+            !
+         END IF
+         !
+         IF ( ionode ) THEN
+            !
+            CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
+            !
+         END IF
+         !
+      END DO k_points_loop
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE read_wavefunctions
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE read_( dirname )
       !------------------------------------------------------------------------
       !
+      ! ... template
       !
       IMPLICIT NONE
       !
@@ -1910,5 +1978,379 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_
+    !
+    ! ... method to write and read wavefunctions
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
+                          nspin, wf0, ngw, nbnd, igl, ngwl, filename )
+      !------------------------------------------------------------------------
+      !
+      USE mp_wave
+      USE mp,         ONLY : mp_sum, mp_get, mp_bcast, mp_max
+      USE mp_global,  ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                             nproc_pool, intra_pool_comm, root_pool
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN) :: iuni
+      INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
+      COMPLEX(KIND=DP),   INTENT(IN) :: wf0(:,:)
+      INTEGER,            INTENT(IN) :: ngw
+      INTEGER,            INTENT(IN) :: nbnd
+      INTEGER,            INTENT(IN) :: ngwl
+      INTEGER,            INTENT(IN) :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN) :: filename
+      !
+      INTEGER                       :: i, j, ierr
+      INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
+      INTEGER                       :: npool, ipmask(nproc), ipsour
+      COMPLEX(KIND=DP), ALLOCATABLE :: wtmp(:)
+      INTEGER                       :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx)   :: attr
+      !
+      !
+      ! ... set working variables for k point index (ikt) 
+      ! ... and k points number (nkt)
+      !
+      ikt = ik
+      nkt = nk
+      !
+      ! ... find out the number of pools
+      !
+      npool = nproc / nproc_pool 
+      !
+      ! ... find out number of k points blocks
+      !
+      nkbl = nkt / kunit  
+      !
+      ! ... k points per pool
+      !
+      nkl = kunit * ( nkbl / npool )
+      !
+      ! ... find out the reminder
+      !
+      nkr = ( nkt - nkl * npool ) / kunit
+      !
+      ! ... Assign the reminder to the first nkr pools
+      !
+      IF( my_pool_id < nkr ) nkl = nkl + kunit
+      !
+      ! ... find out the index of the first k point in this pool
+      !
+      iks = nkl * my_pool_id + 1
+      !
+      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
+      !
+      ! ... find out the index of the last k point in this pool
+      !
+      ike = iks + nkl - 1
+      !
+      ipmask = 0
+      ipsour = ionode_id
+      !
+      ! ... find out the index of the processor which collect the data 
+      ! ... in the pool of ik
+      !
+      IF ( npool > 1 ) THEN
+         !
+         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+            !
+            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
+            !
+         END IF
+         !
+         CALL mp_sum( ipmask )
+         !
+         DO i = 1, nproc
+            !
+            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
+            !
+         END DO
+         !
+      END IF
+      !
+      igwx = 0
+      ierr = 0
+      !
+      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+         !
+         IF ( ngwl > SIZE( igl ) ) THEN
+            !
+            ierr = 1
+            !
+         ELSE
+            !
+            igwx = MAXVAL( igl(1:ngwl) )
+            !
+         END IF
+         !
+      END IF
+      !
+      ! ... get the maximum index within the pool
+      !
+      CALL mp_max( igwx, intra_pool_comm ) 
+      !
+      ! ... now notify all procs if an error has been found 
+      !
+      CALL mp_max( ierr ) 
+      !
+      IF ( ierr > 0 ) &
+         CALL errore( 'write_wfc ', ' wrong size ngl ', ierr )
+      !
+      IF ( ipsour /= ionode_id ) &
+         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         !
+         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_write_attr( attr, "ngw",   ngw, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nbnd",  nbnd )
+         CALL iotk_write_attr( attr, "ik",    ik )
+         CALL iotk_write_attr( attr, "nk",    nk )
+         CALL iotk_write_attr( attr, "kunit", kunit )
+         CALL iotk_write_attr( attr, "ispin", ispin )
+         CALL iotk_write_attr( attr, "nspin", nspin )
+         CALL iotk_write_attr( attr, "igwx",  igwx )
+         !
+         CALL iotk_write_empty( iuni, "INFO", attr )
+         !
+      END IF
+      !
+      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
+      !
+      wtmp = 0.D0
+      !
+      DO j = 1, nbnd
+         !
+         IF ( npool > 1 ) THEN
+            !
+            IF ( ikt >= iks .AND. ikt <= ike ) &      
+               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_pool, &
+                             nproc_pool, root_pool, intra_pool_comm )
+            !
+            IF ( ipsour /= ionode_id ) &
+               CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
+            !
+         ELSE
+            !
+            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
+                          mpime, nproc, ionode_id )
+            !
+         END IF
+         !
+         IF ( ionode ) &
+            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
+         !
+      END DO
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_write( iuni )
+         !
+      END IF
+      !
+      DEALLOCATE( wtmp )
+      !
+      RETURN
+      !
+    END SUBROUTINE write_wfc
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
+                         nspin, wf, ngw, nbnd, igl, ngwl, filename )
+      !------------------------------------------------------------------------
+      !
+      !
+      USE mp_wave
+      USE mp,         ONLY : mp_sum, mp_get, mp_bcast, mp_max, mp_put
+      USE mp_global,  ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                             nproc_pool, intra_pool_comm, root_pool
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN)    :: iuni
+      INTEGER,            INTENT(INOUT) :: ik, nk, kunit, ispin, nspin
+      COMPLEX(KIND=DP),   INTENT(OUT)   :: wf(:,:)
+      INTEGER,            INTENT(INOUT) :: ngw
+      INTEGER,            INTENT(INOUT) :: nbnd
+      INTEGER,            INTENT(IN)    :: ngwl
+      INTEGER,            INTENT(IN)    :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN)    :: filename
+      !
+      INTEGER                       :: i, j, ierr, ipdest
+      INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
+      INTEGER                       :: igwx_
+      INTEGER                       :: npool, ipmask(nproc), ipsour
+      COMPLEX(KIND=DP), ALLOCATABLE :: wtmp(:)
+      INTEGER                       :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx)   :: attr
+      !
+      !
+      ! ... set working variables for k point index (ikt) 
+      ! ... and k points number (nkt)
+      !
+      ikt = ik
+      nkt = nk
+      !
+      ! ... find out the number of pools
+      !
+      npool = nproc / nproc_pool 
+      !
+      ! ... find out number of k points blocks
+      !
+      nkbl = nkt / kunit  
+      !
+      ! ... k points per pool
+      !
+      nkl = kunit * ( nkbl / npool )
+      !
+      ! ... find out the reminder
+      !
+      nkr = ( nkt - nkl * npool ) / kunit
+      !
+      ! ... Assign the reminder to the first nkr pools
+      !
+      IF( my_pool_id < nkr ) nkl = nkl + kunit
+      !
+      ! ... find out the index of the first k point in this pool
+      !
+      iks = nkl * my_pool_id + 1
+      !
+      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
+      !
+      ! ... find out the index of the last k point in this pool
+      !
+      ike = iks + nkl - 1
+      !
+      ipmask = 0
+      ipsour = ionode_id
+      !
+      ! ... find out the index of the processor which collect the data 
+      ! ... in the pool of ik
+      !
+      IF ( npool > 1 ) THEN
+         !
+         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+            !
+            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
+            !
+         END IF
+         !
+         CALL mp_sum( ipmask )
+         !
+         DO i = 1, nproc
+            !
+            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
+            !
+         END DO
+         !
+      END IF
+      !
+      igwx = 0
+      ierr = 0
+      !
+      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+         !
+         IF ( ngwl > SIZE( igl ) ) THEN
+            !
+            ierr = 1
+            !
+         ELSE
+            !
+            igwx = MAXVAL( igl(1:ngwl) )
+            !
+         END IF
+         !
+      END IF
+      !
+      ! ... get the maximum index within the pool
+      !
+      CALL mp_max( igwx, intra_pool_comm ) 
+      !
+      ! ... now notify all procs if an error has been found 
+      !
+      CALL mp_max( ierr ) 
+      !
+      IF ( ierr > 0 ) &
+         CALL errore( 'read_wfc ', ' wrong size ngl ', ierr )
+      !
+      IF ( ipsour /= ionode_id ) &
+         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         !
+         CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_scan_empty( iuni, "INFO", attr )
+         !
+         CALL iotk_scan_attr( attr, "ngw",   ngw )
+         CALL iotk_scan_attr( attr, "nbnd",  nbnd )
+         CALL iotk_scan_attr( attr, "ik",    ik )
+         CALL iotk_scan_attr( attr, "nk",    nk )
+         CALL iotk_scan_attr( attr, "kunit", kunit )
+         CALL iotk_scan_attr( attr, "ispin", ispin )
+         CALL iotk_scan_attr( attr, "nspin", nspin )
+         CALL iotk_scan_attr( attr, "igwx",  igwx_ )
+         !
+      END IF
+      !
+      ALLOCATE( wtmp( MAX( igwx_, igwx ) ) )
+      !
+      wtmp = 0.D0
+      !
+      DO j = 1, nbnd
+         !
+         IF ( j <= SIZE( wf, 2 ) ) THEN         
+            !
+            IF ( ionode ) &
+               CALL iotk_scan_dat( iuni, &
+                                   "evc" // iotk_index( j ), wtmp(1:igwx_) ) 
+            !
+            IF( igwx > igwx_ ) wtmp(igwx_+1:igwx) = 0.0d0
+            !
+            IF ( npool > 1 ) THEN
+               !
+               IF ( ipdest /= ionode_id ) &
+                  CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
+               !
+               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+                  !
+                  CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_pool, &
+                                nproc_pool, root_pool, intra_pool_comm )
+                  !
+               ELSE
+                  !
+                  CALL splitwf( wf(:,j), wtmp, ngwl, &
+                                igl, mpime, nproc, ionode_id )
+                  !
+               END IF
+               !
+            END IF
+            !
+         END IF
+         !
+      END DO
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_read( iuni )
+         !
+      END IF
+      !
+      DEALLOCATE( wtmp )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_wfc
     !
 END MODULE pw_restart

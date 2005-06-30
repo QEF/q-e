@@ -21,6 +21,7 @@ SUBROUTINE openfil()
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc
+  USE pw_restart,       ONLY : pw_readfile
   USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : kunit
@@ -41,8 +42,16 @@ SUBROUTINE openfil()
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
      !
+#if defined (__NEWPUNCH)
+     !
+     CALL pw_readfile( 'wave', ierr )
+     !
+#else
+     !
      CALL readfile_new( 'wave', iunpun, edum, wdum, kunit, nwordwfc, &
                         iunwfc, ierr )
+     !
+#endif
      !                   
      IF ( ierr > 0 ) THEN
         !
