@@ -22,7 +22,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
-                                 check_constrain, deallocate_constraint
+                                 deallocate_constraint
   USE dynam,              ONLY : dt
   USE control_flags,      ONLY : conv_elec, istep, history, wg_set, &
                                  alpha0, beta0, ethr, pot_order,    &
@@ -63,7 +63,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   ALLOCATE( tauold( 3, nat, 3 ) )
   !
   OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
-      & TRIM( int_to_char( istep_path ) ) // ".axsf", &
+      & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
         STATUS = "UNKNOWN", ACTION = "WRITE" )
   !
   WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
@@ -566,7 +566,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
 END SUBROUTINE compute_fes_grads
 !
 !----------------------------------------------------------------------------
-SUBROUTINE write_config( iter )
+SUBROUTINE write_config( image )
   !----------------------------------------------------------------------------
   !
   USE input_parameters, ONLY : atom_label
@@ -577,11 +577,11 @@ SUBROUTINE write_config( iter )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: iter
+  INTEGER, INTENT(IN) :: image
   INTEGER             :: atom
   !
   !
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I3)' ) iter
+  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I3)' ) image
   WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
   !
   DO atom = 1, nat
