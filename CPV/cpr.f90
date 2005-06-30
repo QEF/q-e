@@ -534,7 +534,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
-        CALL ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
+        CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdm0 )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
         !
@@ -951,8 +951,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            ! ... ions
            !
            maxfion = MAXVAL( ABS( fion(:,1:nat) ) )
-           !
-           PRINT *, maxfion, tconvthrs%force
            !
            tconv = tconv .AND. ( maxfion < tconvthrs%force )
            !

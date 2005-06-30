@@ -5,45 +5,78 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module stre
-  implicit none 
-  save
-  real(kind=8) stress(3,3)
-end module stre
-
-module dqrad_mod
-  implicit none 
-  save
-  real(kind=8),allocatable:: dqrad(:,:,:,:,:,:,:)
-contains
-  subroutine deallocate_dqrad_mod
-      IF( ALLOCATED( dqrad ) ) DEALLOCATE( dqrad )
-  end subroutine deallocate_dqrad_mod
-end module dqrad_mod
-
+!----------------------------------------------------------------------------
+MODULE stre
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : dbl
+  !
+  IMPLICIT NONE 
+  SAVE
+  !
+  REAL(KIND=dbl) :: stress(3,3)
+  !
+END MODULE stre
+!
+!----------------------------------------------------------------------------
+MODULE dqrad_mod
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : dbl
+  !
+  IMPLICIT NONE 
+  SAVE
+  !
+  REAL(KIND=dbl), ALLOCATABLE :: dqrad(:,:,:,:,:,:,:)
+  !
+  CONTAINS
+  !
+  SUBROUTINE deallocate_dqrad_mod()
+    !
+    IF ( ALLOCATED( dqrad ) ) DEALLOCATE( dqrad )
+    !
+  END SUBROUTINE deallocate_dqrad_mod
+  !
+END MODULE dqrad_mod
+!
+!----------------------------------------------------------------------------
 module betax
-  implicit none 
-  save
-  integer, parameter:: mmx=5001
-  real(kind=8) :: refg
-  real(kind=8),allocatable:: betagx(:,:,:), dbetagx(:,:,:), &
-                       qradx(:,:,:,:,:), dqradx(:,:,:,:,:)
-contains
-  subroutine deallocate_betax
-      IF( ALLOCATED( betagx ) ) DEALLOCATE( betagx )
-      IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
-      IF( ALLOCATED( qradx ) ) DEALLOCATE( qradx )
-      IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
-  end subroutine deallocate_betax
-end module betax
-
-module cpr_subroutines
-
-  implicit none
-  save
-
-contains
-
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : dbl
+  !
+  IMPLICIT NONE 
+  SAVE
+  !
+  INTEGER, PARAMETER         :: mmx = 5001
+  REAL(KIND=dbl)             :: refg
+  REAL(KIND=dbl),ALLOCATABLE :: betagx(:,:,:), dbetagx(:,:,:), &
+                                qradx(:,:,:,:,:), dqradx(:,:,:,:,:)
+  !
+  CONTAINS
+  !
+  SUBROUTINE deallocate_betax()
+    !
+    IF ( ALLOCATED( betagx ) )  DEALLOCATE( betagx )
+    IF ( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
+    IF ( ALLOCATED( qradx ) )   DEALLOCATE( qradx )
+    IF ( ALLOCATED( dqradx ) )  DEALLOCATE( dqradx )
+    !
+  END SUBROUTINE deallocate_betax
+  !
+END MODULE betax
+!
+!----------------------------------------------------------------------------
+MODULE cpr_subroutines
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : dbl
+  !
+  IMPLICIT NONE
+  SAVE
+  !
+  CONTAINS
+  !
   subroutine compute_stress( stress, detot, h, omega )
     real(kind=8) :: stress(3,3), detot(3,3), h(3,3), omega
     integer :: i, j
@@ -105,27 +138,44 @@ contains
     end if
     return
   end subroutine print_cell_var
-
-
-  subroutine ions_cofmsub( tausp, na, nsp, cdm, cdm0 )
-    implicit none
-    real( kind=8 ), intent(inout) :: tausp( :, : )
-    integer, intent(in) :: na(:), nsp
-    real( kind=8 ), intent(in) :: cdm( : ), cdm0( : )
-    integer :: i, ia, is, isa
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE ions_cofmsub( tausp, iforce, na, nsp, cdm, cdm0 )
+    !--------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(KIND=dbl), INTENT(INOUT) :: tausp(:,:)
+    INTEGER,        INTENT(IN)    :: iforce(:,:)
+    INTEGER,        INTENT(IN)    :: na(:), nsp
+    REAL(KIND=dbl), INTENT(IN)    :: cdm(:), cdm0(:)
+    !
+    INTEGER :: i, ia, is, isa
+    !
+    !
     isa = 0
-    do is=1,nsp
-      do ia=1,na(is)
-        isa = isa + 1
-        do i=1,3
-          tausp(i,isa)=tausp(i,isa)+cdm0(i)-cdm(i)
-        enddo
-      enddo
-    enddo
-    return
-  end subroutine ions_cofmsub
-
-
+    !
+    DO is = 1, nsp
+       !
+       DO ia = 1, na(is)
+          !
+          isa = isa + 1
+          !
+          DO i = 1, 3
+             !
+             tausp(i,isa) = tausp(i,isa) + &
+                            DBLE( iforce(i,isa) ) * ( cdm0(i) - cdm(i) )
+             !
+          END DO
+          !
+       END DO
+       !
+    END DO
+    !
+    RETURN
+    !
+  END SUBROUTINE ions_cofmsub
+  !
   subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
     use mp, only: mp_sum
     use reciprocal_vectors, only: gstart
@@ -234,5 +284,4 @@ contains
      return
    end subroutine add_thermal_stress
 
-
-end module cpr_subroutines
+END MODULE cpr_subroutines
