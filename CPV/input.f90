@@ -5,30 +5,27 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ----------------------------------------------------------------
-  MODULE input
-! ----------------------------------------------------------------
-
+! ---------------------------------------------------------------------------
+MODULE input
+   ! --------------------------------------------------------------------------
+   !
    USE kinds,     ONLY: dbl
    USE io_global, ONLY: ionode, stdout
-
+   !
    IMPLICIT NONE
    SAVE
-
+   !
    PRIVATE                      !  Input Subroutines
                                 !  should be called in the following order
                                 !
    PUBLIC :: read_input_file    !  a) This sub. should be called first
    PUBLIC :: iosys_pseudo       !  b) then read pseudo files
    PUBLIC :: iosys              !  c) finally copy variables to modules
-
+   !
    LOGICAL :: has_been_read = .FALSE.
-
-! ----------------------------------------------------------------
-  CONTAINS
-! ----------------------------------------------------------------
-
-
+   !
+   CONTAINS
+     !
    SUBROUTINE read_input_file( lneb, lsmd, lwf )
       !
       USE read_namelists_module, ONLY: read_namelists
@@ -83,9 +80,7 @@
       RETURN
    END SUBROUTINE read_input_file
    !
-   !
    !  ----------------------------------------------
-   !
    !
    SUBROUTINE iosys_pseudo( )
 
@@ -125,9 +120,7 @@
         return
    END SUBROUTINE iosys_pseudo
    !
-   !
    !  ----------------------------------------------
-   !
    !
    SUBROUTINE iosys
 
@@ -172,9 +165,7 @@
      RETURN
    END SUBROUTINE iosys
    !
-   !
    !  ----------------------------------------------
-   !
    !
    SUBROUTINE set_control_flags( )
      !
@@ -309,8 +300,6 @@
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
-!     etot_maxiter_ = etot_maxiter, &
-!     forc_maxiter_ = forc_maxiter
 
      ! ...   Set internal time step variables ( delt, twodelt, dt2 ... )
 
@@ -456,7 +445,6 @@
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT
 
-
       ! ... Electron dynamics
 
       tdamp_          = .FALSE.
@@ -508,7 +496,6 @@
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
-
 
       ! ... Ions dynamics
 
@@ -590,7 +577,6 @@
           CALL errore(' control_flags ',' unknown ion_temperature '//TRIM(ion_temperature), 1 )
       END SELECT
 
-
       ! ... Starting/Restarting ionic velocities
 
       tcap_         = .FALSE.
@@ -632,9 +618,7 @@
             WRITE(stdout) " ion_nstepe or cell_nstepe have no effects "
       END IF
 
-
       !   Cell dynamics
-
          
       SELECT CASE ( TRIM(cell_dynamics) )
         CASE ('sd')
@@ -713,7 +697,6 @@
       IF( program_name == 'CP90' .AND. force_pairing_) &
             WRITE(stdout) " force_pairing have no effects "
 
-
       ! . Set internal flags according to the input .......................!
 
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
@@ -747,23 +730,17 @@
       RETURN
    END SUBROUTINE set_control_flags
    !
-   !
    !  ----------------------------------------------
-   !
-   !
    !  
    !  modules setup ( copy-in variables )
    !
-   !
-   !
    !  ----------------------------------------------
    !
-   !
-   SUBROUTINE modules_setup( )
+   SUBROUTINE modules_setup()
      !
-     USE control_flags,    ONLY: lneb, program_name, lconstrain
-     USE constants,        ONLY: UMA_AU, pi
-   
+     USE control_flags,    ONLY : lneb, program_name, lconstrain
+     USE constants,        ONLY : UMA_AU, pi
+     !
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
@@ -775,9 +752,8 @@
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
-           rotation_dynamics, degauss, smearing, nhpcl, ndega
-
-
+           rotation_dynamics, degauss, smearing, nhpcl, ndega, restart_mode
+     !
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
            diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
@@ -790,27 +766,28 @@
            nelec, tprnks, ks_path, press,                                      &
            cell_damping, cell_dofree, tf_inp, tpstab_inp, pstab_size_inp,      &
            greash, grease, greasp, epol, efield, tcg, maxiter, etresh, passop
-
+     !
      USE input_parameters, ONLY : nconstr_inp
+     USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
+                                  efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
+                                  wf_q, wf_dt, wf_friction, nit, nsd, nsteps,  &
+                                  tolw, adapt, calwf, nwf, wffort, iwf, writev
      !
-     USE check_stop,       ONLY: check_stop_init
-     !
-     !
-     USE ions_base,        ONLY: tau, ityp
-     USE cell_base,        ONLY: cell_base_init, a1, a2, a3, cell_alat
-     USE cell_nose,        ONLY: cell_nose_init
-     USE ions_base,        ONLY: ions_base_init, greasp_ => greasp
-     USE sic_module,       ONLY: sic_initval
-     USE ions_nose,        ONLY: ions_nose_init
-     USE wave_base,        ONLY: grease_ => grease
-     USE electrons_nose,   ONLY: electrons_nose_init
-     USE printout_base,    ONLY: printout_base_init
-     USE turbo,            ONLY: turbo_init
-     USE efield_module,    ONLY: efield_init
-     USE cg_module,        ONLY: cg_init
+     USE check_stop,       ONLY : check_stop_init
+     USE ions_base,        ONLY : tau, ityp
+     USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
+     USE cell_nose,        ONLY : cell_nose_init
+     USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
+     USE sic_module,       ONLY : sic_initval
+     USE ions_nose,        ONLY : ions_nose_init
+     USE wave_base,        ONLY : grease_ => grease
+     USE electrons_nose,   ONLY : electrons_nose_init
+     USE printout_base,    ONLY : printout_base_init
+     USE turbo,            ONLY : turbo_init
+     USE efield_module,    ONLY : efield_init
+     USE cg_module,        ONLY : cg_init
      !
      USE reciprocal_space_mesh,    ONLY: recvecs_units
-     !
      USE smallbox_grid_dimensions, ONLY: &
            nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1b_ => nr1b, &
@@ -826,30 +803,29 @@
            nr1s_ => nr1s, &
            nr2s_ => nr2s, &
            nr3s_ => nr3s
-     !
-     USE brillouin,                ONLY: kpoint_setup
-     USE optical_properties,       ONLY: optical_setup
-     USE pseudopotential,          ONLY: pseudopotential_setup
-     USE guess,                    ONLY: guess_setup
-     USE empty_states,             ONLY: empty_init
-     USE diis,                     ONLY: diis_setup
-     USE charge_mix,               ONLY: charge_mix_setup
-     USE potentials,               ONLY: potential_init
-     USE kohn_sham_states,         ONLY: ks_states_init
-     USE electrons_module,         ONLY: electrons_setup
-     USE electrons_base,           ONLY: electrons_base_initval
-     USE ensemble_dft,             ONLY: ensemble_initval
-     !
+     USE brillouin,                ONLY : kpoint_setup
+     USE optical_properties,       ONLY : optical_setup
+     USE pseudopotential,          ONLY : pseudopotential_setup
+     USE guess,                    ONLY : guess_setup
+     USE empty_states,             ONLY : empty_init
+     USE diis,                     ONLY : diis_setup
+     USE charge_mix,               ONLY : charge_mix_setup
+     USE potentials,               ONLY : potential_init
+     USE kohn_sham_states,         ONLY : ks_states_init
+     USE electrons_module,         ONLY : electrons_setup
+     USE electrons_base,           ONLY : electrons_base_initval
+     USE ensemble_dft,             ONLY : ensemble_initval
+     USE wannier_base,             ONLY : wannier_init
      USE constraints_module,       ONLY : init_constraint
      USE basic_algebra_routines,   ONLY : norm
      !
      !
      IMPLICIT NONE
-
-     REAL(dbl) :: alat_ , massa_totale
-     REAL(dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+     !
+     REAL(KIND=dbl) :: alat_ , massa_totale
+     REAL(KIND=dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
      ! ...   DIIS
-     REAL(dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
+     REAL(KIND=dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
      LOGICAL :: o_diis_inp, oqnr_diis_inp
      INTEGER :: ia
      LOGICAL :: ltest
@@ -994,19 +970,21 @@
 
      END IF
      !
+     CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
+                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
+                        wf_dt, wf_friction, nit, nsd, nsteps, tolw,     &
+                        adapt, calwf, nwf, wffort, iwf, writev, restart_mode )
+     !
      RETURN
      !
   END SUBROUTINE modules_setup
   !
-  !
-  !
   !     -------------------------------------------------------------------
-  !
   !
   SUBROUTINE smd_initvar( )
 
-      !     this subroutine copies SMD variables from input module to path_variables
-      !     -------------------------------------------------------------------
+      ! this subroutine copies SMD variables from input module to path_variables
+      ! -------------------------------------------------------------------
 
       USE input_parameters, only: calculation, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
@@ -1036,7 +1014,7 @@
       !
       implicit none
       !
-      real(dbl) :: alat_
+      REAL(KIND=dbl) :: alat_
       !
       IF( .NOT. tions_base_init ) &
         CALL errore( " smd_initvar ", " ions_base_init should be called first ", 1 )
@@ -1108,12 +1086,9 @@
       RETURN
   END SUBROUTINE smd_initvar
   !
-  !
   !     --------------------------------------------------------
   !
   !     print out heading
-  !
-  !
   !
   SUBROUTINE input_info()
 
@@ -1151,9 +1126,7 @@
     RETURN
   END SUBROUTINE input_info
   !
-  !
   ! ----------------------------------------------------------------
-  !
   !
   SUBROUTINE modules_info()
 
@@ -1309,7 +1282,6 @@
  722  format( 3X, 'local potential is written in unit 46')
 
   END SUBROUTINE modules_info
-
 
 ! ----------------------------------------------------------------
   END MODULE input

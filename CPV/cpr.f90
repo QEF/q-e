@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -163,7 +163,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub, elec_fakekine
   USE wannier_subroutines,      ONLY : wannier_init, wf_closing_options, &
-                                       read_efwan_param, ef_enthalpy
+                                       ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
   USE constraints_module,       ONLY : check_constraint
   !
@@ -238,8 +238,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !=======================================================================
   !
   CALL iosys()
-  !
-  IF ( lwf ) CALL read_efwan_param( nbeg )
   !
   !=======================================================================
   !     initialize g-vectors, fft grids

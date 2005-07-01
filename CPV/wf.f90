@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,10 +35,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE smooth_grid_dimensions,   ONLY : nnrsx
   USE control_flags,            ONLY : iprsta
   USE qgb_mod,                  ONLY : qgb
-  USE wfparm,                   ONLY : wfg, nw, weight, indexplus, indexplusz, &
+  USE wannier_base,             ONLY : wfg, nw, weight, indexplus, indexplusz, &
                                        indexminus, indexminusz, tag, tagp,     &
-                                       expo
-  USE wfparm2,                  ONLY : wfsd
+                                       expo, wfsd
   USE grid_dimensions,          ONLY : nr1, nr2, nr3
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
@@ -1278,8 +1277,8 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !
   USE kinds,            ONLY : dbl
   USE io_global,        ONLY : stdout
-  USE wfparm2,          ONLY : friction, nsteps, tolw, adapt, dt, q
-  USE wfparm,           ONLY : weight, nw
+  USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_dt, wf_q, &
+                               weight, nw
   USE cell_base,        ONLY : alat
   USE constants,        ONLY : tpi
   USE electrons_base,   ONLY : nbsp
@@ -1316,7 +1315,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ALLOCATE(X1(m,m))
   ALLOCATE(Oc(nw,m,m))
 
-  fric=friction
+  fric=wf_friction
   ALLOCATE (W(m,m),wr(m))
 
   Umat=0.D0
@@ -1398,14 +1397,14 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      END DO
 
 
-     !   the verlet scheme to calculate A(t+dt)
+     !   the verlet scheme to calculate A(t+wf_dt)
 
      Aplus=0.D0
 
      DO i=1,m
         DO j=i+1,m
-           Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
-                -Aminus(i,j)+(dt*dt/q)*W(i,j)) + (fric/(2*dt+fric))*Aminus(i,j)
+           Aplus(i,j)=Aplus(i,j)+(2*wf_dt/(2*wf_dt+fric))*(2*A(i,j)               &
+                -Aminus(i,j)+(wf_dt*wf_dt/wf_q)*W(i,j)) + (fric/(2*wf_dt+fric))*Aminus(i,j)
         ENDDO
      ENDDO
 
@@ -1432,7 +1431,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      d=0.D0
      DO i=1, m
-        d(i, i)=EXP(CI*wr(i)*dt)
+        d(i, i)=EXP(CI*wr(i)*wf_dt)
      END DO      !d=exp(d)
 
      !   U=z*exp(d)*z+
@@ -1544,7 +1543,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   USE reCIprocal_vectors, ONLY : gx, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
-  USE wfparm,             ONLY : gnx, gnn, indexplus, indexminus, &
+  USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
                                  indexplusz, indexminusz, tag, tagp
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
@@ -1743,8 +1742,6 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
      ALLOCATE(indexplusz(ngw))
      ALLOCATE(indexminusz(ngw))
 
-
-
      i_1(1)=1     ! 1
      j_1(1)=0     ! 0
      k_1(1)=0     ! 0
@@ -1788,8 +1785,6 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
      ALLOCATE(tagp(ntot,nw1))
      ALLOCATE(indexplusz(ngw))
      ALLOCATE(indexminusz(ngw))
-
-
 
      i_1(1)=1     ! 1
      j_1(1)=0     ! 0
@@ -2673,7 +2668,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE io_global,              ONLY : stdout
   USE smooth_grid_dimensions, ONLY : nnrsx
   USE constants,              ONLY : fpi
-  USE wfparm,                 ONLY : expo
+  USE wannier_base,           ONLY : expo
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
   USE parallel_include
   USE para_mod
@@ -3220,8 +3215,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !
   USE kinds,                  ONLY : dbl
   USE io_global,              ONLY : stdout
-  USE wfparm,                 ONLY : nw, weight
-  USE wfparm2,                ONLY : nit, tolw, wfdt, maxwfdt, nsd
+  USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
@@ -3896,7 +3890,7 @@ SUBROUTINE rhoiofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,ndwwf)
                                      nr1sx, nr2sx, nr3sx, nnrsx
   USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, fspin
   USE constants,              ONLY : pi, fpi
-  USE wfparm,                 ONLY : iwf
+  USE wannier_base,           ONLY : iwf
   USE dener,                  ONLY : dekin, denl
   USE io_global,              ONLY : stdout
   USE uspp_param,             ONLY : nh, nhm

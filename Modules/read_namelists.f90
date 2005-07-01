@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF-FPMD-CPV group
+! Copyright (C) 2002-2004 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -506,6 +506,59 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+     !  Variables initialization for Namelist WANNIER
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_defaults( prog )
+       !----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       wf_efield = .FALSE.
+       wf_switch = .FALSE.
+       !   
+       sw_len = 1
+       !   
+       efx0 = 0.D0
+       efy0 = 0.D0
+       efz0 = 0.D0
+       efx1 = 0.D0
+       efy1 = 0.D0
+       efz1 = 0.D0
+       !   
+       wfsd = .FALSE.
+       !
+       wfdt        = 0.1D0
+       maxwfdt     = 0.3D0
+       wf_q        = 1500.D0
+       wf_dt       = 5.D0
+       wf_friction = 0.3D0
+       !   
+       nit    = 10
+       nsd    = 10
+       nsteps = 20
+       !   
+       tolw = 1.D-8
+       !
+       adapt = .FALSE.
+       !   
+       calwf  = 3
+       nwf    = 1
+       wffort = 40
+       !
+       iwf = 21
+       !
+       writev = .FALSE.
+       ! 
+       RETURN
+       !
+     END SUBROUTINE     
+     !
+     !=----------------------------------------------------------------------=!
+     !
      !  Broadcast variables values for Namelist CONTROL
      !
      !=----------------------------------------------------------------------=!
@@ -872,8 +925,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE
-     
+     END SUBROUTINE     
      !
      !=----------------------------------------------------------------------------=!
      !
@@ -897,6 +949,53 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
+     !
+     !
+     !=----------------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist WANNIER
+     !
+     !=----------------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_bcast()
+       !----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp,        ONLY: mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       !
+       CALL mp_bcast( wf_efield, ionode_id )
+       CALL mp_bcast( wf_switch, ionode_id )
+       CALL mp_bcast( sw_len, ionode_id )
+       CALL mp_bcast( efx0, ionode_id )
+       CALL mp_bcast( efy0, ionode_id )
+       CALL mp_bcast( efz0, ionode_id )
+       CALL mp_bcast( efx1, ionode_id )
+       CALL mp_bcast( efy1, ionode_id )
+       CALL mp_bcast( efz1, ionode_id )
+       CALL mp_bcast( wfsd, ionode_id )
+       CALL mp_bcast( wfdt, ionode_id )
+       CALL mp_bcast( maxwfdt, ionode_id )
+       CALL mp_bcast( wf_q, ionode_id )
+       CALL mp_bcast( wf_dt, ionode_id )
+       CALL mp_bcast( wf_friction, ionode_id )
+       CALL mp_bcast( nit, ionode_id )
+       CALL mp_bcast( nsd, ionode_id )
+       CALL mp_bcast( nsteps, ionode_id )
+       CALL mp_bcast( tolw, ionode_id )
+       CALL mp_bcast( adapt, ionode_id )
+       CALL mp_bcast( calwf, ionode_id )
+       CALL mp_bcast( nwf, ionode_id )
+       CALL mp_bcast( wffort, ionode_id )
+       CALL mp_bcast( iwf, ionode_id )
+       CALL mp_bcast( writev, ionode_id )
+       !
+       RETURN
+       !
+     END SUBROUTINE 
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1384,7 +1483,25 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
-
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Check input values for Namelist WANNIER
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_checkin( prog )
+       !--------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       RETURN
+       !
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1443,8 +1560,11 @@ MODULE read_namelists_module
           CASE ( 'cp-wf' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
-                ion_dynamics = 'damp'
+                ion_dynamics      = 'damp'
              END IF
+             IF ( prog == 'FP' .OR. prog == 'PW' ) &
+                CALL errore( sub_name, ' calculation ' // &
+                           & TRIM( calculation ) // ' not implemented ', 1 )
           CASE ('relax')
              IF( prog == 'FP' ) THEN
                 electron_dynamics = 'sd'
@@ -1725,6 +1845,24 @@ MODULE read_namelists_module
        !
        CALL raman_bcast()
        CALL raman_checkin( prog )
+       !
+       ! ... WANNIER NAMELIST
+       !
+       CALL wannier_defaults( prog )
+       ios = 0
+       IF( ionode ) THEN
+          IF( TRIM( calculation ) == 'cp-wf' ) THEN
+             READ( 5, wannier, iostat = ios )
+          END IF
+       END IF
+       CALL mp_bcast( ios, ionode_id )
+       IF( ios /= 0 ) THEN
+          CALL errore( ' read_namelists ', &
+                     & ' reading namelist wannier ', ABS(ios) )
+       END IF
+       !
+       CALL wannier_bcast()
+       CALL wannier_checkin( prog )
        !
        RETURN
        !

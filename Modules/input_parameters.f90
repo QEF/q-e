@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 FPMD & PWSCF group
+! Copyright (C) 2002-2003 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1224,9 +1224,10 @@ MODULE input_parameters
           ! where E1 E2 E3 are successive values of the DFT total energy 
           ! in a ionic steepest descent simulation
 
-        NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, press, &
-          wmass, cell_temperature, temph, fnoseh, cell_dofree, greash, cell_factor, &
-          cell_nstepe, cell_damping
+        NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, &
+                          press, wmass, cell_temperature, temph, fnoseh,   &
+                          cell_dofree, greash, cell_factor, cell_nstepe,   &
+                          cell_damping
 !
 !=----------------------------------------------------------------------------=!
 !  PHONON Namelist Input Parameters
@@ -1235,13 +1236,13 @@ MODULE input_parameters
 
         INTEGER :: modenum = 0
         
-        integer :: nq1, nq2, nq3
+        INTEGER :: nq1, nq2, nq3
         ! number of q points in each direction
         
         REAL(dbl) :: xqq(3) = 0.0d0
           ! coordinates of q point for phonon calculation
 
-        real(dbl) :: tr2_ph
+        REAL(dbl) :: tr2_ph
 
         NAMELIST / phonon / modenum, xqq, nq1, nq2, nq3, tr2_ph
 
@@ -1249,12 +1250,53 @@ MODULE input_parameters
 !  RAMAN Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
  
-         real(dbl) :: b_length
+         REAL(dbl) :: b_length
            ! length of the b-vector
-         logical :: lcart
+         LOGICAL :: lcart
            ! cartesian directions
  
          NAMELIST / raman / b_length, lcart
+
+!=----------------------------------------------------------------------------=!  
+!  WANNIER Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+
+          LOGICAL :: wf_efield
+          LOGICAL :: wf_switch
+          !
+          INTEGER :: sw_len
+          !
+          REAL(KIND=dbl) :: efx0, efy0, efz0
+          REAL(KIND=dbl) :: efx1, efy1, efz1
+          !
+          LOGICAL :: wfsd
+          !
+          REAL(KIND=dbl) :: wfdt
+          REAL(KIND=dbl) :: maxwfdt
+          REAL(KIND=dbl) :: wf_q
+          REAL(KIND=dbl) :: wf_dt
+          REAL(KIND=dbl) :: wf_friction
+          !
+          INTEGER :: nit
+          INTEGER :: nsd
+          INTEGER :: nsteps
+          !
+          REAL(KIND=dbl) :: tolw
+          !
+          LOGICAL :: adapt
+          !
+          INTEGER :: calwf
+          INTEGER :: nwf
+          INTEGER :: wffort
+          !
+          INTEGER :: iwf
+          !
+          LOGICAL :: writev
+          !
+          NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
+                               efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
+                               wf_dt, wf_friction, nit, nsd, nsteps, tolw,     &
+                               adapt, calwf, nwf, wffort, iwf, writev
 
 !  END manual
 ! ----------------------------------------------------------------------
