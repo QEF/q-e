@@ -517,7 +517,6 @@ cat > ni.scf.in << EOF
  /
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
-    starting_magnetization(1)=0.7,
     ecutwfc = 24.0, ecutrho = 288.0,
     occupations='smearing', smearing='methfessel-paxton', degauss=0.02
     noncolin = .true.
