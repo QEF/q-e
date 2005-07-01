@@ -15,32 +15,32 @@ MODULE wannier_base
   !
   ! ... input variables
   !
-  LOGICAL        :: wf_efield
-  LOGICAL        :: wf_switch
-  INTEGER        :: sw_len
-  REAL(KIND=dbl) :: efx0, efy0, efz0
-  REAL(KIND=dbl) :: efx1, efy1, efz1
-  LOGICAL        :: wfsd
-  REAL(KIND=dbl) :: wfdt
-  REAL(KIND=dbl) :: maxwfdt
-  REAL(KIND=dbl) :: wf_q
-  REAL(KIND=dbl) :: wf_dt
-  REAL(KIND=dbl) :: wf_friction
-  INTEGER        :: nit
-  INTEGER        :: nsd
-  INTEGER        :: nsteps
-  REAL(KIND=dbl) :: tolw
-  LOGICAL        :: adapt
-  INTEGER        :: calwf
-  INTEGER        :: nwf
-  INTEGER        :: wffort
-  INTEGER        :: iwf
-  LOGICAL        :: writev
+  LOGICAL              :: wf_efield
+  LOGICAL              :: wf_switch
+  INTEGER              :: sw_len
+  REAL(KIND=dbl)       :: efx0, efy0, efz0
+  REAL(KIND=dbl)       :: efx1, efy1, efz1
+  LOGICAL              :: wfsd
+  REAL(KIND=dbl)       :: wfdt
+  REAL(KIND=dbl)       :: maxwfdt
+  REAL(KIND=dbl)       :: wf_q
+  REAL(KIND=dbl)       :: wf_dt
+  REAL(KIND=dbl)       :: wf_friction
+  INTEGER              :: nit
+  INTEGER              :: nsd
+  INTEGER              :: nsteps
+  REAL(KIND=dbl)       :: tolw
+  LOGICAL              :: adapt
+  INTEGER              :: calwf
+  INTEGER              :: nwf
+  INTEGER              :: wffort
+  LOGICAL              :: writev
+  INTEGER, ALLOCATABLE :: iplot(:)
   !
   ! ... other internal variables
   !
-  INTEGER                        :: nw, nwrwf ,jwf
-  INTEGER, ALLOCATABLE           :: iplot(:), wfg1(:), wfg(:,:)
+  INTEGER                        :: nw, nwrwf, iwf, jwf
+  INTEGER, ALLOCATABLE           :: wfg1(:), wfg(:,:)
   INTEGER, ALLOCATABLE           :: indexplus(:,:), indexminus(:,:)
   INTEGER, ALLOCATABLE           :: indexplusz(:), indexminusz(:)
   INTEGER, ALLOCATABLE           :: tag(:,:), tagp(:,:)
@@ -56,7 +56,7 @@ MODULE wannier_base
                              efz0_, efx1_, efy1_, efz1_, wfsd_, wfdt_,      &
                              maxwfdt_, wf_q_, wf_dt_, wf_friction_, nit_,   &
                              nsd_, nsteps_, tolw_, adapt_, calwf_, nwf_,    &
-                             wffort_, iwf_, writev_, restart_mode_ )
+                             wffort_, writev_, iplot_, restart_mode_ )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -80,7 +80,7 @@ MODULE wannier_base
       INTEGER,          INTENT(IN) :: calwf_
       INTEGER,          INTENT(IN) :: nwf_
       INTEGER,          INTENT(IN) :: wffort_
-      INTEGER,          INTENT(IN) :: iwf_
+      INTEGER,          INTENT(IN) :: iplot_(:)
       LOGICAL,          INTENT(IN) :: writev_
       CHARACTER(LEN=*), INTENT(IN) :: restart_mode_
       !
@@ -108,14 +108,26 @@ MODULE wannier_base
       calwf       = calwf_
       nwf         = nwf_
       wffort      = wffort_
-      iwf         = iwf_
       writev      = writev_
+      !
+      IF ( calwf == 1 .AND. nwf == 0 ) &
+         CALL errore( 'wannier_init ', &
+                    & 'when calwf = 1, nwf must be larger that 0', 1 )
+      !
+      IF ( nwf > 0 ) THEN
+         !
+         ALLOCATE( iplot( nwf ) )
+         !
+         iplot(:) = iplot_(1:nwf)
+         !
+      END IF
       !
       IF ( TRIM( restart_mode_ ) == "from_scratch" ) THEN
          !
          IF ( wf_efield == .TRUE.  ) &
             CALL errore( 'wannier_init ', &
-                       & 'electric field not allowed from scratch', 1 )
+                       & 'electric field not allowed when starting ' // &
+                       & 'from scratch', 1 )
          !
       END IF
       !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -771,7 +771,8 @@ MODULE input
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
                                   wf_q, wf_dt, wf_friction, nit, nsd, nsteps,  &
-                                  tolw, adapt, calwf, nwf, wffort, iwf, writev
+                                  tolw, adapt, calwf, nwf, wffort, writev,     &
+                                  wannier_index
      !
      USE check_stop,       ONLY : check_stop_init
      USE ions_base,        ONLY : tau, ityp
@@ -970,10 +971,11 @@ MODULE input
 
      END IF
      !
-     CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
-                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
-                        wf_dt, wf_friction, nit, nsd, nsteps, tolw,     &
-                        adapt, calwf, nwf, wffort, iwf, writev, restart_mode )
+     CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0,   &
+                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,      &
+                        wf_dt, wf_friction, nit, nsd, nsteps, tolw,       &
+                        adapt, calwf, nwf, wffort, writev, wannier_index, &
+                        restart_mode )
      !
      RETURN
      !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 FPMD & PWSCF group
+! Copyright (C) 2002-2003 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,12 +15,13 @@ MODULE read_cards_module
   !
   USE kinds
   USE io_global,         ONLY: stdout 
-  USE input_parameters
   USE constants,         ONLY: angstrom_au
   USE parser,            ONLY: field_count, read_line
   USE mp_global,         ONLY: mpime, nproc, group
   USE io_global,         ONLY: ionode, ionode_id
   USE mp,                ONLY: mp_bcast
+  !
+  USE input_parameters
   !
   IMPLICIT NONE
   !
@@ -39,8 +40,6 @@ MODULE read_cards_module
      ! ... Read CARDS ....
      !
      ! ... subroutines
-     !
-     !  ----------------------------------------------
      !
      !----------------------------------------------------------------------
      SUBROUTINE card_default_values( prog )
@@ -125,12 +124,12 @@ MODULE read_cards_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2)   :: prog   ! calling program ( FP, PW, CP )
-       CHARACTER(LEN=256) :: input_line
-       CHARACTER(LEN=80)  :: card
+       CHARACTER(LEN=2)           :: prog   ! calling program ( FP, PW, CP )
+       CHARACTER(LEN=256)         :: input_line
+       CHARACTER(LEN=80)          :: card
        CHARACTER(LEN=1), EXTERNAL :: capital
-       LOGICAL            :: tend
-       INTEGER            :: i
+       LOGICAL                    :: tend
+       INTEGER                    :: i
        !
        !
        CALL card_default_values( prog )
@@ -204,8 +203,6 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
           !
           CALL card_occupations( input_line )
-!          IF ( prog == 'PW' .AND. ionode ) &
-!             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'PSTAB' ) THEN
           !
@@ -250,6 +247,10 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
           CALL card_climbing_images( input_line )
+
+       ELSE IF ( TRIM(card) == 'PLOT_WANNIER' ) THEN
+          !
+          CALL card_plot_wannier( input_line )
 
        ELSE
           !
@@ -1876,7 +1877,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
-     !
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
@@ -1940,17 +1940,90 @@ MODULE read_cards_module
           !   
        END IF
        ! 
-       tread   = .TRUE.
+       tread = .TRUE.
        !
        RETURN
        !
-     END SUBROUTINE card_climbing_images   
-     !
+     END SUBROUTINE card_climbing_images
      !
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
+     ! 
+     ! PLOT WANNIER
      !
+     !   Needed to specify the indices of the wannier functions that
+     !   have to be plotted
+     !
+     ! Syntax:
+     !
+     !   PLOT_WANNIER
+     !     index1, ..., indexN
+     !
+     ! Where:
+     !
+     !   index1, ..., indexN are indices of the wannier functions
+     !
+     !----------------------------------------------------------------------
+     !    END manual
+     !------------------------------------------------------------------------
+     !
+     SUBROUTINE card_plot_wannier( input_line )
+       !
+       USE parser, ONLY :  int_to_char
+       !
+       IMPLICIT NONE
+       ! 
+       CHARACTER(LEN=256) :: input_line
+       LOGICAL, SAVE      :: tread = .FALSE.
+       LOGICAL, EXTERNAL  :: matches
+       ! 
+       INTEGER            :: i, ib
+       CHARACTER (LEN=5)  :: i_char
+       !
+       !
+       IF ( tread ) &
+          CALL errore( 'card_plot_wannier ', 'two occurrence', 2 )
+       !
+       IF ( nwf > 0 ) THEN
+          !
+          IF ( nwf > nwf_max ) &
+             CALL errore( 'card_plot_wannier ', &
+                          'too many wannier functions', 1 )
+          !
+          CALL read_line( input_line )
+          !
+          ib = 0
+          !
+          DO i = 1, nbnd
+             !
+             i_char = int_to_char( i ) 
+             !
+             IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
+                           ' ' // TRIM( input_line ) // ',' ) ) THEN
+                !
+                ib = ib + 1
+                !
+                IF ( ib > nwf ) &
+                   CALL errore( 'card_plot_wannier ', 'too many indices', 1 )
+                 !
+                wannier_index( ib ) = i
+                !
+             END IF
+             !
+          END DO
+          !   
+       END IF
+       ! 
+       tread = .TRUE.
+       !
+       RETURN
+       !
+     END SUBROUTINE card_plot_wannier
+     !
+     !------------------------------------------------------------------------
+     !    BEGIN manual
+     !----------------------------------------------------------------------
      !
      !
      ! TEMPLATE

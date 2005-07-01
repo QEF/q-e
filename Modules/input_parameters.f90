@@ -1289,14 +1289,12 @@ MODULE input_parameters
           INTEGER :: nwf
           INTEGER :: wffort
           !
-          INTEGER :: iwf
-          !
           LOGICAL :: writev
           !
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                                efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
                                wf_dt, wf_friction, nit, nsd, nsteps, tolw,     &
-                               adapt, calwf, nwf, wffort, iwf, writev
+                               adapt, calwf, nwf, wffort, writev
 
 !  END manual
 ! ----------------------------------------------------------------------
@@ -1479,6 +1477,13 @@ MODULE input_parameters
       !
       LOGICAL, ALLOCATABLE :: climbing(:) 
 
+!
+!   PLOT_WANNIER
+!
+
+      INTEGER, PARAMETER :: nwf_max = 1000
+      !
+      INTEGER :: wannier_index(nwf_max)
 
 !  END manual
 ! ----------------------------------------------------------------------
@@ -1490,8 +1495,8 @@ MODULE input_parameters
        IMPLICIT NONE
        !
        !
-       IF ( ALLOCATED( pos ) )       DEALLOCATE( pos )
-       IF ( ALLOCATED( climbing ) )  DEALLOCATE( climbing )
+       IF ( ALLOCATED( pos ) )      DEALLOCATE( pos )
+       IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
        !  
      END SUBROUTINE deallocate_input_parameters
      !

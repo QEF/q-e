@@ -3859,30 +3859,35 @@ END SUBROUTINE write_psi
 !
 #endif
 !
-!-----------------------------------------------------------------------
-SUBROUTINE rhoiofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,ndwwf)
-  !-----------------------------------------------------------------------
-  !     the normalized electron density rhor in real space
-  !     the kinetic energy ekin
-  !     subroutine uses complex fft so it computes two ft's
-  !     simultaneously
+!----------------------------------------------------------------------------
+SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
+                    rhovan, rhor, rhog, rhos, enl, ekin, ndwwf )
+  !----------------------------------------------------------------------------
   !
-  !     rho_i,ij = sum_n < beta_i,i | psi_n >< psi_n | beta_i,j >
-  !     < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
-  !                   2 sum_g> re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
+  ! ... the normalized electron density rhor in real space
+  ! ... the kinetic energy ekin
+  ! ... subroutine uses complex fft so it computes two ft's
+  ! ... simultaneously
+  !
+  ! ... rho_i,ij = sum_n < beta_i,i | psi_n >< psi_n | beta_i,j >
+  !     
+  ! ... < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
+  !                            2 sum_g re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
   !
   !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
   !
+  USE constants,              ONLY : bohr_radius_angs
   USE kinds,                  ONLY : dbl
   USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
+  USE cell_base,              ONLY : a1, a2, a3
   USE parameters,             ONLY : natx, nsx
   USE recvecs_indexes,        ONLY : np, nM
   USE gvecs,                  ONLY : nms, nps, ngs
   USE gvecp,                  ONLY : ngm
   USE gvecb,                  ONLY : ngb
   USE gvecw,                  ONLY : ngw
-  USE reCIprocal_vectors,     ONLY : gstart
+  USE reciprocal_vectors,     ONLY : gstart
   USE cvan,                   ONLY : ish
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
   USE cell_base,              ONLY : omega
@@ -3892,7 +3897,7 @@ SUBROUTINE rhoiofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,ndwwf)
   USE constants,              ONLY : pi, fpi
   USE wannier_base,           ONLY : iwf
   USE dener,                  ONLY : dekin, denl
-  USE io_global,              ONLY : stdout
+  USE io_global,              ONLY : stdout, ionode
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
   !
@@ -4153,14 +4158,29 @@ SUBROUTINE rhoiofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,ndwwf)
   ENDIF
   !     ======================================endif for trhor=============
   REWIND ndwwf
-#ifdef __PARA
-  CALL write_rho(ndwwf,nspin,rhor)
+  !
+  IF ( ionode ) THEN
+     !
+     WRITE( ndwwf, '("3  2")' )
+     !
+     WRITE( ndwwf, '(3(2X,I3))' ) nr1x, nr2x, nr3x
+     !
+     WRITE( ndwwf, '(3(2X,"0",2X,F16.10))' ) &
+         ( DBLE( nr1x - 1 ) / DBLE( nr1x ) ) * a1(1) * bohr_radius_angs, &
+         ( DBLE( nr2x - 1 ) / DBLE( nr2x ) ) * a2(2) * bohr_radius_angs, &
+         ( DBLE( nr3x - 1 ) / DBLE( nr3x ) ) * a3(3) * bohr_radius_angs
+     !
+  END IF
+  !
+#if defined (__PARA)
+  !
+  CALL write_rho( ndwwf, nspin, rhor )
+  !
 #else
-  WRITE(ndwwf,'(f12.7)')     &
-       ((rhor(ir,iss),ir=1,nnrx),iss=1,nspin)
+  !
+  WRITE( ndwwf, '(F14.9)' ) ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
+  !
 #endif
-
-
   !
   !     here to check the integral of the charge density
   !

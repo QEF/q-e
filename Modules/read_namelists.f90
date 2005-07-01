@@ -546,13 +546,11 @@ MODULE read_namelists_module
        adapt = .FALSE.
        !   
        calwf  = 3
-       nwf    = 1
+       nwf    = 0
        wffort = 40
        !
-       iwf = 21
-       !
        writev = .FALSE.
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE     
@@ -990,7 +988,6 @@ MODULE read_namelists_module
        CALL mp_bcast( calwf, ionode_id )
        CALL mp_bcast( nwf, ionode_id )
        CALL mp_bcast( wffort, ionode_id )
-       CALL mp_bcast( iwf, ionode_id )
        CALL mp_bcast( writev, ionode_id )
        !
        RETURN
