@@ -311,7 +311,8 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
-../Modules/timestep.o
+../Modules/timestep.o \
+../Modules/xml_io_base.o
 
 
 

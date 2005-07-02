@@ -59,7 +59,8 @@ timestep.o \
 version.o \
 uspp.o \
 wave_base.o \
-wavefunctions.o
+wavefunctions.o \
+xml_io_base.o
 
 all : $(MODULES)
 
