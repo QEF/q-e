@@ -124,7 +124,7 @@ MODULE wannier_base
       !
       IF ( TRIM( restart_mode_ ) == "from_scratch" ) THEN
          !
-         IF ( wf_efield == .TRUE.  ) &
+         IF ( wf_efield ) &
             CALL errore( 'wannier_init ', &
                        & 'electric field not allowed when starting ' // &
                        & 'from scratch', 1 )
