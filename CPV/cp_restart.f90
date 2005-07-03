@@ -131,7 +131,6 @@ MODULE cp_restart
       nk1 = 1
       nk2 = 1
       nk3 = 1
-
       !
       !  Compute Cell related variables
       !
@@ -141,7 +140,6 @@ MODULE cp_restart
       a2 = ht( 2, : )
       a3 = ht( 3, : )
       CALL recips( a1, a2, a3, b1, b2, b3 )
-
       !
       !  Compute array ityp, and tau
       !
@@ -175,7 +173,6 @@ MODULE cp_restart
         ise = iss + nupdwn( ispin ) - 1
         ftmp( 1:nupdwn( ispin ), ispin ) = f( iss : ise )
       END DO
-
       !
       !  Open XML descriptor
 
@@ -189,7 +186,7 @@ MODULE cp_restart
                file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.true.)
         ENDIF
       END IF
-
+      !
       IF( ionode ) THEN
         !
         call iotk_write_begin(iunpun,"STATUS")
@@ -199,19 +196,21 @@ MODULE cp_restart
           call iotk_write_dat (iunpun, "TITLE", TRIM(title) )
         call iotk_write_end(iunpun,"STATUS")      
         !
+        ! ... CELL
+        !
         CALL write_cell( ibrav, symm_type, &
                          celldm, alat, a1, a2, a3, b1, b2, b3 )
         ! 
+        ! ... IONS
+        !
         CALL write_ions( nsp, nat, atm, ityp, &
                          psfile, pseudo_dir, amass, tau, iforce, dirname )
-        
+        !
+        ! ... PLANE_WAVES
+        !
         CALL write_planewaves( ecutw, dual, ngwt, gamma_only, nr1, nr2, &
                                nr3, ngmt, nr1s, nr2s, nr3s, ngst, nr1b, &
                                nr2b, nr3b, mill, .FALSE. )
-        !
-        !  Symmetries ?
-        !
-
         !
         ! ... SPIN
         !
@@ -219,55 +218,17 @@ MODULE cp_restart
         !
         ! ... EXCHANGE_CORRELATION
         !
-        CALL write_exchange_correlation( dft, .FALSE., nsp )
+        CALL write_xc( DFT = dft, NSP = nsp, LDA_PLUS_U = .FALSE. )
         !
         ! ... OCCUPATIONS
         !
-        CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
-          !
-          CALL iotk_write_dat( iunpun, "SMEARING_METHOD", .false. )
-          !
-          CALL iotk_write_dat( iunpun, "TETRAHEDRON_METHOD", .false. )
-          !
-          CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", .true. )
-          !
-          DO ispin = 1, nspin
-               !
-               IF ( ispin == 1 ) THEN
-                  !
-                  CALL iotk_write_attr( attr, "SPIN", "UP", FIRST = .TRUE. )
-                  !
-               ELSE
-                  !
-                  CALL iotk_write_attr( attr, "SPIN", "DOWN", FIRST = .TRUE. )
-                  !
-               END IF
-               !
-               CALL iotk_write_dat( iunpun, "INPUT_OCC", ftmp( 1:nupdwn(ispin), ispin ) )
-               !
-          END DO
-          !
-        CALL iotk_write_end( iunpun, "OCCUPATIONS" )
+        CALL write_occ( LGAUSS = .FALSE., LTETRA = .FALSE., &
+                        TFIXED_OCC = .TRUE., LSDA = lsda, NELUP = nupdwn(1), &
+                        NELDW = nupdwn(2), F_INP = DBLE( ftmp ) )
         !
-        CALL iotk_write_begin( iunpun, "BRILLOUIN_ZONE" )
-          !
-          CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", nk )
-          !
-          CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
-          CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
-          !
-          DO ik = 1, nk
-            !
-            CALL iotk_write_attr( attr, "XYZ", xk(:,ik), FIRST = .TRUE. )
-            !
-            CALL iotk_write_attr( attr, "WEIGHT", wk(ik) )
-            !
-            CALL iotk_write_empty( iunpun, "K-POINT" // TRIM( iotk_index(ik) ), attr )
-            !
-          END DO
-          !
-        CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
-
+        ! ... BRILLOUIN_ZONE
+        !
+        CALL write_bz( nk, xk, wk )
         !
         ! ... PARALLELISM
         !
@@ -367,11 +328,8 @@ MODULE cp_restart
           call iotk_write_end(iunpun,"STEPM")
           !
         call iotk_write_end(iunpun,"TIMESTEPS")
-        !
-
         !  
         ! ... BAND_STRUCTURE
-        !
         ! 
         CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
         !
@@ -446,8 +404,7 @@ MODULE cp_restart
             END IF
             !
          END DO
-
-
+         !
          IF ( ionode ) THEN
             !
             CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
@@ -455,8 +412,7 @@ MODULE cp_restart
          END IF
          !
       END DO k_points_loop
-
-
+      !
       DO ispin = 1, nspin
          ! 
          cspin = iotk_index(ispin)
@@ -470,7 +426,6 @@ MODULE cp_restart
          END IF
          !
       END DO
-
 
       IF( ionode ) THEN
         !  

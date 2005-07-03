@@ -462,8 +462,8 @@ MODULE xml_io_base
     END SUBROUTINE write_spin
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_exchange_correlation( dft, lda_plus_u, nsp, Hubbard_lmax, &
-                                           Hubbard_l, Hubbard_U, Hubbard_alpha )
+    SUBROUTINE write_xc( dft, nsp, lda_plus_u, &
+                         Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*),        INTENT(IN) :: dft
@@ -502,6 +502,85 @@ MODULE xml_io_base
       !
       CALL iotk_write_end( iunpun, "EXCHANGE_CORRELATION" )
       !
-    END SUBROUTINE write_exchange_correlation
+    END SUBROUTINE write_xc
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_occ( lgauss, ngauss, degauss, ltetra, &
+                          ntetra, tfixed_occ, lsda, nelup, neldw, f_inp )
+      !------------------------------------------------------------------------
+      !
+      USE constants, ONLY : e2
+      !
+      LOGICAL,                 INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
+      INTEGER,       OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
+      REAL(KIND=DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
+      !
+      !
+      CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
+      !
+      CALL iotk_write_dat( iunpun, "SMEARING_METHOD", lgauss )
+      !
+      IF ( lgauss ) THEN
+         !
+         CALL iotk_write_dat( iunpun, "SMEARING_TYPE", ngauss )
+         !
+         CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
+         !
+         CALL iotk_write_dat( iunpun, "SMEARING_PARAMETER", &
+                              degauss / e2, ATTR = attr )
+         !
+      END IF
+      !
+      CALL iotk_write_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
+      !
+      IF ( ltetra ) &
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
+      !
+      CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
+      !
+      IF ( tfixed_occ ) THEN
+         !
+         CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nelup,1) )
+         !
+         IF ( lsda ) &
+            CALL iotk_write_dat( iunpun, "INPUT_OCC_DOWN", f_inp(1:neldw,2) )
+         !
+      END IF
+      !
+      CALL iotk_write_end( iunpun, "OCCUPATIONS" )
+      !
+    END SUBROUTINE write_occ
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_bz( num_k_points, xk, wk )
+      !------------------------------------------------------------------------
+      !
+      INTEGER,       INTENT(IN) :: num_k_points
+      REAL(KIND=DP), INTENT(IN) :: xk(:,:), wk(:)
+      !
+      INTEGER :: ik
+      !
+      !
+      CALL iotk_write_begin( iunpun, "BRILLOUIN_ZONE" )
+      !
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
+      !
+      CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
+      !
+      DO ik = 1, num_k_points
+         !
+         CALL iotk_write_attr( attr, "XYZ", xk(:,ik), FIRST = .TRUE. )
+         !            
+         CALL iotk_write_attr( attr, "WEIGHT", wk(ik) )
+         !
+         CALL iotk_write_empty( iunpun, "K-POINT" // &
+                              & TRIM( iotk_index(ik) ), attr )
+         !
+      END DO
+      !
+      CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
+      !
+    END SUBROUTINE write_bz
     !
 END MODULE xml_io_base

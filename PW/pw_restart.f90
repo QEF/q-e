@@ -248,43 +248,16 @@ MODULE pw_restart
          !
          ! ... EXCHANGE_CORRELATION
          !
-         CALL write_exchange_correlation( dft, lda_plus_u, nsp, Hubbard_lmax, &
-                                          Hubbard_l, Hubbard_U, Hubbard_alpha )
+         CALL write_xc( DFT = dft, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
+                        HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
+                        HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
          !
          ! ... OCCUPATIONS
          !
-         CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
-         !
-         CALL iotk_write_dat( iunpun, "SMEARING_METHOD", lgauss )
-         !
-         IF ( lgauss ) THEN
-            !
-            CALL iotk_write_dat( iunpun, "SMEARING_TYPE", ngauss )
-            !
-            CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-            !
-            CALL iotk_write_dat( iunpun, "SMEARING_PARAMETER", &
-                                 degauss / e2, ATTR = attr )
-            !
-         END IF
-         !
-         CALL iotk_write_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
-         !
-         IF ( ltetra ) &
-            CALL iotk_write_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
-         !
-         CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
-         !
-         IF ( tfixed_occ ) THEN
-            !
-            CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(:,1) )
-            !
-            IF ( lsda ) &
-               CALL iotk_write_dat( iunpun, "INPUT_OCC_DOWN", f_inp(:,2) )
-            !
-         END IF
-         !
-         CALL iotk_write_end( iunpun, "OCCUPATIONS" )
+         CALL write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
+                         DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
+                         TFIXED_OCC = tfixed_occ, LSDA = lsda, NELUP = nbnd,  &
+                         NELDW = nbnd, F_INP = f_inp )
          !
          ! ... BRILLOUIN_ZONE
          !
@@ -292,25 +265,7 @@ MODULE pw_restart
          !
          IF ( nspin == 2 ) num_k_points = nkstot / 2
          !
-         CALL iotk_write_begin( iunpun, "BRILLOUIN_ZONE" )
-         !
-         CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
-         !
-         CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
-         CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
-         !
-         DO ik = 1, num_k_points
-            !
-            CALL iotk_write_attr( attr, "XYZ", xk(:,ik), FIRST = .TRUE. )
-            !            
-            CALL iotk_write_attr( attr, "WEIGHT", wk(ik) )
-            !
-            CALL iotk_write_empty( iunpun, "K-POINT" // &
-                                 & TRIM( iotk_index(ik) ), attr )
-            !
-         END DO
-         !
-         CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
+         CALL write_bz( num_k_points, xk, wk )
          !
          ! ... PARALLELISM
          !
