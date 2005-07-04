@@ -136,6 +136,7 @@ PWOBJS = \
 ../PW/punch.o \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
+../PW/pw_restart.o \
 ../PW/qvan2.o \
 ../PW/rcgdiagg.o \
 ../PW/rdiaghg.o \
@@ -273,7 +274,8 @@ MODULES = \
 ../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/wavefunctions.o
+../Modules/wavefunctions.o \
+../Modules/xml_io_base.o
 
 CGOBJS = \
 a_h.o \

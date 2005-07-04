@@ -36,10 +36,9 @@ MODULE cp_main_variables
   ! ...    rhog  = charge density in g space
   ! ...    rhor  = charge density in r space (dense grid)
   ! ...    rhos  = charge density in r space (smooth grid)
-  ! ...    rhoc  = core charge density in real space (dense grid)
   !
   COMPLEX(dbl), ALLOCATABLE:: rhog(:,:)
-  REAL(dbl),    ALLOCATABLE:: rhor(:,:), rhos(:,:), rhoc(:)
+  REAL(dbl),    ALLOCATABLE:: rhor(:,:), rhos(:,:)
   !
   ! ... nonlocal projectors:
   ! ...    bec   = scalar product of projectors and wave functions
@@ -66,13 +65,12 @@ MODULE cp_main_variables
     !------------------------------------------------------------------------
     SUBROUTINE allocate_mainvar( ngw, ngb, ngs, ng, nr1, nr2, nr3, nnr, &
                                  nnrsx, nat, nax, nsp, nspin, n, nx, nhsa, &
-                                 nlcc_any, smd )
+                                 smd )
       !------------------------------------------------------------------------
       !
       INTEGER,           INTENT(IN) :: ngw, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
                                        n, nx, nhsa
-      LOGICAL,           INTENT(IN) :: nlcc_any
       LOGICAL, OPTIONAL, INTENT(IN) :: smd
       LOGICAL                       :: nosmd
       !
@@ -97,18 +95,6 @@ MODULE cp_main_variables
       ALLOCATE( rhos( nnrsx, nspin ) )
       ALLOCATE( rhog( ng,    nspin ) )
       !
-      IF ( nlcc_any ) THEN
-         !
-         ALLOCATE( rhoc( nnr ) )
-         !
-      ELSE
-         !
-         ! ... dummy allocation required because this array appears in the
-         ! ... list of arguments of some routines
-         !
-         ALLOCATE( rhoc( 1 ) )
-         !
-      END IF
       !
       ALLOCATE( ema0bg( ngw ) )
       !
@@ -145,7 +131,6 @@ MODULE cp_main_variables
       IF( ALLOCATED( rhor ) )    DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) )    DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )
-      IF( ALLOCATED( rhoc ) )    DEALLOCATE( rhoc )
       IF( ALLOCATED( bec ) )     DEALLOCATE( bec )
       IF( ALLOCATED( becdr ) )   DEALLOCATE( becdr )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )

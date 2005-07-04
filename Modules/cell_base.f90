@@ -414,11 +414,11 @@
 
 !------------------------------------------------------------------------------!
 
-  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht,  &
+  SUBROUTINE cell_base_init( ibrav_ , celldm_ , trd_ht, cell_symmetry, rd_ht, cell_units, &
                a_ , b_ , c_ , cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
                frich_ , greash_ , cell_dofree )
 
-    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au 
+    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au
     USE io_global, ONLY: stdout
 
     IMPLICIT NONE
@@ -427,6 +427,7 @@
     LOGICAL, INTENT(IN) :: trd_ht
     CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
     REAL(dbl), INTENT(IN) :: rd_ht (3,3)
+    CHARACTER(LEN=*), INTENT(IN) :: cell_units
     REAL(dbl), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
     REAL(dbl),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
@@ -434,17 +435,28 @@
 
 
     REAL(dbl) :: b1(3), b2(3), b3(3)
-    REAL(dbl) :: a, b, c
+    REAL(dbl) :: a, b, c, units
     INTEGER   :: j
 
     !
     ! ... set up crystal lattice, and initialize cell_base module
     !
+
     celldm = celldm_
     a = a_
     b = b_
     c = c_
     ibrav  = ibrav_
+
+    IF ( ibrav == 0 .AND. .NOT. trd_ht ) &
+      CALL errore( ' cell_base_init ', ' ibrav=0: must read cell parameters', 1 )
+    IF ( ibrav /= 0 .AND. trd_ht ) &
+      CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
+
+    IF ( celldm(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
+      CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
+    END IF
+
     press  = press_ * gpa_au
     !  frich  = frich_   ! for the time being this is set elsewhere
     greash = greash_
@@ -465,71 +477,82 @@
 120 format(3X,'wmass (read from input) = ',f15.2,' [AU]')
 130 format(3X,'wmass (calculated)      = ',f15.2,' [AU]')
 
+    IF( wmass <= 0.0d0 ) &
+      CALL errore(' cell_base_init ',' wmass out of range ',0)
+
+
 
     ! ... if celldm(1) /= 0  rd_ht should be in unit of alat
 
     IF ( trd_ht ) THEN
+      !
+      SELECT CASE ( TRIM( cell_units ) )
+        CASE ( 'bohr' )
+          units = 1.0d0
+        CASE ( 'angstrom' )
+          units = 1.0d0 / BOHR_RADIUS_ANGS
+        CASE ( 'alat' )
+          IF( celldm( 1 ) == 0.0d0 ) &
+            CALL errore( ' cell_base_init ', ' cell_parameter in alat without celldm(1) ', 1 )
+          units = celldm( 1 )
+        CASE DEFAULT
+          units = 1.0d0
+      END SELECT
+      !
       symm_type = cell_symmetry
       !
       !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
       !
-      at        = TRANSPOSE( rd_ht )
+      at        = TRANSPOSE( rd_ht ) * units
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( rd_ht( 1, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( rd_ht( 2, j ), j = 1, 3 )
       WRITE( stdout, 220 ) ( rd_ht( 3, j ), j = 1, 3 )
-      IF ( ANY( celldm(1:6) /= 0 ) ) THEN
+      !
+      IF ( ANY( celldm(1:6) /= 0 ) .AND. TRIM( cell_units ) /= 'alat' ) THEN
         WRITE( stdout, 230 )
         celldm(1:6) = 0.0d0
       END IF
+      !
       IF ( a /= 0 ) THEN
         WRITE( stdout, 240 )
         a = 0.0d0
         b = 0.0d0
         c = 0.0d0
       END IF
+      !
 210   format(3X,'initial cell from CELL_PARAMETERS card')
 220   format(3X,3F14.8)
 230   format(3X,'celldm(1:6) are ignored')
 240   format(3X,'a, b, c are ignored')
-    END IF
-
-    IF ( ibrav == 0 .AND. .NOT. trd_ht ) &
-      CALL errore( ' cell_base_init ', ' ibrav=0: must read cell parameters', 1 )
-    IF ( ibrav /= 0 .AND. trd_ht ) &
-      CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
-    IF( wmass <= 0.0d0 ) &
-      CALL errore(' cell_base_init ',' wmass out of range ',0)
-
-
-    IF ( celldm(1) == 0.D0 .AND. a /= 0.D0 ) THEN
-      IF ( ibrav == 0 ) ibrav = 14
-      celldm(1) = a / bohr_radius_angs
-      celldm(2) = b / a
-      celldm(3) = c / a
-      celldm(4) = cosab
-      celldm(5) = cosac
-      celldm(6) = cosbc
-    ELSE IF ( celldm(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
-      CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
-    END IF
-
-    IF ( ibrav == 0 .AND. celldm(1) /= 0.D0 ) THEN
       !
-      ! ... input at are in units of alat
-      !
-      alat = celldm(1)
-    ELSE IF ( ibrav == 0 .AND. celldm(1) == 0.D0 ) THEN
-      !
-      ! ... input at are in atomic units: define alat
-      !
-      celldm(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
+
+      IF ( celldm(1) == 0.D0 ) THEN
+        !
+        ! ... input at are in atomic units: define alat
+        !
+        celldm(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
+      END IF
+
       alat = celldm(1)
       !
       ! ... bring at to alat units
       !
       at(:,:) = at(:,:) / alat
-    ELSE
+
+    ELSE 
+
+      IF( a /= 0.D0 ) THEN
+
+        celldm(1) = a / bohr_radius_angs
+        celldm(2) = b / a
+        celldm(3) = c / a
+        celldm(4) = cosab
+        celldm(5) = cosac
+        celldm(6) = cosbc
+
+      END IF
+
       !
       ! ... generate at (atomic units)
       !
@@ -539,7 +562,9 @@
       ! ... bring at to alat units
       !
       at(:,:) = at(:,:) / alat
+
     END IF
+
 
     !
     a1  =  at( :, 1 ) * alat

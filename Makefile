@@ -95,7 +95,7 @@ pw_export : libiotk bindir mods libs pw
 pwall : pw ph pp gamma pwcond d3 tools
 all   : pwall fpmd cp ld1 upf 
 
-mods :
+mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
 	else $(MAKE) $(MFLAGS) all ; fi )
 libs : mods

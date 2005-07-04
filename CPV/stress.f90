@@ -80,7 +80,7 @@
       USE gvecp,                ONLY: ngm
       USE local_pseudo,         ONLY: dvps
       USE atom,                 ONLY: nlcc
-      USE core,                 ONLY: drhoc
+      USE core,                 ONLY: drhocg
 
       IMPLICIT NONE
 
@@ -143,7 +143,7 @@
 
 ! ... compute exchange & correlation energy contribution
       CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, &
-        nlcc, drhoc, box)
+        nlcc, drhocg, box)
 
       IF(timing) s4 = cclock()
 

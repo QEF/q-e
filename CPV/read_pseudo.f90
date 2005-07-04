@@ -956,9 +956,16 @@ SUBROUTINE upf2ncpp( upf, ap )
   DO l = 1, ap%nbeta
     which_lloc( ap%lll( l ) ) = 1
   END DO
-  DO l = 0, ap%nbeta
-    IF( which_lloc( l ) == 0 ) ap%lloc = l
-  END DO
+  !
+  !  the first "l" which is not non-local
+  !  is taken as the "l" of the local part of the pseudo
+  !
+  LLOC: DO l = 0, ap%nbeta
+    IF( which_lloc( l ) == 0 ) THEN
+      ap%lloc = l
+      exit LLOC
+    END IF
+  END DO LLOC
 
   ap%nchan = upf%nbeta + 1   ! projectors and local part
   ap%mesh  = upf%mesh

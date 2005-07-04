@@ -67,7 +67,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        tnosee, tnosep, trane, tranp, tsdp,   &
                                        tcp, tcap, ampre, amprp, tnoseh, tolp
   USE control_flags,            ONLY : lwf, ortho_eps, ortho_max, printwfc
-  USE core,                     ONLY : nlcc_any
+  USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq
@@ -156,7 +156,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, rhoc, bephi, becp
+                                       rhor, bephi, becp
   !
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
@@ -275,7 +275,17 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !=======================================================================
   !
   CALL allocate_mainvar( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnrx, nnrsx, &
-                         nat, nax, nsp, nspin, nbsp, nbspx, nkb, nlcc_any )
+                         nat, nax, nsp, nspin, nbsp, nbspx, nkb )
+  !
+  IF( nlcc_any ) THEN
+    ALLOCATE( rhoc( nnrx ) )
+  ELSE
+    !
+    ! ... dummy allocation required because this array appears in the
+    ! ... list of arguments of some routines
+    !
+    ALLOCATE( rhoc( 1 ) )
+  END IF
   !
   ALLOCATE( c0(  ngw, nbspx, 1, 1 ) )
   ALLOCATE( cm(  ngw, nbspx, 1, 1 ) )

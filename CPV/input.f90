@@ -752,8 +752,9 @@ MODULE input
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
-           rotation_dynamics, degauss, smearing, nhpcl, ndega, restart_mode
-     !
+           rotation_dynamics, degauss, smearing, nhpcl, ndega, cell_units,    &
+           restart_mode
+
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
            diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
@@ -845,7 +846,7 @@ MODULE input
 
      IF( .not. lneb ) THEN
         massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
-        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht,  &
+        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, cell_units, &
                a, b, c, cosab, cosac, cosbc , wmass , massa_totale , press , &
                cell_damping, greash , cell_dofree )
      END IF

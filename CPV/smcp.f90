@@ -60,7 +60,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use control_flags, only: ortho_eps, ortho_max
   !
   use atom, only: nlcc
-  use core, only: nlcc_any
+  use core, only: nlcc_any, rhoc
   use uspp_param, only: nhm
   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
   use cvan, only: nvb
@@ -146,7 +146,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use phase_factors_module, only: strucf
 
   USE cp_main_variables, ONLY: ei1, ei2, ei3, eigr, sfac, irb, taub, eigrb, &
-        rhog, rhor, rhos, rhoc, becdr, bephi, becp, ema0bg, allocate_mainvar
+        rhog, rhor, rhos, becdr, bephi, becp, ema0bg, allocate_mainvar
   !
   !
   implicit none
@@ -441,7 +441,18 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
   CALL allocate_mainvar &
       ( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnr, nnrsx, nat, nax, nsp, nspin, n, nx, nhsa, &
-        nlcc_any, smd = .TRUE. )
+        smd = .TRUE. )
+  !
+  IF( nlcc_any ) THEN
+    ALLOCATE( rhoc( nnr ) )
+  ELSE
+    !
+    ! ... dummy allocation required because this array appears in the
+    ! ... list of arguments of some routines
+    !
+    ALLOCATE( rhoc( 1 ) )
+  END IF
+  !
   !
   !
   CALL allocate_local_pseudo( ngs, nsp )

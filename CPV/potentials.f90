@@ -278,7 +278,7 @@
       USE local_pseudo, ONLY: vps, rhops
       USE ions_base, ONLY: rcmax
       USE atom, ONLY: nlcc
-      USE core, ONLY: nlcc_any, rhoc
+      USE core, ONLY: nlcc_any, rhocg
 
       IMPLICIT NONE
 
@@ -479,7 +479,7 @@
           ! ...     add core correction
           ! ...     rhoetg = rhoeg + cc
           ! ...     rhoetr = rhoe  + cc
-          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), sfac, rhoc, atoms%nsp )
+          CALL add_core_charge( rhoetg(:,ispin), rhoetr(:,:,:,ispin), sfac, rhocg, atoms%nsp )
         ELSE
 
           ! ...     no core correction
@@ -615,7 +615,7 @@
         END DO
 ! ...   now rhoetg contains the xc potential
         IF (ttforce) THEN
-          CALL core_charge_forces(fion, rhoetg, rhoc, nlcc, atoms, box, ei1, ei2, ei3, kp )
+          CALL core_charge_forces(fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3, kp )
         END IF
       END IF
 

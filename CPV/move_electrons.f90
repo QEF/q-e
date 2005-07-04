@@ -19,7 +19,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : lwf, trhow, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor,  &
-                                   rhoc, ei1, ei2, ei3, sfac, ema0bg, becdr, &
+                                   ei1, ei2, ei3, sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap
   USE wavefunctions_module, ONLY : c0, cm, phi => cp
   USE ensemble_dft,         ONLY : tens, z0, c0diag, becdiag, bec0, v0s, &
@@ -29,7 +29,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE grid_dimensions,      ONLY : nnrx
   USE electrons_base,       ONLY : nbsp, nspin, f
-  USE core,                 ONLY : nlcc_any
+  USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0
   USE stre,                 ONLY : stress
   USE dener,                ONLY : detot

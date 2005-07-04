@@ -337,7 +337,7 @@
         USE read_pseudo_module_fpmd, ONLY: ap
         USE gvecp, ONLY: ngm
         USE gvecw, ONLY: ngw
-        USE core,  ONLY: nlcc_any, rhoc, drhoc
+        USE core,  ONLY: nlcc_any, rhocg, drhocg
         use uspp_param, only: lmaxkb, nhm
         
         IMPLICIT NONE
@@ -353,9 +353,9 @@
 
           ! WRITE( *, * ) 'DEBUG: nlcc_any = ', nlcc_any
           IF( nlcc_any ) THEN
-            ! WRITE( *, * ) 'DEBUG: allocating rhoc = ', ngm, nsp
-            ALLOCATE( rhoc( ngm, nsp ) )
-            ALLOCATE( drhoc( ngm, nsp ) )
+            ! WRITE( *, * ) 'DEBUG: allocating rhocg = ', ngm, nsp
+            ALLOCATE( rhocg( ngm, nsp ) )
+            ALLOCATE( drhocg( ngm, nsp ) )
           END IF
           CALL allocate_local_pseudo( ngm, nsp )
           CALL allocate_pseudo(ps, nsp, ngw, nbetax, nhm, kp%nkpt)
@@ -450,7 +450,7 @@
       use uspp_param, only: lmaxkb, nhm, nh
       use uspp, only: dvan
       USE constants, ONLY: pi
-      USE core, ONLY: rhoc, drhoc
+      USE core, ONLY: rhocg, drhocg
 
       IMPLICIT NONE
 
@@ -496,10 +496,10 @@
 
         IF( ps%ap(is)%tnlcc ) THEN
           IF(tpstab) THEN
-            CALL corecortab_base(g, rhoc(:,is), drhoc(:,is), &
+            CALL corecortab_base(g, rhocg(:,is), drhocg(:,is), &
                    rhoc1_sp(is), rhocp_sp(is), xgtabmax, omega) 
           ELSE
-            CALL compute_rhocg( rhoc(:,is), drhoc(:,is), ps%ap(is)%rw, &
+            CALL compute_rhocg( rhocg(:,is), drhocg(:,is), ps%ap(is)%rw, &
                    ps%ap(is)%rab, ps%ap(is)%rhoc, g, omega, tpiba2, ps%ap(is)%mesh, ngm, 1 )
 
           END IF
