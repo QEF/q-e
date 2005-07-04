@@ -412,6 +412,8 @@ MODULE input_parameters
 
         INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
           ! ONLY PWSCF
+        REAL(dbl) :: yukawa = 0.d0
+          ! ONLY PWSCF
 #endif
 
         REAL(dbl) :: a = 0.0d0
@@ -520,7 +522,7 @@ MODULE input_parameters
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
              U_projection_type,  &
 #if defined (EXX)
-             lexx, nqx1, nqx2, nqx3, &
+             lexx, nqx1, nqx2, nqx3, yukawa, &
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &

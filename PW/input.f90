@@ -103,7 +103,8 @@ SUBROUTINE iosys()
   USE exx,           ONLY : lexx_ => lexx, &
                             nqx1_  => nq1,  &
                             nqx2_  => nq2,  &
-                            nqx3_  => nq3
+                            nqx3_  => nq3,  &
+                            yukawa_ => yukawa
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -199,7 +200,7 @@ SUBROUTINE iosys()
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
                                starting_ns_eigenvalue, U_projection_type, &
 #if defined (EXX)                               
-                               lexx, nqx1, nqx2, nqx3, &
+                               lexx, nqx1, nqx2, nqx3, yukawa, &
 #endif
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, angle1, angle2, &
@@ -1150,6 +1151,7 @@ SUBROUTINE iosys()
   nqx1_   = nqx1
   nqx2_   = nqx2
   nqx3_   = nqx3
+  yukawa_ = yukawa
 #endif
   !
   startingwfc_ = startingwfc

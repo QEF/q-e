@@ -57,7 +57,7 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
 #if defined (EXX)
-  USE exx,                  ONLY : lexx, exxinit, exxenergy !Suriano
+  USE exx,                  ONLY : lexx, exxinit, init_h_wfc, exxenergy !Suriano
 #endif
   !
   IMPLICIT NONE
@@ -109,6 +109,17 @@ SUBROUTINE electrons()
   !
   CALL start_clock( 'electrons' )
   !
+#if defined (EXX)
+     if (lexx .and. .false.) then
+        CALL init_h_wfc()
+        CALL exxinit()
+        fock1 = 0.5d0 * exxenergy()
+        write (stdout,90) fock1
+        stop
+        !
+     end if
+90 FORMAT(/' EXX energy      =',  F15.8,' ryd' )
+#endif
   iter = 0
   ik_  = 0
   !
@@ -484,13 +495,10 @@ SUBROUTINE electrons()
      !
 #if defined (EXX)
      if (lexx .and. conv_elec) then
+!        CALL init_h_wfc()
         CALL exxinit()
 
         fock1 = exxenergy()
-        !
-!        CALL exxinit()
-!        !
-!        fock2 = exxenergy()
         fock2 = fock1
         !
         etot = etot - fock1 + 0.5D0 * fock2

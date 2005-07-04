@@ -20,6 +20,7 @@ module exx
 
   integer :: currentk
   real (kind=DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
+  real (kind=DP):: yukawa = 0.d0
   logical:: exxstart=.false. !1 if initialited
   integer:: iunexx
   integer :: exx_nwordwfc
@@ -45,6 +46,53 @@ module exx
   real (kind=DP):: exxdiv ! 1 if exx, 0 elsewhere
 
 contains
+  !------------------------------------------------------------------------
+  subroutine init_h_wfc()
+  !------------------------------------------------------------------------
+
+     USE kinds,      ONLY : DP
+     USE constants,  ONLY : pi
+     USE io_files,   ONLY : iunigk, nwordwfc, iunwfc
+     USE klist,      ONLY : xk, nks, wk
+     USE wvfct,      ONLY : nbnd, npw, npwx, igk, g2kin, wg
+     USE gvect,      ONLY : g
+     USE cell_base,  ONLY : tpiba2, omega
+     USE wavefunctions_module, ONLY : evc
+
+     integer :: ik, ig
+     REAL(KIND=DP) :: alpha, norm
+
+     wg = 0.d0
+     wg(1,1:nks/2) = 1.d0 * wk(1:nks/2)
+
+     IF ( nks > 1 ) REWIND( iunigk )
+     do ik=1,nks
+        IF ( nks > 1 ) READ( iunigk ) npw, igk
+        DO ig = 1, npw
+           !
+           g2kin(ig) = ( xk(1,ik) + g(1,igk(ig)) )**2 + &
+                       ( xk(2,ik) + g(2,igk(ig)) )**2 + &
+                       ( xk(3,ik) + g(3,igk(ig)) )**2
+        END DO
+        g2kin(:) = g2kin(:) * tpiba2
+        alpha = 1.d0
+
+        norm = 0.d0
+        DO ig = 1, npw
+           evc(ig,1) =  sqrt(alpha**3/pi) * 8.d0 * pi * alpha /  &
+                        (alpha**2 + g2kin(ig))**2 / sqrt(omega)
+           norm = norm + abs(evc(ig,1))**2
+        end do
+        write (*,*) "NORM  ", ik, norm
+!        evc(:,1) = evc(:,1)/sqrt(norm)
+
+        CALL davcio( evc, nwordwfc, iunwfc, ik, 1)
+
+     END DO
+
+     return
+  end subroutine init_h_wfc
+  
   !------------------------------------------------------------------------
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
@@ -298,7 +346,7 @@ contains
        iunexx = find_free_unit()
        call diropn(iunexx,'exx', exx_nwordwfc, exst) 
 
-       exxdiv = exx_divergence(nq1) 
+       exxdiv = exx_divergence() 
        exxalfa = 1.d0
 
        exxstart=.true.
@@ -350,7 +398,8 @@ contains
              if (index_xk(ikq) .ne. ik) cycle
 
              isym = abs(index_sym(ikq) )
-             psic(rir(1:nrxxs,isym)) = temppsic(1:nrxxs)
+!             psic(rir(1:nrxxs,isym)) = temppsic(1:nrxxs)
+             psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
              if (index_sym(ikq) < 0 ) psic(1:nrxxs) = conjg(psic(1:nrxxs))
 
              CALL davcio( psic, exx_nwordwfc, iunexx, (ikq-1)*nbnd+ibnd, 1 )
@@ -401,7 +450,7 @@ contains
     real (kind=DP),   allocatable :: fac(:)
     integer          :: ibnd, ik, im , ig, ir,  ikq, iq, isym
     real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3)
+    real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha
 
     call start_clock ('vexx')
 
@@ -409,7 +458,7 @@ contains
               rhoc(nrxxs), vc(nrxxs), fac(ngm) )
 
     tpiba2 = (fpi / 2.d0 / alat) **2
-  
+
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
 
     do im=1,m !for each band of psi (the k cycle is outside band)
@@ -432,15 +481,20 @@ contains
           xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
           do ig=1,ngm
-             qq = (xkq(1)-xk(1,currentk)+g(1,ig))**2 + &
-                  (xkq(2)-xk(2,currentk)+g(2,ig))**2 + &
-                  (xkq(3)-xk(3,currentk)+g(3,ig))**2
+             qq = ( xk(1,currentk) - xkq(1) + g(1,ig) )**2 + &
+                  ( xk(2,currentk) - xkq(2) + g(2,ig) )**2 + &
+                  ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
              if (qq.gt.1.d-8) then
-                fac(ig)=e2*fpi/tpiba2/qq
+                fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
              else
-                fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
+                fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
+ !                         - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
+                if (yukawa .gt. 1.d-8) then
+                   fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
+                end if
 !                fac(ig)= 0.d0 ! or rather something else (see F.Gygi)
              end if
+!             fac(ig)=e2*fpi/tpiba2/(qq + alpha)
           end do
           do ibnd=1,nbnd !for each band of psi
              if ( abs(wg(ibnd,ik)) < 1.d-6) cycle
@@ -456,6 +510,8 @@ contains
              vc(:) = ( 0.D0, 0.D0 )
              do ig=1,ngm
                 vc(nls(ig)) = fac(ig) * rhoc(nls(ig))
+!                if (fac(ig).gt.e2*fpi/tpiba2/2.1) &
+!                   write (*,*) ig, (rhoc(nls(ig))/rhoc(nls(1))-1.d0) * fac(ig)
              end do
              vc = vc * wg (ibnd, ik) / wk(ik) / nqs
 
@@ -517,18 +573,20 @@ contains
     call stop_clock ('exxenergy')
   end function exxenergy
 
-  function exx_divergence (nq)
+  function exx_divergence ()
 
      USE cell_base, ONLY : bg, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
 
      real(kind=DP) :: exx_divergence
-     integer       :: nq, nqq
 
      ! local variables
      integer :: iq1,iq2,iq3, ig
-     real(kind=DP) :: div, dq1, dq2, dq3, xq(3), qq, tpiba2, alpha
+     real(kind=DP) :: div, dq1, dq2, dq3, xq(3), q, qq, tpiba2, alpha
      real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
+
+     integer :: nqq, iq
+     real(kind=DP) :: aa, dq
 
      call start_clock ('exx_div')
 
@@ -536,16 +594,14 @@ contains
 
      alpha  = 10.d0 * tpiba2 / ecutwfc
 
-     dq1= 1.d0/dble(nq) ! dq1= 1.d0/dble(nq1)
-     dq2= 1.d0/dble(nq) ! dq1= 1.d0/dble(nq2)
-     dq3= 1.d0/dble(nq) ! dq1= 1.d0/dble(nq3)
+     dq1= 1.d0/dble(nq1)
+     dq2= 1.d0/dble(nq2) 
+     dq3= 1.d0/dble(nq3) 
 
-     nqq = nq**3
- 
      div = 0.d0
-     do iq1=1,nq
-        do iq2=1,nq
-           do iq3=1,nq
+     do iq1=1,nq1
+        do iq2=1,nq2
+           do iq3=1,nq3
               xq(:) = bg(:,1) * (iq1-1) * dq1 + &
                       bg(:,2) * (iq2-1) * dq2 + &
                       bg(:,3) * (iq3-1) * dq3 
@@ -553,8 +609,8 @@ contains
                  qq = ( xq(1) + g(1,ig) )**2 + &
                       ( xq(2) + g(2,ig) )**2 + &
                       ( xq(3) + g(3,ig) )**2
-                 if ( qq.gt.1.d-8 ) then
-                    div = div + exp( -alpha * qq) / qq
+                 if ( qq.gt.1.d-8 .or. yukawa .gt. 1.d-8) then
+                    div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2)
                  else
                     div = div - alpha ! or maybe something else
                  end if
@@ -562,16 +618,30 @@ contains
            end do
         end do
      end do
-!     div = div * e2 * fpi / tpiba2 / nqs
-     div = div * e2 * fpi / tpiba2 / nqq
+     div = div * e2 * fpi / tpiba2 / nqs
 
      alpha = alpha / tpiba2
+     
 
-     div = div - e2*omega/sqrt(alpha*0.25d0*fpi)
+     nqq = 100000
+     dq = 5.0 / sqrt(alpha) /nqq
+     aa = 0.d0
+     do iq=0,  nqq
+        q = dq * (iq+0.5d0)
+        qq = q * q
+        aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
+     end do
+     aa = aa * 8.d0 /fpi
+     aa = aa + 1.d0/sqrt(alpha*0.25d0*fpi) 
+     write (*,*) aa, 1.d0/sqrt(alpha*0.25d0*fpi)
+    
+     div = div - e2*omega * aa
+
+!     div = div - e2*omega/sqrt(alpha*0.25d0*fpi)
 
      exx_divergence = div * nqs
 
-     write (*,'(a,i4,a,3f12.4)') 'EXX divergence (',nq,')= ', &
+     write (*,'(a,i4,a,3f12.4)') 'EXX divergence (',nq1,')= ', &
                                   div, alpha
 
      call stop_clock ('exx_div')
