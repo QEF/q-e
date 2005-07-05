@@ -128,9 +128,18 @@ SUBROUTINE dynamics()
         !
      END DO
      !
-     ! ... initial thermalization. N.B. tau is in units of alat
-     !
-     CALL start_therm()
+     IF ( lrescale_t ) THEN
+        !
+        ! ... initial thermalization. N.B. tau is in units of alat
+        !
+        CALL start_therm()
+        !
+     ELSE
+        !
+        tau_old = tau
+        vel     = 0.D0
+        !
+     END IF
      !
      elapsed_time = 0.D0
      !
@@ -211,7 +220,7 @@ SUBROUTINE dynamics()
   !
   ! ... positions are updated here
   !
-  tau_new = tau + dt * vel + 0.5D0 * dt**2 * acc
+  tau_new = tau + dt * vel + dt**2 * acc
   !
   IF ( lconstrain ) THEN
      !
@@ -281,7 +290,8 @@ SUBROUTINE dynamics()
   DO na = 1, nat 
      ! 
      ml(:) = ml(:) + vel(:,na) * mass(na)
-     ekin  = ekin + mass(na) * ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
+     ekin  = ekin + &
+             0.5D0 * mass(na) * ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
      !
   END DO  
   !

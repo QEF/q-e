@@ -435,9 +435,7 @@ MODULE constraints_module
                 !
                 taup(:,na) = taup(:,na) - lambda * dg0(:,na) / fac
                 !
-                ! ... Why should I multiply by 2 ???
-                !
-                force(:,na) = force(:,na) - 2.D0 * lambda * dg0(:,na) / dt**2
+                force(:,na) = force(:,na) - lambda * dg0(:,na) / dt**2
                 !
              END DO
              !
