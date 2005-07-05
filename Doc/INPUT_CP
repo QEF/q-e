@@ -190,20 +190,11 @@ nat            INTEGER
 ntyp           INTEGER
                number of types of atoms in the unit cell - must be specified
 
-nbnd           INTEGER
+nbnd           INTEGER (no default)
                number of electronic states (bands) to be calculated.
-               Default: for an insulator, nbnd = (number of valence bands)
-                        (nbnd=nelec/2, see below for nelec)
-                        for a metal, 20% more (minimum 4 more)
-               Note that in spin-polarized calculations the number of
-               k-point, not the number of bands per k-point, is doubled
 
-nelec          REAL
+nelec          INTEGER (no default)
                number of electron in the unit cell
-               (may be noninteger if you wish)
-               Default: the same as ionic charge (neutral cell)
-               A compensating jellium background is inserted
-               to remove divergencies if the cell is not neutral
 
 ecutwfc        REAL
                kinetic energy cutoff (Ry) for wavefunctions
@@ -236,7 +227,7 @@ nspin          INTEGER ( default = 1 )
                nspin = 2 :  spin-polarized calculation
 
 nelup, neldw   REAL
-               number of spin-up and spin-down electrons, respectively
+               number of spin-up and spin-down electrons, respectively.
                The sum must yield nelec that must also be specified
                explicitely in this case.
 
