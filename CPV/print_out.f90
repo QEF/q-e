@@ -59,7 +59,7 @@
       USE sic_module, ONLY: ind_localisation, pos_localisation, nat_localisation, self_interaction
       USE sic_module, ONLY: rad_localisation
       USE ions_base, ONLY: ions_temp, cdmi, taui
-      USE ions_nose, ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, kbt, nhpcl
+      USE ions_nose, ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
       USE cell_nose, ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
       USE cell_base, ONLY: iforceh
       USE printout_base, ONLY: printout_base_open, printout_base_close, &
@@ -105,7 +105,7 @@
 
 ! ...   Calculate Ions temperature tempp (in Kelvin )
 
-      CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega )
+      CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
 
 ! ...   Calculate MSD for each specie, starting from taui positions
 
@@ -133,7 +133,7 @@
       endif
 
       IF( tnosep ) THEN
-        enosep = ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
+        enosep = ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
       ELSE
         enosep = 0
       END IF

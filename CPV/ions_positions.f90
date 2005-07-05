@@ -68,7 +68,7 @@ MODULE ions_positions
   !--------------------------------------------------------------------------
   SUBROUTINE ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
                         delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
-                        fionm, vnhp, velsp, velsm )
+                        fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
     !--------------------------------------------------------------------------
     !
     IMPLICIT NONE
@@ -77,11 +77,11 @@ MODULE ions_positions
     INTEGER,        INTENT(IN)    :: iforce(:,:)
     REAL(KIND=dbl), INTENT(IN)    :: ainv(3,3), delt
     REAL(KIND=dbl), INTENT(OUT)   :: tausp(:,:)
-    INTEGER,        INTENT(IN)    :: na(:), nsp
+    INTEGER,        INTENT(IN)    :: na(:), nsp, nhpcl, nhpdim, atm2nhp(:)
     REAL(KIND=dbl), INTENT(IN)    :: fricp, hgamma(3,3), vels(:,:)
     LOGICAL,        INTENT(IN)    :: tsdp, tnosep
     REAL(KIND=dbl), INTENT(INOUT) :: fionm(:,:)
-    REAL(KIND=dbl), INTENT(IN)    :: vnhp(:)
+    REAL(KIND=dbl), INTENT(IN)    :: vnhp(nhpcl,nhpdim)
     REAL(KIND=dbl), INTENT(OUT)   :: velsp(:,:)
     REAL(KIND=dbl), INTENT(IN)    :: velsm(:,:)
     INTEGER                       :: is, ia, i, isa
@@ -135,7 +135,7 @@ MODULE ions_positions
                 fionm(i,isa) = ainv(i,1) * fion(1,isa) + &
                                ainv(i,2) * fion(2,isa) + &
                                ainv(i,3) * fion(3,isa) - &
-                               vnhp(1) * vels(i,isa) * pmass(is) - &
+                               vnhp(1,atm2nhp(isa)) * vels(i,isa) * pmass(is) - &
                                pmass(is) * ( hgamma(i,1) * vels(1,isa) + &
                                              hgamma(i,2) * vels(2,isa) + &
                                              hgamma(i,3) * vels(3,isa) )

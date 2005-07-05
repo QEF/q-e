@@ -752,8 +752,8 @@ MODULE input
            noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
-           rotation_dynamics, degauss, smearing, nhpcl, ndega, cell_units,    &
-           restart_mode
+           rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
+           cell_units, restart_mode
 
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
@@ -880,7 +880,7 @@ MODULE input
 
      CALL cell_nose_init( temph, fnoseh )
 
-     CALL ions_nose_init( tempw, fnosep, nhpcl, ndega, nat )
+     CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega )
   
      CALL electrons_nose_init( ekincw , fnosee )
 

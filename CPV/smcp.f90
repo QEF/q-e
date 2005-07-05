@@ -105,7 +105,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use ions_positions, only: tau0, velsp
   use ions_positions, only: ions_hmove, ions_move
   use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw, &
-                       ions_nose_nrg, kbt, nhpcl, ndega
+                       ions_nose_nrg, kbt, nhpcl, ndega, nhpdim, atm2nhp
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
   USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
         cell_nosevel, cell_noseupd, cell_nose_nrg, cell_nosezero
@@ -1174,7 +1174,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
 
            CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, &
              rep(sm_k)%fion, ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, &
-             tnosep, rep(sm_k)%fionm, vnhp(:,sm_k), velsp, rep(sm_k)%velsm )
+             tnosep, rep(sm_k)%fionm, vnhp(:,sm_k), velsp, rep(sm_k)%velsm, 1, 1, atm2nhp )
            !
            !cc   call cofmass(velsp,rep(sm_k)%cdmvel)
            !         call cofmass(rep(sm_k)%tausp,cdm)
@@ -1328,7 +1328,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !
         if(tnosep)then
            CALL ions_noseupd( xnhpp( :, sm_k), xnhp0( :, sm_k), xnhpm( :, sm_k), delt, qnp, &
-             ekinpr(sm_k), gkbt, vnhp( :, sm_k), kbt, nhpcl )
+             ekinpr(sm_k), gkbt, vnhp( :, sm_k), kbt, nhpcl, 1 )
         endif
         if(tnosee)then
            call elec_noseupd( xnhep(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, qne, ekinc(sm_k), ekincw, vnhe(sm_k) )
@@ -1372,7 +1372,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         econt(sm_k)=econs(sm_k)+ekinc(sm_k)
         !
         if(tnosep)then
-           econt(sm_k)=econt(sm_k)+ ions_nose_nrg( xnhp0(:,sm_k), vnhp(:,sm_k), qnp, gkbt, kbt, nhpcl )
+           econt(sm_k)=econt(sm_k)+ ions_nose_nrg( xnhp0(:,sm_k), vnhp(:,sm_k), qnp, gkbt, kbt, nhpcl, 1 )
         endif
         if(tnosee)then
            econt(sm_k)=econt(sm_k)+ electrons_nose_nrg( xnhe0(sm_k), vnhe(sm_k), qne, ekincw )
@@ -1742,6 +1742,7 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   IF( ALLOCATED( p_tan )) DEALLOCATE( p_tan )
 
 
+  call ions_nose_deallocate()
   CALL deallocate_modules_var()
 
   CALL deallocate_smd_rep()

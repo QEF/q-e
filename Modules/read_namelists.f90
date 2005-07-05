@@ -338,6 +338,7 @@ MODULE read_namelists_module
        fnosep            = -1.0D0
        fnosep(1)         = 1.0D0
        nhpcl             = 0
+       nhptyp            = 0
        ndega             = 0
        tranp             = .FALSE.
        amprp             = 0.D0
@@ -797,6 +798,7 @@ MODULE read_namelists_module
        CALL mp_bcast( tempw, ionode_id )
        CALL mp_bcast( fnosep, ionode_id )
        CALL mp_bcast( nhpcl, ionode_id )
+       CALL mp_bcast( nhptyp, ionode_id )
        CALL mp_bcast( ndega, ionode_id )
        CALL mp_bcast( tranp, ionode_id )
        CALL mp_bcast( amprp, ionode_id )

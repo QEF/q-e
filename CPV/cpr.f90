@@ -126,10 +126,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff, emass_precond
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, ions_hmove, ions_move
-  USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, qnp, vnhp, &
-                                       xnhp0, xnhpm, xnhpp, ions_nosevel,  &
-                                       ions_noseupd, tempw, ions_nose_nrg, &
-                                       ions_nose_shiftvar
+  USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, nhpdim, qnp, &
+                                       vnhp, xnhp0, xnhpm, xnhpp, atm2nhp, &
+                                       ions_nosevel, ions_noseupd, &
+                                       ions_nose_allocate, ions_nose_deallocate,&
+                                       tempw, ions_nose_nrg, &
+                                       ions_nose_shiftvar, gkbt2nhp, ekin2nhp, &
+                                       anum2nhp
   USE electrons_nose,           ONLY : qne, ekincw, xnhe0, xnhep, xnhem,  &
                                        vnhe, electrons_nose_nrg,          &
                                        electrons_nose_shiftvar,           &
@@ -435,7 +438,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( .NOT. tsde ) fccc = 1.D0 / ( 1.D0 + frice )
      !
-     IF ( tnosep ) CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl )
+     IF ( tnosep ) CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
      !
      IF ( tnosee ) THEN
         !
@@ -525,7 +528,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, &
                         ainv, delt, na, nsp, fricp, hgamma, vels, &
-                        tsdp, tnosep, fionm, vnhp, velsp, velsm )
+                        tsdp, tnosep, fionm, vnhp, velsp, velsm, &
+                        nhpcl, nhpdim, atm2nhp )
         !
         IF ( lconstrain ) THEN
            !
@@ -641,7 +645,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... ionic temperature
      !
      IF ( tfor ) CALL ions_temp( tempp, temps, ekinpr, vels, &
-                                 na, nsp, hold, pmass, ndega )
+                                 na, nsp, hold, pmass, ndega, &
+                                 nhpdim, atm2nhp, ekin2nhp )
      !
      ! ... fake electronic kinetic energy
      !
@@ -672,7 +677,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... udating nose-hoover friction variables
      !
      IF ( tnosep ) CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, &
-                                      qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
+                                      qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
      !
      IF ( tnosee ) CALL electrons_noseupd( xnhep, xnhe0, xnhem, &
                                            delt, qne, ekinc, ekincw, vnhe )
@@ -751,7 +756,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... add energies of thermostats
      !
      IF ( tnosep ) econt = econt + &
-                           ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
+                           ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
      IF ( tnosee ) econt = econt + &
                            electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
      IF ( tnoseh ) econt = econt + &
@@ -806,12 +811,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         WRITE( stdout,11)
         !
-        CALL printout_pos( stdout, nfi, tau0, nat, tps )
+!        CALL printout_pos( stdout, nfi, tau0, nat, tps )
         CALL printout_pos( 35    , nfi, tau0, nat, tps )
         !
         ! ... write out a standard XYZ file in angstroms
         !
-!        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
+        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
 !        WRITE( 35, '(I5)') nat
 !        CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,toang)
 
@@ -834,16 +839,16 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         WRITE( stdout, 12 )
         !
-        CALL printout_pos( stdout, nfi, tauw, nat, tps )
+!        CALL printout_pos( stdout, nfi, tauw, nat, tps )
         CALL printout_pos( 34    , nfi, tauw, nat, tps )
-!        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
+        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
 !        CALL print_pos_in( 34    , nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
         !
         WRITE( stdout, 13 )
         !
-        CALL printout_pos( stdout, nfi, fion, nat, tps )
+!        CALL printout_pos( stdout, nfi, fion, nat, tps )
         CALL printout_pos( 37    , nfi, fion, nat, tps )
-!        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,one)
+        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,one)
 !        CALL print_pos_in( 37    , nfi, fion , nat, tps, ityp, atm,ind_bck,one)
         !
         DEALLOCATE( tauw )
@@ -1101,6 +1106,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !      
 1977 FORMAT(5X,//'====================== end cprvan ======================',//)
   !
+! by Kostya
+! Something is fishy here, when deallocate_modules_var is called
+! IFC 8.0 and 8.1 spit out 
+!*** glibc detected *** free(): invalid next size (fast): 0x18b46af8 ***
+!forrtl: error (76): IOT trap signal
+! I could not find what is wrong ...
+  call ions_nose_deallocate()
   CALL deallocate_modules_var()
   !
   RETURN

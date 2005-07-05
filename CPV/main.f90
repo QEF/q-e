@@ -167,7 +167,7 @@
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
       !
       USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
-                           ions_noseupd, qnp, gkbt, kbt, nhpcl
+                           ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, gkbt2nhp, ekin2nhp
 
       USE wave_init,        ONLY: pw_atomic_init
       USE electrons_module, ONLY: electron_mass_init, band_init
@@ -586,14 +586,15 @@
         IF(tfor .AND. doions) THEN
 ! ...     Determines DXNOS/DT dynamically
           IF (tnosep) THEN
-            CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1 )
+            CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1, 1 )
             vnosep = vnhp(1)
           END IF
 ! ...     move ionic degrees of freedom
           ! ... WRITE( stdout,*) '* TSDP *', tsdp
           ekinp = moveions(tsdp, thdyn, nfi, atoms_m, atoms_0, atoms_p, ht_m, ht_0, vnosep)
           IF (tnosep) THEN
-            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, atoms_0%ekint, gkbt, vnhp, kbt, nhpcl )
+! below one really should have atoms_0%ekint and NOT ekin2nhp
+            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
           END IF
         END IF
 

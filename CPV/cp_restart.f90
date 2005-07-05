@@ -54,6 +54,7 @@ MODULE cp_restart
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass, amass, iforce
       USE funct,     ONLY: dft
       USE mp, ONLY: mp_sum
+      USE parameters, ONLY: nhclm
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ndw    !
@@ -271,8 +272,8 @@ MODULE cp_restart
             !
             call iotk_write_begin(iunpun,"IONS_NOSE")
               call iotk_write_dat (iunpun, "nhpcl", nhpcl)
-              call iotk_write_dat (iunpun, "xnhp", xnhp0 )
-              call iotk_write_dat (iunpun, "vnhp", vnhp)
+              call iotk_write_dat (iunpun, "xnhp", xnhp0(1:nhclm) )
+              call iotk_write_dat (iunpun, "vnhp", vnhp(1:nhclm) )
             call iotk_write_end(iunpun,"IONS_NOSE")
             !
             call iotk_write_dat (iunpun, "ekincm", ekincm)
@@ -305,7 +306,7 @@ MODULE cp_restart
             !
             call iotk_write_begin(iunpun,"IONS_NOSE")
               call iotk_write_dat (iunpun, "nhpcl", nhpcl)
-              call iotk_write_dat (iunpun, "xnhp", xnhpm )
+              call iotk_write_dat (iunpun, "xnhp", xnhpm(1:nhclm) )
               ! call iotk_write_dat (iunpun, "vnhp", vnhp)
             call iotk_write_end(iunpun,"IONS_NOSE")
             !
@@ -569,6 +570,7 @@ MODULE cp_restart
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
       USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g, mill_l
       USE mp, ONLY: mp_sum, mp_bcast
+      USE parameters, ONLY: nhclm
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ndr    !  I/O unit number
@@ -689,8 +691,8 @@ MODULE cp_restart
               !
               call iotk_scan_begin(iunpun,"IONS_NOSE")
                 call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
-                call iotk_scan_dat (iunpun, "xnhp", xnhp0 )
-                call iotk_scan_dat (iunpun, "vnhp", vnhp)
+                call iotk_scan_dat (iunpun, "xnhp", xnhp0(1:nhclm) )
+                call iotk_scan_dat (iunpun, "vnhp", vnhp(1:nhclm) )
               call iotk_scan_end(iunpun,"IONS_NOSE")
               !
               call iotk_scan_dat (iunpun, "ekincm", ekincm)
@@ -730,7 +732,7 @@ MODULE cp_restart
               !
               call iotk_scan_begin(iunpun,"IONS_NOSE")
                 call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
-                call iotk_scan_dat (iunpun, "xnhp", xnhpm )
+                call iotk_scan_dat (iunpun, "xnhp", xnhpm(1:nhclm) )
               call iotk_scan_end(iunpun,"IONS_NOSE")
               !
               call iotk_scan_begin(iunpun,"ELECTRONS_NOSE")

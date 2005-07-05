@@ -10,16 +10,35 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: dbl
-      USE parameters, ONLY: nhclm
+      USE parameters, ONLY: nhclm, natx
 !
       IMPLICIT NONE
+! Some comments are in order on how Nose-Hoover chains work here (K.N. Kudin)
+! the present code allows one to use "massive" Nose-Hoover chains:
+! TOBIAS DJ, MARTYNA GJ, KLEIN ML
+! JOURNAL OF PHYSICAL CHEMISTRY 97 (49): 12959-12966 DEC 9 1993
+!
+! currently "easy" input options allow one chain per atomic type (nhptyp=1)
+! and one chain per atom (nhptyp=2), but other options could be added too
+! one chain for the whole system is specified by nhptyp=0 (or nothing)
+!
+! nhpdim is the total number of the resulting NH chains
+! array atm2nhp(1:nat) gives the chain number from the atom list (which
+! is sorted by type)
+! anum2nhp is the number of degrees of freedom per chain (now just 3*nat_i)
+! ekin2nhp is the kinetic energy of the present chain
+! gkbt2nhp are the NH chain parameters
+! qnp are the chain masses, qnp_ is a temporary array for now
+! see subroutine ions_nose_allocate on what are the dimensions of these
+! variables
+! nhclm is now mostly not used, needs to be cleaned up at some point
+!
+      INTEGER   :: nhpcl, ndega, nhpdim, nhptyp
+      INTEGER   :: atm2nhp(natx)
+      INTEGER, ALLOCATABLE   :: anum2nhp(:)
+      REAL(dbl), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
+      ekin2nhp(:), gkbt2nhp(:), qnp(:), qnp_(:)
 
-      INTEGER   :: nhpcl, ndega
-      REAL(dbl) :: vnhp( nhclm ) = 0.0d0
-      REAL(dbl) :: xnhp0( nhclm ) = 0.0d0
-      REAL(dbl) :: xnhpm( nhclm ) = 0.0d0
-      REAL(dbl) :: xnhpp( nhclm ) = 0.0d0
-      REAL(dbl) :: qnp( nhclm ) = 0.0d0
       REAL(dbl) :: gkbt = 0.0d0
       REAL(dbl) :: kbt = 0.0d0
       REAL(dbl) :: tempw = 0.0d0
@@ -29,33 +48,42 @@
   CONTAINS 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , ndega_ , nat )
+  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_  )
     use constants,      only: factem, pi, terahertz
     use control_flags,  only: tnosep
-    use ions_base,      only: ndofp, tions_base_init
-    implicit none
+    use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
     real(KIND=dbl), intent(in)  :: tempw_ , fnosep_(:) 
-    integer, intent(in) :: nhpcl_ , ndega_
-    integer, intent(in) :: nat
-    integer :: nsvar, i
+    integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_
+    integer :: nsvar, i, j, iat, is, ia
 
     IF( .NOT. tions_base_init ) &
       CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )
-
-    vnhp  = 0.0d0
-    xnhp0 = 0.0d0
-    xnhpm = 0.0d0 
-    xnhpp = 0.0d0
-
     tempw     = tempw_
     fnosep    = 0.0d0
-
-    qnp   = 0.0d0
     nhpcl = MAX( nhpcl_ , 1 )
-
+    nhpdim = 1
+    atm2nhp(1:nat) = 1
+    nhptyp = 0
+    if (nhptyp_.eq.1) then
+       nhptyp = 1
+       nhpdim = nsp
+       iat = 0
+       do is=1,nsp
+          do ia=1,na(is)
+             iat = iat+1
+             atm2nhp(iat) = is
+          enddo
+       enddo
+    elseif (nhptyp_.eq.2) then
+       nhptyp = 2
+       nhpdim = nat
+       do i=1,nat
+          atm2nhp(i) = i
+       enddo
+    endif
     IF( nhpcl > nhclm ) &
       CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
-
+    call ions_nose_allocate()
     !  Setup Nose-Hoover chain masses
     !
     if ( ndega_ > 0 ) then
@@ -75,26 +103,49 @@
       IF( nhpcl > SIZE( fnosep_ ) ) &
         CALL errore(' ions_nose_init ', ' fnosep size too small ', nhpcl )
 
+      ! count the number of atoms per thermostat and set the value
+      anum2nhp = 0
+      iat = 0
+      do is=1,nsp
+         do ia=1,na(is)
+            iat = iat+1
+            anum2nhp(atm2nhp(iat)) = anum2nhp(atm2nhp(iat)) + 3
+         enddo
+      enddo
+      ! set gkbt2nhp for each thermostat
+      do is=1,nhpdim
+         gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw / factem
+      enddo
+      !
       gkbt = DBLE( ndega ) * tempw / factem
+      if (nhpdim.eq.1) gkbt2nhp(1) = gkbt
       kbt  = tempw / factem
 
       fnosep(1) = fnosep_ (1)
       if( fnosep(1) > 0.0d0 ) then
-        qnp(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * terahertz )**2
+        qnp_(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * terahertz )**2
       end if
 
       if ( nhpcl > 1 ) then
         do i = 2, nhpcl
           fnosep(i) = fnosep_ (i)
           if( fnosep(i) > 0.0d0 ) then
-            qnp(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * terahertz )**2
+            qnp_(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * terahertz )**2
           else
-            qnp(i) = qnp(1) / dble(ndega)
+            qnp_(i) = qnp_(1) / dble(ndega)
           endif
         enddo
       endif
-
-    END IF
+      ! set the NH masses for all the chains
+      do j=1,nhpdim
+         qnp((j-1)*nhpcl+1) = qnp_(1)*gkbt2nhp(j)/gkbt
+         If (nhpcl > 1) then
+            do i=2,nhpcl
+               qnp((j-1)*nhpcl+i) = qnp_(i)
+            enddo
+         endif
+      enddo
+   END IF
 
 
     !    WRITE( stdout,100)
@@ -110,6 +161,40 @@
   end subroutine ions_nose_init
 
 
+  SUBROUTINE ions_nose_allocate()  
+    IMPLICIT NONE
+    allocate(vnhp(nhpcl*nhpdim))
+    vnhp = 0.0d0
+    allocate(xnhp0(nhpcl*nhpdim))
+    xnhp0 = 0.0d0
+    allocate(xnhpm(nhpcl*nhpdim))
+    xnhpm = 0.0d0
+    allocate(xnhpp(nhpcl*nhpdim))
+    xnhpp = 0.0d0
+    allocate(ekin2nhp(nhpdim))
+    allocate(gkbt2nhp(nhpdim))
+    allocate(anum2nhp(nhpdim))
+    allocate(qnp(nhpcl*nhpdim))
+    qnp = 0.0d0
+    allocate(qnp_(nhpcl))
+    qnp_ = 0.0d0
+    RETURN
+  END SUBROUTINE ions_nose_allocate
+
+  SUBROUTINE ions_nose_deallocate()  
+    IMPLICIT NONE
+    IF( ALLOCATED( vnhp ) ) deallocate(vnhp )
+    IF( ALLOCATED( xnhp0 ) ) deallocate(xnhp0 )
+    IF( ALLOCATED( xnhpm ) ) deallocate(xnhpm )
+    IF( ALLOCATED( xnhpp ) ) deallocate(xnhpp )
+    IF( ALLOCATED( ekin2nhp ) ) deallocate(ekin2nhp )
+    IF( ALLOCATED( gkbt2nhp ) ) deallocate(gkbt2nhp )
+    IF( ALLOCATED( qnp ) ) deallocate(qnp )
+    IF( ALLOCATED( qnp_ ) ) deallocate(qnp_ )
+    RETURN
+  END SUBROUTINE ions_nose_deallocate
+
+
   SUBROUTINE ions_nose_info()
 
       use constants,     only: factem, terahertz, pi
@@ -119,7 +204,7 @@
 
       IMPLICIT NONE
 
-      INTEGER   :: nsvar, i
+      INTEGER   :: nsvar, i, j
       REAL(dbl) :: wnosep
 
       IF( tnosep ) THEN
@@ -134,8 +219,11 @@
 
         WRITE( stdout,563) tempw, nhpcl, ndega, nsvar
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
-        WRITE( stdout,565) (qnp(i),i=1,nhpcl)
-      END IF
+        WRITE( stdout,565) nhptyp, nhpdim, (anum2nhp(j),j=1,nhpdim)
+        do j=1,nhpdim
+           WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
+        enddo
+     END IF
 
  563  format( //, &
             & 3X,'ion dynamics with nose` temperature control:', /, &
@@ -145,23 +233,29 @@
             & 3X,'time steps per nose osc.  = ', i5 )
  564  format( //, &
             & 3X,'nose` frequency(es)       = ', 20(1X,f10.3) ) 
- 565  format( //, &
-            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
-
-
+! 565  format( //, &
+!            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
+ 565  FORMAT( //, &
+            & 3X,'the requested type of NH chains is ',I5, /, &
+            & 3X,'total number of thermostats used ',I5, /, &
+            & 3X,'ionic degrees of freedom for each chain ',20(1X,I3)) 
+ 566  format( //, &
+            & 3X,'nose` mass(es) for chain ',i4,' = ', 20(1X,f10.3)) 
     RETURN
   END SUBROUTINE ions_nose_info
 
   
 
-  subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl )
+  subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
     implicit none
-    real(KIND=dbl), intent(inout) :: vnhp(:)
-    real(KIND=dbl), intent(in) :: xnhp0(:), xnhpm(:), delt
-    integer, intent(in) :: nhpcl
-    integer :: i
-    do i=1,nhpcl
-       vnhp(i)=2.*(xnhp0(i)-xnhpm(i))/delt-vnhp(i)
+    real(KIND=dbl), intent(inout) :: vnhp(nhpcl,nhpdim)
+    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt
+    integer, intent(in) :: nhpcl, nhpdim
+    integer :: i,j
+    do j=1,nhpdim
+       do i=1,nhpcl
+          vnhp(i,j)=2.*(xnhp0(i,j)-xnhpm(i,j))/delt-vnhp(i,j)
+       enddo
     enddo
         !
         !  this is equivalent to:
@@ -172,28 +266,31 @@
   end subroutine ions_nosevel
 
 
- subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekinpr, gkbt, vnhp, kbt, nhpcl )
+ subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
     implicit none
-    real(KIND=dbl), intent(out) :: xnhpp(:), vnhp(:)
-    real(KIND=dbl), intent(in) :: xnhp0(:), xnhpm(:), delt, qnp(:), ekinpr, gkbt, kbt
-    integer, intent(in) :: nhpcl
-    integer :: i
+    real(KIND=dbl), intent(out) :: xnhpp(nhpcl,nhpdim), vnhp(nhpcl,nhpdim)
+    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), ekin2nhp(:), gkbt2nhp(:), kbt
+    integer, intent(in) :: nhpcl, nhpdim
+    integer :: i, j
     real(KIND=dbl) :: dt2, zetfrc
 
-    zetfrc = 2.0d0*ekinpr-gkbt
+
     dt2 = delt**2
+    do j=1,nhpdim
+    zetfrc = 2.0d0*ekin2nhp(j)-gkbt2nhp(j)
     If (nhpcl.gt.1) then
        do i=1,(nhpcl-1)
-          xnhpp(i)=(4.d0*xnhp0(i)-(2.d0-delt*vnhp(i+1))*xnhpm(i)+2.0d0*dt2*zetfrc/qnp(i))&
-               &   /(2.d0+delt*vnhp(i+1))
-          vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
-          zetfrc = (qnp(i)*vnhp(i)**2-kbt)
+          xnhpp(i,j)=(4.d0*xnhp0(i,j)-(2.d0-delt*vnhp(i+1,j))*xnhpm(i,j)+2.0d0*dt2*zetfrc/qnp(i,j))&
+               &   /(2.d0+delt*vnhp(i+1,j))
+          vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+          zetfrc = (qnp(i,j)*vnhp(i,j)**2-kbt)
        enddo
     endif
     ! Last variable
-    xnhpp(nhpcl)=2.d0*xnhp0(nhpcl)-xnhpm(nhpcl)+( delt**2 / qnp(nhpcl) )*zetfrc
     i = nhpcl
-    vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
+    xnhpp(i,j)=2.d0*xnhp0(i,j)-xnhpm(i,j)+( delt**2 / qnp(i,j) )*zetfrc
+    vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+    enddo
     ! Update velocities
 !    do i=1,nhpcl
 !       vnhp(i) =(xnhpp(i)-xnhpm(i))/( 2.0d0 * delt )
@@ -206,19 +303,22 @@
 
   
 
-  real(KIND=dbl) function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt, kbt, nhpcl )
+  real(KIND=dbl) function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
     implicit none
-    integer :: nhpcl
-    real(KIND=dbl) :: gkbt,qnp(:),vnhp(:),xnhp0(:),kbt
-    integer :: i
+    integer :: nhpcl, nhpdim
+    real(KIND=dbl) :: gkbt2nhp(:), qnp(nhpcl,nhpdim),vnhp(nhpcl,nhpdim),xnhp0(nhpcl,nhpdim),kbt
+    integer :: i,j
     real(KIND=dbl) :: stmp
     !
-    stmp = 0.5d0 * qnp(1) * vnhp(1) * vnhp(1) +     gkbt * xnhp0(1)
+    stmp = 0.0d0
+    do j=1,nhpdim
+    stmp = stmp + 0.5d0 * qnp(1,j) * vnhp(1,j) * vnhp(1,j) + gkbt2nhp(j) * xnhp0(1,j)
     if (nhpcl > 1) then
        do i=2,nhpcl
-          stmp=stmp+0.5*qnp(i)*vnhp(i)*vnhp(i) + kbt*xnhp0(i)
+          stmp=stmp+0.5*qnp(i,j)*vnhp(i,j)*vnhp(i,j) + kbt*xnhp0(i,j)
        enddo
     endif
+    enddo
     ions_nose_nrg = stmp
     return
   end function ions_nose_nrg
