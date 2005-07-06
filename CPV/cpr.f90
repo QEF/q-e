@@ -60,6 +60,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
   USE kinds,                    ONLY : dbl
+  USE constants,                ONLY : bohr_radius_angs
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow, &
                                        taurdr, tprnfor, tsdc, lconstrain
@@ -165,7 +166,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE phase_factors_module,     ONLY : strucf
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub, elec_fakekine
-  USE wannier_subroutines,      ONLY : wannier_init, wf_closing_options, &
+  USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
   USE constraints_module,       ONLY : check_constraint
@@ -202,7 +203,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   REAL(KIND=dbl) :: temps(nsx)
   REAL(KIND=dbl) :: ekinh, temphc, temp1, temp2, randy
   REAL(KIND=dbl) :: delta_etot
-  REAL(KIND=dbl) :: ftmp, enb, enbi, one, toang
+  REAL(KIND=dbl) :: ftmp, enb, enbi
   INTEGER        :: is, nacc, ia, j, iter, nfi, i, isa, ipos
   INTEGER        :: k, ii, l, m, ibeg
   !
@@ -250,9 +251,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
-  one = 1.0d0
-  toang = 0.5291772083
-
+  !
   tfirst   = .TRUE.
   tlast    = .FALSE.
   nacc     = 5
@@ -298,16 +297,17 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   ALLOCATE( vkb( ngw, nkb ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
-  ALLOCATE( becsum( nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
-  ALLOCATE( drhog( ngm, nspin, 3, 3 ) )
+  ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
   ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
+  ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
   !
-  IF ( lwf ) CALL allocate_wannier(  nbsp, nnrsx, nspin, ngm )
+  IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
   !
-  IF ( tens .or. tcg) CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
-                                          nspin, nbspx, nnrsx, natx )
+  IF ( tens .or. tcg) &
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
+                                 nspin, nbspx, nnrsx, natx )
   !
   IF( tcg ) CALL allocate_cg( ngw, nbspx )
   !
@@ -338,7 +338,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !
-  IF ( lwf ) CALL wannier_init( ibrav, alat, a1, a2, a3, b1, b2, b3 )
+  IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
   !
   IF ( nbeg < -1 ) THEN
      !
@@ -404,7 +404,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
   END IF
   !
-  IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion = 0.D0
+  IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion(:,:) = 0.D0
   !
   IF ( .NOT. tpre ) stress = 0.D0
   !         
@@ -430,9 +430,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 )
      !
-     IF( ionode .AND. ttprint ) THEN
+     IF( ionode .AND. ttprint ) &
        WRITE( stdout, fmt = '( /, " * Step ",  I6 )' ) nfi
-     END IF
      !
      ! ... calculation of velocity of nose-hoover variables
      !
@@ -816,9 +815,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         ! ... write out a standard XYZ file in angstroms
         !
-        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck,one)
-!        WRITE( 35, '(I5)') nat
-!        CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,toang)
+        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck, 1.D0)
+!        CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,bohr_radius_angs)
 
         !
         ALLOCATE( tauw( 3, natx ) )
@@ -841,15 +839,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
 !        CALL printout_pos( stdout, nfi, tauw, nat, tps )
         CALL printout_pos( 34    , nfi, tauw, nat, tps )
-        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
-!        CALL print_pos_in( 34    , nfi, tauw , nat, tps, ityp, atm,ind_bck,one)
+        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,1.D0)
+!        CALL print_pos_in( 34    , nfi, tauw , nat, tps, ityp, atm,ind_bck,1.D0)
         !
         WRITE( stdout, 13 )
         !
 !        CALL printout_pos( stdout, nfi, fion, nat, tps )
         CALL printout_pos( 37    , nfi, fion, nat, tps )
-        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,one)
-!        CALL print_pos_in( 37    , nfi, fion , nat, tps, ityp, atm,ind_bck,one)
+        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,1.D0)
+!        CALL print_pos_in( 37    , nfi, fion , nat, tps, ityp, atm,ind_bck,1.D0)
         !
         DEALLOCATE( tauw )
         !
