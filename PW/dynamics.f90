@@ -226,7 +226,8 @@ SUBROUTINE dynamics()
      !
      ! ... check if the new positions satisfy the constrain equation
      !
-     CALL check_constraint( nat, tau_new, tau, force, if_pos, ityp, alat, dt )
+     CALL check_constraint( nat, tau_new, tau, &
+                            force, if_pos, ityp, alat, dt, amconv )
      !
      WRITE( stdout, '(/5X,"Corrected atomic positions:")')
      !

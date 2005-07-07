@@ -443,12 +443,12 @@
 
 !  --------------------------------------------------------------------------   
 
-
    REAL(dbl) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, htm, ht0, vnosep)
 
       !  Moves the ions
 
 ! ... declare modules
+      USE constants,          ONLY : uma_au
       USE cell_module,        ONLY : dgcell, r_to_s, s_to_r, boxdimensions
       use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
       use time_step,          ONLY : delt
@@ -625,34 +625,34 @@
            !
            ! ... constraints are imposed here
            !
-           DO ia = 1,  atoms_p%nat
+           DO ia = 1, atoms_p%nat
               !
               CALL s_to_r( atoms_p%taus(:,ia), atoms_p%taur(:,ia), ht0 )
               !
            END DO
            !
            CALL check_constraint( atoms_p%nat, atoms_p%taur, atoms_0%taur, &
-                                  atoms_0%for, if_pos, atoms_p%ityp, 1.D0, delt )
+                                  atoms_0%for, if_pos, atoms_p%ityp, 1.D0, &
+                                  delt, uma_au )
            !
-           DO ia = 1,  atoms_p%nat
+           DO ia = 1, atoms_p%nat
               !
               CALL r_to_s( atoms_p%taur(:,ia), atoms_p%taus(:,ia), ht0 )
               !
            END DO
            !
         END IF
-
+        !
         CALL ions_vel( atoms_0%vels, atoms_p%taus, atoms_m%taus, atoms_0%na, atoms_0%nsp, delt )
         CALL ions_kinene( atoms_0%ekint, atoms_0%vels, atoms_0%na, atoms_0%nsp, ht0%hmat, atoms_0%m )
-       
+        !
         moveions = atoms_0%ekint
-
-      RETURN
+        !
+        RETURN
+        !
       END FUNCTION moveions
 
-
 !  --------------------------------------------------------------------------   
-
 
       SUBROUTINE update_ions(atoms_m, atoms_0, atoms_p)
 

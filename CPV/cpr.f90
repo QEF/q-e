@@ -60,7 +60,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
   USE kinds,                    ONLY : dbl
-  USE constants,                ONLY : bohr_radius_angs
+  USE constants,                ONLY : bohr_radius_angs, uma_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow, &
                                        taurdr, tprnfor, tsdc, lconstrain
@@ -537,7 +537,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !
            CALL check_constraint( nat, taup, tau0, &
-                                  fion, iforce, ityp, 1.D0, delt )
+                                  fion, iforce, ityp, 1.D0, delt, uma_au )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !
@@ -643,9 +643,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      ! ... ionic temperature
      !
-     IF ( tfor ) CALL ions_temp( tempp, temps, ekinpr, vels, &
-                                 na, nsp, hold, pmass, ndega, &
-                                 nhpdim, atm2nhp, ekin2nhp )
+     IF ( tfor ) &
+        CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, &
+                        hold, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
      !
      ! ... fake electronic kinetic energy
      !
@@ -702,9 +702,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
                       rhog, rhos, lambdap, lambda, tau0, h )
         !
-        IF( printwfc >= 0 ) CALL cp_print_rho( nfi, bec, c0, eigr, irb, &
-                                               eigrb, rhor, rhog, rhos, &
-                                               lambdap, lambda, tau0, h )
+        IF ( printwfc >= 0 ) &
+           CALL cp_print_rho( nfi, bec, c0, eigr, irb, eigrb, rhor, &
+                              rhog, rhos, lambdap, lambda, tau0, h )
         !
      END IF
      !
@@ -787,7 +787,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END IF
      !
 1947 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
-          &  7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
+           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
      !
      IF ( ionode .AND. ttprint ) THEN

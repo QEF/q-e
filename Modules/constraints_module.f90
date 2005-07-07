@@ -350,7 +350,7 @@ MODULE constraints_module
      !
      !-----------------------------------------------------------------------
      SUBROUTINE check_constraint( nat, taup, tau0, &
-                                  force, if_pos, ityp, alat, dt )
+                                  force, if_pos, ityp, alat, dt, massconv )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -363,7 +363,6 @@ MODULE constraints_module
        ! ... in normal cases the constraint equation should be always 
        ! ... satisfied at the very first iteration.
        !
-       USE constants, ONLY : amconv
        USE ions_base, ONLY : amass
        !
        IMPLICIT NONE
@@ -376,11 +375,12 @@ MODULE constraints_module
        INTEGER,        INTENT(IN)    :: ityp(nat)
        REAL (KIND=DP), INTENT(IN)    :: alat
        REAL (KIND=DP), INTENT(IN)    :: dt
+       REAL (KIND=DP), INTENT(IN)    :: massconv
        !
        INTEGER                    :: na, i, index
        REAL(KIND=DP), ALLOCATABLE :: dgp(:,:), dg0(:,:)
        REAL(KIND=DP)              :: gp, g0
-       REAL(KIND=DP)              :: lambda, fac
+       REAL(KIND=DP)              :: lambda, fac, invdtsq
        LOGICAL                    :: ltest(nconstr), global_test
        INTEGER, PARAMETER         :: maxiter = 100
        !
@@ -390,6 +390,7 @@ MODULE constraints_module
        ALLOCATE( dgp( 3, nat ) )
        ALLOCATE( dg0( 3, nat ) )
        !
+       invdtsq  = 1.D0 / dt**2
        lagrange = 0.D0
        !
        outer_loop: DO i = 1, maxiter
@@ -420,7 +421,7 @@ MODULE constraints_module
              !
              DO na = 1, nat
                 !
-                dgp(:,na) = dgp(:,na) / ( amass( ityp(na) ) * amconv )
+                dgp(:,na) = dgp(:,na) / ( amass( ityp(na) ) * massconv )
                 !
              END DO
              !
@@ -431,15 +432,15 @@ MODULE constraints_module
              !
              DO na = 1, nat
                 !
-                fac = amass( ityp(na) ) * amconv * alat
+                fac = amass( ityp(na) ) * massconv * alat
                 !
                 taup(:,na) = taup(:,na) - lambda * dg0(:,na) / fac
                 !
-                force(:,na) = force(:,na) - lambda * dg0(:,na) / dt**2
+                force(:,na) = force(:,na) - lambda * dg0(:,na) * invdtsq
                 !
              END DO
              !
-             lagrange(index) = lagrange(index) + lambda / dt**2
+             lagrange(index) = lagrange(index) + lambda * invdtsq
              !
           END DO inner_loop
           !
