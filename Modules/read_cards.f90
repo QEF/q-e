@@ -923,15 +923,17 @@ MODULE read_cards_module
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
-       INTEGER            :: is, nx10, i, j
+       INTEGER            :: is, nx10, i, j, nspin0
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
        IF ( tread ) THEN
           CALL errore( ' card_occupations ', ' two occurrence ', 2 )
        END IF
+       nspin0=nspin
+       if (nspin == 4) nspin0=1
        !
-       DO is = 1, nspin
+       DO is = 1, nspin0
           !
           nx10 = 10 * INT( nbnd / 10 )
           DO i = 1, nx10, 10
