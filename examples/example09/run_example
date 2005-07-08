@@ -131,7 +131,6 @@ EOF
 $ECHO "  running normal mode calculation for SiH4...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4.nm.out
 $ECHO " done"
-/bin/rm restart*
 
 # IR cross sections  for SiH4
 cat > sih4.dyn.in << EOF
