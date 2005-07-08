@@ -83,7 +83,7 @@
 
 ! ... read in the input file
 
-      CALL read_input_file( lneb )
+      CALL read_input_file()
 
       !
       !  copy pseudopotential input parameter into internal variables

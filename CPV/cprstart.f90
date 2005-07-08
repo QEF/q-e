@@ -1,15 +1,11 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-!
-!=======================================================================
-!
-                        program main
 !
 !=======================================================================
 !***  Molecular Dynamics using Density-Functional Theory   ****
@@ -21,6 +17,7 @@
 !***  using parallel FFT written for PWSCF by Stefano de Gironcoli
 !***  PBE added by Michele Lazzeri (2000)
 !***  variable-cell dynamics by Andrea Trave (1998-2000)
+!***  Makov Payne Correction for charged systems by Filippo De Angelis
 !***********************************************************************
 !***  appropriate citation for use of this code:
 !***  Car-Parrinello method    R. Car and M. Parrinello, PRL 55, 2471 (1985) 
@@ -30,6 +27,16 @@
 !***                           C. Lee, and D. Vanderbilt, PRB 47, 10142 (1993).
 !***  implementation gga       A. Dal Corso, A. Pasquarello, A. Baldereschi,
 !***                           and R. Car, PRB 53, 1180 (1996).
+!***  implementation Wannier   M. Sharma, Y. Wu and R. Car, Int.J.Quantum.Chem.
+!***  function dynamics        95, 821, (2003).
+!***
+!***  implementation           M. Sharma and R.Car, ???
+!***  Electric Field
+!***  ensemble-DFT
+! cf. "Ensemble Density-Functional Theory for Ab Initio Molecular Dynamics
+!      of Metals and Finite-Temperature Insulators"  PRL v.79,nbsp.7 (1997)
+!      nbsp. Marzari, D. Vanderbilt and M.C. Payne
+!***
 !***********************************************************************
 !***  
 !***  f90 version, with dynamical allocation of memory
@@ -48,70 +55,72 @@
 !     dt2bye         = 2*delt/emass
 !***********************************************************************
 !
-      use input, only: read_input_file, iosys_pseudo
-      use io_global, ONLY: io_global_start, io_global_getionode
-      use mp_global, ONLY: mp_global_start
-      use mp, ONLY: mp_end, mp_start, mp_env
-      use control_flags, only: lneb, lsmd, lwf, program_name
-      use environment, ONLY: environment_start, environment_end
-!
-      implicit none
-
-      INTEGER :: mpime, nproc, gid, root, ionode_id
-      LOGICAL :: ionode
-
-!
-!     program starts here
-!
-
-! ... initialize MPI (parallel processing handling)
-
-      root = 0
-      CALL mp_start()
-      CALL mp_env( nproc, mpime, gid )
-      CALL mp_global_start( root, mpime, gid, nproc )
-
-! ... mpime = processor number, starting from 0
-! ... nproc = number of processors
-! ... gid   = group index
-! ... root  = index of the root processor
-
-      program_name = 'CP90'
-
-! ... initialize input output
-
-      CALL io_global_start( mpime, root )
-      CALL io_global_getionode( ionode, ionode_id )
-
-
-      CALL environment_start( )
-
-      !
-      !  readin the input file
-      !
-
-      call read_input_file( lneb, lsmd, lwf )
-
-      !
-      !  copy pseudopotential input parameter into internal variables
-      !  and read in pseudopotentials and wavefunctions files
-      !
-
-      call iosys_pseudo( )
-
-      IF( lneb ) THEN
-        call neb_loop( 1 )
-      ELSE IF ( lsmd ) THEN
-        call smd_loop( 1 )
-      ELSE IF ( lwf ) THEN
-        call wf_loop( 1 )
-      ELSE
-        call cpr_loop( 1 )
-      END IF
-
-      CALL environment_end( )
-
-      call mp_end()
-
-      stop
-      end program main
+!----------------------------------------------------------------------------
+PROGRAM main
+  !----------------------------------------------------------------------------
+  !
+  USE input,         ONLY : read_input_file, iosys_pseudo
+  USE io_global,     ONLY : io_global_start, io_global_getionode
+  USE mp_global,     ONLY : mp_global_start
+  USE mp,            ONLY : mp_end, mp_start, mp_env
+  USE control_flags, ONLY : lneb, lsmd, program_name
+  USE environment,   ONLY : environment_start, environment_end
+  !
+  IMPLICIT NONE
+  !
+  INTEGER            :: mpime, nproc, gid, ionode_id
+  LOGICAL            :: ionode
+  INTEGER, PARAMETER :: root = 0
+  !
+  ! ... program starts here
+  !
+  ! ... initialize MPI (parallel processing handling)
+  !
+  CALL mp_start()
+  CALL mp_env( nproc, mpime, gid )
+  CALL mp_global_start( root, mpime, gid, nproc )
+  !
+  ! ... mpime = processor number, starting from 0
+  ! ... nproc = number of processors
+  ! ... gid   = group index
+  ! ... root  = index of the root processor
+  !
+  program_name = 'CP90'
+  !
+  ! ... initialize input output
+  !
+  CALL io_global_start( mpime, root )
+  CALL io_global_getionode( ionode, ionode_id )
+  !
+  CALL environment_start( )
+  !
+  ! ... readin the input file
+  !
+  CALL read_input_file()
+  !
+  ! ... copy pseudopotential input parameter into internal variables
+  ! ... and read in pseudopotentials and wavefunctions files
+  !
+  CALL iosys_pseudo( )
+  !
+  IF ( lneb ) THEN
+     !
+     CALL neb_loop( 1, program_name )
+     !
+  ELSE IF ( lsmd ) THEN
+     !
+     CALL smd_loop( 1 )
+     !
+  ELSE
+     !
+     CALL cpr_loop( 1 )
+     !
+  END IF
+  !
+  CALL environment_end( )
+  !
+  CALL mp_end()
+  !
+  STOP
+  !
+END PROGRAM main

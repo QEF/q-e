@@ -5,9 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! ---------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 MODULE input
-   ! --------------------------------------------------------------------------
+   !---------------------------------------------------------------------------
    !
    USE kinds,     ONLY: dbl
    USE io_global, ONLY: ionode, stdout
@@ -25,59 +25,57 @@ MODULE input
    LOGICAL :: has_been_read = .FALSE.
    !
    CONTAINS
+   !
+   !-------------------------------------------------------------------------
+   SUBROUTINE read_input_file()
+     !-------------------------------------------------------------------------
      !
-   SUBROUTINE read_input_file( lneb, lsmd, lwf )
-      !
-      USE read_namelists_module, ONLY: read_namelists
-      USE read_cards_module,     ONLY: read_cards
-      USE input_parameters,      ONLY: calculation, title
-      USE control_flags,         ONLY: program_name
-      USE printout_base,         ONLY: title_ => title
-      !
-      IMPLICIT NONE
-
-      LOGICAL, OPTIONAL, INTENT(OUT) :: lneb, lsmd, lwf
-      CHARACTER(LEN=2) :: prog
-
-      IF( program_name == 'FPMD' ) prog = 'FP'
-      IF( program_name == 'CP90' ) prog = 'CP'
-
-      IF( ionode ) THEN
-        CALL input_from_file()
-      END IF
-
-      ! . Read NAMELISTS ..................................................!
-
-      CALL read_namelists( prog )
-
-      ! . Read CARDS ......................................................!
-
-      CALL read_cards( prog )
-
-      IF( PRESENT(lneb) ) THEN
-        lneb = ( TRIM( calculation ) == 'neb' )
-      END IF
-      IF( PRESENT(lsmd) ) THEN
-        lsmd = ( TRIM( calculation ) == 'smd' )
-        IF( lsmd .AND. ( program_name == 'FPMD' ) ) THEN
-          CALL errore(" read_input_file ", " SMD Dynamics not implemented in FPMD ", 1 )
-        END IF
-      END IF
-      IF( PRESENT(lwf) ) THEN
-        lwf  = ( TRIM( calculation ) == 'cp-wf' )
-      END IF
-
-      !
-      !  Set job title and print it on standard output
-      !
-
-      title_ = title
-      WRITE( stdout, 400 ) TRIM( title_ )
-400   FORMAT(/  3X, 'Job Title: ', A )
-
-      has_been_read = .TRUE.
-
-      RETURN
+     USE read_namelists_module, ONLY : read_namelists
+     USE read_cards_module,     ONLY : read_cards
+     USE input_parameters,      ONLY : calculation, title
+     USE control_flags,         ONLY : lneb, lsmd, lwf, program_name
+     USE printout_base,         ONLY : title_ => title
+     !
+     IMPLICIT NONE
+     !
+     CHARACTER(LEN=2) :: prog
+     !
+     IF ( program_name == 'FPMD' ) prog = 'FP'
+     IF ( program_name == 'CP90' ) prog = 'CP'
+     !
+     IF ( ionode ) CALL input_from_file()
+     !
+     ! ... Read NAMELISTS 
+     !
+     CALL read_namelists( prog )
+     !
+     ! ... Read CARDS 
+     !
+     CALL read_cards( prog )
+     !
+     lneb = ( TRIM( calculation ) == 'neb' )
+     !
+     lsmd = ( TRIM( calculation ) == 'smd' )
+     !
+     IF ( lsmd .AND. ( program_name == 'FPMD' ) ) &
+        CALL errore( 'read_input_file ', &
+                     'string dynamics not implemented in FPMD', 1 )
+     !
+     lwf = ( TRIM( calculation ) == 'cp-wf' )
+     !
+     IF ( lwf .AND. ( program_name == 'FPMD' ) ) &
+        CALL errore( 'read_input_file ', 'cp-wf not implemented in FPMD', 1 )
+     !
+     ! ... Set job title and print it on standard output
+     !
+     title_ = title
+     !
+     WRITE( stdout, '(/,3X,"Job Title: ",A )' ) TRIM( title_ )
+     !
+     has_been_read = .TRUE.
+     !
+     RETURN
+     !
    END SUBROUTINE read_input_file
    !
    !  ----------------------------------------------
