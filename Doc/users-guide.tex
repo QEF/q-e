@@ -1667,6 +1667,12 @@ phonon mode.
 This must be the same \textbf{q}-vector given in the input of
 \texttt{pw.x}.
 
+Notice that at $\mathbf{q}=0$ the non-analytic term of the
+dymamical matrix is absent, i.e. there is no LO-TO splitting
+in insulators. Use program \texttt{dynmat.x} to add the 
+LO-TO splitting, if you have calculated effective charges
+(option \texttt{epsil=.true.}).
+
 A sample phonon calculation is performed in Example 02.
 
 \subsubsection{Calculation of interatomic force constants in real

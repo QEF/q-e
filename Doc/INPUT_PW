@@ -184,8 +184,9 @@ celldm(i)      REAL, DIMENSION(6)
 
 a, b, c, cosab, cosac, cosbc: 
                REAL
-	       traditional crystallographic constants (a,b,c in ANGSTROM)
-               specify either these or celldm  but not both
+	       traditional crystallographic constants (a,b,c in ANGSTROM,
+               cosab = cosine of the angle between axis a and b
+               specify either these OR celldm but NOT both
  
 nat            INTEGER
                 number of atoms in the unit cell - must be specified
@@ -554,7 +555,7 @@ pot_extrapolation
                'none'        :  no extrapolation
                'atomic'      :  extrapolate the potential as if it was a sum of
                                 atomic-like orbitals 
-               'first_rder'  :  extrapolate the potential with first-order 
+               'first_order'  :  extrapolate the potential with first-order 
                                 formula
                'second_order':  as above, with second order formula
 
@@ -562,7 +563,7 @@ wfc_extrapolation
                CHARACTER ( default = "none" )
                used to extrapolate the wavefunctions from preceding ionic steps
                'none'        :  no extrapolation
-               'first_rder'  :  extrapolate the wave-functions with first-order
+               'first_order'  :  extrapolate the wave-functions with first-order
                                 formula
                'second_order':  as above, with second order formula
 
