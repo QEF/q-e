@@ -104,8 +104,11 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       file_pseudopw= file where the generated PP is written.
                      If the file name ends with "upf" or "UPF",
                      or in any case for spin-orbit PP (rel=2),
-                     the file is written in UPF format; otherwise,
-                     in the old "NC" format if pseudotype=1,
+                     the file is written in UPF format;
+                     if the file name ends with 'psp' it is
+                     written in native CPMD format (this is currently
+                     an experimental feature); otherwise it is written
+                     in the old "NC" format if pseudotype=1, or
                      in the old RRKJ format if pseudotype=2 or 3
                      (no default, must be specified)
       file_recon =  file containing data needed for PAW reconstruction 
