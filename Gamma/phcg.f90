@@ -129,7 +129,8 @@ SUBROUTINE cg_dchi(dchi_dtau)
   nd_  =1
   dchi_dtau(:,:,:,:) = 0.d0
   IF (recover) THEN
-     OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
+     CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
+     IF ( .NOT. exst) GO TO 1
      READ(iunres,*,err=1,END=1) na_,ipol_,nd_
      READ(iunres,*,err=1,END=1) dchi_dtau
      CLOSE(unit=iunres)
@@ -142,9 +143,9 @@ SUBROUTINE cg_dchi(dchi_dtau)
      CLOSE(unit=iunres)
      GO TO 2
 1    WRITE( stdout,'(/5x,"Restart failed, starting new calculation")')
-     CLOSE(unit=iunres)
+     CLOSE(unit=iunres, status='delete' )
   ELSE
-     WRITE( stdout,'(5x,"Starting calculation of Raman coeficients")')
+     WRITE( stdout,'(5x,"Starting calculation of Raman coefficients")')
   END IF
   !
 2 CONTINUE
@@ -194,8 +195,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
            !
            IF ( ionode ) THEN
               !
-              OPEN (unit=iunres,file='restart_d',form='formatted',     &
-                   status='unknown')
+              CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
               IF (nd.NE.nderiv) THEN
                  WRITE(iunres,*) na,ipol,nd+1
               ELSE IF(ipol.NE.3) THEN
@@ -265,6 +265,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   !
   REAL(kind=DP) :: w2(3*nat), dynout(3*nat,3*nat), chi(3,3)
   !
+  LOGICAL :: exst
   INTEGER :: na, i,j,  nt, iudyn, mode_done
   !
   !   calculate linear response to macroscopic fields
@@ -274,15 +275,18 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   verify if already calculated
      !
      IF (recover) THEN
-        OPEN (unit=iunres,file='restart_e',form='formatted', status='unknown')
+        CALL seqopn( iunres, 'restart_e', 'FORMATTED', exst )
+        if (.NOT. exst) GO TO 1
         READ(iunres,*,END=1,err=1) epsilon0
         READ(iunres,*,END=1,err=1) zstar
         CLOSE(unit=iunres)
         go to 2
         !
-1       CLOSE(unit=iunres)
+1       CLOSE(unit=iunres, status='delete')
      END IF
+     !
      CALL macro
+     !
      CALL solve_e
      !
      !   calculate the dielectric tensor and effective charges
@@ -295,7 +299,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !
      IF ( ionode ) THEN
         !
-        OPEN(unit=iunres,file='restart_e',form='formatted',status='unknown')
+        CALL seqopn( iunres, 'restart_e', 'FORMATTED', exst )
         WRITE(iunres,*) epsilon0
         WRITE(iunres,*) zstar
         CLOSE(unit=iunres)
@@ -329,18 +333,20 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   verify if already calculated
      !
      IF (recover) THEN
-        OPEN (unit=iunres,file='restartph',form='formatted', status='unknown')
+        CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+        IF (.NOT. exst) GO TO 10
         READ (iunres,*,err=10,END=10) mode_done
         IF (mode_done.EQ.nmodes+1) THEN
-           READ(iunres,*,END=10,err=10) dynout
+           READ(iunres,*,END=10,err=10) dyn
            READ(iunres,*,END=10,err=10) w2
            CLOSE(unit=iunres)
            go to 20
         END IF
         !
-10      CLOSE(unit=iunres)
+10      CLOSE(unit=iunres, status='delete')
      END IF
-     CALL solve_ph
+     !
+     CALL solve_ph ( )
      !
      !   get the complete dynamical matrix from the irreducible part
      !
@@ -362,10 +368,11 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   !
   IF ( ionode ) THEN
      !
-     IF (trans) CALL writedyn
-     OPEN (unit=iunres,file='restartph',form='formatted',status='unknown')
+     IF (trans) CALL writedyn ( )
+     !
+     CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
      WRITE(iunres,*) nmodes+1
-     WRITE(iunres,*) dynout
+     WRITE(iunres,*) dyn
      WRITE(iunres,*) w2
      CLOSE(unit=iunres)
      !
@@ -560,6 +567,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   REAL(kind=DP), ALLOCATABLE :: raman_activity(:,:,:), infrared(:)
   REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, norm, coeff, convfact
+  LOGICAL :: exst
   INTEGER iudyn, nd, nu, nd_, nu_, na, ipol, jpol
   DATA delta2/-1.d0, 1.d0/, coeff2/-0.5d0, 0.5d0/
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
@@ -577,7 +585,8 @@ SUBROUTINE raman_cs2(w2,dynout)
   nd_=1
   raman_activity(:,:,:) = 0.d0
   IF (recover) THEN
-     OPEN (unit=iunres,file='restart_d',form='formatted',status='unknown')
+     CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
+     IF (.NOT. exst) GO TO 1
      READ(iunres,*,err=1,END=1) nu_,nd_
      READ(iunres,*,err=1,END=1) raman_activity
      CLOSE(unit=iunres)
@@ -671,8 +680,7 @@ SUBROUTINE raman_cs2(w2,dynout)
         !
         IF ( ionode ) THEN
            !
-           OPEN (unit=iunres,file='restart_d',form='formatted',     &
-                status='unknown')
+           CALL seqopn( iunres, 'restart_d', 'FORMATTED', exst )
            IF (nd.NE.nderiv) THEN
               WRITE(iunres,*) nu,nd+1
            ELSE

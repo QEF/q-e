@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE solve_ph
+SUBROUTINE solve_ph ( )
   !-----------------------------------------------------------------------
   !
   USE io_global,             ONLY : stdout, ionode
@@ -24,7 +24,7 @@ SUBROUTINE solve_ph
   REAL(kind=DP), ALLOCATABLE ::  diag(:)
   COMPLEX(kind=DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
   REAL(kind=DP), ALLOCATABLE :: overlap(:,:)
-  LOGICAL :: orthonormal, precondition, startwith0
+  LOGICAL :: orthonormal, precondition, startwith0, exst
   EXTERNAL A_h
   !
   CALL start_clock('solve_ph')
@@ -61,15 +61,17 @@ SUBROUTINE solve_ph
   !
   !  check if a restart file exists
   !
-  OPEN (unit=iunres,file='restartph',form='formatted',status='unknown')
-  READ (iunres,*,err=1,END=1) mode_done
-  READ (iunres,*,err=1,END=1) dyn
-  CLOSE(unit=iunres)
-  PRINT '("  Phonon: modes up to mode ",i3," are done")',       &
-       &     mode_done
-  go to 2
-1 CLOSE(unit=iunres)
-  !  restart failed or file not found
+  if (recover) THEN
+     CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
+     IF (.NOT. exst) GO TO 1
+     READ (iunres,*,err=1,END=1) mode_done
+     READ (iunres,*,err=1,END=1) dyn
+     CLOSE(unit=iunres)
+     PRINT '("  Phonon: modes up to mode ",i3," already done")', mode_done
+     go to 2
+1    CLOSE(unit=iunres)
+  END IF
+  !  initialisation if not restarting from previous calculation
   CALL  dynmat_init
   mode_done=0
 2 CONTINUE
@@ -107,7 +109,7 @@ SUBROUTINE solve_ph
      !
      IF ( ionode ) THEN
         !
-        OPEN (unit=iunres,file='restartph',form='formatted',status='unknown')
+        CALL seqopn( iunres, 'restartph', 'FORMATTED', exst )
         WRITE(iunres,*) nu
         WRITE(iunres,*) dyn
         CLOSE(unit=iunres)
