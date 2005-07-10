@@ -17,14 +17,9 @@ MODULE cp_restart
   IMPLICIT NONE
   SAVE
   !
-  INTERFACE cp_write_wfc
-     MODULE PROCEDURE cp_write_wfc2, cp_write_wfc4
-  END INTERFACE
-  INTERFACE cp_read_wfc
-     MODULE PROCEDURE cp_read_wfc2, cp_read_wfc4
-  END INTERFACE
-  !
   PRIVATE :: write_wfc, read_wfc, read_cell
+  !
+  INTEGER, PARAMETER, PRIVATE :: iunout = 99
   !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -33,7 +28,8 @@ MODULE cp_restart
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, occ0, &
-        occm, lambda0, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z )
+        occm, lambda0, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z, et, &
+        c04, cm4, c02, cm2 )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -93,11 +89,16 @@ MODULE cp_restart
       REAL(dbl), INTENT(IN) :: vnhe ! 
       REAL(dbl), INTENT(IN) :: ekincm ! 
       REAL(dbl), INTENT(IN) :: mat_z(:,:,:) ! 
+      REAL(dbl), INTENT(IN) :: et(:,:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c04(:,:,:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm4(:,:,:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c02(:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm2(:,:) ! 
       !
       CHARACTER(LEN=256)      :: dirname, filename
       CHARACTER(iotk_attlenx) :: attr
       CHARACTER(LEN=4)        :: cspin
-      INTEGER :: kunit
+      INTEGER :: kunit, ib
       INTEGER :: k1, k2, k3
       INTEGER :: nk1, nk2, nk3
       INTEGER :: j, i, ispin, ig, nspin_wfc
@@ -118,6 +119,7 @@ MODULE cp_restart
       CALL create_directory( dirname )
       !
       !  Create K points subdirectories
+      !  note: in FPMD and CP k points are not distributed to processors
       !
       DO i = 1, nk
         CALL create_directory( kpoint_dir( dirname, i ) )
@@ -372,7 +374,7 @@ MODULE cp_restart
                cspin = iotk_index(ispin)
                !
                CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), 0.0d0, ATTR = attr  )
+               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), et(:, ik, ispin), ATTR = attr  )
                !
                CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ),  occ0(:, ik, ispin ) )
                CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ),  occm(:, ik, ispin ) )
@@ -401,8 +403,42 @@ MODULE cp_restart
                                CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
                !
                filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
-               !
+
             END IF
+
+            IF( PRESENT( C04 ) ) THEN
+              CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+                            c04(:,:,ik,ispin), ngwt, nbnd, ig_l2g,   &
+                            ngw, filename )
+            ELSE IF( PRESENT( C02 ) ) THEN
+              ib = iupdwn(ispin)
+              CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+                            c02(:,ib:), ngwt, nbnd, ig_l2g,   &
+                            ngw, filename )
+            END IF
+
+            IF ( ionode ) THEN
+               !
+               filename = TRIM( wfc_filename( ".", 'evcm', ik, ispin ) )
+               !
+               CALL iotk_link( iunpun, "wfcm", filename, &
+                               CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+               !
+               filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+
+            END IF
+
+            IF( PRESENT( cm4 ) ) THEN
+              CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+                            cm4(:,:,ik,ispin), ngwt, nbnd, ig_l2g,  &
+                            ngw, filename )
+            ELSE IF( PRESENT( c02 ) ) THEN
+              ib = iupdwn(ispin)
+              CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+                            cm2(:,ib:), ngwt, nbnd, ig_l2g,  &
+                            ngw, filename )
+            END IF
+
             !
          END DO
          !
@@ -437,24 +473,6 @@ MODULE cp_restart
       END IF
 
 
-      IF( ionode ) THEN
-        !
-        call iotk_write_begin(iunpun,"K_POINTS")
-        DO i = 1, nk
-          DO ispin = 1, nspin
-            call iotk_write_attr (attr, "spin",ispin,first=.true.)
-            call iotk_write_begin(iunpun,"spin_component",attr)
-            filename = TRIM( wfc_filename( ".", 'wf', i, ispin, '0' ) )
-            call iotk_link(iunpun,"wfc_0",filename,create=.false.,binary=.not.ascii,raw=.true.)
-            filename = TRIM( wfc_filename( ".", 'wf', i, ispin, 'm' ) )
-            call iotk_link(iunpun,"wfc_m",filename,create=.false.,binary=.not.ascii,raw=.true.)
-            call iotk_write_end(iunpun,"spin_component")
-          END DO
-        END DO
-        call iotk_write_end(iunpun,"K_POINTS")
-        !
-      END IF
-
       !
       !  Write matrix lambda to file
       !
@@ -481,76 +499,12 @@ MODULE cp_restart
 
 !=-----------------------------------------------------------------------------=!
 
-    SUBROUTINE cp_write_wfc4( ndw, scradir, nk, nspin, c0, cm )
-      !  
-      USE kinds, ONLY: dbl
-      USE control_flags, ONLY: force_pairing
-      !
-      IMPLICIT NONE
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
-      COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:) !
-      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm(:,:,:,:) !
-      INTEGER, INTENT(IN) :: ndw, nk, nspin !
-      INTEGER :: ik, ispin, nspin_wfc
-      !
-      DO ik = 1, nk
-        !
-        nspin_wfc = nspin
-        IF( force_pairing ) nspin_wfc = 1
-        !
-        DO ispin = 1, nspin_wfc
-          !
-          CALL cp_write_wfc( ndw, scradir, ik, nk, ispin, nspin_wfc, c0(:,:,ik,ispin), '0' )
-          CALL cp_write_wfc( ndw, scradir, ik, nk, ispin, nspin_wfc, cm(:,:,ik,ispin), 'm' )
-          !
-        END DO
-        !
-        !
-      END DO
-      !
-      RETURN
-    END SUBROUTINE cp_write_wfc4
-
-!=-----------------------------------------------------------------------------=!
-
-    SUBROUTINE cp_write_wfc2( ndw, scradir, ik, nk, ispin, nspin, c, tag )
-      !
-      USE kinds, ONLY: dbl
-      USE io_global, ONLY: ionode, ionode_id, stdout
-      USE electrons_base, ONLY: nbnd
-      USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g
-
-      IMPLICIT NONE
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
-      CHARACTER, INTENT(IN) :: tag
-      COMPLEX(dbl), INTENT(IN) :: c(:,:) ! 
-      INTEGER, INTENT(IN) :: ndw, ik, ispin, nk, nspin ! 
-      !
-      CHARACTER(LEN=256) :: dirname, filename
-      INTEGER :: kunit
-      !
-      dirname  = restart_dir( scradir, ndw )
-      !
-      kunit = 1
-      ! 
-      filename = wfc_filename( dirname, 'wf', ik, ispin, tag )
-      IF( ionode ) THEN
-        OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
-      END IF
-      CALL write_wfc( 10, ik, nk, kunit, ispin, nspin, c(:,:), ngwt, nbnd, ig_l2g, ngw )
-      IF( ionode ) CLOSE( unit = 10 )
-      !
-      RETURN
-    END SUBROUTINE cp_write_wfc2
-
-
-!=----------------------------------------------------------------------------=!
 
     SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, &
         occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, &
-        vnhe, ekincm, mat_z, tens  )
+        vnhe, ekincm, mat_z, tens, c04, cm4, c02, cm2 )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -613,6 +567,10 @@ MODULE cp_restart
       REAL(dbl), INTENT(INOUT) :: ekincm !  
       REAL(dbl), INTENT(INOUT) :: mat_z(:,:,:) ! 
       LOGICAL, INTENT(IN) :: tens
+      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c04(:,:,:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm4(:,:,:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c02(:,:) ! 
+      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm2(:,:) ! 
 
       !
       CHARACTER(LEN=256) :: dirname, kdirname, filename
@@ -639,6 +597,9 @@ MODULE cp_restart
       REAL(dbl) :: celldm_ ( 6 )
       INTEGER :: ispin_ , nspin_ , ngwt_ , nbnd_ , nelt_
       INTEGER :: nhpcl_ 
+      INTEGER :: ib 
+
+      kunit = 1
 
       dirname = restart_dir( scradir, ndr )
       filename = TRIM( dirname ) // '/' // 'restart.xml'
@@ -803,6 +764,41 @@ MODULE cp_restart
             CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ),  occm(:, ik, ispin ), FOUND=found, IERR=ierr )
             IF ( .NOT. found ) occm(:, ik, ispin ) = occ0(:, ik, ispin )
           END IF
+
+          IF ( ionode ) THEN
+             !
+             filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+             !
+          END IF
+          !
+          IF( PRESENT( c04 ) ) THEN
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         c04(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+          ELSE IF( PRESENT( c02 ) ) THEN
+            ib = iupdwn(ispin)
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         c02( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+          END IF
+
+          IF ( ionode ) THEN
+             !
+             filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+             !
+          END IF
+          !
+          IF( PRESENT( cm4 ) ) THEN
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         cm4(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+          ELSE IF( PRESENT( cm2 ) ) THEN
+            ib = iupdwn(ispin)
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         cm2( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+          END IF
+
           !
         END DO
         !
@@ -901,69 +897,46 @@ MODULE cp_restart
 
 !=-----------------------------------------------------------------------------=!
 
-    SUBROUTINE cp_read_wfc4( ndr, scradir, nk, nspin, c0, cm )
-      !
-      USE kinds, ONLY: dbl
-      USE control_flags, ONLY: force_pairing
-      !
-      IMPLICIT NONE
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
-      COMPLEX(dbl), INTENT(OUT) :: c0(:,:,:,:) !
-      COMPLEX(dbl), OPTIONAL, INTENT(OUT) :: cm(:,:,:,:) !
-      INTEGER, INTENT(IN) :: ndr, nk, nspin !
-      INTEGER :: ik, ispin, nspin_wfc
-      !
-      DO ik = 1, nk
-        !
-        nspin_wfc = nspin
-        IF( force_pairing ) nspin_wfc = 1
-        !
-        DO ispin = 1, nspin_wfc
-          !
-          CALL cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin_wfc, c0(:,:,ik,ispin), '0' )
-          CALL cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin_wfc, cm(:,:,ik,ispin), 'm' )
-          !
-        END DO
-        !
-        !
-      END DO
-      !
-      RETURN
-    END SUBROUTINE cp_read_wfc4
-
-
-!=-----------------------------------------------------------------------------=!
-
-    SUBROUTINE cp_read_wfc2( ndr, scradir, ik, nk, ispin, nspin, c, tag )
+    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin, c2, c4, tag )
       !
       USE kinds, ONLY: dbl
       USE io_global, ONLY: ionode, ionode_id, stdout
-      USE electrons_base, ONLY: nbnd
+      USE electrons_base, ONLY: nbnd, iupdwn
       USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ndr
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       CHARACTER, INTENT(IN) :: tag
-      COMPLEX(dbl), INTENT(OUT) :: c(:,:) !
-      INTEGER, INTENT(IN) :: ik, ispin, nk, nspin !
+      COMPLEX(dbl), OPTIONAL, INTENT(OUT) :: c2(:,:) !
+      COMPLEX(dbl), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:) !
+      INTEGER, INTENT(IN) :: ik, ispin, nk, nspin
       !
       CHARACTER(LEN=256) :: dirname, filename
-      INTEGER :: kunit , ispin_ , nspin_ , ngwt_ , nbnd_
-      !
-      dirname  = restart_dir( scradir, ndr )
+      INTEGER :: ib, kunit , ispin_ , nspin_ , ngwt_ , nbnd_
       !
       kunit = 1
       !
-      filename = wfc_filename( dirname, 'wf', ik, ispin, tag )
-      IF( ionode ) THEN
-        OPEN( unit = 10, file = TRIM(filename), status = 'UNKNOWN', form = 'UNFORMATTED' )
+      dirname  = restart_dir( scradir, ndr )
+      IF( tag /= 'm' ) THEN
+        filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+      ELSE
+        filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
       END IF
-      CALL read_wfc( 10, ik, nk, kunit, ispin_ , nspin_ , c(:,:), ngwt_ , nbnd_ , ig_l2g, ngw )
-      IF( ionode ) CLOSE( unit = 10 )
+      !
+      IF( PRESENT( c4 ) ) THEN
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         c4(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+      ELSE IF( PRESENT( c2 ) ) THEN
+            ib = iupdwn(ispin)
+            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                         c2( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
+                         ngw, filename )
+      END IF
       !
       RETURN
-    END SUBROUTINE cp_read_wfc2
+    END SUBROUTINE cp_read_wfc
 
 !=----------------------------------=!
 
@@ -1001,11 +974,7 @@ MODULE cp_restart
       REAL(dbl) :: alat_
       REAL(dbl) :: celldm_ ( 6 )
 
-      dirname = 'RESTART' // int_to_char( ndr )
-      IF ( LEN( scradir ) > 1 ) THEN
-         strlen  = index(scradir,' ') - 1
-         dirname = scradir(1:strlen) // '/' // dirname
-      END IF
+      dirname  = restart_dir( scradir, ndr ) 
       filename = TRIM( dirname ) // '/' // 'restart.xml'
      
       IF( ionode ) THEN
@@ -1092,14 +1061,15 @@ MODULE cp_restart
 ! ..  This subroutine write wavefunctions to the disk
 !
 
-    SUBROUTINE write_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, ngwl )
+    SUBROUTINE write_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, ngwl, filename )
 !
       USE kinds, ONLY: dbl
       USE mp_wave
-      USE mp, ONLY: mp_sum, mp_get, mp_bcast, mp_max
+      USE mp,        ONLY: mp_sum, mp_get, mp_bcast, mp_max
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool, my_image_id
+                           nproc_pool, intra_pool_comm, root_pool, my_image_id
       USE io_global, ONLY: ionode, ionode_id
+      USE iotk_module
 !
       IMPLICIT NONE
 !
@@ -1110,104 +1080,137 @@ MODULE cp_restart
       INTEGER, INTENT(IN) :: nbnd
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN) :: filename
 
       INTEGER :: i, j, ierr
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER :: npool, ipmask( nproc ), ipsour
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
+      INTEGER                       :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx)   :: attr
 
-      !
-      ! ... Subroutine Body
-      !
 
-        ! set working variables for k point index (ikt) and k points number (nkt)
-        ikt = ik
-        nkt = nk
+      ! set working variables for k point index (ikt) and k points number (nkt)
 
-        !  find out the number of pools
-        npool = nproc / nproc_pool 
+      ikt = ik
+      nkt = nk
 
-        !  find out number of k points blocks
-        nkbl = nkt / kunit  
+      !  find out the number of pools
 
-        !  k points per pool
-        nkl = kunit * ( nkbl / npool )
+      npool = nproc / nproc_pool 
 
-        !  find out the reminder
-        nkr = ( nkt - nkl * npool ) / kunit
+      !  find out number of k points blocks
 
-        !  Assign the reminder to the first nkr pools
-        IF( my_pool_id < nkr ) nkl = nkl + kunit
+      nkbl = nkt / kunit  
 
-        !  find out the index of the first k point in this pool
-        iks = nkl * my_pool_id + 1
-        IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
+      !  k points per pool
+      nkl = kunit * ( nkbl / npool )
+
+      !  find out the reminder
+      nkr = ( nkt - nkl * npool ) / kunit
+
+      !  Assign the reminder to the first nkr pools
+      IF( my_pool_id < nkr ) nkl = nkl + kunit
+
+      !  find out the index of the first k point in this pool
+      iks = nkl * my_pool_id + 1
+      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
       
-        !  find out the index of the last k point in this pool
-        ike = iks + nkl - 1
+      !  find out the index of the last k point in this pool
+      ike = iks + nkl - 1
 
-        ipmask = 0
-        ipsour = ionode_id
+      ipmask = 0
+      ipsour = ionode_id
 
-        !  find out the index of the processor which collect the data in the pool of ik
-        !
+      !  find out the index of the processor which collect the data in the pool of ik
+      !
+      IF( npool > 1 ) THEN
+        IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+          IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
+        END IF
+        CALL mp_sum( ipmask )
+        DO i = 1, nproc
+          IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
+        END DO
+      END IF
+
+      igwx = 0
+      ierr = 0
+      IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+        IF( ngwl > SIZE( igl ) ) THEN
+          ierr = 1
+        ELSE
+          igwx = MAXVAL( igl(1:ngwl) )
+        END IF
+      END IF
+
+      ! get the maximum G vector index within the pool
+      !
+      CALL mp_max( igwx, intra_pool_comm ) 
+
+      ! now notify all procs if an error has been found 
+      !
+      CALL mp_max( ierr ) 
+
+      IF( ierr > 0 ) &
+        CALL errore(' write_wfc ',' wrong size ngl ', ierr )
+
+      IF( ipsour /= ionode_id ) THEN
+        CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      END IF
+
+      ! IF( ionode ) WRITE(iuni) ngw, nbnd, ik, nk, kunit, ispin, nspin
+      ! IF( ionode ) WRITE(iuni) igwx
+
+      IF( ionode ) THEN
+         !
+         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         !
+         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_write_attr( attr, "ngw",   ngw, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nbnd",  nbnd )
+         CALL iotk_write_attr( attr, "ik",    ik )
+         CALL iotk_write_attr( attr, "nk",    nk )
+         CALL iotk_write_attr( attr, "kunit", kunit )
+         CALL iotk_write_attr( attr, "ispin", ispin )
+         CALL iotk_write_attr( attr, "nspin", nspin )
+         CALL iotk_write_attr( attr, "igwx",  igwx )
+         !
+         CALL iotk_write_empty( iuni, "INFO", attr )
+         !
+      END IF
+
+
+      ALLOCATE( wtmp( MAX(igwx,1) ) )
+      wtmp = 0.0d0
+
+      DO j = 1, nbnd
         IF( npool > 1 ) THEN
           IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-            IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
+            CALL mergewf( wf(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm )
           END IF
-          CALL mp_sum( ipmask )
-          DO i = 1, nproc
-            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
-          END DO
-        END IF
-
-        igwx = 0
-        ierr = 0
-        IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-          IF( ngwl > SIZE( igl ) ) THEN
-            ierr = 1
-          ELSE
-            igwx = MAXVAL( igl(1:ngwl) )
+          IF( ipsour /= ionode_id ) THEN
+            CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
           END IF
+        ELSE
+          CALL mergewf( wf(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
         END IF
+        IF ( ionode ) &
+            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
 
-        ! get the maximum G vector index within the pool
-        !
-        CALL mp_max( igwx, intra_pool_comm ) 
+      END DO
 
-        ! now notify all procs if an error has been found 
-        !
-        CALL mp_max( ierr ) 
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_write( iuni )
+         !
+      END IF
 
-        IF( ierr > 0 ) &
-          CALL errore(' write_wfc ',' wrong size ngl ', ierr )
-
-        IF( ipsour /= ionode_id ) THEN
-          CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
-        END IF
-
-        IF( ionode ) WRITE(iuni) ngw, nbnd, ik, nk, kunit, ispin, nspin
-        IF( ionode ) WRITE(iuni) igwx
-
-        ALLOCATE( wtmp( MAX(igwx,1) ) )
-        wtmp = 0.0d0
-
-        DO j = 1, nbnd
-          IF( npool > 1 ) THEN
-            IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-              CALL mergewf( wf(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm )
-            END IF
-            IF( ipsour /= ionode_id ) THEN
-              CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
-            END IF
-          ELSE
-            CALL mergewf( wf(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
-          END IF
-          IF( ionode ) WRITE(iuni) ( wtmp( i ), i=1,igwx )
-        END DO
-
-        DEALLOCATE( wtmp )
+      DEALLOCATE( wtmp )
 
       RETURN
     END SUBROUTINE write_wfc
@@ -1217,7 +1220,8 @@ MODULE cp_restart
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE read_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, ngwl )
+    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, &
+                         ngwl, filename )
 !
       USE kinds, ONLY: dbl
       USE mp_wave
@@ -1225,15 +1229,21 @@ MODULE cp_restart
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
         nproc_pool, intra_pool_comm, root_pool, my_image_id
       USE io_global, ONLY: ionode, ionode_id
+      USE iotk_module
 !
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      COMPLEX(dbl), INTENT(INOUT) :: wf(:,:)
-      INTEGER, INTENT(IN) :: ik, nk, kunit
-      INTEGER, INTENT(OUT) :: ngw, nbnd, ispin, nspin
+      COMPLEX(dbl), INTENT(OUT) :: wf(:,:)
+      INTEGER, INTENT(IN) :: ik, nk
+      INTEGER, INTENT(INOUT) :: kunit
+      INTEGER, INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN)    :: filename
+      INTEGER                       :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx)   :: attr
+
 
       INTEGER :: i, j
       COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
@@ -1243,101 +1253,118 @@ MODULE cp_restart
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx, igwx_
       INTEGER :: ik_, nk_, kunit_
       INTEGER :: npool, ipmask( nproc ), ipdest
-!
-! ... Subroutine Body
-!
 
-        IF( ionode ) READ(iuni) ngw, nbnd, ik_, nk_, kunit_, ispin, nspin
-        IF( ionode ) READ(iuni) igwx_
 
-        CALL mp_bcast( ngw, ionode_id )
-        CALL mp_bcast( nbnd, ionode_id )
-        CALL mp_bcast( ik_, ionode_id )
-        CALL mp_bcast( nk_, ionode_id )
-        CALL mp_bcast( kunit_, ionode_id )
-        CALL mp_bcast( ispin, ionode_id )
-        CALL mp_bcast( nspin, ionode_id )
-        CALL mp_bcast( igwx_, ionode_id )
-
-        IF( nproc_pool < 1 ) &
-          CALL errore( "read_wfc", " nproc_pool less than 1 ", 1 )
+      IF( nproc_pool < 1 ) &
+         CALL errore( "read_wfc", " nproc_pool less than 1 ", 1 )
      
-        IF( kunit < 1 ) &
-          CALL errore( "read_wfc", " kunit less than 1 ", 1 )
+      IF( kunit < 1 ) &
+         CALL errore( "read_wfc", " kunit less than 1 ", 1 )
 
-        ! set working variables for k point index (ikt) and k points number (nkt)
-        ikt = ik
-        nkt = nk
+      ! set working variables for k point index (ikt) and k points number (nkt)
+      ikt = ik
+      nkt = nk
 
-        !  find out the number of pools
-        npool = nproc / nproc_pool
+      !  find out the number of pools
+      npool = nproc / nproc_pool
 
-        !  find out number of k points blocks (each block contains kunit k points)
-        nkbl = nkt / kunit
+      !  find out number of k points blocks (each block contains kunit k points)
+      nkbl = nkt / kunit
 
-        !  k points per pool
-        nkl = kunit * ( nkbl / npool )
+      !  k points per pool
+      nkl = kunit * ( nkbl / npool )
 
-        !  find out the reminder
-        nkr = ( nkt - nkl * npool ) / kunit
+      !  find out the reminder
+      nkr = ( nkt - nkl * npool ) / kunit
 
-        !  Assign the reminder to the first nkr pools
-        IF( my_pool_id < nkr ) nkl = nkl + kunit
+      !  Assign the reminder to the first nkr pools
+      IF( my_pool_id < nkr ) nkl = nkl + kunit
 
-        !  find out the index of the first k point in this pool
-        iks = nkl * my_pool_id + 1
-        IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
+      !  find out the index of the first k point in this pool
+      iks = nkl * my_pool_id + 1
+      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
 
-        !  find out the index of the last k point in this pool
-        ike = iks + nkl - 1
+      !  find out the index of the last k point in this pool
+      ike = iks + nkl - 1
 
-        ipmask = 0
-        ipdest = ionode_id
+      ipmask = 0
+      ipdest = ionode_id
 
-        !  find out the index of the processor which collect the data in the pool of ik
-        IF( npool > 1 ) THEN
-          IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-            IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
-          END IF
-          CALL mp_sum( ipmask )
-          DO i = 1, nproc
-            IF( ipmask(i) == 1 ) ipdest = ( i - 1 )
-          END DO
-        END IF
-
-        igwx = 0
-        ierr = 0
+      !  find out the index of the processor which collect the data in the pool of ik
+      IF( npool > 1 ) THEN
         IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-          IF( ngwl > SIZE( igl ) ) THEN
-            ierr = 1
-          ELSE
-            igwx = MAXVAL( igl(1:ngwl) )
-          END IF
+            IF( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
         END IF
+        CALL mp_sum( ipmask )
+        DO i = 1, nproc
+          IF( ipmask(i) == 1 ) ipdest = ( i - 1 )
+        END DO
+      END IF
 
-        ! get the maximum index within the pool
-        !
-        CALL mp_max( igwx, intra_pool_comm ) 
-
-        ! now notify all procs if an error has been found 
-        !
-        CALL mp_max( ierr ) 
-
-        IF( ierr > 0 ) &
-          CALL errore(' read_restart_wfc ',' wrong size ngl ', ierr )
-
-        IF( ipdest /= ionode_id ) THEN
-          CALL mp_get( igwx, igwx, mpime, ionode_id, ipdest, 1 )
+      igwx = 0
+      ierr = 0
+      IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+        IF( ngwl > SIZE( igl ) ) THEN
+          ierr = 1
+        ELSE
+          igwx = MAXVAL( igl(1:ngwl) )
         END IF
+      END IF
 
-        ALLOCATE( wtmp( MAX(igwx_, igwx) ) )
+      ! get the maximum index within the pool
+      !
+      CALL mp_max( igwx, intra_pool_comm ) 
 
-        DO j = 1, nbnd
+      ! now notify all procs if an error has been found 
+      !
+      CALL mp_max( ierr ) 
+
+      IF( ierr > 0 ) &
+        CALL errore(' read_restart_wfc ',' wrong size ngl ', ierr )
+
+      IF( ipdest /= ionode_id ) THEN
+        CALL mp_get( igwx, igwx, mpime, ionode_id, ipdest, 1 )
+      END IF
+
+      IF ( ionode ) THEN
+          !
+          CALL iotk_open_read( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+          !
+          CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
+          !
+          CALL iotk_scan_empty( iuni, "INFO", attr )
+          !
+          CALL iotk_scan_attr( attr, "ngw",   ngw )
+          CALL iotk_scan_attr( attr, "nbnd",  nbnd )
+          CALL iotk_scan_attr( attr, "ik",    ik_ )
+          CALL iotk_scan_attr( attr, "nk",    nk_ )
+          CALL iotk_scan_attr( attr, "kunit", kunit_ )
+          CALL iotk_scan_attr( attr, "ispin", ispin )
+          CALL iotk_scan_attr( attr, "nspin", nspin )
+          CALL iotk_scan_attr( attr, "igwx",  igwx_ )
+          !
+      END IF
+
+      CALL mp_bcast( ngw,     ionode_id )
+      CALL mp_bcast( nbnd,    ionode_id )
+      CALL mp_bcast( ik_ ,    ionode_id )
+      CALL mp_bcast( nk_ ,    ionode_id )
+      CALL mp_bcast( kunit_ , ionode_id )
+      CALL mp_bcast( ispin,   ionode_id )
+      CALL mp_bcast( nspin,   ionode_id )
+      CALL mp_bcast( igwx_ ,  ionode_id )
+
+
+      ALLOCATE( wtmp( MAX(igwx_, igwx) ) )
+
+      DO j = 1, nbnd
 
             IF( j <= SIZE( wf, 2 ) ) THEN
 
-              IF( ionode ) READ(iuni) ( wtmp(i), i=1,igwx_ )
-              IF( igwx > igwx_ ) wtmp( (igwx_ + 1) : igwx ) = 0.0d0
+              IF ( ionode ) THEN 
+                CALL iotk_scan_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx_) )
+                IF( igwx > igwx_ ) wtmp( (igwx_ + 1) : igwx ) = 0.0d0
+              END IF
  
               IF( npool > 1 ) THEN
                 IF( ipdest /= ionode_id ) THEN
@@ -1352,9 +1379,18 @@ MODULE cp_restart
 
             END IF
 
-        END DO
+      END DO
 
-        DEALLOCATE( wtmp )
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_read( iuni )
+         !
+      END IF
+
+
+      DEALLOCATE( wtmp )
 
       RETURN
     END SUBROUTINE read_wfc

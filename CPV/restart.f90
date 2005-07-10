@@ -46,8 +46,9 @@
 !
       use ions_base, only: nsp, na
       use cell_base, only: s_to_r
-      use cp_restart, only: cp_writefile, cp_write_wfc
+      use cp_restart, only: cp_writefile
       USE electrons_base, ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
+      USE electrons_module, ONLY: ei
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -107,16 +108,11 @@
       CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
-        occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z  )
+        occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z, ei, &
+        c02 = c0, cm2 = cm  )
 
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
-
-      DO ispin = 1, nspin
-        ib = iupdwn(ispin)
-        CALL cp_write_wfc( ndw, ' ', 1, 1, ispin, nspin, c0( :, ib: ) , '0' )
-        CALL cp_write_wfc( ndw, ' ', 1, 1, ispin, nspin, cm( :, ib: ) , 'm' )
-      END DO
 
       return
       end subroutine writefile_cp
@@ -174,8 +170,7 @@
         RETURN
       ELSE IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
-          ib = iupdwn(ispin)
-          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, cm(:,ib:), 'm' )
+          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
         END DO
         RETURN
       END IF
@@ -187,7 +182,7 @@
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, vnhe, ekincm, mat_z, tens  )
+        xnhe0, xnhem, vnhe, ekincm, mat_z, tens, c02 = c0, cm2 = cm  )
 
       DEALLOCATE( taui_ )
 
@@ -202,12 +197,6 @@
       hold  = TRANSPOSE( htm )
       velh  = TRANSPOSE( htvel )
 
-      DO ispin = 1, nspin
-        ib = iupdwn(ispin)
-        CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c0(:,ib:) , '0' )
-        CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, cm(:,ib:) , 'm' )
-      END DO
-
       return
       end subroutine readfile_cp
 
@@ -219,7 +208,6 @@
      atoms_0, atoms_m, acc, taui, cdmi, &
      ht_m, ht_0, rho, desc, vpot, kp)
                                                                         
-        use electrons_module, only: nspin
         USE cell_module, only: boxdimensions, r_to_s
         USE brillouin, only: kpoints
         USE wave_types, ONLY: wave_descriptor
@@ -230,10 +218,11 @@
         USE io_global, ONLY: stdout
         USE charge_types, ONLY: charge_descriptor
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
-        USE electrons_base, ONLY: nbsp
+        USE electrons_base, ONLY: nbsp, nspin
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
-        USE cp_restart, ONLY: cp_writefile, cp_write_wfc
+        USE cp_restart, ONLY: cp_writefile
+        USE electrons_module, ONLY: ei
 
         IMPLICIT NONE 
  
@@ -274,11 +263,9 @@
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, mat_z )
+          xnhe0, xnhem, vnhe, ekincm, mat_z, ei, c04 = c0, cm4 = cm )
 
         DEALLOCATE( lambda )
-
-        CALL cp_write_wfc( ndw, ' ', kp%nkpt, nspin, c0, cm )
 
         s1 = cclock()
 
@@ -324,7 +311,7 @@
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
-        USE cp_restart, ONLY: cp_readfile, cp_read_wfc
+        USE cp_restart, ONLY: cp_readfile
  
         IMPLICIT NONE 
  
@@ -365,11 +352,9 @@
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , b1, b2,   &
-          b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens )
+          b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens, c04 = c0, cm4 = cm )
 
         DEALLOCATE( lambda_ )
-
-        CALL cp_read_wfc( ndr, ' ', kp%nkpt, nspin, c0, cm )
 
         IF( .NOT. tbeg ) THEN
           CALL cell_init( ht_0, hp0_ )

@@ -40,6 +40,7 @@ MODULE xml_io_base
       !
       INTEGER,  EXTERNAL :: c_mkdir
       !
+      ierr = 0
       !
       IF ( ionode ) &
          ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
