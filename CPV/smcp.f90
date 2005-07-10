@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-! Version OSCP.01_050404
 !
 ! main subroutine for SMD by Yosuke Kanai
 !
@@ -15,44 +13,7 @@
 !
 subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
-  !=======================================================================
-  !***  Molecular Dynamics using Density-Functional Theory   ****
-  !***  this is a Car-Parrinello program using Vanderbilt pseudopotentials
-  !***********************************************************************
-  !***  based on version 11 of cpv code including ggapw 07/04/99
-  !***  copyright Alfredo Pasquarello 10/04/1996
-  !***  parallelized and converted to f90 by Paolo Giannozzi (2000),
-  !***  using parallel FFT written for PWSCF by Stefano de Gironcoli
-  !***  PBE added by Michele Lazzeri (2000)
-  !***  variable-cell dynamics by Andrea Trave (1998-2000)
-  !***********************************************************************
-  !***  appropriate citation for use of this code:
-  !***  Car-Parrinello method    R. Car and M. Parrinello, PRL 55, 2471 (1985) 
-  !***  current implementation   A. Pasquarello, K. Laasonen, R. Car, 
-  !***                           C. Lee, and D. Vanderbilt, PRL 69, 1982 (1992);
-  !***                           K. Laasonen, A. Pasquarello, R. Car, 
-  !***                           C. Lee, and D. Vanderbilt, PRB 47, 10142 (1993).
-  !***  implementation gga       A. Dal Corso, A. Pasquarello, A. Baldereschi,
-  !***                           and R. Car, PRB 53, 1180 (1996).
-  !***  string methods           Yosuke Kanai et al.  J. Chem. Phys., 2004, 121, 3359-3367
-  !***********************************************************************
-  !***  
-  !***  f90 version, with dynamical allocation of memory
-  !***  Variables that do not change during the dynamics are in modules
-  !***  (with some exceptions) All other variables are passed as arguments
-  !***********************************************************************
-  !***
-  !*** fft : uses machine's own complex fft routines, two real fft at the time
-  !*** ggen: g's only for positive halfspace (g>)
-  !*** all routines : keep equal c(g) and [c(-g)]*
-  !***
-  !***********************************************************************
-  !    general variables:
-  !     delt           = delta t
-  !     emass          = electron mass (fictitious)
-  !     dt2bye         = 2*delt/emass
-  !***********************************************************************
-  !
+  USE kinds, ONLY : dbl
   use control_flags, only: iprint, isave, thdyn, tpre, tbuff, iprsta, trhor, &
        tfor, tvlocw, trhow, taurdr, tprnfor, tsdc
   use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
@@ -96,7 +57,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use parameters, only: nacx, natx, nsx, nbndxx, nhclm
   use constants, only: pi, factem, au_gpa, au_ps, gpa_au
   use io_files, only: psfile, pseudo_dir, smwout, outdir
-  use input, only: iosys
   use wave_base, only: wave_steepest, wave_verlet
   use wave_base, only: wave_speed2, frice, grease
   USE control_flags, ONLY : conv_elec, tconvthrs
@@ -104,11 +64,12 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   USE cpr_subroutines
   use ions_positions, only: tau0, velsp
   use ions_positions, only: ions_hmove, ions_move
-  use ions_nose, only: gkbt, qnp, ions_nosevel, ions_noseupd, tempw, &
-                       ions_nose_nrg, kbt, nhpcl, ndega, nhpdim, atm2nhp
   USE cell_base, ONLY: cell_kinene, cell_move, cell_gamma, cell_hmove
-  USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh, &
-        cell_nosevel, cell_noseupd, cell_nose_nrg, cell_nosezero
+  
+  use ions_nose, only: gkbt, qnp, tempw, kbt, nhpcl, &
+                       ndega, nhpdim, atm2nhp, ekin2nhp
+  USE cell_nose, ONLY: xnhh0, xnhhm, xnhhp, vnhh, temph, qnh
+  
   USE gvecw, ONLY: ecutw
   USE gvecp, ONLY: ecutp
 
@@ -117,7 +78,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   use cp_electronic_mass, only: emass, emaec => emass_cutoff
   use cp_electronic_mass, only: emass_precond
 
-  use electrons_nose, only: qne, ekincw, electrons_nose_nrg, electrons_nose_shiftvar
+  use electrons_nose, only: qne, ekincw, electrons_nose_nrg, &
+                            electrons_nose_shiftvar
 
 
   USE path_variables, only: smx, &
@@ -154,9 +116,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   ! output variables
   !
   integer :: nat_out
-  real(kind=8) :: tau( 3, nat_out, 0:* )
-  real(kind=8) :: fion_out( 3, nat_out, 0:* )
-  real(kind=8) :: etot_out( 0:* )
+  real(KIND=dbl) :: tau( 3, nat_out, 0:* )
+  real(KIND=dbl) :: fion_out( 3, nat_out, 0:* )
+  real(KIND=dbl) :: etot_out( 0:* )
   !
   !
   ! control variables
@@ -165,21 +127,21 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   logical tfirst, tlast
   logical tstop
   logical tconv
-  real(kind=8) :: delta_etot
+  real(KIND=dbl) :: delta_etot
   !
   !
   ! work variables
   !
-  complex(kind=8)  speed
-  real(kind=8)                                                      &
+  complex(KIND=dbl)  speed
+  real(KIND=dbl)                                                      &
        &       vnhp(nhclm,smx), xnhp0(nhclm,smx), xnhpm(nhclm,smx), &
        &       tempp(smx), xnhe0(smx), fccc(smx), xnhem(smx), vnhe(smx),  &
        &       epot(smx), xnhpp(nhclm,smx), xnhep(smx), epre(smx), enow(smx),   &
        &       econs(smx), econt(smx), ccc(smx)
-  real(kind=8) temps(nsx) 
-  real(kind=8) verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
+  real(KIND=dbl) temps(nsx) 
+  real(KIND=dbl) verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
        &       dt2by2, twodel, gausp, dt2bye, dt2hbe, savee, savep
-  real(kind=8) ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
+  real(KIND=dbl) ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
        &       ekinc(smx), pre_ekinc(smx), enthal(smx)
   !
   integer is, nacc, ia, j, iter, nfi, i, isa, ipos
@@ -187,76 +149,52 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   !
   ! work variables, 2
   !
-  real(kind=8) fcell(3,3), hnew(3,3), velh(3,3), hgamma(3,3)
-  real(kind=8) cdm(3)
-  real(kind=8) qr(3)
-  real(kind=8) temphh(3,3)
-  real(kind=8) thstress(3,3) 
+  real(KIND=dbl) fcell(3,3), hnew(3,3), velh(3,3), hgamma(3,3)
+  real(KIND=dbl) cdm(3)
+  real(KIND=dbl) qr(3)
+  real(KIND=dbl) temphh(3,3)
+  real(KIND=dbl) thstress(3,3) 
   !
   integer k, ii, l, m
-  real(kind=8) ekinh, alfar, temphc, alfap, temp1, temp2, randy
-  real(kind=8) ftmp
+  real(KIND=dbl) ekinh, alfar, temphc, alfap, temp1, temp2, randy
+  real(KIND=dbl) ftmp
 
   character(len=256) :: filename
   character(len=256) :: dirname
   integer :: strlen, dirlen
   !
-  character :: unitsmw*2, unitnum*2  
+  character(len=2) :: unitsmw, unitnum 
   !
   !
   !     SMD 
   !
-  real(kind=8) :: t_arc_pre, t_arc_now, t_arc_tot
+  real(KIND=dbl) :: t_arc_pre, t_arc_now, t_arc_tot
   integer :: sm_k,sm_file,sm_ndr,sm_ndw,unico,unifo,unist
   integer :: smpm,con_ite 
 
-  real(kind=8) :: workvec(3,natx,nsx) 
-  real(kind=8), allocatable :: deviation(:)
-  real(kind=8), allocatable :: maxforce(:)
-  real(kind=8), allocatable :: arc_now(:)
-  real(kind=8), allocatable :: arc_tot(:)
-  real(kind=8), allocatable :: arc_pre(:)
-  real(kind=8), allocatable :: paraforce(:)
-  real(kind=8), allocatable :: err_const(:)
+  real(KIND=dbl) :: workvec(3,natx,nsx) 
+  real(KIND=dbl), allocatable :: deviation(:)
+  real(KIND=dbl), allocatable :: maxforce(:)
+  real(KIND=dbl), allocatable :: arc_now(:)
+  real(KIND=dbl), allocatable :: arc_tot(:)
+  real(KIND=dbl), allocatable :: arc_pre(:)
+  real(KIND=dbl), allocatable :: paraforce(:)
+  real(KIND=dbl), allocatable :: err_const(:)
   integer, allocatable :: pvvcheck(:)
   !
   type(ptr), allocatable :: p_tau0(:)
   type(ptr), allocatable :: p_taup(:)
   type(ptr), allocatable :: p_tan(:)
   !
-  real(kind=8), allocatable :: mat_z(:,:,:)
-
-#ifdef __SMD
+  real(KIND=dbl), allocatable :: mat_z(:,:,:)
   !
   !
   !     CP loop starts here
   !
   call start_clock( 'initialize' )
-  !
-  !
-  !     ==================================================================
-  !     ====  units and constants                                     ====
-  !     ====  1 hartree           = 1 a.u.                            ====
-  !     ====  1 bohr radius       = 1 a.u. = 0.529167 Angstrom        ====
-  !     ====  1 rydberg           = 1/2 a.u.                          ====
-  !     ====  1 electron volt     = 1/27.212 a.u.                     ====
-  !     ====  1 kelvin *k-boltzm. = 1/(27.212*11606) a.u.'='3.2e-6 a.u====
-  !     ====  1 second            = 1/(2.4189)*1.e+17 a.u.            ====
-  !     ====  1 proton mass       = 1822.89 a.u.                      ====
-  !     ====  1 tera              = 1.e+12                            ====
-  !     ====  1 pico              = 1.e-12                            ====
-  !     ==================================================================
 
   tps     = 0.0d0
 
-  !
-  !     ==================================================================
-  !     read input from standard input (unit 5)
-  !     ==================================================================
-
-  call iosys( )
-
-  call init_dimensions( )
   !
   !     ==================================================================
   !
@@ -859,7 +797,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
      rep(sm_k)%fionm=0.d0
      CALL ions_vel(  rep(sm_k)%vels,  rep(sm_k)%taus,  rep(sm_k)%tausm, na, nsp, delt )
 
-     CALL cell_nosezero( vnhh, xnhh0, xnhhm )
      velh = ( h - hold ) / delt
      !
      !     ======================================================
@@ -929,21 +866,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         sm_file = smwout + sm_k
         sm_ndr = ndr + sm_k
         !
-        !
         !     calculation of velocity of nose-hoover variables
         !
         if(.not.tsde) fccc(sm_k)=1./(1.+frice)
-        if(tnosep)then
-           CALL ions_nosevel( vnhp(:,sm_k), xnhp0(:,sm_k), xnhpm(:,sm_k), delt )
-        endif
-        if(tnosee)then
-           CALL elec_nosevel( vnhe(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, fccc(sm_k) )
-        endif
-        if(tnoseh) then
-           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
-           velh(:,:)=2.0d0*(h(:,:)-hold(:,:))/delt-velh(:,:)
-        endif
-        ! 
         !
         call initbox ( rep(sm_k)%tau0, taub, irb )
         call phbox(taub,eigrb)
@@ -1298,8 +1223,9 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         !     ionic temperature
         !
         if( tfor ) then
-          CALL ions_temp( tempp(sm_k), temps, ekinpr(sm_k), rep(sm_k)%vels, na, nsp, &
-            hold, pmass, ndega )
+          CALL ions_temp( tempp(sm_k), temps, ekinpr(sm_k), rep(sm_k)%vels, &
+                          na, nsp, hold, pmass, ndega, nhpdim, atm2nhp,     &
+                          ekin2nhp )
         endif
         !
         !     fake electronic kinetic energy
@@ -1322,19 +1248,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
            temphc=2.*factem*ekinh/3.
         else
            temphc=2.*factem*ekinh/9.
-        endif
-        !
-        !     udating nose-hoover friction variables
-        !
-        if(tnosep)then
-           CALL ions_noseupd( xnhpp( :, sm_k), xnhp0( :, sm_k), xnhpm( :, sm_k), delt, qnp, &
-             ekinpr(sm_k), gkbt, vnhp( :, sm_k), kbt, nhpcl, 1 )
-        endif
-        if(tnosee)then
-           call elec_noseupd( xnhep(sm_k), xnhe0(sm_k), xnhem(sm_k), delt, qne, ekinc(sm_k), ekincw, vnhe(sm_k) )
-        endif
-        if(tnoseh)then
-           call cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
         endif
         !
         ! warning! thdyn and tcp/tcap are not compatible yet!!!
@@ -1371,14 +1284,8 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         econs(sm_k)=ekinp(sm_k)+ekinh+enthal(sm_k)
         econt(sm_k)=econs(sm_k)+ekinc(sm_k)
         !
-        if(tnosep)then
-           econt(sm_k)=econt(sm_k)+ ions_nose_nrg( xnhp0(:,sm_k), vnhp(:,sm_k), qnp, gkbt, kbt, nhpcl, 1 )
-        endif
         if(tnosee)then
            econt(sm_k)=econt(sm_k)+ electrons_nose_nrg( xnhe0(sm_k), vnhe(sm_k), qne, ekincw )
-        endif
-        if(tnoseh)then
-           econt(sm_k) = econt(sm_k) + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
         endif
         !
         !     ... Writing the smfiles ...
@@ -1741,8 +1648,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
   IF( ALLOCATED( p_taup )) DEALLOCATE( p_taup )
   IF( ALLOCATED( p_tan )) DEALLOCATE( p_tan )
 
-
-  call ions_nose_deallocate()
   CALL deallocate_modules_var()
 
   CALL deallocate_smd_rep()
@@ -1758,9 +1663,6 @@ subroutine smdmain( tau, fion_out, etot_out, nat_out )
         CLOSE(sm_file)
      ENDDO
   end if
-
-#endif
-
   !
   return
 end subroutine smdmain
