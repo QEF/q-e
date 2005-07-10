@@ -215,7 +215,7 @@ smallg_q.o \
 spinor.o \
 sph_ind.o \
 startup.o \
-stop_pw.o \
+stop_run.o \
 stres_cc.o \
 stres_ewa.o \
 stres_gradcorr.o \

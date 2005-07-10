@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#define IPRINT 1
+#define AUTOMATIC_K
 !
 !---------------------------------------------------------------------------
 MODULE path_base
@@ -132,22 +132,17 @@ MODULE path_base
       !
       IF ( lneb ) THEN
          !
-         ! ... elastic constants are rescaled here on
-         ! ... the base of the input time step ds ( m = 5 ) :
+#if defined (AUTOMATIC_K)
+         !
+         ! ... elastic constants are rescaled here on the base
+         ! ... of the input time step ds :
          !
          k_ratio = k_min / k_max
          !
-         IF ( lbroyden ) THEN
-            !
-            k_max = ( pi / 2.D0 )**2 / 16.D0
-            !
-         ELSE
-            !
-            k_max = ( pi / ds )**2 / 16.D0
-            !
-         END IF
+         k_max = ( pi / ds )**2 / 16.D0
          !
          k_min = k_max * k_ratio
+#endif
          !
       ELSE IF ( lsmd ) THEN
          !
@@ -455,7 +450,6 @@ MODULE path_base
     SUBROUTINE real_space_tangent( index )
       !-----------------------------------------------------------------------
       !
-      USE supercell,      ONLY : pbc
       USE path_variables, ONLY : pos, dim, num_of_images, pes, tangent
       !
       IMPLICIT NONE
@@ -475,13 +469,13 @@ MODULE path_base
       !
       IF ( index == 1 ) THEN
          !
-         tangent(:,index) = pbc( pos(:,index+1) - pos(:,index) )
+         tangent(:,index) = pos(:,index+1) - pos(:,index)
          !
          RETURN
          !
       ELSE IF ( index == num_of_images ) THEN
          !
-         tangent(:,index) = pbc( pos(:,index ) - pos(:,index-1) )
+         tangent(:,index) = pos(:,index ) - pos(:,index-1)
          !
          RETURN
          !
@@ -493,11 +487,11 @@ MODULE path_base
       !
       IF ( ( V_next > V_actual ) .AND. ( V_actual > V_previous ) ) THEN
          !
-         tangent(:,index) = pbc( pos(:,index+1) - pos(:,index) )
+         tangent(:,index) = pos(:,index+1) - pos(:,index)
          !
       ELSE IF ( ( V_next < V_actual ) .AND. ( V_actual < V_previous ) ) THEN
          !
-         tangent(:,index) = pbc( pos(:,index) - pos(:,index-1) )
+         tangent(:,index) = pos(:,index) - pos(:,index-1)
          !
       ELSE
          !
@@ -509,19 +503,17 @@ MODULE path_base
          !
          IF ( V_next > V_previous ) THEN
             !
-            tangent(:,index) = &
-                         pbc( pos(:,index+1) - pos(:,index) ) * delta_V_max + & 
-                         pbc( pos(:,index) - pos(:,index-1) ) * delta_V_min
+            tangent(:,index) = pos(:,index+1) - pos(:,index) * delta_V_max + & 
+                               pos(:,index) - pos(:,index-1) * delta_V_min
             !
          ELSE IF ( V_next < V_previous ) THEN
             !
-            tangent(:,index) = &
-                         pbc( pos(:,index+1) - pos(:,index) ) * delta_V_min + &
-                         pbc( pos(:,index) - pos(:,index-1) ) * delta_V_max
+            tangent(:,index) = pos(:,index+1) - pos(:,index) * delta_V_min + &
+                               pos(:,index) - pos(:,index-1) * delta_V_max
             !
          ELSE
             !
-            tangent(:,index) = pbc( pos(:,index+1) - pos(:,index-1) ) 
+            tangent(:,index) = pos(:,index+1) - pos(:,index-1)
             !
          END IF
          !
@@ -579,7 +571,6 @@ MODULE path_base
     SUBROUTINE neb_gradient()
       !------------------------------------------------------------------------
       !
-      USE supercell,      ONLY : pbc
       USE path_variables, ONLY : pos, grad, norm_grad, elastic_grad,   &
                                  grad_pes, k, lmol_dyn, num_of_images, &
                                  climbing, tangent, mass
@@ -601,8 +592,8 @@ MODULE path_base
             ! ... consatnt is used ) NEB recipe
             !
             elastic_grad = tangent(:,i) * 0.5D0 * &
-                ( ( k(i) + k(i-1) ) * norm( pbc( pos(:,i) - pos(:,(i-1)) ) ) - &
-                  ( k(i) + k(i+1) ) * norm( pbc( pos(:,(i+1)) - pos(:,i) ) ) )
+                       ( ( k(i) + k(i-1) ) * norm( pos(:,i) - pos(:,(i-1)) ) - &
+                         ( k(i) + k(i+1) ) * norm( pos(:,(i+1)) - pos(:,i) ) )
             !
          END IF
          !
@@ -1039,9 +1030,9 @@ MODULE path_base
          IF ( meta_ionode ) &
             WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
          !
-         ! ... the restart file is written (in real space)
+         ! ... the restart file is written
          !
-         IF ( MOD( istep_path, IPRINT ) == 0 ) CALL write_restart()
+         CALL write_restart()
          !
          IF ( suspended_image == 0 ) THEN
             !
@@ -1103,7 +1094,9 @@ MODULE path_base
             !
             CALL write_restart()
             !
-            CALL stop_pw( .FALSE. )
+            conv_path = .FALSE.
+            !
+            RETURN
             !
          END IF
          !

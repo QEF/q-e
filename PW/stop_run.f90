@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE stop_pw( flag )
+SUBROUTINE stop_run( flag )
   !----------------------------------------------------------------------------
   !
   ! ... Close all files and synchronize processes before stopping.
@@ -109,7 +109,7 @@ SUBROUTINE stop_pw( flag )
      !
   END IF
   !
-END SUBROUTINE stop_pw
+END SUBROUTINE stop_run
 !
 !
 !----------------------------------------------------------------------------
@@ -123,7 +123,7 @@ SUBROUTINE closefile()
   !
   WRITE( stdout,'(5X,"Signal Received, stopping ... ")')
   !
-  CALL stop_pw( .FALSE. )
+  CALL stop_run( .FALSE. )
   !
   RETURN
   !

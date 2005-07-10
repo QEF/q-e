@@ -75,7 +75,7 @@ PROGRAM pwscf
      !
      CALL io_path_stop()
      !  
-     CALL stop_pw( conv_path )
+     CALL stop_run( conv_path )
      !
   ELSE
      !
@@ -91,7 +91,7 @@ PROGRAM pwscf
         !
         CALL electrons()
         !
-        IF ( .NOT. conv_elec ) CALL stop_pw( conv_elec )
+        IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
         !
         ! ... if requested ions are moved
         !
@@ -109,7 +109,7 @@ PROGRAM pwscf
      !
      CALL punch()
      !
-     CALL stop_pw( conv_ions )
+     CALL stop_run( conv_ions )
      !
   END IF      
   !

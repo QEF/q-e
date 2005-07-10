@@ -102,7 +102,6 @@ smd.o  \
 smlam.o \
 spharmonic.o \
 spline.o \
-stop_pw.o \
 stop_run.o \
 stress.o \
 turbo.o \
