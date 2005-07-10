@@ -142,9 +142,7 @@ PROGRAM main
      !
   END IF
   !
-  CALL environment_end( )
-  !
-  CALL mp_end()
+  CALL stop_run( .TRUE. )
   !
   STOP
   !

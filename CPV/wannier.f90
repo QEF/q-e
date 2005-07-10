@@ -355,7 +355,6 @@ MODULE wannier_subroutines
   SUBROUTINE write_charge_and_exit( rhog )
     !--------------------------------------------------------------------------
     !
-    USE mp,           ONLY : mp_end
     USE wannier_base, ONLY : writev
     !
     IMPLICIT NONE
@@ -368,9 +367,7 @@ MODULE wannier_subroutines
        !
        CALL write_rho_g( rhog )
        !
-       CALL mp_end()
-       !
-       STOP 'write_charge_and_exit'
+       CALL stop_run( .TRUE. )
        !
     END IF
     !
@@ -387,7 +384,6 @@ MODULE wannier_subroutines
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
     USE wannier_module, ONLY : what1, wfc, utwf
-    USE mp,             ONLY : mp_end
     USE control_flags,  ONLY : iprsta
     !
     IMPLICIT NONE
@@ -418,28 +414,30 @@ MODULE wannier_subroutines
           j=wffort+i-1
           CALL rhoiofr (nfi,cm, irb, eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,j)
        END DO
-       CALL mp_end()
-       STOP 'wf_options 1'
+       !
+       CALL stop_run( .TRUE. )
+       !
     END IF
     !
-    IF (calwf.EQ.2) THEN
-
-       !     calculate the overlap matrix
+    IF ( calwf == 2 ) THEN
+       !
+       ! ... calculate the overlap matrix
        !
        jwf=1
+       !
        CALL wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-
-       CALL mp_end()
-       STOP 'wf_options 2'
+       !
+       CALL stop_run( .TRUE. )
+       !
     END IF
     !
     IF (calwf.EQ.5) THEN
        !
        jwf=iplot(1)
        CALL wf (calwf,cm(:,:,1,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
-
-       CALL mp_end()
-       STOP 'wf_options 5'
+       !
+       CALL stop_run( .TRUE. )
+       !
     END IF
     !
     ! ... End Wannier Function options - M.S
@@ -652,7 +650,6 @@ MODULE wannier_subroutines
     USE efcalc,         ONLY : wf_efield
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
     USE wannier_module, ONLY : what1, wfc, utwf
-    USE mp,             ONLY : mp_end
     USE control_flags,  ONLY : iprsta
     USE electrons_base, ONLY : nbsp
     USE gvecw,          ONLY : ngw
@@ -711,8 +708,7 @@ MODULE wannier_subroutines
                        vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
                        fion, tps, mat_z, occ_f )
        !
-       CALL mp_end()
-       STOP 'wf_closing_options 4'
+       CALL stop_run( .TRUE. )
        !
     END IF
     !

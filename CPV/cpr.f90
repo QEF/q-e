@@ -81,10 +81,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, nhpdim, qnp, &
                                        vnhp, xnhp0, xnhpm, xnhpp, atm2nhp, &
                                        ions_nosevel, ions_noseupd, &
-                                       ions_nose_allocate, ions_nose_deallocate,&
-                                       tempw, ions_nose_nrg, &
-                                       ions_nose_shiftvar, gkbt2nhp, ekin2nhp, &
-                                       anum2nhp
+                                       ions_nose_allocate, tempw,  &
+                                       ions_nose_nrg, ions_nose_shiftvar, &
+                                       gkbt2nhp, ekin2nhp, anum2nhp
   USE electrons_nose,           ONLY : qne, ekincw, xnhe0, xnhep, xnhem,  &
                                        vnhe, electrons_nose_nrg,          &
                                        electrons_nose_shiftvar,           &
@@ -1019,20 +1018,10 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )
 1976 FORMAT( 1X,2I5,3F10.4 )
   !
-  IF( ionode ) WRITE( stdout, 1977 ) 
+  IF ( ionode ) &
+     WRITE( stdout, '(5X,//,24("=")," end cp ",24("="),//)' ) 
   !
   CALL memory()
-  !      
-1977 FORMAT(5X,//'====================== end cprvan ======================',//)
-  !
-! by Kostya
-! Something is fishy here, when deallocate_modules_var is called
-! IFC 8.0 and 8.1 spit out 
-!*** glibc detected *** free(): invalid next size (fast): 0x18b46af8 ***
-!forrtl: error (76): IOT trap signal
-! I could not find what is wrong ...
-  call ions_nose_deallocate()
-  CALL deallocate_modules_var()
   !
   RETURN
   !
