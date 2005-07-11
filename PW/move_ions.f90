@@ -263,7 +263,7 @@ SUBROUTINE move_ions()
            & /5X,'                   absolute magnetization has been found' )
 9020 FORMAT( /5X,'the program is checking if it is really ', &
            &     'the minimum energy structure',             &
-           & /5X,'by performing a new scf iteration',        & 
+           & /5X,'by performing a new scf iteration ',       & 
            &     'without any "electronic" history' )               
   !
 END SUBROUTINE move_ions     
