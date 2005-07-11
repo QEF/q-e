@@ -33,7 +33,6 @@ MODULE path_reparametrisation
       !------------------------------------------------------------------------
       !
       USE splinelib,        ONLY : dosplineint
-      USE supercell,        ONLY : pbc
       USE path_variables,   ONLY : pos, num_of_images, dim
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE path_variables,   ONLY : istep_path, path_thr, use_multistep, &
@@ -113,7 +112,7 @@ MODULE path_reparametrisation
       !
       DO i = 1, ( num_of_images - 1 )
          !
-         old_mesh(i+1) = old_mesh(i) + norm( pbc( pos(:,i+1) - pos(:,i) ) )
+         old_mesh(i+1) = old_mesh(i) + norm( pos(:,i+1) - pos(:,i) )
          !
       END DO
       !

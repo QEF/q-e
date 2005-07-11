@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -560,7 +560,6 @@ MODULE path_io_routines
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
-       USE supercell,        ONLY : pbc
        !
        IMPLICIT NONE
        !
@@ -603,7 +602,7 @@ MODULE path_io_routines
        !
        DO image = 1, ( num_of_images - 1 )
           !
-          d_R = pbc( pos(:,( image + 1 )) - pos(:,image) ) 
+          d_R = pos(:,( image + 1 )) - pos(:,image)
           !
           R = norm( d_R )
           !

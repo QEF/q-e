@@ -35,7 +35,7 @@ PROGRAM images_interpolator
   USE constants,              ONLY : eps16
   USE path_formats
   USE basic_algebra_routines, ONLY : norm
-  USE supercell,              ONLY : pbc, at, alat
+  USE cell_base,              ONLY : at, alat
   USE int_global_variables
   USE splinelib
   !
@@ -218,7 +218,7 @@ PROGRAM images_interpolator
   !
   DO i = 1, ( old_num_of_images - 1 )
      !
-     d_R = pbc( old_pos(:,(i+1)) - old_pos(:,i) )
+     d_R = old_pos(:,(i+1)) - old_pos(:,i)
      !
      R = norm( d_R )
      !

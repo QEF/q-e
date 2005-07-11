@@ -39,7 +39,6 @@ MODULES = \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/path_formats.o \
-../Modules/supercell.o \
 ../Modules/splinelib.o \
 ../Modules/timestep.o
 
