@@ -13,7 +13,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   USE kinds,                    ONLY : dbl
   USE constants,                ONLY : bohr_radius_angs, uma_au
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
+  USE control_flags,            ONLY : nfi, iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow, &
                                        taurdr, tprnfor, tsdc, lconstrain
   USE control_flags,            ONLY : ndr, ndw, nbeg, nomore, tsde, tortho, &
@@ -25,7 +25,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cvan,                     ONLY : nvb, ish
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
-                                       ekin, atot, entropy, egrand
+                                       ekin, atot, entropy, egrand, enthal, &
+                                       ekincm
   USE electrons_base,           ONLY : nbspx, nbsp, ispin => fspin, f, nspin
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
@@ -49,11 +50,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        ions_temp, ions_thermal_stress
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ions_shiftvar, ityp, &
-                                       atm, ind_bck
-  USE cell_base,                ONLY : ainv, a1, a2, a3, frich, greash, tpiba2
-  USE cell_base,                ONLY : omega, alat, ibrav, celldm
-  USE cell_base,                ONLY : h, hold, deth, wmass, press
-  USE cell_base,                ONLY : iforceh, cell_force, thdiag
+                                       atm, ind_bck, cdm, cdmi, fion, fionm
+  USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
+                                       greash, tpiba2, omega, alat, ibrav,  &
+                                       celldm, h, hold, hnew, velh, deth,   &
+                                       wmass, press, iforceh, cell_force,   &
+                                       thdiag
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
   USE smooth_grid_dimensions,   ONLY : nnrsx, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
@@ -85,7 +87,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        ions_nose_nrg, ions_nose_shiftvar, &
                                        gkbt2nhp, ekin2nhp, anum2nhp
   USE electrons_nose,           ONLY : qne, ekincw, xnhe0, xnhep, xnhem,  &
-                                       vnhe, electrons_nose_nrg,          &
+                                       vnhe, fccc, electrons_nose_nrg,    &
                                        electrons_nose_shiftvar,           &
                                        electrons_nosevel, electrons_noseupd
   USE from_scratch_module,      ONLY : from_scratch
@@ -135,39 +137,30 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   LOGICAL :: ttprint    
     !  logical variable used to control printout
   !
-  ! ... ionic positions, center of mass position
-  !
-  REAL(KIND=dbl) :: cdm0(3)
-  REAL(KIND=dbl) :: cdm(3)
-  !
   ! ... forces on ions
   !
-  REAL(KIND=dbl) :: fion(3,natx), fionm(3,natx)
   REAL(KIND=dbl) :: maxfion
   !
   ! ... work variables
   !
-  REAL(KIND=dbl) :: tempp,  fccc, savee, saveh, savep, enthal, epot, epre, &
+  REAL(KIND=dbl) :: tempp, savee, saveh, savep, epot, epre, &
                     enow, econs, econt, ettt, ccc, bigr, dt2bye
-  REAL(KIND=dbl) :: ekinc0, ekinp, ekinpr, ekincm, ekinc
+  REAL(KIND=dbl) :: ekinc0, ekinp, ekinpr, ekinc
   REAL(KIND=dbl) :: temps(nsx)
   REAL(KIND=dbl) :: ekinh, temphc, temp1, temp2, randy
   REAL(KIND=dbl) :: delta_etot
   REAL(KIND=dbl) :: ftmp, enb, enbi
-  INTEGER        :: is, nacc, ia, j, iter, nfi, i, isa, ipos
-  INTEGER        :: k, ii, l, m, ibeg
+  INTEGER        :: is, nacc, ia, j, iter, i, isa, ipos
+  INTEGER        :: k, ii, l, m
   !
-  REAL(KIND=dbl) :: hnew(3,3), velh(3,3), hgamma(3,3), temphh(3,3)
+  REAL(KIND=dbl) :: hgamma(3,3), temphh(3,3)
   REAL(KIND=dbl) :: fcell(3,3)
   !
-  REAL(KIND=dbl) :: b1(3), b2(3), b3(3)
   REAL(KIND=dbl) :: stress_gpa(3,3), thstress(3,3)
   !
   REAL(KIND=dbl), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
   !
-  !
-  CALL start_clock( 'initialize' )
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
@@ -175,166 +168,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   tfirst   = .TRUE.
   tlast    = .FALSE.
   nacc     = 5
-  !
-  CALL init_geometry()
-  !
-  IF ( lwf ) CALL clear_nbeg( nbeg )
-  !
-  ! ... more initialization requiring atomic positions
-  !
-  nax = MAXVAL( na(1:nsp) )
-  !
-  IF ( iprsta > 1 ) CALL print_atomic_var( tau0, na, nsp, ' tau0 ' )
-  !
-  !=======================================================================
-  !     allocate and initialize nonlocal potentials
-  !=======================================================================
-  !
-  CALL nlinit()
-  !
-  !=======================================================================
-  !     allocation of all arrays not already allocated in init and nlinit
-  !=======================================================================
-  !
-  CALL allocate_mainvar( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnrx, nnrsx, &
-                         nat, nax, nsp, nspin, nbsp, nbspx, nkb )
-  !
-  IF( nlcc_any ) THEN
-    ALLOCATE( rhoc( nnrx ) )
-  ELSE
-    !
-    ! ... dummy allocation required because this array appears in the
-    ! ... list of arguments of some routines
-    !
-    ALLOCATE( rhoc( 1 ) )
-  END IF
-  !
-  ALLOCATE( c0(  ngw, nbspx, 1, 1 ) )
-  ALLOCATE( cm(  ngw, nbspx, 1, 1 ) )
-  ALLOCATE( phi( ngw, nbspx, 1, 1 ) )
-  !
-  CALL allocate_local_pseudo( ngs, nsp )
-  !
-  ALLOCATE( vkb( ngw, nkb ) )
-  ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
-  ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
-  ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
-  ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
-  ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
-  ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
-  !
-  IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
-  !
-  IF ( tens .or. tcg) &
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
-                                 nspin, nbspx, nnrsx, natx )
-  !
-  IF( tcg ) CALL allocate_cg( ngw, nbspx )
-  !
-  IF( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
-  !
-  deeq(:,:,:,:) = 0.D0
-  !
-  temp1 = tempw + tolp
-  temp2 = tempw - tolp
-  !
-  !=======================================================================
-  !
-  taum  = tau0
-  taup  = 0.D0
-  tausm = taus
-  tausp = 0.D0
-  vels  = 0.D0
-  velsm = 0.D0
-  velsp = 0.D0
-  !
-  hnew=h
-  !
-  lambda(:,:) = 0.D0
-  cm(:,:,1,1) = ( 0.D0, 0.D0 )
-  c0(:,:,1,1) = ( 0.D0, 0.D0 )
-  !
-  IF ( tens ) CALL id_matrix_init( nupdwn, nspin )
-  !
-  CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
-  !
-  IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
-  !
-  IF ( nbeg < -1 ) THEN
-     !
-     !======================================================================
-     !     Initialize from scratch nbeg = -2 or nbeg = -3
-     !======================================================================
-     !
-     nfi = 0
-     !
-     CALL from_scratch ( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
-                         eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
-                         rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
-                         enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
-                         dbec, delt, bephi, becp, velh, dt2bye, iforce,    &
-                         fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
-     !
-  ELSE
-     !
-     !======================================================================
-     !     nbeg = -1, nbeg = 0, nbeg = 1 or nbeg = 2
-     !======================================================================
-     !
-     IF( nbeg == -1 ) THEN
-        !
-        ! ... read only wavefunction cm from restart
-        !
-        ! ibeg = 0  
-        ibeg = 1  !  DEBUG
-        !
-     ELSE
-        !
-        ! ... read all dynamic variable from restart
-        !
-        ibeg = 1
-        !
-     END IF
-     !
-     CALL readfile( ibeg, ndr, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, &
-                    tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
-                    vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm,   &
-                    vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,    &
-                    fion, tps, z0, f )
-     !
-     CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, fion, &
-                        taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, &
-                        rhoc, stress, detot, enthal, lambda, lambdam, lambdap, &
-                        ema0bg, dbec, bephi, becp, velh, dt2bye, fionm, ekincm )
-     !
-  END IF
-  !
-  !=======================================================================
-  !     restart with new averages and nfi=0
-  !=======================================================================
-  !
-  ! ... Fix. Center of Mass - M.S
-  !
-  IF ( lwf ) CALL ions_cofmass( tau0, pmass, na, nsp, cdm0 )
-  !
-  IF ( nbeg <= 0 ) THEN
-     !
-     acc = 0.D0
-     nfi = 0
-     !
-  END IF
-  !
-  IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion(:,:) = 0.D0
-  !
-  IF ( .NOT. tpre ) stress = 0.D0
-  !         
-  fccc = 1.D0
-  !
-  nomore = nomore + nfi
-  !
-  CALL ions_cofmass( taus, pmass, na, nsp, cdm0 )
-  !
-  CALL stop_clock( 'initialize' )
   !
   !======================================================================
   !
@@ -465,7 +298,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
-        CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdm0 )
+        CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdmi )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
         !

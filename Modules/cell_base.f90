@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -47,6 +47,12 @@
         REAL(dbl) :: a1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
         REAL(dbl) :: a2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
         REAL(dbl) :: a3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        
+        !  b1, b2 and b3 are the simulation reciprocal lattice vectors
+
+        REAL(dbl) :: b1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(dbl) :: b2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(dbl) :: b3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
 
         REAL(dbl) :: ainv(3,3) = 0.0d0
 
@@ -74,6 +80,8 @@
 
         REAL(dbl) :: h(3,3)    = 0.0d0 ! simulation cell at time t 
         REAL(dbl) :: hold(3,3) = 0.0d0 ! simulation cell at time t-delt
+        REAL(dbl) :: hnew(3,3) = 0.0d0 ! simulation cell at time t+delt
+        REAL(dbl) :: velh(3,3) = 0.0d0 ! simulation cell velocity
         REAL(dbl) :: deth      = 0.0d0 ! determinant of h ( cell volume )
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 

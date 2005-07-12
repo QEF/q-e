@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !------------------------------------------------------------------------------!
   MODULE electrons_base
 !------------------------------------------------------------------------------!
@@ -260,7 +259,9 @@
       REAL(dbl) :: xnhe0   = 0.0d0   
       REAL(dbl) :: xnhep   = 0.0d0   
       REAL(dbl) :: xnhem   = 0.0d0   
-      REAL(dbl) :: vnhe    = 0.0d0   
+      REAL(dbl) :: vnhe    = 0.0d0
+      
+      REAL(dbl) :: fccc    = 0.0d0
 !
 !------------------------------------------------------------------------------!
   CONTAINS

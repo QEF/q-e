@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,13 +20,10 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 !  evalue  : input, scale for electric field
 !  enbi    : output, berry phase energy of the ions
 
-     
-
-  
-  use constants, only: pi, fpi
-  use ions_base
-  use parameters, only: natx
-  use cell_base, only: a1, a2, a3
+  use constants,  only : pi, fpi
+  use ions_base,  ONLY : nsp, na, zv
+  use parameters, only : natx
+  use cell_base,  only : a1, a2, a3
 
   implicit none
 
@@ -125,7 +122,7 @@ end subroutine berryion
 ! to keep steady the center of mass along the electric
 ! field direction
 
-          use ions_base
+          use ions_base, ONLY : na, nsp, zv
 
           implicit none
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -63,13 +63,15 @@
         REAL(dbl)  :: ATOT = 0.0_dbl
         REAL(dbl)  :: ENTROPY = 0.0_dbl
         REAL(dbl)  :: EGRAND = 0.0_dbl
+        
+        REAL(KIND=dbl) :: enthal, ekincm
 
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
-          print_energies, debug_energies
+                  print_energies, debug_energies
 
-        PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc
+        PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm
 
-        PUBLIC :: atot, entropy, egrand
+        PUBLIC :: atot, entropy, egrand, enthal
 
       CONTAINS
 

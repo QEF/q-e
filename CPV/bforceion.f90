@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,14 +21,8 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 ! becdr      : input, factors d<beta_iR|Psi_j>/dR
 ! gqq        : input, Int_e exp(iG*r)*q_ijR(r)
 ! evalue     : input, scale of electric field
-
-      
-
-
  
- 
-  use ions_base
-  use ions_base, only : nas => nax
+  use ions_base, only : nas => nax, na, nsp
   use cvan
   use parameters
   use constants
@@ -116,5 +110,3 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
   return
 end subroutine bforceion
-
-

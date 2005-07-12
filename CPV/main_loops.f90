@@ -142,6 +142,8 @@ SUBROUTINE cpr_loop( nloop )
      !
   END IF
   !
+  CALL init_run()
+  !
   DO iloop = 1, nloop
      !
      CALL cprmain( tau(1,1), fion(1,1), etot )

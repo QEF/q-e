@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 PWSCF-FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,7 +44,7 @@ MODULE control_flags
   !
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
-            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,    &
+            nfi, ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,   &
             timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar, rhoout,  &
             trane, ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,      &
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
@@ -121,6 +121,7 @@ MODULE control_flags
   TYPE (ionic_conjugate_gradient) :: tconjgrad_ion
                             !  conjugate gradient for ionic minimization
 
+  INTEGER :: nfi    = 0 ! counter on the electronic iterations
   INTEGER :: nbeg   = 0 ! internal code for initialization ( -1, 0, 1, 2, .. )
   INTEGER :: ndw    = 0 !
   INTEGER :: ndr    = 0 !

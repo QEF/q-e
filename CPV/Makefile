@@ -53,6 +53,7 @@ gsmesh.o \
 gtable.o \
 guess.o \
 init.o \
+init_run.o \
 input.o \
 interfaces_main.o \
 interfaces.o \

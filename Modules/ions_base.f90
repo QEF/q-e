@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 PWSCF-FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -40,41 +40,41 @@
       !     tau( 1:3, i ) = position of the i-th atom
 
       INTEGER,   ALLOCATABLE :: ityp(:)
-      REAL(dbl), ALLOCATABLE :: tau(:,:)      !  initial positions read from stdin (in bohr)
-      REAL(dbl), ALLOCATABLE :: vel(:,:)      !  initial velocities read from stdin (in bohr)
-      REAL(dbl), ALLOCATABLE :: tau_srt(:,:)  !  tau sorted by specie in bohr
-      REAL(dbl), ALLOCATABLE :: vel_srt(:,:)  !  vel sorted by specie in bohr
-      INTEGER,   ALLOCATABLE :: ind_srt( : )  !  index of tau sorted by specie
-      INTEGER,   ALLOCATABLE :: ind_bck( : )  !  reverse of ind_srt
-      CHARACTER(LEN=3  ) :: atm( ntypx ) 
-      CHARACTER(LEN=80 ) :: tau_units
+      REAL(dbl), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
+      REAL(dbl), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
+      REAL(dbl), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
+      REAL(dbl), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
+      INTEGER,   ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
+      INTEGER,   ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
+      CHARACTER(LEN=3)       :: atm( ntypx ) 
+      CHARACTER(LEN=80)      :: tau_units
 
 
-      INTEGER, ALLOCATABLE :: if_pos(:,:)     ! if if_pos( x, i ) = 0 then  x coordinate of 
-                                              ! the i-th atom will be kept fixed
-      INTEGER, ALLOCATABLE :: iforce(:,:)     ! if_pos sorted by specie 
-      INTEGER :: fixatom   = -1               !!! to be removed
-      INTEGER :: ndofp     = -1               ! ionic degree of freedom
+      INTEGER, ALLOCATABLE :: if_pos(:,:)  ! if if_pos( x, i ) = 0 then  x coordinate of 
+                                           ! the i-th atom will be kept fixed
+      INTEGER, ALLOCATABLE :: iforce(:,:)  ! if_pos sorted by specie 
+      INTEGER :: fixatom   = -1            ! to be removed
+      INTEGER :: ndofp     = -1            ! ionic degree of freedom
 
       REAL(dbl) :: fricp   ! friction parameter for damped dynamics
       REAL(dbl) :: greasp  ! friction parameter for damped dynamics
 
-
-      ! ...     taui = real ionic positions in the center of mass reference
-      ! ...     system at istep = 0
-      ! ...     this array is used to compute mean square displacements,
-      ! ...     it is initialized when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
-      ! ...     first index: x,y,z, second index: atom sortred by specie with respect input
-      ! ...     this array is saved in the restart file
+      ! ... taui = real ionic positions in the center of mass reference
+      ! ... system at istep = 0
+      ! ... this array is used to compute mean square displacements,
+      ! ... it is initialized when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
+      ! ... first index: x,y,z, second index: atom sortred by specie with respect input
+      ! ... this array is saved in the restart file
 
       REAL(dbl), ALLOCATABLE ::  taui(:,:)
 
-      ! ...     cdmi = center of mass reference system (related to the taui)
-      ! ...     this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
-      ! ...     this array is saved in the restart file
+      ! ... cdmi = center of mass reference system (related to the taui)
+      ! ... this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
+      ! ... this array is saved in the restart file
 
-      REAL(dbl) ::  cdmi(3)
-
+      REAL(dbl) :: cdmi(3), cdm(3)
+      !
+      REAL(KIND=dbl) :: fion(3,natx), fionm(3,natx)
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
