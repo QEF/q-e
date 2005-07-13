@@ -385,8 +385,9 @@ ion_velocities CHARACTER
 
 ion_temperature  
                CHARACTER ( default = 'not_controlled' )
-               nose            = control ionic temperature using Nose 
-                                 thermostat. see parameters "fnosep" and "tempw"
+               nose            = control ionic temperature using Nose-Hoover
+                                 thermostat  see parameters "fnosep", "tempw",
+                                 "nhpcl", "ndega", "nhptyp"
                rescaling       = control ionic temperature via velocities 
                                  rescaling. see parameter "tolp"
                not_controlled  = ionic temperature is not controlled
@@ -396,16 +397,26 @@ tempw          REAL ( default = 300.D0 )
                value of the ionic temperature (in Kelvin) forced by the 
                temperature control.
                meaningful only with " ion_temperature /= 'not_controlled' "
+               "ndega" controls number of degrees of freedom used in 
+               temperature calculation
 
 fnosep         REAL ( default = 1.0D0 )
                oscillation frequency of the nose thermostat (in terahertz)
                meaningful only with " ion_temperature = 'nose' "
                for Nose-Hoover chain one can set frequencies of all thermostats
-               if only first is set, the defaults for the others should be same
+               ( fnosep = X Y Z etc. ) If only first is set, the defaults for 
+               the others will be same.
 
 nhpcl          INTEGER ( default = 1 )
                number of thermostats in the Nose-Hoover chain
                currently maximum allowed is 4
+
+nhptyp         INTEGER ( default = 0 )
+               type of the "massive" Nose-Hoover chain thermostat
+               nhptyp=1 uses a NH chain per each atomic type
+               nhptyp=2 uses a NH chain per atom, this one is really great
+               for extremely rapid equipartitioning (equilibration is a 
+               different beast)
 
 ndega          INTEGER ( default = 0 )
                number of degrees of freedom used for temperature calculation
