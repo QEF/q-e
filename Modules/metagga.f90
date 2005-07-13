@@ -6,14 +6,14 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !------------------------------------------------------------------------------!
-    MODULE metaflag   !Begin METAGGA
+MODULE metaflag
 !------------------------------------------------------------------------------!
-
-      IMPLICIT NONE
-      SAVE
-      LOGICAL :: ismeta  ! ismeta = .true. if metagga is used
-			 ! default value is .false.
-!
+  !
+  IMPLICIT NONE
+  SAVE
+  LOGICAL :: ismeta = .FALSE.   ! ismeta = .TRUE. if metagga is used
+			        ! default value is .FALSE.
+  !
 !------------------------------------------------------------------------------!
-    END MODULE metaflag   !End METAGGA
+END MODULE metaflag
 !------------------------------------------------------------------------------!

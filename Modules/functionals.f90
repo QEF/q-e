@@ -91,16 +91,16 @@ module funct
 
 CONTAINS
   !-----------------------------------------------------------------------
-  subroutine which_dft (dft_)
+  subroutine which_dft( dft_, ismeta )
     !-----------------------------------------------------------------------
     !
     ! translates a string containing the exchange-correlation name
     ! into internal indices iexch, icorr, igcx, igcc
     !
-    use metaflag, only : ismeta  !METAGGA
     implicit none
     ! input
-    character (len=*) :: dft_
+    character(len=*)               :: dft_
+    LOGICAL, OPTIONAL, INTENT(OUT) :: ismeta
     ! data
     integer :: nxc, ncc, ngcx, ngcc
     parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6) !METAGGA
@@ -203,16 +203,20 @@ CONTAINS
     end if
     
     !special case : META = tpss metaGGA Exc  !Begin METAGGA
-    ismeta = .false.
-    if (matches('META',dftout)) then
-       ismeta = .true.
-       call set_dft_value(iexch,1)!1
-       call set_dft_value(icorr,4)!4
-       call set_dft_value(igcx,7)
-       call set_dft_value(igcc,6)
-    end if  !END METAGGA
+    IF ( PRESENT( ismeta ) ) THEN
+       !
+       ismeta = .false.
+       !
+       if (matches('META',dftout)) then
+          ismeta = .true.
+          call set_dft_value(iexch,1)!1
+          call set_dft_value(icorr,4)!4
+          call set_dft_value(igcx,7)
+          call set_dft_value(igcc,6)
+       end if  !END METAGGA
+       !
+    END IF
    
-
     if (igcx == 6) &
          call errore('which_dft','OPTX untested! please test',-igcx)
     ! Default value: Slater exchange

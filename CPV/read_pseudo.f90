@@ -186,6 +186,7 @@ END FUNCTION calculate_dx
       use read_pseudo_module, only: read_pseudo_upf
       use control_flags, only: program_name, tuspp
       use funct, only: iexch, icorr, igcx, igcc, dft, which_dft
+      use metaflag, only : ismeta
 
       IMPLICIT NONE
 
@@ -359,7 +360,7 @@ END FUNCTION calculate_dx
           !  DFT xc functional, given from input
           !
           dft = TRIM( xc_type )
-          CALL which_dft( dft )
+          CALL which_dft( dft, ismeta )
           WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft
           !
         else
@@ -751,6 +752,7 @@ subroutine upf2internal ( upf, is, ierr )
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
   use funct, only: dft, which_dft
+  use metaflag, only : ismeta
   !
   use pseudo_types
   !
@@ -771,7 +773,7 @@ subroutine upf2internal ( upf, is, ierr )
   nlcc(is)  = upf%nlcc
   !
   dft = upf%dft
-  call which_dft (upf%dft)
+  call which_dft( upf%dft, ismeta )
   !
   mesh(is) = upf%mesh
   if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
@@ -841,6 +843,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
   use funct, only: dft, which_dft
+  use metaflag, only : ismeta
   !
   use pseudo_types
   !
@@ -868,7 +871,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
   !
   dft = TRIM( xc_type )
-  call which_dft ( TRIM( xc_type ) )
+  call which_dft( TRIM( xc_type ), ismeta )
   !
   !
   lchi( 1 : ap%nrps, is ) = ap%lrps( 1 : ap%nrps )
@@ -1196,6 +1199,7 @@ END SUBROUTINE read_atomic_cc
       use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: dft, which_dft
+      use metaflag, only : ismeta
       use ions_base, only: zv
       use io_global, only: stdout
 
@@ -1218,7 +1222,7 @@ END SUBROUTINE read_atomic_cc
       endif
 
       call dftname_cp (nint(exfact), dft)
-      call which_dft (dft)
+      call which_dft( dft, ismeta )
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
@@ -1633,6 +1637,7 @@ END SUBROUTINE read_atomic_cc
            rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
       use qrl_mod, only: cmesh, qrl
       use funct, only: dft, which_dft
+      use metaflag, only : ismeta
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use cvan, only: oldvan
       use ions_base, only: zv
@@ -1715,7 +1720,7 @@ END SUBROUTINE read_atomic_cc
 !
 
       call dftname_cp (nint(exfact), dft)
-      call which_dft (dft)
+      call which_dft( dft, ismeta )
 !
       read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios )              &
      &     nchi(is), mesh(is), etotpseu
