@@ -13,32 +13,33 @@ MODULE cp_main_variables
   !
   USE kinds,      ONLY : dbl
   USE parameters, ONLY : natx, nsx, nacx
+  USE metagga,    ONLY : ismeta, kedtaur, kedtaus, kedtaug
   !
   IMPLICIT NONE
   SAVE
   !
   ! ... structure factors e^{-ig*R}
   !
-  COMPLEX(dbl), ALLOCATABLE:: ei1(:,:), ei2(:,:), ei3(:,:)
-  COMPLEX(dbl), ALLOCATABLE:: eigr(:,:)
+  COMPLEX(KIND=dbl), ALLOCATABLE :: ei1(:,:), ei2(:,:), ei3(:,:)
+  COMPLEX(KIND=dbl), ALLOCATABLE :: eigr(:,:)
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
-  COMPLEX(dbl), ALLOCATABLE:: sfac(:,:)
+  COMPLEX(KIND=dbl), ALLOCATABLE:: sfac(:,:)
   !
   ! ... indexes, positions, and structure factors for the box grid
   !
-  REAL(dbl)                :: taub(3,natx)
-  COMPLEX(dbl), ALLOCATABLE:: eigrb(:,:)
-  INTEGER,      ALLOCATABLE:: irb(:,:)
+  REAL(KIND=dbl)                 :: taub(3,natx)
+  COMPLEX(KIND=dbl), ALLOCATABLE :: eigrb(:,:)
+  INTEGER,           ALLOCATABLE :: irb(:,:)
   ! 
   ! ... charge densities and potentials
   ! ...    rhog  = charge density in g space
   ! ...    rhor  = charge density in r space (dense grid)
   ! ...    rhos  = charge density in r space (smooth grid)
   !
-  COMPLEX(dbl), ALLOCATABLE:: rhog(:,:)
-  REAL(dbl),    ALLOCATABLE:: rhor(:,:), rhos(:,:)
+  COMPLEX(KIND=dbl), ALLOCATABLE :: rhog(:,:)
+  REAL(KIND=dbl),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
   !
   ! ... nonlocal projectors:
   ! ...    bec   = scalar product of projectors and wave functions
@@ -47,18 +48,18 @@ MODULE cp_main_variables
   ! ...    rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
-  REAL(dbl), ALLOCATABLE:: bec(:,:), becdr(:,:,:)
-  REAL(dbl), ALLOCATABLE:: bephi(:,:), becp(:,:)
+  REAL(KIND=dbl), ALLOCATABLE :: bec(:,:), becdr(:,:,:)
+  REAL(KIND=dbl), ALLOCATABLE :: bephi(:,:), becp(:,:)
   !
   ! ... mass preconditioning
   !
-  REAL(dbl), ALLOCATABLE:: ema0bg(:)
+  REAL(KIND=dbl), ALLOCATABLE :: ema0bg(:)
   !
   ! ... constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
   !
-  REAL(dbl), ALLOCATABLE:: lambda(:,:), lambdam(:,:), lambdap(:,:)
+  REAL(KIND=dbl), ALLOCATABLE :: lambda(:,:), lambdam(:,:), lambdap(:,:)
   !
-  REAL(dbl) :: acc(nacx)
+  REAL(KIND=dbl) :: acc(nacx)
   !
   CONTAINS
     !
@@ -95,6 +96,24 @@ MODULE cp_main_variables
       ALLOCATE( rhos( nnrsx, nspin ) )
       ALLOCATE( rhog( ng,    nspin ) )
       !
+      IF ( ismeta ) THEN
+         !
+         ! ... METAGGA
+         !
+         ALLOCATE( kedtaur( nnr,   nspin ) )
+         ALLOCATE( kedtaus( nnrsx, nspin ) )
+         ALLOCATE( kedtaug( ng,    nspin ) )
+         !
+      ELSE
+         !
+         ! ... dummy allocation required because this array appears in the
+         ! ... list of arguments of some routines
+         !
+         ALLOCATE( kedtaur( 1, nspin ) )
+         ALLOCATE( kedtaus( 1, nspin ) )
+         ALLOCATE( kedtaug( 1, nspin ) )
+         !
+      END IF
       !
       ALLOCATE( ema0bg( ngw ) )
       !
@@ -139,6 +158,9 @@ MODULE cp_main_variables
       IF( ALLOCATED( lambda ) )  DEALLOCATE( lambda )
       IF( ALLOCATED( lambdam ) ) DEALLOCATE( lambdam )
       IF( ALLOCATED( lambdap ) ) DEALLOCATE( lambdap )
+      IF( ALLOCATED( kedtaur ) ) DEALLOCATE( kedtaur )
+      IF( ALLOCATED( kedtaus ) ) DEALLOCATE( kedtaus )
+      IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
       !
       RETURN
       !

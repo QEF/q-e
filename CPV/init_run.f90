@@ -67,6 +67,7 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
+  USE metagga,                  ONLY : ismeta,crosstaus,dkedtaus,gradwfc  !METAGGA
   !
   IMPLICIT NONE
   !
@@ -122,6 +123,12 @@ SUBROUTINE init_run()
   ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
+  IF (ismeta .and. tens) CALL errore('cprmain','ensemble_dft not implimented for metaGGA',1)
+  IF (ismeta .and. tpre) THEN  !Begin METAGGA
+     ALLOCATE(crosstaus(nnrsx,6,nspin))
+     ALLOCATE(dkedtaus(nnrsx,3,3,nspin))
+     ALLOCATE(gradwfc(nnrsx,3))
+  END IF  !End METAGGA
   !
   IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
   !

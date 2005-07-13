@@ -65,6 +65,8 @@ macdep.o \
 main.o \
 mainvar.o \
 main_loops.o \
+cplib_meta.o \
+metaxc.o \
 modules.o \
 move_electrons.o \
 nl_base.o \

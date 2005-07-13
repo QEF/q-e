@@ -97,12 +97,13 @@ CONTAINS
     ! translates a string containing the exchange-correlation name
     ! into internal indices iexch, icorr, igcx, igcc
     !
+    use metaflag, only : ismeta  !METAGGA
     implicit none
     ! input
     character (len=*) :: dft_
     ! data
     integer :: nxc, ncc, ngcx, ngcc
-    parameter (nxc = 3, ncc = 9, ngcx = 6, ngcc = 5)
+    parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6) !METAGGA
     character (len=3) :: exc, corr
     character (len=4) :: gradx, gradc
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -115,8 +116,8 @@ CONTAINS
     data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
          'OBW', 'GL' /
-    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX' /
-    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH'/
+    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX','META' / !METAGGA
+    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH','META'/ !METAGGA
     !
     ! convert to uppercase
     len = len_trim(dft)
@@ -200,6 +201,17 @@ CONTAINS
        call set_dft_value(igcx,6)
        call set_dft_value(igcc,3)
     end if
+    
+    !special case : META = tpss metaGGA Exc  !Begin METAGGA
+    ismeta = .false.
+    if (matches('META',dftout)) then
+       ismeta = .true.
+       call set_dft_value(iexch,1)!1
+       call set_dft_value(icorr,4)!4
+       call set_dft_value(igcx,7)
+       call set_dft_value(igcc,6)
+    end if  !END METAGGA
+   
 
     if (igcx == 6) &
          call errore('which_dft','OPTX untested! please test',-igcx)

@@ -697,6 +697,7 @@
       use gvecw, only: ggp
       use cell_base, only: tpiba2
       use ensemble_dft, only: tens
+      use metaflag, only: ismeta
 !
       implicit none
 !
@@ -787,6 +788,8 @@
          df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+cmplx(real(fp), aimag(fm)))
          da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+cmplx(aimag(fp),-real(fm)))
       end do
+
+      if(ismeta) call  dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip)  !METAGGA
 !
 !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
 ! 
@@ -3033,6 +3036,7 @@
       use cdvan
       use dener
       use io_global, only: stdout
+      use metaflag, only: ismeta
 !
       implicit none
       real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
@@ -3224,6 +3228,7 @@
                rhor(ir,isdw)=aimag(psi(ir))
             end do
          endif
+         if (ismeta) call kedtauofr_meta(c, psi, psis) ! METAGGA
 !
          if(iprsta.ge.3)then
             do iss=1,nspin
@@ -4139,6 +4144,7 @@
       use dener
       use derho
       use mp, only: mp_sum
+      use metaflag, only: ismeta
 !
       implicit none
 !
@@ -4396,7 +4402,7 @@
             rhos(ir,isdw)=aimag(vs(ir))
          end do
       endif
-
+      if(ismeta) call vofrho_meta(v,vs)  !METAGGA
       ebac=0.0
 !
       eht=eh*omega+esr-eself

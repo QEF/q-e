@@ -167,6 +167,25 @@ contains
   end subroutine deallocate_derho
 end module derho
 
+MODULE metagga  !metagga
+  use metaflag, only : ismeta
+  !the variables needed for meta-GGA
+  REAL(kind=8), ALLOCATABLE :: &
+       kedtaus(:,:), &! KineticEnergyDensity in real space,smooth grid
+       kedtaur(:,:), &! real space, density grid
+       crosstaus(:,:,:), &!used by stress tensor,in smooth grid
+       dkedtaus(:,:,:,:)  !derivative of kedtau wrt h on smooth grid
+  COMPLEX(kind=8) , ALLOCATABLE :: &
+       kedtaug(:,:),    & !KineticEnergyDensity in G space
+       gradwfc(:,:)    !used by stress tensor
+contains
+  subroutine deallocate_metagga
+      IF( ALLOCATED(crosstaus))DEALLOCATE(crosstaus)
+      IF( ALLOCATED(dkedtaus)) DEALLOCATE(dkedtaus)
+      IF( ALLOCATED(gradwfc))  DEALLOCATE(gradwfc)
+  end subroutine deallocate_metagga
+END MODULE metagga  !end metagga
+
 module dener
   implicit none
   save

@@ -45,6 +45,7 @@
       USE derho, ONLY: deallocate_derho
       USE cdvan, ONLY: deallocate_cdvan
       USE pseudopotential, ONLY: deallocate_pseudopotential
+      USE metagga, ONLY: deallocate_metagga, ismeta   !METAGGA
 
       IMPLICIT NONE
 
@@ -86,7 +87,7 @@
         CALL deallocate_ions_base
       END IF
       CALL deallocate_sic( )
-
+      if(ismeta) CALL deallocate_metagga()  !METAGGA
 
      RETURN
    END SUBROUTINE deallocate_modules_var

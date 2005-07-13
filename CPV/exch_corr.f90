@@ -318,13 +318,14 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      use funct, only: iexch, icorr, igcx, igcc
-      use gvecp, only: ng => ngm
-      use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
-      use cell_base, only: ainv, omega
-      use control_flags, only: tpre
-      use derho, only: drhor
-      use mp, only: mp_sum
+      use funct,           only : iexch, icorr, igcx, igcc
+      use gvecp,           only : ng => ngm
+      use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
+      use cell_base,       only : ainv, omega
+      use control_flags,   only : tpre
+      use derho,           only : drhor
+      use mp,              only : mp_sum
+      use metagga,         ONLY : ismeta, kedtaur
 !
       implicit none
 ! input     
@@ -347,7 +348,11 @@
          call fillgrad(nspin,rhog,gradr)
       end if
 !
-      CALL exch_corr_cp(nnr,nspin,gradr,rhor,exc)
+      if(ismeta) then
+            call tpssmeta(nnr,nspin,gradr,rhor,kedtaur,exc)
+      else
+            CALL exch_corr_cp(nnr,nspin,gradr,rhor,exc)
+      end if
 
       call mp_sum( exc )
 
