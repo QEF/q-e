@@ -285,6 +285,7 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
+../Modules/metagga.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \

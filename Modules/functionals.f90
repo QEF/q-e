@@ -103,7 +103,7 @@ CONTAINS
     LOGICAL, OPTIONAL, INTENT(OUT) :: ismeta
     ! data
     integer :: nxc, ncc, ngcx, ngcc
-    parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6) !METAGGA
+    parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6)
     character (len=3) :: exc, corr
     character (len=4) :: gradx, gradc
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -116,8 +116,8 @@ CONTAINS
     data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
          'OBW', 'GL' /
-    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX','META' / !METAGGA
-    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH','META'/ !METAGGA
+    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX','META' /
+    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH','META'/
     !
     ! convert to uppercase
     len = len_trim(dft)
@@ -201,8 +201,9 @@ CONTAINS
        call set_dft_value(igcx,6)
        call set_dft_value(igcc,3)
     end if
-    
-    !special case : META = tpss metaGGA Exc  !Begin METAGGA
+    !
+    ! ... special case : META = tpss metaGGA Exc
+    !
     IF ( PRESENT( ismeta ) ) THEN
        !
        ismeta = .false.
@@ -213,7 +214,7 @@ CONTAINS
           call set_dft_value(icorr,4)!4
           call set_dft_value(igcx,7)
           call set_dft_value(igcc,6)
-       end if  !END METAGGA
+       end if
        !
     END IF
    

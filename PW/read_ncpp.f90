@@ -18,6 +18,7 @@ subroutine read_ncpp (np, iunps)
        a_nlcc, b_nlcc, alpha_nlcc
   use uspp_param, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
   use funct, only: dft, which_dft
+  use metaflag, only : ismeta
   implicit none
   !
   integer :: iunps, np
@@ -112,7 +113,10 @@ subroutine read_ncpp (np, iunps)
   !====================================================================
   ! PP read: now setup 
   !
-  call which_dft (dft)
+  call which_dft( dft, ismeta )
+  !
+  IF ( ismeta ) &
+    CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )
   !
   !    compute the radial mesh
   !

@@ -25,6 +25,7 @@ subroutine readvan (is, iunps)
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
        rinner, nbeta, kkbeta, lll, iver, ifqopt, psd, tvanp
   use funct, only: dft, which_dft
+  use metaflag, only : ismeta
   implicit none
 
   !
@@ -101,7 +102,12 @@ subroutine readvan (is, iunps)
   else
      call errore ('readvan', 'Wrong xc in pseudopotential', 1)
   endif
-  call which_dft (dft)
+  !
+  call which_dft( dft, ismeta )
+  !
+  IF ( ismeta ) &
+    CALL errore( 'readvan ', 'META-GGA not implemented in PWscf', 1 )
+  !
   read (iunps, '(2i5,1pe19.11)', err = 100, iostat = ios) nchi (is) &
        , mesh (is) , etotpseu
   !
