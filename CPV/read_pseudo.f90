@@ -1714,7 +1714,7 @@ END SUBROUTINE read_atomic_cc
      &     call errore( 'readvan','wrong z', is )
       if ( zv(is) < 1 .or. zv(is) > 100.d0)                             &
      &     call errore('readvan','wrong zv',is)
-      if ( exfact.lt.-6.or.exfact.gt.6) &  !METAGGA
+      if ( exfact.lt.-6.or.exfact.gt.6) &
      &     call errore('readvan','Wrong xc in pseudopotential',1)
 ! convert from "our" conventions to Vanderbilt conventions
 !

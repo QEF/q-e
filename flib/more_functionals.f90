@@ -1595,9 +1595,9 @@
          dft = 'HL'
       elseif (exfact ==-3) then
          dft = 'GL'
-      elseif (exfact == 6) then  !Begin METAGGA
-	 dft = 'META'
-      else                        !Begin METAGGA
+      elseif (exfact == 6) then
+	 dft = 'TPSS'
+      else
          call errore ('dftname','unknown exch-corr functional',exfact)
       end if
 

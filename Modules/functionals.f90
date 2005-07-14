@@ -115,9 +115,9 @@ CONTAINS
     !
     data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-         'OBW', 'GL' /
-    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH','OPTX','META' /
-    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH','META'/
+                'OBW', 'GL' /
+    data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META' /
+    data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META'/
     !
     ! convert to uppercase
     len = len_trim(dft)
@@ -202,19 +202,22 @@ CONTAINS
        call set_dft_value(igcc,3)
     end if
     !
-    ! ... special case : META = tpss metaGGA Exc
+    ! ... special case : TPSS meta-GGA Exc
     !
     IF ( PRESENT( ismeta ) ) THEN
        !
-       ismeta = .false.
+       ismeta = .FALSE.
        !
-       if (matches('META',dftout)) then
-          ismeta = .true.
-          call set_dft_value(iexch,1)!1
-          call set_dft_value(icorr,4)!4
-          call set_dft_value(igcx,7)
-          call set_dft_value(igcc,6)
-       end if
+       IF ( matches( 'TPSS', dftout ) ) THEN
+          !
+          ismeta = .TRUE.
+          !
+          CALL set_dft_value( iexch, 1 )
+          CALL set_dft_value( icorr, 4 )
+          CALL set_dft_value( igcx,  7 )
+          CALL set_dft_value( igcc,  6 )
+          !
+       END IF
        !
     END IF
    
