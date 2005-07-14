@@ -503,13 +503,15 @@ MODULE path_base
          !
          IF ( V_next > V_previous ) THEN
             !
-            tangent(:,index) = pos(:,index+1) - pos(:,index) * delta_V_max + & 
-                               pos(:,index) - pos(:,index-1) * delta_V_min
+            tangent(:,index) = &
+                             ( pos(:,index+1) - pos(:,index) ) * delta_V_max + & 
+                             ( pos(:,index) - pos(:,index-1) ) * delta_V_min
             !
          ELSE IF ( V_next < V_previous ) THEN
             !
-            tangent(:,index) = pos(:,index+1) - pos(:,index) * delta_V_min + &
-                               pos(:,index) - pos(:,index-1) * delta_V_max
+            tangent(:,index) = &
+                             ( pos(:,index+1) - pos(:,index) ) * delta_V_min + &
+                             ( pos(:,index) - pos(:,index-1) ) * delta_V_max
             !
          ELSE
             !
