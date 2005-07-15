@@ -1289,8 +1289,9 @@
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case
           
-        call bforceion(fion,tfor,ipolp, qmat,bec,becdr,gqq,evalue)
-  
+        if( evalue .ne. 0.d0 ) then
+           call bforceion(fion,tfor,ipolp, qmat,bec,becdr,gqq,evalue)
+        endif
       endif
       !        end if
 
