@@ -258,6 +258,14 @@ electron_dynamics
                damp    = damped dynamics is used to propagate electronic d.o.f. 
                verlet  = standard Verlet algorithm is used to propagate 
                          electronic d.o.f. 
+               cg      = conjugate gradient is used to converge the 
+                         wavefunction at each ionic step. 'cg' can be used 
+                         interchangeably with 'verlet' for a couple of ionic
+                         steps in order to "cool down" the electrons and
+                         return them back to the BO surface. Then 'verlet' can 
+                         be restarted again. This procedure is useful when
+                         electronic adiabaticity in CP is lost yet the ionic 
+                         velocities need to be preserved.
 
 emass          REAL ( default = 400.D0 )
                effective electron mass in the CP Lagrangian, in atomic units 
