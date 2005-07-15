@@ -19,6 +19,8 @@
 !
 !
 !*********************************************************************
+
+
 SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
   use ions_base, ONLY: na, nsp
@@ -27,6 +29,7 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
         sm_p => smd_p, &
         ptr  => smd_ptr, &
         maxlm => smd_maxlm
+
 
   IMPLICIT NONE
 
@@ -46,11 +49,16 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   real(kind=8) :: mov(3,natx,0:sm_p) 
   real(kind=8) :: lambda(0:sm_p), dotp1, dotp2
   real(kind=8) :: dalpha(0:sm_p),t_alpha
-
+  real(kind=8), ALLOCATABLE :: dotp1a(:), dotp2a(:), lam_f(:), lam_b(:)
 
   !_______________________________________
   !***************************************
 
+  call start_clock( 'smlam')
+  ALLOCATE( dotp1a(0:sm_p))
+  ALLOCATE( dotp2a(0:sm_p))
+  ALLOCATE( lam_f(0:sm_p))
+  ALLOCATE( lam_b(0:sm_p))
   smpm = sm_p -1
 
 
@@ -65,7 +73,8 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   exit_sign = 0
 
   lambda(0:sm_p) = 0.d0
-
+  lam_f(0:sm_p) = 0.0d0
+  lam_b(0:sm_p) = 0.0d0
 
 
   ! ... Copy ... 
@@ -105,19 +114,20 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
         ite = ite-1
         GOTO 9090
      ENDIF
+     
+     
+     ! ... calculate dalpha(i) = phi(i) - phi(i-1) ...
+     
+     call ARC(statep,dalpha,t_alpha,1)
+
+     ! ...  Calculate the const C ...
+
+     call CALC(mov,n_const,exit_sign,err_const,cons_c)
 
 
-     CONSTRAINT_LOOP : DO a=0,n_const-1  ! >>>>>>>>>>>>>>>>>>>>>>> !
 
+     CONSTRAINT_LOOP : DO a=0,n_const  ! >>>>>>>>>>>>>>>>>>>>>>> !
 
-        ! ...  Calculate the const C ...
-
-        call CALC(mov,n_const,exit_sign,err_const,cons_c)
-
-
-        ! ... calculate dalpha(i) = phi(i) - phi(i-1) ...
-
-        call ARC(statep,dalpha,t_alpha,1)
 
 
         ! ... tan(l)*dphi(l) ...
@@ -158,16 +168,38 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
         ENDDO
 
 
+        dotp1a(a) = dotp1
+        dotp2a(a) = dotp2
+
+     ENDDO CONSTRAINT_LOOP  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
+        
+     ! do the forward loop, i.e. get a+1 from a
+     CONSTRAINT_LOOP2f : DO a=0,(n_const-1)  ! >>>>>>>>>>>>>>>>>>>>>>> !
         ! ... Lagrange multiplier ...
 
-        lambda(a+1) = &
-             & ( cons_c - (t_alpha*dalpha(a+1))**2.d0 + 2.d0 *lambda(a) * dotp1) &
-             & / (2.d0 *dotp2)  
-
-
+        lam_f(a+1) = &
+             & ( cons_c - (t_alpha*dalpha(a+1))**2.d0 + 2.d0 *lam_f(a) * dotp1a(a)) &
+             & / (2.d0 *dotp2a(a))  
         ! ... Update ...
+     ENDDO CONSTRAINT_LOOP2f  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
 
-        isa = 0
+!     write(6,*) 'lam_f after the update ',lam_f
+
+     ! do the backward loop, i.e. get a from a+1
+     CONSTRAINT_LOOP2b : DO a=n_const,1,-1  ! >>>>>>>>>>>>>>>>>>>>>>> !
+        ! ... Lagrange multiplier ...
+
+        lam_b(a) = &
+             & -( cons_c - (t_alpha*dalpha(a+1))**2.d0 - 2.d0 *lam_b(a+1) * dotp2a(a)) &
+             & / (2.d0 *dotp1a(a))  
+        ! ... Update ...
+     ENDDO CONSTRAINT_LOOP2b  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
+
+!     write(6,*) 'lam_b after the update ',lam_b
+
+     lambda = 0.5d0*(lam_f+lam_b)
+     CONSTRAINT_LOOP3 : DO a=0,n_const-1  ! >>>>>>>>>>>>>>>>>>>>>>> !
+         isa = 0
         DO is=1,nsp
            DO ia=1,na(is)
               isa = isa + 1
@@ -176,9 +208,11 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
               ENDDO
            ENDDO
         ENDDO
+    ENDDO CONSTRAINT_LOOP3  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
 
 
-     ENDDO CONSTRAINT_LOOP  ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
+
+!     write(6,*) 'lambda after the update ',lambda
 
   ENDDO ITERATION_LOOP  ! <<<<<<<<<<<<<<<<<<<<<<<< !
 
@@ -206,6 +240,8 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
   con_ite = ite
 
+  DEALLOCATE( dotp1a,dotp2a,lam_f,lam_b)
+  call stop_clock( 'smlam')
   RETURN
 
 
@@ -242,6 +278,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
   ! -- seg.
 
+  call start_clock( 'calc')
   dalpha(0) = 0.d0
 
   DO sm_k=1,sm_p
@@ -307,6 +344,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
   IF(ace == sm_p) THEN
      exit_sign = 1
+     call stop_clock( 'calc')
      RETURN
   ENDIF
 
@@ -321,6 +359,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
 
   cons = total/dble(sm_p)
 
+  call stop_clock( 'calc')
   RETURN
 
 END SUBROUTINE CALC
