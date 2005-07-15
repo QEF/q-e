@@ -383,6 +383,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ekinp  = 0.D0
      ekinpr = 0.D0
      tempp  = 0.D0
+     ekinc0 = 0.0d0
+     ekinc = 0.0d0
+     !
      !
      ! ... ionic kinetic energy 
      !
@@ -409,6 +412,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         ekinc = ekinc0
         !
      END IF
+     
      !
      ! ... fake cell-parameters kinetic energy
      !

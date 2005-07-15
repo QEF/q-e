@@ -269,7 +269,7 @@ MODULE input
         amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
         cell_parameters, cell_velocities, cell_temperature, force_pairing, &
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
-        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt
+        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, tcg
 
      USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
         tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
@@ -459,9 +459,11 @@ MODULE input
           tsde_ = .FALSE.
         CASE ('cg')
           tsde_      = .FALSE.
-          tconjgrad_ = .TRUE.
-          IF( program_name == 'CP90' ) &
-            CALL errore( "iosys ", " electron_dynamics keyword not yet implemented ", 1 )
+          IF( program_name == 'CP90' ) then
+             tcg = .true.
+          else
+             tconjgrad_ = .TRUE.
+          endif
         CASE ('damp')
           tsde_   = .FALSE.
           tdamp_  = .TRUE.
