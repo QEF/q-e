@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -149,40 +149,41 @@ MODULE path_opt_routines
      SUBROUTINE broyden()
        !-----------------------------------------------------------------------
        !
-       USE constants,      ONLY : eps8, au, bohr_radius_angs
-       USE io_files,       ONLY : broy_file, iunbroy
+       USE constants,      ONLY : eps8
+       USE control_flags,  ONLY : lsmd
+       USE io_files,       ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim, reset_broyden, frozen, &
-                                  n_im => num_of_images
+                                  n_im => num_of_images, tangent
        USE io_global,      ONLY : meta_ionode, meta_ionode_id
        USE mp,             ONLY : mp_bcast
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), ALLOCATABLE :: g(:), s(:,:), pos_old(:,:)
+       REAL (KIND=DP), ALLOCATABLE :: t(:), g(:), s(:,:)
        INTEGER                     :: k, i, j, I_in, I_fin
-       REAL (KIND=DP)              :: s_norm, coeff, &
-                                      norm_g, norm_g_old, g_dot_s
-       LOGICAL                     :: exists, accepted
-       REAL (KIND=DP)              :: J0
+       REAL (KIND=DP)              :: s_norm, coeff, norm_g
+       LOGICAL                     :: exists
        !
        REAL (KIND=DP), PARAMETER   :: step_max = 0.6D0
-       !
        INTEGER,        PARAMETER   :: broyden_ndim = 5
        !
        !
        ALLOCATE( g( dim * n_im ) )
        ALLOCATE( s( dim * n_im, broyden_ndim ) )
+       ALLOCATE( t( dim * n_im ) )
        !
-       ALLOCATE( pos_old( dim, n_im ) )
        !
        g = 0.D0
+       t = 0.D0
        !
        DO i = 1, n_im
           !
-          IF ( frozen(i) ) CYCLE
-          !
           I_in  = ( i - 1 ) * dim + 1
           I_fin = i * dim
+          !
+          IF ( lsmd ) t(I_in:I_fin) = tangent(:,i)
+          !
+          IF ( frozen(i) ) CYCLE
           !
           g(I_in:I_fin) = grad(:,i)
           !
@@ -210,73 +211,12 @@ MODULE path_opt_routines
           !
           IF ( exists .AND. .NOT. reset_broyden ) THEN
              !
-             READ( UNIT = iunbroy , FMT = * ) J0
-             READ( UNIT = iunbroy , FMT = * ) accepted
-             READ( UNIT = iunbroy , FMT = * ) norm_g_old
-             READ( UNIT = iunbroy , FMT = * ) pos_old
              READ( UNIT = iunbroy , FMT = * ) k
              READ( UNIT = iunbroy , FMT = * ) s
              !
-             IF ( accepted ) THEN
-                !
-                g_dot_s = ( g(:) .dot. s(:,k) ) / norm( s(:,k) )
-                !
-                ! ... here we check wether the previous step has to be 
-                ! ... accepted or not
-                !
-                IF ( g_dot_s < 0.D0 ) THEN
-                   !
-                   PRINT '(5X,"case 1")'
-                   !
-                   accepted = .TRUE.
-                   !
-                ELSE
-                   !
-                   IF ( norm_g < norm_g_old ) THEN
-                      !
-                      PRINT '(5X,"case 2")'
-                      !
-                      accepted = .TRUE.
-                      !
-                      J0 = J0 * 1.1D0
-                      !
-                   ELSE
-                      !
-                      PRINT '(5X,"case 3")'
-                      !
-                      J0 = J0 * 0.8D0
-                      !
-                      accepted = .FALSE.
-                      !
-                      pos(:,1:n_im) = pos_old
-                      !
-                      norm_g = norm_g_old
-                      !
-                   END IF
-                   !
-                END IF
-                !
-             ELSE
-                !
-                accepted = .TRUE.
-                !
-             END IF
-             !
-             IF ( accepted ) k = k + 1
+             k = k + 1
              !
           ELSE 
-             !
-             IF ( reset_broyden ) THEN
-                !
-                READ( UNIT = iunbroy , FMT = * ) J0
-                !
-             ELSE
-                !
-                J0 = ds
-                !
-             END IF
-             !             
-             accepted = .TRUE.
              !
              s = 0.D0
              !
@@ -288,81 +228,66 @@ MODULE path_opt_routines
           !
           CLOSE( UNIT = iunbroy )
           !
-          PRINT '(5X,"J0        = ",F10.6)', J0
-          PRINT '(5X,"norm( g ) = ",F10.6)', norm_g / bohr_radius_angs * au
-          PRINT '(5X,"accepted  = ",L1,/)', accepted
+          ! ... Broyden's update
           !
-          IF ( accepted ) THEN
+          IF ( k > broyden_ndim ) THEN
              !
-             ! ... Broyden's update
+             ! ... the Broyden's subspace is swapped and s is projected
+             ! ... orthogonally to the current tangent (this last thing 
+             ! ... in the smd case only, otherwise t = 0.0)
              !
-             IF ( k > broyden_ndim ) THEN
-                !
-                ! ... the Broyden's subspace is swapped
-                !
-                k = broyden_ndim
-                !
-                DO j = 1, k - 1
-                   !
-                   s(:,j) = s(:,j+1)
-                   !
-                END DO
-                !
-             END IF
+             k = broyden_ndim
              !
-             s(:,k) = - J0 * g(:)
-             !
-             DO j = 1, k - 2
+             DO j = 1, k - 1
                 !
-                s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
-                                  ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
+                s(:,j) = s(:,j+1) - t(:) * ( s(:,j+1) .dot. t(:) )
                 !
              END DO
              !
-             IF ( k > 1 ) THEN
-                !
-                coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
-                !
-                IF ( coeff > eps8 ) & 
-                   s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
-                !
-             END IF
+          END IF
+          !
+          s(:,k) = - ds * g(:)
+          !
+          DO j = 1, k - 2
              !
-             IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
-                !
-                ! ... uphill step :  history reset
-                !
-                PRINT '(5X,"BROYDEN uphill step :  history reset",/)'
-                !
-                k = 1
-                !
-                s = 0.D0
-                !
-                s(:,k) = - J0 * g(:)
-                !
-             END IF
+             s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
+                               ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
              !
-             s_norm = norm( s(:,k) )
+          END DO
+          !
+          IF ( k > 1 ) THEN
              !
-             s(:,k) = s(:,k) / s_norm * MIN( s_norm, step_max )
+             coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
              !
-          ELSE
-             !
-             ! ... here we try a shorter step
-             !
-             s(:,k) = 0.5D0 * s(:,k)
+             IF ( coeff > eps8 ) & 
+                s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
              !
           END IF
+          !
+          IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
+             !
+             ! ... uphill step :  history reset
+             !
+             WRITE( UNIT = iunpath, &
+                    FMT = '(5X,"BROYDEN uphill step :  history reset",/)' )
+             !
+             k = 1
+             !
+             s = 0.D0
+             !
+             s(:,k) = - ds * g(:)
+             !
+          END IF
+          !
+          s_norm = norm( s(:,k) )
+          !
+          s(:,k) = s(:,k) / s_norm * MIN( s_norm, step_max )
           !
           ! ... save the file containing the history
           !
           OPEN( UNIT = iunbroy, FILE = broy_file )
           !
           WRITE( UNIT = iunbroy, FMT = * ) n_im
-          WRITE( UNIT = iunbroy, FMT = * ) J0
-          WRITE( UNIT = iunbroy, FMT = * ) accepted
-          WRITE( UNIT = iunbroy, FMT = * ) norm_g
-          WRITE( UNIT = iunbroy, FMT = * ) pos(:,1:n_im)
           WRITE( UNIT = iunbroy, FMT = * ) k
           WRITE( UNIT = iunbroy, FMT = * ) s
           !
@@ -374,11 +299,11 @@ MODULE path_opt_routines
           !
        END IF
        !
-       CALL mp_bcast( pos, meta_ionode_id )  
+       CALL mp_bcast( pos, meta_ionode_id )
        !
+       DEALLOCATE( t )
        DEALLOCATE( g )
        DEALLOCATE( s )
-       DEALLOCATE( pos_old )
        !
        RETURN
        !

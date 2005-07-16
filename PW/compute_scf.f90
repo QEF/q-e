@@ -104,7 +104,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... all processes are syncronized (needed to have an ordered output)
   !
   CALL mp_barrier()
-  ! 
+  !
   scf_loop: DO
      !
      ! ... exit if available images are finished
@@ -160,7 +160,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         ! ... tau is in alat units ( pos is in bohr )
         !
-        tau = RESHAPE( SOURCE = pos(:,image), SHAPE = SHAPE( tau ) ) / alat
+        tau = RESHAPE( pos(:,image), SHAPE( tau ) ) / alat
         !
         ! ... initialization of the scf calculation
         !

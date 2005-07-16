@@ -71,17 +71,14 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      ! ... input variables
-      !
-      CHARACTER (LEN=2) :: prog
+      CHARACTER (LEN=2), INTENT(IN) :: prog
         ! ... specify the calling program
-      !
-      ! ... local variables
       !
       INTEGER                     :: i
       REAL (KIND=DP)              :: inter_image_dist, k_ratio
       REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
+      LOGICAL                     :: lexists
       !
       !
       ! ... output files are set
@@ -103,6 +100,10 @@ MODULE path_base
       ! ... ( It corresponds to the dimension of the configurational space )
       !
       IF ( lcoarsegrained ) THEN
+         !
+         IF ( lneb ) &
+            CALL errore( 'initialize_path ', 'coarsegrained phase-space' // &
+                       & ' dynamics is implemented for smd only', 1 )
          !
          dim = nconstr
          !
@@ -236,6 +237,14 @@ MODULE path_base
       !
       IF ( restart_mode == "restart" ) THEN
          !
+         INQUIRE( FILE = path_file, EXIST = lexists )
+         !
+         IF ( .NOT. lexists ) restart_mode = "from_scratch"
+         !
+      END IF
+      !
+      IF ( restart_mode == "restart" ) THEN
+         !
          ALLOCATE( image_spacing( num_of_images - 1 ) )
          !
          CALL read_restart()
@@ -264,13 +273,13 @@ MODULE path_base
          !
          inter_image_dist = SUM( image_spacing(:) ) / DBLE( num_of_images - 1 )
          !
+         DEALLOCATE( image_spacing )
+         !
       ELSE
          !
          CALL initial_guess()
          !
       END IF
-      !
-      DEALLOCATE( image_spacing )
       !
       ! ... the actual number of degrees of freedom is computed
       !
@@ -439,6 +448,8 @@ MODULE path_base
              pos_(:,:) = pos_(:,:) * alat
              !
           END IF
+          !
+          DEALLOCATE( image_spacing, d_R )
           !
           RETURN
           !
@@ -886,12 +897,43 @@ MODULE path_base
     END FUNCTION gaussian_vect
     !
     !------------------------------------------------------------------------
+    SUBROUTINE fe_profile()
+      !------------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : num_of_images, pos, pes, grad_pes, &
+                                 Emin, Emax, Emax_index, tangent
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: i
+      !
+      !
+      pes(:) = 0.D0
+      !
+      DO i = 2, num_of_images
+         !
+         pes(i) = pes(i-1) + &
+                  norm( pos(:,i) - pos(:,i-1) ) * 0.25D0 * &
+                  ( ( tangent(:,i-1) + tangent(:,i) ) .dot. &
+                    ( grad_pes(:,i-1) + grad_pes(:,i) ) )
+         !
+      END DO
+      !
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      !
+      RETURN
+      !
+    END SUBROUTINE fe_profile
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
       USE path_variables, ONLY : num_of_images, suspended_image,  &
                                  istep_path, pes, first_last_opt, &
-                                 Emin , Emax, Emax_index
+                                 Emin, Emax, Emax_index
       !
       IMPLICIT NONE
       !
@@ -929,11 +971,8 @@ MODULE path_base
     SUBROUTINE born_oppenheimer_fes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_io_routines, ONLY : write_output
-      USE path_variables,   ONLY : num_of_images, suspended_image, &
-                                   istep_path, pos, pes, grad_pes, &
-                                   first_last_opt, Emin , Emax,    &
-                                   Emax_index, tangent
+      USE path_variables, ONLY : num_of_images, suspended_image, &
+                                 istep_path, first_last_opt
       !
       IMPLICIT NONE
       !
@@ -958,21 +997,6 @@ MODULE path_base
       CALL compute_fes_grads( N_in, N_fin, stat )
       !
       IF ( .NOT. stat ) RETURN
-      !
-      pes(:) = 0.D0
-      !
-      DO i = 2, num_of_images
-         !
-         pes(i) = pes(i-1) + &
-                  norm( pos(:,i) - pos(:,i-1) ) * 0.25D0 * &
-                  ( ( tangent(:,i-1) + tangent(:,i) ) .dot. &
-                    ( grad_pes(:,i-1) + grad_pes(:,i) ) )
-         !
-      END DO
-      !
-      Emin       = MINVAL( pes(1:num_of_images) )
-      Emax       = MAXVAL( pes(1:num_of_images) )
-      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
       !
       RETURN
       !
@@ -1038,7 +1062,7 @@ MODULE path_base
          !
          IF ( suspended_image == 0 ) THEN
             !
-            ! ... minimisation step is done only in case of no suspended images
+            ! ... minimisation step is done only in case of no suspended images.
             ! ... when the simulation is started from scratch all gradients are
             ! ... zero.
             !
@@ -1083,10 +1107,6 @@ MODULE path_base
                !
             END IF
             !
-            ! ... normalised tangent of the new path
-            !
-            CALL compute_tangent()
-            !
          END IF
          !
          IF ( check_stop_now() ) THEN
@@ -1126,6 +1146,12 @@ MODULE path_base
          ! ... istep_path is updated after a self-consistency step
          !
          istep_path = istep_path + 1
+         !
+         ! ... normalised tangent of the new path
+         !
+         CALL compute_tangent()
+         !
+         IF ( lcoarsegrained ) CALL fe_profile()
          !
          IF ( lneb ) THEN
             !
@@ -1200,56 +1226,54 @@ MODULE path_base
       IMPLICIT NONE
       !
       !
-      IF ( suspended_image == 0 ) THEN
+      IF ( suspended_image /= 0 ) RETURN
+      !
+      IF ( lneb ) THEN
          !
-         IF ( lneb ) THEN
+         ! ... neb forces
+         !
+         CALL neb_gradient()
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         IF ( use_fourier ) THEN
             !
-            ! ... neb forces
+            ! ... the fourier components of the path are computed here
             !
-            CALL neb_gradient()
+            CALL to_reciprocal_space()
             !
-         ELSE IF ( lsmd ) THEN
+            ! ... the path-length is computed here
             !
-            IF ( use_fourier ) THEN
-               !
-               ! ... the fourier components of the path are computed here
-               !
-               CALL to_reciprocal_space()
-               !
-               ! ... the path-length is computed here
-               !
-               CALL compute_path_length()
-               !
-               ! ... back to real space
-               !
-               CALL to_real_space()
-               !
-               ! ... the new fourier components
-               !
-               CALL to_reciprocal_space()
-               !
-            END IF
+            CALL compute_path_length()
             !
-            ! ... projected gradients are computed here
+            ! ... back to real space
             !
-            CALL smd_gradient()
+            CALL to_real_space()
+            !
+            ! ... the new fourier components
+            !
+            CALL to_reciprocal_space()
             !
          END IF
          !
-         ! ... the error is computed only when the run is not starting 
-         ! ... from scratch
+         ! ... projected gradients are computed here
          !
-         IF ( istep_path > 0 ) THEN
-            !
-            CALL compute_error()
-            !
-         ELSE
-            !
-            frozen = .FALSE.
-            !
-            grad = 0.D0
-            !
-         END IF
+         CALL smd_gradient()
+         !
+      END IF
+      !
+      ! ... the error is computed only when the run is not starting 
+      ! ... from scratch
+      !
+      IF ( istep_path > 0 ) THEN
+         !
+         CALL compute_error()
+         !
+      ELSE
+         !
+         frozen = .FALSE.
+         !
+         grad = 0.D0
          !
       END IF
       !
