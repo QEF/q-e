@@ -1353,7 +1353,7 @@ SUBROUTINE iosys()
   !
   ! ... set constraints
   !
-  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp, if_pos )
+  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
   !
   ! ... Renata's dynamics uses masses in atomic units
   !

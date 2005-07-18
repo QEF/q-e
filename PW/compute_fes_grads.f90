@@ -102,7 +102,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !   
   END IF
   !
-  ! ... only the tfirst cpu initializes the file needed by parallelization 
+  ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
   IF ( meta_ionode ) CALL new_image_init()
@@ -134,7 +134,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !    
      END IF
      !
-     ! ... self-consistency ( for non-frozen images only )
+     ! ... free-energy gradient ( for non-frozen images only )
      !
      IF ( .NOT. frozen(image) ) THEN
         !
@@ -198,7 +198,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ! ... the new value of the order-parameter is set here
         !
-        CALL init_constraint( nat, tau, alat, ityp, if_pos )
+        CALL init_constraint( nat, tau, alat, ityp )
         !
         new_target(:) = pos(:,image)
         !

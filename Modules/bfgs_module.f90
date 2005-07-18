@@ -136,13 +136,13 @@ MODULE bfgs_module
       ! ... local variables
       !
       INTEGER       :: dim, i, j
-      LOGICAL       :: lwolfe, ltest
-      REAL(KIND=DP) :: dE0s, dEs, E_diff, num, den, ratio
+      LOGICAL       :: lwolfe
+      REAL(KIND=DP) :: dE0s, den
       !
       REAL (KIND=DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
       INTEGER,        ALLOCATABLE :: iwork(:)
       INTEGER                     :: k, k_m, info
-      REAL (KIND=DP)              :: norm_g, gamma0
+      REAL(KIND=DP)               :: gamma0
       !
       !
       dim = SIZE( pos )

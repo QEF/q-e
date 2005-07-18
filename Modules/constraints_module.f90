@@ -65,7 +65,7 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE init_constraint( nat, tau, alat, ityp, if_pos )
+     SUBROUTINE init_constraint( nat, tau, alat, ityp )
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
@@ -78,10 +78,9 @@ MODULE constraints_module
        REAL (KIND=DP), INTENT(IN) :: tau(3,nat)
        REAL (KIND=DP), INTENT(IN) :: alat
        INTEGER,        INTENT(IN) :: ityp(nat)
-       INTEGER,        INTENT(IN) :: if_pos(3,nat)
        !
        INTEGER       :: ia, ia1, ia2, ia3
-       REAL(KIND=DP) :: r12(3), r23(3)
+       REAL(KIND=DP) :: r21(3), r23(3)
        REAL(KIND=DP) :: k, r_c
        INTEGER       :: type_coord
        REAL(KIND=DP) :: dtau(3), norm_dtau
@@ -176,13 +175,13 @@ MODULE constraints_module
              ia2 = ANINT( constr(2,ia) )
              ia3 = ANINT( constr(3,ia) )
              !
-             r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
+             r21 = ( tau(:,ia2) - tau(:,ia1) ) * alat
              r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
              !
-             r12 = r12 / norm( r12 )
+             r21 = r21 / norm( r21 )
              r23 = r23 / norm( r23 )
              !
-             target(ia) = DOT_PRODUCT( r12, r23 )
+             target(ia) = DOT_PRODUCT( r21, r23 )
              !
           CASE DEFAULT
              !
@@ -229,8 +228,8 @@ MODULE constraints_module
        REAL(KIND=DP) :: x1, x2, y1, y2, z1, z2
        REAL(KIND=DP) :: dist0
        INTEGER       :: ia, ia1, ia2, ia3
-       REAL(KIND=DP) :: r12(3), r23(3)
-       REAL(KIND=DP) :: norm_r12, norm_r23, cos123, sin123
+       REAL(KIND=DP) :: r21(3), r23(3)
+       REAL(KIND=DP) :: norm_r21, norm_r23, cos123, sin123
        REAL(KIND=DP) :: k, r_c
        INTEGER       :: type_coord
        REAL(KIND=DP) :: dtau(3), norm_dtau, expo
@@ -317,22 +316,22 @@ MODULE constraints_module
           ia2 = ANINT( constr(2,index) )
           ia3 = ANINT( constr(3,index) )
           !
-          r12 = ( tau(:,ia2) - tau(:,ia1) ) * alat
+          r21 = ( tau(:,ia2) - tau(:,ia1) ) * alat
           r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
           !
-          norm_r12 = norm( r12 )
+          norm_r21 = norm( r21 )
           norm_r23 = norm( r23 )
           !
-          r12 = r12 / norm_r12
+          r21 = r21 / norm_r21
           r23 = r23 / norm_r23
           !
-          cos123 = DOT_PRODUCT( r12, r23 )
+          cos123 = DOT_PRODUCT( r21, r23 )
           sin123 = SQRT( 1.D0 - cos123**2 )
           !
           g = ( cos123 - target(index) )
           !
-          dg(:,ia1) = ( cos123 * r12 - r23 ) / ( sin123 * norm_r12 )
-          dg(:,ia3) = ( cos123 * r23 - r12 ) / ( sin123 * norm_r23 )
+          dg(:,ia1) = ( cos123 * r21 - r23 ) / ( sin123 * norm_r21 )
+          dg(:,ia3) = ( cos123 * r23 - r21 ) / ( sin123 * norm_r23 )
           dg(:,ia2) = - dg(:,ia1) - dg(:,ia3)
           !
        CASE DEFAULT
