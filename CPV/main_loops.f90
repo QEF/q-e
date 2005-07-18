@@ -46,6 +46,10 @@ SUBROUTINE smd_loop( nloop )
      !
   END IF
   !
+  ! ... initialize g-vectors, fft grids
+  !
+  CALL init_dimensions()
+  !
   DO iloop = 1, nloop
      !
      CALL smdmain( tau, fion, etot, nat )
@@ -64,14 +68,9 @@ END SUBROUTINE smd_loop
 SUBROUTINE neb_loop( iloop, program_name )
   !----------------------------------------------------------------------------
   !
-  USE kinds,            ONLY : dbl
-  USE io_global,        ONLY : ionode, stdout
-  USE path_variables,   ONLY : conv_path
-  USE path_variables,   ONLY : path_deallocation
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_routines,    ONLY : iosys_path
-  USE path_io_routines, ONLY : write_output
-  USE ions_base,        ONLY : deallocate_ions_base
+  USE path_io_routines, ONLY : io_path_start
   !
   IMPLICIT NONE
   !
@@ -79,34 +78,15 @@ SUBROUTINE neb_loop( iloop, program_name )
   CHARACTER(LEN=*), INTENT(IN) :: program_name
   !
   !
-  ! ... stdout is connected to a file ( specific for each image )
-  ! ... via unit 17
-  !
-  IF( ionode ) THEN
-     !
-     stdout = 17
-     !
-  END IF
-  !
   CALL iosys_path()
+  !
+  CALL io_path_start()
   !
   CALL initialize_path( 'FP' )
   !
   ! ... this routine does all the NEB job
   !
   CALL search_mep()
-  !
-  ! ... output is written
-  !
-  CALL write_output()
-  !
-  CALL deallocate_ions_base( )
-  !
-  CALL path_deallocation( 'neb' )
-  !
-  ! ... stdout is reconnected to standard output
-  !
-  stdout = 6
   !
   RETURN
   !

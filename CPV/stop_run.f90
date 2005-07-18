@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,6 @@ SUBROUTINE stop_run( flag )
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
-  USE ions_nose,          ONLY : ions_nose_deallocate
   USE mp,                 ONLY : mp_barrier, mp_end
   !
   IMPLICIT NONE
@@ -45,7 +44,6 @@ SUBROUTINE stop_run( flag )
   !
 #endif
   !
-  CALL ions_nose_deallocate()
   CALL deallocate_modules_var()
   CALL deallocate_input_parameters()
   !

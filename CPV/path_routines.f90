@@ -24,9 +24,14 @@ MODULE path_routines
   !   
   CONTAINS
     !    
-    !-----------------------------------------------------------------------
+    !------------------------------------------------------------------------
     SUBROUTINE iosys_path()
-      !-----------------------------------------------------------------------
+      !------------------------------------------------------------------------
+      !
+      USE input_parameters, ONLY : CI_scheme, opt_scheme, num_of_images, &
+                                   first_last_opt, damp, temp_req, ds, k_max, &
+                                   k_min, path_thr, restart_mode, calculation, &
+                                   nstep, max_seconds, outdir
       !
       USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, &
                                  lmol_dyn, nstep_path, &
@@ -39,28 +44,13 @@ MODULE path_routines
                                  k_max_          => k_max, &
                                  k_min_          => k_min, &
                                  path_thr_       => path_thr
-      !
-      USE input_parameters, ONLY : CI_scheme, opt_scheme, &
-                                   num_of_images, first_last_opt, damp, &
-                                   temp_req, ds, k_max, k_min, path_thr
-      USE input_parameters, ONLY : outdir, prefix, restart_mode, calculation
-      USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc
-      USE input_parameters, ONLY : rd_ht, trd_ht, cell_symmetry
-      USE input_parameters, ONLY : nstep
-      USE input_parameters, ONLY : max_seconds
-      USE input_parameters, ONLY : ntyp, nat, na_inp, sp_pos, rd_pos, &
-                                   atom_mass, atom_label, if_pos, rd_vel, &
-                                   atomic_positions, ion_radius, wmass, cell_damping, &
-                                   greash, press, cell_dofree, cell_units
-      !
-      USE io_global,     ONLY : ionode, ionode_id
-      USE mp_global,     ONLY : mpime
-      USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
-      USE control_flags, ONLY : lpath, lneb
-      USE parser,        ONLY : int_to_char
-      USE cell_base,     ONLY : cell_base_init, a1, a2, a3, cell_alat
-      USE ions_base,     ONLY : ions_base_init
-      USE check_stop,    ONLY : check_stop_init
+      USE io_files,       ONLY : prefix, outdir_ => outdir
+      USE io_global,      ONLY : ionode, ionode_id
+      USE mp_global,      ONLY : mpime
+      USE mp,             ONLY : mp_bcast, mp_barrier, mp_sum
+      USE control_flags,  ONLY : lpath, lneb
+      USE parser,         ONLY : int_to_char
+      USE check_stop,     ONLY : check_stop_init
       !
       IMPLICIT NONE
       !
@@ -68,14 +58,12 @@ MODULE path_routines
       INTEGER            :: ios
       CHARACTER(LEN=256) :: outdir_saved
       CHARACTER(LEN=256) :: filename
-      REAL(dbl)          :: alat_ , massa_totale
       !
-      INTEGER, EXTERNAL :: C_MKDIR
+      INTEGER, EXTERNAL :: c_mkdir
       !
-      IF ( num_of_images < 2 ) THEN
+      IF ( num_of_images < 2 ) &
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
                    & ': num_of_images must be at least 2', 1 )
-      END IF
       !
       IF ( ( CI_scheme /= "no-CI"      ) .AND. &
            ( CI_scheme /= "highest-TS" ) .AND. &
@@ -117,20 +105,9 @@ MODULE path_routines
       CASE default
          !
          CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
-                   & ': unknown opt_scheme', 1 )
+                    & ': unknown opt_scheme', 1 )
          !
       END SELECT
-      !
-      massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
-      CALL cell_base_init( ibrav, celldm, trd_ht, cell_symmetry, rd_ht, cell_units, a, b, &
-             c, cosab, cosac, cosbc, wmass , massa_totale , press , cell_damping , &
-             greash , cell_dofree )
-
-      alat_ = cell_alat()
-
-      CALL ions_base_init( ntyp, nat, na_inp, sp_pos, rd_pos, rd_vel, &
-                           atom_mass, atom_label, if_pos, atomic_positions, &
-                           alat_ , a1, a2, a3, ion_radius  )
       !
       CALL check_stop_init( max_seconds )
       !
@@ -143,6 +120,8 @@ MODULE path_routines
       k_max_           = k_max
       k_min_           = k_min
       path_thr_        = path_thr
+      !
+      outdir_ = outdir
       !
       lpath      = .TRUE.
       lneb       = .TRUE.
@@ -164,7 +143,7 @@ MODULE path_routines
            !
            WRITE( stdout, * ) 'Creating dir : ',TRIM( outdir )
            !
-           ios = C_MKDIR( TRIM( outdir ), LEN_TRIM( outdir ) )
+           ios = c_mkdir( TRIM( outdir ), LEN_TRIM( outdir ) )
            !
         END IF
         !

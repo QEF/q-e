@@ -11,9 +11,12 @@
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
+  ! ... this routine initialise the cp code and allocates (calling the
+  ! ... appropriate routines) the memory
+  !
   USE kinds,                    ONLY : dbl
   USE control_flags,            ONLY : nfi, nbeg, nomore, lwf, iprsta, &
-                                       tolp, ndr, tfor, tprnfor, tpre
+                                       ndr, tfor, tprnfor, tpre
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
                                        fion, fionm, cdmi
@@ -28,7 +31,7 @@ SUBROUTINE init_run()
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum
   USE core,                     ONLY : nlcc_any, rhoc
   USE smooth_grid_dimensions,   ONLY : nnrsx
-  USE wavefunctions_module,     ONLY : c0, cm, phi => cp
+  USE wavefunctions_module,     ONLY : c0, cm, cp
   USE cdvan,                    ONLY : dbec, drhovan
   USE derho,                    ONLY : drhor, drhog
   USE ensemble_dft,             ONLY : tens, z0
@@ -37,7 +40,7 @@ SUBROUTINE init_run()
   USE parameters,               ONLY : natx
   USE efield_module,            ONLY : tefield
   USE uspp_param,               ONLY : nhm
-  USE ions_nose,                ONLY : tempw, xnhp0, xnhpm, vnhp, nhpcl
+  USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
                                        alat, celldm, a1, a2, a3, b1, b2, b3
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
@@ -52,6 +55,7 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe, fccc
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE gvecp,                    ONLY : ecutp
+  USE metagga,                  ONLY : ismeta, crosstaus, dkedtaus, gradwfc
   !
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE efcalc,                   ONLY : clear_nbeg
@@ -67,12 +71,15 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
-  USE metagga,                  ONLY : ismeta,crosstaus,dkedtaus,gradwfc  !METAGGA
   !
   IMPLICIT NONE
   !
   !
   CALL start_clock( 'initialize' )
+  !
+  ! ... initialize g-vectors, fft grids
+  !
+  CALL init_dimensions()
   !
   CALL init_geometry()
   !
@@ -110,9 +117,9 @@ SUBROUTINE init_run()
      !
   END IF
   !
-  ALLOCATE( c0(  ngw, nbspx, 1, 1 ) )
-  ALLOCATE( cm(  ngw, nbspx, 1, 1 ) )
-  ALLOCATE( phi( ngw, nbspx, 1, 1 ) )
+  ALLOCATE( c0( ngw, nbspx, 1, 1 ) )
+  ALLOCATE( cm( ngw, nbspx, 1, 1 ) )
+  ALLOCATE( cp( ngw, nbspx, 1, 1 ) )
   !
   CALL allocate_local_pseudo( ngs, nsp )
   !
@@ -123,16 +130,21 @@ SUBROUTINE init_run()
   ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
-  IF (ismeta .and. tens) CALL errore('cprmain','ensemble_dft not implimented for metaGGA',1)
-  IF (ismeta .and. tpre) THEN  !Begin METAGGA
-     ALLOCATE(crosstaus(nnrsx,6,nspin))
-     ALLOCATE(dkedtaus(nnrsx,3,3,nspin))
-     ALLOCATE(gradwfc(nnrsx,3))
-  END IF  !End METAGGA
+  !
+  IF ( ismeta .AND. tens ) &
+     CALL errore( 'cprmain ', 'ensemble_dft not implimented for metaGGA', 1 )
+  !
+  IF ( ismeta .AND. tpre ) THEN
+     !
+     ALLOCATE( crosstaus( nnrsx, 6, nspin ) )
+     ALLOCATE( dkedtaus(  nnrsx, 3, 3, nspin ) )
+     ALLOCATE( gradwfc(   nnrsx, 3 ) )
+     !
+  END IF
   !
   IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
   !
-  IF ( tens .or. tcg) &
+  IF ( tens .OR. tcg) &
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, &
                                  nspin, nbspx, nnrsx, natx )
   !
@@ -225,5 +237,7 @@ SUBROUTINE init_run()
   CALL ions_cofmass( taus, pmass, na, nsp, cdmi )
   !
   CALL stop_clock( 'initialize' )
+  !
+  RETURN
   !
 END SUBROUTINE init_run

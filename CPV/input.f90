@@ -21,6 +21,7 @@ MODULE input
    PUBLIC :: read_input_file    !  a) This sub. should be called first
    PUBLIC :: iosys_pseudo       !  b) then read pseudo files
    PUBLIC :: iosys              !  c) finally copy variables to modules
+   PUBLIC :: modules_setup
    !
    LOGICAL :: has_been_read = .FALSE.
    !
@@ -33,12 +34,13 @@ MODULE input
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lsmd, lwf, program_name
+     USE control_flags,         ONLY : lneb, lsmd, lpath, lwf, program_name
      USE printout_base,         ONLY : title_ => title
      !
      IMPLICIT NONE
      !
      CHARACTER(LEN=2) :: prog
+     !
      !
      IF ( program_name == 'FPMD' ) prog = 'FP'
      IF ( program_name == 'CP90' ) prog = 'CP'
@@ -56,6 +58,8 @@ MODULE input
      lneb = ( TRIM( calculation ) == 'neb' )
      !
      lsmd = ( TRIM( calculation ) == 'smd' )
+     !
+     lpath = ( lneb .OR. lsmd )
      !
      IF ( lsmd .AND. ( program_name == 'FPMD' ) ) &
         CALL errore( 'read_input_file ', &
@@ -78,247 +82,223 @@ MODULE input
      !
    END SUBROUTINE read_input_file
    !
-   !  ----------------------------------------------
-   !
-   SUBROUTINE iosys_pseudo( )
-
-        use input_parameters, only:  atom_pfile, pseudo_dir, ntyp, nat, prefix, scradir, xc_type
-        use control_flags, only:  program_name
-        use parameters, only: nsx
-        use read_pseudo_module_fpmd, only: readpp
-        USE io_files,  ONLY: &
-              psfile_ => psfile , &
-              pseudo_dir_ => pseudo_dir, &
-              scradir_ => scradir, &
-              prefix_ => prefix
-        USE ions_base, ONLY: nsp_ => nsp, nat_ => nat
-
-        implicit none
-
-        IF( .NOT. has_been_read ) &
-          CALL errore( ' iosys_pseudo ', ' input file has not been read yet! ', 1 )
-
-        prefix_  = TRIM( prefix  )
-        scradir_ = TRIM( scradir )
-
-        !
-        !  Set internal variables for the number of species and number of atoms
-        !
-        nsp_   = ntyp
-        nat_   = nat
-
-        psfile_= ' '
-        psfile_ ( 1:nsp_ ) = atom_pfile( 1:nsp_ )
-        pseudo_dir_        = TRIM( pseudo_dir  )
-        !
-        !  read in pseudopotentials and wavefunctions files
-        !
-        call readpp( xc_type )
-        !
-        return
+   !-------------------------------------------------------------------------
+   SUBROUTINE iosys_pseudo()
+     !-------------------------------------------------------------------------
+     !
+     USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
+                                         prefix, scradir, xc_type
+     USE control_flags,           ONLY : program_name
+     USE parameters,              ONLY : nsx
+     USE read_pseudo_module_fpmd, ONLY : readpp
+     USE io_files,                ONLY : psfile_     => psfile , &
+                                         pseudo_dir_ => pseudo_dir, &
+                                         scradir_    => scradir, &
+                                         prefix_     => prefix
+     USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
+     !
+     IMPLICIT NONE
+     !
+     !
+     IF ( .NOT. has_been_read ) &
+        CALL errore( 'iosys_pseudo ', 'input file has not been read yet!', 1 )
+     !
+     prefix_  = TRIM( prefix  )
+     scradir_ = TRIM( scradir )
+     !
+     ! ... Set internal variables for the number of species and number of atoms
+     !
+     nsp_ = ntyp
+     nat_ = nat
+     !
+     psfile_         = ' '
+     psfile_(1:nsp_) = atom_pfile(1:nsp_)
+     pseudo_dir_     = TRIM( pseudo_dir  )
+     !
+     ! ... read in pseudopotentials and wavefunctions files
+     !
+     CALL readpp( xc_type )
+     !
+     RETURN
+     !
    END SUBROUTINE iosys_pseudo
    !
-   !  ----------------------------------------------
-   !
-   SUBROUTINE iosys
-
-     USE control_flags, ONLY: fix_dependencies, program_name
-
+   !-------------------------------------------------------------------------
+   SUBROUTINE iosys()
+     !-------------------------------------------------------------------------
+     !
+     USE control_flags, ONLY: fix_dependencies, program_name, lsmd, lneb
+     !
      IMPLICIT NONE
-
-        IF( ionode ) THEN
-          WRITE( stdout, fmt = &
-            "(//,3X,'Main Simulation Parameters (from input)',/ &
-            &   ,3X,'---------------------------------------')" )
-        END IF
-
-        ! . Set internal flags according to the input .......................!
-
-        CALL set_control_flags( )
-
+     !
+     !
+     IF ( ionode ) THEN
         !
-        ! . Write to stdout basic simulation parameters .....................!
+        WRITE( UNIT = stdout, &
+               FMT = "(//,3X,'Main Simulation Parameters (from input)',/ &
+                     &   ,3X,'---------------------------------------')" )
         !
-
-        CALL input_info()
-
-        ! . CALL the Module specific setup routine ..........................!
-
-        CALL modules_setup()
-
-        ! . Initialize SMD variables and path
-        
-        CALL smd_initvar()
-
-        ! . Fix values for dependencies .....................................!
-
-        IF( program_name == 'FPMD' ) THEN
-          CALL fix_dependencies()
-        END IF
-        !
-        ! . Write to stdout input module information ........................!
-        !
-        CALL modules_info()
-        !
+     END IF
+     !
+     ! ... Set internal flags according to the input
+     !
+     CALL set_control_flags()
+     !
+     ! ... Write to stdout basic simulation parameters
+     !
+     CALL input_info()
+     !
+     ! . CALL the Module specific setup routine
+     !
+     CALL modules_setup()
+     !
+     ! ... Initialize SMD variables and path
+     !
+     IF ( lsmd ) CALL smd_initvar()
+     !
+     ! ... Fix values for dependencies
+     !
+     IF ( program_name == 'FPMD' ) CALL fix_dependencies()
+     !
+     ! ... Write to stdout input module information
+     !
+     CALL modules_info()
+     !
      RETURN
+     !
    END SUBROUTINE iosys
    !
-   !  ----------------------------------------------
-   !
-   SUBROUTINE set_control_flags( )
+   !-------------------------------------------------------------------------
+   SUBROUTINE set_control_flags()
+     !-------------------------------------------------------------------------
      !
-     USE control_flags, ONLY: program_name
-
-     USE control_flags, ONLY: &
-        ndw_     => ndw, &
-        ndr_     => ndr, &
-        iprint_  => iprint, &
-        isave_   => isave, &
-        tstress_ => tstress, &
-        tprnfor_ => tprnfor, &
-        tprnsfac_ => tprnsfac, &
-        toptical_ => toptical, &
-        ampre_   => ampre, &
-        trane_   => trane, &
-        newnfi_  => newnfi, &
-        tnewnfi_ => tnewnfi, &
-        rhoout_  => rhoout, &
-        tdipole_ => tdipole, &
-        nomore_  => nomore, &
-        memchk_  => memchk, &
-        tpre_    => tpre, &
-        timing_  => timing, &
-        iprsta_  => iprsta, &
-        taurdr_  => taurdr, &
-        nbeg_    => nbeg, &
-        gamma_only_ => gamma_only, &
-        tchi2_   => tchi2, &
-        tatomicwfc_ => tatomicwfc, &
-        printwfc_ => printwfc, &
-        tortho_  => tortho
-
-     USE control_flags, ONLY: &
-        t_diis_simple_ => t_diis_simple, &
-        t_diis_ => t_diis, &
-        tsde_ => tsde, &
-        t_diis_rot_ => t_diis_rot, &
-        tconjgrad_ => tconjgrad, &
-        tsteepdesc_ => tsteepdesc, &
-        tzeroe_ => tzeroe, &
-        tdamp_ => tdamp, &
-        trhor_ => trhor, &
-        trhow_ => trhow, &
-        tvlocw_ => tvlocw, &
-        ortho_eps_ => ortho_eps, &
-        ortho_max_ => ortho_max, &
-        tnosee_ => tnosee
-
-     USE control_flags, ONLY: &
-        tdampions_ => tdampions, &
-        tfor_ => tfor, &
-        tsdp_ => tsdp, &
-        tconvthrs, tconjgrad_ion
-
-     USE control_flags, ONLY: &
-        tnosep_ => tnosep, &
-        tcap_ => tcap, &
-        tcp_ => tcp, &
-        tolp_ => tolp, &
-        tzerop_ => tzerop, &
-        tv0rd_ => tv0rd, &
-        tranp_ => tranp, &
-        amprp_ => amprp
-
-      USE control_flags, ONLY: &
-        tionstep_ => tionstep, &
-        nstepe_ => nstepe
-
-      USE control_flags, ONLY: &
-        tzeroc_ => tzeroc, &
-        tnoseh_ => tnoseh, &
-        thdyn_ => thdyn, &
-        tsdc_ => tsdc, &
-        tbeg_ => tbeg
-
-      USE control_flags, ONLY: &
-          ekin_conv_thr_ => ekin_conv_thr, &
-          etot_conv_thr_ => etot_conv_thr, &
-          forc_conv_thr_ => forc_conv_thr, &
-          ekin_maxiter_ => ekin_maxiter, &
-          etot_maxiter_ => etot_maxiter, &
-          forc_maxiter_ => forc_maxiter
-
-      USE control_flags, ONLY: &
-        force_pairing_ => force_pairing
-     
-     !   Other module
-
-     USE wave_base, ONLY: frice_ => frice
-     USE ions_base, ONLY: fricp_ => fricp
-     USE cell_base, ONLY: frich_ => frich
-     USE time_step, ONLY: set_time_step
-     USE cp_electronic_mass,       only: &
-           emass_ => emass, &
-           emaec_ => emass_cutoff
-
-
+     USE control_flags, ONLY : program_name
+     USE control_flags, ONLY : ndw_        => ndw, &
+                               ndr_        => ndr, &
+                               iprint_     => iprint, &
+                               isave_      => isave, &
+                               tstress_    => tstress, &
+                               tprnfor_    => tprnfor, &
+                               tprnsfac_   => tprnsfac, &
+                               toptical_   => toptical, &
+                               ampre_      => ampre, &
+                               trane_      => trane, &
+                               newnfi_     => newnfi, &
+                               tnewnfi_    => tnewnfi, &
+                               rhoout_     => rhoout, &
+                               tdipole_    => tdipole, &
+                               nomore_     => nomore, &
+                               memchk_     => memchk, &
+                               tpre_       => tpre, &
+                               timing_     => timing, &
+                               iprsta_     => iprsta, &
+                               taurdr_     => taurdr, &
+                               nbeg_       => nbeg, &
+                               gamma_only_ => gamma_only, &
+                               tchi2_      => tchi2, &
+                               tatomicwfc_ => tatomicwfc, &
+                               printwfc_   => printwfc, &
+                               tortho_     => tortho
+     USE control_flags, ONLY : t_diis_simple_ => t_diis_simple, &
+                               t_diis_        => t_diis, &
+                               tsde_          => tsde, &
+                               t_diis_rot_    => t_diis_rot, &
+                               tconjgrad_     => tconjgrad, &
+                               tsteepdesc_    => tsteepdesc, &
+                               tzeroe_        => tzeroe, &
+                               tdamp_         => tdamp, &
+                               trhor_         => trhor, &
+                               trhow_         => trhow, &
+                               tvlocw_        => tvlocw, &
+                               ortho_eps_     => ortho_eps, &
+                               ortho_max_     => ortho_max, &
+                               tnosee_        => tnosee
+     USE control_flags, ONLY : tdampions_ => tdampions, &
+                               tfor_      => tfor, &
+                               tsdp_      => tsdp, &
+                               tconvthrs, tconjgrad_ion
+     USE control_flags, ONLY : tnosep_ => tnosep, &
+                               tcap_   => tcap, &
+                               tcp_    => tcp, &
+                               tolp_   => tolp, &
+                               tzerop_ => tzerop, &
+                               tv0rd_  => tv0rd, &
+                               tranp_  => tranp, &
+                               amprp_  => amprp
+     USE control_flags, ONLY : tionstep_ => tionstep, &
+                               nstepe_   => nstepe
+     USE control_flags, ONLY : tzeroc_ => tzeroc, &
+                               tnoseh_ => tnoseh, &
+                               thdyn_  => thdyn, &
+                               tsdc_   => tsdc, &
+                               tbeg_   => tbeg
+     USE control_flags, ONLY : ekin_conv_thr_ => ekin_conv_thr, &
+                               etot_conv_thr_ => etot_conv_thr, &
+                               forc_conv_thr_ => forc_conv_thr, &
+                               ekin_maxiter_  => ekin_maxiter, &
+                               etot_maxiter_  => etot_maxiter, &
+                               forc_maxiter_  => forc_maxiter
+     USE control_flags, ONLY : force_pairing_ => force_pairing
+     !
+     ! ...  Other modules
+     !
+     USE wave_base,          ONLY : frice_ => frice
+     USE ions_base,          ONLY : fricp_ => fricp
+     USE cell_base,          ONLY : frich_ => frich
+     USE time_step,          ONLY : set_time_step
+     USE cp_electronic_mass, ONLY : emass_ => emass, &
+                                    emaec_ => emass_cutoff
+     !
      USE input_parameters, ONLY: &
-        electron_dynamics, electron_damping, diis_rot, electron_temperature, &
-        ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep, &
+        electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
+        ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
         electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
-        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,  &
-        cell_parameters, cell_velocities, cell_temperature, force_pairing, &
-        tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav, ortho_eps, &
-        ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, tcg
-
-     USE input_parameters, ONLY: ndr, ndw, iprint, isave, tstress, k_points, &
-        tprnfor, verbosity, tprnrho, tdipole_card, toptical_card, &
-        tnewnfi_card, newnfi_card, ampre, nstep, restart_mode, ion_positions, &
-        startingwfc, printwfc, orthogonalization, electron_velocities
-
-
+        amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,           &
+        cell_parameters, cell_velocities, cell_temperature, force_pairing,     &
+        tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
+        ortho_eps, ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, &
+        tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
+        tprnrho, tdipole_card, toptical_card, tnewnfi_card, newnfi_card,       &
+        ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
+        orthogonalization, electron_velocities
      !
      IMPLICIT NONE
      !
-
-     IF( .NOT. has_been_read ) &
-       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
-
-     ndr_        = ndr
-     ndw_        = ndw
-     iprint_     = iprint
-     isave_      = isave
-     tstress_    = tstress
-     tpre_       = tstress
-     gamma_only_ = ( TRIM( k_points ) == 'gamma' )
-     tprnfor_    = tprnfor
-     printwfc_   = printwfc
-     tchi2_      = tchi2_inp
+     IF ( .NOT. has_been_read ) &
+        CALL errore( 'iosys ', 'input file has not been read yet!', 1 )
+     !
+     ndr_           = ndr
+     ndw_           = ndw
+     iprint_        = iprint
+     isave_         = isave
+     tstress_       = tstress
+     tpre_          = tstress
+     gamma_only_    = ( TRIM( k_points ) == 'gamma' )
+     tprnfor_       = tprnfor
+     printwfc_      = printwfc
+     tchi2_         = tchi2_inp
      ekin_conv_thr_ = ekin_conv_thr
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
-
-     ! ...   Set internal time step variables ( delt, twodelt, dt2 ... )
-
+     !
+     ! ... Set internal time step variables ( delt, twodelt, dt2 ... )
+     !
      CALL set_time_step( dt )
-
-     ! ...   Set electronic fictitius mass and its cut-off for fourier
-     !       acceleration
-
+     !
+     ! ... Set electronic fictitius mass and its cut-off for fourier
+     ! ... acceleration
+     !
      emass_ = emass
      emaec_ = emass_cutoff
-
-
      !
-     !  set the level of output, the code verbosity 
+     ! ... set the level of output, the code verbosity 
      !
-
      iprsta_ = 1
      timing_ = .FALSE.
           ! The code write to files fort.8 fort.41 fort.42 fort.43
           ! a detailed report of subroutines timing
-     rhoout_ = .false.
+     rhoout_ = .FALSE.
           ! save charge density to file  CHARGEDENSITY if nspin = 1, and
           ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
      memchk_ = .FALSE.
@@ -328,65 +308,75 @@ MODULE input
      tprnsfac_   = .FALSE.
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
-
+     !
      trhor_  = ( TRIM( calculation ) == 'nscf' )
      trhow_  = ( TRIM( disk_io ) == 'high' )
-     tvlocw_ = .false. ! temporaneo
-
-     SELECT CASE ( TRIM(verbosity) )
-       CASE ('minimal')
+     tvlocw_ = .FALSE.
+     !
+     SELECT CASE( TRIM( verbosity ) )
+       CASE( 'minimal' )
+         !
          iprsta_ = 0
-       CASE ('low', 'default')
+         !
+       CASE( 'low', 'default' )
+         !
          iprsta_ = 1
          timing_ = .TRUE.
-       CASE ('medium')
-         iprsta_ = 2
-         timing_ = .TRUE.
-         rhoout_ = .TRUE.
+         !
+       CASE( 'medium' )
+         !
+         iprsta_   = 2
+         timing_   = .TRUE.
+         rhoout_   = .TRUE.
          tprnsfac_ = .TRUE.
-       CASE ('high')
-         iprsta_ = 3
-         memchk_ = .TRUE.
-         timing_ = .TRUE.
-         rhoout_ = .TRUE.
+         !
+       CASE( 'high' )
+         !
+         iprsta_   = 3
+         memchk_   = .TRUE.
+         timing_   = .TRUE.
+         rhoout_   = .TRUE.
          tprnsfac_ = .TRUE.
+         !
        CASE DEFAULT
-         CALL errore(' control_flags ',' unknown verbosity '//TRIM(verbosity), 1 )
+         !
+         CALL errore( 'control_flags ', &
+                      'unknown verbosity ' // TRIM( verbosity ), 1 )
+         !
      END SELECT
-
-     ! ...   If explicitly requested force the charge density to be printed
-     IF( tprnrho ) rhoout_ = .TRUE.
-
+     !
+     ! ... If explicitly requested force the charge density to be printed
+     !
+     IF ( tprnrho ) rhoout_ = .TRUE.
+     !
      tdipole_  = tdipole_card
      toptical_ = toptical_card
      newnfi_   = newnfi_card
      tnewnfi_  = tnewnfi_card
-
      !
-     !   set the restart flags
+     ! ... set the restart flags
      !
-
      trane_ = .FALSE.
      ampre_ = ampre
      SELECT CASE ( TRIM( restart_mode ) )
        CASE ('from_scratch')
          nbeg_ = -2
-         if ( ion_positions == 'from_input' ) nbeg_ = -1
+         IF ( ion_positions == 'from_input' ) nbeg_ = -1
          nomore_ = nstep
          trane_  = ( startingwfc == 'random' )
-         if ( ampre_ == 0.d0 ) ampre_ = 0.02
+         IF ( ampre_ == 0.d0 ) ampre_ = 0.02
        CASE ('reset_counters')
          nbeg_ = 0
          nomore_ = nstep
        CASE ('restart')
          nbeg_ = 1
          nomore_ = nstep
-         if ( ion_positions == 'from_input' ) then
+         IF ( ion_positions == 'from_input' ) THEN
            taurdr_ = .TRUE.
            nbeg_ = -1
-         end if
+         END IF
        CASE DEFAULT
-         CALL errore(' iosys ',' unknown restart_mode '//trim(restart_mode), 1 )
+         CALL errore(' iosys ',' unknown restart_mode '//TRIM(restart_mode), 1 )
      END SELECT
 
      ! ... Starting/Restarting Atomic positions
@@ -424,7 +414,7 @@ MODULE input
          tortho_ = .TRUE.
       CASE DEFAULT
          CALL errore(' iosys ',' unknown orthogonalization '//&
-              trim(orthogonalization), 1 )
+              TRIM(orthogonalization), 1 )
       END SELECT
 
       ortho_max_ = ortho_max
@@ -438,7 +428,7 @@ MODULE input
         CASE ('zero')
           tzeroe_ = .TRUE.
           IF( program_name == 'CP90' ) &
-            print '("Warning: electron_velocities keyword has no effect")'
+            PRINT '("Warning: electron_velocities keyword has no effect")'
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT
@@ -459,11 +449,11 @@ MODULE input
           tsde_ = .FALSE.
         CASE ('cg')
           tsde_      = .FALSE.
-          IF( program_name == 'CP90' ) then
-             tcg = .true.
-          else
+          IF( program_name == 'CP90' ) THEN
+             tcg = .TRUE.
+          ELSE
              tconjgrad_ = .TRUE.
-          endif
+          ENDIF
         CASE ('damp')
           tsde_   = .FALSE.
           tdamp_  = .TRUE.
@@ -566,13 +556,13 @@ MODULE input
         !         temperature control of ions via Nose' thermostat
         CASE ('nose')
           tnosep_ = .TRUE.
-          tcp_ = .false.
+          tcp_ = .FALSE.
         CASE ('not_controlled', 'default')
           tnosep_ = .FALSE.
-          tcp_ = .false.
+          tcp_ = .FALSE.
         CASE ('rescaling' )
           tnosep_ = .FALSE.
-          tcp_ = .true.
+          tcp_ = .TRUE.
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown ion_temperature '//TRIM(ion_temperature), 1 )
       END SELECT
@@ -584,7 +574,7 @@ MODULE input
         CASE ('default')
           tzerop_ = .FALSE.
           tv0rd_ = .FALSE.
-          tcap_ = .false.
+          tcap_ = .FALSE.
         CASE ('zero')
           tzerop_ = .TRUE.
           tv0rd_ = .FALSE.
@@ -592,7 +582,7 @@ MODULE input
           tzerop_ = .TRUE.
           tv0rd_  = .TRUE.
         CASE ('random')
-          tcap_ = .true.
+          tcap_ = .TRUE.
           IF( program_name == 'FPMD' ) &
             WRITE(stdout) " ion_velocities = '//TRIM(ion_velocities)//' has no effects "
         CASE DEFAULT
@@ -724,21 +714,17 @@ MODULE input
       END IF
 
       IF( ( TRIM( calculation ) == 'smd' ) .AND. ( TRIM( cell_dynamics ) /= 'none' ) ) THEN
-        CALL errore(' smiosys ',' cell_dynamics not implemented : '//trim(cell_dynamics), 1 )
+        CALL errore(' smiosys ',' cell_dynamics not implemented : '//TRIM(cell_dynamics), 1 )
       END IF
 
       RETURN
    END SUBROUTINE set_control_flags
    !
-   !  ----------------------------------------------
-   !  
-   !  modules setup ( copy-in variables )
-   !
-   !  ----------------------------------------------
-   !
+   !-------------------------------------------------------------------------
    SUBROUTINE modules_setup()
+     !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : lneb, program_name, lconstrain
+     USE control_flags,    ONLY : program_name, lconstrain
      USE constants,        ONLY : UMA_AU, pi
      !
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
@@ -825,7 +811,7 @@ MODULE input
      IMPLICIT NONE
      !
      REAL(KIND=dbl) :: alat_ , massa_totale
-     REAL(KIND=dbl)  :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+     REAL(KIND=dbl) :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
      ! ...   DIIS
      REAL(KIND=dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
      LOGICAL :: o_diis_inp, oqnr_diis_inp
@@ -838,28 +824,24 @@ MODULE input
        CALL errore( ' modules_setup ', ' input file has not been read yet! ', 1 )
      !
      !
-     IF( .NOT. lneb ) THEN
-        CALL check_stop_init( max_seconds )
-     END IF
+     CALL check_stop_init( max_seconds )
 
      ! ...  Set cell base module
 
-     IF( .not. lneb ) THEN
-        massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
-        CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, cell_units, &
-               a, b, c, cosab, cosac, cosbc , wmass , massa_totale , press , &
-               cell_damping, greash , cell_dofree )
-     END IF
-
+     massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
+     !
+     CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &
+                          cell_units, a, b, c, cosab, cosac, cosbc , wmass, &
+                          massa_totale, press, cell_damping, greash, &
+                          cell_dofree )
+     !
      alat_ = cell_alat()
-
 
      ! ...  Set ions base module
 
-     if( .not. lneb ) then
-        CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel, atom_mass, &
-             atom_label, if_pos, atomic_positions , alat_ , a1, a2, a3, ion_radius  )
-     end if
+     CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel,  &
+                          atom_mass, atom_label, if_pos, atomic_positions, &
+                          alat_ , a1, a2, a3, ion_radius )
 
      ! ...   Set units for Reciprocal vectors ( 2PI/alat by convention )
 
@@ -872,16 +854,16 @@ MODULE input
      CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
 
      ! ... 
-
+     
      grease_ = grease
      greasp_ = greasp
-
-     !   set thermostat parameter for cell, ions and electrons
-
+     !
+     ! ... set thermostat parameter for cell, ions and electrons
+     !
      CALL cell_nose_init( temph, fnoseh )
-
+     !
      CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega )
-  
+     !
      CALL electrons_nose_init( ekincw , fnosee )
 
      ! set box grid module variables
@@ -908,16 +890,14 @@ MODULE input
 
      CALL printout_base_init( outdir, prefix )
 
-     IF( noptical > 0 ) then
+     IF( noptical > 0 ) &
         CALL optical_setup( woptical, noptical, boptical )
-     END IF
 
      CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
 
      CALL efield_init( epol, efield )
 
      CALL cg_init( tcg , maxiter , etresh , passop )
-
      !
      CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_rloc  )
 
@@ -932,7 +912,7 @@ MODULE input
 
      !
      CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
-               vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp)
+                          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
 
      CALL ks_states_init( nspin, tprnks, tprnks_empty )
 
@@ -940,10 +920,10 @@ MODULE input
      CALL electrons_base_initval( nelec, nelup, neldw, nbnd, nspin, occupations, f_inp )
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
-
-     CALL ensemble_initval &
-          ( occupations, n_inner, fermi_energy, rotmass, occmass, rotation_damping,        &
-            occupation_damping, occupation_dynamics, rotation_dynamics,  degauss, smearing )
+     CALL ensemble_initval( occupations, n_inner, fermi_energy, rotmass, &
+                            occmass, rotation_damping, occupation_damping, &
+                            occupation_dynamics, rotation_dynamics, degauss, &
+                            smearing )
      !
      ! ... variables for constrained dynamics are set here
      !
@@ -982,14 +962,14 @@ MODULE input
      !
   END SUBROUTINE modules_setup
   !
-  !     -------------------------------------------------------------------
-  !
-  SUBROUTINE smd_initvar( )
-
-      ! this subroutine copies SMD variables from input module to path_variables
-      ! -------------------------------------------------------------------
-
-      USE input_parameters, only: calculation, &
+  !-------------------------------------------------------------------------
+  SUBROUTINE smd_initvar()
+    !-------------------------------------------------------------------------
+    !
+    ! ... this subroutine copies SMD variables from input 
+    ! ... module to path_variables
+    !
+      USE input_parameters, ONLY: calculation, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
            num_of_images, smd_ene_ini, smd_ene_fin
@@ -1015,7 +995,7 @@ MODULE input
       USE control_flags,  ONLY: nbeg
       USE cell_base,      ONLY: cell_alat
       !
-      implicit none
+      IMPLICIT NONE
       !
       REAL(KIND=dbl) :: alat_
       !
@@ -1180,7 +1160,7 @@ MODULE input
           WRITE( stdout,510)
           frice = 0.
       ELSE IF( TRIM(electron_dynamics) == 'damp' ) THEN
-          tnosee = .false.
+          tnosee = .FALSE.
           WRITE( stdout,509)
           WRITE( stdout,514) frice, grease
       ELSE
@@ -1194,40 +1174,40 @@ MODULE input
         WRITE( stdout,535)
       END IF
       !
-      if( trane ) then
+      IF( trane ) THEN
          WRITE( stdout,515) ampre
-      endif
+      ENDIF
       !
       CALL electrons_print_info( )
       !
       CALL exch_corr_print_info( )
 
-      if ( trhor ) then
+      IF ( trhor ) THEN
          WRITE( stdout,720)
-      endif
-      if( .not. trhor .and. trhow )then
+      ENDIF
+      IF( .NOT. trhor .AND. trhow )THEN
          WRITE( stdout,721)
-      endif
-      if( tvlocw )then
+      ENDIF
+      IF( tvlocw )THEN
          WRITE( stdout,722)
-      endif
+      ENDIF
       !
       IF( program_name == 'FPMD' ) THEN
         CALL empty_print_info( stdout )
         CALL kpoint_info( stdout )
       END IF
       !
-      if( tfor .AND. tnosep ) fricp = 0.0d0
+      IF( tfor .AND. tnosep ) fricp = 0.0d0
       !
       CALL ions_print_info( )
       !
-      if( tfor .AND. tnosep ) CALL ions_nose_info()
+      IF( tfor .AND. tnosep ) CALL ions_nose_info()
       !
-      if( thdyn .AND. tnoseh ) frich = 0.0d0
+      IF( thdyn .AND. tnoseh ) frich = 0.0d0
       !
       CALL cell_print_info( )
       !
-      if( thdyn .AND. tnoseh ) CALL cell_nose_info()
+      IF( thdyn .AND. tnoseh ) CALL cell_nose_info()
       !
       IF( program_name == 'FPMD' ) THEN
         CALL potential_print_info( stdout )
@@ -1245,8 +1225,8 @@ MODULE input
  510  FORMAT(   3X,'Electron dynamics with newton equations')
  512  FORMAT(   3X,'Orthog. with Gram-Schmidt')
  513  FORMAT(   3X,'Electron dynamics with steepest descent')
- 514  format(   3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
- 515  format(   3X,'initial random displacement of el. coordinates with ',   &
+ 514  FORMAT(   3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
+ 515  FORMAT(   3X,'initial random displacement of el. coordinates with ',   &
      &       ' amplitude=',f10.6,/,                                      &
      &       3X,'trane not to be used with mass preconditioning')
  535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
@@ -1256,21 +1236,21 @@ MODULE input
  545   FORMAT(   3X,'Electron dynamics with canonical temp. control : ',/ &
                ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
                   ,'Tolerance = ',F11.6)
- 550  format(' ion dynamics: the temperature is not controlled'//)
- 555  format(' ion dynamics with rescaling of velocities:'/             &
+ 550  FORMAT(' ion dynamics: the temperature is not controlled'//)
+ 555  FORMAT(' ion dynamics with rescaling of velocities:'/             &
      &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
      &       f10.5//)
- 560  format(' ion dynamics with canonical temp. control:'/             &
+ 560  FORMAT(' ion dynamics with canonical temp. control:'/             &
      &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
      &       f10.5//)
- 562  format(' ion dynamics with nose` temp. control:'/                 &
+ 562  FORMAT(' ion dynamics with nose` temp. control:'/                 &
      &       ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
      &       f10.3//)
-563  format(' ion dynamics with nose` temp. control:'/                 &
+563  FORMAT(' ion dynamics with nose` temp. control:'/                 &
      &       ' temperature required=',f10.5,'(kelvin)'/                 &
      &       ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
      &       ' nose` mass(es) =',20(1X,f10.3)//)
- 566  format(' electronic dynamics with nose` temp. control:'/          &
+ 566  FORMAT(' electronic dynamics with nose` temp. control:'/          &
      &       ' elec. kin. en. required=',f10.5,'(hartree)',             &
      &       ' nose` mass = ',f10.3//)
  580   FORMAT(   3X,'Nstepe = ',I3  &
@@ -1279,13 +1259,11 @@ MODULE input
  590   FORMAT(   3X,'Electron temperature control via nose thermostat')
     !
 
- 700  format( /,3X, 'Verbosity: iprsta = ',i2,/)
- 720  format( 3X, 'charge density is read from unit 47')
- 721  format( 3X, 'charge density is written in unit 47')
- 722  format( 3X, 'local potential is written in unit 46')
+ 700  FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
+ 720  FORMAT( 3X, 'charge density is read from unit 47')
+ 721  FORMAT( 3X, 'charge density is written in unit 47')
+ 722  FORMAT( 3X, 'local potential is written in unit 46')
 
   END SUBROUTINE modules_info
-
-! ----------------------------------------------------------------
-  END MODULE input
-! ----------------------------------------------------------------
+  !
+END MODULE input

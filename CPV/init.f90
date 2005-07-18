@@ -376,6 +376,7 @@
       tau0 = 0.0d0
       taus = 0.0d0
       tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
+
       CALL r_to_s( tau0, taus, na, nsp, ainv )
       !
       !  if trd_ht = .true.  the geometry is given in the standard input even if
@@ -450,7 +451,7 @@
       CALL cell_base_reinit( TRANSPOSE( h ) )
       !
       call recips( a1, a2, a3, b1, b2, b3 )
-
+      !
       call gcal( alat, b1, b2, b3, gmax )
       !
       !   generation of little box g-vectors

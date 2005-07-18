@@ -189,6 +189,7 @@
     IF( ALLOCATED( xnhpp ) ) deallocate(xnhpp )
     IF( ALLOCATED( ekin2nhp ) ) deallocate(ekin2nhp )
     IF( ALLOCATED( gkbt2nhp ) ) deallocate(gkbt2nhp )
+    IF( ALLOCATED( anum2nhp ) ) deallocate(anum2nhp )
     IF( ALLOCATED( qnp ) ) deallocate(qnp )
     IF( ALLOCATED( qnp_ ) ) deallocate(qnp_ )
     RETURN
