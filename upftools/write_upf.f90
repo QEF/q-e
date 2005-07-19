@@ -407,14 +407,14 @@ end subroutine write_upf
   ! The data used to convert iexch, icorr, igcx, igcc
   ! into a user-readable string
   !
-  integer, parameter :: nxc = 1, ncc = 9, ngcx = 3, ngcc = 4 
-  character (len=4) :: exc, corr, gradx, gradc  
+  integer, parameter :: nxc = 1, ncc = 9, ngcx = 4, ngcc = 5
+  character (len=20) :: exc, corr, gradx, gradc  
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc)
   data exc / 'NOX ', 'SLA ' /  
   data corr / 'NOC ', 'PZ  ', 'VWN ', 'LYP ', 'PW  ', 'WIG ', 'HL  ',&
               'OBZ ', 'OBW ', 'GL  ' /
-  data gradx / 'NOGX', 'B88 ', 'GGX ', 'PBE ' /  
-  data gradc / 'NOGC', 'P86 ', 'GGC ', 'BLYP', 'PBE ' /  
+  data gradx / 'NOGX', 'B88 ', 'GGX ', 'PBE ', 'TPSS' /  
+  data gradc / 'NOGC', 'P86 ', 'GGC ', 'BLYP', 'PBE ', 'TPSS' /  
 
   if (iexch==1.and.igcx==0.and.igcc==0) then
      shortname = corr(icorr)
@@ -428,6 +428,8 @@ end subroutine write_upf
      shortname = 'PW91'
   else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
      shortname = 'PBE'
+  else if (iexch==1.and.icorr==4.and.igcx==4.and.igcc==5) then
+     shortname = 'TPSS'
   else
      shortname = ' '
   end if

@@ -197,7 +197,7 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   integer :: iexch, icorr, igcx, igcc  
   ! data
   integer :: nxc, ncc, ngcx, ngcc  
-  parameter (nxc = 1, ncc = 9, ngcx = 3, ngcc = 4)  
+  parameter (nxc = 1, ncc = 9, ngcx = 4, ngcc = 5)  
   character (len=3) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -209,9 +209,9 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
   data notset / -1 /  
   data exc / 'NOX', 'SLA' /  
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-       'OBW', 'GL' /
-  data gradx / 'NOGX', 'B88', 'GGX', 'PBE' /  
-  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBE' /  
+       'OBW', 'GL'  /
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBE' ,'TPSS'/  
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBE','TPSS' /  
 
   ! convert to uppercase
   len = len_trim(dft)  
@@ -262,6 +262,12 @@ subroutine which_dft (dft, iexch, icorr, igcx, igcc)
      call set_dft_value (igcx, 2)  
      call set_dft_value (igcc, 2)  
   endif
+  !special case : META = tpss metaGGA Exc  !Begin METAGGA
+  if (matches('TPSS',dftout)) then
+     call set_dft_value(iexch,1)!1
+     call set_dft_value(icorr,4)!4
+  end if    !End METAGGA
+
   ! Default value: Slater exchange
 
 
