@@ -51,7 +51,7 @@ subroutine do_elf (elf)
   ! local variables
   !
   integer :: i, j, k, ng, ibnd, ik, is
-  real(kind=DP) :: gv(3), w1, d, arho, fac
+  real(kind=DP) :: gv(3), w1, d, fac
   real(kind=DP), allocatable :: kkin (:), tbos (:)
   complex(kind=DP), allocatable :: aux (:), aux2 (:)
   !
@@ -153,8 +153,7 @@ subroutine do_elf (elf)
   fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
   do i = 1, nrxx
-     arho = abs (rho (i, 1) )
-     if (arho > 1.d-30) then
+     if (rho (i,1) > 1.d-30) then
         d = fac / rho(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho(i,1))
         elf (i) = 1.0d0 / (1.0d0 + d**2)
      endif
