@@ -70,7 +70,7 @@ SUBROUTINE neb_loop( iloop, program_name )
   !
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_routines,    ONLY : iosys_path
-  USE path_io_routines, ONLY : io_path_start
+  USE path_io_routines, ONLY : io_path_start, io_path_stop
   !
   IMPLICIT NONE
   !
@@ -87,6 +87,8 @@ SUBROUTINE neb_loop( iloop, program_name )
   ! ... this routine does all the NEB job
   !
   CALL search_mep()
+  !
+  CALL io_path_stop()
   !
   RETURN
   !
