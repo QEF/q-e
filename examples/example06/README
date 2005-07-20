@@ -9,18 +9,18 @@ variables see the appropriate INPUT_* file)
    output=alas.scf.out)
 
 2) make a phonon calculation for a uniform grid of q-points. We chose
-   a 444 Monkhorst-Pack grid, not translated. We separately calculate
-   the dynamical matrix at Gamma together with effective charges 
+   a 444 Monkhorst-Pack grid, not translated (nqte the variables
+   nq, nq2, nq3). At Gamma, effective charges are automatically calculated
    (AlAs is a polar system).  All dynamical matrices are saved with
-   a different name.
+   a different name ("fildyn" + 1-8), while "fildyn" + 0 contains the
+   information on the q-point grid (type of grid and number of points)
 
 3) call program q2r.x to calculate IFC's in real space.
-   All dynamical matrices are read and Fourier-transformed. Note that
-   nr1,nr2,nr3  in file q2r.in are the Monkhorst-Pack indexes of the 
-   q-point uniform grid (4,4,4 in this case).
+   All dynamical matrices are read and Fourier-transformed.
    The output file containing the force constants in a format suitable 
    for program matdyn.x is alas444.fc.
 
 4) call program matdyn.x to recalculate phonons at any q-vector from
    previously calculated IFC's. See the header of matdyn.f90 for
-   input documentation.
+   input documentation. Two different kind of calculations are 
+   performed: phonon dispersions along the Gamma-X line, phonon DOS
