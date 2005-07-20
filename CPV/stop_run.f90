@@ -32,10 +32,6 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lpath ) CALL io_path_stop()
   !
-  CALL mp_barrier()
-  !
-  CALL mp_end()
-  !
 #ifdef __T3E
   !
   ! ... set streambuffers off
@@ -58,6 +54,10 @@ SUBROUTINE stop_run( flag )
      CALL path_deallocation( 'smd' )
      !
   END IF
+  !
+  CALL mp_barrier()
+  !
+  CALL mp_end()
   !
   IF ( flag ) THEN
      !

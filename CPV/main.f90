@@ -31,7 +31,19 @@
 !  this routine does some initialization, then handles for the main loop
 !  for Car-Parrinello dynamics
 !  ----------------------------------------------
-!  list of Fortran I/O units used by the program
+!  this version features:
+!  Parrinello-Rahman dynamics
+!  generic k-points calculation
+!  Nose' thermostat for ions and electrons
+!  velocity rescaling for ions
+!  Kleinman-Bylander fully non-local pseudopotentials
+!  support for local and s, p and d nonlocality
+!  generalized gradient corrections
+!  core corrections
+!  calculus of polarizability
+!  DIIS minimization for electrons
+!  ions dynamics with DIIS electronic minimization at each step
+!  --------------------------------------------
 !
 !  input units
 !  NDR > 50: system configuration at start (not used if nbeg.LT.0)
@@ -268,14 +280,6 @@
 
       s1 = cclock()
 
-      !     copy-in input parameters from input_parameter module
-
-      CALL iosys()
-
-      !     initialize g-vectors, fft grids
-
-      CALL init_dimensions( )
-
       CALL cpsizes( nproc )
       CALL flush_unit( stdout )
 
@@ -312,11 +316,8 @@
       ALLOCATE( ei2( -nr2:nr2, nat ) )
       ALLOCATE( ei3( -nr3:nr3, nat ) )
 
-
-      !     initialize system geometry, cell and positions
-
-      CALL init_geometry( )
-
+      !
+      CALL init_geometry()
 
       !     initialize variables and types
       !

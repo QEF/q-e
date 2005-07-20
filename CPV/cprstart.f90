@@ -79,7 +79,7 @@ PROGRAM main
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
   USE io_global,     ONLY : io_global_start, io_global_getionode
   USE mp_global,     ONLY : mp_global_start
-  USE mp,            ONLY : mp_start, mp_env
+  USE mp,            ONLY : mp_end, mp_start, mp_env
   USE control_flags, ONLY : lneb, lsmd, program_name
   USE environment,   ONLY : environment_start
   !
@@ -88,6 +88,7 @@ PROGRAM main
   INTEGER            :: mpime, nproc, gid, ionode_id
   LOGICAL            :: ionode
   INTEGER, PARAMETER :: root = 0
+  CHARACTER(LEN=4)   :: get_program
   !
   ! ... program starts here
   !
@@ -102,12 +103,12 @@ PROGRAM main
   ! ... gid   = group index
   ! ... root  = index of the root processor
   !
-  program_name = 'CP90'
-  !
   ! ... initialize input output
   !
   CALL io_global_start( mpime, root )
   CALL io_global_getionode( ionode, ionode_id )
+  !
+  program_name = get_program()
   !
   CALL environment_start( )
   !
@@ -134,7 +135,11 @@ PROGRAM main
      !
   ELSE
      !
-     CALL cpr_loop( 1 )
+     IF( program_name == 'CP90' ) THEN
+       CALL cpr_loop( 1 )
+     ELSE IF( program_name == 'FPMD' ) THEN
+       CALL fpmd_loop( 0 )
+     END IF
      !
   END IF
   !
