@@ -31,7 +31,7 @@ SUBROUTINE phq_readin()
   USE char_ph,       ONLY : title_ph
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, epsil, zue, trans, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
-                            ldisp
+                            ldisp, recover
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
@@ -59,33 +59,34 @@ SUBROUTINE phq_readin()
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, modenum,         &
-                       eth_rps, eth_ns, lraman, elop, dek
-    ! tr2_ph       : convergence threshold
-    ! amass        : atomic masses
-    ! alpha_mix    : the mixing parameter
-    ! niter_ph     : maximum number of iterations
-    ! nmix_ph      : number of previous iterations used in mixing
-    ! maxirr       : the number of irreducible representations
-    ! nat_todo     : number of atom to be displaced
-    ! iverbosity   : verbosity control
-    ! outdir       : directory where input, output, temporary files reside
-    ! epsil        : if true calculate dielectric constant
-    ! trans        : if true calculate phonon
-    ! elph         : if true calculate electron-phonon coefficients
-    ! zue          : if true calculate effective charges (alternate way)
-    ! lraman       : if true calculate raman tensor
-    ! elop         : if true calculate electro-optic tensor
-    ! nrapp        : the representations to do
-    ! max_seconds  : maximum cputime for this run
-    ! reduce_io    : reduce I/O to the strict minimum
-    ! prefix       : the prefix of files produced by pwscf
-    ! fildyn       : output file for the dynamical matrix
-    ! filelph      : output file for electron-phonon coefficients
-    ! fildvscf     : output file containing deltavsc
-    ! fildrho      : output file containing deltarho
-    ! eth_rps      : threshold for calculation of  Pc R |psi> (Raman)
-    ! eth_ns       : threshold for non-scf wavefunction calculation (Raman)
-    ! dek          : delta_xk used for wavefunctions derivation (Raman)
+                       eth_rps, eth_ns, lraman, elop, dek, recover
+  ! tr2_ph       : convergence threshold
+  ! amass        : atomic masses
+  ! alpha_mix    : the mixing parameter
+  ! niter_ph     : maximum number of iterations
+  ! nmix_ph      : number of previous iterations used in mixing
+  ! maxirr       : the number of irreducible representations
+  ! nat_todo     : number of atom to be displaced
+  ! iverbosity   : verbosity control
+  ! outdir       : directory where input, output, temporary files reside
+  ! epsil        : if true calculate dielectric constant
+  ! trans        : if true calculate phonon
+  ! elph         : if true calculate electron-phonon coefficients
+  ! zue          : if true calculate effective charges (alternate way)
+  ! lraman       : if true calculate raman tensor
+  ! elop         : if true calculate electro-optic tensor
+  ! nrapp        : the representations to do
+  ! max_seconds  : maximum cputime for this run
+  ! reduce_io    : reduce I/O to the strict minimum
+  ! prefix       : the prefix of files produced by pwscf
+  ! fildyn       : output file for the dynamical matrix
+  ! filelph      : output file for electron-phonon coefficients
+  ! fildvscf     : output file containing deltavsc
+  ! fildrho      : output file containing deltarho
+  ! eth_rps      : threshold for calculation of  Pc R |psi> (Raman)
+  ! eth_ns       : threshold for non-scf wavefunction calculation (Raman)
+  ! dek          : delta_xk used for wavefunctions derivation (Raman)
+  ! recover      : recover=.true. to restart from an interrupted run
   !
   !
   IF ( .NOT. ionode ) GOTO 400
@@ -135,6 +136,7 @@ SUBROUTINE phq_readin()
   nq3          = 0
   modenum      = -1
   dek          = 1.0d-3
+  recover      = .FALSE.
   !
   ! ...  reading the namelist inputph
   !
@@ -180,7 +182,7 @@ SUBROUTINE phq_readin()
        &.t. for Zue calc.', 1)
   tmp_dir = TRIM(outdir)
 400 CONTINUE
-  CALL bcast_ph_input
+  CALL bcast_ph_input ( ) 
   xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
@@ -228,9 +230,8 @@ SUBROUTINE phq_readin()
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  CALL allocate_part
-
-
+  CALL allocate_part ( )
+  !
   IF ( .NOT. ionode ) GOTO 800
 
   IF (nat_todo.LT.0.OR.nat_todo.GT.nat) CALL errore ('phq_readin', &
@@ -249,8 +250,8 @@ SUBROUTINE phq_readin()
   ENDIF
 
 800 CONTINUE
-  CALL bcast_ph_input1
 
+  CALL bcast_ph_input1 ( ) 
 
   IF (epsil.AND.degauss.NE.0.D0) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)

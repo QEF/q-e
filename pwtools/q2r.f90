@@ -27,20 +27,18 @@ PROGRAM q2r
   !     for a grid of q-points, calculates the corresponding set of 
   !     interatomic force constants (IFC), C(R)
   !
-  !  Input data:
-  !     namelist "input"
-  !  followed by a card
-  !     nfile
-  !  followed by nfile cards
-  !     filin
-  !
-  !  Namelist "input" :
-  !     nr1,nr2,nr3:  dimensions of the FFT grid formed by the q-point grid
-  !     (integer)     no default value, must be specified
-  !     fild       :  output file containing the IFC
-  !     (character)   no default value, must be specified
+  !  Input data: Namelist "input" 
+  !     fildyn     :  input file name (character, must be specified)
+  !                   "fildyn"0 contains information on the q-point grid
+  !                   "fildyn"1-N contain force constans C_n = C(q_n)
+  !                   for n=1,...N, where N is the number of q-points
+  !                   in the irreducible brillouin zone
+  !                   Normally this should be the same as specified
+  !                   on input to the phonon code
+  !     flfrc      :  output file containing the IFC in real space
+  !                   (character, must be specified)
   !     zasr       :  Indicates type of Acoustic Sum Rules used for the Born 
-  !     (character)   effective charges: 
+  !                   effective charges (character):            
   !                   - 'no': no Acoustic Sum Rules imposed (default)
   !                   - 'simple':  previous implementation of the asr used 
   !                     (3 translational asr imposed by correction of 
@@ -60,33 +58,40 @@ PROGRAM q2r
   !                   In these cases the supplementary asr are cancelled
   !                   during the orthonormalization procedure (see below).
   !
-  !  nfile (integer)  : number of files containing C(q), one per q
-  !  filin (character): name of the files containing C(q). Their order
-  !                     is not important but q=0 MUST be the first file
+  !  If a file "fildyn"0 is not found, the code will ignore variable "fildyn"
+  !  and will try to read from the following cards the missing information 
+  !  on the q-point grid and file names:
+  !     nr1,nr2,nr3:  dimensions of the FFT grid formed by the q-point grid
+  !     nfile      :  number of files containing C(q_n), n=1,nfile
+  !  followed by nfile cards:
+  !     filin      :  name of file containing C(q_n)
+  !  The name and order of files is not important as long as q=0 is the first
   !
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
+  USE parser,     ONLY : int_to_char
   !
   IMPLICIT NONE
   !
   INTEGER,       PARAMETER :: ntypx = 10
   REAL(kind=DP), PARAMETER :: eps=1.D-5
-  INTEGER                  :: nr1, nr2, nr3, nr(3), nax
+  INTEGER                  :: nr1, nr2, nr3, nr(3)
+  !     dimensions of the FFT grid formed by the q-point grid
   !
   CHARACTER(len=20)  :: crystal
   CHARACTER(len=80)  :: title
-  CHARACTER(len=256) :: filin,filj,filf,fild
+  CHARACTER(len=256) :: fildyn, filin, filj, filf, flfrc
   CHARACTER(len=3)   :: atm(ntypx)
   !
-  LOGICAL :: lq,lrigid,lrigid_save 
+  LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
   CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
   INTEGER :: na, nt
   !
-  INTEGER :: gid, ibrav
+  INTEGER :: gid, ibrav, ierr
   !
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
   COMPLEX(KIND=DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
@@ -96,8 +101,7 @@ PROGRAM q2r
   REAL(KIND=DP) :: epsil(3,3)
   !
   !
-  NAMELIST / input / nr1, nr2, nr3, fild, zasr
-  !
+  NAMELIST / input / fildyn, flfrc, zasr
   !
   CALL mp_start()
   !
@@ -107,9 +111,8 @@ PROGRAM q2r
      !
      ! ... all calculations are done by the first cpu
      !
-     nr1 = 0
-     nr2 = 0
-     nr3 = 0
+     fildyn = ' '
+     flfrc = ' '
      !
      CALL input_from_file ( ) 
      !
@@ -117,9 +120,27 @@ PROGRAM q2r
      !
      ! check input
      !
-     IF (nr1 < 1) CALL errore ('q2r',' nr1 wrong or missing',1)
-     IF (nr2 < 1) CALL errore ('q2r',' nr2 wrong or missing',1)
-     IF (nr3 < 1) CALL errore ('q2r',' nr3 wrong or missing',1)
+     IF (fildyn == ' ')  CALL errore ('q2r',' bad fildyn',1)
+     IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
+     !
+     OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
+          iostat=ierr)
+     lnogridinfo = ( ierr /= 0 )
+     IF (lnogridinfo) THEN
+        WRITE (6,*) ' file ',TRIM(fildyn)//'0', ' not found'
+        WRITE (6,*) ' reading grid info from input'
+        READ (5, *) nr1, nr2, nr3
+        READ (5, *) nfile
+     ELSE
+        WRITE (6,*) ' reading grid info from file ',TRIM(fildyn)//'0'
+        READ (1, *) nr1, nr2, nr3
+        READ (1, *) nfile
+        CLOSE (unit=1, status='keep')
+     END IF
+     !
+     IF (nr1 < 1 .OR. nr1 > 1024) CALL errore ('q2r',' nr1 wrong or missing',1)
+     IF (nr2 < 1 .OR. nr2 > 1024) CALL errore ('q2r',' nr2 wrong or missing',1)
+     IF (nr3 < 1 .OR. nr2 > 1024) CALL errore ('q2r',' nr3 wrong or missing',1)
      !
      ! copy nrX -> nr(X)
      !
@@ -135,16 +156,20 @@ PROGRAM q2r
      ALLOCATE ( nc(nr1,nr2,nr3) )
      nc = 0
      !
-     ! Reciprocal space dyn.mat. read from file
+     ! Force constants in reciprocal space read from file
      !
-     READ (5,*) nfile
      DO ifile=1,nfile
-        READ(5,'(a)') filin
-        WRITE (6,*) ' reading dyn.mat. from file ',TRIM(filin)
-        OPEN (unit=1,file=filin,status='old',form='formatted')
+        IF (lnogridinfo) THEN
+           READ(5,'(a)') filin
+        ELSE
+           filin = TRIM(fildyn) // TRIM( int_to_char( ifile ) )
+        END IF
+        WRITE (6,*) ' reading force constants from file ',TRIM(filin)
+        OPEN (unit=1, file=filin, status='old', form='formatted', iostat=ierr)
+        IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
         CALL read_file (nqs, q, epsil, lrigid,  &
              ntyp, nat, ibrav, celldm, atm, amass)
-        IF (ifile.EQ.1) THEN
+        IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
            ALLOCATE (phid(nr1,nr2,nr3,3,3,nat,nat) )
            !
@@ -180,9 +205,8 @@ PROGRAM q2r
 
            IF(nc(m(1),m(2),m(3)).EQ.0) THEN
               nc(m(1),m(2),m(3))=1
-              nax = nat
               IF (lrigid) THEN
-                 CALL rgd_blk (nr1,nr2,nr3,nax,nat,phiq(1,1,1,1,nq),q(1,nq), &
+                 CALL rgd_blk (nr1,nr2,nr3,nat,phiq(1,1,1,1,nq),q(1,nq), &
                   tau,epsil,zeu,bg,omega,-1.d0)
               END IF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
@@ -219,7 +243,7 @@ PROGRAM q2r
      !
      ! Real space force constants written to file (analytical part)
      !
-     OPEN(unit=2,file=fild,status='unknown',form='formatted')
+     OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
      DO nt = 1,ntyp
         WRITE(2,*) nt," '",atm(nt),"' ",amass(nt)

@@ -33,7 +33,7 @@ subroutine phq_summary
        ik, ib, irr, imode0
   ! generic counter
   ! counter on angular momenta
-  ! counter on atomi types
+  ! counter on atomic types
   ! counter on modes
   ! counter on modes
   ! counter on polarizations

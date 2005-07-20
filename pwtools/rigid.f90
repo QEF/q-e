@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine rgd_blk (nr1,nr2,nr3,nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
+subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
   ! compute the rigid-ion (long-range) term for q 
   !
@@ -14,13 +14,13 @@ subroutine rgd_blk (nr1,nr2,nr3,nax,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   implicit none
   real(kind=8), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
   integer ::  nr1, nr2, nr3    !  FFT grid
-  integer ::  nax, nat         ! (maximum) number of atoms 
-  complex(kind=8) :: dyn(3,3,nax,nax) ! dynamical matrix
+  integer ::  nat              ! number of atoms 
+  complex(kind=8) :: dyn(3,3,nat,nat) ! dynamical matrix
   real(kind=8) &
        q(3),           &! q-vector
-       tau(3,nax),     &! atomic positions
+       tau(3,nat),     &! atomic positions
        epsil(3,3),     &! dielectric constant tensor
-       zeu(3,3,nax),   &! effective charges tensor
+       zeu(3,3,nat),   &! effective charges tensor
        bg(3,3),        &! reciprocal lattice basis vectors
        omega,          &! unit cell volume
        sign             ! sign=+/-1.0 ==> add/subtract rigid-ion term

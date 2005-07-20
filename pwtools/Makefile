@@ -38,6 +38,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
+../Modules/parser.o \
 ../Modules/path_formats.o \
 ../Modules/splinelib.o \
 ../Modules/timestep.o

@@ -23,13 +23,13 @@ subroutine raman
   if (epsil.and..not.convt) &
       call errore ('raman','epsil calcul. not converged',1)
   !
-  ! Computes Pc [DH,D\rho] |psi>
+  ! Computes Pc [DH,Drho] |psi>
   !
   IF (irr0 == -10) THEN
      ! restart from a previous calculation
-     write (6,'(/,5x,''Skipping computation of Pc [DH,D\rho] |psi> '')')
+     write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE
-     write (6,'(/,5x,''Computing Pc [DH,D\rho] |psi> '')')
+     write (6,'(/,5x,''Computing Pc [DH,Drho] |psi> '')')
      call dhdrhopsi
   END IF
   !

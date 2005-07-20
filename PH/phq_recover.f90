@@ -25,15 +25,15 @@ subroutine phq_recover
   implicit none
 
   integer :: irr, na
-  ! dummy variable to read
-  ! dummy variable to read
   ! counter on representations
   ! counter on atoms
+  logical :: exst
 
   iunrec = 99
-  call seqopn (iunrec, 'recover', 'unformatted', recover)
+  call seqopn (iunrec, 'recover', 'unformatted', exst)
   irr0 = 0
   zstarue0 (:,:) = (0.d0, 0.d0)
+  recover = recover .AND. exst
   if (recover) then
      !
      ! irr: state of the calculation

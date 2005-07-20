@@ -351,8 +351,9 @@ PROGRAM matdyn
      !
      IF(flfrq.NE.' ') THEN
         OPEN (unit=2,file=flfrq ,status='unknown',form='formatted')
-        WRITE(2,*) nq, 3*nat
+        WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
+           WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
            WRITE(2,'(6f10.4)') (freq(i,n),i=1,3*nat)
         END DO
         CLOSE(unit=2)
@@ -577,7 +578,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   !
   REAL(KIND=DP) :: arg
   COMPLEX(KIND=DP) :: cfac(nat)
-  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq, nax
+  INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq
   REAL(KIND=DP) qp(3), qbid(3,nsc) ! automatic array
   !
   !
@@ -592,9 +593,8 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
      dyn_blk(:,:,:,:) = (0.d0,0.d0)
      CALL frc_blk (dyn_blk,qp,tau_blk,nat_blk,              &
           &              nr1,nr2,nr3,frc,at_blk,bg_blk,rws,nrws)
-     nax = nat_blk
      IF (has_zstar) &
-          CALL rgd_blk(nr1,nr2,nr3,nax,nat_blk,dyn_blk,qp,tau_blk,   &
+          CALL rgd_blk(nr1,nr2,nr3,nat_blk,dyn_blk,qp,tau_blk,   &
                        epsil,zeu,bg_blk,omega_blk,+1.d0)
      !
      DO na=1,nat

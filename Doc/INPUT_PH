@@ -77,10 +77,14 @@ c             numerical noise.
 c
 c lnscf       If .TRUE. the run makes first a nscf calculation        .false.
 c
-c ldisp       If .TRUE. the run calculates the points for dispersion  .false.
+c ldisp       If .TRUE. the run calculates phonons for a grid of      .false.
+c             q-points specified by nq1, nq2, nq3  - for direct
+c             calculation of the entire phonon dispersion
 c             (ldisp and modenum are not compatible)
 c
-c nq1, nq2, nq3 number of q-points in each direction                  0, 0, 0
+c nq1,nq2,nq3 parameters of the Monkhorst-Pack grid (no offset) used   0,0,0
+c             when ldisp=.true. Same meaning as for nk1, nk2, nk3
+c             in the input of pw.x
 c
 c modenum     for single mode calculation                             -1
 c             If not set here, will be read from file .save           

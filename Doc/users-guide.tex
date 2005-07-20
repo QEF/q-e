@@ -1678,17 +1678,17 @@ A sample phonon calculation is performed in Example 02.
 \subsubsection{Calculation of interatomic force constants in real
 space}
 
-First, dynamical matrices are calculated and saved for a suitable
-uniform grid of \textbf{q}-vectors.
-Only the \textbf{q}-vectors in the Irreducible Brillouin Zone of the
-crystal are needed.
-If the system is an insulator, effective charges and dielectric tensor
-must be calculated (variable \texttt{epsil=.true}) at $\mathbf{q}=0$.
+First, dynamical matrices $D(\mathbf{q})$ are calculated and saved 
+for a suitable uniform grid of \textbf{q}-vectors (only those in the 
+Irreducible Brillouin Zone of the crystal are needed). Although
+this can be done one \textbf{q}-vector at the time, a simpler procedure
+is to specify variable \texttt{ldisp=.true} and to set variables
+\texttt{nq1,nq2,nq3} to some suitable Monkhorst-Pack grid, that
+will be automatically generated, centered at $\mathbf{q}=0$.
 
-Second, all dynamical matrices are given as input to code
-\texttt{q2r.x}.
-The $\mathbf{q}=0$ file must be the first in the list.
-This produces a file of Interatomic Force Constants in real space, up
+Second, code \texttt{q2r.x} reads the $D(\mathbf{q})$ dynamical 
+matrices produced in the preceding step and Fourier-transform them,
+writing a file of Interatomic Force Constants in real space, up
 to a distance that depends on the size of the grid of
 \textbf{q}-vectors.
 Program \texttt{matdyn.x} may be used to produce phonon modes and

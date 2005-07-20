@@ -40,6 +40,7 @@ subroutine bcast_ph_input
   call mp_bcast (ldisp, root)
   call mp_bcast (lraman, root)
   call mp_bcast (elop, root)
+  call mp_bcast (recover, root)
   !
   ! integers
   !

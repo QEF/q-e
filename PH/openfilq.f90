@@ -109,7 +109,7 @@ SUBROUTINE openfilq()
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
 
-  !   ... by the first node only, other nodes write on unit 6 (i.e./dev/nu
+  !   ... by the first node only, other nodes write on unit 6 (i.e./dev/null
   !   exception: electron-phonon calculation from saved data
   !  (iudyn is read, not written, by all nodes)
   !
@@ -125,7 +125,7 @@ SUBROUTINE openfilq()
      REWIND (iudyn)
   ENDIF
   !
-  !   An optional file for electron-phonon calculations containing deltaVs
+  !   An optional file for electron-phonon calculations containing deltaVscf
   !
 400 IF (fildvscf.NE.' ') THEN
      iudvscf = 27
