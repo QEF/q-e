@@ -15,9 +15,7 @@
     !
     CHARACTER(LEN=4) :: get_program
     !
-    INCLUDE 'prog.h'
-    !
-    get_program = prog
+    get_program = 'FPMD'
     !
     RETURN
   END FUNCTION

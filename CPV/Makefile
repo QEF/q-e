@@ -136,8 +136,8 @@ fpmd : fpmd.x fpmdpp.x
 cp : cp.x
 
 
-cp.x : cprstart.o $(FOBJS) $(LIBOBJ) get_cp
-	$(LD) -o cp.x cprstart.o get_program.o $(FOBJS) $(LIBOBJ) ../Modules/*.o ../flib/eispack.o $(LDFLAGS)
+cp.x : cprstart.o get_cp.o $(FOBJS) $(LIBOBJ)
+	$(LD) -o cp.x cprstart.o get_cp.o $(FOBJS) $(LIBOBJ) ../Modules/*.o ../flib/eispack.o $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 
@@ -147,8 +147,8 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-fpmd.x : cprstart.o $(FOBJS) $(LIBOBJ) get_fpmd
-	$(LD) -o fpmd.x cprstart.o get_program.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
+fpmd.x : cprstart.o get_fpmd.o $(FOBJS) $(LIBOBJ)
+	$(LD) -o fpmd.x cprstart.o get_fpmd.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
 		../flib/eispack.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
 		$(LDFLAGS)
 	- (cd ../bin ; ln -fs ../CPV/fpmd.x . )
@@ -156,15 +156,6 @@ fpmd.x : cprstart.o $(FOBJS) $(LIBOBJ) get_fpmd
 fpmdpp.x : fpmdpp.o
 	$(LD) -o fpmdpp.x fpmdpp.o $(LDFLAGS)
 	- (cd ../bin ; ln -fs ../CPV/fpmdpp.x . )
-
-get_fpmd:
-	echo "CHARACTER(LEN=4), PARAMETER :: prog = 'FPMD'" > prog.h
-	$(F90) $(F90FLAGS) -c get_program.f90
-
-get_cp:
-	echo "CHARACTER(LEN=4), PARAMETER :: prog = 'CP90'" > prog.h
-	$(F90) $(F90FLAGS) -c get_program.f90
-
 
 clean :
 	- /bin/rm -f fpmd.x fpmdpp.x *.o *.mod version.h *.i core* *.F90 fort* \
