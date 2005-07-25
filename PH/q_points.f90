@@ -19,7 +19,7 @@ SUBROUTINE q_points ( )
 
   implicit none
   
-  integer :: i, iq, iudyn, ierr
+  integer :: i, iq, ierr
 
   real(kind = dp), allocatable, dimension(:) :: wq  
 
@@ -71,7 +71,6 @@ SUBROUTINE q_points ( )
   ! ... write the information on the grid of q-points to file
   !
   IF (ionode) THEN
-     iudyn = 26
      OPEN (unit=iudyn, file=TRIM(fildyn)//'0', status='unknown', iostat=ierr)
      IF ( ierr > 0 ) CALL errore ('phonon','cannot open file ' &
           & // TRIM(fildyn) // '0', ierr)
