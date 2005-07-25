@@ -97,7 +97,7 @@ PROGRAM q2r
   COMPLEX(KIND=DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
   !
   REAL(KIND=DP) :: celldm(6), at(3,3), bg(3,3)
-  REAL(KIND=DP) :: q(3,48),omega, xq, amass(ntypx), resi,sum
+  REAL(KIND=DP) :: q(3,48),omega, xq, amass(ntypx), resi
   REAL(KIND=DP) :: epsil(3,3)
   !
   !

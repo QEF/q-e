@@ -34,7 +34,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   integer, parameter :: nrx=16
   real(kind=8), save :: gmega(3,(2*nrx+1)*(2*nrx+1)*(2*nrx+1))
   real(kind=8) :: alph, fac,g1,g2,g3, fnat(3), facgd, arg
-  complex(kind=8) :: facg, cmplx
+  complex(kind=8) :: facg
   !
   ! Check if some dimensions should not be taken into account:
   ! e.g. if nr1=1 and nr2=1, then the G-vectors run along nr3 only.
@@ -140,7 +140,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                            g3 * (tau(3,na)-tau(3,nb)))
               !
               facg = fac * exp(-geg/alph/4.0)/geg *                 &
-                   cmplx(cos(arg),sin(arg))
+                   dcmplx(cos(arg),sin(arg))
               do i=1,3
                  do j=1,3 
                     dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg * zag(i) * zbg(j) 
