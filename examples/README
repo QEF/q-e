@@ -236,3 +236,7 @@ example26:
     In order to run calculations up to the N-th, use:
        ./run_example N
     Note that "./run_example" alone does nothing.
+
+example27:
+    This example shows how to use cp.x to perform TPSS metaGGA calculations
+    for C4H6
