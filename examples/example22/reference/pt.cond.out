@@ -1,6 +1,6 @@
 
      Program POST-PROC v.2.1cvs starts ...
-     Today is  3Jun2005 at 14:16:51 
+     Today is 26Jul2005 at 17:25: 7 
 
      Reading file ptt.save ...      only dimensions
      read complete
@@ -12,7 +12,7 @@
      nelec  =  20.00  nkb   =    52  ngl    =     947
 
      warning: negative or imaginary core charge    -0.000004    0.000000
- 
+
 ===== INPUT FILE containing the left lead =====
 
      GEOMETRY:
@@ -60,7 +60,7 @@
           Pt      5         1                    0.6547
           Pt      6         1                    0.6547
 ----- General information -----
- 
+
 ----- Complex band structure calculation -----
 
          Noncollinear calculations
@@ -192,30 +192,30 @@
    23   1.2445 1.3011 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    24   1.3011 1.3576 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    25   1.3576 1.4142 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
- ngper, shell number =           69          13
- ngper, ngper*npol, n2d =           69         138         128
- Nchannels of the left tip =            6
+ ngper, shell number =  69 13
+ ngper, ngper*npol, n2d =  69 138 128
+ Nchannels of the left tip =  6
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
- 
-  -0.0642912   0.0000000   0.0000000
-  -0.0642912   0.0000000   0.0000000
-  -0.1970836   0.0000000   0.0000000
-  -0.1970836   0.0000000   0.0000000
-  -0.3204902   0.0000000   0.0000000
-  -0.3204902   0.0000000   0.0000000
- 
-     PWCOND       :  1m26.98s CPU time
 
-     init         :     4.72s CPU
-     poten        :     0.07s CPU
-     local        :     3.77s CPU
- 
-     scatter_forw :    64.72s CPU
-     integrals    :    36.24s CPU
-     rotatef      :     2.11s CPU (      24 calls,   0.088 s avg)
-     rotateb      :     1.38s CPU (      24 calls,   0.058 s avg)
-     scatter_back :    12.22s CPU
- 
-     compbs       :    13.76s CPU
-     compbs_2     :    12.57s CPU
- 
+  -0.0642912   0.0000000   0.0000000
+  -0.0642912   0.0000000   0.0000000
+  -0.1970840   0.0000000   0.0000000
+  -0.1970840   0.0000000   0.0000000
+  -0.3204898   0.0000000   0.0000000
+  -0.3204898   0.0000000   0.0000000
+
+     PWCOND       :    57.95s CPU time
+
+     init         :     4.34s CPU
+     poten        :     0.03s CPU
+     local        :     2.50s CPU
+
+     scatter_forw :    43.30s CPU
+     integrals    :    26.48s CPU
+     rotatef      :     2.55s CPU (      24 calls,   0.106 s avg)
+     rotateb      :     1.68s CPU (      24 calls,   0.070 s avg)
+     scatter_back :     8.68s CPU
+
+     compbs       :     7.81s CPU
+     compbs_2     :     6.47s CPU
+

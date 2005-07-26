@@ -1,6 +1,6 @@
 
      Program RAMAN     v.2.1cvs starts ...
-     Today is  3Jun2005 at 13:26: 2 
+     Today is 26Jul2005 at 16:56:45 
 
 
      **********************************************
@@ -57,7 +57,7 @@
 
      Computing dynamical matrix for 
                     q = (    0.00000    0.00000    0.00000 )
- 
+
      25 Sym.Ops. (with q -> -q+G )
 
 
@@ -165,7 +165,7 @@ in crystal axes:
        0.0005000  0.0000000  0.0005000     500000.000
        0.0000000 -0.0005000 -0.0005000     500000.000
       -0.0005000 -0.0005000  0.0000000     500000.000
-     RAMAN        :     0.18s CPU time
+     RAMAN        :     0.22s CPU time
 
 
      Computing electric fields
@@ -206,31 +206,31 @@ in crystal axes:
      THE RAMAN TENSOR WILL BE WRITTEN ON FILE: alas.ram                                                                                                                                                                                                                                                        
 
      Finished this calculation
- 
-     RAMAN        :  9m10.66s CPU time
+
+     RAMAN        :  7m49.51s CPU time
 
      INITIALIZATION: 
      phq_setup    :     0.00s CPU
-     phq_init     :     0.15s CPU
+     phq_init     :     0.19s CPU
      ram_init     :     0.00s CPU
- 
+
      NSCF ROUTINES:
-     nscf_e       :    22.86s CPU
-     nscf_u       :    24.83s CPU (       2 calls,  12.415 s avg)
- 
+     nscf_e       :    15.63s CPU
+     nscf_u       :    16.21s CPU (       2 calls,   8.105 s avg)
+
      NONL. SUSCEPT.:
-     pdvp_dpdp    :     0.01s CPU
-     dpsidvdpsi   :     0.22s CPU
-     sus_xc       :     0.16s CPU
-     sus_findif   :    83.92s CPU
- 
+     pdvp_dpdp    :     0.03s CPU
+     dpsidvdpsi   :     0.19s CPU
+     sus_xc       :     0.15s CPU
+     sus_findif   :    62.35s CPU
+
      RAMAN TENSOR:
-     dpE_dvu_dpE  :     0.49s CPU (      60 calls,   0.008 s avg)
-     dpE_dpu_dHE  :     0.02s CPU (       2 calls,   0.010 s avg)
-     dpE_dpE_dHu  :     0.01s CPU (       2 calls,   0.005 s avg)
-     dpE_dhE_dpu  :     0.66s CPU (       2 calls,   0.330 s avg)
-     dpE_dHu_dpE  :     0.68s CPU (       2 calls,   0.340 s avg)
-     ram_xc       :     0.23s CPU
-     findif_el    :   142.87s CPU (       2 calls,  71.435 s avg)
-     findif_at    :   122.08s CPU (       2 calls,  61.040 s avg)
-     findif_both  :   151.93s CPU (       2 calls,  75.965 s avg)
+     dpE_dvu_dpE  :     0.46s CPU (      60 calls,   0.008 s avg)
+     dpE_dpu_dHE  :     0.06s CPU (       2 calls,   0.030 s avg)
+     dpE_dpE_dHu  :     0.06s CPU (       2 calls,   0.030 s avg)
+     dpE_dhE_dpu  :     0.49s CPU (       2 calls,   0.245 s avg)
+     dpE_dHu_dpE  :     0.47s CPU (       2 calls,   0.235 s avg)
+     ram_xc       :     0.17s CPU
+     findif_el    :   123.55s CPU (       2 calls,  61.775 s avg)
+     findif_at    :   112.71s CPU (       2 calls,  56.355 s avg)
+     findif_both  :   137.21s CPU (       2 calls,  68.605 s avg)

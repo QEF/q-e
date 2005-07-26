@@ -3,13 +3,11 @@
      CPV: variable-cell Car-Parrinello molecular dynamics
      using ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Mon Jan 31 11:35:49 CET 2005                       
-     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, and others
+     Version: 2.1cvs - Sat Jan 15 19:44:57 CET 2005                       
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  13:58:36   3Jun2005               
+   This run was started on:  17:23: 6  26Jul2005               
 
    Serial Build
 
@@ -20,11 +18,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
+   /tmp/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
    file type is 20
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/espresso/pseudo/Si.vbc.UPF
+   /tmp/giannozz/espresso/pseudo/Si.vbc.UPF
    file type is 20
 
 
@@ -46,8 +44,8 @@
    alat  =     9.28990000
    a1    =     9.28990000    0.00000000    0.00000000
    a2    =     0.00000000   16.09066419    0.00000000
-   a3    =     0.00000000    0.00000000   10.21470954
- 
+   a3    =     0.00000000    0.00000000   10.21470955
+
    b1    =     0.10764379    0.00000000    0.00000000
    b2    =     0.00000000    0.06214784    0.00000000
    b3    =     0.00000000    0.00000000    0.09789804
@@ -68,7 +66,7 @@
    Electronic states
    -----------------
    Number of Electron =    96, of States =    48
-   Occupation numbers :
+
    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
@@ -127,7 +125,12 @@
    nose` frequency(es)       =       6.667
 
 
-   nose` mass(es)            =  100013.420
+   the requested type of NH chains is     0
+   total number of thermostats used     1
+   ionic degrees of freedom for each chain   54
+
+
+   nose` mass(es) for chain    1 =  100013.420
 
 
    Cell Dynamics Parameters (from STDIN)
@@ -158,49 +161,49 @@
    1     9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
    2     0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
    3     0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
- 
+
    Stick Mesh
    ----------
    nst =   892,  nstw =   120, nsts =   476
         PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
           1    1783     239     951   47285    2305   18431
           0    1783     239     951   47285    2305   18431
- 
- 
+
+
    Real Mesh Report 
    ---------------- 
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     40    64    40      40    64    40       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     40    64    40
-   Local number of cell to store the grid ( nnrx ) =  *****
+   Local number of cell to store the grid ( nnrx ) =     102400
    Number of x-y planes for each processors: 
    nr3l =    40
- 
+
    Smooth Real Mesh Report 
    ----------------------- 
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     27    45    30      27    45    30       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     27    45    30
-   Local number of cell to store the grid ( nnrx ) =  36450
+   Local number of cell to store the grid ( nnrx ) =      36450
    Number of x-y planes for each processors: 
    nr3sl =    30
- 
+
    Small Box Real Mesh Report 
    -------------------------- 
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     16    16    16      16    16    16       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     16    16    16
-   Local number of cell to store the grid ( nnrx ) =   4096
- 
+   Local number of cell to store the grid ( nnrx ) =       4096
+
    Reciprocal Space Mesh
    ---------------------
                 Large Mesh Number of G               Small Mesh Number of G
    PE       Global       Local   Max Local       Global       Local   Max Local
     1        23643       23643       23643         1153        1153        1153
- 
+
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
        3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
@@ -214,275 +217,3 @@
    Simulation dimensions initialization completed
 
 
- ibrav =    8       cell parameters 
-
-       9.35235       0.00011      -0.00014
-       0.00019      16.12388      -0.00058
-      -0.00015      -0.00037      10.26032
- 
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8         948           1
-         865           3
- 
-                        qqq 
-  -0.0987   0.4865   0.0000   0.0000
-   0.4865  -2.1787   0.0000   0.0000
-   0.0000   0.0000   0.2330   0.2950
-   0.0000   0.0000   0.2950   0.3737
- 
-
-
-   Common initialization
-
-   Specie:     1
-   1  indv=  1   ang. mom=  0
-   2  indv=  2   ang. mom=  0
-   3  indv=  3   ang. mom=  1
-   4  indv=  3   ang. mom=  1
-   5  indv=  3   ang. mom=  1
-   6  indv=  4   ang. mom=  1
-   7  indv=  4   ang. mom=  1
-   8  indv=  4   ang. mom=  1
- 
-                        dion 
-   0.4817  -1.2813   0.0000   0.0000
-  -1.2813   2.3075   0.0000   0.0000
-   0.0000   0.0000   0.6338   0.8752
-   0.0000   0.0000   0.8752   1.2039
-
-   Specie:     2
-   1  indv=  1   ang. mom=  0
-   2  indv=  2   ang. mom=  1
-   3  indv=  2   ang. mom=  1
-   4  indv=  2   ang. mom=  1
- 
-                        dion 
-   0.7619   0.0000
-   0.0000   1.8417
-  formf: eself= 210.64152
-  formf:     vps(g=0)=  -0.0097953     rhops(g=0)=  -0.0038779
-  formf: sum_g vps(g)=  -2.2973044 sum_g rhops(g)=  -0.5407003
-  formf:     vps(g=0)=  -0.0097108     rhops(g=0)=  -0.0025853
-  formf: sum_g vps(g)=  -2.3752886 sum_g rhops(g)=  -0.3604669
-  formf: eself= 210.64152
-  formf:     vps(g=0)=  -0.0097953     rhops(g=0)=  -0.0038779
-  formf: sum_g vps(g)=  -2.2973044 sum_g rhops(g)=  -0.5407003
-  formf:     vps(g=0)=  -0.0097108     rhops(g=0)=  -0.0025853
-  formf: sum_g vps(g)=  -2.3752886 sum_g rhops(g)=  -0.3604669
-
-
- subroutine rhoofr: total integrated electronic density
- in g-space = 96.000000     in r-space = 96.000000
-
-
-                total energy =     -211.98164 a.u.
-              kinetic energy =       94.30748 a.u.
-        electrostatic energy =     -198.23860 a.u.
-                         esr =        0.40016 a.u.
-                       eself =      210.64152 a.u.
-      pseudopotential energy =      -95.94442 a.u.
-  n-l pseudopotential energy =       36.31267 a.u.
- exchange-correlation energy =      -48.41877 a.u.
-           average potential =       -0.52739 a.u.
-
-
- cell parameters h
-      9.35235      0.00011     -0.00014
-      0.00019     16.12388     -0.00058
-     -0.00015     -0.00037     10.26032
-
-
- 
- derivative of e(tot)
-      0.13667     -0.00011      0.00050
-     -0.00019      0.08712      0.00315
-      0.00055      0.00201      0.17503
-
-
- 
-
-
- eigenvalues at k-point:  0.000 0.000 0.000
-  -23.62  -23.13  -22.79  -22.33  -22.28  -22.21  -21.81  -21.76  -21.75  -21.74
-  -21.74  -21.70  -11.63  -11.55  -11.37  -10.74   -9.17   -8.71   -8.67   -8.64
-   -8.63   -8.43   -8.38   -7.72   -6.25   -6.12   -6.09   -5.99   -5.98   -5.68
-   -5.65   -5.24   -5.22   -4.83   -4.81   -4.43   -4.39   -4.36   -4.24   -4.06
-   -4.04   -4.03   -3.70   -3.69   -3.30   -3.29   -3.22   -3.04
- 
- 
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    1  0.00167  776.9   35.3  -211.98164  -211.92905  -211.91496  -211.91316  0.0001  0.0047 -0.0001 -0.0037
-    2  0.00194  745.4   34.6  -211.98183  -211.92918  -211.91560  -211.91350  0.0001  0.0056 -0.0001 -0.0045
-    3  0.00135  731.0   36.7  -211.98166  -211.92895  -211.91539  -211.91385  0.0001  0.0065 -0.0001 -0.0053
-    4  0.00066  730.7   41.0  -211.98142  -211.92864  -211.91472  -211.91384  0.0001  0.0075 -0.0001 -0.0061
-    5  0.00035  732.7   45.4  -211.98145  -211.92861  -211.91428  -211.91369  0.0001  0.0085 -0.0001 -0.0070
-    6  0.00036  723.9   47.5  -211.98146  -211.92855  -211.91417  -211.91353  0.0001  0.0096 -0.0001 -0.0080
-    7  0.00072  698.9   46.7  -211.98123  -211.92826  -211.91431  -211.91327  0.0001  0.0107 -0.0001 -0.0091
-    8  0.00131  662.9   44.6  -211.98097  -211.92794  -211.91469  -211.91302  0.0001  0.0119 -0.0001 -0.0102
-    9  0.00169  626.9   43.3  -211.98085  -211.92776  -211.91513  -211.91304  0.0001  0.0130 -0.0001 -0.0114
-
-
-                total energy =     -211.98075 a.u.
-              kinetic energy =       94.18222 a.u.
-        electrostatic energy =     -198.21410 a.u.
-                         esr =        0.37852 a.u.
-                       eself =      210.64152 a.u.
-      pseudopotential energy =      -95.88810 a.u.
-  n-l pseudopotential energy =       36.30177 a.u.
- exchange-correlation energy =      -48.36254 a.u.
-           average potential =       -0.52413 a.u.
-
-
- cell parameters h
-      9.40882      0.00023     -0.00029
-      0.00040     16.15009     -0.00187
-     -0.00032     -0.00119     10.28866
-
-
- 
- derivative of e(tot)
-      0.12190     -0.00035     -0.00040
-     -0.00060      0.07763      0.00320
-     -0.00044      0.00205      0.14013
-
-
- 
-
-
- eigenvalues at k-point:  0.000 0.000 0.000
-  -23.56  -23.07  -22.75  -22.30  -22.25  -22.16  -21.79  -21.73  -21.72  -21.71
-  -21.70  -21.67  -11.61  -11.52  -11.34  -10.71   -9.15   -8.69   -8.64   -8.60
-   -8.59   -8.38   -8.33   -7.68   -6.23   -6.11   -6.07   -5.96   -5.96   -5.65
-   -5.62   -5.21   -5.19   -4.81   -4.79   -4.41   -4.35   -4.33   -4.25   -4.04
-   -4.04   -4.02   -3.71   -3.67   -3.30   -3.29   -3.22   -3.04
- 
- 
-   10  0.00154  600.3   44.5  -211.98075  -211.92761  -211.91525  -211.91328  0.0001  0.0142 -0.0001 -0.0126
-
-   Cell Variables (AU)
-
-   STEP:     10   0.022738
-    9.40881979    0.00023377   -0.00029222
-    0.00040476   16.15009375   -0.00186573
-   -0.00032147   -0.00118644   10.28866209
-
-   Total Stress (GPa)
-
-   STEP:     10   0.022738
-       -1.81983368         0.09600515         0.07905772
-        0.09600515        -3.79432765        -0.61635383
-        0.07905774        -0.61635381        -7.29420882
-
-   Atomic Positions (AU)
-
-   STEP:     10   0.022738
-  0.322878E+01  0.149140E+02  0.122222E+01
-  0.792644E+01  0.683043E+01  0.122179E+01
-  0.212015E+01  0.601964E+01  0.475657E+01
-  0.683236E+01  0.140924E+02  0.475584E+01
-  0.400537E+01  0.112839E+02  0.791995E+01
-  0.871089E+01  0.321515E+01  0.791527E+01
-  0.399620E+01  0.486895E+01  0.923046E+01
-  0.870153E+01  0.129352E+02  0.925003E+01
-  0.322532E+01  0.124956E+01  0.562215E+01
-  0.792882E+01  0.931298E+01  0.562808E+01
-  0.212211E+01  0.101153E+02  0.209480E+01
-  0.682543E+01  0.204073E+01  0.209750E+01
-  0.290169E+00  0.807434E+01  0.342943E+01
-  0.499461E+01 -0.426884E-03  0.343019E+01
-  0.215953E+01  0.123226E+02 -0.419949E-01
-  0.686348E+01  0.424744E+01 -0.418737E-01
-  0.215917E+01  0.382700E+01  0.690207E+01
-  0.686391E+01  0.119021E+02  0.690148E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     10   0.022738
- -0.659023E-05  0.127295E-03 -0.641634E-04
- -0.260834E-04  0.972767E-04 -0.639415E-04
-  0.903147E-04  0.230476E-04 -0.687412E-04
-  0.116383E-03  0.810406E-05 -0.703920E-04
- -0.363290E-04 -0.134478E-03 -0.855246E-04
- -0.331730E-04 -0.100674E-03 -0.105501E-03
- -0.701896E-04  0.162080E-03  0.102898E-03
- -0.728632E-04  0.122912E-03  0.181792E-03
- -0.142236E-04 -0.635898E-04  0.125322E-04
- -0.239840E-04 -0.110709E-03  0.420262E-04
-  0.965242E-04 -0.639187E-04  0.320820E-04
-  0.969939E-04 -0.607267E-04  0.414480E-04
- -0.138350E-04 -0.306500E-05  0.239817E-05
- -0.117532E-04 -0.188933E-05  0.551006E-05
- -0.973859E-05 -0.165869E-05  0.566190E-05
- -0.134463E-04 -0.440264E-05  0.193625E-05
- -0.101067E-04  0.506477E-05  0.389407E-05
- -0.785116E-05  0.216779E-05  0.659121E-05
-
-   Atomic Forces (AU)
-
-   STEP:     10   0.022738
- -0.326638E-02  0.770411E-02 -0.232042E-02
- -0.222592E-02  0.832779E-02 -0.127634E-02
-  0.474745E-02  0.569102E-02 -0.322452E-02
-  0.518370E-02  0.808746E-02 -0.787771E-02
-  0.180421E-02 -0.130755E-01 -0.415460E-02
-  0.126100E-02 -0.821757E-02 -0.552802E-02
- -0.665624E-03  0.129946E-01  0.807262E-02
- -0.327711E-02  0.103121E-01  0.106676E-01
- -0.459319E-02 -0.280641E-02 -0.921753E-04
- -0.509047E-02 -0.747298E-02  0.176541E-02
-  0.480134E-02 -0.866401E-02  0.789710E-03
-  0.503716E-02 -0.716519E-02  0.234389E-02
-  0.209494E-03 -0.177375E-02 -0.123891E-02
-  0.142416E-02 -0.238112E-03 -0.108563E-02
- -0.141125E-02 -0.769032E-03  0.571700E-03
- -0.214053E-02  0.788705E-04 -0.120217E-02
- -0.176807E-02  0.153629E-02  0.277007E-03
- -0.129305E-02 -0.175581E-02  0.215624E-02
-
-
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
-       0.00116      94.23963    -342.54564    -211.98133      42.0
-     initialize   :    15.50s CPU
-     total_time   :    50.20s CPU (      10 calls,   5.020 s avg)
-     formf        :    24.20s CPU (      11 calls,   2.200 s avg)
-     rhoofr       :    10.50s CPU (      10 calls,   1.050 s avg)
-     vofrho       :     3.07s CPU (      10 calls,   0.307 s avg)
-     dforce       :     4.10s CPU (     240 calls,   0.017 s avg)
-     calphi       :     0.18s CPU (      10 calls,   0.018 s avg)
-     ortho        :     0.73s CPU (      10 calls,   0.073 s avg)
-     updatc       :     0.10s CPU (      10 calls,   0.010 s avg)
-     newd         :     2.95s CPU (      10 calls,   0.295 s avg)
-     calbec       :     0.12s CPU (      11 calls,   0.011 s avg)
-     prefor       :     0.11s CPU (      20 calls,   0.005 s avg)
-     strucf       :     0.05s CPU (      11 calls,   0.005 s avg)
-     nlfl         :     0.02s CPU (      10 calls,   0.002 s avg)
-     nlfq         :     1.05s CPU (      10 calls,   0.105 s avg)
-     rhov         :     0.75s CPU (      10 calls,   0.075 s avg)
-     nlsm1        :     0.56s CPU (      31 calls,   0.018 s avg)
-     nlsm2        :     1.04s CPU (      10 calls,   0.104 s avg)
-     fft          :     6.67s CPU (     130 calls,   0.051 s avg)
-     ffts         :     0.21s CPU (      20 calls,   0.011 s avg)
-     fftw         :     3.68s CPU (     720 calls,   0.005 s avg)
-     fftb         :     2.38s CPU (    2940 calls,   0.001 s avg)
-     rsg          :     0.02s CPU (      10 calls,   0.002 s avg)
- Creating dir : RESTART94
- Creating dir : RESTART94/K00001
- Opening file restart.xml
-
-
-====================== end cprvan ======================
-
-
- 
-     CP90         :  1m 5.86s CPU time
-
- 
-   This run was terminated on:  13:59:44   3Jun2005            
-
-=------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    68.0
-   JOB DONE.
-=------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 

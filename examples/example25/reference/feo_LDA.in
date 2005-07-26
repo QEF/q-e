@@ -4,8 +4,8 @@ FeO Wustite in LDA
     calculation = 'scf'
     restart_mode='from_scratch',
     prefix='feo_af',
-    pseudo_dir = '/home/giannozz/espresso/pseudo/',
-    outdir='/home/giannozz/tmp/'
+    pseudo_dir = '/tmp/giannozz/espresso/pseudo/',
+    outdir='/tmp/giannozz/tmp/'
  /
  &system
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,

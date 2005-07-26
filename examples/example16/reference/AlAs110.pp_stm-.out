@@ -1,6 +1,6 @@
 
      Program POST-PROC v.2.1cvs starts ...
-     Today is  3Jun2005 at 13:44:31 
+     Today is 26Jul2005 at 17:14: 6 
 
      Reading file AlAs110.save ...      only dimensions
      read complete
@@ -21,5 +21,5 @@
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     stm took       1.58 cpu secs
+     stm took       1.46 cpu secs
      Writing data on file  AlAsresm-1.0                                                                                                                                                                                                                                                    

@@ -1,6 +1,6 @@
 
      Program PWSCF     v.2.1cvs starts ...
-     Today is  3Jun2005 at 12:36:25 
+     Today is 26Jul2005 at 16:26:15 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -53,9 +53,9 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
          2           Al  tau(  2) = (   0.0000000   0.0000000   0.3750000  )
-         3           Al  tau(  3) = (  -0.0277987   0.0000000   0.7553751  )
+         3           Al  tau(  3) = (  -0.0277987   0.0000000   0.7553752  )
          4           H   tau(  4) = (   0.1926901   0.0000000   0.9375000  )
-         5           Al  tau(  5) = (  -0.0277987   0.0000000   1.1196248  )
+         5           Al  tau(  5) = (  -0.0277987   0.0000000   1.1196249  )
          6           Al  tau(  6) = (   0.0000000   0.0000000   1.5000000  )
 
      number of k points=    1  gaussian broad. (ryd)=  0.0100     ngauss =   1
@@ -77,7 +77,7 @@
      negative rho (up, down):  0.599E-02 0.000E+00
      Starting wfc are atomic
 
-     total cpu time spent up to now is      3.74 secs
+     total cpu time spent up to now is      3.62 secs
 
      Self-consistent Calculation
 
@@ -87,7 +87,7 @@
 
      negative rho (up, down):  0.153E-03 0.000E+00
 
-     total cpu time spent up to now is      6.91 secs
+     total cpu time spent up to now is      6.33 secs
 
      total energy              =   -21.20066495 ryd
      estimated scf accuracy    <     0.36167784 ryd
@@ -98,7 +98,7 @@
 
      negative rho (up, down):  0.612E-04 0.000E+00
 
-     total cpu time spent up to now is      9.84 secs
+     total cpu time spent up to now is      8.83 secs
 
      total energy              =   -21.04707331 ryd
      estimated scf accuracy    <     1.40895804 ryd
@@ -109,7 +109,7 @@
 
      negative rho (up, down):  0.101E-05 0.000E+00
 
-     total cpu time spent up to now is     12.83 secs
+     total cpu time spent up to now is     11.41 secs
 
      total energy              =   -21.24026298 ryd
      estimated scf accuracy    <     0.62834378 ryd
@@ -118,7 +118,7 @@
      Davidson diagonalization (with overlap)
      ethr =  2.26E-03,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.51 secs
+     total cpu time spent up to now is     13.67 secs
 
      total energy              =   -21.30233499 ryd
      estimated scf accuracy    <     0.02995372 ryd
@@ -127,7 +127,7 @@
      Davidson diagonalization (with overlap)
      ethr =  1.87E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     18.09 secs
+     total cpu time spent up to now is     15.88 secs
 
      total energy              =   -21.30531511 ryd
      estimated scf accuracy    <     0.00147140 ryd
@@ -136,7 +136,7 @@
      Davidson diagonalization (with overlap)
      ethr =  9.20E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     21.39 secs
+     total cpu time spent up to now is     18.89 secs
 
      total energy              =   -21.30588684 ryd
      estimated scf accuracy    <     0.00077897 ryd
@@ -145,7 +145,7 @@
      Davidson diagonalization (with overlap)
      ethr =  4.87E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     23.95 secs
+     total cpu time spent up to now is     21.15 secs
 
      total energy              =   -21.30590851 ryd
      estimated scf accuracy    <     0.00008256 ryd
@@ -154,7 +154,7 @@
      Davidson diagonalization (with overlap)
      ethr =  5.16E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     26.94 secs
+     total cpu time spent up to now is     23.86 secs
 
      total energy              =   -21.30592874 ryd
      estimated scf accuracy    <     0.00000532 ryd
@@ -163,7 +163,7 @@
      Davidson diagonalization (with overlap)
      ethr =  3.33E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     29.79 secs
+     total cpu time spent up to now is     26.48 secs
 
      total energy              =   -21.30592947 ryd
      estimated scf accuracy    <     0.00000038 ryd
@@ -172,7 +172,7 @@
      Davidson diagonalization (with overlap)
      ethr =  2.35E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     32.65 secs
+     total cpu time spent up to now is     29.10 secs
 
      total energy              =   -21.30592954 ryd
      estimated scf accuracy    <     0.00000006 ryd
@@ -181,7 +181,7 @@
      Davidson diagonalization (with overlap)
      ethr =  3.53E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     34.95 secs
+     total cpu time spent up to now is     31.01 secs
 
      End of self-consistent calculation
 
@@ -204,44 +204,44 @@
 
      convergence has been achieved
 
-     Writing data file       alh.save
- 
-     PWSCF        :    34.96s CPU time
+     Writing file         alh.save for program phonon
 
-     init_run     :     3.72s CPU
-     electrons    :    31.21s CPU
- 
-     electrons    :    31.21s CPU
-     c_bands      :    15.48s CPU (      11 calls,   1.407 s avg)
-     sum_band     :     6.22s CPU (      11 calls,   0.565 s avg)
-     v_of_rho     :     3.90s CPU (      12 calls,   0.325 s avg)
-     mix_rho      :     1.12s CPU (      11 calls,   0.102 s avg)
- 
-     c_bands      :    15.48s CPU (      11 calls,   1.407 s avg)
-     init_us_2    :     0.29s CPU (      23 calls,   0.013 s avg)
-     cegterg      :    15.20s CPU (      11 calls,   1.382 s avg)
- 
-     sum_band     :     6.22s CPU (      11 calls,   0.565 s avg)
- 
-     wfcrot       :     2.00s CPU
-     cegterg      :    15.20s CPU (      11 calls,   1.382 s avg)
-     h_psi        :    15.50s CPU (      37 calls,   0.419 s avg)
-     g_psi        :     0.15s CPU (      25 calls,   0.006 s avg)
-     overlap      :     0.38s CPU (      25 calls,   0.015 s avg)
-     cdiaghg      :     0.05s CPU (      36 calls,   0.001 s avg)
-     update       :     0.35s CPU (      25 calls,   0.014 s avg)
-     last         :     0.13s CPU (      11 calls,   0.012 s avg)
- 
-     h_psi        :    15.50s CPU (      37 calls,   0.419 s avg)
-     init         :     0.11s CPU (      37 calls,   0.003 s avg)
-     firstfft     :     6.69s CPU (     379 calls,   0.018 s avg)
-     secondfft    :     6.76s CPU (     379 calls,   0.018 s avg)
-     add_vuspsi   :     0.43s CPU (      37 calls,   0.012 s avg)
- 
+     PWSCF        :    31.08s CPU time
+
+     init_run     :     3.60s CPU
+     electrons    :    27.39s CPU
+
+     electrons    :    27.39s CPU
+     c_bands      :    15.27s CPU (      11 calls,   1.388 s avg)
+     sum_band     :     4.00s CPU (      11 calls,   0.364 s avg)
+     v_of_rho     :     2.65s CPU (      12 calls,   0.221 s avg)
+     mix_rho      :     2.19s CPU (      11 calls,   0.199 s avg)
+
+     c_bands      :    15.27s CPU (      11 calls,   1.388 s avg)
+     init_us_2    :     0.22s CPU (      23 calls,   0.010 s avg)
+     cegterg      :    15.08s CPU (      11 calls,   1.371 s avg)
+
+     sum_band     :     4.00s CPU (      11 calls,   0.364 s avg)
+
+     wfcrot       :     2.25s CPU
+     cegterg      :    15.08s CPU (      11 calls,   1.371 s avg)
+     h_psi        :    14.43s CPU (      37 calls,   0.390 s avg)
+     g_psi        :     0.09s CPU (      25 calls,   0.004 s avg)
+     overlap      :     0.93s CPU (      25 calls,   0.037 s avg)
+     cdiaghg      :     0.04s CPU (      36 calls,   0.001 s avg)
+     update       :     0.49s CPU (      25 calls,   0.020 s avg)
+     last         :     0.27s CPU (      11 calls,   0.025 s avg)
+
+     h_psi        :    14.43s CPU (      37 calls,   0.390 s avg)
+     init         :     0.06s CPU (      37 calls,   0.002 s avg)
+     firstfft     :     5.27s CPU (     379 calls,   0.014 s avg)
+     secondfft    :     5.33s CPU (     379 calls,   0.014 s avg)
+     add_vuspsi   :     0.52s CPU (      37 calls,   0.014 s avg)
+
      General routines
-     ccalbec      :     0.25s CPU (      37 calls,   0.007 s avg)
-     cft3         :     7.33s CPU (      71 calls,   0.103 s avg)
-     cft3s        :    14.82s CPU (     913 calls,   0.016 s avg)
-     interpolate  :     3.99s CPU (      23 calls,   0.173 s avg)
-     davcio       :     0.02s CPU (      12 calls,   0.002 s avg)
- 
+     ccalbec      :     0.66s CPU (      37 calls,   0.018 s avg)
+     cft3         :     2.68s CPU (      71 calls,   0.038 s avg)
+     cft3s        :    11.23s CPU (     913 calls,   0.012 s avg)
+     interpolate  :     1.78s CPU (      23 calls,   0.077 s avg)
+     davcio       :     0.28s CPU (      12 calls,   0.023 s avg)
+
