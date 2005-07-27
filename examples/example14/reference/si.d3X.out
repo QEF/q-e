@@ -163,7 +163,7 @@
 
 
       thresh= 0.100E-04 total cpu time :   168.0 secs   av.it.: 156.7
-     gen_dwfc(1)   time:       166.99 sec    Total time:      168.04 sec
+     gen_dwfc(1)   cpu time:   166.99 sec    Total time:      168.04 sec
 
      Calculating for the wavevector q=0 at the original k-points
 
@@ -178,7 +178,7 @@
 
 
       thresh= 0.100E-04 total cpu time :   332.7 secs   av.it.: 157.4
-     gen_dwfc(3)   time:       164.66 sec    Total time:      332.70 sec
+     gen_dwfc(3)   cpu time:   164.66 sec    Total time:      332.70 sec
 
      Calculating for the wavevector q=0 at the (k+q)-points
 
@@ -195,37 +195,37 @@
 
 
       thresh= 0.100E-04 total cpu time :   498.2 secs   av.it.: 157.5
-     gen_dwfc(2)   time:       165.45 sec    Total time:      498.15 sec
+     gen_dwfc(2)   cpu time:   165.45 sec    Total time:      498.15 sec
 
      Finished the ncf calculation of the perturbed wavefunctions
 
      calling gen_dpdvp
-     gen_dpdvp     time:         0.00 sec    Total time:      498.15 sec
+     gen_dpdvp     cpu time:     0.00 sec    Total time:      498.15 sec
 
      Calculating the matrix elements <dpsi |dH |dpsi>
 
      calling dpsidvdpsi:  1
-     dpsidvdpsi  1 time:         3.97 sec    Total time:      502.12 sec
+     dpsidvdpsi  1 cpu time:     3.97 sec    Total time:      502.12 sec
 
      calling dpsidvdpsi:  2
-     dpsidvdpsi  2 time:         3.99 sec    Total time:      506.11 sec
+     dpsidvdpsi  2 cpu time:     3.99 sec    Total time:      506.11 sec
 
      calling dpsidvdpsi:  3
-     dpsidvdpsi  3 time:         3.98 sec    Total time:      510.09 sec
+     dpsidvdpsi  3 cpu time:     3.98 sec    Total time:      510.09 sec
 
      calling dpsidvdpsi:  4
-     dpsidvdpsi  4 time:         4.02 sec    Total time:      514.11 sec
+     dpsidvdpsi  4 cpu time:     4.02 sec    Total time:      514.11 sec
 
      calling dpsidvdpsi:  5
-     dpsidvdpsi  5 time:         4.00 sec    Total time:      518.11 sec
+     dpsidvdpsi  5 cpu time:     4.00 sec    Total time:      518.11 sec
 
      calling dpsidvdpsi:  6
-     dpsidvdpsi  6 time:         4.02 sec    Total time:      522.13 sec
+     dpsidvdpsi  6 cpu time:     4.02 sec    Total time:      522.13 sec
 
      Calculating the matrix elements <dpsi|dpsi>< psi|dH|psi> 
 
      calling dpsidpsidv
-     dpsidpsidv    time:         1.30 sec    Total time:      523.43 sec
+     dpsidpsidv    cpu time:     1.30 sec    Total time:      523.43 sec
 
      Calculating the matrix elements <psi |d^2 v |dpsi>
 
@@ -278,37 +278,37 @@
   0.000000  0.000000    1.180499  0.000000    0.000000  0.000000  
   1.180499  0.000000    0.000000  0.000000    0.000000  0.000000  
   0.000000  0.000000    0.000000  0.000000    0.000000  0.000000
-     drhod2v       time:         2.87 sec    Total time:      526.30 sec
+     drhod2v       cpu time:     2.87 sec    Total time:      526.30 sec
 
      Calculating the matrix elements <psi |d^3v |psi>
 
      calling d3vrho
-     d3vrho        time:         0.67 sec    Total time:      526.97 sec
+     d3vrho        cpu time:     0.67 sec    Total time:      526.97 sec
 
      Calculating the Ewald contribution
 
      calling d3ionq
 
      Alpha used in Ewald sum =   1.0000
-     d3ionq        time:         0.05 sec    Total time:      527.02 sec
+     d3ionq        cpu time:     0.05 sec    Total time:      527.02 sec
 
      Calculating the valence contribution
 
      calling d3_valence
-     d3_valence    time:         0.00 sec    Total time:      527.02 sec
+     d3_valence    cpu time:     0.00 sec    Total time:      527.02 sec
 
      calling drho_cc(+1)
-     drho_cc(+1)   time:         0.00 sec    Total time:      527.02 sec
+     drho_cc(+1)   cpu time:     0.00 sec    Total time:      527.02 sec
 
      Calculating the exchange-correlation contribution
 
      calling d3_exc
-     d3_exc        time:         0.99 sec    Total time:      528.01 sec
+     d3_exc        cpu time:     0.99 sec    Total time:      528.01 sec
 
      Calculating the core-correction contribution
 
      calling d3dyn_cc
-     d3dyn_cc      time:         0.00 sec    Total time:      528.01 sec
+     d3dyn_cc      cpu time:     0.00 sec    Total time:      528.01 sec
 
      Symmetrizing and writing the tensor to disc
 
@@ -319,7 +319,7 @@
           1   0.000000000   0.000000000   1.000000000
           2   1.000000000   0.000000000   0.000000000
           3   0.000000000   1.000000000   0.000000000
-     d3matrix      time:         0.03 sec    Total time:      528.04 sec
+     d3matrix      cpu time:     0.03 sec    Total time:      528.04 sec
 
      D3TOTEN      :  8m48.04s CPU time
 

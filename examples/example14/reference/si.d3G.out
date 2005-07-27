@@ -98,37 +98,37 @@
 
 
       thresh= 0.100E-04 total cpu time :    75.5 secs   av.it.: 157.2
-     gen_dwfc(3)   time:        74.79 sec    Total time:       75.47 sec
+     gen_dwfc(3)   cpu time:    74.79 sec    Total time:       75.47 sec
 
      Finished the ncf calculation of the perturbed wavefunctions
 
      calling gen_dpdvp
-     gen_dpdvp     time:         0.00 sec    Total time:       75.47 sec
+     gen_dpdvp     cpu time:     0.00 sec    Total time:       75.47 sec
 
      Calculating the matrix elements <dpsi |dH |dpsi>
 
      calling dpsidvdpsi:  1
-     dpsidvdpsi  1 time:         0.69 sec    Total time:       76.16 sec
+     dpsidvdpsi  1 cpu time:     0.69 sec    Total time:       76.16 sec
 
      calling dpsidvdpsi:  2
-     dpsidvdpsi  2 time:         0.72 sec    Total time:       76.88 sec
+     dpsidvdpsi  2 cpu time:     0.72 sec    Total time:       76.88 sec
 
      calling dpsidvdpsi:  3
-     dpsidvdpsi  3 time:         0.70 sec    Total time:       77.58 sec
+     dpsidvdpsi  3 cpu time:     0.70 sec    Total time:       77.58 sec
 
      calling dpsidvdpsi:  4
-     dpsidvdpsi  4 time:         0.72 sec    Total time:       78.30 sec
+     dpsidvdpsi  4 cpu time:     0.72 sec    Total time:       78.30 sec
 
      calling dpsidvdpsi:  5
-     dpsidvdpsi  5 time:         0.70 sec    Total time:       79.00 sec
+     dpsidvdpsi  5 cpu time:     0.70 sec    Total time:       79.00 sec
 
      calling dpsidvdpsi:  6
-     dpsidvdpsi  6 time:         0.73 sec    Total time:       79.73 sec
+     dpsidvdpsi  6 cpu time:     0.73 sec    Total time:       79.73 sec
 
      Calculating the matrix elements <dpsi|dpsi>< psi|dH|psi> 
 
      calling dpsidpsidv
-     dpsidpsidv    time:         0.33 sec    Total time:       80.06 sec
+     dpsidpsidv    cpu time:     0.33 sec    Total time:       80.06 sec
 
      Calculating the matrix elements <psi |d^2 v |dpsi>
 
@@ -181,37 +181,37 @@
   0.000000  0.000000    1.180499  0.000000    0.000000  0.000000  
   1.180499  0.000000    0.000000  0.000000    0.000000  0.000000  
   0.000000  0.000000    0.000000  0.000000    0.000000  0.000000
-     drhod2v       time:         0.75 sec    Total time:       80.81 sec
+     drhod2v       cpu time:     0.75 sec    Total time:       80.81 sec
 
      Calculating the matrix elements <psi |d^3v |psi>
 
      calling d3vrho
-     d3vrho        time:         0.36 sec    Total time:       81.17 sec
+     d3vrho        cpu time:     0.36 sec    Total time:       81.17 sec
 
      Calculating the Ewald contribution
 
      calling d3ionq
 
      Alpha used in Ewald sum =   1.0000
-     d3ionq        time:         0.05 sec    Total time:       81.22 sec
+     d3ionq        cpu time:     0.05 sec    Total time:       81.22 sec
 
      Calculating the valence contribution
 
      calling d3_valence
-     d3_valence    time:         0.00 sec    Total time:       81.22 sec
+     d3_valence    cpu time:     0.00 sec    Total time:       81.22 sec
 
      calling drho_cc(+1)
-     drho_cc(+1)   time:         0.00 sec    Total time:       81.22 sec
+     drho_cc(+1)   cpu time:     0.00 sec    Total time:       81.22 sec
 
      Calculating the exchange-correlation contribution
 
      calling d3_exc
-     d3_exc        time:         0.98 sec    Total time:       82.20 sec
+     d3_exc        cpu time:     0.98 sec    Total time:       82.20 sec
 
      Calculating the core-correction contribution
 
      calling d3dyn_cc
-     d3dyn_cc      time:         0.00 sec    Total time:       82.20 sec
+     d3dyn_cc      cpu time:     0.00 sec    Total time:       82.20 sec
 
      Symmetrizing and writing the tensor to disc
 
@@ -220,7 +220,7 @@
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
-     d3matrix      time:         0.03 sec    Total time:       82.23 sec
+     d3matrix      cpu time:     0.03 sec    Total time:       82.23 sec
 
      D3TOTEN      :  1m22.23s CPU time
 
