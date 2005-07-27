@@ -84,7 +84,7 @@ program d3toten
      call d3_recover (1, + 1)
      t1 = get_clock ('D3TOTEN') - t0
      t0 = get_clock ('D3TOTEN')
-     WRITE( stdout, '(5x,"gen_dwfc(1)   time: ",f12.2, &
+     WRITE( stdout, '(5x,"gen_dwfc(1)   cpu time:",f9.2, &
           &         " sec    Total time:",f12.2," sec")') t1, t0
   endif
   if (istop.eq.1) stop
@@ -99,7 +99,7 @@ program d3toten
   call d3_recover (2, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"gen_dwfc(3)   time: ",f12.2, &
+  WRITE( stdout, '(5x,"gen_dwfc(3)   cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.2) stop
   !
@@ -115,7 +115,7 @@ program d3toten
      call d3_recover (3, + 1)
      t1 = get_clock ('D3TOTEN') - t0
      t0 = get_clock ('D3TOTEN')
-     WRITE( stdout, '(5x,"gen_dwfc(2)   time: ",f12.2, &
+     WRITE( stdout, '(5x,"gen_dwfc(2)   cpu time:",f9.2, &
           &          " sec    Total time:",f12.2," sec")') t1, t0
   endif
 
@@ -132,7 +132,7 @@ program d3toten
   call d3_recover (4, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"gen_dpdvp     time: ",f12.2, &
+  WRITE( stdout, '(5x,"gen_dpdvp     cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.4) stop
   !
@@ -149,7 +149,7 @@ program d3toten
         t1 = get_clock ('D3TOTEN') - t0
         t0 = get_clock ('D3TOTEN')
 
-        WRITE( stdout, '(5x,"dpsidvdpsi",i3," time: ",f12.2, &
+        WRITE( stdout, '(5x,"dpsidvdpsi",i3," cpu time:",f9.2, &
              &   " sec    Total time:",f12.2," sec")') nu_i, t1, t0
 
         if (istop.gt.400.and.nu_i.eq. (istop - 400) ) stop
@@ -167,7 +167,7 @@ program d3toten
   call d3_recover (6, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"dpsidpsidv    time: ",f12.2, &
+  WRITE( stdout, '(5x,"dpsidpsidv    cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.6) stop
   !
@@ -180,7 +180,7 @@ program d3toten
   call d3_recover (7, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"drhod2v       time: ",f12.2, &
+  WRITE( stdout, '(5x,"drhod2v       cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.7) stop
   !
@@ -193,7 +193,7 @@ program d3toten
   call d3_recover (8, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"d3vrho        time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3vrho        cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.8) stop
   !
@@ -207,7 +207,7 @@ program d3toten
   call d3_recover (9, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"d3ionq        time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3ionq        cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.9) stop
   !
@@ -220,7 +220,7 @@ program d3toten
   call d3_recover (10, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"d3_valence    time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3_valence    cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (istop.eq.10) stop
   !
@@ -235,7 +235,7 @@ program d3toten
   call d3_recover (11, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"drho_cc(+1)   time: ",f12.2, &
+  WRITE( stdout, '(5x,"drho_cc(+1)   cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   !
   ! It calculates d3Ei * drho * drho * drho, where drho is the variation
@@ -249,7 +249,7 @@ program d3toten
   call d3_recover (12, + 1)
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
-  WRITE( stdout, '(5x,"d3_exc        time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3_exc        cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   !
   ! It calculates additional terms due to non_linear-core-corrections
@@ -262,7 +262,7 @@ program d3toten
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
 
-  WRITE( stdout, '(5x,"d3dyn_cc      time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3dyn_cc      cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   !
   ! drho is restored as it was before
@@ -285,7 +285,7 @@ program d3toten
   t1 = get_clock ('D3TOTEN') - t0
   t0 = get_clock ('D3TOTEN')
 
-  WRITE( stdout, '(5x,"d3matrix      time: ",f12.2, &
+  WRITE( stdout, '(5x,"d3matrix      cpu time:",f9.2, &
        &         " sec    Total time:",f12.2," sec")') t1, t0
   if (wraux) call write_aux (3)
 
