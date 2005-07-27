@@ -15,7 +15,8 @@ function check_line()
   # a key of the form "@key@"
   # postprocessor will check them based on key
 
-  if (match($0, "Today is") || match($0, "cpu time") || match($0, "CPU"))
+  if (match($0, "Today is") || match($0, "cpu time") || match($0, "CPU") || \
+      match($0, "This run") || match($0, "tcpu") )
     {
       print_key("TIMING");
       if (getline)
