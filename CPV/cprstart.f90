@@ -136,9 +136,13 @@ PROGRAM main
   ELSE
      !
      IF( program_name == 'CP90' ) THEN
+       !
        CALL cpr_loop( 1 )
+       !
      ELSE IF( program_name == 'FPMD' ) THEN
+       !
        CALL fpmd_loop( 0 )
+       !
      END IF
      !
   END IF

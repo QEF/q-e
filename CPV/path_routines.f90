@@ -31,10 +31,11 @@ MODULE path_routines
       USE input_parameters, ONLY : CI_scheme, opt_scheme, num_of_images, &
                                    first_last_opt, damp, temp_req, ds, k_max, &
                                    k_min, path_thr, restart_mode, calculation, &
-                                   nstep, max_seconds, outdir
+                                   nstep, max_seconds, phase_space, ion_dynamics, &
+                                   etot_conv_thr, forc_conv_thr
       !
       USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, &
-                                 lmol_dyn, nstep_path, &
+                                 lbroyden, lmol_dyn, nstep_path, &
                                  num_of_images_  => num_of_images, &
                                  CI_scheme_      => CI_scheme, &
                                  first_last_opt_ => first_last_opt, &
@@ -44,22 +45,60 @@ MODULE path_routines
                                  k_max_          => k_max, &
                                  k_min_          => k_min, &
                                  path_thr_       => path_thr
-      USE io_files,       ONLY : prefix, outdir_ => outdir
+
+      USE io_files,       ONLY : prefix, outdir, scradir
       USE io_global,      ONLY : ionode, ionode_id
       USE mp_global,      ONLY : mpime
       USE mp,             ONLY : mp_bcast, mp_barrier, mp_sum
-      USE control_flags,  ONLY : lpath, lneb
+      USE control_flags,  ONLY : lpath, lneb, lcoarsegrained, lconstrain, lmd, &
+                                 ldamped
       USE parser,         ONLY : int_to_char
       USE check_stop,     ONLY : check_stop_init
+
       !
       IMPLICIT NONE
       !
       INTEGER            :: image
       INTEGER            :: ios
       CHARACTER(LEN=256) :: outdir_saved
+      CHARACTER(LEN=256) :: scradir_saved
       CHARACTER(LEN=256) :: filename
       !
       INTEGER, EXTERNAL :: c_mkdir
+
+      ! nstep_path = nstep
+
+      SELECT CASE( TRIM( phase_space ) )
+      CASE( 'full' )
+        !
+        lcoarsegrained  = .FALSE.
+        !
+      CASE ( 'coarse-grained' )
+        !
+        lcoarsegrained  = .TRUE.
+        !
+      END SELECT
+      !
+      IF ( lcoarsegrained ) THEN
+        !
+        lmd        = .TRUE.
+        lconstrain = .TRUE.
+        !
+        SELECT CASE( TRIM( ion_dynamics ) )
+        CASE( 'constrained-verlet' )
+           !
+           CONTINUE
+           !
+        CASE DEFAULT
+           !
+           CALL errore( 'iosys_path ', 'calculation=' // TRIM( calculation ) // &
+                      & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                      & ' not supported', 1 )
+           !
+        END SELECT
+        !
+      END IF
+
       !
       IF ( num_of_images < 2 ) &
         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
@@ -74,11 +113,15 @@ MODULE path_routines
                    & ': unknown CI_scheme', 1 )
          !
       END IF
+
+      !
+      ! ... initialization of logical variables
       !
       lsteep_des  = .FALSE.
       lquick_min  = .FALSE.
+      lbroyden    = .FALSE.
       ldamped_dyn = .FALSE.
-      lmol_dyn    = .FALSE.      
+      lmol_dyn    = .FALSE.
       !
       SELECT CASE ( opt_scheme )
       CASE ( "sd" )
@@ -88,6 +131,10 @@ MODULE path_routines
       CASE ( "quick-min" )
          !
          lquick_min  = .TRUE.
+         !
+      CASE( "broyden" )
+         !
+         lbroyden     = .TRUE.
          !
       CASE ( "damped-dyn" )
          !
@@ -121,19 +168,20 @@ MODULE path_routines
       k_min_           = k_min
       path_thr_        = path_thr
       !
-      outdir_ = outdir
-      !
       lpath      = .TRUE.
       lneb       = .TRUE.
       nstep_path = nstep
       nstep      = 1000
       !
       outdir_saved = outdir
+      scradir_saved = scradir
       !
       DO image = 1, num_of_images
         !
         ios = 0
         outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
+                 TRIM( int_to_char( image ) ) // '/'
+        scradir = TRIM( scradir_saved ) // "/" // TRIM( prefix ) // "_" // &
                  TRIM( int_to_char( image ) ) // '/'
         !
         IF ( ionode ) THEN
@@ -144,6 +192,10 @@ MODULE path_routines
            WRITE( stdout, * ) 'Creating dir : ',TRIM( outdir )
            !
            ios = c_mkdir( TRIM( outdir ), LEN_TRIM( outdir ) )
+           !
+           WRITE( stdout, * ) 'Creating dir : ',TRIM( scradir )
+           !
+           ios = c_mkdir( TRIM( scradir ), LEN_TRIM( scradir ) )
            !
         END IF
         !
@@ -185,7 +237,8 @@ MODULE path_routines
         !
       END DO
       !
-      outdir = outdir_saved
+      outdir  = outdir_saved
+      scradir = scradir_saved
       !
       RETURN
       !

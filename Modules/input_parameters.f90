@@ -192,6 +192,11 @@ MODULE input_parameters
         CHARACTER(LEN=256) :: pseudo_dir = './'
           ! specify the directory containing the pseudopotentials
 
+        CHARACTER(LEN=256) :: scradir = './'
+          ! specify the scratch directory to store large, usually temporary, 
+          ! files. When possible put this directory in the fastest available
+          ! filesystem ( not NFS! )
+
         REAL(dbl) :: max_seconds = 1.0d+6
           ! smootly terminate program after the specified number of seconds
           ! this parameter is typically used to prevent an hard kill from
@@ -251,7 +256,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc
+          wf_collect, printwfc, scradir
 
 
 !
@@ -1460,11 +1465,6 @@ MODULE input_parameters
 !    CHI2
 !
       LOGICAL :: tchi2_inp = .FALSE.
-!
-!   SCRATCH DIRECTORY
-!
-      LOGICAL   :: tscra_inp = .FALSE.
-      CHARACTER(LEN=256) :: scradir = './'
 
 !
 !   RHOOUT 

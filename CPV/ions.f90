@@ -425,9 +425,9 @@
          ismb = .TRUE.
          DO isa = 1, nat
            ia = ind_srt( isa )
-           IF( if_pos( 1, ia ) == 0 ) ismb( 1, isa ) = .FALSE.
-           IF( if_pos( 2, ia ) == 0 ) ismb( 2, isa ) = .FALSE.
-           IF( if_pos( 3, ia ) == 0 ) ismb( 3, isa ) = .FALSE.
+           ismb( 1, isa ) = ( if_pos( 1, ia ) /= 0 )
+           ismb( 2, isa ) = ( if_pos( 2, ia ) /= 0 )
+           ismb( 3, isa ) = ( if_pos( 3, ia ) /= 0 )
          END DO
 
          CALL atoms_type_init(atoms_m, stau, ismb, atml, pmass, na, nsp, h)
@@ -435,6 +435,17 @@
          CALL atoms_type_init(atoms_p, stau, ismb, atml, pmass, na, nsp, h)
 
          CALL print_scaled_positions( atoms_0, stdout, 'from standard input')
+
+         IF( ANY( ismb ) ) THEN
+           WRITE( stdout, 10 )
+ 10        FORMAT( 3X, 'The following position components are kept fixed', /, &
+                   3X, '  ia  x  y  z ' )
+           DO isa = 1, nat
+             ia = ind_srt( isa )
+             WRITE( stdout, 20 ) isa, if_pos( 1, ia ), if_pos( 2, ia ), if_pos( 3, ia )
+           END DO
+ 20        FORMAT( 3X, I4, I3, I3, I3 )
+         END IF
 
          DEALLOCATE( ismb )
 

@@ -87,13 +87,14 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
-                                         prefix, scradir, xc_type
+                                         prefix, scradir, outdir, xc_type
      USE control_flags,           ONLY : program_name
      USE parameters,              ONLY : nsx
      USE read_pseudo_module_fpmd, ONLY : readpp
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          scradir_    => scradir, &
+                                         outdir_     => outdir, &
                                          prefix_     => prefix
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
      !
@@ -105,6 +106,7 @@ MODULE input
      !
      prefix_  = TRIM( prefix  )
      scradir_ = TRIM( scradir )
+     outdir_  = TRIM( outdir )
      !
      ! ... Set internal variables for the number of species and number of atoms
      !
@@ -216,7 +218,7 @@ MODULE input
      USE control_flags, ONLY : tdampions_ => tdampions, &
                                tfor_      => tfor, &
                                tsdp_      => tsdp, &
-                               tconvthrs, tconjgrad_ion
+                               lfixatom, tconvthrs, tconjgrad_ion
      USE control_flags, ONLY : tnosep_ => tnosep, &
                                tcap_   => tcap, &
                                tcp_    => tcp, &
@@ -260,7 +262,7 @@ MODULE input
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         tprnrho, tdipole_card, toptical_card, tnewnfi_card, newnfi_card,       &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
-        orthogonalization, electron_velocities
+        orthogonalization, electron_velocities, nat, if_pos
      !
      IMPLICIT NONE
      !
@@ -356,8 +358,9 @@ MODULE input
      !
      ! ... set the restart flags
      !
-     trane_ = .FALSE.
-     ampre_ = ampre
+     trane_  = .FALSE.
+     ampre_  = ampre
+     taurdr_ = .FALSE.
      SELECT CASE ( TRIM( restart_mode ) )
        CASE ('from_scratch')
          nbeg_ = -2
@@ -380,7 +383,7 @@ MODULE input
      END SELECT
 
      ! ... Starting/Restarting Atomic positions
-     taurdr_ = .FALSE.
+     !
      SELECT CASE ( TRIM(ion_positions) )
        CASE ( 'from_input' )
          taurdr_ = .TRUE.   ! Positions read from standard input
@@ -546,6 +549,8 @@ MODULE input
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown ion_dynamics '//TRIM(ion_dynamics), 1 )
       END SELECT
+
+      IF ( ANY( if_pos(:,1:nat) == 0 ) ) lfixatom = .TRUE.
 
       ! ... Ionic Temperature
 
@@ -724,7 +729,7 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : program_name, lconstrain
+     USE control_flags,    ONLY : program_name, lconstrain, lneb
      USE constants,        ONLY : UMA_AU, pi
      !
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
@@ -762,7 +767,7 @@ MODULE input
                                   wannier_index
      !
      USE check_stop,       ONLY : check_stop_init
-     USE ions_base,        ONLY : tau, ityp
+     USE ions_base,        ONLY : tau, ityp, zv
      USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
      USE ions_base,        ONLY : ions_base_init, greasp_ => greasp
@@ -888,7 +893,8 @@ MODULE input
 
      CALL turbo_init( tturbo_inp, nturbo_inp )
 
-     CALL printout_base_init( outdir, prefix )
+     IF( .not. lneb ) &
+        CALL printout_base_init( outdir, prefix )
 
      IF( noptical > 0 ) &
         CALL optical_setup( woptical, noptical, boptical )
@@ -912,12 +918,13 @@ MODULE input
 
      !
      CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
-                          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
+             vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
 
      CALL ks_states_init( nspin, tprnks, tprnks_empty )
 
+     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup, neldw, nbnd, &
+             nspin, occupations, f_inp )
 
-     CALL electrons_base_initval( nelec, nelup, neldw, nbnd, nspin, occupations, f_inp )
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
      CALL ensemble_initval( occupations, n_inner, fermi_energy, rotmass, &

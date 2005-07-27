@@ -1476,5 +1476,33 @@ MODULE cp_restart
     END SUBROUTINE
 
 !------------------------------------------------------------------------------!
+
+    LOGICAL FUNCTION check_restartfile( scradir, ndr )
+
+      USE io_global, ONLY: ionode, ionode_id
+      USE mp, ONLY: mp_bcast
+      USE parser, ONLY: int_to_char
+
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: ndr
+      CHARACTER(LEN=*) :: scradir
+      CHARACTER(LEN=256) :: filename
+      LOGICAL :: lval
+      INTEGER :: strlen
+
+      filename = restart_dir( scradir, ndr )
+
+      IF ( ionode ) THEN
+        filename = TRIM( filename ) // '/restart.xml' 
+        INQUIRE( FILE = TRIM( filename ), EXIST = lval )
+      END IF
+      CALL mp_bcast( lval, ionode_id )
+      check_restartfile = lval
+      RETURN
+    END FUNCTION check_restartfile
+
+
+!------------------------------------------------------------------------------!
   END MODULE cp_restart
 !------------------------------------------------------------------------------!

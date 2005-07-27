@@ -38,12 +38,14 @@
 !------------------------------------------------------------------------------!
 
 
-    SUBROUTINE electrons_base_initval( nelec_ , nelup_ , neldw_ , nbnd_ , &
+    SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nelec_ , nelup_ , neldw_ , nbnd_ , &
                nspin_ , occupations_ , f_inp )
 
       USE constants, ONLY: eps8
       USE io_global, ONLY: stdout
 
+      REAL(dbl), INTENT(IN) :: zv_ (:)
+      INTEGER, INTENT(IN) :: na_ (:) , nsp_
       REAL(dbl), INTENT(IN) :: nelec_ , nelup_ , neldw_
       INTEGER, INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
@@ -51,12 +53,37 @@
       REAL(dbl) :: nelec, nelup, neldw, ocp, fsum
       INTEGER   :: iss, i, in
 
-      nbnd  = nbnd_
-      nbsp  = nbnd_ * nspin_
+      IF( nelec_ /= 0 ) THEN
+        nelec = nelec_
+      ELSE
+        nelec = 0.0d0
+        DO i = 1, nsp_
+          nelec = nelec + na_ ( i ) * zv_ ( i )
+        END DO 
+      END IF
+
+      IF( nbnd_ /= 0 ) THEN
+        nbnd  = nbnd_
+      ELSE
+        nbnd  = INT( nelec + 1 ) / 2
+      END IF
+
+      nbsp  = nbnd * nspin_
       nspin = nspin_
-      nelec = nelec_
-      nelup = nelup_
-      neldw = neldw_
+
+      IF( nelup_ > 0.0d0 .AND. neldw_ > 0.0d0 ) THEN
+        nelup = nelup_
+        neldw = neldw_
+      ELSE IF( nelup_ > 0.0d0 .AND. neldw_ == 0.0d0 ) THEN
+        nelup = nelup_
+        neldw = nelec - nelup_
+      ELSE IF( nelup_ == 0.0d0 .AND. neldw_ > 0.0d0 ) THEN
+        neldw = neldw_
+        nelup = nelec - neldw_
+      ELSE
+        nelup = INT( nelec + 1 ) / 2
+        neldw = nelec - nelup
+      END IF
 
       IF( nelec < 1 ) THEN
          CALL errore(' electrons_base_initval ',' nelec less than 1 ', 1 )

@@ -79,7 +79,8 @@ MODULE read_namelists_module
        ! ... use the path specified as outdir and the filename prefix to store 
        ! ... the output
        !
-       outdir = './'   
+       outdir  = './'   
+       scradir = './'   
        IF( prog == 'PW' ) prefix = 'pwscf'  
        IF( prog == 'CP' ) prefix = 'cp'  
        IF( prog == 'FP' ) prefix = 'cp'  
@@ -585,6 +586,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ndr, ionode_id )
        CALL mp_bcast( ndw, ionode_id )
        CALL mp_bcast( outdir, ionode_id )
+       CALL mp_bcast( scradir, ionode_id )
        CALL mp_bcast( prefix, ionode_id )
        CALL mp_bcast( max_seconds, ionode_id )
        CALL mp_bcast( ekin_conv_thr, ionode_id )
@@ -1123,13 +1125,13 @@ MODULE read_namelists_module
           CALL errore( sub_name , &
                        & ' ntyp too large, increase NSX ', MAX( ntyp, 1) )
        !
-       IF( prog /= 'PW' ) THEN
-          IF( nbnd < 1 .OR. nbnd > nbndxx ) &
-             CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
-          IF( nelec <= 0.d0 .OR. nelec > 2*nbnd ) &
-             CALL errore( sub_name , &
-                          & ' nelec out of range ', MAX(int(nelec), 1) )
-       END IF
+!       IF( prog /= 'PW' ) THEN
+!          IF( nbnd < 1 .OR. nbnd > nbndxx ) &
+!             CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
+!          IF( nelec <= 0.d0 .OR. nelec > 2*nbnd ) &
+!             CALL errore( sub_name , &
+!                          & ' nelec out of range ', MAX(int(nelec), 1) )
+!       END IF
        !
        IF( nspin < 1 .OR. nspin > nspinx ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )

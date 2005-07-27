@@ -21,7 +21,7 @@ MODULE printout_base
   ! ...  fort_unit = fortran units for saving physical quantity
 
   CHARACTER(LEN=256) :: pprefix
-  ! ...  prefix combined with the outpur path
+  ! ...  prefix combined with the output path
 
 CONTAINS
 

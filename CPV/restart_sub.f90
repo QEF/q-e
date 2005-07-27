@@ -438,6 +438,7 @@ MODULE from_restart_module
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
+    USE ions_base,             ONLY : na, nat, tau_srt
     !
     IMPLICIT NONE
     !
@@ -481,13 +482,18 @@ MODULE from_restart_module
        CALL newinit( ht_0%hmat )
        CALL newgk( kp, ht_0%m1 )
        !
-       IF ( taurdr ) THEN
-          !
-          ! ... positions are read from stdin and not read from restart file, 
-          ! ... while the cell is read from the restart file, then real 
-          ! ... position do not correspond 
-          !
-       END IF
+    END IF
+
+    IF ( taurdr ) THEN
+       !
+       ! ... positions are read from stdin (tau_srt) and not read from restart file
+       ! ... then reinitialize structure atoms_0
+       !
+       hinv = TRANSPOSE( ht_0%m1 )
+       !
+       CALL r_to_s( tau_srt, atoms_0%taus, atoms_0%na, atoms_0%nsp, hinv )
+       !
+       atoms_0%taur( 1:3, 1:nat ) = tau_srt( 1:3, 1:nat )
        !
     END IF
     !

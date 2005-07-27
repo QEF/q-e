@@ -20,7 +20,7 @@
   REAL(dbl) :: cclock
   EXTERNAL  :: cclock
 
-  PUBLIC :: writefile, readfile, check_restartfile
+  PUBLIC :: writefile, readfile
 
   INTERFACE readfile
     MODULE PROCEDURE readfile_cp, readfile_fpmd
@@ -44,11 +44,12 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
-      use ions_base, only: nsp, na
-      use cell_base, only: s_to_r
-      use cp_restart, only: cp_writefile
-      USE electrons_base, ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
+      USE ions_base,        ONLY: nsp, na
+      USE cell_base,        ONLY: s_to_r
+      USE cp_restart,       ONLY: cp_writefile
+      USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
       USE electrons_module, ONLY: ei
+      USE io_files,         ONLY: scradir
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -105,7 +106,7 @@
         end do
       end do
 
-      CALL cp_writefile( ndw, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
+      CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
         occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z, ei, &
@@ -128,11 +129,12 @@
 ! read from file and distribute data calculated in preceding iterations
 !
 
-      use electrons_base, only: nbnd, nbsp, nspin, nupdwn, iupdwn
-      use gvecw, only: ngw, ngwt
-      use ions_base, only: nsp, na
-      use cp_restart, only: cp_readfile, cp_read_cell, cp_read_wfc
-      use ensemble_dft, only: tens
+      USE electrons_base, ONLY: nbnd, nbsp, nspin, nupdwn, iupdwn
+      USE gvecw,          ONLY: ngw, ngwt
+      USE ions_base,      ONLY: nsp, na
+      USE cp_restart,     ONLY: cp_readfile, cp_read_cell, cp_read_wfc
+      USE ensemble_dft,   ONLY: tens
+      USE io_files,       ONLY: scradir
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -163,14 +165,14 @@
 
 
       IF( flag == -1 ) THEN
-        CALL cp_read_cell( ndr, ' ', .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, scradir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
         h     = TRANSPOSE( ht )
         hold  = TRANSPOSE( htm )
         velh  = TRANSPOSE( htvel )
         RETURN
       ELSE IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
-          CALL cp_read_wfc( ndr, ' ', 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
+          CALL cp_read_wfc( ndr, scradir, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
         END DO
         RETURN
       END IF
@@ -178,7 +180,7 @@
       ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
 
-      CALL cp_readfile( ndr, ' ', .TRUE., nfi, tps, acc, nk, xk, wk, &
+      CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
@@ -223,6 +225,7 @@
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_writefile
         USE electrons_module, ONLY: ei
+        USE io_files, ONLY: scradir
 
         IMPLICIT NONE 
  
@@ -259,7 +262,7 @@
         ekincm = 0.0d0
         mat_z = 0.0d0
 
-        CALL cp_writefile( ndw, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda,  &
@@ -295,7 +298,7 @@
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp_wave, ONLY: mergewf
         USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndr, tbeg, taurdr, gamma_only
+        USE control_flags, ONLY: ndr, tbeg, gamma_only
         USE atoms_type_module, ONLY: atoms_type
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
@@ -312,6 +315,7 @@
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
         USE cp_restart, ONLY: cp_readfile
+        USE io_files, ONLY: scradir
  
         IMPLICIT NONE 
  
@@ -348,7 +352,7 @@
         ALLOCATE( lambda_( nbsp , nbsp ) )
         lambda_  = 0.0d0
 
-        CALL cp_readfile( ndr, ' ', .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
+        CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , b1, b2,   &
@@ -377,34 +381,6 @@
         END SUBROUTINE readfile_fpmd
 
 
-!=----------------------------------------------------------------------------=!
-
-
-        LOGICAL FUNCTION check_restartfile( scradir, ndr )
-
-          USE io_global, ONLY: ionode, ionode_id
-          USE mp, ONLY: mp_bcast
-          USE parser, ONLY: int_to_char
-
-          IMPLICIT NONE
-
-          INTEGER, INTENT(IN) :: ndr
-          CHARACTER(LEN=*) :: scradir
-          CHARACTER(LEN=256) :: filename
-          LOGICAL :: lval
-          INTEGER :: strlen
-
-          IF ( ionode ) THEN
-            filename = 'fort.' // int_to_char( ndr )
-            strlen  = INDEX( scradir, ' ' ) - 1
-            filename = scradir( 1 : strlen ) // '/' // filename
-            INQUIRE( FILE = TRIM( filename ), EXIST = lval )
-            ! WRITE(6,*) '  checking file ', lval, ' ', TRIM( filename )
-          END IF
-          CALL mp_bcast( lval, ionode_id )
-          check_restartfile = lval
-          RETURN 
-        END FUNCTION check_restartfile
 
 !=----------------------------------------------------------------------------=!
      END MODULE restart_file

@@ -222,6 +222,8 @@
       if ( nat /= SUM( na( 1:nsp ) ) ) &
         call errore(' ions_base_init ',' inconsistent NAT and NA ',1)
 
+      CALL deallocate_ions_base()
+
       ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
       ALLOCATE( vel( 3, nat ) )
@@ -349,12 +351,17 @@
       ! ... TEMP: calculate fixatom (to be removed)
       !
       fixatom = 0
-      fix1: DO ia = nat, 1, -1
+      !
+      DO ia = 1, nat
+        !
         IF ( if_pos(1,ia) /= 0 .OR. &
              if_pos(2,ia) /= 0 .OR. &
-             if_pos(3,ia) /= 0 ) EXIT fix1
+             if_pos(3,ia) /= 0 ) CYCLE
+        !
         fixatom = fixatom + 1
-      END DO fix1
+        !
+      END DO
+
 
       amass( 1:nsp ) = amass_ ( 1:nsp )
       IF( ANY( amass( 1:nsp ) <= 0.0d0 ) ) &

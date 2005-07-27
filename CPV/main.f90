@@ -144,7 +144,7 @@
       USE ions_base, ONLY: taui, cdmi, nat, nsp
       USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
                             ind_localisation, pos_localisation
-      USE ions_base, ONLY: ind_srt, ions_thermal_stress
+      USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
       USE electrons_base, ONLY: nupdwn, nbnd
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
@@ -189,6 +189,8 @@
       USE core            , ONLY: deallocate_core
       USE local_pseudo    , ONLY: deallocate_local_pseudo
       !
+      USE io_files        , ONLY: outdir, prefix
+      USE printout_base   , ONLY: printout_base_init
 
       IMPLICIT NONE
 
@@ -280,6 +282,12 @@
 
       s1 = cclock()
 
+      !
+      ! ... initialize g-vectors, fft grids
+      !
+
+      CALL init_dimensions( )
+
       CALL cpsizes( nproc )
       CALL flush_unit( stdout )
 
@@ -322,7 +330,6 @@
       !     initialize variables and types
       !
       CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht_0 )
-
 
       lds_wfc = wfill%lds
       IF( force_pairing ) lds_wfc = 1
@@ -371,6 +378,7 @@
       IF( ierr /= 0 ) &
         CALL errore(' cpmain ', ' allocating vpot ', ierr)
 
+      CALL printout_base_init( outdir, prefix )
 
       ! --- end of initialization and allocation
 
@@ -385,6 +393,7 @@
 
         CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
           toptical, ht_0, kp, avgs, avgs_this_run, edft)
+
 
       ELSE
 
@@ -426,7 +435,15 @@
 ! ...   set the right flags for the current MD step
         ttprint   = ( MOD(nfi, iprint) == 0)  .OR. (iprsta>2)
         ttsave    =   MOD(nfi, isave) == 0
-        ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep) == 0 )
+        !
+        !  Perform at least two step without checking the convergence
+        !
+        IF( nstep_this_run > 2 ) THEN  
+          ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep) == 0 )
+        ELSE
+          ttconvchk =  .FALSE.
+        END IF
+        !
         ttdipole  =  ttprint .AND. tdipole
         ttoptical =  ttprint .AND. toptical
         ttforce   =  ttprint .OR.  tfor .OR. ttconvchk
@@ -781,6 +798,11 @@
       etot      = edft%etot
       !
       CALL resort_position( tau, fion, atoms_0, ind_srt, ht_0 )
+      IF( lneb ) THEN
+        DO i = 1, nat
+          fion( :, i ) = fion( :, i ) * DBLE( if_pos( :, i ) )
+        END DO
+      END IF
       !
 
       IF(tksout) THEN
