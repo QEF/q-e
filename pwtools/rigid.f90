@@ -366,20 +366,21 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
 end subroutine writemodes
 !
 !-----------------------------------------------------------------------
-subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
+subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   !-----------------------------------------------------------------------
   !
   !   write modes on output file in a molden-friendly way
   !
  implicit none
  ! input
- integer nax, nat, ityp(nat)
- real(kind=8) a0, tau(3,nat), w2(3*nat)
- complex(kind=8) z(3*nax,3*nat)
- character(len=50) flmol
- character(len=3) atm(*)
+ integer :: nat, ityp(nat)
+ real(kind=8) :: a0, tau(3,nat), w2(3*nat)
+ complex(kind=8) :: z(3*nat,3*nat)
+ character(len=50) :: flmol
+ character(len=3) :: atm(*)
+ logical :: gamma
  ! local
- integer nat3, na, nta, ipol, i, j, iout
+ integer :: nat3, na, nta, ipol, i, j, iout
  real(kind=8) :: freq(3*nat)
  real(kind=8) :: rydcm1, znorm
  !
@@ -419,7 +420,11 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
     end do
     znorm = sqrt(znorm)
     do na = 1,nat
-       write (iout,'(3f10.5)') (real(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+       if (gamma) then
+          write (iout,'(3f10.5)') (real(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+       else
+          write (iout,'(3f10.5)') ( abs(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+       end if
     end do
  end do
  !
@@ -428,6 +433,71 @@ subroutine writemolden(nax,nat,atm,a0,tau,ityp,w2,z,flmol)
  return
  !
 end subroutine writemolden
+!
+!-----------------------------------------------------------------------
+subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
+  !-----------------------------------------------------------------------
+  !
+  !   write modes on output file in a xcrysden-friendly way
+  !
+ implicit none
+ ! input
+ integer :: nat, ityp(nat)
+ real(kind=8) :: a0, tau(3,nat), at(3,3)
+ complex(kind=8) :: z(3*nat,3*nat)
+ character(len=50) :: xsffile
+ character(len=3) :: atm(*)
+ logical :: gamma
+ ! local
+ integer :: nat3, na, nta, ipol, i, j, iout
+ real(kind=8) :: znorm
+ !
+ if (xsffile == ' ') then
+    return
+ else
+    iout=4
+    open (unit=iout, file=xsffile, status='unknown', form='formatted')
+ end if
+ nat3=3*nat
+ !
+ !  write atomic positions and normalised displacements
+ !
+ write(iout,'("ANIMSTEPS",i4)') nat3
+ !
+ write(iout,'("CRYSTAL")')
+ !
+ write(iout,'("PRIMVEC")')
+ write(iout,'(2(3F15.9/),3f15.9)') at(:,:)*a0*0.529177d0
+ !
+ do i = 1,nat3
+    write(iout,'("PRIMCOORD",i3)') i
+    write(iout,'(3x,2i4)') nat, 1
+    znorm = 0.0
+    do j=1,nat3
+       znorm=znorm+abs(z(j,i))**2
+    end do
+    ! empirical factor: displacement vector normalised to 0.1
+    znorm = sqrt(znorm)*10.
+    do na = 1,nat
+       if (gamma) then
+          write (iout,'(a6,1x,6f10.5)') atm(ityp(na)),  &
+                    a0*0.529177d0*tau(1,na), a0*0.529177d0*tau(2,na), &
+                    a0*0.529177d0*tau(3,na), &
+                    (real(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+       else
+          write (iout,'(a6,1x,6f10.5)') atm(ityp(na)),  &
+                    a0*0.529177d0*tau(1,na), a0*0.529177d0*tau(2,na), &
+                    a0*0.529177d0*tau(3,na), &
+                    ( abs(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+       end if
+    end do
+ end do
+ !
+ close(unit=iout)
+ !
+ return
+ !
+end subroutine writexsf
 !
 !-----------------------------------------------------------------------
 subroutine cdiagh2 (n,h,ldh,e,v)

@@ -19,8 +19,14 @@ end Module dynamical
       program dynmat
 !--------------------------------------------------------------------
 !
-!  read a dynamical matrix at q=0 , diagonalise it, calculate IR
-!  and Raman cross sections (if Z* and Raman tensor available) 
+!  This program
+!  - reads a dynamical matrix file produced by the phonon code
+!  - adds the nonanalytical part (if Z* and epsilon are read from file),
+!    applies the chosen Acoustic Sum Rule (if q=0)
+!  - diagonalise the dynamical matrix
+!  - calculates IR and Raman cross sections (if Z* and Raman tensors
+!    are read from file, respectively) 
+!  - writes the results to files, both for inspection and for plotting
 !
 !  Input data (namelist "input")
 !
@@ -57,30 +63,33 @@ end Module dynamical
 !  filout  character output file containing frequencies and modes
 !                    (default: filout='dynmat.out')
 !  filmol  character as above, in a format suitable for 'molden'
-!                    (default: filmol='molden.out') 
+!                    (default: filmol='dynmat.mold') 
+!  filxsf  character as above, in axsf format suitable for xcrysden
+!                    (default: filmol='dynmat.axsf') 
 !
       use dynamical
       !
       implicit none
       integer, parameter :: ntypx = 10
-      character(len=256):: fildyn, filout, filmol
+      character(len=256):: fildyn, filout, filmol, filxsf
       character(len=3) :: atm(ntypx)
       character(len=10) :: asr
       logical :: lread, gamma
       complex(kind=8), allocatable :: z(:,:)
       real(kind=8) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
-           amconv, q(3), q_(3)
+           at(3,3), amconv, q(3), q_(3)
       real(kind=8), allocatable :: w2(:)
       integer, allocatable :: itau(:)
       integer :: nat, na, nt, ntyp, nu, iout, axis, nax
-      namelist /input/ amass, asr, axis, fildyn, filout, filmol, q
+      namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
 !
       asr  = 'no'
       axis = 3
       fildyn='matdyn'
       filout='dynmat.out'
-      filmol='molden.out'
+      filmol='dynmat.mold'
+      filxsf='dynmat.axsf'
       amass(:)=0.0
       q(1)=0.0
       q(2)=0.0
@@ -99,7 +108,7 @@ end Module dynamical
 !
       ntyp = ntypx ! avoids spurious out-of-bound errors
       call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
-           omega, amass_, eps0, q_ )
+           at, omega, amass_, eps0, q_ )
       !
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
       amconv = 1.66042e-24/9.1095e-28*0.5
@@ -133,7 +142,9 @@ end Module dynamical
       call writemodes(nax,nat,q_,w2,z,iout)
       if(iout .ne. 6) close(unit=iout)
 !
-      call writemolden(nax,nat,atm,a0,tau,ityp,w2,z,filmol)
+      call writemolden (filmol, gamma, nat, atm, a0, tau, ityp, w2, z)
+!
+      call writexsf (filxsf, gamma, nat, atm, a0, at, tau, ityp, z)
 !
       if (gamma) call RamanIR &
            (nat, omega, w2, z, zstar, eps0, dchi_dtau)
@@ -143,7 +154,7 @@ end Module dynamical
 !
 !-----------------------------------------------------------------------
       subroutine readmat ( fildyn, asr, axis, nat, ntyp, atm, &
-           a0, omega, amass, eps0, q )
+           a0, at, omega, amass, eps0, q )
 !-----------------------------------------------------------------------
 !
       use dynamical
@@ -154,10 +165,11 @@ end Module dynamical
       integer, intent(in) :: axis
       integer, intent(inout) :: nat, ntyp
       character(len=3), intent(out) ::  atm(ntyp)
-      real(kind=8), intent(out) :: amass(ntyp), a0, omega, eps0(3,3), q(3)
+      real(kind=8), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
+           eps0(3,3), q(3)
       !
       character(len=80) :: line
-      real(kind=8) :: at(3,3), celldm(6), sum, dyn0r(3,3,2)
+      real(kind=8) :: celldm(6), sum, dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
       logical :: qfinito, noraman
       !
