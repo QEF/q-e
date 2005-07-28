@@ -49,7 +49,7 @@ MODULE cp_restart
       USE cell_base, ONLY: ibrav, alat, celldm, symm_type, s_to_r
       USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass, amass, iforce
       USE funct,     ONLY: dft
-      USE mp, ONLY: mp_sum
+      USE mp, ONLY: mp_sum, mp_bcast
       USE parameters, ONLY: nhclm
 
       IMPLICIT NONE
@@ -102,7 +102,7 @@ MODULE cp_restart
       INTEGER :: k1, k2, k3
       INTEGER :: nk1, nk2, nk3
       INTEGER :: j, i, ispin, ig, nspin_wfc
-      INTEGER :: is, ia, isa, iss, ise, ik
+      INTEGER :: is, ia, isa, iss, ise, ik, ierr
       INTEGER, ALLOCATABLE :: mill(:,:)
       INTEGER, ALLOCATABLE :: ftmp(:,:)
       INTEGER, ALLOCATABLE :: ityp(:)
@@ -183,12 +183,16 @@ MODULE cp_restart
         write(stdout,*) "Opening file "//trim(xmlpun)
         IF( ascii ) THEN
           call iotk_open_write(iunpun, &
-               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.false.)
+               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.false., ierr=ierr)
         ELSE
           call iotk_open_write(iunpun, &
-               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.true.)
+               file=TRIM(dirname)//'/'//TRIM(xmlpun),binary=.true., ierr=ierr)
         ENDIF
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" cp_writefile ", " cannot open restart file for writing ", ierr )
       !
       IF( ionode ) THEN
         !
@@ -605,8 +609,12 @@ MODULE cp_restart
       filename = TRIM( dirname ) // '/' // 'restart.xml'
      
       IF( ionode ) THEN
-        CALL iotk_open_read( iunpun, file = TRIM( filename ), binary = .FALSE., root = attr )
+        CALL iotk_open_read( iunpun, file = TRIM( filename ), binary = .FALSE., root = attr, ierr = ierr )
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" cp_readfile ", " cannot open restart file for reading ", ierr )
 
       ierr = 0
       IF( ionode ) THEN
@@ -978,8 +986,12 @@ MODULE cp_restart
       filename = TRIM( dirname ) // '/' // 'restart.xml'
      
       IF( ionode ) THEN
-        CALL iotk_open_read( iunpun, file = TRIM( filename ), binary = .FALSE., root = attr )
+        CALL iotk_open_read( iunpun, file = TRIM( filename ), binary = .FALSE., root = attr, ierr = ierr )
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
 
       ierr = 0
       IF( ionode ) THEN
@@ -1165,7 +1177,15 @@ MODULE cp_restart
 
       IF( ionode ) THEN
          !
-         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE., ierr = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" write_wfc ", " cannot open restart file for writing ", ierr )
+      !
+      IF( ionode ) THEN
          !
          CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
          !
@@ -1181,6 +1201,10 @@ MODULE cp_restart
          CALL iotk_write_empty( iuni, "INFO", attr )
          !
       END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
 
 
       ALLOCATE( wtmp( MAX(igwx,1) ) )
@@ -1328,7 +1352,15 @@ MODULE cp_restart
 
       IF ( ionode ) THEN
           !
-          CALL iotk_open_read( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+          CALL iotk_open_read( iuni, FILE = TRIM( filename ), BINARY = .TRUE., ierr = ierr )
+          !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" read_wfc ", " cannot open restart file for reading ", ierr )
+      !
+      IF ( ionode ) THEN
           !
           CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
           !
