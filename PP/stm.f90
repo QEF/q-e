@@ -376,7 +376,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   deallocate(psi)
   deallocate(a)
   deallocate(gs)
-  WRITE( stdout, '(/5x,"stm took ",f10.2," cpu secs")') scnds ()-t0
+  WRITE( stdout, '(/5x,"STM:",f10.2,"s cpu time")') scnds ()-t0
   !
   !     use wf to store istates
   !
