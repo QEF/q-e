@@ -15,7 +15,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE kinds,             ONLY : DP
   USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos
   USE ions_base,         ONLY : nat, sort_tau, tau_srt, ind_srt, ityp, nsp
-  USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr
+  USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
+                                trane, ampre
   USE io_files,          ONLY : iunpath, iunexit, outdir, prefix, scradir
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
@@ -95,10 +96,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF( check_restartfile( scradir, ndr ) ) THEN
         WRITE( iunpath, * ) ' restarting calling readfile '
-        nbeg = 1
+        nbeg =  1
      ELSE
         WRITE( iunpath, * ) ' restarting from scratch '
-        nbeg = -1
+        nbeg  = -1
+        trane = .true.
+        ampre = 0.02
      END IF
      !
      ! ... perform an electronic minimization using cpmain

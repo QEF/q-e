@@ -486,27 +486,28 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      IF ( nbeg < 0 ) THEN 
 
         !======================================================================
-        !    nbeg = -1 or nbeg = -2 or nbeg = -3
+        !    nbeg = -1 
         !======================================================================
 
-        IF( nbeg == -1 ) THEN
-           CALL readfile                                            &
-                &     ( 0, sm_ndr,h,hold,nfi,rep_el(sm_k)%cm,rep_el(sm_k)%cm,rep(sm_k)%taus,  &
-                &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
-                &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
-                &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
-                &       nhpcl, ekincm(sm_k),                           &
-                &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
-                &       tps, mat_z, f )
-        ENDIF
+        ! IF( trdwfc ) THEN  ! add a new flag
+        !   CALL readfile                                            &
+        !         &     ( 0, sm_ndr,h,hold,nfi,rep_el(sm_k)%cm,rep_el(sm_k)%cm,rep(sm_k)%taus,  &
+        !         &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
+        !         &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
+        !         &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
+        !         &       nhpcl, ekincm(sm_k),                           &
+        !         &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
+        !         &       tps, mat_z, f )
+        ! ENDIF
         !     
+
         CALL phfac( rep(sm_k)%tau0, ei1, ei2, ei3, eigr )
         !
         CALL initbox ( rep(sm_k)%tau0, taub, irb )
         !
         CALL phbox( taub, eigrb )
         !
-        IF(trane) THEN            ! >>>>>>>>>>>>>>>>>> ! 
+        IF(trane) THEN    
            IF(sm_k == 1) THEN
               !       
               !     random initialization
@@ -515,16 +516,16 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            ELSE
               rep_el(sm_k)%cm = rep_el(1)%cm
            ENDIF
-        ELSE IF(nbeg.EQ.-3) THEN
-           IF(sm_k == 1) THEN
-              !       
-              !     gaussian initialization
-              !
-              CALL gausin(eigr,rep_el(sm_k)%cm)
-           ELSE
-              rep_el(sm_k)%cm = rep_el(1)%cm 
-           ENDIF
-        END IF            ! <<<<<<<<<<<<<<<<<<<< !
+        ELSE 
+           ! IF(sm_k == 1) THEN   ! To be checked
+           !    !       
+           !    !     gaussian initialization
+           !    !
+           !    CALL gausin(eigr,rep_el(sm_k)%cm)
+           ! ELSE
+           !    rep_el(sm_k)%cm = rep_el(1)%cm 
+           ! ENDIF
+        END IF           
         !
         !     prefor calculates vkb (used by gram)
         !
@@ -671,7 +672,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      ELSE   
         !
         !======================================================================
-        !       nbeg = 0, nbeg = 1 or nbeg = 2
+        !       nbeg = 0, nbeg = 1
         !======================================================================
 
         CALL readfile                                           &
@@ -691,7 +692,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      END IF
 
 
-     !==============================================end of if(nbeg.lt.0)====
      !=============== END of NBEG selection ================================
 
      !

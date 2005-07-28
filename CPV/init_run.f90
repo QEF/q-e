@@ -71,11 +71,17 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
+  USE io_files,                 ONLY : outdir, prefix
+  USE printout_base,            ONLY : printout_base_init
+
   !
   IMPLICIT NONE
   !
   !
   CALL start_clock( 'initialize' )
+
+  !
+  CALL printout_base_init( outdir, prefix )
   !
   ! ... initialize g-vectors, fft grids
   !
@@ -176,10 +182,10 @@ SUBROUTINE init_run()
   !
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
   !
-  IF ( nbeg < -1 ) THEN
+  IF ( nbeg < 0 ) THEN
      !
      !======================================================================
-     !     Initialize from scratch nbeg = -2 or nbeg = -3
+     !     Initialize from scratch nbeg = -1
      !======================================================================
      !
      nfi = 0
@@ -194,7 +200,7 @@ SUBROUTINE init_run()
   ELSE
      !
      !======================================================================
-     !     nbeg = -1, nbeg = 0, nbeg = 1 or nbeg = 2
+     !     nbeg = 0, nbeg = 1
      !======================================================================
      !
      CALL readfile( 1, ndr, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,   &

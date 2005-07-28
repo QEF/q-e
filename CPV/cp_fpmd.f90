@@ -1491,8 +1491,10 @@ END SUBROUTINE gshcount
            END DO
          END DO    
 
-         IF ( ( nbeg > 0 ) .AND. ( .NOT. taurdr ) ) THEN
+         IF ( ( nbeg > -1 ) .AND. ( .NOT. taurdr ) ) THEN
             WRITE(stdout,661)
+         ELSE
+            WRITE(stdout,662)
          ENDIF
 
          IF( tfor ) THEN
@@ -1570,6 +1572,7 @@ END SUBROUTINE gshcount
   660 FORMAT(   3X,'Ionic position (from input)', /, &
                 3X,'sorted by specie, and converted to real a.u. coordinates')
   661 FORMAT(   3X,'Ionic position will be re-read from restart file')
+  662 FORMAT(   3X,'Ionic position read from input file')
 
   850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
 

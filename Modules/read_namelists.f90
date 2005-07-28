@@ -1603,7 +1603,7 @@ MODULE read_namelists_module
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'beeman'
              END IF
-          CASE ( 'neb' , 'smd' )
+          CASE ( 'neb' )
              !
              ! ... "path" optimizations
              ! 
@@ -1623,9 +1623,20 @@ MODULE read_namelists_module
              IF( prog == 'CP' ) THEN
                 !
                 electron_dynamics = 'damp'
+                ion_dynamics      = 'none'
+                cell_dynamics     = 'none'
+                !
+             END IF
+             !
+          CASE ( 'smd' )
+             !
+             IF( prog == 'CP' ) THEN
+                !
+                electron_dynamics = 'damp'
                 ion_dynamics      = 'damp'
                 !
              END IF
+
           CASE DEFAULT
              CALL errore( sub_name,' calculation '// & 
                           & calculation//' not implemented ',1)

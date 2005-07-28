@@ -15,7 +15,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE constants,                ONLY : bohr_radius_angs, uma_au
   USE control_flags,            ONLY : nfi, iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow, &
-                                       taurdr, tprnfor, tsdc, lconstrain
+                                       taurdr, tprnfor, tsdc, lconstrain, lneb
   USE control_flags,            ONLY : ndr, ndw, nbeg, nomore, tsde, tortho, &
                                        tnosee, tnosep, trane, tranp, tsdp,   &
                                        tcp, tcap, ampre, amprp, tnoseh, tolp
@@ -47,7 +47,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE reciprocal_vectors,       ONLY : gstart, mill_l
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
-                                       ions_temp, ions_thermal_stress
+                                       ions_temp, ions_thermal_stress, if_pos
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdmi, fion, fionm
@@ -785,6 +785,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END DO
      !
   END DO
+  IF( lneb ) THEN
+    DO ia = 1, nat
+      fion_out( :, ia ) = fion( :, ia ) * DBLE( if_pos( :, ia ) )
+    END DO
+  END IF
+
   !
   ! ...  Calculate statistics
   !

@@ -109,7 +109,7 @@
       nspin = SIZE( cm, 4)
       IF( force_pairing ) nspin = 1
 
-      IF( nbeg <  1) THEN
+      IF( nbeg <  0 ) THEN
 
         ampre = 0.01d0
         ALLOCATE( pwt( ngwt ) )

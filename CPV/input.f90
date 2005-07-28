@@ -363,21 +363,16 @@ MODULE input
      taurdr_ = .FALSE.
      SELECT CASE ( TRIM( restart_mode ) )
        CASE ('from_scratch')
-         nbeg_ = -2
-         IF ( ion_positions == 'from_input' ) nbeg_ = -1
+         nbeg_   = -1
          nomore_ = nstep
          trane_  = ( startingwfc == 'random' )
          IF ( ampre_ == 0.d0 ) ampre_ = 0.02
        CASE ('reset_counters')
-         nbeg_ = 0
+         nbeg_   =  0
          nomore_ = nstep
        CASE ('restart')
-         nbeg_ = 1
+         nbeg_   =  1
          nomore_ = nstep
-         IF ( ion_positions == 'from_input' ) THEN
-           taurdr_ = .TRUE.
-           nbeg_ = -1
-         END IF
        CASE DEFAULT
          CALL errore(' iosys ',' unknown restart_mode '//TRIM(restart_mode), 1 )
      END SELECT

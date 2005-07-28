@@ -246,11 +246,11 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
       !     
       call randin( 1, n, gstart, ngw, ampre, cm )
       
-    else if( nbeg == -3 ) then
+    else 
       !       
       !     gaussian initialization
       !     
-      call gausin( eigr, cm )
+      ! call gausin( eigr, cm )  ! DEBUG to be check
       
     end if
 

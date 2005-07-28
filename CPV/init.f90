@@ -195,7 +195,8 @@
 
       IF( ionode ) THEN
         WRITE( stdout, 100 )
- 100    FORMAT( 3X,'Simulation dimensions initialization',/, &
+ 100    FORMAT( //, &
+                3X,'Simulation dimensions initialization',/, &
                 3X,'------------------------------------' )
       END IF
       !
@@ -382,9 +383,9 @@
       !  if trd_ht = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run
       !
-      if( ( nbeg >= 0 ) .and. ( .not. trd_ht ) ) then
+      if( ( nbeg > -1 ) .and. ( .not. trd_ht ) ) then
         !
-        ! read only h and hold from file ndr
+        ! read only h and hold from restart file "ndr"
         !
         CALL cp_read_cell( ndr, ' ', .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 

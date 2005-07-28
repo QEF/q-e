@@ -110,7 +110,7 @@ MODULE from_restart_module
        !
        ! ... Input positions read from input file and stored in tau0
        !
-       CALL r_to_s( tau0, taus, na, nsp, h )
+       CALL r_to_s( tau0, taus, na, nsp, ainv )
        !
     END IF
     !
