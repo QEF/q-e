@@ -70,7 +70,7 @@ do
     head -$check2 pwdiff.sh.tmp2 > pwdiff.sh.tmp4
 
     # diff up to next checkpoints, then postprocess
-    diff pwdiff.sh.tmp3 pwdiff.sh.tmp4 \
+    diff -wib pwdiff.sh.tmp3 pwdiff.sh.tmp4 \
 	| awk -f $postdiff o1=$offset1 o2=$offset2 >> pwdiff.sh.tmp5
 
     # discard processed part
