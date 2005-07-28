@@ -1,6 +1,6 @@
 
      Program PWSCF     v.2.1cvs starts ...
-     Today is 26Jul2005 at 16: 3:53 
+     Today is 28Jul2005 at 16:39:12 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -65,7 +65,7 @@
 
      number of k points=  120  gaussian broad. (ryd)=  0.0200     ngauss =   1
                        cart. coord. in units 2pi/a_0
-        k(    1) = (   0.0625000   0.0625000   0.0625000), wk =   0.0039063
+        k(    1) = (   0.0625000   0.0625000   0.0625000), wk =   0.0039062
         k(    2) = (   0.0625000   0.0625000   0.1875000), wk =   0.0117188
         k(    3) = (   0.0625000   0.0625000   0.3125000), wk =   0.0117188
         k(    4) = (   0.0625000   0.0625000   0.4375000), wk =   0.0117188
@@ -97,7 +97,7 @@
         k(   30) = (   0.0625000   0.6875000   0.6875000), wk =   0.0117188
         k(   31) = (   0.0625000   0.6875000   0.8125000), wk =   0.0234375
         k(   32) = (   0.0625000   0.8125000   0.8125000), wk =   0.0117188
-        k(   33) = (   0.1875000   0.1875000   0.1875000), wk =   0.0039063
+        k(   33) = (   0.1875000   0.1875000   0.1875000), wk =   0.0039062
         k(   34) = (   0.1875000   0.1875000   0.3125000), wk =   0.0117188
         k(   35) = (   0.1875000   0.1875000   0.4375000), wk =   0.0117188
         k(   36) = (   0.1875000   0.1875000   0.5625000), wk =   0.0117188
@@ -115,7 +115,7 @@
         k(   48) = (   0.1875000   0.5625000   0.5625000), wk =   0.0117188
         k(   49) = (   0.1875000   0.5625000   0.6875000), wk =   0.0234375
         k(   50) = (   0.1875000   0.6875000   0.6875000), wk =   0.0117188
-        k(   51) = (   0.3125000   0.3125000   0.3125000), wk =   0.0039063
+        k(   51) = (   0.3125000   0.3125000   0.3125000), wk =   0.0039062
         k(   52) = (   0.3125000   0.3125000   0.4375000), wk =   0.0117188
         k(   53) = (   0.3125000   0.3125000   0.5625000), wk =   0.0117188
         k(   54) = (   0.3125000   0.3125000   0.6875000), wk =   0.0117188
@@ -123,9 +123,9 @@
         k(   56) = (   0.3125000   0.4375000   0.5625000), wk =   0.0234375
         k(   57) = (   0.3125000   0.4375000   0.6875000), wk =   0.0234375
         k(   58) = (   0.3125000   0.5625000   0.5625000), wk =   0.0117188
-        k(   59) = (   0.4375000   0.4375000   0.4375000), wk =   0.0039063
+        k(   59) = (   0.4375000   0.4375000   0.4375000), wk =   0.0039062
         k(   60) = (   0.4375000   0.4375000   0.5625000), wk =   0.0117188
-        k(   61) = (   0.0625000   0.0625000   0.0625000), wk =   0.0039063
+        k(   61) = (   0.0625000   0.0625000   0.0625000), wk =   0.0039062
         k(   62) = (   0.0625000   0.0625000   0.1875000), wk =   0.0117188
         k(   63) = (   0.0625000   0.0625000   0.3125000), wk =   0.0117188
         k(   64) = (   0.0625000   0.0625000   0.4375000), wk =   0.0117188
@@ -157,7 +157,7 @@
         k(   90) = (   0.0625000   0.6875000   0.6875000), wk =   0.0117188
         k(   91) = (   0.0625000   0.6875000   0.8125000), wk =   0.0234375
         k(   92) = (   0.0625000   0.8125000   0.8125000), wk =   0.0117188
-        k(   93) = (   0.1875000   0.1875000   0.1875000), wk =   0.0039063
+        k(   93) = (   0.1875000   0.1875000   0.1875000), wk =   0.0039062
         k(   94) = (   0.1875000   0.1875000   0.3125000), wk =   0.0117188
         k(   95) = (   0.1875000   0.1875000   0.4375000), wk =   0.0117188
         k(   96) = (   0.1875000   0.1875000   0.5625000), wk =   0.0117188
@@ -175,7 +175,7 @@
         k(  108) = (   0.1875000   0.5625000   0.5625000), wk =   0.0117188
         k(  109) = (   0.1875000   0.5625000   0.6875000), wk =   0.0234375
         k(  110) = (   0.1875000   0.6875000   0.6875000), wk =   0.0117188
-        k(  111) = (   0.3125000   0.3125000   0.3125000), wk =   0.0039063
+        k(  111) = (   0.3125000   0.3125000   0.3125000), wk =   0.0039062
         k(  112) = (   0.3125000   0.3125000   0.4375000), wk =   0.0117188
         k(  113) = (   0.3125000   0.3125000   0.5625000), wk =   0.0117188
         k(  114) = (   0.3125000   0.3125000   0.6875000), wk =   0.0117188
@@ -183,7 +183,7 @@
         k(  116) = (   0.3125000   0.4375000   0.5625000), wk =   0.0234375
         k(  117) = (   0.3125000   0.4375000   0.6875000), wk =   0.0234375
         k(  118) = (   0.3125000   0.5625000   0.5625000), wk =   0.0117188
-        k(  119) = (   0.4375000   0.4375000   0.4375000), wk =   0.0039063
+        k(  119) = (   0.4375000   0.4375000   0.4375000), wk =   0.0039062
         k(  120) = (   0.4375000   0.4375000   0.5625000), wk =   0.0117188
 
      G cutoff =  306.3252  (   5601 G-vectors)     FFT grid: ( 25, 25, 25)
@@ -199,7 +199,7 @@
      starting charge    9.99966, renormalised to   10.00000
      Starting wfc are atomic +   3 random wfc
 
-     total cpu time spent up to now is      3.76 secs
+     total cpu time spent up to now is      2.25 secs
 
      Self-consistent Calculation
 
@@ -207,7 +207,7 @@
      Davidson diagonalization (with overlap)
      ethr =  1.00E-02,  avg # of iterations =  4.2
 
-     total cpu time spent up to now is      6.94 secs
+     total cpu time spent up to now is      4.73 secs
 
      total energy              =   -85.35017170 ryd
      estimated scf accuracy    <     0.91631934 ryd
@@ -219,7 +219,7 @@
      Davidson diagonalization (with overlap)
      ethr =  9.16E-03,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      8.93 secs
+     total cpu time spent up to now is      6.36 secs
 
      total energy              =   -85.53049253 ryd
      estimated scf accuracy    <     0.92737930 ryd
@@ -231,7 +231,7 @@
      Davidson diagonalization (with overlap)
      ethr =  9.16E-03,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     10.93 secs
+     total cpu time spent up to now is      7.99 secs
 
      total energy              =   -85.71084167 ryd
      estimated scf accuracy    <     0.04318106 ryd
@@ -243,7 +243,7 @@
      Davidson diagonalization (with overlap)
      ethr =  4.32E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     12.92 secs
+     total cpu time spent up to now is      9.63 secs
 
      total energy              =   -85.72197394 ryd
      estimated scf accuracy    <     0.00122624 ryd
@@ -255,7 +255,7 @@
      Davidson diagonalization (with overlap)
      ethr =  1.23E-05,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is     14.99 secs
+     total cpu time spent up to now is     11.32 secs
 
      total energy              =   -85.72231484 ryd
      estimated scf accuracy    <     0.00034535 ryd
@@ -267,7 +267,7 @@
      Davidson diagonalization (with overlap)
      ethr =  3.45E-06,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is     17.03 secs
+     total cpu time spent up to now is     13.02 secs
 
      total energy              =   -85.72248622 ryd
      estimated scf accuracy    <     0.00003699 ryd
@@ -279,7 +279,7 @@
      Davidson diagonalization (with overlap)
      ethr =  3.70E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     19.05 secs
+     total cpu time spent up to now is     14.66 secs
 
      total energy              =   -85.72248992 ryd
      estimated scf accuracy    <     0.00000333 ryd
@@ -291,7 +291,7 @@
      Davidson diagonalization (with overlap)
      ethr =  3.33E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     21.06 secs
+     total cpu time spent up to now is     16.30 secs
 
      total energy              =   -85.72249123 ryd
      estimated scf accuracy    <     0.00000097 ryd
@@ -303,7 +303,7 @@
      Davidson diagonalization (with overlap)
      ethr =  9.66E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     23.03 secs
+     total cpu time spent up to now is     17.92 secs
 
      End of self-consistent calculation
 
@@ -946,49 +946,49 @@
 
 
      Writing file          ni.save for program phonon
+ 
+     PWSCF        :    19.65s CPU time
 
-     PWSCF        :    25.49s CPU time
-
-     init_run     :     3.51s CPU
-     electrons    :    19.28s CPU
-     forces       :     0.54s CPU
-     stress       :     1.87s CPU
-
-     electrons    :    19.28s CPU
-     c_bands      :    12.76s CPU (       9 calls,   1.418 s avg)
-     sum_band     :     4.72s CPU (       9 calls,   0.524 s avg)
-     v_of_rho     :     0.43s CPU (      10 calls,   0.043 s avg)
-     newd         :     1.09s CPU (      10 calls,   0.109 s avg)
-     mix_rho      :     0.11s CPU (       9 calls,   0.012 s avg)
-
-     c_bands      :    12.76s CPU (       9 calls,   1.418 s avg)
-     init_us_2    :     0.75s CPU (    2520 calls,   0.000 s avg)
-     cegterg      :    11.36s CPU (    1080 calls,   0.011 s avg)
-
-     sum_band     :     4.72s CPU (       9 calls,   0.524 s avg)
-     becsum       :     0.04s CPU (    1080 calls,   0.000 s avg)
-     addusdens    :     1.27s CPU (       9 calls,   0.141 s avg)
-
-     wfcrot       :     0.54s CPU (     120 calls,   0.005 s avg)
-     cegterg      :    11.36s CPU (    1080 calls,   0.011 s avg)
-     h_psi        :     8.23s CPU (    2741 calls,   0.003 s avg)
-     g_psi        :     0.09s CPU (    1541 calls,   0.000 s avg)
-     overlap      :     0.62s CPU (    1541 calls,   0.000 s avg)
-     cdiaghg      :     1.39s CPU (    2621 calls,   0.001 s avg)
-     update       :     0.28s CPU (    1541 calls,   0.000 s avg)
-     last         :     0.16s CPU (    1080 calls,   0.000 s avg)
-
-     h_psi        :     8.23s CPU (    2741 calls,   0.003 s avg)
-     init         :     0.00s CPU (    2741 calls,   0.000 s avg)
-     firstfft     :     3.20s CPU (   21948 calls,   0.000 s avg)
-     secondfft    :     3.18s CPU (   21948 calls,   0.000 s avg)
-     add_vuspsi   :     0.31s CPU (    2741 calls,   0.000 s avg)
-     s_psi        :     0.49s CPU (    2741 calls,   0.000 s avg)
-
+     init_run     :     2.15s CPU
+     electrons    :    15.68s CPU
+     forces       :     0.34s CPU
+     stress       :     1.32s CPU
+ 
+     electrons    :    15.68s CPU
+     c_bands      :    11.06s CPU (       9 calls,   1.229 s avg)
+     sum_band     :     3.45s CPU (       9 calls,   0.383 s avg)
+     v_of_rho     :     0.15s CPU (      10 calls,   0.015 s avg)
+     newd         :     0.90s CPU (      10 calls,   0.090 s avg)
+     mix_rho      :     0.08s CPU (       9 calls,   0.009 s avg)
+ 
+     c_bands      :    11.06s CPU (       9 calls,   1.229 s avg)
+     init_us_2    :     0.55s CPU (    2520 calls,   0.000 s avg)
+     cegterg      :    10.46s CPU (    1080 calls,   0.010 s avg)
+ 
+     sum_band     :     3.45s CPU (       9 calls,   0.383 s avg)
+     becsum       :     0.06s CPU (    1080 calls,   0.000 s avg)
+     addusdens    :     0.97s CPU (       9 calls,   0.108 s avg)
+ 
+     wfcrot       :     0.49s CPU (     120 calls,   0.004 s avg)
+     cegterg      :    10.46s CPU (    1080 calls,   0.010 s avg)
+     h_psi        :     6.67s CPU (    2741 calls,   0.002 s avg)
+     g_psi        :     0.10s CPU (    1541 calls,   0.000 s avg)
+     overlap      :     0.25s CPU (    1541 calls,   0.000 s avg)
+     cdiaghg      :     2.43s CPU (    2621 calls,   0.001 s avg)
+     update       :     0.30s CPU (    1541 calls,   0.000 s avg)
+     last         :     0.15s CPU (    1080 calls,   0.000 s avg)
+ 
+     h_psi        :     6.67s CPU (    2741 calls,   0.002 s avg)
+     init         :     0.04s CPU (    2741 calls,   0.000 s avg)
+     firstfft     :     2.75s CPU (   21948 calls,   0.000 s avg)
+     secondfft    :     2.73s CPU (   21948 calls,   0.000 s avg)
+     add_vuspsi   :     0.34s CPU (    2741 calls,   0.000 s avg)
+     s_psi        :     0.32s CPU (    2741 calls,   0.000 s avg)
+ 
      General routines
-     ccalbec      :     1.05s CPU (    4061 calls,   0.000 s avg)
-     cft3         :     0.26s CPU (     146 calls,   0.002 s avg)
-     cft3s        :     6.80s CPU (   53654 calls,   0.000 s avg)
-     interpolate  :     0.12s CPU (      38 calls,   0.003 s avg)
-     davcio       :     1.15s CPU (    3600 calls,   0.000 s avg)
-
+     ccalbec      :     0.33s CPU (    4061 calls,   0.000 s avg)
+     cft3         :     0.24s CPU (     146 calls,   0.002 s avg)
+     cft3s        :     6.03s CPU (   53654 calls,   0.000 s avg)
+     interpolate  :     0.08s CPU (      38 calls,   0.002 s avg)
+     davcio       :     0.22s CPU (    3600 calls,   0.000 s avg)
+ 

@@ -3,17 +3,600 @@
      CPV: variable-cell Car-Parrinello molecular dynamics
      using ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Sat Jan 15 19:44:57 CET 2005                       
+     Version: 2.1cvs - Mon Jan 31 11:35:49 CET 2005                       
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:26: 5  26Jul2005               
+   This run was started on:  14:31:13   3Jun2005               
 
    Serial Build
+Warning: card  &CELL ignored
+Warning: card     CELL_DYNAMICS = 'NONE', ignored
+Warning: card     CELL_VELOCITIES = 'ZERO', ignored
+Warning: card     PRESS = 0.0D0, ignored
+Warning: card  / ignored
 
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     from  read_namelists  : error #         1
-      reading namelist wannier 
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   Job Title:  Water Molecule
 
-     stopping ...
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/giannozz/espresso/pseudo/O_US.van
+   file type is  1
+
+    ============================================================
+    |  pseudopotential report for atomic species:  1           |
+    |        pseudo potential version   7   3   2              |
+    ------------------------------------------------------------
+    |  oxygen              PBE                  exchange-corr  |
+    |  z =   8.    zv( 1) =   6.    exfact =   5.00000         |
+    |  ifpcor =  0           atomic energy = -31.58351 Ry      |
+    |  index    orbital      occupation    energy              |
+    |    1        200           2.00       -1.76               |
+    |    2        210           4.00       -0.66               |
+    |  rinner =  0.7000  0.7000  0.7000                        |
+    |    new generation scheme:                                |
+    |    nbeta =  4     kkbeta =  519     rcloc =    1.0000    |
+    |    ibeta    l     epsilon   rcut                         |
+    |      1       0      -1.76   1.20                         |
+    |      2       0      -0.66   1.20                         |
+    |      3       1      -1.76   1.20                         |
+    |      4       1      -0.66   1.20                         |
+    ============================================================
+
+   Warning XC functionals forced to be: PBE                 
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/giannozz/espresso/pseudo/H_US.van
+   file type is  1
+
+    ============================================================
+    |  pseudopotential report for atomic species:  2           |
+    |        pseudo potential version   7   3   2              |
+    ------------------------------------------------------------
+    |  hydrogen            PBE                  exchange-corr  |
+    |  z =   1.    zv( 2) =   1.    exfact =   5.00000         |
+    |  ifpcor =  0           atomic energy =  -0.91772 Ry      |
+    |  index    orbital      occupation    energy              |
+    |    1        100           1.00       -0.48               |
+    |  rinner =  0.5000                                        |
+    |    new generation scheme:                                |
+    |    nbeta =  1     kkbeta =  271     rcloc =    0.6000    |
+    |    ibeta    l     epsilon   rcut                         |
+    |      1       0      -0.48   0.80                         |
+    ============================================================
+
+   Warning XC functionals forced to be: PBE                 
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+Warning: electron_velocities keyword has no effect
+   Restart Mode       =       1   restart        
+   Number of MD Steps =     100
+   Print out every          100 MD Steps
+   Reads from unit    =      52
+   Writes to unit     =      51
+   MD Simulation time step            =       7.00
+   Electronic fictitious mass (emass) =     350.00
+   emass cut-off                      =       3.00
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [GPa]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =    1
+   alat  =    20.00000000
+   a1    =    20.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   20.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   20.00000000
+ 
+   b1    =     0.05000000    0.00000000    0.00000000
+   b2    =     0.00000000    0.05000000    0.00000000
+   b3    =     0.00000000    0.00000000    0.05000000
+   omega =  8000.00000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   25.0 Ryd.,    Ecutrho =  100.0 Ryd.,    Ecuts =  100.0 Ryd.
+   Gcutwfc =   15.9     ,    Gcutrho =   31.8          Gcuts =   31.8
+   NOTA BENE: refg, mmx =   0.020000  5001
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.50E-07,  max = 250
+   Electron dynamics with newton equations
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: PERDEW AND WANG                                             
+   Using Generalized Gradient Corrections with
+     Exchange functional: PERDEW BURKE ERNZERHOF                                      
+     Correlation functional: PERDEW BURKE ERNZERHOF                                      
+     Exchange-correlation      = PBE (1434)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for     9 degrees of freedom
+   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Zero initial momentum for ions
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   0.80 (a.u.)
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.80 (a.u.)
+        1.832500    -0.224300    -0.000100
+       -0.224300     1.832500     0.000200
+   Ionic position will be re-read from restart file
+
+   All atoms are allowed to move
+   Ionic temperature is not controlled
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iprsta =  1
+
+ F
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    20.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   20.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   20.0000              0.0000    0.0000    1.0000
+ 
+   Stick Mesh
+   ----------
+   nst =  1591,  nstw =   397, nsts =  1591
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1    3181     793    3181  135043   16879  135043
+          0    3181     793    3181  135043   16879  135043
+ 
+ 
+   Real Mesh Report 
+   ---------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    64    64    64      64    64    64       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     64    64    64
+   Local number of cell to store the grid ( nnrx ) =  *****
+   Number of x-y planes for each processors: 
+   nr3l =    64
+ 
+   Smooth Real Mesh Report 
+   ----------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    64    64    64      64    64    64       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     64    64    64
+   Local number of cell to store the grid ( nnrx ) =  *****
+   Number of x-y planes for each processors: 
+   nr3sl =    64
+ 
+   Small Box Real Mesh Report 
+   -------------------------- 
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    10    10    10      10    10    10       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     10    10    10
+   Local number of cell to store the grid ( nnrx ) =   1000
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh Number of G               Small Mesh Number of G
+   PE       Global       Local   Max Local       Global       Local   Max Local
+    1        67522       67522       67522         8440        8440        8440
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       3.1250    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    3.1250    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    3.1250              0.0000    0.0000    1.0000
+
+                Small box Mesh Number of G
+   PE       Global       Local   Max Local
+    1          243         243         243
+
+   Simulation dimensions initialization completed
+
+
+ ibrav =    1       cell parameters 
+
+      20.00000       0.00000       0.00000
+       0.00000      20.00000       0.00000
+       0.00000       0.00000      20.00000
+ 
+ !-------------------------------------------------------!
+ !                                                       !
+ ! NBEG IS SET TO 0 FOR ADIABATIC SWITCHING OF THE FIELD !
+ !                                                       !
+ !-------------------------------------------------------!
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8         243           1
+         519           3
+ 
+                        qqq 
+  -0.2814  -0.1752   0.0000   0.0000
+  -0.1752  -0.1519   0.0000   0.0000
+   0.0000   0.0000   3.4543  -1.8676
+   0.0000   0.0000  -1.8676   0.9140
+ 
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            1         243           2
+         271           1
+ 
+                        qqq 
+   9.4958
+ 
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+   2  indv=  2   ang. mom=  0
+   3  indv=  3   ang. mom=  1
+   4  indv=  3   ang. mom=  1
+   5  indv=  3   ang. mom=  1
+   6  indv=  4   ang. mom=  1
+   7  indv=  4   ang. mom=  1
+   8  indv=  4   ang. mom=  1
+ 
+                        dion 
+   1.1855  -0.0482   0.0000   0.0000
+  -0.0482  -0.1194   0.0000   0.0000
+   0.0000   0.0000  24.3757 -18.2972
+   0.0000   0.0000 -18.2972  13.6557
+
+   Specie:     2
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   3.3279
+ ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
+                              DYNAMICS PARAMETERS 
+ FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            =  1500.0
+ TIME STEP USED FOR DAMPED DYNAMICS                                =  5.0000000
+ DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
+          10 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
+ AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  FORT.25
+ WANNIER CENTERS WRITTEN TO                     FORT.26
+ SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
+ -------------------------------------------------------------------------------
+ 
+ IBRAV SELECTED:           1
+ Translations to be done           3
+ ibrav selected:           1
+           1 :           1           0           0
+           2 :           0           1           0
+           3 :           0           0           1
+ Translation           1 for        8440 G vectors
+ Translation           2 for        8440 G vectors
+ Translation           3 for        8440 G vectors
+ out from wfunc_init
+ 
+ GRID MAPPING DONE
+ DYNAMICS IN THE PRESENCE OF AN EXTERNAL ELECTRIC FIELD
+ 
+ POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT
+ 
+ EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)
+ 
+ E0(x) =  0.0000000
+ E0(y) =  0.0000000
+ E0(z) =  0.0000000
+ E1(x) =  0.0000000
+ E1(y) =  0.0000000
+ E1(z) =  0.0050000
+ FIELD WILL BE TURNED ON ADIBATICALLY OVER   100 STEPS
+ 
+Electronic velocities set to zero
+  formf: eself=  18.94976
+  formf:     vps(g=0)=  -0.0011514     rhops(g=0)=  -0.0007500
+  formf: sum_g vps(g)=  -2.9856365 sum_g rhops(g)=  -1.0526427
+  formf:     vps(g=0)=  -0.0002240     rhops(g=0)=  -0.0001250
+  formf: sum_g vps(g)=  -1.1625924 sum_g rhops(g)=  -0.1754405
+ WFC Obtained
+
+
+                total energy =      -17.20683 a.u.
+              kinetic energy =        7.85208 a.u.
+        electrostatic energy =      -18.21235 a.u.
+                         esr =        0.14128 a.u.
+                       eself =       18.94976 a.u.
+      pseudopotential energy =       -7.16484 a.u.
+  n-l pseudopotential energy =        4.52258 a.u.
+ exchange-correlation energy =       -4.20429 a.u.
+           average potential =       -0.02035 a.u.
+
+
+ cell parameters h
+     20.00000      0.00000      0.00000
+      0.00000     20.00000      0.00000
+      0.00000      0.00000     20.00000
+
+
+ 
+ derivative of e(tot)
+      0.01987      0.00231      0.00000
+      0.00231      0.01987      0.00000
+      0.00000      0.00000      0.02760
+
+
+ 
+ WFC Obtained
+
+
+ subroutine rhoofr: total integrated electronic density
+ in g-space =  7.999984     in r-space =  7.999984
+
+
+                total energy =      -17.20682 a.u.
+              kinetic energy =        7.85206 a.u.
+        electrostatic energy =      -18.21249 a.u.
+                         esr =        0.14118 a.u.
+                       eself =       18.94976 a.u.
+      pseudopotential energy =       -7.16468 a.u.
+  n-l pseudopotential energy =        4.52256 a.u.
+ exchange-correlation energy =       -4.20427 a.u.
+           average potential =       -0.02035 a.u.
+
+
+ cell parameters h
+     20.00000      0.00000      0.00000
+      0.00000     20.00000      0.00000
+      0.00000      0.00000     20.00000
+
+
+ 
+ derivative of e(tot)
+      0.01987      0.00231      0.00000
+      0.00231      0.01987      0.00000
+      0.00000      0.00000      0.02759
+
+
+ 
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -25.21  -12.98   -9.17   -7.23
+ 
+ 
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+    1  0.00000    0.0    0.0   -17.20682   -17.20682   -17.20682   -17.20681  0.0000  0.0000  0.0000  0.0000
+    2  0.00001    0.0    0.6   -17.20683   -17.20683   -17.20682   -17.20681  0.0000  0.0000  0.0000  0.0000
+    3  0.00003    0.0    2.9   -17.20685   -17.20685   -17.20681   -17.20678  0.0000  0.0000  0.0000  0.0000
+    4  0.00007    0.0    4.7   -17.20688   -17.20688   -17.20681   -17.20674  0.0000  0.0000  0.0000  0.0000
+    5  0.00012    0.0    6.8   -17.20691   -17.20691   -17.20682   -17.20669  0.0000  0.0000  0.0000  0.0000
+    6  0.00018    0.0    8.9   -17.20695   -17.20695   -17.20682   -17.20664  0.0000  0.0000  0.0000  0.0000
+    7  0.00023    0.0   11.1   -17.20699   -17.20699   -17.20683   -17.20660  0.0000  0.0000  0.0000  0.0000
+    8  0.00028    0.0   13.2   -17.20702   -17.20702   -17.20683   -17.20655  0.0000  0.0000  0.0000  0.0000
+    9  0.00032    0.0   15.3   -17.20706   -17.20705   -17.20684   -17.20651  0.0000  0.0000  0.0000  0.0000
+   10  0.00035    0.0   17.2   -17.20708   -17.20708   -17.20684   -17.20648  0.0000  0.0000  0.0000  0.0000
+   11  0.00037    0.0   18.8   -17.20710   -17.20710   -17.20683   -17.20647  0.0000  0.0000  0.0000  0.0000
+   12  0.00037    0.0   19.9   -17.20712   -17.20712   -17.20683   -17.20646  0.0000  0.0000  0.0000  0.0000
+   13  0.00036    0.0   20.3   -17.20712   -17.20712   -17.20683   -17.20648  0.0000  0.0000  0.0000  0.0000
+   14  0.00033    0.0   20.0   -17.20712   -17.20712   -17.20683   -17.20650  0.0000  0.0000  0.0000  0.0000
+   15  0.00029    0.0   19.1   -17.20710   -17.20710   -17.20683   -17.20654  0.0000  0.0000  0.0000  0.0000
+   16  0.00025    0.0   17.7   -17.20708   -17.20708   -17.20683   -17.20658  0.0000  0.0000  0.0000  0.0000
+   17  0.00020    0.0   15.9   -17.20706   -17.20705   -17.20683   -17.20662  0.0000  0.0000  0.0000  0.0000
+   18  0.00015    0.0   14.0   -17.20703   -17.20702   -17.20682   -17.20667  0.0000  0.0000  0.0000  0.0000
+   19  0.00010    0.0   12.0   -17.20699   -17.20699   -17.20681   -17.20671  0.0000  0.0000  0.0000  0.0000
+   20  0.00006    0.0    9.9   -17.20696   -17.20695   -17.20681   -17.20675  0.0000  0.0000  0.0000  0.0000
+   21  0.00003    0.0    7.9   -17.20692   -17.20691   -17.20680   -17.20677  0.0000  0.0000  0.0000  0.0000
+   22  0.00001    0.0    5.9   -17.20689   -17.20688   -17.20679   -17.20678  0.0000  0.0000  0.0000  0.0000
+   23  0.00001    0.0    4.2   -17.20521   -17.20518   -17.20512   -17.20511  0.0000  0.0000  0.0000  0.0000
+   24  0.00002    0.0    2.8   -17.20519   -17.20516   -17.20512   -17.20509  0.0000  0.0000  0.0000  0.0000
+   25  0.00004    0.0    1.7   -17.20517   -17.20514   -17.20511   -17.20507  0.0000  0.0000  0.0000  0.0000
+   26  0.00007    0.0    1.1   -17.20516   -17.20512   -17.20510   -17.20504  0.0000  0.0000  0.0000  0.0000
+   27  0.00010    0.0    1.0   -17.20516   -17.20511   -17.20510   -17.20500  0.0000  0.0000  0.0000  0.0000
+   28  0.00013    0.0    1.3   -17.20516   -17.20511   -17.20509   -17.20496  0.0000  0.0000  0.0000  0.0000
+   29  0.00017    0.0    2.0   -17.20517   -17.20511   -17.20508   -17.20492  0.0000  0.0000  0.0000  0.0000
+   30  0.00020    0.0    3.1   -17.20519   -17.20512   -17.20507   -17.20488  0.0000  0.0000  0.0000  0.0000
+   31  0.00022    0.0    4.5   -17.20521   -17.20513   -17.20507   -17.20484  0.0000  0.0000  0.0000  0.0000
+   32  0.00024    0.0    6.2   -17.20524   -17.20515   -17.20506   -17.20482  0.0000  0.0000  0.0000  0.0000
+   33  0.00024    0.0    8.2   -17.20694   -17.20684   -17.20672   -17.20648  0.0000  0.0000  0.0000  0.0000
+   34  0.00024    0.0   10.6   -17.20697   -17.20686   -17.20671   -17.20647  0.0000  0.0000  0.0000  0.0000
+   35  0.00022    0.0   12.9   -17.20701   -17.20689   -17.20670   -17.20648  0.0000  0.0000  0.0000  0.0000
+   36  0.00020    0.0   15.2   -17.20704   -17.20691   -17.20669   -17.20649  0.0000  0.0000  0.0000  0.0000
+   37  0.00017    0.0   17.1   -17.20707   -17.20693   -17.20668   -17.20651  0.0000  0.0000  0.0000  0.0000
+   38  0.00014    0.0   18.6   -17.20709   -17.20694   -17.20667   -17.20653  0.0000  0.0000  0.0000  0.0000
+   39  0.00011    0.0   19.7   -17.20711   -17.20694   -17.20666   -17.20655  0.0000  0.0000  0.0000  0.0000
+   40  0.00009    0.0   20.2   -17.20712   -17.20694   -17.20665   -17.20656  0.0000  0.0000  0.0000  0.0000
+   41  0.00006    0.0   20.2   -17.20712   -17.20692   -17.20663   -17.20657  0.0000  0.0000  0.0000  0.0000
+   42  0.00005    0.0   19.7   -17.20711   -17.20690   -17.20662   -17.20657  0.0000  0.0000  0.0000  0.0000
+   43  0.00004    0.0   18.6   -17.20710   -17.20687   -17.20660   -17.20657  0.0000  0.0000  0.0000  0.0000
+   44  0.00003    0.0   17.2   -17.20707   -17.20683   -17.20659   -17.20655  0.0000  0.0000  0.0000  0.0000
+   45  0.00003    0.0   15.3   -17.20704   -17.20679   -17.20657   -17.20654  0.0000  0.0000  0.0000  0.0000
+   46  0.00004    0.0   13.3   -17.20700   -17.20674   -17.20655   -17.20651  0.0000  0.0000  0.0000  0.0000
+   47  0.00005    0.0   11.0   -17.20696   -17.20669   -17.20653   -17.20648  0.0000  0.0000  0.0000  0.0000
+   48  0.00006    0.0    8.7   -17.20692   -17.20664   -17.20651   -17.20645  0.0000  0.0000  0.0000  0.0000
+   49  0.00008    0.0    6.5   -17.20689   -17.20659   -17.20650   -17.20642  0.0000  0.0000  0.0000  0.0000
+   50  0.00010    0.0    4.4   -17.20685   -17.20654   -17.20648   -17.20638  0.0000  0.0000  0.0000  0.0000
+   51  0.00011    0.0    2.7   -17.20682   -17.20650   -17.20646   -17.20635  0.0000  0.0000  0.0000  0.0000
+   52  0.00012    0.0    1.4   -17.20680   -17.20646   -17.20644   -17.20632  0.0000  0.0000  0.0000  0.0000
+   53  0.00013    0.0    0.8   -17.20678   -17.20643   -17.20642   -17.20629  0.0000  0.0000  0.0000  0.0000
+   54  0.00013    0.0    0.6   -17.20677   -17.20640   -17.20640   -17.20626  0.0000  0.0000  0.0000  0.0000
+   55  0.00013    0.0    1.1   -17.20677   -17.20639   -17.20637   -17.20624  0.0000  0.0000  0.0000  0.0000
+   56  0.00012    0.0    2.0   -17.20678   -17.20638   -17.20635   -17.20623  0.0000  0.0000  0.0000  0.0000
+   57  0.00011    0.0    3.5   -17.20680   -17.20639   -17.20634   -17.20622  0.0000  0.0000  0.0000  0.0000
+   58  0.00010    0.0    5.4   -17.20682   -17.20640   -17.20633   -17.20622  0.0000  0.0000  0.0000  0.0000
+   59  0.00009    0.0    7.7   -17.20685   -17.20643   -17.20632   -17.20623  0.0000  0.0000  0.0000  0.0000
+   60  0.00008    0.0   10.1   -17.20689   -17.20645   -17.20631   -17.20623  0.0000  0.0000  0.0000  0.0000
+   61  0.00007    0.0   12.5   -17.20692   -17.20648   -17.20630   -17.20624  0.0000  0.0000  0.0000  0.0000
+   62  0.00006    0.0   14.8   -17.20695   -17.20651   -17.20630   -17.20624  0.0000  0.0000  0.0000  0.0000
+   63  0.00005    0.0   16.9   -17.20698   -17.20653   -17.20629   -17.20624  0.0000  0.0000  0.0000  0.0000
+   64  0.00004    0.0   18.7   -17.20700   -17.20654   -17.20627   -17.20623  0.0000  0.0000  0.0000  0.0000
+   65  0.00004    0.0   20.1   -17.20701   -17.20655   -17.20626   -17.20622  0.0000  0.0000  0.0000  0.0000
+   66  0.00004    0.0   21.0   -17.20702   -17.20655   -17.20625   -17.20621  0.0000  0.0000  0.0000  0.0000
+   67  0.00004    0.0   21.3   -17.20702   -17.20655   -17.20624   -17.20620  0.0000  0.0000  0.0000  0.0000
+   68  0.00005    0.0   21.0   -17.20701   -17.20653   -17.20623   -17.20618  0.0000  0.0000  0.0000  0.0000
+   69  0.00006    0.0   20.3   -17.20699   -17.20651   -17.20622   -17.20616  0.0000  0.0000  0.0000  0.0000
+   70  0.00007    0.0   19.1   -17.20697   -17.20648   -17.20621   -17.20614  0.0000  0.0000  0.0000  0.0000
+   71  0.00008    0.0   17.6   -17.20693   -17.20645   -17.20620   -17.20612  0.0000  0.0000  0.0000  0.0000
+   72  0.00009    0.0   15.8   -17.20690   -17.20642   -17.20619   -17.20610  0.0000  0.0000  0.0000  0.0000
+   73  0.00010    0.0   13.8   -17.20686   -17.20638   -17.20618   -17.20608  0.0000  0.0000  0.0000  0.0000
+   74  0.00011    0.0   11.8   -17.20682   -17.20635   -17.20618   -17.20606  0.0000  0.0000  0.0000  0.0000
+   75  0.00012    0.0    9.9   -17.20511   -17.20464   -17.20450   -17.20438  0.0000  0.0000  0.0000  0.0000
+   76  0.00012    0.0    8.2   -17.20508   -17.20461   -17.20449   -17.20437  0.0000  0.0000  0.0000  0.0000
+   77  0.00012    0.0    6.9   -17.20505   -17.20458   -17.20448   -17.20436  0.0000  0.0000  0.0000  0.0000
+   78  0.00011    0.0    5.9   -17.20503   -17.20456   -17.20448   -17.20437  0.0000  0.0000  0.0000  0.0000
+   79  0.00010    0.0    5.2   -17.20502   -17.20455   -17.20447   -17.20437  0.0000  0.0000  0.0000  0.0000
+   80  0.00008    0.0    5.1   -17.20501   -17.20454   -17.20447   -17.20439  0.0000  0.0000  0.0000  0.0000
+   81  0.00007    0.0    5.3   -17.20500   -17.20455   -17.20448   -17.20441  0.0000  0.0000  0.0000  0.0000
+   82  0.00006    0.0    6.0   -17.20501   -17.20457   -17.20449   -17.20443  0.0000  0.0000  0.0000  0.0000
+   83  0.00005    0.0    7.1   -17.20502   -17.20460   -17.20450   -17.20445  0.0000  0.0000  0.0000  0.0000
+   84  0.00004    0.0    8.5   -17.20504   -17.20463   -17.20451   -17.20447  0.0000  0.0000  0.0000  0.0000
+   85  0.00003    0.0   10.3   -17.20507   -17.20467   -17.20452   -17.20449  0.0000  0.0000  0.0000  0.0000
+   86  0.00003    0.0   12.4   -17.20510   -17.20471   -17.20453   -17.20450  0.0000  0.0000  0.0000  0.0000
+   87  0.00003    0.0   14.8   -17.20680   -17.20642   -17.20621   -17.20618  0.0000  0.0000  0.0000  0.0000
+   88  0.00003    0.0   17.5   -17.20683   -17.20647   -17.20622   -17.20619  0.0000  0.0000  0.0000  0.0000
+   89  0.00004    0.0   20.2   -17.20687   -17.20652   -17.20624   -17.20620  0.0000  0.0000  0.0000  0.0000
+   90  0.00004    0.0   22.8   -17.20691   -17.20658   -17.20625   -17.20621  0.0000  0.0000  0.0000  0.0000
+   91  0.00005    0.0   25.0   -17.20694   -17.20662   -17.20627   -17.20621  0.0000  0.0000  0.0000  0.0000
+   92  0.00006    0.0   26.9   -17.20696   -17.20666   -17.20628   -17.20622  0.0000  0.0000  0.0000  0.0000
+   93  0.00007    0.0   28.2   -17.20698   -17.20670   -17.20630   -17.20623  0.0000  0.0000  0.0000  0.0000
+   94  0.00008    0.0   29.1   -17.20699   -17.20673   -17.20631   -17.20623  0.0000  0.0000  0.0000  0.0000
+   95  0.00009    0.0   29.6   -17.20699   -17.20675   -17.20632   -17.20624  0.0000  0.0000  0.0000  0.0000
+   96  0.00009    0.0   29.6   -17.20699   -17.20676   -17.20633   -17.20625  0.0000  0.0000  0.0000  0.0000
+   97  0.00008    0.0   29.1   -17.20697   -17.20676   -17.20634   -17.20626  0.0000  0.0000  0.0000  0.0000
+   98  0.00008    0.0   28.3   -17.20695   -17.20675   -17.20635   -17.20627  0.0000  0.0000  0.0000  0.0000
+   99  0.00007    0.0   27.0   -17.20692   -17.20674   -17.20636   -17.20629  0.0000  0.0000  0.0000  0.0000
+
+
+                total energy =      -17.20689 a.u.
+              kinetic energy =        7.84010 a.u.
+        electrostatic energy =      -18.21571 a.u.
+                         esr =        0.13590 a.u.
+                       eself =       18.94976 a.u.
+      pseudopotential energy =       -7.14849 a.u.
+  n-l pseudopotential energy =        4.51643 a.u.
+ exchange-correlation energy =       -4.19922 a.u.
+           average potential =       -0.02047 a.u.
+
+
+ cell parameters h
+     20.00000      0.00000      0.00000
+      0.00000     20.00000      0.00000
+      0.00000      0.00000     20.00000
+
+
+ 
+ derivative of e(tot)
+      0.02028      0.00216     -0.00025
+      0.00216      0.02028     -0.00025
+     -0.00025     -0.00024      0.02754
+
+
+ 
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+  -25.17  -12.91   -9.20   -7.22
+ 
+ 
+  100  0.00006    0.0   25.3   -17.20689   -17.20673   -17.20637   -17.20630  0.0000  0.0000  0.0000  0.0000
+
+   Cell Variables (AU)
+
+   STEP:    100   0.026608
+   20.00000000    0.00000000    0.00000000
+    0.00000000   20.00000000    0.00000000
+    0.00000000    0.00000000   20.00000000
+
+   Total Stress (GPa)
+
+   STEP:    100   0.026608
+        0.21414764        -0.13717309         0.01447752
+       -0.13728567         0.21429498         0.01473772
+        0.01443666         0.01423835        -0.22299787
+
+   Atomic Positions (AU)
+
+   STEP:    100   0.026608
+  0.897618E-02  0.894779E-02 -0.694605E-02
+  0.184158E+01 -0.218041E+00  0.557341E-01
+ -0.218599E+00  0.184147E+01  0.560201E-01
+
+   Atomic Velocities (AU)
+
+   STEP:    100   0.026608
+  0.222499E-04  0.221212E-04 -0.341057E-04
+ -0.324308E-03 -0.289801E-04  0.272863E-03
+ -0.316897E-04 -0.324958E-03  0.272828E-03
+
+   Atomic Forces (AU)
+
+   STEP:    100   0.026608
+ -0.519814E-02 -0.542213E-02  0.126915E-02
+  0.697887E-02 -0.971913E-03  0.187369E-02
+ -0.983978E-03  0.697173E-02  0.188725E-02
+
+
+              averaged quantities :
+         ekinc          ekin          epot          etot     tempp
+       0.00011       7.82158     -29.53796     -17.20655      12.7
+     initialize   :    31.02s CPU
+     total_time   :   681.11s CPU (     100 calls,   6.811 s avg)
+     formf        :    11.25s CPU
+     rhoofr       :   302.60s CPU (     101 calls,   2.996 s avg)
+     vofrho       :   295.22s CPU (     101 calls,   2.923 s avg)
+     calphi       :     0.83s CPU (     101 calls,   0.008 s avg)
+     ortho        :     2.17s CPU (     101 calls,   0.021 s avg)
+     updatc       :     0.50s CPU (     101 calls,   0.005 s avg)
+     newd         :     1.16s CPU (     101 calls,   0.011 s avg)
+     calbec       :     0.02s CPU (     103 calls,   0.000 s avg)
+     prefor       :     0.51s CPU (     201 calls,   0.003 s avg)
+     strucf       :     0.98s CPU (     101 calls,   0.010 s avg)
+     nlfl         :     0.00s CPU (     101 calls,   0.000 s avg)
+     nlfq         :     2.91s CPU (     101 calls,   0.029 s avg)
+     rhov         :    22.77s CPU (     101 calls,   0.225 s avg)
+     nlsm1        :     1.75s CPU (     305 calls,   0.006 s avg)
+     nlsm2        :     2.91s CPU (     101 calls,   0.029 s avg)
+     fft          :   349.22s CPU (    1818 calls,   0.192 s avg)
+     ffts         :    35.98s CPU (     202 calls,   0.178 s avg)
+     fftw         :    65.59s CPU (     606 calls,   0.108 s avg)
+     fftb         :     1.23s CPU (    9423 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
+ Creating dir : RESTART51
+ Creating dir : RESTART51/K00001
+ Opening file restart.xml
+
+
+====================== end cprvan ======================
+
+
+ 
+     CP90         : 11m57.07s CPU time
+
+ 
+   This run was terminated on:  14:43:42   3Jun2005            
+
+=------------------------------------------------------------------------------=
+   ELAPSED SECONDS:   749.0
+   JOB DONE.
+=------------------------------------------------------------------------------=
+
+   MEMORY STATISTICS FROM PE(1) : 

@@ -1,6 +1,6 @@
 
      Program PWSCF     v.2.1cvs starts ...
-     Today is 26Jul2005 at 16: 4:27 
+     Today is 28Jul2005 at 16:39:38 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -89,13 +89,13 @@
      The potential is recalculated from file          silicon.rho
      Starting wfc are atomic
 
-     total cpu time spent up to now is      0.58 secs
+     total cpu time spent up to now is      0.38 secs
 
      Band Structure Calculation
      Conjugate-gradient style diagonalization
      ethr =  1.25E-08,  avg # of iterations =  8.8
 
-     total cpu time spent up to now is      3.30 secs
+     total cpu time spent up to now is      2.55 secs
 
      End of band structure calculation
 
@@ -214,37 +214,37 @@
      Highest occupied, lowest unoccupied level (ev):     6.2551    6.7658
 
      Writing file     silicon.save for program phonon
+ 
+     PWSCF        :     2.69s CPU time
 
-     PWSCF        :     3.47s CPU time
-
-     init_run     :     0.55s CPU
-     electrons    :     2.72s CPU
-
-     electrons    :     2.72s CPU
-     c_bands      :     2.72s CPU
-     sum_band     :     0.17s CPU
-     v_of_rho     :     0.01s CPU
-
-     c_bands      :     2.72s CPU
+     init_run     :     0.37s CPU
+     electrons    :     2.17s CPU
+ 
+     electrons    :     2.17s CPU
+     c_bands      :     2.17s CPU
+     sum_band     :     0.12s CPU
+     v_of_rho     :     0.00s CPU
+ 
+     c_bands      :     2.17s CPU
      init_us_2    :     0.01s CPU (      84 calls,   0.000 s avg)
-     ccgdiagg     :     2.72s CPU (      28 calls,   0.097 s avg)
-
-     sum_band     :     0.17s CPU
-
-     wfcrot1      :     0.35s CPU (      28 calls,   0.013 s avg)
-     h_1psi       :     2.66s CPU (    2184 calls,   0.001 s avg)
-     s_1psi       :     0.04s CPU (    1960 calls,   0.000 s avg)
-     cdiaghg      :     0.00s CPU (      28 calls,   0.000 s avg)
-
-     h_1psi       :     2.66s CPU (    2184 calls,   0.001 s avg)
-     init         :     0.00s CPU (    2184 calls,   0.000 s avg)
-     firstfft     :     1.10s CPU (    2184 calls,   0.001 s avg)
-     secondfft    :     1.18s CPU (    2184 calls,   0.001 s avg)
-     add_vuspsi   :     0.09s CPU (    2184 calls,   0.000 s avg)
-
+     ccgdiagg     :     2.15s CPU (      28 calls,   0.077 s avg)
+ 
+     sum_band     :     0.12s CPU
+ 
+     wfcrot1      :     0.26s CPU (      28 calls,   0.009 s avg)
+     h_1psi       :     2.14s CPU (    2184 calls,   0.001 s avg)
+     s_1psi       :     0.03s CPU (    1960 calls,   0.000 s avg)
+     cdiaghg      :     0.07s CPU (      28 calls,   0.003 s avg)
+ 
+     h_1psi       :     2.14s CPU (    2184 calls,   0.001 s avg)
+     init         :     0.01s CPU (    2184 calls,   0.000 s avg)
+     firstfft     :     0.96s CPU (    2184 calls,   0.000 s avg)
+     secondfft    :     0.97s CPU (    2184 calls,   0.000 s avg)
+     add_vuspsi   :     0.03s CPU (    2184 calls,   0.000 s avg)
+ 
      General routines
-     ccalbec      :     0.12s CPU (    4144 calls,   0.000 s avg)
+     ccalbec      :     0.07s CPU (    4144 calls,   0.000 s avg)
      cft3         :     0.00s CPU (       3 calls,   0.000 s avg)
-     cft3s        :     2.25s CPU (    4592 calls,   0.000 s avg)
-     davcio       :     0.05s CPU (     112 calls,   0.000 s avg)
-
+     cft3s        :     1.95s CPU (    4592 calls,   0.000 s avg)
+     davcio       :     0.03s CPU (     112 calls,   0.000 s avg)
+ 

@@ -18,7 +18,7 @@ do
         if test -d $dir/results/
         then
             cd $dir
-            $ECHO "saving `pwd`...\n"
+            $ECHO "\n saving `pwd`..."
             if test -d $dir/reference.old/
             then 
                /bin/rm -r reference.old
@@ -33,14 +33,13 @@ do
             files=`/bin/ls`
             for file in $files
             do
-	      if test -f  ../results/$file
+	      if test -f ../results/$file
               then
-                 mv ../results/$file ../reference/
+                 mv ../results/$file ../reference
               fi 
             done
-            cd ..
+            cd ../..
             $ECHO "`pwd` done...\n"
-            cd ..
         fi
     fi
 done

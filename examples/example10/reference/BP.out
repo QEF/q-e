@@ -1,6 +1,6 @@
 
      Program PWSCF     v.2.1cvs starts ...
-     Today is 26Jul2005 at 16:20:33 
+     Today is 28Jul2005 at 16:52:27 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -120,13 +120,13 @@
      The potential is recalculated from file            pwscf.rho
      Starting wfc are atomic
 
-     total cpu time spent up to now is     10.29 secs
+     total cpu time spent up to now is      5.17 secs
 
      Band Structure Calculation
      Davidson diagonalization (with overlap)
      ethr =  2.27E-08,  avg # of iterations =  9.2
 
-     total cpu time spent up to now is     45.78 secs
+     total cpu time spent up to now is     22.41 secs
 
      End of band structure calculation
 
@@ -182,7 +182,7 @@
 
    -45.0389 -21.6791 -21.6704 -21.6246  -5.9985  -5.3436  -5.2649  -4.3402
     -4.3045  -4.2503  -4.1510  -4.0409   3.3556   6.5785   6.7423   6.9452
-     7.3915   8.3666   9.1353   9.3145   9.8636  10.3597
+     7.3916   8.3666   9.1353   9.3145   9.8636  10.3597
 
           k = 0.1250 0.3750-0.1667     band energies (ev):
 
@@ -206,7 +206,7 @@
 
    -45.0389 -21.6791 -21.6704 -21.6246  -5.9985  -5.3436  -5.2649  -4.3402
     -4.3045  -4.2503  -4.1510  -4.0409   3.3556   6.5785   6.7423   6.9452
-     7.3915   8.3666   9.1353   9.3145   9.8636  10.3597
+     7.3916   8.3666   9.1353   9.3145   9.8636  10.3597
 
           k = 0.1250 0.3750 0.5000     band energies (ev):
 
@@ -329,13 +329,15 @@
                              ~~~~~~~~~~~~~~~~~~~~~~
 
         The calculation of phases done along the direction of vector 3
+        of the reciprocal lattice gives the following contribution to
+        the polarization vector (in different units, and being Omega
+        the volume of the unit cell):
 
-
-           P =   0.2884737  (mod  14.7398000)  (e/Omega).bohr
+           P =   0.2884740  (mod  14.7398000)  (e/Omega).bohr
 
            P =   0.0007206  (mod   0.0368220)  e/bohr^2
 
-           P =   0.0412005  (mod   2.1051744)  C/m^2
+           P =   0.0412006  (mod   2.1051744)  C/m^2
 
         The polarization direction is:  ( 0.00000 , 0.00000 , 1.00000 )
 
@@ -345,45 +347,45 @@
 
 
      Writing file       pwscf.save for program phonon
+ 
+     PWSCF        :    25.31s CPU time
 
-     PWSCF        :    50.74s CPU time
-
-     init_run     :     9.84s CPU
-     electrons    :    38.63s CPU
-
-     electrons    :    38.63s CPU
-     c_bands      :    35.49s CPU
-     sum_band     :     1.78s CPU
-     v_of_rho     :     0.02s CPU
-     newd         :     0.34s CPU
-
-     c_bands      :    35.49s CPU
-     init_us_2    :     0.45s CPU (      99 calls,   0.005 s avg)
-     cegterg      :    35.00s CPU (      21 calls,   1.667 s avg)
-
-     sum_band     :     1.78s CPU
+     init_run     :     4.99s CPU
+     electrons    :    18.98s CPU
+ 
+     electrons    :    18.98s CPU
+     c_bands      :    17.24s CPU
+     sum_band     :     1.13s CPU
+     v_of_rho     :     0.01s CPU
+     newd         :     0.29s CPU
+ 
+     c_bands      :    17.24s CPU
+     init_us_2    :     0.25s CPU (      99 calls,   0.003 s avg)
+     cegterg      :    17.02s CPU (      21 calls,   0.810 s avg)
+ 
+     sum_band     :     1.13s CPU
      becsum       :     0.00s CPU (      21 calls,   0.000 s avg)
-     addusdens    :     0.34s CPU
-
-     wfcrot       :     5.01s CPU (      21 calls,   0.239 s avg)
-     cegterg      :    35.00s CPU (      21 calls,   1.667 s avg)
-     h_psi        :    23.74s CPU (     235 calls,   0.101 s avg)
-     g_psi        :     0.30s CPU (     193 calls,   0.002 s avg)
-     overlap      :     4.95s CPU (     193 calls,   0.026 s avg)
-     cdiaghg      :     1.80s CPU (     214 calls,   0.008 s avg)
-     update       :     2.38s CPU (     193 calls,   0.012 s avg)
-     last         :     2.67s CPU (      59 calls,   0.045 s avg)
-
-     h_psi        :    23.74s CPU (     235 calls,   0.101 s avg)
-     init         :     0.16s CPU (     235 calls,   0.001 s avg)
-     firstfft     :     6.00s CPU (    4015 calls,   0.001 s avg)
-     secondfft    :     6.36s CPU (    4015 calls,   0.002 s avg)
-     add_vuspsi   :     2.73s CPU (     235 calls,   0.012 s avg)
-     s_psi        :     2.77s CPU (     235 calls,   0.012 s avg)
-
+     addusdens    :     0.29s CPU
+ 
+     wfcrot       :     2.34s CPU (      21 calls,   0.111 s avg)
+     cegterg      :    17.02s CPU (      21 calls,   0.810 s avg)
+     h_psi        :    12.81s CPU (     235 calls,   0.055 s avg)
+     g_psi        :     0.22s CPU (     193 calls,   0.001 s avg)
+     overlap      :     1.35s CPU (     193 calls,   0.007 s avg)
+     cdiaghg      :     1.35s CPU (     214 calls,   0.006 s avg)
+     update       :     1.04s CPU (     193 calls,   0.005 s avg)
+     last         :     0.90s CPU (      59 calls,   0.015 s avg)
+ 
+     h_psi        :    12.81s CPU (     235 calls,   0.055 s avg)
+     init         :     0.09s CPU (     235 calls,   0.000 s avg)
+     firstfft     :     5.14s CPU (    4015 calls,   0.001 s avg)
+     secondfft    :     5.35s CPU (    4015 calls,   0.001 s avg)
+     add_vuspsi   :     1.01s CPU (     235 calls,   0.004 s avg)
+     s_psi        :     0.99s CPU (     235 calls,   0.004 s avg)
+ 
      General routines
-     ccalbec      :     4.29s CPU (     292 calls,   0.015 s avg)
-     cft3         :     0.02s CPU (       5 calls,   0.004 s avg)
-     cft3s        :    12.20s CPU (    8492 calls,   0.001 s avg)
-     davcio       :     0.88s CPU (     120 calls,   0.007 s avg)
-
+     ccalbec      :     1.18s CPU (     292 calls,   0.004 s avg)
+     cft3         :     0.01s CPU (       5 calls,   0.002 s avg)
+     cft3s        :    10.41s CPU (    8492 calls,   0.001 s avg)
+     davcio       :     0.08s CPU (     120 calls,   0.001 s avg)
+ 
