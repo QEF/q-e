@@ -423,11 +423,12 @@ nhpcl          INTEGER ( default = 1 )
 nhptyp         INTEGER ( default = 0 )
                type of the "massive" Nose-Hoover chain thermostat
                nhptyp=1 uses a NH chain per each atomic type
-               nhptyp=2 uses a NH chain per atom, this one is really great
+               nhptyp=2 uses a NH chain per atom, this one is useful
                for extremely rapid equipartitioning (equilibration is a 
                different beast)
                NOTE: if using more than 1 thermostat per system there will
-               be a common thermostat added on top of them all
+               be a common thermostat added on top of them all, to disable
+               this common thermostat specify nhptyp=-X instead of nhptyp=X
 
 ndega          INTEGER ( default = 0 )
                number of degrees of freedom used for temperature calculation
