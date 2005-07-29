@@ -35,21 +35,13 @@ c max_seconds maximum allowed run time before the job stops smoothly 1.d7
 c
 c fildyn      file where the dynamical matrix is written           'matdyn'
 c
-c fildrho     file where the charge density variations is written     ' '
+c fildrho     file where the charge density responses are written     ' '
 c
 c filelph     file where electron-phonon matrix elements are written  ' '
 c
 c fildvscf    file where the the potential variation is written       ' '
 c             (for later use in electron-phonon calculation)
 c
-c maxirr      maximum number of irreducible representation to be      0 i.e. all
-c             computed in a single run 
-c
-c nrapp       the representations to do                               0
-c             (nrapp and nat_todo are not compatible)
-c
-c nat_todo    number of atom to be displaced                          0
-c             (nrapp and nat_todo are not compatible)
 c
 c epsil       if .true. in a q=0 calculation for a non metal the      .false.
 c             macroscopic dielectric constant of the system is 
@@ -58,6 +50,16 @@ c             metallic system or q/=0: the code will complain and stop
 c
 c trans       if .true. the phonons are computed                      .true.
 c             If trans.and.epsil effective charges are calculated            
+c
+c lraman      if .true. calculate nonresonant Raman coefficients      .false.
+c             using second-order response as in:
+c             M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+c             Optional variables for Raman:
+c     eth_rps threshold for calculation of  Pc R |psi>                1.0d-9
+c     eth_ns  threshold for non-scf wavefunction calculation          1.0e-12
+c     dek     delta_xk used for wavefunction derivation wrt k         1.0e-3
+c
+c recover     if .true. restart from an interrupted run               .false.
 c
 c elph        if .true. electron-phonon lambda coeffs are computed    .false.
 c             For metals only, requires gaussian smearing.
@@ -85,6 +87,15 @@ c
 c nq1,nq2,nq3 parameters of the Monkhorst-Pack grid (no offset) used   0,0,0
 c             when ldisp=.true. Same meaning as for nk1, nk2, nk3
 c             in the input of pw.x
+c
+c maxirr      maximum number of irreducible representation to be     0 i.e. all
+c             computed in a single run 
+c
+c nrapp       the representations to do                               0
+c             (nrapp and nat_todo are not compatible)
+c
+c nat_todo    number of atom to be displaced                          0
+c             (nrapp and nat_todo are not compatible)
 c
 c modenum     for single mode calculation                             -1
 c             If not set here, will be read from file .save           

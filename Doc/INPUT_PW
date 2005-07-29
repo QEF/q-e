@@ -130,7 +130,7 @@ prefix         CHARACTER ( default = 'pwscf' )
                prepended to input/output filenames: 
                prefix.wfc, prefix.rho, etc. 
 
-max_seconds    INTEGER
+max_seconds    REAL ( default : 1.0d+7, or 150 days, i.e. no time limit )
                jobs stops after max_seconds CPU time
 
 etot_conv_thr  REAL ( default = 1.0D-4 )
