@@ -80,7 +80,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff, emass_precond
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, ions_hmove, ions_move
-  USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, nhpdim, qnp, &
+  USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, nhpdim, nhpend, qnp, &
                                        vnhp, xnhp0, xnhpm, xnhpp, atm2nhp, &
                                        ions_nosevel, ions_noseupd, &
                                        ions_nose_allocate, tempw,  &
@@ -433,7 +433,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... udating nose-hoover friction variables
      !
      IF ( tnosep ) CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, &
-                                      qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
+                                      qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
      !
      IF ( tnosee ) CALL electrons_noseupd( xnhep, xnhe0, xnhem, &
                                            delt, qne, ekinc, ekincw, vnhe )

@@ -426,6 +426,8 @@ nhptyp         INTEGER ( default = 0 )
                nhptyp=2 uses a NH chain per atom, this one is really great
                for extremely rapid equipartitioning (equilibration is a 
                different beast)
+               NOTE: if using more than 1 thermostat per system there will
+               be a common thermostat added on top of them all
 
 ndega          INTEGER ( default = 0 )
                number of degrees of freedom used for temperature calculation

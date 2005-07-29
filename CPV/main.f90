@@ -179,7 +179,7 @@
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
       !
       USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
-                           ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, gkbt2nhp, ekin2nhp
+                           ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, nhpend, gkbt2nhp, ekin2nhp
 
       USE wave_init,        ONLY: pw_atomic_init
       USE electrons_module, ONLY: electron_mass_init, band_init
@@ -612,7 +612,7 @@
           ekinp = moveions(tsdp, thdyn, nfi, atoms_m, atoms_0, atoms_p, ht_m, ht_0, vnosep)
           IF (tnosep) THEN
 ! below one really should have atoms_0%ekint and NOT ekin2nhp
-            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
+            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
           END IF
         END IF
 

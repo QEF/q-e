@@ -23,6 +23,7 @@
 ! one chain for the whole system is specified by nhptyp=0 (or nothing)
 !
 ! nhpdim is the total number of the resulting NH chains
+! nhpend is 1 if there is a chain above all chains, otherwise it is 0
 ! array atm2nhp(1:nat) gives the chain number from the atom list (which
 ! is sorted by type)
 ! anum2nhp is the number of degrees of freedom per chain (now just 3*nat_i)
@@ -33,7 +34,7 @@
 ! variables
 ! nhclm is now mostly not used, needs to be cleaned up at some point
 !
-      INTEGER   :: nhpcl, ndega, nhpdim, nhptyp
+      INTEGER   :: nhpcl, ndega, nhpdim, nhptyp, nhpend
       INTEGER   :: atm2nhp(natx)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
       REAL(dbl), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
@@ -62,10 +63,12 @@
     fnosep    = 0.0d0
     nhpcl = MAX( nhpcl_ , 1 )
     nhpdim = 1
+    nhpend = 0
     atm2nhp(1:nat) = 1
     nhptyp = 0
     if (nhptyp_.eq.1) then
        nhptyp = 1
+       nhpend = 1
        nhpdim = nsp
        iat = 0
        do is=1,nsp
@@ -76,11 +79,15 @@
        enddo
     elseif (nhptyp_.eq.2) then
        nhptyp = 2
+       nhpend = 1
        nhpdim = nat
        do i=1,nat
           atm2nhp(i) = i
        enddo
     endif
+    ! Add one more chain on top if needed
+    nhpdim = nhpdim + nhpend
+    
     IF( nhpcl > nhclm ) &
       CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
     call ions_nose_allocate()
@@ -112,6 +119,7 @@
             anum2nhp(atm2nhp(iat)) = anum2nhp(atm2nhp(iat)) + 3
          enddo
       enddo
+      if (nhpend.eq.1) anum2nhp(nhpdim) = nhpdim - 1
       ! set gkbt2nhp for each thermostat
       do is=1,nhpdim
          gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw / factem
@@ -220,7 +228,8 @@
 
         WRITE( stdout,563) tempw, nhpcl, ndega, nsvar
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
-        WRITE( stdout,565) nhptyp, nhpdim, (anum2nhp(j),j=1,nhpdim)
+        WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , &
+             (anum2nhp(j),j=1,nhpdim)
         do j=1,nhpdim
            WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
         enddo
@@ -238,7 +247,7 @@
 !            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
  565  FORMAT( //, &
             & 3X,'the requested type of NH chains is ',I5, /, &
-            & 3X,'total number of thermostats used ',I5, /, &
+            & 3X,'total number of thermostats used ',I5,1X,I1, /, &
             & 3X,'ionic degrees of freedom for each chain ',20(1X,I3)) 
  566  format( //, &
             & 3X,'nose` mass(es) for chain ',i4,' = ', 20(1X,f10.3)) 
@@ -267,30 +276,48 @@
   end subroutine ions_nosevel
 
 
- subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim )
+ subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
     implicit none
     real(KIND=dbl), intent(out) :: xnhpp(nhpcl,nhpdim), vnhp(nhpcl,nhpdim)
-    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), ekin2nhp(:), gkbt2nhp(:), kbt
-    integer, intent(in) :: nhpcl, nhpdim
+    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), gkbt2nhp(:), kbt
+    real(KIND=dbl), intent(inout) :: ekin2nhp(:)
+    integer, intent(in) :: nhpcl, nhpdim, nhpend
     integer :: i, j
-    real(KIND=dbl) :: dt2, zetfrc
+    real(KIND=dbl) :: dt2, zetfrc, vp1dlt, ekinend, vp1dend
 
 
+    ekinend = 0.0d0
+    vp1dend = 0.0d0
+    if (nhpend.eq.1) vp1dend = 0.5d0*delt*vnhp(1,nhpdim)
     dt2 = delt**2
     do j=1,nhpdim
-    zetfrc = 2.0d0*ekin2nhp(j)-gkbt2nhp(j)
+    zetfrc = dt2*(2.0d0*ekin2nhp(j)-gkbt2nhp(j))
     If (nhpcl.gt.1) then
        do i=1,(nhpcl-1)
-          xnhpp(i,j)=(4.d0*xnhp0(i,j)-(2.d0-delt*vnhp(i+1,j))*xnhpm(i,j)+2.0d0*dt2*zetfrc/qnp(i,j))&
-               &   /(2.d0+delt*vnhp(i+1,j))
+          vp1dlt = 0.5d0*delt*vnhp(i+1,j)
+          xnhpp(i,j)=(2.d0*xnhp0(i,j)-(1.d0-vp1dlt)*xnhpm(i,j)+zetfrc/qnp(i,j))&
+               &   /(1.d0+vp1dlt)
+!           xnhpp(i,j)=(4.d0*xnhp0(i,j)-(2.d0-delt*vnhp(i+1,j))*xnhpm(i,j)+2.0d0*dt2*zetfrc/qnp(i,j))&
+!                &   /(2.d0+delt*vnhp(i+1,j))
           vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
-          zetfrc = (qnp(i,j)*vnhp(i,j)**2-kbt)
+          zetfrc = dt2*(qnp(i,j)*vnhp(i,j)**2-kbt)
        enddo
     endif
     ! Last variable
     i = nhpcl
-    xnhpp(i,j)=2.d0*xnhp0(i,j)-xnhpm(i,j)+( delt**2 / qnp(i,j) )*zetfrc
-    vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+    if (nhpend.eq.0) then
+       xnhpp(i,j)=2.d0*xnhp0(i,j)-xnhpm(i,j)+ zetfrc / qnp(i,j)
+       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+    elseif (nhpend.eq.1) then
+       xnhpp(i,j)=(2.d0*xnhp0(i,j)-(1.d0-vp1dend)*xnhpm(i,j)+zetfrc/qnp(i,j))&
+            &   /(1.d0+vp1dend)       
+       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+       ekinend = ekinend + (qnp(i,j)*vnhp(i,j)**2)
+       if (j.eq.(nhpdim-nhpend)) then
+          ekin2nhp(nhpdim) = 0.5d0*ekinend       
+          vp1dend = 0.0d0
+       endif
+    endif
     enddo
     ! Update velocities
 !    do i=1,nhpcl
