@@ -88,7 +88,7 @@ MODULE read_namelists_module
        ! ... directory containing the pseudopotentials
        !
        pseudo_dir    = './'  
-       max_seconds   = 1.D+6
+       max_seconds   = 1.D+7
        ekin_conv_thr = 1.D-6
        etot_conv_thr = 1.D-4
        forc_conv_thr = 1.D-3

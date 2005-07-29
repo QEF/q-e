@@ -197,8 +197,8 @@ MODULE input_parameters
           ! files. When possible put this directory in the fastest available
           ! filesystem ( not NFS! )
 
-        REAL(dbl) :: max_seconds = 1.0d+6
-          ! smootly terminate program after the specified number of seconds
+        REAL(dbl) :: max_seconds = 1.0d+7
+          ! smoothly terminate program after the specified number of seconds
           ! this parameter is typically used to prevent an hard kill from
           ! the queuing system.
 
