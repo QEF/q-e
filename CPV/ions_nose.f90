@@ -66,9 +66,9 @@
     nhpend = 0
     atm2nhp(1:nat) = 1
     nhptyp = 0
-    if (nhptyp_.eq.1) then
+    if (abs(nhptyp_).eq.1) then
        nhptyp = 1
-       nhpend = 1
+       if (nhptyp_.gt.0) nhpend = 1
        nhpdim = nsp
        iat = 0
        do is=1,nsp
@@ -77,9 +77,9 @@
              atm2nhp(iat) = is
           enddo
        enddo
-    elseif (nhptyp_.eq.2) then
+    elseif (abs(nhptyp_).eq.2) then
        nhptyp = 2
-       nhpend = 1
+       if (nhptyp_.gt.0) nhpend = 1
        nhpdim = nat
        do i=1,nat
           atm2nhp(i) = i
@@ -124,6 +124,12 @@
       do is=1,nhpdim
          gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw / factem
       enddo
+      ! scale the target energy by some factor convering 3*nat to ndega
+      if (nhpdim.gt.1) then
+         do is=1,(nhpdim-nhpend)
+            gkbt2nhp(is) = gkbt2nhp(is)*DBLE(ndega)/DBLE(3*nat)
+         enddo
+      endif
       !
       gkbt = DBLE( ndega ) * tempw / factem
       if (nhpdim.eq.1) gkbt2nhp(1) = gkbt
