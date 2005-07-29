@@ -1,0 +1,456 @@
+
+     Program PHONON    v.2.1cvs starts ...
+     Today is 29Jul2005 at 18:20:40 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Reading file alas.save ...      only dimensions
+     read complete
+
+     Reading file alas.save ...      all except wavefuctions
+     read complete
+
+     nbndx  =     4  nbnd   =     4  natomwfc =    13  npwx   =     165
+     nelec  =   8.00  nkb   =     8  ngl    =      39
+     WRITING PATTERNS TO FILE alas.drho.pat
+
+     phonons of AlAs at Gamma                                                   
+
+     crystal is                     
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =      10.5750  a.u.
+     unit-cell volume          =     295.6522 (a.u.)^3
+     number of atoms/cell      =            2
+     number of atomic types    =            2
+     kinetic-energy cut-off    =      10.0000  Ry
+     charge density cut-off    =      40.0000  Ry
+     convergence threshold     =      1.0E-12
+     beta                      =       0.7000
+     number of iterations used =            4
+
+     celldm(1)=   10.57500  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1        Al  69.7200   tau( 1) = (    0.00000    0.00000    0.00000  )
+        2        As  26.9800   tau( 2) = (    0.25000    0.25000    0.25000  )
+
+     Computing dynamical matrix for 
+                    q = (    0.00000    0.00000    0.00000 )
+ 
+     25 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  113.3081  (   1243 G-vectors)     FFT grid: ( 16, 16, 16)
+     number of k points=   10
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (  -0.1250000   0.1250000   0.1250000), wk =   0.0625000
+        k(    2) = (  -0.3750000   0.3750000  -0.1250000), wk =   0.1875000
+        k(    3) = (   0.3750000  -0.3750000   0.6250000), wk =   0.1875000
+        k(    4) = (   0.1250000  -0.1250000   0.3750000), wk =   0.1875000
+        k(    5) = (  -0.1250000   0.6250000   0.1250000), wk =   0.1875000
+        k(    6) = (   0.6250000  -0.1250000   0.8750000), wk =   0.3750000
+        k(    7) = (   0.3750000   0.1250000   0.6250000), wk =   0.3750000
+        k(    8) = (  -0.1250000  -0.8750000   0.1250000), wk =   0.1875000
+        k(    9) = (  -0.3750000   0.3750000   0.3750000), wk =   0.0625000
+        k(   10) = (   0.3750000  -0.3750000   1.1250000), wk =   0.1875000
+
+     pseudo 1 is Al         zval =  3.0   lmax= 1   lloc= 0
+     (in numerical form: 171 grid points, xmin =  0.00, dx = 0.0000)
+
+     pseudo 2 is As         zval =  5.0   lmax= 1   lloc= 0
+     (in numerical form: 525 grid points, xmin =  0.00, dx = 0.0000)
+
+
+     Atomic displacements:
+     There are   2 irreducible representations
+
+     Representation     1      3 modes - To be done
+
+     Representation     2      3 modes - To be done
+     PHONON       :     0.11s CPU time
+
+
+     Alpha used in Ewald sum =   0.4000
+
+     Electric Fields Calculation
+
+      iter #   1 total cpu time :     1.4 secs   av.it.:   6.0
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.227E-05
+
+      iter #   2 total cpu time :     2.0 secs   av.it.:   9.6
+      thresh= 0.151E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.113E-06
+
+      iter #   3 total cpu time :     2.5 secs   av.it.:   9.3
+      thresh= 0.336E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.715E-09
+
+      iter #   4 total cpu time :     2.8 secs   av.it.:   9.4
+      thresh= 0.267E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.312E-11
+
+      iter #   5 total cpu time :     3.4 secs   av.it.:   8.9
+      thresh= 0.177E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.645E-13
+
+     End of electric fields calculation
+
+          Dielectric constant in cartesian axis 
+
+          (       8.812677610       0.000000000       0.000000000 )
+          (       0.000000000       8.812677610       0.000000000 )
+          (       0.000000000       0.000000000       8.812677610 )
+
+          Effective charges E-U in cartesian axis 
+
+           atom      1
+          (        2.14274        0.00000        0.00000 )
+          (        0.00000        2.14274        0.00000 )
+          (        0.00000        0.00000        2.14274 )
+           atom      2
+          (       -2.14417        0.00000        0.00000 )
+          (        0.00000       -2.14417        0.00000 )
+          (        0.00000        0.00000       -2.14417 )
+
+     Calling punch_plot_e
+     Writing on file  alas.drho                                                                                                                                                                                                                                                       
+
+     Computing Pc [DH,Drho] |psi> 
+
+     Derivative coefficient:  0.001000
+
+        k(   1) = (  -0.1250000   0.1250000   0.1250000)
+
+     Non-scf  u_k:   1 ,thr. =  1.00E-12, avg iteration # = 24.0
+     Non-scf Du_k:   1 ,thr. =  1.00E-12, avg iteration # = 25.9
+
+        k(   2) = (  -0.3750000   0.3750000  -0.1250000)
+
+     Non-scf  u_k:   2 ,thr. =  1.00E-12, avg iteration # = 11.8
+     Non-scf Du_k:   2 ,thr. =  1.00E-12, avg iteration # = 20.2
+
+        k(   3) = (   0.3750000  -0.3750000   0.6250000)
+
+     Non-scf  u_k:   3 ,thr. =  1.00E-12, avg iteration # = 14.5
+     Non-scf Du_k:   3 ,thr. =  1.00E-12, avg iteration # = 21.4
+
+        k(   4) = (   0.1250000  -0.1250000   0.3750000)
+
+     Non-scf  u_k:   4 ,thr. =  1.00E-12, avg iteration # = 16.5
+     Non-scf Du_k:   4 ,thr. =  1.00E-12, avg iteration # = 22.4
+
+        k(   5) = (  -0.1250000   0.6250000   0.1250000)
+
+     Non-scf  u_k:   5 ,thr. =  1.00E-12, avg iteration # = 15.2
+     Non-scf Du_k:   5 ,thr. =  1.00E-12, avg iteration # = 21.7
+
+        k(   6) = (   0.6250000  -0.1250000   0.8750000)
+
+     Non-scf  u_k:   6 ,thr. =  1.00E-12, avg iteration # = 12.7
+     Non-scf Du_k:   6 ,thr. =  1.00E-12, avg iteration # = 19.0
+
+        k(   7) = (   0.3750000   0.1250000   0.6250000)
+
+     Non-scf  u_k:   7 ,thr. =  1.00E-12, avg iteration # = 13.3
+     Non-scf Du_k:   7 ,thr. =  1.00E-12, avg iteration # = 19.8
+
+        k(   8) = (  -0.1250000  -0.8750000   0.1250000)
+
+     Non-scf  u_k:   8 ,thr. =  1.00E-12, avg iteration # = 12.1
+     Non-scf Du_k:   8 ,thr. =  1.00E-12, avg iteration # = 18.8
+
+        k(   9) = (  -0.3750000   0.3750000   0.3750000)
+
+     Non-scf  u_k:   9 ,thr. =  1.00E-12, avg iteration # = 19.9
+     Non-scf Du_k:   9 ,thr. =  1.00E-12, avg iteration # = 23.8
+
+        k(  10) = (   0.3750000  -0.3750000   1.1250000)
+
+     Non-scf  u_k:  10 ,thr. =  1.00E-12, avg iteration # = 12.3
+     Non-scf Du_k:  10 ,thr. =  1.00E-12, avg iteration # = 18.8
+
+          Dielectric constant from finite-differences
+
+          (       8.812485115       0.000000000       0.000000000 )
+          (       0.000000000       8.812485115       0.000000000 )
+          (       0.000000000       0.000000000       8.812485115 )
+
+              Electro-optic tensor is defined as 
+            the derivative of the dielectric tensor 
+              with respect to one electric field 
+                 units are Rydberg a.u. 
+
+            to obtain the static chi^2 multiply by 1/2  
+
+            to convert to pm/Volt multiply per 2.7502  
+
+
+          Electro-optic tensor in cartesian axis: 
+
+          (       0.000000000       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000      40.478778873 )
+          (       0.000000000      40.478778873       0.000000000 )
+
+          (       0.000000000       0.000000000      40.478778873 )
+          (       0.000000000       0.000000000       0.000000000 )
+          (      40.478778873       0.000000000       0.000000000 )
+
+          (       0.000000000      40.478778873       0.000000000 )
+          (      40.478778873       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000       0.000000000 )
+
+
+     Computing Second order response 
+
+
+      iter #   1   av.it.:   8.9
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.207E-04
+
+
+      iter #   2   av.it.:  10.1
+      thresh= 0.455E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.163E-05
+
+
+      iter #   3   av.it.:   9.8
+      thresh= 0.128E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.639E-07
+
+
+      iter #   4   av.it.:   9.8
+      thresh= 0.253E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.203E-08
+
+
+      iter #   5   av.it.:   9.8
+      thresh= 0.451E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.383E-10
+
+
+      iter #   6   av.it.:   9.9
+      thresh= 0.619E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.855E-12
+
+          Raman tensor (au^-1) in cartesian axis 
+
+           atom      1
+          (       0.000000000       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000      -0.784693842 )
+          (       0.000000000      -0.784693842       0.000000000 )
+
+          (       0.000000000       0.000000000      -0.784693842 )
+          (       0.000000000       0.000000000       0.000000000 )
+          (      -0.784693842       0.000000000       0.000000000 )
+
+          (       0.000000000      -0.784693842       0.000000000 )
+          (      -0.784693842       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000       0.000000000 )
+
+           atom      2
+          (       0.000000000       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000       0.789254479 )
+          (       0.000000000       0.789254479       0.000000000 )
+
+          (       0.000000000       0.000000000       0.789254479 )
+          (       0.000000000       0.000000000       0.000000000 )
+          (       0.789254479       0.000000000       0.000000000 )
+
+          (       0.000000000       0.789254479       0.000000000 )
+          (       0.789254479       0.000000000       0.000000000 )
+          (       0.000000000       0.000000000       0.000000000 )
+
+
+     Raman tensor (A^2)
+
+     atom #    1    pol.  1
+     -0.109336223475E-14     -0.369533577599E-15     -0.361914328576E-15
+     -0.110098148377E-14     -0.109336223475E-14     -0.516979611376E+01
+      0.552395554142E-15     -0.516979611376E+01     -0.179052352032E-15
+     atom #    1    pol.  2
+      0.109336223475E-14      0.183242938995E-14     -0.516979611376E+01
+      0.369533577599E-15      0.361914328576E-15     -0.109336223475E-14
+     -0.516979611376E+01      0.369533577599E-15     -0.369533577599E-15
+     atom #    1    pol.  3
+     -0.237339607056E-14     -0.516979611376E+01     -0.179052352032E-15
+     -0.516979611376E+01      0.128384346032E-14     -0.552395554142E-15
+     -0.179052352032E-15     -0.552395554142E-15      0.552395554142E-15
+     atom #    2    pol.  1
+      0.145527656333E-14      0.739067155197E-15      0.145527656333E-14
+      0.128765308483E-14      0.127241458678E-14      0.519984294354E+01
+      0.127241458678E-14      0.519984294354E+01      0.127241458678E-14
+     atom #    2    pol.  2
+      0.190481225566E-15     -0.190481225566E-15      0.519984294354E+01
+     -0.190481225566E-15      0.190481225566E-15     -0.190481225566E-15
+      0.519984294354E+01     -0.190481225566E-15      0.190481225566E-15
+     atom #    2    pol.  3
+     -0.190481225566E-15      0.519984294354E+01     -0.190481225566E-15
+      0.519984294354E+01     -0.190481225566E-15      0.190481225566E-15
+     -0.190481225566E-15     -0.540966680608E-15     -0.921929131741E-15
+
+
+     Representation #  1 modes #   1  2  3
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :    27.1 secs   av.it.:   4.8
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.542E-07
+
+      iter #   2 total cpu time :    27.7 secs   av.it.:   9.3
+      thresh= 0.233E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.464E-09
+
+      iter #   3 total cpu time :    28.3 secs   av.it.:   9.2
+      thresh= 0.215E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.387E-10
+
+      iter #   4 total cpu time :    28.9 secs   av.it.:   8.9
+      thresh= 0.622E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.225E-11
+
+      iter #   5 total cpu time :    29.5 secs   av.it.:   9.3
+      thresh= 0.150E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.845E-15
+
+     End of self-consistent calculation
+
+     Convergence has been achieved 
+
+
+     Representation #  2 modes #   4  5  6
+
+     Self-consistent Calculation
+
+      iter #   1 total cpu time :    30.0 secs   av.it.:   5.7
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.877E-06
+
+      iter #   2 total cpu time :    30.6 secs   av.it.:   9.5
+      thresh= 0.937E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.429E-07
+
+      iter #   3 total cpu time :    31.3 secs   av.it.:   9.3
+      thresh= 0.207E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.509E-10
+
+      iter #   4 total cpu time :    31.9 secs   av.it.:   9.5
+      thresh= 0.714E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.116E-11
+
+      iter #   5 total cpu time :    32.5 secs   av.it.:   9.3
+      thresh= 0.108E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.124E-13
+
+     End of self-consistent calculation
+
+     Convergence has been achieved 
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+
+          Dielectric constant in cartesian axis 
+
+          (        8.81249        0.00000        0.00000 )
+          (        0.00000        8.81249        0.00000 )
+          (        0.00000        0.00000        8.81249 )
+
+          Effective charges E-U in cartesian axis 
+
+           atom     1
+          (        2.14274        0.00000        0.00000 )
+          (        0.00000        2.14274        0.00000 )
+          (        0.00000        0.00000        2.14274 )
+           atom     2
+          (       -2.14417        0.00000        0.00000 )
+          (        0.00000       -2.14417        0.00000 )
+          (        0.00000        0.00000       -2.14417 )
+
+     Diagonalizing the dynamical matrix
+
+     q = (    0.000000000   0.000000000   0.000000000 ) 
+
+ **************************************************************************
+     omega( 1) =       0.076337 [THz] =       2.546361 [cm-1]
+     omega( 2) =       0.076337 [THz] =       2.546361 [cm-1]
+     omega( 3) =       0.076337 [THz] =       2.546361 [cm-1]
+     omega( 4) =      10.685499 [THz] =     356.432249 [cm-1]
+     omega( 5) =      10.685499 [THz] =     356.432249 [cm-1]
+     omega( 6) =      10.685499 [THz] =     356.432249 [cm-1]
+ **************************************************************************
+
+     Calling punch_plot_ph
+     Writing on file  alas.drho                                                                                                                                                                                                                                                       
+ 
+     PHONON       :    32.66s CPU time
+
+     INITIALIZATION: 
+     phq_setup    :     0.00s CPU
+     phq_init     :     0.09s CPU
+ 
+     phq_init     :     0.09s CPU
+     init_vloc    :     0.00s CPU (       2 calls,   0.000 s avg)
+     init_us_1    :     0.04s CPU
+ 
+     DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:
+     solve_e      :     3.26s CPU
+     dielec       :     0.00s CPU
+     zstar_eu     :     0.12s CPU
+ 
+     RAMAN COEFFICIENTS, THIRD-ORDER CHI:
+     dhdrhopsi    :    13.87s CPU
+     el_opt       :     0.01s CPU
+     dvpsi_e2     :     0.41s CPU
+     solve_e2     :     8.22s CPU
+ 
+     DYNAMICAL MATRIX:
+     dynmat0      :     0.01s CPU
+     phqscf       :     5.93s CPU
+     dynmatrix    :     0.01s CPU
+ 
+     phqscf       :     5.93s CPU
+     solve_linter :     5.91s CPU (       2 calls,   2.955 s avg)
+     drhodv       :     0.02s CPU (       2 calls,   0.010 s avg)
+ 
+     dynmat0      :     0.01s CPU
+     dynmat_us    :     0.01s CPU
+     d2ionq       :     0.00s CPU
+ 
+     dynmat_us    :     0.01s CPU
+ 
+     phqscf       :     5.93s CPU
+     solve_linter :     5.91s CPU (       2 calls,   2.955 s avg)
+ 
+     solve_linter :     5.91s CPU (       2 calls,   2.955 s avg)
+     dvqpsi_us    :     0.83s CPU (     360 calls,   0.002 s avg)
+     ortho        :     0.00s CPU (     300 calls,   0.000 s avg)
+     cgsolve      :    24.21s CPU (    1200 calls,   0.020 s avg)
+     incdrhoscf   :     1.45s CPU (     810 calls,   0.002 s avg)
+     vpsifft      :     0.43s CPU (     240 calls,   0.002 s avg)
+     dv_of_drho   :     0.15s CPU (      90 calls,   0.002 s avg)
+     mix_pot      :     0.17s CPU (      21 calls,   0.008 s avg)
+     symdvscf     :     0.46s CPU (      12 calls,   0.038 s avg)
+ 
+     dvqpsi_us    :     0.83s CPU (     360 calls,   0.002 s avg)
+     dvqpsi_us_on :     0.09s CPU (     360 calls,   0.000 s avg)
+ 
+     cgsolve      :    24.21s CPU (    1200 calls,   0.020 s avg)
+     ch_psi       :    23.27s CPU (   17026 calls,   0.001 s avg)
+ 
+     ch_psi       :    23.27s CPU (   17026 calls,   0.001 s avg)
+     h_psiq       :    21.30s CPU (   17026 calls,   0.001 s avg)
+     last         :     1.74s CPU (   17026 calls,   0.000 s avg)
+ 
+     h_psiq       :    21.30s CPU (   17026 calls,   0.001 s avg)
+     firstfft     :     9.95s CPU (   65804 calls,   0.000 s avg)
+     secondfft    :     9.48s CPU (   65804 calls,   0.000 s avg)
+     add_vuspsi   :     0.75s CPU (   20654 calls,   0.000 s avg)
+ 
+     incdrhoscf   :     1.45s CPU (     810 calls,   0.002 s avg)
+ 
+ 
+      General routines
+     ccalbec      :     1.20s CPU (   43198 calls,   0.000 s avg)
+     cft3         :     0.13s CPU (     272 calls,   0.000 s avg)
+     cft3s        :    21.05s CPU (  149580 calls,   0.000 s avg)
+     davcio       :     0.38s CPU (    4039 calls,   0.000 s avg)
+     write_rec    :     0.01s CPU (      10 calls,   0.001 s avg)
+ 
