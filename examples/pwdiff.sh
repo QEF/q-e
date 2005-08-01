@@ -25,12 +25,12 @@ fi
 if test ! -f "$1"
 then
     echo $0: file $1 does not exist
-    exit 1
+    exit -1
 fi
 if test ! -f "$2"
 then
     echo $0: file $2 does not exist
-    exit 1
+    exit -1
 fi
 
 # preprocess
