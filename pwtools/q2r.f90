@@ -76,7 +76,7 @@ PROGRAM q2r
   IMPLICIT NONE
   !
   INTEGER,       PARAMETER :: ntypx = 10
-  REAL(kind=DP), PARAMETER :: eps=1.D-5
+  REAL(kind=DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
   INTEGER                  :: nr1, nr2, nr3, nr(3)
   !     dimensions of the FFT grid formed by the q-point grid
   !
@@ -274,7 +274,11 @@ PROGRAM q2r
      END DO
      CLOSE(2)
      resi = SUM ( ABS (AIMAG ( phid ) ) )
-     WRITE (6,"(/5x,' fft-check: imaginary sum = ',e12.7)") resi
+     IF (resi > eps12) THEN
+        WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+     ELSE
+        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12))")
+     END IF
      !
      DEALLOCATE (phid, phiq, nc, tau, zeu, ityp) 
      !
