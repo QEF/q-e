@@ -94,4 +94,4 @@
 
       q-space grid ok, #points =   64
 
-      fft-check: imaginary sum = .4106990E-14
+      fft-check success (sum of imaginary terms < 10^-12)
