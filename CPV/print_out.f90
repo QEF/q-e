@@ -84,7 +84,6 @@
       REAL(dbl) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(dbl) :: dis(atoms%nsp), h(3,3)
       LOGICAL :: tfile, topen
-      REAL(dbl) :: sec_per_loop, s0
       INTEGER, SAVE :: nfi_old = -999
       LOGICAL, SAVE :: first = .true.
       CHARACTER(LEN=4), ALLOCATABLE :: labelw( : )
@@ -95,14 +94,6 @@
       tfile = ( tprint .AND. ( nfi > 0 ) )
       ttsic = ( self_interaction /= 0 )
       
-      IF( first ) THEN
-        old_clock_value = start_cclock_val
-      END IF
-
-      s0 = cclock()
-      sec_per_loop = (s0 - old_clock_value)
-      old_clock_value = s0
-
 ! ...   Calculate Ions temperature tempp (in Kelvin )
 
       CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
@@ -358,16 +349,16 @@
           ! ...  Print energies on standard output EVERY MD STEP!  
 
           IF( tprint .or. first ) WRITE( stdout, 1947 )
-          WRITE( stdout, 1948) nfi, ekinc, temphc, tempp, edft%etot, enthal, econs, ettt, sec_per_loop
+          WRITE( stdout, 1948) nfi, ekinc, temphc, tempp, edft%etot, enthal, econs, ettt
 
         END IF
 
  1947 FORMAT(//3X,'nfi', 5X,'ekinc', 2X,'temph', 2X,'tempp', 9X,'etot', 7X,'enthal', &
-               8X,'econs', 9X,'ettt',5X,'sec.')
+               8X,'econs', 9X,'ettt')
  1946 FORMAT(//6X,       5X,'(AU) ', 3X,'(K )', 9X,'(AU)', &
                2X,' (K) ', 8X,' (AU)', 9X,'(AU)')
  1948 FORMAT(        I6, 1X, F9.5,  1X, F6.1,  1X, F6.1, 1X, F12.5, 1X, F12.5, &
-                         1X, F12.5, 1X, F12.5, 2X, F7.1 )
+                         1X, F12.5, 1X, F12.5 )
 
    5  FORMAT(/,3X,'Simulated Time (ps): ',F12.6)
   10  FORMAT(/,3X,'Cell Variables (AU)',/)
