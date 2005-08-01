@@ -15,11 +15,10 @@ SUBROUTINE q_points ( )
   USE output, ONLY : fildyn
   USE symme, ONLY : nsym, s
   USE cell_base, ONLY : bg
-  USE units_ph,  ONLY : iudyn
 
   implicit none
   
-  integer :: i, iq, ierr
+  integer :: i, iq, ierr, iudyn = 26
 
   real(kind = dp), allocatable, dimension(:) :: wq  
 
