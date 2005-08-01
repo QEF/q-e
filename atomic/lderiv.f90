@@ -81,7 +81,7 @@ subroutine lderiv
            else if (rel == 2) then
               call dir_outward(ndm,ikrld+5,lam,j,e,dx,&
                    aux_dir,r,rab,vpot(1,is))
-              aux(:)=aux_dir(:,2)
+              aux(:)=aux_dir(:,1)
            else
               call intref(lam,e,ikrld+5,dx,r,r2,sqr, &
                    vpot(1,is),ze2,aux)
