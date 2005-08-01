@@ -277,7 +277,7 @@ PROGRAM q2r
      IF (resi > eps12) THEN
         WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
      ELSE
-        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12'))")
+        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
      !
      DEALLOCATE (phid, phiq, nc, tau, zeu, ityp) 
