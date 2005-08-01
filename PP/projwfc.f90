@@ -454,7 +454,7 @@ SUBROUTINE projwave( )
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
-           WRITE( stdout, '(5x,"e = ",f14.10," eV")') et (ibnd, ik) * rytoev 
+           WRITE( stdout, '(5x,"e = ",f14.8," eV")') et (ibnd, ik) * rytoev 
            ! 
            ! sort projections by magnitude, in decreasing order 
            ! 
