@@ -3,13 +3,13 @@
      CPV: variable-cell Car-Parrinello molecular dynamics
      using ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Wed Jul 27 02:36:43 CEST 2005                      
+     Version: 2.1cvs - Sun Jul 31 02:34:00 CEST 2005                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:52:29  28Jul2005               
+   This run was started on:  16:17:30   1Aug2005               
 
    Serial Build
 
@@ -112,6 +112,7 @@
         6.778840     4.231844    -0.041880
         2.133890     3.813486     6.852027
         6.778840    11.858816     6.852027
+   Ionic position will be re-read from restart file
 
    All atoms are allowed to move
    Ionic temperature control via nose thermostat
@@ -128,7 +129,7 @@
 
 
    the requested type of NH chains is     0
-   total number of thermostats used     1
+   total number of thermostats used     1 0
    ionic degrees of freedom for each chain   54
 
 
@@ -154,6 +155,8 @@
    nose` mass(es)            =   10000.049
 
    Verbosity: iprsta =  1
+
+
 
    Simulation dimensions initialization
    ------------------------------------
@@ -377,7 +380,7 @@
    STEP:     10   0.022738
        -1.81983368         0.09600515         0.07905772
         0.09600515        -3.79432765        -0.61635383
-        0.07905773        -0.61635382        -7.29420883
+        0.07905774        -0.61635380        -7.29420882
 
    Atomic Positions (AU)
 
@@ -434,14 +437,14 @@ O      0.18042070E-02 -0.13075473E-01 -0.41545985E-02
 O      0.12609977E-02 -0.82175685E-02 -0.55280214E-02
 O     -0.66562428E-03  0.12994619E-01  0.80726227E-02
 O     -0.32771099E-02  0.10312078E-01  0.10667624E-01
-O     -0.45931882E-02 -0.28064120E-02 -0.92175255E-04
+O     -0.45931882E-02 -0.28064120E-02 -0.92175256E-04
 O     -0.50904681E-02 -0.74729761E-02  0.17654070E-02
 O      0.48013380E-02 -0.86640132E-02  0.78971033E-03
 O      0.50371617E-02 -0.71651940E-02  0.23438898E-02
 Si     0.20949437E-03 -0.17737499E-02 -0.12389148E-02
 Si     0.14241643E-02 -0.23811171E-03 -0.10856344E-02
 Si    -0.14112519E-02 -0.76903223E-03  0.57170005E-03
-Si    -0.21405259E-02  0.78870521E-04 -0.12021722E-02
+Si    -0.21405259E-02  0.78870519E-04 -0.12021722E-02
 Si    -0.17680661E-02  0.15362885E-02  0.27700708E-03
 Si    -0.12930457E-02 -0.17558123E-02  0.21562439E-02
 
@@ -449,29 +452,29 @@ Si    -0.12930457E-02 -0.17558123E-02  0.21562439E-02
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        0.00116      94.23963    -342.54564    -211.98133      42.0
-     initialize   :    11.42s CPU
-     total_time   :    33.44s CPU (      10 calls,   3.344 s avg)
-     formf        :    17.63s CPU (      11 calls,   1.603 s avg)
-     rhoofr       :     5.06s CPU (      10 calls,   0.506 s avg)
-     vofrho       :     1.81s CPU (      10 calls,   0.181 s avg)
-     dforce       :     2.71s CPU (     240 calls,   0.011 s avg)
-     calphi       :     0.09s CPU (      10 calls,   0.009 s avg)
-     ortho        :     1.00s CPU (      10 calls,   0.100 s avg)
-     updatc       :     0.06s CPU (      10 calls,   0.006 s avg)
-     newd         :     1.16s CPU (      10 calls,   0.116 s avg)
+     initialize   :    12.12s CPU
+     total_time   :    34.28s CPU (      10 calls,   3.428 s avg)
+     formf        :    17.66s CPU (      11 calls,   1.605 s avg)
+     rhoofr       :     5.51s CPU (      10 calls,   0.551 s avg)
+     vofrho       :     1.86s CPU (      10 calls,   0.186 s avg)
+     dforce       :     2.66s CPU (     240 calls,   0.011 s avg)
+     calphi       :     0.10s CPU (      10 calls,   0.010 s avg)
+     ortho        :     0.96s CPU (      10 calls,   0.096 s avg)
+     updatc       :     0.07s CPU (      10 calls,   0.007 s avg)
+     newd         :     1.69s CPU (      10 calls,   0.169 s avg)
      calbec       :     0.14s CPU (      11 calls,   0.013 s avg)
-     prefor       :     0.06s CPU (      20 calls,   0.003 s avg)
-     strucf       :     0.07s CPU (      11 calls,   0.006 s avg)
-     nlfl         :     0.03s CPU (      10 calls,   0.003 s avg)
-     nlfq         :     0.91s CPU (      10 calls,   0.091 s avg)
-     rhov         :     0.32s CPU (      10 calls,   0.032 s avg)
-     nlsm1        :     0.60s CPU (      31 calls,   0.019 s avg)
-     nlsm2        :     0.91s CPU (      10 calls,   0.091 s avg)
-     fft          :     2.21s CPU (     130 calls,   0.017 s avg)
-     ffts         :     0.10s CPU (      20 calls,   0.005 s avg)
-     fftw         :     1.96s CPU (     720 calls,   0.003 s avg)
-     fftb         :     0.50s CPU (    2940 calls,   0.000 s avg)
-     rsg          :     0.36s CPU (      10 calls,   0.036 s avg)
+     prefor       :     0.07s CPU (      20 calls,   0.003 s avg)
+     strucf       :     0.03s CPU (      11 calls,   0.003 s avg)
+     nlfl         :     0.01s CPU (      10 calls,   0.001 s avg)
+     nlfq         :     0.94s CPU (      10 calls,   0.094 s avg)
+     rhov         :     0.39s CPU (      10 calls,   0.039 s avg)
+     nlsm1        :     0.54s CPU (      31 calls,   0.017 s avg)
+     nlsm2        :     0.93s CPU (      10 calls,   0.093 s avg)
+     fft          :     2.71s CPU (     130 calls,   0.021 s avg)
+     ffts         :     0.13s CPU (      20 calls,   0.007 s avg)
+     fftw         :     2.30s CPU (     720 calls,   0.003 s avg)
+     fftb         :     1.19s CPU (    2940 calls,   0.000 s avg)
+     rsg          :     0.33s CPU (      10 calls,   0.033 s avg)
  Opening file restart.xml
 
 
@@ -479,13 +482,13 @@ Si    -0.12930457E-02 -0.17558123E-02  0.21562439E-02
 
 
  
-     CP90         :    45.16s CPU time
+     CP90         :    46.67s CPU time
 
  
-   This run was terminated on:  17:53:15  28Jul2005            
+   This run was terminated on:  16:18:17   1Aug2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    46.0
+   ELAPSED SECONDS:    47.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

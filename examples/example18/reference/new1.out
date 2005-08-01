@@ -3,13 +3,13 @@
      CPV: variable-cell Car-Parrinello molecular dynamics
      using ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Wed Jul 27 02:36:43 CEST 2005                      
+     Version: 2.1cvs - Sun Jul 31 02:34:00 CEST 2005                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:50:48  28Jul2005               
+   This run was started on:  16:15:43   1Aug2005               
 
    Serial Build
 
@@ -30,7 +30,7 @@
 
    Main Simulation Parameters (from input)
    ---------------------------------------
-   Restart Mode       =      -2   from_scratch   
+   Restart Mode       =      -1   from_scratch   
    Number of MD Steps =      20
    Print out every           20 MD Steps
    Reads from unit    =      90
@@ -112,6 +112,7 @@
         6.778840     4.231844    -0.041880
         2.133890     3.813486     6.852027
         6.778840    11.858816     6.852027
+   Ionic position read from input file
 
 
    Cell Dynamics Parameters (from STDIN)
@@ -121,6 +122,8 @@
    cell parameters are not allowed to move
 
    Verbosity: iprsta =  1
+
+
 
    Simulation dimensions initialization
    ------------------------------------
@@ -403,27 +406,27 @@ Si     0.00000000E+00  0.00000000E+00  0.00000000E+00
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
       16.92078     136.46124    -310.11095    -140.16656       0.0
-     initialize   :     6.89s CPU
-     total_time   :    14.01s CPU (      20 calls,   0.701 s avg)
-     formf        :     0.73s CPU
-     rhoofr       :     3.30s CPU (      21 calls,   0.157 s avg)
-     vofrho       :     1.62s CPU (      21 calls,   0.077 s avg)
-     dforce       :     5.25s CPU (     504 calls,   0.010 s avg)
-     calphi       :     0.20s CPU (      21 calls,   0.010 s avg)
-     ortho        :     2.06s CPU (      21 calls,   0.098 s avg)
-     updatc       :     0.12s CPU (      21 calls,   0.006 s avg)
-     gram         :     0.08s CPU
-     newd         :     1.71s CPU (      21 calls,   0.081 s avg)
-     calbec       :     0.23s CPU (      22 calls,   0.010 s avg)
-     prefor       :     0.08s CPU (      22 calls,   0.004 s avg)
+     initialize   :     7.02s CPU
+     total_time   :    15.87s CPU (      20 calls,   0.794 s avg)
+     formf        :     0.74s CPU
+     rhoofr       :     3.69s CPU (      21 calls,   0.176 s avg)
+     vofrho       :     1.90s CPU (      21 calls,   0.090 s avg)
+     dforce       :     5.48s CPU (     504 calls,   0.011 s avg)
+     calphi       :     0.18s CPU (      21 calls,   0.009 s avg)
+     ortho        :     2.02s CPU (      21 calls,   0.096 s avg)
+     updatc       :     0.13s CPU (      21 calls,   0.006 s avg)
+     gram         :     0.09s CPU
+     newd         :     2.78s CPU (      21 calls,   0.132 s avg)
+     calbec       :     0.21s CPU (      22 calls,   0.010 s avg)
+     prefor       :     0.09s CPU (      22 calls,   0.004 s avg)
      strucf       :     0.07s CPU (      21 calls,   0.003 s avg)
-     rhov         :     0.67s CPU (      21 calls,   0.032 s avg)
-     nlsm1        :     1.10s CPU (      64 calls,   0.017 s avg)
-     fft          :     1.32s CPU (      84 calls,   0.016 s avg)
-     ffts         :     0.12s CPU (      42 calls,   0.003 s avg)
-     fftw         :     4.01s CPU (    1512 calls,   0.003 s avg)
-     fftb         :     0.79s CPU (    4662 calls,   0.000 s avg)
-     rsg          :     0.81s CPU (      21 calls,   0.039 s avg)
+     rhov         :     0.85s CPU (      21 calls,   0.040 s avg)
+     nlsm1        :     1.04s CPU (      64 calls,   0.016 s avg)
+     fft          :     1.78s CPU (      84 calls,   0.021 s avg)
+     ffts         :     0.30s CPU (      42 calls,   0.007 s avg)
+     fftw         :     4.61s CPU (    1512 calls,   0.003 s avg)
+     fftb         :     1.79s CPU (    4662 calls,   0.000 s avg)
+     rsg          :     0.82s CPU (      21 calls,   0.039 s avg)
  Opening file restart.xml
 
 
@@ -431,13 +434,13 @@ Si     0.00000000E+00  0.00000000E+00  0.00000000E+00
 
 
  
-     CP90         :    21.17s CPU time
+     CP90         :    23.16s CPU time
 
  
-   This run was terminated on:  17:51:10  28Jul2005            
+   This run was terminated on:  16:16: 6   1Aug2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    22.0
+   ELAPSED SECONDS:    23.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

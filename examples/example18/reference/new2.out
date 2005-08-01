@@ -3,13 +3,13 @@
      CPV: variable-cell Car-Parrinello molecular dynamics
      using ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Wed Jul 27 02:36:43 CEST 2005                      
+     Version: 2.1cvs - Sun Jul 31 02:34:00 CEST 2005                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:51:10  28Jul2005               
+   This run was started on:  16:16: 6   1Aug2005               
 
    Serial Build
 
@@ -110,6 +110,7 @@
         6.778840     4.231844    -0.041880
         2.133890     3.813486     6.852027
         6.778840    11.858816     6.852027
+   Ionic position will be re-read from restart file
 
 
    Cell Dynamics Parameters (from STDIN)
@@ -120,6 +121,8 @@
    cell parameters are not allowed to move
 
    Verbosity: iprsta =  1
+
+
 
    Simulation dimensions initialization
    ------------------------------------
@@ -308,26 +311,26 @@
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        0.20887      94.94304    -342.98542    -211.49551       0.0
-     initialize   :     6.15s CPU
-     total_time   :    28.06s CPU (      40 calls,   0.702 s avg)
-     formf        :     0.74s CPU
-     rhoofr       :     6.21s CPU (      40 calls,   0.155 s avg)
-     vofrho       :     3.03s CPU (      40 calls,   0.076 s avg)
-     dforce       :    10.27s CPU (     960 calls,   0.011 s avg)
+     initialize   :     6.17s CPU
+     total_time   :    31.55s CPU (      40 calls,   0.789 s avg)
+     formf        :     0.73s CPU
+     rhoofr       :     6.94s CPU (      40 calls,   0.173 s avg)
+     vofrho       :     3.60s CPU (      40 calls,   0.090 s avg)
+     dforce       :    10.49s CPU (     960 calls,   0.011 s avg)
      calphi       :     0.40s CPU (      40 calls,   0.010 s avg)
-     ortho        :     3.76s CPU (      40 calls,   0.094 s avg)
-     updatc       :     0.31s CPU (      40 calls,   0.008 s avg)
-     newd         :     3.23s CPU (      40 calls,   0.081 s avg)
-     calbec       :     0.42s CPU (      41 calls,   0.010 s avg)
-     prefor       :     0.15s CPU (      40 calls,   0.004 s avg)
+     ortho        :     3.78s CPU (      40 calls,   0.095 s avg)
+     updatc       :     0.29s CPU (      40 calls,   0.007 s avg)
+     newd         :     5.29s CPU (      40 calls,   0.132 s avg)
+     calbec       :     0.37s CPU (      41 calls,   0.009 s avg)
+     prefor       :     0.09s CPU (      40 calls,   0.002 s avg)
      strucf       :     0.15s CPU (      41 calls,   0.004 s avg)
-     rhov         :     1.32s CPU (      40 calls,   0.033 s avg)
-     nlsm1        :     2.04s CPU (     121 calls,   0.017 s avg)
-     fft          :     2.51s CPU (     160 calls,   0.016 s avg)
-     ffts         :     0.35s CPU (      80 calls,   0.004 s avg)
-     fftw         :     7.64s CPU (    2880 calls,   0.003 s avg)
-     fftb         :     1.45s CPU (    8880 calls,   0.000 s avg)
-     rsg          :     1.39s CPU (      40 calls,   0.035 s avg)
+     rhov         :     1.61s CPU (      40 calls,   0.040 s avg)
+     nlsm1        :     1.96s CPU (     121 calls,   0.016 s avg)
+     fft          :     3.43s CPU (     160 calls,   0.021 s avg)
+     ffts         :     0.46s CPU (      80 calls,   0.006 s avg)
+     fftw         :     8.64s CPU (    2880 calls,   0.003 s avg)
+     fftb         :     3.52s CPU (    8880 calls,   0.000 s avg)
+     rsg          :     1.40s CPU (      40 calls,   0.035 s avg)
  Opening file restart.xml
 
 
@@ -335,13 +338,13 @@
 
 
  
-     CP90         :    34.48s CPU time
+     CP90         :    37.98s CPU time
 
  
-   This run was terminated on:  17:51:44  28Jul2005            
+   This run was terminated on:  16:16:44   1Aug2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    34.0
+   ELAPSED SECONDS:    38.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 
