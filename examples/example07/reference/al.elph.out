@@ -1,6 +1,6 @@
 
      Program PHONON    v.2.1cvs starts ...
-     Today is 28Jul2005 at 16:50:52 
+     Today is  1Aug2005 at 14:50:29 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -774,65 +774,65 @@
      Gaussian Broadening:   0.010 Ry, ngauss=   1
      DOS =  1.571115 states/spin/Ry/Unit Cell at Ef=  8.320256 eV
      double delta at Ef = 11.222215
-     lambda( 1)=  0.159831   gamma=  8.569579 GHz
-     lambda( 2)=  0.159831   gamma=  8.569579 GHz
-     lambda( 3)=  0.003227   gamma=  0.492180 GHz
+     lambda( 1)=  0.1599   gamma=    8.57 GHz
+     lambda( 2)=  0.1599   gamma=    8.57 GHz
+     lambda( 3)=  0.0032   gamma=    0.49 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   1
      DOS =  2.063784 states/spin/Ry/Unit Cell at Ef=  8.335251 eV
      double delta at Ef = 18.003905
-     lambda( 1)=  0.228204   gamma= 16.072282 GHz
-     lambda( 2)=  0.228204   gamma= 16.072282 GHz
-     lambda( 3)=  0.189868   gamma= 38.034324 GHz
+     lambda( 1)=  0.2283   gamma=   16.07 GHz
+     lambda( 2)=  0.2283   gamma=   16.07 GHz
+     lambda( 3)=  0.1900   gamma=   38.04 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   1
      DOS =  2.225332 states/spin/Ry/Unit Cell at Ef=  8.330059 eV
      double delta at Ef = 16.641271
-     lambda( 1)=  0.193472   gamma= 14.692742 GHz
-     lambda( 2)=  0.193472   gamma= 14.692742 GHz
-     lambda( 3)=  0.209725   gamma= 45.300778 GHz
+     lambda( 1)=  0.1935   gamma=   14.69 GHz
+     lambda( 2)=  0.1935   gamma=   14.69 GHz
+     lambda( 3)=  0.2099   gamma=   45.30 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   1
      DOS =  2.326744 states/spin/Ry/Unit Cell at Ef=  8.319467 eV
      double delta at Ef = 14.664431
-     lambda( 1)=  0.177004   gamma= 14.054744 GHz
-     lambda( 2)=  0.177004   gamma= 14.054744 GHz
-     lambda( 3)=  0.155056   gamma= 35.018536 GHz
+     lambda( 1)=  0.1771   gamma=   14.05 GHz
+     lambda( 2)=  0.1771   gamma=   14.05 GHz
+     lambda( 3)=  0.1552   gamma=   35.02 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   1
      DOS =  2.437507 states/spin/Ry/Unit Cell at Ef=  8.308701 eV
      double delta at Ef = 13.505008
-     lambda( 1)=  0.158178   gamma= 13.157792 GHz
-     lambda( 2)=  0.158178   gamma= 13.157792 GHz
-     lambda( 3)=  0.130384   gamma= 30.848177 GHz
+     lambda( 1)=  0.1582   gamma=   13.16 GHz
+     lambda( 2)=  0.1582   gamma=   13.16 GHz
+     lambda( 3)=  0.1305   gamma=   30.85 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   1
      DOS =  2.540674 states/spin/Ry/Unit Cell at Ef=  8.300511 eV
      double delta at Ef = 12.914221
-     lambda( 1)=  0.140487   gamma= 12.180832 GHz
-     lambda( 2)=  0.140487   gamma= 12.180832 GHz
-     lambda( 3)=  0.126716   gamma= 31.249376 GHz
+     lambda( 1)=  0.1405   gamma=   12.18 GHz
+     lambda( 2)=  0.1405   gamma=   12.18 GHz
+     lambda( 3)=  0.1268   gamma=   31.25 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   1
      DOS =  2.612588 states/spin/Ry/Unit Cell at Ef=  8.295172 eV
      double delta at Ef = 12.624568
-     lambda( 1)=  0.127859   gamma= 11.399649 GHz
-     lambda( 2)=  0.127859   gamma= 11.399649 GHz
-     lambda( 3)=  0.127725   gamma= 32.389733 GHz
+     lambda( 1)=  0.1279   gamma=   11.40 GHz
+     lambda( 2)=  0.1279   gamma=   11.40 GHz
+     lambda( 3)=  0.1278   gamma=   32.39 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   1
      DOS =  2.651930 states/spin/Ry/Unit Cell at Ef=  8.291974 eV
      double delta at Ef = 12.510092
-     lambda( 1)=  0.120279   gamma= 10.885326 GHz
-     lambda( 2)=  0.120279   gamma= 10.885326 GHz
-     lambda( 3)=  0.130103   gamma= 33.489691 GHz
+     lambda( 1)=  0.1203   gamma=   10.89 GHz
+     lambda( 2)=  0.1203   gamma=   10.89 GHz
+     lambda( 3)=  0.1302   gamma=   33.49 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   1
      DOS =  2.669095 states/spin/Ry/Unit Cell at Ef=  8.290118 eV
      double delta at Ef = 12.474095
-     lambda( 1)=  0.116083   gamma= 10.573607 GHz
-     lambda( 2)=  0.116083   gamma= 10.573607 GHz
-     lambda( 3)=  0.133433   gamma= 34.569212 GHz
+     lambda( 1)=  0.1161   gamma=   10.57 GHz
+     lambda( 2)=  0.1161   gamma=   10.57 GHz
+     lambda( 3)=  0.1335   gamma=   34.57 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   1
      DOS =  2.674519 states/spin/Ry/Unit Cell at Ef=  8.288963 eV
      double delta at Ef = 12.456420
-     lambda( 1)=  0.113755   gamma= 10.382622 GHz
-     lambda( 2)=  0.113755   gamma= 10.382622 GHz
-     lambda( 3)=  0.137283   gamma= 35.638828 GHz
+     lambda( 1)=  0.1138   gamma=   10.38 GHz
+     lambda( 2)=  0.1138   gamma=   10.38 GHz
+     lambda( 3)=  0.1374   gamma=   35.64 GHz
  
-     PHONON       :     4.30s CPU time
+     PHONON       :     4.84s CPU time
 
      INITIALIZATION: 
      phq_setup    :     0.00s CPU
@@ -845,10 +845,10 @@
  
  
  
-     dvqpsi_us    :     1.95s CPU (    1047 calls,   0.002 s avg)
+     dvqpsi_us    :     2.34s CPU (    1047 calls,   0.002 s avg)
  
-     dvqpsi_us    :     1.95s CPU (    1047 calls,   0.002 s avg)
-     dvqpsi_us_on :     0.09s CPU (    1047 calls,   0.000 s avg)
+     dvqpsi_us    :     2.34s CPU (    1047 calls,   0.002 s avg)
+     dvqpsi_us_on :     0.06s CPU (    1047 calls,   0.000 s avg)
  
  
  
@@ -856,8 +856,8 @@
  
  
       General routines
-     ccalbec      :     0.03s CPU (    1396 calls,   0.000 s avg)
-     cft3         :     0.01s CPU
-     cft3s        :     3.16s CPU (   26175 calls,   0.000 s avg)
-     davcio       :     0.04s CPU (    1748 calls,   0.000 s avg)
+     ccalbec      :     0.05s CPU (    1396 calls,   0.000 s avg)
+     cft3         :     0.00s CPU
+     cft3s        :     3.63s CPU (   26175 calls,   0.000 s avg)
+     davcio       :     0.02s CPU (    1748 calls,   0.000 s avg)
  
