@@ -33,13 +33,13 @@ PROGRAM postproc
   INTEGER :: plot_num, kpoint, kband, spin_component, ios
   LOGICAL :: stm_wfc_matching, lsign
 
-  REAL(kind=DP) :: emin, emax, sample_bias, z, dz
+  REAL(kind=DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 
   NAMELIST / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
-       filplot, lsign
+       filplot, lsign, epsilon
 
   !
   CALL start_postproc (nd_nmbr)
@@ -58,7 +58,8 @@ PROGRAM postproc
   lsign=.FALSE.
   emin = - 999.0d0
   emax = ef*13.6058d0
-
+  epsilon=1.d0
+  !
   IF ( ionode )  THEN
      !
      CALL input_from_file ( )
@@ -87,20 +88,20 @@ PROGRAM postproc
   CALL mp_bcast( kpoint, ionode_id )
   CALL mp_bcast( filplot, ionode_id )
   CALL mp_bcast( lsign, ionode_id )
+  CALL mp_bcast( epsilon, ionode_id )
   !
   !     Check of namelist variables
   !
-  IF (plot_num < 0 .OR. plot_num > 13) CALL errore ('postproc', &
+  IF (plot_num < 0 .OR. plot_num > 16) CALL errore ('postproc', &
           'Wrong plot_num', ABS (plot_num) )
 
-  IF ( (plot_num == 0 .OR. plot_num == 1) .AND.  &
-       (spin_component < 0 .OR. spin_component > 2) ) CALL errore &
-         ('postproc', 'wrong value of spin_component', 1)
-
-  IF ( (plot_num == 13) .AND.   &
-       (spin_component < 0 .OR. spin_component > 3) ) CALL errore &
+  IF (plot_num == 13) THEN
+     IF  (spin_component < 0 .OR. spin_component > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
-
+  ELSE
+     IF (spin_component < 0 .OR. spin_component > 2) CALL errore &
+         ('postproc', 'wrong value of spin_component', 1)
+  END IF
 
   IF (plot_num == 10) THEN
      emin = emin / 13.6058d0
@@ -119,7 +120,8 @@ PROGRAM postproc
   !   Now do whatever you want
   !
   CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
-       stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
+       stm_wfc_matching, emin, emax, kpoint, kband, spin_component, &
+       lsign, epsilon)
   !
   CALL stop_pp
   STOP

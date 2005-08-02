@@ -9,12 +9,13 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
-     stm_wfc_matching, emin, emax, kpoint, kband, spin_component, lsign)
+     stm_wfc_matching, emin, emax, kpoint, kband, spin_component, &
+     lsign, epsilon)
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output several quantities
-  !     in a real space 3D mesh which can be plotted using ch.x
-  !     The integer variable plot_num is used to chose the output quantity
+  !     in a real space 3D mesh which can be plotted using chdens.x
+  !     The integer variable plot_num is used to choose the output quantity
   !
   !           plot_num                  quantity
   !              0                 self consistent charge density
@@ -31,6 +32,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !             11                 the V_bare + V_H potential
   !             12                 The electric field potential
   !             13                 The noncolinear magnetization.
+  !                                Unfinished and untested:
+  !             14, 15, 16         The polarisation along x, y, z resp.
   !
   !     The output quantity is written (formatted) on file filplot.
   !
@@ -54,9 +57,9 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   INTEGER :: kpoint, kband, spin_component, plot_num
   LOGICAL :: stm_wfc_matching, lsign
   REAL(kind=DP) :: sample_bias, z, dz, dummy
-  REAL(kind=DP) :: emin, emax, wf, charge
+  REAL(kind=DP) :: emin, emax, wf, charge, epsilon
 
-  INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff
+  INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff, ipol
 #ifdef __PARA
   ! auxiliary vector (parallel case)
   REAL(kind=DP), ALLOCATABLE :: raux1 (:)
@@ -204,14 +207,18 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      CALL v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, gg, gstart, nspin_eff, alat, omega, ehart, charge, raux)
      IF (tefield.AND.dipfield) CALL add_efield(rho,raux,dummy,1)
+
   ELSEIF (plot_num == 12) THEN
+
      raux=0.d0
      IF (tefield) THEN
          CALL add_efield(rho,raux,dummy,1)
      ELSE
          CALL errore('punch_plot','e_field is not calculated',-1)
      ENDIF
+
   ELSEIF (plot_num == 13) THEN
+
      IF (noncolin) THEN
         IF (spin_component==0) THEN
            raux(:) = SQRT(rho(:,2)**2 + rho(:,3)**2 + rho(:,4)**2 )
@@ -223,11 +230,18 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      ELSE
         CALL errore('punch_plot','noncollinear spin required',1)
      ENDIF
+
+  ELSEIF (plot_num == 14 .OR. plot_num == 15 .OR. plot_num == 16 ) THEN
+
+     ipol = plot_num - 13
+     call polarization ( spin_component, ipol, epsilon, raux )
+
   ELSE
 
      CALL errore ('punch_plot', 'plot_num not implemented', - 1)
 
   ENDIF
+
 #ifdef __PARA
   IF (.NOT. (plot_num == 5 .OR. plot_num == 9) ) &
        CALL gather (raux, raux1)
@@ -268,3 +282,52 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   DEALLOCATE (raux)
   RETURN
 END SUBROUTINE punch_plot
+
+SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
+  !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : fpi
+  USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nl, nlm, &
+       ngm, nrxx, gstart, g, gg
+  USE lsda_mod,  ONLY : nspin
+  USE scf, ONLY: rho
+  USE wvfct,  ONLY: gamma_only
+  USE wavefunctions_module,  ONLY: psic
+  !
+  IMPLICIT NONE
+  INTEGER :: spin_component, ipol, ig
+  REAL(kind=DP) :: epsilon, raux (nrxx)
+  !
+  IF (ipol < 1 .OR. ipol > 3) CALL errore('polarization', &
+       'wrong component',1)
+  !
+  IF (spin_component == 0) THEN
+     IF (nspin == 1 .OR. nspin == 4 ) THEN
+        psic(:) = DCMPLX (rho(:,1), 0.d0)
+     ELSE IF (nspin == 2) THEN
+        psic(:) = DCMPLX (rho(:,1) + rho(:,2), 0.d0) 
+     END IF
+  ELSE 
+     IF (spin_component > nspin .OR. spin_component < 1) &
+          CALL errore('polarization', 'wrong spin component',1)
+     psic(:) = DCMPLX (rho(:,spin_component), 0.d0)
+  END IF
+  !
+  !   transform to G space
+  !
+  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  !
+  IF (gstart == 2) psic (1) = (epsilon - 1.d0) / fpi
+  DO ig = gstart, ngm
+     psic (nl (ig) ) = psic (nl (ig) ) * g (ipol, ig) / gg (ig) &
+       / (0.d0, 1.d0)
+     if (gamma_only) psic (nlm(ig) ) = CMPLX ( psic (nl (ig) ) )
+  END DO
+  !
+  CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  !
+  raux (:) = DREAL (psic (:) )
+  !
+  RETURN
+  !
+END SUBROUTINE polarization

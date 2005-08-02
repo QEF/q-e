@@ -33,7 +33,7 @@ program chdens
   ! maximum number of files with charge
 
   integer :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, ir, i, j, ig, plot_out, output_format, plot_num
+       na, ir, i, j, ig, output_format, plot_num
 
   real(kind=DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
@@ -54,7 +54,7 @@ program chdens
 
   namelist /input/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
-       plot_out, output_format, fileout, epsilon, filepol
+       output_format, fileout, epsilon, filepol
 
   !
   call start_postproc (nd_nmbr)
@@ -66,7 +66,6 @@ program chdens
   weight(1)     = 1.0d0
   iflag         = 1
   radius        = 1.0d0
-  plot_out      = 1
   output_format = 0
   fileout       = ' '
   epsilon       = 1.0d0
@@ -94,7 +93,7 @@ program chdens
 
   ! check for iflag
 
-  if (iflag == 1) then
+  if (iflag <= 1) then
 
      ! 1D plot : check variables
 
@@ -136,10 +135,6 @@ program chdens
      call errore ('chdens', 'iflag not implemented', 1)
 
   endif
-
-  ! check for plot_out
-
-  if (plot_out < 0 .or. plot_out > 4) call errore ('chdens','plot_out wrong',1)
 
   !
   ! Read the header and allocate objects
@@ -267,36 +262,15 @@ program chdens
   !
 
   allocate (rhog( ngm))    
-  if (plot_out <= 1) then
-     do ig = 1, ngm
-        rhog (ig) = psic (nl (ig) )
-     enddo
-  else
-     ipol = plot_out - 1
-     rhog (1) = (epsilon - 1.d0) / fpi
-     rhog (2:ngm) = psic (nl (2:ngm) ) * g (ipol, 2:ngm) / gg (2:ngm)
-     !
-     !    bring the quantity back to real space
-     !
-     psic (:) = (0.d0,0.d0)
-     psic (nl (:) ) = rhog (:)
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     !
-     rho (:, 1) = DREAL (psic (:) )
-     !
-     if (filepol.ne.' ') then
-        ! write to the output file
-        call plot_io (filepol, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                      nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                      plot_num, atm, ityp, zv, tau, rho(1,1), + 1)
-     endif
-  endif
+  do ig = 1, ngm
+     rhog (ig) = psic (nl (ig) )
+  enddo
   !
   !     And now the plot (rhog in G-space, rhor in real space)
   !
-  if (iflag == 1) then
+  if (iflag <= 1) then
 
-     call plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, plot_out, ounit)
+     call plot_1d (nx, m1, x0, e1, ngm, g, rhog, alat, iflag, ounit)
 
   elseif (iflag == 2) then
 
@@ -391,13 +365,13 @@ program chdens
 end program chdens
 !
 !-----------------------------------------------------------------------
-subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
+subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   !-----------------------------------------------------------------------
   !
   USE kinds, only : DP
   use constants, only:  pi
   implicit none
-  integer :: nx, ngm, plot_out, ounit
+  integer :: nx, ngm, iflag, ounit
   ! number of points along the line
   ! number of G vectors
   ! type of plot
@@ -427,7 +401,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
 
   deltax = m1 / (nx - 1)
   carica(:) = (0.d0,0.d0)
-  if (plot_out == 1) then
+  if (iflag == 1) then
      do i = 1, nx
         xi = x0 (1) + (i - 1) * deltax * e (1)
         yi = x0 (2) + (i - 1) * deltax * e (2)
@@ -443,7 +417,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
            carica(i) = carica(i) + rhog (ig) * cmplx(cos(arg),sin(arg))
         enddo
      enddo
-  else
+  else if (iflag == 0) then
      !
      !     spherically averaged charge: rho0(|r|) = int rho(r) dOmega
      !     rho0(r) = 4pi \sum_G rho(G) j_0(|G||r|)
@@ -467,6 +441,8 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
         enddo
 
      enddo
+  else
+     call errore ('plot_1d', ' bad type of plot', 1)
   endif
   !
   !    Here we check the value of the resulting charge
@@ -486,7 +462,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, plot_out, ounit)
   !
   !       we print the charge on output
   !
-  if (plot_out.eq.1) then
+  if (iflag == 1) then
      do i = 1, nx
         write (ounit, '(2f20.10)') deltax*dble(i-1), real(carica(i))
      enddo
