@@ -13,7 +13,7 @@ IMAGES = \
 GIF_IMAGES = $(IMAGES:.png=.gif)
 LINK_FILES = \
 	$(INPUT_FILES) \
-	manual.tex \
+	users-guide.tex \
 	$(IMAGES)
 
 %.pdf : %.tex
@@ -40,20 +40,20 @@ input_html: links
 	./htmlise.sh ProjWFC projwfc.x INPUT_PROJWFC > INPUT_PROJWFC.html
 	./htmlise.sh D3      d3.x      INPUT_D3      > INPUT_D3.html
 
-compile_manual: manual.pdf $(GIF_IMAGES) manual
+compile_manual: users-guide.pdf $(GIF_IMAGES) users-guide
 
-manual.pdf: manual.tex
+users-guide.pdf: users-guide.tex
 
 $(GIF_IMAGES): $(IMAGES)
 
-manual: manual.pdf manual.tex
+users-guide: users-guide.pdf users-guide.tex
 	rm -rf manual/	
 	latex2html \
 		-t "PWscf's Users Manual" \
 		-html_version 3.2,math \
 		-toc_depth 5 -split 5 -toc_stars -show_section_numbers \
 		-local_icons \
-		manual.tex
+		users-guide.tex
 	cd manual; \
 	for file in *.png; do \
 		convert $$file $${file%.png}.gif; \
