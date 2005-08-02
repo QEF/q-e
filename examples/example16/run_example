@@ -208,7 +208,6 @@ cat > AlAs110.chdens-.in << EOF
    filepp(1)='AlAsresm-1.0'
    weight(1)=1.0
    iflag=2
-   plot_out=1
    output_format=2
    e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
@@ -228,7 +227,6 @@ cat > AlAs110.chdens+.in << EOF
    filepp(1)='AlAsresm+1.0'
    weight(1)=1.0
    iflag=2
-   plot_out=1
    output_format=2
    e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
