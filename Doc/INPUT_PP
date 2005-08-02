@@ -23,8 +23,8 @@
   !                7=|psi|^2
   !                8=electron localization function (ELF)
   !                9=planar average of all |psi|^2
-  !               10=integrated local density of states (ILDOS) from
-  !                  emin to emax (emin, emax in eV)
+  !               10=integrated local density of states (ILDOS)
+  !                  from emin to emax (emin, emax in eV)
   !                  if emax is not specified, emax=E_fermi
   !               11=the V_bare + V_H potential
   !               12=the electric field potential
@@ -70,5 +70,9 @@
   !                2=y component of the magnetization
   !                3=z component of the magnetization
   !
+  !             Unfinished and untested option:
+  !
+  ! plot_num = 14, 15, 16  polarisation along x, y, z resp.
+  ! epsilon  = macroscopic dielectric constant
   !
   !-/              END of namelist &inputpp
