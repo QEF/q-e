@@ -5,6 +5,20 @@ tracevar nfile w {
 
 tracevar iflag w {
     switch -exact -- [vartextvalue iflag] {
+	"1D plot, spherical average" { 
+	    widget e1 enable
+	    widget e2 disable
+	    widget e3 disable
+	    widget x0 enable
+	    widget nx enable
+	    widget ny disable
+	    widget nz disable
+	    widget radius disable
+	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
+		varset output_format -textvalue ""
+	    }
+	}
+
 	"1D plot" { 
 	    widget e1 enable
 	    widget e2 disable
@@ -14,7 +28,6 @@ tracevar iflag w {
 	    widget ny disable
 	    widget nz disable
 	    widget radius disable
-	    widget idpol disable
 	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
 		varset output_format -textvalue ""
 	    }
@@ -29,7 +42,6 @@ tracevar iflag w {
 	    widget ny enable
 	    widget nz disable
 	    widget radius disable
-	    widget idpol disable
 	    if { [string match "XCRYSDEN's XSF format (whole unit cell)" [vartextvalue output_format]] } {
 		varset output_format -textvalue "XCRYSDEN's XSF format"
 	    }
@@ -58,11 +70,6 @@ tracevar iflag w {
 		    widget radius disable
 		}
 	    }
-	    if { [varvalue plot_out] == 1 } {
-		widget idpol enable
-	    } else {
-		widget idpol disable
-	    }		
 	}
 	
 	"2D polar plot" {
@@ -74,7 +81,6 @@ tracevar iflag w {
 	    widget ny enable
 	    widget nz disable
 	    widget radius enable
-	    widget idpol disable
 	    if { [string match "XCRYSDEN*" [vartextvalue output_format]] } {
 		varset output_format -textvalue ""
 	    }	    
@@ -105,33 +111,7 @@ tracevar output_format w {
     }
 }
 
-tracevar plot_out w {
-    switch -exact -- [vartextvalue plot_out] {
-	"induced polarization along x" -
-	"induced polarization along y" -
-	"induced polarization along z" {
-	    widget epsilon enable
-	    widget filepol enable
-	}
-	"normal plot" {
-	    if { [varvalue iflag] == 3 } {
-		widget idpol enable
-	    } else {
-		widget idpol disable
-	    }
-	    widget epsilon disable
-	    widget filepol disable
-	}
-	default {
-	    widget epsilon disable
-	    widget filepol disable
-	    widget idpol disable
-	}
-    }
-}
-
 postprocess {
     varset iflag         -textvalue "3D plot"
-    varset plot_out      -textvalue "normal plot"
     varset output_format -textvalue "XCRYSDEN's XSF format (whole unit cell)"
 }

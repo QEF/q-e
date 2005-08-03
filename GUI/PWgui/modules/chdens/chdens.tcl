@@ -43,26 +43,14 @@ module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
 	var iflag {
 	    -label     "Dimensionality of plot (iflag):"
 	    -textvalue {
+		"1D plot, spherical average"
 		"1D plot"
 		"2D plot"
 		"3D plot"
 		"2D polar plot"
 	    }
-	    -value  { 1 2 3 4 }
+	    -value  { 0 1 2 3 4 }
 	    -widget optionmenu
-	}
-
-	var plot_out {
-	    -label    "What to plot (plot_out):"
-	    -textvalue {
-		"normal plot"
-		"spherical averaged plot"
-		"induced polarization along x"
-		"induced polarization along y"
-		"induced polarization along z"
-	    }
-	    -value     { 1 0 2 3 4 }
-	    -widget    optionmenu
 	}
 
 	var output_format {
@@ -80,15 +68,6 @@ module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
 	    -widget    optionmenu
 	}
 
-	separator -label "--- Polarization input ---"
-
-	var epsilon {
-	    -label    "Dielectric constant for polarization calculation (epsilon):"
-	    -validate fortranreal
-	}
-
-	var filepol -label "Name of output file for induced polarization (filepol):"
-	
 	separator -label "--- Spanning vectors & origin ---"
 
 	dimension e1 {
@@ -136,24 +115,6 @@ module ChDens\#auto -title "PWSCF GUI: module ChDens.x" -script {
 	separator -label "--- Polar plot ---"
 	var radius -label "Radius of the sphere (radius):" -validate real
 
-	separator -label "--- Ionic and electronic dipole moment ---"
-	var idpol {
-	    -label "Which dipole moment to compute (idpol):" 
-	    -textvalue {
-		"ionic + electronic dipole moment"
-		"electronic-only dipole moment"
-	    }
-	    -value {1 2} 
-	    -widget optionmenu
-	}
-
-	separator -label "--- Makov-Payne (MP) correction for charged supercells ---"
-	var makov {
-	    -label "Compute the 1st and 2d order MP corrections (makov):"
-	    -textvalue { Yes No }
-	    -value     { .true. .false. }
-	    -widget    radiobox
-	}
     }
     
     # ----------------------------------------------------------------------

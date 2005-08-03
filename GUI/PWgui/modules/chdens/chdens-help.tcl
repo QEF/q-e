@@ -21,19 +21,11 @@ help weight -vartype real -helpfmt txt2html -helptext {
 
 
 help iflag -vartype integer -helpfmt txt2html -helptext {
+          1 1D plot of spherical average
           1 if a 1D plot is required (DEFAULT)
           2 if a 2D plot is required
           3 if a 3D plot is required
           4 if a 2D polar plot on a sphere is required
-<p> ( default = 1 )
-}
-
-help plot_out -vartype integer -helpfmt txt2html -helptext {
-          0   plot the spherical average of the charge density
-          1   plot the charge density (DEFAULT)
-          2   plot the induced polarization along x
-          3   plot the induced polarization along y
-          4   plot the induced polarization along z
 <p> ( default = 1 )
 }
 
@@ -128,51 +120,3 @@ help fileout -vartype character -helpfmt txt2html -helptext {
 <p> ( default = standard output )
 }
 
-help epsilon -vartype real -helpfmt txt2html -helptext {
-    the dielectric constant for polarization computation
-}
-
-  
-help filepol -vartype character helpfmt txt2html -helptext {
-    name of an output file to which the induced polarization
-    is written (in postproc format) for further processing
-    (macroscopic average)
-}
-  
-  
-help idpol -vartype integer -helpfmt txt2html -helptext {
-    = 1 the ionic and electronic dipole moment of the charge
-        is computed. 
-      
-    = 2 only the electronic dipole moment is computed
-  
-  NB: This option is to be used for an isolated molecule in 
-      a box and the molecule must be at the center of the box.
-      The code computes the dipole on the Wigner-Seitz cell of
-      the Bravais lattice. The 3d box must contain this cell 
-      otherwise meaningless numbers are printed.
-}
-
-
-help makov -vartype logical -helpfmt txt2html -helptext {
-      Makov-Payne correction for charged supercells (OPTIONAL)
-
-      makov     .true. the 1st and 2d order corrections are
-                computed (default: .false.)
-
-                WARNING: - not thoroughly tested
-                         - the correction works only for clusters
-                         embedded within a cubic supercell
-                         - the cluster (and the plotting box) MUST be
-                         CENTERED around (0,0,0), otherwise meaningless
-                         results are printed
-                         - always check that the printed total charge
-                         is the right one
-                         - for impurities in bulk crystals the
-                         correction should work as well, but the
-                         Madelung constant of the considered lattice
-                         must be used and the correction has to be
-                         divided by the crystal dielectric constant.
-                Ref.: G. Makov and M.C. Payne, PRB 51, 4014 (1995).
-                Contributed by Giovanni Cantele
-}
