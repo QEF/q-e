@@ -28,11 +28,11 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of Quantum ($\nu$)
+This guide covers the installation and usage of Quantum
 ESPRESSO (opEn-Source Package for Research in Electronic Structure, 
 Simulation, and Optimization), version \version.
 
-The $\nu-$ESPRESSO package contains the following codes for the
+The Quantum-ESPRESSO package contains the following codes for the
 calculation of electronic-structure properties within
 Density-Functional Theory, using a Plane-Wave basis set and
 pseudopotentials:
@@ -48,15 +48,15 @@ and the following auxiliary codes:
   \item atomic: a program for atomic calculations and generation of
         pseudopotentials.
 \end{itemize}
-The $\nu-$ESPRESSO codes work on many different types of Unix machines,
+The Quantum-ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
-Running $\nu-$ESPRESSO on MS-Windows is possible, but not supported: 
+Running Quantum-ESPRESSO on MS-Windows is possible, but not supported: 
 see section \ref{installation}, ``Installation''.
 
 Further documentation, beyond what is provided in this guide, can be
 found in:
 \begin{itemize}
-  \item the \texttt{Doc/} directory of the $\nu-$ESPRESSO distribution
+  \item the \texttt{Doc/} directory of the Quantum-ESPRESSO distribution
 
         In particular the \texttt{INPUT\_*} files contain the detailed
         listing of available input variables and cards.
@@ -134,7 +134,7 @@ with a restart file from CP, and vice versa.
 \subsection{People}
 
 \hyphenation{gian-noz-zi}
-The maintenance and further development of the $\nu-$ESPRESSO code is
+The maintenance and further development of the Quantum-ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of INFM (Italian
 institute for condensed matter physics) under the coordination of
 Paolo Giannozzi (Scuola Normale Superiore, Pisa), with the strong
@@ -227,11 +227,11 @@ The web site for PWscf is:
 
 \medskip
 \noindent
-Releases and patches of $\nu-$ESPRESSO can be downloaded from this
+Releases and patches of Quantum-ESPRESSO can be downloaded from this
 site.
 
 The recommended place where to ask questions about installation and
-usage of $\nu-$ESPRESSO, and to report bugs, is the Pw$\_$forum
+usage of Quantum-ESPRESSO, and to report bugs, is the Pw$\_$forum
 mailing list
 (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
                    {mailto:pw\_forum@pwscf.org}).
@@ -241,7 +241,7 @@ archives from the PWscf web site.  Only subscribed users can post.
 Please search the archives before posting: your question may have
 already been answered.
 
-If you specifically need to contact the developers of $\nu-$ESPRESSO
+If you specifically need to contact the developers of Quantum-ESPRESSO
 (and only them), write to
 \htmladdnormallink{\texttt{pwscf@pwscf.org}}%
                   {mailto:pwscf@pwscf.org}.
@@ -262,7 +262,7 @@ SISSA:
 
 \subsection{Terms of use}
 
-$\nu-$ESPRESSO is free software, released under the GNU General Public
+Quantum-ESPRESSO is free software, released under the GNU General Public
 License
 (\htmladdnormallink{\texttt{http://www.pwscf.org/License.txt}}%
                    {http://www.pwscf.org/License.txt},
@@ -273,7 +273,7 @@ owners.
 
 We shall greatly appreciate if scientific work done using this code
 will contain an explicit acknowledgment and a reference to the
-$\nu-$ESPRESSO web page.
+Quantum-ESPRESSO web page.
 Our preferred form for the acknowledgment is the following:
 
 \begin{quote}
@@ -295,13 +295,13 @@ A.~Kokalj, % PWgui
 \section{Installation}
   \label{installation}
 
-Presently, the $\nu-$ESPRESSO package is only distributed in source
+Presently, the Quantum-ESPRESSO package is only distributed in source
 form; some precompiled executables (binary files) are provided only
 for PWgui.
-Providing binaries for $\nu-$ESPRESSO would require too much effort
+Providing binaries for Quantum-ESPRESSO would require too much effort
 and would work only for a small number of machines anyway.
 
-Stable releases of the $\nu-$ESPRESSO source package (current version
+Stable releases of the Quantum-ESPRESSO source package (current version
 is \stableversion) can be downloaded from this URL:
 \medskip
 
@@ -330,7 +330,7 @@ The bravest may access the (unstable) development version via anonymous
 CVS (Concurrent Version System): see the file \texttt{README.cvs}
 contained in the distribution.
 
-To install $\nu-$ESPRESSO from source, you need C and Fortran-95
+To install Quantum-ESPRESSO from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most "Fortran-90"
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
@@ -355,7 +355,7 @@ the detailed instructions below.
 
 \subsection{Configure}
 
-To configure the $\nu-$ESPRESSO source package, run the \texttt{configure}
+To configure the Quantum-ESPRESSO source package, run the \texttt{configure}
 script.  It will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly.
 Presently it is expected to work on most Linux 32- and 64-bit (Itanium
@@ -378,7 +378,7 @@ Specifically, \texttt{configure} generates the following files:
 \texttt{makedeps.sh} shell script, that \texttt{configure} invokes.
 If you modify the program sources, you might have to rerun it.
 
-You should always be able to compile the $\nu-$ESPRESSO suite of programs
+You should always be able to compile the Quantum-ESPRESSO suite of programs
 without having to edit any of the generated files.  However you may
 have to tune \texttt{configure} by specifying appropriate environment
 variables and/or command-line options.
@@ -465,7 +465,7 @@ For more information, see \texttt{README.configure}.
 \subsubsection{Libraries}
   \label{libraries}
 
-$\nu-$ESPRESSO makes use of the following external libraries:
+Quantum-ESPRESSO makes use of the following external libraries:
 \begin{itemize}
   \item BLAS
         (\htmladdnormallink{\texttt{http://www.netlib.org/blas/}}%
@@ -483,7 +483,7 @@ A copy of the needed routines is provided with the distribution.
 However, when available, optimized vendor-specific libraries can be
 used instead: this often yields huge performance gains.
 
-$\nu-$ESPRESSO can use the following architecture-specific replacements for
+Quantum-ESPRESSO can use the following architecture-specific replacements for
 BLAS and LAPACK:
 \begin{quote}
   \texttt{essl} for IBM machines\\
@@ -577,7 +577,7 @@ settings and how to force their recompilation.
 \subsubsection{Manual configuration}
   \label{manualconf}
 
-To configure $\nu-$ESPRESSO manually, you have to write a working
+To configure Quantum-ESPRESSO manually, you have to write a working
 \texttt{make.sys} and generate \texttt{*/make.depend} files yourself.
 
 For \texttt{make.sys}, several templates (each for a different machine
@@ -672,7 +672,7 @@ The present values will work for most cases.  All other variables are
 dynamically allocated: you do not need to recompile your code for a
 different system.
 
-At your option, you may compile the complete $\nu-$ESPRESSO suite of
+At your option, you may compile the complete Quantum-ESPRESSO suite of
 programs (with \texttt{make all}), or only some specific programs.
 
 \texttt{make} with no arguments yields a list of valid compilation
@@ -761,6 +761,11 @@ The codes for data postprocessing in \texttt{PP/} are:
   \item \texttt{projwfc.x} calculates projections of wavefunction
         over atomic orbitals, performs L\"owdin population
         analysis and calculates projected density of states
+  \item \texttt{dipole.x} calculates the dipole moment for
+        isolated systems (molecules) and the Makov-Payne correction
+        for molecules in supercells (beware: meaningful results 
+        only if the charge density is completely contained into 
+        the Wigner-Seitz cell)
   \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
         writing them into a format that is suitable for several
         plotting programs
@@ -789,16 +794,17 @@ The codes for data postprocessing in \texttt{PP/} are:
 
 The utility programs in \texttt{pwtools/} are:
 \begin{itemize}
-  \item \texttt{dynmat.x} calculates LO-TO splitting at
-        $\mathbf{q}=0$ in insulator, IR cross sections, from the
-        dynamical matrix produced by \texttt{ph.x}
-  \item \texttt{q2r.x} calculates Interatomic Force Constants ion
+  \item \texttt{dynmat.x} applies various kinds of Acoustic Sum Rule
+        (ASR), calculates LO-TO splitting at $\mathbf{q}=0$ in 
+        insulators, IR and Raman cross sections (if the coefficients
+        have been properly calculated), from the dynamical matrix
+        produced by \texttt{ph.x}
+  \item \texttt{q2r.x} calculates Interatomic Force Constants (IFC) in
         real space from dynamical matrices produced by
         \texttt{ph.x} on a regular \textbf{q}-grid
   \item \texttt{matdyn.x} produces phonon frequencies at a generic
-        wave vector using the Interatomic Force Constants
-        calculated by \texttt{q2r.x}; may also calculate phonon
-        DOS
+        wave vector using the IFC file calculated by \texttt{q2r.x}; 
+        may also calculate phonon DOS
   \item \texttt{fqha.x} for quasi-harmonic calculations
   \item \texttt{lambda.x} calculates the electron-phonon coefficient
         $\lambda$ and the function $\alpha^2F(\omega)$
@@ -837,17 +843,17 @@ The utility programs in \texttt{pwtools/} are:
 
 As a final check that compilation was successful, you may want to run
 some or all of the examples contained within the \texttt{examples}
-directory of the $\nu-$ESPRESSO distribution.
+directory of the Quantum-ESPRESSO distribution.
 Those examples try to exercise all the programs and features of the
-$\nu-$ESPRESSO package: for details, see the \texttt{README} file in each
+Quantum-ESPRESSO package: for details, see the \texttt{README} file in each
 example's directory.
 If you find that any relevant feature isn't being tested, please
 contact us (or even better, write and send us a new example
 yourself!).
 
-If you haven't downloaded the full $\nu-$ESPRESSO distribution and don't
+If you haven't downloaded the full Quantum-ESPRESSO distribution and don't
 have the examples, you can get them from the Test and Examples Page of
-the $\nu-$ESPRESSO web site
+the Quantum-ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/tests.htm}}%
                    {http://www.pwscf.org/tests.htm}).
 The necessary pseudopotentials are included.
@@ -860,14 +866,14 @@ Go to the \texttt{examples} directory and edit the
 \texttt{environment\_variables} file, setting the following variables
 as needed:
 \begin{quote}
-  \texttt{BIN\_DIR=} directory where $\nu-$ESPRESSO executables reside\\
+  \texttt{BIN\_DIR=} directory where Quantum-ESPRESSO executables reside\\
   \texttt{PSEUDO\_DIR=} directory where pseudopotential files reside\\
   \texttt{TMP\_DIR=} directory to be used as temporary storage area
 \end{quote}
-If you have downloaded the full $\nu-$ESPRESSO distribution, you may set
+If you have downloaded the full Quantum-ESPRESSO distribution, you may set
 \texttt{BIN\_DIR=\$TOPDIR/bin} and
 \texttt{PSEUDO\_DIR=\$TOPDIR/pseudo}, where \texttt{\$TOPDIR} is the
-root of the $\nu-$ESPRESSO source tree.
+root of the Quantum-ESPRESSO source tree.
 
 The \texttt{PSEUDO\_DIR} directory must contain the following files:    
 \begin{quote}
@@ -902,7 +908,7 @@ The \texttt{PSEUDO\_DIR} directory must contain the following files:
 
 If any of these are missing, you may not be able to run some of the
 examples.  You can download them from the Pseudopotentials Page of the
-$\nu-$ESPRESSO web site
+Quantum-ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
 
@@ -912,7 +918,7 @@ by the example runs, and possibly offering high I/O performance (i.e.,
 don't use an NFS-mounted directory).
 
   \item
-If you have compiled the parallel version of $\nu-$ESPRESSO (that is the
+If you have compiled the parallel version of Quantum-ESPRESSO (that is the
 default), you'll usually have to specify a driver program (such as
 \texttt{poe} or \texttt{mpiexec}) and the number of processors: read
 section \ref{runparallel}, ``Running on parallel machines'' for
@@ -998,7 +1004,7 @@ and Intel compiler.  For other machines, we rely on user's feedback.
 \paragraph{All machines}
 
 Working fortran-95 and C compilers are needed in order to compile 
-$\nu-$ESPRESSO. Most so-called ``fortran-90'' compilers implement the 
+Quantum-ESPRESSO. Most so-called ``fortran-90'' compilers implement the 
 fortran-95 standard, but older versions may not be fortran-95
 compliant.
 
@@ -1048,7 +1054,7 @@ on Linux Alphas, check the following page:
 
 The web site of Axel Kohlmeyer contains a very informative section 
 on compiling and running CPMD on Linux.
-Most of its contents applies to the $\nu-$ESPRESSO code as well:\hfill\break
+Most of its contents applies to the Quantum-ESPRESSO code as well:\hfill\break
 \htmladdnormallink%
 {\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html}}%
 {http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html}.
@@ -1095,7 +1101,7 @@ With some precompiled lapack libraries, you may need to add
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
-$\nu-$ESPRESSO does not work reliably, or not at all, with some versions of
+Quantum-ESPRESSO does not work reliably, or not at all, with some versions of
 the Portland Group compiler.  In particular, with some versions PWscf
 works only for small systems, but not for larger systems.  We think
 that this is a compiler bug.  Use the latest version of each release
@@ -1236,16 +1242,16 @@ computational platform nowadays. Two major MPI implementations
 (MPICH, LAM-MPI) are available. The number of possible
 configurations, in terms of type and and version of the MPI 
 libraries, kernels, system libraries, compilers, is very large. 
-$\nu-$ESPRESSO compiles and works on all non-buggy, properly configured 
+Quantum-ESPRESSO compiles and works on all non-buggy, properly configured 
 configuration. You may have to recompile MPI libraries in order 
 to be able to use them with the Intel compiler. See Axel Kohlmeyer's 
 web site for precompiled versions of the MPI library.
 
-If $\nu-$ESPRESSO does not work for some reason on a PC cluster, try first 
+If Quantum-ESPRESSO does not work for some reason on a PC cluster, try first 
 if it works in serial execution. If the problem is clearly related to
 parallelism, it is likely that your MPI libraries are buggy or not
 properly configured: see Axel Kohlmeyer's web site for help.
-A frequent problem is that $\nu-$ESPRESSO does not read from standard 
+A frequent problem is that Quantum-ESPRESSO does not read from standard 
 output: see section ``Running on parallel machines''.
 If you are dissatisfied with the performances in parallel 
 execution, read the ``Parallelization issues'' section.
@@ -1302,7 +1308,7 @@ partitioned into 8 pools (2 processors each), for several typical
 cases.
 For convenience, we also give the corresponding values of
 \texttt{PARA\_PREFIX}, \texttt{PARA\_POSTFIX} to be used in running
-the examples distributed with $\nu-$ESPRESSO (see section \ref{runexamples},
+the examples distributed with Quantum-ESPRESSO (see section \ref{runexamples},
 ``Run examples'').
 
 \begin{description}
@@ -1380,7 +1386,7 @@ Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
 implemented with US PPs. Presently FPMD supports only NC PPs.
 
-The $\nu-$ESPRESSO package uses a unified pseudopotential format (UPF)
+The Quantum-ESPRESSO package uses a unified pseudopotential format (UPF)
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
 for all types of PPs, but still accepts a number of other formats:
@@ -1398,7 +1404,7 @@ Note however that PWscf accept the first, fourth and fifth in the
 above list; CP the second, fourth and fifth; FPMD the third only.
 
 PPs for selected elements can be downloaded from the Pseudopotentials
-Page of the $\nu-$ESPRESSO web site
+Page of the Quantum-ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
 If you do not find there the PP you need (because there is no PP for
@@ -1414,7 +1420,7 @@ tables, such as e.g.:
   \item S. Goedecker, M. Teter, and J. Hutter, Phys. Rev. B
         \textbf{54}, 1703 (1996)
 \end{itemize}
-or otherwise it must be generated. Since version 2.1, $\nu-$ESPRESSO 
+or otherwise it must be generated. Since version 2.1, Quantum-ESPRESSO 
 includes a PP generation package, in the
 directory \texttt{atomic/} (sources) and \texttt{atomic\_doc/}
 (documentation, tests and examples). 
@@ -1448,7 +1454,7 @@ can be converted to unified format using the utilities of directory
 
 Finally, other electronic-structure packages (CAMPOS, ABINIT)
 provide tables of PPs that can be freely downloaded, but need
-to be converted into a suitable format for use with $\nu-$ESPRESSO.
+to be converted into a suitable format for use with Quantum-ESPRESSO.
 
 Remember: \emph{always} test the PPs on simple test systems before
 proceeding to serious calculations.
@@ -1459,12 +1465,12 @@ proceeding to serious calculations.
 
 Input files for the PWscf codes may be either written by hand (the
 good old way), or produced via the ``PWgui'' graphical interface
-by Anton Kokalj, included in the $\nu-$ESPRESSO distribution.
+by Anton Kokalj, included in the Quantum-ESPRESSO distribution.
 See \texttt{PWgui-}\emph{x.y.z}\texttt{/INSTALL} (where \emph{x.y.z}
 is the version number) for more info on PWgui, or \texttt{GUI/README}
 if you are using CVS sources.
 
-You may take the examples distributed with $\nu-$ESPRESSO as templates for
+You may take the examples distributed with Quantum-ESPRESSO as templates for
 writing your own input files: see section \ref{runexamples}, ``Run
 examples''.  In the following, whenever we mention ``Example N'', we
 refer to those.
@@ -2376,7 +2382,7 @@ calculations are not at all an "embarrassing parallel" problem.
 Note that multiprocessor motherboards for Intel Pentium CPUs typically
 have just one memory bus for all processors.
 This dramatically slows down any code doing massive access to memory
-(as most codes in the $\nu-$ESPRESSO package do) that runs on processors of
+(as most codes in the Quantum-ESPRESSO package do) that runs on processors of
 the same motherboard.
 
 \clearpage
