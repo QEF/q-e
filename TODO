@@ -3,6 +3,7 @@ TODO LIST - 7 june 2005
 BUGS TO EXAMINE
 
 - Zr pp buggy?
+- wavefunctions in Cu.pbe-d-rrkjus.UPF not normalized?
 
 NEW DEVELOPMENTS TO MERGE
 
@@ -110,7 +111,7 @@ PH, D3, Gamma, Raman
 - use charge mixing instead of potential mixing
 
 - finish simplification of phonon dispersion calculation:
-  move all phonon-specific stuff (symmetry etc) from pw into phonon?
+  move all phonon-specific stuff (symmetry etc) from pw into phonon
 
 - same input for Gamma and PH
 

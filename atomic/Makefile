@@ -89,11 +89,16 @@ MODULES = \
 ../Modules/readpseudo.o \
 ../PW/bachel.o 
 
-all: ld1.x
+TLDEPS= bindir mods libs pw
 
-ld1.x: $(LD1OBJS) ld1.o
-	$(LD) -o ld1.x ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LDFLAGS)
+all: tldeps ld1.x
+
+ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(MODULES) $(LIBOBJS)
+	$(LD) -o ld1.x ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean:
 	- /bin/rm -f *.o *.F90 *.x $(LIB) *~ *.d *.mod *.tmp.* work.pc

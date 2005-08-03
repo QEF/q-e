@@ -428,11 +428,15 @@ raman.o    \
 dhdrhopsi.o\
 set_dvscf.o
 
-all : ph.x
+TLDEPS= bindir mods libs pw
 
-ph.x : $(PHOBJS) $(RAMAN)
-	$(LD) -o ph.x $(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LDFLAGS)
+all : tldeps ph.x
+
+ph.x : $(PHOBJS) $(RAMAN) $(LIBOBJS)
+	$(LD) -o ph.x $(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f ph.x *.o *~ *.F90 *.d *.mod *.i work.pc

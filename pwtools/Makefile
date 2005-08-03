@@ -43,52 +43,56 @@ MODULES = \
 ../Modules/splinelib.o \
 ../Modules/timestep.o
 
-all : band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
+TLDEPS= bindir mods libs pw
+
+all : tldeps band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
       path_int.x pwi2xsf.x q2r.x
 
-band_plot.x : band_plot.o
-	$(LD) -o $@ band_plot.o $(LDFLAGS)
+band_plot.x : band_plot.o $(LIBOBJS)
+	$(LD) -o $@ band_plot.o $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-dist.x : dist.o
-	$(LD) -o $@ dist.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ dist.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-dynmat.x : dynmat.o rigid.o
-	$(LD) -o $@ dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-ev.x : ev.o
-	$(LD) -o $@ ev.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ ev.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-fqha.x : fqha.o
-	$(LD) -o $@ fqha.o $(LDFLAGS)
+fqha.x : fqha.o $(LIBOBJS)
+	$(LD) -o $@ fqha.o $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-kpoints.x : kpoints.o
-	$(LD) -o $@ kpoints.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+kpoints.x : kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-lambda.x : lambda.o
-	$(LD) -o $@ lambda.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-matdyn.x : matdyn.o rigid.o
-	$(LD) -o $@ matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-path_int.x : path_int.o
-	$(LD) -o $@ path_int.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-pwi2xsf.x : pwi2xsf.o
-	$(LD) -o $@ pwi2xsf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-q2r.x : q2r.o rigid.o
-	$(LD) -o $@ q2r.o rigid.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f pwi2xsf pwi2xsf_old *.x *.o *~ *.F90 *.mod *.d *.i work.pc

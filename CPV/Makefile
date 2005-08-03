@@ -130,14 +130,16 @@ indices.o \
 miller.o
 
 WRAPPERS = wrapper.o
+TLDEPS= bindir mods libs libiotk
 
-all : cp.x fpmd.x fpmdpp.x
-fpmd : fpmd.x fpmdpp.x
-cp : cp.x
+all : tldeps cp.x fpmd.x fpmdpp.x
+fpmd : tldeps fpmd.x fpmdpp.x
+cp : tldeps cp.x
 
 
-cp.x : cprstart.o get_cp.o $(FOBJS) $(LIBOBJ)
-	$(LD) -o cp.x cprstart.o get_cp.o $(FOBJS) $(LIBOBJ) ../Modules/*.o ../flib/eispack.o $(LDFLAGS)
+cp.x : cprstart.o get_cp.o $(FOBJS) $(LIBOBJ) $(LIBOBJS)
+	$(LD) -o cp.x cprstart.o get_cp.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
+		../flib/eispack.o $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 
@@ -147,15 +149,18 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-fpmd.x : cprstart.o get_fpmd.o $(FOBJS) $(LIBOBJ)
+fpmd.x : cprstart.o get_fpmd.o $(FOBJS) $(LIBOBJ) $(LIBOBJS)
 	$(LD) -o fpmd.x cprstart.o get_fpmd.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
 		../flib/eispack.o ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-		$(LDFLAGS)
+		$(LIBOBJS) $(LDFLAGS)
 	- (cd ../bin ; ln -fs ../CPV/fpmd.x . )
 
-fpmdpp.x : fpmdpp.o
-	$(LD) -o fpmdpp.x fpmdpp.o $(LDFLAGS)
+fpmdpp.x : fpmdpp.o $(LIBOBJS)
+	$(LD) -o fpmdpp.x fpmdpp.o $(LIBOBJS) $(LDFLAGS)
 	- (cd ../bin ; ln -fs ../CPV/fpmdpp.x . )
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f fpmd.x fpmdpp.x *.o *.mod version.h *.i core* *.F90 fort* \

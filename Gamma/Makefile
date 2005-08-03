@@ -311,11 +311,15 @@ solve_ph.o \
 writedyn.o \
 zvscal.o
 
-all : phcg.x
+TLDEPS= bindir mods libs pw
 
-phcg.x : $(PWOBJS) $(CGOBJS)
-	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+all : tldeps phcg.x
+
+phcg.x : $(PWOBJS) $(CGOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f *.x *.o *.d *.i *~ *.F90 *.mod work.pc

@@ -24,85 +24,85 @@ default :
 
 pw : bindir mods libs libiotk
 	if test -d PW ; then \
-	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 fpmd : bindir mods libs libiotk
 	if test -d CPV ; then \
-	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) fpmd ; \
-	else $(MAKE) $(MFLAGS) fpmd ; fi ) ; fi
+	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= fpmd ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= fpmd ; fi ) ; fi
 
 cp : bindir mods libs libiotk
 	if test -d CPV ; then \
-	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) cp ; \
-	else $(MAKE) $(MFLAGS) cp ; fi ) ; fi
+	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= cp ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= cp ; fi ) ; fi
 
 ph : bindir mods libs pw
 	if test -d PH ; then \
-	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd PH ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 pp : bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 gamma : bindir mods libs pw
 	if test -d Gamma ; then \
-	( cd Gamma ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd Gamma ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 pwcond : bindir mods libs pw pp
 	if test -d PWCOND ; then \
-	( cd PWCOND ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd PWCOND ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 d3 : bindir mods libs pw ph
 	if test -d D3 ; then \
-	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 raman : bindir mods libs pw ph
 	if test -d Raman ; then \
-	( cd Raman ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd Raman ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
-	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 ld1 : bindir mods libs pw
 	if test -d atomic ; then \
-	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 upf : mods libs
 	if test -d upftools ; then \
-	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi ) ; fi
+	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 libiotk :
 	if test -d iotk ; then \
-	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) libiotk.a ; \
-	else $(MAKE) $(MFLAGS) libiotk.a ; fi ) ; fi
+	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= libiotk.a ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= libiotk.a ; fi ) ; fi
 
 pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
-	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) pw_export.x ; \
-	else $(MAKE) $(MFLAGS) pw_export.x ; fi ) ; fi
+	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
 pwall : pw ph pp gamma pwcond d3 tools
 all   : pwall fpmd cp ld1 upf 
 
 mods : libiotk
-	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi )
+	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 libs : mods
-	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi )
-	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) all ; \
-	else $(MAKE) $(MFLAGS) all ; fi )
+	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 bindir :
 	test -d bin || mkdir bin
 
@@ -116,8 +116,8 @@ clean :
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; touch make.depend ; \
-		if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
-		else $(MAKE) $(MFLAGS) clean ; fi ) \
+		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= clean ; \
+		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
 	    fi \
 	done
 	- /bin/rm -rf bin/*.x
@@ -130,8 +130,8 @@ veryclean : clean
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
 	- if test -d GUI ; then \
-	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) veryclean ; \
-		else $(MAKE) $(MFLAGS) veryclean ; fi ) \
+	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= veryclean ; \
+		else $(MAKE) $(MFLAGS) TLDEPS= veryclean ; fi ) \
 	  fi
 
 tar :
@@ -153,8 +153,8 @@ tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
 	    if test "$(MAKE)" = "" ; then \
-		make $(MFLAGS) clean cvsinit pwgui-source-notcl; \
-	    else $(MAKE) $(MFLAGS) clean cvsinit pwgui-source-notcl; fi \
+		make $(MFLAGS) TLDEPS= clean cvsinit pwgui-source-notcl; \
+	    else $(MAKE) $(MFLAGS) TLDEPS= clean cvsinit pwgui-source-notcl; fi \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \

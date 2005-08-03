@@ -387,11 +387,15 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-all : d3.x
+TLDEPS= bindir mods libs pw ph
 
-d3.x : $(D3OBJS)
-	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+all : tldeps d3.x
+
+d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../D3/d3.x . )
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod work.pc

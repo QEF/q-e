@@ -239,7 +239,6 @@ PWOBJS = \
 ../PW/make_pointlists.o \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
-../PW/mix_rho_nc.o \
 ../PW/mode_group.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
@@ -340,10 +339,14 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-all : nmr.x
+TLDEPS=bindir mods libs libiotk pw ph
 
-nmr.x : $(NMROBJ)
-	$(LD) -o nmr.x $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+all : tldeps nmr.x
+
+nmr.x : $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o nmr.x $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f nmr.x *.o *~ *.F90 *.d *.mod *.i work.pc
