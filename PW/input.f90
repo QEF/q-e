@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2002-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -1653,7 +1653,7 @@ SUBROUTINE verify_tmpdir()
   IMPLICIT NONE
   !
   INTEGER            :: l, ios, image, proc
-  CHARACTER (LEN=80) :: file_path, tmp_dir_saved
+  CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   INTEGER, EXTERNAL  :: c_mkdir
   !
   !

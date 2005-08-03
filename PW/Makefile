@@ -314,17 +314,20 @@ MODULES = \
 ../Modules/timestep.o \
 ../Modules/xml_io_base.o
 
+TLDEPS=bindir mods libs libiotk
 
+all : tldeps memory.x pw.x
 
-all : memory.x pw.x
-
-memory.x : memory.o $(PWOBJS)
-	$(LD) -o $@ memory.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+memory.x : memory.o $(PWOBJS) $(LIBOBJS)
+	$(LD) -o $@ memory.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
-pw.x : pwscf.o $(PWOBJS)
-	$(LD) -o $@ pwscf.o $(PWOBJS) $(MODULES) $(LDFLAGS)
+pw.x : pwscf.o $(PWOBJS) $(LIBOBJS)
+	$(LD) -o $@ pwscf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
 	- /bin/rm -f pw.x memory.x *.o *~ *.F90 *.d *.mod *.i work.pc
