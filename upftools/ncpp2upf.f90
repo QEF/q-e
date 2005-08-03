@@ -329,6 +329,9 @@ subroutine convert_ncpp
            exit
         end if
      end do
+
+! make sure kkbeta is odd as required for simpson
+     if(mod(kkbeta,2) == 0) kkbeta=kkbeta-1 
      ikk2(:) = kkbeta
      allocate(aux(kkbeta))
      allocate(betar(mesh,nbeta))
@@ -351,6 +354,7 @@ subroutine convert_ncpp
            call simpson(kkbeta,aux,rab,vll)
            dion(iv,iv) = 1.0d0/vll
         end if
+        if(iv >= nbeta) exit  ! skip additional pseudo wfns
      enddo
      deallocate (vnl, aux)
 
