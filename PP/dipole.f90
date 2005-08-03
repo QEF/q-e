@@ -5,13 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 program dipole
   !-----------------------------------------------------------------------
   !
   !      DESCRIPTION of the INPUT: see file INPUT_CHDENS in pwdocs/
-  !      (only for variables: nfile filepp weight e1,e2,e3 nx,ny,nz x0)
+  !      (only for variables: nfile filepp weight x0)
   ! 
   !      Calculation of the dipole moment:
   !          to be used for an isolated molecule in a box;
@@ -19,7 +18,7 @@ program dipole
   !          The code computes the dipole on the Wigner-Seitz cell of
   !          the Bravais lattice. The 3d box must contain this cell 
   !          otherwise meaningless numbers are obtained
-  !      
+  !
   !      Calculation of Makov-Payne correction for charged supercells:
   !          - not thoroughly tested
   !          - works only for clusters embedded within a cubic supercell
@@ -52,28 +51,22 @@ program dipole
   integer, parameter :: nfilemax = 7
   ! maximum number of files with charge
 
-  integer :: ounit, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, ir, i, j, ig, plot_num
+  integer :: nfile, plot_num
 
-  real(kind=DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
-       weight (nfilemax)
+  real(kind=DP) :: x0 (3), weight (nfilemax), dipol(0:3), quadrupol
 
-  character (len=256) :: filepol, filename (nfilemax)
+  character (len=256) :: filename (nfilemax)
 
   real(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
   real(kind=DP), allocatable :: taus (:,:), rhor(:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   integer, allocatable :: ityps (:)
+  integer :: ios, ipol, ifile, na, ir, i, j
   character (len=3) :: atms(ntypx)
   character (len=256) :: filepp(nfilemax)
-  real(kind=DP) :: rhodum, dipol(0:3), quadrupol, rhotot
-  complex(kind=DP), allocatable:: rhog (:)
-  ! rho or polarization in G space
-  logical :: fast3d
 
-  namelist /input/  &
-       nfile, filepp, weight, e1, e2, e3, nx, ny, nz, x0
+  namelist /input/  nfile, filepp, weight, x0
   !
   call start_postproc (nd_nmbr)
   !
@@ -82,14 +75,7 @@ program dipole
   nfile         = 1
   filepp(1)   = ' '
   weight(1)     = 1.0d0
-  radius        = 1.0d0
-  e1(:)         = 0.d0
-  e2(:)         = 0.d0
-  e3(:)         = 0.d0
   x0(:)         = 0.d0
-  nx            = 0
-  ny            = 0
-  nz            = 0
   !
   !    read and check input data
   !
@@ -101,16 +87,8 @@ program dipole
 200 call errore ('dipole', 'reading input namelist', abs (ios) )
 
   ! check for number of files
-  if (nfile.le.0.or.nfile.gt.nfilemax) &
+  if (nfile < 1 .or. nfile > nfilemax) &
        call errore ('dipole ', 'nfile is wrong ', 1)
-
-  ! 3D plot : check variables
-
-  if ( e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) > 1d-6 .or. &
-       e1(1)*e3(1) + e1(2)*e3(2) + e1(3)*e3(3) > 1d-6 .or. &
-       e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
-       call errore ('dipole', 'e1, e2, e3 are not orthogonal', 1)
-
   !
   ! Read the header and allocate objects
   !
@@ -118,9 +96,6 @@ program dipole
   call read_io_header(filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                 nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num )
   !
-  ! ... see comment above
-  !
-  
   allocate(tau (3, nat))
   allocate(ityp(nat))
   allocate(rhor(nrx1*nrx2*nrx3))
@@ -136,7 +111,7 @@ program dipole
   endif
 
   nspin = 1
-  if (ibrav.gt.0) then
+  if (ibrav > 0) then
     call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
     at = at / alat !  bring at in units of alat
   end if
@@ -146,7 +121,7 @@ program dipole
 
   call set_fft_dim ( )
 
-  call allocate_fft ( )
+  allocate (rho (nrx1*nrx2*nrx3,1))
   !
   ! Read first file
   !
@@ -185,334 +160,73 @@ program dipole
      !
      rhor (:) = rhor (:) + weight (ifile) * rho (:,1)
   enddo
+  !
+  call dipole_fast (celldm (1), at, nat, omega, tau, &
+       nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
+       x0, dipol, quadrupol)
 
-  !
-  ounit = 6
-
-  !
-  !    At this point we start the calculations, first we normalize the 
-  !    vectors defining the plotting region. 
-  !    If these vectors have 0 length, replace them with crystal axis
-  !
-
-  m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
-  if (abs(m1) < 1.d-6) then
-     e1 (:) = at(:,1)
-     m1 = sqrt (e1 (1)**2 + e1 (2)**2 + e1 (3)**2)
-  end if
-  e1 (:) = e1 (:) / m1
-  !
-  m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
-  if (abs(m2) < 1.d-6) then
-     e2 (:) = at(:,2)
-     m2 = sqrt (e2 (1)**2 + e2 (2)**2 + e2 (3)**2)
-  end if
-  e2 (:) = e2 (:) / m2
-  !
-  m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
-  if (abs(m3) < 1.d-6) then
-     e3 (:) = at(:,3)
-     m3 = sqrt (e3 (1)**2 + e3 (2)**2 + e3 (3)**2)
-  end if
-  e3 (:) = e3 (:) / m3
-  !
-  !    and rebuild G-vectors in reciprocal space
-  !
-  call ggen
-  !
-  !    here we compute the fourier component of the quantity to plot
-  !
-  psic(:) = DCMPLX (rhor(:), 0.d0)
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-  !
-  !    we store the fourier components in the array rhog
-  !
-
-  allocate (rhog( ngm))    
-  do ig = 1, ngm
-     rhog (ig) = psic (nl (ig) )
-  enddo
-
-  ! are vectors defining the plotting region aligned along xyz ?
-
-  fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
-           ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
-           ( e3(1) == 0.d0  .and.  e3(2) == 0.d0) 
-
-  ! are crystal axis aligned along xyz ?
-
-  fast3d = fast3d .and. &
-       ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
-       ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
-       ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
-
-  !
-  if (fast3d) then
-     
-     call dipole_fast (celldm (1), at, nat, tau, &
-          nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
-          bg, m1, m2, m3, x0, e1, e2, e3, dipol(0), quadrupol)
-  else
-     if (nx<=0 .or. ny <=0 .or. nz <=0) &
-          call errore("dipole","nx,ny,nz, required",1)
-
-     call dipole_3d (celldm (1), at, nat, tau, ngm, g, rhog, &
-          nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, dipol(0), quadrupol )
-  end if
-
-  call write_dipol(dipol(0),quadrupol,tau,nat,alat,zv,ntyp,ityp, &
-       ibrav, rhotot)
+  call write_dipol(dipol,quadrupol,tau,nat,alat,zv,ntyp,ityp, &
+       ibrav)
  
   deallocate(rhor)
-  deallocate(rhog)
   deallocate(tau)
   deallocate(ityp)
   call stop_pp
 end program dipole
 !
 !-----------------------------------------------------------------------
-subroutine dipole_3d (alat, at, nat, tau, ngm, g, rhog, &
-     nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, dipol, quadrupol )
-  !-----------------------------------------------------------------------
-  !
-  USE kinds, only : DP
-  use constants, only:  pi 
-  implicit none
-  integer :: nat, ngm, nx, ny, nz
-  ! number of atoms, number of G vectors, number of points along x, y, z
-
-  real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
-                   e1(3), e2(3), e3(3), m1, m2, m3, dipol(0:3), quadrupol
-  ! lattice parameter
-  ! atomic positions
-  ! lattice vectors
-  ! G-vectors
-  ! origin
-  ! vectors e1,e2,e3 defining the parallelepiped
-  ! moduli of e1,e2,e3
-  ! electronic dipole & quadrupole moments
-
-  complex(kind=DP) :: rhog (ngm)
-  ! rho or polarization in G space
-  integer :: i, j, k, ig
-
-  real(kind=DP) :: deltax, deltay, deltaz
-  ! steps along e1, e2, e3
-  complex(kind=DP), allocatable :: eigx (:), eigy (:), eigz (:)
-  real(kind=DP), allocatable :: carica (:,:,:), rws(:,:)
-  real(kind=dp) :: wsweight, r(3), omega, fact
-  integer :: ipol, na, nrwsx, nrws
-
-  allocate (eigx(  nx))    
-  allocate (eigy(  ny))    
-  allocate (eigz(  nz))    
-  allocate (carica( nx , ny , nz))    
-
-  deltax = m1 / nx 
-  deltay = m2 / ny 
-  deltaz = m3 / nz 
-
-  carica = 0.d0
-  do ig = 1, ngm
-     !
-     ! eigx=exp(iG*e1+iGx0), eigy=exp(iG*e2), eigz=exp(iG*e3)
-     ! These factors are calculated and stored in order to save CPU time
-     !
-     do i = 1, nx
-        eigx (i) = exp( (0.d0,1.d0) * 2.d0 * pi * ( (i-1) * deltax * &
-             (e1(1)*g(1,ig)+e1(2)*g(2,ig)+e1(3)*g(3,ig)) + &
-             ( x0(1)*g(1,ig)+ x0(2)*g(2,ig)+ x0(3)*g(3,ig)) ) )
-     enddo
-     do j = 1, ny
-        eigy (j) = exp( (0.d0,1.d0) * 2.d0 * pi * (j-1) * deltay * &
-             (e2(1)*g(1,ig)+e2(2)*g(2,ig)+e2(3)*g(3,ig)) )
-     enddo
-     do k = 1, nz
-        eigz (k) = exp( (0.d0,1.d0) * 2.d0 * pi * (k-1) * deltaz * &
-             (e3(1)*g(1,ig)+e3(2)*g(2,ig)+e3(3)*g(3,ig)) )
-     enddo
-     do k = 1, nz
-        do j = 1, ny
-           do i = 1, nx
-              carica (i, j, k) = carica (i, j, k) + &
-                   DREAL (rhog (ig) * eigz (k) * eigy (j) * eigx (i) )
-           enddo
-        enddo
-     enddo
-
-  enddo
-  !
-  !    compute the dipole of the charge
-  !
-  call volume(alat,e1(1),e2(1),e3(1),omega)
-
-  nrwsx=125
-  allocate(rws(0:3,nrwsx))
-  call wsinit(rws,nrwsx,nrws,at) 
-
-  fact=0.d0
-  dipol=0.d0
-  quadrupol=0.d0
-  do k = 1, nz
-     do j = 1, ny
-        do i = 1, nx
-           do ipol=1,3
-              r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
-                               (j-1)*e2(ipol)*deltay + &
-                               (k-1)*e3(ipol)*deltaz
-           enddo
-           fact=wsweight(r,rws,nrws)
-           dipol(0) = dipol(0) + fact*carica (i, j, k) 
-           do ipol=1,3
-              dipol(ipol)=dipol(ipol)+fact*r(ipol)*carica(i,j,k)
-              quadrupol=quadrupol + fact*carica (i, j, k)*r(ipol)**2
-           enddo
-        enddo
-     enddo
-  enddo
-
-  dipol(0) = dipol(0)  * omega * deltax * deltay * deltaz
-  do ipol=1,3
-     dipol(ipol)=dipol(ipol)  * omega * deltax * deltay * deltaz * alat
-  enddo
-  quadrupol = quadrupol * omega * deltax * deltay * deltaz * alat**2 
-
-  deallocate (carica)
-  deallocate (rws)
-  deallocate (eigz)
-  deallocate (eigy)
-  deallocate (eigx)
-  return
-end subroutine dipole_3d
-!
-!-----------------------------------------------------------------------
-subroutine dipole_fast (alat, at, nat, tau, nrx1, nrx2, nrx3, nr1, nr2, nr3,&
-     rho, bg, m1, m2, m3, x0, e1, e2, e3, dipol, quadrupol)
+subroutine dipole_fast (alat, at, nat, omega, tau, nrx1, nrx2, nrx3, &
+     nr1, nr2, nr3, rhor, x0, dipol, quadrupol)
   !-----------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none
   integer :: nat, nrx1, nrx2, nrx3, nr1, nr2, nr3
+  real(kind=DP) :: alat, omega, tau (3, nat), at (3, 3), &
+       rhor(nrx1,nrx2,nrx3), x0 (3), dipol(0:3), quadrupol
 
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
-       bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3, dipol(0:3), &
-       quadrupol
+  real(kind=DP) :: r(3)
+  integer :: i,j,k, i1,j1,k1, ipol
 
-  integer :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
-  real(kind=DP), allocatable :: carica (:,:,:), rws(:,:)
-  real(kind=DP) :: deltax, deltay, deltaz, debye
-  real(kind=dp) :: wsweight, r(3), omega, fact
-  integer :: ipol, na, nrwsx, nrws
-
-  ! find FFT grid point closer to X0 (origin of the parallelepiped)
-  ! (add 1 because r=0 correspond to n=1)
-
-  nx0 = nint ( (x0(1)*bg(1,1) + x0(2)*bg(2,1) + x0(3)*bg(3,1) )*nr1) + 1
-  ny0 = nint ( (x0(1)*bg(1,2) + x0(2)*bg(2,2) + x0(3)*bg(3,2) )*nr2) + 1
-  nz0 = nint ( (x0(1)*bg(1,3) + x0(2)*bg(2,3) + x0(3)*bg(3,3) )*nr3) + 1
-  !
-  if ( e1(2) .ne. 0.d0  .or.  e1(3) .ne. 0.d0 .or. &
-       e2(1) .ne. 0.d0  .or.  e2(3) .ne. 0.d0 .or. &
-       e3(1) .ne. 0.d0  .or.  e3(2) .ne. 0.d0 )   &
-       call errore ('dipole_fast','need vectors along x,y,z',1)
-
-  ! find FFT grid points closer to X0 + e1, X0 + e2, X0 + e3
-  ! (the opposite vertex of the parallelepiped)
-
-  nx1 = nint ( ((x0(1)+m1)*bg(1,1)+x0(2)*bg(2,1)+x0(3)*bg(3,1) )*nr1)
-  ny1 = nint ( (x0(1)*bg(1,2)+(x0(2)+m2)*bg(2,2)+x0(3)*bg(3,2) )*nr2)
-  nz1 = nint ( (x0(1)*bg(1,3)+x0(2)*bg(2,3)+(x0(3)+m3)*bg(3,3) )*nr3)
-
-  nx = nx1 - nx0 + 1
-  ny = ny1 - ny0 + 1
-  nz = nz1 - nz0 + 1
-
-  allocate ( carica(nx, ny, nz) )    
-
-  carica = 0.d0
-  do k = nz0, nz1
-     k1 = mod(k, nr3)
-     if (k1.le.0) k1 = k1 + nr3
-     do j = ny0, ny1
-        j1 = mod(j, nr2)
-        if (j1.le.0) j1 = j1 + nr2
-        do i = nx0, nx1
-           i1 = mod(i, nr1)
-           if (i1.le.0) i1 = i1 + nr1
-           carica (i-nx0+1, j-ny0+1, k-nz0+1) = rho(i1, j1, k1)
-        enddo
-     enddo
-  enddo
-  !
-  ! recalculate m1, m2, m3 (the sides of the parallelepiped divided by alat)
-  ! consistent with the FFT grid
-  !
-  WRITE( stdout,'(5x,"Requested parallelepiped sides : ",3f8.4)') m1, m2,m3
-  m1 = nx * sqrt (at(1, 1) **2 + at(2, 1) **2 + at(3, 1) **2) / nr1
-  m2 = ny * sqrt (at(1, 2) **2 + at(2, 2) **2 + at(3, 2) **2) / nr2
-  m3 = nz * sqrt (at(1, 3) **2 + at(2, 3) **2 + at(3, 3) **2) / nr3
-  WRITE( stdout,'(5x,"Redefined parallelepiped sides : ",3f8.4)') m1, m2,m3
-  !
-  ! recalculate x0 (the origin of the parallelepiped)
-  ! consistent with the FFT grid
-  !
-  WRITE( stdout,'(5x,"Requested parallelepiped origin: ",3f8.4)') x0
-  x0(1)=(nx0-1)*at(1,1)/ nr1 +(ny0-1)*at(1,2)/ nr2 +(nz0-1)*at(1,3)/ nr3
-  x0(2)=(nx0-1)*at(2,1)/ nr1 +(ny0-1)*at(2,2)/ nr2 +(nz0-1)*at(2,3)/ nr3
-  x0(3)=(nx0-1)*at(3,1)/ nr1 +(ny0-1)*at(3,2)/ nr2 +(nz0-1)*at(3,3)/ nr3
-  WRITE( stdout,'(5x,"Redefined parallelepiped origin: ",3f8.4)') x0
-
-  deltax = m1/nx 
-  deltay = m2/ny 
-  deltaz = m3/nz 
-  !
-  !    Here we check the value of the resulting charge
-  !    and compute the dipole 
-  !
-  call volume(alat,at(1,1),at(1,2),at(1,3),omega)
-
-  nrwsx=125
-  allocate(rws(0:3,nrwsx))
-  call wsinit(rws,nrwsx,nrws,at) 
-  fact=0.d0
   dipol=0.d0
   quadrupol=0.d0
-  do k = 1, nz  
-     do j = 1, ny  
-        do i = 1, nx  
+  do k1 = -nr3/2, nr3/2
+     k = k1 + 1
+     if (k < 1) k = k + nr3
+     do j1 = -nr2/2, nr2/2
+        j = j1 + 1
+        if (j < 1) j = j + nr2
+        do i1 = -nr1/2, nr1/2  
+           i = i1 + 1
+           if (i < 1) i = i + nr1
+           dipol(0) = dipol(0) + rhor (i, j, k) 
            do ipol=1,3
-              r(ipol)=x0(ipol)+(i-1)*e1(ipol)*deltax + &
-                               (j-1)*e2(ipol)*deltay + &
-                               (k-1)*e3(ipol)*deltaz
+!!! x0 ???
+              r(ipol) = i1*at(ipol,1)/nr1 + &
+                        j1*at(ipol,2)/nr2 + &
+                        k1*at(ipol,3)/nr3
            enddo
-           fact=wsweight(r,rws,nrws)
-           dipol(0) = dipol(0) + fact*carica (i, j, k) 
            do ipol=1,3
-              dipol(ipol)=dipol(ipol)+fact*r(ipol)*carica(i,j,k)
-              quadrupol=quadrupol + fact*carica (i, j, k)*r(ipol)**2
+              dipol(ipol)=dipol(ipol) + r(ipol)*rhor(i,j,k)
+              quadrupol = quadrupol + rhor (i, j, k)*r(ipol)**2
            enddo
         enddo
      enddo
   enddo
 
-  dipol(0) = dipol(0) * omega * deltax * deltay * deltaz 
+  dipol(0) = dipol(0) * omega / (nr1*nr2*nr3)
   do ipol=1,3
-     dipol(ipol)=dipol(ipol) * omega * deltax * deltay * deltaz * alat 
+     dipol(ipol)=dipol(ipol) * omega / (nr1*nr2*nr3) * alat
   enddo
-  quadrupol = quadrupol * omega * deltax * deltay * deltaz * alat**2 
+  quadrupol = quadrupol * omega / (nr1*nr2*nr3) * alat**2 
 
-  if (omega > m1*m2*m3*alat**3) &
-     WRITE( stdout,*) 'Warning: the box is too small to calculate dipole'
-  !
-  deallocate (carica)
-  deallocate (rws)
   return
 end subroutine dipole_fast
 !
 !------------------------------------------------------------
 subroutine write_dipol(dipol_el,quadrupol_el,tau,nat,alat,zv, &
-     ntyp,ityp,ibrav, rhotot)
+     ntyp,ityp,ibrav)
   !-----------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE kinds, only : dp
@@ -549,9 +263,9 @@ subroutine write_dipol(dipol_el,quadrupol_el,tau,nat,alat,zv, &
   !
   !   compute ionic+electronic total charge, dipole and quadrupole moments
   !
-  qq = -rhotot+zvtot
-  dipol = -dipol_el(1:3)+dipol_ion
-  quadrupol = -quadrupol_el+quadrupol_ion
+  qq = -dipol_el(0) + zvtot
+  dipol(:) = -dipol_el(1:3) + dipol_ion(:)
+  quadrupol = -quadrupol_el + quadrupol_ion
 
   !
   !  Makov-Payne correction, PRB 51, 43014 (1995)
@@ -607,7 +321,7 @@ subroutine write_dipol(dipol_el,quadrupol_el,tau,nat,alat,zv, &
        Madelung(ibrav)
   WRITE( stdout, '(/,"Warning: results are meaningless if the cluster is &
        & not centered within the 3d box.")')
-  WRITE( stdout, '(/4x,"Electron charge: ",f15.8," el.")') -rhotot
+  WRITE( stdout, '(/4x,"Electron charge: ",f15.8," el.")') -dipol_el(0)
   WRITE( stdout, '(4x,"   Ionic charge: ",f15.8," el.")') zvtot
   WRITE( stdout, '(4x,"   Total charge: ",f15.8," el.")') qq
   !
