@@ -21,12 +21,12 @@ subroutine transmit(ik, ien)
   use cond
 implicit none
 
-  integer :: ik, ien, n, iorb, iorb1, iorb2, nt, &
+  integer :: ik, ien, n, iorb, iorb1, iorb2, iorba, ipol, nt, &
              ih, ih1, ig, ntran, ij, is, js, info
   integer, allocatable :: ipiv(:)
   real(kind=DP) :: tk, tj, tij, eev
   real(kind=DP), allocatable :: zps(:,:), eigen(:)
-  complex(kind=DP) :: x1, x2
+  complex(kind=DP) :: x1, x2, xi1(2)
   complex(kind=DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
                      vec2(:,:), smat(:,:)
@@ -289,14 +289,18 @@ implicit none
     do n = 1, nchanl
      if(eigen(n).gt.1.d-5) then
       do iorb = orbj_in, orbj_fin
-       x1 = 0.d0
-       do ig = 1, 2*n2d
-        x1 = x1+intw1(iorb, ig)*vec2(ig, n)
-       enddo
-       do ig = 1, norbs
-        x1 = x1+intw2(iorb, ig)*vec2(2*n2d+ig, n)
-       enddo
-       write(6,'(2i5,f12.6)') n, iorb-orbj_in+1, DREAL(x1)**2+DIMAG(x1)**2
+         do ipol=1, npol
+            iorba=(iorb-1)*npol+ipol
+            xi1(ipol) = 0.d0
+            do ig = 1, 2*n2d
+               xi1(ipol) = xi1(ipol)+intw1(iorba, ig)*vec2(ig, n)
+            enddo
+            do ig = 1, norbs*npol
+               xi1(ipol) = xi1(ipol)+intw2(iorba, ig)*vec2(2*n2d+ig, n)
+            enddo
+         enddo
+         write(6,'(2i5,2f20.12)') n, iorb-orbj_in+1,   &
+                        (DREAL(xi1(ipol))**2+DIMAG(xi1(ipol))**2,ipol=1,npol)
       enddo
      endif
     enddo
