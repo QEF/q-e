@@ -31,7 +31,10 @@ module exx
   integer :: nqs                 ! number of points in the q-gridd
   integer :: nkqs                ! total number of different k+q
   real (kind=DP), allocatable :: &
-             xkq(:,:)               ! xkq(3,nkqs) the auxiliary k+q set
+             xkq(:,:)            ! xkq(3,nkqs) the auxiliary k+q set
+  real (kind=DP), allocatable :: &
+             x_occupation(:,:)   ! x_occupation(nbnd,nks) the weight of 
+                                 ! auxiliary functions in the density matrix
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
   ! 
@@ -59,6 +62,7 @@ contains
      USE cell_base,  ONLY : tpiba2, omega
      USE wavefunctions_module, ONLY : evc
 
+     implicit none
      integer :: ik, ig
      REAL(KIND=DP) :: alpha, norm
 
@@ -99,8 +103,10 @@ contains
   USE symme,     ONLY : nsym, s
   USE cell_base, ONLY : bg, at
   USE lsda_mod,  ONLY : nspin
-  USE klist
+  USE klist,     ONLY : xk
+  USE wvfct,     ONLY : nbnd
 
+  implicit none
   integer :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
   integer, allocatable :: temp_index_xk(:), temp_index_sym(:)
   integer, allocatable :: temp_index_ikq(:), new_ikq(:)
@@ -111,7 +117,6 @@ contains
 
   call start_clock ('exx_grid')
   eps = 1.d-6
-
   !
   ! set a safe limit as the maximum number of auxiliary points we may need
   ! and allocate auxiliary arrays
@@ -179,8 +184,10 @@ contains
   nqs = nq1 * nq2 * nq3
   if ( nspin == 2 ) then
      allocate ( index_xkq(2*nks,nqs) )
+     allocate ( x_occupation(nbnd,2*nks) )
   else
      allocate ( index_xkq(nks,nqs) )
+     allocate ( x_occupation(nbnd,nks) )
   end if
   nkqs = 0
   new_ikq(:) = 0
@@ -260,6 +267,7 @@ contains
   USE cell_base, ONLY : bg, at
   USE lsda_mod,  ONLY : nspin
   USE klist
+  implicit none
   real (kind=DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
   integer :: iq1, iq2, iq3, isym, ik, ikk, ikq, iq
   real (kind=DP) :: eps, dq1, dq2, dq3
@@ -327,9 +335,11 @@ contains
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
+    USE klist,                ONLY : wk
     USE parser,               ONLY : find_free_unit
     USE symme,                ONLY : nsym, s, ftau
 
+    implicit none
     integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     COMPLEX(KIND=DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
     logical, allocatable :: present(:)
@@ -347,8 +357,8 @@ contains
        call diropn(iunexx,'exx', exx_nwordwfc, exst) 
 
        exxdiv = exx_divergence() 
-       exxalfa = 1.d0
-
+       if (exxalfa == 0.d0) exxalfa = 0.25d0 !  1.d0
+       write (*,*) " ! EXXALFA SET TO ", exxalfa
        exxstart=.true.
     endif
 
@@ -386,8 +396,12 @@ contains
     end do
 
     DO ik = 1, nks
-       call davcio (tempevc, nwordwfc, iunwfc, ik, -1)
-       IF ( nks > 1 ) READ( iunigk ) npw, igk
+       IF ( nks > 1 ) THEN
+          READ( iunigk ) npw, igk
+          CALL davcio (tempevc, nwordwfc, iunwfc, ik, -1)
+       ELSE
+          tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
+       ENDIF
 
        do ibnd =1, nbnd     
           temppsic(:) = ( 0.D0, 0.D0 )
@@ -408,6 +422,13 @@ contains
     end do
     deallocate(temppsic, psic, tempevc)
     deallocate(present,rir)
+
+    ! set appropriately the x_occupation
+    do ik =1,nks
+       do ibnd=1,nbnd
+          x_occupation(ibnd,ik) = wg (ibnd, ik) / wk(ik) 
+       end do
+    end do
 
     call stop_clock ('exxinit')  
 
@@ -435,11 +456,12 @@ contains
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                            nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, et
-    USE klist,     ONLY : xk,wk
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk
+    USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
 
+    implicit none
     INTEGER          :: lda, n, m, kpsi
     COMPLEX(KIND=DP) :: psi(lda,m) 
     COMPLEX(KIND=DP) :: hpsi(lda,m)
@@ -497,7 +519,7 @@ contains
 !             fac(ig)=e2*fpi/tpiba2/(qq + alpha)
           end do
           do ibnd=1,nbnd !for each band of psi
-             if ( abs(wg(ibnd,ik)) < 1.d-6) cycle
+             if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
              !
              !loads the phi from file
              !
@@ -513,7 +535,7 @@ contains
 !                if (fac(ig).gt.e2*fpi/tpiba2/2.1) &
 !                   write (*,*) ig, (rhoc(nls(ig))/rhoc(nls(1))-1.d0) * fac(ig)
              end do
-             vc = vc * wg (ibnd, ik) / wk(ik) / nqs
+             vc = vc * x_occupation(ibnd,ik) / nqs
 
              !brings back v in real space
              CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
@@ -557,9 +579,13 @@ contains
     IF ( nks > 1 ) REWIND( iunigk )
     do ik=1,nks
        currentk = ik
-       IF ( nks > 1 ) READ( iunigk ) npw, igk
        IF ( lsda ) current_spin = isk(ik)
-       call davcio (psi, nwordwfc, iunwfc, ik, -1)
+       IF ( nks > 1 ) THEN
+          READ( iunigk ) npw, igk
+          call davcio (psi, nwordwfc, iunwfc, ik, -1)
+       ELSE
+          psi(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
+       END IF
        vxpsi(:,:) = (0.d0, 0.d0)
 !!    subroutine vexx(lda, n, m, psi, hpsi)
        call vexx(npwx,npw,nbnd,psi,vxpsi)
@@ -573,11 +599,124 @@ contains
     call stop_clock ('exxenergy')
   end function exxenergy
 
+  !-----------------------------------------------------------------------
+  function exxenergy2()
+  !-----------------------------------------------------------------------
+    !
+    USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
+    USE cell_base, ONLY : alat, omega, bg, at
+    USE symme,     ONLY : nsym, s
+    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
+    USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
+                          nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg
+    USE wavefunctions_module, ONLY : evc
+    USE klist,     ONLY : xk
+    USE lsda_mod,  ONLY : lsda, current_spin, isk
+    USE gvect,     ONLY : g, nl
+
+    implicit none
+    REAL (KIND=DP)   :: exxenergy2,  energy
+    INTEGER          :: n, m, kpsi
+
+    ! local variables
+    COMPLEX(KIND=DP), allocatable :: tempphic(:), temppsic(:)
+    COMPLEX(KIND=DP), allocatable :: rhoc(:)
+    real (kind=DP),   allocatable :: fac(:)
+    integer          :: jbnd, ibnd, ik, ikk, ig, ir,  ikq, iq, isym
+    real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
+    real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc
+
+    call start_clock ('exxen2')
+
+
+    energy=0.d0
+
+    tpiba2 = (fpi / 2.d0 / alat) **2
+
+    allocate (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
+
+    IF ( nks > 1 ) REWIND( iunigk )
+    do ikk=1,nks
+       currentk = ikk
+       IF ( lsda ) current_spin = isk(ikk)
+       IF ( nks > 1 ) THEN
+          READ( iunigk ) npw, igk
+          call davcio (evc, nwordwfc, iunwfc, ikk, -1)
+       END IF
+
+       do jbnd=1, nbnd !for each band of psi (the k cycle is outside band)
+          temppsic(:) = ( 0.D0, 0.D0 )
+          temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
+
+          CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+       
+          do iq = 1, nqs
+             ikq  = index_xkq(currentk,iq)
+             ik   = index_xk(ikq)
+             isym = abs(index_sym(ikq))
+
+             xk_cryst(:)=at(1,:)*xk(1,ik)+at(2,:)*xk(2,ik)+at(3,:)*xk(3,ik)
+             if (index_sym(ikq) < 0 ) xk_cryst = - xk_cryst
+             sxk(:) = s(:,1,isym)*xk_cryst(1) + &
+                      s(:,2,isym)*xk_cryst(2) + &
+                      s(:,3,isym)*xk_cryst(3) 
+             xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
+
+             do ig=1,ngm
+                qq = ( xk(1,currentk) - xkq(1) + g(1,ig) )**2 + &
+                     ( xk(2,currentk) - xkq(2) + g(2,ig) )**2 + &
+                     ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
+                if (qq.gt.1.d-8) then
+                   fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
+                else
+                   fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
+ !                            - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
+                   if (yukawa .gt. 1.d-8) then
+                      fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
+                   end if
+!                   fac(ig)= 0.d0 ! or rather something else (see F.Gygi)
+                end if
+!                fac(ig)=e2*fpi/tpiba2/(qq + alpha)
+             end do
+
+             do ibnd=1,nbnd !for each band of psi
+                if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
+                !
+                !loads the phi from file
+                !
+                CALL davcio(tempphic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,-1)
+                !calculate rho in real space
+                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                !brings it to G-space
+                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+   
+                vc = 0.D0
+                do ig=1,ngm
+                   vc = vc + fac(ig) * rhoc(nls(ig)) * conjg(rhoc(nls(ig)))
+                end do
+                vc = vc * omega * x_occupation(ibnd,ik) / nqs
+
+                energy = energy - exxalfa * vc * wg(jbnd,ikk)
+             end do
+          end do
+       end do
+    end do
+
+    deallocate (tempphic, temppsic, rhoc, fac )
+
+    exxenergy2 = energy
+
+    call stop_clock ('exxen2')
+
+  end function  exxenergy2
+
   function exx_divergence ()
 
      USE cell_base, ONLY : bg, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
 
+     implicit none
      real(kind=DP) :: exx_divergence
 
      ! local variables

@@ -15,6 +15,10 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   USE constants, ONLY : e2
   USE kinds,     ONLY : DP
   USE funct,     ONLY : igcx, igcc
+
+#ifdef EXX
+  USE exx,       ONLY: lexx, exxalfa
+#endif
   !
   IMPLICIT NONE
   !
@@ -77,6 +81,16 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               segno = SIGN( 1.D0, rho(k,1) )
               !
               CALL gcxc( arho, grho2, sx, sc, v1x, v2x, v1c, v2c )
+#if defined (EXX)
+              if (lexx) then
+                 sx  = (1.d0-exxalfa)*sx
+                 v1x = (1.d0-exxalfa)*v1x
+                 v2x = (1.d0-exxalfa)*v2x
+!                 sc  = (1.d0-exxalfa)*sc
+!                 v1c = (1.d0-exxalfa)*v1c
+!                 v2c = (1.d0-exxalfa)*v2c
+              end if
+#endif
               !
               ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
               !
@@ -113,6 +127,15 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         !
         CALL gcx_spin( rho(k,1), rho(k,2), grho2(1), &
                        grho2(2), sx, v1xup, v1xdw, v2xup, v2xdw )
+#if defined (EXX)
+        if (lexx) then
+           sx    = (1.d0-exxalfa)*sx
+           v1xup = (1.d0-exxalfa)*v1xup
+           v1xdw = (1.d0-exxalfa)*v1xdw
+           v2xup = (1.d0-exxalfa)*v2xup
+           v2xdw = (1.d0-exxalfa)*v2xdw
+        end if
+#endif
         !
         IF ( rh > epsr ) THEN
            !
@@ -158,6 +181,17 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            v2cud = 0.D0
            !
         ENDIF
+#if defined (EXX)
+!        if (lexx) then
+!           sc    = (1.d0-exxalfa)*sc
+!           v1cup = (1.d0-exxalfa)*v1cup
+!           v1cdw = (1.d0-exxalfa)*v1cdw
+!           v2c   = (1.d0-exxalfa)*v2c
+!           v2cup = (1.d0-exxalfa)*v2cup
+!           v2cdw = (1.d0-exxalfa)*v2cdw
+!           v2cud = (1.d0-exxalfa)*v2cud
+!        end if
+#endif
         !
         ! ... first term of the gradient correction : D(rho*Exc)/D(rho)
         !

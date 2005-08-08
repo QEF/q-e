@@ -32,7 +32,8 @@ SUBROUTINE electrons()
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
-                                   lgauss, ngauss, two_fermi_energies
+                                   lgauss, ngauss, two_fermi_energies, &
+                                   nelup, neldw
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
@@ -57,7 +58,9 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
 #if defined (EXX)
-  USE exx,                  ONLY : lexx, exxinit, init_h_wfc, exxenergy !Suriano
+  USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
+                                   exxalfa, exxstart, exxenergy, exxenergy2
+  USE funct,                ONLY : dft, which_dft, iexch, icorr, igcx, igcc
 #endif
   !
   IMPLICIT NONE
@@ -65,7 +68,8 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !  
 #if defined (EXX)
-  REAL (KIND=DP) :: fock1, fock2
+  REAL (KIND=DP) :: dexx
+  REAL (KIND=DP) :: fock0,  fock1,  fock2
 #endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
@@ -109,17 +113,6 @@ SUBROUTINE electrons()
   !
   CALL start_clock( 'electrons' )
   !
-#if defined (EXX)
-     if (lexx .and. .false.) then
-        CALL init_h_wfc()
-        CALL exxinit()
-        fock1 = 0.5d0 * exxenergy()
-        write (stdout,90) fock1
-        stop
-        !
-     end if
-90 FORMAT(/' EXX energy      =',  F15.8,' ryd' )
-#endif
   iter = 0
   ik_  = 0
   !
@@ -174,6 +167,10 @@ SUBROUTINE electrons()
   ! ... for the first scf iteration of each ionic step after the first,
   ! ... the threshold is fixed to a default value of 1.D-5
   !
+#if defined (EXX)
+10 continue
+#endif
+
   IF ( istep > 1 ) ethr = 1.D-5
   !
   WRITE( stdout, 9001 )
@@ -185,7 +182,7 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
   !TEMP
-  ALLOCATE (rhog(ngm, nspin))
+  IF ( .not. ALLOCATED(rhog) ) ALLOCATE (rhog(ngm, nspin))
   do is = 1, nspin
      psic(:) = rho (:, is)
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
@@ -196,9 +193,6 @@ SUBROUTINE electrons()
      !
      IF ( check_stop_now() ) RETURN
      !
-#if defined (EXX)
-!     IF ( lexx ) CALL exxinit()
-#endif
      !  
      iter = iter + 1
      !
@@ -348,6 +342,14 @@ SUBROUTINE electrons()
            descf = 0.D0
            !
         END IF
+#if defined (EXX)
+        if (exxstart) then
+           fock1 = exxenergy2()
+           fock2 = fock0
+        else
+           fock0 = 0.d0
+        end if
+#endif
         !
         EXIT scf_step
         !
@@ -492,16 +494,39 @@ SUBROUTINE electrons()
         WRITE( stdout, 9050 ) charge
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+#if defined (EXX)
+
+     etot = etot - 0.5d0 * fock0
+
+#endif
      !
 #if defined (EXX)
-     if (lexx .and. conv_elec) then
-!        CALL init_h_wfc()
+     if (lexx .and. conv_elec ) then
+
+        first = .not. exxstart
+
         CALL exxinit()
 
-        fock1 = exxenergy()
-        fock2 = fock1
+        if (first) then
+           fock0 = exxenergy2()
+           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                     ehart, etxc, vtxc, etotefield, charge, vr )
+           CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+           write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
+           iter = 0
+           go to 10
+        end if
+        fock2 = exxenergy2()
         !
-        etot = etot - fock1 + 0.5D0 * fock2
+        dexx = fock1 - 0.5d0 * ( fock0 + fock2 )
+
+        etot = etot  - dexx
+
+        write (*,*) fock0,fock1,fock2
+        WRITE( stdout, 9066 ) dexx
+
+        fock0 = fock2
         !
      end if
 #endif
@@ -566,6 +591,14 @@ SUBROUTINE electrons()
      CALL flush_unit( stdout )
      !
      IF ( conv_elec ) THEN
+
+#if defined (EXX)
+        if (lexx .and. dexx > tr2 ) then
+           write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
+           iter = 0
+           go to 10
+        end if
+#endif
         !
         WRITE( stdout, 9110 )
         !
@@ -628,6 +661,7 @@ SUBROUTINE electrons()
 9062 FORMAT( '     Fock energy 1             =',  F15.8,' ryd' )
 9063 FORMAT( '     Fock energy 2             =',  F15.8,' ryd' )
 9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd' )
+9066 FORMAT( '     dexx                      =',  F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
 9070 FORMAT( '     correction for metals     =',F15.8,' ryd' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
