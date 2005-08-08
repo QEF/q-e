@@ -17,8 +17,7 @@ subroutine read_ncpp (np, iunps)
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
   use uspp_param, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
-  use funct, only: dft, which_dft
-  use metaflag, only : ismeta
+  use funct, only: dft, which_dft, ismeta
   implicit none
   !
   integer :: iunps, np
@@ -113,7 +112,7 @@ subroutine read_ncpp (np, iunps)
   !====================================================================
   ! PP read: now setup 
   !
-  call which_dft( dft, ismeta )
+  call which_dft( dft )
   !
   IF ( ismeta ) &
     CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )

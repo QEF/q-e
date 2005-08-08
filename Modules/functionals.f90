@@ -5,11 +5,14 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!-------------------------------------------------------------------
 module funct
+!-------------------------------------------------------------------
+  !
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: dft, iexch, icorr, igcx, igcc, which_dft
+  PUBLIC :: dft, iexch, icorr, igcx, igcc, which_dft, ismeta
   !
   character (len=20) :: dft = ' '
   !
@@ -80,18 +83,23 @@ module funct
   integer :: icorr = notset
   integer :: igcx  = notset
   integer :: igcc  = notset
+  logical :: ismeta = .false.
   !
   ! internal indices for exchange-correlation
   !    iexch: type of exchange
   !    icorr: type of correlation
   !    igcx:  type of gradient correction on exchange
   !    igcc:  type of gradient correction on correlations
+  !
+  !    ismeta: .TRUE. if gradient correction is of meta-gga type
+  !
   ! see comments above and routine "which_dft" below 
+  !
   !
 
 CONTAINS
   !-----------------------------------------------------------------------
-  subroutine which_dft( dft_, ismeta )
+  subroutine which_dft( dft_ )
     !-----------------------------------------------------------------------
     !
     ! translates a string containing the exchange-correlation name
@@ -100,7 +108,6 @@ CONTAINS
     implicit none
     ! input
     character(len=*)               :: dft_
-    LOGICAL, OPTIONAL, INTENT(OUT) :: ismeta
     ! data
     integer :: nxc, ncc, ngcx, ngcc
     parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6)
@@ -204,20 +211,14 @@ CONTAINS
     !
     ! ... special case : TPSS meta-GGA Exc
     !
-    IF ( PRESENT( ismeta ) ) THEN
+    IF ( matches( 'TPSS', dftout ) ) THEN
        !
-       ismeta = .FALSE.
+       ismeta = .TRUE.
        !
-       IF ( matches( 'TPSS', dftout ) ) THEN
-          !
-          ismeta = .TRUE.
-          !
-          CALL set_dft_value( iexch, 1 )
-          CALL set_dft_value( icorr, 4 )
-          CALL set_dft_value( igcx,  7 )
-          CALL set_dft_value( igcc,  6 )
-          !
-       END IF
+       CALL set_dft_value( iexch, 1 )
+       CALL set_dft_value( icorr, 4 )
+       CALL set_dft_value( igcx,  7 )
+       CALL set_dft_value( igcc,  6 )
        !
     END IF
    

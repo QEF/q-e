@@ -168,7 +168,7 @@ contains
 end module derho
 
 MODULE metagga  !metagga
-  use metaflag, only : ismeta
+  use funct, only : ismeta
   !the variables needed for meta-GGA
   REAL(kind=8), ALLOCATABLE :: &
        kedtaus(:,:), &! KineticEnergyDensity in real space,smooth grid

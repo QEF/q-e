@@ -697,7 +697,7 @@
       use gvecw, only: ggp
       use cell_base, only: tpiba2
       use ensemble_dft, only: tens
-      use metaflag, only: ismeta
+      use funct, only: ismeta
 !
       implicit none
 !
@@ -3036,7 +3036,7 @@
       use cdvan
       use dener
       use io_global, only: stdout
-      use metaflag, only: ismeta
+      use funct, only: ismeta
 !
       implicit none
       real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
@@ -4144,7 +4144,7 @@
       use dener
       use derho
       use mp, only: mp_sum
-      use metaflag, only: ismeta
+      use funct, only: ismeta
 !
       implicit none
 !
