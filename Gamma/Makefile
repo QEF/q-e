@@ -60,7 +60,6 @@ PWOBJS = \
 ../PW/divide.o \
 ../PW/d_matrix.o \
 ../PW/dndepsilon.o \
-../PW/dndtau.o \
 ../PW/dndtau_of_k.o \
 ../PW/dprojdepsilon.o \
 ../PW/dprojdtau.o \

@@ -241,7 +241,6 @@ PWOBJS = \
 ../PW/divide.o \
 ../PW/divide_et_impera.o \
 ../PW/dndepsilon.o \
-../PW/dndtau.o \
 ../PW/dprojdepsilon.o \
 ../PW/dprojdtau.o \
 ../PW/dqvan2.o \

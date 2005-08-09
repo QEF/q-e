@@ -67,7 +67,6 @@ diropn.o \
 divide.o \
 divide_et_impera.o \
 dndepsilon.o \
-dndtau.o \
 dndtau_of_k.o \
 dprojdepsilon.o \
 dprojdtau.o \
