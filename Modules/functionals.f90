@@ -12,7 +12,7 @@ module funct
   IMPLICIT NONE
   PRIVATE
   SAVE
-  PUBLIC :: dft, iexch, icorr, igcx, igcc, which_dft, ismeta
+  PUBLIC :: dft, iexch, icorr, igcx, igcc, which_dft, ismeta, ishybrid
   !
   character (len=20) :: dft = ' '
   !
@@ -84,6 +84,7 @@ module funct
   integer :: igcx  = notset
   integer :: igcc  = notset
   logical :: ismeta = .false.
+  logical :: ishybrid = .false.
   !
   ! internal indices for exchange-correlation
   !    iexch: type of exchange
@@ -92,6 +93,8 @@ module funct
   !    igcc:  type of gradient correction on correlations
   !
   !    ismeta: .TRUE. if gradient correction is of meta-gga type
+  !    ishybrid: .TRUE. if the xc finctional is an HF+DFT hybrid like
+  !              PBE0 or B3LYP
   !
   ! see comments above and routine "which_dft" below 
   !

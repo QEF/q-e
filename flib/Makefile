@@ -5,6 +5,7 @@ include ../make.sys
 OBJS = \
 avrec.o \
 atomic_number.o \
+bachel.o \
 capital.o \
 dost.o \
 erf.o \

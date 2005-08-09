@@ -131,7 +131,6 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
-../Modules/metagga.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
@@ -168,7 +167,6 @@ PWOBJS = \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \
-../PW/bachel.o \
 ../PW/becmod.o \
 ../PW/bp_c_phase.o \
 ../PW/bp_calc_btq.o \

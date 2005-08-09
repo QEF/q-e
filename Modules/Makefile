@@ -28,7 +28,6 @@ ions_base.o \
 kind.o \
 coarsegrained_vars.o \
 mp.o \
-metagga.o \
 mp_global.o \
 mp_wave.o \
 mp_buffers.o \

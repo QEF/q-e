@@ -13,9 +13,8 @@ subroutine bachel (alps, aps, npseu, lmax)
   USE kinds
   implicit none
   !
-  !   First dummy variables
+  !   First I/O variables
   !
-
   integer :: npseu, lmax (npseu)
   ! input:  number of pseudopotential
   ! input:  max. angul. momentum of the ps
@@ -25,20 +24,13 @@ subroutine bachel (alps, aps, npseu, lmax)
   !
   !   Here local variables
   !
-
   integer :: np, lmx, l, i, j, k, ia, ka, nik
   ! counter on number of pseudopot.
   ! aux. var. (max. ang. mom. of a fix. ps
   ! counter on angular momentum
   !
-  !
-  !  auxiliary
-  !  variables
-  !
-  !
   real(kind=DP) :: pi
   ! pi constant
-
   parameter (pi = 3.141592653589793d0)
 
   real(kind=DP) :: s (6, 6), alpl, alpi, ail
@@ -46,6 +38,7 @@ subroutine bachel (alps, aps, npseu, lmax)
   ! first real aux. var. (fix. value of al
   ! second real aux. var. (fix. value of a
   ! third real aux. var.
+  !
   do np = 1, npseu
      lmx = lmax (np)
      do l = 0, lmx

@@ -254,6 +254,11 @@ subroutine convert_ncpp
   !     ----------------------------------------------------------
   use ncpp
   use upf
+  use funct, ONLY : which_dft, &
+                    funct_iexch => iexch, &
+                    funct_icorr => icorr, &
+                    funct_igcx => igcx, &
+                    funct_igcc => igcc
   implicit none
   real(kind=8), parameter :: rmax = 10.0
   real(kind=8), allocatable :: aux(:)
@@ -305,7 +310,11 @@ subroutine convert_ncpp
      ocw(i)   = oc(i)
      elsw(i)  = els(i)
   end do
-  call which_dft(dft_, iexch, icorr, igcx, igcc)
+  call which_dft(dft_)
+  iexch = funct_iexch
+  icorr = funct_icorr
+  igcx  = funct_igcx
+  igcc  = funct_igcc
 
   allocate(rab(mesh))
   allocate(  r(mesh))

@@ -17,7 +17,7 @@ subroutine read_ncpp (np, iunps)
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
   use uspp_param, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
-  use funct, only: dft, which_dft, ismeta
+  use funct, only: dft, which_dft, ismeta, ishybrid
   implicit none
   !
   integer :: iunps, np
@@ -116,6 +116,11 @@ subroutine read_ncpp (np, iunps)
   !
   IF ( ismeta ) &
     CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )
+#if defined (EXX)
+#else
+  IF ( ishybrid ) &
+    CALL errore( 'read_ncpp ', 'HYBRID XC not implemented in PWscf', 1 )
+#endif
   !
   !    compute the radial mesh
   !

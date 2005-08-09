@@ -26,8 +26,8 @@ subroutine simpson (mesh, func, rab, asum)
   !     endif
   asum = 0.0d0
   r12 = 1.0d0 / 12.0d0
-
   f3 = func (1) * rab (1) * r12
+
   do i = 2, mesh - 1, 2
      f1 = f3
      f2 = func (i) * rab (i) * r12

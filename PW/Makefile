@@ -17,7 +17,6 @@ allocate_wfc.o \
 atomic_rho.o \
 atomic_wfc.o \
 atomic_wfc_nc.o \
-bachel.o \
 becmod.o \
 bfgs.o \
 bp_c_phase.o \
@@ -285,7 +284,6 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
-../Modules/metagga.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
