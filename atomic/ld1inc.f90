@@ -9,6 +9,7 @@ module ld1inc
   use kinds, only : dp
   use ld1_parameters
   use atomic_paw, only : paw_t
+  integer, parameter :: lmx=3, lmx2=2*lmx
   !
   !    variables for the all-electron calculation
   !
@@ -27,7 +28,8 @@ module ld1inc
        oc(nwfx),     & ! the occupations of the all-electron atom
        oc_old(nwfx), & ! saves the occupations of the all-electron 
        zed,          & ! the ionic charge 
-       enne            ! the number of electrons
+       enne,         & ! the number of electrons
+       sl3(0:lmx2,0:lmx2,0:lmx2)
 
   real(kind=dp)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
@@ -210,7 +212,9 @@ module ld1inc
        vxt(ndm),     & ! the external potential
        vh(ndm),      & ! the hartree potential
        vpstot(ndm,2),& ! the total local pseudopotential
-       vpsloc(ndm)     ! the local pseudopotential
+       vpsloc(ndm)  ,& ! the local pseudopotential
+       vx(ndm,2)    ,& ! the OEP-X potential (when needed)
+       enzero(2)
   !
   !  variables needed for PAW dataset generation and test
   !

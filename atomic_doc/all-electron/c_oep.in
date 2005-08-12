@@ -1,0 +1,11 @@
+ &input
+        title='C',
+        zed=6.0,
+        xmin=-6, rmax=40.0,
+        rel=0,
+        lsd=1,
+        isic=0,
+        iswitch=1,
+        config='[He] 2s2 2p2',
+        dft='OEP',
+ /

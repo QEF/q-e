@@ -13,18 +13,22 @@ subroutine new_potential &
   !---------------------------------------------------------------
   !   set up the selfconsistent atomic potential
   !
+  use constants, only: fpi, e2
   use kinds, only : DP
   use funct
+  use ld1inc, only : nwf, vx
   implicit none
-  logical :: nlcc, gga
-  integer :: ndm,mesh,lsd,latt,i,is,nspin, ierr
+  logical :: nlcc, gga, oep
+  integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(kind=dp):: rho(ndm,2),r(ndm),r2(ndm),vxcp(2), &
        sqr(ndm),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
   real(kind=dp):: zed,enne,dx,rh(2),rhc
   real(kind=dp),allocatable:: vgc(:,:), egc(:), rhotot(:)
-  real(kind=dp),parameter ::fourpi=4.0_DP*3.141592653589793_DP, e2=2.0_DP
+!  real(kind=dp),allocatable:: vx(:,:)
+  real(kind=dp),allocatable:: dchi0(:,:)
 
   gga=igcx.ne.0.or.igcc.ne.0
+  oep=iexch.eq.4
   nspin=1
   if (lsd.eq.1) nspin=2
   !
@@ -41,15 +45,15 @@ subroutine new_potential &
   endif
   call hartree(0,2,mesh,r,r2,sqr,dx,rhotot,vh)
   !
-  !    add exchange and correlation potential: LDA or LSDA only
+  ! add exchange and correlation potential: LDA or LSDA only
   !
   rhc=0.0_DP
   do i=1,mesh
      vh(i) = e2*vh(i)
      do is=1,nspin
-        rh(is) = rho(i,is)/r2(i)/fourpi
+        rh(is) = rho(i,is)/r2(i)/fpi
      enddo
-     if (nlcc) rhc = rhoc(i)/r2(i)/fourpi
+     if (nlcc) rhc = rhoc(i)/r2(i)/fpi
      call vxc_t(rh,rhc,lsd,vxcp)
      do is=1,nspin
         vnew(i,is)= - zed*e2/r(i)+vxt(i)+vh(i)+vxcp(is)
@@ -57,25 +61,48 @@ subroutine new_potential &
   end do
 
   deallocate(rhotot)
-
-  if (.not.gga) goto 1010
   !
-  !   add exchange and correlation potential: GGA only
+  ! add exchange and correlation potential: GGA only
   !
-  allocate(vgc(ndm,2),stat=ierr)
-  allocate(egc(ndm),stat=ierr)
-  call errore('new_potential','allocating vgc and egc',ierr)
+  if (gga) then
+     allocate(vgc(ndm,2),stat=ierr)
+     allocate(egc(ndm),stat=ierr)
+     call errore('new_potential','allocating vgc and egc',ierr)
 
-  call vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
-  do is=1,nspin
-     do i=1,mesh
-        vnew(i,is)=vnew(i,is)+vgc(i,is)
+     call vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
+     do is=1,nspin
+        do i=1,mesh
+           vnew(i,is)=vnew(i,is)+vgc(i,is)
+        enddo
      enddo
-  enddo
-  deallocate(egc)
-  deallocate(vgc)
+     deallocate(egc)
+     deallocate(vgc)
+  end if
 
-1010 if (latt.ne.0) then
+  !
+  ! add OEP exchange 
+  !
+  if (oep) then
+!     write (*,*) ndm, nwf
+     allocate(dchi0(ndm,nwf))
+
+     do nu=1,nwf
+        call dvex(nu,dchi0(1,nu))
+     end do
+
+     call dfx_new(dchi0, vx)
+     do is=1,nspin
+        do i=1,mesh
+! ADD OEP VX
+           vnew(i,is)= vnew(i,is)  + vx(i,is)
+        end do
+     end do
+     deallocate(dchi0)
+  end if 
+  !
+  ! latter correction
+  !
+  if (latt.ne.0) then
      do is=1,nspin
         do i=1,mesh
            vnew(i,is)= min(vnew(i,is),-e2*(zed-enne+1.0_DP)/r(i))

@@ -12,9 +12,9 @@ subroutine write_results
   use funct
   implicit none
 
-  integer :: i, j, n, m, im(40), l, ios
+  integer :: is, i, j, n, m, im(40), l, ios
   real(kind=dp):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
-  logical :: ok
+  logical :: ok, oep
   !
   !
   write(6,'(5x,20(''-''),'' All-electron run '',30(''-''),/)')
@@ -33,9 +33,24 @@ subroutine write_results
      write(6,1000)
 1000 format(/5x, &
           'n l     nl                  e(Ryd)','         e(Ha)          e(eV)')
+
+     oep = iexch .eq. 4
+     if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      write(6,1100) &
           (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
           enl(n)*13.6058_dp, n=1,nwf)
+     if (oep) then
+        enl(1:nwf) = enl(1:nwf) + enzero(isw(1:nwf))
+        write(6,*) 
+!!1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
+        write(6,'(5x,a)') "OEP WARNING: printed eigenvalues were shifted by"
+        if (nspin==1) write(6,'(17x,a,3f15.4)') ( "shift :", &
+                            enzero(is), enzero(is)*0.5_dp, &
+                            enzero(is)*13.6058_dp, is=1,nspin)
+        if (nspin==2) write(6,'(8x,a,i2,3x,a,3f15.4)') ( "spin",is,"shift :", &
+                            enzero(is), enzero(is)*0.5_dp, &
+                            enzero(is)*13.6058_dp, is=1,nspin)
+     end if
   else
      write(6,1001)
 1001 format(/5x, &

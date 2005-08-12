@@ -24,6 +24,8 @@ module funct
   !              "sla"    Slater (alpha=2/3)             iexch=1 (default)
   !              "sl1"    Slater (alpha=1.0)             iexch=2
   !              "rxc"    Relativistic Slater            iexch=3
+  !              "oep"    Optimized Effective Potential  iexch=4
+  !              "hf"     Hartree-Fock                   iexch=5
   ! Correlation: "noc"    none                           icorr=0
   !              "pz"     Perdew-Zunger                  icorr=1 (default)
   !              "vwn"    Vosko-Wilk-Nusair              icorr=2
@@ -76,6 +78,7 @@ module funct
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
+  !              oep
 
   integer, parameter:: notset = -1
   !
@@ -113,7 +116,7 @@ CONTAINS
     character(len=*)               :: dft_
     ! data
     integer :: nxc, ncc, ngcx, ngcc
-    parameter (nxc = 3, ncc = 9, ngcx = 7, ngcc = 6)
+    parameter (nxc = 5, ncc = 9, ngcx = 7, ngcc = 6)
     character (len=3) :: exc, corr
     character (len=4) :: gradx, gradc
     dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -123,7 +126,7 @@ CONTAINS
     logical, external :: matches
     character (len=1), external :: capital
     !
-    data exc / 'NOX', 'SLA', 'SL1', 'RXC' /
+    data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF' /
     data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
                 'OBW', 'GL' /
     data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META' /
@@ -178,6 +181,12 @@ CONTAINS
        call set_dft_value (igcc, 4)
     endif
 
+    if (matches ('PBC', dftout) ) then
+    ! special case : PBC  = PW + PBC 
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcc, 4)
+    endif
+
     ! special case : BP = B88 + P86
     if (matches ('BP', dftout) ) then
        call set_dft_value (igcx, 1)
@@ -224,7 +233,27 @@ CONTAINS
        CALL set_dft_value( igcc,  6 )
        !
     END IF
+
+    !
+    ! ... special case : OEP is exact exchange no GC part
+    !
+    IF ( matches( 'OEP', dftout ) ) THEN
+       !
+       CALL set_dft_value( igcx,  0 )
+       !
+    END IF
    
+    !
+    ! ... special cases : OEP and HF need not GC part (nor LDA...)
+    !                     and inclued no correlation by default
+    !
+    IF ( matches( 'OEP', dftout ) .OR. matches( 'HF', dftout )) THEN
+       !
+       CALL set_dft_value( igcx,  0 )
+       if (icorr == notset) call set_dft_value (icorr, 0)
+       !
+    END IF
+
     if (igcx == 6) &
          call errore('which_dft','OPTX untested! please test',-igcx)
     ! Default value: Slater exchange

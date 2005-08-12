@@ -5,6 +5,7 @@
 include ../make.sys
 
 LD1OBJS = \
+add_exchange.o \
 all_electron.o \
 ascheq.o \
 ascheqlocps.o \
@@ -18,10 +19,14 @@ compute_phipot.o \
 compute_phius.o \
 compute_solution.o \
 descreening.o \
+dfx_new.o \
 dir_outward.o \
 dirsol.o \
 dmixp.o \
+drhoofv.o \
+drho0ofvx.o \
 do_mesh.o \
+dvex.o \
 el_config.o \
 elsd.o \
 elsdps.o \
@@ -29,10 +34,13 @@ esic.o \
 exc_t.o \
 find_qi.o \
 gener_pseudo.o \
+green.o \
 hartree.o \
 int_0_inf_dr.o \
 integrate_inward.o \
 integrate_outward.o \
+inward.o \
+outward.o \
 intref.o \
 ld1_readin.o \
 ld1_setup.o \
@@ -54,6 +62,7 @@ scf.o \
 seriebes.o \
 series.o \
 set_rho_core.o \
+set_sl3.o \
 sic_correction.o \
 starting_potential.o \
 start_potps.o \

@@ -18,9 +18,10 @@
 !
 use kinds, only : DP
 use funct
+use ld1inc, only: vx
 implicit none
 integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
-logical:: nlcc, gga
+logical:: nlcc, gga, oep
 real(kind=dp):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
           etot,encl,epseu,ekin,ehrt,ecxc,evxt
 real(kind=dp):: enl(nwf),oc(nwf), rhotot, exc_t, &
@@ -32,6 +33,7 @@ integer:: mgcx,mgcc,ierr
 real(kind=dp),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
 gga=igcx.ne.0.or.igcc.ne.0
+oep=iexch.eq.4
 
 allocate(vgc(ndm,2),stat=ierr)
 allocate(rhoc(ndm),stat=ierr)
@@ -64,6 +66,11 @@ do i=1,mesh
        f3(i) = exc_t(rh,rhc,lsd) * rhotot
        if (lsd.eq.1) f2(i) =f2(i)-vxcp(2)*rho(i,2)
    endif
+   if (oep) then
+      do is = 1, nspin
+         f2(i) = f2(i) - vx(i,is)*rho(i,is)
+      end do
+   end if
 enddo
 
 encl=    int_0_inf_dr(f1,r,r2,dx,mesh,1)
@@ -77,6 +84,9 @@ ekin = int_0_inf_dr(f2,r,r2,dx,mesh,1)
 do n=1,nwf
    ekin=ekin+oc(n)*enl(n)
 enddo
+
+if (oep) call add_exchange (ecxc)
+
 etot= ekin + encl + ehrt + ecxc + evxt
 
 deallocate(f4)
