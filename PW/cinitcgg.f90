@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
+SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
   !----------------------------------------------------------------------------
   !
   ! ... Hamiltonian diagonalization in the subspace spanned
@@ -22,14 +22,16 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin, npol
+  USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
   !
-  INTEGER :: ndim, ndmx, nstart, nbnd
+  INTEGER :: ndim, ndmx, nstart, nbnd, ik
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
+    ! k-point considered
   COMPLEX(KIND=DP) :: psi(ndmx,npol,nstart), evc(ndmx,npol,nbnd)
     ! input and output eigenvectors (may overlap) 
   REAL(KIND=DP) :: e(nbnd)
@@ -79,10 +81,13 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
      IF ( noncolin ) THEN
         !
         CALL h_1psi_nc( ndmx, ndim, npol, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
+       IF(lelfield) call h_epsi_her(ndmx,ndim,1, ik, psi(1,1,m), aux(1,1,1))
+
         !
      ELSE
         !
         CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
+        IF(lelfield) call h_epsi_her(ndmx,ndim,1, ik, psi(1,1,m), aux(1,1,1))
         !
      END IF
      !

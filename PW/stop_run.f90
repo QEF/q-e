@@ -16,12 +16,13 @@ SUBROUTINE stop_run( flag )
   !
   USE io_global,          ONLY : stdout, ionode
   USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain
-  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres
+  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres, iunefield
   USE input_parameters,   ONLY : deallocate_input_parameters
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
   USE mp,                 ONLY : mp_barrier, mp_end
+  USE bp,                 ONLY : lelfield
   !
   IMPLICIT NONE
   !
@@ -65,11 +66,15 @@ SUBROUTINE stop_run( flag )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
   END IF
+ ! close unit for electric field if needed
+  IF( lelfield)  CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
+
   !
   ! ... iunigk is kept open during the execution - close and remove
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
+
   CALL print_clock_pw()
   !
   CALL mp_barrier()

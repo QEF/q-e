@@ -27,6 +27,7 @@ bp_strings.o \
 bp_ylm_q.o \
 c_bands.o \
 c_gemm.o \
+c_phase_field.o \
 ccalbec.o \
 ccalbec_nc.o \
 ccgdiagg.o \
@@ -104,6 +105,7 @@ gk_sort.o \
 gradcorr.o \
 gradcorr_nc.o \
 gweights.o \
+h_epsi_her.o \
 h_1psi.o \
 h_psi.o \
 h_1psi_nc.o \

@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
-                    overlap, e, btype, notcnv, lrot, dav_iter )
+                    overlap, e, btype, notcnv, lrot, dav_iter,ik )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -25,17 +25,19 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   USE io_global,        ONLY : stdout
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin, npol
+  USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
   !
   ! ... on INPUT
   ! 
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
+  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx,ik
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
+    ! k-point considered
   COMPLEX (KIND=DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL (KIND=DP), INTENT(IN) :: ethr
@@ -149,12 +151,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
      !
+     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, ik,psi,hpsi)
      IF ( overlap ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
      !
   ELSE
      !
      CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
      !
+     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, ik,psi,hpsi)
      IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
      !
   END IF
@@ -309,6 +313,9 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
         !
+        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, ik, psi(1,1,nbase+1) , &
+                 hpsi (1, 1, nbase+1) )
+
         IF ( overlap ) &
            CALL s_psi_nc( ndmx, ndim, notcnv, &
                           psi(1,1,nbase+1), spsi(1,1,nbase+1) )
@@ -317,6 +324,9 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
         !
+        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, ik, psi(1,1,nbase+1) , &
+                 hpsi (1, 1,nbase+1) )
+
         IF ( overlap ) &
            CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), spsi(1,1,nbase+1) )
         !

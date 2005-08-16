@@ -24,7 +24,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
-  USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
+  USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc, iunefield
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -40,6 +40,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc, evc_nc  
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
+  USE bp,                   ONLY : lelfield, evcel
 #if defined (EXX)
   USE exx,                  ONLY : currentk
 #endif
@@ -105,6 +106,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ALLOCATE( btype( nbnd ) )       
   !
+  IF (lelfield) ALLOCATE (evcel(npwx,nbnd))
+  !
+
   IF ( gamma_only ) THEN
      !
      CALL c_bands_gamma()
@@ -129,6 +133,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
+  IF (lelfield) DEALLOCATE (evcel)
+  !
+
   DEALLOCATE( btype )
   !       
   CALL stop_clock( 'c_bands' )  
@@ -463,6 +470,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
+         !read wave function for electric field
+          IF (lelfield) CALL davcio(evcel,nwordwfc,iunefield,ik,-1)
+
 #if defined (EXX)
           currentk = ik
 #endif
@@ -492,12 +502,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           IF ( noncolin ) THEN
              !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
+             IF ( nks > 1 .OR. .NOT. reduce_io.OR. lelfield ) &
                 CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
              !
           ELSE
              !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
+             IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
                 CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              !
           END IF
@@ -569,11 +579,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    IF ( noncolin ) THEN
                       !
                       CALL cinitcgg( npwx, npw, nbnd, &
-                                     nbnd, evc_nc, evc_nc, et(1,ik) )
+                                     nbnd, evc_nc, evc_nc, et(1,ik),ik )
                       !
                    ELSE
                       !
-                      CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                      CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik),ik )
                       !
                    END IF
                    !
@@ -585,13 +595,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    !
                    CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), btype, &
                                   h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
-                                  notconv, cg_iter )
+                                  notconv, cg_iter,ik )
                    !
                 ELSE
                    !
                    CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
                                   h_diag, ethr, max_cg_iter, .NOT. lscf, &
-                                  notconv, cg_iter )
+                                  notconv, cg_iter,ik )
                    !
                 END IF
                 !
@@ -603,12 +613,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
                       CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
                    !
                 ELSE
                    !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
                       CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                    !
                 END IF
@@ -719,12 +729,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( noncolin ) THEN
                    !
                    CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter )
+                                 et(1,ik), btype, notconv, lrot, dav_iter,ik )
                    !
                 ELSE
                    !
                    CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter )
+                                 et(1,ik), btype, notconv, lrot, dav_iter,ik )
                    !
                 END IF
                 !
@@ -736,12 +746,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
                       CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
                    !
                 ELSE
                    !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
                       CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                    !
                 END IF

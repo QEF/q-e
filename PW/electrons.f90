@@ -37,7 +37,7 @@ SUBROUTINE electrons()
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
-  USE wvfct,                ONLY : nbnd, et, gamma_only, wg  
+  USE wvfct,                ONLY : nbnd, et, gamma_only, wg,npwx
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
   USE scf,                  ONLY : rho, vr, vltot, vrs, rho_core
@@ -45,7 +45,7 @@ SUBROUTINE electrons()
                                    iprint, istep, lscf, lmd, conv_elec,       &
                                    restart, reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
-                                   output_drho
+                                   output_drho, iunefield
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
                                    niter_with_fixed_ns, Hubbard_lmax, &
                                    lda_plus_u  
@@ -57,6 +57,7 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE mp_global,            ONLY : me_pool
   USE pfft,                 ONLY : npp, ncplane
+  USE bp
 #if defined (EXX)
   USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
                                    exxalfa, exxstart, exxenergy, exxenergy2
@@ -110,9 +111,17 @@ SUBROUTINE electrons()
   COMPLEX (KIND=DP), ALLOCATABLE :: rhognew(:,:)
   REAL (KIND=DP), ALLOCATABLE :: rhonew(:,:)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !
+  ! PU added for electric field
+  COMPLEX(kind=DP), ALLOCATABLE  :: psi(:,:)
+  INTEGER inberry
+
   !
   CALL start_clock( 'electrons' )
   !
+
+  !
+
   iter = 0
   ik_  = 0
   !
@@ -231,7 +240,19 @@ SUBROUTINE electrons()
         !
         ! ... diagonalization of the KS hamiltonian
         !
-        CALL c_bands( iter, ik_, dr2 )
+        if(lelfield) then
+          do inberry=1,nberrycic
+            ALLOCATE (psi(npwx,nbnd))
+            do ik=1,nks
+               call davcio(psi,nwordwfc,iunwfc,ik,-1)
+               call davcio(psi,nwordwfc,iunefield,ik,1)
+             enddo
+             DEALLOCATE( psi)
+            CALL c_bands( iter, ik_, dr2 )
+          enddo
+        else
+          CALL c_bands( iter, ik_, dr2 )
+         endif
         !
         IF ( check_stop_now() ) RETURN
         !
@@ -395,6 +416,8 @@ SUBROUTINE electrons()
            CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
         !
      END IF
+     IF(lelfield) CALL c_phase_field !in electric field case, calculate the polarization
+
      !
      ! ... write recover file
      !
@@ -689,7 +712,6 @@ SUBROUTINE electrons()
      SUBROUTINE non_scf()
        !-----------------------------------------------------------------------
        !
-       USE bp, ONLY : lberry
        !
        IMPLICIT NONE
        !
@@ -701,7 +723,20 @@ SUBROUTINE electrons()
        !
        ! ... diagonalization of the KS hamiltonian
        !
-       CALL c_bands( iter, ik_, dr2 )
+       if(lelfield) then
+          do inberry=1,nberrycic
+            ALLOCATE (psi(npwx,nbnd))
+            do ik=1,nks
+               call davcio(psi,nwordwfc,iunwfc,ik,-1)
+               call davcio(psi,nwordwfc,iunefield,ik,1)
+             enddo
+             DEALLOCATE(psi)
+            CALL c_bands( iter, ik_, dr2 )
+          enddo
+        else
+          CALL c_bands( iter, ik_, dr2 )
+        endif
+
        !
        conv_elec = .TRUE.
        !

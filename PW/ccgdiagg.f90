@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
-                     ethr, maxter, reorder, notconv, avg_iter )
+                     ethr, maxter, reorder, notconv, avg_iter, ik )
   !----------------------------------------------------------------------------
   !
   ! ... "poor man" iterative diagonalization of a complex hermitian matrix
@@ -26,12 +26,13 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp,             ONLY : vkb, nkb
   USE becmod,           ONLY : becp_nc
+  USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter
+  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter, ik
   INTEGER,           INTENT(IN)    :: btype(nbnd)
   REAL (KIND=DP),    INTENT(IN)    :: precondition(ndmx*npol), ethr
   COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx*npol,nbnd)
@@ -151,10 +152,15 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      IF ( noncolin ) THEN
         !
         CALL h_1psi_nc( ndmx, ndim, npol, psi(1,m), hpsi, spsi )
+        IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,psi(1,m),hpsi)
+
         !
      ELSE
         !
         CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
+        IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,psi(1,m),hpsi)
+
+
         !
      END IF
      !
@@ -274,10 +280,14 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         IF ( noncolin ) THEN
            !
            CALL h_1psi_nc( ndmx, ndim, npol, cg(1), ppsi(1), scg(1) )
+          IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,cg(1),ppsi(1))
+
            !
         ELSE
            !
            CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+         IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,cg(1),ppsi(1))
+
            !
         END IF
         !

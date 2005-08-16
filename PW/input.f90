@@ -28,7 +28,11 @@ SUBROUTINE iosys()
   !
   USE bp,            ONLY : nppstr_ => nppstr, &
                             gdir_   => gdir, &
-                            lberry_ => lberry
+                            lberry_ => lberry,&
+                            lelfield_ => lelfield, &
+                            efield_ => efield, &
+                            nberrycic_ => nberrycic
+
   !
   USE cell_base,     ONLY : at, alat, omega, &
                             celldm_ => celldm, &
@@ -186,7 +190,9 @@ SUBROUTINE iosys()
                                dt, outdir, prefix, max_seconds, &
                                etot_conv_thr, forc_conv_thr, pseudo_dir, &
                                disk_io, tefield, dipfield, lberry, gdir, &
-                               nppstr, wf_collect
+                               nppstr, wf_collect,lelfield, efield,  &
+                               nberrycic
+
   !
   ! SYSTEM namelist
   !
@@ -1097,6 +1103,10 @@ SUBROUTINE iosys()
   nppstr_     = nppstr
   gdir_       = gdir
   lberry_     = lberry
+  lelfield_   = lelfield
+  efield_     = efield
+  nberrycic_  = nberrycic
+
   title_      = title
   dt_         = dt
   tefield_    = tefield

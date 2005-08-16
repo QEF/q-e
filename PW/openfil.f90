@@ -20,11 +20,12 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
-                               nwordwfc, nwordatwfc
+                               nwordwfc, nwordatwfc, iunefield
   USE pw_restart,       ONLY : pw_readfile
   USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : kunit
+  USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
   !
@@ -78,6 +79,15 @@ SUBROUTINE openfil()
   ! ... Note that unit 15 is reserved for error messages 
   !
   CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+
+
+  !
+  ! open units for electric field calculations
+  !
+  if (lelfield) then
+     CALL diropn (iunefield, 'ewfc', nwordwfc, exst)
+  endif
+
   !
   RETURN
   !

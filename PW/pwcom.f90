@@ -518,20 +518,6 @@ MODULE sticks
 END MODULE sticks
 !  
 !  
-MODULE bp
-  !
-  ! ... The variables needed for the Berry phase polarization calculation
-  !
-  SAVE
-  !
-  LOGICAL :: &
-       lberry        ! if .TRUE., calculate polarization 
-  INTEGER :: &
-       gdir,        &! G-vector for polarization calculation
-       nppstr        ! number of k-points (parallel vector)
-  !
-END MODULE bp
-!
 !
 MODULE fixed_occ
   !
@@ -565,6 +551,29 @@ MODULE spin_orb
                          ! account for spinors.
 END MODULE spin_orb
 !
+!
+MODULE bp
+  USE kinds, ONLY: DP
+  !
+  ! ... The variables needed for the Berry phase polarization calculation
+  !
+  SAVE
+  !
+  LOGICAL :: &
+       lberry, &        ! if .TRUE., calculate polarization
+       lelfield         ! if .TRUE. static homogeneous electric field
+  INTEGER :: &
+       gdir,        &! G-vector for polarization calculation
+       nppstr,      &! number of k-points (parallel vector)
+       nberrycic     !numer of cycles for cobergence in electric field without changing the selfconsistent charge
+  REAL(kind=DP) :: efield, & ! electric field intensity in a.u.
+            berry_dip !actual dipole along the gdir direction
+  COMPLEX(kind=DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
+
+!
+END MODULE bp
+!
+
 
 MODULE pwcom
   !
@@ -598,5 +607,6 @@ MODULE pwcom
   USE bp
   USE fixed_occ
   USE spin_orb
+  USE bp
   !
 END MODULE pwcom
