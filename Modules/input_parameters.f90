@@ -240,6 +240,13 @@ MODULE input_parameters
         INTEGER :: nppstr = 0
           ! number of k-points (parallel vector) ( related to lberry )
           ! only used in PW
+        LOGICAL :: lelfield = .FALSE.
+          !if true a static homogeneous electric field is present
+
+
+        INTEGER  :: nberrycic = 1 
+          !number of covergence cycles on electric field
+
 
         LOGICAL :: wf_collect = .FALSE.
           ! This flag is effective only with PW code, and controls the way 
@@ -256,7 +263,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir
+          wf_collect, printwfc, scradir,lelfield, nberrycic
 
 
 !
@@ -839,7 +846,7 @@ MODULE input_parameters
           ! direzione campo elettrico
 
         REAL(dbl) :: efield =0.d0 
-          ! intensita' del campo
+          ! electric field intensity in atomic units
 
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &

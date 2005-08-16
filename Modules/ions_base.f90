@@ -629,6 +629,7 @@
     end do
     ekinpr = 0.5 * ekinpr
     tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
+    write(6,*) 'NDEGA :' , ndega !ATTENZIONE
     return
   end subroutine ions_temp
 

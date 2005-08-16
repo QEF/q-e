@@ -114,6 +114,11 @@ MODULE io_files
   !
   INTEGER :: vib_out     = 20 ! output of phrozen phonon vibrational calculation
   INTEGER :: vib_mass    = 21 ! isotope masses used for the dynamical matrix
+
+  !
+  !... finite electric field (Umari)
+  !
+  INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!

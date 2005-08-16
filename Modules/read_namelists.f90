@@ -100,6 +100,9 @@ MODULE read_namelists_module
        nppstr   = 0
        wf_collect = .FALSE.
        printwfc = -1
+       lelfield = .FALSE.
+       nberrycic  = 1
+
        ! 
        RETURN
        !
@@ -601,6 +604,9 @@ MODULE read_namelists_module
        CALL mp_bcast( nppstr, ionode_id )
        CALL mp_bcast( wf_collect, ionode_id )
        CALL mp_bcast( printwfc, ionode_id )
+       CALL mp_bcast( lelfield, ionode_id )
+       CALL mp_bcast( nberrycic, ionode_id )
+
        ! 
        RETURN
        !
