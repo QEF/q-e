@@ -146,6 +146,7 @@ PWOBJS = \
 ../PW/gweights.o \
 ../PW/h_1psi.o \
 ../PW/h_psi.o \
+../PW/h_epsi_her.o \
 ../PW/h_1psi_nc.o \
 ../PW/h_psi_nc.o \
 ../PW/hexsym.o \
