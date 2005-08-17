@@ -242,21 +242,21 @@
      END IF
 
  563  format( //, &
-            & 3X,'ion dynamics with nose` temperature control:', /, &
-            & 3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
-            & 3X,'NH chain length           = ', i3, /, &
-            & 3X,'active degrees of freedom = ', i3, /, &
-            & 3X,'time steps per nose osc.  = ', i5 )
+     &       3X,'ion dynamics with nose` temperature control:', /, &
+     &       3X,'temperature required      = ', f10.5, ' (kelvin) ', /, &
+     &       3X,'NH chain length           = ', i3, /, &
+     &       3X,'active degrees of freedom = ', i3, /, &
+     &       3X,'time steps per nose osc.  = ', i5 )
  564  format( //, &
-            & 3X,'nose` frequency(es)       = ', 20(1X,f10.3) ) 
+     &       3X,'nose` frequency(es)       = ', 20(1X,f10.3) ) 
 ! 565  format( //, &
-!            & 3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
+!     &       3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
  565  FORMAT( //, &
-            & 3X,'the requested type of NH chains is ',I5, /, &
-            & 3X,'total number of thermostats used ',I5,1X,I1, /, &
-            & 3X,'ionic degrees of freedom for each chain ',20(1X,I3)) 
+     &       3X,'the requested type of NH chains is ',I5, /, &
+     &       3X,'total number of thermostats used ',I5,1X,I1, /, &
+     &       3X,'ionic degrees of freedom for each chain ',20(1X,I3)) 
  566  format( //, &
-            & 3X,'nose` mass(es) for chain ',i4,' = ', 20(1X,f10.3)) 
+     &       3X,'nose` mass(es) for chain ',i4,' = ', 20(1X,f10.3)) 
     RETURN
   END SUBROUTINE ions_nose_info
 

@@ -1039,11 +1039,11 @@ CONTAINS
       END IF
 
  563  format( //, &
-            & 3X,'cell dynamics with nose` temperature control:', /, &
-            & 3X,'Kinetic energy required   = ', f10.5, ' (Kelvin) ', /, &
-            & 3X,'time steps per nose osc.  = ', i5, /, &
-            & 3X,'nose` frequency           = ', f10.3, ' (THz) ', /, &
-            & 3X,'nose` mass(es)            = ', 20(1X,f10.3),//)
+     &       3X,'cell dynamics with nose` temperature control:', /, &
+     &       3X,'Kinetic energy required   = ', f10.5, ' (Kelvin) ', /, &
+     &       3X,'time steps per nose osc.  = ', i5, /, &
+     &       3X,'nose` frequency           = ', f10.3, ' (THz) ', /, &
+     &       3X,'nose` mass(es)            = ', 20(1X,f10.3),//)
 
     RETURN
   END SUBROUTINE cell_nose_info
