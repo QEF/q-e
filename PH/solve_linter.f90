@@ -39,7 +39,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    iuwfc, lrwfc, iunrec, iudvscf
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int1, int2, int3
-  USE efield,               ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
+  USE efield_mod,           ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
   USE dynmat,               ONLY : dyn, dyn00
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : npwq, igkq, nksq

@@ -111,7 +111,7 @@ MODULE eqv
 END MODULE eqv
 !
 !
-MODULE efield
+MODULE efield_mod
   USE kinds, ONLY :  DP
   !
   ! ... the variables for the electric field perturbation
@@ -130,7 +130,7 @@ MODULE efield
        zstarue0(:,:)          ! 3 * nat, 3)
   ! the effective charges
   !
-END MODULE efield
+END MODULE efield_mod
 !
 !
 MODULE nlcc_ph
@@ -349,7 +349,7 @@ MODULE phcom
   USE dynmat
   USE qpoint
   USE eqv
-  USE efield
+  USE efield_mod
   USE nlcc_ph
   USE gc_ph
   USE phus
