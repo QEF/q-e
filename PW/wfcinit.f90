@@ -40,6 +40,10 @@ SUBROUTINE wfcinit()
   !
   CALL start_clock( 'wfcinit' )
   !
+  ! ... Needed for LDA+U (not yet in gamma)
+  !
+  IF ( lda_plus_u ) CALL orthoatwfc()
+  !
   IF ( gamma_only ) THEN
      !
      CALL wfcinit_gamma()
@@ -120,10 +124,6 @@ SUBROUTINE wfcinit()
           n_starting_wfc = nbnd
           !
        END IF
-       !
-       ! ... Needed for LDA+U (not yet in gamma)
-       !
-       IF ( lda_plus_u ) CALL orthoatwfc()
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
@@ -309,10 +309,6 @@ SUBROUTINE wfcinit()
           n_starting_wfc = nbnd
           !
        END IF
-       !
-       ! ... Needed for LDA+U
-       !
-       IF ( lda_plus_u ) CALL orthoatwfc
        !
        IF ( nks > 1 ) REWIND( iunigk )
        !
