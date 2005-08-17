@@ -322,11 +322,11 @@ subroutine write_dipol(x0,dipol_el,quadrupol_el,tau,nat,alat,zv, &
   !  print the results
   !
   WRITE( stdout,'(/4x,"Makov-Payne correction ",f14.8," Ry = ",f6.3, &
-       & " eV (1st order, 1/a0)")') -corr1, (-corr1)*rytoev
+     &  " eV (1st order, 1/a0)")') -corr1, (-corr1)*rytoev
   WRITE( stdout,'(4x,"                       ",f14.8," Ry = ",f6.3, &
-       & " eV (2nd order, 1/a0^3)")') -corr2, (-corr2)*rytoev
-     WRITE( stdout,'(4x,"                       ",f14.8," Ry = ",f6.3, &
-          " eV (total)")') -corr1-corr2, (-corr1-corr2)*rytoev
+     &  " eV (2nd order, 1/a0^3)")') -corr2, (-corr2)*rytoev
+  WRITE( stdout,'(4x,"                       ",f14.8," Ry = ",f6.3, &
+     &  " eV (total)")') -corr1-corr2, (-corr1-corr2)*rytoev
 
   return
 
