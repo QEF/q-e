@@ -304,7 +304,7 @@ SUBROUTINE setup()
   !
   IF ( lscf .AND. ABS( NINT( nelec / 2.D0 ) - nelec / 2.D0 ) > eps8 &
             .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
-      CALL errore( 'setup', 'the system is metallic, specify occupations', 1 )
+      CALL errore( 'setup', 'the system is metallic, specify occupations', -1 )
   !
   ! ... Check: spin-polarized calculations require tetrahedra or broadening
   !            or fixed occupation - the simple filling of levels is not 

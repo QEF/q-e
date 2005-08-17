@@ -329,8 +329,8 @@ SUBROUTINE sum_band()
              DO ir = 1, nrxxs
                 !
                 rho(ir,current_spin) = rho(ir,current_spin) + &
-                                                   w1 * REAL( psic(ir) )**2 + &
-                                                   w2 * AIMAG( psic(ir) )**2
+                                       w1 * REAL(  psic(ir) )**2 + &
+                                       w2 * AIMAG( psic(ir) )**2
                 !
              END DO
              !

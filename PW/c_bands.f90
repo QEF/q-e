@@ -197,6 +197,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
+#if defined (EXX)
+          currentk = ik
+#endif
+          !
           IF ( lsda ) current_spin = isk(ik)
           !
           ! ... Reads the Hamiltonian and the list k+G <-> G of this k point
@@ -440,11 +444,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        IF ( isolve == 0 ) THEN
           !
-          WRITE( stdout, '(5X,"Davidson diagonalization (with overlap)")')
+          WRITE( stdout, '(5X,"Davidson diagonalization with overlap")')
           !
        ELSE IF ( isolve == 1 ) THEN
           !
-          WRITE( stdout, '(5X,"Conjugate-gradient style diagonalization")')
+          WRITE( stdout, '(5X,"CG style diagonalization")')
           !
        ELSE IF ( isolve == 2 ) THEN
           !

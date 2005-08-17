@@ -28,7 +28,7 @@ module exx
   ! variables defining the auxiliary k-point grid used in X BZ integration
   !
   integer :: nq1=1, nq2=1, nq3=1 ! integers defining the X integration mesh
-  integer :: nqs                 ! number of points in the q-gridd
+  integer :: nqs=1               ! number of points in the q-gridd
   integer :: nkqs                ! total number of different k+q
   real (kind=DP), allocatable :: &
              xkq(:,:)            ! xkq(3,nkqs) the auxiliary k+q set
@@ -85,9 +85,9 @@ contains
         DO ig = 1, npw
            evc(ig,1) =  sqrt(alpha**3/pi) * 8.d0 * pi * alpha /  &
                         (alpha**2 + g2kin(ig))**2 / sqrt(omega)
-           norm = norm + abs(evc(ig,1))**2
+!           norm = norm + abs(evc(ig,1))**2
         end do
-        write (*,*) "NORM  ", ik, norm
+!        write (*,*) "NORM  ", ik, norm
 !        evc(:,1) = evc(:,1)/sqrt(norm)
 
         CALL davcio( evc, nwordwfc, iunwfc, ik, 1)
@@ -105,6 +105,10 @@ contains
   USE lsda_mod,  ONLY : nspin
   USE klist,     ONLY : xk
   USE wvfct,     ONLY : nbnd
+!
+! parallel stuff
+!
+  USE mp_global,  ONLY : nproc, npool
 
   implicit none
   integer :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
@@ -114,8 +118,18 @@ contains
   logical:: xk_not_found
   real (kind=DP) :: sxk(3), dxk(3), xk_cryst(3)
   real (kind=DP) :: eps, dq1, dq2, dq3
+  logical:: no_pool_para
 
   call start_clock ('exx_grid')
+
+  nqs = nq1 * nq2 * nq3
+  !
+  ! all processors need to have access to all k+q points
+  !
+  no_pool_para =  (nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )
+  if (no_pool_para ) call errore('exx_grid',&
+              'pool parallelization not possible in this case', npool)
+  !
   eps = 1.d-6
   !
   ! set a safe limit as the maximum number of auxiliary points we may need
@@ -181,7 +195,6 @@ contains
   !
   ! allocate and fill the array index_xkq(nks,nqs)
   !
-  nqs = nq1 * nq2 * nq3
   if ( nspin == 2 ) then
      allocate ( index_xkq(2*nks,nqs) )
      allocate ( x_occupation(nbnd,2*nks) )
@@ -334,19 +347,24 @@ contains
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
+    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, gamma_only
     USE klist,                ONLY : wk
     USE parser,               ONLY : find_free_unit
     USE symme,                ONLY : nsym, s, ftau
 
+    use mp_global,            ONLY : nproc_pool
+
     implicit none
     integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
+    integer :: h_ibnd, half_nbnd
     COMPLEX(KIND=DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
     logical, allocatable :: present(:)
     logical :: exst
     integer, allocatable :: rir(:,:)
 
     call start_clock ('exxinit')
+
+    if (nproc_pool > 1 ) call errore ('exxinit',' nproc_pool > 1 ',nproc_pool)
 
     allocate(present(nsym),rir(nrxxs,nsym))
     allocate(temppsic(nrxxs), psic(nrxxs), tempevc( npwx, nbnd ))
@@ -361,7 +379,6 @@ contains
        write (*,*) " ! EXXALFA SET TO ", exxalfa
        exxstart=.true.
     endif
-
 
     IF ( nks > 1 ) REWIND( iunigk )
 
@@ -403,31 +420,60 @@ contains
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        ENDIF
 
-       do ibnd =1, nbnd     
-          temppsic(:) = ( 0.D0, 0.D0 )
-          temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
-          CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+       if (gamma_only) then
+          half_nbnd = ( nbnd + 1 )/2
+          h_ibnd = 0
+          do ibnd =1, nbnd, 2     
+             h_ibnd = h_ibnd + 1
+             !
+             temppsic(:) = ( 0.D0, 0.D0 )
+             !
+             if (ibnd < nbnd) then
+                temppsic(nls (igk(1:npw))) = tempevc(1:npw,ibnd)  &
+                          + ( 0.D0, 1.D0 ) * tempevc(1:npw,ibnd+1)
+                temppsic(nlsm(igk(1:npw))) = CONJG( tempevc(1:npw,ibnd) ) &
+                          + ( 0.D0, 1.D0 ) * CONJG( tempevc(1:npw,ibnd+1) )
+             else
+                temppsic(nls (igk(1:npw))) = tempevc(1:npw,ibnd) 
+                temppsic(nlsm(igk(1:npw))) = CONJG( tempevc(1:npw,ibnd) ) 
+             end if
+             CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
 
-          do ikq=1,nkqs
-             if (index_xk(ikq) .ne. ik) cycle
+             do ikq=1,nkqs
+                if (index_xk(ikq) .ne. ik) cycle
 
-             isym = abs(index_sym(ikq) )
-!             psic(rir(1:nrxxs,isym)) = temppsic(1:nrxxs)
-             psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
-             if (index_sym(ikq) < 0 ) psic(1:nrxxs) = conjg(psic(1:nrxxs))
+                isym = abs(index_sym(ikq) )
+                psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
+                if (index_sym(ikq) < 0 ) &
+                   call errore('exxinit','index_sym < 0 with gamma_only (!?)',1)
 
-             CALL davcio( psic, exx_nwordwfc, iunexx, (ikq-1)*nbnd+ibnd, 1 )
+                CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*half_nbnd+h_ibnd,1)
+             end do
           end do
-       end do
+       else
+          do ibnd =1, nbnd     
+             temppsic(:) = ( 0.D0, 0.D0 )
+             temppsic(nls(igk(1:npw))) = tempevc(1:npw,ibnd)
+             CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+
+             do ikq=1,nkqs
+                if (index_xk(ikq) .ne. ik) cycle
+
+                isym = abs(index_sym(ikq) )
+                psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
+                if (index_sym(ikq) < 0 ) psic(1:nrxxs) = conjg(psic(1:nrxxs))
+
+                CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
+             end do
+          end do
+       end if
     end do
     deallocate(temppsic, psic, tempevc)
     deallocate(present,rir)
 
     ! set appropriately the x_occupation
     do ik =1,nks
-       do ibnd=1,nbnd
-          x_occupation(ibnd,ik) = wg (ibnd, ik) / wk(ik) 
-       end do
+       x_occupation(1:nbnd,ik) = wg (1:nbnd, ik) / wk(ik) 
     end do
 
     call stop_clock ('exxinit')  
@@ -453,10 +499,10 @@ contains
     !
     USE cell_base, ONLY : alat, omega, bg, at
     USE symme,     ONLY : nsym, s
-    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
+    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                            nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, gamma_only
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
@@ -471,6 +517,8 @@ contains
     COMPLEX(KIND=DP), allocatable :: rhoc(:), vc(:)
     real (kind=DP),   allocatable :: fac(:)
     integer          :: ibnd, ik, im , ig, ir,  ikq, iq, isym
+    integer          :: h_ibnd, half_nbnd, ibndp1
+    real(kind=DP) :: x1, x2
     real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
     real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha
 
@@ -486,6 +534,7 @@ contains
     do im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
        temppsic(nls(igk(1:npw))) = psi(1:npw,im)
+       if (gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(psi(1:npw,im))
        CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
        
        result(:) = (0.d0,0.d0)
@@ -507,7 +556,7 @@ contains
                   ( xk(2,currentk) - xkq(2) + g(2,ig) )**2 + &
                   ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
              if (qq.gt.1.d-8) then
-                fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
+                fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) 
              else
                 fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
  !                         - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
@@ -518,33 +567,65 @@ contains
              end if
 !             fac(ig)=e2*fpi/tpiba2/(qq + alpha)
           end do
-          do ibnd=1,nbnd !for each band of psi
-             if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
-             !
-             !loads the phi from file
-             !
-             CALL davcio(tempphic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,-1)
-             !calculate rho in real space
-             rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
-             !brings it to G-space
-             CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+          if (gamma_only) then
+             half_nbnd = ( nbnd + 1 ) / 2
+             h_ibnd = 0
+             do ibnd=1,nbnd, 2 !for each band of psi
+                h_ibnd = h_ibnd + 1
+                x1 = x_occupation(ibnd,  ik)
+                if (ibnd < nbnd) then
+                   x2 = x_occupation(ibnd + 1,ik)
+                else
+                   x2 = 0.d0
+                end if
+                if ( abs(x1) < 1.d-6 .and.  abs(x2) < 1.d-6 ) cycle
+                !
+                !loads the phi from file
+                !
+                CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+                                    (ikq-1)*half_nbnd+h_ibnd, -1 )
+                !calculate rho in real space
+                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                !brings it to G-space
+                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
-             vc(:) = ( 0.D0, 0.D0 )
-             do ig=1,ngm
-                vc(nls(ig)) = fac(ig) * rhoc(nls(ig))
-!                if (fac(ig).gt.e2*fpi/tpiba2/2.1) &
-!                   write (*,*) ig, (rhoc(nls(ig))/rhoc(nls(1))-1.d0) * fac(ig)
-             end do
-             vc = vc * x_occupation(ibnd,ik) / nqs
+                vc(:) = ( 0.D0, 0.D0 )
+                vc(nls(1:ngm))  = fac(1:ngm) * rhoc(nls(1:ngm))
+                vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
+                !brings back v in real space
+                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
 
-             !brings back v in real space
-             CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+                vc = DCMPLX( x1 * REAL (vc), x2 * DIMAG(vc) )/ nqs
 
-             do ir=1,nrxxs
                 !accumulates over bands and k points
-                result(ir)=result(ir)+vc(ir)*tempphic(ir)
+                result(1:nrxxs) = result(1:nrxxs) + &
+                                  REAL( vc(1:nrxxs) * tempphic(1:nrxxs) )
              end do
-          end do
+          else
+             do ibnd=1,nbnd !for each band of psi
+                if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
+                !
+                !loads the phi from file
+                !
+                CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+                                        (ikq-1)*nbnd+ibnd, -1 )
+                !calculate rho in real space
+                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                !brings it to G-space
+                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+   
+                vc(:) = ( 0.D0, 0.D0 )
+                vc(nls(1:ngm)) = fac(1:ngm) * rhoc(nls(1:ngm))
+                if (gamma_only) vc(nlsm(1:ngm)) = fac(1:ngm) * rhoc(nlsm(1:ngm))
+                vc = vc * x_occupation(ibnd,ik) / nqs
+
+                !brings back v in real space
+                CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
+
+                !accumulates over bands and k points
+                result(1:nrxxs)=result(1:nrxxs)+vc(1:nrxxs)*tempphic(1:nrxxs)
+             end do
+          end if
        end do
 
        !brings back result in G-space
@@ -563,7 +644,8 @@ contains
     ! This function is called to correct the deband value and have 
     ! the correct energy 
     USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
-    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg
+    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, gamma_only
+    USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
 
@@ -587,13 +669,25 @@ contains
           psi(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        END IF
        vxpsi(:,:) = (0.d0, 0.d0)
-!!    subroutine vexx(lda, n, m, psi, hpsi)
        call vexx(npwx,npw,nbnd,psi,vxpsi)
        do ibnd=1,nbnd
           energy = energy + &
                    wg(ibnd,ik) * ZDOTC(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1)
        end do
+       if (gamma_only .and. gstart == 2) then
+           do ibnd=1,nbnd
+              energy = energy - &
+                       0.5d0 * wg(ibnd,ik) * conjg(psi(1,ibnd)) * vxpsi(1,ibnd)
+           end do
+       end if
     end do
+
+    if (gamma_only) energy = 2.d0 * energy
+
+
+    call reduce ( 1, energy)
+    call poolreduce(1,energy)
+
     exxenergy = energy
 
     call stop_clock ('exxenergy')
@@ -606,10 +700,10 @@ contains
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
     USE cell_base, ONLY : alat, omega, bg, at
     USE symme,     ONLY : nsym, s
-    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, gstart
+    USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
@@ -624,6 +718,8 @@ contains
     COMPLEX(KIND=DP), allocatable :: rhoc(:)
     real (kind=DP),   allocatable :: fac(:)
     integer          :: jbnd, ibnd, ik, ikk, ig, ir,  ikq, iq, isym
+    integer          :: half_nbnd, h_ibnd
+    real(kind=DP)    :: x1, x2
     real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
     real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc
 
@@ -648,6 +744,7 @@ contains
        do jbnd=1, nbnd !for each band of psi (the k cycle is outside band)
           temppsic(:) = ( 0.D0, 0.D0 )
           temppsic(nls(igk(1:npw))) = evc(1:npw,jbnd)
+          if(gamma_only) temppsic(nlsm(igk(1:npw))) = CONJG(evc(1:npw,jbnd))
 
           CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
        
@@ -669,6 +766,7 @@ contains
                      ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
                 if (qq.gt.1.d-8) then
                    fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
+                   if (gamma_only) fac(ig) = 2.d0 * fac(ig)
                 else
                    fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
  !                            - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
@@ -680,30 +778,69 @@ contains
 !                fac(ig)=e2*fpi/tpiba2/(qq + alpha)
              end do
 
-             do ibnd=1,nbnd !for each band of psi
-                if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
-                !
-                !loads the phi from file
-                !
-                CALL davcio(tempphic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,-1)
-                !calculate rho in real space
-                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
-                !brings it to G-space
-                CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+             if (gamma_only) then
+                half_nbnd = ( nbnd + 1) / 2
+                h_ibnd = 0
+                do ibnd=1,nbnd, 2 !for each band of psi
+                   h_ibnd = h_ibnd + 1
+                   x1 = x_occupation(ibnd,ik)
+                   if ( ibnd < nbnd ) then
+                      x2 = x_occupation(ibnd+1,ik)
+                   else
+                      x2 = 0.d0
+                   end if
+                   if ( abs(x1) < 1.d-6 .and. abs(x2) < 1.d-6 ) cycle
+                   !
+                   !loads the phi from file
+                   !
+                   CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                                          (ikq-1)*half_nbnd+h_ibnd, -1 )
+                   !calculate rho in real space
+                   rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                   !brings it to G-space
+                   CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
-                vc = 0.D0
-                do ig=1,ngm
-                   vc = vc + fac(ig) * rhoc(nls(ig)) * conjg(rhoc(nls(ig)))
-                end do
-                vc = vc * omega * x_occupation(ibnd,ik) / nqs
+                   vc = 0.D0
+                   do ig=1,ngm
+                      vc = vc + fac(ig) * x1 * &
+                                abs( rhoc(nls(ig)) + conjg(rhoc(nlsm(ig))) )**2
+                      vc = vc + fac(ig) * x2 * &
+                                abs( rhoc(nls(ig)) - conjg(rhoc(nlsm(ig))) )**2
+                   end do
+                   vc = vc * omega * 0.25d0 / nqs
 
-                energy = energy - exxalfa * vc * wg(jbnd,ikk)
-             end do
+                   energy = energy - exxalfa * vc * wg(jbnd,ikk)
+                end do
+             else
+                do ibnd=1,nbnd !for each band of psi
+                   if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
+                   !
+                   !loads the phi from file
+                   !
+                   CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                                          (ikq-1)*nbnd+ibnd, -1 )
+                   !calculate rho in real space
+                   rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                   !brings it to G-space
+                   CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
+   
+                   vc = 0.D0
+                   do ig=1,ngm
+                      vc = vc + fac(ig) * rhoc(nls(ig)) * conjg(rhoc(nls(ig)))
+                   end do
+                   vc = vc * omega * x_occupation(ibnd,ik) / nqs
+
+                   energy = energy - exxalfa * vc * wg(jbnd,ikk)
+                end do
+             end if
           end do
        end do
     end do
 
     deallocate (tempphic, temppsic, rhoc, fac )
+
+    call reduce ( 1, energy)
+    call poolreduce(1,energy)
 
     exxenergy2 = energy
 
@@ -715,6 +852,7 @@ contains
 
      USE cell_base, ONLY : bg, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
+     USE wvfct,     ONLY : gamma_only
 
      implicit none
      real(kind=DP) :: exx_divergence
@@ -757,7 +895,18 @@ contains
            end do
         end do
      end do
+     call reduce (div)
+     if (gamma_only) then
+        div = 2.d0 * div
+        if (yukawa .le. 1.d-8) then
+           div = div + alpha
+        else
+           div = div - tpiba2/yukawa
+        end if
+     end if
+
      div = div * e2 * fpi / tpiba2 / nqs
+
 
      alpha = alpha / tpiba2
      

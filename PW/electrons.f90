@@ -60,7 +60,7 @@ SUBROUTINE electrons()
   USE bp
 #if defined (EXX)
   USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
-                                   exxalfa, exxstart, exxenergy, exxenergy2
+                                   exxalfa, exxstart, exxenergy, exxenergy2 
   USE funct,                ONLY : dft, which_dft, iexch, icorr, igcx, igcc
 #endif
   !
@@ -537,6 +537,7 @@ SUBROUTINE electrons()
                      ehart, etxc, vtxc, etotefield, charge, vr )
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
            write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
+           write (*,*) fock0
            iter = 0
            go to 10
         end if

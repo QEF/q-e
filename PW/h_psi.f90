@@ -108,6 +108,10 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
        !
+#ifdef EXX
+       if (exxstart) call vexx(lda, n, m, psi, hpsi)
+#endif
+       !
        RETURN
        !
      END SUBROUTINE h_psi_gamma
