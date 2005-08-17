@@ -25,6 +25,7 @@ PWOBJS = \
 ../PW/bp_strings.o \
 ../PW/bp_ylm_q.o \
 ../PW/c_bands.o \
+../PW/c_phase_field.o \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
@@ -98,6 +99,7 @@ PWOBJS = \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
+../PW/h_epsi_her.o \
 ../PW/h_psi.o \
 ../PW/h_psi_nc.o \
 ../PW/init_ns.o \

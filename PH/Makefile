@@ -176,6 +176,7 @@ PWOBJS = \
 ../PW/bp_ylm_q.o \
 ../PW/c_bands.o \
 ../PW/c_gemm.o \
+../PW/c_phase_field.o \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
@@ -252,8 +253,9 @@ PWOBJS = \
 ../PW/gradcorr_nc.o \
 ../PW/gweights.o \
 ../PW/h_1psi.o \
-../PW/h_psi.o \
 ../PW/h_1psi_nc.o \
+../PW/h_epsi_her.o \
+../PW/h_psi.o \
 ../PW/h_psi_nc.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \

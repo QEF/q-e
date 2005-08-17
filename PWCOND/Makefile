@@ -95,6 +95,10 @@ PWOBJS = \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \
 ../PW/becmod.o \
+../PW/bp_calc_btq.o \
+../PW/bp_qvan3.o \
+../PW/bp_radin.o \
+../PW/bp_ylm_q.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
@@ -157,8 +161,9 @@ PWOBJS = \
 ../PW/gradcorr_nc.o \
 ../PW/gweights.o \
 ../PW/h_1psi.o \
-../PW/h_psi.o \
 ../PW/h_1psi_nc.o \
+../PW/h_epsi_her.o \
+../PW/h_psi.o \
 ../PW/h_psi_nc.o \
 ../PW/hexsym.o \
 ../PW/hinit0.o \
