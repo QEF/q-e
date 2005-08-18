@@ -18,7 +18,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, npool, kunit
 #if defined (EXX)
-  USE exx,       ONLY : lexx
+  USE exx,       ONLY : lexx, index_xk, index_xkq, nkqs, nqs
 #endif
   !
   IMPLICIT NONE
@@ -32,6 +32,9 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   REAL (KIND=DP) :: xk(3,nks), wk(nks)
     ! k-points
     ! k-point weights
+#if defined (EXX)
+  INTEGER :: ikk, iq
+#endif
   !
 #if defined (__PARA)
   !
@@ -70,14 +73,14 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
 #if defined (EXX)
      IF ( lexx ) THEN
         index_xk(1:nkqs) = index_xk(1:nkqs) - nbase
-        index_xkq(1:nks,1:nqs) = index_xkq((nbase+1:nbase+nks,nqs)
+        index_xkq(1:nks,1:nqs) = index_xkq(nbase+1:nbase+nks,1:nqs)
         !
         ! consistency check
         !
         do ik=1,nks
            do iq =1,nqs
               ikk = index_xk(index_xkq(ik,iq))
-              if ( ikk < 1 .or. ikk > nks ) 
+              if ( ikk < 1 .or. ikk > nks ) then
                  write (stdout,*) ik, iq, index_xkq(ik,iq), ikk
                  call errore ('d_&_i',' error in EXX indexing',1)
               end if
