@@ -15,13 +15,16 @@ do
     fi
     echo checking directory $EXAMPLEDIR...
 
+    REFERENCEDIR=$EXAMPLEDIR/reference
+    RESULTSDIR=$EXAMPLEDIR/results
+
     # look for output files in reference
-    if test ! -d $EXAMPLEDIR/reference
+    if test ! -d $REFERENCEDIR
     then
-	echo error: reference directory not found in $EXAMPLEDIR
+	echo error: directory $REFERENCEDIR not found
 	exit -1
     fi
-    output=`ls $EXAMPLEDIR/reference | grep ".out\$"`
+    output=`ls $REFERENCEDIR | grep ".out\$"`
 
     # check output files
     echo "                     reference   test   diff."
@@ -36,7 +39,7 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $EXAMPLEDIR/reference/$file`
+                  $REFERENCEDIR/$file`
 	tres=`awk '/CPU time/ \
                    { str = $3; h = m = s = 0;
                      if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -44,7 +47,7 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $EXAMPLEDIR/results/$file`
+                  $RESULTSDIR/$file`
 	echo $file $tref $tres |
 	awk '{printf("%20s: %7.2f %7.2f %+6.1f%%\n",
                      $1, $2, $3, ($3/$2 - 1)*100)}'
