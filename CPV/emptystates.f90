@@ -359,20 +359,18 @@
 !     
 !================================================================
 !
-      SUBROUTINE sodomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
+      SUBROUTINE sodomizza(c_occ, wfill, ampre, c_emp, wempt)
         USE wave_types, ONLY: wave_descriptor
         USE reciprocal_vectors, ONLY: ig_l2g
         USE mp_global, ONLY: mpime, nproc, root
         USE mp_wave, ONLY: splitwf
-        USE brillouin, ONLY: kpoints
-        USE control_flags, ONLY: force_pairing
+        USE control_flags, ONLY: force_pairing, gamma_only
         USE reciprocal_space_mesh, ONLY: gkmask_l
         USE wave_functions, ONLY: wave_rand_init
 
 ! ...   Arguments
         COMPLEX(dbl), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-        TYPE (kpoints), INTENT(IN) :: kp
         REAL(dbl)                  :: ampre  
 
         REAL(dbl) :: rranf
@@ -400,7 +398,7 @@
           IF( force_pairing ) ispin_wfc = 1
           DO ik = 1, wempt%nkl
             CALL wave_rand_init( c_emp( :, :, ik, ispin ) )
-            IF ( .NOT. kp%gamma_only ) THEN
+            IF ( .NOT. gamma_only ) THEN
               ! ..  set to zero all elements outside the cutoff sphere
               DO ib = 1, wempt%nbl( ispin )
                 c_emp(:,ib,ik,ispin) = c_emp(:,ib,ik,ispin) * gkmask_l(:,ik)
@@ -422,7 +420,7 @@
 !=======================================================================
 !
 
-    SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, c_emp, wempt, kp, vpot, eigr, ps)
+    SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, c_emp, wempt, vpot, eigr)
 
       USE wave_types, ONLY: wave_descriptor
       USE wave_functions, ONLY: cp_kinetic_energy, crot, fixwave
@@ -434,22 +432,21 @@
       USE cp_electronic_mass, ONLY: emass
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce_all
-      USE brillouin, ONLY: kpoints
-      USE pseudo_projector, ONLY: allocate_projector, projector, &
-        deallocate_projector
+      USE brillouin, ONLY: kpoints, kp
       USE orthogonalize, ONLY: ortho
-      USE nl, ONLY: nlsm1
+      USE nl, ONLY: nlsm1_s
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: mpime, nproc, group
       USE check_stop, ONLY: check_stop_now
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE cp_types, ONLY: pseudo
       USE control_flags, ONLY: force_pairing, gamma_only
       USE reciprocal_space_mesh, ONLY: gkmask_l, gkx_l, gk_l
       USE reciprocal_vectors, ONLY: g, gx
       USE uspp_param, ONLY: nhm
+      USE pseudopotential, ONLY: nspnl
+      USE uspp,             ONLY : nkb
 
       IMPLICIT NONE
 
@@ -459,8 +456,6 @@
       TYPE (wave_descriptor), INTENT(IN) ::  wfill, wempt
       TYPE (atoms_type), INTENT(INOUT) :: atoms ! ions structure
       REAL (dbl), INTENT(IN) ::   vpot(:,:,:,:)
-      TYPE (kpoints), INTENT(IN) :: kp
-      TYPE (pseudo), INTENT(IN) :: ps
       LOGICAL, INTENT(IN) :: tortho
       COMPLEX(dbl) :: eigr(:,:)
 !
@@ -475,7 +470,7 @@
       REAL(dbl) :: ampre
       REAL(dbl), ALLOCATABLE :: dt2bye( : )
       REAL(dbl), PARAMETER :: small    = 1.0d-14
-      TYPE (projector) :: fnle( SIZE(c_emp, 3), SIZE(c_emp, 4) )
+      REAL(dbl), ALLOCATABLE :: bece( :, : )
       COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:,:), cp_emp(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: fi(:,:,:)
       LOGICAL       :: gamma
@@ -494,7 +489,7 @@
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
 
-      CALL allocate_projector(fnle, nsanl, n_emp, nhm, gamma) 
+      ALLOCATE( bece( nkb, n_emp * nspin ) )
       ALLOCATE( eforce( ngw, wempt%ldb, nk, nspin ) )
       ALLOCATE( fi( wempt%ldb, nk, nspin ) )
       ALLOCATE( cp_emp( SIZE(c_emp,1), SIZE(c_emp,2), SIZE(c_emp,3), SIZE(c_emp,4) ) )
@@ -503,9 +498,9 @@
       IF( ionode ) WRITE( stdout,56)
 
       exst = readempty( c_emp, wempt )
-      ! .. WRITE( stdout, * )' DEBUG empty 1 ', exst
+
       IF( .NOT. exst ) THEN
-        CALL sodomizza(c_occ, wfill, ampre, c_emp, wempt, kp)
+        CALL sodomizza(c_occ, wfill, ampre, c_emp, wempt)
       END IF
 
       dt2bye = delt * delt / pmss
@@ -525,18 +520,14 @@
 
           DO ik = 1, kp%nkpt
 
-            IF( gamma_only ) THEN
-              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-                g(:), gx(:,:), fnle(ik,ispin))
-            ELSE
-              CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-                gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
-            END IF
+            bece = 0.0d0
 
-            CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
-              vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps, ik)
+            CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ik, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
 
-! ...       Steepest descent
+            CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
+              vpot(:,:,:,ispin), eigr, bece )
+
+            ! ...       Steepest descent
             DO i = 1, n_emp
               cp_emp(:,i,ik,ispin) = c_emp(:,i,ik,ispin) +  dt2bye(:) * eforce(:, i, ik, ispin)
             END DO
@@ -556,7 +547,7 @@
             END IF
 
           END DO
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, kp, pmss, delt)
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, pmss, delt)
 
         END DO SPIN_LOOP
 
@@ -582,15 +573,15 @@
 
       END DO ITERATIONS
 
-      CALL empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, kp)
+      CALL empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece )
 
       CALL writeempty( c_emp, wempt )
 
-      CALL deallocate_projector(fnle)
       DEALLOCATE( eforce )
       DEALLOCATE( cp_emp )
       DEALLOCATE( fi )
       DEALLOCATE( dt2bye )
+      DEALLOCATE( bece )
               
  55   FORMAT(1X,I8,4F12.6)
  56   FORMAT(/,3X,'Empty states minimization starting ')
@@ -607,27 +598,14 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE empty_eigs(tortho, atoms, c_emp, wempt, fi, vpot, eforce, fnle, ps, eigr, kp)
+    SUBROUTINE empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece)
 
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_functions, ONLY: crot
-      USE wave_constrains, ONLY: update_lambda
-      USE wave_base, ONLY: hpsi, dotp
-      USE constants, ONLY: au
-      USE control_flags, ONLY: gamma_only
-      USE cell_base, ONLY: tpiba2
-      USE electrons_module, ONLY: eigs, ei_emp, pmss, emass, n_emp_l, n_emp
-      USE forces, ONLY: dforce_all
-      USE brillouin, ONLY: kpoints
-      USE pseudo_projector, ONLY: projector
-      USE orthogonalize, ONLY: ortho
-      USE nl, ONLY: nlsm1
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: mpime, nproc, group
-      USE atoms_type_module, ONLY: atoms_type
-      USE cp_types, ONLY: pseudo
-      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
-      USE reciprocal_vectors,    ONLY: gx, g
+      USE wave_types,       ONLY : wave_descriptor
+      USE wave_constrains,  ONLY : update_lambda
+      USE constants,        ONLY : au
+      USE electrons_module, ONLY : eigs, ei_emp, n_emp, n_emp_l
+      USE forces,           ONLY : dforce_all
+      USE pseudopotential,  ONLY : nspnl
 
       IMPLICIT NONE
 
@@ -635,31 +613,25 @@
 
       COMPLEX(dbl), INTENT(inout) ::  c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wempt
-      TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
       REAL (dbl), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
       COMPLEX (dbl) ::  eforce(:,:,:,:)
-      TYPE (kpoints), INTENT(in) :: kp
-      TYPE (pseudo), INTENT(in) :: ps
       LOGICAL, INTENT(IN) :: TORTHO
       COMPLEX(dbl) :: eigr(:,:)
-      TYPE (projector) :: fnle(:,:)
+      REAL (dbl) :: bece(:,:)
 !
 ! ... LOCALS
 !
 
-      INTEGER     kk, i, k, j, iopt, iter, nwh, ik, nk, ibl
-      INTEGER     ngw, n_occ, nspin, ispin
-      INTEGER     ig, iprinte, iks, nrl, jl
+      INTEGER     i, ngw, nspin, ispin
       LOGICAL     gamma
 
       REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
+      COMPLEX(dbl) :: cgam(1,1)
 
 !
 ! ... SUBROUTINE BODY
 !
       nspin     = wempt%nspin
-      nk        = wempt%nkl
       ngw       = wempt%ngwl
       gamma     = wempt%gamma
 
@@ -670,43 +642,28 @@
 
         IF( n_emp < 1 ) CYCLE SPIN_LOOP
 
-        ALLOCATE(gam(n_emp_l(ispin), n_emp), cgam(n_emp_l(ispin), n_emp))
+        ALLOCATE( gam( n_emp_l(ispin), n_emp ) )
 
-        DO ik = 1, nk
-          IF( gamma_only ) THEN
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-              g(:), gx(:,:), fnle(ik,ispin))
-          ELSE
-            CALL nlsm1( ispin, ps%wnl(:,:,:,ik), atoms, eigr, c_emp(:,:,ik,ispin), wempt, &
-              gk_l(:,ik), gkx_l(:,:,ik), fnle(ik,ispin))
-          END IF
+        CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, 1, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
+
+        ! ...   Calculate | dH / dpsi(j) >
+        !
+        CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
+          vpot(:,:,:,ispin), eigr, bece )
+
+        ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
+        DO i = 1, n_emp
+           CALL update_lambda( i, gam, c_emp(:,:,1, ispin), wempt, eforce(:,i,1,ispin) )
         END DO
 
-! ...   Calculate | dH / dpsi(j) >
-        CALL dforce_all( ispin, c_emp(:,:,:,ispin), wempt, fi(:,:,ispin), eforce(:,:,:,ispin), &
-          vpot(:,:,:,ispin), fnle(:,ispin), eigr, ps)
+        CALL eigs( n_emp, gam, cgam, tortho, fi(:,1,ispin), ei_emp(:,1,ispin), gamma)
 
-        DO ik = 1, kp%nkpt
-
-! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
-          DO i = 1, n_emp
-            IF( gamma ) THEN
-              CALL update_lambda( i, gam, c_emp(:,:,ik, ispin), wempt, eforce(:,i,ik,ispin) )
-            ELSE
-              CALL update_lambda( i, cgam, c_emp(:,:,ik, ispin), wempt, eforce(:,i,ik,ispin) )
-            END IF
-          END DO
-
-          CALL eigs( n_emp, gam, cgam, tortho, fi(:,ik,ispin), ei_emp(:,ik,ispin), gamma)
-        END DO
-
-        DEALLOCATE(gam, cgam)
+        DEALLOCATE( gam )
 
       END DO SPIN_LOOP
 
-
       RETURN
-    END SUBROUTINE empty_eigs
+   END SUBROUTINE empty_eigs
 
 ! ---------------------------------------------------------------------- !
       END MODULE empty_states

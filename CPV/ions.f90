@@ -419,15 +419,20 @@
           
          LOGICAL, ALLOCATABLE :: ismb(:,:)
          INTEGER              :: ia, isa
+         LOGICAL              :: nofx
 
          ALLOCATE( ismb( 3, nat ) )
 
          ismb = .TRUE.
+         nofx = .TRUE.
          DO isa = 1, nat
            ia = ind_srt( isa )
            ismb( 1, isa ) = ( if_pos( 1, ia ) /= 0 )
            ismb( 2, isa ) = ( if_pos( 2, ia ) /= 0 )
            ismb( 3, isa ) = ( if_pos( 3, ia ) /= 0 )
+           nofx = nofx .AND. ismb( 1, isa )
+           nofx = nofx .AND. ismb( 2, isa )
+           nofx = nofx .AND. ismb( 3, isa )
          END DO
 
          CALL atoms_type_init(atoms_m, stau, ismb, atml, pmass, na, nsp, h)
@@ -436,9 +441,10 @@
 
          CALL print_scaled_positions( atoms_0, stdout, 'from standard input')
 
-         IF( ANY( ismb ) ) THEN
+         IF( .NOT. nofx ) THEN
            WRITE( stdout, 10 )
- 10        FORMAT( 3X, 'The following position components are kept fixed', /, &
+ 10        FORMAT( /, &
+                   3X, 'Position components with 0 are kept fixed', /, &
                    3X, '  ia  x  y  z ' )
            DO isa = 1, nat
              ia = ind_srt( isa )

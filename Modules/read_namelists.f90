@@ -88,6 +88,7 @@ MODULE read_namelists_module
        ! ... directory containing the pseudopotentials
        !
        pseudo_dir    = './'  
+       pseudo_table_size = 5000
        max_seconds   = 1.D+7
        ekin_conv_thr = 1.D-6
        etot_conv_thr = 1.D-4
@@ -596,6 +597,7 @@ MODULE read_namelists_module
        CALL mp_bcast( etot_conv_thr, ionode_id )
        CALL mp_bcast( forc_conv_thr, ionode_id )
        CALL mp_bcast( pseudo_dir, ionode_id )
+       CALL mp_bcast( pseudo_table_size, ionode_id )
        CALL mp_bcast( disk_io, ionode_id )
        CALL mp_bcast( tefield, ionode_id )
        CALL mp_bcast( dipfield, ionode_id )
@@ -1091,6 +1093,9 @@ MODULE read_namelists_module
                     & ' not implemented in PW ', -1 )
        END IF
        !
+       IF( pseudo_table_size < 0 ) &
+         CALL errore( sub_name, ' size of pseudo table should be positive ', 1 )
+       !
        RETURN
        !
      END SUBROUTINE
@@ -1130,14 +1135,6 @@ MODULE read_namelists_module
        IF( ntyp < 1 .OR. ntyp > nsx ) &
           CALL errore( sub_name , &
                        & ' ntyp too large, increase NSX ', MAX( ntyp, 1) )
-       !
-!       IF( prog /= 'PW' ) THEN
-!          IF( nbnd < 1 .OR. nbnd > nbndxx ) &
-!             CALL errore( sub_name ,' nbnd out of range ', MAX(nbnd, 1) )
-!          IF( nelec <= 0.d0 .OR. nelec > 2*nbnd ) &
-!             CALL errore( sub_name , &
-!                          & ' nelec out of range ', MAX(int(nelec), 1) )
-!       END IF
        !
        IF( nspin < 1 .OR. nspin > nspinx ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )

@@ -31,7 +31,6 @@
           USE fft
           USE fft_base, ONLY: dfftp
           USE cell_base, ONLY: tpiba
-          USE cp_types
           USE mp_global
           USE reciprocal_vectors, ONLY: gstart, gx
           USE gvecp, ONLY: ngm
@@ -262,6 +261,7 @@
 
           nnr   = SIZE( rhoetr, 1 ) * SIZE( rhoetr, 2 ) * SIZE( rhoetr, 3 )
           nspin = SIZE( rhoetr, 4 )
+
           !
           IF( nnr /= nr3l * nr2l * nr1l ) THEN
             DO ispin = 1, nspin
@@ -270,13 +270,16 @@
                   DO i = 1, SIZE( rhoetr, 1 )
                     IF( i > nr1l .OR. j > nr2l .OR. k > nr3l ) THEN
                       rhoetr( i, j, k,    ispin ) = 0.0d0
-                      grho  ( i, j, k, :, ispin ) = 0.0d0
+                      IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+                        grho  ( i, j, k, :, ispin ) = 0.0d0
+                      END IF
                     END IF
                   END DO
                 END DO
               END DO
             END DO
           END IF
+
           !
           CALL exch_corr_wrapper( nnr, nspin, grho(1,1,1,1,1), rhoetr(1,1,1,1), &
                                   sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
@@ -299,6 +302,7 @@
               END DO
             END DO
           END DO
+
 
         RETURN
       END SUBROUTINE exch_corr_energy

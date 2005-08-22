@@ -53,9 +53,9 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, kp, &
-                ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
-                fnl, vpot, doions, edft, maxnstep, cgthr )
+   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, &
+                bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
+                vpot, doions, edft, maxnstep, cgthr, tconv )
 
 !  this routine computes the electronic ground state via ...
 !  END manual
@@ -76,10 +76,7 @@
       USE io_global, ONLY: stdout
       USE orthogonalize
       USE cell_module, ONLY: boxdimensions
-      USE brillouin, ONLY: kpoints
-      USE cp_types
       USE wave_types
-      USE pseudo_projector, ONLY: projector
       USE potentials, ONLY: kspotential
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
@@ -91,22 +88,21 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL   :: tortho, tprint, tcel, doions
+      LOGICAL   :: tortho, tprint, tcel, doions, tconv
       TYPE (atoms_type) :: atoms_0
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
       TYPE (charge_descriptor) :: desc
-      TYPE (pseudo), INTENT(INOUT) :: ps
       REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: eigr(:,:)
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
       REAL(dbl) :: occ(:,:,:)
-      TYPE (projector) :: fnl(:,:)
+      REAL(dbl) :: bec(:,:)
+      REAL(dbl) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
       INTEGER :: maxnstep
       REAL(dbl) :: cgthr
@@ -182,7 +178,7 @@
         s1 = cclock()
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft, timepre )
 
         s2 = cclock()
 
@@ -191,8 +187,8 @@
 ! ...     Calculate wave functions gradient (temporarely stored in cp)
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
-          CALL dforce_all( ispin, c0(:,:,:,ispin), cdesc, occ(:,:,ispin), cp(:,:,:,ispin), &
-            vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+          CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), cp(:,:,1,ispin), &
+            vpot(:,:,:,ispin), eigr, bec )
  
 ! ...     Project the gradient
           IF( gamma_symmetry ) THEN
@@ -241,7 +237,7 @@
         !  perform line minimization in the direction of "hacca"
 
         CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, desc, hacca, &
-          atoms_0, ht0, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp)
+          atoms_0, ht0, bec, becdr, eigr, ei1, ei2, ei3, sfac)
 
         ! CALL print_energies( edft )
         s5 = cclock()
@@ -269,7 +265,7 @@
 
         ekinc = 0.0d0
         DO ispin = 1, nspin
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, kp, pmss, delt)
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, pmss, delt)
         END DO
         IF( iter > 1 ) THEN
           dek   = ekinc - ekinc_old
@@ -291,16 +287,25 @@
 
         s6 = cclock()
 
-! ...   check for exit
+        ! ...   check for exit
+
         IF (check_stop_now()) THEN
+          doions = .FALSE.
+          tconv  = .FALSE.
           EXIT CONJUGATE_GRADIENTS
         END IF
+        !
         IF( ABS( demin ) / MAXVAL( nb ) < cgthr ) THEN
+          !
           IF(ionode) WRITE( stdout,*) "  convergence achieved successfully"
+          !
           doions = .TRUE.
+          tconv  = .TRUE.
           EXIT CONJUGATE_GRADIENTS
         END IF
+        !
         ekinc_old = ekinc
+        !
       END DO CONJUGATE_GRADIENTS
 
       !  set wave functions velocity to 0
@@ -314,8 +319,8 @@
       IF( tprint ) THEN
         DO ispin = 1, nspin
 
-          CALL dforce_all( ispin, c0(:,:,:,ispin), cdesc, occ(:,:,ispin), hacca(:,:,:,ispin), &
-            vpot(:,:,:,ispin), fnl(:,ispin), eigr, ps)
+          CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), hacca(:,:,1,ispin), &
+            vpot(:,:,:,ispin), eigr, bec )
 
           nb_g( ispin ) = cdesc%nbt( ispin )
 
@@ -356,14 +361,11 @@
 ! ---------------------------------------------------------------------- !
 
     SUBROUTINE cglinmin(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
-        atoms, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp)
+        atoms, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac)
 
 ! ... declare modules
 
-        USE cp_types
         USE wave_types
-        USE brillouin, ONLY: kpoints
-        USE pseudo_projector, ONLY: projector
         USE energies, ONLY: dft_energy_type
         USE wave_functions, ONLY: gram, fixwave
         USE io_global, ONLY: ionode
@@ -383,7 +385,6 @@
         COMPLEX(dbl), INTENT(IN) :: c(:,:,:,:)
         COMPLEX(dbl), INTENT(INOUT) :: cp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        TYPE (pseudo), INTENT(INOUT) :: ps
         TYPE (charge_descriptor) :: desc
         REAL(dbl) :: rhoe(:,:,:,:)
         COMPLEX(dbl) :: sfac(:,:)
@@ -391,10 +392,10 @@
         COMPLEX(dbl) :: ei1(:,:)
         COMPLEX(dbl) :: ei2(:,:)
         COMPLEX(dbl) :: ei3(:,:)
-        TYPE (kpoints), INTENT(IN) ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(dbl) :: occ(:,:,:)
-        TYPE (projector) :: fnl(:,:)
+        REAL(dbl), INTENT(IN) :: occ(:,:,:)
+        REAL(dbl) :: bec(:,:)
+        REAL(dbl) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
         COMPLEX (dbl) ::  hacca(:,:,:,:)
         REAL (dbl), INTENT(in) ::  vpot(:,:,:,:)
@@ -597,7 +598,7 @@
         CALL gram( cp, cdesc )
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
-            atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, fnl, vpot, edft, timepre )
+            atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, vpot, edft, timepre )
 
         cgenergy = edft%etot
 

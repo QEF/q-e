@@ -43,6 +43,7 @@
 
       USE constants, ONLY: eps8
       USE io_global, ONLY: stdout
+      USE control_flags, ONLY: iprsta
 
       REAL(dbl), INTENT(IN) :: zv_ (:)
       INTEGER, INTENT(IN) :: na_ (:) , nsp_
@@ -53,6 +54,8 @@
       REAL(dbl) :: nelec, nelup, neldw, ocp, fsum
       INTEGER   :: iss, i, in
 
+      nspin = nspin_
+
       IF( nelec_ /= 0 ) THEN
         nelec = nelec_
       ELSE
@@ -61,15 +64,6 @@
           nelec = nelec + na_ ( i ) * zv_ ( i )
         END DO 
       END IF
-
-      IF( nbnd_ /= 0 ) THEN
-        nbnd  = nbnd_
-      ELSE
-        nbnd  = INT( nelec + 1 ) / 2
-      END IF
-
-      nbsp  = nbnd * nspin_
-      nspin = nspin_
 
       IF( nelup_ > 0.0d0 .AND. neldw_ > 0.0d0 ) THEN
         nelup = nelup_
@@ -85,27 +79,37 @@
         neldw = nelec - nelup
       END IF
 
+      IF( ABS( nelec - ( nelup + neldw ) ) > eps8 ) THEN
+         CALL errore(' electrons_base_initval ',' inconsistent n. of electrons ', 2 )
+      END IF
+      !
+      !   Compute the number of bands
+      !
+      IF( nbnd_ /= 0 ) THEN
+        nbnd  = nbnd_
+      ELSE
+        nbnd  = NINT( MAX( nelup, neldw ) )
+      END IF
+
+
       IF( nelec < 1 ) THEN
          CALL errore(' electrons_base_initval ',' nelec less than 1 ', 1 )
       END IF
-      IF( nint( nelec ) - nelec > eps8 ) THEN
+      !
+      IF( ABS( NINT( nelec ) - nelec ) > eps8 ) THEN
          CALL errore(' electrons_base_initval ',' nelec must be integer', 2 )
       END IF
+      !
       IF( nbnd < 1 ) &
         CALL errore(' electrons_base_initval ',' nbnd out of range ', 1 )
+      !
 
+      IF ( nspin /= 1 .AND. nspin /= 2 ) THEN
+        WRITE( stdout, * ) 'nspin = ', nspin
+        CALL errore( ' electrons_base_initval ', ' nspin out of range ', 1 )
+      END IF
 
-     IF ( nspin /= 1 .AND. nspin /= 2 ) THEN
-       WRITE( stdout, * ) 'nspin = ', nspin
-       CALL errore( ' electrons_base_initval ', ' nspin out of range ', 1 )
-     END IF
-
-
-      if( mod( nbsp , 2 ) .ne. 0 ) then
-         nbspx = nbsp + 1
-      else
-         nbspx = nbsp
-      end if
+      nbspx = nbnd * nspin
 
       ALLOCATE( f     ( nbspx ) )
       ALLOCATE( fspin ( nbspx ) )
@@ -122,9 +126,9 @@
          !
          ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
          !
-         f ( : )    = nelec / nbsp
+         f ( : )    = nelec / nbspx
          nel (1)    = nint( nelec )
-         nupdwn (1) = nbsp
+         nupdwn (1) = nbspx
          if ( nspin == 2 ) then
             !
             ! bogus to ensure Nelec = Nup + Ndw
@@ -140,44 +144,68 @@
          !
          ! occupancies have been read from input
          !
-         f ( 1:nbnd ) = f_inp( 1:nbnd, 1 )
-         if( nspin == 2 ) f ( nbnd+1 : 2*nbnd ) = f_inp( 1:nbnd, 2 )
-         if( nelec == 0.d0 ) nelec = SUM ( f ( 1:nbsp ) )
-         if( nspin == 2 .and. nelup == 0) nelup = SUM ( f ( 1:nbnd ) )
-         if( nspin == 2 .and. neldw == 0) neldw = SUM ( f ( nbnd+1 : 2*nbnd ) )
-
-         if( nspin == 1 ) then
-           nel (1)    = nint(nelec)
-           nupdwn (1) = nbsp
-         else
-           IF ( ABS (nelup + neldw - nelec) > eps8 ) THEN
-              CALL errore(' electrons_base_initval ',' wrong # of up and down spin', 1 )
+         ! count electrons
+         !
+         IF( nspin == 1 ) THEN
+            nelec = SUM( f_inp( :, 1 ) )
+            nelup = nelec / 2.0d0
+            neldw = nelec / 2.0d0
+         ELSE
+            nelup = SUM ( f_inp ( :, 1 ) )
+            neldw = SUM ( f_inp ( :, 2 ) )
+            nelec = nelup + neldw 
+         END IF
+         !
+         ! count bands
+         !
+         nupdwn (1) = 0
+         nupdwn (2) = 0
+         DO i = 1, nbnd
+           IF( nspin == 1 ) THEN
+             IF( f_inp( i, 1 ) > 0.0d0 ) nupdwn (1) = nupdwn (1) + 1
+           ELSE
+             IF( f_inp( i, 1 ) > 0.0d0 ) nupdwn (1) = nupdwn (1) + 1
+             IF( f_inp( i, 2 ) > 0.0d0 ) nupdwn (2) = nupdwn (2) + 1
            END IF
-           nel (1) = nint(nelup)
-           nel (2) = nint(neldw)
-           nupdwn (1)=nbnd
-           nupdwn (2)=nbnd
-           iupdwn (2)=nbnd+1
+         END DO
+         !
+         if( nspin == 1 ) then
+           nel (1)    = nint( nelec )
+           iupdwn (1) = 1
+         else
+           nel (1)    = nint(nelup)
+           nel (2)    = nint(neldw)
+           iupdwn (1) = 1
+           iupdwn (2) = nupdwn (1) + 1
          end if
+         !
+         DO iss = 1, nspin
+           DO in = iupdwn ( iss ), iupdwn ( iss ) - 1 + nupdwn ( iss )
+             f( in ) = f_inp( in - iupdwn ( iss ) + 1, iss )
+           END DO
+         END DO
          !
       CASE ('fixed')
 
          if( nspin == 1 ) then
-            nel (1) = nint(nelec)
-            nupdwn (1) = nbsp
+            nel(1)    = nint(nelec)
+            nupdwn(1) = nbnd
+            iupdwn(1) = 1
          else
             IF ( nelup + neldw /= nelec  ) THEN
                CALL errore(' electrons_base_initval ',' wrong # of up and down spin', 1 )
             END IF
-            nel (1) = nint(nelup)
-            nel (2) = nint(neldw)
-            nupdwn (1)=nbnd
-            nupdwn (2)=nbnd
-            iupdwn (2)=nbnd+1
+            nel(1)    = nint(nelup)
+            nel(2)    = nint(neldw)
+            nupdwn(1) = nint(nelup)
+            nupdwn(2) = nint(neldw)
+            iupdwn(1) = 1
+            iupdwn(2) = nupdwn(1) + 1
          end if
 
          ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
          ocp = 2.d0 / nspin
+         !
          ! default filling: attribute ocp electrons to each states
          !                  until the good number of electrons is reached
          do iss = 1, nspin
@@ -188,18 +216,20 @@
                else
                   f (in) = max( nel ( iss ) - fsum, 0.d0 )
                end if
-                fsum=fsum + f(in)
+                fsum = fsum + f(in)
             end do
          end do
+         !
       CASE ('ensemble','ensemble-dft','edft')
 
           if ( nspin == 1 ) then
-            nbsp       = nbnd
-            f ( : ) = nelec / nbsp
-            nel (1) = nint(nelec)
-            nupdwn (1) = nbsp
+            !
+            f ( : )    = nelec / nbnd
+            nel (1)    = nint(nelec)
+            nupdwn (1) = nbnd
+            !
           else
-            nbsp       = 2*nbnd
+            !
             if (nelup.ne.0) then
               if ((nelup+neldw).ne.nelec) then
                  CALL errore(' electrons_base_initval ',' nelup+neldw .ne. nelec', 1 )
@@ -210,14 +240,17 @@
               nel (1) = ( nint(nelec) + 1 ) / 2
               nel (2) =   nint(nelec)       / 2
             end if
+            !
             nupdwn (1) = nbnd
             nupdwn (2) = nbnd
             iupdwn (2) = nbnd+1
+            !
             do iss = 1, nspin
              do i = iupdwn ( iss ), iupdwn ( iss ) - 1 + nupdwn ( iss )
                 f (i) =  nel (iss) / real (nupdwn (iss))
              end do
             end do
+            !
           end if
 
       CASE DEFAULT
@@ -232,6 +265,7 @@
       end do
 
       nbndx = MAXVAL( nupdwn )
+      nbsp  = nupdwn (1) + nupdwn (2)
 
       IF ( nspin == 1 ) THEN 
         nelt = nel(1)
@@ -241,11 +275,14 @@
         nudx = MAX( nupdwn(1), nupdwn(2) )
       END IF
 
-      IF( nbnd < nupdwn(1) .OR. nbnd < nupdwn(2) ) &
+      IF( nbnd < MAX( nupdwn(1), nupdwn(2) ) ) &
         CALL errore(' electrons_base_initval ',' inconsistent nbnd and nupdwn(1) or nupdwn(2) ', 1 )
 
       IF( ( 2 * nbnd ) < nelt ) &
         CALL errore(' electrons_base_initval ',' too few states ',  1  )
+
+      IF( nbsp < INT( nelec * nspin / 2.0d0 ) ) &
+        CALL errore(' electrons_base_initval ',' too many electrons ', 1 )
 
 
       telectrons_base_initval = .TRUE.

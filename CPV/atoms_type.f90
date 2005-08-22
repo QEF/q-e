@@ -10,15 +10,13 @@
       MODULE atoms_type_module
 !=----------------------------------------------------------------------------=!
 
-!  this module contains the definitions of several TYPE structures
-!  relative to the ionic degrees of freedom,
-!  together with their allocation/deallocation routines
+!  this module contains the definition of TYPE structure
+!  relative to the ionic degrees of freedom
 !  ----------------------------------------------
 !  routines in this module:
 !  ----------------------------------------------
 !  SUBROUTINE specie_index(isa, na, is, ia)
 !  SUBROUTINE allocate_atoms_type(atoms, staur, ismbl, pma, na)
-!  SUBROUTINE deallocate_atoms_type(atoms)
 
 
         USE kinds
@@ -41,7 +39,7 @@
           INTEGER :: nax       ! maximum number of atoms per specie
           INTEGER :: dof(nsx)  ! degree_of_freedom for each specie
 
-          CHARACTER(LEN=4) :: label(nsx) !  atomic labels
+          CHARACTER(LEN=3) :: label(nsx) !  atomic labels
           INTEGER   :: na(nsx)  !   number of atoms per specie
           INTEGER   :: isa(nsx) !   index of the first atom (in the whole list) of a given specie
           REAL(dbl) :: m(nsx)   !   atomic masses
@@ -66,7 +64,6 @@
 
 
         PUBLIC :: atoms_type
-        PUBLIC :: deallocate_atoms_type
         PUBLIC :: atoms_type_init
 
 !  end of module-scope declarations
@@ -170,14 +167,6 @@
 
           RETURN
         END SUBROUTINE atoms_type_init
-
-!=----------------------------------------------------------------------------=!
-
-        SUBROUTINE deallocate_atoms_type(atoms)
-          TYPE (atoms_type) :: atoms
-            INTEGER :: is, ierr
-          RETURN
-        END SUBROUTINE deallocate_atoms_type
 
 
 !=----------------------------------------------------------------------------=!

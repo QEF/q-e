@@ -5,147 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sun Oct 31 12:18:54 MET 1999
-!  ----------------------------------------------
-
-     MODULE init_fpmd
-
-       USE kinds
-       USE io_global, ONLY: ionode, stdout
-
-       IMPLICIT NONE
-       PRIVATE       
-       SAVE
-
-       REAL(dbl), EXTERNAL :: cclock
-
-       PUBLIC :: init0s
-
-     CONTAINS
-
-!  BEGIN manual
-
-      SUBROUTINE init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht)
-
-!  this routine handles data initialization
-!  ----------------------------------------------
-!  END manual
-
-! ... declare modules
-      USE cp_types,             ONLY: pseudo
-      use mp_global,            only: nproc
-      USE phase_factors_module, ONLY: strucf, phfacs
-      USE atoms_type_module,    ONLY: atoms_type
-      USE cell_module,          ONLY: cell_init, get_lattice_vectors
-      USE cell_module,          only: boxdimensions
-      USE electrons_module,     ONLY: electron_mass_init, band_init, n_emp
-      USE electrons_base,       ONLY: nspin, nupdwn
-      USE reciprocal_vectors,   ONLY: ngwt, gstart, gzero, ngm, ngmt, ngw, mill_l
-      USE pseudopotential,      ONLY: formf, nsanl, pseudopotential_init, &
-                                      pseudopotential_initval, &
-                                      pseudopotential_indexes
-      USE ions_base,            ONLY: nsp, na, nat
-      USE ions_module,          ONLY: atoms_init
-      USE brillouin,            ONLY: kpoints
-      USE wave_types,           ONLY: wave_descriptor, wave_descriptor_init, wave_descriptor_info
-      USE control_flags,        ONLY: nbeg, tbeg, timing, iprsta
-      USE turbo,                ONLY: tturbo, allocate_turbo
-      USE ions_base,            ONLY: ind_srt, if_pos, atm
-      USE fft_base,             ONLY: dfftp
-      USE grid_dimensions,      ONLY: nr1, nr2, nr3
-      USE ions_positions,       ONLY: taus
-      USE reciprocal_space_mesh, ONLY: newgk
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-
-      TYPE (atoms_type)   :: atoms_0, atoms_p, atoms_m
-      TYPE (wave_descriptor) :: wfill, wempt
-      TYPE (pseudo) :: ps
-      TYPE (kpoints) :: kp
-      TYPE (boxdimensions) :: ht_m, ht
-
-! ... declare other variables
-      REAL(dbl) :: s1, s2, s3, s4, s5
-      REAL(dbl) :: a1(3), a2(3), a3(3)
-      INTEGER :: i, ispin, isym
-      LOGICAL :: tk
-      INTEGER :: neupdwn( nspin )
-
-
-!  end of declarations
-!  ----------------------------------------------
-
-      call get_lattice_vectors( a1, a2, a3 )
-
-      ! ... Initialize cell variables
-
-      CALL cell_init( ht,   a1, a2, a3 )
-      CALL cell_init( ht_m, a1, a2, a3 )
-
-      ! ... compute reciprocal lattice vectors
-      CALL newgk(kp, ht%m1)
-
-      ! ... initialize atomic configuration (should be called after metric_init)
-      CALL atoms_init( atoms_m, atoms_0, atoms_p, taus, ind_srt, if_pos, atm, ht%hmat )
-
-      ! ... Allocate + Initialize pseudopotentials
-      CALL pseudopotential_indexes()
-      CALL pseudopotential_initval()
-      CALL pseudopotential_init(ps, na, nsp, kp)
-
-      s4 = cclock()
-
-      ! ... compute local form factors
-      CALL formf(ht, kp, ps)
-
-      s5 = cclock()
-
-      IF(ionode) THEN
-        WRITE( stdout,'(  "   formf  (sec) : ",F8.3)') (s5-s4)
-      END IF
-
-      tk = .NOT. ( kp%scheme == 'gamma' )
-      isym = 0
-      IF( tk ) isym = 1
-
-      !  empty states, always same number of spin up and down states
-      neupdwn( 1:nspin ) = n_emp
-
-      CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
-             kp%nkpt, kp%nkpt, nspin, isym, gzero )
-      CALL wave_descriptor_init( wempt, ngw, ngwt, neupdwn, neupdwn, &
-             kp%nkpt, kp%nkpt, nspin, isym, gzero )
-
-      IF( iprsta > 2 ) THEN
-        CALL wave_descriptor_info( wfill, 'wfill', stdout )
-        CALL wave_descriptor_info( wempt, 'wempt', stdout )
-      END IF
-
-      ! ... if tturbo=.TRUE. some data is stored in memory instead of being
-      ! ... recalculated (see card 'TURBO')
-      IF( tturbo ) THEN
-        CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
-      ENDIF
-
-      CALL flush_unit( stdout )  ! flush output streams
-
-      RETURN
-      END SUBROUTINE init0s
-
-
-!=----------------------------------------------------------------------=!
-   END MODULE init_fpmd
-!=----------------------------------------------------------------------=!
-
-
-
 
 !=----------------------------------------------------------------------=!
 !
@@ -170,7 +29,6 @@
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
-      USE reciprocal_space_mesh, ONLY: gmeshinfo
       USE reciprocal_vectors, ONLY : mill_g, g2_g, bi1, bi2, bi3
       USE recvecs_subroutines, ONLY: recvecs_init
       use gvecw, only: gcutw, gkcut
@@ -180,11 +38,13 @@
       use fft_scalar, only: good_fft_dimension, good_fft_order
       USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
       USE fft,       ONLY: fft_setup
-      USE stick_base, ONLY: pstickset
-      USE control_flags, ONLY: tdipole
-      USE berry_phase, ONLY: berry_setup
-      USE real_space_mesh, ONLY: realspace_procgrid_init
+      USE stick_base,       ONLY: pstickset
+      USE control_flags,    ONLY: tdipole
+      USE berry_phase,      ONLY: berry_setup
+      USE real_space_mesh,  ONLY: realspace_procgrid_init
       USE electrons_module, ONLY: bmeshset
+      USE problem_size,     ONLY: cpsizes
+      USE mp_global,        ONLY: nproc
 
       implicit none
 ! 
@@ -291,10 +151,6 @@
       !
       CALL fft_setup( gamma_only , ngm_ , ngs_ , ngw_ )
       !
-      ! ... printout g vector distribution summary
-      !
-      CALL gmeshinfo()
-      !
       !
       ! ... generate g-space
       !
@@ -328,17 +184,21 @@
       gcutb = ecut / tpibab / tpibab
       !
       CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
-      
-      IF( ionode ) THEN
-        WRITE( stdout, 110 )
- 110    FORMAT( /,3X,'Simulation dimensions initialization completed',// )
+
+      ! ... printout g vector distribution summary
+      !
+      CALL gmeshinfo()
+      !
+      IF( program_name == 'FPMD' ) THEN
+        !
+        CALL cpsizes( nproc )
+        !
       END IF
       !
       !   Flush stdout
       !
       CALL flush_unit( stdout )
       !
-
       return
       end subroutine init_dimensions
 
@@ -350,13 +210,16 @@
 !-----------------------------------------------------------------------
 !
       USE input_parameters, ONLY: trd_ht
-      use control_flags,    only: iprint, thdyn, ndr, nbeg
-      use io_global,        only: stdout
-      use ions_base,        only: na, nsp, nat, natx, tau_srt
-      use cell_base,        only: a1, a2, a3, r_to_s
+      use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name
+      use io_global,        only: stdout, ionode
+      use ions_base,        only: na, nsp, nat, natx, tau_srt, ind_srt, if_pos, atm
+      use cell_base,        only: a1, a2, a3, r_to_s, cell_init
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: tau0, taus
       use cp_restart,       only: cp_read_cell
+      USE cp_main_variables,     ONLY: ht0, htm, atomsm, atoms0, atomsp
+      USE brillouin,             ONLY: kp
+      USE ions_module,           ONLY: atoms_init
 
       implicit none
       !
@@ -369,6 +232,16 @@
       IF( .NOT. tcell_base_init ) &
          CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
 
+      IF( ionode ) THEN
+        WRITE( stdout, 100 )
+ 100    FORMAT( //, &
+                3X,'System geometry initialization',/, &
+                3X,'------------------------------' )
+      END IF
+
+      CALL cell_init( ht0, a1, a2, a3 )
+      CALL cell_init( htm, a1, a2, a3 )
+
       ! 
       ! Scale positions that have been read from standard input 
       ! according to the cell given in the standard input too
@@ -379,6 +252,9 @@
       tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
 
       CALL r_to_s( tau0, taus, na, nsp, ainv )
+
+      CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )
+
       !
       !  if trd_ht = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run
@@ -388,6 +264,11 @@
         ! read only h and hold from restart file "ndr"
         !
         CALL cp_read_cell( ndr, ' ', .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
+
+        CALL cell_init( ht0, h    )
+        CALL cell_init( htm, hold )
+        ht0%hvel = velh  !  set cell velocity
+        ht0%gvel = gvel 
 
         h     = TRANSPOSE( h    )
         hold  = TRANSPOSE( hold )
@@ -399,10 +280,12 @@
         enddo
         WRITE( stdout,*)
 
+
       else
         !
         ! geometry is set to the cell parameters read from stdin ( a1, a2, a3 )
         !
+
         do i = 1, 3
             h(i,1) = a1(i)
             h(i,2) = a2(i)
@@ -437,7 +320,9 @@
       !     a1,a2,a3, ainv, and corresponding quantities for small boxes
       !     are recalculated according to the value of cell parameter h
       !
-      use cell_base, only: a1, a2, a3, omega, alat, cell_base_reinit
+      USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
+      USE control_flags,         ONLY : program_name
+      USE reciprocal_space_mesh, ONLY : newgk
       !
       implicit none
       !
@@ -458,6 +343,12 @@
       !   generation of little box g-vectors
       !
       call newgb( a1, a2, a3, omega, alat )
+      !
+      IF( program_name == 'FPMD' ) THEN
+        !
+        CALL newgk( )
+        !
+      END IF
       !
       return
     end subroutine newinit

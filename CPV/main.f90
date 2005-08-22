@@ -95,10 +95,8 @@
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
                   tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr
-      USE init_fpmd
-      USE cp_types
-      USE atoms_type_module, ONLY: atoms_type, deallocate_atoms_type
-      USE print_out_module, ONLY: print_legend, printout, print_time, print_sfac, &
+      USE atoms_type_module, ONLY: atoms_type
+      USE print_out_module, ONLY: printout, print_time, print_sfac, &
           printacc
       USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
       USE empty_states, ONLY: empty
@@ -109,9 +107,8 @@
       USE potentials, ONLY: vofrhos, localisation
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE fft, ONLY : fft_closeup
-      USE electrons_module, ONLY: ei, nspin
+      USE electrons_module, ONLY: ei, nspin, n_emp
       USE diis, ONLY: allocate_diis
-      USE pseudo_projector, ONLY: projector, deallocate_projector, allocate_projector
       USE charge_density, ONLY: rhoofr, printrho
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
@@ -119,8 +116,6 @@
       USE time_step, ONLY: tps, delt
       USE brillouin, ONLY: kp
       USE rundiis_module, ONLY: rundiis, runsdiis
-      USE from_scratch_module, ONLY: from_scratch
-      USE from_restart_module, ONLY: from_restart
       USE wave_types
       USE charge_types
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
@@ -134,8 +129,7 @@
       USE runsd_module, ONLY: runsd
       USE guess, ONLY: guess_closeup
       USE input, ONLY: iosys
-      USE problem_size, ONLY: cpsizes
-      USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene
+      USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene, velh
       USE cell_base, ONLY: frich, greash
       USE stick_base, ONLY: pstickset
       USE electrons_module, ONLY: bmeshset
@@ -154,16 +148,19 @@
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
       !
-      USE reciprocal_space_mesh, ONLY: gmeshinfo, newgk, gindex_closeup
+      USE reciprocal_space_mesh, ONLY:  gindex_closeup
       !
       USE reciprocal_vectors, ONLY: &
            g,      & ! G-vectors square modulus
+           gx,     & ! G-vectors component
            mill_l, & ! G-vectors generators
            gcutw,  & ! Wave function cut-off ( units of (2PI/alat)^2 => tpiba2 )
            gcutp,  & ! Potentials and Charge density cut-off  ( same units )
            gcuts,  & ! Smooth mesh Potentials and Charge density cut-off  ( same units )
            gkcut,  & ! Wave function augmented cut-off (take into account all G + k_i , same units)
+           gzero,  & ! 
            ngw,    & !
+           ngwt,   & !
            ngm,    & !
            ngs
       !
@@ -181,8 +178,6 @@
       USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
                            ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, nhpend, gkbt2nhp, ekin2nhp
 
-      USE wave_init,        ONLY: pw_atomic_init
-      USE electrons_module, ONLY: electron_mass_init, band_init
       !
       USE uspp_param      , ONLY: nhm
       !
@@ -191,6 +186,9 @@
       !
       USE io_files        , ONLY: outdir, prefix
       USE printout_base   , ONLY: printout_base_init
+      USE cp_main_variables, ONLY : atoms0, atomsp, atomsm, ei1, ei2, ei3, eigr, sfac, &
+                                    ht0, htm, htp, rhoe, vpot, desc, wfill, wempt,     &
+                                    acc, acc_this_run, occn, edft, nfi, bec, becdr
 
       IMPLICIT NONE
 
@@ -201,7 +199,7 @@
 ! ... declare functions
 
 ! ... declare other variables
-      INTEGER :: navgs, nfi, ik, nstep_this_run, iunit, is, i, j, ierr
+      INTEGER :: ik, nstep_this_run, iunit, is, i, j, ierr
       INTEGER :: nnrg
       INTEGER :: n1, n2, n3
       INTEGER :: n1s, n2s, n3s
@@ -212,9 +210,7 @@
       REAL(dbl) :: s1, s2, s3, s4, s5, s6, s7, s8
       REAL(dbl) :: timernl, timerho, timevof, timepre
       REAL(dbl) :: timeform, timerd, timeorto, timeloop
-      REAL(dbl) :: qk(3) = 0.0d0
       REAL(dbl) :: ekmt(3,3) = 0.0d0
-      REAL(dbl) :: velh(3,3) = 0.0d0
       REAL(dbl) :: hgamma(3,3) = 0.0d0
       REAL(dbl) :: temphh(3,3) = 0.0d0
 
@@ -224,225 +220,56 @@
       LOGICAL :: topen, ttcarpar, ttempst
       LOGICAL :: ttconvchk
       LOGICAL :: ttionstep
+      LOGICAL :: tconv_cg
 
-      REAL(dbl) ::  avgs( nacx )
-      REAL(dbl) ::  avgs_this_run( nacx )
-
-      ! atomic positions 
-      TYPE (atoms_type) :: atoms_0, atoms_p, atoms_m
-
-      ! pseudopotentials
-      TYPE (pseudo)  :: ps
-
-      ! charge density
-      REAL(dbl), ALLOCATABLE :: rhoe(:,:,:,:)     ! charge density in real space
-      TYPE (charge_descriptor)  :: desc                  ! charge density descriptor
-
-
-      TYPE (wave_descriptor) :: wfill, wempt    ! wave function descriptor
-                                                ! for filled and empty states
-
-      ! electronic states filling 
-      !
-      REAL(dbl), ALLOCATABLE :: fi(:,:,:)     ! occupation numbers for filled state
-
-      ! phase and structure factors 
-      !
-      ! ...  G = reciprocal lattice vectors
-      ! ...  R_I = ionic positions
-      !
-      COMPLEX(dbl), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
-      COMPLEX(dbl), ALLOCATABLE :: ei1(:,:)         ! exp (i G_x dot x_I)
-      COMPLEX(dbl), ALLOCATABLE :: ei2(:,:)         ! exp (i G_y dot y_I)
-      COMPLEX(dbl), ALLOCATABLE :: ei3(:,:)         ! exp (i G_z dot z_I)
-
-      ! structure factors  
-      !
-      ! S( s, G ) = sum_(I in s) exp( i G dot R_(s,I) )
-      ! s       = index of the atomic specie
-      ! R_(s,I) = position of the I-th atom of the "s" specie
-      !
-      COMPLEX(dbl), ALLOCATABLE :: sfac(:,:)
-
-      ! cell geometry
-      TYPE (boxdimensions) :: ht_m, ht_0, ht_p  ! cell metrics
-
-      TYPE (projector), ALLOCATABLE :: fnl( :, : )
-      TYPE (dft_energy_type) :: edft
-
-      REAL(dbl), ALLOCATABLE :: vpot(:,:,:,:)
       REAL(dbl) :: vnosee, vnosep
-
-      INTEGER :: lds_wfc
 
       REAL(dbl), EXTERNAL  :: cclock
 
+      !
       ! ... end of declarations
-      !  ----------------------------------------------
-
-      s1 = cclock()
-
       !
-      ! ... initialize g-vectors, fft grids
-      !
-
-      CALL init_dimensions( )
-
-      CALL cpsizes( nproc )
-      CALL flush_unit( stdout )
-
-      timepre = 0.0_dbl
-      timernl = 0.0_dbl
-      timerho = 0.0_dbl
-      timevof = 0.0_dbl
-      timerd  = 0.0_dbl
-      timeorto= 0.0_dbl
-      timeform= 0.0_dbl
-      timeloop= 0.0_dbl
-
-      nfi             = 0
-      nstep_this_run  = 0
-      ekinc           = 0.0_dbl
-      ekcell          = 0.0_dbl
-      avgs            = 0.0_dbl
-      avgs_this_run   = 0.0_dbl
-      navgs           = 9
-
-      edft%ent  = 0.0d0
-      edft%esr  = 0.0d0
-      edft%evdw = 0.0d0
-      edft%ekin = 0.0d0
-      edft%enl  = 0.0d0
-      edft%etot = 0.0d0
-
-      erhoold   = 1.0d+20  ! a very large number
-      ekincs    = 0.0d0
-
-      ALLOCATE( fnl( kp%nkpt, nspin ) )
-      ALLOCATE( eigr( ngw, nat ) )
-      ALLOCATE( ei1( -nr1:nr1, nat ) )
-      ALLOCATE( ei2( -nr2:nr2, nat ) )
-      ALLOCATE( ei3( -nr3:nr3, nat ) )
-
-      !
-      CALL init_geometry()
-
-      !     initialize variables and types
-      !
-      CALL init0s(kp, ps, atoms_m, atoms_0, atoms_p, wfill, wempt, ht_m, ht_0 )
-
-      lds_wfc = wfill%lds
-      IF( force_pairing ) lds_wfc = 1
-
-      ! ...   initialize wave functions
-      !
-      ALLOCATE( cm( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-      ALLOCATE( c0( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-      ALLOCATE( cp( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-      ALLOCATE( ce( wempt%ldg, wempt%ldb, wempt%ldk, wempt%lds ) )
-
-      cm = 0.0d0
-      c0 = 0.0d0
-      cp = 0.0d0
-      ce = 0.0d0
-
-      CALL pw_atomic_init( nbeg, cm, c0, wfill, ce, wempt, kp )
-
-      ! ... initialize bands        
-      !
-      ALLOCATE( fi( wfill%ldb, wfill%ldk, wfill%lds ) )
-      fi = 0.0d0
-      CALL band_init( fi )   
-      
-      ! ... initialize the electronic fictitious mass and time step for
-      ! ... electron dynamics. 
-      CALL electron_mass_init( alat, g, ngw )
-      
-      ! ... initialize nonlocal pseudopotentials coefficients
-      CALL allocate_projector( fnl, nsanl, nbnd, nhm, kp%gamma_only)
 
       IF( t_diis ) THEN 
         CALL allocate_diis( ngw, nbnd, kp%nkpt )
       END IF
 
-      CALL print_legend( )
+      erhoold   = 1.0d+20  ! a very large number
+      ekincs    = 0.0d0
+      ekinc     = 0.0_dbl
+      ekcell    = 0.0_dbl
+      timepre   = 0.0_dbl
+      timernl   = 0.0_dbl
+      timerho   = 0.0_dbl
+      timevof   = 0.0_dbl
+      timerd    = 0.0_dbl
+      timeorto  = 0.0_dbl
+      timeform  = 0.0_dbl
+      timeloop  = 0.0_dbl
+      nstep_this_run  = 0
 
-      ALLOCATE( rhoe( dfftp%nr1x, dfftp%nr2x, dfftp%npl, nspin ) )
-      CALL charge_descriptor_init( desc, dfftp%nr1, dfftp%nr2, dfftp%nr3, &
-             dfftp%nr1, dfftp%nr2, dfftp%npl, dfftp%nr1x, dfftp%nr2x,     &
-             dfftp%npl, nspin )
-
-      ALLOCATE( sfac( ngm , nsp ) ) 
-
-      ALLOCATE( vpot( dfftp%nr1x, dfftp%nr2x, dfftp%npl, nspin), STAT=ierr)
-      IF( ierr /= 0 ) &
-        CALL errore(' cpmain ', ' allocating vpot ', ierr)
-
-      CALL printout_base_init( outdir, prefix )
-
-      ! --- end of initialization and allocation
-
-
-      IF( nbeg < 0 ) THEN
-        !
-        ! ...   create a new configuration from scratch
-        !
-        ttprint = .true.
-        CALL from_scratch(kp, ps, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, ei3, &
-                          sfac, fi, ht_0, atoms_0, fnl, vpot, edft )
-
-        CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, &
-          toptical, ht_0, kp, avgs, avgs_this_run, edft)
-
-
-      ELSE
-
-        ! ...   read configuration from a restart file
-        ! ...   (Fortran I/O unit number ndr, file fort.<ndr>)
-
-        CALL readfile( nfi, tps, c0, cm, wfill, fi, &
-           atoms_0, atoms_m, avgs, taui, cdmi, ht_m, ht_0, rhoe, &
-           desc, vpot, kp)
-
-        CALL from_restart( nfi, avgs, kp, ps, rhoe, desc, cm, c0, wfill, eigr, &
-                  ei1, ei2, ei3, sfac, fi, ht_m, ht_0, atoms_m, atoms_0, fnl, vpot, edft)
-
-        velh = ht_m%hvel
-
-      END IF
-
-
-      s2 = cclock() 
-
-
-      IF( tnewnfi   ) nfi = newnfi
-      nomore = nfi + nomore
-
-      MAIN_LOOP: DO                      ! *** START OF MAIN LOOP *** !
-
+      MAIN_LOOP: DO 
 
         s3 = cclock()
 
-! ...   increment symulation steps counter
+        ! ...   increment simulation steps counter
+        !
         nfi = nfi + 1
 
-! ...   increment run steps counter
+        ! ...   increment run steps counter
+        !
         nstep_this_run = nstep_this_run + 1
         
-! ...   Increment the integral time of the simulation
+        ! ...   Increment the integral time of the simulation
+        !
         tps = tps + delt * au_ps
 
-! ...   set the right flags for the current MD step
-        ttprint   = ( MOD(nfi, iprint) == 0)  .OR. (iprsta>2)
-        ttsave    =   MOD(nfi, isave) == 0
+        ! ...   set the right flags for the current MD step
         !
-        !  Perform at least two step without checking the convergence
+        ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 )
+        ttsave    =   MOD(nfi, isave)  == 0
         !
-        IF( nstep_this_run > 2 ) THEN  
-          ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep) == 0 )
-        ELSE
-          ttconvchk =  .FALSE.
-        END IF
+        ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep ) == 0 )
         !
         ttdipole  =  ttprint .AND. tdipole
         ttoptical =  ttprint .AND. toptical
@@ -452,37 +279,54 @@
         ttdiis    =  t_diis 
         doions    = .TRUE.
 
-
         IF( ionode .AND. ttprint ) THEN
-          WRITE( stdout, fmt = '( /, " * Step ",  I6 )' ) nfi
+           !
+           WRITE( stdout, fmt = '( /, " * Physical Quantities at step:",  I6 )' ) nfi
+           WRITE( stdout, fmt = '( /, "   Simulated time t = ", D14.8, " ps" )' ) tps
+           !
         END IF
 
-        IF(memchk) CALL memstat(0)
+        IF( memchk ) CALL memstat(0)
 
         IF( thdyn .AND. tnoseh ) THEN
-          CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
-          velh(:,:)=2.*(ht_0%hmat(:,:)-ht_m%hmat(:,:))/delt-velh(:,:)
+           !
+           CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
+           !
+           velh(:,:)=2.*(ht0%hmat(:,:)-htm%hmat(:,:))/delt-velh(:,:)
+           !
         END IF
 
         IF( thdyn ) THEN
-! ...     the simulation cell isn't fixed, recompute the reciprocal lattice
-          CALL newinit( ht_0%hmat )
-          CALL newgk(kp, ht_0%m1)
+           !
+           ! ...     the simulation cell isn't fixed, recompute the reciprocal lattice
+           !
+           CALL newinit( ht0%hmat )
+           !
+           CALL newnlinit( )
+           !
         END IF
 
         IF(memchk) CALL memstat(1)
 
         IF( tfor .OR. thdyn ) THEN
-! ...     ionic positions aren't fixed, recompute structure factors 
-          CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms_0%taus, nr1, nr2, nr3, atoms_0%nat )
-          CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+           !
+           ! ...     ionic positions aren't fixed, recompute structure factors 
+           !
+           CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
+           !
+           CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+           !
         END IF
 
         IF(memchk) CALL memstat(2)
 
         IF( thdyn ) THEN
-! ...     recompute local pseudopotential Fourier expansion
-          CALL formf(ht_0, kp, ps)
+           !
+           !      the simulation cell isn't fixed, recompute local 
+           !      pseudopotential Fourier expansion
+           !
+           CALL formf( .false. , edft%eself )
+           !
         END IF
 
         IF(memchk) CALL memstat(3)
@@ -491,65 +335,86 @@
         timeform = s4 - s3
 
         IF( ttdiis .AND. t_diis_simple ) THEN
-! ...     perform DIIS minimization on electronic states
-          CALL runsdiis(ttprint, rhoe, desc, atoms_0, kp, &
-               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft )
+           !
+           ! ...     perform DIIS minimization on electronic states
+           !
+           CALL runsdiis(ttprint, rhoe, desc, atoms0, bec, becdr, &
+               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+               vpot, doions, edft )
+           !
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
-! ...     perform DIIS minimization with wavefunctions rotation
-          IF(nspin.GT.1) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
-          CALL rundiis(ttprint, rhoe, desc, atoms_0, kp, &
-               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft )
+           !
+           ! ...     perform DIIS minimization with wavefunctions rotation
+           !
+           IF( nspin > 1 ) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
+           !
+           CALL rundiis(ttprint, rhoe, desc, atoms0, bec, becdr, &
+               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+               vpot, doions, edft )
+           !
         ELSE IF ( tconjgrad ) THEN
-! ...     on entry c0 should contain the wavefunctions to be optimized
-          CALL runcg(tortho, ttprint, rhoe, desc, atoms_0, kp, &
-               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft, ekin_maxiter, etot_conv_thr )
-! ...     on exit c0 and cp both contain the updated wave function
-! ...     cm are overwritten (used as working space)
+           !
+           ! ...     on entry c0 should contain the wavefunctions to be optimized
+           !
+           CALL runcg(tortho, ttprint, rhoe, desc, atoms0, bec, becdr, &
+               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+               vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
+           !
+           ! ...     on exit c0 and cp both contain the updated wave function
+           ! ...     cm are overwritten (used as working space)
+           !
         ELSE IF ( tsteepdesc ) THEN
-          CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms_0, kp, &
-               ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
+           !
+           CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms0, bec, becdr, &
+               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+               vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
+           !
         ELSE IF ( tconjgrad_ion%active ) THEN
-          CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atoms_p, atoms_0, &
-               atoms_m, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht_0, fi, ei, &
-               fnl, vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
+           !
+           CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atomsp, atoms0, &
+               atomsm, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+               vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                tconvthrs%ekin, tconjgrad_ion%nstepex )
-! ...     when ions are being relaxed by this subroutine they 
-! ...     shouldn't be moved by moveions
-          doions    = .FALSE.
+           !
+           ! ...     when ions are being relaxed by this subroutine they 
+           ! ...     shouldn't be moved by moveions
+           !
+           doions    = .FALSE.
+           !
         ELSE IF ( .NOT. ttcarpar ) THEN
-          CALL errore(' main ',' electron panic ',0)
+           !
+           CALL errore(' main ',' electron panic ',0)
+           !
         END IF
 
         IF(memchk) CALL memstat(4)
 
-! ...   compute nonlocal pseudopotential
-        atoms_0%for = 0.0d0
-        edft%enl = nlrh_m( c0, wfill, ttforce, atoms_0, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+        ! ...   compute nonlocal pseudopotential
+        !
+        atoms0%for = 0.0d0
+        !
+        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0, occn, bec, becdr, eigr)
 
         IF(memchk) CALL memstat(5)
 
         s5      = cclock()
         timernl = s5 - s4
 
-! ...   compute the new charge density "rhoe"
-        CALL rhoofr( nfi, kp, c0, wfill, fi, rhoe, desc, ht_0)
-        ! CALL printrho(nfi, rhoe, atoms_0, ht_0) ! DEBUG
+        ! ...   compute the new charge density "rhoe"
+        !
+        CALL rhoofr( nfi, c0, wfill, occn, rhoe, desc, ht0)
 
         IF(memchk) CALL memstat(6)
 
         s6      = cclock()
         timerho = s6 - s5
 
-! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
-! ...   ionc forces "fion" and stress "pail".
-        CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms_0, &
-          kp, fnl, vpot, ps, c0, wfill, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht_0, edft)
+        ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
+        ! ...   ionc forces "fion" and stress "pail".
+        !
+        CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms0, &
+          vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
-        ! .. WRITE( stdout,*) 'DEBUG MAIN', atoms_0%for( 1:3, 1:atoms_0%nat )
         ! CALL debug_energies( edft ) ! DEBUG
 
         IF(memchk) CALL memstat(7)
@@ -557,194 +422,243 @@
         s7      = cclock()
         timevof = s7 - s6
 
-! ...   Car-Parrinello dynamics for the electrons
+        ! ...   Car-Parrinello dynamics for the electrons
+        !
         IF( ttcarpar ) THEN
-! ...     calculate thermostat velocity
-          IF(tnosee) THEN
-            call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
-            vnosee = vnhe
-          END IF
-! ...     move electronic degrees of freedom by Verlet's algorithm
-! ...     on input, c0 are the wave functions at time "t" , cm at time "t-dt"
-! ...     on output cp are the new wave functions at time "t+dt"
-          if ( force_pairing ) then 
-            ! unpaired electron is assumed of spinup and in highest 
-            ! index band; and put equal for paired wf spin up and down
-            CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
-              kp, ps, vpot, eigr, fi, ekincs, timerd, &
-              timeorto, ht_0, ei, fnl, vnosee )
-              ! ekincs(2) = 0
-          ELSE
-            CALL runcp(ttprint, tortho, tsde, cm, c0, cp, wfill, &
-              kp, ps, vpot, eigr, fi, ekincs, timerd, &
-              timeorto, ht_0, ei, fnl, vnosee )
-          endif
+           !
+           ! ...     calculate thermostat velocity
+           !
+           IF(tnosee) THEN
+              call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
+              vnosee = vnhe
+           END IF
 
-          ekinc = SUM( ekincs )
-! ...     propagate thermostat for the electronic variables
-          IF(tnosee) THEN
-            CALL electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe ) 
-          END IF
-          IF( tfor .AND. tionstep ) THEN
-            doions = .FALSE.
-            IF( ( ekinc < ekin_conv_thr ) .AND. ( MOD( nfi, nstepe ) == 0 ) ) THEN
-              doions = .TRUE.
-            END IF
-            WRITE( stdout,fmt="(3X,'MAIN: doions = ',L1)") doions
-          END IF
+           !    move electronic degrees of freedom by Verlet's algorithm
+           !    on input, c0 are the wave functions at time "t" , cm at time "t-dt"
+           !    on output cp are the new wave functions at time "t+dt"
+
+           if ( force_pairing ) then 
+              !
+              ! unpaired electron is assumed of spinup and in highest 
+              ! index band; and put equal for paired wf spin up and down
+              !
+              CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
+                vpot, eigr, occn, ekincs, timerd, timeorto, ht0, ei, bec, vnosee )
+              !
+           ELSE
+              !
+              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, wfill, vpot, eigr, &
+                         occn, ekincs, timerd, timeorto, ht0, ei, bec, vnosee )
+              !
+           END IF
+
+           ekinc = SUM( ekincs )
+           !
+           !   ...     propagate thermostat for the electronic variables
+           !
+           IF(tnosee) THEN
+              CALL electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe ) 
+           END IF
+           !
+           !  check if ions should be moved
+           !
+           IF( tfor .AND. tionstep ) THEN
+              !
+              doions = .FALSE.
+              IF( ( ekinc < ekin_conv_thr ) .AND. ( MOD( nfi, nstepe ) == 0 ) ) THEN
+                 doions = .TRUE.
+              END IF
+              WRITE( stdout,fmt="(3X,'MAIN: doions = ',L1)") doions
+           END IF
+           !
         END IF
 
         IF(memchk) CALL memstat(8)
 
-
-        IF(memchk) CALL memstat(9)
-
-! ...   Ions Dynamics
+        ! ...   Ions Dynamics
+        !
         ekinp  = 0.d0  ! kinetic energy of ions
-        IF(tfor .AND. doions) THEN
-! ...     Determines DXNOS/DT dynamically
-          IF (tnosep) THEN
-            CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1, 1 )
-            vnosep = vnhp(1)
-          END IF
-! ...     move ionic degrees of freedom
-          ! ... WRITE( stdout,*) '* TSDP *', tsdp
-          ekinp = moveions(tsdp, thdyn, nfi, atoms_m, atoms_0, atoms_p, ht_m, ht_0, vnosep)
-          IF (tnosep) THEN
-! below one really should have atoms_0%ekint and NOT ekin2nhp
-            CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
-          END IF
+        !
+        IF( tfor .AND. doions ) THEN
+           !
+           ! ...     Determines DXNOS/DT dynamically
+           !
+           IF (tnosep) THEN
+              CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1, 1 )
+              vnosep = vnhp(1)
+           END IF
+           !
+           ! ...     move ionic degrees of freedom
+           !
+           ekinp = moveions(tsdp, thdyn, nfi, atomsm, atoms0, atomsp, htm, ht0, vnosep)
+           IF (tnosep) THEN
+              !
+              ! below one really should have atoms0%ekint and NOT ekin2nhp
+              CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
+              !
+           END IF
+           !
+           !   Add thermal stress to pail
+           !
+           ekmt = 0.0d0
+           CALL ions_thermal_stress( ekmt, atoms0%m, 1.0d0, ht0%hmat, atoms0%vels, atoms0%nsp, atoms0%na )
+           !
+           ht0%pail = ht0%pail + MATMUL( ekmt, ht0%m1(:,:) )
+           !
         END IF
 
-! ...   Cell Dynamics
-
-        IF(tfor .AND. doions) THEN
-          !   Add thermal stress to pail
-          ekmt = 0.0d0
-          CALL ions_thermal_stress( ekmt, atoms_0%m, 1.0d0, ht_0%hmat, atoms_0%vels, atoms_0%nsp, atoms_0%na )
-          ht_0%pail = ht_0%pail + MATMUL( ekmt, ht_0%m1(:,:) )
-        END IF
+        ! ...   Cell Dynamics
 
         ekcell = 0.d0  ! kinetic energy of the cell (Parrinello-Rahman scheme)
 
         IF( thdyn .AND. doions ) THEN
 
-          !   move cell coefficients
-          CALL movecell(tsdc, ht_m, ht_0, ht_p, velh)
+           !   move cell coefficients
+           !
+           CALL movecell(tsdc, htm, ht0, htp, velh)
 
-          velh(:,:) = ( ht_p%hmat(:,:) - ht_m%hmat(:,:) ) / ( 2.0d0 * delt )
-          ht_0%hvel = velh
+           velh(:,:) = ( htp%hmat(:,:) - htm%hmat(:,:) ) / ( 2.0d0 * delt )
+           ht0%hvel = velh
 
-          CALL cell_gamma( hgamma, ht_0%hinv, ht_0%hmat, velh )
+           CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
 
-          !   Kinetic energy of the box
+           !   Kinetic energy of the box
 
-          CALL cell_kinene( ekcell, temphh, velh )
+           CALL cell_kinene( ekcell, temphh, velh )
 
-          IF ( tnoseh ) THEN
-            CALL cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
-          END IF
+           IF ( tnoseh ) THEN
+              CALL cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
+           END IF
 
         END IF
 
 
         IF(memchk) CALL memstat(10)
 
-! ...   Here find Empty states eigenfunctions and eigenvalues
+        ! ...   Here find Empty states eigenfunctions and eigenvalues
+        !
         IF ( ttempst ) THEN
-          CALL empty(tortho, atoms_0, c0, wfill, ce, wempt, kp, vpot, eigr, ps )
+           CALL empty( tortho, atoms0, c0, wfill, ce, wempt, vpot, eigr )
         END IF
 
-! ...   dipole
+        ! ...   dipole
+        !
         IF( ttdipole ) THEN
+
 #if defined __ALPHA
-          CALL errore( ' main ',' there are still problem on alpha with this routine ', 0 )
+           CALL errore( ' main ',' there are still problem on alpha with this routine ', 0 )
 #else
-          IF( wfill%nspin > 1 ) &
-            CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
-          CALL ddipole( nfi, ht_0, c0(:,:,1,1), atoms_0, tfor, ngw, wfill%nbl( 1 ), wfill%nbl( 1 ), ngw )
+           IF( wfill%nspin > 1 ) &
+              CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
+           !
+           CALL ddipole( nfi, ht0, c0(:,:,1,1), atoms0, tfor, ngw, wfill%nbl( 1 ), wfill%nbl( 1 ), ngw )
 #endif
+
         END IF
 
-! ...   Optical properties
+        ! ...   Optical properties
+        !
         IF( ttoptical ) THEN
-          CALL opticalp(nfi, ht_0, atoms_0, c0, wfill, fi, ce, wempt, vpot, fnl, eigr, ps, kp)
+           CALL errore( ' main ',' optical there are still problem ', 0 )
+           ! CALL opticalp(nfi, ht0, atoms0, c0, wfill, occn, ce, wempt, vpot, bec, eigr )
         END IF
 
         IF( self_interaction /= 0 ) THEN
-          IF ( nat_localisation > 0 .AND. ttprint ) THEN
-           CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms_0, kp, ht_0, desc)
-          END IF
+           IF ( nat_localisation > 0 .AND. ttprint ) THEN
+              CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms0, ht0, desc)
+           END IF
         END IF
- 
-
-        ! ---------------------------------------------------------------------------- !
-
 
         ! ...   if we are going to check convergence, then compute the
         ! ...   maximum value of the ionic forces
 
         tconv = .FALSE.
+        !
         IF( ttconvchk ) THEN
-          maxfion = max_ion_forces( atoms_0 )
-          derho = ( erhoold - edft%etot )
-          tconv =             ( derho < tconvthrs%derho )
-          tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
-          tconv = tconv .AND. ( maxfion < tconvthrs%force )
-          IF( ionode ) THEN
-            IF( ttprint .OR. tconv ) THEN
-              WRITE( stdout,fmt= &
-                "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )
-              WRITE( stdout,fmt="(3X,'MAIN: ',3(D14.6,1X,D8.1))" ) &
-                ekinc, tconvthrs%ekin, derho, tconvthrs%derho, maxfion, tconvthrs%force
-              IF( tconv ) THEN
-                WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
-              ELSE
-                WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation')")
+           !
+           maxfion = max_ion_forces( atoms0 )
+           !
+           IF( tconjgrad ) THEN
+              tconv = tconv_cg
+              derho = 0.0d0
+           ELSE
+              derho = ( erhoold - edft%etot )
+              tconv =             ( derho < tconvthrs%derho )
+              tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
+           END IF
+           !
+           tconv = tconv .AND. ( maxfion < tconvthrs%force )
+           !
+           IF( ionode ) THEN
+              !
+              IF( ttprint .OR. tconv ) THEN
+                 !
+                 WRITE( stdout,fmt= &
+                    "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )
+                 !
+                 WRITE( stdout,fmt="(3X,'MAIN: ',3(D14.6,1X,D8.1))" ) &
+                    ekinc, tconvthrs%ekin, derho, tconvthrs%derho, maxfion, tconvthrs%force
+                 !
+                 IF( tconv ) THEN
+                    WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
+                 ELSE
+                    WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation')")
+                 END IF
+                 !
               END IF
-            END IF
-          END IF
-          erhoold = edft%etot
+              !
+           END IF
+           ! 
+           erhoold = edft%etot
+           !
         END IF
 
         ! ...   printout 
         !
 
-        CALL printout(nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, &
-          avgs, avgs_this_run, edft)
+        CALL printout( nfi, atoms0, ekinc, ekcell, ttprint, ht0, acc, acc_this_run, edft)
 
         IF(memchk) CALL memstat(11)
 
-! ...   Update variables
+        ! ...   Update variables
 
         IF ( .NOT. ttdiis ) THEN
-          CALL update_wave_functions(cm, c0, cp, wfill)
-          IF ( tnosee ) THEN
-            CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
-          END IF
+           !
+           CALL update_wave_functions( cm, c0, cp, wfill )
+           !
+           IF ( tnosee ) THEN
+              CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
+           END IF
+           !
         ELSE
-          IF( .NOT. tfor ) THEN
-            cm = c0
-          END IF
+           !
+           IF( .NOT. tfor ) THEN
+              cm = c0
+           END IF
+           !
         END IF
-
-
 
         IF ( doions ) THEN
 
-          IF ( tfor ) THEN
-            CALL update_ions( atoms_m, atoms_0, atoms_p )
-            IF ( tnosep ) THEN
-              CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
-            END IF
-          END IF
+           IF ( tfor ) THEN
+              !
+              CALL update_ions( atomsm, atoms0, atomsp )
+              !
+              IF ( tnosep ) THEN
+                 CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
+              END IF
+              !
+           END IF
 
-          IF ( thdyn ) THEN
-            CALL updatecell( ht_m, ht_0, ht_p)
-            IF( tnoseh ) THEN
-              CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
-            END IF
-          END IF
+           IF ( thdyn ) THEN
+              !
+              CALL updatecell( htm, ht0, htp)
+              !
+              IF( tnoseh ) THEN
+                 CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
+              END IF
+              !
+           END IF
 
         END IF
 
@@ -753,51 +667,52 @@
 
         frich = frich * greash
 
-! ...   stop the code if either the file .cp_stop is present or the
-! ...   cpu time is greater than max_seconds
+        ! ...   stop the code if either the file .cp_stop is present or the
+        ! ...   cpu time is greater than max_seconds
+ 
         tstop =  check_stop_now()
 
-! ...   stop if only the electronic minimization was required
-!        IF(.NOT. (tfor .OR. thdyn) .AND. ttdiis ) tstop = .TRUE.
+        ! ...   stop if only the electronic minimization was required
+        !        IF(.NOT. (tfor .OR. thdyn) .AND. ttdiis ) tstop = .TRUE.
 
         tstop = tstop .OR. tconv
 
         ttexit = tstop .OR. ( nfi >= nomore )
 
-! ...   write the restart file
+        ! ...   write the restart file
+        !
         IF( ttsave .OR. ttexit ) THEN
-          CALL writefile( nfi, tps, c0, cm, wfill, &
-            fi, atoms_0, atoms_m, avgs, taui, cdmi, &
-            ht_m, ht_0, rhoe, desc, vpot, kp)
+          CALL writefile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,  &
+                          taui, cdmi, htm, ht0, rhoe, desc, vpot )
         END IF
 
         IF( ttexit .AND. .NOT. ttprint ) THEN
-          !
-          ! When code stop write to stdout quantities regardles of the value of nfi
-          ! but do not print if MOD( nfi, iprint ) == 0  
-          !
-          CALL printout( -nfi, atoms_0, ekinc, ekcell, ttprint, toptical, ht_0, kp, &
-            avgs, avgs_this_run, edft)
-          !
+           !
+           ! When code stop write to stdout quantities regardles of the value of nfi
+           ! but do not print if MOD( nfi, iprint ) == 0  
+           !
+           CALL printout( nfi, atoms0, ekinc, ekcell, ttexit, ht0, acc, acc_this_run, edft)
+           !
         END IF
 
         s8 = cclock()
         timeloop = s8 - s3
 
         CALL print_time( ttprint, ttexit, timeform, timernl, timerho,  &
-                   timevof, timerd, timeorto, timeloop, timing )
+                         timevof, timerd, timeorto, timeloop, timing )
 
+        ! ...   loop back
+        !
         IF( ttexit ) EXIT MAIN_LOOP
-! ...   loop back
 
-
-      END DO MAIN_LOOP                    !  *** END OF MAIN LOOP ***  !
+      END DO MAIN_LOOP
 
 
       conv_elec = tconv
       etot      = edft%etot
       !
-      CALL resort_position( tau, fion, atoms_0, ind_srt, ht_0 )
+      CALL resort_position( tau, fion, atoms0, ind_srt, ht0 )
+      !
       IF( lneb ) THEN
         DO i = 1, nat
           fion( :, i ) = fion( :, i ) * DBLE( if_pos( :, i ) )
@@ -807,9 +722,9 @@
 
       IF(tksout) THEN
         IF ( force_pairing ) THEN 
-          CALL ks_states_force_pairing(c0, wfill, ce, wempt, fi, kp, ps, vpot, eigr, fnl)
+          CALL ks_states_force_pairing(c0, wfill, ce, wempt, occn, vpot, eigr, bec )
         ELSE
-          CALL ks_states(c0, wfill, ce, wempt, fi, kp, ps, vpot, eigr, fnl)
+          CALL ks_states(c0, wfill, ce, wempt, occn, vpot, eigr, bec )
         END IF
       END IF
 
@@ -817,9 +732,9 @@
         CALL print_sfac(rhoe, desc, sfac)
       END IF
 
-! ... report statistics
+      ! ... report statistics
 
-      CALL printacc(nfi, rhoe, desc, rhoout, atoms_m, ht_m, nstep_this_run, avgs, avgs_this_run)
+      CALL printacc(nfi, rhoe, desc, rhoout, atomsm, htm, nstep_this_run, acc, acc_this_run)
       CALL mp_report_buffers()
       CALL mp_report()
 
@@ -832,7 +747,7 @@
         END IF
       END DO
 
-! ... free memory
+      ! ... free memory
 
       CALL fft_closeup( )
 
@@ -840,31 +755,6 @@
       IF( allocated( cp ) ) deallocate(cp)
       IF( allocated( cm ) ) deallocate(cm)
       IF( allocated( ce ) ) deallocate(ce)
-
-      CALL deallocate_atoms_type( atoms_0 )
-      CALL deallocate_atoms_type( atoms_p )
-      CALL deallocate_atoms_type( atoms_m )
-
-      IF( ALLOCATED( eigr ) ) DEALLOCATE( eigr )
-      IF( ALLOCATED( ei1  ) ) DEALLOCATE( ei1  )
-      IF( ALLOCATED( ei2  ) ) DEALLOCATE( ei2  )
-      IF( ALLOCATED( ei3  ) ) DEALLOCATE( ei3  )
-
-      CALL deallocate_projector( fnl )
-      deallocate(fi)
-
-      DEALLOCATE(vpot, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating vpot ', ierr)
-      DEALLOCATE(rhoe, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating rhoe ', ierr)
-      DEALLOCATE(sfac, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating sfac ', ierr)
-      DEALLOCATE( fnl, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' cpmain ', ' deallocating fnl ', ierr)
-
-      CALL deallocate_pseudo(ps)
-      CALL deallocate_core()
-      CALL deallocate_local_pseudo()
 
       CALL optical_closeup()
       CALL gindex_closeup

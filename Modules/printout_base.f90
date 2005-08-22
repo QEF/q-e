@@ -100,76 +100,119 @@ CONTAINS
   END SUBROUTINE printout_base_close
 
   
-  SUBROUTINE printout_pos( iunit, nfi, tau, nat, simtime, label )
+  SUBROUTINE printout_pos( iunit, tau, nat, what, nfi, tps, label, fact, sort )
+    !
     USE kinds
-    INTEGER :: iunit, nfi, nat
-    REAL(dbl) :: tau( :, : ), simtime
-    CHARACTER(LEN=4), OPTIONAL :: label( : )
-    INTEGER :: ia, k
-    WRITE( iunit, 30 ) NFI, simtime
+    !
+    INTEGER,          INTENT(IN)           :: iunit, nat
+    REAL(dbl),        INTENT(IN)           :: tau( :, : )
+    CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
+    INTEGER,          INTENT(IN), OPTIONAL :: nfi
+    REAL(dbl),        INTENT(IN), OPTIONAL :: tps
+    CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
+    REAL(dbl),        INTENT(IN), OPTIONAL :: fact
+    INTEGER,          INTENT(IN), OPTIONAL :: sort( : )
+    !
+    INTEGER   :: ia, k
+    REAL(dbl) :: f
+    !
+    IF( PRESENT( fact ) ) THEN 
+       f = fact
+    ELSE
+       f = 1.0d0
+    END IF
+    !
+    IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
+       WRITE( iunit, 30 ) NFI, tps
+    ELSE IF( PRESENT( what ) ) THEN
+       IF( what == 'pos' ) THEN
+          WRITE( iunit, 40 )
+       ELSE IF( what == 'vel' ) THEN
+          WRITE( iunit, 50 )
+       ELSE IF( what == 'for' ) THEN
+          WRITE( iunit, 60 )
+       END IF
+    END IF
+    !
     IF( PRESENT( label ) ) THEN
-       DO ia = 1, nat
-         WRITE( iunit, 255 ) label(ia), (tau(k,ia),k = 1,3)
-       END DO
+       IF( PRESENT( sort ) ) THEN
+         DO ia = 1, nat
+           WRITE( iunit, 255 ) label( sort(ia) ), ( f * tau(k, sort(ia) ),k = 1,3)
+         END DO
+       ELSE
+         DO ia = 1, nat
+           WRITE( iunit, 255 ) label(ia), ( f * tau(k,ia),k = 1,3)
+         END DO
+       END IF
     ELSE
        DO ia = 1, nat
          WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)
        END DO
     END IF
- 30 FORMAT(3X,'STEP:',I7,1X,F10.6)
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(3X,'ATOMIC_POSITIONS')
+ 50 FORMAT(3X,'ATOMIC_VELOCITIES')
+ 60 FORMAT(3X,'Forces acting on atoms (au):')
 255 FORMAT(3X,A3,3E14.6)
 252 FORMAT(3E14.6)
     RETURN
   END SUBROUTINE printout_pos
- 
-  SUBROUTINE print_pos_in( iunit, nfi, tau, nat, simtime, ityp, atm, ind_bck , fact)
-    USE kinds
-    INTEGER :: iunit, nfi, nat, ityp( : ), ind_bck( : )
-    REAL(dbl) :: tau( :, : ), simtime, fact
-    CHARACTER(LEN=3) :: atm( : )
-    INTEGER :: ia, k
-    WRITE( iunit, 30 ) NFI, simtime
-!    IF( PRESENT( label ) ) THEN
-       DO ia = 1, nat
-         WRITE( iunit, 255 ) atm(ityp(ia)), (fact*tau(k,ind_bck(ia)),k = 1,3)
-       END DO
-!    ELSE
-!       DO ia = 1, nat
-!         WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)
-!       END DO
-!    END IF
- 30 FORMAT(3X,'STEP:',I7,1X,F10.6)
-255 FORMAT(A3,2X,3(1X,E15.8))
-252 FORMAT(3E14.6)
-    RETURN
-  END SUBROUTINE print_pos_in
 
-  SUBROUTINE printout_cell( iunit, nfi, h, simtime )
+ 
+
+  SUBROUTINE printout_cell( iunit, h, nfi, tps )
+    !
     USE kinds
-    INTEGER :: iunit, nfi
-    REAL(dbl) :: h(3,3), simtime
+    !
+    INTEGER,   INTENT(IN)           :: iunit
+    REAL(dbl), INTENT(IN)           :: h(3,3)
+    INTEGER,   INTENT(IN), OPTIONAL :: nfi
+    REAL(dbl), INTENT(IN), OPTIONAL :: tps
+    !
     INTEGER :: i, j
-    WRITE( iunit, 30 ) nfi, simtime
+    !
+    IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
+       WRITE( iunit, 30 ) nfi, tps
+    ELSE
+       WRITE( iunit, 40 )
+    END IF
+    !
     DO i = 1, 3
-       WRITE( iunit, 1000 ) (h(i,j),j=1,3)
+       WRITE( iunit, 100 ) (h(i,j),j=1,3)
     END DO
- 30 FORMAT(3X,'STEP:',I7,1X,F10.6)
- 1000    format(3F14.8)
+    !
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(3X,'CELL_PARAMETERS')
+100 FORMAT(3F14.8)
     RETURN
   END SUBROUTINE printout_cell
 
 
-  SUBROUTINE printout_stress( iunit, nfi, str, simtime )
+
+  SUBROUTINE printout_stress( iunit, str, nfi, tps )
+    !
     USE kinds
-    INTEGER :: iunit, nfi
-    REAL(dbl) :: str(3,3), simtime
+    !
+    INTEGER,   INTENT(IN)           :: iunit
+    REAL(dbl), INTENT(IN)           :: str(3,3)
+    INTEGER,   INTENT(IN), OPTIONAL :: nfi
+    REAL(dbl), INTENT(IN), OPTIONAL :: tps
+    !
     INTEGER :: i, j
-    WRITE( iunit, 30 ) nfi, simtime
+    !
+    IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
+       WRITE( iunit, 30 ) nfi, tps
+    ELSE
+       WRITE( iunit, 40 )
+    END IF
+    !
     DO i = 1, 3
-       WRITE( iunit, 1000 ) (str(i,j),j=1,3)
+       WRITE( iunit, 100 ) (str(i,j),j=1,3)
     END DO
- 30 FORMAT(3X,'STEP:',I7,1X,F10.6)
- 1000    format(3(F18.8,1X))
+    !
+ 30 FORMAT(I7,1X,F11.8)
+ 40 FORMAT(3X,'Total stress (GPa)')
+100 FORMAT(3(F18.8,1X))
     RETURN
   END SUBROUTINE printout_stress
 

@@ -5,21 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sun Nov 14 08:09:24 MET 1999
-!  ----------------------------------------------
 
 #include "f_defs.h"
 
-      MODULE nl
+!----------------------------------------------
+ MODULE nl
+!----------------------------------------------
 
         USE kinds
         USE spherical_harmonics
-        USE cp_types
         USE nl_base
 
         IMPLICIT NONE
@@ -27,94 +21,136 @@
 
         PRIVATE
 
-        INTERFACE nlsm1
-          MODULE PROCEDURE nlsm1_s, nlsm1_v
-        END INTERFACE
-        INTERFACE nlsm2
-          MODULE PROCEDURE nlsm2_s, nlsm2_v
-        END INTERFACE
 
-        PUBLIC :: nlsm1, nlrh_m
+        PUBLIC :: nlrh_m, nlsm1_s
 
-      CONTAINS
+!----------------------------------------------
+ CONTAINS
+!----------------------------------------------
 
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      REAL(dbl) FUNCTION nlrh_m(c0, cdesc, tforce, atoms, occ, kp, fnl, wsg, wnl, eigr)
+   REAL(dbl) FUNCTION nlrh_m( c0, cdesc, tforce, atoms, occ, bec, becdr, eigr )
 
-!  this routine computes:
-!  fnl: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
-!  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
-!  nonlocal potential contribution to forces on ions
-!
-!    fion(n,ia) = -2 (sum over ib,igh,ik) kp%weight(ik) occ%s(ib,ik)
-!                 Re { conjugate(dfnl(ia,igh,ib,ik)) fnl(ia,igh,ib,ik) }
-!                 ps%wsg(igh,is)
-!
-!    kp%weight(ik) = weight of k point
-!    occ%s(ib,ik) = occupation number
-!    dfnl(ia,igh,ib,ik) = derivative of fnl with respect to R(n,ia)  n = x,y,z
-!    fnl(ia,igh,ib,ik) = Kleinman-Bylander factor (see nlsm1,nlsm1_kp)
-!    ps%wsg(igh,is) = inverse denominator in Kleinman-Bylander's formula (see nlset)
-!  ----------------------------------------------
-!  END manual
+      !  this routine computes:
+      !  Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
+      !  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
+      !  nonlocal potential contribution to forces on ions, see nlsm2
+      !
+      ! ... include modules
 
-! ... include modules
-      USE brillouin, ONLY: kpoints
-      USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
+      USE brillouin,         ONLY: kpoints, kp
+      USE wave_types,        ONLY: wave_descriptor
+      USE pseudo_projector,  ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
-      USE control_flags, ONLY: force_pairing
+      USE control_flags,     ONLY: force_pairing
+      USE pseudopotential,   ONLY: nspnl
+      USE electrons_base,    ONLY: iupdwn, nupdwn
+      USE uspp,              ONLY: becsum, nkb
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
-      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
-      TYPE (kpoints),        INTENT(IN)     :: kp            ! G and k vectors
-      COMPLEX(dbl),           INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
+      ! ... declare subroutine arguments
+
+      COMPLEX(dbl)                          :: eigr(:,:)     ! exp(i G dot r)
+      COMPLEX(dbl),           INTENT(INOUT) :: c0(:,:,:,:)   ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
-      REAL(dbl),           INTENT(IN)     :: occ(:,:,:)      ! occupations
+      REAL(dbl),           INTENT(IN)       :: occ(:,:,:)    ! occupations
       LOGICAL,               INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
-      REAL(dbl),             INTENT(IN)     :: wsg(:,:)      ! KB inverse denominators <Y phi | V | phi Y>**(-1)
-      TYPE (projector),      INTENT(OUT)    :: fnl(:,:)      ! KB  factors
-      REAL(dbl),             INTENT(INOUT)   :: wnl(:,:,:,:) ! KB products <Y phi V | exp(i(k+G) dot r)>
+      REAL(dbl)                             :: bec(:,:)
+      REAL(dbl)                             :: becdr(:,:,:)
 
-! ... declare other variables
-      INTEGER :: ispin, ispin_wfc
+      REAL(dbl)    :: ennl
+      EXTERNAL     :: ennl
+
+      ! ... declare other variables
+      !
+      INTEGER      :: iss, iss_wfc, i, j
+      REAL(dbl)    :: etmp
+      REAL(dbl), ALLOCATABLE :: btmp( :, :, : )
+      REAL(dbl), ALLOCATABLE :: fion( :, : )
 
 !  end of declarations
 !  ----------------------------------------------
 
-      CALL nl_projector_m(c0, cdesc, atoms, kp, fnl, wsg, wnl, eigr)
-      nlrh_m = nl_energy_m(fnl, atoms, occ, kp, wsg)
+      DO iss = 1, cdesc%nspin
+         !
+         iss_wfc = iss
+         IF( force_pairing ) iss_wfc = 1
+         !
+         CALL nlsm1 ( cdesc%nbl( iss ), 1, nspnl, eigr(1,1),    &
+                      c0( 1, 1, 1, iss_wfc ), bec(1, iupdwn( iss ) ) )
+         !
+         IF( tforce ) THEN
+            !
+            ALLOCATE( btmp( nkb, nupdwn( iss ), 3 ) ) 
+            !
+            CALL nlsm2( cdesc%ngwl, nkb, nupdwn( iss ), eigr(1,1), &
+                        c0( 1, 1, 1, iss_wfc ), btmp( 1, 1, 1 ), .false. )
+            !
+            DO i = 1, 3
+               DO j = iupdwn( iss ), iupdwn( iss ) + nupdwn( iss ) - 1
+                  becdr( :, j , i ) = btmp( :, j - iupdwn( iss ) + 1, i ) 
+               END DO
+            END DO
+            !
+            DEALLOCATE( btmp )
+            !
+         END IF
+         !
+      END DO
+      
+      nlrh_m = ennl( becsum, bec )
+
       IF( tforce ) THEN
-        DO ispin = 1, cdesc%nspin
-          ispin_wfc = ispin
-          IF( force_pairing ) ispin_wfc = 1
-          CALL nl_ionic_forces_v( ispin, c0( :, :, :, ispin_wfc ), cdesc, atoms, occ(:,:,ispin), &
-            kp, fnl(:,ispin), wsg, wnl, eigr)
-        END DO
+         !
+         CALL force_nl( atoms%for, bec, becdr )
+         !
       END IF
+
+      ! CALL nl_projector_m(c0, cdesc, atoms, fnl, wsg, wnl, eigr)
+      !
+      ! nlrh_m = nl_energy_m(fnl, atoms, occ, wsg)
+      !
+      ! WRITE(6,*) ' DEBUG nlrh (enl) = ', etmp - nlrh_m, tforce
+      !
+      ! IF( tforce ) THEN
+        !
+        ! ALLOCATE( fion( 3, atoms%nat ) )
+        !
+        ! fion = atoms%for
+        !
+        ! DO iss = 1, cdesc%nspin
+        !   iss_wfc = iss
+        !   IF( force_pairing ) iss_wfc = 1
+        !   CALL nl_ionic_forces_v( iss, c0( :, :, :, iss_wfc ), cdesc, atoms, occ(:,:,iss), &
+        !     fnl(:,iss), wsg, wnl, eigr)
+        ! END DO
+        !
+        ! DO i = 1, atoms%nat
+        !    WRITE(6,*) 'X = ', fion( 1, i ) - atoms%for( 1, i )
+        !    WRITE(6,*) 'Y = ', fion( 2, i ) - atoms%for( 2, i )
+        !    WRITE(6,*) 'Z = ', fion( 3, i ) - atoms%for( 3, i )
+        ! END DO
+        !
+        ! DEALLOCATE( fion )
+        !
+      ! END IF
+      !
       RETURN
-      END FUNCTION nlrh_m
-
+   END FUNCTION nlrh_m
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE nl_projector_m(c0, cdesc, atoms, kp, fnl, wsg, wnl, eigr)
 
-!  this routine computes:
-!  fnl: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
-!
-!  ----------------------------------------------
-!  END manual
+   SUBROUTINE nl_projector_m(c0, cdesc, atoms, fnl, wsg, wnl, eigr)
 
-! ... include modules
-      USE brillouin, ONLY: kpoints
+      !  this routine computes:
+      !  fnl: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
+      !
+
+      USE brillouin, ONLY: kpoints, kp
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
@@ -124,23 +160,20 @@
 
       IMPLICIT NONE
 
-! ...   declare subroutine arguments
+      ! ...   declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
-      TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
       COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
       TYPE (wave_descriptor),  INTENT(IN)  :: cdesc  ! wave functions
       REAL(dbl),      INTENT(IN)  :: wsg(:,:) ! Kleinman-Bylander inverse
                                               ! denominators
                                               ! <Y phi | V | phi Y>**(-1)
-! ...   Kleinman-Bylander factors, with and without k points
+      ! ...   Kleinman-Bylander factors, with and without k points
       TYPE (projector), INTENT(OUT) :: fnl(:,:)
-! ...   Kleinman-Bylander products <Y phi V | exp(i(k+G) dot r)>
+      ! ...   Kleinman-Bylander products <Y phi V | exp(i(k+G) dot r)>
       REAL(dbl), INTENT(IN) :: wnl(:,:,:,:)
-! ...   declare other variables
+      ! ...   declare other variables
       INTEGER      :: ik, ispin, ispin_wfc
-!  end of declarations
-!  ----------------------------------------------
 
       DO ispin = 1, cdesc%nspin
         ispin_wfc = ispin
@@ -155,43 +188,37 @@
         END DO
       END DO
       RETURN
-      END SUBROUTINE nl_projector_m
+   END SUBROUTINE nl_projector_m
 
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      REAL(dbl) FUNCTION nl_energy_m(fnl, atoms, occ, kp, wsg)
+   REAL(dbl) FUNCTION nl_energy_m(fnl, atoms, occ, wsg)
 
-!  this routine computes:
-!  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
-!  ----------------------------------------------
-!  END manual
+      !  this routine computes:
+      !  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
 
-! ... include modules
-      USE brillouin, ONLY: kpoints
+      ! ... include modules
+      USE brillouin, ONLY: kpoints, kp
       USE pseudopotential, ONLY: nspnl
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
-      TYPE (kpoints), INTENT(IN)    :: kp       ! G and k vectors
+      ! ... declare subroutine arguments
       REAL(dbl),    INTENT(IN)    :: occ(:,:,:) ! occupations
       TYPE(atoms_type),  INTENT(IN) :: atoms    ! ions structure
       REAL(dbl),      INTENT(IN)    :: wsg(:,:) ! Kleinman-Bylander inverse
                                                 ! denominators <Y phi | V | phi Y>**(-1)
       TYPE (projector) :: fnl(:,:) ! ... Kleinman-Bylander factors
 
-! ... declare other variables
+      ! ... declare other variables
       REAL(dbl)    :: enl
       INTEGER      :: ik, ispin
 
-!  end of declarations
-!  ----------------------------------------------
 
-! ... compute nonlocal contribution to total energy
+      ! ... compute nonlocal contribution to total energy
       enl = 0.0d0
       DO ispin = 1, SIZE( fnl, 2 )
         DO ik = 1, SIZE( fnl, 1 )
@@ -201,90 +228,27 @@
       END DO
       nl_energy_m = enl
       RETURN
-      END FUNCTION nl_energy_m
+   END FUNCTION nl_energy_m
 
 
 
-!  ----------------------------------------------
-!  BEGIN manual
+   SUBROUTINE nl_ionic_forces_v( ispin, c0, cdesc, atoms, occ, fnl, wsg, wnl, eigr)
 
-      SUBROUTINE nl_ionic_forces_m(c0, cdesc, atoms, occ, kp, fnl, wsg, wnl, eigr)
-
-!  this routine computes:
-!  fnl/fnlk: Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
-!  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
-!  nonlocal potential contribution to forces on ions
-!
-!    fion(n,ia) = -2 (sum over ib,igh,ik) kp%weight(ik) occ%s(ib,ik)
-!                 Re { conjugate(dfnlk(ia,igh,ib,ik)) fnlk(ia,igh,ib,ik) }
-!                 ps%wsg(igh,is)
-!
-!    kp%weight(ik) = weight of k point
-!    occ%s(ib,ik) = occupation number
-!    dfnlk(ia,igh,ib,ik) = derivative of fnlk with respect to R(n,ia)
-!                          n = x,y,z
-!    fnlk(ia,igh,ib,ik) = Kleinman-Bylander factor (see nlsm1,nlsm1_kp)
-!    ps%wsg(igh,is) = inverse denominator in Kleinman-Bylander's formula
-!                     (see nlset)
-!  ----------------------------------------------
-!  END manual
-
-! ... include modules
-      USE brillouin, ONLY: kpoints
-      USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
-      USE atoms_type_module, ONLY: atoms_type
-      USE control_flags, ONLY: force_pairing
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
-      TYPE (kpoints), INTENT(IN)  :: kp       ! G and k vectors
-      COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)    ! wave functions
-      TYPE (wave_descriptor),    INTENT(IN)  :: cdesc    ! wave functions desc.
-      REAL(dbl),    INTENT(IN)  :: occ(:,:,:)      ! occupations
-      TYPE(atoms_type),  INTENT(INOUT) :: atoms    ! ions structure
-      REAL(dbl),      INTENT(IN)  :: wsg(:,:)  ! KB inverse denominators <Y phi | V | phi Y>**(-1)
-      TYPE (projector), INTENT(INOUT) :: fnl(:,:) ! KB factors
-      REAL(dbl), INTENT(INOUT) :: wnl(:,:,:,:)    ! KB products <Y phi V | exp(i(k+G) dot r)>
-      INTEGER :: ispin, ispin_wfc
+      !  this routine computes:
+      !  nonlocal potential contribution to forces on ions
       !
-      DO ispin = 1, cdesc%nspin
-        !
-        ispin_wfc = ispin
-        IF( force_pairing ) ispin_wfc = 1
-        !
-        CALL nl_ionic_forces_v( ispin, c0( :, :, :, ispin_wfc), cdesc, atoms, occ(:,:,ispin), &
-          kp, fnl(:,ispin), wsg, wnl, eigr)
-        !
-      END DO
+      !    fion(n,ia) = -2 (sum over ib,igh,ik) kp%weight(ik) occ%s(ib,ik)
+      !                 Re { conjugate(dfnl(ia,igh,ib,ik)) fnl(ia,igh,ib,ik) } ps%wsg(igh,is)
       !
-      RETURN
-      END SUBROUTINE nl_ionic_forces_m
+      !    kp%weight(ik) = weight of k point
+      !    occ%s(ib,ik) = occupation number
+      !    fnl(ia,igh,ib,ik) = Kleinman-Bylander factor 
+      !    dfnl(ia,igh,ib,ik) = derivative of fnl with respect to R(n,ia) n = x,y,z
+      !    ps%wsg(igh,is) = inverse denominator in Kleinman-Bylander's formula  (see nlset)
 
-!  ----------------------------------------------
-!  BEGIN manual
-
-      SUBROUTINE nl_ionic_forces_v( ispin, c0, cdesc, atoms, occ, kp, fnl, wsg, wnl, eigr)
-
-!  this routine computes:
-!  nonlocal potential contribution to forces on ions
-!
-!    fion(n,ia) = -2 (sum over ib,igh,ik) kp%weight(ik) occ%s(ib,ik)
-!                 Re { conjugate(dfnl(ia,igh,ib,ik)) fnl(ia,igh,ib,ik) } ps%wsg(igh,is)
-!
-!    kp%weight(ik) = weight of k point
-!    occ%s(ib,ik) = occupation number
-!    fnl(ia,igh,ib,ik) = Kleinman-Bylander factor 
-!    dfnl(ia,igh,ib,ik) = derivative of fnl with respect to R(n,ia) n = x,y,z
-!    ps%wsg(igh,is) = inverse denominator in Kleinman-Bylander's formula  (see nlset)
-!  ----------------------------------------------
-!  END manual
-
-! ... include modules
+      ! ... include modules
       USE pseudopotential, ONLY: nspnl, nsanl
-      USE brillouin, ONLY: kpoints
+      USE brillouin, ONLY: kpoints, kp
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
       USE atoms_type_module, ONLY: atoms_type
@@ -295,29 +259,24 @@
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
       COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),       INTENT(INOUT) :: atoms ! ions structure
-      TYPE (kpoints),         INTENT(IN)    :: kp        ! K points
       COMPLEX(dbl),            INTENT(INOUT) :: c0(:,:,:)     ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc     ! wave functions desc.
       REAL(dbl),            INTENT(IN)    :: occ(:,:)       ! occupations
       REAL(dbl),              INTENT(IN)    :: wsg(:,:)  ! KB inverse denominators <Y phi | V | phi Y>**(-1)
       TYPE (projector),       INTENT(INOUT) :: fnl(:)   ! KB factors
-      REAL(dbl),              INTENT(INOUT) :: wnl(:,:,:,:)    ! KB products <Y phi V | exp(i(k+G) dot r)>
+      REAL(dbl),              INTENT(IN) :: wnl(:,:,:,:)    ! KB products <Y phi V | exp(i(k+G) dot r)>
       INTEGER, INTENT(IN) :: ispin
 
-! ... declare other variables
+      ! ... declare other variables
       TYPE (projector) :: dfnl
       COMPLEX(dbl) :: ctmp
       REAL(dbl)    :: temp, fac, tt, fsum, enl
       INTEGER      :: me, ib, ia, k, isa, igh, is, ik
 
-!  end of declarations
-!  ----------------------------------------------
 
-
-! ... compute nonlocal contribution to forces on ions
+      ! ... compute nonlocal contribution to forces on ions
       KAPPA: DO ik = 1, cdesc%nkl
         CARTE: DO k = 1, 3  ! x,y,z directions
           CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), nhm, cdesc%gamma )
@@ -353,69 +312,68 @@
         END DO CARTE
       END DO KAPPA
       RETURN
-      END SUBROUTINE nl_ionic_forces_v
+   END SUBROUTINE nl_ionic_forces_v
 
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE nlsm1_s( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, fnl)
 
-!  this routine computes the Kleinman-Bylander factors of the nonlocal
-!  part of the pseudopotentials
-!
-!    fnl(ia,ib,igh) = (sum over ig) c0%w(ib,ig) exp(i G dot R(ia))
-!                     < vnl(is,igh) phi(igh) Y(igh) | exp(i G dot r) >
-!
-!    wnl(is,igh) = nonlocal part of pseudopotentials
-!    phi(igh) = reference (isolated-atom) state for pseudopotentials
-!    Y(igh) = s, p_x, p_y, p_z ... orbitals
-!    R(ia) = positions of ions
-!
-!    ia = index of ion
-!    ib = index of band
-!    ig = index of G vector
-!    igh = index of orbital
-!  ----------------------------------------------
-!  END manual
+   SUBROUTINE nlsm1_s( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, fnl)
 
-! ... declare modules
+      !  this routine computes the Kleinman-Bylander factors of the nonlocal
+      !  part of the pseudopotentials
+      !
+      !    fnl(ia,ib,igh) = (sum over ig) c0%w(ib,ig) exp(i G dot R(ia))
+      !                     < vnl(is,igh) phi(igh) Y(igh) | exp(i G dot r) >
+      !
+      !    wnl(is,igh) = nonlocal part of pseudopotentials
+      !    phi(igh) = reference (isolated-atom) state for pseudopotentials
+      !    Y(igh) = s, p_x, p_y, p_z ... orbitals
+      !    R(ia) = positions of ions
+      !
+      !    ia = index of ion
+      !    ib = index of band
+      !    ig = index of G vector
+      !    igh = index of orbital
+
+      ! ... declare modules
 
       USE pseudopotential, ONLY: nspnl
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
-      USE mp
+      USE mp, ONLY: mp_sum
       USE mp_global, ONLY: nproc, mpime, group
       USE atoms_type_module, ONLY: atoms_type
       USE uspp_param, only: nh, lmaxkb
       USE uspp, only: nhtol, nhtolm, indv
+      USE uspp, only: beta
+      USE cell_base, only: omega
+      USE constants, only: pi
 
       IMPLICIT NONE 
 
-! ... declare subroutine arguments
+      ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: ispin
       COMPLEX(dbl),      INTENT(INOUT) :: c(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      REAL(dbl)                       :: wnl(:,:,:)
+      REAL(dbl), INTENT(IN)           :: wnl(:,:,:)
       REAL(dbl)                       :: g2(:), gx(:,:)
       TYPE (projector), INTENT(OUT)   :: fnl
       COMPLEX(dbl) :: eigr(:,:)
 
-! ... declare other variables
+      ! ... declare other variables
       INTEGER :: is, igh, isa, iss, ia, ig, nb, iy
       INTEGER :: l, ll, m, ngw, lda, ldw, ldf, ih, iv
       REAL(dbl), ALLOCATABLE :: gwork(:,:)
+      REAL(dbl) :: ftmp
       COMPLEX(dbl), ALLOCATABLE :: gxtmp(:)
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
       COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0)
       COMPLEX(dbl), PARAMETER :: ZERO = (0.0d0,0.0d0)
-! ... i^l
+      ! ... i^l
       COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
           (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
-
-!  end of declarations
-!  ----------------------------------------------
 
       ngw = cdesc%ngwl
       nb  = cdesc%nbl( ispin )
@@ -431,15 +389,21 @@
         fnl%c = 0.0d0
       END IF
 
+      !      write(6,*) 'debug = ', omega
+      ftmp = sqrt( 4.0d0 * ( 4.0d0 * pi )**2 / omega )
+      !      write(6,*) 'debug = ', ftmp
+      !      beta(ig,iv,is) = ftmp * wnl( ig, iv, is) * ylm( ig, iy )
+      !      wsg = ftmp**2 * dvan
+      !      bec = ftmp * fnl
 
       ALLOCATE( gwork( ngw, (lmaxkb+1)**2 ), gxtmp(ngw) )
 
-! ... angular momentum l = 0
-! ... orbital: s
-! ... angular momentum l = 1
-! ... orbitals: p_x, p_y, p_z
-! ... angular momentum l = 2
-! ... orbitals: d_{z^2}, d_{x^2-y^2}, d_{xy}, d_{yz}, d_{zx}
+      ! ... angular momentum l = 0
+      ! ... orbital: s
+      ! ... angular momentum l = 1
+      ! ... orbitals: p_x, p_y, p_z
+      ! ... angular momentum l = 2
+      ! ... orbitals: d_{z^2}, d_{x^2-y^2}, d_{xy}, d_{yz}, d_{zx}
 
       CALL ylmr2( (lmaxkb+1)**2, ngw, gx, g2, gwork )
 
@@ -453,6 +417,12 @@
           l   = ll - 1
           igh = ih
           gxtmp(1:ngw) = csign(l) * wnl(1:ngw, iv, is) * gwork(1:ngw, iy )
+          !DO ig = 1, ngw, 10
+          !  write(101+mpime,*) l,ig,beta(ig,ih,is)/(ftmp * wnl( ig, iv, is) * gwork( ig, iy )), &
+          !                     beta(ig,ih,is), (ftmp * wnl( ig, iv, is) * gwork( ig, iy ))
+          !  write(201+mpime,*) iv, ig, wnl( ig, iv, is)
+          !  write(301+mpime,*) iy, ig, g2(ig), gx(1,ig), gx(2,ig), gx(3,ig), gwork( ig, iy )
+          !END DO
           ! WRITE(6,* ) 'debug is, igh, ll, iy, iv = ', is, igh, ll, iy, iv  ! debug
           IF( cdesc%gamma .AND. cdesc%gzero ) gxtmp(1) = gxtmp(1) * 0.5d0
           DO ia = 1, atoms%na(is)
@@ -471,7 +441,7 @@
       END DO
       DEALLOCATE(gwork, gxtmp)
 
-! ... since G vectors only span half space, multiply results by two
+      ! ... since G vectors only span half space, multiply results by two
       IF ( cdesc%gamma ) THEN
         CALL DSCAL( size( fnl%r ), 2.0d0, fnl%r(1,1,1), 1 )
         CALL mp_sum( fnl%r, group )
@@ -480,68 +450,19 @@
       END IF
 
       RETURN
-      END SUBROUTINE nlsm1_s
-
-      SUBROUTINE nlsm1_v( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, fnl)
-!! ...   declare modules
-        USE wave_types, ONLY: wave_descriptor
-        USE pseudo_projector, ONLY: projector
-        USE atoms_type_module, ONLY: atoms_type
-        IMPLICIT NONE
-!! ...   declare subroutine arguments
-        COMPLEX(dbl),    INTENT(INOUT) :: c(:,:,:)
-        TYPE (wave_descriptor),  INTENT(IN) :: cdesc
-        INTEGER, INTENT(IN) :: ispin
-        TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-        REAL(dbl) :: wnl(:,:,:,:)
-        REAL(dbl) :: g2(:,:), gx(:,:,:)
-        TYPE (projector), INTENT(OUT) :: fnl(:)
-        COMPLEX(dbl) :: eigr(:,:)
-        INTEGER :: i
-          DO i = 1, SIZE(fnl)
-            CALL nlsm1_s( ispin, wnl(:,:,:,i), atoms, eigr, c(:,:,i), cdesc, g2(:,i), &
-              gx(:,:,i), fnl(i) )
-          END DO
-        RETURN
-      END SUBROUTINE nlsm1_v
-
-      SUBROUTINE nlsm2_v( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, dfnl, kk)
-!! ...   declare modules
-        USE wave_types, ONLY: wave_descriptor
-        USE pseudo_projector, ONLY: projector
-        USE atoms_type_module, ONLY: atoms_type
-        IMPLICIT NONE
-!! ...   declare subroutine arguments
-        INTEGER, INTENT(IN) :: ispin
-        COMPLEX(dbl),    INTENT(IN) :: c(:,:,:)
-        TYPE (wave_descriptor),  INTENT(IN) :: cdesc
-        TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-        REAL(dbl) :: wnl(:,:,:,:)
-        REAL(dbl) :: g2(:,:), gx(:,:,:)
-        TYPE (projector), INTENT(OUT) :: dfnl(:)
-        COMPLEX(dbl) :: eigr(:,:)
-        INTEGER, INTENT(IN) :: kk
-        INTEGER :: i
-          DO i = 1, SIZE(dfnl)
-            CALL nlsm2_s( ispin, wnl(:,:,:,i), atoms, eigr, c(:,:,i), cdesc, g2(:,i), &
-              gx(:,:,i), dfnl(i), kk)
-          END DO
-        RETURN
-      END SUBROUTINE nlsm2_v
+   END SUBROUTINE nlsm1_s
 
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE nlsm2_s( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, dfnl, kk)
 
-!  this routine computes the derivatives of the Kleinman-Bylander
-!  factors fnl, to be used for Hellmann-Feynman forces evaluation
-!
-!  ----------------------------------------------
-!  END manual
+   SUBROUTINE nlsm2_s( ispin, wnl, atoms, eigr, c, cdesc, g2, gx, dfnl, kk)
 
-! ... declare modules
+      !  this routine computes the derivatives of the Kleinman-Bylander
+      !  factors fnl, to be used for Hellmann-Feynman forces evaluation
+      !
+
+      ! ... declare modules
       USE pseudopotential, ONLY: nspnl
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
@@ -552,7 +473,7 @@
 
       IMPLICIT   NONE
 
-! ... declare subroutine arguments
+      ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(IN) :: c(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (projector), INTENT(OUT) :: dfnl
@@ -562,18 +483,16 @@
       INTEGER, INTENT(IN) :: kk
       INTEGER, INTENT(IN) :: ispin
 
-! ... declare other variables
+      ! ... declare other variables
       REAL(dbl), ALLOCATABLE :: gwork(:,:)
       INTEGER :: is, ia, igh, isa, ig, iss, ll, l, m, ngw, nb, lda, ldw, ldf
       INTEGER :: iy, ih, iv
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:), gxtmp(:)
       COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0), ZERO = (0.0d0,0.0d0)
-! ... (-i) * i^l
+      ! ... (-i) * i^l
       COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (0.0d0,-1.0d0), &
         (1.0d0,0.0d0), (0.0d0,1.0d0), (-1.0d0,0.0d0) /)
 
-!  end of declarations
-!  ----------------------------------------------
 
       ngw = cdesc%ngwl
       nb  = cdesc%nbl( ispin )
@@ -626,7 +545,9 @@
       !write( 6, * ) 'DEBUG ==== ', SUM( dfnl%r )
       DEALLOCATE(gwork, gxtmp)
       RETURN
-      END SUBROUTINE nlsm2_s
+   END SUBROUTINE nlsm2_s
 
 
-    END MODULE nl
+!----------------------------------------------
+ END MODULE nl
+!----------------------------------------------

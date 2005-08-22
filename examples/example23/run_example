@@ -75,21 +75,6 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-# calculation of Wannier functions
-cat > WANNIER << EOF
-  .false. .false.                       EFIELD SWITCH
-  100                                   SW_LEN
-  0.d0 0.d0 0.0d0                       EFX0 EFY0 EFZ0
-  0.d0 0.d0 0.5d-2                      EFX1 EFY1 EFZ1
-  .false.                               WFSD
-  0.1 0.3 10 10                         WFDT MAXWFDT NIT NSD
-  1500. 5. .3 10                        Q DT FRIC NSTEPS
-  1.d-9                                 TOLW
-  .true.                                ADAPT
-  3 1 40                                CALWF NWF WFFORT
-  21                                    IPLOT
-  .false.                               WRITEV
-EOF
 cat > h2o.wannier.in << EOF
  &control
     title = ' Water Molecule ',
@@ -145,6 +130,23 @@ cat > h2o.wannier.in << EOF
     cell_velocities = 'zero',
     press = 0.0d0,
  /
+ &wannier
+  sw_len = 100
+  efz1 = 0.5d-2
+  wfdt = 0.1d0
+  maxwfdt = 0.3
+  nit = 10
+  nsd = 10
+  wf_q = 1500.0
+  wf_dt = 5.0
+  wf_friction = 0.3
+  nsteps = 10
+  tolw = 1.d-9
+  adapt = .true.
+  calwf = 3 
+  nwf = 1 
+  wffort = 40 
+ /
 ATOMIC_SPECIES
     O 16.0d0 O_US.van 1
     H 1.00d0 H_US.van 1
@@ -158,20 +160,6 @@ $CP_COMMAND < h2o.wannier.in > h2o.wannier.out
 $ECHO " done"
 
 # calculation with an electric field
-cat > WANNIER << EOF
-  .true. .true.                         EFIELD SWITCH
-  100                                   SW_LEN
-  0.d0 0.d0 0.0d0                       EFX0 EFY0 EFZ0
-  0.d0 0.d0 0.5d-2                      EFX1 EFY1 EFZ1
-  .false.                               WFSD
-  0.1 0.3 10 10                         WFDT MAXWFDT NIT NSD
-  1500. 5. .3 10                        Q DT FRIC NSTEPS
-  1.d-9                                 TOLW
-  .true.                                ADAPT
-  3 1 40                                CALWF NWF WFFORT
-  21                                    IPLOT
-  .false.                               WRITEV
-EOF
 cat > h2o.efield.in << EOF
  &control
     title = ' Water Molecule ',
@@ -226,6 +214,25 @@ cat > h2o.efield.in << EOF
     cell_dynamics = 'none',
     cell_velocities = 'zero',
     press = 0.0d0,
+ /
+ &wannier
+  wf_efield = .true.
+  wf_switch = .true.
+  sw_len = 100
+  efz1 = 0.5d-2
+  wfdt = 0.1d0
+  maxwfdt = 0.3
+  nit = 10
+  nsd = 10
+  wf_q = 1500.0
+  wf_dt = 5.0
+  wf_friction = 0.3
+  nsteps = 10
+  tolw = 1.d-9
+  adapt = .true.
+  calwf = 3 
+  nwf = 1 
+  wffort = 40 
  /
 ATOMIC_SPECIES
     O 16.0d0 O_US.van 1

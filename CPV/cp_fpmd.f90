@@ -6,54 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-module cvan
-
-  ! this file contains common subroutines and modules between
-  ! CP and FPMD
-
-  !     ionic pseudo-potential variables
-  use parameters, only: nsx
-  implicit none
-  save
-  logical :: oldvan(nsx)
-  !     oldvan(is) = an old version of Vanderbilt PPs (using Herman-Skillman
-  !                  grid) is read - replaces old "ipp=0" flag
-  integer nvb, ish(nsx)
-  !     nvb    = number of species with Vanderbilt PPs
-  !     ish(is)= used for indexing the nonlocal projectors betae
-  !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
-  !              where "is" is the species and iv=1,nh(is)
-  !
-  !     indlm: indlm(ind,is)=Y_lm for projector ind
-  integer, allocatable:: indlm(:,:)
-contains
-
-  subroutine allocate_cvan( nind, ns )
-    integer, intent(in) :: nind, ns
-    allocate( indlm( nind, ns ) )
-  end subroutine allocate_cvan
-
-  subroutine deallocate_cvan( )
-    if( allocated(indlm) ) deallocate( indlm )
-  end subroutine deallocate_cvan
-
-end module cvan
-
-
-module qrl_mod
-
-  use parameters, only: nsx, ndmx, nbrx, lqmax
-  implicit none
-  save
-!
-! qrl       q(r) functions (old format)
-! cmesh     used only for Herman-Skillman mesh (old format)
-!
-  real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
-  real(kind=8) :: cmesh(nsx)
-
-end module qrl_mod
-
 
 !-----------------------------------------------------------------------
       subroutine fill_qrl(is)
@@ -96,30 +48,27 @@ end module qrl_mod
 
 
 !-----------------------------------------------------------------------
-      subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
+subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
 !-----------------------------------------------------------------------
+   !
+   ! As ggen, for the box grid. A "b" is appended to box variables.
+   ! The documentation for ggen applies
+   !
+   use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
+   use gvecb, only: iglb, mill_b
+   use io_global, only: stdout, ionode
+   use mp_global, only: nproc
+   use control_flags, only: iprsta
 !
-! As ggen, for the box grid. A "b" is appended to box variables.
-! The documentation for ggen applies
+   implicit none
 !
-      use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
-      use gvecb, only: iglb, mill_b
-      use io_global, only: stdout, ionode
-      use mp_global, only: nproc
-      use control_flags, only: iprsta
-
+   integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+   real(kind=8) b1b(3), b2b(3), b3b(3), gcutb
 !
-      implicit none
-!
-      integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-      real(kind=8) b1b(3), b2b(3), b3b(3), gcutb
-!
-      integer, allocatable:: index(:)
-      integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
-      integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
-!       cray:
-!      integer jwork(257)
-      real(kind=8) t(3), g2
+   integer, allocatable:: index(:)
+   integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
+   integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
+   real(kind=8) t(3), g2
 !
       nr1m1=nr1b-1
       nr2m1=nr2b-1
@@ -304,18 +253,10 @@ end module qrl_mod
          gxb(3,ig)=i*b1b(3)+j*b2b(3)+k*b3b(3)
       end do
 !
-      IF(ionode) THEN
-        WRITE( stdout,1000)
-        DO ip = 1, nproc
-          WRITE( stdout,1010) ip, ngb, ngb, ngb
-        END DO
-1000    FORMAT(/,16X,'Small box Mesh Number of G',/, &
-                3X,'PE       Global       Local   Max Local' )
-1010    FORMAT( I5,1X,3I12 )
-      END IF
-
       return
-      end subroutine ggenb
+end subroutine ggenb
+
+
 
 !-----------------------------------------------------------------------
       subroutine gcalb( alatb, b1b_ , b2b_ , b3b_  )
@@ -433,69 +374,71 @@ end module qrl_mod
       use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
       use reciprocal_vectors, only: gzero, gstart, sortedig_l2g
-      use recvecs_indexes, only: nm, np
-      use gvecs, only: ngs, nms, ngsl, nps
-      use gvecw, only: ngw, ngwl, ngwt, ggp
-      use gvecp, only: ng => ngm, ngl => ngml, ng_g => ngmt
-      use io_global, only: stdout
-      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
-      use mp, ONLY: mp_sum, mp_max
-      use io_global, only: ionode
-      use constants, only: eps8
-      use control_flags, only: iprsta
-
+      use recvecs_indexes,    only: nm, np
+      use gvecs,              only: ngs, nms, ngsl, nps
+      use gvecw,              only: ngw, ngwl, ngwt, ggp
+      use gvecp,              only: ng => ngm, ngl => ngml, ng_g => ngmt
+      use io_global,          only: stdout
+      USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
+      use mp,                 ONLY: mp_sum, mp_max
+      use io_global,          only: ionode
+      use constants,          only: eps8
+      use control_flags,      only: iprsta
+      !
       implicit none
-      integer nr1,nr2,nr3, nr1s,nr2s,nr3s
-      real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-      logical lgam
-      integer n1p, n2p, n3p, n1m, n2m, n3m
-      integer n1ps, n2ps, n3ps, n1ms, n2ms, n3ms
-!       cray:
-!      integer jwork(257)
-      integer it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
-      integer ichk
-      integer mill(3)
-      real(kind=8) t(3), g2
-!
-
-      CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3,  &
-     &      gcut, gcuts, gcutw, dfftp%isind, dfftp%nr1x, lgam )
-
-!
-!     Second step. Compute and sort all G vectors, and build non
-!     distributed reciprocal space vectors arrays (ng_g = global
-!     number og Gs )
-!
+      !
+      real(kind=8) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
+      real(kind=8) :: t(3), g2
+      logical      :: lgam
+      integer      :: nr1,nr2,nr3, nr1s,nr2s,nr3s
+      integer      :: n1p, n2p, n3p, n1m, n2m, n3m
+      integer      :: n1ps, n2ps, n3ps, n1ms, n2ms, n3ms
+      integer      :: it, icurr, nr1m1, nr2m1, nr3m1, nrefold, ir, ig, i,j,k
+      integer      :: ichk
+      integer      :: mill(3)
+      !
+      !  First of all count the number of G vectors according with the FFT mesh 
+      ! 
+      CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw,&
+                   dfftp%isind, dfftp%nr1x, lgam )
+      !
+      !     Second step. Compute and sort all G vectors, and build non
+      !     distributed reciprocal space vectors arrays (ng_g = global
+      !     number og Gs )
+      !
       ng_g = ng
       ngwt = ngw
 
       CALL mp_sum( ng_g )
       CALL mp_sum( ngwt )
 
-      allocate(g2_g(ng_g))
-      allocate(mill_g(3,ng_g))
+      !
+      !     Temporary global and replicated arrays, used for sorting
+      !
+      allocate( g2_g( ng_g ) )
+      allocate( mill_g( 3, ng_g ) )
 
       CALL gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 
-!
-!     third step: allocate space
-!     ng is the number of Gs local to this processor
-!
-      allocate(gx(3,ng))
-      allocate(g(ng))
-      allocate(ggp(ngw))
-      allocate(np(ng))
-      allocate(nm(ng))
-      allocate(igl(ng))
+      !
+      !     third step: allocate space
+      !     ng is the number of Gs local to this processor
+      !
+      allocate( gx ( 3, ng ) )
+      allocate( g  ( ng ) )
+      allocate( ggp( ngw ) )
+      allocate( np ( ng ) )
+      allocate( nm ( ng ) )
+      allocate( igl( ng ) )
 
-      allocate(ig_l2g(ng))
-      allocate(mill_l(3,ng))
-      allocate(sortedig_l2g(ng))
+      allocate( ig_l2g( ng ) )
+      allocate( mill_l( 3, ng ) )
+      allocate( sortedig_l2g( ng ) )
 
-!
-!     fourth step : find the vectors with g2 < gcut
-!     local to each processor
-!
+      !
+      !     fourth step : find the vectors with g2 < gcut
+      !     local to each processor
+      !
       CALL glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x  )
 
       IF( iprsta > 3 ) THEN
@@ -508,16 +451,17 @@ end module qrl_mod
  170    format(' ggen:  # of g vectors < gcutw ngw= ',i6)
       END IF
 
-!
-! check for the presence of refolded G-vectors (dense grid)
-!
+      !
+      !     check for the presence of refolded G-vectors (dense grid)
+      !
 
       CALL gchkrefold( ng, mill_l, nr1, nr2, nr3 )
-!
-! costruct fft indexes (n1,n2,n3) for the dense grid
-!
 
-      CALL gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      !
+      !     costruct fft indexes (n1,n2,n3) for the dense grid
+      !
+      CALL gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, &
+                      dfftp%isind, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
@@ -530,19 +474,19 @@ end module qrl_mod
 !      END IF
 
 
-!
-! check for the presence of refolded G-vectors (smooth  grid)
-!
-
+      !
+      ! check for the presence of refolded G-vectors (smooth  grid)
+      !
       CALL gchkrefold( ngs, mill_l, nr1s, nr2s, nr3s )
 
-!
-! costruct fft indexes (n1s,n2s,n3s) for the small grid
-!
+      !
+      ! costruct fft indexes (n1s,n2s,n3s) for the smooth grid
+      !
       allocate(nps(ngs))
       allocate(nms(ngs))
 !
-      CALL gfftindex( nps, nms, ngs, mill_l, nr1s, nr2s, nr3s, dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+      CALL gfftindex( nps, nms, ngs, mill_l, nr1s, nr2s, nr3s, &
+                      dffts%isind, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
 
 ! ... Uncomment to make tests and comparisons with other codes
@@ -555,6 +499,7 @@ end module qrl_mod
 
       !  ... here igl is used as temporary storage area
       !  ... sortedig_l2g is used to find out local G index given the global G index
+      !
       DO ig = 1, ng
         sortedig_l2g( ig ) = ig
       END DO
@@ -1660,4 +1605,88 @@ END SUBROUTINE gshcount
 
         return
       end subroutine cell_print_info
+
+
+!----------------------------------------------
+SUBROUTINE gmeshinfo( )
+!----------------------------------------------
+   !
+   !   Print out the number of g vectors for the different mesh
+   !
+   USE mp_global, ONLY: nproc, mpime, group
+   USE io_global, ONLY: ionode, ionode_id, stdout
+   USE mp,        ONLY: mp_max, mp_gather
+   use gvecb,     only: ngb
+   USE reciprocal_vectors, only: ngst, ngs, ngsx,  &
+              ngw_g  => ngwt,   &
+              ngw_l  => ngw ,   &
+              ngw_lx => ngwx,   &
+              ng_g   => ngmt,   &
+              ng_l   => ngm ,   &
+              ng_lx  => ngmx
+
+   IMPLICIT NONE
+
+   INTEGER :: ip, ng_snd(3), ng_rcv(3,nproc)
+
+   IF(ionode) THEN
+      WRITE( stdout,*)
+      WRITE( stdout,*) '  Reciprocal Space Mesh'
+      WRITE( stdout,*) '  ---------------------'
+   END IF
+
+   ng_snd(1) = ng_g
+   ng_snd(2) = ng_l
+   ng_snd(3) = ng_lx
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   !
+   IF(ionode) THEN
+      WRITE( stdout,1000)
+      DO ip = 1, nproc
+         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
+      END DO
+   END IF
+   !
+   ng_snd(1) = ngst
+   ng_snd(2) = ngs
+   ng_snd(3) = ngsx
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   !
+   IF(ionode) THEN
+      WRITE( stdout,1001)
+      DO ip = 1, nproc
+         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
+      END DO
+   END IF
+   !
+   ng_snd(1) = ngw_g
+   ng_snd(2) = ngw_l
+   ng_snd(3) = ngw_lx
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   !
+   IF(ionode) THEN
+      WRITE( stdout,1002)
+      DO ip = 1, nproc
+         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
+      END DO
+   END IF
+   !
+   IF(ionode) THEN
+      WRITE( stdout,1050)
+      WRITE( stdout,1060) ngb
+   END IF
+
+   1000    FORMAT(16X,'Large Mesh',/, &
+           3X,'PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)') 
+   1001    FORMAT(16X,'Smooth Mesh',/, &
+           3X,'PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)') 
+   1002    FORMAT(16X,'Wave function Mesh',/, &
+           3X,'PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)') 
+   1010    FORMAT( I5,3I15 )
+   1050    FORMAT(/,16X,'Small box Mesh')
+   1060    FORMAT( 3X, 'ngb = ', I12, ' not distributed to processors' )
+
+   RETURN
+
+END SUBROUTINE gmeshinfo
 

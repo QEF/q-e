@@ -28,9 +28,9 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, kp, &
-                 ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
-                 fnl, vpot, doions, edft, maxnstep, sdthr )
+      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, &
+                 bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
+                 vpot, doions, edft, maxnstep, sdthr )
 
 !  this routine computes the electronic ground state via steepest descent
 !  END manual
@@ -42,10 +42,7 @@
       USE io_global,            ONLY: ionode
       USE io_global,            ONLY: stdout
       USE cell_module,          ONLY: boxdimensions
-      USE brillouin,            ONLY: kpoints
-      USE cp_types,             ONLY: pseudo
       USE wave_types,           ONLY: wave_descriptor
-      USE pseudo_projector,     ONLY: projector
       USE potentials,           ONLY: kspotential
       USE atoms_type_module,    ONLY: atoms_type
       USE runcp_module,         ONLY: runcp
@@ -64,7 +61,6 @@
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      TYPE (pseudo), INTENT(INOUT) :: ps
       REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: sfac(:,:)
       TYPE (charge_descriptor) :: desc
@@ -72,10 +68,10 @@
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
       REAL(dbl)  :: occ(:,:,:)
-      TYPE (projector) :: fnl(:,:)
+      REAL(dbl) :: bec(:,:)
+      REAL(dbl) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
 
       REAL(dbl)    :: ei(:,:,:)
@@ -131,14 +127,14 @@
 
         s1 = cclock()
 
-        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
-          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, atoms_0, &
+                          bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0,  &
+                          occ, vpot, edft, timepre )
 
         s2 = cclock()
 
-        CALL runcp(ttprint, ttortho, ttsde, cm, c0, cp, &
-          cdesc, kp, ps, vpot, eigr, occ, ekincs, timerd, &
-          timeorto, ht0, ei, fnl, vnosee)
+        CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, cdesc, vpot, eigr, occ, ekincs, timerd, &
+                    timeorto, ht0, ei, bec, vnosee)
 
         ekinc = SUM( ekincs )
         emin  = edft%etot
@@ -176,7 +172,7 @@
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
         CALL kspotential( 1, ttprint, tforce, ttstress, rhoe, desc, &
-          atoms_0, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, fnl, vpot, edft, timepre )
+          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot
         END IF

@@ -26,7 +26,6 @@ cplib.o \
 cpr_mod.o \
 cpr.o \
 cprsub.o \
-cptypes.o \
 crayfft.o \
 dealloc.o \
 diis.o \
@@ -85,7 +84,6 @@ print_out.o \
 problem_size.o \
 pseudo_base.o \
 pseudopot.o \
-pseudotab_base.o \
 qmatrixd.o \
 qqberry.o \
 read_pseudo.o \

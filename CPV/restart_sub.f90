@@ -48,7 +48,7 @@ MODULE from_restart_module
                                      cell_force, cell_hmove
     USE efcalc,               ONLY : ef_force
     USE electrons_base,       ONLY : nbsp
-    USE uspp,                 ONLY : vkb, becsum, deeq
+    USE uspp,                 ONLY : vkb, becsum, deeq, nkb
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE io_global,            ONLY : stdout
     USE cpr_subroutines,      ONLY : compute_stress, elec_fakekine
@@ -165,7 +165,7 @@ MODULE from_restart_module
     !
     CALL calbec ( 1, nsp, eigr, c0, bec )
     !
-    IF ( tpre ) CALL caldbec( 1, nsp, eigr, c0 )
+    IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
     !
     IF ( tefield ) CALL efield_berry_setup( eigr, tau0 )
     !
@@ -245,7 +245,7 @@ MODULE from_restart_module
        !
        CALL calbec( nvb+1, nsp, eigr, cm, bec )
        !
-       IF ( tpre ) CALL caldbec( 1, nsp, eigr, cm )
+       IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
        !
        IF ( thdyn ) THEN
           !
@@ -280,7 +280,7 @@ MODULE from_restart_module
           !
           CALL calbec ( 1, nsp, eigr, c0, bec )
           !
-          IF ( tpre ) CALL caldbec( 1, nsp, eigr, c0 )
+          IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
           !
        END IF
        !
@@ -324,7 +324,7 @@ MODULE from_restart_module
     !
     USE kinds,                ONLY : dbl
     USE control_flags,        ONLY : trane, trhor, iprsta, tpre
-    USE uspp,                 ONLY : vkb
+    USE uspp,                 ONLY : vkb, nkb
     USE ions_base,            ONLY : na, nsp
     USE electrons_base,       ONLY : nbsp
     USE io_global,            ONLY : stdout
@@ -332,7 +332,9 @@ MODULE from_restart_module
     USE cpr_subroutines,      ONLY : print_atomic_var
     USE reciprocal_vectors,   ONLY : gstart, mill_l
     USE gvecs,                ONLY : ngs
+    USE gvecw,                ONLY : ngw
     USE phase_factors_module, ONLY : strucf
+    USE cdvan,                ONLY : dbec
     !
     IMPLICIT NONE
     !
@@ -382,16 +384,16 @@ MODULE from_restart_module
     !
     CALL calbec( 1, nsp, eigr, c0, bec )
     !
-    IF ( tpre ) CALL caldbec( 1, nsp, eigr, c0 )
+    IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
     !
     RETURN
     !
   END SUBROUTINE from_restart_sm
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_restart_fpmd( nfi, acc, kp, ps, rhoe, desc, cm, c0, cdesc, &
+  SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, desc, cm, c0, cdesc, &
                                 eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0,   &
-                                atoms_m, atoms_0, fnl, vpot, edft )
+                                atoms_m, atoms_0, bec, becdr, vpot, edft )
     !--------------------------------------------------------------------------
     !
     ! ... this routine recreates the starting configuration from a 
@@ -400,18 +402,15 @@ MODULE from_restart_module
     USE kinds,                 ONLY : dbl
     USE phase_factors_module,  ONLY : strucf, phfacs
     USE time_step,             ONLY : delt
-    USE reciprocal_space_mesh, ONLY : newgk
     USE charge_density,        ONLY : rhoofr
     USE wave_functions,        ONLY : gram, rande, fixwave
     USE wave_base,             ONLY : wave_verlet
-    USE electrons_module,      ONLY : pmss,emass, nspin
+    USE electrons_module,      ONLY : pmss,emass, nspin, occn_info
     USE ions_base,             ONLY : na, nsp, nax, randpos, taui, cdmi
     USE ions_module,           ONLY : set_reference_positions, &
                                       print_scaled_positions, &
                                       set_velocities
     USE energies,              ONLY : dft_energy_type
-    USE cp_types,              ONLY : pseudo
-    USE pseudopotential,       ONLY : formf
     USE cell_module,           ONLY : boxdimensions, gethinv, alat
     USE cell_base,             ONLY : r_to_s, s_to_r
     USE print_out_module,      ONLY : printmain
@@ -423,7 +422,6 @@ MODULE from_restart_module
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout
     USE mp,                    ONLY : mp_bcast
-    USE brillouin,             ONLY : kpoints
     USE wave_types,            ONLY : wave_descriptor
     USE pseudo_projector,      ONLY : projector
     USE control_flags,         ONLY : tcarpar, nbeg, tranp, amprp, tfor, tsdp, &
@@ -446,19 +444,18 @@ MODULE from_restart_module
     REAL(KIND=dbl)                   :: acc(nacx)
     COMPLEX(KIND=dbl)                :: sfac(:,:)
     TYPE(atoms_type)                 :: atoms_0, atoms_m
-    TYPE(pseudo)                     :: ps
     COMPLEX(KIND=dbl)                :: eigr(:,:)
     COMPLEX(KIND=dbl)                :: ei1(:,:)
     COMPLEX(KIND=dbl)                :: ei2(:,:)
     COMPLEX(KIND=dbl)                :: ei3(:,:)
-    TYPE(kpoints)                    :: kp
     COMPLEX(KIND=dbl), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
     REAL(KIND=dbl)                   :: fi(:,:,:)
     TYPE(boxdimensions)              :: ht_m, ht_0
     REAL(KIND=dbl)                   :: rhoe(:,:,:,:)
     TYPE(charge_descriptor)          :: desc
     TYPE(wave_descriptor)            :: cdesc
-    TYPE(projector)                  :: fnl(:,:)
+    REAL(KIND=dbl)                   :: bec(:,:)
+    REAL(KIND=dbl)                   :: becdr(:,:,:)
     REAL(KIND=dbl)                   :: vpot(:,:,:,:)
     TYPE(dft_energy_type)            :: edft
     !
@@ -480,10 +477,11 @@ MODULE from_restart_module
     IF ( .NOT. tbeg ) THEN
        !
        CALL newinit( ht_0%hmat )
-       CALL newgk( kp, ht_0%m1 )
        !
     END IF
-
+    !
+    CALL occn_info( fi )
+    !
     IF ( taurdr ) THEN
        !
        ! ... positions are read from stdin (tau_srt) and not read from restart file
@@ -594,7 +592,7 @@ MODULE from_restart_module
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
     !
-    CALL formf( ht_0, kp, ps )
+    CALL formf( .true. , edft%eself )
     !
     IF ( tzeroe .OR. tzerop ) THEN
        !
@@ -606,21 +604,19 @@ MODULE from_restart_module
        !
        atoms_0%for = 0.D0
        ! 
-       edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, &
-                          fi, kp, fnl, ps%wsg, ps%wnl, eigr )
+       edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, fi, bec, becdr, eigr )
        !
-       CALL rhoofr( nfi, kp, c0, cdesc, fi, rhoe, desc, ht_0 )
+       CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht_0 )
        !
        CALL vofrhos( ( iprsta > 1 ), rhoe, desc, tfor, thdyn, ttforce, &
-                     atoms_0, kp, fnl, vpot, ps, c0, cdesc, fi, eigr,  &
+                     atoms_0, vpot, bec, c0, cdesc, fi, eigr,  &
                      ei1, ei2, ei3, sfac, timepre, ht_0, edft )
        !
        IF ( tzeroe ) THEN
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, kp, ps, vpot, eigr, &
-                              fi, fnl, vdum, gam, cgam, restart = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, bec, vdum, gam, cgam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !

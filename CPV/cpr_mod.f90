@@ -48,7 +48,7 @@ module betax
   IMPLICIT NONE 
   SAVE
   !
-  INTEGER, PARAMETER         :: mmx = 5001
+  INTEGER                    :: mmx = 5000
   REAL(KIND=dbl)             :: refg
   REAL(KIND=dbl),ALLOCATABLE :: betagx(:,:,:), dbetagx(:,:,:), &
                                 qradx(:,:,:,:,:), dqradx(:,:,:,:,:)

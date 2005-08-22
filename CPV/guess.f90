@@ -35,7 +35,6 @@
 
 ! ...   declare modules
         USE kinds
-        USE cp_types
         USE parallel_toolkit, ONLY: matmulp, cmatmulp, &
           diagonalize, cdiagonalize
 
@@ -247,14 +246,14 @@
       
 !  ----------------------------------------------
 !  ----------------------------------------------
-          SUBROUTINE guessrho(rho, desc, cm, c0, cdesc, occ, kp, ht ) 
+          SUBROUTINE guessrho(rho, desc, cm, c0, cdesc, occ, ht ) 
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
              USE cell_module, only: boxdimensions
              use charge_density, only: rhoofr
-             use brillouin, only: kpoints
+             use brillouin, only: kpoints, kp
              USE wave_types
              USE parameters, ONLY: nspinx
              USE charge_types, ONLY: charge_descriptor
@@ -264,7 +263,6 @@
              TYPE (charge_descriptor), INTENT(IN) :: desc
              COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
-             TYPE (kpoints), INTENT(IN) :: kp
              TYPE (boxdimensions), INTENT(IN) :: ht
              REAL(dbl), INTENT(IN) :: occ(:,:,:)
 
@@ -284,12 +282,12 @@
 
              IF( tfirst ) THEN
                ALLOCATE( rho_save( nx, ny, nz, nspin ) )
-               CALL rhoofr( 1, kp, cm, cdesc, occ, rho_save, desc, ht)
+               CALL rhoofr( 1, cm, cdesc, occ, rho_save, desc, ht)
                tfirst = .FALSE.
              END IF
 
              ALLOCATE( rho0( nx, ny, nz, nspin ) )
-             CALL rhoofr( 1, kp, c0, cdesc, occ, rho0, desc, ht)
+             CALL rhoofr( 1, c0, cdesc, occ, rho0, desc, ht)
 
              rho = 2.0d0 * rho0 - rho_save
 

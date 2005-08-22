@@ -8,20 +8,97 @@
 #include "f_defs.h"
 
 !=----------------------------------------------------------------------------=!
-   module non_local_core_correction
+  module non_local_core_correction
 !=----------------------------------------------------------------------------=!
 
-     USE kinds
+    USE kinds
+    USE splines,    ONLY: spline_data
 
+    IMPLICIT NONE
+    SAVE
+
+    PRIVATE
+
+    PUBLIC :: add_core_charge,  core_charge_forces, core_charge_ftr
+
+!=----------------------------------------------------------------------------=!
+  contains
+!=----------------------------------------------------------------------------=!
+
+
+!=----------------------------------------------------------------------------=!
+   subroutine core_charge_ftr( tpre )
+!=----------------------------------------------------------------------------=!
+     !
+     !  Compute the fourier trasform of the core charge, from the radial
+     !  mesh to the reciprocal space
+     !
+     use control_flags,   ONLY : program_name
+     use core,            ONLY : rhocb, rhocg, drhocg
+     use ions_base,       ONLY : nsp
+     use uspp_param,      ONLY : kkbeta
+     use atom,            ONLY : nlcc, r, rab, mesh, rho_atc
+     use gvecb,           ONLY : ngb, gb
+     use small_box,       ONLY : omegab, tpibab
+     use pseudo_base,     ONLY : compute_rhocg
+     use pseudopotential, ONLY : tpstab, build_cctab, rhoc1_sp, rhocp_sp, chkpstab
+     use cell_base,       ONLY : omega, tpiba2, tpiba
+     USE splines,         ONLY : spline
+     use reciprocal_vectors, ONLY : ngm, g, gstart
+     !
      IMPLICIT NONE
-     SAVE
+     !
+     LOGICAL, INTENT(IN) :: tpre
+     !
+     INTEGER :: is, ig
+     REAL(dbl) :: xg, cost1
+     !
+     IF( tpstab ) THEN
+        !
+        CALL build_cctab( )
+        !
+     END IF
+     !
+     do is = 1, nsp
+        !
+        if( nlcc( is ) ) then
+           !
+           IF( program_name == 'CP90' ) THEN
+              !
+              CALL compute_rhocg( rhocb(:,is), rhocb(:,is), r(:,is), rab(:,is), &
+                  rho_atc(:,is), gb, omegab, tpibab**2, kkbeta(is), ngb, 0 )
+              !
+           ELSE IF( program_name == 'FPMD' ) THEN
+              !
+              IF( tpstab ) THEN
+                 !
+                 cost1 = 1.0d0/omega
+                 !
+                 IF( gstart == 2 ) THEN
+                    rhocg (1,is) = rhoc1_sp(is)%y( 1 ) * cost1
+                    drhocg(1,is) = 0.0d0
+                 END IF
+                 DO ig = gstart, SIZE( rhocg, 1 )
+                    xg = SQRT( g(ig) ) * tpiba
+                    rhocg (ig,is) = spline( rhoc1_sp(is), xg ) * cost1
+                    drhocg(ig,is) = spline( rhocp_sp(is), xg ) * cost1
+                 END DO
+                 !
+              ELSE
 
-     PRIVATE
+                 CALL compute_rhocg( rhocg(:,is), drhocg(:,is), r(:,is), rab(:,is), &
+                                     rho_atc(:,is), g, omega, tpiba2, kkbeta(is), ngm, 1 )
 
-     PUBLIC :: add_core_charge,  core_charge_forces
+              END IF
+              !
+           END IF
+           !
+        endif
+        !
+     end do
 
-!=----------------------------------------------------------------------------=!
-   contains
+     return
+   end subroutine core_charge_ftr
 !=----------------------------------------------------------------------------=!
 
 
@@ -30,7 +107,6 @@
 !=----------------------------------------------------------------------------=!
 
      USE fft,            ONLY: pinvfft
-     USE cp_types,       ONLY: pseudo
      use electrons_base, only: nspin
      use gvecp,          only: ngm
      use atom,           only: nlcc
@@ -68,13 +144,12 @@
      DEALLOCATE( vtemp )
 
      RETURN
-!=----------------------------------------------------------------------------=!
    end subroutine add_core_charge
 !=----------------------------------------------------------------------------=!
 
 
 !=----------------------------------------------------------------------------=!
-   subroutine core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3, kp )
+   subroutine core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3 )
 !=----------------------------------------------------------------------------=!
 
      !   This subroutine computes the non local core correction
@@ -83,7 +158,7 @@
      USE constants
      USE cell_base, ONLY: tpiba
      USE cell_module, ONLY: boxdimensions
-     USE brillouin, ONLY: kpoints
+     USE brillouin, ONLY: kpoints, kp
      USE atoms_type_module, ONLY: atoms_type
      USE grid_dimensions, ONLY: nr1, nr2, nr3
      USE reciprocal_vectors, ONLY: mill_l, gstart, gx
@@ -94,7 +169,6 @@
 
      TYPE (atoms_type), INTENT(IN) :: atoms    !   atomic positions
      TYPE (boxdimensions), INTENT(IN) :: ht    !   cell parameters
-     TYPE (kpoints), INTENT(IN) :: kp          !   k points
      COMPLEX(dbl) :: ei1( -nr1:nr1, nat)                  !   
      COMPLEX(dbl) :: ei2( -nr2:nr2, nat)                  !   
      COMPLEX(dbl) :: ei3( -nr3:nr3, nat)                  !   

@@ -148,7 +148,7 @@
 
         DO ig = 1, SIZE( wnla, 1 )
           IF( hg(ig) < gsmall ) THEN
-! ...       G=0 (Only if L=1, since otherwise the radial Bessel function JL=0)
+! ...       G=0 (Only if L = 0, since otherwise the radial Bessel function JL=0)
             DO l = 1, nbeta
               IF( ap%lll(l) == 0 ) THEN
                 fint(1:mmax,l) = ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l) 

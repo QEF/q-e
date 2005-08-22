@@ -9,7 +9,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      MODULE wave_init
+MODULE wave_init
 
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
@@ -27,19 +27,13 @@
 
         PRIVATE
 
-        INTEGER, PARAMETER :: maxchan = 4, maxgh = 10
-
         PUBLIC :: pw_atomic_init
 
-! ...   end of module-scope declarations
-!  ----------------------------------------------
 
-      CONTAINS
+CONTAINS
 
-!  subroutines
-!  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, kp)
+
+   SUBROUTINE pw_rand_init(cm, c0, wfill, ce, wempt)
 
 !  this routine sets the initial wavefunctions at random
 !  ----------------------------------------------
@@ -51,9 +45,8 @@
       USE mp_wave, ONLY: splitwf
       USE mp_global, ONLY: mpime, nproc, root
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt
-      USE brillouin, ONLY: kpoints
       USE io_base, ONLY: stdout
-      USE control_flags, ONLY: force_pairing
+      USE control_flags, ONLY: force_pairing, gamma_only
       USE reciprocal_space_mesh, ONLY: gkmask_l
 
       IMPLICIT NONE
@@ -63,8 +56,6 @@
 ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-      TYPE (kpoints), INTENT(IN) :: kp
-      INTEGER, INTENT(IN) :: nbeg
 
       REAL(dbl) :: rranf
       EXTERNAL rranf
@@ -109,24 +100,22 @@
       nspin = SIZE( cm, 4)
       IF( force_pairing ) nspin = 1
 
-      IF( nbeg <  0 ) THEN
+      ampre = 0.01d0
+      ALLOCATE( pwt( ngwt ) )
 
-        ampre = 0.01d0
-        ALLOCATE( pwt( ngwt ) )
-
-        DO ispin = 1, nspin
+      DO ispin = 1, nspin
           DO ik = 1, SIZE( cm, 3)
             CALL wave_rand_init( cm( :, :, ik, ispin ) )
-            IF ( .NOT. kp%gamma_only ) THEN
+            IF ( .NOT. gamma_only ) THEN
 ! ..  .       set to zero all elements outside the cutoff sphere
               DO ib = 1, SIZE( cm, 2 )
                 cm(:, ib, ik, ispin) = cm(:, ib, ik, ispin) * gkmask_l(:,ik)
               END DO
             END IF
           END DO
-        END DO
+      END DO
 
-        DEALLOCATE( pwt )
+      DEALLOCATE( pwt )
     
 ! DEBUG
 !        ctmp = SUM( cm )
@@ -137,9 +126,9 @@
 !
 ! ...   orthonormalize wave functions
 !
-        CALL gram( cm, wfill )
+      CALL gram( cm, wfill )
 
-        c0 = cm
+      c0 = cm
 
 ! DEBUG
 !        ctmp = SUM( cm )
@@ -147,12 +136,8 @@
 !        WRITE( stdout,*) ' *** Wave init check ', ctmp
 ! DEBUG
 
-      END IF
-
       RETURN
-      END SUBROUTINE pw_rand_init
-
-
+   END SUBROUTINE pw_rand_init
 
 
 
@@ -160,52 +145,36 @@
 
 
 
+   SUBROUTINE pw_atomic_init(cm, c0, wfill, ce, wempt)
 
-
-   SUBROUTINE pw_atomic_init(nbeg, cm, c0, wfill, ce, wempt, kp)
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-! ... declare modules
-      USE ions_base, ONLY: nat, nsp, na
-      USE wave_types, ONLY: wave_descriptor
+      ! ... declare modules
+      USE wave_types,    ONLY: wave_descriptor
       USE control_flags, ONLY: tatomicwfc
-      USE io_global, ONLY: ionode
-      USE io_global, ONLY: stdout
-      USE brillouin, ONLY: kpoints
+      USE io_global,     ONLY: ionode, stdout
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
-      INTEGER, INTENT(IN) :: nbeg
-      TYPE (kpoints), INTENT(IN) :: kp
+      ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
 
-! ... declare other variables
+      ! ... declare other variables
 
-! ... end of declarations
-!  ----------------------------------------------
+      ! ... end of declarations
 
-      CALL pw_rand_init(nbeg, cm, c0, wfill, ce, wempt, kp)
+      CALL pw_rand_init(cm, c0, wfill, ce, wempt)
 
-      IF( nbeg < 0 ) THEN
-        IF( ionode ) THEN
-          WRITE( stdout, * )
-          IF( tatomicwfc ) THEN
-            WRITE( stdout, fmt = &
-            & '(/,3X, "Wave Initialization: atomic initial wave-functions not yet implemented" )' )
-          END IF
-          WRITE( stdout, fmt = '(/,3X, "Wave Initialization: random initial wave-functions" )' )
+      IF( ionode ) THEN
+        WRITE( stdout, * )
+        IF( tatomicwfc ) THEN
+          WRITE( stdout, fmt = &
+          & '(/,3X, "Wave Initialization: atomic initial wave-functions not yet implemented" )' )
         END IF
+        WRITE( stdout, fmt = '(/,3X, "Wave Initialization: random initial wave-functions" )' )
       END IF
 
       RETURN
    END SUBROUTINE pw_atomic_init
 
-!  ----------------------------------------------
-!  ----------------------------------------------
 
-      END MODULE wave_init
-
+END MODULE wave_init

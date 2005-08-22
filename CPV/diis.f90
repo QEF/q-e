@@ -26,11 +26,11 @@
 !  SUBROUTINE diis_print_info(unit)
 !  SUBROUTINE converg(c,gemax,cnorm,tprint)
 !  SUBROUTINE converg_kp(c,weight,gemax,cnorm,tprint)
-!  SUBROUTINE hesele(svar2,vpp,wsg,wnl,eigr,vps,ik)
+!  SUBROUTINE hesele(svar2,vpp,eigr,vps,ik)
 !  SUBROUTINE simupd(gemax,doions,c0,cgrad,svar0,svarm,svar2,etot,f, &
-!                    eigr,vps,wsg,wnl,treset,istate,cnorm,eold,ndiis,nowv)
+!                    eigr,vps,treset,istate,cnorm,eold,ndiis,nowv)
 !  SUBROUTINE simupd_kp(gemax,doions,c0,cgrad,svar0,svarm,svar2, &
-!                       etot,f,eigr,vps,wsg,wnl, treset,istate,cnorm, &
+!                       etot,f,eigr,vps,treset,istate,cnorm, &
 !                       eold,ndiis,nowv)
 !  SUBROUTINE updis(ndiis,nowv,nsize,max_diis,iact)
 !  SUBROUTINE solve(b,ldb,ndim,v)
@@ -305,7 +305,7 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE hesele(svar2, vpp, wsg, wnl, eigr, sfac, vps, ik)
+      SUBROUTINE hesele(svar2, vpp, eigr, sfac, vps, ik)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -327,7 +327,7 @@
 
 ! ... declare subroutine arguments
       REAL(dbl) :: svar2
-      REAL(dbl) :: wnl(:,:,:,:), wsg(:,:), vps(:,:)
+      REAL(dbl) :: vps(:,:)
       REAL(dbl) :: vpp(:)
       COMPLEX(dbl) :: sfac(:,:)
       COMPLEX(dbl) :: eigr(:,:)
@@ -342,10 +342,6 @@
 
       ikk = 1
       IF( PRESENT(ik) ) ikk = ik
-
-      IF( SIZE(vpp) > SIZE(wnl, 1) ) THEN
-        CALL errore(' hesele ', ' inconsistent size for vpp ', SIZE(vpp) )
-      END IF
 
 ! ... calculate H0 :The diagonal approximation to the 2nd derivative matrix
 
@@ -362,14 +358,14 @@
 
       vpp = vp
 
-! ... nonlocal potential
-      DO is = 1, nspnl
-        DO igh = 1, nh( is )
-          ll = nhtol ( ih, is ) + 1
-          iv = indv  ( ih, is ) 
-          vpp(:) = vpp(:) + na(is) * wsg(igh,is) * wnl(:,iv,is,ikk)**2
-        END DO
-      END DO
+! ... preconditioning for nonlocal potential  TO BE FIXED
+!      DO is = 1, nspnl
+!        DO ih = 1, nh( is )
+!          ll = nhtol ( ih, is ) + 1
+!          iv = indv  ( ih, is ) 
+!          vpp(:) = vpp(:) + na(is) * dion( ih, ih, is ) * bec( ) ** 2
+!        END DO
+!      END DO
 
 ! ... kinetic energy
       ftpi = 0.5d0 * tpiba2
@@ -394,17 +390,16 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE fermi_diis( ent, kp, occ, nb, nel, eig, wke, efermi, sume, temp)
-        USE brillouin, ONLY: kpoints
+      SUBROUTINE fermi_diis( ent, occ, nb, nel, eig, wke, efermi, sume, temp)
+        USE brillouin, ONLY: kpoints, kp
         USE electrons_module, ONLY: fermi_energy
-        TYPE (kpoints), INTENT(IN) ::  kp
         REAL(dbl)   :: occ(:,:,:)
         REAL(dbl)   :: wke(:,:,:)
         REAL(dbl)   :: eig(:,:,:), efermi, sume, ent, temp, entk, qtot
         INTEGER :: ik, ispin, nel, nb
 
         qtot = REAL( nel ) 
-        CALL fermi_energy(kp, eig, occ, wke, efermi, qtot, temp, sume)
+        CALL fermi_energy( eig, occ, wke, efermi, qtot, temp, sume)
 
 ! ...   compute the enthropic correction
         ent = 0.0d0
@@ -420,7 +415,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
       SUBROUTINE simupd(gemax,doions,c0,cgrad,cdesc,svar0,svarm,svar2,etot,f, &
-                        eigr,sfac,vps,wsg,wnl,treset,istate,cnorm,eold,ndiis,nowv)
+                        eigr,sfac,vps,treset,istate,cnorm,eold,ndiis,nowv)
 
 !  this routine performs a DIIS step
 !  version for the Gamma point
@@ -452,7 +447,7 @@
       LOGICAL, INTENT(OUT) :: doions
       LOGICAL, INTENT(INOUT) :: treset
       REAL(dbl) :: gemax, etot, svar0, svarm, svar2
-      REAL(dbl) :: f(:), vps(:,:), wnl(:,:,:,:), wsg(:,:)
+      REAL(dbl) :: f(:), vps(:,:)
       REAL(dbl) :: eold
       INTEGER ::  ndiis, nowv
 
@@ -548,7 +543,7 @@
         CALL update_diis_buffers( c0, cgrad, cdesc, nowv)
 
 ! ...   calculate the new Hessian
-        CALL hesele(svar2,vpp,wsg,wnl,eigr,sfac,vps)
+        CALL hesele(svar2,vpp,eigr,sfac,vps)
 
 ! ...   set up DIIS matrix
         ff=1.0d0
@@ -636,8 +631,8 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE simupd_kp(gemax,doions,kp,c0,cgrad,cdesc,svar0,svarm,svar2, &
-                 etot,occ,eigr,sfac,vps,wsg,wnl, treset,istate,cnorm, &
+      SUBROUTINE simupd_kp(gemax,doions,c0,cgrad,cdesc,svar0,svarm,svar2, &
+                 etot,occ,eigr,sfac,vps,treset,istate,cnorm, &
                  eold,ndiis,nowv)
 
 !  this routine performs a DIIS step
@@ -646,7 +641,7 @@
 
 ! ... declare modules
       USE wave_types, ONLY: wave_descriptor
-      USE brillouin, ONLY: kpoints
+      USE brillouin, ONLY: kpoints, kp
       USE mp_global, ONLY: group
       USE io_global, ONLY: stdout
       USE mp, ONLY: mp_sum
@@ -662,7 +657,6 @@
 ! hthrs_diis  (REAL(dbl)  ) minimum value for a Hessian matrix element
 ! etot   (REAL(dbl)  ) Kohn-Sham energy
 
-      TYPE (kpoints) kp
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(dbl) :: sfac(:,:) 
@@ -671,7 +665,7 @@
       LOGICAL, INTENT(INOUT) :: treset
       REAL(dbl)  gemax, etot, svar0, svarm, svar2
       REAL(dbl)  occ(:,:)
-      REAL(dbl)  vps(:,:),wnl(:,:,:,:),wsg(:,:)
+      REAL(dbl)  vps(:,:)
       REAL(dbl)  eold
       INTEGER    istate,ndiis,nowv
 
@@ -768,7 +762,7 @@
           END WHERE
 
 ! ...     calculate the new Hessian
-          CALL hesele(svar2,vpp,wsg,wnl,eigr,sfac,vps,ik)
+          CALL hesele(svar2,vpp,eigr,sfac,vps,ik)
 
 ! ...       set up DIIS matrix
             ff=1.0d0

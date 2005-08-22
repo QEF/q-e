@@ -14,7 +14,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   ! ... main subroutine for SMD by Yosuke Kanai
   !
   USE kinds,                    ONLY : dbl
-  USE control_flags,            ONLY : nfi, iprint, isave, thdyn, tpre, tbuff, &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow,     &
                                        taurdr, tprnfor, tsdc, ndr, ndw, nbeg,  &
                                        nomore, tsde, tortho, tnosee, tnosep,   &
@@ -31,8 +31,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE gvecp,                    ONLY : ngm
   USE gvecs,                    ONLY : ngs
   USE gvecb,                    ONLY : ngb
-  USE gvecw,                    ONLY : ngw
-  USE reciprocal_vectors,       ONLY : gstart, mill_l
+  USE gvecw,                    ONLY : ngw, ngwt
+  USE reciprocal_vectors,       ONLY : gstart, mill_l, gzero
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_vel, ions_cofmass, &
                                        ions_kinene, ions_temp
@@ -88,10 +88,12 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE phase_factors_module,     ONLY : strucf
   USE cp_main_variables,        ONLY : ei1, ei2, ei3, eigr, sfac, irb, taub, &
                                        eigrb, rhog, rhor, rhos, becdr, bephi, &
-                                       becp, ema0bg, allocate_mainvar
+                                       becp, ema0bg, allocate_mainvar, nfi
   USE mp_global,                ONLY : mp_global_start
   USE mp,                       ONLY : mp_sum
+  USE fft_base,                 ONLY : dfftp
   !
+#if ! defined __NOSMD
   !
   IMPLICIT NONE
   !
@@ -355,8 +357,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   WRITE( stdout,*) " Allocation for W.F. s : successful " 
 
   CALL allocate_mainvar &
-       ( ngw, ngb, ngs, ngm, nr1, nr2, nr3, nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, nkb, &
-       smd = .TRUE. )
+       ( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, dfftp%nr1x, dfftp%npl, &
+         nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero, 1,   &
+         'gamma', smd = .TRUE. )
   !
   IF( nlcc_any ) THEN
      ALLOCATE( rhoc( nnrx ) )
@@ -544,7 +547,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         IF(sm_k == 1) CALL formf(tfirst,eself) 
 
         CALL calbec (1,nsp,eigr,rep_el(sm_k)%cm,rep_el(sm_k)%bec)
-        IF (tpre) CALL caldbec(1,nsp,eigr,rep_el(sm_k)%cm)
+        IF (tpre) CALL caldbec( ngw, nkb, nbsp, 1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)
         !
         !
         WRITE(stdout,*) " "
@@ -644,7 +647,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            IF(ionode) WRITE( sm_file,*) ' out from updatc'
         ENDIF
         CALL calbec (nvb+1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
-        IF (tpre) CALL caldbec(1,nsp,eigr,rep_el(sm_k)%cm)
+        IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)
         !
         IF(ionode) WRITE( sm_file,*) ' out from calbec'
         !
@@ -765,7 +768,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      IF(tfor .OR. smd_lm) THEN  
         CALL phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
         CALL calbec (1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
-        IF (tpre) CALL caldbec(1,nsp,eigr,rep_el(sm_k)%c0)
+        IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%c0,dbec,.true.)
      ENDIF
      !
      xnhp0(:,sm_k)=0.
@@ -1179,7 +1182,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
              & becp,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
         !
         CALL calbec (nvb+1,nsp,eigr,rep_el(sm_k)%cm,rep_el(sm_k)%bec)
-        IF (tpre) CALL caldbec(1,nsp,eigr,rep_el(sm_k)%cm)
+        IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)
         !
         IF(iprsta.GE.3)  CALL dotcsc(eigr,rep_el(sm_k)%cm)
         !
@@ -1640,6 +1643,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         CLOSE(sm_file)
      ENDDO
   END IF
+  !
+#endif
   !
   RETURN
 END SUBROUTINE smdmain

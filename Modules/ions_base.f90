@@ -586,22 +586,30 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
+    !
     use constants, only: factem
+    !
     implicit none
+    !
     real( kind=8 ), intent(out) :: ekinpr, tempp
     real( kind=8 ), intent(out) :: temps(:)
     real( kind=8 ), intent(out) :: ekin2nhp(:)
-    real( kind=8 ), intent(in) :: vels(:,:)
-    real( kind=8 ), intent(in) :: pmass(:)
-    real( kind=8 ), intent(in) :: h(:,:)
-    integer, intent(in) :: na(:), nsp, ndega, nhpdim, atm2nhp(:)
-    integer :: nat, i, j, is, ia, ii, isa
+    real( kind=8 ), intent(in)  :: vels(:,:)
+    real( kind=8 ), intent(in)  :: pmass(:)
+    real( kind=8 ), intent(in)  :: h(:,:)
+    integer,        intent(in)  :: na(:), nsp, ndega, nhpdim, atm2nhp(:)
+    !
+    integer        :: nat, i, j, is, ia, ii, isa
     real( kind=8 ) :: cdmvel(3), eks, eks1
+    !
     call ions_cofmass( vels, pmass, na, nsp, cdmvel )
+    !
     nat = SUM( na(1:nsp) )
-    ekinpr = 0.0d0
-    temps( 1:nsp ) = 0.0d0
+    !
+    ekinpr             = 0.0d0
+    temps( 1:nsp )     = 0.0d0
     ekin2nhp(1:nhpdim) = 0.0d0
+    !
     do i=1,3
       do j=1,3
         do ii=1,3
@@ -620,16 +628,24 @@
         end do
       end do
     end do
+    !
     do is = 1, nhpdim
        ekin2nhp(is) = ekin2nhp(is) * 0.5d0
     enddo
+    !
     do is = 1, nsp
       temps( is ) = temps( is ) * 0.5d0
       temps( is ) = temps( is ) * factem / ( 1.5d0 * na(is) )
     end do
+    !
     ekinpr = 0.5 * ekinpr
-    tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
-    write(6,*) 'NDEGA :' , ndega !ATTENZIONE
+    !
+    IF( ndega < 1 ) THEN 
+       tempp = 0.0d0
+    ELSE
+       tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
+    END IF
+    !
     return
   end subroutine ions_temp
 

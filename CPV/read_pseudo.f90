@@ -599,6 +599,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ap%rps  = 0.0_dbl
   ap%nrps = 0
   ap%oc   = 0.0d0
+
   ap%lrps = 0
 
   ! this is for local pseudopotentials
@@ -633,6 +634,13 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
       err_msg = ' radial meshes do not match '
       GO TO 110
     END IF
+  END DO
+
+  ! In this format each columns is an atomic functions of 
+  ! increasing angular momentum ( starting from L=0 )
+  !
+  DO m = 1, ap%nrps
+    ap%lrps( m ) = m - 1
   END DO
 
   IF( ap%mesh == 0 ) THEN
@@ -859,7 +867,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   !
   !     Local variables
   !
-  integer :: il, ir
+  integer :: il, ir, ic
   real(dbl), allocatable :: fint(:)
   !
   zv(is)     = ap%zv
@@ -909,11 +917,14 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
 
   dion(:,:,is) = 0.0d0                                   ! upf%dion(1:upf%nbeta, 1:upf%nbeta)
   allocate(fint(mesh(is)))
-  do il=1,nbeta(is)
-    do ir=1,mesh(is)
-      fint(ir)= chi(ir,il,is) * 2.0d0 * ap%vrps( ir, il )
+  do il = 1, nbeta(is)
+    do ic = 1, nchi(is)
+      if( lchi( ic, is ) == lll( il, is ) ) exit
     end do
-    call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
+    do ir = 1, mesh(is)
+      fint(ir) = chi( ir, ic, is ) * 2.0d0 * ap%vrps( ir, il )
+    end do
+    call simpson_cp90( mesh(is), fint, rab(1,is), dion(il,il,is) )
     dion(il,il,is) = 1.0/dion(il,il,is)
   end do
   deallocate(fint)
@@ -1027,6 +1038,7 @@ SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
   ap%lll = 0
   READ(iunit, *) ap%tnlcc, ap%tmix
   READ(iunit, *) ap%pottyp, ap%lloc, ap%nbeta, (ap%lll(l), l = 1, MIN(ap%nbeta, SIZE(ap%lll)) ) 
+
   ap%lll = ap%lll - 1
   ap%lloc = ap%lloc - 1
 

@@ -356,7 +356,7 @@
                  end do
                enddo
                    
-               call nlsm2(eigr,c0(:,:,1,1),becdr)
+               call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
 
             endif
             if(.not.tens) then
@@ -1282,7 +1282,7 @@
               lambdap(i,j)=sta
             enddo
           enddo
-          call nlsm2(eigr,c0(:,:,1,1),becdr)
+          call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
         endif
         call nlfl(bec,becdr,lambda,fion)
           

@@ -750,9 +750,9 @@ MODULE input
            tvhmean_inp, vhasse_inp, constr_target, constr_target_set,          &
            constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
-           nelec, tprnks, ks_path, press,                                      &
-           cell_damping, cell_dofree, tf_inp, tpstab_inp, pstab_size_inp,      &
-           greash, grease, greasp, epol, efield, tcg, maxiter, etresh, passop
+           nelec, tprnks, ks_path, press, cell_damping, cell_dofree, tf_inp,   &
+           pseudo_table_size, greash, grease, greasp, epol, efield, tcg,       &
+           maxiter, etresh, passop
      !
      USE input_parameters, ONLY : nconstr_inp
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
@@ -933,9 +933,9 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp )
      !
-     IF( program_name == 'FPMD' ) THEN
+     CALL pseudopotential_setup( pseudo_table_size )
 
-        CALL pseudopotential_setup( ntyp, tpstab_inp, pstab_size_inp )
+     IF( program_name == 'FPMD' ) THEN
         !
         o_diis_inp        = .TRUE.
         oqnr_diis_inp     = .TRUE.
@@ -951,7 +951,7 @@ MODULE input
           diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
         CALL guess_setup( diis_chguess )
         CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
-
+        !
      END IF
      !
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0,   &
@@ -1229,8 +1229,7 @@ MODULE input
  513  FORMAT(   3X,'Electron dynamics with steepest descent')
  514  FORMAT(   3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
  515  FORMAT(   3X,'initial random displacement of el. coordinates with ',   &
-     &       ' amplitude=',f10.6,/,                                      &
-     &       3X,'trane not to be used with mass preconditioning')
+     &       ' amplitude=',f10.6)
  535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
  540   FORMAT(   3X,'Electron dynamics with rescaling of velocities :',/ &
                ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &

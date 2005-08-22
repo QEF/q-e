@@ -65,7 +65,7 @@ SUBROUTINE smd_loop( nloop )
 END SUBROUTINE smd_loop
 !
 !----------------------------------------------------------------------------
-SUBROUTINE neb_loop( iloop, program_name )
+SUBROUTINE neb_loop( )
   !----------------------------------------------------------------------------
   !
   USE path_base,        ONLY : initialize_path, search_mep
@@ -73,10 +73,6 @@ SUBROUTINE neb_loop( iloop, program_name )
   USE path_io_routines, ONLY : io_path_start, io_path_stop
   !
   IMPLICIT NONE
-  !
-  INTEGER,          INTENT(IN) :: iloop
-  CHARACTER(LEN=*), INTENT(IN) :: program_name
-  !
   !
   CALL iosys_path()
   !
@@ -193,6 +189,8 @@ SUBROUTINE fpmd_loop( iloop )
      CALL errore( ' fpmd_loop ', ' nat less or equal 0 ', 1 )
      !
   END IF
+  !
+  CALL init_run()
   !
   CALL cpmain( tau, fion, etot )
   !

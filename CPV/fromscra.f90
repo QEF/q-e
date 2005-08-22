@@ -7,93 +7,84 @@
 !
 #include "f_defs.h"
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-
 !=----------------------------------------------------------------------------=!
   MODULE from_scratch_module
 !=----------------------------------------------------------------------------=!
 
-        IMPLICIT NONE
-        SAVE
+    IMPLICIT NONE
+    SAVE
 
-        PRIVATE
+    PRIVATE
 
-        PUBLIC :: from_scratch
+    PUBLIC :: from_scratch
 
-        INTERFACE from_scratch
-          MODULE PROCEDURE from_scratch_fpmd, from_scratch_cp
-        END INTERFACE
+    INTERFACE from_scratch
+       MODULE PROCEDURE from_scratch_fpmd, from_scratch_cp
+    END INTERFACE
 
 !=----------------------------------------------------------------------------=!
-      CONTAINS
+  CONTAINS
 !=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE from_scratch_fpmd( kp, ps, rhoe, desc, cm, c0, cdesc, &
-        eigr, ei1, ei2, ei3, sfac, fi, ht, atoms, fnl, vpot, edft )
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
+SUBROUTINE from_scratch_fpmd   & 
+      ( rhoe, desc, cm, c0, cp, ce, cdesc, edesc, eigr, ei1, ei2, ei3, sfac,   &
+        fi, ht, atoms, bec, becdr, vpot, edft )
 
 
-! ... declare modules
-      USE kinds
-      USE cp_types, ONLY: pseudo
-      USE wave_types, ONLY: wave_descriptor
-      USE atoms_type_module, ONLY: atoms_type
-      USE wave_functions, ONLY: gram, fixwave
-      USE wave_base, ONLY: wave_steepest
-      USE charge_density, ONLY: rhoofr
-      USE phase_factors_module, ONLY: strucf, phfacs
-      USE cell_module, only: boxdimensions
-      USE electrons_module, ONLY: nspin, pmss
-      USE cp_electronic_mass, ONLY: emass
-      USE ions_base, ONLY: taui, cdmi
-      USE ions_module, ONLY: set_reference_positions
-      USE mp, ONLY: mp_end
-      USE nl, ONLY: nlrh_m
-      USE energies, ONLY: dft_energy_type, debug_energies
-      USE potentials, ONLY: vofrhos
-      USE forces, ONLY: dforce_all
-      USE orthogonalize, ONLY: ortho
-      USE brillouin, ONLY: kpoints
-      USE pseudo_projector, ONLY: projector
-      USE control_flags, ONLY: tcarpar, tfor, thdyn, tortho, force_pairing
-      USE charge_types, ONLY: charge_descriptor
-      USE time_step, ONLY: delt
-      USE runcp_module, ONLY: runcp_ncpp
-      use grid_dimensions,    only: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill_l
-      USE gvecp, ONLY: ngm
+      USE kinds,            ONLY : dbl
+      USE wave_types,       ONLY : wave_descriptor
+      USE wave_functions,   ONLY : gram, fixwave
+      USE wave_base,        ONLY : wave_steepest
+      USE charge_density,   ONLY : rhoofr
+      USE cell_module,      only : boxdimensions
+      USE electrons_module, ONLY : nspin, pmss, occn_init, occn_info
+      USE ions_base,        ONLY : taui, cdmi
+      USE ions_module,      ONLY : set_reference_positions
+      USE mp,               ONLY : mp_end
+      USE nl,               ONLY : nlrh_m
+      USE energies,         ONLY : dft_energy_type, debug_energies
+      USE potentials,       ONLY : vofrhos
+      USE forces,           ONLY : dforce_all
+      USE orthogonalize,    ONLY : ortho
+      USE control_flags,    ONLY : tcarpar, tfor, thdyn, tortho, force_pairing, &
+                                   iprsta
+      USE charge_types,     ONLY : charge_descriptor
+      USE time_step,        ONLY : delt
+      USE runcp_module,     ONLY : runcp_ncpp
+      use grid_dimensions,  only : nr1, nr2, nr3
+      USE gvecp,            ONLY : ngm
+      USE wave_init,        ONLY : pw_atomic_init
+      USE io_global,        ONLY : ionode, stdout
+      USE parameters,       ONLY : nacx
+      !
+      USE atoms_type_module,    ONLY : atoms_type
+      USE phase_factors_module, ONLY : strucf, phfacs
+      USE cp_electronic_mass,   ONLY : emass
+      USE print_out_module,     ONLY : printout
+      USE reciprocal_vectors,   ONLY : mill_l, gx
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
-
-      TYPE (atoms_type) :: atoms
       COMPLEX(dbl) :: eigr(:,:)
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
-      TYPE (kpoints) :: kp 
-      REAL(dbl) :: rhoe(:,:,:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (charge_descriptor), INTENT(IN) :: desc
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
-      TYPE (boxdimensions) :: ht 
-      TYPE (pseudo) :: ps
-      REAL(dbl) :: fi(:,:,:)
-      TYPE (projector) :: fnl(:,:)
-      REAL (dbl)    ::  vpot(:,:,:,:)
+      REAL(dbl)    :: rhoe(:,:,:,:)
+      REAL(dbl)    :: bec(:,:)
+      REAL(dbl)    :: becdr(:,:,:)
+      REAL(dbl)    :: fi(:,:,:)
+      REAL(dbl)    ::  vpot(:,:,:,:)
+      TYPE (atoms_type)      :: atoms
       TYPE (dft_energy_type) :: edft
+      TYPE (boxdimensions)   :: ht 
+      TYPE (charge_descriptor), INTENT(IN) :: desc
+      TYPE (wave_descriptor),   INTENT(IN) :: cdesc, edesc
+      COMPLEX(dbl),             INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
+      COMPLEX(dbl),             INTENT(INOUT) :: cp(:,:,:,:), ce(:,:,:,:)
 
-
-! ... declare other variables
+      ! ... declare other variables
 
       LOGICAL, PARAMETER :: ttforce = .TRUE.
       LOGICAL, PARAMETER :: ttprint = .TRUE.
@@ -101,52 +92,85 @@
 
       COMPLEX(dbl) :: cgam(1,1,1)
       REAL (dbl)   :: gam(1,1,1)
-      INTEGER :: ierr
-      REAL(dbl)  timepre, vdum
+      INTEGER      :: ierr
+      REAL(dbl)    :: timepre, vdum
+      REAL(dbl)    :: s4, s5, cclock
+      REAL(dbl)    :: adum( nacx )
+      !
+      !  initialize wave functions
+      !
+      cm = 0.0d0
+      c0 = 0.0d0
+      cp = 0.0d0
+      ce = 0.0d0
 
-!  end of declarations
-!  ----------------------------------------------
+      CALL pw_atomic_init( cm, c0, cdesc, ce, edesc )
 
-
+      !
+      ! ... initialize bands
+      !
+      CALL occn_init( fi )
+      CALL occn_info( fi )
+      !
       atoms%for = 0.0d0
+      !
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+      !
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-      edft%enl = nlrh_m(cm, cdesc, ttforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
-      CALL rhoofr( 0, kp, cm, cdesc, fi, rhoe, desc, ht)
-      CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
-           kp, fnl, vpot, ps, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
-      CALL debug_energies( edft ) ! DEBUG
+      !
+      ! ... compute local form factors
+      !
+      CALL formf( .true. , edft%eself )
+
+      !
+      edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
+
+      !
+      CALL rhoofr( 0, cm, cdesc, fi, rhoe, desc, ht)
+      !
+      !
+      CALL vofrhos( ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
+           vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
+
+      !
+      IF( iprsta > 1 ) CALL debug_energies( edft )
+      !
 
       IF( tcarpar ) THEN
         
-        IF( .NOT. force_pairing ) THEN
+         IF( .NOT. force_pairing ) THEN
 
-          CALL runcp_ncpp( cm, cm, c0, cdesc, kp, ps, vpot, eigr, &
-             fi, fnl, vdum, gam, cgam, fromscra = .TRUE. )
+            CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, bec, vdum, gam, &
+                             cgam, fromscra = .TRUE. )
 
-        ELSE
+         ELSE
 
-          c0 = cm
+            c0 = cm
 
-        END IF
+         END IF
 
-        IF( tortho .AND. ( .NOT. force_pairing ) ) THEN
-          CALL ortho( cm, c0, cdesc, pmss, emass )
-        ELSE
-          CALL gram( c0, cdesc )
-        END IF
+         IF( tortho .AND. ( .NOT. force_pairing ) ) THEN
+            CALL ortho( cm, c0, cdesc, pmss, emass )
+         ELSE
+            CALL gram( c0, cdesc )
+         END IF
 
       ELSE
 
-        c0 = cm
+         c0 = cm
 
       END IF
 
-      CALL set_reference_positions(cdmi, taui, atoms, ht)
+      CALL set_reference_positions( cdmi, taui, atoms, ht )
 
-   RETURN
-   END SUBROUTINE from_scratch_fpmd
+      adum = 0.0d0
+
+      CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, adum, adum, edft )
+
+      RETURN
+END SUBROUTINE from_scratch_fpmd
+
 
 !=----------------------------------------------------------------------------=!
 
@@ -164,7 +188,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     USE cell_base, ONLY: wmass, iforceh, cell_force
     use electrons_base, only: n => nbsp
     USE energies, ONLY: entropy
-    USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq
+    USE uspp, ONLY: betae => vkb, rhovan => becsum, deeq, nkb
     USE wavefunctions_module, ONLY: c0, cm, phi => cp
     USE io_global, ONLY: stdout
     USE cpr_subroutines, ONLY: compute_stress, print_atomic_var, print_lambda, elec_fakekine
@@ -216,8 +240,6 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 
     !
     !
-
-    ! WRITE(6,*) 'DEBUG running from_scratch'
 
     dt2hbe = 0.5d0 * dt2bye
 
@@ -279,7 +301,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     IF( .NOT. tcg ) THEN
 
       call calbec ( 1, nsp, eigr, cm, bec )
-      if (tpre) call caldbec( 1, nsp, eigr, cm )
+      if (tpre) call caldbec( ngw, nkb, n, 1, nsp, eigr, cm, dbec, .true. )
 
       call initbox ( tau0, taub, irb )
       call phbox( taub, eigrb )
@@ -342,7 +364,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
 !
       if ( tortho ) call updatc( ccc, lambda, phi, bephi, becp, bec, c0 )
       call calbec ( nvb+1, nsp, eigr, c0, bec )
-      if ( tpre ) call caldbec( 1, nsp, eigr, cm )
+      if ( tpre ) call caldbec( ngw, nkb, n, 1, nsp, eigr, cm, dbec, .true. )
 
       if(iprsta.ge.3) call dotcsc(eigr,c0)
 !

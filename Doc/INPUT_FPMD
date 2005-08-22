@@ -645,7 +645,7 @@
           !              from the restart file
           ! 'random'     start the simulation with random atomic velocities
           ! 'from_input' restart the simulation with atomic velocities read
-          !              from standard input (see the card 'ION_VELOCITIES' )
+          !              from standard input (see the card 'ATOMIC_VELOCITIES' )
           ! 'zero'       restart the simulation with atomic velocities set to zero
 
         CHARACTER(LEN=80) :: ion_temperature
@@ -808,7 +808,7 @@
 
 
 
-    ION_VELOCITIES
+    ATOMIC_VELOCITIES
 
         REAL(dbl) :: rd_vel(3,natx) ! unsorted velocities from input
         INTEGER   :: sp_vel(natx)
@@ -1284,13 +1284,13 @@
 
  ----------------------------------------------------------------
 
- ION_VELOCITIES
+ ATOMIC_VELOCITIES
 
    read velocities (in atomic units) from standard input
 
  Syntax:
 
-   ION_VELOCITIES
+   ATOMIC_VELOCITIES
      label(1)  Vx(1) Vy(1) Vz(1)
      ....
      label(n)  Vx(n) Vy(n) Vz(n)

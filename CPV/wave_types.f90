@@ -66,7 +66,7 @@
 
 
       SUBROUTINE wave_descriptor_init( desc, ngwl, ngwt, nbl, nbt, nkl, nkt, &
-        nspin, isym, lgz )
+        nspin, scheme, lgz )
 
         IMPLICIT NONE
 
@@ -78,7 +78,7 @@
         INTEGER, INTENT(IN) :: nkl
         INTEGER, INTENT(IN) :: nkt
         INTEGER, INTENT(IN) :: nspin
-        INTEGER, INTENT(IN) :: isym
+        CHARACTER(LEN=*), INTENT(IN) :: scheme
         LOGICAL, INTENT(IN) :: lgz
 
         INTEGER :: is
@@ -143,12 +143,13 @@
 
         ! other
 
-        IF( isym < 0 ) &
-          CALL errore( ' wave_descriptor_init ', ' arg no. 9 out of range ', 1 ) 
-
-        desc % isym = isym
-        desc % gamma = .FALSE.
-        IF( isym == 0 ) desc % gamma = .TRUE.
+        IF( TRIM( scheme ) == 'gamma' ) THEN
+          desc % isym = 0
+          desc % gamma = .TRUE.
+        ELSE
+          desc % isym = 1
+          desc % gamma = .FALSE.
+        END IF
 
         desc % gzero = lgz
 

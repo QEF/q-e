@@ -70,14 +70,14 @@
 !  ----------------------------------------------
 
 
-    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, kp, f, xmkin)
+    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, f, xmkin)
 
 !  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
 !  wave function
 !  ----------------------------------------------
 
         USE cell_base, ONLY: tpiba2
-        USE brillouin, ONLY: kpoints
+        USE brillouin, ONLY: kpoints, kp
         USE wave_types, ONLY: wave_descriptor
         USE electrons_module, ONLY: pmss
         USE control_flags, ONLY: force_pairing, gamma_only
@@ -89,7 +89,6 @@
         COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)       !  wave functions coefficients
         TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
         REAL(dbl), INTENT(IN) :: f(:,:,:)             !  occupation numbers
-        TYPE (kpoints), INTENT(IN) :: kp              !  k points
         REAL(dbl), OPTIONAL, INTENT(INOUT) :: xmkin
 
         INTEGER    :: ib, ik, ispin, ispin_wfc
@@ -417,7 +416,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-   REAL(dbl) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, kp, pmss, delt)
+   REAL(dbl) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, pmss, delt)
 
 !  (describe briefly what this routine does...)
 !  if ekinc_fp will hold the full electron kinetic energy (paired and unpaired) and
@@ -427,7 +426,7 @@
 ! ... declare modules
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY:  group
-      USE brillouin, ONLY: kpoints
+      USE brillouin, ONLY: kpoints, kp
       USE wave_types, ONLY: wave_descriptor
       USE wave_base, ONLY: wave_speed2
 
@@ -436,7 +435,6 @@
 ! ... declare subroutine arguments
       COMPLEX(dbl), INTENT(IN) :: cp(:,:,:), cm(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      TYPE (kpoints), INTENT(IN) :: kp
       INTEGER, INTENT( IN ) :: ispin
       REAL(dbl), INTENT(IN) :: delt
       REAL(dbl) :: pmss(:)

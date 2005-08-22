@@ -687,13 +687,13 @@ where :
 
 -------------------------------------------------------------------------------
 
-ION_VELOCITIES
+ATOMIC_VELOCITIES
 
   optional card :  reads velocities (in atomic units) from standard input
   
   Syntax:
   
-   ION_VELOCITIES
+   ATOMIC_VELOCITIES
      label(1)  Vx(1) Vy(1) Vz(1)
      ....
      label(n)  Vx(n) Vy(n) Vz(n)

@@ -57,14 +57,13 @@
 !  BEGIN manual
 
       SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, &
-        fnl, ps, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
+        bec, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
 
 !  this routine computes stress tensor from dft total energy
 !  ----------------------------------------------
 !  END manual
 
 ! ... declare modules
-      USE cp_types,             ONLY: pseudo
       USE cell_module,          ONLY: boxdimensions
       USE energies,             ONLY: dft_energy_type
       USE ions_base,            ONLY: nsp
@@ -87,15 +86,14 @@
 ! ... declare subroutine arguments
       REAL(dbl) :: pail(:,:), desr(:), strvxc
       REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
+      REAL(dbl) :: bec(:,:)
       COMPLEX(dbl) :: rhoeg(:,:), vxc(:,:)
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
       REAL(dbl), INTENT(IN) :: occ(:,:,:)
-      TYPE (pseudo), INTENT(IN) :: ps
       COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
       COMPLEX(dbl) :: eigr(:,:)
-      TYPE (projector) :: fnl(:,:)
       TYPE (dft_energy_type) :: edft
 
 ! ... declare other variables
@@ -137,7 +135,7 @@
       IF(timing) s2 = cclock()
 
 ! ... compute hartree energy contribution
-      CALL stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, box)
+      CALL stress_har(deht, ehr, sfac, rhoeg, gagx_l, box)
 
       IF(timing) s3 = cclock()
 
@@ -159,13 +157,12 @@
       IF(timing) s6 = cclock()
 
 ! ... compute enl (non-local) contribution
-      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, ps%wsg,fnl, &
-        ps%wnl(:,:,:,1), edft%enl)
+      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, edft%enl, box%m1 )
 
       IF(timing) s7 = cclock()
 
-      IF( iprsta > 2 ) THEN
-      CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
+      IF( iprsta >= 2 ) THEN
+         CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
       END IF
 
 ! ... total stress (pai-lowercase)
@@ -234,7 +231,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, wsg, fnl, wnl, enl)
+      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, enl, htm1)
 
 !  this routine computes nl part of the stress tensor from dft total energy
 !  ----------------------------------------------
@@ -242,18 +239,23 @@
 
 
 ! ... declare modules
-      USE pseudopotential, ONLY: nlin_stress, &
-            nspnl,nsanl
+      USE constants, ONLY: pi
+      USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
       USE ions_base, ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
       USE mp_global, ONLY: mpime, nproc
+      USE io_global, ONLY: stdout
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
-      USE cell_base, ONLY: tpiba2
+      USE cell_base, ONLY: tpiba2, omega
       USE control_flags, ONLY: force_pairing
       USE reciprocal_vectors, ONLY: gstart, gzero, g, gx
-      USE uspp_param, only: nh, lmaxkb, nbeta
-      USE uspp, only: nhtol, nhtolm, indv
+      USE uspp_param, only: nh, lmaxkb, nbeta, nhm
+      USE uspp, only: nhtol, nhtolm, indv, nkb
+      USE electrons_base, only: nupdwn, iupdwn, nspin
+      USE cdvan, only: dbec
+      USE cvan, only: ish
+      USE mp, only: mp_sum
 
       IMPLICIT NONE
 
@@ -264,10 +266,9 @@
       REAL(dbl), INTENT(OUT) :: denl(:)
       REAL(dbl), INTENT(IN) :: gagx_l(:,:)
       COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-      TYPE (projector), INTENT(IN) :: fnl(:,:)
-      REAL(dbl), INTENT(IN) :: wsg(:,:)
-      REAL(dbl), INTENT(IN) :: wnl(:,:,:)
+      REAL(dbl) :: bec(:,:)
       REAL(dbl), INTENT(IN) :: enl
+      REAL(dbl) :: htm1(3,3)
 
 ! ... declare functions
       REAL(dbl)  DDOT
@@ -275,32 +276,66 @@
 ! ... declare other variables
       INTEGER :: is, l, ll, me, al, be, s, k
       INTEGER :: ir, kk, m, mm, isa, ig, iy, iv, iyy, ih, ihh
-      INTEGER :: ia, in, i, iss, nx, ispin, nspin, ngw
-      INTEGER :: ispin_wfc, mi(16), igh(0:3)
+      INTEGER :: ia, in, i, iss, nx, ispin, ngw, j, inl
+      INTEGER :: iss_wfc, ispin_wfc, mi(16), igh(0:3)
       REAL(dbl)  xg,xrg,arg,wnd,wnd1,wnd2,temp,tt1,fac,tt2
-      REAL(dbl)  temp2, fg, gmod, anm
+      REAL(dbl)  temp2, fg, gmod, anm, sgn
       REAL(dbl)  pm(3,3), pmtm(6,3,3)
       REAL(dbl)  dm(6,5), dmqm(6,5,5)
       REAL(dbl)  fm(3,3,3,7), fmrm(6,7,7)
       REAL(dbl)  facty(16)
+      REAL(dbl)  denl_new(3,3), detmp(3,3)
+      LOGICAL :: new_stress = .false.
 
       COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
       REAL(dbl), ALLOCATABLE :: wnla(:,:,:)
+      REAL(dbl), ALLOCATABLE :: wnl(:,:,:,:)
+      REAL(dbl), ALLOCATABLE :: wsg(:,:)
+      REAL(dbl), ALLOCATABLE :: btmp(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: fnls(:,:)
+      REAL(dbl), ALLOCATABLE :: fnlb(:,:,:,:)
       REAL(dbl), ALLOCATABLE :: gspha(:,:)
       REAL(dbl), ALLOCATABLE :: gwtmp(:)
       REAL(dbl), PARAMETER :: twothird = 2.0d0/3.0d0
       COMPLEX(dbl), PARAMETER :: uimag = (0.0d0,1.0d0)
-! ... i^l
+! ... (i)^l
       COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
-          (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
+          (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0, -1.0d0) /)
 
 
 !  end of declarations
 !  ----------------------------------------------
 
       me = mpime + 1
-      nspin = cdesc%nspin
+
+      IF( new_stress ) then
+
+      DO iss = 1, nspin
+         !
+         iss_wfc = iss
+         IF( force_pairing ) iss_wfc = 1
+         !
+         ALLOCATE( btmp( nkb, nupdwn( iss ), 3, 3 ) )
+         ! 
+         CALL caldbec( cdesc%ngwl, nkb, nupdwn( iss ), 1, nspnl, eigr(1,1), &
+                       c0( 1, 1, 1, iss_wfc ), btmp( 1, 1, 1, 1 ), .false. )
+         !
+         DO j = 1, 3
+            DO i = 1, 3
+               DO in = iupdwn( iss ), iupdwn( iss ) + nupdwn( iss ) - 1
+                  dbec( :, in , i, j ) = btmp( :, in - iupdwn( iss ) + 1, i, j )
+               END DO
+            END DO
+         END DO
+         !
+         DEALLOCATE( btmp )
+         !
+      END DO
+ 
+      CALL dennl( bec, denl_new )
+
+      end if
+
 
       IF(gzero) THEN
         denl = - enl * dalbe
@@ -310,8 +345,37 @@
   
       ngw = cdesc%ngwl
       
-! ... initialize array wnla
-      ALLOCATE( wnla( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp) )
+      ! ... initialize array wnla
+ 
+      ALLOCATE( wsg ( nhm, nsp ) )
+      ALLOCATE( wnl ( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp, 1 ) )
+      ALLOCATE( wnla( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp ) )
+      ALLOCATE( fnlb( nsanl, MAXVAL( nh( 1:nsp ) ), MAXVAL( nupdwn ), nspin ) )
+      !
+      fac = sqrt( omega ) / ( 2.0d0 * 4.0d0 * pi )
+      !
+      DO iss = 1, nspin
+         DO in = 1, nupdwn( iss )
+            isa = 0
+            DO is = 1, nspnl
+               DO ia = 1, na( is )
+                  DO ih = 1, nh( is )
+                     l   = nhtol ( ih, is )
+                     inl = ish(is) + (ih-1) * na(is) + ia
+                     sgn = 1.0d0
+                     IF( MOD( l, 2 ) /= 0 ) sgn = -1.0d0   !  ( -1)^l
+                     fnlb( isa + ia, ih, in, iss ) = sgn * fac * bec( inl, in + iupdwn( iss ) - 1 )
+                     ! WRITE(6,*) ' i ', iss, in, is, ia, ih, l
+                     ! WRITE(6,*) ' v ', fnlb( isa + ia, ih, in, iss ) , fnl(1,iss)%r( isa+ia, ih, in )
+                     ! WRITE(6,*) ' r ', fnlb( isa + ia, ih, in, iss ) / fnl(1,iss)%r( isa+ia, ih, in )
+                  END DO
+               END DO
+               isa = isa + na( is )
+            END DO
+         END DO
+      END DO
+      !
+      CALL nlin( wsg, wnl )
       CALL nlin_stress( wnla )
 
       ALLOCATE( gwtmp( ngw ) )
@@ -377,18 +441,19 @@
               l   = nhtol ( ih, is )
               anm = 2*l + 1
 
+
               ! WRITE(6,*) 'DEBUG ih, iy, iv, l = ', ih, iy, iv, l
 
               gwtmp(1) = 0.0d0
               DO ig = gstart, ngw
-                gwtmp( ig ) = gagx_l(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is) - wnla(ig,iv,is) )
+                gwtmp( ig ) = gagx_l(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is,1) - wnla(ig,iv,is) )
               END DO
 
               IF( igh(l) < 0 ) igh(l) = ih
               IF ( l == 1 ) THEN
               ELSE IF ( l == 2 ) THEN
                 DO ig = gstart, ngw
-                  gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm( kk, mi( iy ) ) * wnl(ig,iv,is)
+                  gwtmp(ig) = gwtmp(ig) - 2.0d0/3.0d0 * dm( kk, mi( iy ) ) * wnl(ig,iv,is,1)
                 END DO
               ELSE IF ( l == 3 ) THEN
                 al = alpha(kk)
@@ -402,9 +467,10 @@
                   DO s = 1, 3
                     fg = fg + 6.0d0/5.0d0 * fm(be,s,al,mi(iy)) * gx(s,ig) / gmod
                   END DO
-                  gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,iv,is)
+                  gwtmp(ig) = gwtmp(ig) - fg * wnl(ig,iv,is,1)
                 END DO
               END IF
+
               DO ihh = igh(l), igh(l) + 2*l
                 iyy = nhtolm( ihh, is )
                 IF ( l == 0 ) THEN
@@ -437,10 +503,10 @@
                   temp2 = 0.d0
                   IF( me == 1 ) THEN
                     DO ihh = igh(l), igh(l) + 2*l
-                      temp2 = temp2 + facty( ihh ) * fnl(1,ispin)%r( isa, ihh, in )
+                      temp2 = temp2 + facty( ihh ) * fnlb( isa, ihh, in, ispin )
                     END DO
                   END IF
-                  tt1 = fnl(1,ispin)%r(isa, ih, in )
+                  tt1 = fnlb( isa, ih, in, ispin )
                   tt2 = - l * temp2 + 2.d0 * fnls( ia, in )
                   denl(kk) = denl(kk) + fac * tt1 * tt2
                 END DO
@@ -460,9 +526,30 @@
 
       END DO SPIN_LOOP
 
-      DEALLOCATE(gwtmp)
-      DEALLOCATE(gspha)
-      DEALLOCATE(wnla)
+      DEALLOCATE( gwtmp )
+      DEALLOCATE( gspha )
+      DEALLOCATE( fnlb )
+      DEALLOCATE( wnla )
+      DEALLOCATE( wnl )
+      DEALLOCATE( wsg )
+
+      IF( new_stress ) THEN
+        DO k=1,6
+          detmp(alpha(k),beta(k)) = denl(k)
+          detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+        END DO
+        detmp = MATMUL( detmp(:,:), htm1(:,:) )
+        WRITE( stdout,*) "FROM stress_nl derivative of e(nl)"
+        CALL mp_sum( detmp )
+        CALL mp_sum( denl_new )
+        WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+        WRITE( stdout,5555) ((denl_new(i,j),j=1,3),i=1,3)
+      END IF
+
+5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+
 
       RETURN
       END SUBROUTINE stress_nl
@@ -508,7 +595,7 @@
           IF( nspin > 1) THEN
             rhets = rhets + rhoeg(ig, 2)
           END IF
-          rhets = 2.d0 * sfac( ig, is ) * dvps(ig,is) * CONJG(rhets)
+          rhets = -2.d0 * sfac( ig, is ) * dvps(ig,is) * CONJG(rhets)
           depst(1) = depst(1) + rhets * gagx_l(1,ig)
           depst(2) = depst(2) + rhets * gagx_l(2,ig)
           depst(3) = depst(3) + rhets * gagx_l(3,ig)
@@ -610,14 +697,13 @@
 !==          COMPUTES HARTREE ENERGY CONTRIBUTION                     ==
 !=======================================================================
 
-      SUBROUTINE stress_har(deht, ehr, sfac, ps, rhoeg, gagx_l, box ) 
+      SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagx_l, box ) 
 
       use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
       use mp_global,          ONLY: mpime, nproc
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
-      USE cp_types,           ONLY: pseudo, pseudo_ncpp
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
@@ -627,7 +713,6 @@
 !---------------------------------------------------ARGUMENT
 
       type (boxdimensions) :: box
-      TYPE (pseudo), INTENT(IN) :: ps
       REAL(dbl)    :: DEHT(:), EHR, GAgx_L(:,:)
       COMPLEX(dbl) :: RHOEG(:,:)
       COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
@@ -661,7 +746,6 @@
         RHOPR= (0.D0,0.D0)
         DO IS = 1, NSP
           RHOP  = RHOP  + sfac( IG, is ) *  RHOPS(IG,is)
-          ! RHOPR = RHOPR + sfac( IG, is ) * ps%DRHOPS(IG,is) 
           RHOPR = RHOPR + sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
         END DO
         HGM1   = 1.D0 / g(IG) / TPIBA2 

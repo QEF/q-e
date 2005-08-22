@@ -53,6 +53,8 @@ SUBROUTINE deallocate_modules_var()
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
   USE metagga,              ONLY : deallocate_metagga
+  USE ncpp,                 ONLY : deallocate_ncpp
+  USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
   !
   IMPLICIT NONE
   !
@@ -65,6 +67,11 @@ SUBROUTINE deallocate_modules_var()
   IF ( ALLOCATED( dqrad ) )    DEALLOCATE( dqrad )
   IF ( ALLOCATED( dqgb ) )     DEALLOCATE( dqgb )
   IF ( ALLOCATED( dbeta ) )    DEALLOCATE( dbeta )
+  !
+  IF ( ALLOCATED( fnl ) ) THEN
+     CALL deallocate_projector( fnl )
+     DEALLOCATE( fnl )
+  END IF
   !
   CALL deallocate_mainvar()
   CALL deallocate_cvan()
@@ -97,6 +104,7 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_electrons()
   CALL deallocate_polarization()
   CALL deallocate_pseudopotential()
+  CALL deallocate_ncpp()
   CALL deallocate_turbo()
   CALL deallocate_diis()
   !

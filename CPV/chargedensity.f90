@@ -18,7 +18,6 @@
 
 !  include modules
         USE kinds
-        USE brillouin, ONLY: kpoints
         USE io_files, ONLY: rho_name, rho_name_up, rho_name_down, rho_name_avg
         USE io_files, ONLY: rhounit
 
@@ -355,7 +354,7 @@
 !=----------------------------------------------------------------------=!
 !  BEGIN manual
 
-   SUBROUTINE rhoofr (nfi, kp, c0, cdesc, fi, rhoe, desc, box)
+   SUBROUTINE rhoofr (nfi, c0, cdesc, fi, rhoe, desc, box)
 
 !  this routine computes:
 !  rhoe = normalized electron density in real space
@@ -384,13 +383,14 @@
     USE fft_base, ONLY: dfftp
     USE mp_global, ONLY: mpime
     USE mp, ONLY: mp_sum
-    USE turbo, ONLY: tturbo, nturbo, turbo_states
+    USE turbo, ONLY: tturbo, nturbo, turbo_states, allocate_turbo
     USE cell_module, ONLY: boxdimensions
     USE wave_types, ONLY: wave_descriptor
     USE charge_types, ONLY: charge_descriptor
     USE io_global, ONLY: stdout, ionode
     USE control_flags, ONLY: force_pairing, iprint
     USE parameters, ONLY: nspinx
+    USE brillouin, ONLY: kpoints, kp
 
 
     IMPLICIT NONE
@@ -398,7 +398,6 @@
 ! ... declare subroutine arguments
 
     INTEGER,              INTENT(IN) :: nfi
-    TYPE (kpoints),       INTENT(IN) :: kp
     COMPLEX(dbl)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
     REAL(dbl),          INTENT(IN) :: fi(:,:,:)
@@ -453,6 +452,14 @@
     ALLOCATE( rho( nr1x, nr2x, nr3x ), STAT=ierr )
     IF( ierr /= 0 ) CALL errore(' rhoofr ', ' allocating rho ', ABS(ierr) )
 
+    IF( tturbo ) THEN
+      !
+      ! ... if tturbo=.TRUE. some data is stored in memory instead of being
+      ! ... recalculated (see card 'TURBO')
+      !
+      CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
+
+    END IF
 
     DO ispin = 1, nspin
 

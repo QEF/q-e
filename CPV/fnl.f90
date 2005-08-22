@@ -20,6 +20,8 @@
           COMPLEX(dbl), POINTER :: c(:,:,:)
         END TYPE
 
+        TYPE (projector), ALLOCATABLE :: fnl( :, : )
+
         INTERFACE allocate_projector
           MODULE PROCEDURE allocate_projector_s, allocate_projector_v, allocate_projector_m
         END INTERFACE
@@ -28,7 +30,7 @@
             deallocate_projector_m
         END INTERFACE
 
-        PUBLIC :: projector, allocate_projector, deallocate_projector
+        PUBLIC :: fnl, projector, allocate_projector, deallocate_projector
           
       CONTAINS
 !

@@ -60,9 +60,6 @@ MODULE read_cards_module
        ! ... Simulation cell from standard input
        trd_ht = .FALSE.
        rd_ht  = 0.0d0
-       ! ... Spline interpolation tables for pseudopotentials
-       tpstab_inp  = .FALSE.
-       pstab_size_inp = 0
        ! ... DIPOLE
        tdipole_card     = .FALSE.
        ! ... OPTICAL PROPERTIES
@@ -191,8 +188,6 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
           !
           CALL card_kpoints( input_line )
-          IF ( prog == 'CP' .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'NEIGHBOURS' ) THEN
           !
@@ -204,12 +199,6 @@ MODULE read_cards_module
           !
           CALL card_occupations( input_line )
           !
-       ELSE IF ( TRIM(card) == 'PSTAB' ) THEN
-          !
-          CALL card_pstab( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !
        ELSE IF ( TRIM(card) == 'CELL_PARAMETERS' ) THEN
           !
           CALL card_cell_parameters( input_line )
@@ -220,7 +209,7 @@ MODULE read_cards_module
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'ION_VELOCITIES' ) THEN
+       ELSE IF ( TRIM(card) == 'ATOMIC_VELOCITIES' ) THEN
           !
           CALL card_ion_velocities( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
@@ -1197,56 +1186,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     !
-     ! PSTAB
-     !
-     !   calculate the pseudopotential form factor using an 
-     !   interpolaton table
-     !
-     ! Syntax:
-     !
-     !    PSTAB
-     !      pstab_size
-     !
-     ! Example:
-     !
-     !    PSTAB
-     !    20000
-     !
-     ! Where:
-     !
-     !    pstab_size (integer) size of the interpolation table
-     !                         typically values are between 10000 and 50000
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_pstab( input_line )
-       ! 
-       IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
-       !
-       IF ( tread ) THEN
-          CALL errore( ' card_pstab ', ' two occurrence ', 2 )
-       END IF
-       ! 
-       CALL read_line( input_line )
-       READ(input_line, *) pstab_size_inp
-       ! 
-       tpstab_inp = .TRUE.
-       tread = .TRUE.
-       !
-       RETURN
-       !
-     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------

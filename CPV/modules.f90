@@ -29,6 +29,26 @@ module core
   real(kind=8), allocatable:: rhocg(:,:)
   real(kind=8), allocatable:: drhocg(:,:)
 contains
+  subroutine allocate_core( nnrx, ngs, ngb, nsp )
+     integer, intent(in) :: nnrx, ngs, ngb, nsp
+     character(len=4), intent(in) :: program_name
+     IF ( nlcc_any ) THEN
+        !
+        ALLOCATE( rhoc( nnrx ) )
+        ALLOCATE( rhocb( ngb, nsp ) )
+        ALLOCATE( rhocg( ngs, nsp ) )
+        ALLOCATE( drhocg( ngs, nsp ) )
+        !
+     ELSE
+        !
+        ! ... dummy allocation required because this array appears in the
+        ! ... list of arguments of some routines
+        !
+        ALLOCATE( rhoc( 1 ) )
+        !
+     END IF
+  end subroutine allocate_core
+
   subroutine deallocate_core()
       IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
       IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
@@ -215,3 +235,92 @@ contains
       IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
   end subroutine deallocate_cdvan
 end module cdvan
+
+
+MODULE ncpp
+  !
+  ! norm-conserving pseudo-potentials, Kleinman-Bylander factors 
+  !
+  USE kinds, ONLY: dbl
+  IMPLICIT NONE
+  SAVE
+  REAL(dbl), ALLOCATABLE :: wsg(:,:)     ! inverse of Kleinman-Bylander
+                                         !   denominators
+                                         ! <Y phi | V | phi Y>**(-1)
+                                         !   first index: orbital
+                                         !   second index: atomic species
+  REAL(dbl), ALLOCATABLE :: wnl(:,:,:,:) ! Kleinman-Bylander products
+                                         ! <Y phi | V | exp(i(k+G) dot r)>
+                                         !   first index: G vector
+                                         !   second index: orbital
+                                         !   third index: atomic species
+                                         !   fourth index: k point
+CONTAINS
+
+  SUBROUTINE allocate_ncpp( nsp, ngw, nbetax, nhm, nk )
+    INTEGER, INTENT(IN) :: nsp, nbetax, nhm, ngw, nk
+    INTEGER :: ierr
+
+    ALLOCATE( wnl( ngw, nbetax, nsp, nk ), STAT=ierr)
+    IF( ierr /= 0 ) CALL errore(' allocate_ncpp ', ' allocating wnl ', ierr )
+    ALLOCATE( wsg( nhm, nsp ), STAT=ierr)
+    IF( ierr /= 0 ) CALL errore(' allocate_ncpp ', ' allocating wsg ', ierr )
+    RETURN
+  END SUBROUTINE allocate_ncpp
+
+  SUBROUTINE deallocate_ncpp
+    IF( ALLOCATED( wsg ) ) DEALLOCATE( wsg )
+    IF( ALLOCATED( wnl ) ) DEALLOCATE( wnl )
+    RETURN
+  END SUBROUTINE deallocate_ncpp
+
+END MODULE ncpp
+
+module cvan
+
+  ! this file contains common subroutines and modules between
+  ! CP and FPMD
+
+  !     ionic pseudo-potential variables
+  use parameters, only: nsx
+  implicit none
+  save
+  logical :: oldvan(nsx)
+  !     oldvan(is) = an old version of Vanderbilt PPs (using Herman-Skillman
+  !                  grid) is read - replaces old "ipp=0" flag
+  integer nvb, ish(nsx)
+  !     nvb    = number of species with Vanderbilt PPs
+  !     ish(is)= used for indexing the nonlocal projectors betae
+  !              with contiguous indices inl=ish(is)+(iv-1)*na(is)+1
+  !              where "is" is the species and iv=1,nh(is)
+  !
+  !     indlm: indlm(ind,is)=Y_lm for projector ind
+  integer, allocatable:: indlm(:,:)
+contains
+
+  subroutine allocate_cvan( nind, ns )
+    integer, intent(in) :: nind, ns
+    allocate( indlm( nind, ns ) )
+  end subroutine allocate_cvan
+
+  subroutine deallocate_cvan( )
+    if( allocated(indlm) ) deallocate( indlm )
+  end subroutine deallocate_cvan
+
+end module cvan
+
+
+module qrl_mod
+
+  use parameters, only: nsx, ndmx, nbrx, lqmax
+  implicit none
+  save
+!
+! qrl       q(r) functions (old format)
+! cmesh     used only for Herman-Skillman mesh (old format)
+!
+  real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
+  real(kind=8) :: cmesh(nsx)
+
+end module qrl_mod
+

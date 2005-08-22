@@ -57,16 +57,15 @@
           RETURN
         END SUBROUTINE optical_closeup
 
-        SUBROUTINE opticalp(nfi, box, atoms, c0, wfill, occ, ce, wempt, vpot, fnl, eigr, ps, kp)
+        SUBROUTINE opticalp(nfi, box, atoms, c0, wfill, occ, ce, wempt, vpot, eigr, bec )
 
-          USE cp_types
           USE cell_module, ONLY: boxdimensions
           USE wave_types, ONLY: wave_descriptor
           USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
           USE pseudopotential, ONLY: nsanl
-          USE nl, ONLY: nlsm1
+          USE nl, ONLY: nlsm1_s
           USE forces, ONLY: dforce_all
-          USE brillouin, ONLY: kpoints
+          USE brillouin, ONLY: kpoints, kp
           USE electrons_module, ONLY: ei, ei_emp
           USE kohn_sham_states, ONLY: kohn_sham
           USE constants, ONLY: au, pi, k_boltzman_au, au_to_ohmcmm1
@@ -79,7 +78,9 @@
           USE control_flags, ONLY: force_pairing
           USE reciprocal_vectors, ONLY: gx, g
           USE reciprocal_space_mesh, ONLY: gkx_l
+          USE pseudopotential, ONLY: nspnl
           USE uspp_param, ONLY: nhm
+          USE uspp, ONLY: nkb
 
           INTEGER, INTENT(IN) :: nfi
           TYPE(boxdimensions), INTENT(IN) :: box
@@ -88,17 +89,14 @@
           COMPLEX(dbl), INTENT(INOUT) :: ce(:,:,:,:)
           TYPE(wave_descriptor), INTENT(IN) :: wempt, wfill
           REAL(dbl), INTENT(IN) :: occ(:,:,:)
-          TYPE(projector) :: fnl(:,:)
           REAL (dbl), INTENT(in) ::   vpot(:,:,:,:)
-          TYPE (kpoints), INTENT(in) :: kp
-          TYPE (pseudo), INTENT(in) :: ps
+          REAL (dbl) ::   bec(:,:)
           COMPLEX(dbl) :: eigr(:,:)
-
-          TYPE (projector) :: fnle( SIZE(ce, 1) )
 
           INTEGER :: nspin, ispin, ngw, nb_l, nk, ngw_g
           INTEGER :: ie, if, nf, ne, ik, idie, ig, ierr
           COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:)
+          REAL (dbl), ALLOCATABLE ::   bece(:,:)
           REAL(dbl) :: curr(3), currt, wef
           COMPLEX(dbl) :: ccurr(3), ccurrt
           COMPLEX(dbl), ALLOCATABLE :: diet(:), cf(:,:,:,:)
@@ -109,6 +107,8 @@
           LOGICAL :: gamma_symmetry, gzero
 
 ! ...     SUBROUTINE BODY
+
+          CALL errore( ' opticalp ', ' not working ', 1 )
 
           IF( force_pairing ) &
             CALL errore( ' opticalp ', ' force_pairing not implemented ', 1 )
@@ -134,12 +134,13 @@
             nb_l   = wfill%nbl( ispin )
 
             ALLOCATE( eforce( ngw,  nb_l, nk ) )
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, cf(:,:,1,ispin), wfill, g, &
-              gx, fnl(1,ispin))
-            CALL dforce_all( ispin, cf(:,:,:,ispin), wfill, occ(:,:,ispin), eforce, vpot(:,:,:,ispin), &
-              fnl(:,ispin), eigr, ps)
-            CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce, kp )
-            DEALLOCATE( eforce )
+            !
+            CALL nlsm1 ( nb_l, 1, nspnl, eigr, cf(1,1,1,ispin), bec )
+
+            CALL dforce_all( ispin, cf(:,:,1,ispin), wfill, occ(:,1,ispin), eforce(:,:,1), &
+                             vpot(:,:,:,ispin), eigr, bec )
+
+            CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce )
 
             ngw  = wempt%ngwl
             nb_l = wempt%nbl( ispin )
@@ -149,14 +150,16 @@
               ff( 1:nb_l, ik ) = 2.0d0 / nspin
             END DO
 
-            ALLOCATE( eforce( ngw,  nb_l, nk ) )
-            CALL allocate_projector(fnle, nsanl, nb_l, nhm, kp%gamma_only)
-            CALL nlsm1( ispin, ps%wnl(:,:,:,1), atoms, eigr, ce(:,:,1,ispin), wempt, g, &
-              gx, fnle(1))
-            CALL dforce_all( ispin, ce(:,:,:,ispin), wempt, ff, eforce, vpot(:,:,:,ispin), &
-              fnle, eigr, ps)
-            CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce, kp )
-            CALL deallocate_projector(fnle)
+            ALLOCATE( bece( nkb, nb_l ) ) 
+            !
+            CALL nlsm1 ( nb_l, 1, nspnl, eigr, ce(1,1,1,ispin), bece )
+            !
+            CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, ff( :, 1), eforce(:,:,1), &
+                             vpot(:,:,:,ispin), eigr, bece )
+            !
+            CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce )
+
+            DEALLOCATE( bece )
             DEALLOCATE( eforce )
             DEALLOCATE( ff )
 

@@ -208,10 +208,10 @@
 
    SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, cdesc, occ, &
      atoms_0, atoms_m, acc, taui, cdmi, &
-     ht_m, ht_0, rho, desc, vpot, kp)
+     ht_m, ht_0, rho, desc, vpot)
                                                                         
         USE cell_module, only: boxdimensions, r_to_s
-        USE brillouin, only: kpoints
+        USE brillouin, only: kpoints, kp
         USE wave_types, ONLY: wave_descriptor
         USE control_flags, ONLY: ndw, gamma_only
         USE control_flags, ONLY: twfcollect, force_pairing
@@ -232,7 +232,6 @@
         INTEGER, INTENT(IN) :: nfi
         COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(IN) :: occ(:,:,:)
-        TYPE (kpoints), INTENT(IN) :: kp 
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
         REAL(dbl), INTENT(IN) :: rho(:,:,:,:)
@@ -288,11 +287,11 @@
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, &
-          ht_m, ht_0, rho, desc, vpot, kp)
+          ht_m, ht_0, rho, desc, vpot )
                                                                         
         use electrons_base, only: nbsp
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
-        USE brillouin, only: kpoints
+        USE brillouin, only: kpoints, kp
         use parameters, only: npkx, nsx
         USE mp, ONLY: mp_sum, mp_barrier
         USE mp_global, ONLY: mpime, nproc, group, root
@@ -322,7 +321,6 @@
         INTEGER, INTENT(OUT) :: nfi
         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
         REAL(dbl), INTENT(INOUT) :: occ(:,:,:)
-        TYPE (kpoints), INTENT(INOUT) :: kp 
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
         REAL(dbl), INTENT(INOUT) :: rho(:,:,:,:)

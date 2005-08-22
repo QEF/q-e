@@ -44,11 +44,11 @@
 
       !  this routine computes the phase factors
       !
-      !    ei1(ix,ia) = exp (i ix G_1 dot R(ia))
-      !    ei2(iy,ia) = exp (i iy G_2 dot R(ia))
-      !    ei3(iz,ia) = exp (i iz G_3 dot R(ia))
+      !    ei1(ix,ia) = exp ( -i ix G_1 dot R(ia))
+      !    ei2(iy,ia) = exp ( -i iy G_2 dot R(ia))
+      !    ei3(iz,ia) = exp ( -i iz G_3 dot R(ia))
       !
-      !    eigr(ig,ia) = exp(i G dot R(ia)) =
+      !    eigr(ig,ia) = exp( -i G dot R(ia)) =
       !                = ei1(ix,ia) * ei2(iy,ia) * ei3(iz,ia)
       !
       !    G_1,G_2,G_3 = reciprocal lattice generators
@@ -105,13 +105,13 @@
               ar2 = tpi * taus(2,isa)  ! G_2 dot R(ia)
               ar3 = tpi * taus(3,isa)  ! G_3 dot R(ia)
 
-              ! ...         Miller index = 1: exp(i G_i dot R(ia))
+              ! ...         Miller index = 1: exp(-i G_i dot R(ia))
 
               ctep1 = CMPLX( cos( ar1 ), -sin( ar1 ) )
               ctep2 = CMPLX( cos( ar2 ), -sin( ar2 ) )
               ctep3 = CMPLX( cos( ar3 ), -sin( ar3 ) )
 
-              ! ...         Miller index = -1: exp(-i G_i dot R(ia))
+              ! ...         Miller index = -1: exp(-i G_im dot R(ia)) = exp(i G_i dot R(ia))
 
               ctem1 = CONJG(ctep1)
               ctem2 = CONJG(ctep2)

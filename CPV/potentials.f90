@@ -180,17 +180,14 @@
 
 !  -------------------------------------------------------------------------
       SUBROUTINE kspotential( nfi, tprint, tforce, tstress, rhoe, desc, &
-        atoms, kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, fnl, vpot, edft, timepre )
+        atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft, timepre )
 
         USE charge_density, ONLY: rhoofr
         USE nl, ONLY: nlrh_m
         USE energies, ONLY: dft_energy_type
         USE cell_module, ONLY: boxdimensions
-        USE brillouin, ONLY: kpoints
-        USE cp_types, ONLY: pseudo
         USE atoms_type_module, ONLY: atoms_type
         USE wave_types, ONLY: wave_descriptor
-        USE pseudo_projector, ONLY: projector
         USE charge_types, ONLY: charge_descriptor
 
 ! ...   declare subroutine arguments
@@ -199,16 +196,15 @@
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
         COMPLEX(dbl),         INTENT(INOUT) :: c0(:,:,:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
-        TYPE (pseudo),        INTENT(INOUT) :: ps
         REAL(dbl) :: rhoe(:,:,:,:)
         COMPLEX(dbl) :: ei1(:,:)
         COMPLEX(dbl) :: ei2(:,:)
         COMPLEX(dbl) :: ei3(:,:)
         COMPLEX(dbl) :: eigr(:,:)
-        TYPE (kpoints),       INTENT(IN)    ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(dbl) :: fi(:,:,:)
-        TYPE (projector) :: fnl(:,:)
+        REAL(dbl), INTENT(IN) :: fi(:,:,:)
+        REAL(dbl) :: bec(:,:)
+        REAL(dbl) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
         REAL(dbl)    :: vpot(:,:,:,:)
         COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
@@ -216,12 +212,12 @@
         REAL(dbl), INTENT(OUT) :: timepre
         TYPE (charge_descriptor),  INTENT(IN) :: desc
 
-        edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, kp, fnl, ps%wsg, ps%wnl, eigr)
+        edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, bec, becdr, eigr)
 
-        CALL rhoofr( nfi, kp, c0, cdesc, fi, rhoe, desc, ht)
+        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht)
 
         CALL vofrhos(tprint, rhoe, desc, tforce, tstress, tforce, atoms, &
-          kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
+          vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
         RETURN
       END SUBROUTINE kspotential
@@ -232,7 +228,7 @@
 !  BEGIN manual
 
       SUBROUTINE vofrhos(tprint, rhoe, desc, tfor, thdyn, tforce, atoms, &
-              kp, fnl, vpot, ps, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, box, edft)
+              vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, box, edft)
 
 !  this routine computes:
 !  ekin = dft_kinetic term of the DFT functional (see dft_kinetic_energy)
@@ -260,23 +256,18 @@
       USE vanderwaals, ONLY: tvdw, vdw
       USE charge_density, ONLY: checkrho
       USE wave_functions, ONLY: dft_kinetic_energy
-      USE brillouin, ONLY: kpoints
       USE mp, ONLY: mp_sum
       USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
       USE fft_base, ONLY: dfftp
       USE charge_types, ONLY: charge_descriptor
-      USE control_flags, ONLY: tscreen, tchi2, iprsta
-      USE io_global, ONLY: ionode
-      USE cp_types, ONLY: pseudo
-      USE io_global, ONLY: stdout
+      USE control_flags, ONLY: tscreen, tchi2, iprsta, tpre
+      USE io_global, ONLY: ionode, stdout
       USE sic_module, ONLY: self_interaction, si_epsilon
       USE reciprocal_vectors, ONLY: gx
       USE gvecp, ONLY: ngm
-      USE pseudo_base, ONLY: compute_eself
       USE local_pseudo, ONLY: vps, rhops
-      USE ions_base, ONLY: rcmax
+      USE ions_base, ONLY: rcmax, zv
       USE atom, ONLY: nlcc
       USE core, ONLY: nlcc_any, rhocg
 
@@ -288,13 +279,11 @@
 
       TYPE (atoms_type), INTENT(INOUT) :: atoms
       REAL(dbl),    INTENT(IN) :: fi(:,:,:)
-      TYPE (projector) :: fnl(:,:)
-      TYPE (pseudo),  INTENT(IN) :: ps
+      REAL(dbl) :: bec(:,:)
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: eigr(:,:)
-      TYPE (kpoints), INTENT(IN) :: kp
       COMPLEX(dbl),    INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (charge_descriptor),    INTENT(IN) :: desc
@@ -333,13 +322,11 @@
 
       REAL(dbl)  :: summing1, summing2
 
-
       COMPLEX(dbl) :: ehp, eps
 
       REAL(dbl)  :: dum, sxcp, vxc, ehr, strvxc
       REAL(dbl)  :: omega, desr(6), pesum(16)
       REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
-      REAL(dbl)  :: zv( atoms%nsp )
 
       LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
 
@@ -374,14 +361,19 @@
       nr3x = dfftp%npl
 
       edft%evdw = 0.0d0
-      ttstress = thdyn.OR.(iprsta>2).OR.tprint
-      ttforce  = tfor.OR.(iprsta>2).OR.tprint.OR.tforce
-      !ttscreen = .TRUE.
+      !
+      ttstress = ( thdyn .OR. (iprsta>2) .OR. tprint ) .AND. tpre
+      !
+      ttforce  = tfor  .OR. (iprsta>2) .OR. tprint .OR. tforce
+      !
+      ! ttscreen = .TRUE.
       ttscreen = .FALSE.
+      !
       ttsic    = ( ABS(self_interaction) /= 0 )
+      !
       omega    = box%deth
+      !
       tgc      = ( igcx > 0 ) .OR. ( igcc > 0 )
-
 
       IF(tchi2) THEN
         CALL allocate_chi2(ngm)
@@ -391,7 +383,7 @@
       ALLOCATE( fion( 3, atoms%nat ) )
 
       fion = atoms%for( 1:3, 1:atoms%nat )
-      ! WRITE(6,*) 'DEBUG atoms = ', SUM(fion)
+      !
       pail = box%pail
 
       IF(tgc) THEN
@@ -405,10 +397,11 @@
       ALLOCATE( rhoeg(ngm, nspin) )
       ALLOCATE( rhoetg(ngm, nspin) )
 
-      edft%self_sxc = 0.d0
-      edft%sxc = 0.d0
+      edft%self_sxc  = 0.d0
+      edft%sxc       = 0.d0
       edft%self_ehte = 0.d0
-      edft%eht = 0.d0
+      edft%eht       = 0.d0
+
     
       IF( ttsic ) THEN
       
@@ -441,12 +434,13 @@
 
       edft%ekin  = 0.0_dbl
       edft%emkin = 0.0_dbl
-      edft%ekin  = dft_kinetic_energy(c0, cdesc, kp, fi, edft%emkin)
+      edft%ekin  = dft_kinetic_energy(c0, cdesc, fi, edft%emkin)
 
       IF(tprint) THEN
         IF( ionode .AND.  ttscreen ) &
            WRITE( stdout,fmt="(3X,'Using screened Coulomb potential for cluster calculation')")
       END IF
+
 
 ! ... reciprocal-space vectors are in units of alat/(2 pi) so a
 ! ... multiplicative factor (2 pi/alat)**2 is required
@@ -454,7 +448,7 @@
       edft%emkin = edft%emkin * tpiba2
 
       IF( ttstress .OR. ttforce .OR. iflag == 0 )  THEN
-        CALL vofesr( edft%esr, desr, fion, ps, atoms, ttstress, box )
+        CALL vofesr( edft%esr, desr, fion, atoms, ttstress, box )
         IF( iflag == 0 ) &
           WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
         iflag = 1
@@ -500,6 +494,7 @@
 
       END DO
 
+
       IF(timing) s3 = cclock()
 
 
@@ -508,6 +503,7 @@
 !In any case calculate the Excor part with rhoetr
       
       CALL exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxcp, vxc, v2xc)
+
 
       IF( ttsic ) THEN
         IF( ionode ) THEN
@@ -524,9 +520,9 @@
 
           !  no sic correction
           !
-          edft%sxc = sxcp
+          edft%sxc       = sxcp
           edft%self_sxc  = 0.d0
-          self_vxc  = 0.d0
+          self_vxc       = 0.d0
                 
         CASE(1) 
 
@@ -534,14 +530,18 @@
           !
           self_rho(:,:,:,1) = rhoetr(:,:,:,1) - rhoetr(:,:,:,2)
           self_rho(:,:,:,2) = 0.D0
+          !
           IF (tgc) THEN
                  self_grho(:,:,:,:,1) = grho(:,:,:,:,1) - grho(:,:,:,:,2)
                  self_grho(:,:,:,:,2) = 0.D0
           ENDIF
+          !
           CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
-                   self_sxcp, self_vxc, self_v2xc)
+                                self_sxcp, self_vxc, self_v2xc)
+          !
           vpot(:,:,:,1) =  vpot(:,:,:,1) - self_vpot(:,:,:,1)
           vpot(:,:,:,2) =  vpot(:,:,:,2) + self_vpot(:,:,:,1)
+          !
           IF (tgc) THEN
             v2xc(:,:,:,1,1) =  v2xc(:,:,:,1,1) - self_v2xc(:,:,:,1,1)
             v2xc(:,:,:,2,2) =  v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1)
@@ -568,8 +568,8 @@
             self_grho(:,:,:,:,2) = grho(:,:,:,:,2)
           ENDIF
 
-!          write(stdout,*)'DA XC SELF_RHO1',self_rho(:,:,:,1)
-!          write(stdout,*)'DA XC SELF_RHO2',self_rho(:,:,:,2)
+          !          write(stdout,*)'DA XC SELF_RHO1',self_rho(:,:,:,1)
+          !          write(stdout,*)'DA XC SELF_RHO2',self_rho(:,:,:,2)
 
           CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
                  self_sxcp, self_vxc, self_v2xc)
@@ -591,8 +591,8 @@
 
       END SELECT 
 
-      !on value of self_interaction for Exchange-Correlation Part 
-      !!sxcp is the exchange-correlation part to the energy from LSD with rhoup e rhodown
+      !  on value of self_interaction for Exchange-Correlation Part 
+      !  sxcp is the exchange-correlation part to the energy from LSD with rhoup e rhodown
 
       IF( ttsic ) THEN
           write(stdout,*) '  Exchange-correlation Energy introducing the SIC'
@@ -615,9 +615,10 @@
         END DO
 ! ...   now rhoetg contains the xc potential
         IF (ttforce) THEN
-          CALL core_charge_forces(fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3, kp )
+          CALL core_charge_forces(fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
         END IF
       END IF
+
 
 ! ... Van Der Waals energy and forces
       IF (tvdw) THEN
@@ -633,12 +634,13 @@
 
       ALLOCATE( vloc( ngm ) )
       CALL vofloc(ttscreen, ttforce, edft%ehte, edft%ehti, ehp, & 
-           eps, vloc, rhoeg, fion, atoms, rhops, vps, kp, eigr, &
-           ei1, ei2, ei3, sfac, box, desc, ps%ap )
+           eps, vloc, rhoeg, fion, atoms, rhops, vps, eigr, &
+           ei1, ei2, ei3, sfac, box, desc )
       !
       ! WRITE(6,*) 'DEBUG vofloc = ', SUM(fion)
 
       !       edft%ehte = REAL ( ehtep )
+
 
       edft%self_ehte = 0.d0
 
@@ -656,7 +658,7 @@
         !  working on the total charge density
 
         CALL self_vofloc(ttscreen, self_ehtep, self_vloc, self_rhoeg, &
-              kp, box, desc)
+              box, desc)
         CALL pinvfft(self_vpot(:,:,:,1), self_vloc(:))
 
         self_vpot(:,:,:,1) = si_epsilon * self_vpot(:,:,:,1)
@@ -728,12 +730,6 @@
       CALL mp_sum(edft%ekin, group)
       CALL mp_sum(edft%emkin, group)
 
-      ! ... self interaction energy of the pseudocharges
-      do is = 1, atoms%nsp
-        zv( is ) = ps%ap(is)%zv
-      end do
-      edft%eself = compute_eself( atoms%na, zv, rcmax, atoms%nsp ) 
-
 
       IF( ttsic .and. ionode ) THEN
         write(stdout,*) 'ESELF_EL::', edft%eself
@@ -741,13 +737,16 @@
 
       CALL total_energy(edft,omega,vxc,eps,self_vxc,nr1_g*nr2_g*nr3_g)
 
-! ... compute stress tensor
-      IF( ttstress .AND. kp%gamma_only ) THEN
+
+      ! ... compute stress tensor
+      !
+      IF( ttstress ) THEN
         s8 = cclock()
-        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, fnl, &
-          ps, c0, cdesc, fi, eigr, sfac, grho, v2xc, box, edft)
+        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, cdesc, fi,  &
+                      eigr, sfac, grho, v2xc, box, edft)
         timepre = cclock() - s8
       END IF
+
 
 ! ... Copy new atomic forces on for type member
 !
@@ -927,7 +926,7 @@
 !  BEGIN manual
 
       SUBROUTINE vofloc(tscreen, ttforce, ehte, ehti, eh, eps, vloc, rhoeg, &
-                 fion, atoms, rhops, vps, kp, eigr, ei1, ei2, ei3, sfac, ht, desc, ap)
+                 fion, atoms, rhops, vps, eigr, ei1, ei2, ei3, sfac, ht, desc )
 
 !  this routine computes:
 !  omega = ht%deth
@@ -963,12 +962,11 @@
 !  END manual
 
       USE constants, ONLY: fpi
+      USE control_flags, ONLY: gamma_only
       USE cell_base, ONLY: tpiba2, tpiba
       USE cell_module, ONLY: boxdimensions
-      USE brillouin, ONLY: kpoints
       USE charge_types, ONLY: charge_descriptor
       USE atoms_type_module, ONLY: atoms_type
-      USE pseudo_types, ONLY: pseudo_ncpp
       USE io_global, ONLY: stdout
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE reciprocal_vectors, ONLY: mill_l
@@ -981,8 +979,6 @@
 ! ... Arguments
 
       TYPE (atoms_type) :: atoms
-      TYPE (pseudo_ncpp), INTENT(IN) :: ap(:)
-      TYPE (kpoints), INTENT(in) :: kp
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
       LOGICAL      :: ttforce
@@ -1093,7 +1089,7 @@
 ! ... 
       IF(TTFORCE) THEN
 ! ...   each processor add its own contribution to the array FION
-        IF(kp%gamma_only) THEN
+        IF( gamma_only ) THEN
           cost = 2.D0 * ht%deth * tpiba
         ELSE
           cost = ht%deth * tpiba
@@ -1121,7 +1117,7 @@
         ehte    = ehte +  vscreen *   REAL(rhet * CONJG(rhet))
         ehti    = ehti +  vscreen *   REAL(  rp * CONJG(rp))
         DO ispin = 1, nspin
-          IF( kp%gamma_only ) THEN
+          IF( gamma_only ) THEN
             eps = eps + vp * CONJG(RHOEG(1,ispin)) * 0.5d0
           ELSE
             eps = eps + vp * CONJG(RHOEG(1,ispin))
@@ -1129,7 +1125,7 @@
         END DO
       END IF
 ! ...
-      IF( .NOT. kp%gamma_only ) THEN
+      IF( .NOT. gamma_only ) THEN
         EPS = EPS * 0.5d0
         EH  = EH  * 0.5d0
       END IF
@@ -1146,7 +1142,7 @@
 
 !
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE vofesr(esr, desr, fion, ps, atoms, tstress, ht)
+   SUBROUTINE vofesr(esr, desr, fion, atoms, tstress, ht)
 !=----------------------------------------------------------------------------=!
 
       USE constants, ONLY: sqrtpm1
@@ -1156,15 +1152,13 @@
       USE parallel_types, ONLY: BLOCK_PARTITION_SHAPE
       USE descriptors_module, ONLY: global_index, local_dimension
       USE atoms_type_module, ONLY: atoms_type
-      USE cp_types, ONLY: pseudo
-      USE ions_base, ONLY: rcmax
+      USE ions_base, ONLY: rcmax, zv
  
       IMPLICIT NONE
 
 ! ... ARGUMENTS 
       
       TYPE (atoms_type) :: atoms
-      TYPE (pseudo)     :: ps
       REAL(dbl) :: ESR
       REAL(dbl) :: DESR(:)
       REAL(dbl) :: FION(:,:)
@@ -1231,7 +1225,7 @@
 
       DO k = 1, atoms%nsp
         DO j = k, atoms%nsp
-          zv2( k, j ) = ps%ap(k)%zv * ps%ap(j)%zv 
+          zv2( k, j ) = zv( k ) * zv( j )
           rc ( k, j ) = SQRT( rcmax(k)**2 + rcmax(j)**2 )
         END DO
       END DO
@@ -1362,16 +1356,16 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE self_vofloc(tscreen, ehte, vloc, rhoeg, kp, ht, desc)
+      SUBROUTINE self_vofloc(tscreen, ehte, vloc, rhoeg, ht, desc)
 
 !  adds the hartree part of the self interaction
 !
 !  ----------------------------------------------
 !  END manual
 
-      USE constants
+      USE constants, ONLY: fpi
+      USE control_flags, ONLY: gamma_only
       USE cell_module, ONLY: boxdimensions
-      USE brillouin, ONLY: kpoints
       USE charge_types, ONLY: charge_descriptor
       USE cell_base, ONLY: tpiba2
       USE gvecp, ONLY: ngm
@@ -1380,7 +1374,6 @@
       IMPLICIT NONE
 
 ! ... Arguments
-      TYPE (kpoints), INTENT(in) :: kp
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
       LOGICAL      :: tscreen
@@ -1439,7 +1432,7 @@
         ehte      = ehte   +  vscreen *  rhog * CONJG(rhog)
       END IF
 ! ...
-      IF( .NOT. kp%gamma_only ) THEN
+      IF( .NOT. gamma_only ) THEN
         ehte  = ehte  * 0.5d0
       END IF
       ehte =        ehte * omega
@@ -1452,16 +1445,16 @@
 
 
 
-      SUBROUTINE localisation( wfc, atoms_m, kp, ht, desc)
+      SUBROUTINE localisation( wfc, atoms_m, ht, desc)
 
 !  adds the hartree part of the self interaction
 !
 !  ----------------------------------------------
 !  END manual
 
-      USE constants
+      USE constants, ONLY: fpi
+      USE control_flags, ONLY: gamma_only
       USE cell_module, ONLY: boxdimensions, s_to_r
-      USE brillouin, ONLY: kpoints
       USE charge_types, ONLY: charge_descriptor
       USE atoms_type_module, ONLY: atoms_type
       USE fft, ONLY : pw_invfft, pfwfft, pinvfft
@@ -1479,7 +1472,6 @@
 
       COMPLEX(dbl), INTENT(IN) :: wfc(:)
       TYPE (atoms_type), INTENT(in) :: atoms_m
-      TYPE (kpoints), INTENT(in) :: kp
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
 
@@ -1608,7 +1600,7 @@
               ehte    = ehte   +  vscreen *  REAL(rhog * CONJG(rhog))
             END IF
 ! ...
-            IF( .NOT. kp%gamma_only ) THEN
+            IF( .NOT. gamma_only ) THEN
               ehte  = ehte  * 0.5d0
             END IF
             ehte = ehte * omega

@@ -236,56 +236,8 @@
       return
       end function boxdotgrid
 !
-!-----------------------------------------------------------------------
-      subroutine calbec (nspmn,nspmx,eigr,c,bec)
-!-----------------------------------------------------------------------
-!     this routine calculates array bec
-!
-!        < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
-!                 2 sum_g> re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
-!
-!     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
-!
-      use ions_base, only: na, nas => nax, nat
-      use io_global, only: stdout
-      use cvan, only: ish
-      use electrons_base, only: n => nbsp
-      use gvecw, only: ngw
-      use control_flags, only: iprint, iprsta
-      use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb
-!
-      implicit none
-      integer nspmn, nspmx
-      real(kind=8)  bec(nhsa,n)
-      complex(kind=8) c(ngw,n), eigr(ngw,nat)
-! local variables
-      integer is, ia, i , iv
-!
-!
-      call start_clock( 'calbec' )
-      call nlsm1(n,nspmn,nspmx,eigr,c,bec)
-!
-      if (iprsta.gt.2) then
-         WRITE( stdout,*)
-         do is=1,nspmx
-            if(nspmx.gt.1) then
-               WRITE( stdout,'(33x,a,i4)') ' calbec: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &              ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            else
-               do ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calbec: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &             ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               end do
-            end if
-         end do
-      endif
-      call stop_clock( 'calbec' )
-!
-      return
-      end subroutine calbec
+
+
 !-------------------------------------------------------------------------
       subroutine calphi(c0,ema0bg,bec,betae,phi)
 !-----------------------------------------------------------------------
@@ -550,70 +502,6 @@
 
       return
       end subroutine denh
-!
-!-----------------------------------------------------------------------
-      subroutine dennl(bec,denl)
-!-----------------------------------------------------------------------
-!
-      use cvan, only: ish
-      use uspp_param, only: nh
-      use uspp, only: nhsa=>nkb, dvan
-      use cdvan
-      use electrons_base, only: n => nbsp, ispin => fspin, f, nspin
-      use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na
-      implicit none
-! input
-      real(kind=8) bec(nhsa,n)
-! output
-      real(kind=8) denl(3,3)
-! local
-      real(kind=8) dsum(3,3),dsums(2,3,3)
-      integer is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
-!
-      denl=0.d0
-      do is=1,nsp
-         ijv=0
-         do iv=1,nh(is)
-            do jv=iv,nh(is)
-               ijv=ijv+1
-               isa=0
-               do ism=1,is-1
-                  isa=isa+na(ism)
-               end do
-               do ia=1,na(is)
-                  inl=ish(is)+(iv-1)*na(is)+ia
-                  jnl=ish(is)+(jv-1)*na(is)+ia
-                  isa=isa+1
-                  dsums=0.d0
-                  do i=1,n
-                     iss=ispin(i) 
-                     do k=1,3
-                        do j=1,3
-                           dsums(iss,k,j)=dsums(iss,k,j)+f(i)*       &
-     &                          (dbec(inl,i,k,j)*bec(jnl,i)          &
-     &                          + bec(inl,i)*dbec(jnl,i,k,j))
-                        enddo
-                     enddo
-                  end do
-                  dsum=0.d0
-                  do iss=1,nspin
-                     do k=1,3
-                        do j=1,3
-                           drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
-                           dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
-                        enddo
-                     enddo
-                  end do
-                  if(iv.ne.jv) dsum=2.d0*dsum
-                  denl = denl + dsum*dvan(jv,iv,is)
-               end do
-            end do
-         end do
-      end do
-!
-      return
-      end subroutine dennl
 !
 !-----------------------------------------------------------------------
       subroutine denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -1208,61 +1096,6 @@
 !
       return
       end function enkin
-!
-!-----------------------------------------------------------------------
-      real(kind=8) function ennl(rhovan, bec)
-!-----------------------------------------------------------------------
-!
-! calculation of nonlocal potential energy term
-!
-      use cvan, only: ish
-      use uspp_param, only: nhm, nh
-      use uspp, only :nhsa=>nkb, dvan
-      use electrons_base, only: n => nbsp, nspin, ispin => fspin, f
-      use ions_base, only: nsp, nat, na
-      implicit none
-! input
-      real(kind=8) bec(nhsa,n)
-      real(kind=8) rhovan(nhm*(nhm+1)/2,nat,nspin)
-! local
-      real(kind=8) sum, sums(2)
-      integer is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
-!
-!
-      ennl=0.d0
-      do is=1,nsp
-         ijv=0
-         do iv= 1,nh(is)
-            do jv=iv,nh(is)
-               ijv=ijv+1
-               isa=0
-               do ism=1,is-1
-                  isa=isa+na(ism)
-               end do
-               do ia=1,na(is)
-                  inl=ish(is)+(iv-1)*na(is)+ia
-                  jnl=ish(is)+(jv-1)*na(is)+ia
-                  isa=isa+1
-                  sums=0.d0
-                  do i=1,n
-                     iss=ispin(i) 
-                     sums(iss) = sums(iss) +f(i)*bec(inl,i)*bec(jnl,i)
-                  end do
-                  sum=0.d0
-                  do iss=1,nspin
-                     rhovan(ijv,isa,iss) = sums(iss)
-                     sum=sum+sums(iss)
-                  end do
-                  if(iv.ne.jv) sum=2.d0*sum
-                  ennl=ennl+sum*dvan(jv,iv,is)
-               end do
-            end do
-         end do
-      end do
-!
-      return
-      end function ennl
-
 !
 !
 !-----------------------------------------------------------------------
@@ -2166,285 +1999,8 @@
       call stop_clock( 'nlfl' )
       return
       end subroutine nlfl
-!-----------------------------------------------------------------------
-      subroutine nlfq(c,eigr,bec,becdr,fion)
-!-----------------------------------------------------------------------
-!     contribution to fion due to nonlocal part
-!
-      use uspp, only :nhsa=>nkb, dvan, deeq
-      use uspp_param, only: nhm, nh
-      use cvan, only: ish, nvb
-      use ions_base, only: nas => nax, nat, nsp, na
-      use parameters, only: natx, nsx
-      use electrons_base, only: n => nbsp, ispin => fspin, f
-      use gvecw, only: ngw
-      use constants, only: pi, fpi
-      !use parm
-! 
-      implicit none
-      real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), c(2,ngw,n)
-      complex(kind=8) eigr(ngw,nat)
-      real(kind=8) fion(3,natx)
-!
-      integer k, is, ia, isa, iss, inl, iv, jv, i
-      real(kind=8) tmpbec(nhm,n), tmpdr(nhm,n) ! automatic arrays
-      real(kind=8) temp
-!
-!     nlsm2 fills becdr
-!
-      call start_clock( 'nlfq' )
-      call nlsm2(eigr,c,becdr)
-!
-      do k=1,3
-!
-         isa=0
-         do is=1,nsp
-            do ia=1,na(is)
-               isa=isa+1
-!
-               tmpbec = 0.d0
-               tmpdr  = 0.d0
-!
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
-                     inl=ish(is)+(jv-1)*na(is)+ia
-                     do i=1,n
-                        iss=ispin(i)
-                        temp=dvan(iv,jv,is)+deeq(jv,iv,isa,iss)
-                        tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i)
-                     end do
-                  end do
-               end do
-!  
-               do iv=1,nh(is)
-                  inl=ish(is)+(iv-1)*na(is)+ia
-                  do i=1,n
-                     tmpdr(iv,i)=f(i)*becdr(inl,i,k)
-                  end do
-               end do
-!
-               do i=1,n
-                  do iv=1,nh(is)
-                     tmpdr(iv,i)=tmpdr(iv,i)*tmpbec(iv,i)
-                  end do
-               end do
-!
-               fion(k,isa)=fion(k,isa)-2.*SUM(tmpdr)
-!
-            end do
-         end do
-      end do
-!
-!     end of x/y/z loop
-!
-      call stop_clock( 'nlfq' )
-!
-      return
-      end subroutine nlfq
-!-----------------------------------------------------------------------
-      subroutine nlsm1 (n,nspmn,nspmx,eigr,c,becp)
-!-----------------------------------------------------------------------
-!     computes: the array becp
-!     becp(ia,n,iv,is)=
-!         = sum_g [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* c(g,n)
-!         = delta_l0 beta(g=0,iv,is) c(g=0,n)
-!          +sum_g> beta(g,iv,is) 2 re[(i)**l e^(ig.r_ia) c(g,n)]
-!
-!     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
-!     input : beta(ig,l,is), eigr, c
-!     output: becp as parameter
-!
-      use ions_base, only: na, nas => nax, nat
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use constants, only: pi, fpi
-      use uspp, only :nhsa=>nkb, nhtol, beta
-      use cvan, only: ish
-      use uspp_param, only: nh
-!
-      implicit none
-      integer n, nspmn, nspmx
-      real(kind=8)  eigr(2,ngw,nat), c(2,ngw,n)
-      real(kind=8)  becp(nhsa,n)
-      complex(kind=8), allocatable :: wrk2(:,:)
-!
-      integer isa, ig, is, iv, ia, l, ixr, ixi, inl, i
-      real(kind=8) signre, signim, arg
-!
-      call start_clock( 'nlsm1' )
 
-      allocate( wrk2( ngw, nas ) )
 
-      isa = 0
-      do is = 1, nspmn - 1
-        isa = isa + na(is)
-      end do
-
-      do is=nspmn,nspmx
-         do iv=1,nh(is)
-            l=nhtol(iv,is)
-            if (l == 0) then
-               ixr = 1
-               ixi = 2
-               signre =  1.0
-               signim =  1.0
-            else if (l == 1) then
-               ixr = 2
-               ixi = 1
-               signre =  1.0
-               signim = -1.0
-            else if (l == 2) then
-               ixr = 1
-               ixi = 2
-               signre = -1.0
-               signim = -1.0
-            else if (l == 3) then
-               ixr = 2
-               ixi = 1
-               signre = -1.0
-               signim =  1.0
-            endif
-!
-            do ia=1,na(is)
-               if (gstart == 2) then
-!                   q = 0   component (with weight 1.0)
-                  wrk2(1,ia)= cmplx(                                   &
-     &               signre*beta(1,iv,is)*eigr(ixr,1,ia+isa),           &
-     &               signim*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
-!                   q > 0   components (with weight 2.0)
-               end if
-               do ig=gstart,ngw
-                  arg = 2.0*beta(ig,iv,is)
-                  wrk2(ig,ia) = cmplx(                                 &
-     &                  signre*arg*eigr(ixr,ig,ia+isa),                 &
-     &                  signim*arg*eigr(ixi,ig,ia+isa) )
-               end do
-            end do
-            inl=ish(is)+(iv-1)*na(is)+1
-            call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becp(inl,1),1,nhsa,       &
-     &           na(is),2*ngw,n)
-         end do
-
-#ifdef __PARA
-         inl=ish(is)+1
-         do i=1,n
-            call reduce(na(is)*nh(is),becp(inl,i))
-         end do
-#endif
-
-        isa = isa + na(is)
-
-      end do
-
-      deallocate( wrk2 )
-      call stop_clock( 'nlsm1' )
-
-      return
-      end subroutine nlsm1
-!-------------------------------------------------------------------------
-      subroutine nlsm2(eigr,c,becdr)
-!-----------------------------------------------------------------------
-!     computes: the array becdr 
-!     becdr(ia,n,iv,is,k)
-!      =2.0 sum_g> g_k beta(g,iv,is) re[ (i)**(l+1) e^(ig.r_ia) c(g,n)]
-! 
-!     routine makes use of  c*(g)=c(-g)  (g> see routine ggen)
-!     input : eigr, c
-!     output: becdr
-!
-      use ions_base, only: nas => nax, nsp, na, nat
-      use electrons_base, only: n => nbsp
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use constants, only: pi, fpi
-      use uspp, only :nhsa=>nkb, nhtol, beta
-      use cvan, only: ish
-      use uspp_param, only: nh
-      use reciprocal_vectors, only: gx
-      use cell_base, only: tpiba
-!
-      implicit none
-      real(kind=8)  eigr(2,ngw,nat),c(2,ngw,n), becdr(nhsa,n,3)
-      integer ig, is, iv, ia, k, l, ixr, ixi, inl, isa
-      real(kind=8) signre, signim, arg
-      real(kind=8), allocatable:: gk(:)
-      complex(kind=8), allocatable :: wrk2(:,:)
-!
-      call start_clock( 'nlsm2' )
-
-      allocate( gk( ngw ) )
-      allocate( wrk2( ngw, nas ) )
-
-      becdr = 0.d0
-!
-      do k=1,3
-         do ig=1,ngw
-            gk(ig)=gx(k,ig)*tpiba
-         end do
-!
-         isa = 0
-         do is=1,nsp
-            do iv=1,nh(is)
-!
-!     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-!
-               l=nhtol(iv,is)
-               if (l.eq.0) then
-                  ixr = 2
-                  ixi = 1
-                  signre =  1.0
-                  signim = -1.0
-               else if (l.eq.1) then
-                  ixr = 1
-                  ixi = 2
-                  signre = -1.0
-                  signim = -1.0
-               else if (l.eq.2) then
-                  ixr = 2
-                  ixi = 1
-                  signre = -1.0
-                  signim =  1.0
-               else if (l == 3) then
-                  ixr = 1
-                  ixi = 2
-                  signre =  1.0
-                  signim =  1.0
-               endif
-!     
-               do ia=1,na(is)
-                  if (gstart == 2) then
-!                             q = 0   component (with weight 1.0)
-                     wrk2(1,ia) = cmplx (                               &
-     &                  signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa),   &
-     &                  signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
-!                            q > 0   components (with weight 2.0)
-                  end if
-                  do ig=gstart,ngw
-                     arg = 2.0*gk(ig)*beta(ig,iv,is)
-                     wrk2(ig,ia) = cmplx (                              &
-    &                     signre*arg*eigr(ixr,ig,ia+isa),                &
-    &                     signim*arg*eigr(ixi,ig,ia+isa) )
-                  end do
-               end do
-               inl=ish(is)+(iv-1)*na(is)+1
-               call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1,       &
-     &                   nhsa,na(is),2*ngw,n)
-            end do
- 
-            isa = isa + na(is)
-
-         end do
-      end do
-
-      call reduce(3*nhsa*n,becdr)
-
-      deallocate( gk )
-      deallocate( wrk2 )
-
-      call stop_clock( 'nlsm2' )
-!
-      return
-      end subroutine nlsm2
 !-----------------------------------------------------------------------
       subroutine ortho                                                  &
      &      (eigr,cp,phi,x0,diff,iter,ccc,eps,max,delt,bephi,becp)
@@ -4427,28 +3983,20 @@
 !
 !
       call stop_clock( 'vofrho' )
+
       if((nfi.eq.0).or.tfirst.or.tlast) goto 999
       if(mod(nfi-1,iprint).ne.0 ) return
 !
- 999  WRITE( stdout,1) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
-    1 format(//'                total energy = ',f14.5,' a.u.'/         &
-     &         '              kinetic energy = ',f14.5,' a.u.'/         &
-     &         '        electrostatic energy = ',f14.5,' a.u.'/         &
-     &         '                         esr = ',f14.5,' a.u.'/         &
-     &         '                       eself = ',f14.5,' a.u.'/         &
-     &         '      pseudopotential energy = ',f14.5,' a.u.'/         &
-     &         '  n-l pseudopotential energy = ',f14.5,' a.u.'/         &
-     &         ' exchange-correlation energy = ',f14.5,' a.u.'/         &
-     &         '           average potential = ',f14.5,' a.u.'//)
-!
-      if(tpre)then
-         WRITE( stdout,*) "cell parameters h"
-         WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
-         WRITE( stdout,*)
-         WRITE( stdout,*) "derivative of e(tot)"
-         WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
-         WRITE( stdout,*)
-         if(tpre.and.iprsta.ge.2) then
+ 999  if(tpre)then
+         if(iprsta.ge.2) then
+            WRITE( stdout,*)
+            WRITE( stdout,*) "From vofrho:"
+            WRITE( stdout,*) "cell parameters h"
+            WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+            WRITE( stdout,*)
+            WRITE( stdout,*) "derivative of e(tot)"
+            WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*)
             WRITE( stdout,*) "derivative of e(kin)"
             WRITE( stdout,5555) ((dekin(i,j),j=1,3),i=1,3)
             WRITE( stdout,*) "derivative of e(electrostatic)"
@@ -4534,7 +4082,7 @@
             nr1sx, nr2sx, nr3sx, nnrsx
       use electrons_base, only: nspin, qbac
       use constants, only: pi, fpi
-      use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
+      use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc, vave 
       use local_pseudo, only: rhops, vps
       use core, only: nlcc_any
       use gvecb
@@ -4558,7 +4106,7 @@
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx), vave, ebac, wz, eh
+      real(kind=8) fion1(3,natx), ebac, wz, eh
       complex(kind=8)  fp, fm, ci
       complex(kind=8), allocatable :: v(:), vs(:)
       complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
@@ -4928,13 +4476,15 @@
      &         '           average potential = ',f14.5,' a.u.'//)
 !
       if(tpre)then
-         WRITE( stdout,*) "cell parameters h"
-         WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
-         WRITE( stdout,*)
-         WRITE( stdout,*) "derivative of e(tot)"
-         WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
-         WRITE( stdout,*)
          if(tpre.and.iprsta.ge.2) then
+            WRITE( stdout,*)
+            WRITE( stdout,*) "From vofrho:"
+            WRITE( stdout,*) "cell parameters h"
+            WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+            WRITE( stdout,*)
+            WRITE( stdout,*) "derivative of e(tot)"
+            WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*)
             WRITE( stdout,*) "derivative of e(kin)"
             WRITE( stdout,5555) ((dekin(i,j),j=1,3),i=1,3)
             WRITE( stdout,*) "derivative of e(electrostatic)"

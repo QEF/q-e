@@ -25,7 +25,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE ensemble_dft,         ONLY : tens, z0, c0diag, becdiag, bec0, v0s, &
                                    vhxcs, becdrdiag
   USE cell_base,            ONLY : omega, ibrav, h, press
-  USE uspp,                 ONLY : becsum, vkb
+  USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE grid_dimensions,      ONLY : nnrx
   USE electrons_base,       ONLY : nbsp, nspin, f
@@ -42,7 +42,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE efield_module,        ONLY : berry_energy
   USE runcp_module,         ONLY : runcp_uspp
   USE wave_constrains,      ONLY : interpolate_lambda
-  USE para_mod,             ONLY : 
+  USE gvecw,                ONLY : ngw
+  ! USE para_mod,             ONLY : 
   !
   IMPLICIT NONE
   !
@@ -194,7 +195,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
         IF ( tfor .OR. tprnfor ) THEN
            !
-           CALL nlsm2( eigr, c0(:,:,1,1), becdr )
+           CALL nlsm2( ngw, nkb, nbsp, eigr, c0(:,:,1,1), becdr, .true. )
            !
            CALL nlfl( bec, becdr, lambda, fion )
            !

@@ -40,74 +40,73 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, toptical, ht, kp, &
-                avgs, avgs_run, edft) 
+   SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, ht, avgs, avgs_run, edft) 
 
-      USE cell_module, only: s_to_r, boxdimensions, press
-      use constants, only: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
-      use energies, only: print_energies, dft_energy_type
-      use mp_global, only: mpime
+      USE control_flags,    ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
+                                  toptical, tconjgrad
+      use constants,        only: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
+      use energies,         only: print_energies, dft_energy_type
+      use mp_global,        only: mpime
       use electrons_module, only: ei, ei_emp, n_emp
-      use brillouin, only: kpoints
-      use time_step, ONLY: tps
-      USE electrons_nose, ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
-      USE ions_module, ONLY: displacement, cdm_displacement
-      USE polarization, ONLY: pdipole, pdipolt, p
-      USE optical_properties, ONLY:  WRITE_DIELEC
-      USE control_flags, ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta
-      USE atoms_type_module, ONLY: atoms_type
-      USE sic_module, ONLY: ind_localisation, pos_localisation, nat_localisation, self_interaction
-      USE sic_module, ONLY: rad_localisation
-      USE ions_base, ONLY: ions_temp, cdmi, taui
-      USE ions_nose, ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
-      USE cell_nose, ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
-      USE cell_base, ONLY: iforceh
-      USE printout_base, ONLY: printout_base_open, printout_base_close, &
-            printout_pos, printout_cell, printout_stress
-      USE environment, ONLY: start_cclock_val
+      use brillouin,        only: kpoints, kp
+      use time_step,        ONLY: tps
+      USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
+      USE polarization,     ONLY: pdipole, pdipolt, p
+      USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
+                                  self_interaction, rad_localisation
+      USE ions_module,      ONLY: displacement, cdm_displacement
+      USE ions_base,        ONLY: ions_temp, cdmi, taui
+      USE ions_nose,        ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
+                                  kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
+      USE cell_module,      only: s_to_r, boxdimensions, press
+      USE cell_nose,        ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
+      USE cell_base,        ONLY: iforceh
+      USE printout_base,    ONLY: printout_base_open, printout_base_close, &
+                                  printout_pos, printout_cell, printout_stress
+      USE environment,      ONLY: start_cclock_val
+      USE atoms_type_module,  ONLY: atoms_type
+      USE optical_properties, ONLY: write_dielec
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nfi
-      TYPE (atoms_type) :: atoms
-      REAL(dbl) ::   ekinc, ekcell
-      LOGICAL   ::   tprint, toptical, ttsic
+      TYPE (atoms_type)   :: atoms
+      REAL(dbl)           :: ekinc, ekcell
+      LOGICAL             :: tprint
       type (boxdimensions), intent(in) :: ht
-      type (kpoints), intent(in) :: kp
       REAL(dbl) :: avgs(:), avgs_run(:)
       TYPE (dft_energy_type) :: edft
 !
 ! ...
-      INTEGER is, ia, k, i, j, ik, isa, iunit, nfill, nempt
+      INTEGER   :: is, ia, k, i, j, ik, isa, iunit, nfill, nempt
       REAL(dbl) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
       REAL(dbl) :: tempp, econs, ettt, out_press, ekinpr, enosee
       REAL(dbl) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(dbl) :: dis(atoms%nsp), h(3,3)
-      LOGICAL :: tfile, topen
-      INTEGER, SAVE :: nfi_old = -999
-      LOGICAL, SAVE :: first = .true.
-      CHARACTER(LEN=4), ALLOCATABLE :: labelw( : )
+      LOGICAL   :: tfile, topen, ttsic
+      CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       REAL(dbl), ALLOCATABLE :: tauw( :, : )
+      INTEGER   :: old_nfi = -1
 
-! ...   Subroutine Body
+      ! ...   Subroutine Body
 
-      tfile = ( tprint .AND. ( nfi > 0 ) )
+      tfile = ( MOD( nfi, iprint ) == 0 )   !  print quantity to trajectory files
       ttsic = ( self_interaction /= 0 )
       
-! ...   Calculate Ions temperature tempp (in Kelvin )
+      ! ...   Calculate Ions temperature tempp (in Kelvin )
 
       CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
 
-! ...   Calculate MSD for each specie, starting from taui positions
+      ! ...   Calculate MSD for each specie, starting from taui positions
 
       CALL displacement(dis, atoms, taui, ht)
 
-! ...   Stress tensor (in GPa) and pressure (in GPa)
+      ! ...   Stress tensor (in GPa) and pressure (in GPa)
 
       stress_tensor = MATMUL( ht%pail(:,:), ht%a(:,:) ) * au_gpa / ht%deth
       out_press = ( stress_tensor(1,1) + stress_tensor(2,2) + stress_tensor(3,3) ) / 3.0d0
 
-! ...   Enthalpy (in Hartree)
+      ! ...   Enthalpy (in Hartree)
 
       enthal = edft%etot + press * ht%deth
 
@@ -136,18 +135,18 @@
       END IF
 
 
-! ...   Energy expectation value for physical ions hamiltonian
-! ...   in Born-Oppenheimer approximation
+      ! ...   Energy expectation value for physical ions hamiltonian
+      ! ...   in Born-Oppenheimer approximation
 
       econs  = atoms%ekint + ekcell + enthal
 
-! ...   Car-Parrinello constant of motion
+      ! ...   Car-Parrinello constant of motion
 
       ettt   = econs + ekinc + enosee + enosep + enoseh
 
       IF( nfi > 0 ) THEN
 
-! ...   sum up values to be averaged
+        ! ...   sum up values to be averaged
 
         avgs(1) = avgs(1) + ekinc
         avgs(2) = avgs(2)
@@ -159,7 +158,7 @@
         avgs(8) = avgs(8) + out_press  ! pressure in GPa
         avgs(9) = avgs(9) + ht%deth
 
-! ...   sum up values to be averaged
+        ! ...   sum up values to be averaged
 
         avgs_run(1) = avgs_run(1) + ekinc
         avgs_run(2) = avgs_run(2)
@@ -173,20 +172,19 @@
 
       END IF
 
-! ...   Check Memory
+      ! ...   Check Memory
 
       IF( iprsta > 1 ) CALL memstat(mpime)
 
-! ...   Print physical variables to fortran units
+      ! ...   Print physical variables to fortran units
 
       IF ( ionode ) THEN
 
-        IF ( tprint .OR. first .OR. ( nfi < 0 ) ) THEN
+        IF ( tprint ) THEN
 
           ! ...  Write total energy components to standard output
 
-          WRITE( stdout, 5 ) tps
-          CALL print_energies( ttsic, edft )
+          CALL print_energies( ttsic, iprsta, edft )
 
           IF( ttsic ) THEN
             WRITE ( stdout, *) '  Sic_correction: type ', self_interaction
@@ -195,10 +193,6 @@
               write( stdout, *) '    Atom ', ind_localisation(i), ' : ', pos_localisation(4,i)
             END DO
           END IF
-
-        END IF
-
-        IF ( tprint .OR. ( nfi < 0 ) ) THEN
 
           IF( tfile ) THEN
             ! ...  Open units 30, 31, ... 40 for simulation output 
@@ -248,20 +242,20 @@
             END DO
           END DO
           
-          WRITE( stdout,11) 
-          CALL printout_pos( stdout, nfi, tauw     , atoms%nat, tps, labelw )
-          IF( tfile ) CALL printout_pos( 35, nfi, tauw     , atoms%nat, tps )
+          WRITE( stdout,*) 
+          CALL printout_pos( stdout, tauw, atoms%nat, what = 'pos', label = labelw )
+          IF( tfile ) CALL printout_pos( 35, tauw, atoms%nat, nfi = nfi, tps = tps )
 
           DO ia = 1, atoms%nat
             CALL s_to_r( atoms%vels(:,ia), tauw(:,ia), ht )
           END DO
-          WRITE( stdout,12) 
-          CALL printout_pos( stdout, nfi, tauw     , atoms%nat, tps, labelw )
-          IF( tfile ) CALL printout_pos( 34, nfi, tauw     , atoms%nat, tps )
+          WRITE( stdout,*) 
+          CALL printout_pos( stdout, tauw, atoms%nat, what = 'vel', label = labelw )
+          IF( tfile ) CALL printout_pos( 34, tauw, atoms%nat, nfi = nfi, tps = tps )
 
-          WRITE( stdout,13) 
-          CALL printout_pos( stdout, nfi, atoms%for, atoms%nat, tps, labelw )
-          IF( tfile ) CALL printout_pos( 37, nfi, atoms%for, atoms%nat, tps )
+          WRITE( stdout,*) 
+          CALL printout_pos( stdout, atoms%for, atoms%nat, what = 'for', label = labelw )
+          IF( tfile ) CALL printout_pos( 37, atoms%for, atoms%nat, nfi = nfi, tps = tps )
 
           DEALLOCATE( labelw )
           DEALLOCATE( tauw )
@@ -273,14 +267,13 @@
           ! ...  Write Cell parameter to unit fort.36 and stdout
           ! ...  Write Stress tensor to unit fort.38 and stdout
 
-          WRITE( stdout, 10 )
-          CALL printout_cell( stdout, nfi, ht%a, tps )
-          WRITE( stdout, 17 )
-          CALL printout_stress( stdout, nfi, stress_tensor, tps )
-          IF( tfile ) THEN
-            CALL printout_cell( 36, nfi, ht%a, tps )
-            CALL printout_stress( 38, nfi, stress_tensor, tps )
-          END IF
+          WRITE( stdout, * )
+          CALL printout_cell( stdout, ht%a )
+          IF( tfile ) CALL printout_cell( 36, ht%a, nfi, tps )
+          !
+          WRITE( stdout, * )
+          CALL printout_stress( stdout, stress_tensor )
+          IF( tfile ) CALL printout_stress( 38, stress_tensor, nfi, tps )
 
 
           ! ...  System density:
@@ -348,7 +341,7 @@
 
           ! ...  Print energies on standard output EVERY MD STEP!  
 
-          IF( tprint .or. first ) WRITE( stdout, 1947 )
+          IF( tprint .OR. tconjgrad ) WRITE( stdout, 1947 )
           WRITE( stdout, 1948) nfi, ekinc, temphc, tempp, edft%etot, enthal, econs, ettt
 
         END IF
@@ -392,8 +385,7 @@
 
       END IF
 
-      IF( nfi >= 0 ) nfi_old = nfi
-      first   = .FALSE.
+    old_nfi = nfi
 
     RETURN
   END SUBROUTINE printout

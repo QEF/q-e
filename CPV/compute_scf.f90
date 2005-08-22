@@ -118,9 +118,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )       
      !
+     CALL init_run()
+     !
      IF ( program_name == 'CP90' ) THEN
-        !
-        CALL init_run()
         !
         CALL cprmain( tau, fion, etot )
         !

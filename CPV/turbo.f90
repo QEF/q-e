@@ -46,14 +46,16 @@
             WRITE( stdout,fmt='(/,3X,"TURBO: allocating ",I10," bytes ")') &
               16*nr1*nr2*nr3*nturbo
           END IF
-          ALLOCATE( turbo_states( nr1, nr2, nr3, nturbo ), STAT = ierr)
-          CALL mp_sum(ierr)
-          IF( ierr /= 0 ) THEN 
-            IF( ionode ) THEN
-              WRITE( stdout,fmt='(3X,"TURBO: insufficient memory, turbo is switched off ")')
+          IF( .NOT. ALLOCATED( turbo_states ) ) THEN
+            ALLOCATE( turbo_states( nr1, nr2, nr3, nturbo ), STAT = ierr)
+            CALL mp_sum(ierr)
+            IF( ierr /= 0 ) THEN 
+              IF( ionode ) THEN
+                WRITE( stdout,fmt='(3X,"TURBO: insufficient memory, turbo is switched off ")')
+              END IF
+              tturbo = .FALSE.
+              nturbo = 0
             END IF
-            tturbo = .FALSE.
-            nturbo = 0
           END IF
           RETURN
         END SUBROUTINE allocate_turbo 

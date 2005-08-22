@@ -39,6 +39,7 @@
           REAL(dbl)  :: ATOT     ! Ensamble DFT
           REAL(dbl)  :: ENTROPY  ! Ensamble DFT
           REAL(dbl)  :: EGRAND   ! Ensamble DFT
+          REAL(dbl)  :: VAVE   ! Ensamble DFT
         END TYPE
 
         REAL(dbl)  :: EHTE = 0.0_dbl
@@ -63,6 +64,7 @@
         REAL(dbl)  :: ATOT = 0.0_dbl
         REAL(dbl)  :: ENTROPY = 0.0_dbl
         REAL(dbl)  :: EGRAND = 0.0_dbl
+        REAL(dbl)  :: VAVE = 0.0_dbl    ! average potential
         
         REAL(KIND=dbl) :: enthal, ekincm
 
@@ -71,7 +73,7 @@
 
         PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm
 
-        PUBLIC :: atot, entropy, egrand, enthal
+        PUBLIC :: atot, entropy, egrand, enthal, vave
 
       CONTAINS
 
@@ -146,9 +148,10 @@
 
 ! ---------------------------------------------------------------------------- !
 
-        SUBROUTINE print_energies( tsic, edft )
+        SUBROUTINE print_energies( tsic, iprsta, edft )
           LOGICAL, INTENT(IN) :: tsic
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
+          INTEGER, OPTIONAL, INTENT(IN) :: iprsta
           REAL ( dbl ) :: EHT
 
           IF( PRESENT ( edft ) ) THEN
@@ -162,12 +165,16 @@
               WRITE( stdout,  9 ) edft%epseu
               WRITE( stdout, 10 ) edft%enl
               WRITE( stdout, 11 ) edft%exc
-              WRITE( stdout,  * )
-              WRITE( stdout,  6 ) edft%eh
-              WRITE( stdout,  7 ) edft%ehte
-              WRITE( stdout,  8 ) edft%ehti
-              WRITE( stdout, 12 ) edft%evdw
-              WRITE( stdout, 13 ) edft%emkin
+              IF( PRESENT( iprsta ) ) THEN
+                 IF( iprsta > 1 ) THEN
+                    WRITE( stdout,  * )
+                    WRITE( stdout,  6 ) edft%eh
+                    WRITE( stdout,  7 ) edft%ehte
+                    WRITE( stdout,  8 ) edft%ehti
+                    WRITE( stdout, 12 ) edft%evdw
+                    WRITE( stdout, 13 ) edft%emkin
+                 END IF
+              END IF
               IF( tsic ) THEN
                 WRITE( stdout, fmt = "('Sic contributes:')" )
                 WRITE( stdout, fmt = "('----------------')" )
@@ -178,14 +185,9 @@
               END IF
             ! ETOT  = EKIN + EHT + EPSEU + ENL + EXC + EVDW - ENT
           ELSE
-              WRITE( stdout,  1 ) edft%etot
-              WRITE( stdout,  2 ) edft%ekin
-              WRITE( stdout,  3 ) edft%eht
-              WRITE( stdout,  4 ) edft%eself
-              WRITE( stdout,  5 ) edft%esr
-              WRITE( stdout,  9 ) edft%epseu
-              WRITE( stdout, 10 ) edft%enl
-              WRITE( stdout, 11 ) edft%exc
+             !
+ 999         WRITE( stdout,100) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
+             !
           END IF
 1         FORMAT(    6X,'                TOTAL ENERGY = ',F18.10,' A.U.')
 2         FORMAT(    6X,'              KINETIC ENERGY = ',F18.10,' A.U.')
@@ -204,6 +206,17 @@
 15        FORMAT(    6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' A.U.')
 16        FORMAT(    6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
 17        FORMAT(    6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
+
+  100 format(//'                total energy = ',f14.5,' a.u.'/         &
+     &         '              kinetic energy = ',f14.5,' a.u.'/         &
+     &         '        electrostatic energy = ',f14.5,' a.u.'/         &
+     &         '                         esr = ',f14.5,' a.u.'/         &
+     &         '                       eself = ',f14.5,' a.u.'/         &
+     &         '      pseudopotential energy = ',f14.5,' a.u.'/         &
+     &         '  n-l pseudopotential energy = ',f14.5,' a.u.'/         &
+     &         ' exchange-correlation energy = ',f14.5,' a.u.'/         &
+     &         '           average potential = ',f14.5,' a.u.'//)
+
           RETURN
         END SUBROUTINE print_energies
 

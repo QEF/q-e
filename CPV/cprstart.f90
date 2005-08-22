@@ -127,7 +127,7 @@ PROGRAM main
   !
   IF ( lneb ) THEN
      !
-     CALL neb_loop( 1, program_name )
+     CALL neb_loop( )
      !
   ELSE IF ( lsmd ) THEN
      !

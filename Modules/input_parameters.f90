@@ -192,6 +192,11 @@ MODULE input_parameters
         CHARACTER(LEN=256) :: pseudo_dir = './'
           ! specify the directory containing the pseudopotentials
 
+        INTEGER :: pseudo_table_size = 5000
+          ! size of the interpolation table to be used in CP/FPMD for 
+          ! pseudopotentials in reciprocal space. 
+          ! If it is set to 0 table are disabled.
+
         CHARACTER(LEN=256) :: scradir = './'
           ! specify the scratch directory to store large, usually temporary, 
           ! files. When possible put this directory in the fastest available
@@ -263,7 +268,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycic
+          wf_collect, printwfc, scradir,lelfield, nberrycic, pseudo_table_size
 
 
 !
@@ -1427,12 +1432,6 @@ MODULE input_parameters
 !
        LOGICAL :: tneighbo = .FALSE.
        REAL(dbl) :: neighbo_radius = 0.0d0
-
-!
-!    PSTAB
-!
-       LOGICAL :: tpstab_inp = .FALSE.
-       INTEGER :: pstab_size_inp = 10000
 
 !
 !    CELL_PARAMETERS

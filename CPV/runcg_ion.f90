@@ -30,8 +30,8 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, desc, atomsp, atoms0, atomsm, &
-      kp, ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-      fnl, vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
+      bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+      vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
 !  this routine computes the equilibrium ionic positions via conjugate gradient
 !  END manual
@@ -47,10 +47,7 @@
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE cell_module, ONLY: boxdimensions, s_to_r, r_to_s
-      USE brillouin, ONLY: kpoints
-      USE cp_types, ONLY: pseudo
       USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
       USE print_out_module
@@ -69,18 +66,17 @@
       TYPE (atoms_type) :: atomsm
       COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      TYPE (pseudo), INTENT(INOUT) :: ps
       TYPE (charge_descriptor) :: desc
       REAL(dbl) :: rhoe(:,:,:,:)
+      REAL(dbl) :: bec(:,:)
+      REAL(dbl) :: becdr(:,:,:)
       COMPLEX(dbl) :: eigr(:,:)
       COMPLEX(dbl) :: ei1(:,:)
       COMPLEX(dbl) :: ei2(:,:)
       COMPLEX(dbl) :: ei3(:,:)
       COMPLEX(dbl) :: sfac(:,:)
-      TYPE (kpoints), INTENT(IN) ::  kp
       TYPE (boxdimensions), INTENT(INOUT) ::  ht
       REAL(dbl)  :: occ(:,:,:)
-      TYPE (projector) :: fnl(:,:)
       TYPE (dft_energy_type) :: edft
 
       REAL(dbl)    :: ei(:,:,:)
@@ -160,9 +156,9 @@
       s1 = cclock()
       old_clock_value = s1
 
-      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, kp, &
-         ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-         fnl, vpot, doions, edft, maxnstep, sdthr )
+      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, &
+         bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+         vpot, doions, edft, maxnstep, sdthr )
 
       IF( ionode .AND. cg_prn ) THEN
         DO j = 1, atoms0%nat
@@ -189,7 +185,7 @@
           WRITE( stdout,fmt="(/,8X,'cgion: iter',I5,' line minimization along gradient starting')") iter
 
         CALL CGLINMIN(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, desc, xi, atomsp, atoms0, &
-          ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp, maxnstep, sdthr, displ)
+          ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, maxnstep, sdthr, displ)
 
         IF( tbad ) THEN
 !          displ = displ * 2.0d0
@@ -203,9 +199,9 @@
           IF( ionode ) WRITE( stdout, fmt='(8X,"cgion: bad step")')  ! perform steepest descent
           displ = displ / 2.0d0
 
-          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, kp, &
-            ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-            fnl, vpot, doions, edft, maxnstep, sdthr )
+          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, &
+            bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+            vpot, doions, edft, maxnstep, sdthr )
         
 !          tbad = .TRUE.
 
@@ -234,8 +230,7 @@
 113       FORMAT(8X,'cgion:',I5,2X,F14.6,2X,2D12.4)
         END IF
 
-        CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., &
-          .false., ht, kp, avgs, avgs_this_run, edft)
+        CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, avgs, avgs_this_run, edft)
 
         fp  = fret
         xi(1:3,1:nat) = - atoms0%for(1:3,1:nat) 
@@ -279,8 +274,7 @@
         WRITE( stdout,fmt="(8X,'cgion:  maximum number of iteration exceeded',/)")
       END IF
 
-      CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., &
-        .false., ht, kp, avgs, avgs_this_run, edft)
+      CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, avgs, avgs_this_run, edft)
 
       DEALLOCATE( hacca, gnew, xi, STAT=ierr )
       IF( ierr/=0 ) CALL errore(' runcg_ion ', ' deallocating hacca ',ierr)
@@ -295,15 +289,12 @@
 ! ---------------------------------------------------------------------- !
 
       SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
-        rhoe, desc, hacca, atomsp, atoms0, ht, fnl, ps, eigr, ei1, ei2, ei3, sfac, kp, &
+        rhoe, desc, hacca, atomsp, atoms0, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, &
         maxnstep, sdthr, displ)
 
 ! ... declare modules
 
-        USE cp_types, ONLY: pseudo
         USE wave_types, ONLY: wave_descriptor
-        USE brillouin, ONLY: kpoints
-        USE pseudo_projector, ONLY: projector
         USE energies, ONLY: dft_energy_type
         USE wave_functions, ONLY: gram, update_wave_functions
         USE io_global, ONLY: ionode
@@ -324,21 +315,20 @@
         COMPLEX(dbl), INTENT(INOUT) :: cp(:,:,:,:)
         COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:)
         TYPE (wave_descriptor) :: cdesc
-        TYPE (pseudo), INTENT(INOUT) :: ps
         TYPE (charge_descriptor) :: desc
         REAL(dbl) :: rhoe(:,:,:,:)
         COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
+        COMPLEX(dbl) :: ei1(:,:)
+        COMPLEX(dbl) :: ei2(:,:)
+        COMPLEX(dbl) :: ei3(:,:)
         COMPLEX(dbl) :: sfac(:,:)
-        TYPE (kpoints), INTENT(IN) ::  kp
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
         REAL(dbl)  :: occ(:,:,:)
-        TYPE (projector) :: fnl(:,:)
         TYPE (dft_energy_type) :: edft
         REAL (dbl) ::  hacca(:,:)
         REAL (dbl), INTENT(in) ::  vpot(:,:,:,:)
+        REAL(dbl) :: bec(:,:)
+        REAL(dbl) :: becdr(:,:,:)
 
         REAL(dbl)    :: ei(:,:,:)
 
@@ -556,9 +546,9 @@
          ! ...  Calculate Forces (fion) and DFT Total Energy (edft) for the new ionic
          ! ...  positions (atomsp)
 
-           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, kp, &
-             ps, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-             fnl, vpot, doions, edft, maxnstep, sdthr )
+           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, &
+             bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+             vpot, doions, edft, maxnstep, sdthr )
 
            cgenergy = edft%etot
 

@@ -13,7 +13,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   USE kinds,                    ONLY : dbl
   USE constants,                ONLY : bohr_radius_angs, uma_au
-  USE control_flags,            ONLY : nfi, iprint, isave, thdyn, tpre, tbuff, &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow, &
                                        taurdr, tprnfor, tsdc, lconstrain, lneb
   USE control_flags,            ONLY : ndr, ndw, nbeg, nomore, tsde, tortho, &
@@ -26,7 +26,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE uspp,                     ONLY : nkb, vkb, becsum, deeq
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
-                                       ekincm
+                                       ekincm, print_energies
   USE electrons_base,           ONLY : nbspx, nbsp, ispin => fspin, f, nspin
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
@@ -97,7 +97,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE printout_base,            ONLY : printout_base_open, &
                                        printout_base_close, &
                                        printout_pos, printout_cell, &
-                                       printout_stress, print_pos_in
+                                       printout_stress
   USE cell_nose,                ONLY : xnhh0, xnhhm, xnhhp, vnhh, temph, &
                                        qnh, cell_nosevel, cell_noseupd,  &
                                        cell_nose_nrg, cell_nose_shiftvar
@@ -112,7 +112,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp
+                                       rhor, bephi, becp, nfi
   !
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
@@ -160,6 +160,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   REAL(KIND=dbl), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
+  CHARACTER(LEN=3) :: labelw( natx )
   !
   !
   dt2bye   = dt2 / emass
@@ -184,7 +185,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ttprint = ( MOD( nfi, iprint ) == 0 )
      !
      IF( ionode .AND. ttprint ) &
-       WRITE( stdout, fmt = '( /, " * Step ",  I6 )' ) nfi
+       WRITE( stdout, fmt = '( /, " * Physical Quantities at step:",  I6 )' ) nfi
      !
      ! ... calculation of velocity of nose-hoover variables
      !
@@ -370,7 +371,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
-        IF ( tpre ) CALL caldbec( 1, nsp, eigr, cm )
+        IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
         !
         IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm )
         !
@@ -454,7 +455,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     IF( ( MOD(nfi-1,iprint) == 0 ) .OR. ( nfi == nomore ) ) THEN
+     IF( ( MOD(nfi,iprint) == 0 ) .OR. ( nfi == nomore ) ) THEN
         !
         CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
                       rhog, rhos, lambdap, lambda, tau0, h )
@@ -469,7 +470,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( tens ) THEN
         !
-        IF ( MOD( nfi-1, iprint ) == 0 .OR. ( nfi == nomore ) ) THEN
+        IF ( MOD( nfi, iprint ) == 0 .OR. ( nfi == nomore ) ) THEN
            !
            WRITE( stdout, '("Occupations  :")' )
            WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbsp )
@@ -518,62 +519,36 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( tnoseh ) econt = econt + &
                            cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
      !
-     IF( ( MOD( nfi-1, iprint ) == 0 ) .OR. tfirst )  THEN
-        !
-        WRITE( stdout, * )
-        WRITE( stdout, 1947 )
-        !
-     END IF
-     !
-     tps = tps + delt * au_ps
-     !
-     WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
-                           econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
-     !
-     IF( tcg ) THEN
-        !
-        IF ( MOD( nfi-1, iprint ) == 0 .OR. tfirst ) THEN
-           !
-           WRITE( stdout, * )
-           WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p'
-           !
-        END IF
-        !
-        WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
-        !
-     END IF
-     !
-1947 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
-           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
-1948 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
-     !
      IF ( ionode .AND. ttprint ) THEN
         !
         ! ... Open units 30, 31, ... 40 for simulation output
         !
         CALL printout_base_open()
         !
-        WRITE( stdout, 10 )
+        CALL print_energies( .false. )
         !
-        CALL printout_cell( stdout, nfi, hold, tps )
-        CALL printout_cell( 36, nfi, hold, tps )
+        WRITE( stdout, * )
         !
-        WRITE( stdout, 17 )
+        CALL printout_cell( stdout, hold )
+        CALL printout_cell( 36, hold, nfi, tps )
+        !
+        WRITE( stdout, * )
         !
         stress_gpa = stress * au_gpa
         !
-        CALL printout_stress( stdout, nfi, stress_gpa, tps )
-        CALL printout_stress( 38, nfi, stress_gpa, tps )
+        CALL printout_stress( stdout, stress_gpa )
+        CALL printout_stress( 38, stress_gpa, nfi, tps )
         !
-        WRITE( stdout,11)
-        !
-!        CALL printout_pos( stdout, nfi, tau0, nat, tps )
-        CALL printout_pos( 35    , nfi, tau0, nat, tps )
+        WRITE( stdout, * )
         !
         ! ... write out a standard XYZ file in angstroms
         !
-        CALL print_pos_in( stdout, nfi, tau0 , nat, tps, ityp, atm,ind_bck, 1.D0)
-!        CALL print_pos_in( 35    , nfi, tau0 , nat, tps, ityp, atm,ind_bck,bohr_radius_angs)
+        DO ia = 1, nat
+           labelw( ia ) = atm( ityp( ia ) )
+        END DO
+        !
+        CALL printout_pos( stdout, tau0, nat, what = 'pos', label = labelw, sort = ind_bck )
+        CALL printout_pos( 35    , tau0, nat, nfi = nfi, tps = tps )
 
         !
         ALLOCATE( tauw( 3, natx ) )
@@ -592,19 +567,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
         END DO
         !
-        WRITE( stdout, 12 )
+        WRITE( stdout, * )
         !
-!        CALL printout_pos( stdout, nfi, tauw, nat, tps )
-        CALL printout_pos( 34    , nfi, tauw, nat, tps )
-        CALL print_pos_in( stdout, nfi, tauw , nat, tps, ityp, atm,ind_bck,1.D0)
-!        CALL print_pos_in( 34    , nfi, tauw , nat, tps, ityp, atm,ind_bck,1.D0)
+        CALL printout_pos( stdout, tauw, nat, what = 'vel', label = labelw, sort = ind_bck )
+        CALL printout_pos( 34    , tauw, nat, nfi = nfi, tps = tps )
         !
-        WRITE( stdout, 13 )
+        WRITE( stdout, * )
         !
-!        CALL printout_pos( stdout, nfi, fion, nat, tps )
-        CALL printout_pos( 37    , nfi, fion, nat, tps )
-        CALL print_pos_in( stdout, nfi, fion , nat, tps, ityp, atm,ind_bck,1.D0)
-!        CALL print_pos_in( 37    , nfi, fion , nat, tps, ityp, atm,ind_bck,1.D0)
+        CALL printout_pos( stdout, fion, nat, what = 'for', label = labelw, sort = ind_bck )
+        CALL printout_pos( 37    , fion, nat, nfi = nfi, tps = tps )
         !
         DEALLOCATE( tauw )
         !
@@ -626,6 +597,36 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
 256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
 2948 FORMAT( F8.5,1X,F8.5,1X,F6.1,1X,F6.1,3(1X,F11.5) )
 2949 FORMAT( F8.5,1X,4(1X,F7.4) )
+     !
+     IF( ( MOD( nfi, iprint ) == 0 ) .OR. tfirst )  THEN
+        !
+        WRITE( stdout, * )
+        WRITE( stdout, 1947 )
+        !
+     END IF
+     !
+     WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
+                           econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+     !
+     IF( tcg ) THEN
+        !
+        IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
+           !
+           WRITE( stdout, * )
+           WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p'
+           !
+        END IF
+        !
+        WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
+        !
+     END IF
+     !
+1947 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
+           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
+1948 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
+     !
+     !
+     tps = tps + delt * au_ps
      !
      IF( tfor ) THEN
         !

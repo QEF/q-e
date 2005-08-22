@@ -48,7 +48,7 @@
         END INTERFACE
 
         PUBLIC :: electrons_setup, eigs, cp_eigs
-        PUBLIC :: electron_mass_init, band_init, bmeshset
+        PUBLIC :: pmss_init, occn_init, bmeshset, occn_info
         PUBLIC :: deallocate_electrons, fermi_energy
         PUBLIC :: pmss, n_emp, emass, ei_emp, n_emp_l, ib_owner, ib_local, nb_l
         PUBLIC :: ei, nspin, nelt, nupdwn
@@ -62,33 +62,26 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE electron_mass_init( alat, hg, ngw )
-
+   SUBROUTINE pmss_init( ema0bg, ngw )
+     !
      !  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS 
-
-     USE constants, ONLY: pi
-
-     REAL(dbl), INTENT(IN) :: alat
-     REAL(dbl), INTENT(IN) :: hg(:)
+     !
+     REAL(dbl), INTENT(IN) :: ema0bg(:)
      INTEGER,   INTENT(IN) :: ngw
-     REAL(dbl) :: tpiba2
      INTEGER :: ierr
-
+     !
      ALLOCATE( pmss( ngw ), STAT=ierr)
-     IF( ierr/=0 ) CALL errore( ' electron_mass_init ',' allocating pmss ', ierr)
-
-     tpiba2 = ( 2.d0 * pi / alat ) ** 2
-
-     CALL emass_precond( pmss, hg, ngw, tpiba2, ecutmass )
-     pmss = emass / pmss
-          
+     IF( ierr/=0 ) CALL errore( ' pmss_init ',' allocating pmss ', ierr)
+     !
+     pmss = emass / ema0bg
+     !     
      RETURN 
-   END SUBROUTINE electron_mass_init
+   END SUBROUTINE pmss_init
 
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-   SUBROUTINE band_init( occ )
+   SUBROUTINE occn_init( occ )
 
      !   This subroutine fill in the input array with the 
      !   occupations values read from input
@@ -99,13 +92,13 @@
      INTEGER   :: ik, i, nk, ispin
 
      IF( SIZE( occ, 1 ) < nbnd ) &
-       CALL errore(' band_init ',' wrong dimension ', 1)
+       CALL errore(' occn_init ',' wrong dimension ', 1)
      IF( SIZE( occ, 3 ) < nspin ) &
-       CALL errore(' band_init ',' wrong dimension ', 2)
+       CALL errore(' occn_init ',' wrong dimension ', 2)
 
      nk  = SIZE( occ, 2 )
      occ = 0.0d0
-          
+     !     
      IF( nspin == 1 ) THEN
        DO ik = 1, nk
          occ( 1:nbnd, ik, 1 ) = f( 1:nbnd )
@@ -119,9 +112,22 @@
        END DO
      ELSE
        WRITE( stdout, * ) ' nspin = ', nspin
-       CALL errore(' band_init ',' nspin not implemented ', 3)
+       CALL errore(' occn_init ',' nspin not implemented ', 3)
      END IF
+     !
+     RETURN
+   END SUBROUTINE occn_init
 
+
+   SUBROUTINE occn_info( occ )
+     !
+     !   This subroutine prints occupation numbers to stdout
+     !
+     USE io_global, ONLY: stdout, ionode
+     !
+     REAL(dbl) :: occ(:,:,:)
+     INTEGER   :: ik, i, nk, ispin
+     !
      IF( ionode ) THEN
        WRITE( stdout, fmt="(3X,'Occupation number from init')" )
        IF( nspin == 1 ) THEN
@@ -134,9 +140,9 @@
          END DO
        END IF
      END IF
-
+     !
      RETURN
-   END SUBROUTINE band_init
+   END SUBROUTINE occn_info
 
 !  ----------------------------------------------
 !  ----------------------------------------------
@@ -517,7 +523,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE fermi_energy(kp, eig, occ, wke, ef, qtot, temp, sume)
+      SUBROUTINE fermi_energy(eig, occ, wke, ef, qtot, temp, sume)
 
 !  this routine computes Fermi energy and weights of occupied states
 !  using an improved Gaussian-smearing method
@@ -529,14 +535,13 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE brillouin, ONLY: kpoints
+      USE brillouin, ONLY: kpoints, kp
       USE io_global, ONLY: stdout
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       REAL(dbl) :: occ(:,:,:)
-      TYPE (kpoints) :: kp
       REAL(dbl) ef, qtot, temp, sume
       REAL(dbl) eig(:,:,:), wke(:,:,:)
       REAL(dbl), PARAMETER  :: tol = 1.d-10

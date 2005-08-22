@@ -76,6 +76,9 @@
         IF( ALLOCATED( xk ) )     DEALLOCATE( xk )
         IF( ALLOCATED( weight ) ) DEALLOCATE( weight )
 
+        IF( TRIM( k_points ) /= 'gamma' ) &
+          CALL errore( ' kpoint_setup ', ' only gamma is allowed for CP MD, use PW instead ', 1 )
+
 ! ... Kpoint type
         SELECT CASE ( TRIM(k_points) )
           CASE ( 'gamma', 'default' )

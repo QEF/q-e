@@ -25,7 +25,7 @@
 !  routines in this module:
 !  SUBROUTINE gmeshset(ngw,ng)
 !  INTEGER FUNCTION owner_of_gvec(ig)
-!  SUBROUTINE newg(gv,kp,htm1)
+!  SUBROUTINE newg(gv,htm1)
 !  ----------------------------------------------
 !  END manual
 
@@ -54,7 +54,7 @@
 
         PRIVATE
 
-        PUBLIC :: recvecs_units, newgk, gmeshinfo, gindex_closeup
+        PUBLIC :: recvecs_units, newgk, gindex_closeup
         PUBLIC :: gkmask_l, gkcutz_l, gkx_l, gk_l
 
 ! ...   end of module-scope declarations
@@ -79,67 +79,6 @@
 !  ----------------------------------------------
 
 
-
-   SUBROUTINE gmeshinfo( )
-          
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-! ...     declare modules
-          USE mp_global, ONLY: nproc, mpime, group
-          USE io_global, ONLY: ionode, ionode_id, stdout
-          USE mp, ONLY: mp_max, mp_gather
-          USE brillouin, ONLY: kp
-          USE reciprocal_vectors, only: &
-              ngw_g  => ngwt,   &
-              ngw_l  => ngw ,   &
-              ngw_lx => ngwx,   &
-              ng_g   => ngmt,   &
-              ng_l   => ngm ,   &
-              ng_lx  => ngmx,   &
-              ig_l2g, &
-              mill_l
-
-          IMPLICIT NONE
-
-          INTEGER :: ip, ng_snd(6), ng_rcv(6,nproc)
-
-! ... end of declarations
-!  ----------------------------------------------
-
-! ...     diagnostics
-          ng_snd(1) = ng_g
-          ng_snd(2) = ng_l
-          ng_snd(3) = ng_lx
-          ng_snd(4) = ngw_g
-          ng_snd(5) = ngw_l
-          ng_snd(6) = ngw_lx
-          CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
-          IF(ionode) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,*) '  Reciprocal Space Mesh'
-            WRITE( stdout,*) '  ---------------------'
-            WRITE( stdout,1000)
-            DO ip = 1, nproc
-              WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip), &
-                ng_rcv(4,ip), ng_rcv(5,ip), ng_rcv(6,ip)
-            END DO
-          END IF
-
-1000      FORMAT(16X,'Large Mesh Number of G',15X,'Small Mesh Number of G' &
-          ,/,'   PE       Global       Local   Max Local' &
-                 ,'       Global       Local   Max Local' )
- 
-1010      FORMAT( I5,1X,3I12,1X,3I12 )
-
-          RETURN 
-
-   END SUBROUTINE gmeshinfo
-
-        
-!  ----------------------------------------------
-
-
    INTEGER FUNCTION owner_of_gvec(mill)
 
      USE stick_base, ONLY: stown => sticks_owner
@@ -157,7 +96,7 @@
 !  ----------------------------------------------
 
 
-      SUBROUTINE newgk( kp, htm1 )
+      SUBROUTINE newgk( )
 
 !  this routine computes the squared modulus, and Ciartesian components 
 !  of G vectors, from their Miller indices and current cell shape. 
@@ -171,13 +110,11 @@
       USE gvecp,              ONLY: ngm
       USE reciprocal_vectors, only: g, gx
       USE cell_base,          ONLY: tpiba2
-      USE brillouin,          ONLY: kpoints
+      USE brillouin,          ONLY: kpoints, kp
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      TYPE (kpoints), INTENT(IN)  :: kp
-      REAL(dbl), INTENT(IN) :: htm1(3,3)
       REAL(dbl) :: xk(3, SIZE(kp%xk, 2) )
 
 ! ... declare external function
@@ -209,10 +146,8 @@
 
       IF( kp%scheme == 'gamma' ) THEN
 
-        DO ik = 1, kp%nkpt
-          gk_l( 1:ngw ,ik)       = g( 1:ngw )
-          gkx_l( 1:3, 1:ngw, ik) = gx( 1:3, 1:ngw )
-        END DO
+        gk_l( 1:ngw , 1)       = g( 1:ngw )
+        gkx_l( 1:3, 1:ngw, 1)  = gx( 1:3, 1:ngw )
 
       ELSE
 
