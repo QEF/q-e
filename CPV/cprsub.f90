@@ -561,7 +561,7 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   real(dbl), intent(OUT) :: dylm (ngy, nylm, 3, 3)
   !
   integer :: ipol, jpol, lm
-  real(dbl), allocatable :: dylmaux (:,:,:), s
+  real(dbl), allocatable :: dylmaux (:,:,:)
   !
   allocate ( dylmaux(ngy,nylm,3) )
   !
