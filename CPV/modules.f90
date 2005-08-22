@@ -31,7 +31,6 @@ module core
 contains
   subroutine allocate_core( nnrx, ngs, ngb, nsp )
      integer, intent(in) :: nnrx, ngs, ngb, nsp
-     character(len=4), intent(in) :: program_name
      IF ( nlcc_any ) THEN
         !
         ALLOCATE( rhoc( nnrx ) )
