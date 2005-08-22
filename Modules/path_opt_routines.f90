@@ -86,15 +86,9 @@ MODULE path_opt_routines
        !
        IF ( frozen(index) ) RETURN
        !
-       IF ( ldamped_dyn ) THEN
-          !
-          vel(:,index) = damp * ( vel(:,index) - 0.5D0 * ds * grad(:,index) )
-          !
-       ELSE IF ( lmol_dyn ) THEN
-          !       
-          vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
-          !
-       END IF
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
+       !
+       IF ( ldamped_dyn ) vel(:,index) = damp * vel(:,index)
        !
        RETURN
        !

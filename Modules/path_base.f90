@@ -1177,10 +1177,6 @@ MODULE path_base
          !
          activation_energy = ( pes(Emax_index) - pes(1) ) * au
          !
-         ! ... the error is computed here
-         !
-         CALL compute_error( err_max )
-         !
          IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
             !
             ! ... a second minimisation step is needed for those algorithms
@@ -1189,6 +1185,12 @@ MODULE path_base
             CALL second_opt_step()
             !
          END IF
+         !
+         ! ... the error is computed here (it must be computed after the
+         ! ... second step of the velocity Verlet because, afetr the error
+         ! ... is computed, some images could be frozen)
+         !
+         CALL compute_error( err_max )
          !
          ! ... information is written on the files
          !
