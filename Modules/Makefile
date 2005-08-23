@@ -25,6 +25,7 @@ io_base.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
+ions_nose.o \
 kind.o \
 coarsegrained_vars.o \
 mp.o \
