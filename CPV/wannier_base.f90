@@ -24,7 +24,6 @@ MODULE wannier_base
   REAL(KIND=dbl)       :: wfdt
   REAL(KIND=dbl)       :: maxwfdt
   REAL(KIND=dbl)       :: wf_q
-  REAL(KIND=dbl)       :: wf_dt
   REAL(KIND=dbl)       :: wf_friction
   INTEGER              :: nit
   INTEGER              :: nsd
@@ -54,9 +53,9 @@ MODULE wannier_base
     !------------------------------------------------------------------------
     SUBROUTINE wannier_init( wf_efield_, wf_switch_, sw_len_, efx0_, efy0_, &
                              efz0_, efx1_, efy1_, efz1_, wfsd_, wfdt_,      &
-                             maxwfdt_, wf_q_, wf_dt_, wf_friction_, nit_,   &
-                             nsd_, nsteps_, tolw_, adapt_, calwf_, nwf_,    &
-                             wffort_, writev_, iplot_, restart_mode_ )
+                             maxwfdt_, wf_q_, wf_friction_, nit_, nsd_,     &
+                             nsteps_, tolw_, adapt_, calwf_, nwf_, wffort_, &
+                             writev_, iplot_, restart_mode_ )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -70,7 +69,6 @@ MODULE wannier_base
       REAL(KIND=dbl),   INTENT(IN) :: wfdt_
       REAL(KIND=dbl),   INTENT(IN) :: maxwfdt_
       REAL(KIND=dbl),   INTENT(IN) :: wf_q_
-      REAL(KIND=dbl),   INTENT(IN) :: wf_dt_
       REAL(KIND=dbl),   INTENT(IN) :: wf_friction_
       INTEGER,          INTENT(IN) :: nit_
       INTEGER,          INTENT(IN) :: nsd_
@@ -98,7 +96,6 @@ MODULE wannier_base
       wfdt        = wfdt_
       maxwfdt     = maxwfdt_
       wf_q        = wf_q_
-      wf_dt       = wf_dt_
       wf_friction = wf_friction_
       nit         = nit_
       nsd         = nsd_

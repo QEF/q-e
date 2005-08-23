@@ -200,7 +200,7 @@ MODULE wannier_subroutines
     USE efcalc,                ONLY : wf_efield, efx0, efy0, efz0, &
                                       efx1, efy1, efz1, wf_switch, sw_len
     USE wannier_base,          ONLY : calwf, wfsd, wfdt, maxwfdt, nsd, nit, &
-                                      wf_q, wf_dt, wf_friction, nsteps
+                                      wf_q, wf_friction, nsteps
     !
     IMPLICIT NONE
     !
@@ -224,7 +224,7 @@ MODULE wannier_subroutines
              WRITE( stdout, * ) nit-nsd,"STEPS OF CONJUGATE GRADIENT FOR OPTIMIZATION OF THE SPREAD"
           ELSE
              WRITE( stdout, 12125) wf_q
-             WRITE( stdout, 12126) wf_dt
+             WRITE( stdout, 12126) wfdt
              WRITE( stdout, 12124) wf_friction
              WRITE( stdout, * ) nsteps,"STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD"
           END IF
@@ -242,12 +242,12 @@ MODULE wannier_subroutines
 12133     FORMAT(' LARGEST TIMESTEP IN THE SD / CG DIRECTION FOR SPREAD OPTIMIZATION = ',f10.7)
        END IF
        WRITE( stdout, * ) "IBRAV SELECTED:",ibrav
-
+       !
        CALL recips( a1, a2, a3, b1, b2, b3 )
        b1 = b1 * alat
        b2 = b2 * alat
        b3 = b3 * alat
-
+       !
        CALL wfunc_init( calwf, b1, b2, b3, ibrav)
        !
        WRITE( stdout, * )

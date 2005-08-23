@@ -31,7 +31,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
   USE gvecb,                    ONLY : npb, nmb, ngb
   USE gvecw,                    ONLY : ngw
-  USE reCIprocal_vectors,       ONLY : gstart
+  USE reciprocal_vectors,       ONLY : gstart
   USE smooth_grid_dimensions,   ONLY : nnrsx
   USE control_flags,            ONLY : iprsta
   USE qgb_mod,                  ONLY : qgb
@@ -45,8 +45,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier
+  USE para_mod,                 ONLY : dfftp, me, nproc
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -57,11 +57,11 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   COMPLEX(KIND=dbl), INTENT(IN)    :: eigr(ngw,nat), eigrb(ngb,nat)
   REAL(KIND=dbl),    INTENT(INOUT) :: Uall(nbsp,nbsp)
   !
-  REAL(KIND=dbl)    :: becwf(nkb,nbsp), becdrwf(nkb,nbsp), temp3(nkb,nbsp)
+  REAL(KIND=dbl)    :: becwf(nkb,nbsp), temp3(nkb,nbsp)
   COMPLEX(KIND=dbl) :: cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1))
   COMPLEX(KIND=dbl) :: bec2dw(nupdwn(2)), bec3up(nupdwn(1)), bec3dw(nupdwn(2))
   !
-  COMPLEX(KIND=dbl), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:), c2(:,:)
+  COMPLEX(KIND=dbl), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
   COMPLEX(KIND=dbl), ALLOCATABLE :: c_msp(:,:)
   INTEGER,           ALLOCATABLE :: tagz(:)
   REAL(KIND=dbl),    ALLOCATABLE :: Uspin(:,:)
@@ -69,16 +69,15 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   COMPLEX(KIND=dbl), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
   COMPLEX(KIND=dbl), ALLOCATABLE :: qv(:)
   REAL(KIND=dbl),    ALLOCATABLE :: gr(:,:), mt(:), W(:,:), wr(:)
-  INTEGER,           ALLOCATABLE :: f3(:), f4(:)
+  INTEGER,           ALLOCATABLE :: f3(:)
   !
   LOGICAL           :: what1
   INTEGER           :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, ig, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
-                       ibig3, ir1, ir2, ir3, ir, b5(3), b6(3), clwf, m,  &
+                       ibig3, ir1, ir2, ir3, ir, clwf, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
   REAL(KIND=dbl)    :: t1, t2, t3, taup(3)
-  COMPLEX(KIND=dbl) :: ct1, ct2, ct3, qvt
-  REAL(KIND=dbl)    :: alen, blen, clen
+  COMPLEX(KIND=dbl) :: qvt
   REAL (KIND=dbl)   :: temp_vec(3)
   INTEGER           :: adjust,ini, ierr1,nnn
   COMPLEX(KIND=dbl) :: U2(nbsp,nbsp)
@@ -1166,7 +1165,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! calculate wannier-function centers
   !
-  ALLOCATE(wr(nw), W(nw, nw),gr(nw,3),f3(nw),f4(nw),mt(nw))
+  ALLOCATE( wr( nw ), W( nw, nw ), gr( nw, 3 ), f3( nw ), mt( nw ) )
   DO inw=1, nw
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
@@ -1226,42 +1225,26 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   IF ( nspin == 2 .AND. nvb > 0 ) DEALLOCATE( X2, X3 )
   !
-  DEALLOCATE(wr, W,mt,f3,f4,gr)
+  DEALLOCATE( wr, W, mt, f3, gr )
   !
-  IF (iprsta.GT.4) &
-     WRITE( stdout, * ) "deallocated wr, w, f3, f4, gr"
+#if defined (__PARA)
   !
-#ifdef __PARA
-  DEALLOCATE (psitot)
-  DEALLOCATE (psitot1)
-  IF (iprsta.GT.4) &
-     WRITE( stdout, * ) "deallocated psitot, psitot1"
+  DEALLOCATE( psitot )
+  DEALLOCATE( psitot1 )
+  DEALLOCATE( psitot_pl )
+  DEALLOCATE( psitot_p )
+  DEALLOCATE( psitot_mi )
+  DEALLOCATE( psitot_m )
+  DEALLOCATE( c_p )
+  DEALLOCATE( c_m )
   !
-  DEALLOCATE (psitot_pl)
-  DEALLOCATE (psitot_p)
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "deallocated psitot_pl,psuitot_p"
-  END IF
-  DEALLOCATE (psitot_mi)
-  DEALLOCATE (psitot_m)
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "deallocated psitot_mi,psitot_m"
-  END IF
-  DEALLOCATE(c_p)
-  DEALLOCATE(c_m)
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "deallocated c_p, c_m"
-  END IF
 #else
-  DEALLOCATE(c_p,c_m)
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "deallocated c_p,c_m"
-  END IF
+  !
+  DEALLOCATE( c_p, c_m )
+  !
 #endif
-  DEALLOCATE(X,O,Oa,wfg,weight,tagz)
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "deallocated X,O,Oa,wfg,weight,tagz"
-  END IF
+  !
+  DEALLOCATE( X, O, Oa, wfg, weight, tagz )
   !
   RETURN
   !
@@ -1277,14 +1260,14 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !
   USE kinds,            ONLY : dbl
   USE io_global,        ONLY : stdout
-  USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_dt, wf_q, &
-                               weight, nw
+  USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
+                               weight, nw, wfdt
   USE cell_base,        ONLY : alat
   USE constants,        ONLY : tpi
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
+  USE para_mod,         ONLY : me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -1397,14 +1380,14 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      END DO
 
 
-     !   the verlet scheme to calculate A(t+wf_dt)
+     !   the verlet scheme to calculate A(t+wfdt)
 
      Aplus=0.D0
 
      DO i=1,m
         DO j=i+1,m
-           Aplus(i,j)=Aplus(i,j)+(2*wf_dt/(2*wf_dt+fric))*(2*A(i,j)               &
-                -Aminus(i,j)+(wf_dt*wf_dt/wf_q)*W(i,j)) + (fric/(2*wf_dt+fric))*Aminus(i,j)
+           Aplus(i,j)=Aplus(i,j)+(2*wfdt/(2*wfdt+fric))*(2*A(i,j)               &
+                -Aminus(i,j)+(wfdt*wfdt/wf_q)*W(i,j)) + (fric/(2*wfdt+fric))*Aminus(i,j)
         ENDDO
      ENDDO
 
@@ -1431,7 +1414,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      d=0.D0
      DO i=1, m
-        d(i, i)=EXP(CI*wr(i)*wf_dt)
+        d(i, i)=EXP(CI*wr(i)*wfdt)
      END DO      !d=exp(d)
 
      !   U=z*exp(d)*z+
@@ -1540,15 +1523,15 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   USE io_global,          ONLY : stdout
   USE kinds,              ONLY : dbl
-  USE reCIprocal_vectors, ONLY : gx, mill_l, gstart
+  USE reciprocal_vectors, ONLY : gx, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
                                  indexplusz, indexminusz, tag, tagp
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
+  USE para_mod,           ONLY : dfftp, nproc, me
   USE parallel_include     
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -2535,8 +2518,8 @@ SUBROUTINE grid_map()
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
+  USE para_mod,               ONLY : dffts, me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -2666,12 +2649,11 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   !
   USE kinds,                  ONLY : dbl
   USE io_global,              ONLY : stdout
-  USE smooth_grid_dimensions, ONLY : nnrsx
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
+  USE para_mod,               ONLY : dfftp, me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
 
@@ -2722,7 +2704,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
-  USE para_mod
+  USE para_mod,                 ONLY : dfftp, me
   !
   IMPLICIT NONE
   !
@@ -2769,10 +2751,10 @@ SUBROUTINE write_rho_g( rhog )
   USE kinds,              ONLY : dbl
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
-  USE reCIprocal_vectors, ONLY : gx, mill_l
+  USE reciprocal_vectors, ONLY : gx, mill_l
   USE electrons_base,     ONLY : nspin
+  USE para_mod,           ONLY : dfftp, nproc, me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -2914,7 +2896,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : dbl
-  USE reCIprocal_vectors, ONLY : gx
+  USE reciprocal_vectors, ONLY : gx
   USE gvecp,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
@@ -2923,8 +2905,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE ions_base,          ONLY : nsp, na, zv, nsx, nax
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast
+  USE para_mod,           ONLY : dfftp, nproc, me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
   !
@@ -3220,8 +3202,8 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  USE para_mod,               ONLY : me
   USE parallel_include
-  USE para_mod
   !
   IMPLICIT NONE
 
@@ -3742,7 +3724,7 @@ SUBROUTINE write_psi( c, jw )
   USE gvecw ,                 ONLY : ngw
   USE reciprocal_vectors,     ONLY : mill_l
   USE mp,                     ONLY : mp_barrier
-  USE para_mod
+  USE para_mod,               ONLY : dfftp, nproc, me
   USE parallel_include
   !
   IMPLICIT NONE

@@ -307,7 +307,7 @@ MODULE input
           ! The code performs a memory check, write on standard
           ! output the allocated memory at each step.
           ! Architecture Dependent
-     tprnsfac_   = .FALSE.
+     tprnsfac_  = .FALSE.
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
      !
@@ -757,8 +757,8 @@ MODULE input
      USE input_parameters, ONLY : nconstr_inp
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
-                                  wf_q, wf_dt, wf_friction, nit, nsd, nsteps,  &
-                                  tolw, adapt, calwf, nwf, wffort, writev,     &
+                                  wf_q, wf_friction, nit, nsd, nsteps, tolw,   &
+                                  adapt, calwf, nwf, wffort, writev,           &
                                   wannier_index
      !
      USE check_stop,       ONLY : check_stop_init
@@ -888,10 +888,10 @@ MODULE input
 
      CALL turbo_init( tturbo_inp, nturbo_inp )
 
-     IF( .not. lneb ) &
+     IF ( .NOT. lneb ) &
         CALL printout_base_init( outdir, prefix )
 
-     IF( noptical > 0 ) &
+     IF ( noptical > 0 ) &
         CALL optical_setup( woptical, noptical, boptical )
 
      CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
@@ -913,12 +913,12 @@ MODULE input
 
      !
      CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
-             vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
+                          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
 
      CALL ks_states_init( nspin, tprnks, tprnks_empty )
 
-     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup, neldw, nbnd, &
-             nspin, occupations, f_inp )
+     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup, &
+                                  neldw, nbnd, nspin, occupations, f_inp )
 
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
@@ -954,10 +954,10 @@ MODULE input
         !
      END IF
      !
-     CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0,   &
-                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,      &
-                        wf_dt, wf_friction, nit, nsd, nsteps, tolw,       &
-                        adapt, calwf, nwf, wffort, writev, wannier_index, &
+     CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
+                        efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
+                        wf_friction, nit, nsd, nsteps, tolw, adapt,     &
+                        calwf, nwf, wffort, writev, wannier_index,      &
                         restart_mode )
      !
      RETURN

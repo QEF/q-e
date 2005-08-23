@@ -537,10 +537,9 @@ MODULE read_namelists_module
        !   
        wfsd = .FALSE.
        !
-       wfdt        = 0.1D0
+       wfdt        = 5.D0
        maxwfdt     = 0.3D0
        wf_q        = 1500.D0
-       wf_dt       = 5.D0
        wf_friction = 0.3D0
        !   
        nit    = 10
@@ -990,7 +989,6 @@ MODULE read_namelists_module
        CALL mp_bcast( wfdt, ionode_id )
        CALL mp_bcast( maxwfdt, ionode_id )
        CALL mp_bcast( wf_q, ionode_id )
-       CALL mp_bcast( wf_dt, ionode_id )
        CALL mp_bcast( wf_friction, ionode_id )
        CALL mp_bcast( nit, ionode_id )
        CALL mp_bcast( nsd, ionode_id )
@@ -1500,8 +1498,12 @@ MODULE read_namelists_module
        !
        IMPLICIT NONE
        !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) :: sub_name = 'wannier_checkin'
        !
+       !
+       IF ( calwf < 1 .OR. calwf > 5 ) &
+          CALL errore( sub_name, ' calwf out of range ', 1 )
        !
        RETURN
        !

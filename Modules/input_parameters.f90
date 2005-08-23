@@ -1296,7 +1296,6 @@ MODULE input_parameters
           REAL(KIND=dbl) :: wfdt
           REAL(KIND=dbl) :: maxwfdt
           REAL(KIND=dbl) :: wf_q
-          REAL(KIND=dbl) :: wf_dt
           REAL(KIND=dbl) :: wf_friction
           !
           INTEGER :: nit
@@ -1315,8 +1314,8 @@ MODULE input_parameters
           !
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                                efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
-                               wf_dt, wf_friction, nit, nsd, nsteps, tolw,     &
-                               adapt, calwf, nwf, wffort, writev
+                               wf_friction, nit, nsd, nsteps, tolw, adapt,     &
+                               calwf, nwf, wffort, writev
 
 !  END manual
 ! ----------------------------------------------------------------------
