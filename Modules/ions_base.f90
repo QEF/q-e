@@ -305,7 +305,7 @@
 ! ...     tau_srt : atomic species are ordered according to
 ! ...     the ATOMIC_SPECIES input card. Within each specie atoms are ordered
 ! ...     according to the ATOMIC_POSITIONS input card.
-! ...     ind_srt : can be used to restore the origina position
+! ...     ind_srt : can be used to restore the original position
 
       CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
 

@@ -44,7 +44,7 @@ MODULE control_flags
   !
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
-            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,   &
+            ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
             timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar, rhoout,  &
             trane, ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,      &
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
@@ -129,45 +129,47 @@ MODULE control_flags
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   INTEGER :: nv0rd  = 0 !
   INTEGER :: iprsta = 0 ! output verbosity (increasing from 0 to infinity)
-
-  LOGICAL :: gamma_only = .TRUE. !  true if only gamma point is used
-
+  !
+  ! ... .TRUE. if only gamma point is used
+  !
+  LOGICAL :: gamma_only = .TRUE.
+  !
   LOGICAL :: tnewnfi = .FALSE.
   INTEGER :: newnfi  = 0
   !
-  ! ...   Wave function randomization
+  ! ... Wave function randomization
   !
   LOGICAL   :: trane = .FALSE.
   REAL(dbl) :: ampre = 0.D0
   !
-  ! ...   Ionic position randomization
+  ! ... Ionic position randomization
   !
   LOGICAL   :: tranp(nsx) = .FALSE.
   REAL(dbl) :: amprp(nsx) = 0.D0
   !
-  ! ...   Read the cell from standard input
+  ! ... Read the cell from standard input
   !
   LOGICAL   :: tbeg = .FALSE.
   !
-  ! ...   This flags control the calculation of the Dipole Moments
+  ! ... This flags control the calculation of the Dipole Moments
   !
   LOGICAL :: tdipole = .FALSE.
   !
-  ! ...   Flags that controls DIIS electronic minimization
+  ! ... Flags that controls DIIS electronic minimization
   !
   LOGICAL :: t_diis        = .FALSE.
   LOGICAL :: t_diis_simple = .FALSE.
   LOGICAL :: t_diis_rot    = .FALSE.
   !
-  ! ...   Flag controlling the Nose thermostat for electrons
+  ! ... Flag controlling the Nose thermostat for electrons
   !
   LOGICAL :: tnosee = .FALSE.
   !
-  ! ...   Flag controlling the Nose thermostat for the cell
+  ! ... Flag controlling the Nose thermostat for the cell
   !
   LOGICAL :: tnoseh = .FALSE.
   !
-  ! ...   Flag controlling the Nose thermostat for ions
+  ! ... Flag controlling the Nose thermostat for ions
   !
   LOGICAL   :: tnosep = .FALSE.
   LOGICAL   :: tcap   = .FALSE.

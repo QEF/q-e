@@ -250,21 +250,25 @@ CONTAINS
     
     return
   end function compute_ap
-
-  subroutine deallocate_uspp()
-    IF( ALLOCATED( nhtol ) ) DEALLOCATE( nhtol )
-    IF( ALLOCATED( indv ) ) DEALLOCATE( indv )
-    IF( ALLOCATED( nhtolm ) ) DEALLOCATE( nhtolm )
-    IF( ALLOCATED( nhtoj ) ) DEALLOCATE( nhtoj )
-    IF( ALLOCATED( vkb ) ) DEALLOCATE( vkb )
-    IF( ALLOCATED( becsum ) ) DEALLOCATE( becsum )
-    IF( ALLOCATED( qq ) ) DEALLOCATE( qq )
-    IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
-    IF( ALLOCATED( deeq ) ) DEALLOCATE( deeq )
-    IF( ALLOCATED( qq_so ) ) DEALLOCATE( qq_so )
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE deallocate_uspp()
+    !-----------------------------------------------------------------------
+    !
+    IF( ALLOCATED( nhtol ) )   DEALLOCATE( nhtol )
+    IF( ALLOCATED( indv ) )    DEALLOCATE( indv )
+    IF( ALLOCATED( nhtolm ) )  DEALLOCATE( nhtolm )
+    IF( ALLOCATED( nhtoj ) )   DEALLOCATE( nhtoj )
+    IF( ALLOCATED( vkb ) )     DEALLOCATE( vkb )
+    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
+    IF( ALLOCATED( qq ) )      DEALLOCATE( qq )
+    IF( ALLOCATED( dvan ) )    DEALLOCATE( dvan )
+    IF( ALLOCATED( deeq ) )    DEALLOCATE( deeq )
+    IF( ALLOCATED( qq_so ) )   DEALLOCATE( qq_so )
     IF( ALLOCATED( dvan_so ) ) DEALLOCATE( dvan_so )
     IF( ALLOCATED( deeq_nc ) ) DEALLOCATE( deeq_nc )
-  end subroutine deallocate_uspp
-
-end module uspp
+    !
+  END SUBROUTINE deallocate_uspp
+  !
+END MODULE uspp
 
