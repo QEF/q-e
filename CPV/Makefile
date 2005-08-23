@@ -57,7 +57,6 @@ input.o \
 interfaces_main.o \
 interfaces.o \
 ions.o \
-ions_nose.o \
 ions_positions.o \
 ksstates.o \
 macdep.o \
