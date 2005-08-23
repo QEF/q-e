@@ -1,51 +1,62 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!----------------------------------------------------------------------
-subroutine davcio (vect, nword, unit, nrec, io)
-  !----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE davcio( vect, nword, unit, nrec, io )
+  !----------------------------------------------------------------------------
   !
-  !   direct-access vector input/output
-  !   read/write nword words starting from the address specified by vect
+  ! ... direct-access vector input/output
+  ! ... read/write nword words starting from the address specified by vect
   !
   USE io_global, ONLY : stdout
-  USE kinds
-implicit none
-  integer :: nword, unit, nrec, io
-  ! input: the dimension of vect
-  ! input: the unit where to read/write
-  ! input: the record where to read/write
-  ! input: flag if < 0 reading if > 0 writing
-  real(kind=DP) :: vect (nword)
-  ! inp/out: the vector to read/write
+  USE kinds,     ONLY : DP
   !
-  !   the local variables
+  IMPLICIT NONE
   !
-
-
-  integer :: ios
-  ! integer variable for I/O control
-  call start_clock ('davcio')
-  if (unit.le.0) call errore ('davcio', 'wrong unit', 1)
-  if (nrec.le.0) call errore ('davcio', 'wrong record number', 2)
-  if (nword.le.0) call errore ('davcio', 'wrong record length', 3)
+  INTEGER, INTENT(IN) :: nword, unit, nrec, io
+    ! input: the dimension of vect
+    ! input: the unit where to read/write
+    ! input: the record where to read/write
+    ! input: flag if < 0 reading if > 0 writing
+  REAL(KIND=DP), INTENT(INOUT) :: vect(nword)
+   ! input/output: the vector to read/write
+  !
+  INTEGER :: ios
+    ! integer variable for I/O control
+  !
+  !
+  CALL start_clock( 'davcio' )
+  !
+  IF ( unit  <= 0 ) CALL errore( 'davcio', 'wrong unit', 1 )
+  IF ( nrec  <= 0 ) CALL errore( 'davcio', 'wrong record number', 2 )
+  IF ( nword <= 0 ) CALL errore( 'davcio', 'wrong record length', 3 )
+  IF ( io    == 0 ) CALL errore( 'davcio', 'nothing to do?', -1 )
+  !
   ios = 0
-  if (io.lt.0) then
-     read (unit, rec = nrec, iostat = ios) vect
-  elseif (io.gt.0) then
-     write (unit, rec = nrec, iostat = ios) vect
-  else
-     call errore ('davcio', 'nothing to do?', - 1)
-  endif
-  if (ios.ne.0) then
-     WRITE( stdout, * ) ' IOS = ', ios
-     call errore ('davcio', 'i/o error in davcio', unit)
-  endif
-  call stop_clock ('davcio')
-  return
-end subroutine davcio
+  !
+  IF ( io < 0 ) THEN
+     !
+     READ( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
+     !
+  ELSE IF ( io > 0 ) THEN
+     !
+     WRITE( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
+     !
+  END IF
+  !
+  IF ( ios /= 0 ) THEN
+     !
+     WRITE( stdout, '(1X,"IOS = ",I2)' ) ios
+     CALL errore( 'davcio', 'i/o error in davcio', unit )
+     !
+  END IF
+  !
+  CALL stop_clock( 'davcio' )
+  !
+  RETURN
+  !
+END SUBROUTINE davcio

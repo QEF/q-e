@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ SUBROUTINE dynamics()
   ! ... delta_t < 0 :                  every 'nraise' step the temperature
   ! ...                                reduced by -delta_t
   !
-  ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
+  ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
@@ -134,6 +134,11 @@ SUBROUTINE dynamics()
         !
         CALL start_therm()
         !
+        ! ... vel is used already multiplied by dt (it is used as an auxiliary 
+        ! ... variable in the Verlet scheme)
+        !
+        vel = dt * vel
+        !
      ELSE
         !
         tau_old = tau
@@ -158,7 +163,7 @@ SUBROUTINE dynamics()
      !
      ! ... the velocity is computed here (used as an auxiliary variable)
      !
-     vel = ( tau - tau_old ) / dt
+     vel = ( tau - tau_old ) * DBLE( if_pos )
      ! 
   END IF
   !
@@ -214,13 +219,9 @@ SUBROUTINE dynamics()
   !
   IF ( ldamped ) CALL project_velocity()
   !
-  ! ... constraints ( atoms kept fixed ) are reinforced 
+  ! ... positions are updated here. NB: vel is actually dt*( tau - tau_old )
   !
-  vel = vel * DBLE( if_pos )
-  !
-  ! ... positions are updated here
-  !
-  tau_new = tau + dt * vel + dt**2 * acc
+  tau_new = tau + vel + dt**2 * acc
   !
   IF ( lconstrain ) THEN
      !
@@ -237,7 +238,8 @@ SUBROUTINE dynamics()
      !
      DO na = 1, nat
         !
-        WRITE( UNIT = stdout, FMT = 9000 ) na, ityp(na), force(:,na)
+        WRITE( stdout, '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+            na, ityp(na), force(:,na)
         !
      END DO
      !
@@ -355,8 +357,6 @@ SUBROUTINE dynamics()
   !
   RETURN
   !
-9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)
-  !
   CONTAINS
      !
      ! ... internal procedure
@@ -384,7 +384,8 @@ SUBROUTINE dynamics()
           !
           acc_versor = acc / norm_acc
           !
-          vel = MAX( 0.D0, DDOT( 3*nat, vel, 1, acc_versor, 1 ) ) * acc_versor
+          vel = acc_versor * &
+                MAX( 0.D0, DDOT( 3*nat, vel, 1, acc_versor, 1 ) )
           !
        ELSE
           !
@@ -433,6 +434,10 @@ SUBROUTINE dynamics()
           vel(3,na) = velox * dir_z * module
           !
        END DO
+       !
+       ! ... the velocity of fixed ions must be zero
+       !
+       vel = vel * DBLE( if_pos )
        !
        ! ... if there is inversion symmetry, equivalent atoms have 
        ! ... opposite velocities
@@ -522,7 +527,7 @@ SUBROUTINE dynamics()
           !
        END IF
        !
-       vel = vel * aux * DBLE( if_pos )
+       vel = vel * aux
        !
        RETURN
        !
