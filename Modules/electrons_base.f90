@@ -109,7 +109,11 @@
         CALL errore( ' electrons_base_initval ', ' nspin out of range ', 1 )
       END IF
 
-      nbspx = nbnd * nspin
+      IF( MOD( nbnd, 2 ) == 0 ) THEN
+         nbspx = nbnd * nspin
+      ELSE
+         nbspx = ( nbnd + 1 ) * nspin
+      END IF
 
       ALLOCATE( f     ( nbspx ) )
       ALLOCATE( fspin ( nbspx ) )
