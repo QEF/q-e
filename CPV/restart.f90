@@ -1,3 +1,56 @@
+! RESTART.f90
+!********************************************************************************
+! RESTART.f90        				Copyright (c) 2005 Targacept, Inc.
+!********************************************************************************
+! Original file changed by Targacept in June 2005 in order to accommodate 
+! Autopilot feature suite (see autopilot.f90).
+!
+! This program is free software; you can redistribute it and/or modify it under 
+! the terms of the GNU General Public License as published by the Free Software 
+! Foundation; either version 2 of the License, or (at your option) any later version.
+! This program is distributed in the hope that it will be useful, but WITHOUT ANY 
+! WARRANTY; without even the implied warranty of MERCHANTABILITY FOR A PARTICULAR 
+! PURPOSE.  See the GNU General Public License at www.gnu.or/copyleft/gpl.txt for 
+! more details.
+! 
+! THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  
+! EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES 
+! PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+! INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+! FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND THE 
+! PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, 
+! YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+!
+! IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, 
+! WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE 
+! THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY 
+! GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
+! INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA 
+! BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A 
+! FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER 
+! OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+!
+! You should have received a copy of the GNU General Public License along with 
+! this program; if not, write to the 
+! Free Software Foundation, Inc., 
+! 51 Franklin Street, 
+! Fifth Floor, 
+! Boston, MA  02110-1301, USA.
+! 
+! Targacept's address is 
+! 200 East First Street, Suite 300
+! Winston-Salem, North Carolina USA 27101-4165 
+! Attn: Molecular Design. 
+! Email: atp@targacept.com
+!
+! This work was supported by the Advanced Technology Program of the 
+! National Institute of Standards and Technology (NIST), Award No. 70NANB3H3065 
+!
+!********************************************************************************
+
+
+
+
 !
 ! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
@@ -136,6 +189,9 @@
       USE cp_restart,     ONLY: cp_readfile, cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY: tens
       USE io_files,       ONLY: scradir
+      USE autopilot,      ONLY: event_step, event_index, max_event_step
+      USE autopilot,      ONLY: employ_rules
+
 !
       implicit none
       integer :: ndr, nfi, flag
@@ -186,6 +242,22 @@
         vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
         occ_ , lambda, lambdam, b1, b2, b3, &
         xnhe0, xnhem, vnhe, ekincm, mat_z, tens, c02 = c0, cm2 = cm  )
+
+
+      ! AutoPilot (Dynamic Rules) Implementation
+      event_index = 1
+
+      do while (event_step(event_index) <= nfi)
+         ! Assuming that the remaining dynamic parm values are set correctly by reading 
+         ! the the restart file.
+         ! if this is not true, employ rules as events are updated right here as:
+         call employ_rules()
+         event_index = event_index + 1
+         if(  event_index > max_event_step ) then
+            call errore(' readfile ','maximum events exceeded for dynamic rules', 1)
+         endif
+      enddo
+      
 
       DEALLOCATE( taui_ )
 

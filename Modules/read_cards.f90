@@ -1,3 +1,56 @@
+! READ_CARDS.f90
+!********************************************************************************
+! READ_CARDS.f90        				Copyright (c) 2005 Targacept, Inc.
+!********************************************************************************
+! Original file changed by Targacept in June 2005 in order to accommodate 
+! Autopilot feature suite (see autopilot.f90).
+!
+! This program is free software; you can redistribute it and/or modify it under 
+! the terms of the GNU General Public License as published by the Free Software 
+! Foundation; either version 2 of the License, or (at your option) any later version.
+! This program is distributed in the hope that it will be useful, but WITHOUT ANY 
+! WARRANTY; without even the implied warranty of MERCHANTABILITY FOR A PARTICULAR 
+! PURPOSE.  See the GNU General Public License at www.gnu.or/copyleft/gpl.txt for 
+! more details.
+! 
+! THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  
+! EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES 
+! PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
+! INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+! FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND THE 
+! PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, 
+! YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
+!
+! IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, 
+! WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE 
+! THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY 
+! GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
+! INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA 
+! BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A 
+! FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER 
+! OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+!
+! You should have received a copy of the GNU General Public License along with 
+! this program; if not, write to the 
+! Free Software Foundation, Inc., 
+! 51 Franklin Street, 
+! Fifth Floor, 
+! Boston, MA  02110-1301, USA.
+! 
+! Targacept's address is 
+! 200 East First Street, Suite 300
+! Winston-Salem, North Carolina USA 27101-4165 
+! Attn: Molecular Design. 
+! Email: atp@targacept.com
+!
+! This work was supported by the Advanced Technology Program of the 
+! National Institute of Standards and Technology (NIST), Award No. 70NANB3H3065 
+!
+!********************************************************************************
+
+
+
+
 !
 ! Copyright (C) 2002-2003 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
@@ -45,6 +98,7 @@ MODULE read_cards_module
      SUBROUTINE card_default_values( prog )
        !----------------------------------------------------------------------
        !
+       USE autopilot, ONLY : init_autopilot
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog
@@ -109,6 +163,10 @@ MODULE read_cards_module
        newnfi_card = -1
        tnewnfi_card = .FALSE.
        !
+
+       call init_autopilot()
+
+
        RETURN
        !
      END SUBROUTINE
@@ -119,6 +177,7 @@ MODULE read_cards_module
        !----------------------------------------------------------------------
        !
        !
+       USE autopilot, ONLY : card_autopilot
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)           :: prog   ! calling program ( FP, PW, CP )
@@ -143,7 +202,13 @@ MODULE read_cards_module
        END DO
        !
        !
-       IF ( TRIM(card) == 'ATOMIC_SPECIES' ) THEN
+       WRITE(*,*) 'CARD=', card
+
+       IF ( TRIM(card) == 'AUTOPILOT' ) THEN
+          !
+          CALL card_autopilot( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'ATOMIC_SPECIES' ) THEN
           !
           CALL card_atomic_species( input_line, prog )
           !

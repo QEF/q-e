@@ -33,6 +33,8 @@ MODULE parser
   !
   USE io_global, ONLY : stdout
   USE kinds
+
+  INTEGER :: parse_unit = 5 ! normally 5, but can be set otherwise
   !
   CONTAINS
   !
@@ -237,7 +239,7 @@ MODULE parser
     END IF
     !
     IF ( ionode ) THEN
-30     READ (5, fmt='(A256)', END=10) line
+30     READ (parse_unit, fmt='(A256)', END=10) line
        IF( line == ' ' .OR. line(1:1) == '#' ) GO TO 30
        tend = .FALSE.
        GO TO 20
