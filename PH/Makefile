@@ -115,6 +115,7 @@ zstar_eu_us.o
 
 MODULES = \
 ../Modules/atom.o \
+../Modules/autopilot.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
@@ -130,6 +131,7 @@ MODULES = \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
+../Modules/ions_nose.o \
 ../Modules/kind.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \

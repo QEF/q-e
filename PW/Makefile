@@ -265,6 +265,7 @@ wsweight.o
 
 MODULES = \
 ../Modules/atom.o \
+../Modules/autopilot.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/bfgs_module.o \
@@ -284,6 +285,7 @@ MODULES = \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
+../Modules/ions_nose.o \
 ../Modules/kind.o \
 ../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
