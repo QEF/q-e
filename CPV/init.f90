@@ -212,8 +212,10 @@
       USE input_parameters, ONLY: trd_ht
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name
       use io_global,        only: stdout, ionode
+      USE io_files,         ONLY: scradir     
       use ions_base,        only: na, nsp, nat, natx, tau_srt, ind_srt, if_pos, atm
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init
+
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: tau0, taus
       use cp_restart,       only: cp_read_cell
@@ -263,7 +265,7 @@
         !
         ! read only h and hold from restart file "ndr"
         !
-        CALL cp_read_cell( ndr, ' ', .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, scradir, .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 
         CALL cell_init( ht0, h    )
         CALL cell_init( htm, hold )

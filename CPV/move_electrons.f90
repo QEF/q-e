@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -168,15 +168,15 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      ELSE
         !
         IF ( tfor .OR. tprnfor ) &
-             CALL nlfq( c0diag, eigr, becdiag, becdrdiag, fion )
+           CALL nlfq( c0diag, eigr, becdiag, becdrdiag, fion )
         !
      END IF
      !
-     IF( tfor .AND. tefield ) &
-          CALL bforceion( fion, tfor, ipolp, qmat, bec, becdr, gqq, evalue )
+     IF ( tfor .AND. tefield ) &
+        CALL bforceion( fion, tfor, ipolp, qmat, bec, becdr, gqq, evalue )
      !
-     IF( tfor .OR. thdyn ) &
-          CALL interpolate_lambda( lambdap, lambda, lambdam )
+     IF ( tfor .OR. thdyn ) &
+        CALL interpolate_lambda( lambdap, lambda, lambdam )
      !
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
@@ -185,7 +185,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... begin try and error loop (only one step!)
      !
-     ! ...   nlfl and nlfh need: lambda (guessed) becdr
+     ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
      IF ( .NOT. tens ) THEN
         !

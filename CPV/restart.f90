@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -128,6 +128,7 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
+      USE io_files,  ONLY : scradir
 
       USE electrons_base, ONLY: nbnd, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY: ngw, ngwt
@@ -378,7 +379,7 @@
         RETURN 
         END SUBROUTINE readfile_fpmd
 
-
+!=----------------------------------------------------------------------------=!
 
 !=----------------------------------------------------------------------------=!
      END MODULE restart_file

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF-FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,11 +28,12 @@ MODULE path_routines
     SUBROUTINE iosys_path()
       !------------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : CI_scheme, opt_scheme, num_of_images, &
-                                   first_last_opt, damp, temp_req, ds, k_max, &
-                                   k_min, path_thr, restart_mode, calculation, &
-                                   nstep, max_seconds, phase_space, ion_dynamics, &
-                                   etot_conv_thr, forc_conv_thr
+      USE input_parameters, ONLY : CI_scheme, opt_scheme, num_of_images,     &
+                                   first_last_opt, damp, temp_req, ds,       &
+                                   k_max, k_min, path_thr, restart_mode,     &
+                                   calculation, nstep, max_seconds,          &
+                                   phase_space, ion_dynamics, etot_conv_thr, &
+                                   forc_conv_thr
       !
       USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, &
                                  lbroyden, lmol_dyn, nstep_path, &
@@ -45,13 +46,13 @@ MODULE path_routines
                                  k_max_          => k_max, &
                                  k_min_          => k_min, &
                                  path_thr_       => path_thr
-
-      USE io_files,       ONLY : prefix, outdir, scradir
+      !
+      USE io_files,       ONLY : prefix, outdir, tmp_dir
       USE io_global,      ONLY : ionode, ionode_id
       USE mp_global,      ONLY : mpime
       USE mp,             ONLY : mp_bcast, mp_barrier, mp_sum
-      USE control_flags,  ONLY : lpath, lneb, lcoarsegrained, lconstrain, lmd, &
-                                 ldamped
+      USE control_flags,  ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
+                                 lmd, ldamped, tprnfor
       USE parser,         ONLY : int_to_char
       USE check_stop,     ONLY : check_stop_init
 
@@ -61,13 +62,16 @@ MODULE path_routines
       INTEGER            :: image
       INTEGER            :: ios
       CHARACTER(LEN=256) :: outdir_saved
-      CHARACTER(LEN=256) :: scradir_saved
       CHARACTER(LEN=256) :: filename
       !
       INTEGER, EXTERNAL :: c_mkdir
-
-      ! nstep_path = nstep
-
+      !
+      !
+      tmp_dir = TRIM( outdir )
+      !
+      tprnfor    = .TRUE.
+      nstep_path = nstep
+      !
       SELECT CASE( TRIM( phase_space ) )
       CASE( 'full' )
         !
@@ -110,7 +114,7 @@ MODULE path_routines
            ( CI_scheme /= "manual"     ) ) THEN
          !
          CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': unknown CI_scheme', 1 )
+                    & ': unknown CI_scheme', 1 )
          !
       END IF
 
@@ -156,8 +160,6 @@ MODULE path_routines
          !
       END SELECT
       !
-      CALL check_stop_init( max_seconds )
-      !
       num_of_images_   = num_of_images
       CI_scheme_       = CI_scheme
       first_last_opt_  = first_last_opt
@@ -173,29 +175,21 @@ MODULE path_routines
       nstep_path = nstep
       nstep      = 1000
       !
-      outdir_saved = outdir
-      scradir_saved = scradir
+      outdir_saved  = outdir
       !
       DO image = 1, num_of_images
         !
         ios = 0
-        outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-                 TRIM( int_to_char( image ) ) // '/'
-        scradir = TRIM( scradir_saved ) // "/" // TRIM( prefix ) // "_" // &
-                 TRIM( int_to_char( image ) ) // '/'
+        !
+        outdir  = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
+                  TRIM( int_to_char( image ) ) // '/'
         !
         IF ( ionode ) THEN
            !
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
-           WRITE( stdout, * ) 'Creating dir : ',TRIM( outdir )
-           !
            ios = c_mkdir( TRIM( outdir ), LEN_TRIM( outdir ) )
-           !
-           WRITE( stdout, * ) 'Creating dir : ',TRIM( scradir )
-           !
-           ios = c_mkdir( TRIM( scradir ), LEN_TRIM( scradir ) )
            !
         END IF
         !
@@ -238,7 +232,6 @@ MODULE path_routines
       END DO
       !
       outdir  = outdir_saved
-      scradir = scradir_saved
       !
       RETURN
       !

@@ -1,22 +1,21 @@
 !
-! Copyright (C) 2002-2004 PWSCF-FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE compute_scf( N_in, N_fin, stat  )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   ! ... this subroutine is the main scf-driver for all "path" calculations
   ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine )
   !
   USE kinds,             ONLY : DP
-  USE input_parameters,  ONLY : if_pos, sp_pos, rd_pos
   USE ions_base,         ONLY : nat, sort_tau, tau_srt, ind_srt, ityp, nsp
   USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
-                                trane, ampre
+                                trane, ampre, nomore
   USE io_files,          ONLY : iunpath, iunexit, outdir, prefix, scradir
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
@@ -38,8 +37,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   INTEGER                     :: image
   REAL (KIND=DP)              :: tcpu 
   CHARACTER (LEN=256)         :: outdir_saved
-  CHARACTER (LEN=256)         :: scradir_saved
-  INTEGER                     :: nbeg_saved
   LOGICAL                     :: file_exists, opnd, tstop 
   REAL (KIND=DP), ALLOCATABLE :: tau(:,:)
   REAL (KIND=DP), ALLOCATABLE :: fion(:,:)
@@ -54,9 +51,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
   outdir_saved = outdir
-  scradir_saved = scradir
-  !
-  nbeg_saved = nbeg
   ! 
   DO image = N_in, N_fin
      !
@@ -69,11 +63,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF( tstop ) RETURN
      !
-     outdir  = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-               TRIM( int_to_char( image ) ) // "/" 
+     outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
+              TRIM( int_to_char( image ) ) // "/" 
      !
-     scradir = TRIM( scradir_saved ) // "/" // TRIM( prefix ) // "_" // &
-               TRIM( int_to_char( image ) ) // "/" 
+     scradir = outdir
      !
      tcpu = get_clock( program_name )
      !
@@ -90,21 +83,34 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      END IF
      !
-     !  do everything as if position are read from input
+     ! ... do everything as if position are read from input
      !
      taurdr = .TRUE.
      !
-     IF( check_restartfile( scradir, ndr ) ) THEN
-        WRITE( iunpath, * ) ' restarting calling readfile '
-        nbeg =  1
+     IF ( check_restartfile( scradir, ndr ) ) THEN
+        !
+        WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
+        !
+       ! nbeg   = 0
+       ! nomore = 100
+        !
+        nbeg   = -1
+        nomore = 500
+        trane  = .TRUE.
+        ampre  = 0.02D0
+        !
      ELSE
-        WRITE( iunpath, * ) ' restarting from scratch '
-        nbeg  = -1
-        trane = .true.
-        ampre = 0.02
+        !
+        WRITE( stdout, '(/,2X,"restarting from scratch",/)' )
+        !
+        nbeg   = -1
+        nomore = 500
+        trane  = .TRUE.
+        ampre  = 0.02D0
+        !
      END IF
      !
-     ! ... perform an electronic minimization using cpmain
+     ! ... perform an electronic minimisation using cpmain
      !
      CALL deallocate_modules_var()
      !
@@ -112,7 +118,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      DO ia = 1, nat
         !
-        tau(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),image) 
+        tau(:,ia) = pos((3*ia-2):(3*ia),image) 
         !
      END DO
      !
@@ -155,9 +161,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      DO ia = 1, nat
         !
-        grad_pes( 1 + ( ia - 1 ) * 3, image ) = - fion( 1, ia )
-        grad_pes( 2 + ( ia - 1 ) * 3, image ) = - fion( 2, ia )
-        grad_pes( 3 + ( ia - 1 ) * 3, image ) = - fion( 3, ia )
+        grad_pes(1+(ia-1)*3,image) = - fion(1,ia)
+        grad_pes(2+(ia-1)*3,image) = - fion(2,ia)
+        grad_pes(3+(ia-1)*3,image) = - fion(3,ia)
         !
      END DO
      !
@@ -167,9 +173,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
   END DO
   !
-  outdir       = outdir_saved
-  nbeg         = nbeg_saved
-  scradir      = scradir_saved
+  outdir = outdir_saved
   !
   suspended_image = 0
   !

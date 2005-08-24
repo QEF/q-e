@@ -20,7 +20,7 @@ SUBROUTINE init_run()
                                        force_pairing, newnfi, tnewnfi
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
-                                       fion, fionm, cdmi, taui
+                                       fion, fionm, cdmi, ityp, taui
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp
   USE gvecw,                    ONLY : ngw, ecutw, ngwt, ggp
@@ -62,6 +62,8 @@ SUBROUTINE init_run()
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE gvecp,                    ONLY : ecutp
   USE metagga,                  ONLY : ismeta, crosstaus, dkedtaus, gradwfc
+  USE pseudo_projector,         ONLY : fnl, projector
+  USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
   !
   USE brillouin,                ONLY : kpoints, kp
   USE efcalc,                   ONLY : clear_nbeg
@@ -81,14 +83,14 @@ SUBROUTINE init_run()
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE print_out_module,         ONLY : print_legend
-  USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
-  USE wave_types 
-  USE pseudo_projector,         ONLY : fnl, projector, allocate_projector
+  USE wave_types,               ONLY : wave_descriptor_info
+  USE pseudo_projector,         ONLY : allocate_projector
   !
   IMPLICIT NONE
   !
-  INTEGER   :: neupdwn( nspinx )
-  INTEGER   :: lds_wfc
+  INTEGER :: neupdwn( nspinx )
+  INTEGER :: lds_wfc
+  !
   !
   CALL start_clock( 'initialize' )
   !
@@ -192,9 +194,9 @@ SUBROUTINE init_run()
   IF ( tens .OR. tcg ) &
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nnrsx, natx )
   !
-  IF( tcg ) CALL allocate_cg( ngw, nbspx )
+  IF ( tcg ) CALL allocate_cg( ngw, nbspx )
   !
-  IF( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
+  IF ( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
   !
   IF( ALLOCATED( deeq ) )     deeq(:,:,:,:) = 0.D0
   !
@@ -233,18 +235,18 @@ SUBROUTINE init_run()
      !
      nfi = 0
      !
-     IF( program_name == 'CP90' ) THEN
+     IF ( program_name == 'CP90' ) THEN
         !
         CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
                            eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
                            rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
                            enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
                            dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
-                           fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
+                           fionm, xnhe0, xnhem, vnhe, ekincm )
         !
-     ELSE IF( program_name == 'FPMD' ) THEN
+     ELSE IF ( program_name == 'FPMD' ) THEN
         !
-        CALL from_scratch( rhoe, desc, cm, c0, cp, ce, wfill, wempt, eigr,   &
+        CALL from_scratch( rhoe, desc, cm, c0, cp, ce, wfill, wempt, eigr, &
                            ei1, ei2, ei3, sfac, occn, ht0, atoms0, bec, &
                            becdr, vpot, edft )
         !

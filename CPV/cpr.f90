@@ -13,13 +13,14 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   USE kinds,                    ONLY : dbl
   USE constants,                ONLY : bohr_radius_angs, uma_au
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
-                                       iprsta, trhor, tfor, tvlocw, trhow, &
-                                       taurdr, tprnfor, tsdc, lconstrain, lneb
-  USE control_flags,            ONLY : ndr, ndw, nbeg, nomore, tsde, tortho, &
-                                       tnosee, tnosep, trane, tranp, tsdp,   &
-                                       tcp, tcap, ampre, amprp, tnoseh, tolp
-  USE control_flags,            ONLY : lwf, ortho_eps, ortho_max, printwfc
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff,      &
+                                       iprsta, trhor, tfor, tvlocw, trhow,     &
+                                       taurdr, tprnfor, tsdc, lconstrain, lwf, &
+                                       lneb, lcoarsegrained, ndr, ndw, nomore, &
+                                       tsde, tortho, tnosee, tnosep, trane,    &
+                                       tranp, tsdp, tcp, tcap, ampre, amprp,   &
+                                       tnoseh, tolp, ortho_eps, ortho_max,     &
+                                       printwfc
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
@@ -121,7 +122,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
-  USE constraints_module,       ONLY : check_constraint
+  USE constraints_module,       ONLY : check_constraint, lagrange
+  USE coarsegrained_vars,       ONLY : dfe_acc
   !
   IMPLICIT NONE
   !
@@ -184,8 +186,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 )
      !
-     IF( ionode .AND. ttprint ) &
-       WRITE( stdout, fmt = '( /, " * Physical Quantities at step:",  I6 )' ) nfi
+     IF ( ionode .AND. ttprint ) &
+        WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
      !
      ! ... calculation of velocity of nose-hoover variables
      !
@@ -279,9 +281,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
-        CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, &
+        CALL ions_move( tausp, taus, tausm, iforce, pmass, fion,  &
                         ainv, delt, na, nsp, fricp, hgamma, vels, &
-                        tsdp, tnosep, fionm, vnhp, velsp, velsm, &
+                        tsdp, tnosep, fionm, vnhp, velsp, velsm,  &
                         nhpcl, nhpdim, atm2nhp )
         !
         IF ( lconstrain ) THEN
@@ -295,6 +297,10 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !
+           ! ... average value of the lagrange multipliers
+           !
+           IF ( lcoarsegrained ) dfe_acc(:,1) = dfe_acc(:,1) - lagrange(:)
+           !
         END IF
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
@@ -305,9 +311,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !     
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !              initialization with guessed positions of ions
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !
      ! ... if thdyn=true g vectors and pseudopotentials are recalculated for 
      ! ... the new cell parameters
@@ -338,9 +344,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !                    imposing the orthogonality
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !
      IF ( .NOT. tcg ) THEN
         !
@@ -359,9 +365,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !                   correction to displacement of ions
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !
      IF ( .NOT. tcg ) THEN
         !
@@ -371,15 +377,16 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
-        IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
+        IF ( tpre ) &
+           CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
         !
         IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm )
         !
      END IF
      !
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !                  temperature monitored and controlled
-     !---------------------------------------------------------------------------
+     !--------------------------------------------------------------------------
      !
      ekinp  = 0.D0
      ekinpr = 0.D0
@@ -433,8 +440,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      ! ... udating nose-hoover friction variables
      !
-     IF ( tnosep ) CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, &
-                                      qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
+     IF ( tnosep ) CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, &
+                                      ekin2nhp, gkbt2nhp, vnhp, kbt,  &
+                                      nhpcl, nhpdim, nhpend )
      !
      IF ( tnosee ) CALL electrons_noseupd( xnhep, xnhe0, xnhem, &
                                            delt, qne, ekinc, ekincw, vnhe )
@@ -512,12 +520,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      ! ... add energies of thermostats
      !
-     IF ( tnosep ) econt = econt + &
-                           ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
-     IF ( tnosee ) econt = econt + &
-                           electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
-     IF ( tnoseh ) econt = econt + &
-                           cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
+     IF ( tnosep ) &
+        econt = econt + ions_nose_nrg( xnhp0, vnhp, qnp, &
+                                       gkbt2nhp, kbt, nhpcl, nhpdim )
+     IF ( tnosee ) &
+        econt = econt + electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
+     IF ( tnoseh ) &
+        econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
      !
      IF ( ionode .AND. ttprint ) THEN
         !
@@ -543,13 +552,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         ! ... write out a standard XYZ file in angstroms
         !
-        DO ia = 1, nat
-           labelw( ia ) = atm( ityp( ia ) )
-        END DO
+        labelw(ind_bck(1:nat)) = atm(ityp(1:nat))
         !
-        CALL printout_pos( stdout, tau0, nat, what = 'pos', label = labelw, sort = ind_bck )
-        CALL printout_pos( 35    , tau0, nat, nfi = nfi, tps = tps )
-
+        CALL printout_pos( stdout, tau0, nat, &
+                           what = 'pos', label = labelw, sort = ind_bck )
+        CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
         !
         ALLOCATE( tauw( 3, natx ) )
         !
@@ -569,13 +576,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         WRITE( stdout, * )
         !
-        CALL printout_pos( stdout, tauw, nat, what = 'vel', label = labelw, sort = ind_bck )
-        CALL printout_pos( 34    , tauw, nat, nfi = nfi, tps = tps )
+        CALL printout_pos( stdout, tauw, nat, &
+                           what = 'vel', label = labelw, sort = ind_bck )
+        CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
         !
         WRITE( stdout, * )
         !
-        CALL printout_pos( stdout, fion, nat, what = 'for', label = labelw, sort = ind_bck )
-        CALL printout_pos( 37    , fion, nat, nfi = nfi, tps = tps )
+        CALL printout_pos( stdout, fion, nat, &
+                           what = 'for', label = labelw, sort = ind_bck )
+        CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
         !
         DEALLOCATE( tauw )
         !
@@ -786,12 +795,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END DO
      !
   END DO
-  IF( lneb ) THEN
-    DO ia = 1, nat
-      fion_out( :, ia ) = fion( :, ia ) * DBLE( if_pos( :, ia ) )
-    END DO
-  END IF
-
+  !
+  IF ( lneb ) fion_out(:,1:nat) = fion(:,1:nat) * DBLE( if_pos(:,1:nat) )
   !
   ! ...  Calculate statistics
   !
@@ -799,8 +804,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout,1949)
-     WRITE( stdout,1950) ( acc(i), i = 1, nacc )
+     WRITE( stdout, 1949 )
+     WRITE( stdout, 1950 ) ( acc(i), i = 1, nacc )
      !
   END IF
   !

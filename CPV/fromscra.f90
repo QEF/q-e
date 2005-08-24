@@ -174,10 +174,12 @@ END SUBROUTINE from_scratch_fpmd
 
 !=----------------------------------------------------------------------------=!
 
-SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself, fion, &
-      taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, rhoc, enl, ekin, stress,  &
-      detot, enthal, etot, lambda, lambdam, lambdap, ema0bg, dbec, delt,  &
-      bephi, becp, velh, dt2bye, iforce, fionm, nbeg, xnhe0, xnhem, vnhe, ekincm )
+SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
+                            eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
+                            rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
+                            enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
+                            dbec, delt, bephi, becp, velh, dt2bye, iforce,    &
+                            fionm, xnhe0, xnhem, vnhe, ekincm )
 
     USE control_flags, ONLY: tranp, trane, trhor, iprsta, tpre, tzeroc 
     USE control_flags, ONLY: tzerop, tzeroe, tfor, thdyn, lwf, tprnfor, tortho
@@ -215,7 +217,7 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst, eself
     REAL(kind=8) :: taub(:,:)
     REAL(kind=8) :: b1(:), b2(:), b3(:)
     INTEGER :: irb(:,:)
-    INTEGER :: nfi, iforce(:,:), nbeg
+    INTEGER :: nfi, iforce(:,:)
     LOGICAL :: tfirst
     COMPLEX(kind=8) :: sfac(:,:)
     COMPLEX(kind=8) :: rhog(:,:)

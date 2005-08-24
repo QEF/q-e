@@ -17,7 +17,4 @@ MODULE pseudotab_base
 
       PRIVATE
 
-CONTAINS
-
-
 END MODULE pseudotab_base

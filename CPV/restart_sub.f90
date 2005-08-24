@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -163,7 +163,7 @@ MODULE from_restart_module
     !
     CALL formf( tfirst, eself )
     !
-    CALL calbec ( 1, nsp, eigr, c0, bec )
+    CALL calbec( 1, nsp, eigr, c0, bec )
     !
     IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
     !
@@ -208,8 +208,8 @@ MODULE from_restart_module
        CALL prefor( eigr, vkb )
        !
        IF ( tzeroe ) &
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                          bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
+          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+                           bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
        !
        ! ... nlfq needs deeq bec
        !
@@ -278,7 +278,7 @@ MODULE from_restart_module
           !
           CALL phfac( tau0, ei1, ei2, ei3, eigr )
           !
-          CALL calbec ( 1, nsp, eigr, c0, bec )
+          CALL calbec( 1, nsp, eigr, c0, bec )
           !
           IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
           !

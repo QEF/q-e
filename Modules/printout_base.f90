@@ -123,7 +123,7 @@ CONTAINS
     END IF
     !
     IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
-       WRITE( iunit, 30 ) NFI, tps
+       WRITE( iunit, 30 ) nfi, tps
     ELSE IF( PRESENT( what ) ) THEN
        IF( what == 'pos' ) THEN
           WRITE( iunit, 40 )

@@ -990,9 +990,8 @@ MODULE cp_restart
       END IF
       !
       CALL mp_bcast( ierr, ionode_id )
-      IF( ierr /= 0 ) &
-        call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
-
+      IF ( ierr /= 0 ) &
+         call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
       ierr = 0
       IF( ionode ) THEN
         !
@@ -1184,6 +1183,7 @@ MODULE cp_restart
       CALL mp_bcast( ierr, ionode_id )
       IF( ierr /= 0 ) &
         call errore(" write_wfc ", " cannot open restart file for writing ", ierr )
+      ierr = 0 
       !
       IF( ionode ) THEN
          !
@@ -1202,11 +1202,6 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
-      IF( ierr /= 0 ) &
-        call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
-
-
       ALLOCATE( wtmp( MAX(igwx,1) ) )
       wtmp = 0.0d0
 
