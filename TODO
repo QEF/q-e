@@ -1,4 +1,4 @@
-TODO LIST - 7 june 2005
+TODO LIST - 24 aug 2005
 
 BUGS TO EXAMINE
 
@@ -32,6 +32,8 @@ COMMON
 
 - data files: What is exactly the status of file compatibility
   between PW and CP/FPMD?
+
+- better-structured (easily parsable) output format: XML?
 
 - fix shift in eigenvalues between CP/FPMD and PW
   The eigenvalues should be the same
@@ -110,8 +112,7 @@ PH, D3, Gamma, Raman
 
 - use charge mixing instead of potential mixing
 
-- finish simplification of phonon dispersion calculation:
-  move all phonon-specific stuff (symmetry etc) from pw into phonon
+- move all phonon-specific stuff (symmetry etc) from pw into phonon
 
 - same input for Gamma and PH
 
@@ -124,8 +125,10 @@ DOCUMENTATION
 - single source (xml?) for text file, GUI help file, user guide
   (Tone?)
 
-- examples for some features (notably variable cell) still missing
-  automated testing procedure: how to deal with numerical differences?
+- examples for some features (e.g. variable cell, many postprocessings) 
+  still missing
+
+- automated testing procedure
 
 - expand and update the manual; add a list of FAQ, or of already
   answered questions
