@@ -76,84 +76,47 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 cat > h2o.wannier.in << EOF
- &control
-    title = ' Water Molecule ',
-    calculation = 'cp-wf',
-    restart_mode = 'from_scratch',
-    ndr = 51,
-    ndw = 52,
-    nstep  = 100,
-    iprint = 100, 
-    isave  = 100,
-    tstress = .TRUE.,
-    tprnfor = .FALSE.,
-    dt    = 4.0d0,
-    etot_conv_thr = 1.d-9,
-    ekin_conv_thr = 1.d-4,
-    prefix = 'h2o_mol'
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav = 1, 
-    celldm(1) = 20.0, 
-    nat  = 3,
-    ntyp = 2,
-    nbnd = 4,
-    nelec = 8,
-    ecutwfc = 25.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
-    xc_type = 'PBE'
- /
- &electrons
-    emass = 350.d0,
-    emass_cutoff = 3.0d0,
-    orthogonalization = 'ortho',
-    ortho_eps = 5.d-8,
-    ortho_max = 250,
-    electron_dynamics = 'damp',
-    electron_damping = 0.15,
-    electron_velocities = 'zero',
-    electron_temperature = 'not_controlled',
- /
- &ions
-    ion_dynamics = 'none',
-    ion_damping = 0.00,
-    ion_radius(1) = 0.8d0,
-    ion_radius(2) = 0.8d0,
-    ion_velocities = 'zero',
-    ion_temperature = 'not_controlled',
-    ! ion_nstepe = 10
- /
- &cell
-    cell_dynamics = 'none',
-    cell_velocities = 'zero',
-    press = 0.0d0,
- /
- &wannier
-  sw_len = 100
-  efz1 = 0.5d-2
-  wfdt = 0.1d0
-  maxwfdt = 0.3
-  nit = 10
-  nsd = 10
-  wf_q = 1500.0
-  wf_dt = 5.0
-  wf_friction = 0.3
-  nsteps = 10
-  tolw = 1.d-9
-  adapt = .true.
-  calwf = 3 
-  nwf = 1 
-  wffort = 40 
- /
+&CONTROL
+  calculation   = "cp-wf",
+  restart_mode  = "from_scratch",
+  nstep         = 100,
+  iprint        = 100, 
+  isave         = 100,
+  dt            = 4.D0,
+  etot_conv_thr = 1.D-9,
+  ekin_conv_thr = 1.D-4,
+  prefix        = "h2o_mol",
+  pseudo_dir    = "$PSEUDO_DIR/",
+  outdir        = "$TMP_DIR/",
+/
+&SYSTEM
+  ibrav     = 1, 
+  celldm(1) = 20.0, 
+  nat       = 3,
+  ntyp      = 2,
+  ecutwfc   = 25.D0,
+  nr1b = 10, nr2b = 10, nr3b = 10,
+/
+&ELECTRONS
+  emass             = 350.D0,
+  emass_cutoff      = 3.D0,
+  ortho_eps         = 5.D-8,
+  ortho_max         = 250,
+  electron_dynamics = "damp",
+  electron_damping  = 0.15,
+/
+&IONS
+  ion_dynamics = "none",
+/
+&WANNIER
+/
 ATOMIC_SPECIES
-    O 16.0d0 O_US.van 1
-    H 1.00d0 H_US.van 1
+O  16.D0  O_US.van
+H   1.D0  H_US.van
 ATOMIC_POSITIONS (bohr)
-    O     0.0099    0.0099    0.0000  1 1 1
-    H     1.8325   -0.2243   -0.0001  1 1 1
-    H    -0.2243    1.8325    0.0002  1 1 1
+O     0.0099    0.0099    0.0000
+H     1.8325   -0.2243   -0.0001
+H    -0.2243    1.8325    0.0002
 EOF
 $ECHO "  running the Wannier functions calculation...\c"
 $CP_COMMAND < h2o.wannier.in > h2o.wannier.out
@@ -161,86 +124,49 @@ $ECHO " done"
 
 # calculation with an electric field
 cat > h2o.efield.in << EOF
- &control
-    title = ' Water Molecule ',
-    calculation = 'cp-wf',
-    restart_mode = 'restart',
-    ndr = 52,
-    ndw = 51,
-    nstep  = 100,
-    iprint = 100, 
-    isave  = 100,
-    tstress = .TRUE.,
-    tprnfor = .FALSE.,
-    dt    = 7.0d0,
-    etot_conv_thr = 1.d-9,
-    ekin_conv_thr = 1.d-4,
-    prefix = 'h2o_mol'
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav = 1, 
-    celldm(1) = 20.0, 
-    nat  = 3,
-    ntyp = 2,
-    nbnd = 4,
-    nelec = 8,
-    ecutwfc = 25.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
-    xc_type = 'PBE'
- /
- &electrons
-    emass = 350.d0,
-    emass_cutoff = 3.0d0,
-    orthogonalization = 'ortho',
-    ortho_eps = 5.d-8,
-    ortho_max = 250,
-    electron_dynamics = 'verlet',
-    electron_damping = 0.00,
-    electron_velocities = 'zero',
-    electron_temperature = 'not_controlled',
- /
- &ions
-    ion_dynamics = 'verlet',
-    ion_damping = 0.00,
-    ion_radius(1) = 0.8d0,
-    ion_radius(2) = 0.8d0,
-    ion_velocities = 'zero',
-    ion_temperature = 'not_controlled',
-    ! ion_nstepe = 10
- /
- &cell
-    cell_dynamics = 'none',
-    cell_velocities = 'zero',
-    press = 0.0d0,
- /
- &wannier
-  wf_efield = .true.
-  wf_switch = .true.
-  sw_len = 100
-  efz1 = 0.5d-2
-  wfdt = 0.1d0
-  maxwfdt = 0.3
-  nit = 10
-  nsd = 10
-  wf_q = 1500.0
-  wf_dt = 5.0
-  wf_friction = 0.3
-  nsteps = 10
-  tolw = 1.d-9
-  adapt = .true.
-  calwf = 3 
-  nwf = 1 
-  wffort = 40 
- /
+&CONTROL
+  calculation   = "cp-wf",
+  restart_mode  = "reset_counters",
+  ndw           = 51
+  nstep         = 200,
+  iprint        = 100, 
+  isave         = 100,
+  dt            = 6.D0,
+  prefix        = "h2o_mol",
+  pseudo_dir    = "$PSEUDO_DIR/",
+  outdir        = "$TMP_DIR/",
+/
+&SYSTEM
+  ibrav     = 1, 
+  celldm(1) = 20.0, 
+  nat       = 3,
+  ntyp      = 2,
+  ecutwfc   = 25.D0,
+  nr1b = 10, nr2b = 10, nr3b = 10,
+/
+&ELECTRONS
+  emass             = 350.D0,
+  emass_cutoff      = 3.D0,
+  ortho_eps         = 5.D-8,
+  ortho_max         = 250,
+  electron_dynamics = "verlet",
+/
+&IONS
+  ion_dynamics = "verlet",
+/
+&WANNIER
+  wf_efield = .TRUE.,
+  wf_switch = .TRUE.,
+  sw_len    = 100,
+  efz1      = 0.5D-2,
+/
 ATOMIC_SPECIES
-    O 16.0d0 O_US.van 1
-    H 1.00d0 H_US.van 1
+O  16.D0  O_US.van
+H   1.D0  H_US.van
 ATOMIC_POSITIONS (bohr)
-    O     0.0099    0.0099    0.0000  1 1 1
-    H     1.8325   -0.2243   -0.0001  1 1 1
-    H    -0.2243    1.8325    0.0002  1 1 1
+O     0.0099    0.0099    0.0000
+H     1.8325   -0.2243   -0.0001
+H    -0.2243    1.8325    0.0002
 EOF
 $ECHO "  running the calculation with electric field...\c"
 $CP_COMMAND < h2o.efield.in > h2o.efield.out
