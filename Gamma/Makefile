@@ -92,7 +92,6 @@ PWOBJS = \
 ../PW/g_psi_mod.o \
 ../PW/g_psi_nc.o \
 ../PW/gradcorr.o \
-../PW/gradcorr_nc.o \
 ../PW/gweights.o \
 ../PW/h_1psi.o \
 ../PW/h_1psi_nc.o \

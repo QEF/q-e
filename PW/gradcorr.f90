@@ -15,10 +15,12 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   USE constants, ONLY : e2
   USE kinds,     ONLY : DP
   USE funct,     ONLY : igcx, igcc
+  USE spin_orb, ONLY : domag
 
 #ifdef EXX
   USE exx,       ONLY: lexx, exxalfa
 #endif
+
   !
   IMPLICIT NONE
   !
@@ -28,13 +30,14 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   REAL (KIND=DP), INTENT(OUT)   :: v(nrxx,nspin), vtxc, etxc
   REAL (KIND=DP), INTENT(INOUT) :: rho(nrxx,nspin)
   !
-  INTEGER :: k, ipol, is
+  INTEGER :: k, ipol, is, nspin0
   !
   REAL (KIND=DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  REAL (KIND=DP), ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
   !
   REAL (KIND=DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
                     v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
-                    etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2 
+                    etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
   !
   REAL (KIND=DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
                     grhoup, grhodw, grhoud, grup, grdw
@@ -48,29 +51,49 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   etxcgc = 0.D0
   vtxcgc = 0.D0
   !
-  ALLOCATE(    h( 3, nrxx, nspin) )
-  ALLOCATE( grho( 3, nrxx, nspin) )
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+  if (nspin==4.and.domag) nspin0=2
+
+  ALLOCATE(    h( 3, nrxx, nspin0) )
+  ALLOCATE( grho( 3, nrxx, nspin0) )
+  ALLOCATE( rhoout( nrxx, nspin0) )
+  IF (nspin==4.AND.domag) THEN
+     ALLOCATE( segni( nrxx ) )
+     ALLOCATE( vgg( nrxx, nspin0 ) )
+     ALLOCATE( vsave( nrxx, nspin ) )
+     vsave=v
+     v=0.d0
+  ENDIF 
+
+  IF (nspin==4.AND.domag) THEN
+     CALL compute_rho(rho,rhoout,segni,nrxx) 
+  ELSE
+     DO is=1,nspin0
+        rhoout(:,is) = rho(:,is)
+     END DO
+  ENDIF
   !
   ! ... calculate the gradient of rho + rho_core in real space
   !
-  fac = 1.D0 / DBLE( nspin )
+  fac = 1.D0 / DBLE( nspin0 )
   !
-  DO is = 1, nspin
+  DO is = 1, nspin0
      !
-     rho(:,is) = fac * rho_core(:) + rho(:,is)
+     rhoout(:,is) = fac * rho_core(:) + rhoout(:,is)
      !
      CALL gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-                    rho(1,is), ngm, g, nl, alat, grho(1,1,is) )
+                    rhoout(1,is), ngm, g, nl, alat, grho(1,1,is) )
      !
   END DO
   !
-  IF ( nspin == 1 ) THEN
+  IF ( nspin0 == 1 ) THEN
      !
      ! ... This is the spin-unpolarised case
      !
      DO k = 1, nrxx
         !
-        arho = ABS( rho(k,1) )
+        arho = ABS( rhoout(k,1) )
         !
         IF ( arho > epsr ) THEN
            !
@@ -78,7 +101,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            !
            IF ( grho2(1) > epsg ) THEN
               !
-              segno = SIGN( 1.D0, rho(k,1) )
+              segno = SIGN( 1.D0, rhoout(k,1) )
               !
               CALL gcxc( arho, grho2, sx, sc, v1x, v2x, v1c, v2c )
 #if defined (EXX)
@@ -102,8 +125,8 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               !
               h(:,k,1) = e2 * ( v2x + v2c ) * grho(:,k,1)
               !
-              vtxcgc = vtxcgc + e2 * ( v1x + v1c ) * ( rho(k,1) - rho_core(k) )
-              etxcgc = etxcgc + e2 * ( sx + sc ) * segno
+              vtxcgc = vtxcgc+e2*( v1x + v1c ) * ( rhoout(k,1) - rho_core(k) )
+              etxcgc = etxcgc+e2*( sx + sc ) * segno
               !
            END IF
            !
@@ -121,11 +144,11 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      !
      DO k = 1, nrxx
         !
-        rh = rho(k,1) + rho(k,2)
+        rh = rhoout(k,1) + rhoout(k,2)
         !
         grho2(:) = grho(1,k,:)**2 + grho(2,k,:)**2 + grho(3,k,:)**2
         !
-        CALL gcx_spin( rho(k,1), rho(k,2), grho2(1), &
+        CALL gcx_spin( rhoout(k,1), rhoout(k,2), grho2(1), &
                        grho2(2), sx, v1xup, v1xdw, v2xup, v2xdw )
 #if defined (EXX)
         if (lexx) then
@@ -141,8 +164,8 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            !
            IF ( igcc == 3 ) THEN
               !
-              rup = rho(k,1)
-              rdw = rho(k,2)
+              rup = rhoout(k,1)
+              rdw = rhoout(k,2)
               !
               grhoup = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
               grhodw = grho(1,k,2)**2 + grho(2,k,2)**2 + grho(3,k,2)**2
@@ -156,7 +179,8 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               !
            ELSE
               !
-              zeta = ( rho(k,1) - rho(k,2) ) / rh
+              zeta = ( rhoout(k,1) - rhoout(k,2) ) / rh
+              if (nspin.eq.4.and.domag) zeta=abs(zeta)*segni(k)
               !
               grh2 = ( grho(1,k,1) + grho(1,k,2) )**2 + &
                      ( grho(2,k,1) + grho(2,k,2) )**2 + &
@@ -210,18 +234,18 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         END DO
         !
         vtxcgc = vtxcgc + &
-                 e2 * ( v1xup + v1cup ) * ( rho(k,1) - rho_core(k) * fac )
+                 e2 * ( v1xup + v1cup ) * ( rhoout(k,1) - rho_core(k) * fac )
         vtxcgc = vtxcgc + &
-                 e2 * ( v1xdw + v1cdw ) * ( rho(k,2) - rho_core(k) * fac )
+                 e2 * ( v1xdw + v1cdw ) * ( rhoout(k,2) - rho_core(k) * fac )
         etxcgc = etxcgc + e2 * ( sx + sc )
         !
      END DO
      !
   END IF
   !
-  DO is = 1, nspin
+  DO is = 1, nspin0
      !
-     rho(:,is) = rho(:,is) - fac * rho_core(:)
+     rhoout(:,is) = rhoout(:,is) - fac * rho_core(:)
      !
   END DO
   !
@@ -232,22 +256,45 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
-  DO is = 1, nspin
+  DO is = 1, nspin0
      !
      CALL grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                     nrxx, h(1,1,is), ngm, g, nl, alat, dh )
      !
      v(:,is) = v(:,is) - dh(:)
      !
-     vtxcgc = vtxcgc - SUM( dh(:) * rho(:,is) )
+     vtxcgc = vtxcgc - SUM( dh(:) * rhoout(:,is) )
      !
   END DO
   !
   vtxc = vtxc + omega * vtxcgc / ( nr1 * nr2 * nr3 )
   etxc = etxc + omega * etxcgc / ( nr1 * nr2 * nr3 )
+
+  IF (nspin==4.AND.domag) THEN
+     DO is=1,nspin0
+        vgg(:,is)=v(:,is)
+     ENDDO
+     v=vsave
+     DO k=1,nrxx
+        v(k,1)=v(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
+        amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
+        IF (amag.GT.1.d-12) THEN
+           v(k,2)=v(k,2)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
+           v(k,3)=v(k,3)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
+           v(k,4)=v(k,4)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
+        ENDIF
+     ENDDO
+  ENDIF
   !
   DEALLOCATE( dh )
   DEALLOCATE( h )
+  DEALLOCATE( rhoout )
+  IF (nspin==4.and.domag) THEN
+     DEALLOCATE( vgg )
+     DEALLOCATE( vsave )
+     DEALLOCATE( segni )
+  ENDIF
+
   !
   RETURN
   !

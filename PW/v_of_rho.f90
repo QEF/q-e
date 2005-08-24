@@ -291,17 +291,9 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   ! ... add gradient corrections (if any)
   !
-  IF ( noncolin ) THEN
-     !
-     CALL gradcorr_nc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                       nrxx, nl, ngm, g, alat, omega, e2, etxc, vtxc, v, nspin )
-     !
-  ELSE
-     !
-     CALL gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v )
-     !
-  END IF
+  !
+  CALL gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                 nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v )
   !
   CALL reduce( 1, vtxc )
   CALL reduce( 1, etxc )

@@ -103,7 +103,6 @@ get_locals.o \
 ggen.o \
 gk_sort.o \
 gradcorr.o \
-gradcorr_nc.o \
 gweights.o \
 h_epsi_her.o \
 h_1psi.o \
