@@ -278,8 +278,8 @@ MODULE cp_restart
             !
             call iotk_write_begin(iunpun,"IONS_NOSE")
               call iotk_write_dat (iunpun, "nhpcl", nhpcl)
-              call iotk_write_dat (iunpun, "xnhp", xnhp0(1:nhclm) )
-              call iotk_write_dat (iunpun, "vnhp", vnhp(1:nhclm) )
+              call iotk_write_dat (iunpun, "xnhp", xnhp0(1:nhpcl) )
+              call iotk_write_dat (iunpun, "vnhp", vnhp(1:nhpcl) )
             call iotk_write_end(iunpun,"IONS_NOSE")
             !
             call iotk_write_dat (iunpun, "ekincm", ekincm)
@@ -312,7 +312,7 @@ MODULE cp_restart
             !
             call iotk_write_begin(iunpun,"IONS_NOSE")
               call iotk_write_dat (iunpun, "nhpcl", nhpcl)
-              call iotk_write_dat (iunpun, "xnhp", xnhpm(1:nhclm) )
+              call iotk_write_dat (iunpun, "xnhp", xnhpm(1:nhpcl) )
               ! call iotk_write_dat (iunpun, "vnhp", vnhp)
             call iotk_write_end(iunpun,"IONS_NOSE")
             !
@@ -638,11 +638,16 @@ MODULE cp_restart
           END IF
         call iotk_scan_end(iunpun,"IONS")
         !
-        ! 
+      END IF
+      ! 
+      IF( ionode ) THEN
         !
         call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
         call iotk_scan_attr (attr, "nt", nt_ )
-
+        !
+      END IF
+      ! 
+      IF( ionode ) THEN
           !
           IF( nt_ > 0 ) THEN
             !
@@ -660,8 +665,8 @@ MODULE cp_restart
               !
               call iotk_scan_begin(iunpun,"IONS_NOSE")
                 call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
-                call iotk_scan_dat (iunpun, "xnhp", xnhp0(1:nhclm) )
-                call iotk_scan_dat (iunpun, "vnhp", vnhp(1:nhclm) )
+                call iotk_scan_dat (iunpun, "xnhp", xnhp0( 1 : MIN( nhpcl_ , nhpcl ) ) )
+                call iotk_scan_dat (iunpun, "vnhp", vnhp ( 1 : MIN( nhpcl_ , nhpcl ) ) )
               call iotk_scan_end(iunpun,"IONS_NOSE")
               !
               call iotk_scan_dat (iunpun, "ekincm", ekincm)
@@ -689,7 +694,11 @@ MODULE cp_restart
             ierr = 40
             GOTO 100
           END IF
-         
+        !
+      END IF
+      !   
+      IF( ionode ) THEN
+
           IF( nt_ > 1 ) THEN
             !
             call iotk_scan_begin(iunpun,"STEPM")
@@ -701,7 +710,7 @@ MODULE cp_restart
               !
               call iotk_scan_begin(iunpun,"IONS_NOSE")
                 call iotk_scan_dat (iunpun, "nhpcl", nhpcl_ )
-                call iotk_scan_dat (iunpun, "xnhp", xnhpm(1:nhclm) )
+                call iotk_scan_dat (iunpun, "xnhp", xnhpm( 1 : MIN( nhpcl_ , nhpcl ) ) )
               call iotk_scan_end(iunpun,"IONS_NOSE")
               !
               call iotk_scan_begin(iunpun,"ELECTRONS_NOSE")
@@ -720,10 +729,13 @@ MODULE cp_restart
               call iotk_scan_end(iunpun,"CELL_NOSE")
               !
             call iotk_scan_end(iunpun,"STEPM")
-
             !
           END IF
           !
+      END IF   !  ionode
+      ! 
+      IF( ionode ) THEN
+
         call iotk_scan_end(iunpun,"TIMESTEPS")
         !
       END IF   !  ionode
