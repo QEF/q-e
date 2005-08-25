@@ -320,13 +320,13 @@ CONTAINS
     CHARACTER(LEN=1), EXTERNAL :: capital
 
     ! This is so we do not read a autopilot card twice from the input file
-    IF (( pilot_p == .FALSE.) .and. tread ) THEN
+    IF (( .NOT. pilot_p ) .and. tread ) THEN
        CALL errore( ' card_autopilot  ', ' two occurrence ', 2 )
     END IF
 
     ! If this routined has been called from parse_mailbox
     ! the pilot_type should be set
-    IF ( pilot_p == .TRUE.) THEN
+    IF ( pilot_p ) THEN
        ! IF its MANUAL then process this line first! 
        ! other skip this line and get the next
        IF (TRIM(pilot_type) .eq. 'MANUAL') THEN
@@ -347,7 +347,7 @@ CONTAINS
 
     j=0
     ! must use a local (j) since n_rules may not get updated correctly
-    DO WHILE ((endrules .eq. .FALSE.) .and. j<=max_rules)
+    DO WHILE ((.NOT. endrules) .and. j<=max_rules)
        j=j+1
 
        IF (j > max_rules) THEN
@@ -362,7 +362,7 @@ CONTAINS
        ! this call to card_autopilot is from parse_mailbox
        ! and not from read_cards
        IF(pilot_p) THEN
-          IF ( process_this_line == .FALSE. ) THEN
+          IF ( .NOT. process_this_line ) THEN
              ! get the next one
              CALL read_line( input_line, end_of_file = tend)
           END IF
@@ -647,7 +647,7 @@ CONTAINS
 
     write(*,*) 'n_rules=', n_rules
 
-    CALL flush(6)
+    CALL flush_unit(6)
 
 20  CONTINUE
 
@@ -783,7 +783,7 @@ CONTAINS
     write(*,*) '  event_step==', event_step(event_index)
     write(*,*) '========================================'
     write(*,*)
-    call flush(6)
+    call flush_unit(6)
 
 
     !----------------------------------------
@@ -1077,7 +1077,7 @@ CONTAINS
     !write(*,*) '  event_step==', event_step(event_index)
     !write(*,*) '========================================'
     !write(*,*)
-    !call flush(6)
+    !call flush_unit(6)
     !END IF
 
 
@@ -1095,7 +1095,7 @@ CONTAINS
           WRITE(*,*) 
           WRITE(*,*) 'Pilot: Mailbox Found!'
           WRITE(*,*) '       CURRENT_NFI=', current_nfi
-          call flush(6)
+          call flush_unit(6)
 
           ! Open the mailbox
           IF ( ionode ) OPEN( UNIT = pilot_unit, FILE = TRIM( mbfile ) )
@@ -1111,7 +1111,7 @@ CONTAINS
 
        END IF
 
-       IF( pause_p == .FALSE.) THEN
+       IF( .NOT. pause_p ) THEN
           EXIT pause_loop
        ELSE
           write(*,*) 'SLEEPING .... send another pilot.mb'
