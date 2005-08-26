@@ -158,6 +158,8 @@ SUBROUTINE punch_band (filband, spin_component)
   IF (nspin==1.OR.nspin==4) THEN
      nks1=1
      nks2=nks
+     if (spin_component .ne. 1)  &
+        CALL errore('punch_bands','uncorrect spin_component',1)
   ELSE IF (nspin.eq.2) THEN
      IF (spin_component == 1) THEN
         nks1=1
