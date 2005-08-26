@@ -543,9 +543,12 @@ CONTAINS
 
         DO is = 1, nspnl
 
-           DO l = 1, nbeta( is )
+           DO l = 1, nbetax
               CALL nullify_spline(  wnl_sp( l, is ) )
               CALL nullify_spline( wnla_sp( l, is ) )
+           END DO
+
+           DO l = 1, nbeta( is )
               CALL allocate_spline(  wnl_sp(l,is), pstab_size, xgmin, xgmax )
               CALL allocate_spline( wnla_sp(l,is), pstab_size, xgmin, xgmax )
            END DO

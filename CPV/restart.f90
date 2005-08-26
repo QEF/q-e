@@ -92,7 +92,7 @@
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,  &
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
-     &       fion, tps, mat_z, occ_f )
+     &       fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -103,6 +103,7 @@
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
       USE electrons_module, ONLY: ei
       USE io_files,         ONLY: scradir
+      USE ensemble_dft,     ONLY: tens
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -119,8 +120,10 @@
       real(kind=8), INTENT(in) :: pmass(:)
       real(kind=8), INTENT(in) :: celldm(:)
       real(kind=8), INTENT(in) :: tps
+      real(kind=8), INTENT(in) :: rho(:,:)
       integer, INTENT(in) :: ibrav
-      real(kind=8), INTENT(in) :: mat_z(:,:,:), occ_f(:)
+      real(kind=8), INTENT(in) :: occ_f(:)
+      real(kind=8), INTENT(in) :: mat_z(:,:,:)
 
       real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
@@ -159,11 +162,19 @@
         end do
       end do
 
-      CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
-        occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z, ei, &
-        c02 = c0, cm2 = cm  )
+      IF( tens ) THEN
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
+          occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
+          rho, c02 = c0, cm2 = cm, mat_z = mat_z  )
+      ELSE
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
+          occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
+          rho, c02 = c0, cm2 = cm  )
+      END IF
 
       DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
@@ -237,11 +248,19 @@
       ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
 
-      CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-        ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-        vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
-        occ_ , lambda, lambdam, b1, b2, b3, &
-        xnhe0, xnhem, vnhe, ekincm, mat_z, tens, c02 = c0, cm2 = cm  )
+      IF( tens ) THEN
+         CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
+                occ_ , lambda, lambdam, b1, b2, b3, &
+                xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm, mat_z = mat_z )
+      ELSE
+         CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
+                occ_ , lambda, lambdam, b1, b2, b3, &
+                xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm )
+      END IF
 
 
       ! AutoPilot (Dynamic Rules) Implementation
@@ -299,6 +318,7 @@
         USE cp_restart, ONLY: cp_writefile
         USE electrons_module, ONLY: ei
         USE io_files, ONLY: scradir
+        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
 
         IMPLICIT NONE 
  
@@ -317,9 +337,10 @@
         REAL(dbl), INTENT(IN) :: trutime
 
         REAL(dbl), ALLOCATABLE :: lambda(:,:)
+        REAL(dbl), ALLOCATABLE :: rhow(:,:)
         REAL(dbl) S0, S1
         REAL(dbl) :: ekincm
-        REAL(dbl) :: mat_z(1,1,nspin)
+        INTEGER   :: i, j, k, iss, ir
              
         s0 = cclock()
 
@@ -330,16 +351,36 @@
         !   properties on the writefile subroutine
 
         ALLOCATE( lambda(nbsp,nbsp) )
+        ALLOCATE( rhow( nr1x * nr2x * SIZE( rho, 3 ), nspin ) )
         lambda  = 0.0d0
         ekincm = 0.0d0
-        mat_z = 0.0d0
+        !
+        !
+        IF( SIZE( rho, 1 ) /= nr1x .OR.  SIZE( rho, 2 ) /= nr2x ) THEN
+           WRITE( stdout, * ) nr1x, nr2x
+           WRITE( stdout, * ) SIZE( rho, 1 ), SIZE( rho, 2 )
+           CALL errore( ' writefile_fpmd ', ' rho dimensions do not correspond ', 1 )
+        END IF
+        !
+        DO iss = 1, nspin
+           ir = 0
+           DO k = 1, SIZE( rho, 3 )
+              DO j = 1, nr2x
+                 DO i = 1, nr1x
+                   ir = ir + 1
+                   rhow( ir, iss ) = rho( i, j, k, iss )
+                 END DO
+              END DO
+           END DO
+        END DO
 
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, mat_z, ei, c04 = c0, cm4 = cm )
+          xnhe0, xnhem, vnhe, ekincm, ei, rhow, c04 = c0, cm4 = cm )
 
+        DEALLOCATE( rhow )
         DEALLOCATE( lambda )
 
         s1 = cclock()
@@ -413,7 +454,6 @@
         REAL(dbl) :: hm1_ (3,3)
         REAL(dbl) :: gvel_ (3,3)
         REAL(dbl) :: hvel_ (3,3)
-        REAL(dbl) :: mat_z_(1,1,nspin)
         REAL(dbl) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
 
@@ -427,7 +467,7 @@
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , b1, b2,   &
-          b3, xnhe0, xnhem, vnhe, ekincm, mat_z_ , tens, c04 = c0, cm4 = cm )
+          b3, xnhe0, xnhem, vnhe, ekincm, c04 = c0, cm4 = cm )
 
         DEALLOCATE( lambda_ )
 

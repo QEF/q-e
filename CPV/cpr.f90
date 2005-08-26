@@ -760,7 +760,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                            vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
                            vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0,     &
                            xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
-                           celldm, fion, tps, z0, f )
+                           celldm, fion, tps, z0, f, rhor )
            !
         ELSE
            !
@@ -768,7 +768,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,     &
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
-                           ibrav, celldm, fion, tps, z0, f )
+                           ibrav, celldm, fion, tps, z0, f, rhor )
            !
         END IF
         !
@@ -838,7 +838,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,    &
                                  xnhh0, xnhhm, vnhh, velh, ecutp, ecutw,     &
-                                 delt, celldm, fion, tps, z0, f )
+                                 delt, celldm, fion, tps, z0, f, rhor )
      !
      IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
      !
@@ -919,7 +919,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
                      xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh, velh,     &
                      ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,      &
-                     z0, f )
+                     z0, f, rhor )
      !
   ELSE
      !
@@ -927,7 +927,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                      xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh,    &
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,&
-                     z0, f )
+                     z0, f, rhor )
      !
   END IF
   !

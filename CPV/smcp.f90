@@ -1379,7 +1379,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
                 &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
-                &       rep(sm_k)%fion, tps, mat_z, f )
+                &       rep(sm_k)%fion, tps, mat_z, f, rhor )
 
         ENDIF
         !
@@ -1546,7 +1546,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
           &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
           &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
-          &       rep(sm_k)%fion, tps, mat_z, f )
+          &       rep(sm_k)%fion, tps, mat_z, f, rhor )
 
      !
      !

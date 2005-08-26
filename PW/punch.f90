@@ -86,7 +86,7 @@ SUBROUTINE punch()
   !
   iunpun = 999
   !
-  CALL pw_writefile( '' )
+  CALL pw_writefile( 'all' )
   !
 #endif
   !

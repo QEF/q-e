@@ -229,7 +229,7 @@ MODULE pw_restart
          ! ... IONS
          !
          CALL write_ions( nsp, nat, atm, ityp, &
-                          psfile, pseudo_dir, amass, tau, if_pos, dirname )
+                          psfile, pseudo_dir, amass, tau, if_pos, dirname, "alat" )
          !
          ! ... SYMMETRIES
          !
@@ -258,12 +258,15 @@ MODULE pw_restart
                          DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
                          TFIXED_OCC = tfixed_occ, LSDA = lsda, NELUP = nbnd,  &
                          NELDW = nbnd, F_INP = f_inp )
+      END IF
+      !
+      num_k_points = nkstot
+      !
+      IF ( nspin == 2 ) num_k_points = nkstot / 2
+      !
+      IF ( ionode ) THEN
          !
          ! ... BRILLOUIN_ZONE
-         !
-         num_k_points = nkstot
-         !
-         IF ( nspin == 2 ) num_k_points = nkstot / 2
          !
          CALL write_bz( num_k_points, xk, wk )
          !
@@ -419,7 +422,7 @@ MODULE pw_restart
                !
                CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
-                               ngk(ik-iks+1), filename )
+                               ngk(ik-iks+1), filename, 1.0d0 )
                !
                ik_eff = ik + num_k_points
                !
@@ -444,7 +447,7 @@ MODULE pw_restart
                !
                CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik_eff-iks+1),   &
-                               ngk(ik_eff-iks+1), filename )
+                               ngk(ik_eff-iks+1), filename, 1.0d0 )
                !
             ELSE
                !
@@ -480,7 +483,7 @@ MODULE pw_restart
                      CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                      evc_nc(:,ipol,:), npw_g, nbnd,           &
                                      igk_l2g(:,ik-iks+1), ngk(ik-iks+1),      &
-                                     filename )
+                                     filename, 1.0d0 )
                      !
                   END DO
                   !
@@ -488,7 +491,7 @@ MODULE pw_restart
                   !
                   CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                   evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
-                                  ngk(ik-iks+1), filename )
+                                  ngk(ik-iks+1), filename, 1.0d0 )
                   !
                END IF
                !
@@ -1619,7 +1622,7 @@ MODULE pw_restart
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
-                          nspin, wf0, ngw, nbnd, igl, ngwl, filename )
+                          nspin, wf0, ngw, nbnd, igl, ngwl, filename, scalef )
       !------------------------------------------------------------------------
       !
       USE mp_wave
@@ -1637,6 +1640,10 @@ MODULE pw_restart
       INTEGER,            INTENT(IN) :: ngwl
       INTEGER,            INTENT(IN) :: igl(:)
       CHARACTER(LEN=256), INTENT(IN) :: filename
+      !
+      !  scale factor, usually  1.0 for pw and 1/SQRT( omega ) CP
+      !
+      REAL(KIND=DP),      INTENT(IN) :: scalef    
       !
       INTEGER                       :: i, j, ierr
       INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
@@ -1751,6 +1758,7 @@ MODULE pw_restart
          CALL iotk_write_attr( attr, "ispin", ispin )
          CALL iotk_write_attr( attr, "nspin", nspin )
          CALL iotk_write_attr( attr, "igwx",  igwx )
+         CALL iotk_write_attr( attr, "scale_factor",  scalef )
          !
          CALL iotk_write_empty( iuni, "INFO", attr )
          !

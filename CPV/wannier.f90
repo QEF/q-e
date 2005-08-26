@@ -644,7 +644,7 @@ MODULE wannier_subroutines
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,   &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,     &
                                  xnhh0, xnhhm, vnhh, velh, ecut, ecutw, delt, &
-                                 celldm, fion, tps, mat_z, occ_f )
+                                 celldm, fion, tps, mat_z, occ_f, rho )
     !--------------------------------------------------------------------------
     !
     USE efcalc,         ONLY : wf_efield
@@ -679,7 +679,7 @@ MODULE wannier_subroutines
     REAL(KIND=dbl)    :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
     REAL(KIND=dbl)    :: ecut, ecutw, delt, celldm(:)
     REAL(KIND=dbl)    :: fion(:,:), tps
-    REAL(KIND=dbl)    :: mat_z(:,:,:), occ_f(:)
+    REAL(KIND=dbl)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
     !
     !
     ! ... More Wannier Function Options
@@ -706,7 +706,7 @@ MODULE wannier_subroutines
                        tausm, vels, velsm,acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, &
                        vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
-                       fion, tps, mat_z, occ_f )
+                       fion, tps, mat_z, occ_f, rho )
        !
        CALL stop_run( .TRUE. )
        !

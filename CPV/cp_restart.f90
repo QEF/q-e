@@ -28,8 +28,8 @@ MODULE cp_restart
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, wk, &
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, occ0, &
-        occm, lambda0, lambdam, xnhe0, xnhem, vnhe, ekincm, mat_z, et, &
-        c04, cm4, c02, cm2 )
+        occm, lambda0, lambdam, xnhe0, xnhem, vnhe, ekincm, et, rho, &
+        c04, cm4, c02, cm2, mat_z )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -37,7 +37,7 @@ MODULE cp_restart
       USE control_flags, ONLY: gamma_only, force_pairing
       USE io_files, ONLY: iunpun, xmlpun, psfile, pseudo_dir, prefix
       USE printout_base, ONLY: title
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE gvecp, ONLY: ngm, ngmt, ecutp, gcutp
@@ -51,6 +51,7 @@ MODULE cp_restart
       USE funct,     ONLY: dft
       USE mp, ONLY: mp_sum, mp_bcast
       USE parameters, ONLY: nhclm
+      USE fft_base, ONLY: dfftp
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ndw    !
@@ -88,14 +89,15 @@ MODULE cp_restart
       REAL(dbl), INTENT(IN) :: xnhem ! 
       REAL(dbl), INTENT(IN) :: vnhe ! 
       REAL(dbl), INTENT(IN) :: ekincm ! 
-      REAL(dbl), INTENT(IN) :: mat_z(:,:,:) ! 
       REAL(dbl), INTENT(IN) :: et(:,:,:) ! 
+      REAL(dbl), INTENT(IN) :: rho(:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c04(:,:,:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm4(:,:,:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c02(:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm2(:,:) ! 
+      REAL(dbl), OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
-      CHARACTER(LEN=256)      :: dirname, filename
+      CHARACTER(LEN=256)      :: dirname, filename, rho_file
       CHARACTER(iotk_attlenx) :: attr
       CHARACTER(LEN=4)        :: cspin
       INTEGER :: kunit, ib
@@ -107,9 +109,12 @@ MODULE cp_restart
       INTEGER, ALLOCATABLE :: ftmp(:,:)
       INTEGER, ALLOCATABLE :: ityp(:)
       REAL(dbl), ALLOCATABLE :: tau(:,:)
+      REAL(dbl), ALLOCATABLE :: rhosum(:)
       REAL(dbl) :: omega, htm1(3,3), h(3,3)
       REAL(dbl) :: a1(3), a2(3), a3(3)
       REAL(dbl) :: b1(3), b2(3), b3(3)
+      REAL(dbl) :: nelec
+      REAL(dbl) :: scalef
       LOGICAL   :: lsda
 
       !
@@ -143,6 +148,8 @@ MODULE cp_restart
       a2 = ht( 2, : )
       a3 = ht( 3, : )
       CALL recips( a1, a2, a3, b1, b2, b3 )
+      !
+      scalef = 1.0d0 / SQRT( omega )
       !
       !  Compute array ityp, and tau
       !
@@ -211,7 +218,7 @@ MODULE cp_restart
         ! ... IONS
         !
         CALL write_ions( nsp, nat, atm, ityp, &
-                         psfile, pseudo_dir, amass, tau, iforce, dirname )
+                         psfile, pseudo_dir, amass, tau, iforce, dirname, "Bohr" )
         !
         ! ... PLANE_WAVES
         !
@@ -251,12 +258,52 @@ MODULE cp_restart
         !
         CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
         !
-        CALL iotk_link( iunpun, "RHO_FILE", TRIM( prefix ) // ".rho", &
-                        CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
-        !
-        ! CALL iotk_write_begin( iunpun, "CHARGE-DENSITY", attr = attr )
-        ! CALL iotk_write_dat( iunpun, "RHO", rho )
-        ! CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
+      END IF
+      !
+      rho_file = TRIM( prefix ) // ".rho"
+      !
+      IF( ionode ) THEN
+         CALL iotk_link( iunpun, "RHO_FILE", rho_file, CREATE = .FALSE., BINARY = .FALSE. )
+      END IF
+      !
+      rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+      !
+      IF( nspin == 1 ) THEN
+         !
+         CALL write_rho_xml( rho_file, rho(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF( nspin == 2 ) THEN
+         !
+         ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+         rhosum = rho(:,1) + rho(:,2) 
+         !
+         CALL write_rho_xml( rho_file, rhosum, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+         DEALLOCATE( rhosum )
+         !
+         rho_file = TRIM( prefix ) // ".rhoup"
+         !
+         IF( ionode ) THEN
+            CALL iotk_link( iunpun, "RHO_FILE", rho_file, CREATE = .FALSE., BINARY = .FALSE. )
+         END IF
+         !
+         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         !
+         CALL write_rho_xml( rho_file, rho(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+         rho_file = TRIM( prefix ) // ".rhodw"
+         !
+         IF( ionode ) THEN
+            CALL iotk_link( iunpun, "RHO_FILE", rho_file, CREATE = .FALSE., BINARY = .FALSE. )
+         END IF
+         !
+         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         !
+         CALL write_rho_xml( rho_file, rho(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+      END IF
+      !
+      IF( ionode ) THEN
         !
         CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
 
@@ -342,12 +389,14 @@ MODULE cp_restart
         !
         CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
         !
+        nelec = nelt
+        !
         IF( nspin == 2 ) THEN
           call iotk_write_attr (attr,"up",nel(1),first=.true.)
           call iotk_write_attr (attr,"dw",nel(2))
-          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt, ATTR = attr )
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec, ATTR = attr )
         ELSE
-          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt )
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
         END IF
         !
         IF( nspin == 2 ) THEN
@@ -401,46 +450,62 @@ MODULE cp_restart
             ! 
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+               IF( nspin == 1 ) THEN
+                  filename = TRIM( wfc_filename( ".", 'evc', ik ) )
+               ELSE
+                  filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+               END IF
                !
                CALL iotk_link( iunpun, "wfc", filename, &
                                CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               IF( nspin == 1 ) THEN
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+               ELSE
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               END IF
 
             END IF
 
             IF( PRESENT( C04 ) ) THEN
               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
                             c04(:,:,ik,ispin), ngwt, nbnd, ig_l2g,   &
-                            ngw, filename )
+                            ngw, filename, scalef )
             ELSE IF( PRESENT( C02 ) ) THEN
               ib = iupdwn(ispin)
               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
                             c02(:,ib:), ngwt, nbnd, ig_l2g,   &
-                            ngw, filename )
+                            ngw, filename, scalef )
             END IF
 
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( ".", 'evcm', ik, ispin ) )
+               IF( nspin == 1 ) THEN
+                  filename = TRIM( wfc_filename( ".", 'evcm', ik ) )
+               ELSE
+                  filename = TRIM( wfc_filename( ".", 'evcm', ik, ispin ) )
+               END IF
                !
                CALL iotk_link( iunpun, "wfcm", filename, &
                                CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
                !
-               filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+               IF( nspin == 1 ) THEN
+                  filename = TRIM( wfc_filename( dirname, 'evcm', ik ) )
+               ELSE
+                  filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+               END IF
 
             END IF
 
             IF( PRESENT( cm4 ) ) THEN
               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
                             cm4(:,:,ik,ispin), ngwt, nbnd, ig_l2g,  &
-                            ngw, filename )
+                            ngw, filename, scalef )
             ELSE IF( PRESENT( c02 ) ) THEN
               ib = iupdwn(ispin)
               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
                             cm2(:,ib:), ngwt, nbnd, ig_l2g,  &
-                            ngw, filename )
+                            ngw, filename, scalef )
             END IF
 
             !
@@ -458,7 +523,7 @@ MODULE cp_restart
          ! 
          cspin = iotk_index(ispin)
          !
-         IF ( ionode ) THEN
+         IF ( ionode .AND. PRESENT( mat_z ) ) THEN
             ! 
             filename = 'mat_z' // cspin
             call iotk_link(iunpun,"mat_z" // TRIM( cspin ), filename,create=.true.,binary=.true.,raw=.true.)
@@ -508,7 +573,7 @@ MODULE cp_restart
         ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, stau0, &
         svel0, staum, svelm, force, vnhp, xnhp0, xnhpm, nhpcl, &
         occ0, occm, lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, &
-        vnhe, ekincm, mat_z, tens, c04, cm4, c02, cm2 )
+        vnhe, ekincm, c04, cm4, c02, cm2, mat_z )
       !
       USE iotk_module
       USE kinds, ONLY: dbl
@@ -524,11 +589,12 @@ MODULE cp_restart
       USE gvecs, ONLY: ngs, ngst
       USE gvecw, ONLY: ngw, ngwt, ecutw
       USE electrons_base, ONLY: nspin, nbnd, nelt, nel, nupdwn, iupdwn
-      USE cell_base, ONLY: ibrav, alat, celldm, symm_type
-      USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass
+      USE cell_base, ONLY: ibrav, alat, celldm, symm_type, s_to_r, r_to_s
+      USE ions_base, ONLY: nsp, nat, na, atm, zv, pmass, sort_tau, atm, ityp, ions_cofmass
       USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g, mill_l
       USE mp, ONLY: mp_sum, mp_bcast
-      USE parameters, ONLY: nhclm
+      USE parameters, ONLY: nhclm, ntypx
+      USE constants,  ONLY: eps8, ANGSTROM_AU
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: ndr    !  I/O unit number
@@ -569,41 +635,54 @@ MODULE cp_restart
       REAL(dbl), INTENT(INOUT) :: xnhem !
       REAL(dbl), INTENT(INOUT) :: vnhe !  
       REAL(dbl), INTENT(INOUT) :: ekincm !  
-      REAL(dbl), INTENT(INOUT) :: mat_z(:,:,:) ! 
-      LOGICAL, INTENT(IN) :: tens
       COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c04(:,:,:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm4(:,:,:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c02(:,:) ! 
       COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm2(:,:) ! 
+      REAL(dbl),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
 
       !
       CHARACTER(LEN=256) :: dirname, kdirname, filename
       CHARACTER(LEN=5)   :: kindex
       CHARACTER(LEN=4)   :: cspin
-      INTEGER :: strlen
+      INTEGER            :: strlen
+      INTEGER            :: kunit
+      INTEGER            :: k1, k2, k3
+      INTEGER            :: nk1, nk2, nk3
+      INTEGER            :: i, j, ispin, ig, nspin_wfc, ierr, ik
+      REAL(dbl)          :: omega, htm1( 3, 3 ), hinv( 3, 3 ), scalef
+      LOGICAL            :: found
+      LOGICAL            :: tread_cm
+      INTEGER, ALLOCATABLE    :: mill(:,:)
       CHARACTER(iotk_attlenx) :: attr
-      INTEGER :: kunit
-      INTEGER :: k1, k2, k3
-      INTEGER :: nk1, nk2, nk3
-      INTEGER :: i, j, ispin, ig, nspin_wfc, ierr, ik
-      INTEGER, ALLOCATABLE :: mill(:,:)
-      REAL(dbl) :: omega, htm1(3,3)
       !
       ! Variables read for testing pourposes
       !
-      INTEGER :: ibrav_
-      CHARACTER(LEN=256) :: symm_type_
-      INTEGER :: nat_ , nsp_, na_
-      INTEGER :: nk_ , ik_ , nt_
-      LOGICAL :: gamma_only_ , found
-      REAL(dbl) :: alat_ , a1_ (3), a2_ (3), a3_ (3)
-      REAL(dbl) :: pmass_ , zv_
-      REAL(dbl) :: celldm_ ( 6 )
-      INTEGER :: ispin_ , nspin_ , ngwt_ , nbnd_ , nelt_
-      INTEGER :: nhpcl_ 
-      INTEGER :: ib 
+      INTEGER          :: ibrav_
+      CHARACTER(LEN=9) :: symm_type_
+      CHARACTER(LEN=3) :: atm_( ntypx )
+      INTEGER          :: nat_ , nsp_, na_
+      INTEGER          :: nk_ , ik_ , nt_
+      LOGICAL          :: gamma_only_ 
+      REAL(dbl)        :: alat_ , a1_ (3), a2_ (3), a3_ (3)
+      REAL(dbl)        :: pmass_ , zv_ 
+      REAL(dbl)        :: celldm_ ( 6 )
+      INTEGER          :: ispin_ , nspin_ , ngwt_ , nbnd_ 
+      REAL(dbl)        :: nelec_
+      REAL(dbl)        :: scalef_
+      REAL(dbl)        :: wk_
+      INTEGER          :: nhpcl_ 
+      INTEGER          :: ib 
+      REAL(dbl)        :: amass_ ( ntypx )
+      INTEGER,   ALLOCATABLE   :: ityp_ ( : ) 
+      INTEGER,   ALLOCATABLE   :: isrt_ ( : ) 
+      REAL(dbl), ALLOCATABLE   :: tau_ ( :, : ) 
+      INTEGER,   ALLOCATABLE   :: if_pos_ ( :, : ) 
+      CHARACTER(LEN=256)       :: psfile_ ( ntypx )
+      CHARACTER(LEN=80)        :: pos_unit
 
       kunit = 1
+      found = .FALSE.
 
       dirname = restart_dir( scradir, ndr )
       filename = TRIM( dirname ) // '/' // 'restart.xml'
@@ -617,37 +696,63 @@ MODULE cp_restart
         call errore(" cp_readfile ", " cannot open restart file for reading ", ierr )
 
       ierr = 0
+
       IF( ionode ) THEN
         !
-        call iotk_scan_begin(iunpun,"STATUS" )
-        call iotk_scan_empty(iunpun,"STEP",attr)
-        call iotk_scan_attr (attr,"nfi",nfi)
-        call iotk_scan_dat (iunpun, "TIME", simtime )
-        call iotk_scan_dat (iunpun, "TITLE", title )
-        call iotk_scan_end(iunpun,"STATUS")
+        call iotk_scan_begin(iunpun,"STATUS", found = found )
+        !
+        IF( found ) THEN
+           !
+           call iotk_scan_empty(iunpun,"STEP",attr)
+           call iotk_scan_attr (attr,"nfi",nfi)
+           call iotk_scan_dat (iunpun, "TIME", simtime )
+           call iotk_scan_dat (iunpun, "TITLE", title )
+           call iotk_scan_end(iunpun,"STATUS")
+           !
+        END IF
+        !
+      END IF
+      !
+      !  Read cell and positions
+      !
+      ALLOCATE( tau_ ( 3, nat ) )
+      ALLOCATE( if_pos_ ( 3, nat ) )
+      ALLOCATE( ityp_ ( nat ) )
+      !
+      IF( ionode ) THEN
         !
         call read_cell( ibrav_ , symm_type_ , celldm_ , alat_ , &
                         a1_ , a2_ , a3_ , b1, b2, b3 )
+      END IF
+      !
+      IF( ionode ) THEN
         !
-        call iotk_scan_begin(iunpun,"IONS")
-          call iotk_scan_dat ( iunpun, "NUMBER_OF_ATOMS", nat_ )
-          call iotk_scan_dat ( iunpun, "NUMBER_OF_SPECIES", nsp_ )
-          IF( nsp_ /= nsp .OR. nat_ /= nat ) THEN 
-            ierr = 10
-            GOTO 100
-          END IF
-        call iotk_scan_end(iunpun,"IONS")
+        call read_ions( nsp_ , nat_ , atm_ , ityp_ , psfile_ , amass_ , tau_ , if_pos_ , pos_unit, ierr )
+        !
+        IF( ierr == 0 ) THEN
+           IF( nsp_ /= nsp .OR. nat_ /= nat ) ierr = 2
+           DO i = 1, nat
+              IF( ityp_( i ) /= ityp( i ) ) ierr = 3
+           END DO
+        END IF
+        !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+        call errore(" cp_readfile ", " cannot read positions from restart file ", ierr )
+      ! 
+      ! Read MD timesteps variables
+      !
+      IF( ionode ) THEN
+        !
+        call iotk_scan_begin( iunpun, "TIMESTEPS", attr, found = found )
         !
       END IF
       ! 
-      IF( ionode ) THEN
+      IF( ionode .AND. found ) THEN
         !
-        call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
-        call iotk_scan_attr (attr, "nt", nt_ )
-        !
-      END IF
-      ! 
-      IF( ionode ) THEN
+        call iotk_scan_attr ( attr, "nt", nt_ )
           !
           IF( nt_ > 0 ) THEN
             !
@@ -688,17 +793,12 @@ MODULE cp_restart
               call iotk_scan_end(iunpun,"CELL_NOSE")
               !
             call iotk_scan_end(iunpun,"STEP0")
-
             !
           ELSE
             ierr = 40
             GOTO 100
           END IF
-        !
-      END IF
-      !   
-      IF( ionode ) THEN
-
+          !
           IF( nt_ > 1 ) THEN
             !
             call iotk_scan_begin(iunpun,"STEPM")
@@ -732,13 +832,75 @@ MODULE cp_restart
             !
           END IF
           !
-      END IF   !  ionode
-      ! 
-      IF( ionode ) THEN
 
         call iotk_scan_end(iunpun,"TIMESTEPS")
         !
+      ELSE IF( ionode ) THEN
+        !
+        !  MD time steps not found, try to recover from CELL and POSITIONS
+        ! 
+        acc = 0.0d0
+        ! 
+        ALLOCATE( isrt_ ( nat ) )
+        !
+        SELECT CASE ( TRIM( pos_unit ) )
+           CASE ( "alat" )
+              tau_ = tau_ * alat_
+           CASE ( "Angstrom" )
+              tau_ = tau_ * ANGSTROM_AU
+           CASE DEFAULT
+        END SELECT
+        !
+        CALL sort_tau( taui, isrt_ , tau_ , ityp_ , nat_ , nsp_ )
+        ! 
+        ht( 1, : ) = a1_
+        ht( 2, : ) = a2_
+        ht( 3, : ) = a3_
+        !
+        CALL invmat( 3, ht, htm1, omega )
+        !
+        hinv = TRANSPOSE( htm1 )
+        !
+        CALL r_to_s( taui, stau0, na, nsp, hinv )
+        !
+        CALL ions_cofmass( taui, amass_ , na, nsp, cdmi )
+        !
+        staum = stau0
+        svel0 = 0.0d0
+        svelm = 0.0d0
+        force = 0.0d0
+        !
+        htm = ht
+        htvel = 0.0d0
+        gvel  = 0.0d0
+        xnhh0 = 0.0d0
+        vnhh  = 0.0d0
+        xnhhm = 0.0d0
+        !
+        xnhe0 = 0.0d0
+        xnhem = 0.0d0
+        vnhe  = 0.0d0
+        !
+        ekincm = 0.0d0
+        !
+        xnhp0  = 0.0d0
+        xnhpm  = 0.0d0
+        vnhp   = 0.0d0
+        !
+        DEALLOCATE( isrt_  )
+
       END IF   !  ionode
+
+      DEALLOCATE( tau_  )
+      DEALLOCATE( if_pos_  )
+      DEALLOCATE( ityp_  )
+
+      !
+      !  Compute the scale factor
+      !
+      IF( ionode ) CALL invmat( 3, ht, htm1, omega )
+      CALL mp_bcast( omega, ionode_id )
+      scalef = 1.0d0 / SQRT( ABS( omega ) )
 
       ! 
       !  Band Structure
@@ -751,14 +913,14 @@ MODULE cp_restart
           call iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
           !
           IF( nspin_ == 2 ) THEN
-            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt_ , ATTR = attr)
+            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec_ , ATTR = attr)
             call iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_ , ATTR = attr)
           ELSE
-            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelt_ )
+            call iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec_ )
             call iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_ )
           END IF
 
-          IF( ( nspin_ /= nspin ) .OR. ( nbnd_ /= nbnd ) .OR. ( nelt_ /= nelt ) ) THEN 
+          IF( ( nspin_ /= nspin ) .OR. ( nbnd_ /= nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
             ierr = 30
             GOTO 100
           END IF
@@ -772,53 +934,85 @@ MODULE cp_restart
       k_points_loop: DO ik = 1, nk
         !
         IF ( ionode ) THEN
+          !
           CALL iotk_scan_begin( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+          !
+          CALL iotk_scan_dat( iunpun, "WEIGHT", wk_ )
+          !
         END IF
         !
         DO ispin = 1, nspin
           !
           cspin = iotk_index( ispin )
           !
+          tread_cm = .TRUE.
+          !
           IF( ionode ) THEN
             CALL iotk_scan_dat( iunpun, "OCC"  // TRIM( cspin ),  occ0(:, ik, ispin ) )
             CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ),  occm(:, ik, ispin ), FOUND=found, IERR=ierr )
-            IF ( .NOT. found ) occm(:, ik, ispin ) = occ0(:, ik, ispin )
+            occ0(:, ik, ispin ) = occ0(:, ik, ispin ) * wk_
+            IF ( .NOT. found ) THEN
+               occm(:, ik, ispin ) = occ0(:, ik, ispin )
+               tread_cm = .FALSE.
+            END IF
           END IF
+          !
+          CALL mp_bcast( tread_cm, ionode_id )
 
           IF ( ionode ) THEN
              !
-             filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+             IF( nspin == 1 ) THEN
+                filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+             ELSE
+                filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+             END IF
              !
           END IF
           !
           IF( PRESENT( c04 ) ) THEN
             CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
                          c04(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
+                         ngw, filename, scalef_ )
           ELSE IF( PRESENT( c02 ) ) THEN
             ib = iupdwn(ispin)
             CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
                          c02( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
-          END IF
-
-          IF ( ionode ) THEN
-             !
-             filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
-             !
+                         ngw, filename, scalef_ )
           END IF
           !
-          IF( PRESENT( cm4 ) ) THEN
-            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
-                         cm4(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
-          ELSE IF( PRESENT( cm2 ) ) THEN
-            ib = iupdwn(ispin)
-            CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
-                         cm2( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
-          END IF
 
+          IF( tread_cm ) THEN 
+             !
+             IF ( ionode ) THEN
+                !
+                IF( nspin == 1 ) THEN
+                   filename = TRIM( wfc_filename( dirname, 'evcm', ik ) )
+                ELSE
+                   filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+                END IF
+                !
+             END IF
+             !
+             IF( PRESENT( cm4 ) ) THEN
+                CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                            cm4(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
+                            ngw, filename, scalef_ )
+             ELSE IF( PRESENT( cm2 ) ) THEN
+                ib = iupdwn(ispin)
+                CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
+                            cm2( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
+                            ngw, filename, scalef_ )
+             END IF
+             !
+          ELSE
+             !
+             IF( PRESENT( cm4 ) ) THEN
+                cm4 = c04
+             ELSE IF( PRESENT( cm2 ) ) THEN
+                cm2 = c02
+             END IF
+             !
+          END IF
           !
         END DO
         !
@@ -828,9 +1022,8 @@ MODULE cp_restart
         !
       END DO k_points_loop
 
-
       DO ispin = 1, nspin
-        IF( ionode .AND. tens ) THEN
+        IF( ionode .AND. PRESENT( mat_z ) ) THEN
           call iotk_scan_dat( iunpun, "mat_z" // TRIM( iotk_index(ispin) ), mat_z(:,:,ispin) )
         END IF
       END DO
@@ -889,7 +1082,7 @@ MODULE cp_restart
       CALL mp_bcast(occ0( :, :, :), ionode_id)
       CALL mp_bcast(occm( :, :, :), ionode_id)
       !
-      IF( tens ) THEN
+      IF( PRESENT( mat_z ) ) THEN
         CALL mp_bcast(mat_z( :, :, :), ionode_id)
       END IF
       !
@@ -903,10 +1096,14 @@ MODULE cp_restart
       !
       filename = TRIM( dirname ) // '/lambda.dat'
       IF( ionode ) THEN
-        OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
-        READ( 10 ) lambda0
-        READ( 10 ) lambdam
-        CLOSE( unit = 10 )
+        INQUIRE( file = TRIM(filename), EXIST = found )
+        IF( found ) THEN
+           OPEN( unit = 10, file = TRIM(filename), status = 'OLD', form = 'UNFORMATTED' )
+           READ( 10 ) lambda0
+           READ( 10 ) lambdam
+           CLOSE( unit = 10 )
+        ELSE
+        END IF
       END IF
       CALL mp_bcast(lambda0, ionode_id)
       CALL mp_bcast(lambdam, ionode_id)
@@ -934,25 +1131,34 @@ MODULE cp_restart
       !
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER :: ib, kunit , ispin_ , nspin_ , ngwt_ , nbnd_
+      REAL(dbl) :: scalef
       !
       kunit = 1
       !
       dirname  = restart_dir( scradir, ndr )
       IF( tag /= 'm' ) THEN
-        filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+        IF( nspin == 1 ) THEN
+           filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+        ELSE
+           filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+        END IF
       ELSE
-        filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+        IF( nspin == 1 ) THEN
+           filename = TRIM( wfc_filename( dirname, 'evcm', ik ) )
+        ELSE
+           filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+        END IF
       END IF
       !
       IF( PRESENT( c4 ) ) THEN
             CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
                          c4(:,:,ik,ispin), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
+                         ngw, filename, scalef )
       ELSE IF( PRESENT( c2 ) ) THEN
             ib = iupdwn(ispin)
             CALL read_wfc( iunout, ik, nk, kunit, ispin_ , nspin_ , &
                          c2( :, ib: ), ngwt_ , nbnd_ , ig_l2g,       &
-                         ngw, filename )
+                         ngw, filename, scalef )
       END IF
       !
       RETURN
@@ -990,9 +1196,12 @@ MODULE cp_restart
       !
       ! Variables read for testing pourposes
       !
-      INTEGER :: ibrav_
-      REAL(dbl) :: alat_
-      REAL(dbl) :: celldm_ ( 6 )
+      INTEGER          :: ibrav_
+      REAL(dbl)        :: alat_
+      REAL(dbl)        :: celldm_ ( 6 )
+      REAL(dbl)        :: a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
+      REAL(dbl)        :: b1_ ( 3 ), b2_ ( 3 ), b3_ ( 3 )
+      CHARACTER(LEN=9) :: symm_type_
 
       dirname  = restart_dir( scradir, ndr ) 
       filename = TRIM( dirname ) // '/' // 'restart.xml'
@@ -1004,52 +1213,76 @@ MODULE cp_restart
       CALL mp_bcast( ierr, ionode_id )
       IF ( ierr /= 0 ) &
          call errore(" cp_read_cell ", " cannot open restart file for reading ", ierr )
+      !
       ierr = 0
+      !
       IF( ionode ) THEN
         !
-        call iotk_scan_begin(iunpun,"TIMESTEPS", attr)
-        call iotk_scan_attr (attr, "nt", nt_ )
+        call iotk_scan_begin(iunpun,"TIMESTEPS", attr, found = found )
+
+        IF( found ) THEN
+
+          call iotk_scan_attr (attr, "nt", nt_ )
+            !
+            IF( nt_ > 0 ) THEN
+              !
+              call iotk_scan_begin(iunpun,"STEP0")
+                !
+                call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                  call iotk_scan_dat (iunpun, "ht", ht)
+                  call iotk_scan_dat (iunpun, "htvel", htvel)
+                  call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
+                  if ( .NOT. found ) gvel = 0.0d0
+                call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+                !
+                call iotk_scan_begin(iunpun,"CELL_NOSE")
+                  call iotk_scan_dat (iunpun, "xnhh", xnhh0)
+                  call iotk_scan_dat (iunpun, "vnhh", vnhh)
+                call iotk_scan_end(iunpun,"CELL_NOSE")
+                !
+              call iotk_scan_end(iunpun,"STEP0")
+              !
+            ELSE
+              ierr = 40
+              GOTO 100
+            END IF
+           
+            IF( nt_ > 1 ) THEN
+              !
+              call iotk_scan_begin(iunpun,"STEPM")
+                !
+                call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
+                  call iotk_scan_dat (iunpun, "ht", htm)
+                call iotk_scan_end(iunpun,"CELL_PARAMETERS")
+                !
+                call iotk_scan_begin(iunpun,"CELL_NOSE")
+                  call iotk_scan_dat (iunpun, "xnhh", xnhhm)
+                call iotk_scan_end(iunpun,"CELL_NOSE")
+                !
+              call iotk_scan_end(iunpun,"STEPM")
+              !
+            END IF
+            !
+          call iotk_scan_end(iunpun,"TIMESTEPS")
+
+        ELSE
           !
-          IF( nt_ > 0 ) THEN
-            !
-            call iotk_scan_begin(iunpun,"STEP0")
-              !
-              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
-                call iotk_scan_dat (iunpun, "ht", ht)
-                call iotk_scan_dat (iunpun, "htvel", htvel)
-                call iotk_scan_dat (iunpun, "gvel", gvel, FOUND=found, IERR=ierr )
-                if ( .NOT. found ) gvel = 0.0d0
-              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
-              !
-              call iotk_scan_begin(iunpun,"CELL_NOSE")
-                call iotk_scan_dat (iunpun, "xnhh", xnhh0)
-                call iotk_scan_dat (iunpun, "vnhh", vnhh)
-              call iotk_scan_end(iunpun,"CELL_NOSE")
-              !
-            call iotk_scan_end(iunpun,"STEP0")
-            !
-          ELSE
-            ierr = 40
-            GOTO 100
-          END IF
-         
-          IF( nt_ > 1 ) THEN
-            !
-            call iotk_scan_begin(iunpun,"STEPM")
-              !
-              call iotk_scan_begin(iunpun,"CELL_PARAMETERS")
-                call iotk_scan_dat (iunpun, "ht", htm)
-              call iotk_scan_end(iunpun,"CELL_PARAMETERS")
-              !
-              call iotk_scan_begin(iunpun,"CELL_NOSE")
-                call iotk_scan_dat (iunpun, "xnhh", xnhhm)
-              call iotk_scan_end(iunpun,"CELL_NOSE")
-              !
-            call iotk_scan_end(iunpun,"STEPM")
-            !
-          END IF
+          !   MD steps have not been found, try to restart from cell data
           !
-        call iotk_scan_end(iunpun,"TIMESTEPS")
+          CALL read_cell( ibrav_ , symm_type_ , celldm_ , alat_ , a1_ , a2_ , a3_ , b1_ , b2_ , b3_ )
+          !
+          ht( 1, : ) = a1_
+          ht( 2, : ) = a2_
+          ht( 3, : ) = a3_
+          !
+          htm = ht
+          htvel = 0.0d0
+          gvel  = 0.0d0
+          xnhh0 = 0.0d0
+          vnhh  = 0.0d0
+          xnhhm = 0.0d0
+          !
+        END IF
         !
       END IF
       !
@@ -1058,7 +1291,7 @@ MODULE cp_restart
       CALL mp_bcast( ierr, ionode_id )
       CALL mp_bcast( attr, ionode_id )
       IF( ierr /= 0 ) THEN
-        CALL errore( " cp_readfile ", attr, ierr )
+        CALL errore( " cp_read_cell ", attr, ierr )
       END IF
       !
       CALL mp_bcast( ht, ionode_id )
@@ -1084,7 +1317,8 @@ MODULE cp_restart
 ! ..  This subroutine write wavefunctions to the disk
 !
 
-    SUBROUTINE write_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, ngwl, filename )
+    SUBROUTINE write_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, &
+                         ngwl, filename, scalef )
 !
       USE kinds, ONLY: dbl
       USE mp_wave
@@ -1104,6 +1338,7 @@ MODULE cp_restart
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
       CHARACTER(LEN=256), INTENT(IN) :: filename
+      REAL(dbl), INTENT(IN) :: scalef
 
       INTEGER :: i, j, ierr
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
@@ -1209,6 +1444,7 @@ MODULE cp_restart
          CALL iotk_write_attr( attr, "ispin", ispin )
          CALL iotk_write_attr( attr, "nspin", nspin )
          CALL iotk_write_attr( attr, "igwx",  igwx )
+         CALL iotk_write_attr( attr, "scale_factor",  scalef )
          !
          CALL iotk_write_empty( iuni, "INFO", attr )
          !
@@ -1252,7 +1488,7 @@ MODULE cp_restart
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, &
-                         ngwl, filename )
+                         ngwl, filename, scalef )
 !
       USE kinds, ONLY: dbl
       USE mp_wave
@@ -1272,6 +1508,7 @@ MODULE cp_restart
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
       CHARACTER(LEN=256), INTENT(IN)    :: filename
+      REAL(dbl), INTENT(OUT) :: scalef
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
 
@@ -1381,6 +1618,7 @@ MODULE cp_restart
           CALL iotk_scan_attr( attr, "ispin", ispin )
           CALL iotk_scan_attr( attr, "nspin", nspin )
           CALL iotk_scan_attr( attr, "igwx",  igwx_ )
+          CALL iotk_scan_attr( attr, "scale_factor",  scalef )
           !
       END IF
 
@@ -1392,6 +1630,7 @@ MODULE cp_restart
       CALL mp_bcast( ispin,   ionode_id )
       CALL mp_bcast( nspin,   ionode_id )
       CALL mp_bcast( igwx_ ,  ionode_id )
+      CALL mp_bcast( scalef ,  ionode_id )
 
 
       ALLOCATE( wtmp( MAX(igwx_, igwx) ) )
@@ -1516,6 +1755,67 @@ MODULE cp_restart
 
 !------------------------------------------------------------------------------!
 
+    SUBROUTINE read_ions( nsp, nat, atm, ityp, psfile, amass, tau, if_pos, pos_unit, ierr )
+      !
+      USE iotk_module
+      USE kinds,       ONLY: dbl
+      USE io_files,    ONLY: iunpun
+      !
+      INTEGER,            INTENT(OUT) :: nsp, nat
+      CHARACTER(LEN=3),   INTENT(OUT) :: atm( : )
+      INTEGER,            INTENT(OUT) :: ityp( : )
+      CHARACTER(LEN=256), INTENT(OUT) :: psfile( : )
+      REAL(dbl),          INTENT(OUT) :: amass( : )
+      REAL(dbl),          INTENT(OUT) :: tau( :, : )
+      INTEGER,            INTENT(OUT) :: if_pos( :, : )
+      INTEGER,            INTENT(OUT) :: ierr
+      CHARACTER(LEN=*),   INTENT(OUT) :: pos_unit
+      !
+      CHARACTER(iotk_attlenx) :: attr
+      LOGICAL                 :: found
+      INTEGER                 :: i
+      CHARACTER(LEN=3)        :: lab
+      !
+      ierr = 0
+      !
+      CALL iotk_scan_begin( iunpun, "IONS", found = found )
+      IF( .NOT. found ) THEN
+         ierr = 1
+         GOTO 110
+      END IF
+      !
+      CALL iotk_scan_dat ( iunpun, "NUMBER_OF_ATOMS", nat )
+      CALL iotk_scan_dat ( iunpun, "NUMBER_OF_SPECIES", nsp )
+      IF( nsp > SIZE( atm ) .OR. nat > SIZE( ityp ) ) THEN
+         ierr = 10
+         GOTO 100
+      END IF
+      !
+      DO i = 1, nsp
+         CALL iotk_scan_dat ( iunpun, "ATOM_TYPE", atm( i ) )
+         CALL iotk_scan_dat( iunpun, TRIM( atm( i ) )//"_MASS", amass( i ), ATTR = attr )
+      END DO
+      !
+      CALL iotk_scan_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
+      CALL iotk_scan_attr( attr, "UNIT", pos_unit  )
+      !
+      DO i = 1, nat
+         CALL iotk_scan_empty( iunpun, "ATOM" // TRIM( iotk_index(i) ), attr )
+         CALL iotk_scan_attr ( attr, "SPECIES", lab )
+         CALL iotk_scan_attr ( attr, "INDEX", ityp( i ) )
+         CALL iotk_scan_attr ( attr, "tau", tau( :, i ) )
+         CALL iotk_scan_attr ( attr, "if_pos", if_pos( :, i ) )
+      END DO
+
+100   call iotk_scan_end( iunpun, "IONS" )
+      !
+110   RETURN
+      !
+    END SUBROUTINE read_ions
+
+
+!------------------------------------------------------------------------------!
+
     LOGICAL FUNCTION check_restartfile( scradir, ndr )
 
       USE io_global, ONLY: ionode, ionode_id
@@ -1540,7 +1840,6 @@ MODULE cp_restart
       check_restartfile = lval
       RETURN
     END FUNCTION check_restartfile
-
 
 !------------------------------------------------------------------------------!
   END MODULE cp_restart

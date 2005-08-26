@@ -260,7 +260,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_ions( nsp, nat, atm, ityp, psfile, &
-                           pseudo_dir, amass, tau, if_pos, dirname )
+                           pseudo_dir, amass, tau, if_pos, dirname, pos_unit )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: nsp, nat
@@ -272,6 +272,7 @@ MODULE xml_io_base
       REAL(KIND=DP),    INTENT(IN) :: amass(:)
       REAL(KIND=DP),    INTENT(IN) :: tau(:,:)
       INTEGER,          INTENT(IN) :: if_pos(:,:)
+      CHARACTER(LEN=*), INTENT(IN) :: pos_unit
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
@@ -311,7 +312,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNIT", TRIM(pos_unit), FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       !
       DO i = 1, nat
@@ -583,5 +584,114 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
       !
     END SUBROUTINE write_bz
+    !
+    !----------------------------------------------
+    SUBROUTINE write_rho_xml( rho_file, rho, nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+      !
+      !   Writes charge density rho, one plane at a time.
+      !   If ipp and npp are specified planes are collected one by one from
+      !   all processors, avoiding an overall collect of the charge density
+      !   on a single proc.
+      !
+      USE kinds,     ONLY : dbl
+      USE io_files,  ONLY : rhounit
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_sum, mp_get, mp_bcast, mp_max
+      USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                            nproc_pool, intra_pool_comm, root_pool, my_image_id
+      USE iotk_module
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,           INTENT(IN) :: nr1, nr2, nr3
+      INTEGER,           INTENT(IN) :: nr1x, nr2x
+      CHARACTER(LEN=*),  INTENT(IN) :: rho_file
+      REAL(dbl),         INTENT(IN) :: rho( : )
+      INTEGER, OPTIONAL, INTENT(IN) :: ipp( : )
+      INTEGER, OPTIONAL, INTENT(IN) :: npp( : )
+      !
+      INTEGER :: ierr, i, j, k, kk, ldr, ip
+      INTEGER                       :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx)   :: attr
+      REAL(dbl), ALLOCATABLE        :: rho_plane( : )
+      INTEGER,   ALLOCATABLE        :: kowner( : )
+   
+   
+      IF( ionode ) THEN
+         !
+         CALL iotk_open_write( rhounit, FILE = TRIM( rho_file ), BINARY = .FALSE., ierr = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      IF( ierr /= 0 ) &
+         call errore(" write_rho_xml ", " cannot open rho_file file for writing ", ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_begin( rhounit, "CHARGE-DENSITY" )
+         !
+         CALL iotk_write_attr( attr, "nr1",   nr1, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nr2",   nr2 )
+         CALL iotk_write_attr( attr, "nr3",   nr3 )
+         !
+         CALL iotk_write_empty( rhounit, "INFO", attr )
+         !
+      END IF
+   
+      ALLOCATE( rho_plane( nr1 * nr2 ) )
+      ALLOCATE( kowner( nr3 ) )
+   
+      ! find out the owner of each "z" plane
+      !
+      IF( PRESENT( ipp ) .AND. PRESENT( npp ) ) THEN
+         DO ip = 1, nproc
+            kowner( ipp( ip ) + 1 : ipp( ip ) + npp( ip ) ) = ip - 1
+         END DO
+      ELSE
+         kowner = ionode_id
+      END IF
+   
+      ldr = nr1x * nr2x
+   
+      DO k = 1, nr3
+         !
+         IF( kowner( k ) == mpime ) THEN
+            !
+            kk = k
+            !
+            IF( PRESENT( ipp ) ) kk = k - ipp( mpime + 1 )
+            ! 
+            DO j = 1, nr2
+               DO i = 1, nr1
+                  rho_plane( i + ( j - 1 ) * nr1 ) = rho( i + ( j - 1 ) * nr1x + ( kk - 1 ) * ldr )
+               END DO
+            END DO
+         END IF
+         !
+         IF( kowner( k ) /= ionode_id ) THEN
+            CALL mp_get( rho_plane, rho_plane, mpime, ionode_id, kowner( k ), k )
+         END IF
+         !
+         IF ( ionode ) &
+            CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
+   
+      END DO
+   
+      DEALLOCATE( rho_plane )
+      DEALLOCATE( kowner )
+   
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_end( rhounit, "CHARGE-DENSITY" )
+         !
+         CALL iotk_close_write( rhounit )
+         !
+      END IF
+   
+      RETURN
+    
+    END SUBROUTINE write_rho_xml
+    !
     !
 END MODULE xml_io_base
