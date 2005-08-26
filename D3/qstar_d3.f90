@@ -92,7 +92,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
                 rtau, sxq (1, iq) )
         endif
      enddo
-     phi2 = phi2 / float (nsq)
+     phi2 = phi2 / DBLE (nsq)
      !
      ! Back to cartesian coordinates
      !
@@ -112,7 +112,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
         !
         ! if -q is not in the star recovers its matrix by time reversal
         !
-        phi2 (:,:,:,:,:,:) = conjg (phi2 (:,:,:,:,:,:) )
+        phi2 (:,:,:,:,:,:) = CONJG(phi2 (:,:,:,:,:,:) )
         !
         ! and writes it (changing temporarily sign to q)
         !

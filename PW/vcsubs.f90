@@ -1421,7 +1421,7 @@ subroutine setg (avec, g)
 end subroutine setg
 !*
 !*
-real(8) function ran3 (idum)
+real(kind=8) function ran3 (idum)
   USE kinds, only : DP
   implicit none
 

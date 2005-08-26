@@ -212,11 +212,11 @@ implicit none
   do n=1, nchanl
     tj=0.d0
     do ig=1, nchanr
-      tij=DREAL(tmat(ig,n))**2+DIMAG(tmat(ig,n))**2
+      tij= DBLE(tmat(ig,n))**2+AIMAG(tmat(ig,n))**2
       x1 = tmat(ig,n) 
       tj=tj+tij
       WRITE( stdout,'(i5,'' --> '',i5,f12.7)') n, ig, tij
-!      WRITE( stdout,'(2f12.7)') dreal(x1), aimag(x1)
+!      WRITE( stdout,'(2f12.7)')  DBLE(x1), AIMAG(x1)
     enddo
     WRITE( stdout,'(15x,f9.5)') tj
   enddo
@@ -250,7 +250,7 @@ implicit none
   do n=1, nchanl
     WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
     do ig=1, nchanl
-      tj=DREAL(veceig(ig,n))**2+DIMAG(veceig(ig,n))**2
+      tj= DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
       WRITE( stdout,'(20x, f9.5)') tj
     enddo
     tk=tk+eigen(n)
@@ -300,7 +300,7 @@ implicit none
             enddo
          enddo
          write(6,'(2i5,2f20.12)') n, iorb-orbj_in+1,   &
-                        (DREAL(xi1(ipol))**2+DIMAG(xi1(ipol))**2,ipol=1,npol)
+                        ( DBLE(xi1(ipol))**2+AIMAG(xi1(ipol))**2,ipol=1,npol)
       enddo
      endif
     enddo

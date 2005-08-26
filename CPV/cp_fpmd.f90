@@ -1332,7 +1332,7 @@ END SUBROUTINE gshcount
             CASE (3)
               exgc_info = 'PERDEW BURKE ERNZERHOF'
             CASE (7)
-	      exgc_info = 'META-TPSS'
+              exgc_info = 'META-TPSS'
             CASE DEFAULT
               exgc_info = 'UNKNOWN'
           END SELECT
@@ -1348,7 +1348,7 @@ END SUBROUTINE gshcount
             CASE (4)
               cogc_info = 'PERDEW BURKE ERNZERHOF'
             CASE (6)
- 	      cogc_info = 'META-TPSS'
+              cogc_info = 'META-TPSS'
             CASE DEFAULT
               cogc_info = 'UNKNOWN'
           END SELECT

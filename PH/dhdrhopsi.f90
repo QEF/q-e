@@ -154,7 +154,7 @@ subroutine dhdrhopsi
            !
            do ipb = 1, 3
               xk(ipb,ik) = xk_sw(ipb) + &
-                     dfloat(isg)*dek*at(ipb,ipa)
+                     DBLE(isg)*dek*at(ipb,ipa)
            enddo
            !
            ! Calculates in a non self-consistent way the wavefunction
@@ -189,7 +189,7 @@ subroutine dhdrhopsi
 #ifdef __PARA
               call reduce (2 * nbnd * nbnd, ps1)
 #endif
-              tmpc = dfloat (isg) * itdba
+              tmpc = DBLE (isg) * itdba
               if (ipb.eq.ipa) tmpc = 2.d0 * tmpc
               do ibnd = 1, nbnd_occ (ik)
                  auxg (:) = (0.d0, 0.d0)

@@ -135,7 +135,7 @@
 !##############################################################################!
 
 
-
+#include "f_defs.h"
 !======================================================================!
 
 SUBROUTINE c_phase_field
@@ -351,9 +351,9 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 
 !  --- Find vector along strings ---
    if(nppstr .ne. 1) then
-      gpar(1)=(xk(1,nppstr)-xk(1,1))*real(nppstr)/real(nppstr-1)
-      gpar(2)=(xk(2,nppstr)-xk(2,1))*real(nppstr)/real(nppstr-1)
-      gpar(3)=(xk(3,nppstr)-xk(3,1))*real(nppstr)/real(nppstr-1)
+      gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
+      gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
+      gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(:)=gpar(:)!/at(gdir,gdir)!cella ortorombica ATTENZIONE
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
@@ -374,7 +374,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       dk(3)=xk(3,2)-xk(3,1)
       dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!cella ortorombica
      
-!      IF (ABS(dkmod-gvec/real(nppstr)) > eps) & 
+!      IF (ABS(dkmod-gvec/DBLE(nppstr)) > eps) & 
 !           CALL errore('c_phase','Wrong k-strings?',1)
    
 
@@ -605,7 +605,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
                               nhjkbm = nh(np)
                               jkb1 = jkb - nhjkb
                               DO j = 1,nhjkbm
-                                 pref = pref+conjg(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
+                                 pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
                                       *q_dk(nhjkb,j,np)*struc(na)
                               ENDDO
                            ENDDO
@@ -644,12 +644,12 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
          END DO 
          kpoint=kpoint-1
 !        --- Calculate the phase for this string ---
-         phik(istring)=DIMAG(LOG(zeta))
+         phik(istring)=AIMAG(LOG(zeta))
          cphik(istring)=COS(phik(istring))*(1.0_dp,0.0_dp) &
                      +SIN(phik(istring))*(0.0_dp,1.0_dp)
 
 !        --- Calculate the localization for current kort ---
-         zeta_mod=DREAL(conjg(zeta)*zeta)
+         zeta_mod= DBLE(CONJG(zeta)*zeta)
          loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd *log(zeta_mod)
 
 !     --- End loop over orthogonal k-points ---
@@ -660,7 +660,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
    write(6,*) "Log_MDet:", LOG(zeta)
 !-----calculate polarization
 !-----the factor 2. is because of spin
-   berry_dip=2.d0*dimag(LOG(zeta))/dkmod
+   berry_dip=2.d0*AIMAG(LOG(zeta))/dkmod
 !   write(6,*) berry_dip
  
 
@@ -693,7 +693,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       END DO
 
 !     --- Get the angle corresponding to the complex numbers average ---
-      theta0=atan2(DIMAG(cave),DREAL(cave))
+      theta0=atan2(AIMAG(cave), DBLE(cave))
 
 !     --- Assign this angle to the corresponding spin phase average ---
       IF (nspin == 1) THEN
@@ -709,7 +709,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 
 !     --- Put the phases in an around theta0 ---
       cphik(istring)=cphik(istring)/cave
-      dtheta=atan2(DIMAG(cphik(istring)),DREAL(cphik(istring)))
+      dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
       phik(istring)=theta0+dtheta
 
 !  --- End loop over spins
@@ -898,15 +898,15 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       !  --- Give polarization in units of (e/Omega).bohr ---
       fac=rmod
       WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
-           fac*pdl_tot,fac*float(mod_tot)
+           fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in units of e.bohr ---
       fac=rmod/omega
       WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
-           fac*pdl_tot,fac*float(mod_tot)
+           fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
       fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
       WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
-           fac*pdl_tot,fac*float(mod_tot)
+           fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Write polarization direction ---
       WRITE(6,"(/,8X,'The polarization direction is:  ( ', &
            &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)

@@ -110,7 +110,7 @@
 
       ALLOCATE( comp( nz ) )
 
-      fact   = omega / REAL( nx * ny * nz )
+      fact   = omega / DBLE( nx * ny * nz )
 
 
       DO ispin = 1, nspin
@@ -269,7 +269,7 @@
         DO ispin = 1, nspin
 
           rsum1 = SUM( rhoe( 1:nxl, 1:nyl, 1:nzl, ispin ) )
-          rsum1 = rsum1 * omega / REAL( nr1 * nr2 * nr3  )
+          rsum1 = rsum1 * omega / DBLE( nr1 * nr2 * nr3  )
 
 ! ...     sum over all processors
 
@@ -331,15 +331,15 @@
 
           DO ib = 1, cdesc%nbl( ispin )
             wdot = ZDOTC( ( cdesc%ngwl - 1 ), c(2,ib), 1, c(2,ib), 1 )
-            wdot = wdot + REAL( c(1,ib), dbl )**2 / 2.0d0
-            rsum = rsum + fi(ib) * REAL( wdot )
+            wdot = wdot + DBLE( c(1,ib) )**2 / 2.0d0
+            rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
 
         ELSE
 
           DO ib = 1, cdesc%nbl( ispin )
             wdot = ZDOTC( cdesc%ngwl, c(1,ib), 1, c(1,ib), 1 )
-            rsum = rsum + fi(ib) * REAL( wdot )
+            rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
 
         END IF
@@ -507,7 +507,7 @@
 
                 ! ...  extract wave functions from psi2
 
-                r1 = DREAL( psi2(i,j,k) ) 
+                r1 =  DBLE( psi2(i,j,k) ) 
                 r2 = AIMAG( psi2(i,j,k) ) 
 
                 ! ...  add squared moduli to charge density
@@ -540,7 +540,7 @@
 
                 ! ...  extract wave functions from psi2
 
-                r1 = REAL( psi2(i,j,k) )
+                r1 = DBLE( psi2(i,j,k) )
 
                 ! ...  add squared moduli to charge density
 
@@ -579,7 +579,7 @@
 
                   ! ...  add squared modulus to charge density
 
-                  rho(i,j,k) = rho(i,j,k) + coef3 * REAL( psi2(i,j,k) * CONJG(psi2(i,j,k)) )
+                  rho(i,j,k) = rho(i,j,k) + coef3 * DBLE( psi2(i,j,k) * CONJG(psi2(i,j,k)) )
 
                 END DO
               END DO
@@ -670,7 +670,7 @@
      DO ipol = 1, 3
        DO ig = 1, SIZE( rhoeg )
          rg        = rhoeg(ig) * gx( ipol, ig )
-         tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), REAL(rg) ) 
+         tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), DBLE(rg) ) 
        END DO
        CALL pinvfft( grho(:,:,:,ipol), tgrho )
      END DO
@@ -725,11 +725,11 @@
          end do
          do ig=1,ng
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
-            v(nm(ig))=conjg(ci*tpiba*gx(1,ig)*rhog(ig,iss))
+            v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
-            gradr(ir,1,iss)=real(v(ir))
+            gradr(ir,1,iss)=DBLE(v(ir))
          end do
          do ig=1,nnr
             v(ig)=(0.0,0.0)
@@ -737,13 +737,13 @@
          do ig=1,ng
             v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
      &                                 gx(3,ig)*rhog(ig,iss) )
-            v(nm(ig))= tpiba*(conjg(ci*gx(2,ig)*rhog(ig,iss)+           &
+            v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
      &                                 gx(3,ig)*rhog(ig,iss)))
          end do
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
-            gradr(ir,2,iss)= real(v(ir))
-            gradr(ir,3,iss)=aimag(v(ir))
+            gradr(ir,2,iss)= DBLE(v(ir))
+            gradr(ir,3,iss)=AIMAG(v(ir))
          end do
       end do
       !

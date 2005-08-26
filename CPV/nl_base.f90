@@ -76,7 +76,7 @@
             ELSE
               DO ia = 1, na(is)
                 tt = fnl%c(isa+ia,igh,ib)
-                fsum = fsum + REAL( CONJG(tt) * tt )
+                fsum = fsum + DBLE( CONJG(tt) * tt )
               END DO
             END IF
             enl = enl + fi(ib) * wsg(igh, is) * fsum
@@ -109,7 +109,7 @@
       !     input : beta(ig,l,is), eigr, c
       !     output: becp as parameter
       !
-      USE kinds,      ONLY : dbl
+      USE kinds,      ONLY : dbl, dp
       USE mp,         ONLY : mp_sum
       USE mp_global,  ONLY : nproc
       USE ions_base,  only : na, nax, nat
@@ -173,18 +173,16 @@
                !  q = 0   component (with weight 1.0)
                !
                if (gstart == 2) then
-                  wrk2(1,ia)= cmplx(                                   &
-     &               signre*beta(1,iv,is)*eigr(ixr,1,ia+isa),          &
-     &               signim*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
+                  wrk2(1,ia)= &
+                       CMPLX(signre*beta(1,iv,is)*eigr(ixr,1,ia+isa),signim*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
                end if
                !
                !   q > 0   components (with weight 2.0)
                !
                do ig = gstart, ngw
                   arg = 2.0*beta(ig,iv,is)
-                  wrk2(ig,ia) = cmplx(                                 &
-     &                  signre*arg*eigr(ixr,ig,ia+isa),                &
-     &                  signim*arg*eigr(ixi,ig,ia+isa) )
+                  wrk2(ig,ia) = &
+                       CMPLX(signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
                end do
                !
             end do
@@ -229,7 +227,7 @@
       !     output: becdr
       !
  
-      USE kinds,      ONLY : dbl
+      USE kinds,      ONLY : dbl, dp
       use ions_base,  only : nax, nsp, na, nat
       use uspp,       only : nhtol, beta  !, nkb
       use cvan,       only : ish
@@ -297,16 +295,14 @@
                do ia=1,na(is)
                   if (gstart == 2) then
 !                             q = 0   component (with weight 1.0)
-                     wrk2(1,ia) = cmplx (                               &
-     &                  signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa),   &
-     &                  signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
+                     wrk2(1,ia) = &
+                     CMPLX (signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa),signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
 !                            q > 0   components (with weight 2.0)
                   end if
                   do ig=gstart,ngw
                      arg = 2.0*gk(ig)*beta(ig,iv,is)
-                     wrk2(ig,ia) = cmplx (                              &
-    &                     signre*arg*eigr(ixr,ig,ia+isa),                &
-    &                     signim*arg*eigr(ixi,ig,ia+isa) )
+                     wrk2(ig,ia) = &
+                          CMPLX (signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
                   end do
                end do
                inl=ish(is)+(iv-1)*na(is)+1
@@ -537,7 +533,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   !
   !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
-  USE kinds,      ONLY : dbl
+  USE kinds,      ONLY : dbl, dp
   use mp,         only : mp_sum
   use mp_global,  only : nproc
   use ions_base,  only : na, nax, nat
@@ -600,16 +596,14 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
               do ia=1,na(is)
                  if (gstart == 2) then
                     !     q = 0   component (with weight 1.0)
-                    wrk2(1,ia)= cmplx(                             &
- &                  signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa),   &
- &                  signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa) )
+                    wrk2(1,ia)= &
+                    CMPLX(signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa),signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa) )
                  end if
                  !     q > 0   components (with weight 2.0)
                  do ig = gstart, ngw
                     arg = 2.0*dbeta(ig,iv,is,i,j)
-                    wrk2(ig,ia) = cmplx(                           &
- &                         signre*arg*eigr(ixr,ig,ia+isa),          &
- &                         signim*arg*eigr(ixi,ig,ia+isa) )
+                    wrk2(ig,ia) = &
+                         CMPLX(signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
                  end do
               end do
               inl=ish(is)+(iv-1)*na(is)+1

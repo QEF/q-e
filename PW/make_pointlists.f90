@@ -81,10 +81,10 @@ SUBROUTINE make_pointlists
 
                  distance = 0.d0
                  DO ipol = 1,3
-                    posi(ipol) = tau0(ipol,iat1) + REAL(i)*at(ipol,1) &
-                         &                       +REAL(j)*at(ipol,2) + REAL(k)*at(ipol,3)
-                    distance = distance + (posi(ipol)-tau0(ipol,iat)) &
-                         &                       **2
+                    posi(ipol) = tau0(ipol,iat1) + DBLE(i)*at(ipol,1) &
+                                                 + DBLE(j)*at(ipol,2) &
+                                                 + DBLE(k)*at(ipol,3)
+                    distance = distance + (posi(ipol)-tau0(ipol,iat))**2
                  ENDDO
 
                  distance = SQRT(distance)
@@ -129,9 +129,9 @@ SUBROUTINE make_pointlists
               DO k = k0-nr3, k0+nr3, nr3
 
                  DO ipol=1,3
-                    posi(ipol) =  REAL(i)/REAL(nr1) * at(ipol,1) &
-                         + REAL(j)/REAL(nr2) * at(ipol,2) &
-                         + REAL(k)/REAL(nr3) * at(ipol,3)
+                    posi(ipol) =  DBLE(i)/DBLE(nr1) * at(ipol,1) &
+                                + DBLE(j)/DBLE(nr2) * at(ipol,2) &
+                                + DBLE(k)/DBLE(nr3) * at(ipol,3)
 
                     posi(ipol) = posi(ipol) - tau0(ipol,iat)
                  ENDDO

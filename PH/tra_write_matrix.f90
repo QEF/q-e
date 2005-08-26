@@ -31,7 +31,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
         work = (0.d0, 0.d0)
         do mu = 1, 3 * nat
            do nu = 1, 3 * nat
-              work = work + u (i, mu) * adyn (mu, nu) * conjg (u (j, nu) )
+              work = work + u (i, mu) * adyn (mu, nu) * CONJG(u (j, nu) )
            enddo
         enddo
         wdyn (icart, jcart, na, nb) = work

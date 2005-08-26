@@ -55,11 +55,12 @@
 #  define DIRECT_IO_FACTOR 8 
 #endif
 
-#if defined(CRAYY) || defined (__SX4) || defined (__T3E)
+#  define DREAL       @@_use_DBLE_instead@@
+#  define DIMAG       @@_use_AIMAG_instead@@
+#  define DCMPLX      @@_use_CMPLX_instead@@
+#  define CMPLX(a,b)  cmplx(a,b,kind=DP)
 
-#  define DREAL       real
-#  define DIMAG       aimag
-#  define DCMPLX      cmplx
+#if defined(CRAYY) || defined (__SX4) || defined (__T3E)
 
 #  define DAXPY       saxpy
 #  define DCOPY       scopy
@@ -124,21 +125,6 @@
 #  define DPOTRS   spotrs
 
 #else
-
-#  if defined (__ALPHA) && ! defined (__LINUX)
-
-#    define DREAL       real
-#    define DCMPLX      cmplx
-#    define DIMAG       imag
-#    define DCONJG      conjg
-
-#  else
-
-#    define DREAL       dreal
-#    define DCMPLX      dcmplx
-#    define DIMAG       dimag
-
-#  endif
 
 #  if defined(ADD_BLAS_TWO_UNDERSCORES)
 

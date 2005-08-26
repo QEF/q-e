@@ -82,8 +82,8 @@ subroutine dpsidpsidv
                  nrec = nu_z + (ik - 1) * 3 * nat
 
                  call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, - 1)
-                 wrk0 = DCMPLX (0.d0, 0.d0)
-                 wrk = DCMPLX (0.d0, 0.d0)
+                 wrk0 = CMPLX (0.d0, 0.d0)
+                 wrk = CMPLX (0.d0, 0.d0)
                  do ibnd = 1, nbnd
                     do jbnd = 1, nbnd
                        if (degauss /= 0.d0) then
@@ -93,7 +93,7 @@ subroutine dpsidpsidv
                              wg2 = wga (jbnd) / deltae
                              wrk0 = wrk0 + psidqvpsi (jbnd, ibnd) * &
                                   (wg1 * ps1_ij (ibnd, jbnd) - &
-                                   wg2 * conjg (ps1_ji (jbnd, ibnd) ) )
+                                   wg2 * CONJG(ps1_ji (jbnd, ibnd) ) )
                           else
                              wg1 = wga (ibnd)
                              wwg = w0g (ibnd)
@@ -143,8 +143,8 @@ subroutine dpsidpsidv
                     nrec = nu_z + (ik - 1) * 3 * nat
 
                     call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, - 1)
-                    wrk0 = DCMPLX (0.d0, 0.d0)
-                    wrk = DCMPLX (0.d0, 0.d0)
+                    wrk0 = CMPLX (0.d0, 0.d0)
+                    wrk = CMPLX (0.d0, 0.d0)
                     do ibnd = 1, nbnd
                        do jbnd = 1, nbnd
                           if (degauss /= 0.d0) then
@@ -154,7 +154,7 @@ subroutine dpsidpsidv
                                 wg2 = wgq (jbnd) / deltae
                                 wrk0 = wrk0 + psidqvpsi (jbnd, ibnd) * &
                                      (wg1 * ps2_ji (ibnd, jbnd) - &
-                                      wg2 * conjg (ps3_ij (jbnd, ibnd) ) )
+                                      wg2 * CONJG(ps3_ij (jbnd, ibnd) ) )
                              else
                                 wg1 = wga (ibnd)
                                 wwg = w0g (ibnd)
@@ -178,7 +178,7 @@ subroutine dpsidpsidv
                     d3dyn2 (nu_i, nu_j, nu_z) = d3dyn2 (nu_i, nu_j, nu_z) &
                          + wrk
                     d3dyn3 (nu_i, nu_z, nu_j) = d3dyn3 (nu_i, nu_z, nu_j) &
-                         + conjg (wrk)
+                         + CONJG(wrk)
                  enddo
               endif
            enddo

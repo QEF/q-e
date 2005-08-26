@@ -60,8 +60,8 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         do ipol = 1, 3
            do jpol = 1, 3
               phi (ipol, jpol, na, nb) = 0.5d0 * (phi (ipol, jpol, na, nb) &
-                   + conjg (phi (jpol, ipol, nb, na) ) )
-              phi (jpol, ipol, nb, na) = conjg (phi (ipol, jpol, na, nb) )
+                   + CONJG(phi (jpol, ipol, nb, na) ) )
+              phi (jpol, ipol, nb, na) = CONJG(phi (ipol, jpol, na, nb) )
            enddo
         enddo
      enddo
@@ -87,7 +87,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                               rtau (kpol, irotmq, nb) ) )
                  enddo
                  arg = arg * tpi
-                 fase = DCMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX (cos (arg), sin (arg) )
 #if defined __ALTIX
 !DIR$ unroll (0)
 #endif
@@ -99,7 +99,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                     enddo
                  enddo
                  phip (ipol, jpol, na, nb) = (phi (ipol, jpol, na, nb) + &
-                      conjg ( work (ipol, jpol) ) ) * 0.5d0
+                      CONJG( work (ipol, jpol) ) ) * 0.5d0
               enddo
            enddo
         enddo
@@ -127,7 +127,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                            rtau (ipol, irot, nb) ) )
               enddo
               arg = arg * tpi
-              faseq (isymq) = DCMPLX (cos (arg), sin (arg) )
+              faseq (isymq) = CMPLX (cos (arg), sin (arg) )
               do ipol = 1, 3
                  do jpol = 1, 3
                     do kpol = 1, 3
@@ -151,7 +151,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                        do lpol = 1, 3
                           phi (ipol, jpol, sna, snb) = phi (ipol, jpol, sna, snb) &
                                + s (ipol, kpol, invs (irot) ) * s (jpol, lpol, invs (irot) ) &
-                               * work (kpol, lpol) * conjg (faseq (isymq) )
+                               * work (kpol, lpol) * CONJG(faseq (isymq) )
                        enddo
                     enddo
                  enddo
@@ -161,6 +161,6 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         endif
      enddo
   enddo
-  phi (:, :, :, :) = phi (:, :, :, :) / float(nsymq)
+  phi (:, :, :, :) = phi (:, :, :, :) / DBLE(nsymq)
   return
 end subroutine symdynph_gq

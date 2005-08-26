@@ -112,7 +112,7 @@ SUBROUTINE punch_plot_e()
      !
      !      plot of the charge density
      !
-     raux (:) = DREAL (aux1 (:, ipol) )
+     raux (:) =  DBLE (aux1 (:, ipol) )
      !
 #if defined (__PARA)
      ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    

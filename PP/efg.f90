@@ -140,7 +140,7 @@ subroutine do_efg(Q)
            do ig= gstart, ngm
               arg=(tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
               efgr_el(na,alpha,beta)=efgr_el(na,alpha,beta)+ &
-                   efgg_el(ig,alpha,beta) * cmplx(cos(arg),sin(arg))
+                   efgg_el(ig,alpha,beta) * CMPLX(cos(arg),sin(arg))
            enddo
         enddo
      enddo
@@ -156,7 +156,7 @@ subroutine do_efg(Q)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efgr_el", &
-             (real(efgr_el(na,alpha,beta)) , alpha =1,3 )
+             (DBLE(efgr_el(na,alpha,beta)) , alpha =1,3 )
 
      enddo
      write (stdout,*)
@@ -175,7 +175,7 @@ subroutine do_efg(Q)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_ion", &
-             (real(efg_io(na,alpha,beta)) , alpha =1,3 )
+             (DBLE(efg_io(na,alpha,beta)) , alpha =1,3 )
 
      enddo
      write (stdout,*)
@@ -203,14 +203,14 @@ subroutine do_efg(Q)
      do beta=1,3
 
         write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
-             (2*real(efg_corr_tens(alpha,beta,na)) , alpha =1,3 )
+             (2*DBLE(efg_corr_tens(alpha,beta,na)) , alpha =1,3 )
 
      enddo
      write (stdout,*)
   enddo
 
   do na=1,nat
-     efg(:,:,na)=real(2*efg_corr_tens(:,:,na)+efgr_el(na,:,:)+ &
+     efg(:,:,na)=DBLE(2*efg_corr_tens(:,:,na)+efgr_el(na,:,:)+ &
           efg_io(na,:,:))
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg",&
@@ -221,7 +221,7 @@ subroutine do_efg(Q)
 
      do alpha=1,3
         do beta=1,3
-           work(beta,alpha)=cmplx(efg(alpha,beta,na),0.d0)
+           work(beta,alpha)=CMPLX(efg(alpha,beta,na),0.d0)
         enddo
      enddo
 
@@ -348,7 +348,7 @@ subroutine efg_correction(efg_corr_tens)
                        lm2=m2+l2**2 
                        do lm=5,9
                           efg_corr(lm,na) =  efg_corr(lm,na) + &
-                               (paw_becp(jkb,ibnd) * conjg(paw_becp(ikb,ibnd))) &
+                               (paw_becp(jkb,ibnd) * CONJG(paw_becp(ikb,ibnd))) &
                                * at_efg(nbs1,nbs2,nt) * &
                                ap(lm,lm1,lm2) * wk(ik) / 2.d0
                        enddo
@@ -366,16 +366,16 @@ subroutine efg_correction(efg_corr_tens)
   !  transforme in cartesian coordinates
   !
 
-  efg_corr_tens(1,1,:)=real(sqrt(3.d0)*efg_corr(8,:) &
+  efg_corr_tens(1,1,:)=DBLE(sqrt(3.d0)*efg_corr(8,:) &
        - efg_corr(5,:))
-  efg_corr_tens(2,2,:)=real(-sqrt(3.d0)*efg_corr(8,:)&
+  efg_corr_tens(2,2,:)=DBLE(-sqrt(3.d0)*efg_corr(8,:)&
        - efg_corr(5,:))
-  efg_corr_tens(3,3,:)=real(2.d0*efg_corr(5,:))
-  efg_corr_tens(1,2,:)=real(sqrt(3.d0)*efg_corr(9,:))
+  efg_corr_tens(3,3,:)=DBLE(2.d0*efg_corr(5,:))
+  efg_corr_tens(1,2,:)=DBLE(sqrt(3.d0)*efg_corr(9,:))
   efg_corr_tens(2,1,:)=efg_corr_tens(1,2,:)
-  efg_corr_tens(1,3,:)=real(-efg_corr(6,:)*sqrt(3.d0))
+  efg_corr_tens(1,3,:)=DBLE(-efg_corr(6,:)*sqrt(3.d0))
   efg_corr_tens(3,1,:)=efg_corr_tens(1,3,:)
-  efg_corr_tens(2,3,:)=real(-efg_corr(7,:)*sqrt(3.d0))
+  efg_corr_tens(2,3,:)=DBLE(-efg_corr(7,:)*sqrt(3.d0))
   efg_corr_tens(3,2,:)=efg_corr_tens(2,3,:)
 
   efg_corr_tens=-sqrt(4.d0*pi/5.d0)*efg_corr_tens

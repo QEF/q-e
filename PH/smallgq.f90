@@ -78,7 +78,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
      raq = 0.d0
      do ipol = 1, 3
         do jpol = 1, 3
-           raq (ipol) = raq (ipol) + float (s (ipol, jpol, isym) ) * &
+           raq (ipol) = raq (ipol) + DBLE (s (ipol, jpol, isym) ) * &
                 aq (jpol)
         enddo
      enddo

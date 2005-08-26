@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#include "f_defs.h"
 !
 ! Copyright (C) 2002 CP90 group
 ! This file is distributed under the terms of the
@@ -634,7 +634,7 @@
 #endif
       ALLOCATE( my_buffer( ngw ) )
       ALLOCATE( ibuf( nproc ) )
-      ctmp = CMPLX( 0.0d0 )
+      ctmp = CMPLX( 0.0d0, 0.d0 )
 
       ! WRITE( stdout,*) 'D: ', nproc, mpime, group
 

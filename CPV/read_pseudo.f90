@@ -162,7 +162,7 @@ REAL(dbl) FUNCTION calculate_dx( a, m )
   n = MIN( SIZE( a ), m )
   ra = a(1)
   rb = a(n)
-  calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
+  calculate_dx = LOG( rb / ra ) / DBLE( n - 1 )
   RETURN
 END FUNCTION calculate_dx
 
@@ -417,7 +417,7 @@ END FUNCTION calculate_dx
           zmesh =  6.0d0
           dx    =  0.025d0
           DO ir = 1, mesh
-            x = xmin + REAL(ir-1) * dx
+            x = xmin + DBLE(ir-1) * dx
             ap%rw(ir)  = EXP(x) / zmesh
           END DO
           ap%mesh = mesh
@@ -1575,7 +1575,7 @@ END SUBROUTINE read_atomic_cc
 !    compute the radial mesh
 !
       do ir = 1, mesh(is)
-        x = xmin + float(ir-1) * dx
+        x = xmin + DBLE(ir-1) * dx
         r(ir,is) = exp(x) / zmesh
         rab(ir,is) = dx * r(ir,is)
       end do

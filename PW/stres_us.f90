@@ -320,7 +320,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = deeq(ih,jh,na,current_spin) - &
                                  et(ibnd,ik) * qq (ih, jh, np)
                             evps = evps + ps * fac * 2.D0 * &
-                                   REAL( CONJG( becp(ikb,ibnd) ) * &
+                                   DBLE( CONJG( becp(ikb,ibnd) ) * &
                                          becp(jkb, ibnd) )
                          END DO
                       END IF

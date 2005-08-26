@@ -119,12 +119,12 @@
          
 
          if (negative) then
-            rhoout(ir,2)=DREAL(re(1,1))
-            rhoout(ir,1)=DREAL(re(2,2))
+            rhoout(ir,2)= DBLE(re(1,1))
+            rhoout(ir,1)= DBLE(re(2,2))
             segni(ir)=-1.d0
          else
-            rhoout(ir,1)=DREAL(re(1,1))
-            rhoout(ir,2)=DREAL(re(2,2))
+            rhoout(ir,1)= DBLE(re(1,1))
+            rhoout(ir,2)= DBLE(re(2,2))
             segni(ir)=1.d0
          endif
       enddo

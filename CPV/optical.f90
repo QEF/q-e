@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
       MODULE optical_properties
 
         USE kinds
@@ -41,7 +42,7 @@
           END IF
           nfreq = noptical
           maxdie = woptical / au
-          ddie = maxdie / REAL(nfreq)
+          ddie = maxdie / DBLE(nfreq)
           temperature = boptical
           ALLOCATE( dielec_total(nfreq), sigma_total(nfreq), n_total(nfreq) )
           dielec_total = 0.0d0
@@ -378,7 +379,7 @@
 
           WRITE( dielecunit, 30 ) nfi, tm
           DO I = 1, SIZE(dielec_total)
-            w = (REAL(i)-0.5d0) * ddie
+            w = (DBLE(i)-0.5d0) * ddie
             ! WRITE(dielecunit,100) &
             !   w * au, dielec_total(i) / w / w, sigma_total(i) * au_to_ohmcmm1 / w, n_total(i)
             WRITE(dielecunit,100) &
@@ -397,7 +398,7 @@
           WRITE( stdout,40) 
           WRITE( stdout,50) 
           DO I = 1, SIZE(dielec_total)
-            w = (REAL(i)-0.5d0) * ddie
+            w = (DBLE(i)-0.5d0) * ddie
             ! WRITE( stdout,110) w * au, sigma_total(i) * au_to_ohmcmm1 / w, n_total(i)
             WRITE( stdout,110) w * au, sigma_total(i) * au_to_ohmcmm1 / ddie, n_total(i)
           END DO

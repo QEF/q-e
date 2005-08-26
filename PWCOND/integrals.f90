@@ -36,10 +36,10 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
   fact0=exp(arg)
   fact=fact0
   do ik=1, nz1
-    int1d = int1d+conjg(fun(ik))*fact
+    int1d = int1d+CONJG(fun(ik))*fact
     fact=fact*fact0
   enddo
-  if (abs(real(zk))+abs(DIMAG(zk)).gt.eps) then
+  if (abs(DBLE(zk))+abs(AIMAG(zk)).gt.eps) then
     int1d =-sign*cim*int1d*(1.d0-exp(-arg))/(zk*tpiba)
     if (sign.lt.0) int1d=int1d*exp(tpi*cim*zk*dz)
   else
@@ -82,7 +82,7 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
   fact=fact1(1)
   fact0=fact2(1)
   do ik=1, nz1
-    ff=conjg(fun1(ik))
+    ff=CONJG(fun1(ik))
     s1=s1+int1(ik)*ff*fact1(ik)
     s2=s2+int2(ik)*ff*fact2(ik)
     s3=s3+fun2(ik)*ff

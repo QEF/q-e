@@ -225,7 +225,7 @@ subroutine convert_rrkj
   allocate(  r(mesh))
   ! define logarithmic mesh
   do i = 1, mesh
-     x = xmin + float(i-1) * dx
+     x = xmin + DBLE(i-1) * dx
      r  (i) = exp(x) / zmesh
      rab(i) = dx * r(i)
   end do

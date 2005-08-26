@@ -73,8 +73,8 @@
       DO ig = 1, SIZE(co)
         fp = dco(ig) + dce(ig)
         fm = dco(ig) - dce(ig)
-        aro = CMPLX( REAL(fp), AIMAG(fm) )
-        are = CMPLX( AIMAG(fp),-REAL(fm))
+        aro = CMPLX(  DBLE(fp), AIMAG(fm) )
+        are = CMPLX( AIMAG(fp), -DBLE(fm))
         arg = tpiba2 * hg(ig)
         dco(ig) = -fioby2 * (arg * co(ig) + aro)
         dce(ig) = -fieby2 * (arg * ce(ig) + are)
@@ -90,9 +90,9 @@
     SUBROUTINE dforce2(fio, fie, df, da, fnlo, fnle, hg, gx, eigr, wsg, wnl)
 
         !  this routine computes:
-        !  the generalized force df=cmplx(dfr,dfi) acting on the i-th
+        !  the generalized force df=CMPLX(dfr,dfi) acting on the i-th
         !  electron state at the ik-th point of the Brillouin zone
-        !  represented by the vector c=cmplx(cr,ci)
+        !  represented by the vector c=CMPLX(cr,ci)
         !  ----------------------------------------------
 
 ! ... declare modules
@@ -174,9 +174,9 @@
     SUBROUTINE dforce2_bec( fio, fie, df, da, eigr, beco, bece )
 
         !  this routine computes:
-        !  the generalized force df=cmplx(dfr,dfi) acting on the i-th
+        !  the generalized force df=CMPLX(dfr,dfi) acting on the i-th
         !  electron state at the ik-th point of the Brillouin zone
-        !  represented by the vector c=cmplx(cr,ci)
+        !  represented by the vector c=CMPLX(cr,ci)
         !  ----------------------------------------------
 
       USE ions_base,       ONLY: na

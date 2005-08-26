@@ -51,12 +51,12 @@ subroutine summary_band(ik,ien)
       endif
 
       do i=1, nchanl
-       write(3,'(2f10.4)') abs(DREAL(kvall(i))), eev
+       write(3,'(2f10.4)') abs( DBLE(kvall(i))), eev
       enddo
 
       do i=nchanl+1, nstl
-       dre = abs(DREAL(kvall(i)))
-       dim = abs(DIMAG(kvall(i)))
+       dre = abs( DBLE(kvall(i)))
+       dim = abs(AIMAG(kvall(i)))
        if(dim.le.cutplot) then
         if(dre.gt.1.d-4.and.dre.le.0.4999d0) then                    
           write(11,'(2f10.4)')  dre, eev
@@ -82,7 +82,7 @@ subroutine summary_band(ik,ien)
                                'k2(2pi/a)', 'E-Ef (eV)'
   WRITE( stdout,*)
   do i=1, nchanl
-    WRITE( stdout,'(3f12.7)') DREAL(kvall(i)), DIMAG(kvall(i)), eev
+    WRITE( stdout,'(3f12.7)')  DBLE(kvall(i)), AIMAG(kvall(i)), eev
   enddo
   if(ikind.eq.2) then
     WRITE( stdout,*) 'Nchannels of the right tip = ', nchanr
@@ -90,7 +90,7 @@ subroutine summary_band(ik,ien)
                                'k2(2pi/a)', 'E-Ef (eV)'          
     WRITE( stdout,*)
     do i=1, nchanr
-      WRITE( stdout,'(3f12.7)') DREAL(kvalr(i)), DIMAG(kvalr(i)), eev
+      WRITE( stdout,'(3f12.7)')  DBLE(kvalr(i)), AIMAG(kvalr(i)), eev
     enddo         
   endif
 

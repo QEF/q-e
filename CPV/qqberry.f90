@@ -189,13 +189,13 @@ subroutine qqberry2( gqq,gqqm, ipol)
               do ia=1,na(is)
 !                  gqq(iv,jv,ia,is)=qgbs*eigr(igi,ia,is)!ATTENZIONE era cosi'
 !                  gqq(jv,iv,ia,is)=qgbs*eigr(igi,ia,is)
-!                  gqqm(iv,jv,ia,is)=conjg(gqq(iv,jv,ia,is))
-!                  gqqm(jv,iv,ia,is)=conjg(gqq(iv,jv,ia,is))
+!                  gqqm(iv,jv,ia,is)=CONJG(gqq(iv,jv,ia,is))
+!                  gqqm(jv,iv,ia,is)=CONJG(gqq(iv,jv,ia,is))
                      
                  gqqm(iv,jv,ia,is)=qgbs
                  gqqm(jv,iv,ia,is)=qgbs
-                 gqq(iv,jv,ia,is)=conjg(gqqm(iv,jv,ia,is))
-                 gqq(jv,iv,ia,is)=conjg(gqqm(iv,jv,ia,is))
+                 gqq(iv,jv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
+                 gqq(jv,iv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
               end do
            end do
         enddo
@@ -281,8 +281,8 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
               do jv=iv,nh(is)
                  gqqm(iv,jv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
                  gqqm(jv,iv,ia,is)= gqqm0(iv,jv,ia,is)*eigr(igi,isa)
-                 gqq(iv,jv,ia,is)=conjg(gqqm(iv,jv,ia,is))
-                 gqq(jv,iv,ia,is)=conjg(gqqm(iv,jv,ia,is))
+                 gqq(iv,jv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
+                 gqq(jv,iv,ia,is)=CONJG(gqqm(iv,jv,ia,is))
               enddo
            enddo
            isa = isa + 1

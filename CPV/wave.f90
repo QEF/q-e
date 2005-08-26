@@ -173,9 +173,9 @@
           DO ib = 1, cdesc%nbl( ispin )
             skm = 0.d0
             DO ig = 2, cdesc%ngwl
-              skm  = skm + g2(ig) * REAL( CONJG( c(ig,ib) ) * c(ig,ib), dbl) * pmss(ig)
+              skm  = skm + g2(ig) * DBLE( CONJG(c(ig,ib)) * c(ig,ib) ) * pmss(ig)
             END DO
-            skm = skm + g2(1) * REAL( c(1,ib), dbl )**2 * pmss(1) / 2.0d0
+            skm = skm + g2(1) * DBLE( c(1,ib) )**2 * pmss(1) / 2.0d0
             xmkin = xmkin + fi(ib) * skm * 0.5d0
           END DO
 
@@ -184,7 +184,7 @@
           DO ib = 1, cdesc%nbl( ispin )
             skm = 0.d0
             DO ig = 1, cdesc%ngwl
-              skm  = skm + g2(ig) * REAL( CONJG( c( ig, ib ) ) * c( ig, ib ) ) * pmss(ig)
+              skm  = skm + g2(ig) * DBLE( CONJG( c( ig, ib ) ) * c( ig, ib ) ) * pmss(ig)
             END DO
             xmkin = xmkin + fi(ib) * skm * 0.5d0
           END DO
@@ -226,9 +226,9 @@
           DO ib = 1, cdesc%nbl( ispin )
             sk1 = 0.d0
             DO ig = 2, cdesc%ngwl
-              sk1 = sk1 + g2(ig) * REAL( CONJG( c(ig,ib) ) * c(ig,ib), dbl )
+              sk1 = sk1 + g2(ig) * DBLE( CONJG( c(ig,ib) ) * c(ig,ib) )
             END DO
-            sk1  = sk1 + g2(1) * REAL( c(1,ib), dbl )**2 / 2.0d0
+            sk1  = sk1 + g2(1) * DBLE( c(1,ib) )**2 / 2.0d0
             xkin = xkin + fi(ib) * sk1 * 0.5d0
           END DO
 
@@ -237,7 +237,7 @@
           DO ib = 1, cdesc%nbl( ispin )
             sk1 = 0.d0
             DO ig = 1, cdesc%ngwl
-              sk1 = sk1 + g2(ig) * REAL( CONJG( c(ig,ib) ) * c(ig,ib), dbl )
+              sk1 = sk1 + g2(ig) * DBLE( CONJG( c(ig,ib) ) * c(ig,ib) )
             END DO
             xkin = xkin + fi(ib) * sk1 * 0.5d0
           END DO
@@ -367,7 +367,7 @@
 
           IF( cdesc%gzero ) THEN
             DO i = 1, cdesc%nbl( ispin )
-              c( 1, i ) = REAL( c( 1, i ), dbl )
+              c( 1, i ) = DBLE( c( 1, i ) )
             END DO
           END IF
 
@@ -1031,7 +1031,7 @@
         DO ig = 3, ntest
           rranf1 = 0.5d0 - rranf()
           rranf2 = rranf()
-          pwt( ig ) = ampre * DCMPLX(rranf1, rranf2)
+          pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
         END DO
         CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, mpime, nproc, 0 )
       END DO

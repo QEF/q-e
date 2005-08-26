@@ -93,13 +93,13 @@ subroutine add_shift_cc (shift_cc)
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
               if (gstart.eq.2)  shift_(na) = omega * rhocg (igtongl (1) ) * &
-                                                     conjg (psic (nl (1) ) )
+                                                     CONJG(psic (nl (1) ) )
               do ig = gstart, ngm
                  arg = (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
                       + g (3, ig) * tau (3, na) ) * tpi
                  shift_ (na) = shift_( na) + omega * &
-                         rhocg (igtongl (ig) ) * conjg (psic (nl (ig) ) ) * &
-                         DCMPLX ( cos(arg), -sin(arg)) * fact
+                         rhocg (igtongl (ig) ) * CONJG(psic (nl (ig) ) ) * &
+                         CMPLX ( cos(arg), -sin(arg)) * fact
               enddo
            endif
         enddo

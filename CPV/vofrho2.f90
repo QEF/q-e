@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
       subroutine vofrho2(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
      &     ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion,v0s,vhxcs)
@@ -22,6 +23,7 @@
 !     v0s output : total local pseudopotential on smooth real space grid
 !     vhxcs out  : hartree-xc potential on smooth real space grid
 !
+      use kinds, only: dp
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
@@ -128,11 +130,11 @@
       vtemp=(0.,0.)
       do is=1,nsp
          do ig=1,ngs
-            vtemp(ig)=vtemp(ig)+conjg(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
+            vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          end do
       end do
 !
-      epseu = wz * real( SUM( vtemp( 1:ngs ) ) )
+      epseu = wz * DBLE( SUM( vtemp( 1:ngs ) ) )
       if (ng0.eq.2) epseu=epseu-vtemp(1)
 
       call mp_sum( epseu )
@@ -151,10 +153,10 @@
       end do
       if (ng0.eq.2) vtemp(1)=0.0
       do ig=ng0,ngm
-         vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
+         vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real( SUM( vtemp( 1:ngm ) ) ) *wz*0.5*fpi/tpiba2
+      eh=DBLE( SUM( vtemp( 1:ngm ) ) ) *wz*0.5*fpi/tpiba2
 
       call mp_sum( eh )
 
@@ -184,7 +186,7 @@
       vs = 0.0d0
       do is=1,nsp
          do ig=1,ngs
-           vs(nms(ig))=vs(nms(ig))+conjg(sfac(ig,is)*vps(ig,is))
+           vs(nms(ig))=vs(nms(ig))+CONJG(sfac(ig,is)*vps(ig,is))
            vs(nps(ig))=vs(nps(ig))+sfac(ig,is)*vps(ig,is)
          end do
       end do
@@ -192,7 +194,7 @@
       call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
       do ir=1,nnrsx
-         v0s(ir)=real(vs(ir))
+         v0s(ir)=DBLE(vs(ir))
       end do
 
 
@@ -215,7 +217,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,iss),0.0)
+            v(ir)=CMPLX(rhor(ir,iss),0.0)
          end do
 !
 !     v_xc(r) --> v_xc(g)
@@ -233,14 +235,14 @@
          isup=1
          isdw=2
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
+            v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ngm
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            rhog(ig,isup)=vtemp(ig)+0.5*cmplx( real(fp),aimag(fm))
-            rhog(ig,isdw)=vtemp(ig)+0.5*cmplx(aimag(fp),-real(fm))
+            rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
       endif
 !
@@ -264,7 +266,7 @@
          iss=1
          do ig=1,ngm
             v(np(ig))=rhog(ig,iss)
-            v(nm(ig))=conjg(rhog(ig,iss))
+            v(nm(ig))=CONJG(rhog(ig,iss))
          end do
 !
 !     v(g) --> v(r)
@@ -272,30 +274,30 @@
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          do ir=1,nnr
-            rhor(ir,iss)=real(v(ir))
+            rhor(ir,iss)=DBLE(v(ir))
          end do
 !
 !     calculation of average potential
 !
-         vave= SUM( rhor(1:nnr,iss) ) /dfloat(nr1*nr2*nr3)
+         vave= SUM( rhor(1:nnr,iss) ) /DBLE(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
          do ig=1,ngm
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nm(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do
 !
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
-            rhor(ir,isup)= real(v(ir))
-            rhor(ir,isdw)=aimag(v(ir))
+            rhor(ir,isup)= DBLE(v(ir))
+            rhor(ir,isdw)=AIMAG(v(ir))
          end do
 !
 !     calculation of average potential
 !
          vave=( SUM( rhor(1:nnr,isup) ) + SUM( rhor(1:nnr,isdw) ) )      &
-     &        /2.0/dfloat(nr1*nr2*nr3)
+     &        /2.0/DBLE(nr1*nr2*nr3)
       endif
 
       call mp_sum( vave )
@@ -309,31 +311,31 @@
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
-            vs(nms(ig))=conjg(rhog(ig,iss))
+            vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
          end do
 !
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
          do ir=1,nnrsx
-            vhxcs(ir,iss)=real(vs(ir))-v0s(ir)
-            rhos(ir,iss)=real(vs(ir))
+            vhxcs(ir,iss)=DBLE(vs(ir))-v0s(ir)
+            rhos(ir,iss)=DBLE(vs(ir))
          end do
       else
          isup=1
          isdw=2
          do ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nms(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do 
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          do ir=1,nnrsx
             
-            vhxcs(ir,isup)= real(vs(ir))-v0s(ir)
-            vhxcs(ir,isdw)=aimag(vs(ir))-v0s(ir)
+            vhxcs(ir,isup)= DBLE(vs(ir))-v0s(ir)
+            vhxcs(ir,isdw)=AIMAG(vs(ir))-v0s(ir)
 
-            rhos(ir,isup)= real(vs(ir))
-            rhos(ir,isdw)=aimag(vs(ir))
+            rhos(ir,isup)= DBLE(vs(ir))
+            rhos(ir,isdw)=AIMAG(vs(ir))
          end do
       endif
 

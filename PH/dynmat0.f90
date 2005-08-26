@@ -65,7 +65,7 @@ subroutine dynmat0
            wrk = (0.d0, 0.d0)
            do nb_jcart = 1, 3 * nat
               do na_icart = 1, 3 * nat
-                 wrk = wrk + conjg (u (na_icart, nu_i) ) * &
+                 wrk = wrk + CONJG(u (na_icart, nu_i) ) * &
                              dynwrk (na_icart, nb_jcart) * &
                              u (nb_jcart, nu_j)
               enddo

@@ -99,10 +99,10 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
               enddo
 
               isa = isa + 1
-              fion(ipol,isa) = fion(ipol,isa) -   2.*evalue*aimag(temp)/gmes
-              fion(1,isa) = fion(1,isa) -   2.*evalue*aimag(temp1)/gmes
-              fion(2,isa) = fion(2,isa) -   2.*evalue*aimag(temp2)/gmes
-              fion(3,isa) = fion(3,isa) -   2.*evalue*aimag(temp3)/gmes
+              fion(ipol,isa) = fion(ipol,isa) -   2.*evalue*AIMAG(temp)/gmes
+              fion(1,isa) = fion(1,isa) -   2.*evalue*AIMAG(temp1)/gmes
+              fion(2,isa) = fion(2,isa) -   2.*evalue*AIMAG(temp2)/gmes
+              fion(3,isa) = fion(3,isa) -   2.*evalue*AIMAG(temp3)/gmes
            end do
         end do
      end do

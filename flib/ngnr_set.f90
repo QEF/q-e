@@ -78,9 +78,9 @@
           DO j = -nr, nr
             DO i = -nr, nr
 
-              g( 1 ) = REAL(i) * b1(1) + REAL(j) * b2(1) + REAL(k) * b3(1)
-              g( 2 ) = REAL(i) * b1(2) + REAL(j) * b2(2) + REAL(k) * b3(2)
-              g( 3 ) = REAL(i) * b1(3) + REAL(j) * b2(3) + REAL(k) * b3(3)
+              g( 1 ) = DBLE(i) * b1(1) + DBLE(j) * b2(1) + DBLE(k) * b3(1)
+              g( 2 ) = DBLE(i) * b1(2) + DBLE(j) * b2(2) + DBLE(k) * b3(2)
+              g( 3 ) = DBLE(i) * b1(3) + DBLE(j) * b2(3) + DBLE(k) * b3(3)
 
 ! ...         calculate modulus
               IF( tqk ) THEN

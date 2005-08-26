@@ -141,7 +141,7 @@ subroutine atomic_rho (rhoa, nspina)
      !
      psic(:) = (0.d0,0.d0)
      psic (nl (:) ) = rhocg (:, is)
-     if (gamma_only) psic ( nlm(:) ) = conjg( rhocg (:, is) )
+     if (gamma_only) psic ( nlm(:) ) = CONJG( rhocg (:, is) )
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      !
      ! we check that everything is correct
@@ -149,8 +149,8 @@ subroutine atomic_rho (rhoa, nspina)
      rhoneg = 0.d0
      rhoima = 0.d0
      do ir = 1, nrxx
-        rhoneg = rhoneg + MIN (0.d0, DREAL (psic (ir)) )
-        rhoima = rhoima + abs (DIMAG (psic (ir) ) )
+        rhoneg = rhoneg + MIN (0.d0,  DBLE (psic (ir)) )
+        rhoima = rhoima + abs (AIMAG (psic (ir) ) )
      enddo
      rhoneg = omega * rhoneg / (nr1 * nr2 * nr3)
      rhoima = omega * rhoima / (nr1 * nr2 * nr3)
@@ -180,7 +180,7 @@ subroutine atomic_rho (rhoa, nspina)
      ! charge will re-appear when Fourier-transformed back and forth
      !
      DO ir = 1, nrxx
-        rhoa (ir, is) = DREAL (psic (ir))
+        rhoa (ir, is) =  DBLE (psic (ir))
      END DO
      !
   enddo

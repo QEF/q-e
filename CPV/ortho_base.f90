@@ -234,14 +234,14 @@
 !      DO i = 1, nb
 !        DO j = 1, nb
 !          DO k = 1, ngw
-!            sig(i,j) = - 2.0d0 * ( REAL(cp(k,i))*REAL(cp(k,j))+AIMAG(cp(k,i))*AIMAG(cp(k,j)) )
+!            sig(i,j) = - 2.0d0 * ( DBLE(cp(k,i))*DBLE(cp(k,j))+AIMAG(cp(k,i))*AIMAG(cp(k,j)) )
 !          END DO
 !        END DO
 !      END DO
 
       CALL DGEMM('T','N', n, n, twongw, -2.0d0, cp(1,1), ldc, cp(1,1), ldc, zero, sig(1,1), lds)
       DO i = 1, n
-        sig(i,i) = sig(i,i) + one / REAL(nproc)
+        sig(i,i) = sig(i,i) + one / DBLE(nproc)
       END DO
 
 !      WRITE( stdout,*) ' SIGSET 2 ', SUM(sig)  ! DEBUG
@@ -287,7 +287,7 @@
       
       CALL ZGEMM('C','N',NX,NX,NGW,mcone,CP(1,1),ldc,CP(1,1),ldc,czero,sig(1,1),lds)
       DO i = 1, nx
-        sig(i,i) = sig(i,i) + cone / REAL(nproc)
+        sig(i,i) = sig(i,i) + cone / DBLE(nproc)
       END DO
       
 #if defined __SHMEM
@@ -482,7 +482,7 @@
           c0ji        = c0(j,i)
           c0ji        = c0ji * ebpmss(j)
           c0(j,i)     = c0ji
-          ctmp(i,jp1) = REAL(c0ji)
+          ctmp(i,jp1) =  DBLE(c0ji)
           ctmp(i,jp2) = AIMAG(c0ji)
         ENDDO
       ENDDO

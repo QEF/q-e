@@ -109,7 +109,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
            arg = (q_(1) * tau (1, na) + &
                   q_(2) * tau (2, na) + &
                   q_(3) * tau (3, na) ) * tpi
-           phase = DCMPLX (cos (arg), - sin (arg) )
+           phase = CMPLX (cos (arg), - sin (arg) )
            do ig = 1, npw_
               sk (ig) = eigts1 (ig1(igk_(ig)), na) * &
                         eigts2 (ig2(igk_(ig)), na) * &

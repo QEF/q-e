@@ -329,7 +329,7 @@ SUBROUTINE sum_band()
              DO ir = 1, nrxxs
                 !
                 rho(ir,current_spin) = rho(ir,current_spin) + &
-                                       w1 * REAL(  psic(ir) )**2 + &
+                                       w1 *  DBLE( psic(ir) )**2 + &
                                        w2 * AIMAG( psic(ir) )**2
                 !
              END DO
@@ -490,7 +490,7 @@ SUBROUTINE sum_band()
                 DO ipol=1,npol
                    DO ir = 1, nrxxs
                       rho (ir, 1) = rho (ir, 1) + &
-                      w1*(DREAL(psic_nc(ir,ipol))**2+DIMAG(psic_nc(ir,ipol))**2)
+                      w1*( DBLE(psic_nc(ir,ipol))**2+AIMAG(psic_nc(ir,ipol))**2)
                    END DO
                 END DO
                 !
@@ -500,16 +500,16 @@ SUBROUTINE sum_band()
                 IF (domag) THEN
                    DO ir = 1,nrxxs
                       rho(ir,2) = rho(ir,2) + w1*2.D0* &
-                         (real(psic_nc(ir,1))*real(psic_nc(ir,2)) + &
-                         DIMAG(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)))
+                         (DBLE(psic_nc(ir,1))* DBLE(psic_nc(ir,2)) + &
+                         AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
 
                       rho(ir,3) = rho(ir,3) + w1*2.D0* &
-                         (real(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)) - &
-                         real(psic_nc(ir,2))*DIMAG(psic_nc(ir,1)))
+                         (DBLE(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
+                          DBLE(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
 
                       rho(ir,4) = rho(ir,4) + w1* &
-                         (real(psic_nc(ir,1))**2+DIMAG(psic_nc(ir,1))**2 &
-                         -real(psic_nc(ir,2))**2-DIMAG(psic_nc(ir,2))**2)
+                         (DBLE(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
+                         -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
                    END DO
                 ELSE
                    rho(ir,2:4)=0.d0
@@ -529,8 +529,8 @@ SUBROUTINE sum_band()
                 DO ir = 1, nrxxs
                    !
                    rho(ir,current_spin) = rho(ir,current_spin) + &
-                                            w1 * ( REAL( psic(ir) )**2 + &
-                                                        AIMAG( psic(ir) )**2 )
+                                            w1 * ( DBLE( psic(ir) )**2 + &
+                                                  AIMAG( psic(ir) )**2 )
                    !
                 END DO
                 !
@@ -624,7 +624,7 @@ SUBROUTINE sum_band()
                                                  *becp_nc(ikb,2,ibnd) )
                                      becsum(ijh,na,3)=becsum(ijh,na,3)  &
                                           + w1*2.d0     &
-                                      *DIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                      *AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
                                                    becp_nc(ikb,2,ibnd) )
                                      becsum(ijh,na,4) = becsum(ijh,na,4)    &
                                           + w1*( CONJG(becp_nc(ikb,1,ibnd)) &
@@ -636,7 +636,7 @@ SUBROUTINE sum_band()
                             ELSE
                                becsum(ijh,na,current_spin) = &
                                         becsum(ijh,na,current_spin) + &
-                                        w1 * REAL( CONJG( becp(ikb,ibnd) ) * &
+                                        w1 * DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                           becp(ikb,ibnd) )
                             END IF                       
                             !
@@ -669,26 +669,26 @@ SUBROUTINE sum_band()
                                   ELSE
                                      becsum(ijh,na,1)= becsum(ijh,na,1)+ &
                                                       w1*2.d0* &
-                                     REAL(CONJG(becp_nc(ikb,1,ibnd))* &
+                                     DBLE(CONJG(becp_nc(ikb,1,ibnd))* &
                                                 becp_nc(jkb,1,ibnd) + &
                                           CONJG(becp_nc(ikb,2,ibnd))* &
                                                 becp_nc(jkb,2,ibnd) )
                                      IF (domag) THEN
                                         becsum(ijh,na,2)=becsum(ijh,na,2)+ &
                                                           w1*2.d0* &
-                                           REAL(CONJG(becp_nc(ikb,2,ibnd))* &
+                                           DBLE(CONJG(becp_nc(ikb,2,ibnd))* &
                                                       becp_nc(jkb,1,ibnd) + &
                                                 CONJG(becp_nc(ikb,1,ibnd))* &
                                                       becp_nc(jkb,2,ibnd) )
                                         becsum(ijh,na,3)=becsum(ijh,na,3)+ &
                                                        w1*2.d0* &
-                                            DIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
+                                            AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
                                                         becp_nc(jkb,2,ibnd) + &
                                                   CONJG(becp_nc(ikb,1,ibnd))* &
                                                         becp_nc(jkb,2,ibnd) )
                                         becsum(ijh,na,4)=becsum(ijh,na,4)+ &
                                                        w1*2.d0* &
-                                            REAL(CONJG(becp_nc(ikb,1,ibnd))* &
+                                            DBLE(CONJG(becp_nc(ikb,1,ibnd))* &
                                                        becp_nc(jkb,1,ibnd) - &
                                                  CONJG(becp_nc(ikb,2,ibnd))* &
                                                        becp_nc(jkb,2,ibnd) )
@@ -698,7 +698,7 @@ SUBROUTINE sum_band()
                                !
                                    becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + w1 * 2.D0 * &
-                                     REAL( CONJG( becp(ikb,ibnd) ) * &
+                                     DBLE( CONJG( becp(ikb,ibnd) ) * &
                                            becp(jkb,ibnd) )
                                ENDIF
                                !            

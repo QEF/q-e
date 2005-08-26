@@ -947,7 +947,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            isa = isa + 1
         END DO
      END DO
-     t1=omega/dfloat(nr1*nr2*nr3)
+     t1=omega/DBLE(nr1*nr2*nr3)
      X=X*t1
      DO i=1, nbsp
         DO j=i+1, nbsp
@@ -1258,7 +1258,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ! ... obtain the wannier function at time(t+delta). It also updates the
   ! ... quantities bec and becdr
   !
-  USE kinds,            ONLY : dbl
+  USE kinds,            ONLY : dbl, dp
   USE io_global,        ONLY : stdout
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
@@ -1338,7 +1338,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      t0=0.D0     !use t0 to store the value of omega
      DO inw=1, nw
         DO i=1, m
-           t0=t0+REAL(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
+           t0=t0+DBLE(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
         END DO
      END DO
 
@@ -1373,7 +1373,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
         t2=weight(inw)
         DO i=1,m
            DO j=1,m
-              W(i,j)=W(i,j)+t2*REAL(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
+              W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
                    -Oc(inw,j,j))+CONJG(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
            END DO
         END DO
@@ -1396,7 +1396,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      DO i=1, m
         DO j=i,m 
-           wp(i + (j-1)*j/2) = CMPLX(0.0, Aplus(i,j))
+           wp(i + (j-1)*j/2) = CMPLX(0.d0, Aplus(i,j))
         END DO
      END DO
 
@@ -1425,7 +1425,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      U2=ZERO
      !    call ZGEMUL(U3, m, 'nbsp', z, m, 'c', U2, m, m,m,m)
      CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
-     U=REAL(U2)
+     U=DBLE(U2)
      U2=ZERO
      U3=ZERO
 
@@ -1479,7 +1479,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 241 DEALLOCATE(wr, W)
   spread=0.0
   DO i=1, m
-     mt=1.D0-REAL(Oc(:,i,i)*CONJG(Oc(:,i,i)))
+     mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
      sp= (alat*autoaf/tpi)**2*SUM(mt*weight)
 #ifdef __PARA
      IF(me.EQ.1) THEN
@@ -1522,7 +1522,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !----------------------------------------------------------------------------
   !
   USE io_global,          ONLY : stdout
-  USE kinds,              ONLY : dbl
+  USE kinds,              ONLY : dbl, dp
   USE reciprocal_vectors, ONLY : gx, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
@@ -2514,7 +2514,7 @@ END SUBROUTINE wfunc_init
 SUBROUTINE grid_map()
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
@@ -2539,11 +2539,11 @@ SUBROUTINE grid_map()
         DO ir2=1,nr2s
            DO ir1=1,nr1s
               xdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
-                   &                  ((ir1-1)/dfloat(nr1sx))
+                   &                  ((ir1-1)/DBLE(nr1sx))
               ydist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                   &
-                   &                  ((ir2-1)/dfloat(nr2sx))
+                   &                  ((ir2-1)/DBLE(nr2sx))
               zdist(ir1+(ir2-1)*nr1sx+(ibig3-1)*nr1sx*nr2sx) =                     &
-                   &                  ((ir3-1)/dfloat(nr3sx))
+                   &                  ((ir3-1)/DBLE(nr3sx))
               !         
            END DO
         END DO
@@ -2562,7 +2562,7 @@ SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   ! ... R.P. translations in the WF calculation in the case
   ! ... of ibrav=0 or ibrav=14
   !
-  USE kinds,     ONLY : dbl
+  USE kinds,     ONLY : dbl, dp
   USE constants, ONLY : pi
   USE cell_base, ONLY : tpiba, tpiba2
   !
@@ -2647,7 +2647,7 @@ END SUBROUTINE tric_wts
 SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE io_global,              ONLY : stdout
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
@@ -2675,9 +2675,9 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
 #endif
            DO ir2=1,nr2
               DO ir1=1,nr1
-                 x =  (((ir1-1)/dfloat(nr1x))*i_1(inw) +                          &
-                      &                  ((ir2-1)/dfloat(nr2x))*j_1(inw) +             &
-                      &                  ((ir3-1)/dfloat(nr3x))*k_1(inw))*0.5d0*fpi
+                 x =  (((ir1-1)/DBLE(nr1x))*i_1(inw) +                          &
+                      &                  ((ir2-1)/DBLE(nr2x))*j_1(inw) +             &
+                      &                  ((ir3-1)/DBLE(nr3x))*k_1(inw))*0.5d0*fpi
                  expo(ir1+(ir2-1)*nr1x+(ibig3-1)*nr1x*nr2x,inw) =  CMPLX(COS(x), -SIN(x))
               END DO
            END DO
@@ -2700,7 +2700,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   !      use ion_parameters
   !
-  USE kinds,                    ONLY : dbl
+  USE kinds,                    ONLY : dbl, dp
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
@@ -2748,7 +2748,7 @@ END FUNCTION boxdotgridcplx
 SUBROUTINE write_rho_g( rhog )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : dbl
+  USE kinds,              ONLY : dbl, dp
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
   USE reciprocal_vectors, ONLY : gx, mill_l
@@ -2895,7 +2895,7 @@ END SUBROUTINE write_rho_g
 SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : dbl
+  USE kinds,              ONLY : dbl, dp
   USE reciprocal_vectors, ONLY : gx
   USE gvecp,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
@@ -3110,11 +3110,11 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   DO j=1,npts
      dz(j)=(j-1)*zlen/(npts*1.D0)
      DO i=1,ngz
-        vbar(j)=vbar(j)-REAL(EXP(CI*gz(i)*dz(j))*v_1(i))
-        v_mr(j)=v_mr(j)-REAL(EXP(CI*gz(i)*dz(j))*vmac(i))
-        cdel(j)=cdel(j)-REAL(EXP(CI*gz(i)*dz(j))*rhogz(i))
-        cdion(j)=cdion(j)+REAL(EXP(CI*gz(i)*dz(j))*rho_ion(i))
-        cd(j)=cd(j)+REAL(EXP(CI*gz(i)*dz(j))*rho_tot(i))
+        vbar(j)=vbar(j)-DBLE(EXP(CI*gz(i)*dz(j))*v_1(i))
+        v_mr(j)=v_mr(j)-DBLE(EXP(CI*gz(i)*dz(j))*vmac(i))
+        cdel(j)=cdel(j)-DBLE(EXP(CI*gz(i)*dz(j))*rhogz(i))
+        cdion(j)=cdion(j)+DBLE(EXP(CI*gz(i)*dz(j))*rho_ion(i))
+        cd(j)=cd(j)+DBLE(EXP(CI*gz(i)*dz(j))*rho_tot(i))
      END DO
      !           WRITE( stdout, * ) vbar(j), v_mr(j), cdel(j), cdion(j)
   END DO
@@ -3157,7 +3157,7 @@ END SUBROUTINE macroscopic_average
 SUBROUTINE least_square( npts, x, y, slope, intercept )
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : dbl, dp
   !
   IMPLICIT NONE
   !
@@ -3180,8 +3180,8 @@ SUBROUTINE least_square( npts, x, y, slope, intercept )
      sumx2=sumx2+x(i)*x(i)
   END DO
   sumsqx=sumx**2
-  xav=sumx/dfloat(npts)
-  yav=sumy/dfloat(npts)
+  xav=sumx/DBLE(npts)
+  yav=sumy/DBLE(npts)
 
   slope=(npts*sumxy - sumx*sumy)/(npts*sumx2 - sumsqx)
 
@@ -3195,7 +3195,7 @@ END SUBROUTINE least_square
 SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE io_global,              ONLY : stdout
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
@@ -3267,7 +3267,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      t01=0.D0     !use t1 to store the value of omiga
      DO inw=1, nw
         DO i=1, m
-           t01=t01+REAL(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
+           t01=t01+DBLE(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
         END DO
      END DO
 
@@ -3298,7 +3298,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         t2=weight(inw)
         DO i=1,m
            DO j=i+1,m
-              W(i,j)=W(i,j)+t2*REAL(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
+              W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
                    -Oc(inw,j,j))+CONJG(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
            END DO
         END DO
@@ -3315,7 +3315,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
            DO tk=1, m
               t2=0.D0
               DO inw=1, nw
-                 t2=t2+REAL(Oc(inw,tj,tk)*CONJG(Oc(inw,tj,tj)+Oc(inw,tk,tk) &
+                 t2=t2+DBLE(Oc(inw,tj,tk)*CONJG(Oc(inw,tj,tj)+Oc(inw,tk,tk) &
                       -2.D0*Oc(inw,ti,ti))-4.D0*Oc(inw,ti,tk)          &
                       *CONJG(Oc(inw,ti,tj)))*weight(inw)
               END DO
@@ -3338,7 +3338,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         !       schd=schd*maxwfdt
         DO i=1, m
            DO j=i, m
-              wp1(i + (j-1)*j/2) = CMPLX(0.0, schd(i,j))
+              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
            END DO
         END DO
 
@@ -3386,7 +3386,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         !   schd=schd*maxwfdt
         DO i=1, m
            DO j=i, m
-              wp1(i + (j-1)*j/2) = CMPLX(0.0, schd(i,j))
+              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
            END DO
         END DO
 
@@ -3409,7 +3409,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         CALL ZGEMM ('nbsp', 'nbsp', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
         U2=ZERO
         CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
-        U=REAL(U2)
+        U=DBLE(U2)
         U2=ZERO
         U3=ZERO
         !
@@ -3436,7 +3436,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         t21=0.D0     !use t21 to store the value of omiga
         DO inw=1, nw
            DO i=1, m
-              t21=t21+REAL(CONJG(Oc2(inw, i, i))*Oc2(inw, i, i))
+              t21=t21+DBLE(CONJG(Oc2(inw, i, i))*Oc2(inw, i, i))
            END DO
         END DO
 
@@ -3475,7 +3475,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      CALL ZGEMM ('nbsp', 'nbsp', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
      U2=ZERO
      CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
-     U=REAL(U2)
+     U=DBLE(U2)
      U2=ZERO
      U3=ZERO
 
@@ -3521,7 +3521,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !
   !  write(24, *) "spread: (unit \AA^2)"
   DO i=1, m
-     mt=1.D0-REAL(Oc(:,i,i)*CONJG(Oc(:,i,i)))
+     mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
      sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
 #ifdef __PARA
      IF(me.EQ.1) THEN
@@ -3536,7 +3536,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      spread=spread+sp
      !
   END DO
-  spread=spread/dfloat(m)
+  spread=spread/DBLE(m)
 
 #ifdef __PARA
   IF(me.EQ.1) THEN
@@ -3554,15 +3554,15 @@ END SUBROUTINE wfsteep
 SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   !----------------------------------------------------------------------------
   !
-  ! ... computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
+  ! ... computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
   ! ...           electron state at the gamma point of the brillouin zone
-  ! ...           represented by the vector c=cmplx(cr,CI)
+  ! ...           represented by the vector c=CMPLX(cr,CI)
   !
   ! ...    d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
   ! ...                   sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
   ! ...                                e^-ig.r_i < beta_i,j | c_n > }
   !
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE control_flags,          ONLY : iprint, tbuff
   USE gvecs,                  ONLY : nms, nps
   USE gvecw,                  ONLY : ngw
@@ -3637,8 +3637,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   END IF
   !
   DO ir=1,nnrsx
-     psi(ir)=CMPLX(v(ir,iss1)* REAL(psi(ir)),                       &
-          &                 v1(ir,iss2)*AIMAG(psi(ir)) )
+     psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v1(ir,iss2)*AIMAG(psi(ir)) )
   END DO
   !
   CALL fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
@@ -3652,8 +3651,8 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   DO ig=1,ngw
      fp= psi(nps(ig)) + psi(nms(ig))
      fm= psi(nps(ig)) - psi(nms(ig))
-     df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+CMPLX(REAL(fp), AIMAG(fm)))
-     da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-REAL(fm)))
+     df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+CMPLX(DBLE(fp), AIMAG(fm)))
+     da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-DBLE(fm)))
   END DO
   !
   !     aa_i,i,nbsp = sum_j d_i,ij <beta_i,j|c_n>
@@ -3716,7 +3715,7 @@ SUBROUTINE write_psi( c, jw )
   ! ... for calwf 5             - M.S
   ! ... collect wavefunctions on first node and write to file
   !
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE io_global,              ONLY : stdout
   USE gvecs,                  ONLY : nps
   USE electrons_base,         ONLY : nbspx
@@ -3859,7 +3858,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
   !
   USE constants,              ONLY : bohr_radius_angs
-  USE kinds,                  ONLY : dbl
+  USE kinds,                  ONLY : dbl, dp
   USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
   USE cell_base,              ONLY : a1, a2, a3
@@ -3967,7 +3966,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      IF(nspin.EQ.1)THEN
         iss=1
         DO ir=1,nnrx
-           psi(ir)=CMPLX(rhor(ir,iss),0.)
+           psi(ir)=CMPLX(rhor(ir,iss),0.d0)
         END DO
         CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ig=1,ngm
@@ -3983,8 +3982,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ig=1,ngm
            fp=psi(np(ig))+psi(nm(ig))
            fm=psi(np(ig))-psi(nm(ig))
-           rhog(ig,isup)=0.5*CMPLX( REAL(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-REAL(fm))
+           rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
         END DO
      ENDIF
      !
@@ -4030,7 +4029,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      sa2=0.0
      !            end if
      DO ir=1,nnrsx
-        rhos(ir,iss1)=rhos(ir,iss1) + sa1*( REAL(psis(ir)))**2
+        rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
         rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
      END DO
      !
@@ -4053,7 +4052,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      IF(nspin.EQ.1)THEN
         iss=1
         DO ir=1,nnrsx
-           psis(ir)=CMPLX(rhos(ir,iss),0.)
+           psis(ir)=CMPLX(rhos(ir,iss),0.d0)
         END DO
         CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
         DO ig=1,ngs
@@ -4069,8 +4068,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ig=1,ngs
            fp= psis(nps(ig)) + psis(nms(ig))
            fm= psis(nps(ig)) - psis(nms(ig))
-           rhog(ig,isup)=0.5*CMPLX( REAL(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-REAL(fm))
+           rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
         END DO
      ENDIF
      !
@@ -4086,7 +4085,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         END DO
         CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ir=1,nnrx
-           rhor(ir,iss)=REAL(psi(ir))
+           rhor(ir,iss)=DBLE(psi(ir))
         END DO
      ELSE 
         !     ==================================================================
@@ -4101,7 +4100,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         END DO
         CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ir=1,nnrx
-           rhor(ir,isup)= REAL(psi(ir))
+           rhor(ir,isup)= DBLE(psi(ir))
            rhor(ir,isdw)=AIMAG(psi(ir))
         END DO
      ENDIF
@@ -4109,8 +4108,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !         if(iprsta.ge.3)then
      WRITE( stdout,*) 'Smooth part of charge density :'
      DO iss=1,nspin
-        rsumg(iss)=omega*REAL(rhog(1,iss))
-        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/dfloat(nr1*nr2*nr3)
+        rsumg(iss)=omega*DBLE(rhog(1,iss))
+        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/DBLE(nr1*nr2*nr3)
      END DO
 #ifdef __PARA
      IF (gstart.NE.2) THEN
@@ -4169,8 +4168,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !
   IF(iprsta.GE.2) THEN
      CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
-     rnegsum=rnegsum*omega/dfloat(nr1*nr2*nr3)
-     rsum=rsum*omega/dfloat(nr1*nr2*nr3)
+     rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
+     rsum=rsum*omega/DBLE(nr1*nr2*nr3)
      WRITE( stdout,'(a,4(1x,f12.6))')                                     &
           &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
   END IF
@@ -4180,8 +4179,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      WRITE( stdout, * ) 
      WRITE( stdout, * ) 'Smooth part + Augmentatio Part: '
      DO iss=1,nspin
-        rsumg(iss)=omega*REAL(rhog(1,iss))
-        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/dfloat(nr1*nr2*nr3)
+        rsumg(iss)=omega*DBLE(rhog(1,iss))
+        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/DBLE(nr1*nr2*nr3)
      END DO
 #ifdef __PARA
      IF (gstart.NE.2) THEN

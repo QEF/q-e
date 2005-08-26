@@ -103,7 +103,7 @@ subroutine d3_valence
                           endif
                           aux1 (nu_i, nu_j, nu_k) = aux1 (nu_i, nu_j, nu_k) + &
                                2.d0 * wrk * wk (ikk) * pdvp_i (ibnd, jbnd) * &
-                               conjg (pdvp_j (kbnd, jbnd) ) * pdvp_k (kbnd, ibnd)
+                               CONJG(pdvp_j (kbnd, jbnd) ) * pdvp_k (kbnd, ibnd)
                        enddo
                     enddo
                  enddo
@@ -136,7 +136,7 @@ subroutine d3_valence
            do nu_i = 1, 3 * nat
 
               if (q0mode (nu_i) .or.lgamma) then
-                 wrk1 = DCMPLX (0.d0, 0.d0)
+                 wrk1 = CMPLX (0.d0, 0.d0)
                  do ibnd = 1, nbnd
                     do jbnd = 1, nbnd
                        de1 = et (ibnd, ikk) - et (jbnd, ikq)
@@ -148,7 +148,7 @@ subroutine d3_valence
                           wrk = - w_1gauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss) &
                                / (degauss**2)
                        endif
-                       wrk1 = wrk1 + wk (ikk) * wrk * ef_sh (nu_i) * conjg (pdvp_j ( &
+                       wrk1 = wrk1 + wk (ikk) * wrk * ef_sh (nu_i) * CONJG(pdvp_j ( &
                             jbnd, ibnd) ) * pdvp_k (jbnd, ibnd)
                     enddo
                  enddo
@@ -158,7 +158,7 @@ subroutine d3_valence
                     aux2 (nu_k, nu_i, nu_j) = aux2 (nu_k, nu_i, nu_j) + wrk1
                     aux2 (nu_j, nu_k, nu_i) = aux2 (nu_j, nu_k, nu_i) + wrk1
                  endif
-                 wrk1 = DCMPLX (0.d0, 0.d0)
+                 wrk1 = CMPLX (0.d0, 0.d0)
                  do ibnd = 1, nbnd
                     wrk1 = wrk1 + wk (ikk) * ef_sh (nu_i) * dpsidvpsi (ibnd, ibnd) &
                          * w0gauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss) / &
@@ -166,14 +166,14 @@ subroutine d3_valence
                  enddo
                  aux2 (nu_i, nu_j, nu_k) = aux2 (nu_i, nu_j, nu_k) + wrk1
                  aux2 (nu_i, nu_k, nu_j) = aux2 (nu_i, nu_k, nu_j) + &
-                      conjg (wrk1)
+                      CONJG(wrk1)
                  if (lgamma) then
                     aux2 (nu_k, nu_i, nu_j) = aux2 (nu_k, nu_i, nu_j) + wrk1
                     aux2 (nu_j, nu_i, nu_k) = aux2 (nu_j, nu_i, nu_k) + &
-                         conjg (wrk1)
+                         CONJG(wrk1)
                     aux2 (nu_j, nu_k, nu_i) = aux2 (nu_j, nu_k, nu_i) + wrk1
                     aux2 (nu_k, nu_j, nu_i) = aux2 (nu_k, nu_j, nu_i) + &
-                         conjg (wrk1)
+                         CONJG(wrk1)
                  endif
               endif
            enddo
@@ -185,7 +185,7 @@ subroutine d3_valence
         if (.not.q0mode (nu_i) ) then
            do nu_j = 1, 3 * nat
               do nu_k = 1, 3 * nat
-                 aux2 (nu_i, nu_j, nu_k) = DCMPLX (0.d0, 0.d0)
+                 aux2 (nu_i, nu_j, nu_k) = CMPLX (0.d0, 0.d0)
               enddo
            enddo
         endif

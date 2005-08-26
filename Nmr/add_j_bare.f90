@@ -42,7 +42,7 @@ subroutine add_j_bare (phi1, phi2, weight, rho)
      
      do i = 1, nrxx
         
-        rho(i) = rho(i) + conjg(aux1(i)) * aux2(i) * weight
+        rho(i) = rho(i) + CONJG(aux1(i)) * aux2(i) * weight
         
      enddo
   enddo

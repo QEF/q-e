@@ -80,7 +80,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
            call ccalbec (nkb, npwx, npwq, nbnd, dalpq(1,1,ipol,mu), vkb, aux)
         enddo
      enddo
-     fact = DCMPLX (0.d0, tpiba)
+     fact = CMPLX (0.d0, tpiba)
      dalpq = dalpq * fact
      call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)
   enddo

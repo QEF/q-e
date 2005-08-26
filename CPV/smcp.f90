@@ -1491,7 +1491,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
      !  Calculate statistics
 
-     anor=1.d0/dfloat(nfi)
+     anor=1.d0/DBLE(nfi)
      DO i=1,nacc
         rep(sm_k)%acc(i)=rep(sm_k)%acc(i)*anor
      END DO

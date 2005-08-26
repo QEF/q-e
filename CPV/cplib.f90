@@ -301,7 +301,7 @@
          do j=1,n
             do i=1,ngw
                emtot=emtot                                              &
-     &        +2.*real(phi(i,j)*conjg(c0(i,j)))*ema0bg(i)**(-2.)
+     &        +2.*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.)
             end do
          end do
          emtot=emtot/n
@@ -354,7 +354,7 @@
 !
       allocate(temp(ngw))
       do ig=1,ngw
-         temp(ig)=real(conjg(cp(ig,i))*cp(ig,i))
+         temp(ig)=DBLE(CONJG(cp(ig,i))*cp(ig,i))
       end do
       rsum=2.*SUM(temp)
       if (gstart == 2) rsum=rsum-temp(1)
@@ -419,7 +419,7 @@
             do i=1,n
                sk(i)=0.d0
                do ig=gstart,ngw
-                  sk(i)=sk(i)+real(conjg(c(ig,i))*c(ig,i))*gtmp(ig)
+                  sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*gtmp(ig)
                end do
             end do
             do i=1,n
@@ -483,12 +483,12 @@
             enddo
             if (gstart == 2) vtemp(1)=(0.d0,0.d0)
             do ig=gstart,ng
-               vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
+               vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
      &                 * tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+           &
      &                   gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3)) +       &
-     &                 conjg(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
+     &                 CONJG(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
             enddo
-            dh(i,j)=fpi*omega*real(SUM(vtemp))*wz
+            dh(i,j)=fpi*omega*DBLE(SUM(vtemp))*wz
          enddo
       enddo
 
@@ -543,16 +543,16 @@
             enddo
             do is=1,nsp
                do ig=1,ngs
-                  vtemp(ig)=vtemp(ig)-conjg(rhotmp(ig))*sfac(ig,is)*    &
+                  vtemp(ig)=vtemp(ig)-CONJG(rhotmp(ig))*sfac(ig,is)*    &
      &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
      &                    (gx(1,ig)*ainv(j,1) +                         &
      &                     gx(2,ig)*ainv(j,2) +                         &
      &                     gx(3,ig)*ainv(j,3) ) +                       &
-     &                    conjg(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
+     &                    CONJG(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
                enddo
             enddo
-            dps(i,j)=omega*real(wz*SUM(vtemp))
-            if (gstart == 2) dps(i,j)=dps(i,j)-omega*real(vtemp(1))
+            dps(i,j)=omega*DBLE(wz*SUM(vtemp))
+            if (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
          enddo
       enddo
 
@@ -564,13 +564,14 @@
 !-------------------------------------------------------------------------
       subroutine dforce (bec,betae,i,c,ca,df,da,v)
 !-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
+!computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci)
+!          represented by the vector c=CMPLX(cr,ci)
 !
 !     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
+      use kinds, only: dp
       use control_flags, only: iprint, tbuff
       use gvecs
       use gvecw, only: ngw
@@ -619,7 +620,7 @@
 !
          psi (:) = (0.d0, 0.d0)
          do ig=1,ngw
-            psi(nms(ig))=conjg(c(ig)-ci*ca(ig))
+            psi(nms(ig))=CONJG(c(ig)-ci*ca(ig))
             psi(nps(ig))=c(ig)+ci*ca(ig)
          end do
 !
@@ -651,8 +652,7 @@
       end if
 !
       do ir=1,nnrsx
-         psi(ir)=cmplx(v(ir,iss1)* real(psi(ir)),                       &
-     &                 v(ir,iss2)*aimag(psi(ir)) )
+         psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v(ir,iss2)*AIMAG(psi(ir)) )
       end do
 !
       call fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
@@ -673,8 +673,8 @@
       do ig=1,ngw
          fp= psi(nps(ig)) + psi(nms(ig))
          fm= psi(nps(ig)) - psi(nms(ig))
-         df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+cmplx(real(fp), aimag(fm)))
-         da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+cmplx(aimag(fp),-real(fm)))
+         df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+CMPLX(DBLE(fp), AIMAG(fm)))
+         da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-DBLE(fm)))
       end do
 
       if(ismeta) call  dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip)  !METAGGA
@@ -776,10 +776,10 @@
 !
          do k=1,kmax
             do ig=1,ngw
-               temp(ig)=conjg(cp(ig,k))*cp(ig,i)
+               temp(ig)=CONJG(cp(ig,k))*cp(ig,i)
             end do
-            csc(k)=2.*real(SUM(temp))
-            if (gstart == 2) csc(k)=csc(k)-real(temp(1))
+            csc(k)=2.*DBLE(SUM(temp))
+            if (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
          end do
 
          call mp_sum( csc( 1:kmax ) )
@@ -821,6 +821,7 @@
 !     On input rhor and rhog must contain the smooth part only !!!
 !     Output in module derho (drhor, drhog)
 !
+      use kinds, only: dp
       use control_flags, only: iprint
       use parameters, only: natx, nsx
       use ions_base, only: na, nsp, nat, nas => nax
@@ -933,14 +934,14 @@
                            qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
      &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
                            qv(nmb(ig))=                                 &
-     &                             conjg(eigrb(ig,isa  )*dqgbt(ig,1)) &
-     &                        + ci*conjg(eigrb(ig,isa+1)*dqgbt(ig,2))
+     &                             CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
+     &                        + ci*CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
                         end do
                      else
                         do ig=1,ngb
                            qv(npb(ig)) = eigrb(ig,isa)*dqgbt(ig,1)
                            qv(nmb(ig)) =                                &
-     &                             conjg(eigrb(ig,isa)*dqgbt(ig,1))
+     &                             CONJG(eigrb(ig,isa)*dqgbt(ig,1))
                         end do
                      endif
 !
@@ -959,7 +960,7 @@
                end do
 !
                do ir=1,nnr
-                  drhor(ir,iss,i,j)=drhor(ir,iss,i,j)+real(v(ir))
+                  drhor(ir,iss,i,j)=drhor(ir,iss,i,j)+DBLE(v(ir))
                end do
 !
                call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
@@ -1015,8 +1016,8 @@
                      do ig=1,ngb
                         qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
      &                    + ci*      eigrb(ig,isa)*dqgbt(ig,2)
-                        qv(nmb(ig))= conjg(eigrb(ig,isa)*dqgbt(ig,1)) &
-     &                    +       ci*conjg(eigrb(ig,isa)*dqgbt(ig,2))
+                        qv(nmb(ig))= CONJG(eigrb(ig,isa)*dqgbt(ig,1)) &
+     &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      end do
 !
                      call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
@@ -1032,8 +1033,8 @@
                end do
 !
                do ir=1,nnr
-                  drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + real(v(ir))
-                  drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +aimag(v(ir))
+                  drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
+                  drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                enddo
 !
                call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
@@ -1041,9 +1042,9 @@
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
-     &                 0.5*cmplx( real(fp),aimag(fm))
+     &                 0.5*CMPLX( DBLE(fp),AIMAG(fm))
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
-     &                 0.5*cmplx(aimag(fp),-real(fm))
+     &                 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
                end do
 !
             end do
@@ -1082,7 +1083,7 @@
       do i=1,n
          sk(i)=0.0
          do ig=gstart,ngw
-            sk(i)=sk(i)+real(conjg(c(ig,i))*c(ig,i))*ggp(ig)
+            sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
          end do
       end do
 
@@ -1181,6 +1182,7 @@
 !
 ! Contribution to ionic forces from local pseudopotential
 !
+      use kinds, only: dp
       use constants, only: pi, fpi
       use electrons_base, only: nspin
       use gvecs
@@ -1221,32 +1223,32 @@
                   iss=1
                   if (gstart == 2) vtemp(1)=0.0
                   do ig=gstart,ngs
-                     vcgs=conjg(rhotemp(ig))*fpi/(tpiba2*g(ig))
+                     vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
-                     cvn=vps(ig,is)*conjg(rhog(ig,iss))
+                     cvn=vps(ig,is)*CONJG(rhog(ig,iss))
                      i = mill_l(1,ig)
                      j = mill_l(2,ig)
                      k = mill_l(3,ig)
                      eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
+                     vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
                   end do
                else
                   isup=1
                   isdw=2
                   if (gstart == 2) vtemp(1)=0.0
                   do ig=gstart,ngs
-                     vcgs=conjg(rhotemp(ig))*fpi/(tpiba2*g(ig))
+                     vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
-                     cvn=vps(ig,is)*conjg(rhog(ig,isup)                 &
+                     cvn=vps(ig,is)*CONJG(rhog(ig,isup)                 &
      &                                   +rhog(ig,isdw))
                      i = mill_l(1,ig)
                      j = mill_l(2,ig)
                      k = mill_l(3,ig)
                      eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*cmplx(0.0,gx(ix,ig)) 
+                     vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
                   end do
                endif
-               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega* wz*real(SUM(vtemp))
+               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega* wz*DBLE(SUM(vtemp))
             end do
          end do
       end do
@@ -1405,8 +1407,8 @@
 !
       do inl=1,nhsavb
          do ig=1,ngw
-            temp(ig)=cp(1,ig,i)* real(betae(ig,inl))+             &
-     &               cp(2,ig,i)*aimag(betae(ig,inl))
+            temp(ig)=cp(1,ig,i)* DBLE(betae(ig,inl))+             &
+     &               cp(2,ig,i)*AIMAG(betae(ig,inl))
          end do
          bec(inl,i)=2.*SUM(temp)
          if (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
@@ -1677,6 +1679,7 @@
 !     where
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
+      use kinds, only: dp
       use uspp_param, only: nh, nhm
       use uspp, only: deeq
       use cvan, only: nvb
@@ -1712,7 +1715,7 @@
 !
       call start_clock( 'newd' )
       ci=(0.d0,1.d0)
-      fac=omegab/float(nr1b*nr2b*nr3b)
+      fac=omegab/DBLE(nr1b*nr2b*nr3b)
       deeq (:,:,:,:) = 0.d0
       fvan (:,:,:) = 0.d0
 
@@ -1745,15 +1748,15 @@
                      do ig=1,ngb
                         qv(npb(ig))= eigrb(ig,isa  )*qgb(ig,ijv,is)   &
      &                          + ci*eigrb(ig,isa+1)*qgb(ig,ijv,is)
-                        qv(nmb(ig))= conjg(                             &
+                        qv(nmb(ig))= CONJG(                             &
      &                               eigrb(ig,isa  )*qgb(ig,ijv,is))  &
-     &                          + ci*conjg(                             &
+     &                          + ci*CONJG(                             &
      &                               eigrb(ig,isa+1)*qgb(ig,ijv,is))
                      end do
                   else
                      do ig=1,ngb
                         qv(npb(ig)) = eigrb(ig,isa)*qgb(ig,ijv,is)
-                        qv(nmb(ig)) = conjg(                            &
+                        qv(nmb(ig)) = CONJG(                            &
      &                                eigrb(ig,isa)*qgb(ig,ijv,is))
                      end do
                   end if
@@ -1821,25 +1824,25 @@
                         endif
                         if (nfft.eq.2) then
                            do ig=1,ngb
-                              facg1 = cmplx(0.d0,-gxb(ik,ig)) *         &
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac1
-                              facg2 = cmplx(0.d0,-gxb(ik,ig)) *         &
+                              facg2 = CMPLX(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac2
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,isa  )*facg1  &
      &                                    + ci*eigrb(ig,isa+1)*facg2
                               qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                                +   conjg(eigrb(ig,isa  )*facg1)&
-     &                                +ci*conjg(eigrb(ig,isa+1)*facg2)
+     &                                +   CONJG(eigrb(ig,isa  )*facg1)&
+     &                                +ci*CONJG(eigrb(ig,isa+1)*facg2)
                            end do
                         else
                            do ig=1,ngb
-                              facg1 = cmplx(0.d0,-gxb(ik,ig)) *         &
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is)*fac1
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,isa)*facg1
                               qv(nmb(ig)) = qv(nmb(ig))                 &
-     &                               +  conjg( eigrb(ig,isa)*facg1)
+     &                               +  CONJG( eigrb(ig,isa)*facg1)
                            end do
                         end if
                      end do
@@ -1885,14 +1888,14 @@
                            fac2=     fac*tpibab*rhovan(ijv,isa,isdw)
                         end if
                         do ig=1,ngb
-                           facg1 = fac1 * cmplx(0.d0,-gxb(ik,ig)) *     &
+                           facg1 = fac1 * CMPLX(0.d0,-gxb(ik,ig)) *     &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
-                           facg2 = fac2 * cmplx(0.d0,-gxb(ik,ig)) *     &
+                           facg2 = fac2 * CMPLX(0.d0,-gxb(ik,ig)) *     &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
                            qv(npb(ig)) = qv(npb(ig))                    &
      &                                    + facg1 + ci*facg2
                            qv(nmb(ig)) = qv(nmb(ig))                    &
-     &                                    +conjg(facg1)+ci*conjg(facg2)
+     &                                    +CONJG(facg1)+ci*conjg(facg2)
                         end do
                      end do
                   end do
@@ -2372,7 +2375,7 @@
       if (gstart == 2) then
          do l=1,n_atomic_wfc
             do m=1,n_atomic_wfc
-               overlap(m,l)=overlap(m,l)-real(wfc(1,m))*real(swfc(1,l))
+               overlap(m,l)=overlap(m,l)-DBLE(wfc(1,m))*DBLE(swfc(1,l))
             end do
          end do
       end if
@@ -2412,7 +2415,7 @@
       allocate(temp(ngw))
       do m=1,n
          do l=1,n_atomic_wfc
-            temp(:)=real(conjg(c(:,m))*wfc(:,l))
+            temp(:)=DBLE(CONJG(c(:,m))*wfc(:,l))
             proj(m,l)=2.d0*SUM(temp)
             if (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
          end do
@@ -2527,7 +2530,7 @@
 !            ranf1=.5-randy()
 !            ranf2=.5-randy()
 !            ampexp=ampre*exp(-(4.*j)/ngw)
-!            c(j,i)=c(j,i)+ampexp*cmplx(ranf1,ranf2)
+!            c(j,i)=c(j,i)+ampexp*CMPLX(ranf1,ranf2)
 !         end do
 !      end do
 !
@@ -2568,6 +2571,7 @@
 !
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
+      use kinds, only: dp
       use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
       use ions_base, only: nat, nas => nax, nsp
       use parameters, only: natx, nsx
@@ -2647,7 +2651,7 @@
          if(nspin.eq.1)then
             iss=1
             do ir=1,nnr
-               psi(ir)=cmplx(rhor(ir,iss),0.)
+               psi(ir)=CMPLX(rhor(ir,iss),0.d0)
             end do
             call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             do ig=1,ng
@@ -2657,14 +2661,14 @@
             isup=1
             isdw=2
             do ir=1,nnr
-               psi(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
+               psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             end do
             call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             do ig=1,ng
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
-               rhog(ig,isup)=0.5*cmplx( real(fp),aimag(fm))
-               rhog(ig,isdw)=0.5*cmplx(aimag(fp),-real(fm))
+               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
             end do
          endif
 !
@@ -2685,7 +2689,7 @@
          do i=1,n,2
             psis (:) = (0.d0, 0.d0)
             do ig=1,ngw
-               psis(nms(ig))=conjg(c(ig,i))+ci*conjg(c(ig,i+1))
+               psis(nms(ig))=CONJG(c(ig,i))+ci*conjg(c(ig,i+1))
                psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
                ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
             end do
@@ -2709,8 +2713,8 @@
                sa2=0.0
             end if
             do ir=1,nnrsx
-               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( real(psis(ir)))**2
-               rhos(ir,iss2)=rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
+               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
+               rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
             end do
 
             !
@@ -2732,7 +2736,7 @@
          if(nspin.eq.1)then
             iss=1
             do ir=1,nnrsx
-               psis(ir)=cmplx(rhos(ir,iss),0.)
+               psis(ir)=CMPLX(rhos(ir,iss),0.d0)
             end do
             call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             do ig=1,ngs
@@ -2742,14 +2746,14 @@
             isup=1
             isdw=2
              do ir=1,nnrsx
-               psis(ir)=cmplx(rhos(ir,isup),rhos(ir,isdw))
+               psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
             end do
             call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             do ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
-               rhog(ig,isup)=0.5*cmplx( real(fp),aimag(fm))
-               rhog(ig,isdw)=0.5*cmplx(aimag(fp),-real(fm))
+               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
             end do
          endif
 !
@@ -2760,12 +2764,12 @@
             iss=1
             psi (:) = (0.d0, 0.d0)
             do ig=1,ngs
-               psi(nm(ig))=conjg(rhog(ig,iss))
+               psi(nm(ig))=CONJG(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
             end do
             call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             do ir=1,nnr
-               rhor(ir,iss)=real(psi(ir))
+               rhor(ir,iss)=DBLE(psi(ir))
             end do
          else 
             !
@@ -2775,20 +2779,20 @@
             isdw=2
             psi (:) = (0.d0, 0.d0)
             do ig=1,ngs
-               psi(nm(ig))=conjg(rhog(ig,isup))+ci*conjg(rhog(ig,isdw))
+               psi(nm(ig))=CONJG(rhog(ig,isup))+ci*conjg(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             end do
             call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             do ir=1,nnr
-               rhor(ir,isup)= real(psi(ir))
-               rhor(ir,isdw)=aimag(psi(ir))
+               rhor(ir,isup)= DBLE(psi(ir))
+               rhor(ir,isdw)=AIMAG(psi(ir))
             end do
          endif
          if (ismeta) call kedtauofr_meta(c, psi, psis) ! METAGGA
 !
          if(iprsta.ge.3)then
             do iss=1,nspin
-               rsumg(iss)=omega*real(rhog(1,iss))
+               rsumg(iss)=omega*DBLE(rhog(1,iss))
                rsumr(iss)=SUM(rhor(:,iss))*omega/dble(nr1*nr2*nr3)
             end do
 
@@ -2836,7 +2840,7 @@
       if( nfi == 0 .or. mod(nfi, iprint) == 0 ) then
 
          do iss=1,nspin
-            rsumg(iss)=omega*real(rhog(1,iss))
+            rsumg(iss)=omega*DBLE(rhog(1,iss))
             rsumr(iss)=SUM(rhor(:,iss),1)*omega/dble(nr1*nr2*nr3)
          end do
 
@@ -2922,7 +2926,7 @@
          do j=1,nss
             do i=1,nss
                rho(i,j) = rho(i,j) -                                    &
-     &              real(phi(1,i+ist-1))*real(cp(1,j+ist-1))
+     &              DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
             end do
          end do
       end if
@@ -2954,6 +2958,7 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
+      use kinds, only: dp
       use ions_base, only: nas => nax, nat, na, nsp
       use io_global, only: stdout
       use parameters, only: natx, nsx
@@ -3052,13 +3057,13 @@
                                    eigrb(ig,isa  )*qgbt(ig,1)  &
                         + ci*      eigrb(ig,isa+1)*qgbt(ig,2)
                      qv(nmb(ig))=                                       &
-                             conjg(eigrb(ig,isa  )*qgbt(ig,1))        &
-                        + ci*conjg(eigrb(ig,isa+1)*qgbt(ig,2))
+                             CONJG(eigrb(ig,isa  )*qgbt(ig,1))        &
+                        + ci*CONJG(eigrb(ig,isa+1)*qgbt(ig,2))
                   end do
                else
                   do ig=1,ngb
                      qv(npb(ig)) = eigrb(ig,isa)*qgbt(ig,1)
-                     qv(nmb(ig)) = conjg(eigrb(ig,isa)*qgbt(ig,1))
+                     qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))
                   end do
                endif
 
@@ -3071,13 +3076,13 @@
                if(iprsta.gt.2) then
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*real(qgbt(1,1))
+     &                 omegab*DBLE(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*real(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
-     &                 omegab*real(qgbt(1,2))
+     &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
-     &                 omegab*aimag(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
                endif
                !
                !  add qv(r) to v(r), in real space on the dense grid
@@ -3092,7 +3097,7 @@
          !  rhor(r) = total (smooth + US) charge density in real space
          !
          do ir=1,nnr
-            rhor(ir,iss)=rhor(ir,iss)+real(v(ir))        
+            rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
          end do
 !
          if(iprsta.gt.2) then
@@ -3119,7 +3124,7 @@
          end do
 !
          if(iprsta.gt.1) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) = ',omega*real(rhog(1,iss))
+     &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
 !
       else
          !
@@ -3156,8 +3161,8 @@
                do ig=1,ngb
                   qv(npb(ig)) =    eigrb(ig,isa)*qgbt(ig,1)           &
      &                  + ci*      eigrb(ig,isa)*qgbt(ig,2)
-                  qv(nmb(ig)) = conjg(eigrb(ig,isa)*qgbt(ig,1))       &
-     &                  + ci*   conjg(eigrb(ig,isa)*qgbt(ig,2))
+                  qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))       &
+     &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
                end do
 !
                call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
@@ -3168,13 +3173,13 @@
                if(iprsta.gt.2) then
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
-     &                 omegab*real(qgbt(1,1))
+     &                 omegab*DBLE(qgbt(1,1))
                   WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
-     &                 omegab*real(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
-     &                 omegab*real(qgbt(1,2))
+     &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
-     &                 omegab*aimag(ca)/(nr1b*nr2b*nr3b)
+     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
                endif
 !
 !  add qv(r) to v(r), in real space on the dense grid
@@ -3186,8 +3191,8 @@
          end do
 !
          do ir=1,nnr
-            rhor(ir,isup)=rhor(ir,isup)+real(v(ir)) 
-            rhor(ir,isdw)=rhor(ir,isdw)+aimag(v(ir)) 
+            rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
+            rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
          end do
 !
          if(iprsta.gt.2) then
@@ -3201,25 +3206,25 @@
          if(iprsta.gt.2) then
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
             WRITE( stdout,*) 'rhov: smooth dw',omega*rhog(1,isdw)
-            WRITE( stdout,*) 'rhov: vander up',omega*real(v(1))
-            WRITE( stdout,*) 'rhov: vander dw',omega*aimag(v(1))
+            WRITE( stdout,*) 'rhov: vander up',omega*DBLE(v(1))
+            WRITE( stdout,*) 'rhov: vander dw',omega*AIMAG(v(1))
             WRITE( stdout,*) 'rhov: all up',                                  &
-     &           omega*(rhog(1,isup)+real(v(1)))
+     &           omega*(rhog(1,isup)+DBLE(v(1)))
             WRITE( stdout,*) 'rhov: all dw',                                  &
-     &           omega*(rhog(1,isdw)+aimag(v(1)))
+     &           omega*(rhog(1,isdw)+AIMAG(v(1)))
          endif
 !
          do ig=1,ng
             fp=  v(np(ig)) + v(nm(ig))
             fm=  v(np(ig)) - v(nm(ig))
-            rhog(ig,isup)=rhog(ig,isup) + 0.5*cmplx(real(fp),aimag(fm))
-            rhog(ig,isdw)=rhog(ig,isdw) + 0.5*cmplx(aimag(fp),-real(fm))
+            rhog(ig,isup)=rhog(ig,isup) + 0.5*CMPLX(DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=rhog(ig,isdw) + 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 !
          if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) up   = ',omega*real (rhog(1,isup))
+     &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
          if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
-     &        ' rhov: n_v(g=0) down = ',omega*real(rhog(1,isdw))
+     &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
 !
       endif
 
@@ -3333,7 +3338,7 @@
          do j=1,nss
             do i=1,nss
                sig(i,j) = sig(i,j) +                                    &
-     &              real(cp(1,i+ist-1))*real(cp(1,j+ist-1))
+     &              DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
             end do
          end do
       end if
@@ -3459,7 +3464,7 @@
          do i=1,nup
             overlap(i,j)=0.d0
             do ig=1,ngw
-               temp(ig)=real(conjg(c(ig,i))*c(ig,jj))
+               temp(ig)=DBLE(CONJG(c(ig,i))*c(ig,jj))
             end do
             overlap(i,j) = 2.d0*SUM(temp)
             if (gstart == 2) overlap(i,j) = overlap(i,j) - temp(1)
@@ -3546,7 +3551,7 @@
          do j=1,nss
             do i=1,nss
                tau(i,j) = tau(i,j) -                                    &
-     &              real(phi(1,i+ist-1))*real(phi(1,j+ist-1))
+     &              DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
             end do
          end do
       end if
@@ -3677,6 +3682,7 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
+      use kinds, only: dp
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
@@ -3779,11 +3785,11 @@
       vtemp=(0.,0.)
       do is=1,nsp
          do ig=1,ngs
-            vtemp(ig)=vtemp(ig)+conjg(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
+            vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          end do
       end do
 !
-      epseu=wz*real(SUM(vtemp))
+      epseu=wz*DBLE(SUM(vtemp))
       if (gstart == 2) epseu=epseu-vtemp(1)
       call reduce(1,epseu)
       epseu=epseu*omega
@@ -3800,10 +3806,10 @@
       end do
       if (gstart == 2) vtemp(1)=0.0
       do ig=gstart,ng
-         vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
+         vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real(SUM(vtemp))*wz*0.5*fpi/tpiba2
+      eh=DBLE(SUM(vtemp))*wz*0.5*fpi/tpiba2
       call reduce(1,eh)
       if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       if(tpre) deallocate(drhotmp)
@@ -3845,7 +3851,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,iss),0.0)
+            v(ir)=CMPLX(rhor(ir,iss),0.d0)
          end do
 !
 !     v_xc(r) --> v_xc(g)
@@ -3863,14 +3869,14 @@
          isup=1
          isdw=2
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
+            v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            rhog(ig,isup)=vtemp(ig)+0.5*cmplx( real(fp),aimag(fm))
-            rhog(ig,isdw)=vtemp(ig)+0.5*cmplx(aimag(fp),-real(fm))
+            rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
       endif
 !
@@ -3895,7 +3901,7 @@
          iss=1
          do ig=1,ng
             v(np(ig))=rhog(ig,iss)
-            v(nm(ig))=conjg(rhog(ig,iss))
+            v(nm(ig))=CONJG(rhog(ig,iss))
          end do
 !
 !     v(g) --> v(r)
@@ -3903,7 +3909,7 @@
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          do ir=1,nnr
-            rhor(ir,iss)=real(v(ir))
+            rhor(ir,iss)=DBLE(v(ir))
          end do
 !
 !     calculation of average potential
@@ -3914,13 +3920,13 @@
          isdw=2
          do ig=1,ng
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nm(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do
 !
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
-            rhor(ir,isup)= real(v(ir))
-            rhor(ir,isdw)=aimag(v(ir))
+            rhor(ir,isup)= DBLE(v(ir))
+            rhor(ir,isdw)=AIMAG(v(ir))
          end do
 !
 !     calculation of average potential
@@ -3936,26 +3942,26 @@
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
-            vs(nms(ig))=conjg(rhog(ig,iss))
+            vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
          end do
 !
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
          do ir=1,nnrsx
-            rhos(ir,iss)=real(vs(ir))
+            rhos(ir,iss)=DBLE(vs(ir))
          end do
       else
          isup=1
          isdw=2
          do ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nms(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do 
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          do ir=1,nnrsx
-            rhos(ir,isup)= real(vs(ir))
-            rhos(ir,isdw)=aimag(vs(ir))
+            rhos(ir,isup)= DBLE(vs(ir))
+            rhos(ir,isdw)=AIMAG(vs(ir))
          end do
       endif
       if(ismeta) call vofrho_meta(v,vs)  !METAGGA
@@ -4069,6 +4075,7 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
+      use kinds, only: dp
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
@@ -4189,11 +4196,11 @@
       vtemp=(0.,0.)
       do is=1,nsp
          do ig=1,ngs
-            vtemp(ig)=vtemp(ig)+conjg(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
+            vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          end do
       end do
 !
-      epseu=wz*real(SUM(vtemp(1:ngs)))
+      epseu=wz*DBLE(SUM(vtemp(1:ngs)))
       if (ng0.eq.2) epseu=epseu-vtemp(1)
       call reduce(1,epseu)
       epseu=epseu*omega
@@ -4212,10 +4219,10 @@
       end do
       if (ng0.eq.2) vtemp(1)=0.0
       do ig=ng0,ng
-         vtemp(ig)=conjg(rhotmp(ig))*rhotmp(ig)/g(ig)
+         vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/g(ig)
       end do
 !
-      eh=real(SUM(vtemp(1:ng)))*wz*0.5*fpi/tpiba2
+      eh=DBLE(SUM(vtemp(1:ng)))*wz*0.5*fpi/tpiba2
       call reduce(1,eh)
       if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       if(tpre) deallocate(drhotmp)
@@ -4251,7 +4258,7 @@
 !     -------------------------------------------------------------------
       v(:) = (0.d0, 0.d0)
          do ig=1,ng
-            v(nm(ig))=conjg(rhotmp(ig))
+            v(nm(ig))=CONJG(rhotmp(ig))
             v(np(ig))=rhotmp(ig)
          end do
 !
@@ -4260,7 +4267,7 @@
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          do ir=1,nnr
-          rhortot(ir)=real(v(ir))
+          rhortot(ir)=DBLE(v(ir))
          end do
 !
        call poles(rhortot,dipole,quadrupole)
@@ -4309,7 +4316,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,iss),0.0)
+            v(ir)=CMPLX(rhor(ir,iss),0.d0)
          end do
 !
 !     v_xc(r) --> v_xc(g)
@@ -4327,14 +4334,14 @@
          isup=1
          isdw=2
          do ir=1,nnr
-            v(ir)=cmplx(rhor(ir,isup),rhor(ir,isdw))
+            v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            rhog(ig,isup)=vtemp(ig)+0.5*cmplx( real(fp),aimag(fm))
-            rhog(ig,isdw)=vtemp(ig)+0.5*cmplx(aimag(fp),-real(fm))
+            rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
       endif
 !
@@ -4358,7 +4365,7 @@
          iss=1
          do ig=1,ng
             v(np(ig))=rhog(ig,iss)
-            v(nm(ig))=conjg(rhog(ig,iss))
+            v(nm(ig))=CONJG(rhog(ig,iss))
          end do
 !
 !     v(g) --> v(r)
@@ -4366,24 +4373,24 @@
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          do ir=1,nnr
-            rhor(ir,iss)=real(v(ir))
+            rhor(ir,iss)=DBLE(v(ir))
          end do
 !
 !     calculation of average potential
 !
-         vave=SUM(rhor(1:nnr,iss))/dfloat(nr1*nr2*nr3)
+         vave=SUM(rhor(1:nnr,iss))/DBLE(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
          do ig=1,ng
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nm(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do
 !
          call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
-            rhor(ir,isup)= real(v(ir))
-            rhor(ir,isdw)=aimag(v(ir))
+            rhor(ir,isup)= DBLE(v(ir))
+            rhor(ir,isdw)=AIMAG(v(ir))
          end do
 
 !       write(6,*) 'Average Potential'
@@ -4391,7 +4398,7 @@
 !     calculation of average potential
 !
          vave=(SUM(rhor(1:nnr,isup))+SUM(rhor(1:nnr,isdw)))       &
-     &        /2.0/dfloat(nr1*nr2*nr3)
+     &        /2.0/DBLE(nr1*nr2*nr3)
       endif
       call reduce(1,vave)
 !     ===================================================================
@@ -4401,26 +4408,26 @@
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
-            vs(nms(ig))=conjg(rhog(ig,iss))
+            vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
          end do
 !
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
          do ir=1,nnrsx
-            rhos(ir,iss)=real(vs(ir))
+            rhos(ir,iss)=DBLE(vs(ir))
          end do
       else
          isup=1
          isdw=2
          do ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nms(ig))=conjg(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
+            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
          end do 
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          do ir=1,nnrsx
-            rhos(ir,isup)= real(vs(ir))
-            rhos(ir,isdw)=aimag(vs(ir))
+            rhos(ir,isup)= DBLE(vs(ir))
+            rhos(ir,isdw)=AIMAG(vs(ir))
          end do
       endif
 
@@ -4572,7 +4579,7 @@
          call reduce(3,mu)
 !
         do ix=1,3
-         mu(ix)=mu(ix)*omega/dfloat(nr1*nr2*nr3)
+         mu(ix)=mu(ix)*omega/DBLE(nr1*nr2*nr3)
         end do
 !
         dipole=sqrt(mu(1)**2+mu(2)**2+mu(3)**2)
@@ -4622,7 +4629,7 @@
          call reduce(6,quad)
 
         do ix=1,6
-         quad(ix)=quad(ix)*omega/dfloat(nr1*nr2*nr3)
+         quad(ix)=quad(ix)*omega/DBLE(nr1*nr2*nr3)
         end do
 !
         quadrupole=quad(1)+quad(2)+quad(3)-rzero*qbac

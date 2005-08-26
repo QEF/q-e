@@ -244,7 +244,7 @@
       ALLOCATE( psi( SIZE(A,1), SIZE(A,2), SIZE(A,3) ), STAT=ierr)
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' allocation of psi failed ' ,0)
 
-      psi = CMPLX( A )
+      psi = CMPLX( A, 0.d0 )
 
 #if defined __PARA
 
@@ -338,9 +338,9 @@
 #endif
 
       IF( .NOT. PRESENT( alpha ) ) THEN
-        c = REAL( psi )
+        c = DBLE( psi )
       ELSE
-        c = c + alpha * REAL( psi )
+        c = c + alpha * DBLE( psi )
       END IF
 
       DEALLOCATE(psi, STAT=ierr)
@@ -770,14 +770,14 @@
            CASE ( 1 )
              !
              do ig = 1, ng
-               psi( nms( ig ) ) = conjg( c( ig ) )
+               psi( nms( ig ) ) = CONJG( c( ig ) )
                psi( nps( ig ) ) = c( ig )
              end do
              !
            CASE ( 2 )
              !
              do ig = 1, ng
-               psi( nms( ig ) ) = conjg( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( nms( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
                psi( nps( ig ) ) = c( ig ) + ci * ca( ig )
              end do
 
@@ -793,14 +793,14 @@
            CASE ( 11 )
              !
              do ig = 1, ng
-               psi( nm( ig ) ) = conjg( c( ig ) )
+               psi( nm( ig ) ) = CONJG( c( ig ) )
                psi( np( ig ) ) = c( ig )
              end do
              !
            CASE ( 12 )
              !
              do ig = 1, ng
-               psi( nm( ig ) ) = conjg( c( ig ) ) + ci * conjg( ca( ig ) )
+               psi( nm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
                psi( np( ig ) ) = c( ig ) + ci * ca( ig )
              end do
              !

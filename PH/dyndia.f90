@@ -55,8 +55,8 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   do nu_i = 1, nmodes
      do nu_j = 1, nu_i
         dyn (nu_i, nu_j) = 0.5d0 * (dyn (nu_i, nu_j) + &
-                             conjg (dyn (nu_j, nu_i) ) )
-        dyn (nu_j, nu_i) = conjg (dyn (nu_i, nu_j) )
+                             CONJG(dyn (nu_j, nu_i) ) )
+        dyn (nu_j, nu_i) = CONJG(dyn (nu_i, nu_j) )
      enddo
   enddo
   !
@@ -102,7 +102,7 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
      do mu = 1, 3 * nat
         na = (mu - 1) / 3 + 1
         dyn (mu, nu_i) = z (mu, nu_i) / sqrt (amass (ityp (na) ) )
-        unorm = unorm + dyn (mu, nu_i) * conjg (dyn (mu, nu_i) )
+        unorm = unorm + dyn (mu, nu_i) * CONJG(dyn (mu, nu_i) )
      enddo
      if (iudyn /= 0) write (iudyn, '(" (",6f10.6," ) ")') &
           (dyn (mu, nu_i) / sqrt (unorm) , mu = 1, 3 * nat)

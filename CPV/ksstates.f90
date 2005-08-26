@@ -604,7 +604,7 @@
             zcomp( izl : ( izl + nr3_l - 1 ) ) = psi2( i, j, 1 : nr3_l )
             CALL mp_sum( zcomp(1:nr3_g) )
             IF ( ionode ) THEN
-              rcomp2 = REAL(zcomp)**2
+              rcomp2 = DBLE(zcomp)**2
               WRITE(ksunit, fmt='(F10.5)') ( rcomp2(k), k=1, nr3_g )
               charge = charge + SUM(rcomp2)
             END IF
@@ -615,7 +615,7 @@
         IF ( ionode ) THEN
           CLOSE(ksunit)
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &
-     &      file_name(1:istr), charge / REAL(nr1_g*nr2_g*nr3_g)
+     &      file_name(1:istr), charge / DBLE(nr1_g*nr2_g*nr3_g)
         END IF
         DEALLOCATE(zcomp, rcomp2, psi2)
 ! ...

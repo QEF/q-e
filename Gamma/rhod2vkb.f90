@@ -55,8 +55,8 @@ subroutine rhod2vkb(dyn0)
                              g(2,ng)*tau(2,na) + &
                              g(3,ng)*tau(3,na)   )
               fac = omega * vloc(igtongl(ng),ityp(na)) * tpiba2 *   &
-                        (  real(psic(nl(ng)))*cos(gtau) -  &
-                          DIMAG(psic(nl(ng)))*sin(gtau)   )
+                        (  DBLE(psic(nl(ng)))*cos(gtau) -  &
+                          AIMAG(psic(nl(ng)))*sin(gtau)   )
               dynloc(nu_i,nu_j) = dynloc(nu_i,nu_j) + fac *         &
                    ( g(1,ng) * u(mu_i+1,nu_i) +                     &
                      g(2,ng) * u(mu_i+2,nu_i) +                     &
@@ -105,7 +105,7 @@ subroutine rhod2vkb(dyn0)
      do ipol = 1, 3
         do jkb = 1, nkb
            do i = 1,npw
-              dvkb(i,jkb) = vkb(i,jkb) * cmplx(0.d0,-tpiba) * g(ipol,igk(i))
+              dvkb(i,jkb) = vkb(i,jkb) * CMPLX(0.d0,-tpiba) * g(ipol,igk(i))
            end do
         end do
         !

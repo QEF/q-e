@@ -59,7 +59,7 @@ subroutine d3dyn_cc
      do ig = 1, ngm
         arg = - tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        exc = DCMPLX (cos (arg), sin (arg) )
+        exc = CMPLX (cos (arg), sin (arg) )
         drc_exp (ig, na) = d0rc (ig, nta) * exc
      enddo
   enddo
@@ -69,7 +69,7 @@ subroutine d3dyn_cc
      arhox = abs (rhox)
      if (arhox > 1.0e-30) then
         call xc (arhox, ex, ec, vx, vc)
-        aux (ir) = DCMPLX (e2 * (vx + vc), 0.d0)
+        aux (ir) = CMPLX (e2 * (vx + vc), 0.d0)
      endif
   enddo
 
@@ -82,10 +82,10 @@ subroutine d3dyn_cc
         do k_cart = 1, 3
 
            na_k = k_cart + 3 * (na - 1)
-           work = DCMPLX (0.d0, 0.d0)
+           work = CMPLX (0.d0, 0.d0)
            do ig = 1, ngm
-              work = work + DCMPLX (0.d0, 1.d0) * g (i_cart, ig) * g (j_cart, ig) &
-                   * g (k_cart, ig) * conjg (aux (nl (ig) ) ) * drc_exp (ig, na)
+              work = work + CMPLX (0.d0, 1.d0) * g (i_cart, ig) * g (j_cart, ig) &
+                   * g (k_cart, ig) * CONJG(aux (nl (ig) ) ) * drc_exp (ig, na)
 
            enddo
 
@@ -114,9 +114,9 @@ subroutine d3dyn_cc
            na_i = i_cart + 3 * (na - 1)
            do j_cart = 1, 3
               na_j = j_cart + 3 * (na - 1)
-              work = DCMPLX (0.d0, 0.d0)
+              work = CMPLX (0.d0, 0.d0)
               do ig = 1, ngm
-                 work = work - conjg (aux (nl (ig) ) ) * g (i_cart, ig) * g ( &
+                 work = work - CONJG(aux (nl (ig) ) ) * g (i_cart, ig) * g ( &
                       j_cart, ig) * drc_exp (ig, na)
 
               enddo
@@ -137,7 +137,7 @@ subroutine d3dyn_cc
      do ig = 1, ngm
         arg = - tpi * ( (g (1, ig) + xq (1) ) * tau (1, na) + (g (2, ig) &
              + xq (2) ) * tau (2, na) + (g (3, ig) + xq (3) ) * tau (3, na) )
-        exc = DCMPLX (cos (arg), sin (arg) )
+        exc = CMPLX (cos (arg), sin (arg) )
         drc_exp (ig, na) = drc (ig, nta) * exc
      enddo
   enddo
@@ -163,14 +163,14 @@ subroutine d3dyn_cc
            do j_cart = 1, 3
 
               na_j = j_cart + 3 * (na - 1)
-              work = DCMPLX (0.d0, 0.d0)
+              work = CMPLX (0.d0, 0.d0)
               do ig = 1, ngm
-                 work = work - conjg (aux (nl (ig) ) ) * drc_exp (ig, na) * &
+                 work = work - CONJG(aux (nl (ig) ) ) * drc_exp (ig, na) * &
                       (g (i_cart, ig) + xq (i_cart) ) * (g (j_cart, ig) + xq (j_cart) )
 
               enddo
               d3dyn2 (na_i, nu_i, na_j) = work * omega * tpiba2
-              d3dyn3 (na_i, na_j, nu_i) = conjg (work) * omega * tpiba2
+              d3dyn3 (na_i, na_j, nu_i) = CONJG(work) * omega * tpiba2
            enddo
         enddo
      enddo
@@ -204,7 +204,7 @@ subroutine d3dyn_cc
                  do na_icart = 1, 3 * nat
                     do nb_jcart = 1, 3 * nat
                        work0 = work0 + ug0 (nc_kcart, nu_k) * &
-                            conjg (u (na_icart, nu_i) ) * &
+                            CONJG(u (na_icart, nu_i) ) * &
                             d3dyn0 (nc_kcart, na_icart, nb_jcart) * &
                             u (nb_jcart, nu_j)
                     enddo
@@ -214,7 +214,7 @@ subroutine d3dyn_cc
               work1 = (0.d0, 0.d0)
               do na_icart = 1, 3 * nat
                  do nb_jcart = 1, 3 * nat
-                    work1 = work1 + conjg (u (na_icart, nu_i) ) * d3dyn1 (nu_k, &
+                    work1 = work1 + CONJG(u (na_icart, nu_i) ) * d3dyn1 (nu_k, &
                          na_icart, nb_jcart) * u (nb_jcart, nu_j)
                  enddo
               enddo
@@ -231,7 +231,7 @@ subroutine d3dyn_cc
               do nc_kcart = 1, 3 * nat
                  do na_icart = 1, 3 * nat
                     work3 = work3 + ug0 (nc_kcart, nu_k) * &
-                         conjg (u (na_icart, nu_i) ) * &
+                         CONJG(u (na_icart, nu_i) ) * &
                          d3dyn3 (nc_kcart, na_icart, nu_j)
                  enddo
               enddo

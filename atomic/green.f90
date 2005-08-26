@@ -29,7 +29,7 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
 ! set up constants and initialize
    ddx12=dx*dx/12.0
    l1=lam+1
-   sqlhf=(float(lam)+.5)**2
+   sqlhf=(DBLE(lam)+.5)**2
    xl1=l1
    x4l6=4*lam+6
    x6l12=6*lam+12

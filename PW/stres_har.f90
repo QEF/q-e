@@ -38,7 +38,7 @@ subroutine stres_har (sigmahar)
   ! the  G=0 component is not computed
   do ig = gstart, ngm
      g2 = gg (ig) * tpiba2
-     shart = psic (nl (ig) ) * conjg (psic (nl (ig) ) ) / g2
+     shart = psic (nl (ig) ) * CONJG(psic (nl (ig) ) ) / g2
      do l = 1, 3
         do m = 1, l
            sigmahar (l, m) = sigmahar (l, m) + shart * tpiba2 * 2 * &

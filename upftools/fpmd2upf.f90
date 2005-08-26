@@ -131,7 +131,7 @@ contains
           zmesh = 6.0d0
           dx    =  0.025d0
           DO ir = 1, mesh
-            x = xmin + REAL(ir-1) * dx
+            x = xmin + DBLE(ir-1) * dx
             ap%rw(ir)  = EXP(x) / zmesh
             IF( ap%rw(ir) > 1000.0d0 ) EXIT
           END DO
@@ -248,7 +248,7 @@ contains
         ! WRITE(6,*) ' DEBUG ', ap%lloc, ap%numeric, ap%nbeta, ap%raggio, ap%zv
 
         DO i = 1, mesh
-          r = EXP(xmin+REAL(i-1)*dx)/zmesh
+          r = EXP(xmin+DBLE(i-1)*dx)/zmesh
           ap%rw(i) = r
           DO j = 1, lmax+1
             ap%vnl(i,j) = vnl(i,j) * fac
@@ -270,7 +270,7 @@ contains
         fac = 1.0d0/SQRT(4.0d0*pi)
         fac = 1.0d0
         DO i = 1, mesh
-          r = EXP(xmin+REAL(i-1)*dx)/zmesh
+          r = EXP(xmin+DBLE(i-1)*dx)/zmesh
           DO j = 1, nwf
             ap%rps(i,j) = chi(i,j) * fac
           END DO
@@ -287,7 +287,7 @@ contains
         IF( nlcc ) THEN
           ap%rhoc = 0.0d0
           DO i = 1, mesh
-            r = EXP(xmin+REAL(i-1)*dx)/zmesh
+            r = EXP(xmin+DBLE(i-1)*dx)/zmesh
             ap%rhoc(i) = rho_core(i)
           END DO
         END IF
@@ -417,7 +417,7 @@ contains
           n = MIN( SIZE( a ), m )
           ra = a(1)
           rb = a(n)
-          calculate_dx = LOG( rb / ra ) / REAL( n - 1 )
+          calculate_dx = LOG( rb / ra ) / DBLE( n - 1 )
           write(6,*) 'amesh (dx) = ', calculate_dx
         RETURN
       END FUNCTION calculate_dx

@@ -69,9 +69,9 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                  do jpol = 1, 3
                     phi (kpol, ipol, jpol, nc, na, nb) = 0.5d0 * &
                          (phi (kpol, ipol, jpol, nc, na, nb) + &
-                         conjg (phi (kpol, jpol, ipol, nc, nb, na) ) )
+                         CONJG(phi (kpol, jpol, ipol, nc, nb, na) ) )
                     phi (kpol, jpol, ipol, nc, nb, na) = &
-                         conjg (phi (kpol, ipol, jpol, nc, na, nb) )
+                         CONJG(phi (kpol, ipol, jpol, nc, na, nb) )
                  enddo
               enddo
            enddo
@@ -104,7 +104,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                                     rtau (kpol, irotmq, nb) ) )
                        enddo
                        arg = arg * tpi
-                       fase = DCMPLX (cos (arg), sin (arg) )
+                       fase = CMPLX (cos (arg), sin (arg) )
                        do npol = 1, 3
                           do kpol = 1, 3
                              do lpol = 1, 3
@@ -118,7 +118,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                        enddo
                        phip (mpol, ipol, jpol, nc, na, nb) = &
                             (phi (mpol, ipol, jpol, nc, na, nb) + &
-                            conjg (work (mpol, ipol, jpol) ) ) * 0.5d0
+                            CONJG(work (mpol, ipol, jpol) ) ) * 0.5d0
                     enddo
                  enddo
               enddo
@@ -161,7 +161,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                               rtau (ipol, irot, nb) ) )
                  enddo
                  arg = arg * tpi
-                 faseq (isymq) = DCMPLX (cos (arg), sin (arg) )
+                 faseq (isymq) = CMPLX (cos (arg), sin (arg) )
                  do mpol = 1, 3
                     do ipol = 1, 3
                        do jpol = 1, 3
@@ -199,7 +199,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                         s (ipol, kpol, invs (irot) ) * &
                                         s (jpol, lpol, invs (irot) ) * &
                                         work (npol, kpol, lpol) * &
-                                        conjg (faseq (isymq) )
+                                        CONJG(faseq (isymq) )
                                 enddo
                              enddo
                           enddo
@@ -212,7 +212,7 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
         enddo
      enddo
   enddo
-  phi = phi / float(nsymq)
+  phi = phi / DBLE(nsymq)
   deallocate (iflb)
   return
 end subroutine d3_symdynph

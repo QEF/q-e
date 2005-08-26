@@ -93,14 +93,14 @@ subroutine dvanqq
   allocate (veff ( nrxx , nspin))    
   do is = 1, nspin
      do ir = 1, nrxx
-        veff (ir, is) = DCMPLX (vltot (ir) + vr (ir, is), 0.d0)
+        veff (ir, is) = CMPLX (vltot (ir) + vr (ir, is), 0.d0)
      enddo
      call cft3 (veff (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   enddo
   !
   !     We compute here four of the five integrals needed in the phonon
   !
-  fact1 = DCMPLX (0.d0, - tpiba * omega)
+  fact1 = CMPLX (0.d0, - tpiba * omega)
   !
   do ntb = 1, ntyp
      if (tvanp (ntb) ) then
@@ -126,7 +126,7 @@ subroutine dvanqq
                                              * eigts3 (ig3 (ig), nb)
                     enddo
                     do na = 1, nat
-                       fact = eigqts (na) * conjg (eigqts (nb) )
+                       fact = eigqts (na) * CONJG(eigqts (nb) )
                        !
                        !    nb is the atom of the augmentation function
                        !
@@ -149,7 +149,7 @@ subroutine dvanqq
                                                (g (jpol, ig) + xq (jpol) )
                                 enddo
                                 int5 (ijh, ipol, jpol, na, nb) = &
-                                     conjg(fact) * tpiba2 * omega * &
+                                     CONJG(fact) * tpiba2 * omega * &
                                      ZDOTC (ngm, aux3, 1, aux1, 1)
                              else
                                 int5 (ijh, ipol, jpol, na, nb) = &

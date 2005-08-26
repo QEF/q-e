@@ -37,7 +37,7 @@ subroutine syme (dvsym)
 
   do is = 1, nspin
      do ipol = 1, 3
-        dvsym(:,:,:,is,ipol) = CMPLX(REAL(dvsym(:,:,:,is,ipol)),0.d0)
+        dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0)
      end do
   end do
   if (nsym == 1) return
@@ -70,7 +70,7 @@ subroutine syme (dvsym)
         enddo
      enddo
      do ipol = 1, 3
-        dvsym(:,:,:,is,ipol) = dvsym(:,:,:,is,ipol) / float(nsym)
+        dvsym(:,:,:,is,ipol) = dvsym(:,:,:,is,ipol) / DBLE(nsym)
      enddo
   enddo
   deallocate (aux)

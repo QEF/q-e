@@ -428,7 +428,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
      if (lp > lmaxq*lmaxq) call errore(' qvan2b ',' lp out of bounds ',lp)
      !
      !     extraction of angular momentum l from lp:  
-     !     l = int ( sqrt( float(l-1) + epsilon) ) + 1
+     !     l = int ( sqrt( DBLE(l-1) + epsilon) ) + 1
      !
      if (lp == 1) then
         l=1         
@@ -506,7 +506,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
      if (lp > lmaxq*lmaxq) call errore(' dqvan2b ',' lp out of bounds ',lp)
 
      !  extraction of angular momentum l from lp:  
-     !  l = int ( sqrt( float(l-1) + epsilon) ) + 1
+     !  l = int ( sqrt( DBLE(l-1) + epsilon) ) + 1
      !
      if (lp == 1) then
         l=1         

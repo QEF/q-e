@@ -94,7 +94,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
         qmod (ig) = sqrt (gg (ig) )
      enddo
   endif
-  fact = 0.5d0 * DCMPLX (0.d0, - tpiba)
+  fact = 0.5d0 * CMPLX (0.d0, - tpiba)
   aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (tvanp (nt) ) then

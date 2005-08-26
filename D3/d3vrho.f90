@@ -46,7 +46,7 @@ subroutine d3vrho
 
   d3dynwrk (:,:,:) = (0.d0, 0.d0)
   do ir = 1, nrxx
-     rhog (ir) = cmplx (rho (ir, 1), 0.d0)
+     rhog (ir) = CMPLX (rho (ir, 1), 0.d0)
   enddo
   call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
@@ -63,8 +63,8 @@ subroutine d3vrho
               gtau = tpi * (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
                    + g (3, ng) * tau (3, na) )
               fac = vloc (igtongl (ng), ityp (na) ) * tpiba2 * tpiba * omega *&
-                   (real (rhog (nl (ng) ) ) * sin (gtau) + &
-                   DIMAG (rhog (nl (ng) ) ) * cos (gtau) )
+                   (DBLE (rhog (nl (ng) ) ) * sin (gtau) + &
+                   AIMAG (rhog (nl (ng) ) ) * cos (gtau) )
               d3dynwrk (na_i, na_j, na_k) = d3dynwrk (na_i, na_j, na_k) + &
                    fac * g (icart, ng) * g (jcart, ng) * g (kcart, ng)
            enddo
@@ -132,7 +132,7 @@ subroutine d3vrho
 #endif
                              d3dynwrk (na_k, na_i, na_j) = d3dynwrk (na_k, na_i, na_j) - &
                                   2.0d0 * dvan(ikb,ikb,nt) * wgg * &
-                                  DIMAG(alpha(1)*alpha(2) + alpha(3)*alpha(4) +&
+                                  AIMAG(alpha(1)*alpha(2) + alpha(3)*alpha(4) +&
                                         alpha(5)*alpha(6) + alpha(7)*alpha(8))
                           enddo
                        endif
@@ -159,7 +159,7 @@ subroutine d3vrho
               do kcart = 1, 3 * nat
                  do icart = 1, 3 * nat
                     do jcart = 1, 3 * nat
-                       work = work + ug0 (kcart, na_k) * conjg (u (icart, na_i) ) &
+                       work = work + ug0 (kcart, na_k) * CONJG(u (icart, na_i) ) &
                             * d3dynwrk (kcart, icart, jcart) * u (jcart, na_j)
                     enddo
                  enddo

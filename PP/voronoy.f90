@@ -247,7 +247,7 @@ SUBROUTINE calculate_partial_charges (nat, tau, at, bg, nrx1big, &
            ! the charge is assigned to the closest atom or shared among equidistant
            DO na = 1, equidistant
               partial_charge (atom (na) ) = partial_charge (atom (na) ) + &
-                 REAL ( rhobig (n1, n2, n3) ) / equidistant
+                 DBLE ( rhobig (n1, n2, n3) ) / equidistant
            ENDDO
         ENDDO
      ENDDO

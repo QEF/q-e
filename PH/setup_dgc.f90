@@ -42,7 +42,7 @@ subroutine setup_dgc
   !
   !    add rho_core
   !
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / DBLE (nspin)
   if (nlcc_any) then
      do is = 1, nspin
         do k = 1, nrxx

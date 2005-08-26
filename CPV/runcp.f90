@@ -294,8 +294,8 @@
               CALL wave_verlet( cp(:,i+1,1,is), c0(:,i+1,1,is), svar1, svar2, svar3, c3 )
             END IF
 
-            IF( cdesc%gzero ) cp(1,i,1,is) = REAL( cp(1,i,1,is), dbl )
-            IF( cdesc%gzero ) cp(1,i+1,1,is) = REAL( cp(1,i+1,1,is), dbl )
+            IF( cdesc%gzero ) cp(1,i,1,is)  = DBLE( cp(1,i,1,is) )
+            IF( cdesc%gzero ) cp(1,i+1,1,is)= DBLE( cp(1,i+1,1,is) )
 
           END DO
 
@@ -319,7 +319,7 @@
               cp(:,nb,1,is) = cm(:,nb,1,is)
               CALL wave_verlet( cp(:,nb,1,is), c0(:,nb,1,is), svar1, svar2, svar3, c2 )
             END IF
-            IF( cdesc%gzero ) cp(1,nb,1,is) = REAL( cp(1,nb,1,is), dbl )
+            IF( cdesc%gzero ) cp(1,nb,1,is) = DBLE( cp(1,nb,1,is) )
 
           END IF
 
@@ -482,7 +482,7 @@
 
         if ( nupdwn(1) == (nupdwn(2) + 1) ) then
            !
-           intermed = sum ( c0( :, nupdwn(1), ik, 1 ) * conjg( c0( :, nupdwn(1), ik, 1 ) ) )
+           intermed = sum ( c0( :, nupdwn(1), ik, 1 ) * CONJG( c0( :, nupdwn(1), ik, 1 ) ) )
            !  prodotto delle wf relative all'unpaired el
            !  lavoro sugli n processori e' per quetso che sommo ... 
            !  vengono messi nella variabile temporanea ei_t(:,:,2)
@@ -546,10 +546,10 @@
 
 
             if ( nupdwn(1) > nupdwn(2) ) then
-                intermed  = sum ( c2* conjg(c2) )
-                intermed2 = sum ( c3* conjg(c3) )
-                intermed3 = sum ( c2* conjg( c0(:,nupdwn(1),ik,1) ) )
-                intermed4 = sum ( c3* conjg( c0(:,nupdwn(1),ik,1) ) )
+                intermed  = sum ( c2* CONJG(c2) )
+                intermed2 = sum ( c3* CONJG(c3) )
+                intermed3 = sum ( c2* CONJG( c0(:,nupdwn(1),ik,1) ) )
+                intermed4 = sum ( c3* CONJG( c0(:,nupdwn(1),ik,1) ) )
                 CALL mp_sum ( intermed,  group )
                 CALL mp_sum ( intermed2, group )
                 CALL mp_sum ( intermed3, group )
@@ -572,8 +572,8 @@
             CALL wave_verlet( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar1, svar2, svar3, c3 )
           END IF
 
-          IF( cdesc%gzero ) cp(1,i,ik,1) = REAL( cp(1,i,ik,1), dbl )
-          IF( cdesc%gzero ) cp(1,i+1,ik,1) = REAL( cp(1,i+1,ik,1), dbl )
+          IF( cdesc%gzero ) cp(1,i,ik,1)  = DBLE( cp(1,i,ik,1) )
+          IF( cdesc%gzero ) cp(1,i+1,ik,1)= DBLE( cp(1,i+1,ik,1) )
 
 
         END DO ! bande
@@ -593,8 +593,8 @@
           IF( ttprint .and. ( nupdwn(1) > nupdwn(2) ) ) THEN
             CALL update_lambda( nb, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
             if ( nupdwn(1) > nupdwn(2) ) then
-              intermed  = sum ( c2 * conjg(c2) )
-              intermed3 = sum ( c2 * conjg( c0(:, nupdwn(1), ik, 1) ) )
+              intermed  = sum ( c2 * CONJG(c2) )
+              intermed3 = sum ( c2 * CONJG( c0(:, nupdwn(1), ik, 1) ) )
               CALL mp_sum ( intermed, group )
               CALL mp_sum ( intermed3, group )
               ei_t(nb,ik,1) = intermed * ei_t(nb,ik,2) ! <Phi|H H|Phi>*<Phiunpaired|Phiunpaired>
@@ -608,7 +608,7 @@
            cp(:,nb,ik,1) = cm(:,nb,ik,1)
             CALL wave_verlet( cp(:,nb,ik,1), c0(:,nb,ik,1), svar1, svar2, svar3, c2 )
           END IF
-          IF( cdesc%gzero ) cp(1,nb,ik,1) = REAL( cp(1,nb,ik,1), dbl )
+          IF( cdesc%gzero ) cp(1,nb,ik,1) = DBLE( cp(1,nb,ik,1) )
 
         END IF
 
@@ -806,8 +806,8 @@
               CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
            endif
            if ( gstart == 2 ) then
-              cm(1,  i)=cmplx(real(cm(1,  i)),0.0)
-              cm(1,i+1)=cmplx(real(cm(1,i+1)),0.0)
+              cm(1,  i)=CMPLX(DBLE(cm(1,  i)),0.d0)
+              cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0)
            end if
         end do
       end if

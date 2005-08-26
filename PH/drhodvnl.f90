@@ -96,8 +96,8 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                        nu = nu_i0 + iper
                        dynwrk (nu, mu) = dynwrk (nu, mu) + &
                             2.d0 * wk (ikk) * (ps2 (ikb, ibnd, ipol) * &
-                            conjg (dbecq (ikb, ibnd, iper) ) + &
-                            ps1(ikb,ibnd) * conjg (dalpq(ikb,ibnd,ipol,iper)) )
+                            CONJG(dbecq (ikb, ibnd, iper) ) + &
+                            ps1(ikb,ibnd) * CONJG(dalpq(ikb,ibnd,ipol,iper)) )
                     enddo
                  enddo
                  if (okvan) then
@@ -117,7 +117,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                    nu = nu_i0 + iper
                                    dynwrk (nu, mu) = dynwrk (nu, mu) + &
                                         2.d0 * wk (ikk) * ps * &
-                                        conjg (dbecq (ikb, ibnd, iper) )
+                                        CONJG(dbecq (ikb, ibnd, iper) )
                                 enddo
                              enddo
                              ijkb0b = ijkb0b + nh (ntb)

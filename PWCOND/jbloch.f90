@@ -55,7 +55,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
   allocate( ncond( nst ) ) 
   nchan=0
   do k=1, nst
-    if (abs(DIMAG(kval(k))).le.eps) then
+    if (abs(AIMAG(kval(k))).le.eps) then
       nchan=nchan+1      
       ncond(nchan)=k
     endif
@@ -101,10 +101,10 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
 !     ---------------------------------------------
       do iorb=1, nocros*npol
         kcuroff(k,n)=kcuroff(k,n)-cim*(                               &
-            conjg(vec(2*n2d+npol*(nocros+noins)+iorb,ir))*kcoef(iorb,n)-   &
-            vec(2*n2d+npol*(nocros+noins)+iorb,il)*conjg(kcoef(iorb,k)))
+            CONJG(vec(2*n2d+npol*(nocros+noins)+iorb,ir))*kcoef(iorb,n)-   &
+            vec(2*n2d+npol*(nocros+noins)+iorb,il)*CONJG(kcoef(iorb,k)))
       enddo
-!   WRITE( 6,'(2i5, 2f12.6)') k,n,DREAL(kcuroff(k,n)),DIMAG(kcuroff(k,n))  
+!   WRITE( 6,'(2i5, 2f12.6)') k,n, DBLE(kcuroff(k,n)),AIMAG(kcuroff(k,n))  
     enddo
   enddo
 
@@ -132,7 +132,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
         enddo
         kcur(ir)=ej(in)
         do n=1, 2*nchan
-          k1=DREAL(valj(n,in))**2+DIMAG(valj(n,in))**2
+          k1= DBLE(valj(n,in))**2+AIMAG(valj(n,in))**2
           if(abs(k1).gt.eps) kval1(ir)=kval(ncond(n))
         enddo                      
       else
@@ -145,7 +145,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
         enddo
         kcur(il)=ej(in)
         do n=1, 2*nchan
-          k1=DREAL(valj(n,in))**2+DIMAG(valj(n,in))**2
+          k1= DBLE(valj(n,in))**2+AIMAG(valj(n,in))**2
           if(abs(k1).gt.eps) kval1(il)=kval(ncond(n))    
         enddo                              
       endif
@@ -153,12 +153,12 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
 
 !--  decaying states 
     do in=1, nst  
-      if (DIMAG(kval(in)).gt.eps) then
+      if (AIMAG(kval(in)).gt.eps) then
         ir=ir+1
         kval1(ir)=kval(in)
         call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,ir),1)
       endif
-      if (-DIMAG(kval(in)).gt.eps) then
+      if (-AIMAG(kval(in)).gt.eps) then
         il=il+1
         kval1(il)=kval(in)
         call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,il),1)
@@ -186,7 +186,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
     do k=1, nchan
       kval(k)=1.d2
       do n=1, nchan
-        if(abs(DREAL(kval1(n))).le.abs(DREAL(kval(k)))) then
+        if(abs( DBLE(kval1(n))).le.abs( DBLE(kval(k)))) then
           kval(k)=kval1(n)
           ncond(k)=n 
         endif 
@@ -199,7 +199,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
     do k=nst/2+1, nst/2+nchan
       kval(k)=1.d2
       do n=nst/2+1, nst/2+nchan
-        if(abs(DREAL(kval1(n))).le.abs(DREAL(kval(k)))) then
+        if(abs( DBLE(kval1(n))).le.abs( DBLE(kval(k)))) then
           kval(k)=kval1(n)
           ncond(k)=n
         endif

@@ -182,7 +182,7 @@ SUBROUTINE add_shift_us( shift_nl )
                          ps = deeq(ih,ih,na,current_spin) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
-                                      REAL( CONJG( becp(ikb,ibnd) ) * &
+                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                    becp(ikb,ibnd) )
                       END DO
                       !
@@ -198,7 +198,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                ps = deeq(ih,jh,na,current_spin) - &
                                     et(ibnd,ik) * qq (ih,jh,nt)
                                shift_(na) = shift_ (na) + ps * wg(ibnd,ik) * &
-                                      2.d0 * REAL( CONJG( becp(ikb,ibnd) ) * &
+                                      2.d0 * DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                           becp(jkb,ibnd) )
                             END DO
                          END DO

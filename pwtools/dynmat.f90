@@ -9,8 +9,9 @@ Module dynamical
   !
   ! All variables read from file that need dynamical allocation
   !
-  complex(kind=8), allocatable :: dyn(:,:,:,:)
-  real(kind=8), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
+  USE kinds, ONLY: DP
+  complex(kind=DP), allocatable :: dyn(:,:,:,:)
+  real(kind=DP), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
   integer, allocatable :: ityp(:)
   !
 end Module dynamical
@@ -67,6 +68,7 @@ end Module dynamical
 !  filxsf  character as above, in axsf format suitable for xcrysden
 !                    (default: filmol='dynmat.axsf') 
 !
+#include "f_defs.h"
       use dynamical
       !
       implicit none
@@ -157,6 +159,7 @@ end Module dynamical
            a0, at, omega, amass, eps0, q )
 !-----------------------------------------------------------------------
 !
+      USE kinds, ONLY: DP
       use dynamical
       !
       implicit none
@@ -165,11 +168,11 @@ end Module dynamical
       integer, intent(in) :: axis
       integer, intent(inout) :: nat, ntyp
       character(len=3), intent(out) ::  atm(ntyp)
-      real(kind=8), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
+      real(kind=DP), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
            eps0(3,3), q(3)
       !
       character(len=80) :: line
-      real(kind=8) :: celldm(6), sum, dyn0r(3,3,2)
+      real(kind=DP) :: celldm(6), sum, dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
       logical :: qfinito, noraman
       !
@@ -277,18 +280,19 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !             zstar = effective charges (units of e)
   !             dchi_dtau = derivatives of chi wrt atomic displacement
   !                         (units: A^2)
+ USE kinds, ONLY: DP
  implicit none
  ! input
  integer, intent(in) :: nat
- real(kind=8) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
+ real(kind=DP) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
       dchi_dtau(3,3,3,nat), chi(3,3)
- complex(kind=8) z(3*nat,3*nat)
+ complex(kind=DP) z(3*nat,3*nat)
  ! local
  integer na, nu, ipol, jpol, lpol
  logical noraman
- real(kind=8), allocatable :: infrared(:), raman(:,:,:)
- real(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
- real(kind=8):: cmfac, alpha, beta2
+ real(kind=DP), allocatable :: infrared(:), raman(:,:,:)
+ real(kind=DP):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
+ real(kind=DP):: cmfac, alpha, beta2
  !
  !  conversion factors Ry => THz, Ry=>cm^(-1) e cm^(-1)=>THz
  !
@@ -408,16 +412,17 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   !
   !  Impose ASR - refined version by Nicolas Mounet
   !
+  USE kinds, ONLY: DP
   implicit none
   character(len=10), intent(in) :: asr
   integer, intent(in) :: axis, nat
-  real(kind=8), intent(in) :: tau(3,nat)
-  real(kind=8), intent(inout) :: zeu(3,3,nat)
-  complex(kind=8), intent(inout) :: dyn(3,3,nat,nat)
+  real(kind=DP), intent(in) :: tau(3,nat)
+  real(kind=DP), intent(inout) :: zeu(3,3,nat)
+  complex(kind=DP), intent(inout) :: dyn(3,3,nat,nat)
   !
   integer :: i,j,n,m,p,k,l,q,r,na, nb, na1, i1, j1
-  real(kind=8) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
-  real(kind=8), allocatable :: u(:,:,:,:,:)
+  real(kind=DP) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
+  real(kind=DP), allocatable :: u(:,:,:,:,:)
   ! These are the "vectors" associated with the sum rules
   !
   integer u_less(6*3*nat),n_less,i_less
@@ -425,24 +430,24 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   ! n_less = number of such vectors, i_less = temporary parameter
   !
   integer ind_v(9*nat*nat,2,4)
-  real(kind=8) v(9*nat*nat,2)
+  real(kind=DP) v(9*nat*nat,2)
   ! These are the "vectors" associated with symmetry conditions, coded by 
   ! indicating the positions (i.e. the four indices) of the non-zero elements
   ! (there should be only 2 of them) and the value of that element.
   ! We do so in order to use limit the amount of memory used. 
   !
-  real(kind=8) w(3,3,nat,nat), x(3,3,nat,nat)
-  real(kind=8) sum, scal, norm2
+  real(kind=DP) w(3,3,nat,nat), x(3,3,nat,nat)
+  real(kind=DP) sum, scal, norm2
   ! temporary vectors and parameters  
   !
-  real(kind=8) zeu_u(6*3,3,3,nat)
+  real(kind=DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding
   ! ones, nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat)
+  real(kind=DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
   !
   ! Initialization
@@ -603,7 +608,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
            do na=1,nat
               sum=0.0
               do nb=1,nat
-                 if (na.ne.nb) sum=sum + REAL (dyn(i,j,na,nb))
+                 if (na.ne.nb) sum=sum + DBLE (dyn(i,j,na,nb))
               end do
               dyn(i,j,na,na) = CMPLX (-sum, 0.d0)
            end do
@@ -620,7 +625,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         do j=1,3
            do na=1,nat
               do nb=1,nat
-                 dynr_new(1,i,j,na,nb) = REAL (dyn(i,j,na,nb) )
+                 dynr_new(1,i,j,na,nb) = DBLE (dyn(i,j,na,nb) )
                  dynr_new(2,i,j,na,nb) =AIMAG (dyn(i,j,na,nb) )
               enddo
            enddo
@@ -819,8 +824,8 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
         do j=1,3
            do na=1,nat
               do nb=1,nat
-                 dyn (i,j,na,nb) = CMPLX (dynr_new(1,i,j,na,nb), &
-                                          dynr_new(2,i,j,na,nb) )
+                 dyn (i,j,na,nb) = &
+                      CMPLX (dynr_new(1,i,j,na,nb), dynr_new(2,i,j,na,nb) )
               enddo
            enddo
         enddo
@@ -838,11 +843,12 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
+  USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nat
-  real(kind=8) zeu_u(3,3,nat)
-  real(kind=8) zeu_v(3,3,nat)
-  real(kind=8) scal  
+  real(kind=DP) zeu_u(3,3,nat)
+  real(kind=DP) zeu_v(3,3,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -866,11 +872,12 @@ subroutine sp1(u,v,nat,scal)
   ! does the scalar product of two dyn. matrices u and v (considered as
   ! vectors in the R^(3*3*nat*nat) space, and coded in the usual way)
   !
+  USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nb,nat
-  real(kind=8) u(3,3,nat,nat)
-  real(kind=8) v(3,3,nat,nat)
-  real(kind=8) scal  
+  real(kind=DP) u(3,3,nat,nat)
+  real(kind=DP) v(3,3,nat,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -897,12 +904,13 @@ subroutine sp2(u,v,ind_v,nat,scal)
   ! but v is coded as explained when defining the vectors corresponding to the 
   ! symmetry constraints
   !
+  USE kinds, ONLY: DP
   implicit none
   integer i,nat
-  real(kind=8) u(3,3,nat,nat)
+  real(kind=DP) u(3,3,nat,nat)
   integer ind_v(2,4)
-  real(kind=8) v(2)
-  real(kind=8) scal  
+  real(kind=DP) v(2)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -923,11 +931,12 @@ subroutine sp3(u,v,i,na,nat,scal)
   ! terms are zero (the ones that are not are characterized by i and na), so 
   ! that a lot of computer time can be saved (during Gram-Schmidt). 
   !
+  USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nb,nat
-  real(kind=8) u(3,3,nat,nat)
-  real(kind=8) v(3,3,nat,nat)
-  real(kind=8) scal  
+  real(kind=DP) u(3,3,nat,nat)
+  real(kind=DP) v(3,3,nat,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0

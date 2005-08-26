@@ -85,7 +85,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           ! ... set to zero the imaginary part of psi at G=0
           ! ... absolutely needed for numerical stability
           !
-          IF ( gstart == 2 ) psi(1,ibnd) = DCMPLX( REAL( psi(1,ibnd) ), 0.D0 )
+          IF ( gstart == 2 ) psi(1,ibnd) = CMPLX( DBLE( psi(1,ibnd) ), 0.D0 )
           !
           hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
           !

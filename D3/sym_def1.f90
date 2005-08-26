@@ -36,7 +36,7 @@ subroutine sym_def1 (def, irr)
   ! the fermi energy changes (work array)
 
   do ipert = 1, npertg0 (irr)
-     def (ipert) = DREAL (def (ipert) )
+     def (ipert) =  DBLE (def (ipert) )
   enddo
   if (nsymq == 1) return
   !
@@ -55,7 +55,7 @@ subroutine sym_def1 (def, irr)
   !
   ! normalize and exit
   !
-  def (:) = w_def(:) / float(nsymq)
+  def (:) = w_def(:) / DBLE(nsymq)
 
   return
 end subroutine sym_def1

@@ -46,7 +46,7 @@ subroutine dielec
               !
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
-              epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w*DREAL( &
+              epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w* DBLE( &
                    ZDOTC (npw, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
            enddo
         enddo

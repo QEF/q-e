@@ -10,6 +10,7 @@ subroutine form_zk(n2d, nrzp, zkr, zk, e, tpiba)
 ! To construct complex wavevectors zk=sqrt(e-E_n) 
 ! for an energy e from eigenvalues E_n of 2d problem 
 !
+#include "f_defs.h"
   USE kinds, only : DP 
   implicit none
   integer :: nrzp, n2d, n, k 
@@ -19,7 +20,7 @@ subroutine form_zk(n2d, nrzp, zkr, zk, e, tpiba)
   do k=1, nrzp
     do n=1, n2d
       ed = e-zkr(n,k)
-      zk(n,k)=SQRT(CMPLX(ed))/tpiba
+      zk(n,k)=SQRT(CMPLX(ed,0.d0))/tpiba
     enddo
   enddo  
 

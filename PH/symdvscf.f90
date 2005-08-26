@@ -58,9 +58,9 @@ subroutine symdvscf (nper, irr, dvtosym)
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !
-  in1 = tpi / float (nr1)
-  in2 = tpi / float (nr2)
-  in3 = tpi / float (nr3)
+  in1 = tpi / DBLE (nr1)
+  in2 = tpi / DBLE (nr2)
+  in3 = tpi / DBLE (nr3)
   if (minus_q) then
      g1 (1) = 0.d0
      g2 (1) = 0.d0
@@ -70,9 +70,9 @@ subroutine symdvscf (nper, irr, dvtosym)
         g2 (1) = g2 (1) + gimq (ipol) * in2 * at (ipol, 2)
         g3 (1) = g3 (1) + gimq (ipol) * in3 * at (ipol, 3)
      enddo
-     term (1, 1) = DCMPLX (cos (g1 (1) ), sin (g1 (1) ) )
-     term (2, 1) = DCMPLX (cos (g2 (1) ), sin (g2 (1) ) )
-     term (3, 1) = DCMPLX (cos (g3 (1) ), sin (g3 (1) ) )
+     term (1, 1) = CMPLX (cos (g1 (1) ), sin (g1 (1) ) )
+     term (2, 1) = CMPLX (cos (g2 (1) ), sin (g2 (1) ) )
+     term (3, 1) = CMPLX (cos (g3 (1) ), sin (g3 (1) ) )
      do is = 1, nspin
         phase (1) = (1.d0, 0.d0)
         do k = 1, nr3
@@ -98,7 +98,7 @@ subroutine symdvscf (nper, irr, dvtosym)
                             dvtosym (ri, rj, rk, is, jpert) * phase (1)
                     enddo
                     dvsym (i, j, k, ipert) = (dvtosym (i, j, k, is, ipert) +&
-                         conjg (aux2) ) * 0.5d0
+                         CONJG(aux2) ) * 0.5d0
                  enddo
                  phase (1) = phase (1) * term (1, 1)
               enddo
@@ -123,9 +123,9 @@ subroutine symdvscf (nper, irr, dvtosym)
         g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
         g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
      enddo
-     term (1, isym) = DCMPLX (cos (g1 (isym) ), sin (g1 (isym) ) )
-     term (2, isym) = DCMPLX (cos (g2 (isym) ), sin (g2 (isym) ) )
-     term (3, isym) = DCMPLX (cos (g3 (isym) ), sin (g3 (isym) ) )
+     term (1, isym) = CMPLX (cos (g1 (isym) ), sin (g1 (isym) ) )
+     term (2, isym) = CMPLX (cos (g2 (isym) ), sin (g2 (isym) ) )
+     term (3, isym) = CMPLX (cos (g3 (isym) ), sin (g3 (isym) ) )
   enddo
 
   do is = 1, nspin
@@ -173,7 +173,7 @@ subroutine symdvscf (nper, irr, dvtosym)
      enddo
 
      do ipert = 1, nper
-        dvtosym(:,:,:,is,ipert) = dvsym(:,:,:,ipert) / float (nsymq)
+        dvtosym(:,:,:,is,ipert) = dvsym(:,:,:,ipert) / DBLE (nsymq)
      enddo
 
   enddo

@@ -132,7 +132,6 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
-../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
@@ -157,7 +156,6 @@ PWOBJS = \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \
-../PW/bachel.o \
 ../PW/becmod.o \
 ../PW/c_gemm.o \
 ../PW/ccalbec.o \

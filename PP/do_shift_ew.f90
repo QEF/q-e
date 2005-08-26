@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
@@ -116,7 +117,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
         arg = (g (1, ng) * tau (1, na) + &
                g (2, ng) * tau (2, na) + &
                g (3, ng) * tau (3, na) ) * tpi
-        rhon(ng) = rhon(ng) + zv (ityp(na)) * DCMPLX (cos (arg), -sin (arg))
+        rhon(ng) = rhon(ng) + zv (ityp(na)) * CMPLX (cos (arg), -sin (arg))
      enddo
   end do
   do na=1,nat
@@ -124,7 +125,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
         arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
              + g (3, ng) * tau (3, na) ) * tpi
         shift_ion(na) = shift_ion(na) + fact * delta_zv(ityp(na)) * &
-                        CONJG(rhon(ng)) * DCMPLX (cos (arg), -sin (arg)) * &
+                        CONJG(rhon(ng)) * CMPLX (cos (arg), -sin (arg)) * &
                         exp ( -gg(ng)*tpiba2/alpha/4.d0) / gg(ng)/tpiba2
      enddo
   enddo

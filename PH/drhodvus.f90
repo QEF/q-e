@@ -61,7 +61,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
            do is = 1, nspin
               dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
                    ZDOTC (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
-                   * omega / float (nrtot)
+                   * omega / DBLE (nrtot)
            enddo
         enddo
      enddo

@@ -69,7 +69,7 @@ subroutine el_opt
         do ipb = 1, 3
            do ipc = 1, 3
               elop_ (ipa, ipb, ipc, 1) = elop_ (ipa, ipb, ipc, 1) + &
-                  weight * dreal( ps(ipa, jab (ipb, ipc))   + &
+                  weight *  DBLE( ps(ipa, jab (ipb, ipc))   + &
                                   ps(ipb, jab (ipc, ipa))   + &
                                   ps(ipc, jab (ipa, ipb)) )
            enddo
@@ -117,7 +117,7 @@ subroutine el_opt
               tmp = tmp + d2muxc (ir) * aux3 (1, ipa) *   &
                         aux3 (1, ipb) * aux3 (1, ipc)
            enddo
-           ps3 (ipa, ipb, ipc) = dreal(tmp)
+           ps3 (ipa, ipb, ipc) =  DBLE(tmp)
         enddo
      enddo
   enddo

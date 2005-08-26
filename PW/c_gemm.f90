@@ -123,7 +123,7 @@ subroutine c_transpose (a, lda, b, ldb, n, m, itype, info)
      s2 = irtc ()
      do j = 1, m
         do i = 1, n
-           b (i, j) = conjg (a (j, i) )
+           b (i, j) = CONJG(a (j, i) )
         enddo
      enddo
 

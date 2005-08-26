@@ -56,10 +56,10 @@ subroutine rotate_and_add_dyn (phi, phi2, nat, isym, s, invs, irt, &
         arg = (sxq (1) * (rtau (1, isym, na) - rtau (1, isym, nb) ) &
              + sxq (2) * (rtau (2, isym, na) - rtau (2, isym, nb) ) + sxq (3) &
              * (rtau (3, isym, na) - rtau (3, isym, nb) ) ) * tpi
-        phase = DCMPLX (cos (arg), - sin (arg) )
+        phase = CMPLX (cos (arg), - sin (arg) )
         do i = 1, 3
            do j = 1, 3
-              work = DCMPLX (0.d0, 0.d0)
+              work = CMPLX (0.d0, 0.d0)
               do k = 1, 3
                  do l = 1, 3
                     work = work + s (i, k, ism1) * s (j, l, ism1) * phi (k, l, na, nb) &

@@ -201,9 +201,8 @@ MODULE read_cards_module
           input_line( i : i ) = capital( input_line( i : i ) )
        END DO
        !
+       !  WRITE(*,*) 'CARD=', card
        !
-       WRITE(*,*) 'CARD=', card
-
        IF ( TRIM(card) == 'AUTOPILOT' ) THEN
           !
           CALL card_autopilot( input_line )

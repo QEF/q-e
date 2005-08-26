@@ -60,7 +60,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
               do i = 1, npw
                  sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
                       gk (l, i) * gk (m, i) * kfac (i) * &
-                      DREAL (conjg (evc (i, ibnd) ) * evc (i, ibnd) )
+                       DBLE (CONJG(evc (i, ibnd) ) * evc (i, ibnd) )
               enddo
            enddo
         enddo

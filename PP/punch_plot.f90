@@ -303,14 +303,14 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   IF (spin_component == 0) THEN
      IF (nspin == 1 .OR. nspin == 4 ) THEN
-        psic(:) = DCMPLX (rho(:,1), 0.d0)
+        psic(:) = CMPLX (rho(:,1), 0.d0)
      ELSE IF (nspin == 2) THEN
-        psic(:) = DCMPLX (rho(:,1) + rho(:,2), 0.d0) 
+        psic(:) = CMPLX (rho(:,1) + rho(:,2), 0.d0) 
      END IF
   ELSE 
      IF (spin_component > nspin .OR. spin_component < 1) &
           CALL errore('polarization', 'wrong spin component',1)
-     psic(:) = DCMPLX (rho(:,spin_component), 0.d0)
+     psic(:) = CMPLX (rho(:,spin_component), 0.d0)
   END IF
   !
   !   transform to G space
@@ -321,12 +321,12 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   DO ig = gstart, ngm
      psic (nl (ig) ) = psic (nl (ig) ) * g (ipol, ig) / gg (ig) &
        / (0.d0, 1.d0)
-     if (gamma_only) psic (nlm(ig) ) = CMPLX ( psic (nl (ig) ) )
+     if (gamma_only) psic (nlm(ig) ) = CONJG ( psic (nl (ig) ) )
   END DO
   !
   CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
-  raux (:) = DREAL (psic (:) )
+  raux (:) =  DBLE (psic (:) )
   !
   RETURN
   !

@@ -396,7 +396,7 @@
         REAL(dbl),  INTENT(IN)  :: X1,Y1,Z1
         REAL(dbl),  INTENT(OUT) :: X2,Y2,Z2
         REAL(dbl) MIC
-        MIC = REAL(M)
+        MIC = DBLE(M)
         X2 = X1 - DNINT(X1/MIC)*MIC
         Y2 = Y1 - DNINT(Y1/MIC)*MIC
         Z2 = Z1 - DNINT(Z1/MIC)*MIC
@@ -413,7 +413,7 @@
         REAL(dbl),  INTENT(IN)  :: v(3)
         REAL(dbl),  INTENT(OUT) :: w(3)
         REAL(dbl) :: MIC
-        MIC = REAL(M)
+        MIC = DBLE(M)
         w(1) = v(1) - DNINT(v(1)/MIC)*MIC
         w(2) = v(2) - DNINT(v(2)/MIC)*MIC
         w(3) = v(3) - DNINT(v(3)/MIC)*MIC

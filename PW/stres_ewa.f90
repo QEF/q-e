@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      omega, g, gg, ngm, gstart, gamma_only, gcutm, sigmaewa)
@@ -117,7 +118,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      do na = 1, nat
         arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) + &
                g (3, ng) * tau (3, na) ) * tpi
-        rhostar = rhostar + zv (ityp (na) ) * DCMPLX (cos (arg), sin (arg))
+        rhostar = rhostar + zv (ityp (na) ) * CMPLX (cos (arg), sin (arg))
      enddo
      rhostar = rhostar / omega
      sewald = fact * tpi * e2 * exp ( - g2a) / g2 * abs (rhostar) **2

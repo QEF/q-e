@@ -56,7 +56,7 @@ subroutine sym_elop (phi, nsym, s, nat, irt)
      enddo
   enddo
 
-  call DSCAL (27, 1.d0 / float (nsym), work, 1)
+  call DSCAL (27, 1.d0 / DBLE (nsym), work, 1)
   call DCOPY (27, work, 1, phi, 1)
 
   return

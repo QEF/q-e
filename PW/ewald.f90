@@ -110,7 +110,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   do ng = gstart, ngm
      rhon = (0.d0, 0.d0)
      do nt = 1, ntyp
-        rhon = rhon + zv (nt) * conjg (strf (ng, nt) )
+        rhon = rhon + zv (nt) * CONJG(strf (ng, nt) )
      enddo
      ewaldg = ewaldg + fact * abs (rhon) **2 * exp ( - gg (ng) * tpiba2 / &
           alpha / 4.d0) / gg (ng) / tpiba2

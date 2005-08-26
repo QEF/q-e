@@ -89,7 +89,7 @@ subroutine addusforce (forcenl)
                     !
                     do is = 1, nspin
                        do ig = 1, ngm
-                          cfac = aux (ig, is) * conjg (eigts1 (ig1 (ig), na) *&
+                          cfac = aux (ig, is) * CONJG(eigts1 (ig1 (ig), na) *&
                                                        eigts2 (ig2 (ig), na) *&
                                                        eigts3 (ig3 (ig), na) )
                           aux1 (ig, 1) = g (1, ig) * cfac

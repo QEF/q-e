@@ -79,7 +79,7 @@ subroutine dpsidvdpsi (nu_q0)
         do nu_j = 1, 3 * nat
            nrec = (nu_j - 1) * nksq + ik
            call davcio (dqpsi, lrdwf, iudqwf, nrec, - 1)
-           wrk = DCMPLX (0.d0, 0.d0)
+           wrk = CMPLX (0.d0, 0.d0)
            do ibnd = 1, nbnd
               if (degauss /= 0.d0) wg1 = wk (ikk) * wga (ibnd)
               wrk = wrk + 2.d0 * wg1 * &
@@ -130,7 +130,7 @@ subroutine dpsidvdpsi (nu_q0)
            do nu_j = 1, 3 * nat
               nrec = (nu_j - 1) * nksq + ik
               call davcio (dqpsi, lrdwf, iudqwf, nrec, - 1)
-              wrk = DCMPLX (0.d0, 0.d0)
+              wrk = CMPLX (0.d0, 0.d0)
               do ibnd = 1, nbnd
                  if (degauss.ne.0.d0) wg1 = wk (ikk) * wga (ibnd)
                  wrk = wrk + 2.d0 * wg1 * &
@@ -140,7 +140,7 @@ subroutine dpsidvdpsi (nu_q0)
               call reduce (2, wrk)
 #endif
               d3dyn2 (nu_i, nu_z, nu_j) = d3dyn2 (nu_i, nu_z, nu_j) + wrk
-              d3dyn3 (nu_i, nu_j, nu_z) = d3dyn3 (nu_i, nu_j, nu_z) + conjg(wrk)
+              d3dyn3 (nu_i, nu_j, nu_z) = d3dyn3 (nu_i, nu_j, nu_z) + CONJG(wrk)
            enddo
         enddo
      enddo

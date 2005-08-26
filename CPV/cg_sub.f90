@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#include "f_defs.h"
 !
 !=======================================================================
 !
@@ -13,7 +13,7 @@
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
       lambdap, lambda  )
 
-
+      use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
             tfor, tvlocw, trhow, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
@@ -279,8 +279,8 @@
           hpsi(1:ngw,  i)=c2(1:ngw)
           hpsi(1:ngw,i+1)=c3(1:ngw)
           if (ng0.eq.2) then
-            hpsi(1,  i)=cmplx(real(hpsi(1,  i)))
-            hpsi(1,i+1)=cmplx(real(hpsi(1,i+1)))
+            hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0)
+            hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0)
           end if
         enddo
 
@@ -303,10 +303,10 @@
         !                     do j=i,n
         !                        lambda(i,j)=0.d0
         !                        do ig=1,ngw
-        !                           lambda(i,j)=lambda(i,j)-2.d0*real(conjg(c0(ig,i,1,1))*hpsi(ig,j))
+        !                           lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*hpsi(ig,j))
         !                        enddo
         !                        if(ng0.eq.2) then
-        !                           lambda(i,j)=lambda(i,j)+real(conjg(c0(1,i,1,1))*hpsi(1,j))
+        !                           lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*hpsi(1,j))
         !                        endif
         !                        lambda(j,i)=lambda(i,j)
         !                     enddo
@@ -336,10 +336,10 @@
               do j=1,n
                  lambda(i,j)=0.d0
                  do ig=1,ngw
-                    lambda(i,j)=lambda(i,j)-2.d0*real(conjg(c0(ig,i,1,1))*gi(ig,j))
+                    lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*gi(ig,j))
                  enddo
                  if(ng0.eq.2) then
-                    lambda(i,j)=lambda(i,j)+real(conjg(c0(1,i,1,1))*gi(1,j))
+                    lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*gi(1,j))
                  endif
               enddo
             enddo
@@ -397,10 +397,10 @@
             call calbec(1,nsp,eigr,gi,becm)
             do i=1,n        
               do ig=1,ngw
-                gamma=gamma+2*real(conjg(gi(ig,i))*gi(ig,i))
+                gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,i))
               enddo
               if (ng0.eq.2) then
-                gamma=gamma-real(conjg(gi(1,i))*gi(1,i))
+                gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,i))
               endif
             enddo
             call mp_sum(gamma)
@@ -424,10 +424,10 @@
             do i=1,n        
                do j=1,n
                   do ig=1,ngw
-                     gamma=gamma+2*real(conjg(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
+                     gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
                   enddo
                   if (ng0.eq.2) then
-                     gamma=gamma-real(conjg(gi(1,i))*gi(1,j))*fmat0(j,i,1)
+                     gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,j))*fmat0(j,i,1)
                   endif
                enddo
             enddo
@@ -450,10 +450,10 @@
             call calbec(1,nsp,eigr,gi,becm)
             do i=1,n        
                do ig=1,ngw
-                  gamma=gamma+2*real(conjg(gi(ig,i))*gi(ig,i))
+                  gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,i))
                enddo
                if (ng0.eq.2) then
-                  gamma=gamma-real(conjg(gi(1,i))*gi(1,i))
+                  gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,i))
                endif
             enddo
                 
@@ -478,10 +478,10 @@
             do i=1,n        
               do j=1,n
                 do ig=1,ngw
-                  gamma=gamma+2*real(conjg(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
+                  gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
                 enddo
                 if (ng0.eq.2) then
-                  gamma=gamma-real(conjg(gi(1,i))*gi(1,j))*fmat0(j,i,1)
+                  gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,j))*fmat0(j,i,1)
                 endif
               enddo
             enddo
@@ -514,10 +514,10 @@
         if(.not.tens) then
           do i=1,n               
             do ig=1,ngw
-              dene0=dene0-4.d0*real(conjg(hi(ig,i))*hpsi(ig,i))!ATTENZION iera gi
+              dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,i))!ATTENZION iera gi
             enddo
             if (ng0.eq.2) then
-              dene0=dene0+2.d0*real(conjg(hi(1,i))*hpsi(1,i))!ATTENZION iera gi
+              dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi(1,i))!ATTENZION iera gi
             endif
           end do
         else
@@ -527,13 +527,13 @@
           do i=1,n
             do j=1,n
               do ig=1,ngw
-                dene0=dene0-2.d0*real(conjg(hi(ig,i))*hpsi(ig,j))*fmat0(j,i,1)
+                dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,j))*fmat0(j,i,1)
                 !ATTENZIONE solo caso nspin=1!!!!!
-                dene0=dene0-2.d0*real(conjg(hpsi(ig,i))*hi(ig,j))*fmat0(j,i,1)
+                dene0=dene0-2.d0*DBLE(CONJG(hpsi(ig,i))*hi(ig,j))*fmat0(j,i,1)
               enddo
               if (ng0.eq.2) then
-                dene0=dene0+real(conjg(hi(1,i))*hpsi(1,j))*fmat0(j,i,1)
-                dene0=dene0+real(conjg(hpsi(1,i))*hi(1,j))*fmat0(j,i,1)
+                dene0=dene0+DBLE(CONJG(hi(1,i))*hpsi(1,j))*fmat0(j,i,1)
+                dene0=dene0+DBLE(CONJG(hpsi(1,i))*hi(1,j))*fmat0(j,i,1)
               end if
             enddo
           enddo
@@ -614,7 +614,7 @@
 
         cm(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passo*hi(1:ngw,1:n)
         if(ng0.eq.2) then
-          cm(1,:,1,1)=0.5d0*(cm(1,:,1,1)+conjg(cm(1,:,1,1)))
+          cm(1,:,1,1)=0.5d0*(cm(1,:,1,1)+CONJG(cm(1,:,1,1)))
         endif
 
         !               call ordina(cm,e0)               
@@ -811,11 +811,11 @@
                   c0hc0(k,i,is)=0.d0
                   do ig=1,ngw
                     c0hc0(k,i,is)=c0hc0(k,i,is)- &
-                 &   2.0*real(conjg(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
+                 &   2.0*DBLE(CONJG(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
                   enddo
                   if (ng0.eq.2) then
                     c0hc0(k,i,is)=c0hc0(k,i,is)+&
-                 &   real(conjg(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
+                 &   DBLE(CONJG(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
                   endif
                 end do
               end do
@@ -897,8 +897,8 @@
             !     initialization when xmin is determined by sampling 
             do il=1,1
               !     this loop is useful to check that the sampling is correct
-              !x=0.1*real(il)
-              x=1.*real(il)
+              !x=0.1*DBLE(il)
+              x=1.*DBLE(il)
               do is=1,nspin
                 nss=nupdwn(is)
                 fmatx(1:nss,1:nss,is)=fmat0(1:nss,1:nss,is)+x*dfmat(1:nss,1:nss,is)
@@ -989,11 +989,11 @@
                   c0hc0(k,i,is)=0.d0
                   do ig=1,ngw
                     c0hc0(k,i,is)=c0hc0(k,i,is)-&
-                    2.0*real(conjg(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
+                    2.0*DBLE(CONJG(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
                   enddo
                   if (ng0.eq.2) then
                     c0hc0(k,i,is)=c0hc0(k,i,is)+&
-                    real(conjg(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
+                    DBLE(CONJG(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
                   endif
                 end do
               end do
@@ -1063,7 +1063,7 @@
                    
             do il=0,2000
                       
-              x=0.0005*real(il)     
+              x=0.0005*DBLE(il)     
               entropy2=0.0
                       
               do is=1,nspin
@@ -1164,9 +1164,9 @@
  !            do j=1,n
  !               add=0.d0
  !                 do ig=1,ngw
- !                add = add + 2*real(conjg(c0diag(ig,i))*c0diag(ig,j))
+ !                add = add + 2*DBLE(CONJG(c0diag(ig,i))*c0diag(ig,j))
  !                 enddo
- !              add = add - real(conjg(c0diag(1,i))*c0diag(1,j))
+ !              add = add - DBLE(CONJG(c0diag(1,i))*c0diag(1,j))
  !               write(*,*) 'Conrollo c0diag', i,j, add
  !            enddo
  !         enddo
@@ -1247,18 +1247,18 @@
             gi(ig,i+1)=c3(ig)
           end do
           if (ng0.eq.2) then
-            gi(1,  i)=cmplx(real(gi(1,  i)))
-            gi(1,i+1)=cmplx(real(gi(1,i+1)))
+            gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0)
+            gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0)
           end if
         enddo
         do i=1,n
           do j=i,n
             lambda(i,j)=0.d0
             do ig=1,ngw
-              lambda(i,j)=lambda(i,j)-2.d0*real(conjg(c0(ig,i,1,1))*gi(ig,j))
+              lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*gi(ig,j))
             enddo
             if(ng0.eq.2) then
-              lambda(i,j)=lambda(i,j)+real(conjg(c0(1,i,1,1))*gi(1,j))
+              lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*gi(1,j))
             endif
             lambda(j,i)=lambda(i,j)
           enddo

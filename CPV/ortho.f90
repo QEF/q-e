@@ -834,8 +834,8 @@
           DO I=1,N        
             X1(I,J) = SIG(I,J) - BLAM(I,J) - CLAM(I,J)
             X1(I,J) = X1(I,J) / ( RHOD(I)+RHOD(J) ) ! +SIGD(I)+SIGD(J))
-            difgam=max(abs(REAL(X1(I,J))-REAL(X0(I,J))),difgam)
-            difgam=max(abs(aimag(X1(I,J))-aimag(X0(I,J))),difgam)
+            difgam=max(abs( DBLE(X1(I,J))- DBLE(X0(I,J))),difgam)
+            difgam=max(abs(AIMAG(X1(I,J))-AIMAG(X0(I,J))),difgam)
           ENDDO
         ENDDO      
 

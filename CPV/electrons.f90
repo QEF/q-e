@@ -8,7 +8,7 @@
 !=----------------------------------------------------------------------------=!
   MODULE electrons_module
 !=----------------------------------------------------------------------------=!
-
+#include "f_defs.h"
         USE kinds
         USE parameters,         ONLY: nspinx
         USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
@@ -373,7 +373,7 @@
                 IF ( gamma_symmetry ) THEN
                   ei(i) = gam(ib_local(i),i) / ftmp(i)
                 ELSE
-                  ei(i) = REAL(cgam(ib_local(i),i)) / ftmp(i)
+                  ei(i) = DBLE(cgam(ib_local(i),i)) / ftmp(i)
                 END IF
               END IF
             END DO
@@ -447,7 +447,7 @@
           nrl = SIZE(cgam, 1)
           n   = SIZE(cgam, 2)
           IF( PRESENT( caux ) ) THEN
-            caux = CMPLX(0.0d0)
+            caux = CMPLX(0.0d0, 0.d0)
             IF( mpime < n ) THEN
               DO i = 1, n
                 j = mpime + 1

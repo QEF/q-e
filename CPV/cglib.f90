@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#include "f_defs.h"
 !-------------------------------------------------------------------------
       subroutine calphiid(c0,bec,betae,phi)
 !-----------------------------------------------------------------------
@@ -15,7 +15,6 @@
 !     where s'=s(r(t))  
 !
 !ATTENZION no  usa el preconditioning
-
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
@@ -69,7 +68,7 @@
          do j=1,n
             do i=1,ngw
                emtot=emtot                                              &
-     &        +2.*real(phi(i,j)*conjg(c0(i,j)))
+     &        +2.*DBLE(phi(i,j)*CONJG(c0(i,j)))
             end do
          end do
          emtot=emtot/n
@@ -135,7 +134,7 @@
 !-----------------------------------------------------------------------
       subroutine rotate(z0,c0,bec,c0diag,becdiag)
 !-----------------------------------------------------------------------
-
+      use kinds, only: dp
       use cvan
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
       use uspp_param, only: nh
@@ -158,7 +157,7 @@
 !          do nj=1,nss
 !           do j=1,ngw
 !            c0diag(j,ni+istart-1)=c0diag(j,ni+istart-1)+                &
-!     &           cmplx(z0(ni,nj,iss),0.0)*c0(j,nj+istart-1)
+!     &           CMPLX(z0(ni,nj,iss),0.0)*c0(j,nj+istart-1)
 !           end do
 !          end do
 !         end do
@@ -176,7 +175,7 @@
              becdiag(jnl,ni+istart-1)=0.0
              do nj=1,nss
               becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
-     &        cmplx(z0(ni,nj,iss),0.0)*bec(jnl,nj+istart-1)
+     &        CMPLX(z0(ni,nj,iss),0.d0)*bec(jnl,nj+istart-1)
              end do
            end do
           end do
@@ -327,13 +326,13 @@ subroutine pc2(a,beca,b,becb)
          do j=1,n
             sca=0.
             if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
             do  ig=1,ngw           !loop on g vectors
-               sca=sca+2.d0*real(conjg(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+               sca=sca+2.d0*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real wavefunctions
             enddo
             if (ng0.eq.2) then
-               sca=sca-real(conjg(a(1,j))*b(1,i))
+               sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
             endif
 
             call mp_sum( sca )
@@ -358,7 +357,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
             ! this to prevent numerical errors
             if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
          enddo
 
@@ -400,13 +399,13 @@ subroutine pcdaga2(a,as ,b )
          do j=1,n
             sca=0.
             if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
             do  ig=1,ngw           !loop on g vectors
-               sca=sca+2.*real(conjg(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+               sca=sca+2.*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real weavefunctions
             enddo
             if (ng0.eq.2) then
-               sca=sca-real(conjg(a(1,j))*b(1,i))
+               sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
             endif
             call mp_sum(sca)
             do ig=1,ngw
@@ -414,7 +413,7 @@ subroutine pcdaga2(a,as ,b )
             enddo
             ! this to prevent numerical errors
             if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+conjg(b(1,i)))
+               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
          enddo
       enddo

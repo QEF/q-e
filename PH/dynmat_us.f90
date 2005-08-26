@@ -60,7 +60,7 @@ SUBROUTINE dynmat_us()
   !
   rhog (:) = (0.d0, 0.d0)
   DO is = 1, nspin
-     rhog (:) = rhog (:) + DCMPLX (rho (:, is), 0.d0)
+     rhog (:) = rhog (:) + CMPLX (rho (:, is), 0.d0)
   ENDDO
 
   CALL cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -77,8 +77,8 @@ SUBROUTINE dynmat_us()
                             g (2, ng) * tau (2, na) + &
                             g (3, ng) * tau (3, na) )
               fac = omega * vloc (igtongl (ng), ityp (na) ) * tpiba2 * &
-                   (DREAL (rhog (nl (ng) ) ) * COS (gtau) - &
-                    DIMAG (rhog (nl (ng) ) ) * SIN (gtau) )
+                   ( DBLE (rhog (nl (ng) ) ) * COS (gtau) - &
+                    AIMAG (rhog (nl (ng) ) ) * SIN (gtau) )
               dynwrk (na_icart, na_jcart) = dynwrk (na_icart, na_jcart) - &
                    fac * g (icart, ng) * g (jcart, ng)
            ENDDO

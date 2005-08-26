@@ -82,8 +82,8 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                           do ipol = 1, 3
                              mu = 3 * (na - 1) + ipol
                              ps1(ibnd,jbnd) = ps1(ibnd,jbnd) - qq(ih,jh,nt) * &
-                      ( alphap(ikb,ibnd,ipol,ik) * conjg(becq(jkb,jbnd,ik)) + &
-                        becp1(ikb,ibnd,ik) * conjg(alpq(jkb,jbnd,ipol,ik)) ) * &
+                      ( alphap(ikb,ibnd,ipol,ik) * CONJG(becq(jkb,jbnd,ik)) + &
+                        becp1(ikb,ibnd,ik) * CONJG(alpq(jkb,jbnd,ipol,ik)) ) * &
                         wgg (ibnd, jbnd, ik) * u (mu, mode)
                           enddo
                        enddo
@@ -110,7 +110,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
      call cft3s (dpsir, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
-        drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * conjg(evcr(ir,ibnd))
+        drhoscf(ir) = drhoscf(ir) + wgt * dpsir(ir) * CONJG(evcr(ir,ibnd))
      enddo
   enddo
 

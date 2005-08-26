@@ -1287,7 +1287,7 @@ function allowed (nr)
   pwr = 0
   factors_loop: do i = 1, 5
      fac = factors (i)
-     maxpwr = NINT ( LOG( REAL (mr) ) / LOG( REAL (fac) ) ) + 1
+     maxpwr = NINT ( LOG( DBLE (mr) ) / LOG( DBLE (fac) ) ) + 1
      do p = 1, maxpwr
         if ( mr == 1 ) EXIT factors_loop
         if ( MOD (mr, fac) == 0 ) then

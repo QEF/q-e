@@ -448,7 +448,7 @@
         ioff = ib_s - 1
         DO j = 1, n
           DO i = 1, nb
-            auxa( ibuf + i ) = DCONJG( a( j, i + ioff ) )
+            auxa( ibuf + i ) = CONJG( a( j, i + ioff ) )
           END DO
           ibuf = ibuf + ldx
         END DO
@@ -1670,8 +1670,8 @@
       EXTERNAL           DLAMCH, DLAPY3, DZNRM2, ZLADIV
 !     ..
 !     .. Intrinsic Functions ..
-      INTRINSIC          DABS, REAL, DCMPLX, AIMAG, SIGN
-
+      INTRINSIC          DABS, DBLE, AIMAG, SIGN
+!     cmplx removed because preprocessed
 !
 !     .. Executable Statements ..
 !
@@ -1695,7 +1695,7 @@
 !        Reduce the lower triangle of A. 
 !
          IF (OW(1).EQ.ME) THEN
-           AP( IL(1), 1 ) = REAL( AP( IL(1), 1 ) )
+           AP( IL(1), 1 ) = DBLE( AP( IL(1), 1 ) )
          END IF                                                             
 
          DO I = 1, N - 1
@@ -1737,7 +1737,7 @@
                 XNORM = 0.0D0
               ENDIF
 
-              ALPHR = REAL( ALPHA )
+              ALPHR = DBLE( ALPHA )
               ALPHI = AIMAG( ALPHA )
               IF( XNORM.EQ.RZERO .AND. ALPHI.EQ.RZERO ) THEN
                 TAUI = RZERO
@@ -1773,10 +1773,10 @@
                     XNORM = 0.0D0
                   ENDIF
 
-                  ALPHA = DCMPLX( ALPHR, ALPHI )
+                  ALPHA = CMPLX( ALPHR, ALPHI )
                   BETA = -SIGN( DLAPY3( ALPHR, ALPHI, XNORM ), ALPHR )
-                  TAUI = DCMPLX( ( BETA-ALPHR ) / BETA, -ALPHI / BETA)
-                  ALPHA = ZLADIV( DCMPLX( ONE ), ALPHA-BETA )
+                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA )
+                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
 
                   IF(NI1.GT.0) THEN
                     CALL ZSCAL( NI1, ALPHA, AP( I2, I ), 1 )
@@ -1789,8 +1789,8 @@
 
                 ELSE
 
-                  TAUI = DCMPLX( ( BETA-ALPHR ) / BETA, -ALPHI / BETA)
-                  ALPHA = ZLADIV( DCMPLX( RONE ), ALPHA-BETA )
+                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA )
+                  ALPHA = ZLADIV( ONE, ALPHA-BETA )
 
                   IF(NI1.GT.0) THEN
                     CALL ZSCAL( NI1, ALPHA, AP( I2, I ), 1 )
@@ -1961,7 +1961,7 @@
               AP(IL(I+1),I) = E( I )
             END IF
             IF(OW(I).EQ.ME) THEN
-              D( I ) = REAL(AP( IL(I),I ))
+              D( I ) = DBLE(AP( IL(I),I ))
             END IF
 #if defined __PARA
 #  if defined __MPI
@@ -1971,7 +1971,7 @@
             TAU( I ) = TAUI
          END DO
          IF(OW(I).EQ.ME) THEN
-            D( N ) = REAL(AP( IL(I),I ))
+            D( N ) = DBLE(AP( IL(I),I ))
          END IF
 #if defined __PARA
 #  if defined __MPI

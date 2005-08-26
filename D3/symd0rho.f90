@@ -37,7 +37,7 @@ subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
      do j = 1, nr2
         do i = 1, nr1
            do ipert = 1, nper
-              d0rho (i, j, k, ipert) = DREAL (d0rho (i, j, k, ipert) )
+              d0rho (i, j, k, ipert) =  DBLE (d0rho (i, j, k, ipert) )
            enddo
         enddo
      enddo
@@ -78,7 +78,7 @@ subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
      enddo
   enddo
 
-  d0rho (:,:,:,:) = aux1 (:,:,:,:) / float (nsymq)
+  d0rho (:,:,:,:) = aux1 (:,:,:,:) / DBLE (nsymq)
 
   deallocate (aux1)
 

@@ -47,13 +47,6 @@ COMMON
 
 - variable declarations : real(kind=DP) or real(dbl), everywhere
 
-- clean up intrinsic functions mess:
-     real, dreal, float, dfloat, dble
-     cmplx, dcmplx
-     conjg, dconjg
-     imag, aimag, dimag
-  plus preprocessing! See Carlo suggestions
-
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds 
   and other very low level modules 

@@ -266,7 +266,7 @@ PROGRAM q2r
               DO na2=1,nat
                  WRITE (2,'(4i4)') j1,j2,na1,na2
                  WRITE (2,'(3i4,2x,1pe18.11)')   &
-                      (((m1,m2,m3,REAL(phid(m1,m2,m3,j1,j2,na1,na2)), &
+                      (((m1,m2,m3, DBLE(phid(m1,m2,m3,j1,j2,na1,na2)), &
                       m1=1,nr1),m2=1,nr2),m3=1,nr3)
               END DO
            END DO

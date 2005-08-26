@@ -301,7 +301,7 @@
                 ELSE
                   DO ia = 1, atoms%na(is)
                     isa = isa+1
-                    tt = REAL( CONJG( dfnl%c(isa,igh,ib) ) * fnl(ik)%c(isa,igh,ib) )
+                    tt = DBLE( CONJG( dfnl%c(isa,igh,ib) ) * fnl(ik)%c(isa,igh,ib) )
                     atoms%for(k,isa) = atoms%for(k,isa) - tt * temp
                   END DO
                 END IF

@@ -90,9 +90,9 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
            enddo
            arg = arg * tpi
            if (isym.eq.nrot.and.minus_q) then
-              fase = DCMPLX (cos (arg), sin (arg) )
+              fase = CMPLX (cos (arg), sin (arg) )
            else
-              fase = DCMPLX (cos (arg), - sin (arg) )
+              fase = CMPLX (cos (arg), - sin (arg) )
            endif
            do ipol = 1, 3
               do jpol = 1, 3
@@ -115,7 +115,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
         sum = (0.d0, 0.d0)
         do na = 1, nat
            do ipol = 1, 3
-              sum = sum + conjg (work_u (ipol, na) ) * work_ru (ipol, na)
+              sum = sum + CONJG(work_u (ipol, na) ) * work_ru (ipol, na)
            enddo
         enddo
         sum = abs (sum)

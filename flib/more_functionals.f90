@@ -1596,7 +1596,7 @@
       elseif (exfact ==-3) then
          dft = 'GL'
       elseif (exfact == 6) then
-	 dft = 'TPSS'
+         dft = 'TPSS'
       else
          call errore ('dftname','unknown exch-corr functional',exfact)
       end if

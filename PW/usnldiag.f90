@@ -51,7 +51,7 @@ subroutine usnldiag (h_diag, s_diag)
               ps1 = deeq (ih, ih, na, current_spin)
               ps2 = qq (ih, ih, nt)
               do ig = 1, npw
-                 ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
+                 ar = vkb (ig, ikb)*CONJG(vkb (ig, ikb))
                  h_diag (ig) = h_diag (ig) + ps1 * ar
                  s_diag (ig) = s_diag (ig) + ps2 * ar
               enddo
@@ -61,7 +61,7 @@ subroutine usnldiag (h_diag, s_diag)
                     ps1 = 2.d0 * deeq (ih, jh, na, current_spin)
                     ps2 = 2.d0 * qq (ih, jh, nt)
                     do ig = 1, npw
-                       ar = vkb (ig, ikb) *conjg( vkb (ig, jkb))
+                       ar = vkb (ig, ikb) *CONJG( vkb (ig, jkb))
                        h_diag (ig) = h_diag (ig) + ps1 * ar
                        s_diag (ig) = s_diag (ig) + ps2 * ar
                     enddo

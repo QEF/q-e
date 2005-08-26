@@ -231,7 +231,7 @@ PROGRAM average
            DO j = 1, nr2
               DO k = 1, nr3
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (i) = funcr (i) + REAL (psic(ir))
+                 funcr (i) = funcr (i) + DBLE (psic(ir))
               ENDDO
            ENDDO
            funcr (i) = funcr (i) / (DBLE (nr2 * nr3))
@@ -243,7 +243,7 @@ PROGRAM average
            DO i = 1, nr1
               DO k = 1, nr3
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (j) = funcr (j) + REAL (psic (ir) )
+                 funcr (j) = funcr (j) + DBLE (psic (ir) )
               ENDDO
            ENDDO
            funcr (j) = funcr (j) / (DBLE (nr1 * nr3) )
@@ -255,7 +255,7 @@ PROGRAM average
            DO j = 1, nr2
               DO i = 1, nr1
                  ir = i + (j - 1) * nrx1 + (k - 1) * nrx1 * nrx2
-                 funcr (k) = funcr (k) + REAL (psic (ir) )
+                 funcr (k) = funcr (k) + DBLE (psic (ir) )
               ENDDO
            ENDDO
            funcr (k) = funcr (k) / (DBLE (nr1 * nr2) )

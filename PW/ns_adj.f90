@@ -47,9 +47,9 @@ subroutine ns_adj
                do m2 = m1, 2 * Hubbard_l(nt) + 1
                   temp = 0.d0
                   do i = 1,2 * Hubbard_l(nt) + 1
-                     temp = temp + conjg(vet(m1,i))*lambda(i)*vet(m2,i)     
+                     temp = temp + CONJG(vet(m1,i))*lambda(i)*vet(m2,i)     
                   end do
-                  nsnew(m1,m2,is,na) = dreal(temp)
+                  nsnew(m1,m2,is,na) =  DBLE(temp)
                   nsnew(m2,m1,is,na) = nsnew(m1,m2,is,na)
                end do
             end do

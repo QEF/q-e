@@ -287,7 +287,7 @@
             IF( gemax_l < ABS( c(iabs,i,ik) ) ) THEN
               gemax_l = ABS( c(iabs,i,ik) )
             END IF
-            cnormk = cnormk + REAL( zdotc( cdesc%ngwl, c(1,i,ik), 1, c(1,i,ik), 1) )
+            cnormk = cnormk + DBLE( zdotc( cdesc%ngwl, c(1,i,ik), 1, c(1,i,ik), 1) )
           END DO
           cnormk = cnormk * weight(ik)
           cnorm = cnorm + cnormk
@@ -350,7 +350,7 @@
       IF( .NOT. PRESENT(ik) ) THEN
         IF(gzero) THEN
           DO i = 1, nsp
-            vp = vp + REAL( sfac(1,i) ) * vps(1,i)
+            vp = vp + DBLE( sfac(1,i) ) * vps(1,i)
           END DO
         END IF
         CALL mp_sum(vp, group)
@@ -398,7 +398,7 @@
         REAL(dbl)   :: eig(:,:,:), efermi, sume, ent, temp, entk, qtot
         INTEGER :: ik, ispin, nel, nb
 
-        qtot = REAL( nel ) 
+        qtot = DBLE( nel ) 
         CALL fermi_energy( eig, occ, wke, efermi, qtot, temp, sume)
 
 ! ...   compute the enthropic correction
@@ -555,10 +555,10 @@
             IF(oqnr_diis ) ff = fm1(k)
             fff=2.0d0*ff*ff*vvpp
             DO i=1,nsize-1
-              rri=REAL(grade(l,k,1,i))
+              rri=DBLE(grade(l,k,1,i))
               rii=AIMAG(grade(l,k,1,i))
               DO j=1,i
-                rrj=REAL(grade(l,k,1,j))
+                rrj=DBLE(grade(l,k,1,j))
                 rij=AIMAG(grade(l,k,1,j))
                 bc(i,j)=bc(i,j)+(rri*rrj+rii*rij)*fff
               END DO
@@ -571,9 +571,9 @@
             IF(oqnr_diis ) ff = fm1(k)
             fff=ff*ff*vpp(1)*vpp(1)
             DO i=1,nsize-1
-              r1=REAL(grade(1,k,1,i))
+              r1=DBLE(grade(1,k,1,i))
               DO j=1,i
-                r2=REAL(grade(1,k,1,j))
+                r2=DBLE(grade(1,k,1,j))
                 bc(i,j)=bc(i,j)+r1*r2*fff
               END DO
             END DO
@@ -895,7 +895,7 @@
           DO ik = 1, cdesc%nkl
             c(:,:,ik) = c(:,:,ik) + var2 * cgrad(:,:,ik)
             IF ( cdesc%gzero ) THEN
-              c(1,:,ik) = CMPLX( REAL( c(1,:,ik) ), 0.d0 )
+              c(1,:,ik) = CMPLX( DBLE( c(1,:,ik) ), 0.d0 )
             END IF
           END DO
           RETURN

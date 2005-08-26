@@ -87,7 +87,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ib = 1, nbnd_occ (ik)
         do ipa = 1, 3
            do ipb = 1, 3
-              tmp = cmplx (0.d0, 0.d0)
+              tmp = CMPLX (0.d0, 0.d0)
               do jb = 1, nbnd_occ (ik)
                  tmp = tmp +                                 &
                    ps3 (ib, ip, jb, ipa) * ps4 (jb, ipb, ib)

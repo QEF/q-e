@@ -53,10 +53,10 @@ hp = 2.d0 * x * exp ( - arg)
 ni = 1
 a = 1.0 / sqrt (pi)
 do i = 1, n
-hd = 2.0d0 * x * hp - 2.0d0 * float (ni) * hd
+hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
 ni = ni + 1
-a = - a / (float (i) * 4.0d0)
-hp = 2.0d0 * x * hd-2.0d0 * float (ni) * hp
+a = - a / (DBLE (i) * 4.0d0)
+hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
 ni = ni + 1
 w_1gauss = w_1gauss - a * hp
 enddo

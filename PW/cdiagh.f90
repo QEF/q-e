@@ -135,7 +135,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       REAL(KIND=DP) :: rwork(2,ldh), work(ldh)
       !
       !
-      ar = REAL( h )
+      ar =  DBLE( h )
       ai = AIMAG( h )
       !
       CALL ch( ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info )

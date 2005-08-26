@@ -251,7 +251,7 @@
             !
             do iss = 1, nspin
              do i = iupdwn ( iss ), iupdwn ( iss ) - 1 + nupdwn ( iss )
-                f (i) =  nel (iss) / real (nupdwn (iss))
+                f (i) =  nel (iss) / DBLE (nupdwn (iss))
              end do
             end do
             !

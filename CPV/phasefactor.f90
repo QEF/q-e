@@ -60,7 +60,7 @@
  
 !  END manual
 
-          USE kinds,           ONLY: dbl
+          USE kinds,           ONLY: dbl, DP
           USE constants,       ONLY: tpi
 
           ! ...     declare subroutine arguments
@@ -178,7 +178,7 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE kinds,            ONLY: dbl
+      USE kinds,            ONLY: dbl, DP
       USE ions_base,        ONLY: nat, na, nsp
       use grid_dimensions,  only: nr1, nr2, nr3
 

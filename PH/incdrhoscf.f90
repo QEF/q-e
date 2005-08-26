@@ -74,7 +74,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
 
      call cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
-        drhoscf (ir) = drhoscf (ir) + wgt * conjg (psi (ir) ) * dpsic (ir)
+        drhoscf (ir) = drhoscf (ir) + wgt * CONJG(psi (ir) ) * dpsic (ir)
      enddo
   enddo
 

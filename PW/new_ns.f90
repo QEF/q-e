@@ -117,7 +117,7 @@ SUBROUTINE new_ns()
               DO m2 = m1, 2 * Hubbard_l(nt) + 1
                  DO ibnd = 1, nbnd  
                     nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) + &
-                         wg(ibnd,ik) * DREAL( proj(offset(na)+m2,ibnd) * &
+                         wg(ibnd,ik) *  DBLE( proj(offset(na)+m2,ibnd) * &
                          CONJG(proj(offset(na)+m1,ibnd)) )
                  ENDDO
               ENDDO

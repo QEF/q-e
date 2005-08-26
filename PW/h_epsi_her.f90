@@ -1,4 +1,12 @@
+!
+! Copyright (C) 2005 Paolo Umari
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 
+#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   !-----------------------------------------------------------------------
@@ -227,9 +235,9 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 
 ! !  --- Find vector along strings ---
     if(nppstr .ne. 1) then
-      gpar(1)=(xk(1,nppstr)-xk(1,1))*real(nppstr)/real(nppstr-1)
-      gpar(2)=(xk(2,nppstr)-xk(2,1))*real(nppstr)/real(nppstr-1)
-      gpar(3)=(xk(3,nppstr)-xk(3,1))*real(nppstr)/real(nppstr-1)
+      gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
+      gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
+      gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(:)=gpar(:)!/at(gdir,gdir)!cella ortorombica!ATTENZIONE
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
@@ -248,7 +256,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
       dk(2)=xk(2,2)-xk(2,1) 
       dk(3)=xk(3,2)-xk(3,1)
       dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!cella ortorombica
-!      dkmod=tpiba/at(gdir,gdir)/real(nppstr)
+!      dkmod=tpiba/at(gdir,gdir)/DBLE(nppstr)
    else!caso punto gamma, per adesso solo cella cubica
       dk(1)=0.
       dk(2)=0.
@@ -262,15 +270,15 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 
 !calcola fattore fact
 !la carica elettronica e' 2. (unita' Rydberg)
-!i fattori sono (-i)/2 aimag;  2 carica rydberg; campo ele; 2pi/L   
+!i fattori sono (-i)/2 AIMAG;  2 carica rydberg; campo ele; 2pi/L   
 !ho eliminato la multiplicita' di  spin
 !ATTENZIONE in fact va diviso per L:
    if(nspin == 1) then
-      fact=cmplx(0.,-1.)*efield*(2.)/2./dkmod
-!      fact=cmplx(0.,-1.)*efield*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
+      fact=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
+!      fact=CMPLX(0.,-1.)*efield*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
    else
-     fact=cmplx(0.,-1.)*efield*(2.)/2./dkmod/real(nspin)
-!      fact=cmplx(0.,-1.)*efield*nspin*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
+     fact=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
+!      fact=CMPLX(0.,-1.)*efield*nspin*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
    endif
 
 !ATTENZIONE :: solo cella cubica e punti kappa CUBICI!!!!!!!!!!!!!!
@@ -448,8 +456,8 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                      nhjkbm = nh(np)
                      jkb1 = jkb - nhjkb
                      DO j = 1,nhjkbm
-                        pref = pref+conjg(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
-                     &        *q_dkp(nhjkb,j,np)*conjg(struc(na))
+                        pref = pref+CONJG(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
+                     &        *q_dkp(nhjkb,j,np)*CONJG(struc(na))
                      ENDDO
                   ENDDO
                   mat(nb,mb) = mat(nb,mb) + pref
@@ -503,7 +511,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                         do ih = 1, nh (nt)
                            ikb = ijkb0 + ih
                            ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                                q_dkp(ih,jh,ityp(na))*conjg(struc(na))* becp0(jkb,ibnd)
+                                q_dkp(ih,jh,ityp(na))*CONJG(struc(na))* becp0(jkb,ibnd)
                         enddo
                      enddo
                   enddo
@@ -656,8 +664,8 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                      nhjkbm = nh(np)
                      jkb1 = jkb - nhjkb
                      DO j = 1,nhjkbm
-                        pref = pref+conjg(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
-                             *q_dkp(nhjkb,j,np)*conjg(struc(na))
+                        pref = pref+CONJG(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
+                             *q_dkp(nhjkb,j,np)*CONJG(struc(na))
                      ENDDO
                   ENDDO
                   mat(nb,mb) = mat(nb,mb) + pref
@@ -711,7 +719,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                         do ih = 1, nh (nt)
                            ikb = ijkb0 + ih
                            ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                                q_dkp(ih,jh,ityp(na))*conjg(struc(na))* becp0(jkb,ibnd)
+                                q_dkp(ih,jh,ityp(na))*CONJG(struc(na))* becp0(jkb,ibnd)
                         enddo
                      enddo
                   enddo
@@ -833,7 +841,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                      nhjkbm = nh(np)
                      jkb1 = jkb - nhjkb
                      DO j = 1,nhjkbm
-                        pref = pref+conjg(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
+                        pref = pref+CONJG(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
                              *q_dk(nhjkb,j,np)*struc(na)
                      ENDDO
                   ENDDO
@@ -1034,7 +1042,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                      nhjkbm = nh(np)
                      jkb1 = jkb - nhjkb
                      DO j = 1,nhjkbm
-                        pref = pref+conjg(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
+                        pref = pref+CONJG(becp_bp(jkb,nb))*becp0(jkb1+j,mb) &
                              *q_dk(nhjkb,j,np)*struc(na)
                      ENDDO
                   ENDDO
@@ -1187,7 +1195,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                nhjkbm = nh(np)
                jkb1 = jkb - nhjkb
                DO j = 1,nhjkbm
-                  pref = pref+conjg(becp_bp(jkb,mb))*becp0(jkb1+j,nb) &!ACHTUNG in becp_bp fattori relativi a ik
+                  pref = pref+CONJG(becp_bp(jkb,mb))*becp0(jkb1+j,nb) &!ACHTUNG in becp_bp fattori relativi a ik
                        *qqq(nhjkb,j,np)
                ENDDO
             ENDDO
@@ -1209,7 +1217,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             
             do ig=1,npw1
                hpsi(ig,nb) = hpsi(ig,nb) + &
-                    &     conjg(fact)*evcel(ig,mb)*(sca-sca1)
+                    &     CONJG(fact)*evcel(ig,mb)*(sca-sca1)
             enddo
          enddo
       
@@ -1250,7 +1258,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             call reduce(2,sca1)
             do ig=1,npw1
                hpsi(ig,nb) = hpsi(ig,nb) + &
-                    &     conjg(fact)*evct(ig,mb)*(sca-sca1)
+                    &     CONJG(fact)*evct(ig,mb)*(sca-sca1)
             enddo
          enddo
       endif

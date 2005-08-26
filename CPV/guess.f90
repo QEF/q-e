@@ -363,8 +363,8 @@
         DO j=1,ngw
           jp1 = j + j - 1
           jp2 = j + j
-          tmp(i,jp1) = real(a(j,i))
-          tmp(i,jp2) = aimag(a(j,i))
+          tmp(i,jp1) =  DBLE(a(j,i))
+          tmp(i,jp2) = AIMAG(a(j,i))
         END DO
       END DO
 

@@ -137,7 +137,7 @@ subroutine read_ncpp(iunps)
   allocate(rab_(mesh_))
 
   do ir = 1, mesh_
-     x = xmin + float(ir-1) * dx
+     x = xmin + DBLE(ir-1) * dx
      r_  (ir) = exp(x) / zmesh
      rab_(ir) = dx * r_(ir)
   end do

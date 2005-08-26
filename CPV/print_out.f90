@@ -549,7 +549,7 @@
       END IF
 
       IF ( texit ) THEN
-        IF( index > 0 ) timeav  = timesum / REAL( MAX( index, 1 ) )
+        IF( index > 0 ) timeav  = timesum / DBLE( MAX( index, 1 ) )
         IF (ionode) THEN
           WRITE( stdout,*)
           WRITE( stdout, fmt='(3X,"Execution time statistics (SEC)")')
@@ -669,8 +669,8 @@
          CALL printrho(nfi, rhoe, desc, atoms, ht)
       END IF
 
-      avgs     = avgs     / REAL( nfi )
-      avgs_run = avgs_run / REAL( nstep_run )
+      avgs     = avgs     / DBLE( nfi )
+      avgs_run = avgs_run / DBLE( nstep_run )
 
       IF( ionode ) THEN
         WRITE( stdout,1949)

@@ -86,8 +86,8 @@ subroutine force_corr (forcescc)
                    + g (3, ig) * tau (3, na) ) * tpi
               do ipol = 1, 3
                  forcescc (ipol, na) = forcescc (ipol, na) + fact * &
-                      rhocgnt (igtongl(ig) ) * DCMPLX(sin(arg),cos(arg)) * &
-                      g(ipol,ig) * tpiba * conjg(psic(nl(ig)))
+                      rhocgnt (igtongl(ig) ) * CMPLX(sin(arg),cos(arg)) * &
+                      g(ipol,ig) * tpiba * CONJG(psic(nl(ig)))
               enddo
            enddo
         endif

@@ -116,8 +116,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                        ikb = ijkb0 + ih
                        do jbnd = startb, lastb
                           aux1 (jbnd) = aux1 (jbnd) + &
-                               conjg(alpq(ikb,jbnd,ipol,ik)) * ps1(ikb,ibnd)+&
-                               conjg(becq(ikb,jbnd,ik)) * ps2(ikb,ibnd,ipol)
+                               CONJG(alpq(ikb,jbnd,ipol,ik)) * ps1(ikb,ibnd)+&
+                               CONJG(becq(ikb,jbnd,ik)) * ps2(ikb,ibnd,ipol)
                        enddo
                     enddo
                     ijkb0b = 0
@@ -134,7 +134,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                 enddo
                                 do jbnd = startb, lastb
                                    aux1 (jbnd) = aux1 (jbnd) + &
-                                        ps * conjg (becq (ikb, jbnd, ik))
+                                        ps * CONJG(becq (ikb, jbnd, ik))
                                 enddo
                              enddo
                              ijkb0b = ijkb0b + nh (ntb)
@@ -156,9 +156,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                    do jbnd = startb, lastb
                                       aux2 (jbnd) = aux2 (jbnd) + &
                                            wgg (ibnd, jbnd, ik) * &
-                                           (conjg(alphap(ikb,ibnd,jpol,ik)) * &
+                                           (CONJG(alphap(ikb,ibnd,jpol,ik)) * &
                                             ps3 (ikb, jbnd) + &
-                                            conjg(becp1 (ikb, ibnd, ik) ) * &
+                                            CONJG(becp1 (ikb, ibnd, ik) ) * &
                                             ps4 (ikb, jbnd, jpol) )
                                    enddo
                                 enddo
@@ -186,7 +186,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
         ps = (0.0d0, 0.0d0)
         do na_jcart = 1, 3 * nat
            do na_icart = 1, 3 * nat
-              ps = ps + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
+              ps = ps + CONJG(u (na_icart, nu_i) ) * dynwrk (na_icart, &
                    na_jcart) * u (na_jcart, nu_j)
            enddo
         enddo

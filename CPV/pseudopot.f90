@@ -339,10 +339,10 @@ CONTAINS
       xgmax = tpiba * SQRT( MAXVAL( g ) )
       CALL mp_max(xgmax, group)
       xgmax = xgmax + (xgmax-xgmin)
-      dxg   = (xgmax - xgmin) / REAL(nval-1)
+      dxg   = (xgmax - xgmin) / DBLE(nval-1)
       !
       DO ig = 1, SIZE( xgtab )
-         xgtab(ig) = xgmin + REAL(ig-1) * dxg
+         xgtab(ig) = xgmin + DBLE(ig-1) * dxg
       END DO
       !
       xgtabmax = xgtab( SIZE( xgtab ) )
@@ -1014,7 +1014,7 @@ CONTAINS
             do ig = 1, ngw
                gg = g( ig ) * tpiba * tpiba / refg
                jj = int( gg ) + 1
-               betagl = betagx( jj+1, iv, is ) * ( gg - real(jj-1) ) + betagx( jj, iv, is ) * ( real(jj) - gg )
+               betagl = betagx( jj+1, iv, is ) * ( gg - DBLE(jj-1) ) + betagx( jj, iv, is ) * ( DBLE(jj) - gg )
                beta( ig, iv, is ) = c * ylm( ig, lp ) * betagl
             end do
          end do
@@ -1043,10 +1043,10 @@ CONTAINS
                do ig=gstart,ngw
                   gg=g(ig)*tpiba*tpiba/refg
                   jj=int(gg)+1
-                  betagl = betagx(jj+1,iv,is)*(gg-real(jj-1)) +         &
-     &                     betagx(jj,iv,is)*(real(jj)-gg)
-                  dbetagl= dbetagx(jj+1,iv,is)*(gg-real(jj-1)) +        &
-     &                     dbetagx(jj,iv,is)*(real(jj)-gg)
+                  betagl = betagx(jj+1,iv,is)*(gg-DBLE(jj-1)) +         &
+     &                     betagx(jj,iv,is)*(DBLE(jj)-gg)
+                  dbetagl= dbetagx(jj+1,iv,is)*(gg-DBLE(jj-1)) +        &
+     &                     dbetagx(jj,iv,is)*(DBLE(jj)-gg)
                   do i=1,3
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
@@ -1135,8 +1135,8 @@ CONTAINS
                         qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
                      else
                         qradb(ig,iv,jv,l,is)=                           &
-     &                       c*qradx(jj+1,iv,jv,l,is)*(gg-real(jj-1))+  &
-     &                       c*qradx(jj,iv,jv,l,is)*(real(jj)-gg)
+     &                       c*qradx(jj+1,iv,jv,l,is)*(gg-DBLE(jj-1))+  &
+     &                       c*qradx(jj,iv,jv,l,is)*(DBLE(jj)-gg)
                         qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
                      endif
                   enddo
@@ -1158,7 +1158,7 @@ CONTAINS
                ijv=ijv+1
                call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
 !
-               qq(iv,jv,is)=omegab*real(qgb(1,ijv,is))
+               qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
                qq(jv,iv,is)=qq(iv,jv,is)
 !
             end do
@@ -1189,8 +1189,8 @@ CONTAINS
                            dqradb(ig,iv,jv,l,is) = 0.
                         else
                            dqradb(ig,iv,jv,l,is) =                      &
-     &                       dqradx(jj+1,iv,jv,l,is)*(gg-real(jj-1))+   &
-     &                       dqradx(jj,iv,jv,l,is)*(real(jj)-gg)
+     &                       dqradx(jj+1,iv,jv,l,is)*(gg-DBLE(jj-1))+   &
+     &                       dqradx(jj,iv,jv,l,is)*(DBLE(jj)-gg)
                         endif
                      enddo
                      do i=1,3

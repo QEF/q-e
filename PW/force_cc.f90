@@ -99,8 +99,8 @@ subroutine force_cc (forcecc)
                       + g (3, ig) * tau (3, na) ) * tpi
                  do ipol = 1, 3
                     forcecc (ipol, na) = forcecc (ipol, na) + tpiba * omega * &
-                         rhocg (igtongl (ig) ) * conjg (psic (nl (ig) ) ) * &
-                         DCMPLX ( sin (arg), cos (arg) ) * g (ipol, ig) * fact
+                         rhocg (igtongl (ig) ) * CONJG(psic (nl (ig) ) ) * &
+                         CMPLX ( sin (arg), cos (arg) ) * g (ipol, ig) * fact
                  enddo
               enddo
            endif

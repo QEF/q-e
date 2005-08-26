@@ -62,7 +62,7 @@ subroutine write_ns
            WRITE( stdout,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,ldim)
            WRITE( stdout,*) 'eigenvectors'
            do m2 = 1, ldim
-              WRITE( stdout,'(i2,2x,7(f10.7,1x))') m2,(dreal(vet(m1,m2)),m1=1,ldim)
+              WRITE( stdout,'(i2,2x,7(f10.7,1x))') m2,( DBLE(vet(m1,m2)),m1=1,ldim)
            end do
            WRITE( stdout,*) 'occupations'
            do m1 = 1, ldim

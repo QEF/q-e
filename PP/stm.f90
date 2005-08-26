@@ -258,10 +258,10 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
                        !
                        !     works for the z axis orthogonal to the xy plane
                        !
-                       x = at (1,1) * real (irx-1) / nr1 + at (1,2) * &
-                            real (iry-1) / nr2
-                       y = at (2,1) * real (irx-1) / nr1 + at (2,2) * &
-                            real (iry-1) / nr2
+                       x = at (1,1) * DBLE (irx-1) / nr1 + at (1,2) * &
+                            DBLE (iry-1) / nr2
+                       y = at (2,1) * DBLE (irx-1) / nr1 + at (2,2) * &
+                            DBLE (iry-1) / nr2
                        !
                        !     psi is the wfc in the plane xy at height zz
                        !
@@ -282,7 +282,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
                  do irx = 1, nr1
                     ir = irx + (iry - 1) * nrx1 + (irz - 1) * nrx1 * nrx2
                     stmdos (ir) = stmdos (ir) + &
-                         w1 * psi (irx, iry) * conjg (psi (irx, iry) )
+                         w1 * psi (irx, iry) * CONJG(psi (irx, iry) )
                  enddo
               enddo
            enddo
@@ -326,8 +326,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
               do ir = 1, nrxx
-                 rho (ir, 1) = rho (ir, 1) + w1 * real ( psic(ir) ) **2 + &
-                                             w2 * DIMAG( psic(ir) ) **2
+                 rho (ir, 1) = rho (ir, 1) + w1 *  DBLE( psic(ir) ) **2 + &
+                                             w2 * AIMAG( psic(ir) ) **2
               enddo
            END DO
         else
@@ -348,8 +348,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
               do ir = 1, nrxx
-                 rho (ir, 1) = rho (ir, 1) + w1 *(real (psic (ir) ) **2 + &
-                                                  DIMAG(psic (ir) ) **2)
+                 rho (ir, 1) = rho (ir, 1) + w1 *( DBLE(psic (ir) ) **2 + &
+                                                  AIMAG(psic (ir) ) **2)
               enddo
            END DO
         endif

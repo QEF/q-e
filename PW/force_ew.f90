@@ -106,7 +106,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 
   do nt = 1, ntyp
      do ig = gstart, ngm
-        aux (ig) = aux (ig) + zv (nt) * conjg (strf (ig, nt) )
+        aux (ig) = aux (ig) + zv (nt) * CONJG(strf (ig, nt) )
      enddo
   enddo
   do ig = gstart, ngm
@@ -122,7 +122,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      do ig = gstart, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        sumnb = cos (arg) * DIMAG (aux(ig)) - sin (arg) * DREAL (aux(ig) )
+        sumnb = cos (arg) * AIMAG (aux(ig)) - sin (arg) *  DBLE (aux(ig) )
         forceion (1, na) = forceion (1, na) + g (1, ig) * sumnb
         forceion (2, na) = forceion (2, na) + g (2, ig) * sumnb
         forceion (3, na) = forceion (3, na) + g (3, ig) * sumnb

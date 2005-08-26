@@ -255,7 +255,7 @@ program chdens
   !
   !    here we compute the fourier component of the quantity to plot
   !
-  psic(:) = DCMPLX (rhor(:), 0.d0)
+  psic(:) = CMPLX (rhor(:), 0.d0)
   call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   !    we store the fourier components in the array rhog
@@ -414,7 +414,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
            !     NB: G are in 2pi/alat units, r are in alat units
            !
            arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
-           carica(i) = carica(i) + rhog (ig) * cmplx(cos(arg),sin(arg))
+           carica(i) = carica(i) + rhog (ig) * CMPLX(cos(arg),sin(arg))
         enddo
      enddo
   else if (iflag == 0) then
@@ -430,7 +430,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
      do ig = 2, ngm
         arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
         !     This displaces the origin into x0
-        rho0g = rhog (ig) * cmplx(cos(arg),sin(arg))
+        rho0g = rhog (ig) * CMPLX(cos(arg),sin(arg))
         !     r =0 term
         carica (1) = carica (1) + 4.d0 * pi * rho0g
         !     r!=0 terms
@@ -452,9 +452,9 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
 
   rhoim = 0.d0
   do i = 1, nx
-     rhomin = min (rhomin, DREAL (carica (i) ) )
-     rhomax = max (rhomax, DREAL (carica (i) ) )
-     rhoim = rhoim + abs (DIMAG (carica (i) ) )
+     rhomin = min (rhomin,  DBLE (carica (i) ) )
+     rhomax = max (rhomax,  DBLE (carica (i) ) )
+     rhoim = rhoim + abs (AIMAG (carica (i) ) )
   enddo
 
   rhoim = rhoim / nx
@@ -464,7 +464,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   !
   if (iflag == 1) then
      do i = 1, nx
-        write (ounit, '(2f20.10)') deltax*dble(i-1), real(carica(i))
+        write (ounit, '(2f20.10)') deltax*dble(i-1), DBLE(carica(i))
      enddo
   else
      rhoint = 0.d0
@@ -472,8 +472,8 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
         !
         !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
         !
-        rhoint = rhoint + real(carica(i)) * (i-1)**2 * (deltax*alat)**3 
-        write (ounit, '(3f20.10)') deltax*dble(i-1), real(carica(i)), rhoint
+        rhoint = rhoint + DBLE(carica(i)) * (i-1)**2 * (deltax*alat)**3 
+        write (ounit, '(3f20.10)') deltax*dble(i-1), DBLE(carica(i)), rhoint
      enddo
 
   endif
@@ -556,9 +556,9 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   rhoim = 0.d0
   do i = 1, nx
      do j = 1, ny
-        rhomin = min (rhomin, DREAL (carica (i, j) ) )
-        rhomax = max (rhomax, DREAL (carica (i, j) ) )
-        rhoim = rhoim + abs (dimag (carica (i, j) ) )
+        rhomin = min (rhomin,  DBLE (carica (i, j) ) )
+        rhomax = max (rhomax,  DBLE (carica (i, j) ) )
+        rhoim = rhoim + abs (AIMAG (carica (i, j) ) )
      enddo
 
   enddo
@@ -576,7 +576,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
      !
      !         write(ounit,'(2i6)') nx,ny
      do i = 1, nx
-        write (ounit, '(e25.14)') ( DREAL(carica(i,j)), j = 1, ny )
+        write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
         write (ounit, * )
      enddo
   elseif (output_format == 1) then
@@ -584,7 +584,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( ( DREAL(carica(i,j)), j = 1, ny ), i = 1, nx )
+     write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
   elseif (output_format == 2) then
      !
      !     plotrho format
@@ -592,7 +592,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
      write (ounit, '(2i4)') nx - 1, ny - 1
      write (ounit, '(8f8.4)') (deltax * (i - 1) , i = 1, nx)
      write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
-     write (ounit, '(6e12.4)') ( ( DREAL(carica(i,j)), i = 1, nx ), j = 1, ny )
+     write (ounit, '(6e12.4)') ( (  DBLE(carica(i,j)), i = 1, nx ), j = 1, ny )
      write (ounit, '(3f8.4)') x0
      write (ounit, '(3f8.4)') (m1 * e1 (i) , i = 1, 3)
      write (ounit, '(3f8.4)') (m2 * e2 (i) , i = 1, 3)
@@ -685,9 +685,9 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   rhoim = 0.d0
   do i = 1, nx
      do j = 1, ny
-        rhomin = min (rhomin, DREAL (carica (i, j) ) )
-        rhomax = max (rhomax, DREAL (carica (i, j) ) )
-        rhoim = rhoim + abs (dimag (carica (i, j) ) )
+        rhomin = min (rhomin,  DBLE (carica (i, j) ) )
+        rhomax = max (rhomax,  DBLE (carica (i, j) ) )
+        rhoim = rhoim + abs (AIMAG (carica (i, j) ) )
      enddo
 
   enddo
@@ -703,14 +703,14 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
      !
      write (ounit, '(2i8)') nx, ny
      do i = 1, nx
-        write (ounit, '(e25.14)') ( DREAL(carica(i,j)), j = 1, ny )
+        write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
      enddo
   elseif (output_format.eq.1) then
      !
      !     contour.x format
      !
      write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( ( DREAL(carica(i,j)), j = 1, ny ), i = 1, nx )
+     write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
   else
      call errore ('plot_2ds', 'not implemented plot', 1)
 
@@ -793,7 +793,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
         do j = 1, ny
            do i = 1, nx
               carica (i, j, k) = carica (i, j, k) + &
-                   DREAL (rhog (ig) * eigz (k) * eigy (j) * eigx (i) )
+                    DBLE (rhog (ig) * eigz (k) * eigy (j) * eigx (i) )
            enddo
         enddo
      enddo

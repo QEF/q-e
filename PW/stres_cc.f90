@@ -77,9 +77,9 @@ subroutine stres_cc (sigmaxcc)
              , rho_atc (1, nt), rhocg)
         ! diagonal term
         if (gstart==2) sigmadiag = sigmadiag + &
-             conjg (psic (nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
+             CONJG(psic (nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
         do ng = gstart, ngm
-           sigmadiag = sigmadiag + conjg (psic (nl (ng) ) ) * &
+           sigmadiag = sigmadiag + CONJG(psic (nl (ng) ) ) * &
                 strf (ng,nt) * rhocg (igtongl (ng) ) * fact
         enddo
 
@@ -90,7 +90,7 @@ subroutine stres_cc (sigmaxcc)
         do ng = gstart, ngm
            do l = 1, 3
               do m = 1, 3
-                 sigmaxcc (l, m) = sigmaxcc (l, m) + conjg (psic (nl (ng) ) ) &
+                 sigmaxcc (l, m) = sigmaxcc (l, m) + CONJG(psic (nl (ng) ) ) &
                       * strf (ng, nt) * rhocg (igtongl (ng) ) * tpiba * &
                       g (l, ng) * g (m, ng) / sqrt (gg (ng) ) * fact
               enddo

@@ -539,7 +539,7 @@ SUBROUTINE c_phase
                         nhjkbm = nh(np)
                         jkb1 = jkb - nhjkb
                         DO j = 1,nhjkbm
-                           pref = pref+conjg(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
+                           pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
                                   *q_dk(nhjkb,j,np)*struc(na)
                         ENDDO
                      ENDDO
@@ -565,12 +565,12 @@ SUBROUTINE c_phase
          END DO 
 
 !        --- Calculate the phase for this string ---
-         phik(istring)=DIMAG(LOG(zeta))
+         phik(istring)=AIMAG(LOG(zeta))
          cphik(istring)=COS(phik(istring))*(1.0_dp,0.0_dp) &
                      +SIN(phik(istring))*(0.0_dp,1.0_dp)
 
 !        --- Calculate the localization for current kort ---
-         zeta_mod=DREAL(conjg(zeta)*zeta)
+         zeta_mod= DBLE(CONJG(zeta)*zeta)
          loc_k(istring)= - (nppstr-1) / gvec**2 / nbnd *log(zeta_mod)
 
 !     --- End loop over orthogonal k-points ---
@@ -607,7 +607,7 @@ SUBROUTINE c_phase
       END DO
 
 !     --- Get the angle corresponding to the complex numbers average ---
-      theta0=atan2(DIMAG(cave),DREAL(cave))
+      theta0=atan2(AIMAG(cave), DBLE(cave))
 
 !     --- Assign this angle to the corresponding spin phase average ---
       IF (nspin == 1) THEN
@@ -623,7 +623,7 @@ SUBROUTINE c_phase
 
 !     --- Put the phases in an around theta0 ---
       cphik(istring)=cphik(istring)/cave
-      dtheta=atan2(DIMAG(cphik(istring)),DREAL(cphik(istring)))
+      dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
       phik(istring)=theta0+dtheta
 
 !  --- End loop over spins

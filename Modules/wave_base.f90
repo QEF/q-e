@@ -80,7 +80,7 @@
              CALL ZGEMV &
                ('N', ngw, ib-1, onem, wf(1,1), ngw, s(1), 1, one, wf(1,ib), 1)
           END IF
-          anorm = SUM( REAL( wf(:,ib) * CONJG(wf(:,ib)) ) )
+          anorm = SUM( DBLE( wf(:,ib) * CONJG(wf(:,ib)) ) )
           CALL mp_sum(anorm, gid)
           anorm = 1.0d0 / MAX( SQRT(anorm), small )
           CALL ZDSCAL(ngw, anorm, wf(1,ib), 1)
@@ -138,7 +138,7 @@
              s = zero
 ! ...        only the processor that own G=0 
              IF(gzero) THEN
-               wftmp = -REAL(wf(1,ib))
+               wftmp = -DBLE(wf(1,ib))
                CALL DAXPY(ib-1, wftmp, wf(1,1), nwfr, s(1), 1)
              END IF
 
@@ -149,7 +149,7 @@
           END IF
           IF(gzero) THEN
             anorm = DNRM2( 2*(ngw-1), wf(2,ib), 1)
-            anorm = 2.d0 * anorm**2 + REAL( wf(1,ib) * CONJG(wf(1,ib)) )
+            anorm = 2.d0 * anorm**2 + DBLE( wf(1,ib) * CONJG(wf(1,ib)) )
           ELSE
             anorm = DNRM2( 2*ngw, wf(1,ib), 1)
             anorm = 2.d0 * anorm**2
@@ -231,12 +231,11 @@
       IF(gzero) THEN
         DO jb = 1, nx
           hpsi_gamma(jb) = &
-            - REAL( (2.d0 * ZDOTC(ngw-1, c(2,jb), 1, dc(2), 1) + c(1,jb)*dc(1)), dbl )
+            - DBLE( (2.d0 * ZDOTC(ngw-1, c(2,jb), 1, dc(2), 1) + c(1,jb)*dc(1)) )
         END DO
       ELSE
         DO jb = 1, nx
-          hpsi_gamma(jb) = &
-            - REAL( (2.d0 * ZDOTC(ngw, c(1,jb), 1, dc(1), 1)), dbl )
+          hpsi_gamma(jb) = - DBLE( (2.d0 * ZDOTC(ngw, c(1,jb), 1, dc(1), 1)) )
         END DO
       END IF
       RETURN
@@ -342,7 +341,7 @@
             IF( gemax_l < ABS( cgrad(iabs,i,ik) ) ) THEN
               gemax_l = ABS( cgrad(iabs,i,ik) )
             END IF
-            cnormk = cnormk + REAL( ZDOTC(ngw, cgrad(1,i,ik), 1, cgrad(1,i,ik), 1), dbl)
+            cnormk = cnormk + DBLE( ZDOTC(ngw, cgrad(1,i,ik), 1, cgrad(1,i,ik), 1))
           END DO
           cnormk = cnormk * weight(ik)
           cnorm = cnorm + cnormk
@@ -381,7 +380,7 @@
 
             IF (gzero) THEN
               wdot_gamma = DDOT( 2*(n-1), a(2), 1, b(2), 1)
-              wdot_gamma = 2.0d0 * wdot_gamma + REAL( a(1) ) * REAL( b(1) ) 
+              wdot_gamma = 2.0d0 * wdot_gamma + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
               wdot_gamma = 2.0d0 * DDOT( 2*n, a(1), 1, b(1), 1)
             END IF 
@@ -424,7 +423,7 @@
 !
             IF (gzero) THEN
               dot_tmp = DDOT( 2*(n-1), a(2), 1, b(2), 1)
-              dot_tmp = 2.0d0 * dot_tmp + REAL( a(1) ) * REAL( b(1) ) 
+              dot_tmp = 2.0d0 * dot_tmp + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
               dot_tmp = DDOT( 2*n, a(1), 1, b(1), 1)
               dot_tmp = 2.0d0*dot_tmp
@@ -607,7 +606,7 @@
       DO j = 1, SIZE( wf )
         rranf1 = 0.5d0 - rranf()
         rranf2 = 0.5d0 - rranf()
-        wf(j) = wf(j) + ampre * DCMPLX(rranf1, rranf2)
+        wf(j) = wf(j) + ampre * CMPLX(rranf1, rranf2)
       END DO
       RETURN
       END SUBROUTINE rande_base_s

@@ -73,7 +73,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
                  ikb = ijkb0 + ih
                  do jh = 1, nh (np)
                     jkb = ijkb0 + jh
-                    scal = scal + qq (ih,jh,np)*conjg(bec1(ikb))*bec2(jkb)
+                    scal = scal + qq (ih,jh,np)*CONJG(bec1(ikb))*bec2(jkb)
                  enddo
               enddo
               ijkb0 = ijkb0 + nh (np)

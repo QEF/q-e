@@ -83,16 +83,16 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
            if(ctabin(ig,2).ge.0) then
               dtemp(ig)=dtemp(ig)+c0(ctabin(ig,2),j)*qmat(j,i)
            else
-              dtemp(ig)=dtemp(ig)+conjg(c0(-ctabin(ig,2),j))*qmat(j,i)
+              dtemp(ig)=dtemp(ig)+CONJG(c0(-ctabin(ig,2),j))*qmat(j,i)
            endif
         endif
      enddo
      do ig=1,ngw
         if(ctabin(ig,1) .ne. (ngw+1)) then
            if(ctabin(ig,1).ge.0) then
-              dtemp(ig)=dtemp(ig)-c0(ctabin(ig,1),j)*conjg(qmat(j,i))
+              dtemp(ig)=dtemp(ig)-c0(ctabin(ig,1),j)*CONJG(qmat(j,i))
            else
-              dtemp(ig)=dtemp(ig)-conjg(c0(-ctabin(ig,1),j))*conjg(qmat(j,i))
+              dtemp(ig)=dtemp(ig)-CONJG(c0(-ctabin(ig,1),j))*conjg(qmat(j,i))
            endif
         endif
      enddo
@@ -136,7 +136,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
                   jnl=ish(is)+(jv-1)*na(is)+ia              
                   do j=1,n  !loop on states
                      afrc(inl)=afrc(inl)+gqq(iv,jv,ia,is)*bec0(jnl,j)*qmat(j,i)&
-                          &     -conjg(gqq(jv,iv,ia,is))*bec0(jnl,j)*conjg(qmat(i,j))
+                          &     -CONJG(gqq(jv,iv,ia,is))*bec0(jnl,j)*conjg(qmat(i,j))
   
 
                   end do
@@ -194,7 +194,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
    endif
 
    
-   enb = 2.*aimag(log(detq))/gmes!ATTENZIONE al segno
+   enb = 2.*AIMAG(log(detq))/gmes!ATTENZIONE al segno
    
 !   write(6,*) detq, enb
    return

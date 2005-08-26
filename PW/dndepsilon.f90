@@ -119,7 +119,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
                   DO ibnd = 1,nbnd
                      dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                              wg(ibnd,ik) *           &
-                              DREAL( proj(offset(na)+m1,ibnd) *      &
+                               DBLE( proj(offset(na)+m1,ibnd) *      &
                               CONJG(dproj(offset(na)+m2,ibnd) ) +    &
                                     dproj(offset(na)+m1,ibnd)*       &
                               CONJG( proj(offset(na)+m2,ibnd) ) )

@@ -60,8 +60,8 @@ subroutine syme2 (dvsym)
            do mp = 1, 3
               dvsym (ix, jx, kx, jab (ip, jp)) = &
               dvsym (ix, jx, kx, jab (ip, jp)) + &
-                 dfloat (s (ip, lp, irot))* &
-                 dfloat (s (jp, mp, irot))* &
+                 DBLE (s (ip, lp, irot))* &
+                 DBLE (s (jp, mp, irot))* &
                  aux (ri, rj, rk, jab(lp, mp))
            enddo
            enddo
@@ -73,7 +73,7 @@ subroutine syme2 (dvsym)
   enddo
 
   do ip = 1, 6
-     call DSCAL (2 * nrx1 * nrx2 * nrx3, 1.d0 / float (nsym), &
+     call DSCAL (2 * nrx1 * nrx2 * nrx3, 1.d0 / DBLE (nsym), &
                  dvsym (1, 1, 1, ip), 1)
   enddo
 

@@ -419,7 +419,7 @@ SUBROUTINE elphsum
         gamma = 0.0
         DO mu = 1, 3 * nat
            DO vu = 1, 3 * nat
-              gamma = gamma + REAL (CONJG (dyn (mu, nu) ) * el_ph_sum (mu, vu) &
+              gamma = gamma + DBLE (CONJG (dyn (mu, nu) ) * el_ph_sum (mu, vu)&
                    * dyn (vu, nu) )
            ENDDO
         ENDDO

@@ -108,7 +108,7 @@ subroutine atomic_wfc_nc (ik, wfcatom)
      alpha = angle1(nt)
      gamman = - angle2(nt) + 0.5d0*pi
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
-     kphase = DCMPLX (cos (arg), - sin (arg) )
+     kphase = CMPLX (cos (arg), - sin (arg) )
      !
      !     sk is the structure factor
      !

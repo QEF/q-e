@@ -64,7 +64,7 @@ subroutine symram (phi, nsym, s, nat, irt)
      enddo
   enddo
   !
-  phi(:,:,:,:) =   work(:,:,:,:) / float (nsym)
+  phi(:,:,:,:) =   work(:,:,:,:) / DBLE (nsym)
   !
   return
 end subroutine symram

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
    MODULE rundiis_module
-
+#include "f_defs.h"
         IMPLICIT NONE
         SAVE
 
@@ -157,7 +157,7 @@
       ekinc    = 100.0d0
       edft%ent = 0.0d0
       eold     = 1.0d10  ! a large number
-      nel = 2.0d0 * cdesc%nbt( 1 ) / REAL( cdesc%nspin )
+      nel = 2.0d0 * cdesc%nbt( 1 ) / DBLE( cdesc%nspin )
 
       IF( force_pairing ) &
         CALL errore(' rundiis ', ' force pairing not implemented ', 1 )
@@ -317,7 +317,7 @@
         ELSE
           DO ik = 1, kp%nkpt
             DO ib=1,nrl
-              edft%etot = edft%etot + REAL(clambda(ib,(ib-1)*nproc+mpime+1,ik))
+              edft%etot = edft%etot + DBLE(clambda(ib,(ib-1)*nproc+mpime+1,ik))
             END DO
           END DO
         END IF
@@ -650,11 +650,11 @@
         INTEGER ik, ib, ibl, nrl, nk
           nrl = SIZE(clambda, 1)
           nk  = SIZE(clambda, 3)
-          clambda = cmplx(0.d0,0.d0)
+          clambda = CMPLX(0.d0,0.d0)
           DO ik = 1, nk
             ib = mpime + 1
             DO ibl = 1, nrl
-              clambda(ibl,ib,ik) = cmplx(1.0d0, 0.0d0) ! diagonal elements
+              clambda(ibl,ib,ik) = CMPLX(1.0d0, 0.0d0) ! diagonal elements
               ib = ib + nproc
             END DO
           END DO

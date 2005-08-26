@@ -88,9 +88,9 @@ subroutine dvpsi_e2
         enddo
         do ipa = 1, 6
            do ir = 1, nrxxs
-              tmp = conjg (aux3s (ir, a1j (ipa))) *    &
+              tmp = CONJG(aux3s (ir, a1j (ipa))) *    &
                            aux3s (ir, a2j (ipa))
-              raux6 (ir, ipa) = raux6 (ir, ipa) + weight * dreal (tmp)
+              raux6 (ir, ipa) = raux6 (ir, ipa) + weight *  DBLE (tmp)
            enddo
         enddo
      enddo
@@ -114,8 +114,8 @@ subroutine dvpsi_e2
               do ir = 1, nrxxs
                  tmp =  aux3s (ir,1) *                           &
                         ps(ibnd, jbnd, a1j (ipa), a2j (ipa)) *   &
-                        conjg (aux3s (ir,2))
-                 raux6 (ir, ipa) = raux6 (ir, ipa) - weight * dreal (tmp)
+                        CONJG(aux3s (ir,2))
+                 raux6 (ir, ipa) = raux6 (ir, ipa) - weight *  DBLE (tmp)
               enddo
            enddo
         enddo
@@ -141,12 +141,12 @@ subroutine dvpsi_e2
   do ipa = 1, 6
      if (doublegrid) then
         do ir = 1, nrxxs
-           auxs1 (ir) = dcmplx (raux6 (ir, ipa), 0.d0)
+           auxs1 (ir) = CMPLX (raux6 (ir, ipa), 0.d0)
         enddo
         call cinterpolate (aux6 (1, ipa), auxs1, +1)
      else
         do ir = 1, nrxxs
-           aux6 (ir, ipa) = dcmplx (raux6 (ir, ipa), 0.d0)
+           aux6 (ir, ipa) = CMPLX (raux6 (ir, ipa), 0.d0)
         enddo
      endif
      call dv_of_drho (0, aux6(1, ipa), .false.)

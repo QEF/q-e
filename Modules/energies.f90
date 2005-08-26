@@ -105,8 +105,8 @@
 
           self_vxc = self_vxc_in
 
-          EXC   = edft%sxc * omega / REAL(NNR) !EEXC * omega / REAL(NNR)
-          VXC   = VVXC * omega / REAL(NNR)
+          EXC   = edft%sxc * omega / DBLE(NNR) !EEXC * omega / DBLE(NNR)
+          VXC   = VVXC * omega / DBLE(NNR)
 
           edft%exc  = exc
           edft%vxc  = vxc
@@ -115,7 +115,7 @@
           edft%eht =  edft%eh + esr - eself ! = eht
           EHT = edft%eht
 
-          EPSEU = REAL(eps)
+          EPSEU = DBLE(eps)
           edft%epseu = epseu
 
           ETOT  = EKIN + EHT + EPSEU + ENL + EXC + EVDW - ENT

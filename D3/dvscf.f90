@@ -106,7 +106,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
            guexp = tpiba * ( (g(1,ig) + xq_x(1)) * u_x(mu+1,nu_i) + &
                              (g(2,ig) + xq_x(2)) * u_x(mu+2,nu_i) + &
                              (g(3,ig) + xq_x(3)) * u_x(mu+3,nu_i) ) * &
-                   DCMPLX(0.d0,-1.d0) * DCMPLX(cos(gtau),-sin(gtau))
+                   CMPLX(0.d0,-1.d0) * CMPLX(cos(gtau),-sin(gtau))
            aux1 (nl(ig)) = aux1 (nl(ig)) + vloc_x (ig,nt) * guexp
            if (nlcc(nt)) then
               aux2 (nl(ig)) = aux2 (nl(ig)) + drc_x(ig,nt) * guexp

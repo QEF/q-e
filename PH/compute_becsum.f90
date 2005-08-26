@@ -53,7 +53,7 @@ subroutine compute_becsum
                        wgg1 = wg (ibnd, ikk)
                        becsum(ijh,na,current_spin) = &
                             becsum(ijh,na,current_spin) + wgg1 * &
-                            DREAL ( conjg(becp1(ikb,ibnd,ik)) * becp1(ikb,ibnd,ik) )
+                             DBLE ( CONJG(becp1(ikb,ibnd,ik)) * becp1(ikb,ibnd,ik) )
                     enddo
                     do jh = 1, nh (nt)
                        jkb = ijkb0 + jh
@@ -63,7 +63,7 @@ subroutine compute_becsum
                              wgg1 = wg (ibnd, ikk)
                              becsum(ijh,na,current_spin) = &
                                   becsum(ijh,na,current_spin) + wgg1 * 2.d0 * &
-                                  DREAL ( conjg(becp1(ikb,ibnd,ik)) * &
+                                   DBLE ( CONJG(becp1(ikb,ibnd,ik)) * &
                                   becp1(jkb,ibnd,ik) )
                           endif
                        enddo

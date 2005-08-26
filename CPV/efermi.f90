@@ -177,7 +177,7 @@
        stop
       end if
 
-      fspin=float(nspin)
+      fspin=DBLE(nspin)
       entrofac=3.0-fspin
 
       if ((nspin.eq.2).and.(ismear.ne.2)) then
@@ -214,10 +214,10 @@
 ! note that this has to be changed if k-points are introduced !
 
       do nkp=1,nkpts
-       weight(nkp)=1.0/float(nkpts)
+       weight(nkp)=1.0/DBLE(nkpts)
       end do
 
-      Z    = FLOAT(NEL)
+      Z    = DBLE (NEL)
  
 ! COPY EIGVAL INTO SORT ARRAY.
  

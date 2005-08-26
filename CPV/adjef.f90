@@ -58,7 +58,7 @@
 !  end of declarations
 !  ----------------------------------------------
 
-!     qtot=dfloat(nel)
+!     qtot=DBLE(nel)
       sumq=0.d0
       sume=0.d0
       emin=e(1,1,1)
@@ -174,7 +174,7 @@
       integer iter,ie
       real(dbl) t,emin,emax,stepf
       real(dbl) sumq,fac,qtot,drange
-      QTOT=DFLOAT(NEL)
+      QTOT=DBLE(NEL)
       SUMQ=0.D0
       SUME=0.D0
       EMIN=E(1)

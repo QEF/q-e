@@ -56,17 +56,17 @@ subroutine dynmatcc(dyncc)
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
                         g(3,ig)*tau(3,na) )
-           exc = cmplx(cos(exg),-sin(exg))*tpiba2
-           work1(ig)= drhocc(ig)* exc * conjg(vxc(nl(ig)))
-           gc(ig,1) = g(1,ig) * exc * cmplx(0.0,-1.0)
-           gc(ig,2) = g(2,ig) * exc * cmplx(0.0,-1.0)
-           gc(ig,3) = g(3,ig) * exc * cmplx(0.0,-1.0)
+           exc = CMPLX(cos(exg),-sin(exg))*tpiba2
+           work1(ig)= drhocc(ig)* exc * CONJG(vxc(nl(ig)))
+           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0,-1.0)
+           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0,-1.0)
+           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0,-1.0)
         end do
         do i=1,3
            do j=1,3
               do ig=1,ngm
                  dyncc1(i,na,j,na) = dyncc1(i,na,j,na) -  &
-                      real(work1(ig)) * g(i,ig) * g(j,ig)
+                      DBLE(work1(ig)) * g(i,ig) * g(j,ig)
               end do
            end do
         end do
@@ -84,14 +84,14 @@ subroutine dynmatcc(dyncc)
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &
                               g(3,ig)*tau(3,nb) )
-                 exc = -cmplx(sin(exg),cos(exg))
+                 exc = -CMPLX(sin(exg),cos(exg))
                  work1(ig) = exc * drhocc(ig)
               end do
               do i=1,3
                  do j=1,3
                     do ig=1,ngm
                        dyncc1(i,na,j,nb) = dyncc1(i,na,j,nb) +      &
-                            real( work1(ig)*conjg(gc(ig,i)))*g(j,ig)
+                            DBLE( work1(ig)*CONJG(gc(ig,i)))*g(j,ig)
                     end do
                  end do
               end do

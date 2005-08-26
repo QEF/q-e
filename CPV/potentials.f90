@@ -157,7 +157,7 @@
                (gx(ipiano2,IG).EQ.0.d0))THEN
               vcg       = fpi_tpiba2 * (rhoeg(ig) + rp) / g(ig)
               gxt       = gx(iasse, ig) * tpiba
-              vrmean(ir) = vrmean(ir) + REAL(vcg)  * COS(gxt*r) 
+              vrmean(ir) = vrmean(ir) + DBLE(vcg)  * COS(gxt*r) 
               vrmean(ir) = vrmean(ir) - AIMAG(vcg) * SIN(gxt*r)
             END IF
           END DO
@@ -509,7 +509,7 @@
         IF( ionode ) THEN
           write(stdout,*) 
           write(stdout,*) '  KIND of SELF_INTERACTION CHOOSEN  == ', self_interaction
-          write(stdout,*) '  EXC before SIC corr               == ', sxcp * omega / REAL( nr1_g * nr2_g * nr3_g )
+          write(stdout,*) '  EXC before SIC corr               == ', sxcp * omega / DBLE( nr1_g * nr2_g * nr3_g )
           write(stdout,*) 
         END IF
       END IF
@@ -551,8 +551,8 @@
 
           edft%sxc = sxcp + self_sxcp !- self_sxcp
           vxc = vxc - self_vxc
-          edft%self_sxc = self_sxcp * omega / REAL(nr1_g*nr2_g*nr3_g)
-          self_vxc = self_vxc * omega / REAL(nr1_g*nr2_g*nr3_g)
+          edft%self_sxc = self_sxcp * omega / DBLE(nr1_g*nr2_g*nr3_g)
+          self_vxc = self_vxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
 
 
         CASE(2) 
@@ -586,8 +586,8 @@
           edft%self_sxc= sxcp - self_sxcp
           edft%sxc = self_sxcp !!sxcp - edft%self_sxc
           vxc = self_vxc
-          edft%self_sxc = edft%self_sxc * omega / REAL(nr1_g*nr2_g*nr3_g)
-          self_vxc = self_vxc * omega / REAL(nr1_g*nr2_g*nr3_g)
+          edft%self_sxc = edft%self_sxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
+          self_vxc = self_vxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
 
       END SELECT 
 
@@ -597,14 +597,14 @@
       IF( ttsic ) THEN
           write(stdout,*) '  Exchange-correlation Energy introducing the SIC'
           write(stdout,*) '  -----------------------------------------------'
-          write(stdout,*) '  SXCP from first call     :: ', sxcp * omega / REAL( nr1_g * nr2_g * nr3_g )
-          write(stdout,*) '  SXC after SIC-correction :: ', edft%sxc * omega / REAL( nr1_g * nr2_g * nr3_g )
+          write(stdout,*) '  SXCP from first call     :: ', sxcp * omega / DBLE( nr1_g * nr2_g * nr3_g )
+          write(stdout,*) '  SXC after SIC-correction :: ', edft%sxc * omega / DBLE( nr1_g * nr2_g * nr3_g )
           write(stdout,*) '  D_SIC SIC correction     :: ', edft%self_sxc
           write(stdout,*) '  -----------------------------------------------'
       END IF
                  
       IF ( ttstress ) THEN
-        strvxc = ( edft%sxc - vxc ) * omega / REAL( nr1_g * nr2_g * nr3_g )
+        strvxc = ( edft%sxc - vxc ) * omega / DBLE( nr1_g * nr2_g * nr3_g )
       END IF
 
       IF( nlcc_any ) THEN
@@ -639,7 +639,7 @@
       !
       ! WRITE(6,*) 'DEBUG vofloc = ', SUM(fion)
 
-      !       edft%ehte = REAL ( ehtep )
+      !       edft%ehte = DBLE ( ehtep )
 
 
       edft%self_ehte = 0.d0
@@ -662,7 +662,7 @@
         CALL pinvfft(self_vpot(:,:,:,1), self_vloc(:))
 
         self_vpot(:,:,:,1) = si_epsilon * self_vpot(:,:,:,1)
-        edft%self_ehte = si_epsilon * REAL(self_ehtep)
+        edft%self_ehte = si_epsilon * DBLE(self_ehtep)
  
         vpot(:,:,:,1) =  vpot(:,:,:,1) - self_vpot(:,:,:,1)
         vpot(:,:,:,2) =  vpot(:,:,:,2) + self_vpot(:,:,:,1)
@@ -671,15 +671,15 @@
 
       END IF
 
-      edft%eh = REAL( ehp ) - edft%self_ehte
+      edft%eh = DBLE( ehp ) - edft%self_ehte
      
       IF ( ttsic ) THEN
         IF ( ionode ) THEN
           write(stdout,*) '  Hartree Energy Contribution when SIC is introduced'
           write(stdout,*) '  --------------------------------------------------'
-          write(stdout,*) '  HARTREE Potential == ' , REAL( edft%eh )
-          write(stdout,*) '  EH(rhoup+rhodwn)  == ' , REAL( ehp )
-          write(stdout,*) '  EH(rhoup-rhodwn)  == ' , REAL( edft%self_ehte )
+          write(stdout,*) '  HARTREE Potential == ' , DBLE( edft%eh )
+          write(stdout,*) '  EH(rhoup+rhodwn)  == ' , DBLE( ehp )
+          write(stdout,*) '  EH(rhoup-rhodwn)  == ' , DBLE( edft%self_ehte )
           write(stdout,*) '  --------------------------------------------------'
         END IF
       END IF
@@ -886,11 +886,11 @@
       IF( MOD(nr1_g * nr2_g * nr3_g, 2) /= 0 ) fact = -fact
 
       DO k = 1, nr3_l
-        s(3) = REAL ( (k-1) + (ir3 - 1) ) / nr3_g - 0.5d0
+        s(3) = DBLE ( (k-1) + (ir3 - 1) ) / nr3_g - 0.5d0
         DO j = 1, nr2_l
-          s(2) = REAL ( (j-1) + (ir2 - 1) ) / nr2_g - 0.5d0
+          s(2) = DBLE ( (j-1) + (ir2 - 1) ) / nr2_g - 0.5d0
           DO i = 1, nr1_l
-            s(1) = REAL ( (i-1) + (ir1 - 1) ) / nr1_g - 0.5d0
+            s(1) = DBLE ( (i-1) + (ir1 - 1) ) / nr1_g - 0.5d0
             CALL S_TO_R(S, R, box)
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
             IF( rmod < gsmall ) THEN
@@ -935,7 +935,7 @@
 !  vloc_h(ig)   =  fpi / ( g(ig) * tpiba2 ) * { rho_e(ig) + rho_I(ig) }
 !  vloc_ps(ig)  =  (sum over is) sfac(is,ig) * vps(ig,is)
 !
-!  Eps = Fact * omega * (sum over ig) CMPLX( rho_e(ig) ) * vloc_ps(ig)
+!  Eps = Fact * omega * (sum over ig) cmplx ( rho_e(ig) ) * vloc_ps(ig)
 !  if Gamma symmetry Fact = 2 else Fact = 1
 !
 !  Eh  = Fact * omega * (sum over ig) * fpi / ( g(ig) * tpiba2 ) *
@@ -1058,8 +1058,8 @@
         vloc(ig) = vp   +  fpibg *        rhog 
         eh       = eh   +  fpibg *        rhog * CONJG(rhog)
         eps      = eps  +     vp * CONJG(rhet)
-        ehte     = ehte +  fpibg *   REAL(rhet * CONJG(rhet))
-        ehti     = ehti +  fpibg *   REAL(  rp * CONJG(rp))
+        ehte     = ehte +  fpibg *   DBLE(rhet * CONJG(rhet))
+        ehti     = ehti +  fpibg *   DBLE(  rp * CONJG(rp))
 
         IF(TTFORCE) THEN
           ig1  = mill_l(1,IG)
@@ -1094,7 +1094,7 @@
         ELSE
           cost = ht%deth * tpiba
         END IF
-        FION = FION + REAL(ftmp) * cost
+        FION = FION + DBLE(ftmp) * cost
       END IF
 
 ! ... G = 0 element
@@ -1114,8 +1114,8 @@
         rhog    = rhet + rp
         vloc(1) = VP   +  vscreen *   rhog
         eh      = eh   +  vscreen *        rhog * CONJG(rhog)
-        ehte    = ehte +  vscreen *   REAL(rhet * CONJG(rhet))
-        ehti    = ehti +  vscreen *   REAL(  rp * CONJG(rp))
+        ehte    = ehte +  vscreen *   DBLE(rhet * CONJG(rhet))
+        ehti    = ehti +  vscreen *   DBLE(  rp * CONJG(rp))
         DO ispin = 1, nspin
           IF( gamma_only ) THEN
             eps = eps + vp * CONJG(RHOEG(1,ispin)) * 0.5d0
@@ -1290,13 +1290,13 @@
         END IF
 
         DO IX=-IESR,IESR
-          SXLM(1) = XLM + REAL(IX)
+          SXLM(1) = XLM + DBLE(IX)
           DO IY=-IESR,IESR
-            SXLM(2) = YLM + REAL(IY)
+            SXLM(2) = YLM + DBLE(IY)
             DO IZ=-IESR,IESR
               TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
               IF(.NOT.(TZERO.AND.TSHIFT)) THEN
-                SXLM(3) = ZLM + REAL(IZ)
+                SXLM(3) = ZLM + DBLE(IZ)
                 CALL S_TO_R(SXLM,RXLM,ht)
                 ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
                 RLM   = SQRT(ERRE2)
@@ -1516,7 +1516,7 @@
       ALLOCATE( k_density( ngm ) )
 
       CALL pw_invfft( cpsi(:,:,:), wfc(:), wfc(:) )
-      psi = REAL( cpsi, dbl )
+      psi = DBLE( cpsi )
       DEALLOCATE( cpsi )
 
       isa_sorted = 0
@@ -1584,7 +1584,7 @@
                 FPIBG     = fpi / ( g(ig) * tpiba2 )
               END IF
 
-              ehte       = ehte   +  fpibg *   REAL(rhog * CONJG(rhog))
+              ehte       = ehte   +  fpibg *   DBLE(rhog * CONJG(rhog))
 
             END DO
 
@@ -1597,7 +1597,7 @@
                 vscreen = 0.0d0
               END IF
               rhog    = k_density(1)
-              ehte    = ehte   +  vscreen *  REAL(rhog * CONJG(rhog))
+              ehte    = ehte   +  vscreen *  DBLE(rhog * CONJG(rhog))
             END IF
 ! ...
             IF( .NOT. gamma_only ) THEN

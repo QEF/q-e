@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine ewald_dipole (tens,dipole)
@@ -63,7 +64,7 @@ subroutine ewald_dipole (tens,dipole)
   do ng = gstart, ngm
      rhon = (0.d0, 0.d0)
      do nt = 1, ntyp
-        rhon = rhon + dipole (nt) * conjg (strf (ng, nt) )
+        rhon = rhon + dipole (nt) * CONJG(strf (ng, nt) )
      enddo
      do na=1, nat
         do alpha = 1,3
@@ -74,11 +75,11 @@ subroutine ewald_dipole (tens,dipole)
                 rhon  * exp ( - gg (ng) * tpiba2 / &
                 eta / 4.d0) / gg (ng) &
                 * g(alpha,ng) * g(beta,ng) * &
-                DCMPLX (cos (arg), -sin (arg))
+                CMPLX (cos (arg), -sin (arg))
            enddo
            ewaldg(na , alpha, alpha) = ewaldg(na, alpha, alpha) + 1.d0/3.d0 &
                 * rhon  * exp ( - gg (ng) * tpiba2 / &
-                eta / 4.d0) * DCMPLX (cos (arg), -sin (arg))
+                eta / 4.d0) * CMPLX (cos (arg), -sin (arg))
         enddo
      enddo
   enddo

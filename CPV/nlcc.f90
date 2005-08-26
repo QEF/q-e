@@ -105,7 +105,7 @@
 !=----------------------------------------------------------------------------=!
    subroutine add_core_charge( rhoetg, rhoetr, sfac, rhoc, nsp)
 !=----------------------------------------------------------------------------=!
-
+     USE kinds,          ONLY: DP
      USE fft,            ONLY: pinvfft
      use electrons_base, only: nspin
      use gvecp,          only: ngm
@@ -124,7 +124,7 @@
      integer :: is, ig
 
      ALLOCATE( vtemp( ngm ) )
-     vtemp = CMPLX( 0.0d0 )
+     vtemp = CMPLX( 0.0d0, 0.0d0 )
 
      fac = 1.0d0 / DBLE( nspin )
      DO is = 1, nsp
@@ -155,7 +155,7 @@
      !   This subroutine computes the non local core correction
      !   contribution to the atomic forces
 
-     USE constants
+     USE kinds, ONLY : DP
      USE cell_base, ONLY: tpiba
      USE cell_module, ONLY: boxdimensions
      USE brillouin, ONLY: kpoints, kp
@@ -226,9 +226,9 @@
        END IF
 
        DO isa = 1, atoms%nat
-         FION(1,ISA) = FION(1,ISA) + REAL(ftmp(1,ISA)) * cost
-         FION(2,ISA) = FION(2,ISA) + REAL(ftmp(2,ISA)) * cost
-         FION(3,ISA) = FION(3,ISA) + REAL(ftmp(3,ISA)) * cost
+         FION(1,ISA) = FION(1,ISA) + DBLE(ftmp(1,ISA)) * cost
+         FION(2,ISA) = FION(2,ISA) + DBLE(ftmp(2,ISA)) * cost
+         FION(3,ISA) = FION(3,ISA) + DBLE(ftmp(3,ISA)) * cost
        END DO
 
        DEALLOCATE( ftmp )
@@ -317,6 +317,7 @@
 !     same logic as in newd - uses box grid. For parallel execution:
 !     the sum over node contributions is done in the calling routine
 !
+      USE kinds,           ONLY: DP
       use core,            only: rhocb
       use electrons_base,  only: nspin
       use gvecb,           only: gxb, ngb, npb, nmb
@@ -374,17 +375,17 @@
                qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
                   do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
+                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig))*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia+isa  )*facg                 &
      &                      + ci * eigrb(ig,ia+isa+1)*facg
-                     qv(nmb(ig)) = conjg(eigrb(ig,ia+isa  )*facg)          &
-     &                      + ci * conjg(eigrb(ig,ia+isa+1)*facg)
+                     qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa  )*facg)          &
+     &                      + ci * CONJG(eigrb(ig,ia+isa+1)*facg)
                   end do
                else
                   do ig=1,ngb
-                     facg = tpibab*cmplx(0.d0,gxb(ix,ig))*rhocb(ig,is)
+                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig))*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia+isa)*facg
-                     qv(nmb(ig)) = conjg(eigrb(ig,ia+isa)*facg)
+                     qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa)*facg)
                   end do
                end if
 !
@@ -476,13 +477,13 @@
                do ig=1,ngb
                   qv(npb(ig))= eigrb(ig,ia  +isa)*rhocb(ig,is)          &
      &                    + ci*eigrb(ig,ia+1+isa)*rhocb(ig,is)
-                  qv(nmb(ig))= conjg(eigrb(ig,ia  +isa)*rhocb(ig,is))   &
-     &                    + ci*conjg(eigrb(ig,ia+1+isa)*rhocb(ig,is))
+                  qv(nmb(ig))= CONJG(eigrb(ig,ia  +isa)*rhocb(ig,is))   &
+     &                    + ci*CONJG(eigrb(ig,ia+1+isa)*rhocb(ig,is))
                end do
             else
                do ig=1,ngb
                   qv(npb(ig)) = eigrb(ig,ia+isa)*rhocb(ig,is)
-                  qv(nmb(ig)) = conjg(eigrb(ig,ia+isa)*rhocb(ig,is))
+                  qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa)*rhocb(ig,is))
                end do
             endif
 !

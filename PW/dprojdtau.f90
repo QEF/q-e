@@ -78,7 +78,7 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
          ! in c.c. term because the sign of the imaginary unit.
    
          DO m1 = 1, ldim
-            dwfc(ig,m1) = dcmplx(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
+            dwfc(ig,m1) = CMPLX(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
          END DO
       END DO
 

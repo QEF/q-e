@@ -301,7 +301,7 @@ SUBROUTINE force_us( forcenl )
                             DO ipol=1,3
                                forcenl(ipol,na) = forcenl(ipol,na) - &
                                         ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                      REAL( CONJG( dbecp(ikb,ibnd,ipol) ) * &
+                                      DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
                                             becp(ikb,ibnd) )
                             END DO
                          END IF
@@ -358,7 +358,7 @@ SUBROUTINE force_us( forcenl )
                                   DO ipol = 1, 3
                                      forcenl(ipol,na) = forcenl (ipol,na) - &
                                           ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                       REAL( CONJG( dbecp(ikb,ibnd,ipol) ) * &
+                                       DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
                                              becp(jkb,ibnd) +       &
                                              dbecp(jkb,ibnd,ipol) * &
                                              CONJG( becp(ikb,ibnd) ) )

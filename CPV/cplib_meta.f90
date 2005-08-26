@@ -7,11 +7,13 @@
 !
       subroutine dforce_meta (c,ca,df,da, psi,iss1,iss2,fi,fip)
 !-----------------------------------------------------------------------
-!computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
+!computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=cmplx(cr,ci)
+!          represented by the vector c=CMPLX(cr,ci)
 !
-!	contribution from metaGGA
+!          contribution from metaGGA
+#include "f_defs.h"
+      use kinds, only: dp
       use reciprocal_vectors
       use gvecs
       use gvecw,                  only : ngw
@@ -33,23 +35,23 @@
       ci=(0.0,1.0)
 !
          do ipol = 1, 3
-	    psi(:)=(0.d0,0.d0)
+            psi(:)=(0.d0,0.d0)
             do ig=1,ngw
                psi(nps(ig))=gx(ipol,ig)* (ci*c(ig) - ca(ig))
-               psi(nms(ig))=gx(ipol,ig)* (conjg(ci*c(ig) + ca(ig)))
+               psi(nms(ig))=gx(ipol,ig)* (CONJG(ci*c(ig) + ca(ig)))
             end do
             call ivfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !           on smooth grids--> grids for charge density
             do ir=1, nnrs
-               psi(ir) = cmplx(kedtaus(ir,iss1)*real(psi(ir)), &
-                    kedtaus(ir,iss2)*aimag(psi(ir)))
+               psi(ir) = &
+              CMPLX(kedtaus(ir,iss1)*DBLE(psi(ir)), kedtaus(ir,iss2)*AIMAG(psi(ir)))
             end do
             call fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             do ig=1,ngw
                fp= (psi(nps(ig)) + psi(nms(ig)))
                fm= (psi(nps(ig)) - psi(nms(ig)))
-               df(ig)= df(ig) - ci*fi*tpiba2*gx(ipol,ig)*cmplx(real(fp), aimag(fm))
-               da(ig)= da(ig) - ci*fip*tpiba2*gx(ipol,ig)*cmplx(aimag(fp),-real(fm))
+               df(ig)= df(ig) - ci*fi*tpiba2*gx(ipol,ig)*CMPLX(DBLE(fp), AIMAG(fm))
+               da(ig)= da(ig) - ci*fip*tpiba2*gx(ipol,ig)*CMPLX(AIMAG(fp),-DBLE(fm))
             end do
          end do
 
@@ -62,6 +64,7 @@
       subroutine kedtauofr_meta (c, psi, psis)
 !-----------------------------------------------------------------------
 !
+      use kinds, only: dp
       use control_flags, only: tpre
       use gvecs
       use gvecw, only: ngw
@@ -124,14 +127,14 @@
             psis(:)=(0.d0,0.d0)
             do ig=1,ngw
                psis(nps(ig))=tpiba*gx(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
-               psis(nms(ig))=tpiba*gx(ipol,ig)*conjg(ci*c(ig,i)+c(ig,i+1))
+               psis(nms(ig))=tpiba*gx(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
             end do
                   ! gradient of wfc in real space
             call ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             !           on smooth grids--> grids for charge density
             do ir=1, nnrsx
-               kedtaus(ir,iss1)=kedtaus(ir,iss1)+0.5d0*sa1*real(psis(ir))**2
-               kedtaus(ir,iss2)=kedtaus(ir,iss2)+0.5d0*sa2*aimag(psis(ir))**2
+               kedtaus(ir,iss1)=kedtaus(ir,iss1)+0.5d0*sa1*DBLE(psis(ir))**2
+               kedtaus(ir,iss2)=kedtaus(ir,iss2)+0.5d0*sa2*AIMAG(psis(ir))**2
             end do
             if(tpre) then
                do ir=1, nnrsx
@@ -147,9 +150,9 @@
                   ipol2xy(iy,ix)=ipol
                   do ir=1,nnrsx
                      crosstaus(ir,ipol,iss1) = crosstaus(ir,ipol,iss1) +&
-                          sa1*real(gradwfc(ir,ix))*real(gradwfc(ir,iy))
+                          sa1*DBLE(gradwfc(ir,ix))*DBLE(gradwfc(ir,iy))
                      crosstaus(ir,ipol,iss2) = crosstaus(ir,ipol,iss2) +&
-                          sa2*aimag(gradwfc(ir,ix))*aimag(gradwfc(ir,iy))
+                          sa2*AIMAG(gradwfc(ir,ix))*AIMAG(gradwfc(ir,iy))
                   end do
                   ipol=ipol+1
                end do
@@ -177,7 +180,7 @@
       if(nspin.eq.1)then
          iss=1
 
-         psis(1:nnrsx)=cmplx(kedtaus(1:nnrsx,iss),0.)
+         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.)
          call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          kedtaug(1:ngs,iss)=psis(nps(1:ngs))
 
@@ -185,13 +188,13 @@
          isup=1
          isdw=2
 
-         psis(1:nnrsx)=cmplx(kedtaus(1:nnrsx,isup),kedtaus(1:nnrsx,isdw))
+         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,isup),kedtaus(1:nnrsx,isdw))
          call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          do ig=1,ngs
             fp= psis(nps(ig)) + psis(nms(ig))
             fm= psis(nps(ig)) - psis(nms(ig))
-            kedtaug(ig,isup)=0.5*cmplx( real(fp),aimag(fm))
-            kedtaug(ig,isdw)=0.5*cmplx(aimag(fp),-real(fm))
+            kedtaug(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+            kedtaug(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 
       endif
@@ -203,10 +206,10 @@
          iss=1
 
          psi(:) = (0.d0,0.d0)
-         psi(nm(1:ngs))=conjg(kedtaug(1:ngs,iss))
+         psi(nm(1:ngs))=CONJG(kedtaug(1:ngs,iss))
          psi(np(1:ngs))=      kedtaug(1:ngs,iss)
          call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         kedtaur(1:nnr,iss)=real(psi(1:nnr))
+         kedtaur(1:nnr,iss)=DBLE(psi(1:nnr))
 
       else 
 !     ==================================================================
@@ -217,12 +220,12 @@
 
          psi(:) = (0.d0,0.d0)
          do ig=1,ngs
-            psi(nm(ig))=conjg(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
+            psi(nm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
             psi(np(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
          end do
          call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         kedtaur(1:nnr,isup)= real(psi(1:nnr))
-         kedtaur(1:nnr,isdw)=aimag(psi(1:nnr))
+         kedtaur(1:nnr,isup)= DBLE(psi(1:nnr))
+         kedtaur(1:nnr,isdw)=AIMAG(psi(1:nnr))
 
       endif
 !
@@ -244,6 +247,7 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
+      use kinds, only: dp
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use parameters, only: natx, nsx
@@ -303,7 +307,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=cmplx(kedtaur(ir,iss),0.0)
+            v(ir)=CMPLX(kedtaur(ir,iss),0.0)
          end do
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          !
@@ -314,13 +318,13 @@
          isup=1
          isdw=2
 
-         v(1:nnr)=cmplx(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw))
+         v(1:nnr)=CMPLX(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw))
          call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            kedtaug(ig,isup)=0.5*cmplx( real(fp),aimag(fm))
-            kedtaug(ig,isdw)=0.5*cmplx(aimag(fp),-real(fm))
+            kedtaug(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+            kedtaug(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 
       endif
@@ -329,23 +333,23 @@
       if(nspin.eq.1)then
          iss=1
          do ig=1,ngs
-            vs(nms(ig))=conjg(kedtaug(ig,iss))
+            vs(nms(ig))=CONJG(kedtaug(ig,iss))
             vs(nps(ig))=kedtaug(ig,iss)
          end do
 !
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
-         kedtaus(1:nnrs,iss)=real(vs(1:nnrs))
+         kedtaus(1:nnrs,iss)=DBLE(vs(1:nnrs))
       else
          isup=1
          isdw=2
          do ig=1,ngs
             vs(nps(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
-            vs(nms(ig))=conjg(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
+            vs(nms(ig))=CONJG(kedtaug(ig,isup)) +ci*conjg(kedtaug(ig,isdw))
          end do
          call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-         kedtaus(1:nnrs,isup)= real(vs(1:nnrs))
-         kedtaus(1:nnrs,isdw)=aimag(vs(1:nnrs))
+         kedtaus(1:nnrs,isup)= DBLE(vs(1:nnrs))
+         kedtaus(1:nnrs,isdw)=AIMAG(vs(1:nnrs))
       endif
       !calculate dkedxc in real space on smooth grids  !metagga
       if(tpre) then

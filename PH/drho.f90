@@ -110,7 +110,7 @@ subroutine drho
         do is = 1, nspin
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
                 ZDOTC (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
-                omega / float (nrstot)
+                omega / DBLE (nrstot)
         enddo
      enddo
 
@@ -132,8 +132,8 @@ subroutine drho
   !
   do nu_i = 1, 3 * nat
      do nu_j = 1, nu_i
-        dyn00(nu_i,nu_j) = 0.5d0*( dyn00(nu_i,nu_j) + conjg(dyn00(nu_j,nu_i))) 
-        dyn00(nu_j,nu_i) = conjg(dyn00(nu_i,nu_j))
+        dyn00(nu_i,nu_j) = 0.5d0*( dyn00(nu_i,nu_j) + CONJG(dyn00(nu_j,nu_i))) 
+        dyn00(nu_j,nu_i) = CONJG(dyn00(nu_i,nu_j))
      enddo
   enddo
   !      call tra_write_matrix('drho dyn00',dyn00,u,nat)

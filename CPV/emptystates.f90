@@ -284,7 +284,7 @@
         DO I = 1, NE
           SF = 0.D0
           IF( wfill%gzero ) THEN
-            CALL DAXPY( nf, - REAL( ce(1,i) ), cf(1,1), 2*ngw, sf, 1 )
+            CALL DAXPY( nf, -DBLE( ce(1,i) ), cf(1,1), 2*ngw, sf, 1 )
           END IF
           CALL DGEMV( 'T', 2*ngw, nf, 2.0d0, cf(1,1), ldw, ce(1,i), 1, 1.d0, sf, 1 )
           CALL mp_sum( SF, group )
@@ -294,7 +294,7 @@
             IF( I > 1 ) THEN
               SE = 0.D0
               IF( wfill%gzero ) THEN
-                CALL DAXPY( i-1, -REAL( ce(1,i) ), ce(1,1), 2*ngw, se, 1 )
+                CALL DAXPY( i-1, -DBLE( ce(1,i) ), ce(1,1), 2*ngw, se, 1 )
               END IF
               CALL DGEMV( 'T', 2*ngw, i-1, 2.0d0, ce(1,1), ldw, ce(1,i), 1, 1.d0, se, 1 )
               CALL mp_sum( SE, group )
@@ -342,7 +342,7 @@
           IF(.NOT.TORTHO) THEN
             anorm = 0.0d0
             do ig = 1, ngw
-              anorm = anorm + REAL( ce(ig,i) * CONJG(ce(ig,i)) )
+              anorm = anorm + DBLE( ce(ig,i) * CONJG(ce(ig,i)) )
             enddo
             CALL mp_sum(anorm,group)
             anorm = 1.0d0 / MAX( sqrt(anorm), 1.d-14 )

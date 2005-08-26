@@ -72,8 +72,8 @@ subroutine dynmatcc
      do ig = 1, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        exc = DCMPLX (cos (arg), - sin (arg) ) * tpiba2
-        work (ig) = drc (ig, nta) * exc * conjg (vxc (nl (ig) ) )
+        exc = CMPLX (cos (arg), - sin (arg) ) * tpiba2
+        work (ig) = drc (ig, nta) * exc * CONJG(vxc (nl (ig) ) )
      enddo
      do i = 1, 3
         na_i = 3 * (na - 1) + i
@@ -103,7 +103,7 @@ subroutine dynmatcc
         wrk = (0.d0, 0.d0)
         do nb_jcart = 1, 3 * nat
            do na_icart = 1, 3 * nat
-              wrk = wrk + conjg (u (na_icart, nu_i) ) * dynwrk (na_icart, &
+              wrk = wrk + CONJG(u (na_icart, nu_i) ) * dynwrk (na_icart, &
                    nb_jcart) * u (nb_jcart, nu_j)
            enddo
         enddo

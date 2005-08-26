@@ -284,7 +284,7 @@
             CALL s_to_r(sdist, rdist, ht)
             r2 = r2 + SUM( ( rdist(:) - tau_ref(:,isa) )**2 )
           END DO
-          dis(k) = dis(k) + r2 / REAL(atoms%na(k))
+          dis(k) = dis(k) + r2 / DBLE(atoms%na(k))
         END DO
 
         RETURN

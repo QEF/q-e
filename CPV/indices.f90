@@ -297,9 +297,9 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      gsq =       ( REAL(i)*b1(1) + REAL(j)*b2(1) + REAL(k)*b3(1) ) ** 2
-      gsq = gsq + ( REAL(i)*b1(2) + REAL(j)*b2(2) + REAL(k)*b3(2) ) ** 2
-      gsq = gsq + ( REAL(i)*b1(3) + REAL(j)*b2(3) + REAL(k)*b3(3) ) ** 2
+      gsq =       ( DBLE(i)*b1(1) + DBLE(j)*b2(1) + DBLE(k)*b3(1) ) ** 2
+      gsq = gsq + ( DBLE(i)*b1(2) + DBLE(j)*b2(2) + DBLE(k)*b3(2) ) ** 2
+      gsq = gsq + ( DBLE(i)*b1(3) + DBLE(j)*b2(3) + DBLE(k)*b3(3) ) ** 2
 
       miller2gsq = gsq
 

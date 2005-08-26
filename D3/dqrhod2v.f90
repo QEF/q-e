@@ -74,7 +74,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
                  gtau = tpi * ( (xq (1) + g (1, ng) ) * tau (1, na) + &
                       (xq (2) + g (2, ng) ) * tau (2, na) + &
                       (xq (3) + g (3, ng) ) * tau (3, na) )
-                 fac = DCMPLX (COS (gtau), - SIN (gtau) )
+                 fac = CMPLX (COS (gtau), - SIN (gtau) )
                  d3dywrk (na_icart, na_jcart) = d3dywrk (na_icart, na_jcart) &
                       - tpiba2 * omega * (xq (icart) + g (icart, ng) ) * &
                       (xq (jcart) + g (jcart, ng) ) * &

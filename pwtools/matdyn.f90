@@ -11,7 +11,8 @@ Module ifconstants
   !
   ! All variables read from file that need dynamical allocation
   !
-  REAL(KIND=8), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
+  USE kinds, ONLY: DP
+  REAL(KIND=DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
   ! frc : interatomic force constants in real space
   ! tau_blk : atomic positions for the original cell
   ! zeu : effective charges for the original cell
@@ -644,7 +645,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1
   REAL(KIND=DP) :: frc_new(nr1,nr2,nr3,3,3,nat,nat), zeu_new(3,3,nat)
   type vector
-     real(kind=8),pointer :: vec(:,:,:,:,:,:,:)
+     real(kind=DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   ! 
   type (vector) u(6*3*nat)
@@ -655,24 +656,24 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! n_less = number of such vectors, i_less = temporary parameter
   !
   integer ind_v(9*nat*nat*nr1*nr2*nr3,2,7)
-  real(kind=8) v(9*nat*nat*nr1*nr2*nr3,2)
+  real(kind=DP) v(9*nat*nat*nr1*nr2*nr3,2)
   ! These are the "vectors" associated with symmetry conditions, coded by 
   ! indicating the positions (i.e. the seven indices) of the non-zero elements (there
   ! should be only 2 of them) and the value of that element. We do so in order
   ! to limit the amount of memory used. 
   !
-  real(kind=8) w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat)
   ! temporary vectors and parameters  
-  real(kind=8) :: scal,norm2, sum
+  real(kind=DP) :: scal,norm2, sum
   !
-  real(kind=8) zeu_u(6*3,3,3,nat)
+  real(kind=DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat)
+  real(kind=DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
 
 
@@ -1129,11 +1130,12 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   ! does the scalar product of two effective charges matrices zeu_u and zeu_v 
   ! (considered as vectors in the R^(3*3*nat) space, and coded in the usual way)
   !
+  USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nat
-  real(kind=8) zeu_u(3,3,nat)
-  real(kind=8) zeu_v(3,3,nat)
-  real(kind=8) scal  
+  real(kind=DP) zeu_u(3,3,nat)
+  real(kind=DP) zeu_v(3,3,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -1157,11 +1159,12 @@ subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
   ! does the scalar product of two force-constants matrices u and v (considered as
   ! vectors in the R^(3*3*nat*nat*nr1*nr2*nr3) space, and coded in the usual way)
   !
+  USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(kind=8) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=8) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=8) scal  
+  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -1194,12 +1197,13 @@ subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   ! but v is coded as explained when defining the vectors corresponding to the 
   ! symmetry constraints
   !
+  USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,nat
-  real(kind=8) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
   integer ind_v(2,7)
-  real(kind=8) v(2)
-  real(kind=8) scal  
+  real(kind=DP) v(2)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0
@@ -1221,11 +1225,12 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   ! terms are zero (the ones that are not are characterized by i and na), so 
   ! that a lot of computer time can be saved (during Gram-Schmidt). 
   !
+  USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(kind=8) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=8) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=8) scal  
+  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  real(kind=DP) scal  
   !
   !
   scal=0.0d0

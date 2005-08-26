@@ -70,7 +70,7 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
      enddo
   enddo
 
-  enbi=aimag(log(exp(temp)))/gmes!this sounds stupid it's just a Riemann plane
+  enbi=AIMAG(log(exp(temp)))/gmes!this sounds stupid it's just a Riemann plane
 !  write(6,*) 'Pola  :', pola!ATTENZIONE
   return
 end subroutine berryion

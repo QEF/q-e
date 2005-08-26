@@ -61,7 +61,7 @@ SUBROUTINE d3_exc
               CALL davcio_drho (work2, lrdrho, iudrho, jpert, - 1)
               DO kpert = 1, 3 * nat
                  CALL davcio_drho (work3, lrdrho, iudrho, kpert, - 1)
-                 aux = DCMPLX (0.d0, 0.d0)
+                 aux = CMPLX (0.d0, 0.d0)
                  DO ir = 1, nrxx
                     aux = aux + &
                           d2muxc (ir) * work1 (ir) * &

@@ -102,11 +102,11 @@ subroutine init_us_1
      do n1=2,2*l+1,2
        m=n1/2
        n=l+1-m
-       rot_ylm(n,n1)=dcmplx((-1.d0)**m*sqrt2,0.d0)
-       rot_ylm(n,n1+1)=dcmplx(0.d0,-(-1.d0)**m*sqrt2)
+       rot_ylm(n,n1)=CMPLX((-1.d0)**m*sqrt2,0.d0)
+       rot_ylm(n,n1+1)=CMPLX(0.d0,-(-1.d0)**m*sqrt2)
        n=l+1+m
-       rot_ylm(n,n1)=dcmplx(sqrt2,0.d0)
-       rot_ylm(n,n1+1)=dcmplx(0.d0, sqrt2)
+       rot_ylm(n,n1)=CMPLX(sqrt2,0.d0)
+       rot_ylm(n,n1+1)=CMPLX(0.d0, sqrt2)
      enddo
      fcoef=(0.d0,0.d0)
      dvan_so = (0.d0,0.d0)
@@ -161,7 +161,7 @@ subroutine init_us_1
                     m0= sph_ind(li,ji,m,is1) + lmaxx + 1
                     m1= sph_ind(lk,jk,m,is2) + lmaxx + 1
                     coeff=coeff + rot_ylm(m0,mi)*spinor(li,ji,m,is1)* &
-                            conjg(rot_ylm(m1,mk))*spinor(lk,jk,m,is2)
+                            CONJG(rot_ylm(m1,mk))*spinor(lk,jk,m,is2)
                   enddo
                   fcoef(ih,kh,is1,is2,nt)=coeff
                 enddo
@@ -295,7 +295,7 @@ subroutine init_us_1
                     ijs=ijs+1
                     do is=1,2
                       qq_so(kh,lh,ijs,nt) = qq_so(kh,lh,ijs,nt)       &
-                          + omega*DREAL(qgm(1))*fcoef(kh,ih,is1,is,nt)&
+                          + omega* DBLE(qgm(1))*fcoef(kh,ih,is1,is,nt)&
                                                *fcoef(jh,lh,is,is2,nt)
                     enddo
                   enddo
@@ -308,7 +308,7 @@ subroutine init_us_1
         do ih = 1, nh (nt)
           do jh = ih, nh (nt)
              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-             qq (ih, jh, nt) = omega * DREAL (qgm (1) )
+             qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
              qq (jh, ih, nt) = qq (ih, jh, nt)
           enddo
         enddo

@@ -52,29 +52,29 @@ subroutine dvpsi_kb(kpoint,nu)
            gu = tpiba*( g(1,ng)*u(mu+1,nu) + &
                         g(2,ng)*u(mu+2,nu) + &
                         g(3,ng)*u(mu+3,nu)   )
-           exc = gu * cmplx(-sin(gtau),-cos(gtau))
+           exc = gu * CMPLX(-sin(gtau),-cos(gtau))
            dvloc (nl(ng))=dvloc (nl(ng)) + vloc(igtongl(ng),nt)*exc
            if (nlcc(nt)) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
         end do
      end if
   end do
   do ng = gstart,ngm
-     dvloc (nlm(ng))=conjg(dvloc(nl(ng)))
+     dvloc (nlm(ng))=CONJG(dvloc(nl(ng)))
   end do
   !
   !   dVloc/dtau in real space
   !
   call cft3(dvloc, nr1,nr2,nr3,nrx1,nr2,nr3,+1)
   do ir = 1,nrxx
-     dv(ir) = DREAL(dvloc(ir))
+     dv(ir) =  DBLE(dvloc(ir))
   end do
   if (has_nlcc) then
      do ng = gstart,ngm
-        dvb_cc (nlm(ng))=conjg(dvb_cc(nl(ng)))
+        dvb_cc (nlm(ng))=CONJG(dvb_cc(nl(ng)))
      end do
      call cft3(dvb_cc,nr1,nr2,nr3,nrx1,nr2,nr3,+1)
      do ir = 1,nrxx
-        dv(ir) = dv(ir) + DREAL(dvb_cc(ir)) * dmuxc(ir)
+        dv(ir) = dv(ir) +  DBLE(dvb_cc(ir)) * dmuxc(ir)
      end do
   end if
   !
@@ -102,8 +102,8 @@ subroutine dvpsi_kb(kpoint,nu)
               !
               do ih = 1,nh(nt)
                  do ik = 1,npw
-                    work(ik,ih) = vkb(ik,jkb+ih) * &
-                         cmplx(0.d0,-tpiba*( g(1,igk(ik))*u(mu+1,nu) +  &
+                    work(ik,ih) = vkb(ik,jkb+ih) * CMPLX(0.d0,-1.d0) * &
+                                    (tpiba*( g(1,igk(ik))*u(mu+1,nu) +  &
                                              g(2,igk(ik))*u(mu+2,nu) +  &
                                              g(3,igk(ik))*u(mu+3,nu) ) )
                  end do

@@ -94,8 +94,8 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
      CALL DGEMV( 'T', kdim2, 2, 1.D0, aux(1,1,1), &
                  kdmx2, psi(1,1,m), 1, 0.D0, rtmp, 1 )
      !
-     hc(m,m,1) = DCMPLX( rtmp(1), 0.D0 )
-     sc(m,m)   = DCMPLX( rtmp(2), 0.D0 )
+     hc(m,m,1) = CMPLX( rtmp(1), 0.D0 )
+     sc(m,m)   = CMPLX( rtmp(2), 0.D0 )
      !
      DO j = m + 1, nstart
         !

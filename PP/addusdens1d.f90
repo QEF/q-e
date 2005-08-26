@@ -110,8 +110,8 @@ subroutine addusdens1d (plan, prho)
 #endif
   dimz = alat * celldm (3)
   do ig = 1, nr3
-     qgr (ig) = real (qg (ig) )
-     qgi (ig) = DIMAG (qg (ig) )
+     qgr (ig) =  DBLE (qg (ig) )
+     qgi (ig) = AIMAG (qg (ig) )
   enddo
   call cft (qgr, qgi, nr3, nr3, nr3, 1)
   do ig = 1, nr3

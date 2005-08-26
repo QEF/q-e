@@ -51,7 +51,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   dvaux (:,:) = (0.d0, 0.d0)
 
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / DBLE (nspin)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin

@@ -84,7 +84,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
            !
                  do ig = 1, npw
                     wrk2 (ig) = vkb_(ig,jkb) * &
-                         conjg(DCMPLX(0.d0,1.d0) *tpiba * &
+                         CONJG(CMPLX(0.d0,1.d0) *tpiba * &
                                 (g (1, igk (ig) ) * u_x (mu + 1, nu_i) + &
                                  g (2, igk (ig) ) * u_x (mu + 2, nu_i) + &
                                  g (3, igk (ig) ) * u_x (mu + 3, nu_i) ) )
@@ -99,7 +99,7 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
                  call reduce (4 * nbnd, ps)
 #endif
                  do ig = 1, npwq
-                    wrk2 (ig) = vkbq_(ig,jkb) * DCMPLX(0.d0,-1.d0) * tpiba * &
+                    wrk2 (ig) = vkbq_(ig,jkb) * CMPLX(0.d0,-1.d0) * tpiba * &
                          ( (g (1, igkq (ig) ) + xq_ (1) ) * u_x (mu+1, nu_i) +&
                            (g (2, igkq (ig) ) + xq_ (2) ) * u_x (mu+2, nu_i) +&
                            (g (3, igkq (ig) ) + xq_ (3) ) * u_x (mu+3, nu_i) )

@@ -461,7 +461,7 @@ contains
 
                 isym = abs(index_sym(ikq) )
                 psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
-                if (index_sym(ikq) < 0 ) psic(1:nrxxs) = conjg(psic(1:nrxxs))
+                if (index_sym(ikq) < 0 ) psic(1:nrxxs) = CONJG(psic(1:nrxxs))
 
                 CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
              end do
@@ -585,7 +585,7 @@ contains
                 CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
                                     (ikq-1)*half_nbnd+h_ibnd, -1 )
                 !calculate rho in real space
-                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
                 CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
@@ -595,11 +595,11 @@ contains
                 !brings back v in real space
                 CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
 
-                vc = DCMPLX( x1 * REAL (vc), x2 * DIMAG(vc) )/ nqs
+                vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) )/ nqs
 
                 !accumulates over bands and k points
                 result(1:nrxxs) = result(1:nrxxs) + &
-                                  REAL( vc(1:nrxxs) * tempphic(1:nrxxs) )
+                                  DBLE( vc(1:nrxxs) * tempphic(1:nrxxs) )
              end do
           else
              do ibnd=1,nbnd !for each band of psi
@@ -610,7 +610,7 @@ contains
                 CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
                                         (ikq-1)*nbnd+ibnd, -1 )
                 !calculate rho in real space
-                rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
                 CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
@@ -677,7 +677,7 @@ contains
        if (gamma_only .and. gstart == 2) then
            do ibnd=1,nbnd
               energy = energy - &
-                       0.5d0 * wg(ibnd,ik) * conjg(psi(1,ibnd)) * vxpsi(1,ibnd)
+                       0.5d0 * wg(ibnd,ik) * CONJG(psi(1,ibnd)) * vxpsi(1,ibnd)
            end do
        end if
     end do
@@ -796,16 +796,16 @@ contains
                    CALL davcio (tempphic, exx_nwordwfc, iunexx, &
                                           (ikq-1)*half_nbnd+h_ibnd, -1 )
                    !calculate rho in real space
-                   rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                   rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
                    CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
                    vc = 0.D0
                    do ig=1,ngm
                       vc = vc + fac(ig) * x1 * &
-                                abs( rhoc(nls(ig)) + conjg(rhoc(nlsm(ig))) )**2
+                                abs( rhoc(nls(ig)) + CONJG(rhoc(nlsm(ig))) )**2
                       vc = vc + fac(ig) * x2 * &
-                                abs( rhoc(nls(ig)) - conjg(rhoc(nlsm(ig))) )**2
+                                abs( rhoc(nls(ig)) - CONJG(rhoc(nlsm(ig))) )**2
                    end do
                    vc = vc * omega * 0.25d0 / nqs
 
@@ -820,13 +820,13 @@ contains
                    CALL davcio (tempphic, exx_nwordwfc, iunexx, &
                                           (ikq-1)*nbnd+ibnd, -1 )
                    !calculate rho in real space
-                   rhoc(:)=conjg(tempphic(:))*temppsic(:) / omega
+                   rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
                    CALL cft3s( rhoc,nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
    
                    vc = 0.D0
                    do ig=1,ngm
-                      vc = vc + fac(ig) * rhoc(nls(ig)) * conjg(rhoc(nls(ig)))
+                      vc = vc + fac(ig) * rhoc(nls(ig)) * CONJG(rhoc(nls(ig)))
                    end do
                    vc = vc * omega * x_occupation(ibnd,ik) / nqs
 

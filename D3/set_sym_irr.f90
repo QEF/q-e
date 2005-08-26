@@ -165,9 +165,9 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
                  ENDDO
                  arg = arg * tpi
                  IF (isymq.EQ.nsymtot.AND.minus_q) THEN
-                    fase = DCMPLX (COS (arg), SIN (arg) )
+                    fase = CMPLX (COS (arg), SIN (arg) )
                  ELSE
-                    fase = DCMPLX (COS (arg), - SIN (arg) )
+                    fase = CMPLX (COS (arg), - SIN (arg) )
                  ENDIF
                  DO ipol = 1, 3
                     DO jpol = 1, 3

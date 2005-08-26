@@ -81,7 +81,7 @@ subroutine set_rhoc
   enddo
   if (gamma_only) then
      do ng = 1, ngm
-        aux(nlm(ng)) = conjg(aux(nl (ng)))
+        aux(nlm(ng)) = CONJG(aux(nl (ng)))
      end do
   end if
   !
@@ -94,9 +94,9 @@ subroutine set_rhoc
   rhoneg = 0.d0
   rhoima = 0.d0
   do ir = 1, nrxx
-     rhoneg = rhoneg + min (0.d0, DREAL (aux (ir) ) )
-     rhoima = rhoima + abs (DIMAG (aux (ir) ) )
-     rho_core(ir) = DREAL (aux(ir))
+     rhoneg = rhoneg + min (0.d0,  DBLE (aux (ir) ) )
+     rhoima = rhoima + abs (AIMAG (aux (ir) ) )
+     rho_core(ir) =  DBLE (aux(ir))
      !
      ! NOTE: Core charge is computed in reciprocal space and brought to real
      ! space by FFT. For non smooth core charges (or insufficient cut-off)
@@ -109,7 +109,7 @@ subroutine set_rhoc
      ! If you insist to have it positive definite (with the possible problems
      ! mentioned above) uncomment the following lines.  SdG, Oct 15 1999
      !
-     !         rhorea = max (DREAL (aux (ir) ), eps)
+     !         rhorea = max ( DBLE (aux (ir) ), eps)
      !         rho_core(ir) = rhorea
      !
   enddo

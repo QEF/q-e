@@ -48,7 +48,7 @@ subroutine sym_def (def, irr)
         enddo
      enddo
      do ipert = 1, npert (irr)
-        def (ipert) = 0.5d0 * (def (ipert) + conjg (w_def (ipert) ) )
+        def (ipert) = 0.5d0 * (def (ipert) + CONJG(w_def (ipert) ) )
      enddo
   endif
   !
@@ -67,7 +67,7 @@ subroutine sym_def (def, irr)
   !
   ! normalize and exit
   !
-  def = w_def / float(nsymq)
+  def = w_def / DBLE(nsymq)
 
   return
 end subroutine sym_def

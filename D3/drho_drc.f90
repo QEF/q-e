@@ -59,8 +59,8 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
                  guexp = tpiba * ( (g (1, ig) + xq_x (1) ) * uact (mu + 1) &
                                  + (g (2, ig) + xq_x (2) ) * uact (mu + 2) &
                                  + (g (3, ig) + xq_x (3) ) * uact (mu + 3) )&
-                               * DCMPLX (0.d0, - 1.d0) &
-                               * DCMPLX (COS (gtau), - SIN (gtau) )
+                               * CMPLX (0.d0, - 1.d0) &
+                               * CMPLX (COS (gtau), - SIN (gtau) )
                  drhoc (nl (ig) ) = drhoc (nl (ig) ) + drc_x (ig, nt) * guexp
               ENDDO
            ENDIF

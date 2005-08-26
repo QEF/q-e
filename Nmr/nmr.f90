@@ -195,7 +195,7 @@ program nmr
 !                    tmp2(:)=dev(:,ibnd)
 
                  call add_j_bare (evc, dev, &
-                      sign(real(iperm0,dp),real(1-isign,dp)) *wk(ik),&
+                      sign(DBLE(iperm0),DBLE(1-isign)) *wk(ik),&
                       j_bare(1,b0,idir))
 
               enddo
@@ -205,7 +205,7 @@ program nmr
                  call grad(ik, evc, idir, dev )
 
                  call add_j_bare (dpsi, dev, &
-                      - sign(real(iperm0,dp),real(1-isign,dp)) &  
+                      - sign(DBLE(iperm0),DBLE(1-isign)) &  
                       *wk(ik), j_bare(1,b0,idir))   
               enddo
               
@@ -228,8 +228,8 @@ program nmr
                     dchi = dchi+  ZDOTC(npw,evc(1,ibnd),1,dev(1,ibnd),1)
                  enddo
 
-                    dchi = real(iperm1,dp)*real(iperm0,dp)*wk(ik)* &
-                         (dchi-kkterm_hh(p0,p1)*real(nbnd,dp))
+                    dchi = DBLE(iperm1)*DBLE(iperm0)*wk(ik)* &
+                         (dchi-kkterm_hh(p0,p1)*DBLE(nbnd))
                  if (b0 .eq. b1) then
                     chihh(b0,b1) = chihh(b0,b1) + dchi 
                  else
@@ -246,8 +246,8 @@ program nmr
                     dchi = dchi+  ZDOTC(npw,evc(1,ibnd),1,dev(1,ibnd),1)
                  enddo
                  print *,'dchi',dchi
-                    dchi = real(iperm1,dp)*real(iperm0,dp)*wk(ik)* &
-                         (dchi-kkterm_vv(p0,p1)*real(nbnd,dp))
+                    dchi = DBLE(iperm1)*DBLE(iperm0)*wk(ik)* &
+                         (dchi-kkterm_vv(p0,p1)*DBLE(nbnd))
                  if (b0 .eq. b1) then
                     chivv(b0,b1) = chivv(b0,b1) + dchi 
                  else
@@ -262,18 +262,18 @@ program nmr
      enddo
   enddo
   b_length =  0.001d0
-  chihh = -2.d0*real(chihh(:,:),dp)/(b_length**2)
+  chihh = -2.d0*DBLE(chihh(:,:))/(b_length**2)
   chihh = chihh *(.529177d-8)**3*0.6022d24/(137.036**2)*1.d6
 
-  chi_macro= real(chihh(1,1)+chihh(2,2)+chihh(3,3),dp)/3.d0
+  chi_macro= DBLE(chihh(1,1)+chihh(2,2)+chihh(3,3))/3.d0
 
   print *,'chihh_macro',chi_macro
   
 
-  chivv = -2.d0*real(chivv(:,:),dp)/(b_length**2)
+  chivv = -2.d0*DBLE(chivv(:,:))/(b_length**2)
   chivv = chivv *(.529177d-8)**3*0.6022d24/(137.036**2)*1.d6
 
-  chi_macro= real(chivv(1,1)+chivv(2,2)+chivv(3,3),dp)/3.d0
+  chi_macro= DBLE(chivv(1,1)+chivv(2,2)+chivv(3,3))/3.d0
 
   print *,'chivv_macro',chi_macro
 

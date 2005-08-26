@@ -99,7 +99,7 @@ subroutine addusstres (sigmanlc)
                           do jpol = 1, ipol
                              do ig = 1, ngm
                                 cfac = aux (ig, is) * &
-                                       conjg ( eigts1 (ig1 (ig), na) * &
+                                       CONJG( eigts1 (ig1 (ig), na) * &
                                                eigts2 (ig2 (ig), na) * &
                                                eigts3 (ig3 (ig), na) )
                                 aux1 (ig) = cfac * g (jpol, ig)

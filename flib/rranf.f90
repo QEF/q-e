@@ -21,7 +21,7 @@
         SAVE m, konst
           m=m*konst
           m=m-2796203 * (m/2796203)
-          rranf = REAL(m)/2796203.d0
+          rranf = DBLE(m)/2796203.d0
         RETURN
       END FUNCTION rranf
 

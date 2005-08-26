@@ -363,8 +363,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
-        hc(n,n) = DCMPLX( REAL( hc(n,n) ), 0.D0 )
-        sc(n,n) = DCMPLX( REAL( sc(n,n) ), 0.D0 )
+        hc(n,n) = CMPLX( DBLE( hc(n,n) ), 0.D0 )
+        sc(n,n) = CMPLX( DBLE( sc(n,n) ), 0.D0 )
         !
         DO  m = n + 1, nbase
            !

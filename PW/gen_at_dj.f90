@@ -97,7 +97,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
       arg = ( xk(1,kpoint) * tau(1,na) + &
               xk(2,kpoint) * tau(2,na) + &
               xk(3,kpoint) * tau(3,na) ) * tpi
-      phase=DCMPLX(cos(arg),-sin(arg))
+      phase=CMPLX(cos(arg),-sin(arg))
       do ig =1,npw
          iig = igk(ig)
          sk(ig) = eigts1(ig1(iig),na) *      &

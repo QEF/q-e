@@ -85,7 +85,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                       g(2,ng)*tau(2,na) + &
                       g(3,ng)*tau(3,na) )
 
-                 fac = DCMPLX(COS(gtau),SIN(gtau))
+                 fac = CMPLX(COS(gtau),SIN(gtau))
 
                  d3dywrk(na_icart,na_jcart) = &
                       d3dywrk(na_icart,na_jcart) - &

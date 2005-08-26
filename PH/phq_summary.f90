@@ -140,13 +140,13 @@ subroutine phq_summary
                 2, isym) / nr2 + at (3, 3) * ftau (3, isym) / nr3
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &                    " )    f =( ",f10.7," )")') isymq,  (s (1, &
-                & ipol, isym) , ipol = 1, 3) , float (ftau (1, isym) )  / float (nr1)
+                & ipol, isym) , ipol = 1, 3) , DBLE (ftau (1, isym) )  / DBLE (nr1)
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )")')  (s (2, ipol, &
-                &isym) , ipol = 1, 3) , float (ftau (2, isym) )  / float (nr2)
+                &isym) , ipol = 1, 3) , DBLE (ftau (2, isym) )  / DBLE (nr2)
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )"/)')  (s (3, ipol, &
-                & isym) , ipol = 1, 3) , float (ftau (3, isym) )  / float (nr3)
+                & isym) , ipol = 1, 3) , DBLE (ftau (3, isym) )  / DBLE (nr3)
            WRITE( stdout, '(1x,"cart.",3x,"s(",i2,") = (",3f11.7, &
                 &                    " )    f =( ",f10.7," )")') isymq,  (sr (1 &
                 &, ipol) , ipol = 1, 3) , ft1

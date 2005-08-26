@@ -86,7 +86,7 @@
      &             jump,nr3,lot,isign)
 !
       if (isign.eq.-1) then
-         fac=1.d0/dfloat(nr1*nr2*nr3)
+         fac=1.d0/DBLE(nr1*nr2*nr3)
          call SSCAL(2*nr1x*nr2x*nr3x,fac,f,1)
       end if
 !
@@ -161,7 +161,7 @@
      &             jump,nr3b,lot,isign)
 !
       if (isign.eq.-1) then
-         fac=1.d0/dfloat(nr1b*nr2b*nr3b)
+         fac=1.d0/DBLE(nr1b*nr2b*nr3b)
          call SSCAL(2*nr1bx*nr2bx*nr3bx,fac,f,1)
       end if
 !
@@ -247,7 +247,7 @@
      &             jump,nr3s,lot,isign)
 !
       if (isign.eq.-1) then
-         fac=1.d0/dfloat(nr1s*nr2s*nr3s)
+         fac=1.d0/DBLE(nr1s*nr2s*nr3s)
          call SSCAL(2*nr1sx*nr2sx*nr3sx,fac,f,1)
       end if
 !

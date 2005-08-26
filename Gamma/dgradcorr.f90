@@ -183,16 +183,16 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      do n = 1, ngm
         gaux(nl (n)) = CMPLX(0.d0, g(ipol  , n))* a (nl(n)) - &
                                    g(ipol+1, n) * a (nl(n))
-        gaux(nlm(n)) = CMPLX(0.d0, - g(ipol  , n))* conjg(a (nl(n))) + &
-                                     g(ipol+1, n) * conjg(a (nl(n)))
+        gaux(nlm(n)) = CMPLX(0.d0, - g(ipol  , n))* CONJG(a (nl(n))) + &
+                                     g(ipol+1, n) * CONJG(a (nl(n)))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
      call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      do n = 1, nrxx
-        ga (ipol  , n) = DREAL(gaux (n)) * tpiba
-        ga (ipol+1, n) = DIMAG(gaux (n)) * tpiba
+        ga (ipol  , n) =  DBLE(gaux (n)) * tpiba
+        ga (ipol+1, n) = AIMAG(gaux (n)) * tpiba
      enddo
   ! z
      ipol=3
@@ -201,13 +201,13 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      enddo
      do n = 1, ngm
         gaux(nl (n)) = CMPLX(0.d0, g(ipol, n)) * a (nl(n))
-        gaux(nlm(n)) = conjg(gaux(nl(n)))
+        gaux(nlm(n)) = CONJG(gaux(nl(n)))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
      call cft3 (gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      ! ...and add the factor 2\pi/a  missing in the definition of q+G
      do n = 1, nrxx
-        ga (ipol, n) = DREAL(gaux (n)) * tpiba
+        ga (ipol, n) =  DBLE(gaux (n)) * tpiba
      enddo
 !  enddo
   deallocate (gaux)
@@ -243,7 +243,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      ipol=1
      ! copy a(ipol,r) to a complex array...
      do n = 1, nrxx
-        aux (n) = CMPLX(DREAL(a(ipol, n)),DREAL(a(ipol+1, n)))
+        aux (n) = CMPLX( DBLE(a(ipol, n)), DBLE(a(ipol+1, n)))
      enddo
      ! bring a(ipol,r) to G-space, a(G) ...
      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -251,8 +251,8 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      do n = 1, ngm
         fp = (aux(nl (n)) + aux (nlm(n)))*0.5d0
         fm = (aux(nl (n)) - aux (nlm(n)))*0.5d0
-        aux1 = cmplx(DREAL(fp), DIMAG(fm))
-        aux2 = cmplx(DIMAG(fp),-DREAL(fm))
+        aux1 = CMPLX( DBLE(fp), AIMAG(fm))
+        aux2 = CMPLX(AIMAG(fp),- DBLE(fm))
         da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol  , n)) * aux1 + &
                                   CMPLX(0.d0, g(ipol+1, n)) * aux2
      end do
@@ -270,7 +270,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      enddo
 !!!  enddo
   do n = 1, ngm
-     da(nlm(n)) = conjg(da(nl(n)))
+     da(nlm(n)) = CONJG(da(nl(n)))
   enddo
   !  bring back to R-space, (\grad_ipol a)(r) ...
   call cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)

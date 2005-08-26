@@ -386,8 +386,8 @@ SUBROUTINE wfcinit()
                          rr  = rndm()
                          arg = tpi * rndm()
                          !
-                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX( rr*COS( arg ),    &
-                                                            rr*SIN( arg ) ) / &
+                         wfcatom_nc(ig,ipol,ibnd) = &
+                              CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
                                     ( ( xk(1,ik) + g(1,igk(ig) ) )**2 +       &
                                       ( xk(2,ik) + g(2,igk(ig) ) )**2 +       &
                                       ( xk(3,ik) + g(3,igk(ig) ) )**2 + 1.0D0 )
@@ -402,8 +402,8 @@ SUBROUTINE wfcinit()
                       rr  = rndm()
                       arg = tpi * rndm()
                       !
-                      wfcatom(ig,ibnd) = DCMPLX( rr*COS( arg ), &
-                                                 rr*SIN( arg ) ) / &
+                      wfcatom(ig,ibnd) = &
+                           CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
                                       ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                                         ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
@@ -427,8 +427,8 @@ SUBROUTINE wfcinit()
                          rr  = rndm()
                          arg = tpi * rndm()
                          !
-                         wfcatom_nc(ig,ipol,ibnd) = DCMPLX( rr*COS( arg ),    &
-                                                            rr*SIN( arg ) ) / &
+                         wfcatom_nc(ig,ipol,ibnd) = &
+                              CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
                                      ( ( xk(1,ik) + g(1,igk(ig)) )**2 +       &
                                        ( xk(2,ik) + g(2,igk(ig)) )**2 +       &
                                        ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
@@ -443,8 +443,8 @@ SUBROUTINE wfcinit()
                       rr  = rndm()
                       arg = tpi * rndm()
                       !
-                      wfcatom(ig,ibnd) = DCMPLX( rr*COS( arg ),    &
-                                                 rr*SIN( arg ) ) / &
+                      wfcatom(ig,ibnd) = &
+                           CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
                                       ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                                         ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )

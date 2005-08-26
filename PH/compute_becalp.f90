@@ -63,7 +63,7 @@ subroutine compute_becalp (becq, alpq)
         call ccalbec (nkb, npwx, npwq, nbnd, alpq(1, 1, ipol, ik),vkb, aux)
      enddo
   enddo
-  fact = DCMPLX (0.d0, tpiba)
+  fact = CMPLX (0.d0, tpiba)
 
   call ZSCAL (nkb * nbnd * 3 * nksq, fact, alpq, 1)
   deallocate (aux)

@@ -168,12 +168,12 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
         call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0.d0), spsi, &
              ndmx, vc , nvecx, (0.d0, 0.d0), res (1, 1, nbase), ndmx)
         call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), hpsi, &
-             ndmx, vc , nvecx, DCMPLX(- e(ib), 0.d0), res (1, 1, nbase), ndmx)
+             ndmx, vc , nvecx, CMPLX(- e(ib), 0.d0), res (1, 1, nbase), ndmx)
      ELSE
         call ZGEMM ('n', 'n', ndmx*npol, 1, nbase, (1.d0, 0.d0), spsi, &
              ndmx*npol, vc , nvecx, (0.d0, 0.d0), res (1, 1, nbase), ndmx*npol)
         call ZGEMM ('n', 'n', ndmx*npol, 1, nbase, (1.d0, 0d0), hpsi, &
-                     ndmx*npol, vc , nvecx, DCMPLX(- e(ib), 0.d0), & 
+                     ndmx*npol, vc , nvecx, CMPLX(- e(ib), 0.d0), & 
                      res (1, 1, nbase), ndmx*npol)
      ENDIF
      !
@@ -210,29 +210,29 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      ! add a new vector to the basis: kresse method
      ! |psi_n+1> = |psi_n> + \lambda * K * |res_n>
 !        call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0.d0), psi, &
-!             ndmx, vc , nvecx, DCMPLX (lam, 0.d0) , &
+!             ndmx, vc , nvecx, CMPLX (lam, 0.d0) , &
 !             psi (1, 1, nbase+1), ndmx)
 
         nbase = nbase + 1
      !
      ! normalize new basis vector
         IF (npol == 1) THEN
-           ec = DREAL(ZDOTC (ndim, psi (1, 1, nbase), 1, psi (1, 1, nbase), 1))
+           ec =  DBLE(ZDOTC (ndim, psi (1, 1, nbase), 1, psi (1, 1, nbase), 1))
         ELSE
-           ec = DREAL(ZDOTC(ndmx*npol,psi (1, 1,nbase),1,psi(1, 1, nbase),1))
+           ec =  DBLE(ZDOTC(ndmx*npol,psi (1, 1,nbase),1,psi(1, 1, nbase),1))
         ENDIF
 #ifdef __PARA
      call reduce (1 , ec)
 #endif
         IF (npol == 1) THEN
-           call ZSCAL (ndim, DCMPLX (1/dsqrt(ec), 0.d0), psi (1,1,nbase), 1)
+           call ZSCAL (ndim, CMPLX (1/dsqrt(ec), 0.d0), psi (1,1,nbase), 1)
         ELSE
-           call ZSCAL (ndmx*npol, DCMPLX(1/dsqrt(ec),0.d0), psi (1,1,nbase), 1)
+           call ZSCAL (ndmx*npol, CMPLX(1/dsqrt(ec),0.d0), psi (1,1,nbase), 1)
         ENDIF
      ! new eigenvector, normalize eigenvectors
         vc(nbase) = (1.d0, 0.d0)
-        ec = DREAL(ZDOTC (nbase, vc , 1, vc , 1))
-        call ZSCAL (nvecx, DCMPLX (1/dsqrt(ec), 0.d0), vc, 1)
+        ec =  DBLE(ZDOTC (nbase, vc , 1, vc , 1))
+        call ZSCAL (nvecx, CMPLX (1/dsqrt(ec), 0.d0), vc, 1)
      !
      !     calculate hpsi=H|psi> and spsi=S|psi> 
      !
@@ -274,7 +274,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
            call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0 , 0.d0), spsi, &
                 ndmx, vc , nvecx, (0.d0, 0.d0), res (1, 1, nbase), ndmx)
            call ZGEMM ('n', 'n', ndim, 1, nbase, (1.d0, 0d0), hpsi, &
-                ndmx, vc , nvecx, DCMPLX (-e(ib), 0.d0), res (1,1,nbase), ndmx)
+                ndmx, vc , nvecx, CMPLX (-e(ib), 0.d0), res (1,1,nbase), ndmx)
         !
         !   calculate the new elements of the <res_i|res_j> matrix
            call ZGEMM ('c', 'n', nbase, 1, ndim, (1.d0, 0.d0) , &
@@ -284,7 +284,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
            call ZGEMM ('n', 'n', ndmx*npol, 1, nbase, (1.d0 , 0.d0), spsi, &
              ndmx*npol, vc , nvecx, (0.d0, 0.d0), res (1, 1, nbase), ndmx*npol)
            call ZGEMM ('n', 'n', ndmx*npol, 1, nbase, (1.d0, 0d0), hpsi, &
-                ndmx*npol, vc , nvecx, DCMPLX (-e(ib), 0.d0), &
+                ndmx*npol, vc , nvecx, CMPLX (-e(ib), 0.d0), &
                 res (1,1,nbase), ndmx*npol)
         !
         !   calculate the new elements of the <res_i|res_j> matrix
@@ -301,9 +301,9 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      !
      do n = 1, nbase
         !  the diagonal of rc and sc must be strictly real 
-        rc (n, n) = DCMPLX (DREAL (rc (n, n) ), 0.d0)
-        hc (n, n) = DCMPLX (DREAL (hc (n, n) ), 0.d0)
-        sc (n, n) = DCMPLX (DREAL (sc (n, n) ), 0.d0)
+        rc (n, n) = CMPLX ( DBLE (rc (n, n) ), 0.d0)
+        hc (n, n) = CMPLX ( DBLE (hc (n, n) ), 0.d0)
+        sc (n, n) = CMPLX ( DBLE (sc (n, n) ), 0.d0)
         do m = n + 1, nbase
            rc (m, n) = CONJG (rc (n, m) )
            hc (m, n) = CONJG (hc (n, m) )
@@ -347,10 +347,10 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      vcn(:,:)= (0.d0,0.d0)
      call ZGEMM ('n', 'n', nbase, 1, nbase, (1.d0 , 0.d0), hc, &
           nvecx, vc , nvecx, (0.d0, 0.d0), vcn (1, 1), nvecx)
-     ec = DREAL( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
+     ec =  DBLE( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
      call ZGEMM ('n', 'n', nbase, 1, nbase, (1.d0 , 0.d0), sc, &
           nvecx, vc , nvecx, (0.d0, 0.d0), vcn (1, 1), nvecx)
-     ec = ec / DREAL( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
+     ec = ec /  DBLE( ZDOTC (nvecx, vc, 1, vcn (1, 1), 1) )
 
      if (verb) WRITE( stdout,*) 'NORM RES=',snorm,'DELTA EIG=',ec-e(ib)
 

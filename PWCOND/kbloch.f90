@@ -24,8 +24,8 @@ subroutine kbloch(ntot, val)
          val(ntot) ! complex k values
 
   do in=1, ntot
-     g1=DREAL(val(in))
-     g2=DIMAG(val(in))
+     g1= DBLE(val(in))
+     g2=AIMAG(val(in))
      rho=DSQRT(g1**2+g2**2)
      k1=DACOS(g1/rho)
      k2=-DLOG(rho)       
@@ -35,7 +35,7 @@ subroutine kbloch(ntot, val)
      k1=k1-1.d0*INT(k1) 
      if (k1.gt.0.5d0) k1=k1-1.d0        
      val(in)=CMPLX(k1,k2) 
-  !   WRITE( stdout,'(i5, 2f12.7)') in, DREAL(val(in)), DIMAG(val(in))
+  !   WRITE( stdout,'(i5, 2f12.7)') in,  DBLE(val(in)), AIMAG(val(in))
   enddo          
 
   return

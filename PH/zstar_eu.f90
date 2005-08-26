@@ -85,7 +85,7 @@ subroutine zstar_eu
         icart = mu - 3 * (na - 1)
         do nu = 1, 3 * nat
            zstareu (jpol, icart, na) = zstareu (jpol, icart, na) + &
-                conjg (u (mu, nu) ) * zstareu0 (jpol, nu)
+                CONJG(u (mu, nu) ) * zstareu0 (jpol, nu)
         enddo
      enddo
   enddo

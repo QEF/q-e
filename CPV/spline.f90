@@ -92,7 +92,7 @@
             CALL errore(' allocate_spline ', ' wrong interval ', 1)
           spl%xmin = xmin
           spl%xmax = xmax
-          spl%h    = ( xmax - xmin ) / REAL( nn - 1 )
+          spl%h    = ( xmax - xmin ) / DBLE( nn - 1 )
           spl%invh = 1.0d0 / spl%h
         ELSE
           spl%xmin = 0
@@ -371,7 +371,7 @@
 ! fast spline for pair potentials without checks
         h = spl%h
         invh = spl%invh
-        d=xx-spl%x(1); i=INT(d*spl%invh); d0=REAL(i)*h; i=i+1
+        d=xx-spl%x(1); i=INT(d*spl%invh); d0=DBLE(i)*h; i=i+1
         i = (xx-spl%x(1))*invh + 1
 
         a = (spl%x(i+1)-xx)*invh
@@ -547,7 +547,7 @@
         REAL(dbl)  :: p, qn, sig, un, dx
         REAL(dbl)  :: u(n)
 
-        dx = (xmax-xmin)/REAL(n-1)
+        dx = (xmax-xmin)/DBLE(n-1)
         if ( yp1 .gt. 0.99d30 ) then
           y2(1)=0.d0
           u(1)=0.0d0
@@ -585,7 +585,7 @@
         REAL(dbl),  INTENT(OUT) :: y
         INTEGER :: khi,klo
         REAL(dbl)  :: a,b,h,dx,xhi,xlo
-        dx  = (xmax-xmin)/REAL(n-1)
+        dx  = (xmax-xmin)/DBLE(n-1)
         klo = INT(x/dx)
         khi = klo+1
         IF(klo.LT.1) THEN
@@ -594,8 +594,8 @@
         IF(khi.GT.n) THEN
           CALL errore(' splintdx ',' khi grether than N ',khi)
         END IF
-        xlo  = xmin + REAL(klo-1) * dx
-        xhi  = xmin + REAL(khi-1) * dx
+        xlo  = xmin + DBLE(klo-1) * dx
+        xhi  = xmin + DBLE(khi-1) * dx
        
         a   = (xhi-x)/dx
         b   = (x-xlo)/dx

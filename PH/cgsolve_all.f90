@@ -141,7 +141,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            rho(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
         endif
      enddo
-     kter_eff = kter_eff + float (lbnd) / float (nbnd)
+     kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
 #ifdef __PARA
      call reduce (lbnd, rho )
 #endif
@@ -206,7 +206,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           dclambda = DCMPLX ( - a(lbnd) / c(lbnd), 0.d0)
+           dclambda = CMPLX ( - a(lbnd) / c(lbnd), 0.d0)
            !
            !    move to new position
            !

@@ -66,7 +66,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
         work = (0.d0, 0.d0)
         do mu = 1, 3 * nat
            do nu = 1, 3 * nat
-              work = work + u (i, mu) * dyn (mu, nu) * conjg (u (j, nu) )
+              work = work + u (i, mu) * dyn (mu, nu) * CONJG(u (j, nu) )
            enddo
         enddo
         phi (icart, jcart, na, nb) = work

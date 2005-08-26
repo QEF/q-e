@@ -28,12 +28,12 @@ implicit none
     do j = 1, nchanl
       s = 0.d0
       do k = 1, nchanl
-       s = s + conjg(smat(k,i))*smat(k,j)
+       s = s + CONJG(smat(k,i))*smat(k,j)
       enddo
       do k = 1, nchanr
-       s = s + conjg(smat(nchanl+k,i))*smat(nchanl+k,j)
+       s = s + CONJG(smat(nchanl+k,i))*smat(nchanl+k,j)
       enddo
-      raux = sqrt(real(s)**2 + aimag(s)**2)
+      raux = sqrt(DBLE(s)**2 + AIMAG(s)**2)
       raux1 = raux
       if(i.eq.j) raux1 = abs(raux1-1.d0)
       if(raux1.gt.eps) then

@@ -327,7 +327,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   ALLOCATE(  aux( nrxx ) )
   ALLOCATE( gaux( nrxx ) )
   !
-  aux = DCMPLX( a(:), 0.D0 )
+  aux = CMPLX( a(:), 0.D0 )
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
@@ -341,13 +341,12 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      gaux(:) = 0.D0
      !
-     gaux(nl(:)) = g(ipol,:) * DCMPLX( - AIMAG( aux(nl(:)) ), &
-                                       +  REAL( aux(nl(:)) ) )
+     gaux(nl(:)) = g(ipol,:) * &
+          CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = DCMPLX( +  REAL( gaux(nl(:)) ), &
-                               - AIMAG( gaux(nl(:)) ) )
+        gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ) , -AIMAG( gaux(nl(:)) ) )
         !
      END IF
      !
@@ -357,7 +356,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:) = ga(ipol,:) + tpiba * REAL( gaux(:) )
+     ga(ipol,:) = ga(ipol,:) + tpiba * DBLE( gaux(:) )
      !
   END DO
   !
@@ -399,22 +398,20 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   DO ipol = 1, 3
      !
-     aux = DCMPLX( a(ipol,:), 0.D0 )
+     aux = CMPLX( a(ipol,:), 0.D0 )
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
      CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     gaux(nl(:)) = gaux(nl(:)) + &
-                   g(ipol,:) * DCMPLX( - AIMAG( aux(nl(:)) ), &
-                                       +  REAL( aux(nl(:)) ) )
+     gaux(nl(:)) = gaux(nl(:)) + g(ipol,:) * &
+          CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
      !
   END DO
   !
   IF ( gamma_only ) THEN
      !
-     gaux(nlm(:)) = DCMPLX( +  REAL( gaux(nl(:)) ), &
-                            - AIMAG( gaux(nl(:)) ) )
+     gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
      !
   END IF
   !
@@ -424,7 +421,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !
-  da(:) = tpiba * REAL( gaux(:) )
+  da(:) = tpiba * DBLE( gaux(:) )
   !
   DEALLOCATE( gaux )
   DEALLOCATE( aux )

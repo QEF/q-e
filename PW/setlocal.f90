@@ -41,7 +41,7 @@ subroutine setlocal
   enddo
   if (gamma_only) then
      do ng = 1, ngm
-        aux (nlm(ng)) = conjg (aux (nl(ng)))
+        aux (nlm(ng)) = CONJG(aux (nl(ng)))
      enddo
   end if
   !
@@ -50,7 +50,7 @@ subroutine setlocal
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   !
   do ir = 1, nrxx
-     vltot (ir) = DREAL (aux (ir) )
+     vltot (ir) =  DBLE (aux (ir) )
   enddo
 !
 !  If required add an electric field to the local potential 

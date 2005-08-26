@@ -186,7 +186,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
               if (lsign) then
                  if (gamma_only) then
                     !  psi(r) is real by construction
-                    segno(1:nrxxs) = real(psic(1:nrxxs))
+                    segno(1:nrxxs) = DBLE(psic(1:nrxxs))
                  else
                     !  determine the phase factor that makes psi(r) real.
                     maxmod=0.d0
@@ -205,7 +205,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
 #ifdef __PARA
                     call mp_bcast(phase,0)
 #endif
-                    segno(1:nrxxs) = real( psic(1:nrxxs)*CONJG(phase) )
+                    segno(1:nrxxs) = DBLE( psic(1:nrxxs)*CONJG(phase) )
                  endif
                  if (doublegrid) call interpolate (segno, segno, 1)
                  segno(:) = sign( 1.d0, segno(:) )
@@ -215,14 +215,14 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                  do ipol=1,npol
                     do ir=1,nrxxs
                        rho(ir,current_spin)=rho(ir,current_spin)+&
-                          w1*(real(psic_nc(ir,ipol))**2+ &
-                                        DIMAG(psic_nc(ir,ipol))**2)
+                          w1*(DBLE(psic_nc(ir,ipol))**2+ &
+                             AIMAG(psic_nc(ir,ipol))**2)
                     enddo
                  enddo
               else
                  do ir=1,nrxxs
                     rho (ir, current_spin) = rho (ir, current_spin) + &
-                      w1 * (real ( psic (ir) ) **2 + DIMAG (psic (ir) ) **2)
+                      w1 * (DBLE( psic (ir) ) **2 + AIMAG (psic (ir) ) **2)
                  enddo
               endif
         !
@@ -252,7 +252,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                                            becp_nc(kkb,is2,ibnd)
                                      be2(ih,is1)=be2(ih,is1)+ &
                                            fcoef(kh,ih,is2,is1,np)* &
-                                        conjg(becp_nc(kkb,is2,ibnd))
+                                        CONJG(becp_nc(kkb,is2,ibnd))
                                    enddo
                                  enddo
                               endif
@@ -267,9 +267,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                                (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
                           else
                             becsum(ijh,na,1) = becsum(ijh,na,1)+  &
-                             w1*(conjg(becp_nc(ikb,1,ibnd))*      &
+                             w1*(CONJG(becp_nc(ikb,1,ibnd))*      &
                                        becp_nc(ikb,1,ibnd)+       &
-                                 conjg(becp_nc(ikb,2,ibnd))*      &
+                                 CONJG(becp_nc(ikb,2,ibnd))*      &
                                        becp_nc(ikb,2,ibnd))
                           endif
                           ijh = ijh + 1
@@ -283,9 +283,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                                         be1(ih,2)*be2(jh,2)) )
                             else
                               becsum(ijh,na,1)= becsum(ijh,na,1)+ &
-                                   w1*2.d0*real(conjg(becp_nc(ikb,1,ibnd)) &
+                                   w1*2.d0*DBLE(CONJG(becp_nc(ikb,1,ibnd)) &
                                      *becp_nc(jkb,1,ibnd) + &
-                                conjg(becp_nc(ikb,2,ibnd)) &
+                                CONJG(becp_nc(ikb,2,ibnd)) &
                                      *becp_nc(jkb,2,ibnd) )
                             endif
                             ijh = ijh + 1
@@ -302,7 +302,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                           else
                               becsum(ijh,na,current_spin) = &
                                    becsum(ijh,na,current_spin) + w1 * &
-                               real(conjg(becp(ikb,ibnd))*becp(ikb,ibnd))
+                               DBLE(CONJG(becp(ikb,ibnd))*becp(ikb,ibnd))
                           end if
                           ijh = ijh + 1
                           do jh = ih + 1, nh (np)
@@ -314,7 +314,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                              else
                                 becsum(ijh,na,current_spin) = &
                                   becsum(ijh,na,current_spin) + 2.d0*w1 * &
-                                  real(conjg(becp(ikb,ibnd))*becp(jkb,ibnd))
+                                  DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd))
                              endif
                              ijh = ijh + 1
                           enddo

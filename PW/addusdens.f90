@@ -105,9 +105,9 @@ subroutine addusdens
   do is = 1, nspin
      psic(:) = (0.d0, 0.d0)
      psic( nl(:) ) = aux(:,is)
-     if (gamma_only) psic( nlm(:) ) = conjg(aux(:,is))
+     if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     rho (:, is) = rho (:, is) + DREAL (psic (:) )
+     rho (:, is) = rho (:, is) +  DBLE (psic (:) )
   enddo
   deallocate (aux)
 

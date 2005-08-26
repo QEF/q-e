@@ -95,11 +95,11 @@
             end if
  
             do ix=-iesr,iesr
-              sij_image(1)= sij(1)+REAL(ix)
+              sij_image(1)= sij(1)+DBLE(ix)
               do iy=-iesr,iesr
-                sij_image(2)= sij(2)+REAL(iy)
+                sij_image(2)= sij(2)+DBLE(iy)
                 do iz=-iesr,iesr
-                  sij_image(3)= sij(3)+REAL(iz)     
+                  sij_image(3)= sij(3)+DBLE(iz)     
                   tshift=ix.eq.0 .and. iy.eq.0 .and. iz.eq.0
                   if(.not.(tzero.and.tshift)) then
                     call s_to_r(sij_image,rij,box)
@@ -210,7 +210,7 @@
         do j = 1,nvec
           bar(i) = bar(i) + vectors(i,j)
         end do
-        bar(i) = bar(i) / REAL(nvec)
+        bar(i) = bar(i) / DBLE(nvec)
       end do
       return
       end subroutine baricentro
@@ -299,9 +299,9 @@
 !              DO IZ=-IESR,IESR
 !                ISHFT=IX*IX+IY*IY+IZ*IZ
 !                IF(.NOT.(TZERO.AND.ISHFT.EQ.0)) THEN
-!                  SXLM(1) = XLM + DFLOAT(IX)
-!                  SXLM(2) = YLM + DFLOAT(IY)
-!                  SXLM(3) = ZLM + DFLOAT(IZ)
+!                  SXLM(1) = XLM + DBLE(IX)
+!                  SXLM(2) = YLM + DBLE(IY)
+!                  SXLM(3) = ZLM + DBLE(IZ)
 !                  CALL S_TO_R(SXLM,RXLM)
 !                  ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
 !                  RLM   = SQRT(ERRE2)
@@ -424,9 +424,9 @@
 !              DO IZ=-IESR,IESR
 !                ISHFT=IX*IX+IY*IY+IZ*IZ
 !                IF(.NOT.(TZERO.AND.ISHFT.EQ.0)) THEN
-!                  SXLM(1) = XLM + DFLOAT(IX)
-!                  SXLM(2) = YLM + DFLOAT(IY)
-!                  SXLM(3) = ZLM + DFLOAT(IZ)
+!                  SXLM(1) = XLM + DBLE(IX)
+!                  SXLM(2) = YLM + DBLE(IY)
+!                  SXLM(3) = ZLM + DBLE(IZ)
 !                  CALL S_TO_R(SXLM,RXLM)
 !                  ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
 !                  RLM   = SQRT(ERRE2)

@@ -144,9 +144,9 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
               enddo
               arg = arg * tpi
               if (isymq == nsymtot .and. minus_q) then
-                 fase = DCMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX (cos (arg), sin (arg) )
               else
-                 fase = DCMPLX (cos (arg), - sin (arg) )
+                 fase = CMPLX (cos (arg), - sin (arg) )
               endif
               do ipol = 1, 3
                  do jpol = 1, 3
@@ -171,10 +171,10 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
                     jmode = ipol + (na - 1) * 3
                     if (isymq == nsymtot .and. minus_q) then
                        tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + &
-                            conjg (u (jmode, imode) * wrk_ru (ipol, na) )
+                            CONJG(u (jmode, imode) * wrk_ru (ipol, na) )
                     else
                        t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
-                            + conjg (u (jmode, imode) ) * wrk_ru (ipol, na)
+                            + CONJG(u (jmode, imode) ) * wrk_ru (ipol, na)
                     endif
                  enddo
               enddo

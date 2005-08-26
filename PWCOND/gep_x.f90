@@ -52,7 +52,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 !          
   do i=1, n
     eigen(i)=alpha(i)/beta(i)
-!    write(6,'(i5, 2f40.20)') i, dreal(eigen(i)), aimag(eigen(i))
+!    write(6,'(i5, 2f40.20)') i,  DBLE(eigen(i)), AIMAG(eigen(i))
   enddo
 
   deallocate(work)

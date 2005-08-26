@@ -86,7 +86,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
         do ig=1,ngw
            if(ctable(ig,1).ne.(ngw+1))then
               if(ctable(ig,1).ge.0) then
-                 sca=sca+conjg(c0(ctable(ig,1),ix))*c0(ig,jx)
+                 sca=sca+CONJG(c0(ctable(ig,1),ix))*c0(ig,jx)
               endif
            endif
         enddo
@@ -109,7 +109,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
         do ig=ng0,ngw
            if(ctable(ig,2).ne.(ngw+1)) then
               if(ctable(ig,2).lt.0) then
-                 sca=sca+c0(-ctable(ig,2),ix)*conjg(c0(ig,jx))
+                 sca=sca+c0(-ctable(ig,2),ix)*CONJG(c0(ig,jx))
               endif
            endif
         enddo
@@ -119,7 +119,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
         do ig=ng0,ngw
            if(ctable(ig,2).ne.(ngw+1)) then
               if(ctable(ig,2).ge.0) then
-                 sca=sca+conjg(c0(ctable(ig,2),ix))*conjg(c0(ig,jx))
+                 sca=sca+CONJG(c0(ctable(ig,2),ix))*conjg(c0(ig,jx))
               endif
            endif
         enddo

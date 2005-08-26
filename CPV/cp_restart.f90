@@ -404,7 +404,7 @@ MODULE cp_restart
           call iotk_write_attr (attr,"dw",nupdwn(2))
           CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd, ATTR = attr )
         ELSE
-	  CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+          CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
         END IF
         !
         CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )

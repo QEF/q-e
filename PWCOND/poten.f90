@@ -112,9 +112,9 @@ DO ispin=1,nspin_eff
 #ifdef __PARA
   call gather( auxr, allv )
   CALL mp_bcast( allv, ionode_id )
-  aux = CMPLX(allv)
+  aux(:) = CMPLX(allv(:), 0.d0)
 #else
-  aux = CMPLX(auxr)
+  aux(:) = CMPLX(auxr(:), 0.d0)
 #endif
 !
 ! To find FFT of the local potential

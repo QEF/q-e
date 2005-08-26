@@ -64,7 +64,7 @@ subroutine compute_alphasum
                        do ipol = 1, 3
                           alphasum(ijh,ipol,na,current_spin) = &
                                alphasum(ijh,ipol,na,current_spin) + 2.d0*wgg1*&
-                               DREAL (conjg (alphap (ikb,ibnd,ipol,ik) ) * &
+                                DBLE (CONJG(alphap (ikb,ibnd,ipol,ik) ) * &
                                becp1  (ikb,ibnd,ik) )
                        enddo
                     enddo
@@ -78,9 +78,9 @@ subroutine compute_alphasum
                                 alphasum(ijh,ipol,na,current_spin) = &
                                      alphasum(ijh,ipol,na,current_spin) + &
                                      2.d0 * wgg1 * &
-                                     DREAL (conjg (alphap(ikb,ibnd,ipol,ik) )*&
+                                      DBLE (CONJG(alphap(ikb,ibnd,ipol,ik) )*&
                                      becp1 (jkb,ibnd,ik)         + &
-                                     conjg ( becp1 (ikb,ibnd,ik) ) *       &
+                                     CONJG( becp1 (ikb,ibnd,ik) ) *       &
                                      alphap (jkb,ibnd,ipol,ik) )
                              enddo
                           endif

@@ -159,7 +159,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      enddo
      call errore ('set_irr', 'one mode is zero', imode)
 110  do na = 1, 3 * nat
-        u (na, imode) = - u (na, imode) * conjg (fase)
+        u (na, imode) = - u (na, imode) * CONJG(fase)
      enddo
   enddo
 !
@@ -169,9 +169,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
          do imode=1,3*nat
             WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
             WRITE( stdout, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
-                ( DREAL(u(na,imode)), na=1,3*nat )
+                (  DBLE(u(na,imode)), na=1,3*nat )
             WRITE( stdout, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
-                ( DIMAG(u(na,imode)), na=1,3*nat )
+                ( AIMAG(u(na,imode)), na=1,3*nat )
          end do
       end if
 !
@@ -240,9 +240,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
               enddo
               arg = arg * tpi
               if (isymq.eq.nsymtot.and.minus_q) then
-                 fase = DCMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX (cos (arg), sin (arg) )
               else
-                 fase = DCMPLX (cos (arg), - sin (arg) )
+                 fase = CMPLX (cos (arg), - sin (arg) )
               endif
               do ipol = 1, 3
                  do jpol = 1, 3
@@ -266,11 +266,11 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
                  do ipol = 1, 3
                     jmode = ipol + (na - 1) * 3
                     if (isymq.eq.nsymtot.and.minus_q) then
-                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + conjg (u ( &
+                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + CONJG(u ( &
                             jmode, imode) * wrk_ru (ipol, na) )
                     else
                        t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
-                            + conjg (u (jmode, imode) ) * wrk_ru (ipol, na)
+                            + CONJG(u (jmode, imode) ) * wrk_ru (ipol, na)
                     endif
                  enddo
               enddo

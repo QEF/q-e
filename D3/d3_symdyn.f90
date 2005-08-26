@@ -68,8 +68,8 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
            do om = 1, 3 * nat
               do mu = 1, 3 * nat
                  do nu = 1, 3 * nat
-                    work = work + conjg (ug0 (i1, om) ) * u (i, mu) * &
-                         d3dyn (om, mu, nu) * conjg (u (j, nu) )
+                    work = work + CONJG(ug0 (i1, om) ) * u (i, mu) * &
+                         d3dyn (om, mu, nu) * CONJG(u (j, nu) )
                  enddo
               enddo
            enddo

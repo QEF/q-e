@@ -47,7 +47,7 @@ subroutine dynmatrix
               mu = imode0 + ipert
               do jpert = 1, npert (jrr)
                  nu = jmode0 + jpert
-                 dyn (mu, nu) = DCMPLX (0.d0, 0.d0)
+                 dyn (mu, nu) = CMPLX (0.d0, 0.d0)
               enddo
            enddo
         elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then
@@ -55,7 +55,7 @@ subroutine dynmatrix
               mu = imode0 + ipert
               do jpert = 1, npert (jrr)
                  nu = jmode0 + jpert
-                 dyn (mu, nu) = conjg (dyn (nu, mu) )
+                 dyn (mu, nu) = CONJG(dyn (nu, mu) )
               enddo
            enddo
         endif

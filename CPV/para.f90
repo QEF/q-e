@@ -490,14 +490,14 @@ end module para_mod
 ! the center of mass of the system is moved
 
       shift(1) = 0.5d0*l1 - cm(1)
-      tp(1) = nint(shift(1)*dfloat(nr1)/ll1)
-      shift(1) = 0.d0 !dfloat(tp(1))*ll1/dfloat(nr1)
+      tp(1) = nint(shift(1)*DBLE(nr1)/ll1)
+      shift(1) = 0.d0 !DBLE(tp(1))*ll1/DBLE(nr1)
       shift(2) = 0.5d0*l2 - cm(2)
-      tp(2) = nint(shift(2)*dfloat(nr2)/ll2)
-      shift(2) = 0.d0 !dfloat(tp(2))*ll2/dfloat(nr2)
+      tp(2) = nint(shift(2)*DBLE(nr2)/ll2)
+      shift(2) = 0.d0 !DBLE(tp(2))*ll2/DBLE(nr2)
       shift(3) = 0.5d0*l3 - cm(3)
-      tp(3) = nint(shift(3)*dfloat(nr3)/ll3)
-      shift(3) = 0.d0 !dfloat(tp(3))*ll3/dfloat(nr3)
+      tp(3) = nint(shift(3)*DBLE(nr3)/ll3)
+      shift(3) = 0.d0 !DBLE(tp(3))*ll3/DBLE(nr3)
 
 #ifdef __PARA
 ! in parallel execution, only the first nodes writes

@@ -132,14 +132,14 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      CALL reduce( 2 * m, lagrange )
      !
-     psi_norm = REAL( lagrange(m) )
+     psi_norm = DBLE( lagrange(m) )
      !
      DO j = 1, m - 1
         !
         psi(:,m)  = psi(:,m) - lagrange(j) * psi(:,j)
         !
         psi_norm = psi_norm - &
-                   ( REAL( lagrange(j) )**2 + AIMAG( lagrange(j) )**2 )
+                   ( DBLE( lagrange(j) )**2 + AIMAG( lagrange(j) )**2 )
         !
      END DO
      !

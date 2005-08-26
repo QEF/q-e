@@ -55,7 +55,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !  compute the exchange and correlation potential for this mode
   !
   nrtot = nr1 * nr2 * nr3
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / DBLE (nspin)
 
   do ipert = 1, npe
      mode = imode0 + ipert
@@ -93,7 +93,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            do is = 1, nspin
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
                    ZDOTC (nrxx, dvaux (1, is), 1, drhoc, 1) * &
-                   omega * fac / float (nrtot)
+                   omega * fac / DBLE (nrtot)
            enddo
         enddo
      enddo

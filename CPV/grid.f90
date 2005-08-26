@@ -27,7 +27,7 @@
             integer, intent(in) :: nproc
             integer, intent(out) :: nprow, npcol
             integer sqrtnp,i
-            sqrtnp = INT( SQRT( REAL(nproc) ) + 1 )
+            sqrtnp = INT( SQRT( DBLE(nproc) ) + 1 )
             DO i=1,sqrtnp
               IF(MOD(nproc,i).EQ.0) nprow = i
             END DO

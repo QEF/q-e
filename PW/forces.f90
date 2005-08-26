@@ -135,8 +135,8 @@ SUBROUTINE forces()
   !
   ! ... forces on fixed coordinates are set to zero ( C.S. 15/10/2003 )
   !
-  force    = force    * REAL( if_pos )
-  forcescc = forcescc * REAL( if_pos )
+  force    = force    * DBLE( if_pos )
+  forcescc = forcescc * DBLE( if_pos )
   !
 #ifdef DEBUG
   WRITE( stdout, '(5x,"The non-local contrib.  to forces")')

@@ -64,7 +64,7 @@ subroutine usnldiag_nc (h_diag, s_diag)
               end if
               do ipol =1, npol
                  do ig = 1, npw
-                    ar = vkb (ig, ikb)*conjg(vkb (ig, ikb))
+                    ar = vkb (ig, ikb)*CONJG(vkb (ig, ikb))
                     h_diag (ig,ipol) = h_diag (ig,ipol) + ps1(ipol) * ar
                     s_diag (ig,ipol) = s_diag (ig,ipol) + ps2(ipol) * ar
                  enddo
@@ -89,7 +89,7 @@ subroutine usnldiag_nc (h_diag, s_diag)
                        end if
                        do ipol = 1, npol
                           do ig = 1, npw
-                             ar = vkb (ig, ikb) *conjg( vkb (ig, jkb))
+                             ar = vkb (ig, ikb) *CONJG( vkb (ig, jkb))
                              h_diag (ig,ipol) = h_diag (ig,ipol) + &
                                   ps1(ipol) * ar
                              s_diag (ig,ipol) = s_diag (ig,ipol) + &

@@ -11,6 +11,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
 !  This subroutine writes/reads variables needed for PWCOND
 !  so that the punch file from PW calculations is not needed.  
 !
+#include "f_defs.h"
   use kinds, only : DP
   USE parameters, only : ndmx, nbrx, npsx
   USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg
@@ -118,15 +119,15 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     deallocate(ind)
     deallocate(c)
     if(noncolin) then
-      write(3,'(6f20.14)') ((((real(zpseu_nc(i,j,k,l)),i=1,2),     &
+      write(3,'(6f20.14)') (((( DBLE(zpseu_nc(i,j,k,l)),i=1,2),     &
             j=1,norb),k=1,norb),l=1,nspin)
-      write(3,'(6f20.14)') ((((aimag(zpseu_nc(i,j,k,l)),i=1,2),     &
+      write(3,'(6f20.14)') ((((AIMAG(zpseu_nc(i,j,k,l)),i=1,2),     &
             j=1,norb),k=1,norb),l=1,nspin)
     endif
     write(3,'(6f20.14)') (z(i), i=1, nrz+1)
-    write(3,'(6f20.14)') ((((real(vppot(i,j,k,l)),i=1,nrz),         &
+    write(3,'(6f20.14)') (((( DBLE(vppot(i,j,k,l)),i=1,nrz),        &
                              j=1,nrx*nry),k=1,npol),l=1,npol)
-    write(3,'(6f20.14)') ((((aimag(vppot(i,j,k,l)),i=1,nrz),        &
+    write(3,'(6f20.14)') ((((AIMAG(vppot(i,j,k,l)),i=1,nrz),        &
                              j=1,nrx*nry),k=1,npol),l=1,npol)
 !   write r
     allocate( ind(2,npsx*ndmx) )

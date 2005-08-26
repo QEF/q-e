@@ -33,7 +33,7 @@ subroutine H_h(e,h,Ah)
   do ibnd = 1,nbnd
      ! set to zero the imaginary part of h at G=0
      !  needed for numerical stability
-     if (gstart==2) h(1,ibnd) = cmplx(DREAL(h(1,ibnd)),0.d0)
+     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0)
      do j = 1,npw
         ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
      end do
@@ -47,7 +47,7 @@ subroutine H_h(e,h,Ah)
   !  needed for numerical stability
   if (gstart==2) then
      do ibnd = 1, nbnd
-        ah(1,ibnd) = cmplx(DREAL(ah(1,ibnd)),0.d0)
+        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0)
      end do
   end if
   !

@@ -239,11 +239,11 @@ PROGRAM images_interpolator
   i = first_image
   !
   delta_R = ( old_mesh(last_image) - &
-              old_mesh(first_image) ) / REAL( new_num_of_images - 1 )
+              old_mesh(first_image) ) / DBLE( new_num_of_images - 1 )
   ! 
   DO j = 0, ( new_num_of_images - 1 )
      !
-     R = old_mesh( first_image ) + REAL(j) * delta_R 
+     R = old_mesh( first_image ) + DBLE(j) * delta_R 
      !
      new_mesh(j+1) = R
      !

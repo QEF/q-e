@@ -91,7 +91,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
         w1 = weight * wdelta / omega
         do j = 1, nrxxs
            ldoss (j, current_spin) = ldoss (j, current_spin) + &
-                 w1 * (DREAL ( psic (j) ) **2 + DIMAG (psic (j) ) **2)
+                 w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
         enddo
         !
         !    If we have a US pseudopotential we compute here the becsum term
@@ -107,13 +107,13 @@ subroutine localdos (ldos, ldoss, dos_ef)
                        ikb = ijkb0 + ih
                        becsum1 (ijh, na, current_spin) = &
                             becsum1 (ijh, na, current_spin) + w1 * &
-                            DREAL (conjg(becp(ikb,ibnd))*becp(ikb,ibnd) )
+                             DBLE (CONJG(becp(ikb,ibnd))*becp(ikb,ibnd) )
                        ijh = ijh + 1
                        do jh = ih + 1, nh (nt)
                           jkb = ijkb0 + jh
                           becsum1 (ijh, na, current_spin) = &
                                becsum1 (ijh, na, current_spin) + w1 * 2.d0 * &
-                               DREAL(conjg(becp(ikb,ibnd))*becp(jkb,ibnd) )
+                                DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd) )
                           ijh = ijh + 1
                        enddo
                     enddo
@@ -151,7 +151,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !      check =0.d0
   !      do is=1,nspin
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-  !         check = check + omega*DREAL(ldos(nl(1),is))
+  !         check = check + omega* DBLE(ldos(nl(1),is))
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   !      end do
   !      WRITE( stdout,*) ' check ', check, dos_ef

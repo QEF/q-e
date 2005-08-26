@@ -51,7 +51,7 @@ end subroutine write_upf
     write (ounps, '(a75)', err = 100, iostat = ios) generated
     write (ounps, '(a75)', err = 100, iostat = ios) date_author
     if (trim(comment) /= ' ') then
-	write (ounps, '(a75)', err = 100, iostat = ios) comment
+       write (ounps, '(a75)', err = 100, iostat = ios) comment
     end if
     if (rel==2) then  
        write (ounps, '(i5,t14,a)', err = 100, iostat = ios) rel,& 

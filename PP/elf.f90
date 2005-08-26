@@ -80,15 +80,15 @@ subroutine do_elf (elf)
            w1 = wg (ibnd, ik) / omega
            do i = 1, npw
               gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
-              aux (nls(igk (i) ) ) = cmplx (0d0, gv (j) ) * evc (i, ibnd)
+              aux (nls(igk (i) ) ) = CMPLX (0d0, gv (j) ) * evc (i, ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk (i) ) ) = cmplx (0d0, -gv (j) ) * &
+                 aux (nlsm(igk (i) ) ) = CMPLX (0d0, -gv (j) ) * &
                       CONJG ( evc (i, ibnd) )
               END IF
            enddo
            call cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
            do i = 1, nrxxs
-              kkin(i) = kkin(i) + w1 * (real(aux(i))**2 + DIMAG(aux(i))**2)
+              kkin(i) = kkin(i) + w1 * (DBLE(aux(i))**2 + AIMAG(aux(i))**2)
            enddo
            ! j
         enddo
@@ -128,23 +128,23 @@ subroutine do_elf (elf)
      rho (:, 1) =  rho (:, 1) + rho (:, is)
   enddo
   !
-  aux(:) = cmplx ( rho(:, 1), 0.d0 )
+  aux(:) = CMPLX ( rho(:, 1), 0.d0 )
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   do j = 1, 3
      aux2(:) = (0.d0,0.d0)
      do i = 1, ngm
-        aux2(nl(i)) = aux(nl(i)) * cmplx (0.0d0, g(j,i)*tpiba)
+        aux2(nl(i)) = aux(nl(i)) * CMPLX (0.0d0, g(j,i)*tpiba)
      enddo
      IF (gamma_only) THEN
         do i = 1, ngm
-           aux2(nlm(i)) = aux(nlm(i)) * cmplx (0.0d0,-g(j,i)*tpiba)
+           aux2(nlm(i)) = aux(nlm(i)) * CMPLX (0.0d0,-g(j,i)*tpiba)
         enddo
      END IF
 
      call cft3 (aux2, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
      do i = 1, nrxx
-        tbos (i) = tbos (i) + real(aux2(i))**2
+        tbos (i) = tbos (i) + DBLE(aux2(i))**2
      enddo
   enddo
   !

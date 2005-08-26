@@ -74,7 +74,7 @@ subroutine raman_mat
   do iat = 0, nat - 1
      do icr = 1, 3
         do jcr = 1, 3
-           uact (3*iat + jcr, 3*iat + icr) = cmplx (at (jcr, icr), 0.d0)
+           uact (3*iat + jcr, 3*iat + icr) = CMPLX (at (jcr, icr), 0.d0)
         enddo
      enddo
   enddo
@@ -143,7 +143,7 @@ subroutine raman_mat
         do ipa = 1, 6
            tmp = 0.d0
            do ibnd = 1, nbnd_occ (ik)
-              tmp = tmp + weight * dreal( ZDOTC(npwq,             &
+              tmp = tmp + weight *  DBLE( ZDOTC(npwq,             &
                     chif (1, ibnd, ipa), 1, dvpsi (1, ibnd), 1) )
            enddo
            wrk (ipa, imod, 1) = wrk (ipa, imod, 1) + tmp
@@ -184,7 +184,7 @@ subroutine raman_mat
            do ipb = 1, ipa
               tmp = 0.d0
               do ibnd = 1, nbnd_occ (ik)
-                 tmp = tmp + weight * dreal(ZDOTC (npwq, &
+                 tmp = tmp + weight *  DBLE(ZDOTC (npwq, &
                        chif (1, ibnd, ipb), 1, dvpsi (1, ibnd), 1) )
               enddo
               wrk (jab (ipa, ipb), imod, 2) = &

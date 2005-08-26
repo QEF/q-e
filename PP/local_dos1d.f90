@@ -84,7 +84,7 @@ subroutine local_dos1d (ik, kband, plan)
 
   w1 = wg (kband, ik) / omega
   do ir = 1, nrxxs
-     aux(ir) = aux(ir) + w1 * (real(psic(ir))**2 + DIMAG(psic(ir))**2)
+     aux(ir) = aux(ir) + w1 * (DBLE(psic(ir))**2 + AIMAG(psic(ir))**2)
   enddo
   !
   !    If we have a US pseudopotential we compute here the becsum term
@@ -102,13 +102,13 @@ subroutine local_dos1d (ik, kband, plan)
                  ikb = ijkb0 + ih
                  becsum(ijh,na,current_spin) = &
                         becsum(ijh,na,current_spin) + w1 * &
-                        real ( conjg(becp(ikb,ibnd)) * becp(ikb,ibnd) )
+                        DBLE( CONJG(becp(ikb,ibnd)) * becp(ikb,ibnd) )
                  ijh = ijh + 1
                  do jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
                     becsum(ijh,na,current_spin) = &
                            becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                           real( conjg(becp(ikb,ibnd)) * becp(jkb,ibnd) )
+                           DBLE( CONJG(becp(ikb,ibnd)) * becp(jkb,ibnd) )
                     ijh = ijh + 1
                  enddo
               enddo
@@ -128,7 +128,7 @@ subroutine local_dos1d (ik, kband, plan)
      call interpolate (aux, aux, 1)
   endif
   do ir = 1, nrxx
-     prho (ir) = cmplx (aux (ir), 0.d0)
+     prho (ir) = CMPLX (aux (ir), 0.d0)
   enddo
   call cft3 (prho, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !

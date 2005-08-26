@@ -51,15 +51,15 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   write(ounit,*) ' Total SCF Density'
 !                        origin is forced to (0.0,0.0,0.0)
   write(ounit,'(I5,3F12.6)') nat, 0.0, 0.0, 0.0
-  write(ounit,'(I5,3F12.6)') nrx1, (alat*at(i,1)/dfloat(nrx1),i=1,3)
-  write(ounit,'(I5,3F12.6)') nrx2, (alat*at(i,2)/dfloat(nrx2),i=1,3)
-  write(ounit,'(I5,3F12.6)') nrx3, (alat*at(i,3)/dfloat(nrx3),i=1,3)
+  write(ounit,'(I5,3F12.6)') nrx1, (alat*at(i,1)/DBLE(nrx1),i=1,3)
+  write(ounit,'(I5,3F12.6)') nrx2, (alat*at(i,2)/DBLE(nrx2),i=1,3)
+  write(ounit,'(I5,3F12.6)') nrx3, (alat*at(i,3)/DBLE(nrx3),i=1,3)
 
   do i=1,nat
      nt = ityp(i)
      ! find atomic number for this atom. 
      at_num = atomic_number(TRIM(atm(nt)))
-     at_chrg= float(at_num)
+     at_chrg= DBLE(at_num)
      ! at_chrg could be alternatively set to valence charge
      ! positions are in cartesian coordinates and a.u.
      !

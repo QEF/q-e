@@ -81,7 +81,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   !
   call sym_def1 (def, irr)
   do ipert = 1, npe
-     ef_sh (imode0 + ipert) = DREAL (def (ipert) )
+     ef_sh (imode0 + ipert) =  DBLE (def (ipert) )
   enddo
 
   WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", &
